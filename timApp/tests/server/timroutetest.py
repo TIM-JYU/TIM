@@ -59,7 +59,7 @@ class TimRouteTest(TimDbTest):
     def get(self,
             url: str,
             as_tree: bool = False,
-            expect_status: int = 200,
+            expect_status: Optional[int] = 200,
             expect_content: Union[None, str, Dict, List] = None,
             expect_contains: Union[None, str, List[str]] = None,
             expect_xpath: Optional[str] = None,
@@ -85,7 +85,7 @@ class TimRouteTest(TimDbTest):
     def post(self,
              url: str,
              as_tree: bool = False,
-             expect_status: int = 200,
+             expect_status: Optional[int] = 200,
              expect_content: Union[None, str, Dict, List] = None,
              expect_contains: Union[None, str, List[str]] = None,
              expect_xpath: Optional[str] = None,
@@ -111,7 +111,7 @@ class TimRouteTest(TimDbTest):
     def delete(self,
                url: str,
                as_tree: bool = False,
-               expect_status: int = 200,
+               expect_status: Optional[int] = 200,
                expect_content: Union[None, str, Dict, List] = None,
                expect_contains: Union[None, str, List[str]] = None,
                expect_xpath: Optional[str] = None,
@@ -138,7 +138,7 @@ class TimRouteTest(TimDbTest):
                 url: str,
                 method: str,
                 as_tree: bool = False,
-                expect_status: int = 200,
+                expect_status: Optional[int] = 200,
                 expect_content: Union[None, str, Dict, List] = None,
                 expect_contains: Union[None, str, List[str]] = None,
                 expect_xpath: Optional[str] = None,
@@ -178,7 +178,8 @@ class TimRouteTest(TimDbTest):
         if xhr:
             headers.append(('X-Requested-With', 'XMLHttpRequest'))
         resp = self.client.open(url, method=method, headers=headers, **kwargs)
-        self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True))
+        if expect_status is not None:
+            self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True))
         if resp.status_code == 302 and expect_content is not None:
             self.assertEqual(expect_content, resp.location.lstrip('http://localhost/'))
         resp_data = resp.get_data(as_text=True)
@@ -221,7 +222,7 @@ class TimRouteTest(TimDbTest):
                  url: str,
                  json_data: Optional[Dict] = None,
                  as_tree: bool = False,
-                 expect_status: int = 200,
+                 expect_status: Optional[int] = 200,
                  expect_content: Union[None, str, Dict, List] = None,
                  expect_contains: Union[None, str, List[str]] = None,
                  expect_xpath: Optional[str] = None,
@@ -252,7 +253,7 @@ class TimRouteTest(TimDbTest):
                   url: str,
                   json_data: Optional[Dict] = None,
                   as_tree: bool = False,
-                  expect_status: int = 200,
+                  expect_status: Optional[int] = 200,
                   expect_content: Union[None, str, Dict, List] = None,
                   expect_contains: Union[None, str, List[str], Dict] = None,
                   expect_xpath: Optional[str] = None,
@@ -284,7 +285,7 @@ class TimRouteTest(TimDbTest):
                  json_data: Optional[Dict] = None,
                  method: str = 'GET',
                  as_tree: bool = False,
-                 expect_status: int = 200,
+                 expect_status: Optional[int] = 200,
                  expect_content: Union[None, str, Dict, List] = None,
                  expect_contains: Union[None, str, List[str]] = None,
                  expect_xpath: Optional[str] = None,
@@ -456,7 +457,6 @@ class TimRouteTest(TimDbTest):
         """
         if self.client.application.got_first_request:
             if not force and not add:
-                database = self.get_db()
                 u = User.get_by_name(username)
                 # if not flask.has_request_context():
                 #     print('creating request context')

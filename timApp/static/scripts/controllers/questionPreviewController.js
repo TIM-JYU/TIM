@@ -33,6 +33,8 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
             $scope.markup = args.markup;
             $scope.questionTitle = args.markup.json.questionTitle;
             $scope.dynamicAnswerSheetControl.createAnswer($scope);
+            // Tähän Texittää scope
+            // ParCompiler.processAllMath($scope.htmlSheet);
 
         });
 

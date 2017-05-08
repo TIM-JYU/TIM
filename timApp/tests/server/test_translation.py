@@ -35,7 +35,7 @@ class TranslationTest(TimRouteTest):
         par_ids = set(p.get_id() for p in pars)
         tr_pars = tr_doc.get_paragraphs()
         old_md = self.get('/getBlock/{}/{}'.format(tr_doc.doc_id, tr_pars[2].get_id()))
-        self.assertDictEqual({'macros': {}, 'source_document': doc.id}, tr_doc.get_settings().get_dict())
+        self.assertDictEqual({'source_document': doc.id}, tr_doc.get_settings().get_dict())
 
         # all but the settings paragraph are translated paragraphs
         self.assertTrue(tr_pars[0].is_setting())

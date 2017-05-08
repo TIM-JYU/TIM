@@ -6,6 +6,7 @@ import yaml
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
+from documentmodel.macroinfo import MacroInfo
 from markdownconverter import expand_macros
 from timdb.models.user import User
 from timdb.timdbexception import TimDbException
@@ -38,6 +39,7 @@ class Plugin:
                 d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
             except ValueError:
                 raise PluginException('Invalid date format: {}'.format(d))
+        if d is not None:
             if d.tzinfo is None:
                 d = d.replace(tzinfo=timezone.utc)
         return d
@@ -68,8 +70,7 @@ class Plugin:
         task_id_name = par.get_attr('taskId')
         plugin_data = parse_plugin_values(par,
                                           global_attrs=doc.get_settings().global_plugin_attrs(),
-                                          macros=doc.get_settings().get_macros_with_user_specific(user),
-                                          macro_delimiter=doc.get_settings().get_macro_delimiter())
+                                          macroinfo=doc.get_settings().get_macroinfo(user))
         if 'error' in plugin_data:
             if isinstance(plugin_data, str):
                 raise PluginException(plugin_data + ' Task id: ' + task_id_name)
@@ -191,9 +192,8 @@ class PluginException(Exception):
 
 
 def parse_plugin_values(par: DocParagraph,
-                        global_attrs=None,
-                        macros=None,
-                        macro_delimiter=None) -> Dict:
+                        global_attrs: Dict[str, str],
+                        macroinfo: MacroInfo) -> Dict:
     """
     Parses the markup values for a plugin paragraph, taking document attributes and macros into account.
 
@@ -207,8 +207,8 @@ def parse_plugin_values(par: DocParagraph,
         # We get the yaml str by removing the first and last lines of the paragraph markup
         par_md = par.get_markdown()
         yaml_str = expand_macros(par_md[par_md.index('\n') + 1:par_md.rindex('\n')],
-                                 macros=macros,
-                                 macro_delimiter=macro_delimiter)
+                                 macros=macroinfo.get_macros(),
+                                 macro_delimiter=macroinfo.get_macro_delimiter())
         #print("yaml str is: " + yaml_str)
         values = parse_yaml(yaml_str)
         if type(values) is str:

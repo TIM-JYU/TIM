@@ -30,7 +30,7 @@ function wmax(value, min, max) {
     return value;
 }
 
-timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', function ($document, $window, $parse) {
+timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', '$rootScope', function ($document, $window, $parse, $rootScope) {
 
     var resizableConfig = {};
 
@@ -39,10 +39,13 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
         replace: false,
 
         link: function (scope, element, attr) {
+            var posKey;
             if ( attr.save ) {
-                scope.pageId = window.location.pathname.split('/')[1];  // /velp/???
-                scope.posKey = attr.save.replace('%%PAGEID%%', scope.pageId);
+                var pageId = window.location.pathname.split('/')[1];  // /velp/???
+                posKey = attr.save.replace('%%PAGEID%%', pageId);
             }
+
+            var broadcastMsg = attr.broadcastmsg;
 
             var clickFn = null;
             var areaMinimized = false;
@@ -80,7 +83,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                     element.height(15);
                     base.css('display', 'none');
                     element.css('min-height', '0');
-                    setStorage(scope.posKey+"min", true);
+                    setStorage(posKey+"min", true);
                     handles = element.find('.resizehandle');
                     if ( handles.length ) handles.css('display', 'none');
 
@@ -88,7 +91,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                     base.css('display', '');
                     element.css('min-height', '');
                     element.height(areaHeight);
-                    setStorage(scope.posKey+"min", false)
+                    setStorage(posKey+"min", false)
                     element.find('.resizehandle').css('display', '');
                 }
                 if ( handles && handles.length ) scope.$apply();
@@ -292,10 +295,10 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 // element.css("background", "red");
                 pos = getPageXY(e);
                 // element.css("background", "blue");
-                if ( scope.posKey ) {
+                if ( posKey ) {
                     // element.css("background", "yellow");
                     var css = element.css(['top', 'bottom', 'left', 'right']);
-                    setStorage(scope.posKey, css);
+                    setStorage(posKey, css);
                     // element.css("background", "green");
                     timLogTime("pos:" + css.left + "," + css.top, "drag")
                 }
@@ -354,22 +357,25 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                 e.preventDefault();
                 e.stopPropagation();
 
-                if ( scope.posKey ) {
-                    var size = element.css(["width", "height"]);
-                    setStorage(scope.posKey + "Size", size );
+                var size = element.css(["width", "height"]);
+                if ( posKey ) {
+                    setStorage(posKey + "Size", size );
                 }
+                if ( broadcastMsg )
+                    scope.$broadcast(broadcastMsg, {size: size});
+                    // $rootScope.$broadcast(broadcastMsg, {size: size});
             }
 
             element.context.style.msTouchAction = 'none';
 
             if ( attr.save ) {
                 getSetDirs();
-                var oldSize = getStorage(scope.posKey + "Size");
+                var oldSize = getStorage(posKey + "Size");
                 if ( oldSize ) {
                     if (oldSize.width) element.css('width', oldSize.width);
                     if (oldSize.height) element.css('height', oldSize.height);
                 }
-                var oldPos = getStorage(scope.posKey);
+                var oldPos = getStorage(posKey);
                 var w = window.innerWidth;
                 var h = window.innerHeight;
                 var ew = element.width();
@@ -382,7 +388,7 @@ timApp.directive('timDraggableFixed', ['$document', '$window', '$parse', functio
                     // element.css("background", "red");
                     timLogTime("oldpos:" + oldPos.left +", " + oldPos.top, "drag")
                 }
-                if ( getStorage(scope.posKey+"min") ) scope.minimize();
+                if ( getStorage(posKey+"min") ) scope.minimize();
             }
 
 

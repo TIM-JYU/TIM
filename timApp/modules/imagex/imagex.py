@@ -42,7 +42,7 @@ class ImagexServer(tim_server.TimServer):
     """Class for imagex server that can handle the TIM routes."""
 
     def get_html(self, query: QueryParams) -> str:
-        #print("--QUERYHTML--" + str(query))
+        print("--QUERYHTML--" + str(query))
         """Return the html for this query. Params are dumbed as hexstring to avoid problems with html input and so on.
 
         :param query: get or put params

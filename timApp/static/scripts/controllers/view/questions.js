@@ -102,7 +102,7 @@ timApp.defineQuestions = function (sc, http, q, $injector, $compile, $window, $d
     // Opens pop-up window to create question.
     sc.addQuestionQst = function (e, $par) {
         var parId = sc.getParId($par);
-        var parNextId = sc.getParId($par.next());
+        var parNextId = parId; // sc.getParId($par.next());
         var $newpar = sc.createNewPar();
         $par.before($newpar);
         $rootScope.$broadcast('toggleQuestion');

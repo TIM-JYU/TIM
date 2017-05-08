@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template
 from flask import abort
 from flask import request
+from typing import Set
 
 import pluginControl
 from accesshelper import verify_logged_in
@@ -11,6 +12,7 @@ from dbaccess import get_timdb
 from documentmodel.docparagraph import DocParagraph
 from requesthelper import get_option
 from sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group
+from timdb.docinfo import DocInfo
 from timdb.models.docentry import DocEntry
 from timdb.tim_models import BlockAccess
 from timdb.userutils import get_viewable_blocks
@@ -24,6 +26,12 @@ search_routes = Blueprint('search',
 def make_cache_key(*args, **kwargs):
     path = request.path
     return (str(get_current_user_id()) + path + str(request.query_string)).encode('utf-8')
+
+
+class SearchResult:
+    def __init__(self, document: DocInfo, par: DocParagraph):
+        self.document = document
+        self.par = par
 
 
 @search_routes.route('/<query>')
@@ -42,8 +50,9 @@ def search(query):
     all_js = []
     all_css = []
     all_modules = []
-    found_docs = set()
+    results = set()  # type: Set[SearchResult]
     query_lower = query.lower()
+    found_docs = set()  # type: Set[DocInfo]
     for d in docs:
         doc = d.document
         pars = doc.get_paragraphs()
@@ -51,10 +60,13 @@ def search(query):
         for t in pars:
             if query_lower in t.get_markdown().lower():
                 found_pars.append(t)
+                if d in found_docs:
+                    continue
                 found_docs.add(d)
+                results.add(SearchResult(d, t))
         if not found_pars:
             continue
-        if len(found_docs) >= max_results:
+        if len(results) >= max_results:
             break
         if not show_full_pars:
             continue
@@ -98,8 +110,9 @@ def search(query):
                                in_lecture=False,
                                disable_read_markings=True,
                                no_browser=get_option(request, "noanswers", False))
-    found_docs = list(found_docs)
-    found_docs.sort(key=lambda found_doc: found_doc.path)
+    results = list(results)
+    results.sort(key=lambda r: r.document.path)
     return render_template('search.html',
-                           results=found_docs,
-                           too_many=len(found_docs) >= max_results)
+                           query=query,
+                           results=results,
+                           too_many=len(results) >= max_results)

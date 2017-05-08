@@ -9,6 +9,7 @@ import filelock
 from documentmodel.documentparser import DocumentParser
 from documentmodel.documentparseroptions import DocumentParserOptions
 from documentmodel.documentwriter import DocumentWriter
+from documentmodel.macroinfo import MacroInfo
 from documentmodel.randutils import random_id, hashfunc
 from htmlSanitize import sanitize_html
 from markdownconverter import par_list_to_html_list, expand_macros
@@ -98,7 +99,7 @@ class DocParagraph:
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self.is_same_as(other)
+            return self.is_identical_to(other)
         return NotImplemented
 
     def __ne__(self, other):
@@ -352,6 +353,9 @@ class DocParagraph:
 
         return None
 
+    def is_identical_to(self, par: 'DocParagraph'):
+        return self.is_same_as(par) and self.get_id() == par.get_id()
+
     def is_different_from(self, par: 'DocParagraph') -> bool:
         """Determines whether the given paragraph is different from this paragraph content-wise."""
         return not self.is_same_as(par)
@@ -370,6 +374,19 @@ class DocParagraph:
     def get_markdown(self) -> str:
         """Returns the markdown of this paragraph."""
         return self.__data['md']
+
+    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None) -> str:
+        """Returns the macro-processed markdown for this paragraph.
+
+        :param macroinfo: The MacroInfo to use. If None, the MacroInfo is taken from the document that has the
+        paragraph.
+        :return: The expanded markdown.
+
+        """
+        if macroinfo is None:
+            macroinfo = self.doc.get_settings().get_macroinfo()
+        return expand_macros(self.get_markdown(), macroinfo.get_macros(),
+                             macroinfo.get_macro_delimiter())
 
     def get_title(self) -> Optional[str]:
         """Attempts heuristically to return a title for this paragraph.
@@ -544,8 +561,9 @@ class DocParagraph:
         unloaded_pars = []
         dyn = 0
         l = 0
-        macros = settings.get_macros() if settings else None
-        macro_delim = settings.get_macro_delimiter() if settings else None
+        macroinfo = settings.get_macroinfo()
+        macros = macroinfo.get_macros() if settings else None
+        macro_delim = macroinfo.get_macro_delimiter() if settings else None
         m = str(macros) + macro_delim + str(settings.auto_number_headings()) + str(settings.heading_format())
         for par in pars:
             if par.is_dynamic():
@@ -986,3 +1004,13 @@ class DocParagraph:
 
         """
         self.__data['id'] = par_id
+
+
+def is_real_id(par_id: Optional[str]):
+    """Returns whether the given paragraph id corresponds to some real paragraph
+    instead of being None or a placeholder value ('HELP_PAR').
+    
+    :param par_id: The paragraph id.
+    :return: True if the given paragraph id corresponds to some real paragraph, False otherwise.
+    """
+    return par_id is not None and par_id != 'HELP_PAR'
