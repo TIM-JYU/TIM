@@ -15,13 +15,12 @@ var bundles = [
         modules: 'katex + katex-auto-render', // KaTeX, lazily loaded
         file: 'build/katex.js'
     },
-    // TIM bundle is built separately and will be watched for changes, so no need to build it here.
-    // {
-    //     modules: 'tim/main + tim/slide - (tim/main + tim/slide - [tim/**/*])', // all TIM scripts without external dependencies
-    //     file: 'build/tim.js'
-    // },
     {
-        modules: 'tim/ace', // preconfigured Ace editor
+        modules: 'tim/main + tim/slide - (tim/main + tim/slide - [tim/**/*])', // all TIM scripts without external dependencies
+        file: 'build/tim.js'
+    },
+    {
+        modules: 'tim/ace', // preconfigured Ace editor, lazily loaded
         file: 'build/ace.js'
     },
     {

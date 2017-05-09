@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Builds the NPM package at timApp/static/scripts.
+# This script:
+# - Installs the required NPM and JSPM dependencies.
+# - Builds all JS bundles (ace, chart, deps, imagex, katex, tim).
+# - Creates type declarations for TIM modules (needed for plugins).
+
 # You only need to run this when:
 #  - you build TIM for the first time
 #  - you add or remove external JS libraries (either from NPM or JSPM)
@@ -10,7 +14,5 @@
 ./run_command_workdir.sh timApp/static/scripts npm run fixAll
 ./run_command_workdir.sh timApp/static/scripts npm run build
 
-# This is only needed to get the type declarations for plugins.
+# Create type declarations.
 ./run_command_workdir.sh timApp/static/scripts tsc
-
-./watch_ts_files.sh
