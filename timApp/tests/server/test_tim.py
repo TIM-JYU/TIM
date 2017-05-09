@@ -282,7 +282,7 @@ header: %%username%% and %%realname%%
 
         # Index is visible always
         links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
-        self.assertEqual(len(links), 2)
+        self.assertEqual(len(links), 3)
 
         self.login_test1()
         links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))

@@ -1,11 +1,12 @@
 /* globals angular, $, timLogTime, MathJax */
 
-var timApp = angular.module('timApp');
+var timApp = angular.module('timApp'); // ,['ParCompiler']);
 
 timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer', '$compile', '$ocLazyLoad', '$timeout', '$log',
     function ($http, $window, $q, $httpParamSerializer, $compile, $ocLazyLoad, $timeout, $log) {
         "use strict";
         var parCompiler = {};
+        GlobalParCompiler = parCompiler;
 
         parCompiler.compile = function (data, scope, callback) {
             var simpleDirectiveUrl = '/mmcq/SimpleDirective.js';
@@ -64,7 +65,7 @@ timApp.factory('ParCompiler', ['$http', '$window', '$q', '$httpParamSerializer',
                     parCompiler.mathJaxLoadDefer = $.ajax({
                         dataType: "script",
                         cache: true,
-                        url: "//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_SVG"
+                        url: "//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_SVG"
                     });
                 }
                 parCompiler.mathJaxLoadDefer.done(function () {

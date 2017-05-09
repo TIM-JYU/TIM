@@ -8,6 +8,7 @@ from accesshelper import verify_logged_in
 from responsehelper import json_response
 from sessioninfo import get_current_user_object
 from theme import get_available_themes
+from timdb.tim_models import db
 
 settings_page = Blueprint('settings_page',
                           __name__,
@@ -32,6 +33,7 @@ def show():
 @settings_page.route('/save', methods=['POST'])
 def save_settings():
     get_current_user_object().set_prefs(request.get_json())
+    db.session.commit()
     show()  # Regenerate CSS
     return json_response(get_current_user_object().get_prefs())
 

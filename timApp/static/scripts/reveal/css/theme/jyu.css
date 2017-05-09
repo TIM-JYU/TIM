@@ -30,6 +30,13 @@ body::-ms-backdrop {
   font-weight: normal;
   color: #000; }
 
+.reveal .slides>section.present,
+.reveal .slides>section>section.present {
+    margin-left: 100px !important;
+    margin-right: 100px !important;
+}
+  
+  
 .slides {
     min-width: 80%;
 }

@@ -15,7 +15,7 @@ class CopyCiteTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc(from_file='example_docs/multiple_mmcqs.md')
         d2 = self.create_doc(cite=d.id)
-        self.assertEqual({'source_document': d.id, 'macros': {}}, d2.document.get_settings().get_dict())
+        self.assertEqual({'source_document': d.id}, d2.document.get_settings().get_dict())
         d2_pars = d2.document.get_paragraphs()[1:]
         self.assertListEqual([p.get_id() for p in d.document.get_paragraphs()], [p.get_attr('rp') for p in d2_pars])
         self.assertTrue(all(p.get_attr('r') == 'c' for p in d2_pars))

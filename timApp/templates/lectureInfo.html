@@ -1,10 +1,21 @@
 {% extends "document.html" %}
 {% block title %}Lecture info{% endblock %}
+
+{% block ngmodules %}
+    {{ super() }}
+    {{ (['oc.lazyLoad'] )|map('map_format', "'%s'")|join(', ')|safe }},
+{% endblock %}
+
+
+{% block ngscripts %}
+    {{ super() }}
+    <script src="{{ url_for('bower.static', filename='oclazyload/dist/ocLazyLoad.min.js') }}"></script>
+{% endblock %}
+
 {% block head %}
     {{ super() }}
 
     <script src="{{ url_for('static', filename='scripts/controllers/lectureInfoController.js') }}"></script>
-
     <script>
         var lectureId = {{lectureId|tojson}};
         var lectureCode = {{lectureCode|tojson}};
@@ -15,6 +26,9 @@
 
 {% endblock %}
 {% block content %}
+<pareditor></pareditor>
+<div class="popUpWindow" ng-controller="AnswerToQuestionController">
+        <dynamic-answer-sheet control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
     <div ng-controller="LectureInfoController">
         <pop-up-dialog show="showLectureForm" caption="'Edit lecture'">
             <ng-include
@@ -66,20 +80,27 @@
                 </label>
                 <button class="timButton" ng-click="drawCharts(selectedUser)">Show answers</button>
                 <button class="timButton" ng-show="isLecturer" ng-click="drawCharts()">Show all</button>
-                <a class="timButton" href="/getLectureAnswerTotals/{{ "{{lectureId}}" }}?sum_field_name=sum&count_field_name=cnt">Download as plain text</a>
-                <div ng-if="showPoints || true"> <!-- for some reason this can not be hidden??? -->
+                <a class="timButton" href="/getLectureAnswerTotals/{{ '{{lectureId}}' }}?sum_field_name=sum&count_field_name=cnt">Download as plain text</a>
+                <div>
                     <div ng-repeat="question in questions" style="margin-bottom: 2em">
                         <div ng-show="showPoints">
                             <p>{{ "{{question.nr}}" }}. <span class="bold" ng-bind-html="question.json.questionTitle">{{ "{{question.json.questionTitle}}" }}</span> /
                                <span ng-bind="question.asked_time | timtim"></span>
                             </p>
-                            <!-- <p ng-bind-html="question.json.questionText">{{ "{{question.json.questionText}}" }}</p> -->
-                            <p ng-bind-html="question.json.questionText"></p>
+                            <p ng-bind-html="question.json.questionText" ng-click="dynamicAnswerShowControls[$index].toggle()"></p>
                         </div>
-                        <show-chart-directive canvas='answerChart{{ "{{question.asked_id }}" }}'
-                                              control='dynamicAnswerShowControls[$index]'
-                                              class="chart"></show-chart-directive>
-                        <canvas id='answerChart{{ "{{question.asked_id }}" }}' width='400' height='300'></canvas>
+                        <div class="chartDiv" id='answerChart{{ "{{question.asked_id }}" }}'>
+                            <show-chart-directive canvas='answerChart{{ "{{question.asked_id }}" }}'
+                                                  control='dynamicAnswerShowControls[$index]'
+                                                  class="chart"></show-chart-directive>
+                        </div>
+                            <p ng-show="showPoints && !dynamicAnswerShowControls[$index].isText" class="chart-menu">
+                                <span ng-click="dynamicAnswerShowControls[$index].toggle()">Bar</span>
+                                <span ng-click="dynamicAnswerShowControls[$index].zoom(-1,0)">w-</span>
+                                <span ng-click="dynamicAnswerShowControls[$index].zoom(1,0)">w+</span>
+                                <span ng-click="dynamicAnswerShowControls[$index].zoom(0,-1)">h-</span>
+                                <span ng-click="dynamicAnswerShowControls[$index].zoom(0,1)">h+</span>
+                            </p>
                         <p ng-show="showPoints">Points: <span ng-bind="points[$index]"> </span></p>
                     </div>
                 </div>
@@ -99,3 +120,4 @@
         </div>
     </div>
 {% endblock %}
+

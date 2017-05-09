@@ -272,6 +272,29 @@ class DocumentTest(TimDbTest):
         self.assertEqual('<p>this is anothervalue and year is 2016 and user is %%username%% and</p>',
                          macro_par.get_html())
 
+    def test_macro_expansion_from_reference(self):
+        d1 = self.init_testdoc()
+        d1.set_settings({'macros': {'first': '1', 'second': '2'}})
+        par1 = d1.add_paragraph('d1: %%first%% %%second%% %%third%%')
+        d2 = self.init_testdoc()
+        d2.set_settings({'macros': {'first': '3', 'second': '4', 'third': '5'}})
+        self.assertEqual('d1: 1 2 ', par1.get_expanded_markdown())
+        ref_par1 = par1.create_reference(d2)
+        d2.add_paragraph_obj(ref_par1)
+        deref1 = ref_par1.get_referenced_pars()[0]
+        self.assertEqual('d1: 1 2 ', deref1.get_expanded_markdown())
+        par2 = d2.add_paragraph('d2: %%first%% %%second%% %%third%%')
+        self.assertEqual('d2: 3 4 5', par2.get_expanded_markdown())
+        ref_par2 = par2.create_reference(d1)
+        d1.add_paragraph_obj(ref_par2)
+        deref2 = ref_par2.get_referenced_pars()[0]
+        self.assertEqual('d2: 3 4 5', deref2.get_expanded_markdown())
+
+        self.assertEqual('d1: 3 4 5', deref1.get_expanded_markdown(d2.get_settings().get_macroinfo()))
+        self.assertEqual('d1: 1 2 ', deref1.get_expanded_markdown(d1.get_settings().get_macroinfo()))
+        self.assertEqual('d2: 1 2 ', deref2.get_expanded_markdown(d1.get_settings().get_macroinfo()))
+        self.assertEqual('d2: 3 4 5', deref2.get_expanded_markdown(d2.get_settings().get_macroinfo()))
+
     def test_import(self):
         timdb = self.get_db()
         timdb.documents.import_document_from_file('example_docs/mmcq_example.md',

@@ -35,7 +35,9 @@ fi
 # cd /home/agent/run
 # echo "Running: $cmd" >> /tmp/log/log.txt
 # echo "Running: $cmd" >> log.txt
-chmod 755 ~/$cmd
+#set +e
+#chmod 755 ~/$cmd || echo ""
+#set -e
 #cp $cmd a.sh
 
 if ! [  -z "$savestate"  ]; then

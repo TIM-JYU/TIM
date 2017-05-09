@@ -133,6 +133,10 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
         };
 
         $scope.printDocument = function () {
+            var testi = {
+                "testialkio": "jes toimii",
+                "toka": "ihan jess"
+            }
 
             var modalInstance = $uibModal.open({
                 animation: false,
@@ -141,10 +145,17 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
                 templateUrl: '/static/templates/printDialog.html',
                 controller: 'PrintCtrl',
                 controllerAs: '$ctrl',
-                size: 'md',
+                size: 'sm',
                 resolve: {
                     document: function () {
+                        console.log(document);
+                        console.log($window.item)
                         return $window.item;
+                    },
+                    testaa: function () {
+                        console.log(testi);
+                        console.log(testi.testialkio);
+                        return testi
                     }
                 }
             });

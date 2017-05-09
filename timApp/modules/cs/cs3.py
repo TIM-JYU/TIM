@@ -449,7 +449,8 @@ def get_html(ttype, query):
             print("Ei ollut string: ", code, jso)
             code = '' + str(code)
             # ebycode = html.escape(code)
-        ebycode = code.replace("</pre>", "< /pre>")  # prevent pre ending too early
+        # ebycode = code.replace("</pre>", "</pre>")  # prevent pre ending too early
+        ebycode = code.replace("<", "&lt;").replace(">", "&gt;")
         if tiny:
             lazy_visible = '<div class="lazyVisible csRunDiv csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(
                 query,
@@ -946,9 +947,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if is_gethtml:
             scripts = get_param(query, "scripts", "")
+            inchtml = get_param(query, "html", "")
             p = self.path.split("?")
             print(p, scripts)
-            self.wout(replace_scripts(file_to_string(p[0]), scripts, "%INCLUDESCRIPTS%"))
+            htmlstring = file_to_string(p[0])
+            htmlstring = replace_scripts(htmlstring, scripts, "%INCLUDESCRIPTS%")
+            htmlstring = htmlstring.replace("%INCLUDEHTML%", inchtml)
+            self.wout(htmlstring)
             return
 
         if is_ptauno:
@@ -979,6 +984,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             result_json = {"js": ["/cs/js/dir.js",
                                   "/static/scripts/jquery.ui.touch-punch.min.js",
                                   "/cs/cs-parsons/csparsons.js",
+
                                   # "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML",  # will be loaded by JS lazily
                                   # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
                                   # "https://sagecell.sagemath.org/static/embedded_sagecell.js", # will be loaded by JS lazily
@@ -1555,7 +1561,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 elif ttype == "cc":
                     cmdline = "gcc -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "c++":
-                    cmdline = "g++ -std=c++11 -Wall %s %s -o %s -lm" % (opt, csfname, exename)
+                    cmdline = "g++ -std=c++14 -Wall %s %s -o %s -lm" % (opt, csfname, exename)
                 elif ttype == "py":
                     cmdline = ""
                 elif ttype == "swift":
@@ -1686,7 +1692,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 showname = csfname.replace(basename, "").replace("/tmp//", "")
                 if showname == "prg":
                     showname = ""
-                code, out, err, pwd = (0, "", ("tallennettu " + showname), "")
+                code, out, err, pwd = (0, "", ("Saved " + showname), "")
             elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
                 # code, out, err, pwd = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")
                 code, out, err, pwd = (0, "", ("Compiled " + filename), "")
@@ -2141,7 +2147,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     showname = filename
                     if showname == "prg":
                         showname = ""
-                    code, out, err, pwd = (0, "", ("tallennettu " + showname), "")
+                    code, out, err, pwd = (0, "", ("Saved " + showname), "")
                 elif ttype == "fs":
                     print("Exe: ", exename)
                     code, out, err, pwd = run2(["mono", pure_exename], cwd=prgpath, timeout=10, env=env, stdin=stdin,

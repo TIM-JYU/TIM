@@ -1,10 +1,57 @@
 <div class="modal-header">
-    <h3 class="modal-title" id="modal-title">Printing {{ $ctrl.document.title }}</h3>
+    <h3 class="modal-title" id="modal-title">Printing document {{ $ctrl.document.title }}</h3>
+  <!--  <h4>toimiiko {{ $ctrl.testaa.testialkio }}</h4>
+    <h4>toimiiko {{ $ctrl.testaa }}</h4> -->
 </div>
 <div class="modal-body" id="modal-body">
+    <div class="row div_row">
+        <div class="col-sm-5 col-sm-offset-1 div-height"><span>Font size</span></div>
+        <div class="col-sm-5"><select class="form-control">
+            <option>12</option>
+            <option>16</option>
+            <option>20</option>
+        </select></div>
+    </div>
+    <div class="row div_row">
+        <div class="col-sm-5 col-sm-offset-1"><span>Paper size</span></div>
+        <div class="col-sm-5"><select class="form-control">
+            <option>A4</option>
+            <option>A3</option>
+            <option>A2</option>
+        </select></div>
+    </div>
+    <div class="row div_row">
+        <div class="col-sm-5 col-sm-offset-1"><span>Margin left</span></div>
+        <div class="col-sm-5"><input class="form-control" type="number"></div>
+    </div>
+    <div class="row div_row">
+        <div class="col-sm-5 col-sm-offset-1"><span>Margin right</span></div>
+        <div class="col-sm-5"><input class="form-control" type="number"></div>
+    </div>
 
+    <div class="row div_row">
+        <div class="col-sm-5 col-sm-offset-3"><span>Add cover</span></div>
+    </div>
+    <div class="row div_row">
+        <div class="col-sm-5 col-sm-offset-1"><input type="file" id="input"></div>
+    </div>
+    <div class="row div_row">
+        <div class="col-sm-5 col-sm-offset-1"><label class="checkbox-inline">
+            <input type="checkbox" id="inlineCheckbox1" value="option1"> Print PDF
+        </label></div>
+        <div class="col-sm-6"><label class="checkbox-inline">
+            <input type="checkbox" id="inlineCheckbox2" value="option2"> Print LaTeX
+        </label></div>
+    </div>
+    <div class="row div_row">
+        <div class="col-sm-5 col-sm-offset-1"><label class="checkbox-inline">
+            <input type="checkbox" id="checkbox_save_pdf" value="option2"> Save PDF
+        </label></div>
+    </div>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-primary" type="button" ng-click="$ctrl.ok()">OK</button>
-    <button class="btn btn-error" type="button" ng-click="$ctrl.cancel()">Cancel</button>
+    <div>
+        <button class="btn btn-primary" type="button" ng-click="$ctrl.ok()">Print document</button>
+        <button class="btn btn-error" type="button" ng-click="$ctrl.cancel()">Cancel</button>
+    </div>
 </div>
