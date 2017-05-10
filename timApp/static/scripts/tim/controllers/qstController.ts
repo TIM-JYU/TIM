@@ -111,6 +111,7 @@ qstApp.Controller = function($scope, $http, $transclude, $interval) {
 
 };
 
+qstApp.Controller.$inject = ["$scope", "$http", "$transclude", "$interval"];
 
 qstApp.initScope = function (scope, element, attrs) {
 "use strict";
