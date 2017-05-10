@@ -1,6 +1,6 @@
 import $ from "jquery";
 
-$(document).ready(function () {
+$(function () {
     // Scale of the map
     var scale = 0.5;
 

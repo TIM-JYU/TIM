@@ -297,7 +297,7 @@ timApp.controller("ViewCtrl", [
         // Call necessary initialization functions below this line. Define any scope functions above this line.
 
         // from https://stackoverflow.com/a/7317311
-        $(document).ready(() => {
+        $(() => {
             sc.processQuestions();
             $window.addEventListener("beforeunload", function (e) {
                 if (!sc.editing) {
