@@ -11,6 +11,8 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
         var $ctrl = this;
         $ctrl.document = document;
         $ctrl.get_settings = get_settings;
+        $ctrl.defaultTemplate = "http://www.google.com";
+        $ctrl.customTemplate = "http://www.is.fi";
 
         $ctrl.ok = function () {
             var locationProtocol = $location.protocol();
