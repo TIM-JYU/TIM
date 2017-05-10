@@ -2,7 +2,7 @@
 
 import {timApp} from "tim/app";
 import angular from "angular";
-import rangyinputs = require("rangyinputs");
+import rangyinputs from "rangyinputs";
 import $ from "jquery";
 import * as draggable from "tim/directives/draggable";
 import {markAsUsed} from "tim/utils";

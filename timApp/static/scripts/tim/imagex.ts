@@ -1,5 +1,5 @@
 import angular from "angular";
-import ngSanitize = require("angular-sanitize");
+import ngSanitize from "angular-sanitize";
 import * as timHelper from "tim/timHelper";
 import {editorChangeValue} from "tim/editorScope";
 import {markAsUsed} from "tim/utils";

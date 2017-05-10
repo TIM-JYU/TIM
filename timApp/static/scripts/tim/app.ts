@@ -4,7 +4,7 @@ import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import ngMessages from "angular-messages";
 import timer from "angular-timer";
 import humanizeDuration from "humanize-duration";
-import ngSanitize = require("angular-sanitize");
+import ngSanitize from "angular-sanitize";
 import uibootstrap from "angular-ui-bootstrap";
 import {Moment} from "moment";
 import ngFileUpload from "ng-file-upload";
