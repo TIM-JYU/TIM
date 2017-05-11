@@ -9,7 +9,8 @@
     "buildDev": "jspm bundle tim/main + tim/slide - \"(tim/main + tim/slide - [tim/**/*])\" build/tim.js -wd",
     "fixKatex": "node fix-katex-auto-render.js",
     "fixSourceMaps": "node fix-sourcemaps.js",
-    "fixAll": "npm run fixKatex && npm run fixSourceMaps"
+    "fixWatcher": "node fix-watcher.js",
+    "fixAll": "npm run fixKatex && npm run fixSourceMaps && npm run fixWatcher"
   },
   "repository": {
     "type": "git",
