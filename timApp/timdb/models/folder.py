@@ -168,6 +168,10 @@ class Folder(db.Model, Item):
         else:
             return None
 
+    def get_all_documents(self) -> List[DocEntry]:
+        return DocEntry.query.filter(DocEntry.name.contains(self.get_full_path()))
+
+
     @staticmethod
     def create(path: str, owner_group_id: int, title=None, commit=True, apply_default_rights=False) -> 'Folder':
         """Creates a new folder with the specified name. If the folder already exists, it is returned.
