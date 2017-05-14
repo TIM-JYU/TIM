@@ -17,6 +17,11 @@ class PrintedDoc(db.Model):
     temp = db.Column(db.Boolean, default=True, nullable=False)
     created = db.Column(db.DateTime(timezone=True), default=func.now(), nullable=False)
 
-
+    @staticmethod
     def get_by_id(printed_doc_id: int):
+        """
+        Returns the PrintedDoc elements that have been produced from the DocEntry with the with the given id
+        :param printed_doc_id:
+        :return: PrintedDocs with the given source doc
+        """
         return db.session.query(PrintedDoc).filter_by(id=printed_doc_id).first()
