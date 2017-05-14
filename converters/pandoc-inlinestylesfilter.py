@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/local/env python3
 
 """
 Pandoc filter to convert class values to commands of same name in latex. Leaves
@@ -7,26 +7,42 @@ Pandoc filter to convert class values to commands of same name in latex. Leaves
 
 from pandocfilters import toJSONFilter, Span, attributes, Str, RawInline
 
+
 def classes_to_latex_cmds(key, value, format, meta):
-  if key == 'Span' and format == 'latex':
-      [[_id, classes, kvs], contents] = value
+    if key == 'Span' and format == 'latex':
+        [[ident, classes, kvs], contents] = value
 
-    _classes_to_wrap = []
-    for _class in classes:
-        if _class not in ["csl-no-emph", "csl-no-strong", "csl-no-smallcaps"]:
-            _classes_to_wrap.append(_class)
+        # debugging
+        # return Span([id, classes, kvs], contents)
 
-    return Span(attributes({'id': _id,'class': ""}),
-                           wrap_with_latex_cmds(contents, _classes_to_wrap))
+        classes_to_wrap = []
+        for c in classes:
+            if c not in ["csl-no-emph", "csl-no-strong", "csl-no-smallcaps"]:
+                classes_to_wrap.append(c)
+
+        # TODO: should preserve also the aforementioned predef styles
+
+        # TODO: the input 'contents' is a list, output should be a list of inline elements
+
+        content = wrap_with_latex_cmds(contents, classes_to_wrap)
+
+        return Span([ident, classes, kvs], content)
 
 
-def wrap_with_latex_cmds(element, classes_to_wrap):
+def wrap_with_latex_cmds(content, classes_to_wrap):
     if len(classes_to_wrap) <= 0:
-        return ''
+        return content
     else:
         c = classes_to_wrap[0]
-        return '\\%s{%s}' % (c, wrap_with_latex_cmds(classes_to_wrap[1:]))
+        if len(classes_to_wrap) > 1:
+            content = wrap_with_latex_cmds(content, classes_to_wrap[1:])
+        return [latex("\\%s{" % c)] + content + [latex("}")]
 
+        # return [latex("\\%s{" % c)] + content + [latex("}")]
+
+
+def latex(content):
+    return RawInline('latex', content)
 
 if __name__ == "__main__":
     toJSONFilter(classes_to_latex_cmds)
