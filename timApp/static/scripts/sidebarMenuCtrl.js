@@ -166,6 +166,10 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
                 $log.info('Modal dismissed at: ' + new Date());
             });
         };
+
+        $scope.cssPrint = function () {
+          window.print();
+        };
     }
 ])
 ;

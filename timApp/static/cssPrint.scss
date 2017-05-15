@@ -1,78 +1,105 @@
 //Tuomas Porvali
 //The collection of fixes and band-aids for TIM browser printing.
+[id='break']{
+  text-align: center;
+  color: deeppink;
+}
+
+@page{
+  size: A4;
+}
+
 
 @media print and (color) {
 
+  //This forces h1 elemet to ignore page-break (Remove this. This shouldn't be here.)
+  //[id='3lUURaXWmQvB'] .parContent h1{ //Replace 3lUURaXWmQvB with apporiate id.
+  //page-break-before: initial !important;
+  //background-color: green !important;
+  //}
 
- //This forces the first h1 to ignore page-break (Remove this. This shouldn't be here.)
-//[id='3lUURaXWmQvB'] .parContent h1{ //Replace 3lUURaXWmQvB with apporiate id.
- //page-break-before: initial !important;
- //background-color: green !important;
-//}
+  .firstH1 {
+    page-break-before: initial !important;
+    //background-color: green !important;
+  }
 
   //Forces page-break.
-[id='break']{
-page-break-after: always!important;
-}
+  [id='break'] {
+    page-break-after: always !important;
+    //display: none;
+  }
+
+  [id='break'] p{
+    display: none;
+  }
+
+  [id='noBreak']{
+    page-break-inside: avoid !important;
+  }
 
   //Makes printing possible. I was unable to find any other solution
-* {
-float: none !important;
-}
+  * {
+    float: none !important;
+  }
 
   //Useful to highlight pars
-//.par { border: 1px solid black !important;}
-
+  //.par { border: 1px solid black !important;}
 
   //Basic stuff
-.paragraphs .parContent p{
- page-break-inside: avoid;
- //page-break-after: always;
- text-align: justify;
- margin-left: 1em;
-}
+  .paragraphs .parContent p {
+    page-break-inside: avoid;
+    //page-break-after: always;
+    text-align: justify;
+    margin-left: 1em;
+  }
 
-  .paragraphs .console{
+  .paragraphs .console {
     color: #000000;
   }
 
-code{
-word-wrap: break-word;
-}
+  code {
+    word-wrap: break-word;
+  }
 
-h1{ 
- page-break-before: always;
-}
+  h1 {
+    page-break-before: always;
+  }
 
-h2:only-of-type, h3:only-of-type, h4:only-of-type{
-margin-left: 0em !important;
-page-break-after: avoid !important;
-//background-color: yellow !important;
-}
+  h2:only-of-type, h3:only-of-type, h4:only-of-type {
+    margin-left: 0em !important;
+    page-break-after: avoid !important;
+    //background-color: yellow !important;
+  }
 
-.btn-primary, .timButton, .paragraphs .parContent .mcq button, .paragraphs .parContent .mmcq button, .slides .parContent .mcq button, .slides .parContent .mmcq button, .editorButton, button.showMap, .wideButton{
-display: none;
-}
+  .btn-primary, .timButton, .paragraphs .parContent .mcq button, .paragraphs .parContent .mmcq button, .editorButton, button.showMap, .wideButton {
+    display: none;
+  }
 
-.csRunMenu, .answerBrowser, .answerBrowser, .actionButtons, .readsection, .par>.headerlink, .headerlink{
-display: none;
-}
 
-.paragraphs .csRunDiv{
- //border-style: none;
-}
 
-.paragraphs .csRunDiv .csRunArea{
-//border: none;
-}
+  .csRunMenu, .answerBrowser, .answerBrowser, .actionButtons, .readsection, .par > .headerlink, .headerlink, dialog {
+    display: none;
+  }
 
-table {
-  //page-break-inside: avoid;
-}
+  .paragraphs .csRunDiv {
+    //border-style: none;
+  }
 
-textarea {
-resize: none;
-}
+  .paragraphs .csRunDiv .csRunArea {
+    //border: none;
+  }
+
+  .parContent {
+    page-break-inside: avoid;
+  }
+
+  table {
+    //page-break-inside: avoid;
+  }
+
+  textarea {
+    resize: none;
+  }
 
   //Work in progress
   .notes {
@@ -81,37 +108,36 @@ resize: none;
     margin-bottom: 15px;
     margin-left: 23em;
     width: 60%;
- }
+  }
 
-  .notes span
-  {
+  .notes span {
     display: none;
   }
 
-div[id^="Plugin"]{
-margin-bottom: 50px;
-//page-break-inside: avoid;
-}
-
-  .paragraphs .csPlugin{
-     margin-left: 1em;
+  div[id^="Plugin"] {
+    margin-bottom: 50px;
+    //page-break-inside: avoid;
   }
 
-  .paragraphs .csPlugin pre{
-     margin-left: 0em;
-     border-left:none;
+  .paragraphs .csPlugin {
+    margin-left: 1em;
   }
 
-   pre{
-     margin-left: 1em;
+  .paragraphs .csPlugin pre {
+    margin-left: 0em;
+    border-left: none;
   }
 
-  .parlink{
+  pre {
+    margin-left: 1em;
+  }
+
+  .parlink {
     position: inherit;
   }
 
-  .parlink sup:after{
-      content: "Testi";
+  .parlink sup:after {
+    content: "Testi";
   }
 
 }

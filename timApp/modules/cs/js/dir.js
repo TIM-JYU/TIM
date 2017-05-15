@@ -465,7 +465,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   '</p>' +
                   '<div class="csRunMenuArea" ng-if="!forcedupload">'+
 				  '<p class="csRunMenu" >' +
-				  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();" ng-init="runCssPrint();" ng-bind-html="buttonText"></button>&nbsp&nbsp'+
+				  '<button ng-if="isRun"  ng-disabled="isRunning" title="(Ctrl-S)" ng-click="runCode();" ng-bind-html="buttonText"></button>&nbsp&nbsp'+
 				  '<button ng-if="isTest" ng-disabled="isRunning" ng-click="runTest();">Test</button>&nbsp&nbsp'+
 				  '<button ng-if="isUnitTest" ng-disabled="isRunning" ng-click="runUnitTest();">UTest</button>&nbsp&nbsp'+
 				  '<span ng-if="isDocument"><a href="" ng-disabled="isRunning" ng-click="runDocument();">{{docLink}}</a>&nbsp&nbsp</span>'+
@@ -613,8 +613,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"rows",1);
 			csApp.set(scope,attrs,"cols",10);
 			csApp.set(scope,attrs,"maxrows",100);
-			csApp.set(scope,attrs,"cssPrint",false);
-			csApp.set(scope,attrs,"cssRunPlugin", false);
+			csApp.set(scope,attrs,"cssPrint",false);// For changing code editors to pre-defined paragraphs.
 			csApp.set(scope,attrs,"attrs.bycode");
 			csApp.set(scope,attrs,"placeholder", scope.tiny ? "" : english ? "Write your code here": "Kirjoita koodi tähän:");
 			csApp.set(scope,attrs,"inputplaceholder",english ? "Write your input here": "Kirjoita syöte tähän");
@@ -761,7 +760,7 @@ csApp.directiveFunction = function(t,isInput) {
             //scope.out = element[0].getElementsByClassName('console');
             if ( scope.attrs.autorun ) scope.runCodeLink(true);
             scope.editorIndex = 0;
-            if ( scope.editorMode != 0 || scope.editorModes !== "01" || scope.cssPrint) scope.showOtherEditor(scope.editorMode);
+            if ( scope.editorMode != 0 || scope.editorModes !== "01" || scope.cssPrint) scope.showOtherEditor(scope.editorMode); //Forces code editor to change to pre
             scope.mode = languageTypes.getAceModeType(scope.type,"");
             
             var styleArgs = csApp.getParam(scope,"style-args","");
@@ -1266,11 +1265,6 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 	
 	$scope.runCode = function() {
 		$scope.runCodeCommon(false);
-	};
-
-	$scope.runCssPrint = function() {
-	    if($scope.cssPrint && $scope.cssRunPlugin)
-		    $scope.runCodeCommon(false);
 	};
 	
 	$scope.runTest = function() {
@@ -2050,8 +2044,11 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
 
         var parsonsHtml = '<div class="no-popup-menu"></div>';
 
-        var html = [editorHtml,aceHtml,parsonsHtml,parsonsHtml];                    
-        if ($scope.cssPrint) html = [cssHtml, cssHtml, cssHtml, cssHtml];
+        var html;
+        if ($scope.cssPrint)
+            html = [cssHtml, cssHtml, cssHtml, cssHtml];
+        else
+            html = [editorHtml,aceHtml,parsonsHtml,parsonsHtml];
 
         $scope.mode = languageTypes.getAceModeType($scope.type,"");
         if (typeof editorMode !== 'undefined') $scope.editorMode = editorMode;
@@ -2295,7 +2292,6 @@ csApp.Controller = function($scope,$http,$transclude,$sce, Upload, $timeout) {
             this.$apply(fn);
         }
     };
-
 };
 
      /* Heh, lisätäänpä fillCircle kontekstiin :) */
