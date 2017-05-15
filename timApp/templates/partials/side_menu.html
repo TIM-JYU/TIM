@@ -29,6 +29,9 @@
                 <h5>Print document</h5>
                 <button class="timButton" ng-click="printDocument()">Print document</button>
             {% endif %}
+            {% if item %}
+                <button class="timButton" ng-click="cssPrint()">Browser print</button>
+            {% endif %}
             <div ng-show="lectureSettings.inLecture">
                 <h5>Lecture settings</h5>
                 <div class="checkbox">

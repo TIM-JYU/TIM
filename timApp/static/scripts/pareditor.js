@@ -357,6 +357,18 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }
                     });
 
+                    editor.commands.addCommand({
+                        name: 'pageBreak',
+                        bindKey: {
+                            win: 'Ctrl-M',
+                            mac: 'Command-M',
+                            sender: 'editor|cli'
+                        },
+                        exec: function (env, args, request) {
+                            $scope.pageBreakClicked();
+                        }
+                    });
+
                     if (text) editor.getSession().setValue(text);
                 };
 
@@ -1391,6 +1403,35 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.editor.surroundSelectedText('\\sqrt {', '}', 'select');
                     };
                     //TEX
+
+                    $scope.pageBreakClicked = function () {
+                        var editor = $scope.editor.get(0);
+                        var selection = $scope.editor.getSelection();
+                        var value = $scope.editor.val();
+                        var cursor = selection.start;
+                        $scope.selectLine(true);
+
+                        var lineToBreak = $scope.editor.getSelection().text;
+                        var toKeepInLine;
+
+                        if(lineToBreak.length > 0) {
+                            toKeepInLine = value.substring(editor.selectionStart, cursor) + "\n";
+                        } else {
+                            toKeepInLine = "";
+                        }
+                        var toNextLine;
+                        if ((editor.selectionEnd - cursor) > 0) {
+                            toNextLine = value.substring(cursor, editor.selectionEnd);
+                        } else {
+                            toNextLine = "";
+                        }
+                        toNextLine = toNextLine.trim();
+
+                        var breakline = '\n<div id="break"><p>!================!Page Break!================!</p></div>';
+
+                        $scope.editor.replaceSelectedText(toKeepInLine + breakline +"\n" + toNextLine);
+                    };
+
                     $scope.setTextAreaControllerFunctions();
                 };
 
@@ -1696,6 +1737,35 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.snippetManager.insertSnippet($scope.editor, "\\sqrt{${0:$SELECTION}}");
                     };
                     //TEX
+
+                    $scope.pageBreakClicked = function () {
+                        var cursor = $scope.editor.getCursorPosition();
+                        var line = $scope.editor.session.getLine(cursor.row);
+                        var range = $scope.editor.getSelection().getRange();
+                        range.start.column = 0;
+                        range.end.column = line.length;
+
+                        var toKeepInLine;
+                        if(line.length > 0) {
+                            toKeepInLine = line.substring(0, cursor.column) + "\n";
+                        } else {
+                            toKeepInLine = "";
+                        }
+                        var toNextLine;
+                        if ((line.length - cursor.column) > 0) {
+                            toNextLine = line.substring(cursor.column, line.end);
+                        } else {
+                            toNextLine = "";
+                        }
+                        toNextLine = toNextLine.trim();
+
+                        var breakline = '\n<div id="break"><p>!================!Page Break!================!</p></div>';
+
+                        $scope.editor.selection.setRange(range);
+                        $scope.editor.insert(toKeepInLine + breakline +"\n" + toNextLine);
+                        $scope.wrapFn();
+                    };
+
                     $scope.setAceControllerFunctions();
                 };
 

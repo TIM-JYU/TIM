@@ -177,6 +177,10 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
                     $scope.openPrintDialog(data.data);
                 });
         };
+
+        $scope.cssPrint = function () {
+          window.print();
+        };
     }
 ])
 ;
