@@ -5,17 +5,15 @@
 var angular, $;
 var timApp = angular.module('timApp');
 
-timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '$uibModal', 'document', '$uibModalInstance', '$location', 'testaa',
+timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '$uibModal', 'document', '$uibModalInstance', '$location', 'get_settings',
 
-    function ($scope, $http, $window, $uibModal, Users, $log, document, $uibModalInstance, $location, testaa) {
+    function ($scope, $http, $window, $uibModal, Users, $log, document, $uibModalInstance, $location, get_settings) {
         var $ctrl = this;
         $ctrl.document = document;
-        $ctrl.testaa = testaa;
-        /**
-         $scope.printDocument = function () {
-            alert("testi");
-        }
-         */
+        $ctrl.get_settings = get_settings;
+        $ctrl.defaultTemplate = "http://www.google.com";
+        $ctrl.customTemplate = "http://www.is.fi";
+
         $ctrl.ok = function () {
             var locationProtocol = $location.protocol();
             var locationHost = $location.host();

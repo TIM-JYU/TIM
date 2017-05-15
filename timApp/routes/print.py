@@ -8,16 +8,14 @@ from flask import Blueprint, send_file
 from flask import Response
 from flask import g
 from flask import abort
-from flask import current_app
+from flask import jsonify
 
-import sessioninfo
 from accesshelper import verify_logged_in
+from dbaccess import get_timdb
 from timdb.models.docentry import DocEntry
 from documentprinter import DocumentPrinter, PrintingError
 from timdb.printsettings import PrintSettings
-from timdb.printsettings import PrintFormat
-from timdb.models.printeddoc import PrintedDoc
-from timdb.tim_models import db
+from timdb.tim_models import PrintedDoc
 
 print_blueprint = Blueprint('print',
                    __name__,
@@ -27,19 +25,8 @@ print_blueprint = Blueprint('print',
 @print_blueprint.before_request
 def do_before_requests():
     verify_logged_in()
-    g.user = sessioninfo.get_current_user_object()
-
-
-@print_blueprint.url_value_preprocessor
-def pull_doc_path(endpoint, values):
-    if current_app.url_map.is_endpoint_expecting(endpoint, 'doc_path'):
-        doc_path = values['doc_path']
-        if doc_path is None:
-            abort(400)
-        g.doc_path = doc_path
-        g.doc_entry = DocEntry.find_by_path(doc_path, try_translation=True)
-        if not g.doc_entry:
-            abort(404)
+    # g.PrintSettings = PrintSettings(get_current_user_object())
+    g.PrintSettings = PrintSettings()
 
 
 @print_blueprint.route("/latex/<path:doc_path>", methods=['GET'])
@@ -47,69 +34,44 @@ def print_document_as_latex(doc_path):
     doc = DocEntry.find_by_path(doc_path)
     settings_used = PrintSettings()
 
-#    path_to_doc = fetch_document_from_db(doc_entry=doc, file_type='latex', settings=settings_used)
-#    if path_to_doc is "":
-#        path_to_doc = create_printed_doc(doc_entry=doc, file_type='latex', temp=True, settings=PrintSettings())
-    return Response(PrintSettings.read_settings(doc, g.user), mimetype='text/plain')
+    path_to_doc = fetch_document_from_db(doc_entry=doc, file_type='latex', settings=settings_used)
+    if path_to_doc is "":
+        path_to_doc = create_printed_doc(doc_entry=doc, file_type='latex', temp=True, settings=PrintSettings())
+    return send_file(path_to_doc, mimetype='application/x-latex')
 
 
 @print_blueprint.route("/pdf/<path:doc_path>", methods=['GET'])
 def print_document_as_pdf(doc_path):
-    doc = g.doc_entry
+    doc = DocEntry.find_by_path(doc_path)
     settings_used = PrintSettings()
 
-    path_to_doc = fetch_document_from_db(doc_entry=doc, file_type=PrintFormat.PDF, settings=settings_used)
-    if path_to_doc is None:
-        path_to_doc = create_printed_doc(doc_entry=doc, file_type=PrintFormat.PDF, temp=True, settings=settings_used)
+    path_to_doc = fetch_document_from_db(doc_entry=doc, file_type='pdf', settings=settings_used)
+    if path_to_doc is "":
+        path_to_doc = create_printed_doc(doc_entry=doc, file_type='pdf', temp=True, settings=settings_used)
     return send_file(filename_or_fp=path_to_doc, mimetype='application/pdf')
 
 
-@print_blueprint.route("/getDefaultTemplate/<path:doc_path>", methods=['GET'])
-def get_default_template(doc_path):
-    # Gets the latest default printing template from the tree
-    # Precedence is determined such that newest equals closest to the document
-    # atm. only for testing
-    doc = g.doc_entry
-    template_doc = None
-    if doc is not None:
-        template_doc = DocumentPrinter.get_default_template(doc_entry=doc)
-    template_content = None
-    if template_doc is not None:
-        template_content = DocumentPrinter(doc_entry=template_doc, print_settings=PrintSettings())._content
-
-    if template_content is None:
-        abort(404)
-    else:
-        return Response(template_content, mimetype='text/plain')
-
-
-@print_blueprint.route("/getCustomTemplate/<path:doc_path>", methods=['GET'])
-def get_custom_template(doc_path):
-    # Gets the custom template file for the document
-    # The template is presumed to be located at <doc_folder>/Templates/<doc_name>
-    # If the template does not exist, such a file is created by copying the latest default template
-    # and the new document is returned.
-    doc = g.doc_entry
-    template_doc = None
-    if doc is not None:
-        template_doc = DocumentPrinter.get_custom_template(doc_entry=doc)
-    template_content = None
-    if template_doc is not None:
-        template_content = DocumentPrinter(doc_entry=template_doc, print_settings=PrintSettings())._content
-
-    if template_content is None:
-        abort(404)
-    else:
-        return Response(template_content, mimetype='text/plain')
-
-
-
-@print_blueprint.route("/editSettings", methods=['POST'])
+@print_blueprint.route("/edit_settings", methods=['POST'])
 def edit_settings():
     return
 
+@print_blueprint.route("/get_settings/<path:doc_path>", methods=['GET'])
+def get_settings(doc_path):
+    """
+    :return: Print settings
+    :TODO: Get real settings
+    """
 
-def fetch_document_from_db(doc_entry: DocEntry, file_type: PrintFormat, settings: PrintSettings) -> Optional[str]:
+    settings = {
+        "doc_settings" : {
+            "fontSize": 12,
+            "paperSize": "A4"
+        }
+    }
+    return jsonify(settings)
+
+
+def fetch_document_from_db(doc_entry: DocEntry, file_type: str, settings: PrintSettings) -> str:
     """
     Fetches the given document from the database.
 
@@ -119,20 +81,21 @@ def fetch_document_from_db(doc_entry: DocEntry, file_type: PrintFormat, settings
     :return:
     """
 
+    db = get_timdb()
     path = DocumentPrinter(doc_entry=doc_entry, print_settings=settings).get_print_path(file_type=file_type)
     identical_document = db.session.query(PrintedDoc).\
         filter(PrintedDoc.doc_id == doc_entry.document.doc_id).\
         filter(PrintedDoc.path_to_file == path).\
         filter(PrintedDoc.settings_hash == settings.hash_value).first()
     if identical_document is None:
-        return None
+        return ""
     elif not os.path.exists(identical_document.path_to_file):
-        return None
+        return ""
     else:
         return identical_document.path_to_file
 
 
-def create_printed_doc(doc_entry: DocEntry, file_type: PrintFormat, temp: bool, settings: PrintSettings) -> str:
+def create_printed_doc(doc_entry: DocEntry, file_type: str, temp: bool, settings: PrintSettings) -> str:
     """
     Adds a marking for a printed document to the db
 
@@ -157,14 +120,21 @@ def create_printed_doc(doc_entry: DocEntry, file_type: PrintFormat, temp: bool, 
         with open(path, mode='wb') as doc_file:
             doc_file.write(printer.write_to_format(file_type=file_type))
 
+        db = get_timdb()
+
         p_doc = PrintedDoc(doc_id=doc_entry.document.doc_id,
                            path_to_file=path,
-                           temp=temp,
+                           temp=True,
                            settings_hash=settings.hash_value)
 
         db.session.add(p_doc)
-        db.session.commit()
+        db.commit()
 
         return p_doc.path_to_file
     except PrintingError as err:
         abort(403, str(err))
+
+
+def get_printed_document_from_db(printed_doc_id: int):
+    db = get_timdb()
+    return db.session.query(PrintedDoc).filter(PrintedDoc.id == printed_doc_id).first()
