@@ -165,7 +165,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
             }, function () {
                 $log.info('Modal dismissed at: ' + new Date());
             });
-        }
+        };
 
         /**
          *  Gets print settings
