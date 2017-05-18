@@ -47,7 +47,7 @@
 
   //Basic stuff
   .paragraphs .parContent p {
-    page-break-inside: avoid;
+    //page-break-inside: avoid;
     //page-break-after: always;
     text-align: justify;
     margin-left: 1em;
@@ -63,9 +63,10 @@
 
   h1 {
     page-break-before: always;
+    margin-left: 0.5em;
   }
 
-  h2:only-of-type, h3:only-of-type, h4:only-of-type {
+  h2, h3, h4 {
     margin-left: 0em !important;
     page-break-after: avoid !important;
     //background-color: yellow !important;
@@ -77,12 +78,30 @@
 
 
 
-  .csRunMenu, .answerBrowser, .answerBrowser, .actionButtons, .readsection, .par > .headerlink, .headerlink, dialog {
+  .csRunMenu, .answerBrowser, .answerBrowser, .actionButtons, .readsection, .par > .headerlink, .headerlink, dialog, .editline {
     display: none;
   }
 
   .paragraphs .csRunDiv {
     //border-style: none;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+    //display: inline;
+    position: static;
+    overflow: visible;
+    //page-break-inside: avoid;
+  }
+
+  .csEditorAreaDiv{
+    //display: inline;
+    position: static;
+    overflow: visible;
+  }
+
+  .csrunEditorDiv{
+    position: static;
+    overflow: visible;
   }
 
   .paragraphs .csRunDiv .csRunArea {
@@ -90,7 +109,7 @@
   }
 
   .parContent {
-    page-break-inside: avoid;
+    //page-break-inside: avoid;
   }
 
   table {

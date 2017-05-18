@@ -218,60 +218,6 @@
         </bootstrap-panel>
     {% endif %}
     <p id="test"></p>
-    <script>
-
-            $(".par:eq(0) > .parContent > h1").attr("class", "firstH1");
-
-            if($(".par:eq(0)").has(".parContent").has(".docsettings").length)
-                $(".par:eq(1) > .parContent > h1").attr("class", "firstH1");
-            /*
-            var kork = 0;
-            var mKork = 400;
-            var pbr = 0;
-            var group = [];
-            var previouspar = $(".par").first();
-
-            $(".par").each(function (i, obj) {
-                //$(this).css("background-color", generateColor());
-                if(group.length){
-                    alert(group);
-                    $(group).wrapAll("<div id='noBreak'></div>");
-                }
-                    //$(group).wrapAll("<div id='noBreak'></div>");
-                group = [];
-
-                if($(previouspar).has(".parContent").has("h2").length
-                    || $(previouspar).has(".parContent").has("h3").length
-                    || $(previouspar).has(".parContent").has("h4").length
-                    || $(previouspar).has(".parContent").has("h5").length){
-
-                    $(previouspar).before("<p>Ennen</p>");
-                    $(obj).after("<p>Jälkeen</p>");
-
-                    var vari = generateColor();
-                    $(previouspar).css("background-color", vari);
-                    $(obj).css("background-color", vari);
-
-                    group.push($(previouspar));
-                    group.push($(obj));
-                }
-
-                previouspar = $(this);
-            });
-
-
-            //alert(pbr);
-            */
-            function generateColor() {
-                var letters = '0123456789ABCDEF';
-                var color = '#';
-                for (var i = 0; i < 6; i++){
-                    color += letters[Math.floor(Math.random() * 16)];
-                }
-
-                return color;
-            }
-
-    </script>
+    <script src="{{ url_for('static', filename='scripts/CssPrint.js') }}"></script>
 
 {% endblock %}

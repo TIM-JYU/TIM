@@ -1,33 +1,33 @@
+@media print{
+
+//Kappaleteksti
 .parContent p{
 font-size: 16px;
 font-family: Verdana;
 }
 
+//Otskikko 1
 .parContent h1{
 font-size: 32px;
 font-family: Verdana;
 }
 
+//Otskikko 2
 .parContent h2{
 font-size: 24px;
 font-family: Verdana;
 }
 
+//Otskikko 3
 .parContent h3{
 font-size: 21px;
 font-family: Verdana;
 }
 
+//Otskikko 4
 .parContent h4{
 font-size: 18px;
 font-family: Verdana;
-}
-
-//Muut asetukset
-@media print{
-
-.notes{//Piilota kommentit
-display: initial;//None;Initial
 }
 
 }
