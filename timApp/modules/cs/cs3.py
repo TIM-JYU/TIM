@@ -354,6 +354,68 @@ def delete_extra_files(extra_files, prgpath):
                 print("Can not delete: ", efilename)
 
 
+def get_md(ttype, query):
+    tiny = False
+
+    if query.hide_program:
+        get_param_del(query, 'program', '')
+
+    js = query_params_to_map_check_parts(query)
+    if "byFile" in js and not ("byCode" in js):
+        js["byCode"] = get_url_lines_as_string(
+            js["byFile"])  # TODO: Tähän niin että jos tiedosto puuttuu, niin parempi tieto
+    bycode = ""
+    if "byCode" in js:
+        bycode = js["byCode"]
+    if get_param(query, "noeditor", False):
+        bycode = ""
+
+    qso = json.dumps(query.jso)
+    print(qso)
+    uf = get_param(query, "uploadedFile", None)
+    ut = get_param(query, "uploadedType", None)
+    uf = get_json_eparam(query.jso, "state", "uploadedFile", uf)
+    ut = get_json_eparam(query.jso, "state", "uploadedType", ut)
+    if uf and ut:
+        js["uploadedFile"] = uf
+        js["uploadedType"] = ut
+
+    jso = json.dumps(js)
+    print(jso)
+    runner = 'cs-runner'
+    # print(ttype)
+    is_input = ''
+    if "input" in ttype or "args" in ttype:
+        is_input = '-input'
+    if "comtest" in ttype or "junit" in ttype:
+        runner = 'cs-comtest-runner'
+    if "tauno" in ttype:
+        runner = 'cs-tauno-runner'
+    if "simcir" in ttype:
+        runner = 'cs-simcir-runner'
+        bycode = ''
+    if "tiny" in ttype:
+        runner = 'cs-text-runner'
+        tiny = True
+    if "parsons" in ttype:
+        runner = 'cs-parsons-runner'
+    if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype:
+        runner = 'cs-jypeli-runner'
+    if "sage" in ttype:
+        runner = 'cs-sage-runner'
+
+    usercode = get_json_eparam(query.jso, "state", "usercode", "")
+
+    r = runner + is_input
+
+    if "csconsole" in ttype:  # erillinen konsoli
+        r = "cs-console"
+
+    s = '\\begin{verbatim}\n' + usercode + '\\end{verbatim}'
+
+    return s
+
+
 def get_html(ttype, query):
     user_id = get_param(query, "user_id", "--")
     tiny = False
@@ -778,8 +840,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         print("do_POST =================================================")
+        multimd = self.path.find('/multimd') >= 0
 
-        if self.path.find('/multihtml') < 0:
+        if self.path.find('/multihtml') < 0 and not multimd:
             self.do_all(post_params(self))
             return
 
@@ -826,7 +889,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if is_parsons:
                 ttype = 'parsons'
             check_fullprogram(query, True)
-            s = get_html(ttype, query)
+            if multimd:
+                s = get_md(ttype, query)
+            else:
+                s = get_html(ttype, query)
             # print(s)
             htmls.append(s)
 
@@ -993,7 +1059,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css",
                                    "/cs/css/mathcheck.css"
-                                   ], "multihtml": True}
+                                   ], "multihtml": True, "multimd": True}
             if is_parsons:
                 result_json = {"js": ["/cs/js/dir.js",
                                       # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
@@ -1010,7 +1076,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                       ],
                                "angularModule": ["csApp", "csConsoleApp"],
                                "css": ["/cs/css/cs.css", "/cs/js-parsons/parsons.css",
-                                       "/cs/js-parsons/lib/prettify.css"], "multihtml": True}
+                                       "/cs/js-parsons/lib/prettify.css"], "multihtml": True, "multimd": True}
             if is_simcir:
                 result_json = {"js": ["/cs/js/dir.js",
                                       "/cs/simcir/simcir.js",
@@ -1020,7 +1086,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                       ],
                                "angularModule": ["csApp"],
                                "css": ["/cs/css/cs.css", "/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"],
-                               "multihtml": True}
+                               "multihtml": True, "multimd": True}
             result_json.update(templs)
             # result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
             #               "css": ["css/cs.css"]}
