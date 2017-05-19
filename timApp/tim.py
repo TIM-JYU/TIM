@@ -583,6 +583,18 @@ def make_session_permanent():
 
 
 @app.after_request
+def disable_cache_for_testing(response):
+    """Chrome WebDriver caches JavaScript files which causes SystemJS.import('tim') to not get executed properly.
+    It is either WebDriver or SystemJS bug.
+    
+    The workaround is to disable the cache.
+    """
+    if app.config['TESTING']:
+        response.headers["Cache-Control"] = "max-age=0, must-revalidate"
+    return response
+
+
+@app.after_request
 def log_request(response):
     if not request.path.startswith('/static/') and request.path != '/favicon.ico':
         status_code = response.status_code

@@ -1,4 +1,5 @@
 import os
+from pprint import pprint
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -10,12 +11,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_USER_3_NAME
 from tests.server.timroutetest import TimRouteTest
 from tests.timliveserver import TimLiveServer
-
-
-class RemoteControls:
-    PHANTOMJS = 'http://phantomjs:4444'  # Fastest - login test ~ 2 sec, but inaccurate emulation of browser
-    CHROME = 'http://chrome:4444/wd/hub'  # Slower - login test ~ 8 sec
-    FIREFOX = 'http://firefox:4444/wd/hub'  # Very slow - login test ~ 20 sec
 
 
 class BrowserTest(TimLiveServer, TimRouteTest):
@@ -58,6 +53,10 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
         """
         self.drv.get("{}:{}{}".format(self.app.config['SELENIUM_BROWSER_URL'], self.app.config['LIVESERVER_PORT'], url))
+
+    def print_console(self):
+        logs = self.drv.get_log("browser")
+        pprint(logs)
 
     def save_screenshot(self, filename: str):
         """Saves the current browser screen to a PNG file in screenshots directory.

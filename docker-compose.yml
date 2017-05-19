@@ -1,0 +1,113 @@
+version: "3"
+services:
+ tim:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  build: ./timApp
+  depends_on:
+   - postgresql
+   - postgresql-tempdb
+   - csplugin
+   - pali
+   - showfile
+   - haskellplugins2
+   - imagex
+   - chrome
+   - prebuilt_dumbo
+  volumes:
+   - .:/service
+  working_dir: /service/timApp
+  command: python3 launch.py #--with-gunicorn
+  env_file:
+   - variables.sh
+  environment:
+   FLASK_APP: tim_app.py
+   PYTHONPATH: /service/timApp
+ funnel:
+  image: timimages/funnel:latest
+  volumes:
+   - ./funnel:/service
+   - ./tim_logs/funnel:/var/log/funnel
+  command: /service/run.sh
+ postgresql:
+  image: postgres:9.5
+  volumes:
+   - data:/var/lib/postgresql/data
+#  healthcheck:
+#   test: ["CMD-SHELL", "psql -h 'localhost' -U 'postgres' -c '\\l'"]
+#   interval: 30s
+#   timeout: 1s
+#   retries: 10
+ postgresql-tempdb:
+  image: postgres:9.5
+ csplugin:
+  image: timimages/cs3:latest
+  build: ./timApp/modules/cs
+  volumes:
+   - ./timApp/modules/cs:/cs
+   - /var/run/docker.sock:/var/run/docker.sock
+   - ./timApp/modules/cs/images/cs:/csimages
+   - /tmp/${COMPOSE_PROJECT_NAME}_uhome:/tmp
+  working_dir: /cs
+  command: ./startPlugins.sh
+  environment:
+   PYTHONUNBUFFERED: "1"
+   TIM_ROOT: ${TIM_ROOT}
+   COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
+  user: root
+ haskellplugins2:
+  image: timimages/haskellrun:latest
+  volumes:
+   - ./timApp/modules/Haskell:/Haskell
+   - ./timApp/modules/Haskell/bin:/hbin
+  working_dir: /Haskell
+  command: ./startAll.sh
+  depends_on:
+   - prebuilt_haskellplugins
+ showfile:
+  image: timimages/svn:latest
+  build: ./timApp/modules/svn
+  volumes:
+   - ./timApp/modules/svn:/svn:ro
+  working_dir: /svn
+  command: ./startAll.sh
+ imagex:
+  image: timimages/cs3:latest
+  volumes:
+   - ./timApp/modules/imagex:/imagex:ro
+   - ./timApp/modules/py:/py:ro
+   - ./tim_logs/imagex:/var/log
+  working_dir: /imagex
+  command: ./startAll.sh
+ pali:
+  image: timimages/pali:latest
+  volumes:
+   - ./timApp/modules/pali:/pali:ro
+   - ./timApp/modules/py:/py:ro
+   - ./tim_logs/pali:/var/log
+  working_dir: /pali
+  command: ./startAll.sh
+ chrome:
+  image: selenium/standalone-chrome:latest
+ nginx:
+  image: timimages/local_nginx:latest
+  build:
+   context: ./local_nginx
+  depends_on:
+   - tim
+  ports:
+   - "${NGINX_PORT}:80"
+  volumes:
+   - ./timApp/modules/cs/images/cs:/csimages:ro
+   - ./timApp/static:/static:ro
+ prebuilt_dumbo:
+  image: timimages/prebuilt:latest
+  volumes:
+   - ./Ephemeral/Dumbo/dist/build/Dumbo:/target
+  command: "cp /bin/Dumbo /target/"
+ prebuilt_haskellplugins:
+  image: timimages/prebuilt:latest
+  volumes:
+   - ./timApp/modules/Haskell/bin:/target
+  command: "cp /bin/*Plugin /target/"
+volumes:
+ data:

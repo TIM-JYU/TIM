@@ -14,7 +14,13 @@ def get_current_user():
 
 def get_current_user_object() -> User:
     if not hasattr(g, 'user'):
-        g.user = User.query.get(get_current_user_id())
+        while True:
+            u = User.query.get(get_current_user_id())
+            if u is None:
+                session['user_id'] = 0
+            else:
+                break
+        g.user = u
     return g.user
 
 

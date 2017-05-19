@@ -1,0 +1,33 @@
+version: "3"
+services:
+ tim:
+  command: /usr/sbin/sshd -D
+  ports:
+   - "49999:22"
+ postgresql:
+  ports:
+   - "5432:5432"
+# csplugin:
+#  command: /usr/sbin/sshd -D
+#  ports:
+#   - "49998:22"
+ nginx:
+  image: timimages/local_nginx_dev:latest
+  build:
+   args:
+    MAIN_CONFIG: tim_dev.conf
+ tests:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  command: "python3 -m unittest ${TEST_PARAMS:-discover tests/ 'test_*.py' .}"
+  volumes:
+   - .:/service:ro
+   - ./timApp/static/testgen:/service/timApp/static/testgen:rw
+   - ./timApp/static/.webassets-cache:/service/timApp/static/.webassets-cache:rw
+   - ./timApp/static/scripts:/service/timApp/static/scripts:rw
+  environment:
+   TIM_SETTINGS: testconfig.py
+  depends_on:
+   - tim
+  tmpfs:
+   - /tmp/doctest_files
+  working_dir: /service/timApp

@@ -7,13 +7,14 @@ import sys
 import flask_migrate
 import sqlalchemy
 import sqlalchemy.exc
+import time
 from alembic.runtime.environment import EnvironmentContext
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
-from logger import log_info, enable_loggers, log_error
+from logger import log_info, enable_loggers, log_error, log_warning
 from sql.migrate_to_postgre import perform_migration
 from tim_app import app
 from timdb import tempdb_models
@@ -21,7 +22,7 @@ from timdb.models.docentry import DocEntry
 from timdb.models.user import User
 from timdb.tim_models import AccessType, db
 from timdb.timdb2 import TimDb
-from timdb.userutils import get_admin_group_id, get_anon_group_id
+from timdb.userutils import get_anon_group_id
 
 
 def check_db_version(_, context: MigrationContext):
@@ -33,8 +34,19 @@ def check_db_version(_, context: MigrationContext):
 
 
 def postgre_create_database(host, db_name):
-    engine = sqlalchemy.create_engine("postgresql://postgres@postgresql-{}:5432/postgres".format(host))
-    conn = engine.connect()
+    engine = sqlalchemy.create_engine("postgresql://postgres@{}:5432/postgres".format(host))
+    conn_failures = 0
+    while True:
+        try:
+            conn = engine.connect()
+            break
+        except sqlalchemy.exc.OperationalError:
+            conn_failures += 1
+            if conn_failures > 5:
+                log_error('Failed more than 5 times when trying to connect to PostgreSQL - exiting.')
+                sys.exit(1)
+            log_warning('Failed to connect to PostgreSQL, trying again in 1 second...')
+            time.sleep(1)
     conn.execute("commit")
     try:
         conn.execute('create database "{}"'.format(db_name))
@@ -48,7 +60,7 @@ def postgre_create_database(host, db_name):
 
 
 def initialize_temp_database():
-    postgre_create_database('tempdb-' + app.config['TIM_NAME'], 'tempdb_' + app.config['TIM_NAME'])
+    postgre_create_database('postgresql-tempdb', 'tempdb_' + app.config['TIM_NAME'])
     tempdb_models.initialize_temp_database()
 
 
@@ -59,7 +71,7 @@ def initialize_database(create_docs=True):
     files_root_path = app.config['FILES_PATH']
     Document.default_files_root = files_root_path
     DocParagraph.default_files_root = files_root_path
-    was_created = postgre_create_database(app.config['TIM_NAME'], app.config['TIM_NAME'])
+    was_created = postgre_create_database('postgresql', app.config['TIM_NAME'])
     log_info('Database {} {}.'.format(app.config['TIM_NAME'], 'was created' if was_created else 'exists'))
     timdb = TimDb(files_root_path=files_root_path)
     db.create_all(bind='tim_main')
@@ -94,13 +106,8 @@ def initialize_database(create_docs=True):
                                                'Test user {}'.format(i),
                                                'test{}@example.com'.format(i),
                                                password='test{}pass'.format(i))
-        recovered_docs = timdb.documents.recover_db(get_admin_group_id())
 
-        if recovered_docs > 0:
-            print('Recovered {} documents from documents directory.'.format(recovered_docs))
-            print('Skipping creating example documents.')
-
-        elif create_docs:
+        if create_docs:
             DocEntry.create('testaus-1', anon_group, title='Testaus 1')
             DocEntry.create('testaus-2', anon_group, title='Testaus 2')
             timdb.documents.import_document_from_file('example_docs/programming_examples.md',

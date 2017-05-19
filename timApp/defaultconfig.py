@@ -24,13 +24,13 @@ LIBSASS_STYLE = "compressed"
 LIBSASS_INCLUDES = ["static/scripts/jspm_packages/github/twbs/bootstrap-sass@3.3.7/assets/stylesheets",
                     "static/scripts/jspm_packages/npm/eonasdan-bootstrap-datetimepicker@4.17.47/src/sass",
                     "static"]
-TIM_NAME = os.environ.get('TIM_NAME', 'timlocal')
+TIM_NAME = 'tim'  # todo: use compose project name
 TIM_HOST = os.environ.get('TIM_HOST', 'http://localhost')
 OLD_SQLITE_DATABASE = 'tim_files/tim.db'
-DATABASE = "postgresql://postgres@postgresql-{0}:5432/{0}".format(TIM_NAME)
+DATABASE = "postgresql://postgres@postgresql:5432/{0}".format(TIM_NAME)
 SQLALCHEMY_BINDS = {
     'tim_main': DATABASE,
-    'tempdb': "postgresql://postgres:postgres@postgresql-tempdb-{0}:5432/tempdb_{0}".format(TIM_NAME)
+    'tempdb': "postgresql://postgres:postgres@postgresql-tempdb:5432/tempdb_tim".format()
 }
 SASS_GEN_PATH = 'gen'
 TEMPLATES_AUTO_RELOAD = True

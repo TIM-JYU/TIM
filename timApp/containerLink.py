@@ -7,7 +7,7 @@ import requests
 from documentmodel.document import Document
 from documentmodel.timjsonencoder import TimJsonEncoder
 from dumboclient import call_dumbo
-from logger import log_info, log_warning
+from logger import log_warning
 from plugin import PluginException
 from tim_app import app
 
@@ -18,53 +18,25 @@ SVNPLUGIN_NAME = 'showfile'
 HASKELLPLUGIN_NAME = 'haskellplugins2'
 PALIPLUGIN_NAME = 'pali'
 IMAGEXPLUGIN_NAME = 'imagex'
-TIM_HOST = app.config['TIM_HOST']
 
-if TIM_HOST != 'http://localhost' and app.config.get('PLUGIN_CONNECTIONS') == 'nginx':
-    # To use this, put your IP in TIM_HOST environment variable
-    # so tim can get out of the container and to the plugins,
-    # and set PLUGIN_CONNECTIONS = "nginx" in the flask config file
-    log_info("Using nginx for plugins")
-    log_info('Uploader plugin URL is: {}'.format(app.config['UPLOADER_NGINX_URL']))
-    PLUGINS = {
-        "csPlugin": {"host": TIM_HOST + ":56000/cs/"},
-        "taunoPlugin": {"host": TIM_HOST + ":56000/cs/tauno/"},
-        "simcirPlugin": {"host": TIM_HOST + ":56000/cs/simcir/"},
-        "csPluginRikki": {"host": TIM_HOST + ":56000/cs/rikki/"},  # demonstrates a broken plugin
-        "showCode": {"host": TIM_HOST + ":55000/svn/", "browser": False},
-        "showImage": {"host": TIM_HOST + ":55000/svn/image/", "browser": False},
-        "showVideo": {"host": TIM_HOST + ":55000/svn/video/", "browser": False},
-        "mcq": {"host": TIM_HOST + ":57000/"},
-        "mmcq": {"host": TIM_HOST + ":58000/"},
-        "uploader": {"host": app.config['UPLOADER_NGINX_URL']},
-        "shortNote": {"host": TIM_HOST + ":59000/"},
-        "graphviz": {"host": TIM_HOST + ":60000/", "browser": False},
-        "pali": {"host": TIM_HOST + ":61000/"},
-        "imagex": {"host": TIM_HOST + ":62000/"},
-        "qst": {"host": TIM_HOST + "/qst/"},
-        "echo": {"host": TIM_HOST + "/echoRequest/"},
-    }
-else:
-    log_info("Using container network for plugins")
-    log_info('Uploader plugin URL is: {}'.format(app.config['UPLOADER_CONTAINER_URL']))
-    PLUGINS = {
-        "csPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
-        "taunoPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
-        "simcirPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/simcir/"},
-        "csPluginRikki": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/rikki/"},  # demonstrates a broken plugin
-        "showCode": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
-        "showImage": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
-        "showVideo": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
-        "mcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
-        "mmcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
-        "uploader": {"host": app.config['UPLOADER_CONTAINER_URL']},
-        "shortNote": {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
-        "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
-        "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
-        "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
-        "qst": {"host": "http://" + "localhost" + ":{}/qst/".format(app.config['QST_PLUGIN_PORT'])},
-        "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
-    }
+PLUGINS = {
+    "csPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
+    "taunoPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
+    "simcirPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/simcir/"},
+    "csPluginRikki": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/rikki/"},  # demonstrates a broken plugin
+    "showCode": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
+    "showImage": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
+    "showVideo": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
+    "mcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
+    "mmcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
+    "uploader": {"host": app.config['UPLOADER_CONTAINER_URL']},
+    "shortNote": {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
+    "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
+    "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
+    "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
+    "qst": {"host": "http://" + "localhost" + ":{}/qst/".format(app.config['QST_PLUGIN_PORT'])},
+    "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
+}
 
 
 def call_plugin_generic(plugin, method, route, data=None, headers=None, params=None):

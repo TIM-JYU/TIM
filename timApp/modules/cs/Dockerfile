@@ -6,6 +6,8 @@ maintainer vesal "vesal@jyu.fi"
 run ln -fs /bin/true /usr/bin/chfn
 
 # Aikavyöhyke ja merkistöt kuntoon
+run apt-get update
+run apt-get install -y locales tzdata
 run locale-gen en_US.UTF-8
 env LANG en_US.UTF-8
 env LANGUAGE en_US:en
@@ -13,8 +15,9 @@ env LC_ALL en_US.UTF-8
 run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
 
 # tuntuu valittavan koko ajan jos ei tätä asenna
-run apt-get update
 run apt-get install -y apt-utils
+
+run apt-get install -y acl unzip
 
 # Asennetaan python, pip ja flask 
 

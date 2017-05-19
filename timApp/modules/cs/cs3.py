@@ -182,8 +182,8 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     # p = Popen("inotifywait "+ cmdf  + " -e delete", shell=True) # skripti tuhoaa ajojonon kun se valmis
     # ./docker-run-timeout.sh 10s -v /opt/cs:/cs/:ro  -v $USERPATH:/home/agent/ -w /home/agent cs3 /cs/rcmd.sh $CMDNAME
 
-    dargs = ["docker", "run", "--name", tmpname, "--rm=true", "-v", "/opt/cs:/cs/:ro", "-v",
-             "/tmp/uhome/" + udir + "/:/home/agent/",
+    dargs = ["docker", "run", "--name", tmpname, "--rm=true", "-v", "{}/timApp/modules/cs:/cs/:ro".format(os.environ['TIM_ROOT']), "-v",
+             "/tmp/{}_uhome/{}/:/home/agent/".format(os.environ['COMPOSE_PROJECT_NAME'], udir),
              # dargs = ["/cs/docker-run-timeout.sh", "10s", "-v", "/opt/cs:/cs/:ro", "-v", "/tmp/uhome/" + udir + ":/home/agent/",
              # "-w", "/home/agent", "ubuntu", "/cs/rcmd.sh", urndname + ".sh"]
              "-w", "/home/agent", dockercontainer, "/cs/rcmd.sh", urndname + ".sh", str(noX11), str(savestate)]

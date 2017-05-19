@@ -2,13 +2,16 @@
 
 echo variables.sh: Fill in appropriate variable values and comment this line. ; exit 1
 
-TIM_NAME=timlocal                   # Name of TIM instance, must be "timlocal" when running locally for now because it is hardcoded in local_nginx
-TIM_PORT=50000                      # Outbound port of TIM container
-TIM_HOST=http://localhost           # Hostname for the TIM instance
-USE_WUFF=false                      # Whether to use the wuff service, only works for production instance for now
-USE_FUNNEL=false                    # Whether to use the funnel service for sending email
-CREATE_SYMLINKS=true                # Whether to create symlinks
-IS_PRODUCTION=false                 # Whether this is production instance
-OPEN_PG_PORT=false                  # Whether to open PostgreSQL port to outside timnet
-CONFIG_FILE=''                      # Location of config file to use; OK to be empty when running locally; use 'productionconfig.py' in production
-LOG_DIR=${PWD}/tim_logs             # Location of log directory; will be mapped for TIM container at /service/tim_logs
+export TIM_HOST=http://localhost           # Hostname for the TIM instance
+export TIM_IMAGE_TAG=$(./get_latest_date.sh)
+export COMPOSE_PROJECT_NAME=tim
+export TIM_ROOT=${PWD}
+export NGINX_PORT=80
+export USE_WUFF=false                      # Whether to use the wuff service, only works for production instance for now
+export USE_FUNNEL=false                    # Whether to use the funnel service for sending email
+export CREATE_SYMLINKS=true                # Whether to create symlinks
+export IS_PRODUCTION=false                 # Whether this is production instance
+export IS_DEVELOPMENT=false                # Whether this is a local development instance (needed for e.g. PyCharm)
+export OPEN_PG_PORT=false                  # Whether to open PostgreSQL port to outside timnet
+export CONFIG_FILE=''                      # Location of config file to use; OK to be empty when running locally; use 'productionconfig.py' in production
+export LOG_DIR=${PWD}/tim_logs             # Location of log directory; will be mapped for TIM container at /service/tim_logs
