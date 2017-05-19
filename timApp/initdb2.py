@@ -60,7 +60,7 @@ def postgre_create_database(host, db_name):
 
 
 def initialize_temp_database():
-    postgre_create_database('postgresql-tempdb', 'tempdb_' + app.config['TIM_NAME'])
+    postgre_create_database(app.config['TEMPDB_HOST'], 'tempdb_' + app.config['TIM_NAME'])
     tempdb_models.initialize_temp_database()
 
 
@@ -71,7 +71,7 @@ def initialize_database(create_docs=True):
     files_root_path = app.config['FILES_PATH']
     Document.default_files_root = files_root_path
     DocParagraph.default_files_root = files_root_path
-    was_created = postgre_create_database('postgresql', app.config['TIM_NAME'])
+    was_created = postgre_create_database(app.config['DB_HOST'], app.config['TIM_NAME'])
     log_info('Database {} {}.'.format(app.config['TIM_NAME'], 'was created' if was_created else 'exists'))
     timdb = TimDb(files_root_path=files_root_path)
     db.create_all(bind='tim_main')

@@ -4,9 +4,25 @@ services:
   command: /usr/sbin/sshd -D
   ports:
    - "49999:22"
+  depends_on:
+   - postgresql
+   - postgresql-tempdb
+   - postgresql-test
+   - postgresql-tempdb-test
+   - csplugin
+   - pali
+   - showfile
+   - haskellplugins2
+   - imagex
+   - chrome
+   - prebuilt_dumbo
  postgresql:
   ports:
    - "5432:5432"
+ postgresql-test:
+  image: postgres:9.5
+ postgresql-tempdb-test:
+  image: postgres:9.5
 # csplugin:
 #  command: /usr/sbin/sshd -D
 #  ports:

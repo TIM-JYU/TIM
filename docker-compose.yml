@@ -22,6 +22,7 @@ services:
   environment:
    FLASK_APP: tim_app.py
    PYTHONPATH: /service/timApp
+   COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
  funnel:
   image: timimages/funnel:latest
   volumes:

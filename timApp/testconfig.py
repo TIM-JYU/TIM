@@ -6,7 +6,9 @@ from utils import pycharm_running
 DEBUG = True
 PROFILE = False
 TIM_NAME = 'tim-test'
-DATABASE = "postgresql://postgres@postgresql:5432/{0}".format(TIM_NAME)
+DB_HOST = 'postgresql-test'
+TEMPDB_HOST = 'postgresql-tempdb-test'
+DATABASE = "postgresql://postgres@{}:5432/{}".format(DB_HOST, TIM_NAME)
 FILES_PATH = '/tmp/doctest_files'
 LOG_DIR = "/tmp/tim_logs"
 LOG_FILE = "timLog.log"
@@ -17,7 +19,7 @@ TESTING = True
 OLD_SQLITE_DATABASE = None
 SQLALCHEMY_BINDS = {
     'tim_main': DATABASE,
-    'tempdb': "postgresql://postgres@postgresql-tempdb:5432/tempdb_{0}".format(TIM_NAME)
+    'tempdb': "postgresql://postgres@{}:5432/tempdb_{}".format(TEMPDB_HOST, TIM_NAME)
 }
 SASS_GEN_PATH = 'testgen'
 
