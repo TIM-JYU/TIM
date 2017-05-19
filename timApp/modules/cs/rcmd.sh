@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Set locale
 export LANG=en_US.UTF-8
 # export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/

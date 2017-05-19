@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # To format all Python files, run without parameters.
 # To format specific file(s), use: ./format_python_code.sh filename

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 (cd timApp && ./build.sh $@)
 (cd Ephemeral/Dumbo && ./Build.sh $@)

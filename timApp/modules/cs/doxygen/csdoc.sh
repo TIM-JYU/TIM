@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 cd $1
 rm -R $3/*
 mkdir -p $2

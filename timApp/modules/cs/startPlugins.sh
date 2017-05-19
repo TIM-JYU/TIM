@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Start csplugin
 
 if [ "$2" != "p" ]

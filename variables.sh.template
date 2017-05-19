@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo variables.sh: Fill in appropriate variable values and comment this line. ; exit 1
 

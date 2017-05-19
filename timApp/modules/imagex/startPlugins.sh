@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/usr/bin/env bash
 # Restart imagex 
 
 dockername="imagex"

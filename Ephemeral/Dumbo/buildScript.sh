@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -exu
 cd /build
 stack solver --system-ghc --update-config --allow-different-user

@@ -162,9 +162,9 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     if savestate:
         source = 'source '
     # tehdään komentojono jossa suuntaukset
-    cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + source + cmnds + \
+    cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n" + extra + source + cmnds + \
             " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
-    # cmnds = "#!/bin/bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" +
+    # cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" +
     # stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
     print("============")
     print(cwd)

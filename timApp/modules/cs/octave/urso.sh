@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 dockername="cso"
 dockerImage="timimages/octave"
  

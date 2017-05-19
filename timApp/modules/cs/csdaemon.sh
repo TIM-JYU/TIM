@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 cd /opt/cs
 RUNPATH=/tmp/uhome/run
 USERROOT=/tmp/uhome

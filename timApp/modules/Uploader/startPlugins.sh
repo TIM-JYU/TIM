@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Restart uploader plugin
 dockerimage=villet/uploaderplugin:13_10_16_15
 docker pull $dockerimage

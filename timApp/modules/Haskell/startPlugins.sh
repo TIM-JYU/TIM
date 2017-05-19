@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # This is used to (re)start all Haskell plugins. Note that the ports used here must match tim registry
 #set -euo pipefail
 #IFS=$'\n\t'

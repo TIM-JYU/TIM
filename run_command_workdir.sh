@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Runs the given command in the given working directory inside TIM container with the repository's root path being mapped at /service inside container.
 # Usage: ./run_command_workdir.sh <working dir> <command> [arguments...]
 

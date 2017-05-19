@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # see: https://github.com/docker/docker/issues/1905
 set -e
 

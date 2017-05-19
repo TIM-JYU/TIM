@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 if [ ! -f /service/funnel.py ]
 then
     echo "This script is meant to be ran inside a Docker container."

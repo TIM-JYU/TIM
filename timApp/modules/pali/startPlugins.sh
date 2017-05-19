@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/usr/bin/env bash
 # Restart pali 
 
 dockerImage="timimages/pali"
