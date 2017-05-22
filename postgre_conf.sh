@@ -8,18 +8,23 @@ if [ $# -ne 3 ]; then
   exit
 fi
 
-if [ $1 = "2" ]; then
-  container=postgresql-tempdb-${TIM_NAME}
-elif [ $1 = "3" ]; then
-  container=postgresql-timtest
-else
-  container=postgresql-${TIM_NAME}
-fi
+case "$1" in
+ "1")
+  host="postgresql"
+  ;;
+ "2")
+  host="postgresql-tempdb"
+  ;;
+ "3")
+  host="postgresql-test"
+  ;;
+ "4")
+  host="postgresql-tempdb-test"
+esac
 
-docker exec ${container} bash -c \
+./docker-compose.sh exec ${host} bash -c \
  "sed -i -e 's/^#\{0,1\}$2 = .*$/$2 = $3/w sed_changes.txt' /var/lib/postgresql/data/postgresql.conf \
   && echo Lines changed in postgresql.conf: \
   && [ -s sed_changes.txt ] || echo \(nothing changed\) \
   && cat sed_changes.txt"
-echo Restarting ${container}...
-docker restart ${container}
+./docker-compose.sh restart ${host}

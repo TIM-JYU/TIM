@@ -14,8 +14,10 @@ services:
    - showfile
    - haskellplugins2
    - imagex
+   - uploader
    - chrome
    - prebuilt_dumbo
+   - ts-watcher
  postgresql:
   ports:
    - "5432:5432"
@@ -32,6 +34,8 @@ services:
   build:
    args:
     MAIN_CONFIG: tim_dev.conf
+ ts-watcher:
+  command: /bin/true  # in development, the watcher is supposed to be launched from IDE
  tests:
   image: timimages/tim:${TIM_IMAGE_TAG}
   command: "python3 -m unittest ${TEST_PARAMS:-discover tests/ 'test_*.py' .}"

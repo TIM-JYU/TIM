@@ -1,4 +1,5 @@
-#! /bin/bash
+#!/usr/bin/env bash
+
 . ./variables.sh
 
 if [ $# -ne "1" ]; then

@@ -11,24 +11,28 @@ services:
    - showfile
    - haskellplugins2
    - imagex
-   - chrome
+   - uploader
    - prebuilt_dumbo
+   - ts-watcher
   volumes:
    - .:/service
+   - ${LOG_DIR}:/service/tim_logs
   working_dir: /service/timApp
-  command: python3 launch.py #--with-gunicorn
+  command: python3 launch.py --with-gunicorn
   env_file:
    - variables.sh
   environment:
    FLASK_APP: tim_app.py
    PYTHONPATH: /service/timApp
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
+   TIM_SETTINGS: ${CONFIG_FILE}
  funnel:
   image: timimages/funnel:latest
   volumes:
    - ./funnel:/service
    - ./tim_logs/funnel:/var/log/funnel
-  command: /service/run.sh
+  working_dir: /service
+  command: ${FUNNEL_COMMAND}
  postgresql:
   image: postgres:9.5
   volumes:
@@ -87,6 +91,15 @@ services:
    - ./tim_logs/pali:/var/log
   working_dir: /pali
   command: ./startAll.sh
+ uploader:
+  image: villet/uploaderplugin:13_10_16_15
+  command: ${UPLOADER_COMMAND}
+ ts-watcher:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  volumes:
+   - .:/service
+  working_dir: /service/timApp/static/scripts
+  command: jspm bundle tim/main + tim/slide - "(tim/main + tim/slide - [tim/**/*])" build/tim.js -wm
  chrome:
   image: selenium/standalone-chrome:latest
  nginx:
