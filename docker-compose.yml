@@ -14,6 +14,7 @@ services:
    - uploader
    - prebuilt_dumbo
    - ts-watcher
+   - funnel
   volumes:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs

@@ -18,6 +18,7 @@ services:
    - chrome
    - prebuilt_dumbo
    - ts-watcher
+   - funnel
  postgresql:
   ports:
    - "5432:5432"
