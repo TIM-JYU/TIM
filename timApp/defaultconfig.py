@@ -32,7 +32,7 @@ TEMPDB_HOST = 'postgresql-tempdb'
 DATABASE = "postgresql://postgres@{}:5432/{}".format(DB_HOST, TIM_NAME)
 SQLALCHEMY_BINDS = {
     'tim_main': DATABASE,
-    'tempdb': "postgresql://postgres:postgres@{}:5432/tempdb_tim".format(TEMPDB_HOST)
+    'tempdb': "postgresql://postgres:postgres@{}:5432/tempdb_{}".format(TEMPDB_HOST, TIM_NAME)
 }
 SASS_GEN_PATH = 'gen'
 TEMPLATES_AUTO_RELOAD = True
