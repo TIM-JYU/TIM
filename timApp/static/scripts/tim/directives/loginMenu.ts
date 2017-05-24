@@ -18,7 +18,7 @@ timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', functio
                 $event.stopPropagation();
                 $scope.addingToSession = !$scope.addingToSession;
             };
-            $scope.logout = Users.logout;
+            $scope.logout = (...args) => Users.logout(...args);
             $scope.isLoggedIn = () => Users.isLoggedIn();
             $scope.korppiLogin = function (addingToSession) {
                 $scope.korppiLoading = true;
