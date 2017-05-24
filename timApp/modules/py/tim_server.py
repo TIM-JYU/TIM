@@ -235,7 +235,10 @@ def start_server(http_server: TimServer, logname: str):
     if not os.path.exists("/var/log"):
         os.makedirs("/var/log")
     CURRENTDIR = os.getcwd()
-    logging.basicConfig(filename='/var/log/' + logname + '.log', level=logging.INFO, format='%(asctime)s %(message)s')
+    # Logging to file is disabled for now because Docker redirects stdin to an internal JSON file automatically
+    # and setting ownership to volumes via Docker is not possible.
+    # logging.basicConfig(filename='/var/log/' + logname + '.log', level=logging.INFO, format='%(asctime)s %(message)s')
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 
     server = ThreadedHTTPServer(('', PORT), http_server)
     print('Starting server, use <Ctrl-C> to stop')

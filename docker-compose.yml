@@ -81,7 +81,6 @@ services:
   volumes:
    - ./timApp/modules/imagex:/imagex:ro
    - ./timApp/modules/py:/py:ro
-   - ./tim_logs/imagex:/var/log
   working_dir: /imagex
   command: ./startAll.sh
  pali:
@@ -89,7 +88,6 @@ services:
   volumes:
    - ./timApp/modules/pali:/pali:ro
    - ./timApp/modules/py:/py:ro
-   - ./tim_logs/pali:/var/log
   working_dir: /pali
   command: ./startAll.sh
  uploader:
@@ -123,6 +121,7 @@ services:
   image: timimages/prebuilt:latest
   volumes:
    - ./timApp/modules/Haskell/bin:/target
-  command: "cp /bin/*Plugin /target/"
+  working_dir: /bin
+  command: "cp ChoicesPlugin GraphVizPlugin MultipleChoicesPlugin /target/"
 volumes:
  data:
