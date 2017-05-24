@@ -1,5 +1,5 @@
 # Aloitetaan cs3:n imagesta
-from timimages/cs3
+from timimages/cs3:compose
 user root
 run apt-get update
 run apt-get install -y openssh-server

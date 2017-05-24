@@ -46,7 +46,7 @@ services:
  postgresql-tempdb:
   image: postgres:9.5
  csplugin:
-  image: timimages/cs3:latest
+  image: timimages/cs3:compose
   build: ./timApp/modules/cs
   volumes:
    - ./timApp/modules/cs:/cs
@@ -84,7 +84,7 @@ services:
   working_dir: /imagex
   command: ./startAll.sh
  pali:
-  image: timimages/pali:latest
+  image: timimages/pali:compose
   volumes:
    - ./timApp/modules/pali:/pali:ro
    - ./timApp/modules/py:/py:ro

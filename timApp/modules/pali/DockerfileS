@@ -1,5 +1,5 @@
 # Aloitetaan palin:n imagesta
-from pali
+from timimages/pali:compose
 user root
 run apt-get update
 run apt-get install -y openssh-server

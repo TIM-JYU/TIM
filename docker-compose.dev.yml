@@ -26,10 +26,21 @@ services:
   image: postgres:9.5
  postgresql-tempdb-test:
   image: postgres:9.5
-# csplugin:
-#  command: /usr/sbin/sshd -D
-#  ports:
-#   - "49998:22"
+ pali:
+  image: timimages/palisudo:compose
+  build:
+   context: ./timApp/modules/pali
+   dockerfile: DockerfileS
+  ports:
+   - "49997:22"
+ csplugin:
+  image: timimages/cs3sudo:compose
+  build:
+   context: ./timApp/modules/cs
+   dockerfile: DockerfileS
+  command: ${CSPLUGIN_DEV_COMMAND:-/usr/sbin/sshd -D}
+  ports:
+   - "49998:22"
  nginx:
   image: timimages/local_nginx_dev:latest
   build:
