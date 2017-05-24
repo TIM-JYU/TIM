@@ -77,7 +77,7 @@ services:
   working_dir: /svn
   command: ./startAll.sh
  imagex:
-  image: timimages/cs3:latest
+  image: timimages/cs3:compose
   volumes:
    - ./timApp/modules/imagex:/imagex:ro
    - ./timApp/modules/py:/py:ro
