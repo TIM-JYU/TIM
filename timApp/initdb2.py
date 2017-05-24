@@ -42,7 +42,7 @@ def postgre_create_database(host, db_name):
             break
         except sqlalchemy.exc.OperationalError:
             conn_failures += 1
-            if conn_failures > 5:
+            if conn_failures > 10:
                 log_error('Failed more than 5 times when trying to connect to PostgreSQL - exiting.')
                 sys.exit(1)
             log_warning('Failed to connect to PostgreSQL, trying again in 1 second...')
