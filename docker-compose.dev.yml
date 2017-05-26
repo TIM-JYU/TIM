@@ -42,7 +42,7 @@ services:
   ports:
    - "49998:22"
  nginx:
-  image: timimages/local_nginx_dev:latest
+  image: timimages/local_nginx_dev:compose
   build:
    args:
     MAIN_CONFIG: tim_dev.conf

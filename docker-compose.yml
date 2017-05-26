@@ -103,7 +103,7 @@ services:
  chrome:
   image: selenium/standalone-chrome:latest
  nginx:
-  image: timimages/local_nginx:latest
+  image: timimages/local_nginx:compose
   build:
    context: ./local_nginx
   depends_on:
