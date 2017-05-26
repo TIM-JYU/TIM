@@ -31,6 +31,7 @@ services:
   build:
    context: ./timApp/modules/pali
    dockerfile: DockerfileS
+  command: ${PALI_DEV_COMMAND}
   ports:
    - "49997:22"
  csplugin:
