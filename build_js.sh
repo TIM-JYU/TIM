@@ -9,10 +9,4 @@
 #  - you add or remove external JS libraries (either from NPM or JSPM)
 #  - you modify tim/ace.ts or tim/imagex.ts (because these are not included in the set of watched files)
 
-./run_command_workdir.sh timApp/static/scripts npm install
-./run_command_workdir.sh timApp/static/scripts jspm install
-./run_command_workdir.sh timApp/static/scripts npm run fixAll
-./run_command_workdir.sh timApp/static/scripts npm run build
-
-# Create type declarations.
-./run_command_workdir.sh timApp/static/scripts tsc
+./run_command_workdir.sh timApp/static/scripts /bin/bash -c "npm install && jspm install && npm run fixAll && npm run build && tsc"
