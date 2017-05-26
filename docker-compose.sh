@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# A wrapper script for executing Docker Compose commands.
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
