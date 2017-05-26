@@ -20,12 +20,12 @@ export class ParagraphCompiler {
     }
 
     public async processAllMath($elem: JQuery) {
-        timLogTime("processAllMath start", "view");
         const katexFailures = [];
         const mathelems = $elem.find(".math");
         if (mathelems.length === 0) {
             return;
         }
+        timLogTime("processAllMath start", "view");
         const renderMathInElement = await lazyLoad<typeof katex>("katex-auto-render");
         mathelems.each((index, elem) => {
             const result = this.processMath(renderMathInElement, elem, false);

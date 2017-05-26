@@ -32,10 +32,16 @@ import * as ab from "tim/manageView/manageCtrl";
 import * as ac from "tim/settingsView/settingsCtrl";
 import {markAsUsed} from "tim/utils";
 import {ParCompiler} from "./services/parCompiler";
+import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./timTiming";
 
 markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, ab, ac, ad, ae);
 
+timLogInit(document.location.search.slice(1));
+
 $(() => {
+    timLogTime("DOM ready", "main.ts");
+    insertLogDivIfEnabled();
     angular.bootstrap(document, ["timApp"], {strictDi: false});
+    timLogTime("Angular bootstrap done", "main.ts");
     ParCompiler.processAllMathDelayed($("body"), 1500);
 });

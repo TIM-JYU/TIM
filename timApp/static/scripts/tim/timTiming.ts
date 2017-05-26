@@ -1,32 +1,23 @@
 /*
-  To use timTiming, add to meta part of the document:
-  
-    <script src="{{ url_for('static', filename='scripts/timTiming.js') }}"></script>
-    <script>timLogInit("{{ request.query_string }}");</script>
+  To use timTiming, call
 
-  before any othe script loadings.  Then when you want log timing, add:
+    timLogInit(document.location.search.slice(1));
 
-    <script>timLogTime("Document end","base");</script>
-  
-  to html (f.ex end of the whole document before </body>-tag
-  To JavaScript codes add the bare call to the timLogTime-function.
-  First parameter is printed as it is and secod is for filtering the output,
-  see timLogTime comments.  
-  
-*/  
+  at the start of main module. When you want log timing, call:
+
+    timLogTime("description of the event", "location of this call")
+
+  First parameter is printed as it is and the second is for filtering the output;
+  see timLogTime comments.
+
+*/
 var timJavaScriptStartTime = new Date();
 var timJavaScriptLastTime = timJavaScriptStartTime;
 var timDivLogger;
 var timDivPreLogger = document.createElement("pre");
 
-document.addEventListener('DOMContentLoaded', function () {
-    timLogTime("Document loaded","main");
-});
 
-
-
-document.onreadystatechange = function () {
-    timLogTime("ready changed " + document.readyState,"main");
+export function insertLogDivIfEnabled() {
     if ( timTimingDiv && !timDivLogger ) {
         timDivLogger = document.createElement("div");
         timDivLogger.appendChild(timDivPreLogger);
@@ -43,7 +34,7 @@ var timTiming = false;
 var timTimingSummary = false;
 var timTimingLevel = 0;
 
-export function timLogInit(params) {
+export function timLogInit(params: string) {
     /*
     .../view/1?timing=div    - logittaa vain diviin (vain taso 0 tai ei tasoa)
     .../view/1?timing=log    - logittaa vain console.log
