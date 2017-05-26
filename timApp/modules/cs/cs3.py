@@ -123,7 +123,7 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
 
 
 def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
-         extra="", ulimit=None, noX11=False, savestate="", dockercontainer="timimages/cs3"):
+         extra="", ulimit=None, noX11=False, savestate="", dockercontainer="timimages/cs3:compose"):
     """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
     run inside docker.
 
@@ -1051,7 +1051,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             noX11 = get_json_param(query.jso, "markup", "noX11", False)
             extra_files = get_json_param(query.jso, "markup", "extrafiles", None)
-            dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", "timimages/cs3")
+            dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", "timimages/cs3:compose")
             if not extra_files:
                 extra_files = get_json_param(query.jso, "markup", "-extrafiles", None)
 
