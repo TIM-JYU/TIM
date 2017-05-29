@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 
-. ./variables.sh
+if [ $# -ne 1 ]; then
+ echo Usage:
+ echo "./postgre_backup.sh <output directory of backup file>"
+ exit
+fi
+
+if [ ! -d "$1" ]; then
+ echo "$1 is not a directory."
+ exit
+fi
 
 echo Backing up PostgreSQL database...
-./docker-compose.sh run -v ${PWD}/pg_backup:/backup postgresql /bin/bash -c \
- "pg_dump -h postgresql -p 5432 -d $COMPOSE_PROJECT_NAME -U postgres --jobs=1 --format=custom --file=/backup/pg_dump"
-echo Done.
+filename="$1/dump_$(date +%d-%m-%Y"_"%H_%M_%S).sql.gz"
+./docker-compose.sh exec postgresql pg_dumpall --clean -h postgresql -p 5432 -U postgres | gzip > ${filename}
+echo Done, backup saved to ${filename}.
