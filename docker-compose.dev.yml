@@ -42,6 +42,8 @@ services:
   command: ${CSPLUGIN_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49998:22"
+ chrome:
+  image: selenium/standalone-chrome:latest
  nginx:
   image: timimages/local_nginx_dev:compose
   build:

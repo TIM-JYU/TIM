@@ -100,8 +100,6 @@ services:
    - .:/service
   working_dir: /service/timApp/static/scripts
   command: jspm bundle tim/main + tim/slide - "(tim/main + tim/slide - [tim/**/*])" build/tim.js -wm
- chrome:
-  image: selenium/standalone-chrome:latest
  nginx:
   image: timimages/local_nginx:compose
   build:
