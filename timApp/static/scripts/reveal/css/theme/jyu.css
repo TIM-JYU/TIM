@@ -33,6 +33,7 @@ body::-ms-backdrop {
 .reveal .slides>section.present,
 .reveal .slides>section>section.present {
     margin-left: 100px !important;
+    margin-right: 100px !important;
 }
   
   
