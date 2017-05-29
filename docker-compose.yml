@@ -20,8 +20,6 @@ services:
    - ${LOG_DIR}:/service/tim_logs
   working_dir: /service/timApp
   command: python3 launch.py --with-gunicorn
-  env_file:
-   - variables.sh
   environment:
    FLASK_APP: tim_app.py
    PYTHONPATH: /service/timApp
