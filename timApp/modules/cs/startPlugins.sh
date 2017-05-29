@@ -23,6 +23,8 @@ mkdir -p /tmp/cache
 chown -R agent:agent /tmp
 rm /tmp/cache/* > /dev/null 2>&1
 
+chown -R agent:agent /csimages
+
 # Oikeudet käyttää dockeria niin saadaan docker in docker
 chmod 766 /var/run/docker.sock
 
