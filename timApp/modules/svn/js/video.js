@@ -81,7 +81,7 @@ videoApp.directiveTemplateVideo = function(t) {
 				  '<div ><p></p></div>' + 
 				  //'<p ng-if="!videoOn" class="pluginHide"><a ng-click="showVideo()">Click here to show the video</a></p>' +
                   '<div class="no-popup-menu">' +
-				  '<img src="/csimages/video.png" ng-if="!videoOn" ng-click="showVideo()" width="200" alt="Click here to show the video" />' +
+				  '<img src="/csstatic/video.png" ng-if="!videoOn" ng-click="showVideo()" width="200" alt="Click here to show the video" />' +
                   '</div>' + 
                   '<a href="{{doclink}}" ng-if="doclink" target="timdoc"><span ng-if="docoicon"><img ng-src="{{docicon}}"  alt="Go to doc" /> </span>' +
                   '{{doctext}}</a>'+
@@ -120,8 +120,8 @@ videoApp.directiveFunction = function(t) {
             timHelper.set(scope,attrs,".doctext");
             timHelper.set(scope,attrs,".doclink");
             timHelper.set(scope,attrs,".hidetext","hide video");
-            timHelper.set(scope,attrs,".videoicon","/csimages/video_small.png");
-            timHelper.set(scope,attrs,".docicon","/csimages/book.png");
+            timHelper.set(scope,attrs,".videoicon","/csstatic/video_small.png");
+            timHelper.set(scope,attrs,".docicon","/csstatic/book.png");
             timHelper.set(scope,attrs,".followid");
             timHelper.set(scope,attrs,".autoplay", true);
 			timHelper.set(scope,attrs,".open",false);

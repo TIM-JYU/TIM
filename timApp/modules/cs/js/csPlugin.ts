@@ -1787,7 +1787,7 @@ csApp.Controller = function($scope,$transclude) {
 			}
 
             if ( wavURL ) {
-                // <video src="https://tim.jyu.fi/csimages/cs/vesal/sinewave.wav" type="video/mp4" controls="" autoplay="true" ></video>
+                // <video src="https://tim.jyu.fi/csgenerated/vesal/sinewave.wav" type="video/mp4" controls="" autoplay="true" ></video>
 				$scope.wavURL = wavURL;
 				$scope.result = data.web.console.trim();
             }
@@ -2510,7 +2510,7 @@ csApp.Controller = function($scope,$transclude) {
             if ( $scope.type.indexOf("/vis") >= 0 ) {
                 $scope.iframe = true;  // visjs allways to iframe
                 html =  '<div id="myDiv" class="mydiv" width="800" height="400" ></div>';
-                scripts = "https://tim.jyu.fi/csimages/visjs/vis.min.js";
+                scripts = "https://tim.jyu.fi/csstatic/visjs/vis.min.js";
             }
             if ( $scope.iframe ) {
                 var dw,dh;

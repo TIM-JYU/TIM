@@ -23,8 +23,8 @@ pg_backup/
 /timApp/modules/cs/test/a.b
 /timApp/modules/cs/test/a.c
 /timApp/modules/cs/nohup.out
-/timApp/modules/cs/images/html
-/timApp/modules/cs/images/cs/
+/timApp/modules/cs/generated
+/timApp/modules/cs/log.txt
 /timApp/modules/cs/java/cs/ComTest.jar
 /converters/demopisteet/*.csv
 tim_secret.py

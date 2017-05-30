@@ -160,12 +160,12 @@ def small__and_list_html(query, duration_template):
     if di:
         dur = replace_time_params(query, duration_template)
         icon = replace_template_param(
-            query, '<span><img src="{{videoicon}}" alt="Click here to show" /> </span> ', "videoicon", "/csimages/video_small.png")
+            query, '<span><img src="{{videoicon}}" alt="Click here to show" /> </span> ', "videoicon", "/csstatic/video_small.png")
         s += ' <a class="videoname">' + icon + di + dur + '</a>'
     di = replace_template_param(query, ' {{doctext}}', "doctext")
     if di:
         icon = replace_template_param(
-            query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon", "/csimages/book.png")
+            query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon", "/csstatic/book.png")
         s += ' <a href="" target="timdoc">' + icon + di + '</a>'
     return s
 
@@ -196,12 +196,12 @@ def video_html(query):
     s += replace_template_param(query, '<p class="stem" >{{stem}}</p>', "stem")
     s += '<div ><p></p></div>' \
         '<div class="no-popup-menu">' \
-        '<img src="/csimages/video.png"  width="200" alt="Click here to show the video" />' \
+        '<img src="/csstatic/video.png"  width="200" alt="Click here to show the video" />' \
         '</div>'
     di = replace_template_param(query, ' {{doctext}}', "doctext")
     if di:
         icon = replace_template_param(
-            query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon", "/csimages/book.png")
+            query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon", "/csstatic/book.png")
         s += ' <a href="" target="timdoc">' + icon + di + '</a>'
     s += replace_template_params(query, '<p class="plgfooter">{{footer}}</p>', "footer")
     s += '</div>'

@@ -23,7 +23,10 @@ mkdir -p /tmp/cache
 chown -R agent:agent /tmp
 rm /tmp/cache/* > /dev/null 2>&1
 
-chown -R agent:agent /csimages
+chown -R agent:agent /csgenerated
+
+touch /cs/log.txt
+chown agent:agent /cs/log.txt
 
 # Oikeudet käyttää dockeria niin saadaan docker in docker
 chmod 766 /var/run/docker.sock
@@ -45,7 +48,6 @@ mkdir -p cs
 cd cs
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar -O ComTest.jar -nv
 
-mkdir -p /cs/simcir/check
 cd /cs/simcir/check
 wget https://yousource.it.jyu.fi/opetus-ji/logik-py/blobs/raw/master/simcirtest.py -O simcirtest.py -nv
 

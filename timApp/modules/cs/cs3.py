@@ -181,14 +181,8 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     udir = cwd.replace("/tmp/", "")  # koska mountattu eri tavalla, poistetaan tmp alusta
     # print(udir,"\nWait for run")
 
-    # os.system("inotifywait "+ cmdf  + " -e delete")
-    # p = Popen("inotifywait "+ cmdf  + " -e delete", shell=True) # skripti tuhoaa ajojonon kun se valmis
-    # ./docker-run-timeout.sh 10s -v /opt/cs:/cs/:ro  -v $USERPATH:/home/agent/ -w /home/agent cs3 /cs/rcmd.sh $CMDNAME
-
     dargs = ["docker", "run", "--name", tmpname, "--rm=true", "-v", "{}/timApp/modules/cs:/cs/:ro".format(os.environ['TIM_ROOT']), "-v",
              "/tmp/{}_uhome/{}/:/home/agent/".format(os.environ['COMPOSE_PROJECT_NAME'], udir),
-             # dargs = ["/cs/docker-run-timeout.sh", "10s", "-v", "/opt/cs:/cs/:ro", "-v", "/tmp/uhome/" + udir + ":/home/agent/",
-             # "-w", "/home/agent", "ubuntu", "/cs/rcmd.sh", urndname + ".sh"]
              "-w", "/home/agent", dockercontainer, "/cs/rcmd.sh", urndname + ".sh", str(noX11), str(savestate)]
     print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
@@ -603,9 +597,10 @@ def log(self):
     agent = " :AG: " + self.headers["User-Agent"]
     if agent.find("ython") >= 0:
         agent = ""
-    logfile = "/csimages/log.txt"
+    logfile = "/cs/log.txt"
     try:
-        open(logfile, 'a').write(t.isoformat(' ') + ": " + self.path + agent + " u:" + self.user_id + "\n")
+        with open(logfile, 'a') as f:
+            f.write(t.isoformat(' ') + ": " + self.path + agent + " u:" + self.user_id + "\n")
     except Exception as e:
         print(e)
         return
@@ -1040,32 +1035,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             ttype = 'simcir'
 
         if is_reqs:
-            # result_json = {"js": ["http://tim-beta.it.jyu.fi/cs/js/dir.js"], "angularModule": ["csApp"],
-            #               "css": ["http://tim-beta.it.jyu.fi/cs/css/cs.css"], "multihtml": True}
-            # result_json = {"js": ["/cs/js/dir.js"], "angularModule": ["csApp","csConsoleApp"],
-            # result_json = {"js": ["/cs/js/dir.js", "https://static.jsbin.com/js/embed.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
-            # result_json = {"js": ["/cs/js/dir.js", "/static/scripts/bower_components/ace-builds/src-min-noconflict/ext-language_tools.js"],
-            # result_json = {"js":
-            # ["/cs/js/dir.js","https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js","https://sagecell.sagemath.org/static/embedded_sagecell.js"],
             templs = {}
             if not (is_tauno or is_rikki or is_parsons or is_simcir):
                 templs = get_all_templates('templates')
             result_json = {"js": ["/cs/js/build/csPlugin.js",
-
-                                  # "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML",  # will be loaded by JS lazily
-                                  # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
-                                  # "https://sagecell.sagemath.org/static/embedded_sagecell.js", # will be loaded by JS lazily
                                   ],
-                           # "/cs/js/embedded_sagecell.js"],
                            "angularModule": ["csApp", "csConsoleApp"],
                            "css": ["/cs/css/cs.css",
                                    "/cs/css/mathcheck.css"
                                    ], "multihtml": True, "multimd": True}
             if is_parsons:
                 result_json = {"js": ["/cs/js/build/csPlugin.js",
-                                      # "https://tim.it.jyu.fi/csimages/html/chart/Chart.min.js",
-                                      # "https://sagecell.sagemath.org/static/embedded_sagecell.js", # will be loaded by JS lazily
-                                      # "/cs/js/embedded_sagecell.js",
                                       "jqueryui-touch-punch",
                                       "/cs/js-parsons/lib/underscore-min.js",
                                       "/cs/js-parsons/lib/lis.js",
@@ -1083,8 +1063,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                "css": ["/cs/css/cs.css", "/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"],
                                "multihtml": True, "multimd": True}
             result_json.update(templs)
-            # result_json = {"js": ["js/dir.js"], "angularModule": ["csApp"],
-            #               "css": ["css/cs.css"]}
             result_str = json.dumps(result_json)
             return self.wout(result_str)
 
@@ -1253,7 +1231,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 exename = csfname
                 pure_exename = "./%s.py" % filename
                 fileext = "py"
-                pngname = "/csimages/%s.png" % rndname
+                pngname = "/csgenerated/%s.png" % rndname
                 imgsource = get_imgsource(query)
 
             if ttype == "swift":
@@ -1261,7 +1239,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 exename = csfname
                 pure_exename = "./%s.swift" % filename
                 fileext = "swift"
-                pngname = "/csimages/%s.png" % rndname
+                pngname = "/csgenerated/%s.png" % rndname
                 imgsource = get_imgsource(query)
 
             if ttype == "lua":
@@ -1269,7 +1247,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 exename = csfname
                 pure_exename = "./%s.lua" % filename
                 fileext = "lua"
-                pngname = "/csimages/%s.png" % rndname
+                pngname = "/csgenerated/%s.png" % rndname
                 imgsource = get_imgsource(query)
 
             if ttype == "octave":
@@ -1277,21 +1255,21 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 exename = csfname
                 pure_exename = "./%s.m" % filename
                 fileext = "m"
-                pngname = "/csimages/%s.png" % rndname
+                pngname = "/csgenerated/%s.png" % rndname
                 imgsource = get_imgsource(query)
                 wavsource = get_param(query, "wavsource", "")
-                # wavdest = "/csimages/%s/%s" % (self.user_id, wavsource)
-                wavdest = "/csimages/%s%s" % (rndname, wavsource) # rnd name to avoid browser cache problems
+                # wavdest = "/csgenerated/%s/%s" % (self.user_id, wavsource)
+                wavdest = "/csgenerated/%s%s" % (rndname, wavsource) # rnd name to avoid browser cache problems
                 # wavname = "%s/%s" % (self.user_id, wavsource)
                 wavname = "%s%s" % (rndname, wavsource)
-                mkdirs("/csimages/%s" % self.user_id)
+                mkdirs("/csgenerated/%s" % self.user_id)
 
             if ttype == "alloy":
                 csfname = "/tmp/%s/%s.als" % (basename, filename)
                 exename = csfname
                 pure_exename = "./%s.als" % filename
                 imgsource = "%s/mm.png" % prgpath
-                pngname = "/csimages/%s.png" % rndname
+                pngname = "/csgenerated/%s.png" % rndname
 
             if ttype == "shell":
                 csfname = "/tmp/%s/%s.sh" % (basename, filename)
@@ -1303,7 +1281,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 csfname = "/tmp/%s/%s" % (basename, filename)
                 exename = csfname
                 pure_exename = "/home/agent/%s" % filename
-                pngname = "/csimages/%s.png" % rndname
+                pngname = "/csgenerated/%s.png" % rndname
                 imgsource = get_imgsource(query)
 
             if ttype == "r":
@@ -1318,7 +1296,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 pure_exename = "./%s.r" % filename
                 imgsource = "%s/Rplot001.%s" % (prgpath, image_ext)
                 pure_pngname = u"{0:s}.{1:s}".format(rndname, image_ext)
-                pngname = "/csimages/%s.%s" % (rndname, image_ext)
+                pngname = "/csgenerated/%s.%s" % (rndname, image_ext)
 
             if ttype == "jjs":
                 csfname = "/tmp/%s/%s.js" % (basename, filename)
@@ -1355,7 +1333,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 imgsource = "/tmp/%s/output.bmp" % (basename)
                 fileext = "cs"
                 pure_bmpname = "./%s.bmp" % filename
-                pngname = "/csimages/%s.png" % rndname
+                pngname = "/csgenerated/%s.png" % rndname
                 pure_exename = u"{0:s}.exe".format(filename)
                 pure_pngname = u"{0:s}.png".format(rndname)
             if "comtest" in ttype:
@@ -1453,8 +1431,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if "graphics" in ttype:
                     # imgsource = "capture.png" % basename
                     imgsource = "%s/run/capture.png" % prgpath
-                    # pngname = "/csimages/%s.png" % basename
-                    pngname = "/csimages/%s.png" % rndname
+                    # pngname = "/csgenerated/%s.png" % basename
+                    pngname = "/csgenerated/%s.png" % rndname
 
                     # print("TYYPPI = " + ttype + " nimi = " + csfname + " class = " + javaclassname)
 
@@ -1567,10 +1545,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 if is_doc:
                     # doxygen
-                    #  ./doxygen/csdoc.sh /tmp/user/4d859744c28dbca8348fc24833ece03aa3050371f98a882bbd4b54e5da617114/3 /csimages/docs/vesal/abcd /csimages/docs/vesal
-                    # http://tim3/csimages/cs/docs/vesal/abcd/html/index.html
+                    #  ./doxygen/csdoc.sh /tmp/user/4d859744c28dbca8348fc24833ece03aa3050371f98a882bbd4b54e5da617114/3 /csgenerated/docs/vesal/abcd /csgenerated/docs/vesal
+                    # http://tim3/csgenerated/docs/vesal/abcd/html/index.html
                     #
-                    userdoc = "/csimages/docs/%s" % self.user_id
+                    userdoc = "/csgenerated/docs/%s" % self.user_id
                     docrnd = generate_filename()
                     doccmd = "/cs/doxygen/csdoc.sh %s %s/%s %s" % (prgpath, userdoc, docrnd, userdoc)
                     p = re.compile('\.java')
@@ -1578,7 +1556,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     p = re.compile('[^.]*\.')
                     docfilename = p.sub("", docfilename)
                     docfilename = docfilename.replace("_", "__")  # jostakin syystä tekee näin
-                    dochtml = "/csimages/cs/docs/%s/%s/html/%s_8%s.html" % (self.user_id, docrnd, docfilename, fileext)
+                    dochtml = "/csgenerated/docs/%s/%s/html/%s_8%s.html" % (self.user_id, docrnd, docfilename, fileext)
                     docfile = "%s/%s/html/%s_8%s.html" % (userdoc, docrnd, docfilename, fileext)
                     print("XXXXXXXXXXXXXXXXXXXXXX", filename)
                     print("XXXXXXXXXXXXXXXXXXXXXX", docfilename)
@@ -1587,7 +1565,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     doc_output = check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
                     if not os.path.isfile(
                             docfile):  # There is maybe more files with same name and it is difficult to guess the name
-                        dochtml = "/csimages/cs/docs/%s/%s/html/%s" % (self.user_id, docrnd, "files.html")
+                        dochtml = "/csgenerated/docs/%s/%s/html/%s" % (self.user_id, docrnd, "files.html")
                         print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
 
                     web["docurl"] = dochtml
@@ -1784,8 +1762,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 run(["convert", "-flip", imgsource, pngname], cwd=prgpath, timeout=20)
                 # print(imgsource, pngname)
                 remove(imgsource)
-                # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % (basename))
-                print("*** Screenshot: https://tim.it.jyu.fi/csimages/cs/%s\n" % pure_pngname)
+                # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csgenerated/%s.png\n" % (basename))
+                print("*** Screenshot: https://tim.it.jyu.fi/csgenerated/%s\n" % pure_pngname)
                 # TODO: clean up screenshot directory
                 p = re.compile('Number of joysticks:.*\n.*')
                 # out = out.replace("Number of joysticks:.*","")
@@ -1793,8 +1771,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if code == -9:
                     out = "Runtime exceeded, maybe loop forever\n" + out
                 else:
-                    # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
-                    web["image"] = "/csimages/cs/" + pure_pngname
+                    # web["image"] = "http://tim-beta.it.jyu.fi/csgenerated/" + basename + ".png"
+                    web["image"] = "/csgenerated/" + pure_pngname
                     give_points(points_rule, "run")
                 if delete_tmp:
                     remove(csfname)
@@ -1822,8 +1800,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     err = err + "\n" + str(e) + "\n" + out
                     print(e)
 
-                    # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % (basename))
-                print("*** Screenshot: http://tim-beta.it.jyu.fi/csimages/cs/%s.png\n" % rndname)
+                    # self.wfile.write("*** Screenshot: http://tim-beta.it.jyu.fi/csgenerated/%s.png\n" % (basename))
+                print("*** Screenshot: http://tim-beta.it.jyu.fi/csgenerated/%s.png\n" % rndname)
                 # TODO: clean up screenshot directory
                 p = re.compile('Xlib:  extension "RANDR" missing on display ":1"\.\n')
                 # out = out.replace("Number of joysticks:.*","")
@@ -1831,8 +1809,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if code == -9:
                     out = "Runtime exceeded, maybe loop forever\n" + out
                 else:
-                    # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
-                    web["image"] = "/csimages/cs/" + rndname + ".png"
+                    # web["image"] = "http://tim-beta.it.jyu.fi/csgenerated/" + basename + ".png"
+                    web["image"] = "/csgenerated/" + rndname + ".png"
                     give_points(points_rule, "run")
 
             elif ttype == "r":
@@ -1847,12 +1825,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 image_ok, e = copy_file(imgsource, pngname, True, True)  # is_optional_image)
                 remove(imgsource)
                 debug_str("r kuva kopioitu")
-                print("*** Screenshot: https://tim.it.jyu.fi/csimages/cs/%s\n" % pure_pngname)
+                print("*** Screenshot: https://tim.it.jyu.fi/csgenerated/%s\n" % pure_pngname)
                 if code == -9:
                     out = "Runtime exceeded, maybe loop forever\n" + out
                 else:
                     if image_ok:
-                        web["image"] = "/csimages/cs/" + pure_pngname
+                        web["image"] = "/csgenerated/" + pure_pngname
                         give_points(points_rule, "run")
                 if delete_tmp:
                     remove(csfname)
@@ -1868,11 +1846,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if code == -9:
                     out = "Runtime exceeded, maybe loop forever\n" + out
                 else:
-                    # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                    # web["image"] = "http://tim-beta.it.jyu.fi/csgenerated/" + basename + ".png"
                     image_ok, e = copy_file(imgsource, pngname, True, is_optional_image)
                     print(is_optional_image, image_ok)
                     if image_ok:
-                        web["image"] = "/csimages/cs/" + rndname + ".png"
+                        web["image"] = "/csgenerated/" + rndname + ".png"
                         give_points(points_rule, "run")
 
             elif ttype == "comtest":
@@ -2003,11 +1981,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                             image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                             if e:
                                 err = (str(err) + "\n" + str(e) + "\n" + str(out))
-                            # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                            # web["image"] = "http://tim-beta.it.jyu.fi/csgenerated/" + basename + ".png"
                             print(is_optional_image, image_ok)
                             remove(imgsource)
                             if image_ok:
-                                web["image"] = "/csimages/cs/" + rndname + ".png"
+                                web["image"] = "/csgenerated/" + rndname + ".png"
                 elif ttype == "java":
                     print("java: ", javaclassname)
                     # code, out, err = run2(["java" ,"-cp",prgpath, javaclassname], timeout=10, env=env, uargs = userargs)
@@ -2075,11 +2053,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                             image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                             if e:
                                 err = (str(err) + "\n" + str(e) + "\n" + str(out))
-                            # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                            # web["image"] = "http://tim-beta.it.jyu.fi/csgenerated/" + basename + ".png"
                             print(is_optional_image, image_ok)
                             remove(imgsource)
                             if image_ok:
-                                web["image"] = "/csimages/cs/" + rndname + ".png"
+                                web["image"] = "/csgenerated/" + rndname + ".png"
 
                 elif ttype == "jjs":
                     print("jjs: ", exename)
@@ -2114,11 +2092,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                         if e:
                             err = (str(err) + "\n" + str(e) + "\n" + str(out))
-                        # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                        # web["image"] = "http://tim-beta.it.jyu.fi/csgenerated/" + basename + ".png"
                         print(is_optional_image, image_ok)
                         remove(imgsource)
                         if image_ok:
-                            web["image"] = "/csimages/cs/" + rndname + ".png"
+                            web["image"] = "/csgenerated/" + rndname + ".png"
 
                 elif ttype == "swift":
                     print("swift: ", exename)
@@ -2129,11 +2107,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                         if e:
                             err = (str(err) + "\n" + str(e) + "\n" + str(out))
-                        # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                        # web["image"] = "http://tim-beta.it.jyu.fi/csgenerated/" + basename + ".png"
                         print(is_optional_image, image_ok)
                         remove(imgsource)
                         if image_ok:
-                            web["image"] = "/csimages/cs/" + rndname + ".png"
+                            web["image"] = "/csgenerated/" + rndname + ".png"
 
                 elif ttype == "lua":
                     print("lua: ", exename)
@@ -2143,11 +2121,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, True, is_optional_image)
                         if e:
                             err = (str(err) + "\n" + str(e) + "\n" + str(out))
-                        # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                        # web["image"] = "http://tim-beta.it.jyu.fi/csgenerated/" + basename + ".png"
                         print(is_optional_image, image_ok)
                         remove(imgsource)
                         if image_ok:
-                            web["image"] = "/csimages/cs/" + rndname + ".png"
+                            web["image"] = "/csgenerated/" + rndname + ".png"
 
                 elif ttype == "octave":
                     print("octave: ", exename)
@@ -2188,11 +2166,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         image_ok, e = copy_file(filepath + "/" + imgsource, pngname, False, is_optional_image)
                         if e:
                             err = (str(err) + "\n" + str(e) + "\n" + str(out))
-                        # web["image"] = "http://tim-beta.it.jyu.fi/csimages/cs/" + basename + ".png"
+                        # web["image"] = "http://tim-beta.it.jyu.fi/csgenerated/" + basename + ".png"
                         print(is_optional_image, image_ok)
                         # remove(imgsource)
                         if image_ok:
-                            web["image"] = "/csimages/cs/" + rndname + ".png"
+                            web["image"] = "/csgenerated/" + rndname + ".png"
                     if wavsource and wavdest:
                         remove(wavdest)
                         wav_ok, e = copy_file(filepath + "/" + wavsource, wavdest, True, is_optional_image)
@@ -2201,7 +2179,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         print("WAV: ", is_optional_image, wav_ok, wavname, wavsource, wavdest)
                         remove(wavsource)
                         if wav_ok:
-                            web["wav"] = "/csimages/cs/" + wavname
+                            web["wav"] = "/csgenerated/" + wavname
 
                 elif ttype == "clisp":
                     print("clips: ", exename)
