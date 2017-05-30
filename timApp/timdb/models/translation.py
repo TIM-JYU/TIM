@@ -30,7 +30,7 @@ class Translation(db.Model, DocInfo):
 
     @property
     def path(self):
-        return self.path_without_lang + '/' + self.lang_id
+        return self.path_without_lang + '/' + self.lang_id if self.lang_id else self.path_without_lang
 
     @property
     def id(self):

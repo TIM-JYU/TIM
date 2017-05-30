@@ -50,6 +50,10 @@ class DocEntry(db.Model, DocInfo):
         return trs
 
     @staticmethod
+    def get_all() -> List['DocEntry']:
+        return DocEntry.query.all()
+
+    @staticmethod
     def find_all_by_id(doc_id: int) -> List['DocEntry']:
         return DocEntry.query.filter_by(id=doc_id).all()
 
