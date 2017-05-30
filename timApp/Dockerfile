@@ -98,8 +98,8 @@ run sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloa
 # Ensure that netcat is installed.
 run apt-get install --no-install-recommends -y netcat-openbsd
 
-# Default startup command.
-cmd cd /service/timApp && source /service/scripts/_initenv.sh && python3 launch.py
+workdir /service
+cmd python3 launch.py
 
 expose 22
 expose 5000
