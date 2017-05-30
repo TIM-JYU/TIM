@@ -1,5 +1,5 @@
 # Start from the Ubuntu image
-from ubuntu:16.04
+from ubuntu:17.04
 maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
 # Configure timezone and locale
@@ -14,10 +14,15 @@ run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 # Install Python, pip and other necessary packages
 
 run apt-get install --no-install-recommends -y openssh-server
-run apt-get install --no-install-recommends -y python3 python3-setuptools python3-pip
+run apt-get install --no-install-recommends -y python3.6 python3-setuptools python3-pip
+
+# Make Python 3.6 the default one
+run rm /usr/bin/python3
+run ln -s /usr/bin/python3.6 /usr/bin/python3
+
 run apt-get install --no-install-recommends -y git-core
 
-run apt-get install --no-install-recommends -y zlib1g-dev libxml2-dev libxslt-dev python3-dev # lxml dependencies
+run apt-get install --no-install-recommends -y zlib1g-dev libxml2-dev libxslt-dev python3.6-dev # lxml dependencies
 run apt-get install --no-install-recommends -y libyaml-dev # C-parser for PyYAML
 run apt-get install --no-install-recommends -y libmagic1 # python-magic dependency
 run apt-get install --no-install-recommends -y gcc g++
@@ -92,7 +97,7 @@ run echo 'root:test' | chpasswd
 run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # Flask-Testing does not let us configure host, so we do it here.
-run sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.5/dist-packages/flask_testing/utils.py
+run sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.6/dist-packages/flask_testing/utils.py
 
 # Ensure that netcat is installed.
 run apt-get install --no-install-recommends -y netcat-openbsd
