@@ -93,7 +93,7 @@ run npm install -g typescript tslint jspm
 
 run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd
-run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+run sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # Flask-Testing does not let us configure host, so we do it here.
 run sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.6/dist-packages/flask_testing/utils.py
