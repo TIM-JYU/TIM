@@ -85,8 +85,6 @@ run mkdir /service
 run useradd -M agent
 run chown -R agent /service
 
-# angular-timer depends on humanize-duration version 2.8 but it appears to work fine with 3.10, so we force the install.
-# Due to https://github.com/angular-ui/ui-grid/issues/5926, we install version 4.0.1 of angular-ui-grid and not 4.0.2.
 run apt-get install --no-install-recommends -y npm
 run ln -s /usr/bin/nodejs /usr/bin/node
 run npm install -g typescript tslint jspm
