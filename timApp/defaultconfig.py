@@ -54,6 +54,4 @@ WUFF_EMAIL = 'wuff@tim.jyu.fi'
 KORPPI_AUTHORIZE_URL = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.jsp"
 GLOBAL_NOTIFICATION_FILE = '/tmp/global_notification.html'
 
-# Whether to use minified JavaScript build (affects the script choice in base.html)
-USE_OPTIMIZED_JS = False
 QST_PLUGIN_PORT = 5000

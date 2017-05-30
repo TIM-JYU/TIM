@@ -63,10 +63,6 @@ app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
 setup_logging(app)
 log_info('Using database: {}'.format(app.config['DATABASE']))
-if app.config['USE_OPTIMIZED_JS']:
-    log_info('Using optimized JavaScript')
-else:
-    log_info('Not using optimized JavaScript')
 default_secret = app.config['SECRET_KEY']
 if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
     log_warning('secret file not found, using default values - do not run in production!')
