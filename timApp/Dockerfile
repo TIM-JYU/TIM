@@ -1,6 +1,5 @@
 # Start from the Ubuntu image
 from ubuntu:17.04
-maintainer Ville Tirronen "ville.tirronen@jyu.fi"
 
 # Configure timezone and locale
 run apt-get update
