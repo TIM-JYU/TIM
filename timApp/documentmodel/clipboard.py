@@ -6,7 +6,7 @@ from documentmodel.document import Document
 from documentmodel.docparagraph import DocParagraph, is_real_id
 from documentmodel.documentwriter import DocumentParser, DocumentWriter
 from documentmodel.randutils import random_id
-from typing import Dict, Generic, List, Optional
+from typing import Dict, List, Optional, Any
 
 from timdb.timdbexception import TimDbException
 
@@ -88,7 +88,7 @@ class Clipboard:
             metadata.update(kwargs)
             self.write_metadata(**metadata)
 
-        def write(self, pars: List[Dict[str, Generic]]):
+        def write(self, pars: List[Dict[str, Any]]):
             os.makedirs(self.path, exist_ok=True)
             text = DocumentWriter(pars).get_text()
             with open(self.get_clipfilename(), 'wt', encoding='utf-8') as clipfile:
