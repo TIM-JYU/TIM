@@ -26,9 +26,8 @@ run apt-get install --no-install-recommends -y libyaml-dev # C-parser for PyYAML
 run apt-get install --no-install-recommends -y libmagic1 # python-magic dependency
 run apt-get install --no-install-recommends -y gcc g++
 
-run apt-get install --no-install-recommends -y python3-psycopg2
-
 run pip3 install wheel
+run pip3 install psycopg2
 run pip3 install SQLAlchemy
 run pip3 install flask
 run pip3 install flask-compress
