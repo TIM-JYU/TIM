@@ -1,3 +1,6 @@
+import os
+import re
+
 from typing import List, Iterable
 from typing import Optional
 
@@ -168,8 +171,14 @@ class Folder(db.Model, Item):
         else:
             return None
 
-    def get_all_documents(self) -> List[DocEntry]:
-        return DocEntry.query.filter(DocEntry.name.contains(self.get_full_path()))
+    def get_all_documents(self, include_subdirs: bool = False) -> List[DocEntry]:
+
+        query = DocEntry.query.filter(DocEntry.name.like(self.get_full_path() + '%'))
+
+        if include_subdirs is False:
+            query.filter(DocEntry.name.notlike(self.get_full_path() + '%' + os.sep + '%'))
+
+        return query.all()
 
 
     @staticmethod
