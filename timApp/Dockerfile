@@ -14,6 +14,7 @@ run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 
 run apt-get install --no-install-recommends -y openssh-server
 run apt-get install --no-install-recommends -y python3.6 python3-setuptools python3-pip
+run pip3 install --upgrade pip
 
 # Make Python 3.6 the default one
 run rm /usr/bin/python3
