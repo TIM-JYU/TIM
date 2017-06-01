@@ -4,11 +4,12 @@ Routes for printing a document
 import os
 from typing import Optional
 
-from flask import Blueprint, send_file
+from flask import Blueprint, send_file, jsonify
 from flask import Response
 from flask import g
 from flask import abort
 from flask import current_app
+from flask import request
 
 import sessioninfo
 from accesshelper import verify_logged_in
@@ -42,95 +43,56 @@ def pull_doc_path(endpoint, values):
             abort(404)
 
 
-@print_blueprint.route("/latex/<path:doc_path>", methods=['GET'])
-def print_document_as_latex(doc_path):
-    doc = DocEntry.find_by_path(doc_path)
-
-#    path_to_doc = fetch_document_from_db(doc_entry=doc, file_type='latex')
-#    if path_to_doc is "":
-#        path_to_doc = create_printed_doc(doc_entry=doc, file_type='latex', temp=True)
-    return Response(PrintSettings.read_settings(doc, g.user), mimetype='text/plain')
-
-
-@print_blueprint.route("/pdf/<path:doc_path>", methods=['GET'])
-def print_document_as_pdf(doc_path):
+@print_blueprint.route("/<path:doc_path>", methods=['GET'])
+def print_document(doc_path):
     doc = g.doc_entry
 
-    path_to_doc = fetch_document_from_db(doc_entry=doc, file_type=PrintFormat.PDF)
-    if path_to_doc is None:
-        path_to_doc = create_printed_doc(doc_entry=doc, file_type=PrintFormat.PDF, temp=True)
-    return send_file(filename_or_fp=path_to_doc, mimetype='application/pdf')
+    file_type = request.args.get('file_type')
+    template_doc_id = request.args.get('template_doc_id')
+    #print("file_type: %s" % file_type)
+    if file_type is None or file_type.lower() not in [f.value for f in PrintFormat]:
+        abort(404, "The supplied parameter 'file_type' was not valid.")
+
+    if template_doc_id is None:
+        abort(404, "You need to supply a value for parameter 'template_doc_id'.")
+
+    template_doc_id = int(float(template_doc_id))
+    template_doc = DocEntry.query.filter(DocEntry.id == template_doc_id).first()
+
+    if template_doc is None:
+        abort(404, "The supplied parameter 'template_doc_id' was not valid.")
+
+    type = PrintFormat[file_type.upper()]
+    path_to_doc = create_printed_doc(doc_entry=doc, file_type=type, temp=True)
+    mime = get_mimetype_for_format(type)
+
+    if mime is None:
+        abort(404, "The supplied parameter 'file_type' was not valid.")
+
+    return send_file(filename_or_fp=path_to_doc, mimetype=mime)
 
 
-@print_blueprint.route("/testing/latex/<path:doc_path>", methods=['GET'])
-def test_latex(doc_path):
+@print_blueprint.route("/getTemplatesJSON/<path:doc_path>", methods=['GET'])
+def get_templates(doc_path):
     doc = g.doc_entry
+    user = g.user
 
-    printer = DocumentPrinter(doc_entry=doc)
-    path = printer.get_print_path(file_type=PrintFormat.LATEX)
-    if os.path.exists(path):
-        os.remove(path)
-
-    path_to_doc = create_printed_doc(doc_entry=doc, file_type=PrintFormat.LATEX, temp=True)
-    return send_file(filename_or_fp=path_to_doc, mimetype='text/plain')
-
-
-@print_blueprint.route("/testing/pdf/<path:doc_path>", methods=['GET'])
-def test_pdf(doc_path):
-    doc = g.doc_entry
-
-    printer = DocumentPrinter(doc_entry=doc)
-    path = printer.get_print_path(file_type=PrintFormat.PDF)
-    if os.path.exists(path):
-        os.remove(path)
-
-    path_to_doc = create_printed_doc(doc_entry=doc, file_type=PrintFormat.PDF, temp=True)
-    return send_file(filename_or_fp=path_to_doc, mimetype='application/pdf')
-
-
-@print_blueprint.route("/getDefaultTemplate/<path:doc_path>", methods=['GET'])
-def get_default_template(doc_path):
-    # Gets the latest default printing template from the tree
-    # Precedence is determined such that newest equals closest to the document
-    # atm. only for testing
-    doc = g.doc_entry
-    template_doc = None
-    if doc is not None:
-        template_doc = DocumentPrinter.get_default_template(doc_entry=doc)
-    template_content = None
-    if template_doc is not None:
-        template_content = DocumentPrinter(doc_entry=template_doc)._content
-
-    if template_content is None:
-        abort(404)
-    else:
-        return Response(template_content, mimetype='text/plain')
-
-
-@print_blueprint.route("/getCustomTemplate/<path:doc_path>", methods=['GET'])
-def get_custom_template(doc_path):
-    # Gets the custom template file for the document
-    # The template is presumed to be located at <doc_folder>/Templates/<doc_name>
-    # If the template does not exist, such a file is created by copying the latest default template
-    # and the new document is returned.
-    doc = g.doc_entry
-    template_doc = None
-    if doc is not None:
-        template_doc = DocumentPrinter.get_custom_template(doc_entry=doc)
-    template_content = None
-    if template_doc is not None:
-        template_content = DocumentPrinter(doc_entry=template_doc)._content
-
-    if template_content is None:
-        abort(404)
-    else:
-        return Response(template_content, mimetype='text/plain')
-
+    templates = DocumentPrinter.get_templates_as_dict(doc, user)
+    return jsonify(templates)
 
 
 @print_blueprint.route("/editSettings", methods=['POST'])
 def edit_settings():
     return
+
+
+def get_mimetype_for_format(file_type: PrintFormat):
+    if file_type == PrintFormat.PDF:
+        return 'application/pdf'
+    elif file_type == PrintFormat.LATEX:
+        return 'text/plain'
+    else:
+        return None
 
 
 def fetch_document_from_db(doc_entry: DocEntry, file_type: PrintFormat) -> Optional[str]:
@@ -158,8 +120,15 @@ def create_printed_doc(doc_entry: DocEntry, file_type: PrintFormat, temp: bool) 
     :return str: path to the created file
     """
 
+    printer = DocumentPrinter(doc_entry=doc_entry,
+                              template_to_use=DocumentPrinter.get_custom_template(doc_entry=doc_entry))
+
+    existing_doc_path = printer.get_printed_document_path_from_db(file_type=file_type)
+
+    if existing_doc_path is not None:
+        return existing_doc_path
+
     try:
-        printer = DocumentPrinter(doc_entry=doc_entry)
         path = printer.get_print_path(temp=temp, file_type=file_type)
 
         if os.path.exists(path):
@@ -171,10 +140,15 @@ def create_printed_doc(doc_entry: DocEntry, file_type: PrintFormat, temp: bool) 
         with open(path, mode='wb') as doc_file:
             doc_file.write(printer.write_to_format(target_format=file_type))
 
+        doc_version = printer.get_document_version_as_float()
+
         p_doc = PrintedDoc(doc_id=doc_entry.document.doc_id,
+                           doc_version=doc_version,
+                           template_doc_id = printer._template_to_use.document.doc_id,
+                           template_doc_version = printer.get_template_version_as_float(),
                            path_to_file=path,
-                           temp=temp,
-                           settings_hash='TESTING#####')
+                           file_type = file_type.value,
+                           temp=temp)
 
         db.session.add(p_doc)
         db.session.commit()
