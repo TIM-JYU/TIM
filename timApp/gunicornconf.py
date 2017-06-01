@@ -1,3 +1,7 @@
+# workaround for https://github.com/requests/requests/issues/3752
+import gevent.monkey
+gevent.monkey.patch_ssl()
+
 import os
 import sys
 # Without this, the timdb import will fail
