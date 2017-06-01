@@ -8,7 +8,7 @@ and their labels. The module also retrieves the data related to velps and their 
 """
 
 import copy
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 
 from timdb.timdbbase import TimDbBase
 from timdb.velp_models import Velp, VelpVersion, VelpLabel, VelpLabelContent
@@ -187,7 +187,7 @@ class Velps(TimDbBase):
         vlc.content = content
         self.session.commit()
 
-    def get_velp_label_ids_for_velp(self, velp_id: int) -> dict():
+    def get_velp_label_ids_for_velp(self, velp_id: int) -> Dict:
         """Gets labels for one velp.
 
         :param velp_id: ID of velp
@@ -242,7 +242,7 @@ class Velps(TimDbBase):
 
     # Methods for getting information for document
 
-    def get_velp_content_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI') -> dict():
+    def get_velp_content_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI') -> Dict:
         """Gets velp content including labels and velp groups for document.
 
         Uses VelpGroupsInDocument table data to determine which velp groups are usable
@@ -302,7 +302,7 @@ class Velps(TimDbBase):
 
         return velp_data
 
-    def get_velps_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI') -> dict():
+    def get_velps_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI') -> Dict:
         """Gets velps for document.
 
         Uses VelpGroupsInDocument table data to determine which velp groups and via those which velps are usable
@@ -348,7 +348,7 @@ class Velps(TimDbBase):
         results = self.resultAsDictionary(cursor)
         return results
 
-    def get_velp_group_ids_for_document(self, doc_id: int, user_id: int) -> dict():
+    def get_velp_group_ids_for_document(self, doc_id: int, user_id: int) -> Dict:
         """Gets velp group ids for document.
 
         Uses VelpGroupsInDocument table data to determine which velp groups are usable
@@ -384,7 +384,7 @@ class Velps(TimDbBase):
         results = self.resultAsDictionary(cursor)
         return results
 
-    def get_velp_label_ids_for_document(self, doc_id: int, user_id: int) -> dict():
+    def get_velp_label_ids_for_document(self, doc_id: int, user_id: int) -> Dict:
         """Gets velp labels ids for document.
 
         Uses VelpGroupsInDocument table data to determine which velp groups and via those which velp labels are usable
@@ -421,7 +421,7 @@ class Velps(TimDbBase):
         results = self.resultAsDictionary(cursor)
         return results
 
-    def get_velp_label_content_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI') -> dict():
+    def get_velp_label_content_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI') -> Dict:
         """Gets velp label content for document.
 
         Uses VelpGroupsInDocument table data to determine which velp groups and via those which velp labels are usable

@@ -8,7 +8,7 @@ from documentmodel.docparagraph import DocParagraph
 
 class DocumentVersion(Document):
 
-    def __init__(self, doc_id: int, doc_ver: 'tuple(int, int)',
+    def __init__(self, doc_id: int, doc_ver: Tuple[int, int],
                  files_root=None, modifier_group_id: Optional[int] = 0):
         super(DocumentVersion, self).__init__(doc_id, files_root, modifier_group_id)
         self.does_exist = None

@@ -81,7 +81,7 @@ class Document:
         return os.path.exists(os.path.join(cls.get_documents_dir(froot), str(doc_id)))
 
     @classmethod
-    def version_exists(cls, doc_id: int, doc_ver: 'tuple(int,int)', files_root: Optional[str] = None) -> bool:
+    def version_exists(cls, doc_id: int, doc_ver: Tuple[int, int], files_root: Optional[str] = None) -> bool:
         """Checks if a document version exists.
 
         :param doc_id: Document id.
