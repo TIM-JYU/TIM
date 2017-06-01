@@ -8,25 +8,35 @@ import re
 import sys
 
 import pypandoc
+from flask import jsonify
 
+from accesshelper import has_view_access
+from documentmodel.documentversion import DocumentVersion
+from timdb.documents import Documents
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
+from timdb.models.printeddoc import PrintedDoc
+from timdb.models.user import User
 from timdb.printsettings import PrintFormat
+from timdb.tim_models import db
 
-TEMPLATES_FOLDER = 'Templates'
-DEFAULT_TEMPLATE_NAME = 'default'
+FILES_ROOT = os.path.abspath('tim_files')
+DEFAULT_PRINTING_FOLDER = os.path.join(FILES_ROOT, 'printed_documents')
+TEMPORARY_PRINTING_FOLDER = os.path.join(DEFAULT_PRINTING_FOLDER, 'tmp')
+TEMPLATES_FOLDER = os.path.join('Templates', 'Printing')
+DEFAULT_TEMPLATE_NAME = 'Default'
 
 class PrintingError(Exception):
     pass
 
 
 class DocumentPrinter:
-    default_files_root = 'tim_files'
-    default_printing_folder = 'printed_documents'
-    temporary_docs_folder = 'temp'
 
-    def __init__(self, doc_entry: DocEntry):
+    def __init__(self, doc_entry: DocEntry, template_to_use: DocEntry):
         self._doc_entry = doc_entry
+        if template_to_use is None:
+            template_to_use = DocumentPrinter.get_default_template(doc_entry)
+        self._template_to_use = template_to_use
 
     @property
     def _content(self) -> str:
@@ -60,7 +70,7 @@ class DocumentPrinter:
 
     @property
     def _images_root(self) -> str:
-        return os.path.join(os.path.abspath(self.default_files_root), 'blocks')
+        return os.path.join(os.path.abspath(FILES_ROOT), 'blocks')
 
     def write_to_format(self, target_format: PrintFormat) -> bytearray:
         """
@@ -81,16 +91,15 @@ class DocumentPrinter:
         with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file,\
              tempfile.NamedTemporaryFile(suffix='.' + target_format.value, delete=True) as output_file:
 
-            template_doc = DocumentPrinter.get_custom_template(doc_entry=self._doc_entry)
+            if self._template_to_use is None:
+                raise PrintingError("No template chosen for the printing. Printing was cancelled.")
 
-            if template_doc is None:
-                raise PrintingError("No default template exists in the document tree. Printing was cancelled.")
-
-            template_content = DocumentPrinter.parse_template_content(template_doc)
+            template_content = DocumentPrinter.parse_template_content(self._template_to_use)
 
             if template_content is None:
-                raise PrintingError("The content in the template document %s is not valid." % template_doc.path)
+                raise PrintingError("The content in the template document %s is not valid." % self._template_to_use.path)
 
+            self._template_doc = self._template_to_use
             template_file.write(bytearray(template_content, encoding='utf-8'))
             # template_file.seek(0)
             # print("Wrote template:\n %s" % template_file.read().decode(encoding='utf-8'))
@@ -137,9 +146,9 @@ class DocumentPrinter:
         :return: 
         """
 
-        path = os.path.join(self.default_files_root,
-                            self.default_printing_folder,
-                            self.temporary_docs_folder if temp else "",
+        doc_version = self._doc_entry.document.get_latest_version().get_version()
+        print("Document id: %s, version (%s, %s)" % (self._doc_entry.document.doc_id, doc_version[0], doc_version[1]))
+        path = os.path.join(TEMPORARY_PRINTING_FOLDER if temp else DEFAULT_PRINTING_FOLDER,
                             self._doc_entry.name + "." + file_type.value)
 
         return path
@@ -163,7 +172,7 @@ class DocumentPrinter:
 
     @staticmethod
     def _recurse_search_default_templates_from_folder(folder: Folder) -> List[DocEntry]:
-        print("Searching for default templates in folder %s%s" % (os.sep, folder.path))
+        # print("Searching for default templates in folder %s%s" % (os.sep, folder.path))
 
         Folder.query.filter(Folder.location)
 
@@ -173,11 +182,11 @@ class DocumentPrinter:
         template_doc = folder.get_document(template_path)
 
         if template_doc is not None:
-            print("Found template @ %s" % template_doc.path)
+            # print("Found template @ %s" % template_doc.path)
             return [template_doc].append(template_doc)
         else:
             if folder.is_root():
-                print("Reached root...")
+                # print("Reached root...")
                 return []
             else:
                 return DocumentPrinter._recurse_search_default_template_from_folder(folder=folder.parent)
@@ -190,18 +199,18 @@ class DocumentPrinter:
 
     @staticmethod
     def get_custom_template(doc_entry: DocEntry) -> DocEntry:
-        print("Getting custom template...")
+        # print("Getting custom template...")
         folder = Folder.find_by_path(doc_entry.location)
         doc_name = os.path.split(doc_entry.name)[1] # get the filename i.e. the last name in path
-        print("Doc name is %s " % doc_name)
+        # print("Doc name is %s " % doc_name)
         template_path = os.path.join(TEMPLATES_FOLDER, doc_name)
         template_doc = folder.get_document(relative_path=template_path)
 
         if template_doc is not None:
-            print("Found document template at %s " % template_doc.location)
+            # print("Found document template at %s " % template_doc.location)
             return template_doc
         else:
-            print("The document template does not exist. Creating one...")
+            # print("The document template does not exist. Creating one...")
             default_template = DocumentPrinter.get_default_template(doc_entry=doc_entry)
             if default_template is None:
                 raise PrintingError("No default template is defined in the document tree.")
@@ -210,6 +219,98 @@ class DocumentPrinter:
             template_doc.document.update(default_template.document.export_markdown(),
                                          template_doc.document.export_markdown())
             return template_doc
+
+    @staticmethod
+    def get_user_templates(doc_entry: DocEntry, current_user: User) -> List[DocEntry]:
+        templates = []
+
+        if doc_entry is None or current_user is None:
+            raise PrintingError("You need to supply both the DocEntry and User to fetch the printing templates.")
+
+        print("Searching for user's own templates")
+        path = os.path.join(current_user.get_personal_folder().get_full_path(), TEMPLATES_FOLDER)
+
+        print("Trying path " + path)
+        templates_folder = Folder.find_by_path(path)
+
+        if templates_folder is not None and has_view_access(templates_folder.id):
+
+            print("Looking into the template folder " + templates_folder.get_full_path())
+
+            docs = templates_folder.get_all_documents()
+
+            if docs is not None:
+                for d in docs:
+                    if has_view_access(d.id):
+                        print("Found the document " + d.name)
+                        templates.append(d)
+
+        return templates
+
+    @staticmethod
+    def get_all_templates(doc_entry: DocEntry, current_user: User) -> List[DocEntry]:
+        templates = []
+
+        if doc_entry is None or current_user is None:
+            raise PrintingError("You need to supply both the DocEntry and User to fetch the printing templates.")
+
+
+        print("Crawling up the document tree searching for all accessible templates")
+        current_folder = doc_entry.parent
+        while (current_folder is not None):
+
+            print("Searching for templates in " + current_folder.get_full_path())
+            path = os.path.join(current_folder.get_full_path(),
+                                TEMPLATES_FOLDER)
+
+            print("Trying path " + path)
+            templates_folder = Folder.find_by_path(path)
+
+            if templates_folder is not None and has_view_access(templates_folder.id):
+
+                print("Looking into the template folder " + templates_folder.get_full_path())
+
+                docs = templates_folder.get_all_documents()
+
+                if docs is None:
+                    continue
+
+                for d in docs:
+                    if has_view_access(d.id):
+                        print("Found the document " + d.name)
+                        templates.append(d)
+
+            current_folder = current_folder.parent
+
+        return templates
+
+
+    @staticmethod
+    def get_templates_as_dict(doc_entry: DocEntry, current_user: User):
+        user_templates = DocumentPrinter.get_all_templates(doc_entry=doc_entry, current_user=current_user)
+        all_templates = DocumentPrinter.get_all_templates(doc_entry=doc_entry, current_user=current_user)
+
+        default_templates = list(set(all_templates) - set(user_templates))
+
+        templates_dict = {}
+
+        user_templates_dict = {}
+        counter = 0
+        for t in user_templates:
+            user_templates_dict.update({counter : {'doc_id': t.id, 'path': t.name}})
+            counter += 1
+
+        default_templates_dict = {}
+        counter = 0
+        for t in default_templates:
+            default_templates_dict.update({counter: {'doc_id': t.id, 'path': t.name}})
+            counter += 1
+
+        templates_dict.update({'user_templates': user_templates_dict})
+        templates_dict.update({'default_templates': default_templates_dict})
+
+        return templates_dict
+
 
     @staticmethod
     def remove_block_markers(template_md: str) -> str:
@@ -230,3 +331,33 @@ class DocumentPrinter:
                 pars.append(DocumentPrinter.remove_block_markers(par_content))
 
         return "\n\n".join(pars)
+
+    def get_document_version_as_float(self) -> float:
+        doc_v = self._doc_entry.document.get_latest_version().get_version()
+        doc_v_fst, doc_v_snd = doc_v[0], doc_v[1]
+        return doc_v_fst + doc_v_snd/10
+
+    def get_template_version_as_float(self) -> Optional[float]:
+        if self._template_to_use is None:
+            return None
+
+        doc_v = self._template_to_use.document.get_latest_version().get_version()
+        doc_v_fst, doc_v_snd = doc_v[0], doc_v[1]
+        return doc_v_fst + doc_v_snd/10
+
+    def get_printed_document_path_from_db(self, file_type: PrintFormat) -> Optional[str]:
+        current_doc_version = self.get_document_version_as_float()
+        current_template_version = self.get_template_version_as_float()
+
+        existing_print = db.session.query(PrintedDoc). \
+            filter(PrintedDoc.doc_id == self._doc_entry.document.doc_id).\
+            filter(PrintedDoc.template_doc_id == self._template_to_use.document.doc_id).\
+            filter(PrintedDoc.file_type == file_type.value).\
+            filter(PrintedDoc.doc_version == current_doc_version).\
+            filter(PrintedDoc.template_doc_version == current_template_version).\
+            first()
+
+        if existing_print is None or not os.path.exists(existing_print.path_to_file):
+            return None
+
+        return existing_print.path_to_file
