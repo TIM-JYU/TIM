@@ -1,3 +1,6 @@
+import os
+import re
+
 from typing import List, Iterable
 from typing import Optional
 
@@ -167,6 +170,16 @@ class Folder(db.Model, Item):
                                    title=relative_path)
         else:
             return None
+
+    def get_all_documents(self, include_subdirs: bool = False) -> List[DocEntry]:
+
+        query = DocEntry.query.filter(DocEntry.name.like(self.get_full_path() + '%'))
+
+        if include_subdirs is False:
+            query.filter(DocEntry.name.notlike(self.get_full_path() + '%' + os.sep + '%'))
+
+        return query.all()
+
 
     @staticmethod
     def create(path: str, owner_group_id: int, title=None, commit=True, apply_default_rights=False) -> 'Folder':

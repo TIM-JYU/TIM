@@ -132,11 +132,11 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
                 });
         };
 
-        $scope.printDocument = function () {
-            var testi = {
-                "testialkio": "jes toimii",
-                "toka": "ihan jess"
-            }
+        /**
+         *
+         * @param settings_data : print settings
+         */
+        $scope.openPrintDialog = function (settings_data) {
 
             var modalInstance = $uibModal.open({
                 animation: false,
@@ -148,23 +148,34 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
                 size: 'sm',
                 resolve: {
                     document: function () {
-                        console.log(document);
-                        console.log($window.item)
+                        // console.log(document);
+                        // console.log($window.item);
+                        // console.log($window.item.path);
                         return $window.item;
                     },
-                    testaa: function () {
-                        console.log(testi);
-                        console.log(testi.testialkio);
-                        return testi
+                    get_settings: function () {
+                        //console.log(settings_data);
+                        return settings_data;
                     }
                 }
             });
 
             modalInstance.result.then(function () {
-                console.log('test');
+                $log.info('modal works');
             }, function () {
                 $log.info('Modal dismissed at: ' + new Date());
             });
+        };
+
+        /**
+         *  Gets print settings
+         */
+        $scope.printDocument = function () {
+            $http.get('/print/get_settings/' + $window.item.path)
+                .then(function (data) {
+                    console.log(data.data);
+                    $scope.openPrintDialog(data.data);
+                });
         };
 
         $scope.cssPrint = function () {

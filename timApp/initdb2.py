@@ -13,6 +13,7 @@ from alembic.script import ScriptDirectory
 
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import Document
+from documentprinter import DocumentPrinter
 from logger import log_info, enable_loggers, log_error
 from sql.migrate_to_postgre import perform_migration
 from tim_app import app
@@ -59,6 +60,7 @@ def initialize_database(create_docs=True):
     files_root_path = app.config['FILES_PATH']
     Document.default_files_root = files_root_path
     DocParagraph.default_files_root = files_root_path
+    DocumentPrinter.default_files_root = files_root_path
     was_created = postgre_create_database(app.config['TIM_NAME'], app.config['TIM_NAME'])
     log_info('Database {} {}.'.format(app.config['TIM_NAME'], 'was created' if was_created else 'exists'))
     timdb = TimDb(files_root_path=files_root_path)
