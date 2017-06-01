@@ -10,7 +10,8 @@ SystemJS.config({
     "simcir/oma-kirjasto": "/cs/simcir/simcir-oma-kirjasto.js",
     "mathjax": "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVG/MathJax.js",
     "sagecell": "https://sagecell.sagemath.org/static/embedded_sagecell.js",
-    "tim/": "tim/"
+    "tim/": "tim/",
+    "cs/": "/cs/js/build/"
   },
   browserConfig: {
     "baseURL": "/static/scripts"
@@ -64,6 +65,9 @@ SystemJS.config({
           "loader": "ts"
         }
       }
+    },
+    "cs": {
+      "defaultExtension": "js"
     }
   },
   meta: {
