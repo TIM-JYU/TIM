@@ -11,6 +11,7 @@ import subprocess
 import threading
 import time
 import uuid
+import itertools
 #import grp
 #import pwd
 import shutil
@@ -180,9 +181,12 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     mkdirs("/tmp/run")  # varmistetaan run-hakemisto
     udir = cwd.replace("/tmp/", "")  # koska mountattu eri tavalla, poistetaan tmp alusta
     # print(udir,"\nWait for run")
+    path_mappings = [["-v", "{0}/timApp/modules/cs/{1}:/cs/{1}:ro".format(os.environ['TIM_ROOT'], p)] for p in
+                     ["rcmd.sh", "java", "jypeli", "doxygen", "mathcheck", "fs"]]
 
-    dargs = ["docker", "run", "--name", tmpname, "--rm=true", "-v", "{}/timApp/modules/cs:/cs/:ro".format(os.environ['TIM_ROOT']), "-v",
-             "/tmp/{}_uhome/{}/:/home/agent/".format(os.environ['COMPOSE_PROJECT_NAME'], udir),
+    dargs = ["docker", "run", "--name", tmpname, "--rm=true",
+             *itertools.chain.from_iterable(path_mappings),
+             "-v", "/tmp/{}_uhome/{}/:/home/agent/".format(os.environ['COMPOSE_PROJECT_NAME'], udir),
              "-w", "/home/agent", dockercontainer, "/cs/rcmd.sh", urndname + ".sh", str(noX11), str(savestate)]
     print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
