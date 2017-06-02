@@ -1,0 +1,8 @@
+@charset "UTF-8";
+/* Sovita kappaleet sivulle */
+
+@media print {
+  .parContent {
+    page-break-inside: avoid !important;
+  }
+}

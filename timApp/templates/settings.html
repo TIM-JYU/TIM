@@ -12,7 +12,7 @@
         }
 
         function addPrintSettings(){
-            jQuery.get('/static/userPrintSettings.txt', function (data) {
+            jQuery.get('/static/userPrintSettings.css', function (data) {
                 $('#customCssArea').val(data);
                 $('#customCssArea').serialize();
             }, 'text');

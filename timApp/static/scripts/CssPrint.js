@@ -1,31 +1,37 @@
-//Poistaa tyhjän ensimmäisen etusivun.
+//Removes the empty first page.
 $(".par:eq(0) > .parContent > h1").attr("class", "firstH1");
 
 if($(".par:eq(0)").has(".parContent").has(".docsettings").length)
     $(".par:eq(1) > .parContent > h1").attr("class", "firstH1");
 
-//Automaatinen sivunvaihto
-$(".par").has(".parContent").has("h5:only-child").each(function (i, e) {
-    $(e).next(".par").andSelf().wrapAll("<div id='noBreak'>");
-    //$(e).next(".par").andSelf().css("background-color", generateColor());
-});
+//Automatic page break
+function AutoPageBreak() {
+    $(".par").has(".parContent").has("h5:only-child").each(function (i, e) {
+        //$(e).nextUntil(".par:has(:header)").addBack().andSelf().wrapAll("<div id='noBreak'>");
+        $(e).next(".par").andSelf().wrapAll("<div id='noBreak'>")//.css("background-color", GenerateColor());
+    });
+    $(".par").has(".parContent").has("h4:only-child").each(function (i, e) {
+        //$(e).nextUntil(".par:has(:header)").addBack().andSelf().wrapAll("<div id='noBreak'>");
+        $(e).next(".par").andSelf().wrapAll("<div id='noBreak'>")//.css("background-color", GenerateColor());
+    });
+    $(".par").has(".parContent").has("h3:only-child").each(function (i, e) {
+        //$(e).nextUntil(".par:has(:header)").addBack().andSelf().wrapAll("<div id='noBreak'>");
+        $(e).next(".par").andSelf().wrapAll("<div id='noBreak'>")//.css("background-color", GenerateColor());
+    });
+    $(".par").has(".parContent").has("h2:only-child").each(function (i, e) {
+        //$(e).nextUntil(".par:has(:header)").addBack().andSelf().wrapAll("<div id='noBreak'>");
+        $(e).next(".par").andSelf().wrapAll("<div id='noBreak'>")//.css("background-color", GenerateColor());
+    });
+}
 
-$(".par").has(".parContent").has("h4:only-child").each(function (i, e) {
-    $(e).next(".par").andSelf().wrapAll("<div id='noBreak'>");
-    //$(e).next(".par").andSelf().css("background-color", generateColor());
-});
+//Undoing autoprint settings to minimize or prevent possible errors when editing the document after the printing event is done.
+function  UndoAutoPageBreak() {
+    $(".par").unwrap();
+}
 
-$(".par").has(".parContent").has("h3:only-child").each(function (i, e) {
-    $(e).next(".par").andSelf().wrapAll("<div id='noBreak'>");
-    //$(e).next(".par").andSelf().css("background-color", generateColor());
-});
 
-$(".par").has(".parContent").has("h2:only-child").each(function (i, e) {
-    $(e).next(".par").andSelf().wrapAll("<div id='noBreak'>");
-    //$(e).next(".par").andSelf().css("background-color", generateColor());
-});
-
-function generateColor() {
+//For troubleshooting.
+function GenerateColor() {
     var letters = '0123456789ABCDEF';
     var color = '#';
     for (var i = 0; i < 6; i++){
@@ -33,3 +39,27 @@ function generateColor() {
     }
     return color;
 }
+
+//Printing events
+function AfterPrint(){
+    console.log('Undoing the print settings');
+    //UndoAutoPageBreak();
+}
+
+function  BeforePrint() {
+    console.log('Setting up for print');
+    AutoPageBreak();
+}
+
+if(window.matchMedia){
+    var mediaQueryList = window.matchMedia('print');
+    mediaQueryList.addListener(function (mql) {
+        (mql.matches) ? BeforePrint() : AfterPrint();
+    });
+}else{
+    window.addEventListener('beforeprint', BeforePrint, false);
+    window.addEventListener('afterprint', AfterPrint, false);
+}
+
+//window.onbeforeprint = AutoPageBreak();
+//window.onafterprint = UndoAutoPageBreak();
