@@ -5,6 +5,7 @@
 .settings
 .idea
 .cabal-sandbox/
+.mypy_cache/
 .webassets-cache/
 dist/
 bower_components/
