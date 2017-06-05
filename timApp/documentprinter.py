@@ -85,7 +85,6 @@ class DocumentPrinter:
 
         ####
 
-
         output_bytes = None
 
         with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file,\
@@ -95,6 +94,7 @@ class DocumentPrinter:
                 raise PrintingError("No template chosen for the printing. Printing was cancelled.")
 
             template_content = DocumentPrinter.parse_template_content(self._template_to_use)
+            print("template-content:\n\n" + template_content)
 
             if template_content is None:
                 raise PrintingError("The content in the template document %s is not valid." % self._template_to_use.path)
@@ -124,7 +124,7 @@ class DocumentPrinter:
                 template_file.seek(0)
                 output_bytes = bytearray(output_file.read())
             except Exception as ex:
-                print(str(ex))
+                # print(str(ex))
 
                 # TODO: logging of errors
                 # Might be a good idea to log these?
@@ -133,7 +133,7 @@ class DocumentPrinter:
 
                 # TODO: selection of errors that should be routed to the UI
 
-                raise PrintingError("An error occurred during printing and the process was cancelled.")
+                raise PrintingError(str(ex))
 
         return output_bytes
 
@@ -255,20 +255,20 @@ class DocumentPrinter:
             raise PrintingError("You need to supply both the DocEntry and User to fetch the printing templates.")
 
 
-        print("Crawling up the document tree searching for all accessible templates")
+        # print("Crawling up the document tree searching for all accessible templates")
         current_folder = doc_entry.parent
         while (current_folder is not None):
 
-            print("Searching for templates in " + current_folder.get_full_path())
+            # print("Searching for templates in " + current_folder.get_full_path())
             path = os.path.join(current_folder.get_full_path(),
                                 TEMPLATES_FOLDER)
 
-            print("Trying path " + path)
+            # print("Trying path " + path)
             templates_folder = Folder.find_by_path(path)
 
             if templates_folder is not None and has_view_access(templates_folder.id):
 
-                print("Looking into the template folder " + templates_folder.get_full_path())
+                # print("Looking into the template folder " + templates_folder.get_full_path())
 
                 docs = templates_folder.get_all_documents()
 
@@ -277,7 +277,7 @@ class DocumentPrinter:
 
                 for d in docs:
                     if has_view_access(d.id):
-                        print("Found the document " + d.name)
+                        # print("Found the document " + d.name)
                         templates.append(d)
 
             current_folder = current_folder.parent
@@ -287,27 +287,27 @@ class DocumentPrinter:
 
     @staticmethod
     def get_templates_as_dict(doc_entry: DocEntry, current_user: User):
-        user_templates = DocumentPrinter.get_all_templates(doc_entry=doc_entry, current_user=current_user)
-        all_templates = DocumentPrinter.get_all_templates(doc_entry=doc_entry, current_user=current_user)
+
+        try:
+            user_templates = DocumentPrinter.get_all_templates(doc_entry=doc_entry, current_user=current_user)
+            all_templates = DocumentPrinter.get_all_templates(doc_entry=doc_entry, current_user=current_user)
+        except PrintingError as err:
+            raise PrintingError(str(err))
 
         default_templates = list(set(all_templates) - set(user_templates))
 
         templates_dict = {}
 
-        user_templates_dict = {}
-        counter = 0
+        user_templates_list = []
         for t in user_templates:
-            user_templates_dict.update({counter : {'doc_id': t.id, 'path': t.name}})
-            counter += 1
+            user_templates_list.append({'doc_id':t.id,'doc_path':t.name})
 
-        default_templates_dict = {}
-        counter = 0
+        default_templates_list = []
         for t in default_templates:
-            default_templates_dict.update({counter: {'doc_id': t.id, 'path': t.name}})
-            counter += 1
+            default_templates_list.append({'doc_id':t.id,'doc_path':t.name})
 
-        templates_dict.update({'user_templates': user_templates_dict})
-        templates_dict.update({'default_templates': default_templates_dict})
+        templates_dict.update({'userTemplates': user_templates_list})
+        templates_dict.update({'defaultTemplates': default_templates_list})
 
         return templates_dict
 
@@ -350,8 +350,8 @@ class DocumentPrinter:
         current_template_version = self.get_template_version_as_float()
 
         existing_print = db.session.query(PrintedDoc). \
-            filter(PrintedDoc.doc_id == self._doc_entry.document.doc_id).\
-            filter(PrintedDoc.template_doc_id == self._template_to_use.document.doc_id).\
+            filter(PrintedDoc.doc_id == self._doc_entry.id).\
+            filter(PrintedDoc.template_doc_id == self._template_to_use.id).\
             filter(PrintedDoc.file_type == file_type.value).\
             filter(PrintedDoc.doc_version == current_doc_version).\
             filter(PrintedDoc.template_doc_version == current_template_version).\
