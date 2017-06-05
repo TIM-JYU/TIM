@@ -13,7 +13,7 @@ if [ ! -d MIRToolbox ]; then
     rm -rf *
 
     #Here we download MIRToolbox:
-    git clone http://github.com/martinarielhartmann/mirtooloct .
+    git clone https://github.com/martinarielhartmann/mirtooloct .
     #To reduce the size of the folder a bit:
     cd mirtooloct
     rm -rf *.pdf
