@@ -1,23 +1,28 @@
 <!-- Controller defined to be PrintCtrl when creating the modal @ SidebarMenuCtrl -->
 
 <div class="modal-header">
-    <h4 class="modal-title">Printing {{ document.title }}</h4>
-    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+    <button type="button" ng-click="dismissModal()" class="close">
         <span aria-hidden="true">&times;</span>
     </button>
+    <h4 class="modal-title">Printing {{ document.title }}</h4>
 </div>
 <div class="modal-body" id="modal-body">
-    <p>The following LaTeX-templates were found that you can use. Please choose a template.</p>
+    <p ng-if="(defaultTemplates.length > 0) || (userTemplates.length > 0)">
+        The following LaTeX-templates were found that you can use. Please choose a template.
+    </p>
+    <p ng-if="(defaultTemplates.length <= 0) && (userTemplates.length <= 0)" class="text-danger">
+        No templates were found.
+    </p>
 
     <form>
         <div ng-if="defaultTemplates.length > 0">
-            <h5>Default templates</h5>
+            <h5>Templates from document tree:</h5>
             <div class="form-group input-group-sm">
                 <div ng-repeat="item in defaultTemplates">
                     <div class="radio">
                         <label>
                             <input type="radio" ng-model="chosenTemplate.id" ng-value="item.doc_id" name="template-selection">
-                            <a ng-href="{{ item.doc_path }}" class="force-hyphenate-link">{{ item.doc_path }}</a>
+                            <a ng-href="/view/{{ item.doc_path }}" class="force-hyphenate-link">{{ item.doc_path }}</a>
                         </label>
                     </div>
                 </div>
@@ -25,13 +30,13 @@
         </div>
 
         <div ng-if="userTemplates.length > 0">
-            <h5>User templates</h5>
+            <h5>Templates from user home:</h5>
             <div class="form-group input-group-sm">
                 <div ng-repeat="item in userTemplates">
                     <div class="radio">
                         <label>
                             <input type="radio" ng-model="chosenTemplate.id" ng-value="item.doc_id" name="template-selection">
-                            <a ng-href="{{ item.doc_path }}" class="force-hyphenate-link">{{ item.doc_path }}</a>
+                            <a ng-href="/view/{{ item.doc_path }}" class="force-hyphenate-link">{{ item.doc_path }}</a>
                         </label>
                     </div>
                 </div>
@@ -39,7 +44,12 @@
         </div>
     </form>
 
-    <printing-errors></printing-errors>
+    <div ng-if="notificationmsg" class="alert alert-warning">
+        <strong>Warning!</strong><p>{{ notificationmsg }}</p>
+    </div>
+    <div ng-if="errormsg" class="alert alert-danger">
+        <strong>Error!</strong><p>{{ errormsg }}</p>
+    </div>
 
 </div>
     <!-- A working version. Short but creates ugly headers for categories

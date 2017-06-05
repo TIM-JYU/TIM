@@ -8,6 +8,10 @@ var timApp = angular.module('timApp');
 timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '$uibModal', 'document', '$uibModalInstance', '$location', 'templates',
 
     function ($scope, $http, $window, $uibModal, Users, $log, document, $uibModalInstance, $location, templates) {
+        $scope.dismissModal = function() {
+            $uibModalInstance.dismiss();
+        };
+
         $scope.document = document;
         // console.log($scope.document);
         $scope.templatesObject = angular.fromJson(templates);
@@ -15,6 +19,7 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
         $scope.defaultTemplates = $scope.templatesObject.defaultTemplates;
         $scope.userTemplates = $scope.templatesObject.userTemplates;
         $scope.errormsg = null;
+        $scope.notificationmsg = null;
 
         $scope.chosenTemplate = {
             'id' : null
@@ -22,13 +27,14 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
 
 
         $scope.getPrintedDocument = function(fileType) {
-            if (fileType != 'latex' && fileType != 'pdf') {
+            if (fileType !== 'latex' && fileType !== 'pdf') {
                 console.log("The filetype '" + fileType + "' is not valid");
                 return; //TODO: the error should do something visible
                 // TODO: also kind of pointless as the filetype comes from the predefined functions
             }
             var chosenTemplateId = $scope.chosenTemplate.id;
             if (chosenTemplateId) {
+                $scope.notificationmsg = null;
                 var requestURL = '/print/' + $scope.document.path + '?file_type=' + fileType + '&template_doc_id=' + chosenTemplateId;
 
                 // console.log('request url: ' + requestURL);
@@ -56,8 +62,9 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
                     // Check if the error routes correctly.
                     // console.log(response.data.error);
                     $scope.errormsg = response.data.error;
-                    console.log('Tullee kontrollerista: ' + $scope.errormsg);
                 });
+            } else {
+                $scope.notificationmsg = "You need to choose a template first!";
             }
         };
 
