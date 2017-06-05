@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!-- saved from url=(0051)http://www.cs.hut.fi/~ttsirkia/kelmukuva/index.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <title></title>
+  <link href="https://rawcdn.githack.com/acos-server/acos-kelmu/c3f2a30e6e638c6cd6811784d5e9060633f44355/static/kelmu.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js" type="text/javascript"></script>
+  <script src="https://rawcdn.githack.com/acos-server/acos-kelmu/c3f2a30e6e638c6cd6811784d5e9060633f44355/static/kelmu.js" type="text/javascript"></script>
+
+  <script>
+  $(function() {
+
+    // http://stackoverflow.com/questions/19491336/get-url-parameter-jquery
+    var getUrlParameter = function getUrlParameter(sParam) {
+      var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+      sURLVariables = sPageURL.split('&'),
+      sParameterName,
+      i;
+
+      for (i = 0; i < sURLVariables.length; i++) {
+        sParameterName = sURLVariables[i].split('=');
+
+        if (sParameterName[0] === sParam) {
+          return sParameterName[1] === undefined ? true : sParameterName[1];
+        }
+      }
+    };
+
+    $('#container').attr('data-kelmu-id', getUrlParameter('id'));
+    $('#container').attr('data-kelmu-definition', getUrlParameter('definition'));
+    $('#image').attr('src', getUrlParameter('image'));
+
+    var steps = parseInt(getUrlParameter('steps'), 10);
+    var step = 1;
+    $('#back').prop('disabled', true);
+    $('#forward').prop('disabled', false);
+
+    $('#back').click(function() {
+      step -= 1;
+      if (step === 1) {
+        $('#back').prop('disabled', true);
+      }
+      $('#forward').prop('disabled', false);
+    });
+
+    $('#forward').click(function() {
+      step += 1;
+      if (step === steps) {
+        $('#forward').prop('disabled', true);
+      }
+      $('#back').prop('disabled', false);
+    });
+
+  });
+  </script>
+
+</head>
+
+<body>
+  <div id="container" class="kelmu">
+    <img id="image">
+    <p class="kelmunavigation">
+      <button id="back" disabled="">&lt;</button> <button id="forward">&gt;</button>
+    </p>
+  </div>
+
+
+
+</body></html>

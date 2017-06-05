@@ -1,0 +1,11 @@
+.jsvee-value[data-type="str"]:before,.jsvee-value[data-type="str"]:after {
+	content: "\"";
+}
+
+.jsvee-value[data-type="bool"] {
+	text-transform: capitalize;
+}
+
+.jsvee-instance>.jsvee-name:before {
+	content: "id: ";
+}
