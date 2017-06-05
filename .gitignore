@@ -25,6 +25,7 @@ pg_backup/
 /timApp/modules/cs/test/a.c
 /timApp/modules/cs/nohup.out
 /timApp/modules/cs/generated
+/timApp/modules/cs/static/glowscript
 /timApp/modules/cs/log.txt
 /timApp/modules/cs/java/cs/ComTest.jar
 /converters/demopisteet/*.csv

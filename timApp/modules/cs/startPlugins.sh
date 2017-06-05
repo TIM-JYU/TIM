@@ -19,6 +19,11 @@ if [ ! -d MIRToolbox ]; then
     rm -rf *.pdf
 fi
 
+if [ ! -d static/glowscript ]; then
+    echo "GET GlowScript"
+    git clone https://github.com/BruceSherwood/glowscript static/glowscript
+fi
+
 mkdir -p /tmp/cache
 chown -R agent:agent /tmp
 rm /tmp/cache/* > /dev/null 2>&1
