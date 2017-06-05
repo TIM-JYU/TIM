@@ -216,7 +216,7 @@ def item_locked(error):
 
 
 @app.errorhandler(NoSuchUserException)
-def internal_error(error):
+def handle_user_not_found(error):
     if error.user_id == session['user_id']:
         flash('Your user id ({}) was not found in the database. Clearing session automatically.'.format(error.user_id))
         return logout()
@@ -645,7 +645,7 @@ def del_g(response):
 
 # noinspection PyUnusedLocal
 @app.teardown_appcontext
-def close_db(e):
+def close_db_appcontext(e):
     if not app.config['TESTING'] and hasattr(g, 'timdb'):
         g.timdb.close()
 
