@@ -11,7 +11,7 @@ import {setEditorScope} from "tim/editorScope";
 import Editor = AceAjax.Editor;
 import VirtualRenderer = AceAjax.VirtualRenderer;
 import Ace = AceAjax.Ace;
-import {IPromise, IQService} from "angular";
+import {IQService} from "angular";
 import {ParCompiler} from "../services/parCompiler";
 import {IAceEditor} from "../ace-types";
 import {lazyLoadTS} from "../lazyLoad";
