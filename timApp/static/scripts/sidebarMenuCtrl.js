@@ -12,9 +12,9 @@
 var angular, $;
 var timApp = angular.module('timApp');
 
-timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$log', '$uibModal',
+timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$log', '$uibModal', '$location',
 
-    function ($scope, $http, $window, Users, $log, $uibModal) {
+    function ($scope, $http, $window, Users, $log, $uibModal, $location) {
         "use strict";
         $scope.currentLecturesList = [];
         $scope.futureLecturesList = [];
@@ -136,47 +136,40 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
          *
          * @param settings_data : print settings
          */
-        $scope.openPrintDialog = function (settings_data) {
-
-            var modalInstance = $uibModal.open({
-                animation: false,
-                ariaLabelledBy: 'modal-title',
-                ariaDescribedBy: 'modal-body',
-                templateUrl: '/static/templates/printDialog.html',
-                controller: 'PrintCtrl',
-                controllerAs: '$ctrl',
-                size: 'sm',
-                resolve: {
-                    document: function () {
-                        // console.log(document);
-                        // console.log($window.item);
-                        // console.log($window.item.path);
-                        return $window.item;
-                    },
-                    get_settings: function () {
-                        //console.log(settings_data);
-                        return settings_data;
-                    }
-                }
-            });
-
-            modalInstance.result.then(function () {
-                $log.info('modal works');
-            }, function () {
-                $log.info('Modal dismissed at: ' + new Date());
-            });
+        $scope.printDocument = function (settings_data) {
+            var api_address_for_templates = '/print/getTemplatesJSON/' + $window.item.path;
+            $http.get(api_address_for_templates)
+                .then(function success(templatesJSON) {
+                    // console.log(JSON.stringify(templatesJSON.data));
+                    $uibModal.open({
+                        templateUrl: '/static/templates/printDialog.html',
+                        controller: 'PrintCtrl',
+                        size: 'sm',
+                        resolve: {
+                            document: function () {
+                                return $window.item;
+                            },
+                            templates: function () {
+                                return templatesJSON.data;
+                            }
+                        }
+                    })
+                }, function error(response) {
+                    console.log(response.toString());
+                });
         };
 
         /**
          *  Gets print settings
-         */
+         *
         $scope.printDocument = function () {
-            $http.get('/print/get_settings/' + $window.item.path)
+            var api_address_for_templates = '/print/getTemplatesJSON/' + $window.item.path;
+            $http.get(api_address_for_templates)
                 .then(function (data) {
                     console.log(data.data);
                     $scope.openPrintDialog(data.data);
                 });
-        };
+        };*/
 
         $scope.cssPrint = function () {
             //AutoPageBreak();
