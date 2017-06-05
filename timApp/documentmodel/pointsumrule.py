@@ -11,7 +11,7 @@ class PointType(enum.Enum):
 
 class Group:
 
-    def __init__(self, name: str, data: Union[str, Dict]):
+    def __init__(self, name: str, data: Union[str, Dict]) -> None:
         self.name = name
         if isinstance(data, str):
             self.matchers = {data}
@@ -41,7 +41,7 @@ class Group:
 
 class PointSumRule:
 
-    def __init__(self, data: Dict):
+    def __init__(self, data: Dict) -> None:
         try:
             self.groups = dict((k, Group(k, v)) for k, v in data['groups'].items())
         except (AttributeError, KeyError):
