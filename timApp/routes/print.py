@@ -4,11 +4,13 @@ Routes for printing a document
 import os
 from typing import Optional
 
+from datetime import datetime
 from flask import Blueprint, send_file, jsonify
 from flask import Response
 from flask import g
 from flask import abort
 from flask import current_app
+from flask import make_response
 from flask import request
 
 import sessioninfo
@@ -63,13 +65,27 @@ def print_document(doc_path):
         abort(404, "The supplied parameter 'template_doc_id' was not valid.")
 
     type = PrintFormat[file_type.upper()]
-    path_to_doc = create_printed_doc(doc_entry=doc, file_type=type, temp=True)
+
+    print("document: %s\ntemplate_doc: %s" % (doc.name, template_doc.name))
+    path_to_doc = ""
+    try:
+        path_to_doc = create_printed_doc(doc_entry=doc, file_type=type, template_doc=template_doc, temp=True)
+    except PrintingError as err:
+        abort(404, str(err))
+
+
     mime = get_mimetype_for_format(type)
 
     if mime is None:
         abort(404, "The supplied parameter 'file_type' was not valid.")
 
-    return send_file(filename_or_fp=path_to_doc, mimetype=mime)
+    response = make_response(send_file(filename_or_fp=path_to_doc, mimetype=mime))
+    # response.headers['Last-Modified'] = datetime.now()
+    # TODO: not sure if all these are needed
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
 
 
 @print_blueprint.route("/getTemplatesJSON/<path:doc_path>", methods=['GET'])
@@ -109,7 +125,7 @@ def fetch_document_from_db(doc_entry: DocEntry, file_type: PrintFormat) -> Optio
     return None
 
 
-def create_printed_doc(doc_entry: DocEntry, file_type: PrintFormat, temp: bool) -> str:
+def create_printed_doc(doc_entry: DocEntry, template_doc: DocEntry, file_type: PrintFormat, temp: bool) -> str:
     """
     Adds a marking for a printed document to the db
 
@@ -120,12 +136,16 @@ def create_printed_doc(doc_entry: DocEntry, file_type: PrintFormat, temp: bool) 
     :return str: path to the created file
     """
 
+    if template_doc is None:
+        raise PrintingError("No template file was specified for the printing!")
+
     printer = DocumentPrinter(doc_entry=doc_entry,
-                              template_to_use=DocumentPrinter.get_custom_template(doc_entry=doc_entry))
+                              template_to_use=template_doc)
 
     existing_doc_path = printer.get_printed_document_path_from_db(file_type=file_type)
 
     if existing_doc_path is not None:
+        print("already exists:\n" + existing_doc_path)
         return existing_doc_path
 
     try:
