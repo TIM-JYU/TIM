@@ -24,6 +24,7 @@ const MENU_BUTTON_CLASS_DOT = '.' + MENU_BUTTON_CLASS;
 
 // don't extend from IScope because then type checking is too lousy
 interface IParEditorScope {
+    textAreaText: string;
     $parent: any;
     $storage: Storage; // TODO what is the correct type here?
     ace: Ace;
@@ -181,7 +182,6 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                 afterCancel: '&',
                 afterDelete: '&',
                 options: '=',
-                editorText: '@',
                 isAce: '@',
                 initialTextUrl: '@'
             },
@@ -529,7 +529,14 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     }
                     $scope.isAce = false;
                     var $container = ('.editorContainer');
-                    var $textarea = $.parseHTML('<textarea rows="10" ng-model="editorText" ng-change="aceChanged()" ng-trim="false" id="teksti" wrap="off"></textarea>');
+                    var $textarea = $.parseHTML(`
+<textarea rows="10"
+          ng-model="textAreaText"
+          ng-change="aceChanged()"
+          ng-trim="false"
+          id="teksti"
+          wrap="off">
+</textarea>`);
                     $compile($textarea)($scope);
                     $($container).append($textarea);
                     $scope.editor = $('#teksti');
@@ -583,15 +590,15 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                             }
                         }
                     });
-                    if (text) $scope.editor.val(text);
+                    if (text) $scope.textAreaText = text;
                 };
 
                 $scope.setTextAreaControllerFunctions = function () {
                     $scope.getEditorText = function () {
-                        return $scope.editor.val();
+                        return $scope.textAreaText;
                     };
                     $scope.setEditorText = function (text) {
-                        $scope.editor.val(text);
+                        $scope.textAreaText = text;
                     };
                 };
 
@@ -2099,6 +2106,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         neweditor.setBehavioursEnabled($scope.getLocalBool("acebehaviours", false));
                         neweditor.getSession().setUseWrapMode($scope.getLocalBool("acewrap", false));
                         neweditor.setOptions({maxLines: 28});
+                        $scope.setEditorText(text);
                     }
                     if (oldeditor) oldeditor.remove();
                     $scope.adjustPreview();
