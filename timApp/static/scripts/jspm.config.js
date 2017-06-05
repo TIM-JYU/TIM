@@ -10,8 +10,8 @@ SystemJS.config({
     "simcir/oma-kirjasto": "/cs/simcir/simcir-oma-kirjasto.js",
     "mathjax": "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVG/MathJax.js",
     "sagecell": "https://sagecell.sagemath.org/static/embedded_sagecell.js",
-    "tim/": "tim/",
-    "cs/": "/cs/js/build/"
+    "cs/": "/cs/js/build/",
+    "tim/": "tim/"
   },
   browserConfig: {
     "baseURL": "/static/scripts"
@@ -77,7 +77,7 @@ SystemJS.config({
         "eonasdan-bootstrap-datetimepicker"
       ],
       "globals": {
-         "moment": "npm:moment@2.18.1/moment.js"
+        "moment": "npm:moment@2.18.1/moment.js"
       }
     },
     "npm:angular@1.5.11/angular.js": {
