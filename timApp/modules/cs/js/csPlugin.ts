@@ -2510,7 +2510,7 @@ csApp.Controller = function($scope,$transclude) {
             if ( $scope.type.indexOf("/vis") >= 0 ) {
                 $scope.iframe = true;  // visjs allways to iframe
                 html =  '<div id="myDiv" class="mydiv" width="800" height="400" ></div>';
-                scripts = "https://tim.jyu.fi/csstatic/visjs/vis.min.js";
+                scripts = "https://cdnjs.cloudflare.com/ajax/libs/vis/4.20.0/vis.min.js";
             }
             if ( $scope.iframe ) {
                 var dw,dh;
