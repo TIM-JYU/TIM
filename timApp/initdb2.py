@@ -44,7 +44,7 @@ def postgre_create_database(host, db_name):
             conn_failures += 1
             max_failures = 10
             if conn_failures > max_failures:
-                log_error(f'Failed more than ${max_failures} times when trying to connect to PostgreSQL - exiting.')
+                log_error(f'Failed more than {max_failures} times when trying to connect to PostgreSQL - exiting.')
                 sys.exit(1)
             log_warning('Failed to connect to PostgreSQL, trying again in 1 second...')
             time.sleep(1)
