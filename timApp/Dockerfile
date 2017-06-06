@@ -65,6 +65,7 @@ run pip3 install git+git://github.com/dadadel/pyment.git
 run pip3 install docformatter
 run pip3 install filelock
 run pip3 install mypy
+run pip3 install pillow
 
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends

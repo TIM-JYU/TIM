@@ -1,10 +1,14 @@
 import os
+from base64 import b64decode
 from pprint import pprint
 
+from PIL import Image
+from io import BytesIO
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver import DesiredCapabilities
+from selenium.webdriver import DesiredCapabilities, ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -15,6 +19,7 @@ from tests.timliveserver import TimLiveServer
 
 class BrowserTest(TimLiveServer, TimRouteTest):
     login_dropdown_path = '//login-menu/div/button'
+    screenshot_dir = '/service/screenshots'
 
     def setUp(self):
         TimLiveServer.setUp(self)
@@ -79,10 +84,32 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         :param filename: The file name of the PNG file.
 
         """
-        screenshot_dir = '/service/screenshots/'
-        os.makedirs(screenshot_dir, exist_ok=True)
-        if not self.drv.save_screenshot(screenshot_dir + filename + '.png'):
+
+        os.makedirs(self.screenshot_dir, exist_ok=True)
+        if not self.drv.save_screenshot(f'{self.screenshot_dir}/{filename}.png'):
             raise Exception('Screenshot failed')
+
+    def save_element_screenshot(self, element: WebElement, filename: str, move_to_element: bool=False):
+        """Saves the screenshot of an element to a PNG file.
+
+        :param element: The element to save.
+        :param filename: Filename for the image without extension.
+        :param move_to_element: Whether to move to the element before taking screenshot. Use this if there is a
+        possibility that the element is not in viewport.
+        """
+        os.makedirs(self.screenshot_dir, exist_ok=True)
+        if move_to_element:
+            ActionChains(self.drv).move_to_element(element).perform()
+        src_base64 = self.drv.get_screenshot_as_base64()
+        im = Image.open(BytesIO(b64decode(src_base64)))
+
+        x = element.location["x"]
+        y = element.location["y"]
+        w = element.size["width"]
+        h = element.size["height"]
+
+        im = im.crop((x, y, x + w, y + h))
+        im.save(f'{self.screenshot_dir}/{filename}.png')
 
     def should_not_exist(self, css_selector: str):
         """Asserts that the current document should not contain any elements that match the specified CSS selector.
