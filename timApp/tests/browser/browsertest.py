@@ -34,6 +34,21 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.wait.until(ec.text_to_be_present_in_element((By.XPATH, self.login_dropdown_path), name))
         self.client.__enter__()
 
+    def login_browser_quick_test1(self):
+        """Logs testuser 1 in quickly by directly adding the session cookie to the browser."""
+        self.goto("/empty")
+        self.drv.delete_all_cookies()
+        self.drv.add_cookie(
+            {'class': 'org.openqa.selenium.Cookie',
+             'domain': 'tim',
+             'expiry': 7544144177,
+             'hCode': 1984987798,
+             'httpOnly': True,
+             'name': 'session',
+             'path': '/',
+             'secure': False,
+             'value': '.eJwtjEEKwzAMBL8S9mwaDD351EfkboS7pQHLCYoDhdK_V4bcZpiVvsg7TaWxdaRuJwOklfdmSEBAEWV-2aausztV1urcefT44Ed0r7wV7wFGqbn5gffF-3QetCl6GZDXJ9L94ms1vgyP-P0BRcctlw.DBglMQ.vvva2NpZfDBi7dlJAJoKfg5uGQo'})
+
     def login_browser_test1(self):
         """Logs in as Test user 1."""
         self.login_browser_as('test1@example.com', 'test1pass', TEST_USER_1_NAME)

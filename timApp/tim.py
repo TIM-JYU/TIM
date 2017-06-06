@@ -194,6 +194,11 @@ Exception happened on {} at {}
     return error_generic(error, 500)
 
 
+@app.route('/empty')
+def empty_response():
+    return Response('', mimetype='text/plain')
+
+
 @app.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def throw_ex():
     verify_admin()

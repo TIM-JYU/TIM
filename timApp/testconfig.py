@@ -1,6 +1,8 @@
 import logging
 import os
 
+from datetime import timedelta
+
 from utils import pycharm_running
 
 DEBUG = True
@@ -37,3 +39,4 @@ SELENIUM_BROWSER_URL = os.environ.get('SELENIUM_BROWSER_URL', 'http://' +
                                       ('tim' if pycharm_running() else 'tests'))
 LIVESERVER_PORT = 5001
 QST_PLUGIN_PORT = LIVESERVER_PORT
+PERMANENT_SESSION_LIFETIME = timedelta(weeks=9999)

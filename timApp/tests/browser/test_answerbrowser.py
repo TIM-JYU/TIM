@@ -10,7 +10,7 @@ from timdb.userutils import get_admin_group_id
 class AnswerBrowserTest(BrowserTest):
 
     def test_referenced_area_plugin(self):
-        self.login_browser_test1()
+        self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(from_file='example_docs/multiple_mmcqs.md')
         d2 = self.create_doc(initial_par='#- {{rd={} ra=a1}}'.format(d.id))
