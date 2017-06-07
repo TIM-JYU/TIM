@@ -3,7 +3,7 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-if [ ! -f ./variables.sh ]; then
+if [ ! -f "${DIR}/variables.sh" ]; then
   echo "The file variables.sh does not exist, copying template. See variables.sh for how to proceed."
   cp variables.sh.template variables.sh
   chmod u+x variables.sh
