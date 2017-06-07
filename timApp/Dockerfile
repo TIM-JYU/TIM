@@ -26,6 +26,7 @@ run apt-get install --no-install-recommends -y zlib1g-dev libxml2-dev libxslt-de
 run apt-get install --no-install-recommends -y libyaml-dev # C-parser for PyYAML
 run apt-get install --no-install-recommends -y libmagic1 # python-magic dependency
 run apt-get install --no-install-recommends -y gcc g++
+run apt-get install --no-install-recommends -y libmagickwand-dev
 
 run pip3 install wheel
 run pip3 install psycopg2
@@ -66,6 +67,7 @@ run pip3 install docformatter
 run pip3 install filelock
 run pip3 install mypy
 run pip3 install pillow
+run pip3 install wand
 
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends

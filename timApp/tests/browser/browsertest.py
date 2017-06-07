@@ -1,9 +1,11 @@
 import os
 from base64 import b64decode
 from pprint import pprint
+from typing import Union
 
-from PIL import Image
 from io import BytesIO
+
+import math
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import ActionChains
@@ -11,6 +13,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
+from wand.image import Image
 
 from tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_USER_3_NAME
 from tests.server.timroutetest import TimRouteTest
@@ -96,27 +99,58 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         if not self.drv.save_screenshot(f'{self.screenshot_dir}/{filename}.png'):
             raise Exception('Screenshot failed')
 
-    def save_element_screenshot(self, element: WebElement, filename: str, move_to_element: bool=False):
+    def save_element_screenshot(self, element: WebElement, filename_or_file: Union[str, BytesIO, None]=None,
+                                move_to_element: bool = False) -> Image:
         """Saves the screenshot of an element to a PNG file.
 
+        :return: The image object.
         :param element: The element to save.
-        :param filename: Filename for the image without extension.
-        :param move_to_element: Whether to move to the element before taking screenshot. Use this if there is a
+        :param filename_or_file: Filename for the image without extension, a file object or None. If None, the image
+        exists only in memory.
+        :param move_to_element: Whether to move to the element before taking the screenshot. Use this if there is a
         possibility that the element is not in viewport.
         """
-        os.makedirs(self.screenshot_dir, exist_ok=True)
         if move_to_element:
             ActionChains(self.drv).move_to_element(element).perform()
         src_base64 = self.drv.get_screenshot_as_base64()
-        im = Image.open(BytesIO(b64decode(src_base64)))
+        im = Image(blob=b64decode(src_base64))
 
         x = element.location["x"]
         y = element.location["y"]
         w = element.size["width"]
         h = element.size["height"]
+        offset = int(self.drv.execute_script('return window.pageYOffset;'))
+        y -= offset
 
-        im = im.crop((x, y, x + w, y + h))
-        im.save(f'{self.screenshot_dir}/{filename}.png')
+        im.crop(
+            left=math.floor(x),
+            top=math.floor(y),
+            width=math.ceil(w),
+            height=math.ceil(h),
+        )
+        if isinstance(filename_or_file, str):
+            os.makedirs(os.path.dirname(os.path.join(self.screenshot_dir, filename_or_file)), exist_ok=True)
+            im.save(filename=f'{self.screenshot_dir}/{filename_or_file}.png')
+        elif isinstance(filename_or_file, BytesIO):
+            im.save(file=filename_or_file)
+        return im
+
+    def assert_same_screenshot(self, element: WebElement, filename: str, move_to_element: bool = False):
+        """Asserts that the provided element looks the same as in the provided screenshot.
+        :param element: The element to check.
+        :param filename: The filename of the expected screenshot.
+        :param move_to_element: Whether to move to the element before taking the screenshot.
+        """
+        im = self.save_element_screenshot(element, move_to_element=move_to_element)
+        ref = Image(filename=f'tests/browser/expected_screenshots/{filename}.png')
+        diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
+        if result > 0.0001:
+            self.save_element_screenshot(element, f'{filename}_FAIL', move_to_element)
+            diff.save(filename=f'{self.screenshot_dir}/{filename}_FAIL_DIFF.png')
+            self.assertTrue(False,
+                            msg='Screenshots did not match; '
+                                f'failed screenshot saved to screenshots/{filename}_FAIL '
+                                f'and difference to screenshots/{filename}_FAIL_DIFF')
 
     def should_not_exist(self, css_selector: str):
         """Asserts that the current document should not contain any elements that match the specified CSS selector.
