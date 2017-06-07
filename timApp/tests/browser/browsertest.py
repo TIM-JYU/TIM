@@ -6,7 +6,7 @@ from PIL import Image
 from io import BytesIO
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver import DesiredCapabilities, ActionChains
+from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
@@ -23,8 +23,14 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
     def setUp(self):
         TimLiveServer.setUp(self)
+        options = webdriver.ChromeOptions()
+        # native headless mode does not work yet
+        # options.add_argument('headless')
+        # options.add_argument('disable-gpu')
+        # options.add_argument('window-size=1024x768')
+        # options.add_argument('no-sandbox')
         self.drv = webdriver.Remote(command_executor=self.app.config['SELENIUM_REMOTE_URL'] + ':4444/wd/hub',
-                                    desired_capabilities=DesiredCapabilities.CHROME.copy())
+                                    desired_capabilities=options.to_capabilities())
         self.drv.implicitly_wait(10)
         self.wait = WebDriverWait(self.drv, 10)
 
