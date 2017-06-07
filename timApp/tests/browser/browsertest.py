@@ -15,6 +15,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_USER_3_NAME
 from tests.server.timroutetest import TimRouteTest
 from tests.timliveserver import TimLiveServer
+from timdb.models.docentry import DocEntry
 
 
 class BrowserTest(TimLiveServer, TimRouteTest):
@@ -136,3 +137,6 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def tearDown(self):
         TimLiveServer.tearDown(self)
         self.drv.quit()
+
+    def goto_document(self, d: DocEntry):
+        self.goto('/view/' + d.path)

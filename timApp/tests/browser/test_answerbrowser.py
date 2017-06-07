@@ -22,7 +22,7 @@ class AnswerBrowserTest(BrowserTest):
         self.check_reference_answerbrowser_ok(d2)
 
     def check_reference_answerbrowser_ok(self, d: DocEntry):
-        self.goto('/view/' + d.path)
+        self.goto_document(d)
         submitbutton = self.drv.find_element_by_css_selector('#mmcqexample button')
 
         # hover mouse over par element to activate answer browser
