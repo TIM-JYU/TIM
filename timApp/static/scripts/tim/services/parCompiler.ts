@@ -4,17 +4,17 @@ import {timLogTime} from "tim/timTiming";
 import {lazyLoad, lazyLoadMany} from "../lazyLoad";
 
 export class ParagraphCompiler {
-    public async compile(data, scope, callback) {
+    public async compile(data, scope) {
         await lazyLoadMany(data.js);
         await $ocLazyLoad.inject(data.angularModule);
         await $ocLazyLoad.load(data.css);
         const compiled = $compile(data.texts)(scope);
-        this.processAllMathDelayed(compiled);
-        callback(compiled);
+        await this.processAllMathDelayed(compiled);
+        return compiled;
     }
 
-    public processAllMathDelayed($elem: JQuery, delay?: number): void {
-        $timeout(() => {
+    public async processAllMathDelayed($elem: JQuery, delay?: number) {
+        await $timeout(() => {
             this.processAllMath($elem);
         }, delay || 300);
     }

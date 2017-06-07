@@ -16,6 +16,7 @@ import {ParCompiler} from "../services/parCompiler";
 import {IAceEditor} from "../ace-types";
 import {lazyLoadTS} from "../lazyLoad";
 import * as acemodule from "tim/ace";
+import {$timeout} from "../ngimport";
 
 markAsUsed(draggable, rangyinputs);
 
@@ -74,7 +75,7 @@ interface IParEditorScope {
     uploadedFile: string;
 
     $on(name: string, func: () => void): void;
-    aceChanged(): void;
+    editorChanged(applyFn?): void;
     aceLoaded(editor: Editor): void;
     aceReady(): void;
     addAttribute(): void;
@@ -163,11 +164,12 @@ interface IParEditorScope {
     unreadClicked(): void;
     upClicked(): void;
     wrapFn(fn?: () => void): void;
+    $apply(): void;
 }
 
 timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
-    '$window', '$localStorage', '$timeout', '$ocLazyLoad', '$log', '$q',
-    function (Upload, $http, $sce, $compile, $window, $localStorage, $timeout, $ocLazyLoad, $log, $q: IQService) {
+    '$window', '$localStorage', '$ocLazyLoad', '$log', '$q',
+    function (Upload, $http, $sce, $compile, $window, $localStorage, $ocLazyLoad, $log, $q: IQService) {
         "use strict";
         return {
             templateUrl: "/static/templates/parEditor.html",
@@ -306,7 +308,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.setEditorText(data.text);
                         $scope.initialText = data.text;
                         angular.extend($scope.extraData, data.extraData);
-                        $scope.aceChanged();
+                        $scope.editorChanged();
                         $scope.aceReady();
                     }).error(function (data, status, headers, config) {
                         if (status === 404) {
@@ -532,7 +534,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                     var $textarea = $.parseHTML(`
 <textarea rows="10"
           ng-model="textAreaText"
-          ng-change="aceChanged()"
+          ng-change="editorChanged()"
           ng-trim="false"
           id="teksti"
           wrap="off">
@@ -623,7 +625,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
 
                 $('.editorContainer').on('resize', $scope.adjustPreview);
 
-                $scope.aceChanged = function () {
+                $scope.editorChanged = async function (applyFn = () => {}) {
                     $scope.outofdate = true;
                     if ($scope.timer) {
                         $window.clearTimeout($scope.timer);
@@ -634,18 +636,21 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $scope.scrollPos = $('.previewcontent').scrollTop();
                         $http.post($scope.previewUrl, angular.extend({
                             text: text
-                        }, $scope.extraData)).success(function (data, status, headers, config) {
-                            ParCompiler.compile(data, $scope, function (compiled) {
-                                var $previewDiv = angular.element(".previewcontent");
-                                $previewDiv.html(compiled);
-                                $scope.outofdate = false;
-                                $scope.parCount = $previewDiv.children().length;
-                                $('.editorContainer').resize();
-                            });
+                        }, $scope.extraData)).success(async (data, status, headers, config) => {
+                            const compiled = await ParCompiler.compile(data, $scope);
+                            const $previewDiv = angular.element(".previewcontent");
+                            $previewDiv.empty().append(compiled);
+                            $scope.outofdate = false;
+                            $scope.parCount = $previewDiv.children().length;
+                            $('.editorContainer').resize();
+                            $scope.$apply();
                         }).error(function (data, status, headers, config) {
                             $window.alert("Failed to show preview: " + data.error);
                         });
+                        $scope.outofdate = true;
+                        applyFn();
                     }, 500);
+                    applyFn();
                 };
 
 
@@ -735,7 +740,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         $(window).scrollTop(s);
                     }
                     if (func !== null) (func());
-                    if ($scope.isIE) $scope.aceChanged();
+                    if ($scope.isIE) $scope.editorChanged();
                 };
 
                 $scope.changeMeta = function () {
@@ -2102,7 +2107,9 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         let neweditor = ace.edit("ace_editor");
                         $scope.aceLoaded(neweditor);
                         $scope.editor = neweditor;
-                        $scope.editor.getSession().on('change', $scope.aceChanged);
+                        $scope.editor.getSession().on('change', () => {
+                            $scope.editorChanged(() => $scope.$apply())
+                        });
                         neweditor.setBehavioursEnabled($scope.getLocalBool("acebehaviours", false));
                         neweditor.getSession().setUseWrapMode($scope.getLocalBool("acewrap", false));
                         neweditor.setOptions({maxLines: 28});

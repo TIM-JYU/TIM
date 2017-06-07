@@ -384,22 +384,19 @@ timApp.controller("ViewCtrl", [
             $interval(function () {
                 http.get('/getParDiff/' + sc.docId + '/' + sc.docVersion[0] + '/' + sc.docVersion[1]).then(function (response) {
                     sc.docVersion = response.data.version;
-                    var replaceFn = function (d, parId) {
-                        ParCompiler.compile(d.content, sc, function (compiled) {
-                            var e = sc.getElementByParId(parId);
-                            e.replaceWith(compiled);
-                        });
+                    const replaceFn = async (d, parId) => {
+                        const compiled = await ParCompiler.compile(d.content, sc);
+                        const e = sc.getElementByParId(parId);
+                        e.replaceWith(compiled);
                     };
-                    var afterFn = function (d, parId) {
-                        ParCompiler.compile(d.content, sc, function (compiled) {
-                            var e = sc.getElementByParId(parId);
-                            e.after(compiled);
-                        });
+                    const afterFn = async (d, parId) => {
+                        const compiled = await ParCompiler.compile(d.content, sc);
+                        const e = sc.getElementByParId(parId);
+                        e.after(compiled);
                     };
-                    var beforeFn = function (d, e) {
-                        ParCompiler.compile(d.content, sc, function (compiled) {
-                            e.before(compiled);
-                        });
+                    const beforeFn = async (d, e) => {
+                        const compiled = await ParCompiler.compile(d.content, sc);
+                        e.before(compiled);
                     };
                     for (var i = 0; i < response.data.diff.length; ++i) {
                         var d = response.data.diff[i];
