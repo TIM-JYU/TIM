@@ -12,17 +12,17 @@ from alembic.runtime.environment import EnvironmentContext
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.document import Document
-from logger import log_info, enable_loggers, log_error, log_warning
-from sql.migrate_to_postgre import perform_migration
-from tim_app import app
-from timdb import tempdb_models
-from timdb.models.docentry import DocEntry
-from timdb.models.user import User
-from timdb.tim_models import AccessType, db
-from timdb.timdb2 import TimDb
-from timdb.userutils import get_anon_group_id
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.document import Document
+from timApp.logger import log_info, enable_loggers, log_error, log_warning
+from timApp.sql.migrate_to_postgre import perform_migration
+from timApp.tim_app import app
+from timApp.timdb import tempdb_models
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.user import User
+from timApp.timdb.tim_models import AccessType, db
+from timApp.timdb.timdb2 import TimDb
+from timApp.timdb.userutils import get_anon_group_id
 
 
 def check_db_version(_, context: MigrationContext):

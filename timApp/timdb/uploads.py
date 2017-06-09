@@ -1,8 +1,7 @@
-from timdb.dbutils import insert_block
-from timdb.tim_models import AnswerUpload, db
-from timdb.models.block import Block
-from timdb.timdbbase import TimDbBase
-from timdb.blocktypes import blocktypes
+from timApp.timdb.dbutils import insert_block
+from timApp.timdb.tim_models import AnswerUpload, db
+from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.blocktypes import blocktypes
 import os
 
 

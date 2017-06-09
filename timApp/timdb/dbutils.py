@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from timdb.accesstype import AccessType
-from timdb.models.block import Block
-from timdb.tim_models import db, BlockAccess
+from timApp.timdb.accesstype import AccessType
+from timApp.timdb.models.block import Block
+from timApp.timdb.tim_models import db, BlockAccess
 
 
 def insert_block(description: Optional[str], owner_group_id: Optional[int], block_type: int,
@@ -34,8 +34,8 @@ def insert_block(description: Optional[str], owner_group_id: Optional[int], bloc
 
 def copy_default_rights(item_id: int, item_type, commit=True):
     # TODO: Should not need to import anything from routes
-    from dbaccess import get_timdb
-    from timdb.userutils import grant_access
+    from timApp.dbaccess import get_timdb
+    from timApp.timdb.userutils import grant_access
     timdb = get_timdb()
     default_rights = []
     folder = Block.query.get(item_id).parent

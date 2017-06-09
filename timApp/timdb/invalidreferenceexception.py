@@ -1,4 +1,4 @@
-from timdb.timdbexception import TimDbException
+from timApp.timdb.timdbexception import TimDbException
 
 
 class InvalidReferenceException(TimDbException):

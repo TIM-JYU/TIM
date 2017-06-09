@@ -4,17 +4,17 @@ import os
 
 from typing import List, Optional, Dict, Tuple, Iterable
 
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.docsettings import DocSettings
-from documentmodel.document import Document
-from documentmodel.documentparser import DocumentParser
-from timdb.models.block import Block
-from timdb.models.docentry import DocEntry
-from timdb.models.translation import Translation
-from timdb.tim_models import ReadParagraph, UserNotes, db, BlockAccess
-from timdb.timdbbase import TimDbBase
-from timdb.blocktypes import blocktypes
-from timdb.timdbexception import TimDbException
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.docsettings import DocSettings
+from timApp.documentmodel.document import Document
+from timApp.documentmodel.documentparser import DocumentParser
+from timApp.timdb.models.block import Block
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.translation import Translation
+from timApp.timdb.tim_models import ReadParagraph, UserNotes, db, BlockAccess
+from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.blocktypes import blocktypes
+from timApp.timdb.timdbexception import TimDbException
 
 
 class Documents(TimDbBase):

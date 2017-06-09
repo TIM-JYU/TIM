@@ -16,7 +16,7 @@ from datetime import timezone
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 
-from timdb.readparagraphtype import ReadParagraphType
+from timApp.timdb.readparagraphtype import ReadParagraphType
 
 db = SQLAlchemy()
 

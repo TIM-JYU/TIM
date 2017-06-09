@@ -6,10 +6,10 @@ from datetime import datetime
 from operator import itemgetter
 from typing import List, Optional, Dict
 
-from documentmodel.pointsumrule import PointSumRule, PointType
-from utils import get_sql_template
-from timdb.tim_models import Answer, UserAnswer, AnswerTag
-from timdb.timdbbase import TimDbBase
+from timApp.documentmodel.pointsumrule import PointSumRule, PointType
+from timApp.utils import get_sql_template
+from timApp.timdb.tim_models import Answer, UserAnswer, AnswerTag
+from timApp.timdb.timdbbase import TimDbBase
 
 
 class Answers(TimDbBase):

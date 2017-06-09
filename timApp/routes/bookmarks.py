@@ -2,12 +2,12 @@ from flask import Blueprint
 from flask import current_app
 from flask import g
 
-from accesshelper import verify_logged_in
-from requesthelper import verify_json_params
-from responsehelper import json_response
-from sessioninfo import get_current_user_object
-from timdb.bookmarks import Bookmarks
-from timdb.models.docentry import DocEntry
+from timApp.accesshelper import verify_logged_in
+from timApp.requesthelper import verify_json_params
+from timApp.responsehelper import json_response
+from timApp.sessioninfo import get_current_user_object
+from timApp.timdb.bookmarks import Bookmarks
+from timApp.timdb.models.docentry import DocEntry
 
 bookmarks = Blueprint('bookmarks',
                       __name__,

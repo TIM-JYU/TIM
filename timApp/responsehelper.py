@@ -3,7 +3,7 @@ from urllib.parse import urlparse, urljoin
 
 from flask import request, redirect, url_for, Response
 
-from documentmodel.timjsonencoder import TimJsonEncoder
+from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 
 
 def is_safe_url(url):

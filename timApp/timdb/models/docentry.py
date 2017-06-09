@@ -1,14 +1,14 @@
 from typing import Optional, Union, List
 
-from documentmodel.document import Document
-from timdb.gamification_models.gamificationdocument import GamificationDocument
-from timdb.docinfo import DocInfo
-from timdb.tim_models import db
-from timdb.models.translation import Translation
-from timdb.blocktypes import blocktypes
-from timdb.dbutils import insert_block
-from timdb.timdbexception import TimDbException
-from utils import split_location
+from timApp.documentmodel.document import Document
+from timApp.timdb.gamification_models.gamificationdocument import GamificationDocument
+from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.tim_models import db
+from timApp.timdb.models.translation import Translation
+from timApp.timdb.blocktypes import blocktypes
+from timApp.timdb.dbutils import insert_block
+from timApp.timdb.timdbexception import TimDbException
+from timApp.utils import split_location
 
 
 class DocEntry(db.Model, DocInfo):
@@ -114,7 +114,7 @@ class DocEntry(db.Model, DocInfo):
 
         if isinstance(path, str):
             location, _ = split_location(path)
-            from timdb.models.folder import Folder
+            from timApp.timdb.models.folder import Folder
             Folder.create(location, owner_group_id=owner_group_id, commit=False)
 
         document_id = insert_block(title or path, owner_group_id, blocktypes.DOCUMENT, commit=False).id
@@ -124,7 +124,7 @@ class DocEntry(db.Model, DocInfo):
         # noinspection PyArgumentList
         docentry = DocEntry(id=document_id, name=path, public=True)
         if path is not None:
-            from timdb.models.folder import Folder
+            from timApp.timdb.models.folder import Folder
             if Folder.find_by_path(path):
                 db.session.rollback()
                 raise TimDbException('A folder already exists at path {}'.format(path))

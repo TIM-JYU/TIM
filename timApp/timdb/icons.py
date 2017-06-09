@@ -7,8 +7,8 @@ retrieved from the database through this module. The module is not yet used in p
 
 """
 
-from timdb.timdbbase import TimDbBase
-from timdb.timdbexception import TimDbException
+from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.timdbexception import TimDbException
 
 
 class Icons(TimDbBase):

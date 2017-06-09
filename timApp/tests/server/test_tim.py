@@ -4,13 +4,13 @@ import unittest
 
 from lxml.cssselect import CSSSelector
 
-from documentmodel.document import Document
-from markdownconverter import md_to_html
-from plugin import Plugin
-from tests.db.timdbtest import TEST_USER_2_ID, TEST_USER_1_ID, TEST_USER_1_NAME
-from tests.server.timroutetest import TimRouteTest
-from timdb.models.user import User
-from timdb.userutils import get_anon_group_id, grant_view_access
+from timApp.documentmodel.document import Document
+from timApp.markdownconverter import md_to_html
+from timApp.plugin import Plugin
+from timApp.tests.db.timdbtest import TEST_USER_2_ID, TEST_USER_1_ID, TEST_USER_1_NAME
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.models.user import User
+from timApp.timdb.userutils import get_anon_group_id, grant_view_access
 
 link_selector = CSSSelector('a')
 

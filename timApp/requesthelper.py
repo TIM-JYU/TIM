@@ -3,7 +3,7 @@ from typing import List
 from flask import Request
 from flask import request, abort
 
-from timdb.invalidreferenceexception import InvalidReferenceException
+from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 
 
 def verify_json_params(*args: str, require=True, default=None):

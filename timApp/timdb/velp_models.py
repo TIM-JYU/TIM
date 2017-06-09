@@ -1,7 +1,7 @@
 """Defines all data models related to velps."""
 from datetime import datetime
 
-from timdb.tim_models import db
+from timApp.timdb.tim_models import db
 
 
 class Annotation(db.Model):

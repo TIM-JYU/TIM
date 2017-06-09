@@ -7,14 +7,14 @@ from typing import Optional
 
 from sqlalchemy.orm import scoped_session
 
-from logger import log_info
-from timdb.newanswers import NewAnswers
-from timdb.runningquestion import RunningQuestions
-from timdb.showpoints import ShowPoints
-from timdb.slidestatus import SlideStatuses
-from timdb.temp_info_for_user import TempInfoUserQuestion
-from timdb.tim_models import db
-from timdb.useractivity import UserActivity
+from timApp.logger import log_info
+from timApp.timdb.newanswers import NewAnswers
+from timApp.timdb.runningquestion import RunningQuestions
+from timApp.timdb.showpoints import ShowPoints
+from timApp.timdb.slidestatus import SlideStatuses
+from timApp.timdb.temp_info_for_user import TempInfoUserQuestion
+from timApp.timdb.tim_models import db
+from timApp.timdb.useractivity import UserActivity
 
 
 class Runningquestion(db.Model):

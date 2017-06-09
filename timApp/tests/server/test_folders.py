@@ -1,9 +1,9 @@
-from tests.db.timdbtest import TEST_USER_2_ID
-from tests.server.timroutetest import TimRouteTest
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
-from timdb.tim_models import db
-from timdb.userutils import grant_access, grant_view_access, get_anon_group_id
+from timApp.tests.db.timdbtest import TEST_USER_2_ID
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.folder import Folder
+from timApp.timdb.tim_models import db
+from timApp.timdb.userutils import grant_access, grant_view_access, get_anon_group_id
 
 
 class FolderTest(TimRouteTest):

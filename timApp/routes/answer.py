@@ -10,25 +10,25 @@ from flask import Response
 from flask import abort
 from flask import request
 
-import containerLink
-import pluginControl
-from accesshelper import verify_logged_in
-from accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, has_teacher_access, \
+from timApp.accesshelper import verify_logged_in
+from timApp.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, has_teacher_access, \
     verify_view_access, get_par_from_request
-from common import hide_names_in_teacher
-from dbaccess import get_timdb
-from documentmodel.document import Document
-from plugin import Plugin, PluginException
-from requesthelper import verify_json_params, unpack_args, get_option
-from responsehelper import json_response, ok_response
-from sessioninfo import get_current_user_id, logged_in
-from sessioninfo import get_current_user_object, get_session_users, get_current_user_group
-from timdb.accesstype import AccessType
-from timdb.blocktypes import blocktypes
-from timdb.models.block import Block
-from timdb.models.user import User
-from timdb.tim_models import AnswerUpload, Answer, db
-from timdb.timdbexception import TimDbException
+from timApp.common import hide_names_in_teacher
+from timApp.containerLink import call_plugin_answer
+from timApp.dbaccess import get_timdb
+from timApp.documentmodel.document import Document
+from timApp.plugin import Plugin, PluginException
+from timApp.pluginControl import try_load_json, find_task_ids, pluginify
+from timApp.requesthelper import verify_json_params, unpack_args, get_option
+from timApp.responsehelper import json_response, ok_response
+from timApp.sessioninfo import get_current_user_id, logged_in
+from timApp.sessioninfo import get_current_user_object, get_session_users, get_current_user_group
+from timApp.timdb.accesstype import AccessType
+from timApp.timdb.blocktypes import blocktypes
+from timApp.timdb.models.block import Block
+from timApp.timdb.models.user import User
+from timApp.timdb.tim_models import AnswerUpload, Answer, db
+from timApp.timdb.timdbexception import TimDbException
 
 answers = Blueprint('answers',
                     __name__,
@@ -156,7 +156,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     info = plugin.get_info(user_objs, len(old_answers), look_answer=is_teacher and not save_teacher, valid=valid)
 
     # Get the newest answer (state). Only for logged in users.
-    state = pluginControl.try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
+    state = try_load_json(old_answers[0]['content']) if logged_in() and len(old_answers) > 0 else None
 
     # TODO Don't put these under markup; they are there for compatibility for now.
     plugin.values['current_user_id'] = info['current_user_id']
@@ -171,7 +171,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                         'taskID': task_id,
                         'info': info}
 
-    plugin_response = containerLink.call_plugin_answer(plugintype, answer_call_data)
+    plugin_response = call_plugin_answer(plugintype, answer_call_data)
     try:
         jsonresp = json.loads(plugin_response)
     except ValueError:
@@ -308,7 +308,7 @@ def get_answers(task_id, user_id):
 def get_document_answers(doc_id):
     doc = Document(doc_id)
     pars = doc.get_dereferenced_paragraphs()
-    task_ids, _ = pluginControl.find_task_ids(pars)
+    task_ids, _ = find_task_ids(pars)
     return get_all_answers_list_plain(task_ids)
 
 
@@ -438,18 +438,18 @@ def get_state():
     if user is None:
         abort(400, 'Non-existent user')
 
-    texts, js_paths, css_paths, modules = pluginControl.pluginify(doc,
-                                                                  [block],
-                                                                  user,
-                                                                  timdb,
-                                                                  custom_answer=answer)
-    [reviewhtml], _, _, _ = pluginControl.pluginify(doc,
+    texts, js_paths, css_paths, modules = pluginify(doc,
                                                     [block],
                                                     user,
                                                     timdb,
-                                                    custom_answer=answer,
-                                                    plugin_params=plugin_params,
-                                                    wrap_in_div=False) if review else ([None], None, None, None)
+                                                    custom_answer=answer)
+    [reviewhtml], _, _, _ = pluginify(doc,
+                                      [block],
+                                      user,
+                                      timdb,
+                                      custom_answer=answer,
+                                      plugin_params=plugin_params,
+                                      wrap_in_div=False) if review else ([None], None, None, None)
 
     return json_response({'html': texts[0]['html'], 'reviewHtml': reviewhtml['html'] if review else None})
 

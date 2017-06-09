@@ -1,5 +1,5 @@
-from routes.login import test_pws
-from tests.server.timroutetest import TimRouteTest
+from timApp.routes.login import test_pws
+from timApp.tests.server.timroutetest import TimRouteTest
 
 
 class TestSignUp(TimRouteTest):

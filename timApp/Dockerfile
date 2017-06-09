@@ -69,6 +69,11 @@ run pip3 install mypy
 run pip3 install pillow
 run pip3 install wand
 
+# sphinxcontrib-httpdomain does not work with 1.6
+run pip3 install sphinx==1.5.6
+run pip3 install sphinxcontrib-httpdomain
+run pip3 install recommonmark
+
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends
 # on older version of requests package.

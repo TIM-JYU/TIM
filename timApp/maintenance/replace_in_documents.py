@@ -1,8 +1,8 @@
 import argparse
 
-from tim_app import app
-from timdb.models.docentry import DocEntry
-from timdb.models.usergroup import UserGroup
+from timApp.tim_app import app
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.usergroup import UserGroup
 
 
 def perform_replace(from_str: str, to_str: str, dry_run: bool):

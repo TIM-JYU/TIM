@@ -7,14 +7,14 @@ Run from parent directory with command: python3 -m unittest dumboclient filemode
 import random
 import unittest
 
-from documentmodel.document import Document
-from documentmodel.documentparser import DocumentParser
-from documentmodel.documentwriter import DocumentWriter
-from documentmodel.exceptions import DocExistsError
-from documentmodel.randutils import random_paragraph
-from tests.db.timdbtest import TimDbTest
-from timdb.models.docentry import DocEntry
-from timdb.userutils import get_anon_group_id
+from timApp.documentmodel.document import Document
+from timApp.documentmodel.documentparser import DocumentParser
+from timApp.documentmodel.documentwriter import DocumentWriter
+from timApp.documentmodel.exceptions import DocExistsError
+from timApp.documentmodel.randutils import random_paragraph
+from timApp.tests.db.timdbtest import TimDbTest
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.userutils import get_anon_group_id
 
 
 class DocumentTest(TimDbTest):

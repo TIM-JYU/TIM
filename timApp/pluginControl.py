@@ -8,16 +8,16 @@ import yaml
 import yaml.parser
 from flask import render_template
 
-from containerLink import call_plugin_html, call_plugin_multihtml, PLUGINS
-from containerLink import get_plugin_needs_browser
-from containerLink import get_plugin_tim_url
-from containerLink import plugin_reqs
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.document import dereference_pars, Document
-from plugin import PluginException, Plugin
-from timdb import gamificationdata
-from timdb.models.user import User
-from utils import get_error_html
+from timApp.containerLink import call_plugin_html, call_plugin_multihtml, PLUGINS
+from timApp.containerLink import get_plugin_needs_browser
+from timApp.containerLink import get_plugin_tim_url
+from timApp.containerLink import plugin_reqs
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.document import dereference_pars, Document
+from timApp.plugin import PluginException, Plugin
+from timApp.timdb import gamificationdata
+from timApp.timdb.models.user import User
+from timApp.utils import get_error_html
 
 LAZYSTART = "<!--lazy "
 LAZYEND = " lazy-->"
@@ -79,7 +79,7 @@ def pluginify(doc: Document,
     :param user: The current user object.
     :param timdb: A reference to the database.
     :param custom_answer: Optional answer that will used as the state for the plugin instead of answer database.
-                          If this parameter is specified, the expression len(blocks) MUST be 1.
+    If this parameter is specified, the expression len(blocks) MUST be 1.
     :param sanitize: Whether the blocks should be sanitized before processing.
     :param do_lazy Whether to use lazy versions of the plugins.
     :param edit_window Whether the method is called from the edit window or not.

@@ -3,7 +3,7 @@ import os
 
 from datetime import timedelta
 
-from utils import pycharm_running
+from timApp.utils import pycharm_running
 
 DEBUG = True
 PROFILE = False

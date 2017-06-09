@@ -2,17 +2,17 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 
-from accesshelper import verify_comment_right, verify_logged_in, has_ownership
-from accesshelper import verify_view_access
-from dbaccess import get_timdb
-from documentmodel.document import Document
-from requesthelper import get_referenced_pars_from_req, verify_json_params
-from responsehelper import json_response
-from routes.edit import par_response
-from routes.notify import notify_doc_watchers
-from sessioninfo import get_current_user_group
-from timdb.models.docentry import DocEntry
-from timdb.models.notification import NotificationType
+from timApp.accesshelper import verify_comment_right, verify_logged_in, has_ownership
+from timApp.accesshelper import verify_view_access
+from timApp.dbaccess import get_timdb
+from timApp.documentmodel.document import Document
+from timApp.requesthelper import get_referenced_pars_from_req, verify_json_params
+from timApp.responsehelper import json_response
+from timApp.routes.edit import par_response
+from timApp.routes.notify import notify_doc_watchers
+from timApp.sessioninfo import get_current_user_group
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.notification import NotificationType
 
 notes = Blueprint('notes',
                   __name__,

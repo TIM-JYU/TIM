@@ -1,7 +1,7 @@
 from lxml import html
 
-from tests.server.timroutetest import TimRouteTest
-from tests.timliveserver import TimLiveServer
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.tests.timliveserver import TimLiveServer
 
 
 class QuestionTest(TimLiveServer, TimRouteTest):

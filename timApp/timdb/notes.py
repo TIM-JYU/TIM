@@ -1,9 +1,9 @@
 from typing import List
 
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.document import Document
-from markdownconverter import md_to_html
-from timdb.timdbbase import TimDbBase
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.document import Document
+from timApp.markdownconverter import md_to_html
+from timApp.timdb.timdbbase import TimDbBase
 
 
 class Notes(TimDbBase):

@@ -8,8 +8,8 @@ is not yet used in production.
 
 """
 
-from timdb.timdbbase import TimDbBase
-from timdb.velp_models import VelpGroupLabel
+from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.velp_models import VelpGroupLabel
 
 
 class VelpGroupLabels(TimDbBase):

@@ -2,8 +2,8 @@ from typing import List
 
 from sqlalchemy import UniqueConstraint
 
-from timdb.docinfo import DocInfo
-from timdb.tim_models import db
+from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.tim_models import db
 
 
 class Translation(db.Model, DocInfo):
@@ -20,7 +20,7 @@ class Translation(db.Model, DocInfo):
     @property
     def docentry(self):
         if not hasattr(self, '_docentry'):
-            from timdb.models.docentry import DocEntry
+            from timApp.timdb.models.docentry import DocEntry
             self._docentry = DocEntry.find_by_id(self.src_docid)
         return self._docentry
 

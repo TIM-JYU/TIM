@@ -1,10 +1,10 @@
 import random
 from typing import Optional
 
-from documentmodel.docparagraph import DocParagraph
-from tests.server.timroutetest import TimRouteTest
-from timdb.models.docentry import DocEntry
-from timdb.readparagraphtype import ReadParagraphType
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.readparagraphtype import ReadParagraphType
 
 
 class ClipboardTest(TimRouteTest):

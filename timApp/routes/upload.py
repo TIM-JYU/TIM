@@ -9,17 +9,17 @@ from flask import Blueprint, request, send_file
 from flask import abort
 from werkzeug.utils import secure_filename
 
-from accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
+from timApp.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
     grant_access_to_session_users
-from dbaccess import get_timdb
-from plugin import Plugin
-from responsehelper import json_response
-from timdb.userutils import grant_view_access, get_anon_group_id
-from validation import validate_item_and_create, validate_uploaded_document_content
-from sessioninfo import get_current_user_name, get_current_user_group, logged_in
-from timdb.accesstype import AccessType
-from timdb.blocktypes import blocktypes
-from timdb.models.block import Block
+from timApp.dbaccess import get_timdb
+from timApp.plugin import Plugin
+from timApp.responsehelper import json_response
+from timApp.timdb.userutils import grant_view_access, get_anon_group_id
+from timApp.validation import validate_item_and_create, validate_uploaded_document_content
+from timApp.sessioninfo import get_current_user_name, get_current_user_group, logged_in
+from timApp.timdb.accesstype import AccessType
+from timApp.timdb.blocktypes import blocktypes
+from timApp.timdb.models.block import Block
 
 upload = Blueprint('upload',
                    __name__,

@@ -3,11 +3,11 @@ from typing import List
 
 from typing import Dict
 
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.document import Document
-from timdb.readparagraphtype import ReadParagraphType
-from timdb.tim_models import ReadParagraph, db
-from timdb.timdbbase import TimDbBase
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.document import Document
+from timApp.timdb.readparagraphtype import ReadParagraphType
+from timApp.timdb.tim_models import ReadParagraph, db
+from timApp.timdb.timdbbase import TimDbBase
 
 
 class Readings(TimDbBase):

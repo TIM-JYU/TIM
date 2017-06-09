@@ -1,6 +1,6 @@
-from documentmodel.timjsonencoder import TimJsonEncoder
-from tests.server.timroutetest import TimRouteTest
-from timdb.tim_models import db
+from timApp.documentmodel.timjsonencoder import TimJsonEncoder
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.tim_models import db
 
 
 class TemplateTest(TimRouteTest):

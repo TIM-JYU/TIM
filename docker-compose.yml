@@ -22,7 +22,7 @@ services:
   command: python3 launch.py --with-gunicorn
   environment:
    FLASK_APP: tim_app.py
-   PYTHONPATH: /service/timApp
+   PYTHONPATH: /service
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST}

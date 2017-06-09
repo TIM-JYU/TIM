@@ -1,8 +1,8 @@
 from datetime import datetime, timezone, timedelta
 
-from tests.db.timdbtest import TEST_USER_1_ID
-from tests.server.timroutetest import TimRouteTest
-from timdb.userutils import user_is_owner
+from timApp.tests.db.timdbtest import TEST_USER_1_ID
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.userutils import user_is_owner
 
 
 class PermissionTest(TimRouteTest):

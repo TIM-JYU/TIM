@@ -6,7 +6,7 @@ Revision ID: 504a7d9779b9 Revises: None Create Date: 2016-10-10 14:43:14.044658
 
 # revision identifiers, used by Alembic.
 
-from timdb.readparagraphtype import ReadParagraphType
+from timApp.timdb.readparagraphtype import ReadParagraphType
 
 revision = '504a7d9779b9'
 down_revision = None

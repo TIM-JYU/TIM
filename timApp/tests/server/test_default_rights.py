@@ -2,13 +2,13 @@ from operator import itemgetter
 
 from dateutil import parser
 
-from tests.server.timroutetest import TimRouteTest
-from timdb.blocktypes import from_str, blocktypes
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
-from timdb.models.usergroup import UserGroup
-from timdb.special_group_names import KORPPI_GROUPNAME
-from timdb.userutils import get_anon_group_id, grant_default_access, default_right_paths
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.blocktypes import from_str, blocktypes
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.folder import Folder
+from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.special_group_names import KORPPI_GROUPNAME
+from timApp.timdb.userutils import get_anon_group_id, grant_default_access, default_right_paths
 
 
 class DefaultRightTest(TimRouteTest):

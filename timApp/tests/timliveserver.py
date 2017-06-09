@@ -3,7 +3,7 @@ from flask.ext.testing import LiveServerTestCase
 
 class TimLiveServer(LiveServerTestCase):
     def create_app(self):
-        from tim_app import app
+        from timApp.tim_app import app
         return app
 
     def setUp(self):

@@ -1,4 +1,4 @@
-from timdb.tempdbbase import TempDbBase
+from timApp.timdb.tempdbbase import TempDbBase
 
 
 class ShowPoints(TempDbBase):

@@ -6,19 +6,17 @@ from flask import request, g
 from sqlalchemy import inspect
 from werkzeug.exceptions import abort
 
-import documentmodel.document
-import timdb
-import timdb.userutils
-from documentmodel.document import Document
-from requesthelper import get_option
-from sessioninfo import get_current_user_id, logged_in, get_other_users_as_list, \
+import timApp.timdb
+from timApp.documentmodel.document import Document, dereference_pars
+from timApp.requesthelper import get_option
+from timApp.sessioninfo import get_current_user_id, logged_in, get_other_users_as_list, \
     get_current_user_group, get_current_user_object
-from timdb.accesstype import AccessType
-from timdb.models.usergroup import UserGroup
-from timdb.tim_models import db, BlockAccess
-from timdb.timdb2 import TimDb
-from timdb.timdbexception import TimDbException
-from timdb.userutils import get_access_type_id, grant_access
+from timApp.timdb.accesstype import AccessType
+from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.tim_models import db, BlockAccess
+from timApp.timdb.timdb2 import TimDb
+from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.userutils import get_access_type_id, grant_access
 
 
 def verify_admin():
@@ -207,7 +205,7 @@ def get_par_from_request(doc: Document, par_id=None, task_id_name=None):
             abort(400, str(e))
     orig_doc = Document(orig_doc_id)
     orig_par = orig_doc.get_paragraph(orig_par_id)
-    pars = documentmodel.document.dereference_pars([orig_par], source_doc=doc)
+    pars = dereference_pars([orig_par], source_doc=doc)
     for p in pars:
         if p.get_id() == par_id:
             return p
@@ -234,7 +232,7 @@ def verify_task_access(doc_id, task_id_name, access_type):
         par = Document(orig_doc).get_paragraph(par_id)
         if not par.is_reference():
             abort(403)
-        pars = documentmodel.document.dereference_pars([par])
+        pars = dereference_pars([par])
         found_par = next((p for p in pars if p.get_attr('taskId') == task_id_name and p.doc.doc_id == doc_id), None)
         if found_par is None:
             abort(403)
@@ -252,13 +250,13 @@ def grant_access_to_session_users(timdb: TimDb, block_id: int):
 
 def get_owned_blocks():
     if not hasattr(g, 'owned'):
-        g.owned = timdb.userutils.get_owned_blocks(get_current_user_id())
+        g.owned = timApp.timdb.userutils.get_owned_blocks(get_current_user_id())
     return g.owned
 
 
 def get_editable_blocks():
     if not hasattr(g, 'editable'):
-        g.editable = timdb.userutils.get_editable_blocks(get_current_user_id())
+        g.editable = timApp.timdb.userutils.get_editable_blocks(get_current_user_id())
     return g.editable
 
 
@@ -270,23 +268,23 @@ def get_viewable_blocks_or_none_if_admin():
 
 def get_viewable_blocks():
     if not hasattr(g, 'viewable'):
-        g.viewable = timdb.userutils.get_viewable_blocks(get_current_user_id())
+        g.viewable = timApp.timdb.userutils.get_viewable_blocks(get_current_user_id())
     return g.viewable
 
 
 def get_manageable_blocks():
     if not hasattr(g, 'manageable'):
-        g.manageable = timdb.userutils.get_manageable_blocks(get_current_user_id())
+        g.manageable = timApp.timdb.userutils.get_manageable_blocks(get_current_user_id())
     return g.manageable
 
 
 def get_teachable_blocks():
     if not hasattr(g, 'teachable'):
-        g.teachable = timdb.userutils.get_teachable_blocks(get_current_user_id())
+        g.teachable = timApp.timdb.userutils.get_teachable_blocks(get_current_user_id())
     return g.teachable
 
 
 def get_see_answers_blocks():
     if not hasattr(g, 'see_answers'):
-        g.see_answers = timdb.userutils.get_see_answers_blocks(get_current_user_id())
+        g.see_answers = timApp.timdb.userutils.get_see_answers_blocks(get_current_user_id())
     return g.see_answers

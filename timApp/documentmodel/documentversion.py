@@ -1,9 +1,9 @@
 from difflib import HtmlDiff
 from typing import Optional, Tuple
 
-from documentmodel.docsettings import DocSettings
-from documentmodel.document import Document, DocParagraphIter
-from documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.docsettings import DocSettings
+from timApp.documentmodel.document import Document
+from timApp.documentmodel.docparagraph import DocParagraph
 
 
 class DocumentVersion(Document):

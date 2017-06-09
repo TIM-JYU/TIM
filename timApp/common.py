@@ -7,15 +7,15 @@ import dateutil.parser
 import pytz
 from flask import session, abort, request, flash
 
-import pluginControl
-from accesshelper import has_ownership, has_edit_access
-from dbaccess import get_timdb
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.document import Document
-from markdownconverter import expand_macros, create_environment
-from sessioninfo import get_session_usergroup_ids
-from timdb.models.user import User
-from timdb.userutils import get_anon_group_id
+from timApp.accesshelper import has_ownership, has_edit_access
+from timApp.dbaccess import get_timdb
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.document import Document
+from timApp.markdownconverter import expand_macros, create_environment
+from timApp.pluginControl import pluginify
+from timApp.sessioninfo import get_session_usergroup_ids
+from timApp.timdb.models.user import User
+from timApp.timdb.userutils import get_anon_group_id
 
 
 def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
@@ -31,14 +31,14 @@ def hide_names_in_teacher(doc_id):
 
 def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False, load_plugin_states=True):
     timdb = get_timdb()
-    html_pars, js_paths, css_paths, modules = pluginControl.pluginify(doc,
-                                                                      pars,
-                                                                      user,
-                                                                      timdb,
-                                                                      sanitize=sanitize,
-                                                                      do_lazy=do_lazy,
-                                                                      edit_window=edit_window,
-                                                                      load_states=load_plugin_states)
+    html_pars, js_paths, css_paths, modules = pluginify(doc,
+                                                        pars,
+                                                        user,
+                                                        timdb,
+                                                        sanitize=sanitize,
+                                                        do_lazy=do_lazy,
+                                                        edit_window=edit_window,
+                                                        load_states=load_plugin_states)
     macroinfo = doc.get_settings().get_macroinfo()
     user_macros = macroinfo.get_user_specific_macros(user)
     delimiter = macroinfo.get_macro_delimiter()

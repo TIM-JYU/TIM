@@ -10,11 +10,6 @@ tim_logger.setLevel(logging.DEBUG)
 wz = logging.getLogger('werkzeug')
 wz.setLevel(logging.ERROR)
 
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-
-tim_logger.addHandler(ch)
-
 
 def setup_logging(app):
     if not app.config['TESTING']:

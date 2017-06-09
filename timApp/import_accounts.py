@@ -1,9 +1,9 @@
 import csv
 import sys
 
-from tim_app import app
-from timdb.models.user import User
-from timdb.timdb2 import TimDb
+from timApp.tim_app import app
+from timApp.timdb.models.user import User
+from timApp.timdb.timdb2 import TimDb
 
 
 def import_accounts(file, password):

@@ -3,7 +3,7 @@ from typing import Dict, Optional
 from copy import deepcopy
 
 if False:
-    from timdb.models.user import User
+    from timApp.timdb.models.user import User
 
 
 class MacroInfo:
@@ -11,9 +11,9 @@ class MacroInfo:
     
     :ivar macro_map: The mapping of macro keys to their values.
     :ivar macro_delimiter: The delimiter used for macros in the markdown.
-    :ivar user: The user to consider when processing macros.
+    :ivar _user: The user to consider when processing macros.
     :ivar preserve_user_macros: If True and user is not provided, get_macros() will preserve the user-specific-macros
-    (instead of replacing them with empty values).
+     (instead of replacing them with empty values).
     """
 
     def __init__(self,
@@ -22,7 +22,7 @@ class MacroInfo:
                  user: Optional['User'] = None):
         self.macro_map = macro_map or {}  # type: Dict[str, str]
         self.macro_delimiter = macro_delimiter or '%%'
-        self.user = user
+        self._user = user
         self.preserve_user_macros = False
         self.stringize_macros()
 
@@ -34,13 +34,13 @@ class MacroInfo:
             self.macro_map = {}
 
     def get_macros(self) -> Dict[str, str]:
-        if self.user is None:
+        if self._user is None:
             if not self.preserve_user_macros:
                 return self.macro_map
             else:
                 return self.get_macros_preserving_user()
         else:
-            return self.get_macros_with_user_specific(self.user)
+            return self.get_macros_with_user_specific(self._user)
 
     def get_macro_delimiter(self) -> str:
         return self.macro_delimiter

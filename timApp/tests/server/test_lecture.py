@@ -3,8 +3,8 @@ from datetime import timezone
 
 import dateutil.parser
 
-from tests.server.timroutetest import TimRouteTest
-from timdb.tim_models import AskedQuestion, AskedJson, db, LectureAnswer
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.tim_models import AskedQuestion, AskedJson, db, LectureAnswer
 
 
 class LectureTest(TimRouteTest):

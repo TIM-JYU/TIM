@@ -8,7 +8,7 @@ from typing import List, Union, Dict
 import requests
 import time
 
-from documentmodel.timjsonencoder import TimJsonEncoder
+from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 
 DUMBO_URL = 'http://127.0.0.1:8000'
 DUMBO_PATH = os.path.join("..", "Ephemeral", "Dumbo", "dist", "build", "Dumbo")
@@ -35,8 +35,8 @@ def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='') -> Union[List[
     :param data: The data to be converted.
     :param path: The path of the request. Valid paths are: '', '/', '/mdkeys' and '/markdown' (same as '/' and '').
      If path is '/mdkeys', data is expected to be a Dict or List[Dict]. Any dict value that begins with 'md:' is
-       interpreted as Pandoc markdown and is converted to HTML. Otherwise the value is unchanged.
-       The return value format will be the same as input.
+     interpreted as Pandoc markdown and is converted to HTML. Otherwise the value is unchanged.
+     The return value format will be the same as input.
      Otherwise, data is expected to be a List[str]. Each string is interpreted as Pandoc markdown and is converted to
      HTML. The return value format will be the same as input.
 

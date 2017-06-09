@@ -4,18 +4,18 @@ from flask import abort
 from flask import request
 from typing import Set
 
-import pluginControl
-from accesshelper import verify_logged_in
-from cache import cache
-from common import post_process_pars, get_user_settings
-from dbaccess import get_timdb
-from documentmodel.docparagraph import DocParagraph
-from requesthelper import get_option
-from sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group
-from timdb.docinfo import DocInfo
-from timdb.models.docentry import DocEntry
-from timdb.tim_models import BlockAccess
-from timdb.userutils import get_viewable_blocks
+from timApp.accesshelper import verify_logged_in
+from timApp.cache import cache
+from timApp.common import post_process_pars, get_user_settings
+from timApp.dbaccess import get_timdb
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.pluginControl import get_all_reqs
+from timApp.requesthelper import get_option
+from timApp.sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group
+from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.tim_models import BlockAccess
+from timApp.timdb.userutils import get_viewable_blocks
 
 search_routes = Blueprint('search',
                           __name__,
@@ -102,7 +102,7 @@ def search(query):
                                cssFiles=all_css,
                                jsMods=all_modules,
                                group=get_current_user_group(),
-                               reqs=pluginControl.get_all_reqs(),
+                               reqs=get_all_reqs(),
                                settings=get_user_settings(),
                                version={'hash': None},
                                translations=None,

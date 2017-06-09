@@ -1,5 +1,5 @@
-from tests.db.timdbtest import TimDbTest
-from timdb.tim_models import db
+from timApp.tests.db.timdbtest import TimDbTest
+from timApp.timdb.tim_models import db
 
 
 class NotifyTest(TimDbTest):

@@ -10,8 +10,8 @@ and their labels. The module also retrieves the data related to velps and their 
 import copy
 from typing import Optional, List, Tuple, Dict
 
-from timdb.timdbbase import TimDbBase
-from timdb.velp_models import Velp, VelpVersion, VelpLabel, VelpLabelContent
+from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.velp_models import Velp, VelpVersion, VelpLabel, VelpLabelContent
 
 
 class Velps(TimDbBase):

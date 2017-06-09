@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional
 
-from timdb.models.user import User
+from timApp.timdb.models.user import User
 
 
 class Bookmarks:

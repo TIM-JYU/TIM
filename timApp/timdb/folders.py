@@ -1,6 +1,6 @@
-from timdb.models.folder import Folder
-from timdb.models.user import User
-from timdb.timdbbase import TimDbBase
+from timApp.timdb.models.folder import Folder
+from timApp.timdb.models.user import User
+from timApp.timdb.timdbbase import TimDbBase
 
 
 class Folders(TimDbBase):

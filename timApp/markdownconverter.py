@@ -5,9 +5,9 @@ from typing import Optional, Dict
 from jinja2 import Environment, TemplateSyntaxError
 from lxml import html
 
-from dumboclient import call_dumbo
-from htmlSanitize import sanitize_html
-from utils import get_error_html
+from timApp.dumboclient import call_dumbo
+from timApp.htmlSanitize import sanitize_html
+from timApp.utils import get_error_html
 
 
 # noinspection PyUnusedLocal

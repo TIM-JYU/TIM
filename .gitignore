@@ -13,6 +13,7 @@ MIRToolbox/
 pg_backup/
 .stack-work/
 /variables.sh
+/timApp/docs/_build/
 /timApp/static/gen/
 /timApp/static/testgen/
 /timApp/static/scripts/node_modules/

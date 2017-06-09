@@ -8,10 +8,10 @@ from typing import Optional, Tuple
 from psycopg2._psycopg import connection
 from sqlalchemy.orm import scoped_session
 
-from timdb.accesstype import AccessType
-from timdb.models.block import Block
-from timdb.tim_models import BlockAccess, db
-from utils import split_location, join_location, get_sql_template
+from timApp.timdb.accesstype import AccessType
+from timApp.timdb.models.block import Block
+from timApp.timdb.tim_models import BlockAccess, db
+from timApp.utils import split_location, join_location, get_sql_template
 
 
 class TimDbBase(object):

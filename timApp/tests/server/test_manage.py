@@ -1,6 +1,6 @@
-from tests.db.timdbtest import TEST_USER_2_ID
-from tests.server.timroutetest import TimRouteTest
-from timdb.userutils import grant_access
+from timApp.tests.db.timdbtest import TEST_USER_2_ID
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.userutils import grant_access
 
 
 class ManageTest(TimRouteTest):

@@ -4,22 +4,20 @@ from typing import Optional
 
 from flask import Blueprint
 from flask import abort
-from flask import request
 
-from accesshelper import verify_logged_in, verify_view_access
-from dbaccess import get_timdb
-from decorators import async
-from documentmodel.docparagraph import DocParagraph
-from logger import log_info, log_error
-from requesthelper import verify_json_params
-from responsehelper import json_response, ok_response
-from sessioninfo import get_current_user_id, get_current_user_object
-from tim_app import app
-from timdb.docinfo import DocInfo
-from timdb.models.docentry import DocEntry
-from timdb.models.notification import NotificationType
-from timdb.models.user import User
-from timdb.tim_models import db
+from timApp.accesshelper import verify_logged_in, verify_view_access
+from timApp.decorators import async
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.logger import log_info, log_error
+from timApp.requesthelper import verify_json_params
+from timApp.responsehelper import json_response, ok_response
+from timApp.sessioninfo import get_current_user_object
+from timApp.tim_app import app
+from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.notification import NotificationType
+from timApp.timdb.models.user import User
+from timApp.timdb.tim_models import db
 
 FUNNEL_HOST = "funnel"
 FUNNEL_PORT = 80

@@ -11,14 +11,14 @@ from flask import session
 from flask.testing import FlaskClient
 from lxml import html
 
-import tim
-from documentmodel.document import Document
-from documentmodel.timjsonencoder import TimJsonEncoder
-from routes.login import log_in_as_anonymous
-from tests.db.timdbtest import TimDbTest
-from timdb.models.docentry import DocEntry
-from timdb.models.user import User
-from timdb.models.usergroup import UserGroup
+import timApp.tim
+from timApp.documentmodel.document import Document
+from timApp.documentmodel.timjsonencoder import TimJsonEncoder
+from timApp.routes.login import log_in_as_anonymous
+from timApp.tests.db.timdbtest import TimDbTest
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.user import User
+from timApp.timdb.models.usergroup import UserGroup
 
 
 def load_json(resp: Response):
@@ -37,7 +37,7 @@ def fast_getaddrinfo(host, port, family=0, addrtype=0, proto=0, flags=0):
 
 socket.getaddrinfo = fast_getaddrinfo
 
-testclient = tim.app.test_client()
+testclient = timApp.tim.app.test_client()
 testclient = testclient.__enter__()  # type: FlaskClient
 
 
@@ -158,7 +158,7 @@ class TimRouteTest(TimDbTest):
          * If the response is a redirect, this parameter is interpreted as the expected redirect target URL.
          * Otherwise, if as_tree is True, this parameter is not used.
          * Otherwise, if the response mimetype is application/json, this parameter is interpreted as a dictionary or list
-           that must match the response content.
+         that must match the response content.
          * Otherwise, this parameter is interpreted as a string that must match the response content.
         :param expect_contains: The expected subset(s) of the response content. This can be a string or a list of strings.
         :param expect_xpath: The expected XPath expression that must match at least one element in the response tree.

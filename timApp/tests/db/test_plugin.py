@@ -1,6 +1,6 @@
-from plugin import Plugin
-from tests.db.timdbtest import TimDbTest, TEST_USER_1_ID, TEST_USER_2_ID
-from timdb.models.docentry import DocEntry
+from timApp.plugin import Plugin
+from timApp.tests.db.timdbtest import TimDbTest, TEST_USER_1_ID, TEST_USER_2_ID
+from timApp.timdb.models.docentry import DocEntry
 
 
 class PluginTest(TimDbTest):

@@ -2,15 +2,15 @@ from flask import Blueprint, abort
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
-from accesshelper import verify_read_marking_right
-from dbaccess import get_timdb
-from documentmodel.document import Document
-from requesthelper import verify_json_params, get_referenced_pars_from_req
-from responsehelper import json_response, ok_response
-from sessioninfo import get_session_usergroup_ids, get_current_user_group
-from timdb.readparagraphtype import ReadParagraphType
-from timdb.tim_models import ReadParagraph
-from timdb.timdbexception import TimDbException
+from timApp.accesshelper import verify_read_marking_right
+from timApp.dbaccess import get_timdb
+from timApp.documentmodel.document import Document
+from timApp.requesthelper import verify_json_params, get_referenced_pars_from_req
+from timApp.responsehelper import json_response, ok_response
+from timApp.sessioninfo import get_session_usergroup_ids, get_current_user_group
+from timApp.timdb.readparagraphtype import ReadParagraphType
+from timApp.timdb.tim_models import ReadParagraph
+from timApp.timdb.timdbexception import TimDbException
 
 readings = Blueprint('readings',
                      __name__,

@@ -1,10 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
 
-from timdb.tim_models import AskedQuestion, AskedJson, Question
-
-__author__ = 'hajoviin'
-from timdb.timdbbase import TimDbBase
+from timApp.timdb.tim_models import AskedQuestion, AskedJson, Question
+from timApp.timdb.timdbbase import TimDbBase
 
 
 class Questions(TimDbBase):

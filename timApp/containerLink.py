@@ -4,12 +4,12 @@ from functools import lru_cache
 
 import requests
 
-from documentmodel.document import Document
-from documentmodel.timjsonencoder import TimJsonEncoder
-from dumboclient import call_dumbo
-from logger import log_warning
-from plugin import PluginException
-from tim_app import app
+from timApp.documentmodel.document import Document
+from timApp.documentmodel.timjsonencoder import TimJsonEncoder
+from timApp.dumboclient import call_dumbo
+from timApp.logger import log_warning
+from timApp.plugin import PluginException
+from timApp.tim_app import app
 
 TIM_URL = ""
 

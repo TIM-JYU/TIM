@@ -5,7 +5,7 @@ from typing import Optional, Dict
 
 import psycopg2
 
-from logger import log_info
+from timApp.logger import log_info
 
 
 def perform_migration(sqlite_path: str, postgre_path: str):

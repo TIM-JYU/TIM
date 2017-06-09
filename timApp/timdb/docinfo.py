@@ -2,11 +2,11 @@ from typing import List
 
 from flask import current_app
 
-from documentmodel.document import Document
-from timdb.item import Item
-from timdb.models.notification import NotificationType, Notification
-from timdb.models.usergroup import UserGroup
-from timdb.tim_models import db
+from timApp.documentmodel.document import Document
+from timApp.timdb.item import Item
+from timApp.timdb.models.notification import NotificationType, Notification
+from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.tim_models import db
 
 
 class DocInfo(Item):
@@ -39,7 +39,7 @@ class DocInfo(Item):
 
     @property
     def aliases(self):
-        from timdb.models.docentry import DocEntry
+        from timApp.timdb.models.docentry import DocEntry
         return DocEntry.find_all_by_id(self.src_docid)
 
     @property
@@ -49,7 +49,7 @@ class DocInfo(Item):
 
     @property
     def document_as_current_user(self):
-        from sessioninfo import get_current_user_group
+        from timApp.sessioninfo import get_current_user_group
         return Document(self.id, modifier_group_id=get_current_user_group())
 
     @property
@@ -92,7 +92,7 @@ class DocInfo(Item):
         return False
 
     def add_alias(self, new_name, is_public):
-        from timdb.models.docentry import DocEntry
+        from timApp.timdb.models.docentry import DocEntry
         # noinspection PyArgumentList
         d = DocEntry(id=self.src_docid, name=new_name, public=is_public)
         db.session.add(d)

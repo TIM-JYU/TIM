@@ -1,6 +1,6 @@
 import enum
 
-from timdb.tim_models import db
+from timApp.timdb.tim_models import db
 
 
 class NotificationType(enum.Enum):

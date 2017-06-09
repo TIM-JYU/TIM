@@ -14,11 +14,11 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 
-from accesshelper import verify_logged_in, has_view_access, has_seeanswers_access, has_teacher_access, has_ownership
-from dbaccess import get_timdb
-from responsehelper import json_response, ok_response
-from sessioninfo import get_current_user_id
-from timdb.annotations import Annotations
+from timApp.accesshelper import verify_logged_in, has_view_access, has_seeanswers_access, has_teacher_access, has_ownership
+from timApp.dbaccess import get_timdb
+from timApp.responsehelper import json_response, ok_response
+from timApp.sessioninfo import get_current_user_id
+from timApp.timdb.annotations import Annotations
 
 annotations = Blueprint('annotations',
                         __name__,

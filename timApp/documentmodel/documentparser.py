@@ -2,10 +2,10 @@ import re
 
 from typing import Optional
 
-from documentmodel.attributeparser import AttributeParser
-from documentmodel.documentparseroptions import DocumentParserOptions
-from documentmodel.randutils import hashfunc, random_id, is_valid_id
-from utils import count_chars
+from timApp.documentmodel.attributeparser import AttributeParser
+from timApp.documentmodel.documentparseroptions import DocumentParserOptions
+from timApp.documentmodel.randutils import hashfunc, random_id, is_valid_id
+from timApp.utils import count_chars
 
 
 class SplitterException(Exception):

@@ -5,18 +5,18 @@ from flask import abort
 from flask import current_app
 from flask import g
 
-from accesshelper import verify_logged_in
-from accesshelper import verify_view_access, verify_edit_access
-from dbaccess import get_timdb
-from documentmodel.clipboard import Clipboard
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.document import Document
-from requesthelper import verify_json_params
-from responsehelper import json_response, ok_response
-from routes.edit import par_response
-from sessioninfo import get_current_user_id
-from timdb.models.docentry import DocEntry
-from timdb.timdbexception import TimDbException
+from timApp.accesshelper import verify_logged_in
+from timApp.accesshelper import verify_view_access, verify_edit_access
+from timApp.dbaccess import get_timdb
+from timApp.documentmodel.clipboard import Clipboard
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.document import Document
+from timApp.requesthelper import verify_json_params
+from timApp.responsehelper import json_response, ok_response
+from timApp.routes.edit import par_response
+from timApp.sessioninfo import get_current_user_id
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.timdbexception import TimDbException
 
 clipboard = Blueprint('clipboard',
                       __name__,

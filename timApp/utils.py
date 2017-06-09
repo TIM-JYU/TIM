@@ -10,8 +10,8 @@ import yaml.scanner
 from typing import List, Optional, Tuple, Union
 from yaml import CLoader
 
-from htmlSanitize import sanitize_html
-from theme import Theme
+from timApp.htmlSanitize import sanitize_html
+from timApp.theme import Theme
 
 
 def datestr_to_relative(dstr):
@@ -72,11 +72,10 @@ def merge(a, b):
 
 
 def correct_yaml(text):
-    """
-      Inserts missing spaces after : Like  width:20 => width: 20
-      Also gives an other way to write multiline attributes, by starting
-      the multiline like: program: |!!  (!! could be any number and any non a-z,A-Z chars
-      and ending it by !! in first column
+    """Inserts missing spaces after `:` Like  `width:20` => `width: 20`
+    Also gives an other way to write multiline attributes, by starting
+    the multiline like: `program: |!!`  (`!!` could be any number and any non a-z,A-Z chars
+    and ending it by `!!` in first column.
 
     :param text: text to convert proper yaml
     :return: text that is proper yaml
@@ -177,18 +176,22 @@ class ThemeNotFoundException(Exception):
 def generate_theme_scss(themes: List[Theme], gen_dir: str) -> None:
     """Generates an SCSS file based on the given theme names.
 
-    NOTE: This function sorts the given theme list.
+    .. note::
+       This function sorts the given theme list.
 
     The structure of the generated SCSS file is as follows:
 
     1. Charset declaration (always UTF-8)
     2. Import default values for variables (from variables.scss)
     3. For each theme:
+
       1. Declare an empty mixin whose name is the same as the theme
       2. Import the theme's SCSS file. This may contain a mixin of the same name which will override
          the empty one.
+
     4. Import all.scss that contains all generic SCSS files
     5. For each theme:
+
       1. Include the theme mixin in root scope. This trick allows the theme file to override any
          generic CSS.
 

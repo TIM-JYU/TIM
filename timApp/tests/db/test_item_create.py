@@ -1,8 +1,8 @@
-from tests.db.timdbtest import TimDbTest
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
-from timdb.models.usergroup import UserGroup
-from timdb.timdbexception import TimDbException
+from timApp.tests.db.timdbtest import TimDbTest
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.folder import Folder
+from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.timdbexception import TimDbException
 
 
 class ItemCreateTest(TimDbTest):

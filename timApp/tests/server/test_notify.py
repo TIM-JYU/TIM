@@ -1,6 +1,6 @@
-from routes.notify import sent_mails_in_testing
-from tests.server.timroutetest import TimRouteTest
-from timdb.tim_models import db
+from timApp.routes.notify import sent_mails_in_testing
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.tim_models import db
 
 
 class NotifyTest(TimRouteTest):

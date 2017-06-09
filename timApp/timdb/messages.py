@@ -1,10 +1,8 @@
 from datetime import datetime
 from typing import List
 
-from timdb.tim_models import Message
-
-__author__ = 'hajoviin'
-from timdb.timdbbase import TimDbBase
+from timApp.timdb.tim_models import Message
+from timApp.timdb.timdbbase import TimDbBase
 
 # TODO: Also need to save the lecture_id to comfirm that we can only show specific question.
 

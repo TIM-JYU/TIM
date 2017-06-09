@@ -11,27 +11,27 @@ from flask import redirect
 from flask import request
 from flask import session
 
-import pluginControl
-import routes.lecture
-from accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
+import timApp.routes.lecture
+from timApp.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, get_viewable_blocks_or_none_if_admin, has_edit_access
-from common import get_user_settings, save_last_page, has_special_chars, post_process_pars, \
+from timApp.common import get_user_settings, save_last_page, has_special_chars, post_process_pars, \
     hide_names_in_teacher, is_considered_unpublished
-from dbaccess import get_timdb
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.docsettings import DocSettings
-from documentmodel.document import get_index_from_html_list, dereference_pars, Document
-from htmlSanitize import sanitize_html
-from logger import log_error
-from requesthelper import get_option
-from responsehelper import json_response
-from sessioninfo import get_current_user_object, get_current_user_id, logged_in
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
-from timdb.models.user import User
-from timdb.timdbexception import TimDbException
-from timdb.userutils import user_is_owner
-from utils import remove_path_special_chars
+from timApp.dbaccess import get_timdb
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.docsettings import DocSettings
+from timApp.documentmodel.document import get_index_from_html_list, dereference_pars, Document
+from timApp.htmlSanitize import sanitize_html
+from timApp.logger import log_error
+from timApp.pluginControl import find_task_ids, get_all_reqs
+from timApp.requesthelper import get_option
+from timApp.responsehelper import json_response
+from timApp.sessioninfo import get_current_user_object, get_current_user_id, logged_in
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.folder import Folder
+from timApp.timdb.models.user import User
+from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.userutils import user_is_owner
+from timApp.utils import remove_path_special_chars
 
 Range = Tuple[int, int]
 
@@ -141,7 +141,7 @@ def items_route():
 @view_page.route("/view/")
 def index_page():
     save_last_page()
-    in_lecture = routes.lecture.user_in_lecture()
+    in_lecture = timApp.routes.lecture.user_in_lecture()
     return render_template('index.html',
                            items=get_items(''),
                            in_lecture=in_lecture,
@@ -159,7 +159,7 @@ def try_return_folder(item_name):
     user = get_current_user_id()
     is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
     if is_in_lecture:
-        is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
+        is_in_lecture = timApp.routes.lecture.check_if_lecture_is_running(lecture_id)
 
     settings = get_user_settings()
 
@@ -266,7 +266,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     task_groups = None
     user_list = []
     current_user = get_current_user_object() if logged_in() else None
-    task_ids, plugin_count = pluginControl.find_task_ids(xs)
+    task_ids, plugin_count = find_task_ids(xs)
     points_sum_rule = doc_settings.point_sum_rule(default={})
     try:
         total_tasks = len(points_sum_rule['groups'])
@@ -294,7 +294,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     if logged_in():
         is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user.id)
         if is_in_lecture:
-            is_in_lecture = routes.lecture.check_if_lecture_is_running(lecture_id)
+            is_in_lecture = timApp.routes.lecture.check_if_lecture_is_running(lecture_id)
 
     # Close database here because we won't need it for a while
     timdb.close()
@@ -357,7 +357,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            in_lecture=is_in_lecture,
                            group=usergroup,
                            translations=doc_info.translations,
-                           reqs=pluginControl.get_all_reqs(),
+                           reqs=get_all_reqs(),
                            settings=settings,
                            no_browser=hide_answers,
                            no_question_auto_numbering=no_question_auto_numbering,

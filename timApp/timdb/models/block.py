@@ -1,8 +1,8 @@
 from sqlalchemy import func
 
-from timdb.accesstype import AccessType
-from timdb.models.usergroup import UserGroup
-from timdb.tim_models import db, BlockAccess
+from timApp.timdb.accesstype import AccessType
+from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.tim_models import db, BlockAccess
 
 
 class Block(db.Model):
@@ -24,15 +24,15 @@ class Block(db.Model):
     @property
     def parent(self) -> 'Folder':
         if self.type_id == 0:
-            from timdb.models.docentry import DocEntry
+            from timApp.timdb.models.docentry import DocEntry
             return DocEntry.query.filter_by(id=self.id, public=True).first().parent
         elif self.type_id == 6:
-            from timdb.models.folder import Folder
+            from timApp.timdb.models.folder import Folder
             folder = Folder.get_by_id(self.id)
             return folder.parent
 
     def is_unpublished(self):
-        from accesshelper import has_ownership
+        from timApp.accesshelper import has_ownership
         return has_ownership(self.id) is not None and (not self.owner or not self.owner.is_large()) and self.accesses.count() <= 1
 
     @property

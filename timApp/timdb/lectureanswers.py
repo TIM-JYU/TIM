@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 __author__ = 'hajoviin'
-from timdb.timdbbase import TimDbBase
+from timApp.timdb.timdbbase import TimDbBase
 
 
 class LectureAnswers(TimDbBase):

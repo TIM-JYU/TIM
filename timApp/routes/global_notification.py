@@ -7,9 +7,9 @@ from flask import Blueprint
 from flask import current_app
 from flask import url_for
 
-from accesshelper import verify_admin
-from markdownconverter import md_to_html
-from responsehelper import safe_redirect
+from timApp.accesshelper import verify_admin
+from timApp.markdownconverter import md_to_html
+from timApp.responsehelper import safe_redirect
 
 global_notification = Blueprint('global_notification',
                                 __name__,

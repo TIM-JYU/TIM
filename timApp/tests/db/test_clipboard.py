@@ -4,11 +4,11 @@ Run from parent directory with command: python3 -m unittest dumboclient filemode
 
 """
 
-from documentmodel.clipboard import Clipboard
-from documentmodel.randutils import random_id, hashfunc
-from tests.db.timdbtest import TimDbTest
-from timdb.models.docentry import DocEntry
-from timdb.userutils import get_anon_group_id
+from timApp.documentmodel.clipboard import Clipboard
+from timApp.documentmodel.randutils import random_id, hashfunc
+from timApp.tests.db.timdbtest import TimDbTest
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.userutils import get_anon_group_id
 
 
 class ClipboardTest(TimDbTest):

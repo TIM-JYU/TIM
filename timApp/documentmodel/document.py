@@ -10,15 +10,15 @@ import dateutil.parser
 from lxml import etree, html
 from typing import List, Optional, Set, Tuple, Union, Iterable
 
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.docsettings import DocSettings
-from documentmodel.documentparser import DocumentParser, AttributesAtEndOfCodeBlockException, ValidationException
-from documentmodel.documentparseroptions import DocumentParserOptions
-from documentmodel.documentwriter import DocumentWriter
-from documentmodel.exceptions import DocExistsError
-from timdb.invalidreferenceexception import InvalidReferenceException
-from timdb.timdbexception import TimDbException
-from utils import get_error_html
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.docsettings import DocSettings
+from timApp.documentmodel.documentparser import DocumentParser, AttributesAtEndOfCodeBlockException, ValidationException
+from timApp.documentmodel.documentparseroptions import DocumentParserOptions
+from timApp.documentmodel.documentwriter import DocumentWriter
+from timApp.documentmodel.exceptions import DocExistsError
+from timApp.timdb.invalidreferenceexception import InvalidReferenceException
+from timApp.timdb.timdbexception import TimDbException
+from timApp.utils import get_error_html
 
 
 class Document:
@@ -269,7 +269,7 @@ class Document:
         return self.doc_id, major, minor
 
     def get_doc_version(self, version=None) -> 'Document':
-        from documentmodel.documentversion import DocumentVersion
+        from timApp.documentmodel.documentversion import DocumentVersion
         return DocumentVersion(doc_id=self.doc_id,
                                doc_ver=version if version else self.get_version(),
                                files_root=self.files_root,
@@ -600,7 +600,7 @@ class Document:
 
     def parwise_diff(self, other_doc: 'Document', check_html: bool=False):
         if self.get_version() == other_doc.get_version():
-            raise StopIteration
+            return
         old_pars = [par for par in self]
         old_ids = [par.get_id() for par in old_pars]
         new_pars = [par for par in other_doc]
@@ -822,7 +822,7 @@ class Document:
         refs = set()
         source = self
         if ver is not None:
-            from documentmodel.documentversion import DocumentVersion
+            from timApp.documentmodel.documentversion import DocumentVersion
             source = DocumentVersion(self.doc_id, ver, self.files_root)
 
         for p in source:
@@ -877,7 +877,7 @@ class Document:
         return None
 
     def get_latest_version(self):
-        from documentmodel.documentversion import DocumentVersion
+        from timApp.documentmodel.documentversion import DocumentVersion
         return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id)
 
     def get_original_document(self):

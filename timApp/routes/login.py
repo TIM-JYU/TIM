@@ -18,19 +18,19 @@ from flask import url_for
 from yubico_client import Yubico
 from yubico_client.yubico_exceptions import YubicoError
 
-from accesshelper import verify_logged_in, verify_admin
-from dbaccess import get_timdb
-from logger import log_error
-from requesthelper import verify_json_params, get_option
-from responsehelper import safe_redirect, json_response, ok_response
-from routes.notify import send_email
-from sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list, \
+from timApp.accesshelper import verify_logged_in, verify_admin
+from timApp.dbaccess import get_timdb
+from timApp.logger import log_error
+from timApp.requesthelper import verify_json_params, get_option
+from timApp.responsehelper import safe_redirect, json_response, ok_response
+from timApp.routes.notify import send_email
+from timApp.sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list, \
     get_current_user_object
-from sessioninfo import get_current_user_id, logged_in
-from timdb.models.user import User
-from timdb.models.usergroup import UserGroup
-from timdb.tim_models import db
-from timdb.timdbexception import TimDbException
+from timApp.sessioninfo import get_current_user_id, logged_in
+from timApp.timdb.models.user import User
+from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.tim_models import db
+from timApp.timdb.timdbexception import TimDbException
 
 login_page = Blueprint('login_page',
                        __name__,

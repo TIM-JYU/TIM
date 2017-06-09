@@ -6,13 +6,13 @@ Run from parent directory with command: python3 -m unittest dumboclient filemode
 
 import unittest
 
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.documentparser import DocumentParser
-from tests.db.timdbtest import TimDbTest
-from timdb.models.docentry import DocEntry
-from timdb.timdb2 import TimDb
-from timdb.timdbexception import TimDbException
-from timdb.userutils import get_anon_group_id
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.documentparser import DocumentParser
+from timApp.tests.db.timdbtest import TimDbTest
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.timdb2 import TimDb
+from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.userutils import get_anon_group_id
 
 
 class RefTest(TimDbTest):

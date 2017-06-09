@@ -10,21 +10,21 @@ from flask import current_app
 from flask import request
 from flask import session
 
-from accesshelper import verify_ownership, has_edit_access
-from common import has_ownership, \
+from timApp.accesshelper import verify_ownership, has_edit_access
+from timApp.common import has_ownership, \
     get_user_settings
-from dbaccess import get_timdb
-from documentmodel.randutils import hashfunc
-from requesthelper import get_option
-from responsehelper import json_response, ok_response
-from routes.login import log_in_as_anonymous
-from routes.qst import get_question_data_from_document, delete_key, create_points_table, \
+from timApp.dbaccess import get_timdb
+from timApp.documentmodel.randutils import hashfunc
+from timApp.requesthelper import get_option
+from timApp.responsehelper import json_response, ok_response
+from timApp.routes.login import log_in_as_anonymous
+from timApp.routes.qst import get_question_data_from_document, delete_key, create_points_table, \
     calculate_points_from_json_answer, calculate_points
-from sessioninfo import get_current_user_id, logged_in
-from tim_app import app
-from timdb.models.docentry import DocEntry
-from timdb.tempdb_models import TempDb
-from timdb.tim_models import db, Message, LectureUsers, AskedQuestion, LectureAnswer, Lecture
+from timApp.sessioninfo import get_current_user_id, logged_in
+from timApp.tim_app import app
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.tempdb_models import TempDb
+from timApp.timdb.tim_models import db, Message, LectureUsers, AskedQuestion, LectureAnswer, Lecture
 
 lecture_routes = Blueprint('lecture',
                            __name__,

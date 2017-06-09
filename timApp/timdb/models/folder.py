@@ -1,14 +1,14 @@
 from typing import List, Iterable
 from typing import Optional
 
-from timdb.item import Item
-from timdb.models.block import Block
-from timdb.tim_models import db, BlockAccess
-from timdb.blocktypes import blocktypes
-from timdb.dbutils import insert_block, copy_default_rights
-from timdb.models.docentry import DocEntry
-from timdb.timdbexception import TimDbException
-from utils import split_location, join_location
+from timApp.timdb.item import Item
+from timApp.timdb.models.block import Block
+from timApp.timdb.tim_models import db, BlockAccess
+from timApp.timdb.blocktypes import blocktypes
+from timApp.timdb.dbutils import insert_block, copy_default_rights
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.timdbexception import TimDbException
+from timApp.utils import split_location, join_location
 
 ROOT_FOLDER_ID = -1
 

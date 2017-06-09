@@ -2,12 +2,12 @@ from typing import Tuple, List
 
 from flask import Blueprint, abort
 
-from accesshelper import verify_admin
-from dbaccess import get_timdb
-from responsehelper import json_response, ok_response
-from timdb.models.user import User
-from timdb.models.usergroup import UserGroup
-from timdb.special_group_names import SPECIAL_GROUPS
+from timApp.accesshelper import verify_admin
+from timApp.dbaccess import get_timdb
+from timApp.responsehelper import json_response, ok_response
+from timApp.timdb.models.user import User
+from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.special_group_names import SPECIAL_GROUPS
 
 groups = Blueprint('groups',
                    __name__,

@@ -31,7 +31,7 @@ class TimJsonEncoder(json.JSONEncoder):
                     data[field] = None
             return data
 
-        from documentmodel.docparagraph import DocParagraph
+        from timApp.documentmodel.docparagraph import DocParagraph
         if isinstance(o, DocParagraph):  # currently not used anywhere
             return {'md': o.get_markdown(),
                     'html': o.get_html(),

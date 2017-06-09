@@ -10,9 +10,9 @@ annotations as well as adding comments to the annotations. The module also retri
 import copy
 from enum import Enum, unique
 from typing import Dict, List, Optional
-from timdb.timdbbase import TimDbBase
-from timdb.velp_models import Annotation, AnnotationComment
-from utils import date_to_relative
+from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.velp_models import Annotation, AnnotationComment
+from timApp.utils import date_to_relative
 
 
 class Annotations(TimDbBase):

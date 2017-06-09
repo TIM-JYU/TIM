@@ -4,11 +4,11 @@ from flask import abort
 from flask import request
 from jinja2 import TemplateNotFound
 
-from accesshelper import verify_logged_in
-from responsehelper import json_response
-from sessioninfo import get_current_user_object
-from theme import get_available_themes
-from timdb.tim_models import db
+from timApp.accesshelper import verify_logged_in
+from timApp.responsehelper import json_response
+from timApp.sessioninfo import get_current_user_object
+from timApp.theme import get_available_themes
+from timApp.timdb.tim_models import db
 
 settings_page = Blueprint('settings_page',
                           __name__,

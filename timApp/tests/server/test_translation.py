@@ -1,5 +1,5 @@
-from documentmodel.document import Document
-from tests.server.timroutetest import TimRouteTest
+from timApp.documentmodel.document import Document
+from timApp.tests.server.timroutetest import TimRouteTest
 
 
 class TranslationTest(TimRouteTest):

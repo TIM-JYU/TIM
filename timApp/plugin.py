@@ -4,13 +4,13 @@ from typing import Tuple, Optional, Union, Iterable, Dict
 
 import yaml
 
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.document import Document
-from documentmodel.macroinfo import MacroInfo
-from markdownconverter import expand_macros
-from timdb.models.user import User
-from timdb.timdbexception import TimDbException
-from utils import parse_yaml, merge
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.document import Document
+from timApp.documentmodel.macroinfo import MacroInfo
+from timApp.markdownconverter import expand_macros
+from timApp.timdb.models.user import User
+from timApp.timdb.timdbexception import TimDbException
+from timApp.utils import parse_yaml, merge
 
 date_format = '%Y-%m-%d %H:%M:%S'
 
@@ -152,7 +152,7 @@ class Plugin:
 
     def get_info(self, users: Iterable[User], old_answers: int, look_answer: bool = False, valid: bool = True):
         user_ids = ';'.join([u.name for u in users])
-        from sessioninfo import get_current_user_name
+        from timApp.sessioninfo import get_current_user_name
         return {
             # number of earlier answers
             # TODO: this is None when browsing answers with answer browser; should determine the number of answers

@@ -13,7 +13,6 @@ from datetime import timezone
 
 import pprint
 import werkzeug.exceptions as ex
-from flask import Blueprint
 from flask import Response
 from flask import g, abort, flash
 from flask import redirect
@@ -27,57 +26,55 @@ from markupsafe import Markup
 from sqlalchemy.exc import IntegrityError
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
-import containerLink
-from ReverseProxied import ReverseProxied
-from accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
+from timApp.ReverseProxied import ReverseProxied
+from timApp.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
     has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException, \
     get_viewable_blocks_or_none_if_admin
-from cache import cache
-from dbaccess import get_timdb
-from documentmodel.document import Document
-from documentmodel.documentversion import DocumentVersion
-from logger import log_info, log_error, log_debug
-from plugin import PluginException
-from requesthelper import verify_json_params
-from responsehelper import safe_redirect, json_response, ok_response
-from routes.annotation import annotations
-from routes.answer import answers
-from routes.bookmarks import bookmarks
-from routes.clipboard import clipboard
-from routes.edit import edit_page
-from routes.generateMap import generateMap
-from routes.global_notification import global_notification
-from routes.groups import groups
-from routes.lecture import get_tempdb, user_in_lecture, lecture_routes
-from routes.login import login_page, logout
-from routes.manage import manage_page
-from routes.notes import notes
-from routes.notify import notify, send_email
-from routes.qst import qst_plugin
-from routes.readings import readings
-from routes.search import search_routes
-from routes.settings import settings_page
-from routes.upload import upload
-from routes.velp import velps
-from routes.view import view_page
-from sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
+from timApp.cache import cache
+from timApp.containerLink import call_plugin_resource
+from timApp.dbaccess import get_timdb
+from timApp.documentmodel.document import Document
+from timApp.documentmodel.documentversion import DocumentVersion
+from timApp.logger import log_info, log_error, log_debug, log_warning
+from timApp.plugin import PluginException
+from timApp.requesthelper import verify_json_params
+from timApp.responsehelper import safe_redirect, json_response, ok_response
+from timApp.routes.annotation import annotations
+from timApp.routes.answer import answers
+from timApp.routes.bookmarks import bookmarks
+from timApp.routes.clipboard import clipboard
+from timApp.routes.edit import edit_page
+from timApp.routes.generateMap import generateMap
+from timApp.routes.global_notification import global_notification
+from timApp.routes.groups import groups
+from timApp.routes.lecture import get_tempdb, user_in_lecture, lecture_routes
+from timApp.routes.login import login_page, logout
+from timApp.routes.manage import manage_page
+from timApp.routes.notes import notes
+from timApp.routes.notify import notify, send_email
+from timApp.routes.qst import qst_plugin
+from timApp.routes.readings import readings
+from timApp.routes.search import search_routes
+from timApp.routes.settings import settings_page
+from timApp.routes.static_3rdparty import static_blueprint
+from timApp.routes.upload import upload
+from timApp.routes.velp import velps
+from timApp.routes.view import view_page
+from timApp.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     get_current_user_name, get_current_user_group, logged_in
-from tim_app import app
-from timdb.blocktypes import from_str, blocktypes
-from timdb.bookmarks import Bookmarks
-from timdb.dbutils import copy_default_rights
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
-from timdb.models.translation import Translation
-from timdb.models.user import User
-from timdb.tim_models import db
-from timdb.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME, NoSuchUserException
-from validation import validate_item_and_create
+from timApp.tim_app import app, default_secret
+from timApp.timdb.blocktypes import from_str, blocktypes
+from timApp.timdb.bookmarks import Bookmarks
+from timApp.timdb.dbutils import copy_default_rights
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.folder import Folder
+from timApp.timdb.models.translation import Translation
+from timApp.timdb.models.user import User
+from timApp.timdb.tim_models import db
+from timApp.timdb.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME, NoSuchUserException
+from timApp.validation import validate_item_and_create
 
 cache.init_app(app)
-
-with app.app_context():
-    cache.clear()
 
 app.register_blueprint(generateMap)
 app.register_blueprint(settings_page)
@@ -99,17 +96,11 @@ app.register_blueprint(clipboard)
 app.register_blueprint(notify)
 app.register_blueprint(bookmarks)
 app.register_blueprint(global_notification)
-app.register_blueprint(Blueprint('bower',
-                                 __name__,
-                                 static_folder='static/scripts/jspm_packages/npm',
-                                 static_url_path='/static/scripts/jspm_packages/npm'))
+app.register_blueprint(static_blueprint)
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 assets = Environment(app)
-
-log_info('Debug mode: {}'.format(app.config['DEBUG']))
-log_info('Profiling: {}'.format(app.config['PROFILE']))
 
 
 def error_generic(error, code):
@@ -485,7 +476,7 @@ def get_block(doc_id, par_id):
 @app.route("/<plugin>/<path:filename>")
 def plugin_call(plugin, filename):
     try:
-        req = containerLink.call_plugin_resource(plugin, filename, request.args)
+        req = call_plugin_resource(plugin, filename, request.args)
         return Response(stream_with_context(req.iter_content()), content_type=req.headers['content-type'])
     except PluginException:
         abort(404)
@@ -515,7 +506,7 @@ def get_index(doc_id):
 @app.route("/<plugin>/template/<template>/<index>")
 def view_template(plugin, template, index):
     try:
-        req = containerLink.call_plugin_resource(plugin, "template?file=" + template + "&idx=" + index)
+        req = call_plugin_resource(plugin, "template?file=" + template + "&idx=" + index)
         return Response(stream_with_context(req.iter_content()), content_type=req.headers['content-type'])
     except PluginException:
         abort(404)
@@ -655,9 +646,25 @@ def close_db_appcontext(e):
         g.timdb.close()
 
 
-def start_app():
+def init_app():
+    with app.app_context():
+        cache.clear()
+
     if app.config['PROFILE']:
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',), restrictions=[100])
+
+    log_info('Debug mode: {}'.format(app.config['DEBUG']))
+    log_info('Profiling: {}'.format(app.config['PROFILE']))
+    log_info('Using database: {}'.format(app.config['DATABASE']))
+    if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
+        log_warning('secret file not found, using default values - do not run in production!')
+    else:
+        assert default_secret != app.config['SECRET_KEY']
+    return app
+
+
+def start_app():
+    init_app()
     app.run(host='0.0.0.0',
             port=5000,
             use_evalex=False,

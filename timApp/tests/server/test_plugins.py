@@ -8,14 +8,14 @@ from itertools import product
 import dateutil.parser
 from lxml import html
 
-from documentmodel.pointsumrule import PointSumRule, PointType
-from plugin import Plugin
-from sessioninfo import get_current_user_object
-from tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
-from tests.server.timroutetest import TimRouteTest
-from timdb.tim_models import db
-from timdb.userutils import grant_view_access, grant_access, get_anon_group_id, get_anon_user_id
-from timdb.velp_models import Annotation
+from timApp.documentmodel.pointsumrule import PointSumRule, PointType
+from timApp.plugin import Plugin
+from timApp.sessioninfo import get_current_user_object
+from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.tim_models import db
+from timApp.timdb.userutils import grant_view_access, grant_access, get_anon_group_id, get_anon_user_id
+from timApp.timdb.velp_models import Annotation
 
 
 class PluginTest(TimRouteTest):

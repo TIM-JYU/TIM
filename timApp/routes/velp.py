@@ -15,13 +15,13 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 
-from accesshelper import verify_logged_in, has_edit_access, has_manage_access
-from dbaccess import get_timdb
-from responsehelper import json_response, set_no_cache_headers, ok_response
-from sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
-from timdb.userutils import get_viewable_blocks, grant_access
+from timApp.accesshelper import verify_logged_in, has_edit_access, has_manage_access
+from timApp.dbaccess import get_timdb
+from timApp.responsehelper import json_response, set_no_cache_headers, ok_response
+from timApp.sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.folder import Folder
+from timApp.timdb.userutils import get_viewable_blocks, grant_access
 
 velps = Blueprint('velps',
                   __name__,

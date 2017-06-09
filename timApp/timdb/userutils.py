@@ -4,12 +4,12 @@ from typing import Optional, Dict, List
 
 from sqlalchemy import func
 
-from timdb.blocktypes import BlockType, blocktypes
-from timdb.models.folder import Folder
-from timdb.special_group_names import ADMIN_GROUPNAME, LOGGED_IN_GROUPNAME, ANONYMOUS_GROUPNAME, \
+from timApp.timdb.blocktypes import BlockType, blocktypes
+from timApp.timdb.models.folder import Folder
+from timApp.timdb.special_group_names import ADMIN_GROUPNAME, LOGGED_IN_GROUPNAME, ANONYMOUS_GROUPNAME, \
     LOGGED_IN_USERNAME, ANONYMOUS_USERNAME
-from timdb.tim_models import db, AccessType, BlockAccess, UserGroupMember
-from timdb.timdbexception import TimDbException
+from timApp.timdb.tim_models import db, AccessType, BlockAccess, UserGroupMember
+from timApp.timdb.timdbexception import TimDbException
 
 ANON_USER_ID = None
 LOGGED_USER_ID = None
@@ -332,7 +332,7 @@ def is_user_id_in_group_id(user_id: int, usergroup_id: int) -> bool:
 
 
 def get_usergroup_by_name(name: str) -> Optional[int]:
-    from timdb.models.usergroup import UserGroup
+    from timApp.timdb.models.usergroup import UserGroup
     ug = UserGroup.get_by_name(name)
     if ug:
         return ug.id
@@ -346,7 +346,7 @@ def get_user_id_by_name(name: str) -> Optional[int]:
     :returns: The id of the user or None if the user does not exist.
 
     """
-    from timdb.models.user import User
+    from timApp.timdb.models.user import User
     u = User.get_by_name(name)
     if u:
         return u.id

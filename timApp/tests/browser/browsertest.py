@@ -15,10 +15,10 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 from wand.image import Image
 
-from tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_USER_3_NAME
-from tests.server.timroutetest import TimRouteTest
-from tests.timliveserver import TimLiveServer
-from timdb.models.docentry import DocEntry
+from timApp.tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_USER_3_NAME
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.tests.timliveserver import TimLiveServer
+from timApp.timdb.models.docentry import DocEntry
 
 
 class BrowserTest(TimLiveServer, TimRouteTest):
@@ -106,9 +106,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         :return: The image object.
         :param element: The element to save.
         :param filename_or_file: Filename for the image without extension, a file object or None. If None, the image
-        exists only in memory.
+         exists only in memory.
         :param move_to_element: Whether to move to the element before taking the screenshot. Use this if there is a
-        possibility that the element is not in viewport.
+         possibility that the element is not in viewport.
         """
         if move_to_element:
             ActionChains(self.drv).move_to_element(element).perform()

@@ -5,12 +5,12 @@ from bs4 import UnicodeDammit
 from flask import current_app
 from werkzeug.exceptions import abort
 
-from common import has_special_chars
-from dbaccess import get_timdb
-from sessioninfo import logged_in, get_current_user_object
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
-from timdb.timdbexception import TimDbException
+from timApp.common import has_special_chars
+from timApp.dbaccess import get_timdb
+from timApp.sessioninfo import logged_in, get_current_user_object
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.folder import Folder
+from timApp.timdb.timdbexception import TimDbException
 
 
 def validate_item(item_path, item_type):

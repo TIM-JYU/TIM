@@ -1,4 +1,4 @@
-from tests.server.timroutetest import TimRouteTest
+from timApp.tests.server.timroutetest import TimRouteTest
 
 
 class AreaTest(TimRouteTest):

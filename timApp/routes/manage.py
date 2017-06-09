@@ -10,22 +10,22 @@ from flask import request
 from isodate import Duration
 from isodate import parse_duration
 
-from accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, verify_edit_access
-from common import has_special_chars
-from dbaccess import get_timdb
-from requesthelper import verify_json_params, get_option
-from responsehelper import json_response, ok_response
-from sessioninfo import get_current_user_group
-from sessioninfo import get_current_user_object
-from timdb.blocktypes import from_str
-from timdb.item import Item
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
-from timdb.models.usergroup import UserGroup
-from timdb.tim_models import db, AccessType
-from timdb.userutils import grant_access, grant_default_access
-from utils import remove_path_special_chars
-from validation import validate_item
+from timApp.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, verify_edit_access
+from timApp.common import has_special_chars
+from timApp.dbaccess import get_timdb
+from timApp.requesthelper import verify_json_params, get_option
+from timApp.responsehelper import json_response, ok_response
+from timApp.sessioninfo import get_current_user_group
+from timApp.sessioninfo import get_current_user_object
+from timApp.timdb.blocktypes import from_str
+from timApp.timdb.item import Item
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.folder import Folder
+from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.tim_models import db, AccessType
+from timApp.timdb.userutils import grant_access, grant_default_access
+from timApp.utils import remove_path_special_chars
+from timApp.validation import validate_item
 
 manage_page = Blueprint('manage_page',
                         __name__,

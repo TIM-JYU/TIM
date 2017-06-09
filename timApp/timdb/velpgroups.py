@@ -13,8 +13,8 @@ selections from the database.
 import copy
 from typing import Optional, List, Iterable, Dict
 
-from timdb.models.docentry import DocEntry
-from timdb.timdbbase import TimDbBase
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.timdbbase import TimDbBase
 
 
 class VelpGroups(TimDbBase):

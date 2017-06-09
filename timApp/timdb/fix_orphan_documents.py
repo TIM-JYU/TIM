@@ -1,13 +1,13 @@
 """Finds all documents that do not have a DocEntry and creates a DocEntry for them under 'orphans' directory."""
 from typing import List
 
-from tim_app import app
-from timdb.models.block import Block
-from timdb.models.docentry import DocEntry
-from timdb.models.folder import Folder
-from timdb.models.translation import Translation
-from timdb.tim_models import db
-from timdb.userutils import get_admin_group_id
+from timApp.tim_app import app
+from timApp.timdb.models.block import Block
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.folder import Folder
+from timApp.timdb.models.translation import Translation
+from timApp.timdb.tim_models import db
+from timApp.timdb.userutils import get_admin_group_id
 
 
 def fix_orphans():

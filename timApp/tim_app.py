@@ -13,41 +13,41 @@ from flask.exthook import ExtDeprecationWarning
 from flask_migrate import Migrate
 from sqlalchemy.sql.ddl import CreateTable
 
-from documentmodel.timjsonencoder import TimJsonEncoder
-from filters import map_format, timdate, humanize_timedelta, humanize_datetime
-from logger import setup_logging, log_info, log_warning
+from timApp.documentmodel.timjsonencoder import TimJsonEncoder
+from timApp.filters import map_format, timdate, humanize_timedelta, humanize_datetime
+from timApp.logger import setup_logging
 # noinspection PyUnresolvedReferences
-from timdb.tim_models import db
+from timApp.timdb.tim_models import db
 
 # We want to import all database models here to make sure e.g. Flask-Migrate is aware of them
 
 # noinspection PyUnresolvedReferences
-from timdb.gamification_models.docgamified import DocGamified
+from timApp.timdb.gamification_models.docgamified import DocGamified
 # noinspection PyUnresolvedReferences
-from timdb.gamification_models.documentgamificationpoint import DocumentGamificationPoint
+from timApp.timdb.gamification_models.documentgamificationpoint import DocumentGamificationPoint
 # noinspection PyUnresolvedReferences
-from timdb.gamification_models.gamificationdocument import GamificationDocument
+from timApp.timdb.gamification_models.gamificationdocument import GamificationDocument
 # noinspection PyUnresolvedReferences
-from timdb.gamification_models.gamificationdocumenttype import GamificationDocumentType
+from timApp.timdb.gamification_models.gamificationdocumenttype import GamificationDocumentType
 # noinspection PyUnresolvedReferences
-from timdb.gamification_models.gamificationpointtype import GamificationPointType
+from timApp.timdb.gamification_models.gamificationpointtype import GamificationPointType
 # noinspection PyUnresolvedReferences
-from timdb.gamification_models.usergamification import UserGamification
+from timApp.timdb.gamification_models.usergamification import UserGamification
 # noinspection PyUnresolvedReferences
-from timdb.models.translation import Translation
+from timApp.timdb.models.translation import Translation
 # noinspection PyUnresolvedReferences
-from timdb.models.user import User
+from timApp.timdb.models.user import User
 # noinspection PyUnresolvedReferences
-from timdb.models.block import Block
+from timApp.timdb.models.block import Block
 # noinspection PyUnresolvedReferences
-from timdb.models.docentry import DocEntry
+from timApp.timdb.models.docentry import DocEntry
 # noinspection PyUnresolvedReferences
-from timdb.models.folder import Folder
+from timApp.timdb.models.folder import Folder
 # noinspection PyUnresolvedReferences
-from timdb.models.usergroup import UserGroup
+from timApp.timdb.models.usergroup import UserGroup
 # noinspection PyUnresolvedReferences
-from timdb.velp_models import *
-from utils import datestr_to_relative, date_to_relative
+from timApp.timdb.velp_models import *
+from timApp.utils import datestr_to_relative, date_to_relative
 
 sys.setrecursionlimit(10000)
 app = Flask(__name__)
@@ -62,12 +62,7 @@ app.jinja_env.lstrip_blocks = True
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
 setup_logging(app)
-log_info('Using database: {}'.format(app.config['DATABASE']))
 default_secret = app.config['SECRET_KEY']
-if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
-    log_warning('secret file not found, using default values - do not run in production!')
-else:
-    assert default_secret != app.config['SECRET_KEY']
 
 # Compress(app)
 db.init_app(app)

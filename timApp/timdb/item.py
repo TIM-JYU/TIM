@@ -1,6 +1,6 @@
-from timdb.blocktypes import blocktypes
-from timdb.models.block import Block
-from utils import split_location, date_to_relative
+from timApp.timdb.blocktypes import blocktypes
+from timApp.timdb.models.block import Block
+from timApp.utils import split_location, date_to_relative
 
 
 class Item:
@@ -34,7 +34,7 @@ class Item:
 
     @property
     def rights(self):
-        from accesshelper import get_rights
+        from timApp.accesshelper import get_rights
         return get_rights(self.id)
 
     @property
@@ -74,7 +74,7 @@ class Item:
     @property
     def parent(self):
         folder = self.location
-        from timdb.models.folder import Folder
+        from timApp.timdb.models.folder import Folder
         return Folder.find_by_path(folder) if folder else Folder.get_root()
 
     @property
@@ -99,10 +99,10 @@ class Item:
         b = Block.query.get(item_id)
         if b:
             if b.type_id == blocktypes.DOCUMENT:
-                from timdb.models.docentry import DocEntry
+                from timApp.timdb.models.docentry import DocEntry
                 return DocEntry.find_by_id(item_id)
             elif b.type_id == blocktypes.FOLDER:
-                from timdb.models.folder import Folder
+                from timApp.timdb.models.folder import Folder
                 return Folder.get_by_id(item_id)
             else:
                 raise NotImplementedError

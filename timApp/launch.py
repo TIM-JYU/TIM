@@ -4,13 +4,12 @@ import signal
 import subprocess
 import sys
 
-import dumboclient
-import initdb2
-import tim
-from bower_helper import scripts_path, copy_dirs_if_needed
-from logger import log_info
-from tim_app import app
-from utils import pycharm_running
+import timApp.tim
+from timApp.dumboclient import launch_dumbo
+from timApp.initdb2 import initialize_database, initialize_temp_database
+from timApp.logger import log_info
+from timApp.tim_app import app
+from timApp.utils import pycharm_running
 
 
 # noinspection PyUnusedLocal
@@ -22,32 +21,27 @@ if __name__ == '__main__':
     # quit faster when running in PyCharm
     if pycharm_running():
         signal.signal(signal.SIGINT, quit_fast)
-    if not os.path.exists(scripts_path):
-        raise Exception('static/scripts directory does not seem to exist, '
-                        'make sure the working directory is correct')
-    copy_dirs_if_needed()
     dumbo_started = False
     d = None
     try:
         if not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-            d = dumboclient.launch_dumbo()
+            d = launch_dumbo()
             dumbo_started = True
-        initdb2.initialize_database()
-        initdb2.initialize_temp_database()
+        initialize_database()
+        initialize_temp_database()
         try:
             os.remove(app.config['GLOBAL_NOTIFICATION_FILE'])
         except FileNotFoundError:
             pass
         if len(sys.argv) <= 1:
             log_info('Starting without gunicorn.')
-            tim.start_app()
+            timApp.tim.start_app()
         elif sys.argv[1] == '--with-gunicorn':
             log_info('Starting with gunicorn. CPUs available: {}'.format(multiprocessing.cpu_count()))
-            p = subprocess.Popen(["gunicorn", "-p", "/var/run/gunicorn.pid", "--config", "gunicornconf.py", "tim:app"])
+            p = subprocess.Popen(["gunicorn", "-p", "/var/run/gunicorn.pid", "--config", "gunicornconf.py", "tim:init_app()"])
             p.wait()
         else:
             raise Exception('Unknown command line argument: ' + sys.argv[1])
-        tim.start_app()
     finally:
         if dumbo_started:
             d.kill()

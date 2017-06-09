@@ -2,7 +2,7 @@ from typing import Dict, List
 
 from flask import session, g
 
-from timdb.models.user import User
+from timApp.timdb.models.user import User
 
 
 def get_current_user():

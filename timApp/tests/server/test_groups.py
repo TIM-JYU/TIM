@@ -1,7 +1,7 @@
-from tests.server.timroutetest import TimRouteTest
-from timdb.models.user import User
-from timdb.models.usergroup import UserGroup
-from timdb.tim_models import db
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.models.user import User
+from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.tim_models import db
 
 
 class GroupTest(TimRouteTest):

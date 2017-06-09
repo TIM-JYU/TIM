@@ -1,6 +1,6 @@
 from urllib.parse import quote_plus
 
-from tests.server.timroutetest import TimRouteTest
+from timApp.tests.server.timroutetest import TimRouteTest
 
 
 class RedirectTest(TimRouteTest):

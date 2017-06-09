@@ -5,16 +5,16 @@ from typing import Union, List
 
 import sqlalchemy.exc
 
-import dumboclient
-import initdb2
-from documentmodel.document import Document
-from filemodehelper import change_permission_and_retry
-from tim_app import app
-from timdb.models.docentry import DocEntry
-from timdb.models.user import User
-from timdb.tim_models import db
-from timdb.timdb2 import TimDb
-from utils import del_content
+import timApp.dumboclient
+import timApp.initdb2
+from timApp.documentmodel.document import Document
+from timApp.filemodehelper import change_permission_and_retry
+from timApp.tim_app import app
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.user import User
+from timApp.timdb.tim_models import db
+from timApp.timdb.timdb2 import TimDb
+from timApp.utils import del_content
 
 
 class TimDbTest(unittest.TestCase):
@@ -38,7 +38,7 @@ class TimDbTest(unittest.TestCase):
                 os.remove(f)
         else:
             os.mkdir(cls.test_files_path)
-        initdb2.initialize_temp_database()
+        timApp.initdb2.initialize_temp_database()
         # Safety mechanism to make sure we are not wiping some production database
         assert app.config['SQLALCHEMY_BINDS']['tim_main'].endswith('-test')
         db.session.commit()
@@ -48,12 +48,13 @@ class TimDbTest(unittest.TestCase):
             db.drop_all(bind='tim_main')
         except sqlalchemy.exc.OperationalError:
             pass
-        initdb2.initialize_database(create_docs=False)
-        cls.dumbo = dumboclient.launch_dumbo()
+        timApp.initdb2.initialize_database(create_docs=False)
+        cls.dumbo = timApp.dumboclient.launch_dumbo()
 
     @classmethod
     def tearDownClass(cls):
         cls.dumbo.kill()
+        cls.dumbo.wait()
 
     def setUp(self):
         self.db = TimDb(files_root_path=self.test_files_path)

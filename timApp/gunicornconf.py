@@ -2,14 +2,9 @@
 import gevent.monkey
 gevent.monkey.patch_ssl()
 
-import os
-import sys
-# Without this, the timdb import will fail
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 import multiprocessing
 
-from timdb import timdb2
+from timApp.timdb import timdb2
 
 bind = "0.0.0.0:5000"
 workers = multiprocessing.cpu_count() * 2 + 1  # Recommended value is cpu_count() * 2 + 1

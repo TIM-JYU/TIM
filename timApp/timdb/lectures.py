@@ -1,11 +1,8 @@
 from datetime import datetime
 from typing import List, Tuple
 
-from timdb.tim_models import Lecture
-
-__author__ = 'localadmin'
-
-from timdb.timdbbase import TimDbBase
+from timApp.timdb.tim_models import Lecture
+from timApp.timdb.timdbbase import TimDbBase
 import json
 
 

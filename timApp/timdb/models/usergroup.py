@@ -1,7 +1,7 @@
 from typing import List
 
-from timdb.tim_models import db, UserGroupMember
-from timdb.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
+from timApp.timdb.tim_models import db, UserGroupMember
+from timApp.timdb.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
     ADMIN_GROUPNAME
 
 

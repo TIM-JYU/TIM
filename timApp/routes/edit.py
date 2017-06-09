@@ -1,5 +1,4 @@
 """Routes for editing a document."""
-import json
 from typing import List, Tuple
 
 from flask import Blueprint, render_template
@@ -7,26 +6,26 @@ from flask import abort
 from flask import current_app
 from flask import request
 
-from accesshelper import verify_edit_access, verify_view_access, get_rights, has_view_access
-from common import post_process_pars
-from dbaccess import get_timdb
-from documentmodel.docparagraph import DocParagraph
-from documentmodel.document import Document
-from documentmodel.documentparser import ValidationException, ValidationWarning
-from markdownconverter import md_to_html
-from requesthelper import verify_json_params
-from responsehelper import json_response, ok_response
-from routes.notify import notify_doc_watchers
-from routes.qst import question_convert_js_to_yaml
-from routes.view import get_module_ids
-from sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group
-from timdb.bookmarks import Bookmarks
-from timdb.docinfo import DocInfo
-from timdb.models.docentry import DocEntry
-from timdb.models.notification import NotificationType
-from timdb.timdbexception import TimDbException
-from utils import get_error_html
-from validation import validate_uploaded_document_content
+from timApp.accesshelper import verify_edit_access, verify_view_access, get_rights, has_view_access
+from timApp.common import post_process_pars
+from timApp.dbaccess import get_timdb
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.document import Document
+from timApp.documentmodel.documentparser import ValidationException, ValidationWarning
+from timApp.markdownconverter import md_to_html
+from timApp.requesthelper import verify_json_params
+from timApp.responsehelper import json_response, ok_response
+from timApp.routes.notify import notify_doc_watchers
+from timApp.routes.qst import question_convert_js_to_yaml
+from timApp.routes.view import get_module_ids
+from timApp.sessioninfo import get_current_user_object, logged_in, get_current_user_group
+from timApp.timdb.bookmarks import Bookmarks
+from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.notification import NotificationType
+from timApp.timdb.timdbexception import TimDbException
+from timApp.utils import get_error_html
+from timApp.validation import validate_uploaded_document_content
 
 edit_page = Blueprint('edit_page',
                       __name__,

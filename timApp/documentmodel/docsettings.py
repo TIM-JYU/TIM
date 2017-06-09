@@ -1,9 +1,9 @@
 from typing import Optional, List, Dict
 
-from documentmodel.macroinfo import MacroInfo
-from utils import parse_yaml
-from documentmodel.docparagraph import DocParagraph
-from timdb.timdbexception import TimDbException
+from timApp.documentmodel.macroinfo import MacroInfo
+from timApp.utils import parse_yaml
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.timdb.timdbexception import TimDbException
 import yaml
 
 

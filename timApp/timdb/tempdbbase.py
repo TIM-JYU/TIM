@@ -1,6 +1,6 @@
 from sqlalchemy.orm import scoped_session
 
-from timdb.tim_models import db
+from timApp.timdb.tim_models import db
 
 
 class TempDbBase:

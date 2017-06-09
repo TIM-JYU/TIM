@@ -3,24 +3,24 @@ import os
 import time
 from time import sleep
 
-from logger import log_info, log_debug, log_error, log_warning
-from timdb.annotations import Annotations
-from timdb.answers import Answers
-from timdb.documents import Documents
-from timdb.files import Files
-from timdb.folders import Folders
-from timdb.images import Images
-from timdb.lectureanswers import LectureAnswers
-from timdb.lectures import Lectures
-from timdb.messages import Messages
-from timdb.notes import Notes
-from timdb.questions import Questions
-from timdb.readings import Readings
-from timdb.tim_models import db
-from timdb.uploads import Uploads
-from timdb.users import Users
-from timdb.velpgroups import VelpGroups
-from timdb.velps import Velps
+from timApp.logger import log_info, log_debug, log_error, log_warning
+from timApp.timdb.annotations import Annotations
+from timApp.timdb.answers import Answers
+from timApp.timdb.documents import Documents
+from timApp.timdb.files import Files
+from timApp.timdb.folders import Folders
+from timApp.timdb.images import Images
+from timApp.timdb.lectureanswers import LectureAnswers
+from timApp.timdb.lectures import Lectures
+from timApp.timdb.messages import Messages
+from timApp.timdb.notes import Notes
+from timApp.timdb.questions import Questions
+from timApp.timdb.readings import Readings
+from timApp.timdb.tim_models import db
+from timApp.timdb.uploads import Uploads
+from timApp.timdb.users import Users
+from timApp.timdb.velpgroups import VelpGroups
+from timApp.timdb.velps import Velps
 
 num = 0
 
@@ -95,7 +95,7 @@ class TimDb(object):
             worker_pid, self.num, "", "", "", self.route_path))
         # log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid,self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
         waiting = False
-        from tim_app import app
+        from timApp.tim_app import app
         while True:
             try:
                 self.engine = db.get_engine(app, 'tim_main')

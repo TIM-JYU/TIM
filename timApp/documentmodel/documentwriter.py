@@ -1,9 +1,9 @@
 """Defines the DocumentWriter class."""
 from typing import Optional
 
-from documentmodel.documentparser import DocumentParser
-from documentmodel.documentparseroptions import DocumentParserOptions
-from utils import count_chars
+from timApp.documentmodel.documentparser import DocumentParser
+from timApp.documentmodel.documentparseroptions import DocumentParserOptions
+from timApp.utils import count_chars
 
 
 class DocumentWriter:

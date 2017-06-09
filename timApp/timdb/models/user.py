@@ -9,19 +9,19 @@ import os
 from flask import current_app
 from sqlalchemy.orm import Query
 
-from documentmodel.timjsonencoder import TimJsonEncoder
-from theme import Theme
-from timdb.accesstype import AccessType
-from timdb.docinfo import DocInfo
-from timdb.models.notification import Notification
-from timdb.tim_models import db, UserGroupMember, BlockAccess
-from timdb.models.folder import Folder
-from timdb.models.usergroup import UserGroup
-from timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
-from timdb.timdbexception import TimDbException
-from timdb.userutils import hash_password, has_view_access, has_edit_access, has_manage_access, has_teacher_access, \
+from timApp.documentmodel.timjsonencoder import TimJsonEncoder
+from timApp.theme import Theme
+from timApp.timdb.accesstype import AccessType
+from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.models.notification import Notification
+from timApp.timdb.tim_models import db, UserGroupMember, BlockAccess
+from timApp.timdb.models.folder import Folder
+from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
+from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.userutils import hash_password, has_view_access, has_edit_access, has_manage_access, has_teacher_access, \
     has_seeanswers_access, user_is_owner, get_viewable_blocks, get_accessible_blocks, grant_access, get_access_type_id
-from utils import remove_path_special_chars, generate_theme_scss, ThemeNotFoundException, get_combined_css_filename
+from timApp.utils import remove_path_special_chars, generate_theme_scss, ThemeNotFoundException, get_combined_css_filename
 
 
 class User(db.Model):
