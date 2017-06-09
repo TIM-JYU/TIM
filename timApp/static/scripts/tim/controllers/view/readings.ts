@@ -17,7 +17,7 @@ export function defineReadings(sc, http, q, $injector, $compile, $window, $docum
     };
 
     sc.markParsRead = function($pars) {
-        let parIds = $pars.map(function(i, e) {
+        const parIds = $pars.map(function(i, e) {
             return sc.getParId($(e));
         }).get();
         $pars.find(".readline").addClass(sc.readClasses[sc.readingTypes.clickRed]);
@@ -30,8 +30,8 @@ export function defineReadings(sc, http, q, $injector, $compile, $window, $docum
     };
 
     sc.markParRead = function($par, readingType) {
-        let $readline = $par.find(".readline");
-        let readClassName = sc.readClasses[readingType];
+        const $readline = $par.find(".readline");
+        const readClassName = sc.readClasses[readingType];
         if ($readline.hasClass(readClassName)) {
             return q.resolve(null);
         }
@@ -40,7 +40,7 @@ export function defineReadings(sc, http, q, $injector, $compile, $window, $docum
         if ($par.parents(".previewcontent").length > 0 || $par.parents(".csrunPreview").length > 0) {
             return q.resolve(null);
         }
-        let par_id = sc.getParId($par);
+        const par_id = sc.getParId($par);
         if (par_id === "NEW_PAR" || par_id === null || par_id === "HELP_PAR") {
             return q.resolve(null);
         }
@@ -69,13 +69,13 @@ export function defineReadings(sc, http, q, $injector, $compile, $window, $docum
     });
 
     sc.onClick(".areareadline", function($this, e) {
-        let oldClass = $this.attr("class");
+        const oldClass = $this.attr("class");
         $this.attr("class", "readline read");
 
         if (!Users.isLoggedIn()) return true;
 
         // Collapsible area
-        let area_id = $this.parent().attr("data-area");
+        const area_id = $this.parent().attr("data-area");
         $log.info($this);
 
         http.put("/read/" + sc.docId + "/" + area_id)
@@ -91,7 +91,7 @@ export function defineReadings(sc, http, q, $injector, $compile, $window, $docum
     });
 
     $.expr[":"].onScreen = function(el) {
-        let rect = el.getBoundingClientRect();
+        const rect = el.getBoundingClientRect();
 
         return (
             rect.top >= 0 &&
@@ -107,9 +107,9 @@ export function defineReadings(sc, http, q, $injector, $compile, $window, $docum
 
     sc.queueParagraphForReading = function() {
         //noinspection CssInvalidPseudoSelector
-        let visiblePars = sc.jQuery(".par:onScreen").find(".readline").not("." + sc.readClasses[sc.readingTypes.onScreen]);
-        let parToRead = visiblePars.first().parents(".par");
-        let parId = sc.getParId(parToRead);
+        const visiblePars = sc.jQuery(".par:onScreen").find(".readline").not("." + sc.readClasses[sc.readingTypes.onScreen]);
+        const parToRead = visiblePars.first().parents(".par");
+        const parId = sc.getParId(parToRead);
 
         if (sc.readPromise !== null && sc.readingParId !== parId) {
             $timeout.cancel(sc.readPromise);
@@ -121,7 +121,7 @@ export function defineReadings(sc, http, q, $injector, $compile, $window, $docum
             return;
         }
         sc.readingParId = parId;
-        let numWords = parToRead.find(".parContent").text().trim().split(/[\s\n]+/).length;
+        const numWords = parToRead.find(".parContent").text().trim().split(/[\s\n]+/).length;
         sc.readPromise = $timeout(function() {
             sc.markParRead(parToRead, sc.readingTypes.onScreen).finally(sc.queueParagraphForReading);
         }, 300 * numWords);
@@ -145,12 +145,12 @@ export function defineReadings(sc, http, q, $injector, $compile, $window, $docum
      */
     sc.refreshSectionReadMarks = function() {
         $(".readsection").remove();
-        for (let key in sc.sections) {
+        for (const key in sc.sections) {
             if (sc.sections.hasOwnProperty(key)) {
-                let sectionPars = sc.sections[key];
-                let readlines = sectionPars.children(".readline");
-                let modifiedCount = readlines.filter(".read-modified").not(".read").length;
-                let unreadCount = readlines.not(".read-modified").not(".read").length;
+                const sectionPars = sc.sections[key];
+                const readlines = sectionPars.children(".readline");
+                const modifiedCount = readlines.filter(".read-modified").not(".read").length;
+                const unreadCount = readlines.not(".read-modified").not(".read").length;
                 if (modifiedCount + unreadCount > 0) {
                     sectionPars.last().append($("<div>", {
                         class: "readsection",
@@ -164,8 +164,8 @@ export function defineReadings(sc, http, q, $injector, $compile, $window, $docum
     };
 
     sc.onClick(".readsection", function($readsection, e) {
-        let $par = $readsection.parents(".par");
-        let $pars = sc.sections[sc.getParId($par)];
+        const $par = $readsection.parents(".par");
+        const $pars = sc.sections[sc.getParId($par)];
         if ($par.length === 0) {
             $window.alert("Unable to mark this section as read");
             return;

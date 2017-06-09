@@ -15,7 +15,7 @@ timApp.controller("PermCtrl", [
         sc.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
 
         sc.showMoreChangelog = function() {
-            let newLength = sc.item.versions.length + 100;
+            const newLength = sc.item.versions.length + 100;
             sc.changelogLoading = true;
             $http.get("/changelog/" + sc.item.id + "/" + (newLength)).then(function(response) {
                 sc.item.versions = response.data.versions;
@@ -30,7 +30,7 @@ timApp.controller("PermCtrl", [
         sc.getAliases = function() {
             $http.get("/alias/" + sc.item.id, {
             }).then(function(response) {
-                let data = response.data;
+                const data = response.data;
                 if (sc.aliases.length > 0 &&
                     data.length > 0 &&
                     data[0].path !== sc.aliases[0].path)
@@ -57,8 +57,8 @@ timApp.controller("PermCtrl", [
                 sc.translations = [];
 
                 for (let i = 0; i < data.length; i++) {
-                    let tr = data[i];
-                    let trnew = JSON.parse(JSON.stringify(tr));
+                    const tr = data[i];
+                    const trnew = JSON.parse(JSON.stringify(tr));
                     trnew.old_langid = tr.lang_id;
                     trnew.old_title = tr.title;
                     sc.translations.push(trnew);
@@ -169,7 +169,7 @@ timApp.controller("PermCtrl", [
         };
 
         sc.updateAlias = function(alias, first) {
-            let new_alias = sc.combine(alias.location, alias.name);
+            const new_alias = sc.combine(alias.location, alias.name);
             $http.post("/alias/" + $window.encodeURIComponent(alias.path), {
                 public: Boolean(alias.public),
                 new_name: new_alias,
@@ -243,7 +243,7 @@ timApp.controller("PermCtrl", [
 
         sc.convertDocument = function(doc) {
             let text = sc.tracWikiText;
-            let wikiSource = sc.wikiRoot.replace("wiki", "browser");
+            const wikiSource = sc.wikiRoot.replace("wiki", "browser");
             //var text = sc.fulltext;
             text = text.replace(/\[\[PageOutline\]\].*\n/g, "");  // remove contents
             text = text.replace(/ !([a-zA-Z])/g, " $1");                   // remove cat !IsBig
@@ -258,7 +258,7 @@ timApp.controller("PermCtrl", [
             text = text.replace(/\n==\s+(.*?)\s+==.*\n/g, "\n#-\n## $1\n");
             text = text.replace(/\n=\s+(.*?)\s+=.*\n/g, "\n#-\n# $1\n");
             // text = text.replace(/^ \d+. ', r'1.');
-            let lines = text.split("\n");
+            const lines = text.split("\n");
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i];
                 if ( true || line.lastIndexOf("    ", 0) !== 0 ) {
@@ -316,7 +316,7 @@ text = '\n'.join(a)
                 //$element.find("#pluginRenameForm").get(0).remove();
                 return;
             }
-            let duplicateData = [];
+            const duplicateData = [];
             let duplicate;
             // use given names from the input fields
             for (let i = 0; i < duplicates.length; i++) {
@@ -349,11 +349,11 @@ text = '\n'.join(a)
             sc.renameFormShowing = true;
             sc.duplicates = data.duplicates;
             sc.data = data;
-            let $editorTop = $("#documentEditorDiv");
+            const $editorTop = $("#documentEditorDiv");
             //var coords = {left: $editorTop.position().left, top: $editorTop.position().top};
             let $actionDiv = $("<div>", {class: "pluginRenameForm", id: "pluginRenameForm"});
             $actionDiv.css("position", "relative");
-            let $innerTextDiv = $("<div>", {class: "pluginRenameInner"});
+            const $innerTextDiv = $("<div>", {class: "pluginRenameInner"});
             $innerTextDiv.append($("<strong>", {
                 text: "Warning!",
             }));
@@ -373,14 +373,14 @@ text = '\n'.join(a)
                 text: "Rename duplicates:",
             }));
             $actionDiv.append($innerTextDiv);
-            let $form = $("<form>", {class: "pluginRenameInner"});
+            const $form = $("<form>", {class: "pluginRenameInner"});
             sc.inputs = [];
             let input;
             let span;
             for (let i = 0; i < data.duplicates.length; i++) {
                 span = $("<span>");
                 span.css("display", "block");
-                let $warningSpan = $("<span>", {
+                const $warningSpan = $("<span>", {
                     class: "pluginRenameExclamation",
                     text: "!",
                     title: "There are answers related to this task. Those answers might be lost upon renaming this task.",
@@ -403,7 +403,7 @@ text = '\n'.join(a)
                 span.append(input);
                 $form.append(span);
             }
-            let $buttonDiv = $("<div>", {class: "pluginRenameInner"});
+            const $buttonDiv = $("<div>", {class: "pluginRenameInner"});
             $buttonDiv.append($("<button>", {
                 "class": "timButton, pluginRenameObject",
                 "text": "Save",

@@ -7,7 +7,7 @@ timApp.controller("AllAnswersCtrl", ["$uibModalInstance", "$window", "$httpParam
         moment.locale("en", {
             week: {dow: 1, doy: 4}, // set Monday as the first day of the week
         });
-        let $ctrl = this;
+        const $ctrl = this;
 
         $ctrl.showSort = options.allTasks;
         $ctrl.options = {};

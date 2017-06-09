@@ -97,9 +97,9 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
     sc.addQuestionQst = function(e, $par) {
-        let parId = sc.getParId($par);
-        let parNextId = parId; // sc.getParId($par.next());
-        let $newpar = sc.createNewPar();
+        const parId = sc.getParId($par);
+        const parNextId = parId; // sc.getParId($par.next());
+        const $newpar = sc.createNewPar();
         $par.before($newpar);
         $rootScope.$broadcast("toggleQuestion");
         $rootScope.$broadcast("newQuestion", {par_id: parId, par_id_next: parNextId, qst: true});
@@ -107,8 +107,8 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
     };
 
     sc.editQst = function(e, $par) {
-        let parId = sc.getParId($par);
-        let parNextId = sc.getParId($par.next());
+        const parId = sc.getParId($par);
+        const parNextId = sc.getParId($par.next());
         // $rootScope.$broadcast('toggleQuestion');
         http({
             url: "/getQuestionByParId",
@@ -139,9 +139,9 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
     sc.addQuestion = function(e, $par) {
-        let parId = sc.getParId($par);
-        let parNextId = sc.getParId($par.next());
-        let $newpar = sc.createNewPar();
+        const parId = sc.getParId($par);
+        const parNextId = sc.getParId($par.next());
+        const $newpar = sc.createNewPar();
         $par.after($newpar);
         $rootScope.$broadcast("toggleQuestion");
         $rootScope.$broadcast("newQuestion", {par_id: parId, par_id_next: parNextId});
@@ -149,32 +149,32 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
     };
 
     sc.onClick(".questionAdded", function($this, e) {
-        let question = $this;
-        let questionId = question[0].getAttribute("id");
+        const question = $this;
+        const questionId = question[0].getAttribute("id");
         sc.showQuestion(questionId);
         sc.par = ($(question).parent().parent());
     });
 
     sc.onClick(".questionAddedNew", function($this, e) {
-        let question = $this;
-        let $par = $(question).parent().parent();
-        let parId = $($par)[0].getAttribute("id");
-        let parNextId = sc.getParId($par.next());
+        const question = $this;
+        const $par = $(question).parent().parent();
+        const parId = $($par)[0].getAttribute("id");
+        const parNextId = sc.getParId($par.next());
         sc.showQuestionNew(parId, parNextId);
         sc.par = ($(question).parent());
     });
 
     sc.getQuestionHtml = function(questions) {
-        let questionImage = "/static/images/show-question-icon.png";
-        let $questionsDiv = $("<div>", {class: "questions"});
+        const questionImage = "/static/images/show-question-icon.png";
+        const $questionsDiv = $("<div>", {class: "questions"});
 
         // TODO: Think better way to get the ID of question.
         for (let i = 0; i < questions.length; i++) {
 
-            let img = new Image(30, 30);
+            const img = new Image(30, 30);
             img.src = questionImage;
             img.title = questions[i].question_title;
-            let $questionDiv = $("<span>", {
+            const $questionDiv = $("<span>", {
                 class: "questionAdded", html: img, id: questions[i].question_id,
             });
             /*
@@ -192,25 +192,25 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
     };
 
     sc.processQuestions = function() {
-        let questions = $(".questionPar");
+        const questions = $(".questionPar");
         let n = 1;
         let separator = ")";
         if (sc.showQuestions()) {
             for (let i = 0; i < questions.length; i++) {
-                let $par = questions.eq(i);
-                let questionChildren = $par.children();
-                let questionNumber = questionChildren.find(".questionNumber");
+                const $par = questions.eq(i);
+                const questionChildren = $par.children();
+                const questionNumber = questionChildren.find(".questionNumber");
                 // var questionTitle = sc.getParAttributes($par).question;
                 let questionTitle = questionNumber[0].innerHTML;
                 if (questionTitle.length > 10) {
                     questionTitle = questionTitle.substr(0, 10) + "\r\n...";
                 }
-                let nt = parseInt(questionTitle);
+                const nt = parseInt(questionTitle);
                 let nr = "";
                 if ( isNaN(nt) ) nr = (n) + "" + separator + "\r\n";
                 else {
                     n = nt;
-                    let nrt = "" + n;
+                    const nrt = "" + n;
                     if ( questionTitle.length  > nrt.length )
                         separator = questionTitle[nrt.length];
                 }
@@ -231,10 +231,10 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
     sc.getQuestions = function() {
         http.get("/questions/" + sc.docId)
             .success(function(data) {
-                let pars = {};
-                let questionCount = data.length;
+                const pars = {};
+                const questionCount = data.length;
                 for (let i = 0; i < questionCount; i++) {
-                    let pi = data[i].par_id;
+                    const pi = data[i].par_id;
                     if (!(pi in pars)) {
                         pars[pi] = {questions: []};
                     }
@@ -243,9 +243,9 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
                 }
 
                 Object.keys(pars).forEach(function(par_id, index) {
-                    let $par = sc.getElementByParId(par_id);
+                    const $par = sc.getElementByParId(par_id);
                     $par.find(".questions").remove();
-                    let $questionsDiv = sc.getQuestionHtml(pars[par_id].questions);
+                    const $questionsDiv = sc.getQuestionHtml(pars[par_id].questions);
                     $par.append($questionsDiv);
                 });
             });

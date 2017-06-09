@@ -9,8 +9,8 @@ timApp.factory("Slugify", [function() {
             str = str.toLowerCase();
 
             // remove accents, swap ñ for n, etc.
-            let f = "ãàáäâåẽèéëêìíïîõòóöôùúüûñç·/,:;";
-            let t = "aaaaaaeeeeeiiiiooooouuuunc-----";
+            const f = "ãàáäâåẽèéëêìíïîõòóöôùúüûñç·/,:;";
+            const t = "aaaaaaeeeeeiiiiooooouuuunc-----";
             for (let i = 0, l = f.length; i < l; i++) {
                 str = str.replace(new RegExp(f.charAt(i), "g"), t.charAt(i));
             }

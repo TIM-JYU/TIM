@@ -26,12 +26,12 @@ timApp.directive("createItem", ["$window", "$log", "$http", "Slugify", function(
         },
 
         controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
-            let sc = $scope;
+            const sc = $scope;
 
             sc.automaticShortName = true;
 
             if (sc.fullPath) {
-                let str = sc.fullPath;
+                const str = sc.fullPath;
                 sc.itemLocation = str.substring(0, str.lastIndexOf("/"));
                 sc.itemTitle = str.substring(str.lastIndexOf("/") + 1, str.length);
             }

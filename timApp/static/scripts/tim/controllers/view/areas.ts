@@ -8,17 +8,17 @@ markAsUsed(nameArea);
 export function defineAreas(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
 
     sc.onMouseOverOut(".areaeditline1", function($this, e, select) {
-        let areaName = $this.attr("data-area");
+        const areaName = $this.attr("data-area");
         sc.selectArea(areaName, ".areaeditline1", select);
     });
 
     sc.onMouseOverOut(".areaeditline2", function($this, e, select) {
-        let areaName = $this.attr("data-area");
+        const areaName = $this.attr("data-area");
         sc.selectArea(areaName, ".areaeditline2", select);
     });
 
     sc.onMouseOverOut(".areaeditline3", function($this, e, select) {
-        let areaName = $this.attr("data-area");
+        const areaName = $this.attr("data-area");
         sc.selectArea(areaName, ".areaeditline3", select);
     });
 
@@ -35,7 +35,7 @@ export function defineAreas(sc, http, q, $injector, $compile, $window, $document
     });
 
     sc.selectArea = function(areaName, className, selected) {
-        let $selection = $(".area.area_" + areaName).children(className);
+        const $selection = $(".area.area_" + areaName).children(className);
         if (selected)
             $selection.addClass("manualhover");
         else
@@ -44,10 +44,10 @@ export function defineAreas(sc, http, q, $injector, $compile, $window, $document
 
     sc.onAreaEditClicked = function($this, e, className) {
         sc.closeOptionsWindow();
-        let areaName = $this.attr("data-area");
-        let $pars = sc.getArea(areaName).find(".par");
-        let $area_part = $this.parent().filter(".area");
-        let coords = {left: e.pageX - $area_part.offset().left, top: e.pageY - $area_part.offset().top};
+        const areaName = $this.attr("data-area");
+        const $pars = sc.getArea(areaName).find(".par");
+        const $area_part = $this.parent().filter(".area");
+        const coords = {left: e.pageX - $area_part.offset().left, top: e.pageY - $area_part.offset().top};
 
         sc.selectedAreaName = areaName;
         $(".area.area_" + areaName).children(className).addClass("menuopen");
@@ -71,8 +71,8 @@ export function defineAreas(sc, http, q, $injector, $compile, $window, $document
             newClass = "areaexpand";
         }
         $this.removeClass("areaexpand areacollapse");
-        let area_name = $this.attr("data-area");
-        let toggle = $this.children(".areatoggle");
+        const area_name = $this.attr("data-area");
+        const toggle = $this.children(".areatoggle");
         toggle.attr("class", "");
         if (expanding) {
             sc.getArea(area_name).removeClass("collapsed");
@@ -102,7 +102,7 @@ export function defineAreas(sc, http, q, $injector, $compile, $window, $document
         sc.selection.pars.wrapAll($newArea);
 
         $newArea = $("#newarea");
-        let $popup = $("<name-area>");
+        const $popup = $("<name-area>");
         $popup.attr("tim-draggable-fixed", "");
         $popup.attr("onok", "nameAreaOk");
         $popup.attr("oncancel", "nameAreaCancel");
@@ -117,7 +117,7 @@ export function defineAreas(sc, http, q, $injector, $compile, $window, $document
         http.post("/name_area/" + sc.docId + "/" + areaName, {
             area_start: sc.getFirstParId($area.first()),
             area_end: sc.getLastParId($area.last()),
-            options: options,
+            options,
         }).success(function(data, status, headers, config) {
             //$area.children().wrapAll('<div class="areaContent">');
             //$area.append('<div class="areaeditline1">');
@@ -141,7 +141,7 @@ export function defineAreas(sc, http, q, $injector, $compile, $window, $document
     };
 
     sc.removeAreaMarking = function(e, $pars) {
-        let area_name = sc.selectedAreaName;
+        const area_name = sc.selectedAreaName;
         if (!area_name) {
             $window.alert("Could not get area name");
         }

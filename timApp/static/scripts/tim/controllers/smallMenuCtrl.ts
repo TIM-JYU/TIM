@@ -23,7 +23,7 @@ timApp.controller("SmallMenuCtrl", ["$scope", "$window", "$http",
          * FILL WITH SUITABLE TEXT
          * @memberof module:smallMenuCtrl
          */
-  let ready = function() {
+  const ready = function() {
 			$("#currentList").hide();
 			$("#futureList").hide();
 		};
@@ -81,7 +81,7 @@ timApp.controller("SmallMenuCtrl", ["$scope", "$window", "$http",
 
 		};
 
-		let w = angular.element($window);
+		const w = angular.element($window);
 		w.bind("resize", function() {
 			$("#currentList").hide();
 			$("#futureList").hide();

@@ -20,7 +20,7 @@ timApp.directive("bookmarks", ["$window", "$log", "$http", "$uibModal", "$timeou
         },
 
         controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
-            let sc = $scope;
+            const sc = $scope;
             if ($window.bookmarks && !sc.data) {
                 sc.data = angular.copy($window.bookmarks);
             }
@@ -60,8 +60,8 @@ timApp.directive("bookmarks", ["$window", "$log", "$http", "$uibModal", "$timeou
 
             sc.newBookmark = function(group, e) {
                 e.preventDefault();
-                let suggestedName = ($window.item || {}).title || document.title;
-                let modalInstance = $uibModal.open({
+                const suggestedName = ($window.item || {}).title || document.title;
+                const modalInstance = $uibModal.open({
                     animation: false,
                     ariaLabelledBy: "modal-title",
                     ariaDescribedBy: "modal-body",
@@ -95,7 +95,7 @@ timApp.directive("bookmarks", ["$window", "$log", "$http", "$uibModal", "$timeou
             sc.editItem = function(group, item, e) {
                 e.stopPropagation();
                 e.preventDefault();
-                let modalInstance = $uibModal.open({
+                const modalInstance = $uibModal.open({
                     animation: false,
                     ariaLabelledBy: "modal-title",
                     ariaDescribedBy: "modal-body",
@@ -181,7 +181,7 @@ timApp.directive("bookmarks", ["$window", "$log", "$http", "$uibModal", "$timeou
 
 timApp.controller("CreateBookmarkCtrl", ["$uibModalInstance", "$window", "bookmark", function($uibModalInstance, $window, bookmark) {
     "use strict";
-    let $ctrl = this;
+    const $ctrl = this;
     $ctrl.bookmarkForm = {};
     $ctrl.bookmark = bookmark;
     if (bookmark.group === "Last edited" || bookmark.group === "Last read") {

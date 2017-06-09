@@ -17,8 +17,8 @@ export function defineIndex(sc, http, q, $injector, $compile, $window, $document
 
     sc.tolink = function(str) {
         if (str.indexOf("{") >= 0 && str.indexOf("}") > 0) {
-            let ob = str.indexOf("{");
-            let cb = str.indexOf("}");
+            const ob = str.indexOf("{");
+            const cb = str.indexOf("}");
             return str.substring(ob + 1, cb);
         }
         return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").trim().replace(/ +/g, "-").toLowerCase();
@@ -42,7 +42,7 @@ export function defineIndex(sc, http, q, $injector, $compile, $window, $document
                 if (data.empty) {
                     sc.showIndex = false;
                 } else {
-                    let indexElement = $(".index-sidebar .sideBarContainer");
+                    const indexElement = $(".index-sidebar .sideBarContainer");
                     $(indexElement).html(data);
                     sc.showIndex = true;
                 }
@@ -77,7 +77,7 @@ export function defineIndex(sc, http, q, $injector, $compile, $window, $document
             return state;
         }
 
-        let newState = sc.invertState(state);
+        const newState = sc.invertState(state);
         if (newState !== state) {
             sc.clearSelection();
         }
@@ -87,8 +87,8 @@ export function defineIndex(sc, http, q, $injector, $compile, $window, $document
     // call marktree.js initialization function so that TOC clicking works
     addEvents();
     $timeout(function() {
-        let indexHeadings = $("#menuTabs").find(".subexp .exp");
-        let subHeadings = indexHeadings.find("ul.sub li.basic");
+        const indexHeadings = $("#menuTabs").find(".subexp .exp");
+        const subHeadings = indexHeadings.find("ul.sub li.basic");
         if (indexHeadings.length === 1 || indexHeadings.length + subHeadings.length < 40) {
             indexHeadings.attr("class", "col");
             indexHeadings.children(".sub").attr("class", "subexp");

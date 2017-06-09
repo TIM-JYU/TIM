@@ -72,7 +72,7 @@ timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$w
                     $scope.points.push(0);
                     let markup = JSON.parse(answer.questions[i].json);
                     if (!markup.json) markup = {json: markup}; // compability for old
-                    let json = markup.json;
+                    const json = markup.json;
                     fixQuestionJson(json);
                     answer.questions[i].nr = i + 1;
                     answer.questions[i].json = json;
@@ -91,7 +91,7 @@ timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$w
         $http({
             url: "/getAskedQuestionById",
             method: "GET",
-            params: {asked_id: asked_id},
+            params: {asked_id},
         })
             .success(function(data) {
                 let markup = JSON.parse(data.json);
@@ -99,8 +99,8 @@ timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$w
                 markup.points = data.points;
                 $rootScope.$broadcast("changeQuestionTitle", {questionTitle: markup.json.questionTitle});
                 $rootScope.$broadcast("editQuestion", {
-                    asked_id: asked_id,
-                    markup: markup,
+                    asked_id,
+                    markup,
                 });
             })
             .error(function() {
@@ -141,11 +141,11 @@ timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$w
      * if user is currently on the lecture.
      */
     $scope.addReturnLinkToHeader = function() {
-        let menu = document.getElementById("inLectureIconSection");
-        let linkToLecture = document.createElement("a");
+        const menu = document.getElementById("inLectureIconSection");
+        const linkToLecture = document.createElement("a");
         linkToLecture.setAttribute("href", /* "https://" + location.host + */ "/lecture/" + $scope.item.path + "?Lecture=" + $scope.lectureCode);
         linkToLecture.setAttribute("title", "Return to lecture");
-        let returnImg = document.createElement("img");
+        const returnImg = document.createElement("img");
         returnImg.setAttribute("src", "/static/images/join-icon3.png");
         returnImg.setAttribute("class", "icon");
         returnImg.setAttribute("title", "Return to lecture");
@@ -158,7 +158,7 @@ timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$w
      * @memberof module:lectureInfoController
      */
     $scope.deleteLecture = function() {
-        let confirmAnswer = $window.confirm("Do you really want to delete this lecture?");
+        const confirmAnswer = $window.confirm("Do you really want to delete this lecture?");
         if (confirmAnswer) {
             $http({
                 url: "/deleteLecture",
@@ -241,7 +241,7 @@ timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$w
         } else {
             user = userToShow.user_id;
         }
-        let questionIndexes = [];
+        const questionIndexes = [];
         for (let i = 0; i < $scope.dynamicAnswerShowControls.length; i++) {
             await $scope.dynamicAnswerShowControls[i].createChart($scope.questions[i].json);
             questionIndexes.push($scope.questions[i].asked_id);
@@ -256,7 +256,7 @@ timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$w
         }
 
         if ($scope.answers.length <= 0) {
-            let elem = $("#infoBox");
+            const elem = $("#infoBox");
             elem.empty();
             elem.append("No answers from this lecture");
         }

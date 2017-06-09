@@ -37,9 +37,9 @@ timApp.directive("refPopup", ["$window", "$filter", "$http", function($window, $
             };
 
             $scope.loadSuccess = function(response) {
-                let known_attrs = ["doc_name", "doc_author", "par_name"];
+                const known_attrs = ["doc_name", "doc_author", "par_name"];
 
-                for (let i in known_attrs) {
+                for (const i in known_attrs) {
                     const attr = known_attrs[i];
                     if (attr in response.data) {
                         $scope[attr] = response.data[attr];

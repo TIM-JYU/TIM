@@ -21,7 +21,7 @@ timApp.directive("rightsEditor", ["$window", "$log", "$http", function($window, 
         },
 
         controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
-            let sc = $scope;
+            const sc = $scope;
             sc.internalControl = sc.control || {};
             sc.grouprights = [];
             sc.timeOpt = {};
@@ -211,10 +211,10 @@ timApp.directive("rightsEditor", ["$window", "$log", "$http", function($window, 
                 }
 
                 if (group.duration && group.accessible_from === null) {
-                    let d = moment.duration(group.duration);
+                    const d = moment.duration(group.duration);
                     sc.timeOpt.type = "duration";
                     for (let i = sc.durationTypes.length - 1; i >= 0; --i) {
-                        let amount = d.as(sc.durationTypes[i]);
+                        const amount = d.as(sc.durationTypes[i]);
                         if (Math.floor(amount) === amount || i === 0) {
                             // preserve last duration type choice if the amount is zero
                             if (amount !== 0) {

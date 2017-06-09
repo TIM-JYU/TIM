@@ -75,4 +75,3 @@ timApp.controller("ShowStatisticsToQuestionController", ["$scope", "$element",  
     });
 
 }]);
-

@@ -11,10 +11,10 @@
   see timLogTime comments.
 
 */
-let timJavaScriptStartTime = new Date();
+const timJavaScriptStartTime = new Date();
 let timJavaScriptLastTime = timJavaScriptStartTime;
 let timDivLogger;
-let timDivPreLogger = document.createElement("pre");
+const timDivPreLogger = document.createElement("pre");
 
 export function insertLogDivIfEnabled() {
     if ( timTimingDiv && !timDivLogger ) {
@@ -45,11 +45,11 @@ export function timLogInit(params: string) {
     p = p.replace("&amp;", "&");
     p = p.replace("b'", "");
     p = p.replace("'", "");
-    let ps = p.split("&");
+    const ps = p.split("&");
     for (let i = 0; i < ps.length; i++) {
-        let k = (ps[i] + "=").split("=");
-        let key = k[0];
-        let val = k[1];
+        const k = (ps[i] + "=").split("=");
+        const key = k[0];
+        const val = k[1];
         if ( key === "timing" ) {
            if ( val.indexOf("div") >= 0 ) timTimingDiv = true;
            if ( val.indexOf("log") >= 0 ) timTimingLog = true;
@@ -67,13 +67,13 @@ let timLogText = "";
 export function timLogTime(msg, id, level?) {
     if ( !timTiming ) return;
     if ( timTimingFilter && !id.match(timTimingFilter) ) return;
-    let tlevel = level | 0;
+    const tlevel = level | 0;
     if ( tlevel > timTimingLevel ) return;
     let sid = "    ";
     if ( id ) sid = (id + "   ").substring(0, 4);
-    let d = new Date();
-    let diff = d.getTime() - timJavaScriptStartTime.getTime();
-    let diffLast = d.getTime() - timJavaScriptLastTime.getTime();
+    const d = new Date();
+    const diff = d.getTime() - timJavaScriptStartTime.getTime();
+    const diffLast = d.getTime() - timJavaScriptLastTime.getTime();
     let str;
     if ( timTimingSummary ) {
         timLogText = "";

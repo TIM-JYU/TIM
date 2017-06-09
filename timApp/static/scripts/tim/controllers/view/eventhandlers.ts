@@ -32,7 +32,7 @@ export function defineEventHandlers(sc, http, q, $injector, $compile, $window, $
                 return;
             }
 
-            let e2 = sc.fixPageCoords(e);
+            const e2 = sc.fixPageCoords(e);
             if (sc.dist(downCoords, {left: e2.pageX, top: e2.pageY}) > 10) {
                 // Moved too far away, cancel the event
                 downEvent = null;
@@ -42,8 +42,8 @@ export function defineEventHandlers(sc, http, q, $injector, $compile, $window, $
             downEvent = null;
         });
         // it is wrong to register both events at the same time; see https://stackoverflow.com/questions/8503453
-        let isIOS = ((/iphone|ipad/gi).test(navigator.appVersion));
-        let eventName = isIOS ? "touchend" : "mouseup";
+        const isIOS = ((/iphone|ipad/gi).test(navigator.appVersion));
+        const eventName = isIOS ? "touchend" : "mouseup";
         $document.on(eventName, className, function(e) {
             if (downEvent !== null) {
                 if (func($(this), downEvent)) {

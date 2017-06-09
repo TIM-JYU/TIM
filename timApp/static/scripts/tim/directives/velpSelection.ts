@@ -1136,7 +1136,7 @@ timApp.controller("VelpSelectionController", ["$scope", "$window", "$http", "$q"
                         div.css("z-index", 9999);
                         document.getElementById("releaseSelectVelpsButton").innerHTML = "&#8594;";
 
-                        div.offset({left: left, top: top});
+                        div.offset({left, top});
 
                     }
 

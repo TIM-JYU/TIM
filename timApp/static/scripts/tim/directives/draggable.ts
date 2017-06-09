@@ -22,7 +22,7 @@ function getPixels(s) {
 function wmax(value, min, max) {
     if ( !value ) return min + "px";
     if ( value == "auto" ) return value;
-    let v = getPixels(value);
+    const v = getPixels(value);
 
     if ( v <=  min ) return min + "px";
     if ( v >=  max ) return max + "px";
@@ -31,7 +31,7 @@ function wmax(value, min, max) {
 
 timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootScope", function($document, $window, $parse, $rootScope) {
 
-    let resizableConfig = {};
+    const resizableConfig = {};
 
     return {
         restrict: "A",
@@ -40,11 +40,11 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
         link(scope, element: JQuery, attr) {
             let posKey;
             if ( attr.save ) {
-                let pageId = window.location.pathname.split("/")[1];  // /velp/???
+                const pageId = window.location.pathname.split("/")[1];  // /velp/???
                 posKey = attr.save.replace("%%PAGEID%%", pageId);
             }
 
-            let broadcastMsg = attr.broadcastmsg;
+            const broadcastMsg = attr.broadcastmsg;
 
             let clickFn = null;
             let areaMinimized = false;
@@ -83,7 +83,7 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
             function minimize() {
                 areaMinimized = !areaMinimized;
                 let handles;
-                let base = element.find(".draggable-content");
+                const base = element.find(".draggable-content");
                 if (areaMinimized) {
                     areaHeight = element.height();
                     element.height(15);
@@ -106,8 +106,8 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
             scope.minimize = minimize;
 
             function getSetDirs() {
-                let leftSet = element.css("left") != "auto";
-                let rightSet = element.css("right") != "auto";
+                const leftSet = element.css("left") != "auto";
+                const rightSet = element.css("right") != "auto";
                 setLeft = (!leftSet && !rightSet) || leftSet;
                 setRight = rightSet;
                 // setLeft = true; // because for some reason in iPad it was right???
@@ -116,8 +116,8 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
                 // to keep the element dimensions (Y).
                 // Prefer top over bottom.
 
-                let topSet = element.css("top") != "auto";
-                let botSet = element.css("bottom") != "auto";
+                const topSet = element.css("top") != "auto";
+                const botSet = element.css("bottom") != "auto";
                 setTop = (!topSet && !botSet) || topSet;
                 setBottom = botSet;
                 prevHeight = element.height();
@@ -153,24 +153,24 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
              element.css('left', element.position().left); */
 
             function createResizeHandles() {
-                let handleRight = $("<div>", {class: "resizehandle-r resizehandle"});
+                const handleRight = $("<div>", {class: "resizehandle-r resizehandle"});
                 handleRight.on("mousedown pointerdown touchstart", function(e) {
                     resizeElement(e, false, true, false, false);
                 });
                 element.append(handleRight);
-                let handleDown = $("<div>", {class: "resizehandle-d resizehandle"});
+                const handleDown = $("<div>", {class: "resizehandle-d resizehandle"});
                 handleDown.on("mousedown pointerdown touchstart", function(e) {
                     resizeElement(e, false, false, true, false);
                 });
                 element.append(handleDown);
-                let handleRightDown = $("<div>", {class: "resizehandle-rd resizehandle"});
+                const handleRightDown = $("<div>", {class: "resizehandle-rd resizehandle"});
                 handleRightDown.on("mousedown pointerdown touchstart", function(e) {
                     resizeElement(e, false, true, true, false);
                 });
                 element.append(handleRightDown);
 
                 if ( areaMinimized ) {
-                    let handles = element.find(".resizehandle");
+                    const handles = element.find(".resizehandle");
                     if ( handles.length ) handles.css("display", "none");
                 }
             }
@@ -179,9 +179,9 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
                 element.find(".resizehandle").remove();
             }
 
-            let handle = $("<div>", {class: "draghandle"});
+            const handle = $("<div>", {class: "draghandle"});
             if (attr.click) {
-                let minimizeElem = $("<img>", {
+                const minimizeElem = $("<img>", {
                     src: "/static/images/minimize-window-16.png",
                     class: "titlebutton minimize",
                 });
@@ -191,7 +191,7 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
                 handle.append(minimizeElem);
             }
             if (attr.close) {
-                let close = $("<img>", {src: "/static/images/close-window-16.png", class: "titlebutton close"});
+                const close = $("<img>", {src: "/static/images/close-window-16.png", class: "titlebutton close"});
                 close.on("click", function() {
                     closeFn(scope);
                 });
@@ -208,7 +208,7 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
             });
 
             attr.$observe("caption", function() {
-                let handle = $(element).find(".draghandle");
+                const handle = $(element).find(".draghandle");
                 handle.find("p").remove();
                 handle.append("<p>" + attr.caption + "</p>");
             });
@@ -260,7 +260,7 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
             let lastPageXYPos = {X: 0, Y: 0};
 
             function getPageXY(e) {
-                let pos = getPageXYnull(e);
+                const pos = getPageXYnull(e);
                 if ( pos ) lastPageXYPos = pos;
                 return lastPageXYPos;
             }
@@ -294,7 +294,7 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
                 // element.css("background", "blue");
                 if ( posKey ) {
                     // element.css("background", "yellow");
-                    let css = element.css(["top", "bottom", "left", "right"]);
+                    const css = element.css(["top", "bottom", "left", "right"]);
                     setStorage(posKey, css);
                     // element.css("background", "green");
                     timLogTime("pos:" + css.left + "," + css.top, "drag");
@@ -354,7 +354,7 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
                 e.preventDefault();
                 e.stopPropagation();
 
-                let size = element.css(["width", "height"]);
+                const size = element.css(["width", "height"]);
                 if ( posKey ) {
                     setStorage(posKey + "Size", size );
                 }
@@ -368,16 +368,16 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
 
             if ( attr.save ) {
                 getSetDirs();
-                let oldSize: any = getStorage(posKey + "Size");
+                const oldSize: any = getStorage(posKey + "Size");
                 if ( oldSize ) {
                     if (oldSize.width) element.css("width", oldSize.width);
                     if (oldSize.height) element.css("height", oldSize.height);
                 }
-                let oldPos: any = getStorage(posKey);
-                let w = window.innerWidth;
-                let h = window.innerHeight;
-                let ew = element.width();
-                let eh = element.height();
+                const oldPos: any = getStorage(posKey);
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                const ew = element.width();
+                const eh = element.height();
                 if ( oldPos ) {
                     if (oldPos.top && setTop) element.css("top", wmax(oldPos.top, 0, h - 20));
                     if (oldPos.left && setLeft) element.css("left", wmax(oldPos.left, 0 - ew + 20, w - 20));

@@ -293,7 +293,7 @@ timApp.directive("showChartDirective", ["$compile", function($compile) {
                 const emptyData = [];
                 const backgroundColor = [];
                 if (angular.isDefined(data.rows)) {
-                    let i = 0;
+                    const i = 0;
                     angular.forEach(data.rows, function(row) {
                         const text = qstShortText(row.text);
                         labels.push(text);

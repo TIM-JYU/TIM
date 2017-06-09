@@ -51,7 +51,7 @@ timApp.controller("SidebarMenuCtrl", ["$scope", "$http", "$window", "Users", "$l
         $($window).resize($scope.updateLeftSide);
 
         $scope.bookmarkTabSelected = function(isSelected) {
-            let tabContent = $("#menuTabs").find(".tab-content");
+            const tabContent = $("#menuTabs").find(".tab-content");
             if (isSelected) {
                 // The dropdown menu is clipped if it's near right side of the menu without applying this hack
                 // Also the dropdown menu causes vertical scrollbar to appear without specifying height
@@ -70,7 +70,7 @@ timApp.controller("SidebarMenuCtrl", ["$scope", "$http", "$window", "Users", "$l
          * @memberof module:sidebarMenuCtrl
          */
         $scope.showSidebar = function() {
-            let tabs = $("#menuTabs");
+            const tabs = $("#menuTabs");
             if (tabs.is(":visible")) {
                 if ($scope.active !== null) {
                     $scope.lastTab = $scope.active;
@@ -125,7 +125,7 @@ timApp.controller("SidebarMenuCtrl", ["$scope", "$http", "$window", "Users", "$l
             })
                 .success(function(questions) {
                     for (let i = 0; i < questions.length; i++) {
-                        let question = {
+                        const question = {
                             questionId: questions[i].question_id,
                             questionTitle: (JSON.parse(questions[i].questionjson)).questionTitle,
                         };

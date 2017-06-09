@@ -29,11 +29,11 @@ export function defineClipboard(sc, http, q, $injector, $compile, $window, $docu
 
     sc.deleteFromSource = function() {
         http.post("/clipboard/deletesrc/" + sc.docId, {}).success(function(data, status, headers, config) {
-            let doc_ver = data.doc_ver;
-            let pars = data.pars;
+            const doc_ver = data.doc_ver;
+            const pars = data.pars;
             if (pars.length > 0) {
-                let first_par = pars[0].id;
-                let last_par = pars[pars.length - 1].id;
+                const first_par = pars[0].id;
+                const last_par = pars[pars.length - 1].id;
                 sc.handleDelete({version: doc_ver}, {par: first_par, area_start: first_par, area_end: last_par});
             }
 
@@ -51,10 +51,10 @@ export function defineClipboard(sc, http, q, $injector, $compile, $window, $docu
             if (data === null)
                 return;
 
-            let $newpar = sc.createNewPar();
+            const $newpar = sc.createNewPar();
             $par_or_area.before($newpar);
 
-            let extra_data = {
+            const extra_data = {
                 docId: sc.docId, // current document id
                 par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
                 par_next: $par_or_area.id, // the id of the paragraph that follows par
@@ -75,10 +75,10 @@ export function defineClipboard(sc, http, q, $injector, $compile, $window, $docu
             if (data === null)
                 return;
 
-            let $newpar = sc.createNewPar();
+            const $newpar = sc.createNewPar();
             $par_or_area.after($newpar);
 
-            let extra_data = {
+            const extra_data = {
                 docId: sc.docId, // current document id
                 par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
                 par_next: $par_or_area.id, // the id of the paragraph that follows par
@@ -100,10 +100,10 @@ export function defineClipboard(sc, http, q, $injector, $compile, $window, $docu
             if (data === null)
                 return;
 
-            let $newpar = sc.createNewPar();
+            const $newpar = sc.createNewPar();
             $par_or_area.before($newpar);
 
-            let extra_data = {
+            const extra_data = {
                 docId: sc.docId, // current document id
                 par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
                 par_next: $par_or_area.id, // the id of the paragraph that follows par
@@ -124,10 +124,10 @@ export function defineClipboard(sc, http, q, $injector, $compile, $window, $docu
             if (data === null)
                 return;
 
-            let $newpar = sc.createNewPar();
+            const $newpar = sc.createNewPar();
             $par_or_area.after($newpar);
 
-            let extra_data = {
+            const extra_data = {
                 docId: sc.docId, // current document id
                 par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
                 par_next: $par_or_area.id, // the id of the paragraph that follows par
@@ -175,14 +175,14 @@ export function defineClipboard(sc, http, q, $injector, $compile, $window, $docu
     };
 
     sc.cutPar = function(e, $par) {
-        let doc_par_id = [sc.docId, $par.attr("id")];
+        const doc_par_id = [sc.docId, $par.attr("id")];
 
         http.post("/clipboard/cut/" + doc_par_id[0] + "/" + doc_par_id[1] + "/" + doc_par_id[1], {}).success(function(data, status, headers, config) {
-            let doc_ver = data.doc_ver;
-            let pars = data.pars;
+            const doc_ver = data.doc_ver;
+            const pars = data.pars;
             if (pars.length > 0) {
-                let first_par = pars[0].id;
-                let last_par = pars[pars.length - 1].id;
+                const first_par = pars[0].id;
+                const last_par = pars[pars.length - 1].id;
                 sc.handleDelete({version: doc_ver}, {par: first_par, area_start: first_par, area_end: last_par});
             }
 
@@ -194,7 +194,7 @@ export function defineClipboard(sc, http, q, $injector, $compile, $window, $docu
     };
 
     sc.copyPar = function(e, $par) {
-        let doc_par_id = sc.dereferencePar($par);
+        const doc_par_id = sc.dereferencePar($par);
 
         http.post("/clipboard/copy/" + doc_par_id[0] + "/" + doc_par_id[1] + "/" + doc_par_id[1], {}).success(function(data, status, headers, config) {
             sc.allowPasteContent = true;
@@ -219,7 +219,7 @@ export function defineClipboard(sc, http, q, $injector, $compile, $window, $docu
             area_end = sc.getParId(sc.selection.end);
         }
 
-        let doc_id = override_doc_id ? override_doc_id : sc.docId;
+        const doc_id = override_doc_id ? override_doc_id : sc.docId;
 
         if (cut) {
             http.post("/clipboard/cut/" + doc_id + "/" + area_start + "/" + area_end, {
@@ -229,11 +229,11 @@ export function defineClipboard(sc, http, q, $injector, $compile, $window, $docu
                 sc.selection.end = null;
 
                 if (doc_id === sc.docId) {
-                    let doc_ver = data.doc_ver;
-                    let pars = data.pars;
+                    const doc_ver = data.doc_ver;
+                    const pars = data.pars;
                     if (pars.length > 0) {
-                        let first_par = pars[0].id;
-                        let last_par = pars[pars.length - 1].id;
+                        const first_par = pars[0].id;
+                        const last_par = pars[pars.length - 1].id;
                         sc.handleDelete({version: doc_ver}, {
                             par: first_par,
                             area_start: first_par,

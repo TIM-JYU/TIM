@@ -13,11 +13,11 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
         if (!$rootElement)
             $rootElement = $pars;
 
-        let $popup = $("<popup-menu>");
+        const $popup = $("<popup-menu>");
         $popup.attr("tim-draggable-fixed", "");
         $popup.attr("srcid", sc.selectionToStr($pars));
         $popup.attr("editcontext", editcontext);
-        for (let key in attrs) {
+        for (const key in attrs) {
             if (attrs.hasOwnProperty(key)) {
                 $popup.attr(key, attrs[key]);
             }
@@ -31,11 +31,11 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
         $rootElement.prepend($popup); // need to prepend to DOM before compiling
         $compile($popup[0])(sc);
         // TODO: Set offset for the popup
-        let element = $popup;
-        let viewport: any = {};
+        const element = $popup;
+        const viewport: any = {};
         viewport.top = $(window).scrollTop();
         viewport.bottom = viewport.top + $(window).height();
-        let bounds: any = {};
+        const bounds: any = {};
         bounds.top = element.offset().top;
         bounds.bottom = bounds.top + element.outerHeight();
         let y = $(window).scrollTop();
@@ -55,17 +55,17 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
             return false;
         }
 
-        let $target = $(e.target);
-        let tag = $target.prop("tagName");
-        let $par = $this.parents(".par");
+        const $target = $(e.target);
+        const tag = $target.prop("tagName");
+        const $par = $this.parents(".par");
         if ($par.parents(".previewcontent").length > 0) {
             return;
         }
 
         // Don't show paragraph menu on these specific tags or classes
-        let ignoredTags = ["BUTTON", "INPUT", "TEXTAREA", "A", "QUESTIONADDEDNEW"];
-        let ignoredClasses = ["no-popup-menu", "ace_editor"];
-        let classSelector = ignoredClasses.map(function(c) {
+        const ignoredTags = ["BUTTON", "INPUT", "TEXTAREA", "A", "QUESTIONADDEDNEW"];
+        const ignoredClasses = ["no-popup-menu", "ace_editor"];
+        const classSelector = ignoredClasses.map(function(c) {
             return "." + c;
         }).join(",");
         if (ignoredTags.indexOf(tag) > -1 || $target.parents(classSelector).length > 0) {
@@ -76,9 +76,9 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
             sc.extendSelection($par, true);
         }
         else {
-            let coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
-            let toggle1 = $par.find(".actionButtons").length === 0;
-            let toggle2 = $par.hasClass("lightselect");
+            const coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
+            const toggle1 = $par.find(".actionButtons").length === 0;
+            const toggle2 = $par.hasClass("lightselect");
 
             $(".par.selected").removeClass("selected");
             $(".par.lightselect").removeClass("lightselect");
@@ -96,8 +96,8 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
 
         if (toggle2) {
             // Clicked twice successively
-            let clicktime = new Date().getTime() - sc.lastclicktime;
-            let clickdelta = sc.dist(coords, sc.lastclickplace);
+            const clicktime = new Date().getTime() - sc.lastclicktime;
+            const clickdelta = sc.dist(coords, sc.lastclickplace);
             $par.addClass("selected");
 
             if (clickdelta > 10) {
@@ -135,14 +135,14 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
     sc.defaultAction = {func: sc.showOptionsWindow, desc: "Show options window"};
 
     sc.closeOptionsWindow = function() {
-        let $actionButtons = $(".actionButtons");
-        let $par_or_area = $actionButtons.parent();
+        const $actionButtons = $(".actionButtons");
+        const $par_or_area = $actionButtons.parent();
         $actionButtons.remove();
         sc.optionsWindowClosed($par_or_area);
     };
 
     sc.optionsWindowClosed = function($par_or_area) {
-        let $editline = $(".menuopen");
+        const $editline = $(".menuopen");
         $editline.removeClass("menuopen");
     };
 
@@ -159,11 +159,11 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
 
     sc.onClick(".editline", function($this, e) {
         sc.closeOptionsWindow();
-        let $par = $this.parent().filter(".par");
+        const $par = $this.parent().filter(".par");
         if (sc.selection.start !== null) {
             sc.extendSelection($par);
         }
-        let coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
+        const coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
 
         // We need the timeout so we don't trigger the ng-clicks on the buttons
         $timeout(function() {

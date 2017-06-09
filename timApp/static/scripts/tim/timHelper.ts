@@ -3,11 +3,11 @@ import {$sanitize} from "./ngimport";
 export function initAttributes(clone, $scope) {
 "use strict";
 if (!clone[0]) return;
-let markJSON = "xxxJSONxxx";
-let markHex = "xxxHEXJSONxxx";
+const markJSON = "xxxJSONxxx";
+const markHex = "xxxHEXJSONxxx";
 let s = clone[0].textContent;
-let chex = s.indexOf(markHex) === 0;
-let cjson = s.indexOf(markJSON) === 0;
+const chex = s.indexOf(markHex) === 0;
+const cjson = s.indexOf(markJSON) === 0;
 if (!chex && !cjson) {
         return;
     }
@@ -19,14 +19,14 @@ $scope.scope = $scope;
 
 export function getHeading($scope, attrs, key, defElem) {
 "use strict";
-let h = set($scope, attrs, key, "");
+const h = set($scope, attrs, key, "");
 if ( !h ) return "";
-let st = h.split("!!"); // h4 class="h3" width="23"!!Tehtava 1
+const st = h.split("!!"); // h4 class="h3" width="23"!!Tehtava 1
 let elem = defElem;
 let val = st[0];
 let attributes = "";
 if ( st.length >= 2 ) { elem = st[0]; val = st[1]; }
-let i = elem.indexOf(" ");
+const i = elem.indexOf(" ");
 let ea = [elem];
 if ( i >= 0 ) ea = [elem.substring(0, i), elem.substring(i)];
 if ( ea.length > 1 ) { elem = ea[0]; attributes = " " + ea[1] + " "; }
@@ -42,7 +42,7 @@ export function get(jso, keys) {
 "use strict";
 if ( !jso ) return undefined;
 let val = jso;
-for (let k in keys ) {
+for (const k in keys ) {
         if ( val === null ) return undefined;
         if ( !keys[k] ) continue;
         val = val[keys[k]];
@@ -65,15 +65,15 @@ return scope[sname];
 export function setn(scope, sname, attrs, name, def?) {
 "use strict";
 if ( name.indexOf(".") < 0 ) name = "markup." + name;
-let keys = name.split(".");
+const keys = name.split(".");
 return setk(scope, sname, attrs, keys, def);
 }
 
 export function set(scope, attrs, name, def?) {
 "use strict";
 if ( name.indexOf(".") < 0 ) name = "markup." + name;
-let keys = name.split(".");
-let sname = keys[keys.length - 1];
+const keys = name.split(".");
+const sname = keys[keys.length - 1];
 return setk(scope, sname, attrs, keys, def);
 }
 
@@ -81,7 +81,7 @@ export function Hex2Str(s) {
 "use strict";
 let result = "";
 for (let i = 0; i < s.length; i += 2) {
-    let c = String.fromCharCode(parseInt(s[i] + s[i + 1], 16));
+    const c = String.fromCharCode(parseInt(s[i] + s[i + 1], 16));
     result += c;
   }
 return result;

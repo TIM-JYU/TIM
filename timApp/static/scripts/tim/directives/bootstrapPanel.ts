@@ -16,7 +16,7 @@ timApp.directive("bootstrapPanel", ["$window", "$log", "$http", function($window
         },
 
         controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
-            let sc = $scope;
+            const sc = $scope;
 
             sc.close = function() {
                 $element.addClass("ng-hide");

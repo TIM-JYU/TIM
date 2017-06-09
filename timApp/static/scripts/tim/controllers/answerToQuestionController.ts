@@ -114,7 +114,7 @@ timApp.controller("AnswerToQuestionController", ["$scope", "$rootScope", "$http"
                 $rootScope.$broadcast("changeQuestionTitle", {questionTitle: markup.questionTitle});
                 $rootScope.$broadcast("editQuestion", {
                     asked_id: $scope.askedId,
-                    markup: markup,
+                    markup,
                 });
             })
             .error(function() {

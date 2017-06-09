@@ -10,8 +10,8 @@ export function defineRefPopup(sc, http, q, $injector, $compile, $window, $docum
     sc.onMouseOver(".parlink", function($this, e) {
         sc.over_reflink = true;
 
-        let $par = $this.parents(".par").find(".parContent");
-        let coords = {left: e.pageX - $par.offset().left + 10, top: e.pageY - $par.offset().top + 10};
+        const $par = $this.parents(".par").find(".parContent");
+        const coords = {left: e.pageX - $par.offset().left + 10, top: e.pageY - $par.offset().top + 10};
         let params;
 
         try {
@@ -42,10 +42,10 @@ export function defineRefPopup(sc, http, q, $injector, $compile, $window, $docum
     });
 
     sc.showRefPopup = function(e, $ref, coords, attrs) {
-        let $popup = $("<ref-popup>");
+        const $popup = $("<ref-popup>");
         $popup.offset(coords);
 
-        for (let attr in attrs) {
+        for (const attr in attrs) {
             if (attrs.hasOwnProperty(attr)) {
                 $popup.attr(attr, attrs[attr]);
             }

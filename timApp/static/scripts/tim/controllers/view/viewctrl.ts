@@ -73,17 +73,17 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.markPageDirty = function() {
-            let e = angular.element("#page_is_dirty");
+            const e = angular.element("#page_is_dirty");
             e.val("1");
         };
 
         sc.markPageNotDirty = function() {
-            let e = angular.element("#page_is_dirty");
+            const e = angular.element("#page_is_dirty");
             e.val("0");
         };
 
         sc.isPageDirty = function() {
-            let e = angular.element("#page_is_dirty");
+            const e = angular.element("#page_is_dirty");
             return e.val() === "1";
         };
 
@@ -94,10 +94,10 @@ timApp.controller("ViewCtrl", [
 
         $($window).resize(function(e) {
             if (e.target === $window) {
-                let newWidth = $($window).width();
+                const newWidth = $($window).width();
                 if (newWidth !== sc.oldWidth) {
                     sc.oldWidth = newWidth;
-                    let selected = $(".par.lightselect, .par.selected");
+                    const selected = $(".par.lightselect, .par.selected");
                     if (selected.length > 0) {
                         selected[0].scrollIntoView();
                     }
@@ -106,10 +106,10 @@ timApp.controller("ViewCtrl", [
         });
 
         sc.scrollToElement = function(element) {
-            let viewport: any = {};
+            const viewport: any = {};
             viewport.top = $(window).scrollTop();
             viewport.bottom = viewport.top + $(window).height();
-            let bounds: any = {};
+            const bounds: any = {};
             bounds.top = element.offset().top;
             bounds.bottom = bounds.top + element.outerHeight();
             let y = $(window).scrollTop();
@@ -151,10 +151,10 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.updatePending = function() {
-            for (let key in sc.pendingUpdates) {
+            for (const key in sc.pendingUpdates) {
                 if (sc.pendingUpdates.hasOwnProperty(key)) {
-                    let $par = sc.getElementByParId(key);
-                    let $newPar = $($compile(sc.pendingUpdates[key])(sc));
+                    const $par = sc.getElementByParId(key);
+                    const $newPar = $($compile(sc.pendingUpdates[key])(sc));
                     $par.replaceWith($newPar);
                     sc.applyDynamicStyles($newPar);
                     sc.processAllMathDelayed($newPar);
@@ -184,12 +184,12 @@ timApp.controller("ViewCtrl", [
         };
 
         sc.setHeaderLinks = function() {
-            let pars = $(".parContent");
+            const pars = $(".parContent");
             pars.each(function() {
-                let $p = $(this);
+                const $p = $(this);
                 $p.find("h1, h2, h3, h4, h5, h6").each(function() {
-                    let $h = $(this);
-                    let id = $h.attr("id");
+                    const $h = $(this);
+                    const id = $h.attr("id");
                     if (angular.isDefined(id)) {
                         $h.append($("<a>", {
                             text: "#",
@@ -227,13 +227,13 @@ timApp.controller("ViewCtrl", [
                     $currentSectionPars = sc.buildSections(sections, $currentSectionPars, $child.find(".areaContent"));
                 }
                 else if ($child.hasClass("par")) {
-                    let attrs = sc.getParAttributes($child);
-                    let refAttrs = sc.getRefAttrs($child)["ref-attrs"];
-                    let content = $child.children(".parContent");
+                    const attrs = sc.getParAttributes($child);
+                    const refAttrs = sc.getRefAttrs($child)["ref-attrs"];
+                    const content = $child.children(".parContent");
                     if (content.is(":visible")) {
                         if (content.children("h1, h2, h3").length > 0) {
                             if ($currentSectionPars.length > 0) {
-                                let parId = sc.getParId($currentSectionPars.last());
+                                const parId = sc.getParId($currentSectionPars.last());
                                 sections[parId] = $currentSectionPars;
                             }
                             $currentSectionPars = $child;
@@ -269,7 +269,7 @@ timApp.controller("ViewCtrl", [
              return element.parentElement;
              */
             if (!element) return null;
-            let parent = element.parentNode;
+            const parent = element.parentNode;
             if (!parent) return null;
             if (typeof parent.tagName !== "undefined") {
                 return parent;
@@ -304,7 +304,7 @@ timApp.controller("ViewCtrl", [
                     return undefined;
                 }
 
-                let msg = "You are currently editing something. Are you sure you want to leave the page?";
+                const msg = "You are currently editing something. Are you sure you want to leave the page?";
 
                 (e || $window.event).returnValue = msg; //Gecko + IE
                 return msg; //Gecko + Webkit, Safari, Chrome etc.
@@ -313,10 +313,10 @@ timApp.controller("ViewCtrl", [
 
         sc.onClick("html.ng-scope", function($this, e) {
             // Clicking anywhere
-            let tagName = e.target.tagName.toLowerCase();
-            let jqTarget = $(e.target);
-            let ignoreTags = ["button", "input", "label", "i"];
-            let ignoreClasses = ["menu-icon", "editline", "areaeditline", "draghandle", "actionButtons"];
+            const tagName = e.target.tagName.toLowerCase();
+            const jqTarget = $(e.target);
+            const ignoreTags = ["button", "input", "label", "i"];
+            const ignoreClasses = ["menu-icon", "editline", "areaeditline", "draghandle", "actionButtons"];
 
             let curElement = jqTarget;
             let limit = 10;
@@ -399,7 +399,7 @@ timApp.controller("ViewCtrl", [
                         e.before(compiled);
                     };
                     for (let i = 0; i < response.data.diff.length; ++i) {
-                        let d = response.data.diff[i];
+                        const d = response.data.diff[i];
                         if (d.type === "delete") {
                             if (d.end_id !== null) {
                                 sc.getElementByParId(d.start_id).nextUntil(sc.getElementByParId(d.end_id)).addBack().remove();
@@ -409,7 +409,7 @@ timApp.controller("ViewCtrl", [
                             }
                         }
                         else if (d.type === "replace") {
-                            let first = sc.getElementByParId(d.start_id);
+                            const first = sc.getElementByParId(d.start_id);
                             if (d.start_id !== d.end_id) {
                                 if (d.end_id !== null) {
                                     first.nextUntil(sc.getElementByParId(d.end_id)).remove();
@@ -441,7 +441,7 @@ timApp.controller("ViewCtrl", [
         }
 
         try {
-            let found = $filter("filter")(sc.editorFunctions,
+            const found = $filter("filter")(sc.editorFunctions,
                 {desc: sc.$storage.defaultAction}, true);
             if (found.length) {
                 sc.defaultAction = found[0];

@@ -31,7 +31,7 @@ timApp.directive("velpSummary", function() {
 
 timApp.controller("VelpSummaryController", ["$scope", "$http", "$window", function($scope, $http, $window) {
     "use strict";
-    let console = $window.console;
+    const console = $window.console;
     $scope.settings = {selectedAll: false};
 
     /**

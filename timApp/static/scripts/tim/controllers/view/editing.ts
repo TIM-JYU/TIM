@@ -8,13 +8,13 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
     sc.editing = false;
 
     sc.toggleParEditor = function($pars, options) {
-        let $par = sc.getFirstPar($pars);
+        const $par = sc.getFirstPar($pars);
         let area_start, area_end;
         let caption = "Add paragraph";
-        let touch = typeof("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
-        let mobile = touch && (window.screen.width < 1200);
+        const touch = typeof("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
+        const mobile = touch && (window.screen.width < 1200);
         let url;
-        let par_id = sc.getParId($par);
+        const par_id = sc.getParId($par);
         let par_next_id = sc.getParId(sc.getNextPar($par));
         if (par_next_id === "HELP_PAR")
             par_next_id = null;
@@ -46,11 +46,11 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
             area_end = null;
         }
 
-        let tags = {markread: false};
-        let markread = $window.localStorage.getItem("markread") || false;
+        const tags = {markread: false};
+        const markread = $window.localStorage.getItem("markread") || false;
         tags.markread = markread === "true";
 
-        let attrs = {
+        const attrs = {
             "save-url": url,
             "extra-data": {
                 docId: sc.docId, // current document id
@@ -101,8 +101,8 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
         } else {
             $(sc.EDITOR_CLASS_DOT).remove();
 
-            let createEditor = function(attrs: Object) {
-                let $div = $("<" + directive + ">", {class: sc.EDITOR_CLASS}).attr(attrs);
+            const createEditor = function(attrs: Object) {
+                const $div = $("<" + directive + ">", {class: sc.EDITOR_CLASS}).attr(attrs);
                 $div.attr("tim-draggable-fixed", "");
                 if (caption) {
                     $div.attr("caption", caption);
@@ -123,7 +123,7 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
     };
 
     sc.editSettingsPars = function(recursiveCall) {
-        let pars = [];
+        const pars = [];
         $(".par").each(function() {
             if (sc.getParAttributes($(this)).hasOwnProperty("settings")) {
                 pars.push(this);
@@ -133,13 +133,13 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
             if (recursiveCall) {
                 throw new Error("Faulty recursion stopped, there should be a settings paragraph already");
             }
-            let $first = $(".par:first");
+            const $first = $(".par:first");
             let par_next = sc.getParId($first);
             if (par_next === "HELP_PAR") {
                 par_next = null;
             }
             $first.before(sc.createNewPar());
-            let parToReplace = "NEW_PAR";
+            const parToReplace = "NEW_PAR";
             http.post("/newParagraph/", {
                 text: '``` {settings=""}\nexample:\n```',
                 docId: sc.docId,
@@ -155,8 +155,8 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
             sc.toggleParEditor($(pars[0]), {area: false});
         }
         else {
-            let start = pars[0];
-            let end = pars[pars.length - 1];
+            const start = pars[0];
+            const end = pars[pars.length - 1];
             sc.selection.start = $(start);
             sc.selection.end = $(end);
             $(pars).addClass("selected");
@@ -182,7 +182,7 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
     };
 
     sc.handleCancel = function(extraData) {
-        let $par = sc.getElementByParId(extraData.par);
+        const $par = sc.getElementByParId(extraData.par);
         if ($par.hasClass("new")) {
             $par.remove();
         }
@@ -193,7 +193,7 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
         let $par = sc.getElementByParId(extraData.par);
         if (extraData.area_start !== null && extraData.area_end !== null) {
             $par = sc.getElementByParId(extraData.area_start);
-            let $endpar = sc.getElementByParId(extraData.area_end);
+            const $endpar = sc.getElementByParId(extraData.area_end);
             if (extraData.area_start !== extraData.area_end) {
                 $par.nextUntil($endpar).add($endpar).remove();
             }
@@ -205,13 +205,13 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
     };
 
     sc.showAddParagraphAbove = function(e, $par) {
-        let $newpar = sc.createNewPar();
+        const $newpar = sc.createNewPar();
         $par.before($newpar);
         sc.toggleParEditor($newpar, {area: false});
     };
 
     sc.showAddParagraphBelow = function(e, $par) {
-        let $newpar = sc.createNewPar();
+        const $newpar = sc.createNewPar();
         $par.after($newpar);
         sc.toggleParEditor($newpar, {area: false});
     };
@@ -233,11 +233,11 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
 
             // remove all but the first element of the area because it'll be used
             // when replacing
-            let $endpar = sc.getElementByParId(extraData.area_end);
+            const $endpar = sc.getElementByParId(extraData.area_end);
             $par.nextUntil($endpar).add($endpar).remove();
         }
 
-        let $newPars = $($compile(data.texts)(sc));
+        const $newPars = $($compile(data.texts)(sc));
 
         if ($window.editMode === "area")
             $newPars.find(".editline").removeClass("editline").addClass("editline-disabled");
@@ -341,11 +341,11 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
             sc.selection.start = $par;
             sc.selection.end = $par;
         } else {
-            let n = sc.selection.pars.length;
-            let startIndex = sc.getParIndex(sc.selection.pars.eq(0));
-            let endIndex = sc.getParIndex(sc.selection.pars.eq(n - 1));
-            let areaLength = endIndex - startIndex + 1;
-            let newIndex = sc.getParIndex($par);
+            const n = sc.selection.pars.length;
+            const startIndex = sc.getParIndex(sc.selection.pars.eq(0));
+            const endIndex = sc.getParIndex(sc.selection.pars.eq(n - 1));
+            const areaLength = endIndex - startIndex + 1;
+            const newIndex = sc.getParIndex($par);
 
             if (newIndex < startIndex) {
                 sc.selection.start = $par;
@@ -387,9 +387,9 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
         $(".par.selected").removeClass("selected");
         $(".par.marked").removeClass("marked");
         if (sc.selection.start !== null) {
-            let $start = sc.selection.start;
+            const $start = sc.selection.start;
             if (sc.selection.end !== null && !sc.selection.end.is(sc.selection.start)) {
-                let $end = sc.selection.end;
+                const $end = sc.selection.end;
                 sc.selection.pars = sc.getPars($start, $end);
             } else {
                 sc.selection.pars = $start;

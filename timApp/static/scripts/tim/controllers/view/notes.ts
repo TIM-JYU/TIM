@@ -6,8 +6,8 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
 
     sc.toggleNoteEditor = function($par_or_area, options) {
         let caption = "Edit comment";
-        let touch = typeof("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
-        let mobile = touch && (window.screen.width < 1200);
+        const touch = typeof("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
+        const mobile = touch && (window.screen.width < 1200);
         if (!sc.item.rights.can_comment) {
             return;
         }
@@ -29,8 +29,8 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
             data = {};
             initUrl = "/note/" + options.noteData.id;
         }
-        let $par = sc.getFirstPar($par_or_area);
-        let par_id = sc.getFirstParId($par_or_area),
+        const $par = sc.getFirstPar($par_or_area);
+        const par_id = sc.getFirstParId($par_or_area),
             attrs = {
                 "save-url": url,
                 "extra-data": angular.extend({
@@ -111,7 +111,7 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
             return sc.noteBadge;
         }
 
-        let btn = document.createElement("input");
+        const btn = document.createElement("input");
         btn.type = "button";
         btn.classList.add("note-badge");
         if ($window.velpMode)
@@ -153,7 +153,7 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
             return;
         }
         sc.markParRead($par, sc.readingTypes.clickPar);
-        let newElement = $par[0];
+        const newElement = $par[0];
         if (!newElement) return null;
         sc.addElementToParagraphMargin(newElement, sc.createNoteBadge($par));
     };
@@ -163,9 +163,9 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
      * @param e - Current click event
      */
     sc.clearNoteBadge = function(e) {
-        let btn = sc.noteBadge;
+        const btn = sc.noteBadge;
         if (btn) {
-            let parent = sc.getElementParent(btn);
+            const parent = sc.getElementParent(btn);
             if (parent) parent.removeChild(btn);
         }
 

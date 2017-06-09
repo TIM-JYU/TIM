@@ -6,7 +6,7 @@ import {markAsUsed} from "tim/utils";
 
 markAsUsed(ngSanitize);
 
-let imagexApp: any = angular.module("imagexApp", ["ngSanitize"]);
+const imagexApp: any = angular.module("imagexApp", ["ngSanitize"]);
 imagexApp.TESTWITHOUTPLUGINS = false; // if one wants to test without imagex plugins
 
 imagexApp.directive("imagexRunner",
@@ -57,8 +57,8 @@ FreeHand.prototype.draw = function(ctx) {
 
 FreeHand.prototype.startSegment = function(pxy) {
     if ( !pxy ) return;
-    let p = [Math.round(pxy.x), Math.round(pxy.y)];
-    let ns: any = {};
+    const p = [Math.round(pxy.x), Math.round(pxy.y)];
+    const ns: any = {};
     ns.color = this.params.color;
     ns.w = this.params.w;
     ns.lines = [p];
@@ -72,9 +72,9 @@ FreeHand.prototype.endSegment = function() {
 
 FreeHand.prototype.startSegmentDraw = function(redraw, pxy) {
     if ( !pxy ) return;
-    let p = [Math.round(pxy.x), Math.round(pxy.y)];
+    const p = [Math.round(pxy.x), Math.round(pxy.y)];
     this.redraw = redraw;
-    let ns: any = {};
+    const ns: any = {};
     ns.color = this.params.color;
     ns.w = this.params.w;
     ns.lines = [p];
@@ -84,25 +84,25 @@ FreeHand.prototype.startSegmentDraw = function(redraw, pxy) {
 
 FreeHand.prototype.addPoint = function(pxy) {
     if ( !pxy ) return;
-    let p = [Math.round(pxy.x), Math.round(pxy.y)];
-    let n = this.freeDrawing.length;
+    const p = [Math.round(pxy.x), Math.round(pxy.y)];
+    const n = this.freeDrawing.length;
     if ( n == 0 ) this.startSegment(p);
     else {
-        let ns = this.freeDrawing[n - 1];
+        const ns = this.freeDrawing[n - 1];
         ns.lines.push(p);
     }
     if ( !this.params.lineMode ) this.prevPos = p;
 };
 
 FreeHand.prototype.popPoint = function(minlen) {
-    let n = this.freeDrawing.length;
+    const n = this.freeDrawing.length;
     if ( n == 0 ) return;
-    let ns = this.freeDrawing[n - 1];
+    const ns = this.freeDrawing[n - 1];
     if ( ns.lines.length > minlen) ns.lines.pop();
 };
 
 FreeHand.prototype.popSegment = function(minlen) {
-    let n = this.freeDrawing.length;
+    const n = this.freeDrawing.length;
     if ( n <= minlen ) return;
     this.freeDrawing.pop();
     if ( this.redraw ) this.redraw();
@@ -161,7 +161,7 @@ FreeHand.prototype.line = function(ctx, p1, p2) {
 
 function drawFreeHand(ctx, dr) {
     for (let dri = 0; dri < dr.length; dri++) {
-        let seg = dr[dri];
+        const seg = dr[dri];
         if ( seg.lines.length < 2 ) continue;
         ctx.beginPath();
         ctx.strokeStyle = seg.color;
@@ -237,9 +237,9 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
 
     function getPos(canvas, p) {
-        let rect = canvas.getBoundingClientRect();
-        let posX = p.clientX;
-        let posY = p.clientY;
+        const rect = canvas.getBoundingClientRect();
+        const posX = p.clientX;
+        const posY = p.clientY;
         return {
             x: posX - rect.left,
             y: posY - rect.top,
@@ -251,10 +251,10 @@ imagexApp.initDrawing = function(scope, canvas) {
             return false;
         if (!object)
             return false;
-        let sina = Math.sin(-object.a * to_radians);
-        let cosa = Math.cos(-object.a * to_radians);
-        let rotatedX = cosa * (position.x - object.x) - sina * (position.y - object.y);
-        let rotatedY = cosa * (position.y - object.y) + sina * (position.x - object.x);
+        const sina = Math.sin(-object.a * to_radians);
+        const cosa = Math.cos(-object.a * to_radians);
+        const rotatedX = cosa * (position.x - object.x) - sina * (position.y - object.y);
+        const rotatedY = cosa * (position.y - object.y) + sina * (position.x - object.x);
 
         if (object.name === "target") {
             if (object.type === "rectangle") {
@@ -296,14 +296,14 @@ imagexApp.initDrawing = function(scope, canvas) {
 
     function areObjectsOnTopOf(position, objects, name) {
         for (let i = objects.length - 1; i >= 0; i--) {
-            let collision = isObjectOnTopOf(position, objects[i], name, 0);
+            const collision = isObjectOnTopOf(position, objects[i], name, 0);
             if (collision) {
                 return objects[i];
             }
         }
         if (grabOffset) {
             for (let i = objects.length - 1; i >= 0; i--) {
-                let collision = isObjectOnTopOf(position, objects[i], name, grabOffset);
+                const collision = isObjectOnTopOf(position, objects[i], name, grabOffset);
                 if (collision && objects[i].name === "dragobject") {
                     return objects[i];
                 }
@@ -313,7 +313,7 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
 
     function DragTask(canvas) {
-        let th = this;
+        const th = this;
         this.canvas = canvas;
         this.drawObjects = [];
         this.activeDragObject = null;
@@ -332,7 +332,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                 try {
                     this.drawObjects[i].ctx = this.ctx;
                     if (this.activeDragObject) {
-                        let dobj = this.activeDragObject;
+                        const dobj = this.activeDragObject;
                         let p;
                         if (dobj.lock != "x")
                             dobj.x = toRange(dobj.xlimits, this.mousePosition.x - dobj.xoffset);
@@ -348,19 +348,19 @@ imagexApp.initDrawing = function(scope, canvas) {
                     }
                     if (this.drawObjects[i].name == "dragobject") {
                         if (this.activeDragObject) {
-                            let onTopOf = areObjectsOnTopOf(this.activeDragObject,
+                            const onTopOf = areObjectsOnTopOf(this.activeDragObject,
                                                             this.drawObjects, "target");
                             if (onTopOf && onTopOf.objectCount < onTopOf.maxObjects) {
                                 onTopOf.color = onTopOf.snapColor;
                                 //this.drawObjects[i].objectCount++;
                             }
-                            let onTopOfB = areObjectsOnTopOf(this.drawObjects[i],
+                            const onTopOfB = areObjectsOnTopOf(this.drawObjects[i],
                                                              this.drawObjects, "target");
                             if (onTopOfB && this.drawObjects[i] !== this.activeDragObject)
                                 onTopOfB.color = onTopOfB.dropColor;
                         }
                         else {
-                            let onTopOfA = areObjectsOnTopOf(this.drawObjects[i],
+                            const onTopOfA = areObjectsOnTopOf(this.drawObjects[i],
                                                              this.drawObjects, "target");
                             if (onTopOfA) {
                                 onTopOfA.color = onTopOfA.dropColor;
@@ -457,7 +457,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                 if ( event != p ) event.preventDefault();
                 this.mousePosition = getPos(this.canvas, p);
 
-                let isTarget = areObjectsOnTopOf(this.activeDragObject,
+                const isTarget = areObjectsOnTopOf(this.activeDragObject,
                     this.drawObjects, "target");
                 this.drawObjects.splice(topmostIndex, 1);
                 this.drawObjects.splice(this.drawObjects.length, 0, topmostElement);
@@ -499,7 +499,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         if ( scope.freeHandShortCuts)
             // this.canvas.parentElement.parentElement.addEventListener( "keypress", function(event) {
             this.canvas.addEventListener( "keypress", function(event) {
-                let c = String.fromCharCode(event.keyCode);
+                const c = String.fromCharCode(event.keyCode);
                 if ( event.keyCode == 26 ) { th.freeHand.popSegment(0); }
                 if ( c == "c" ) { th.freeHand.clear(); th.draw(); }
                 if ( c == "r" ) th.freeHand.setColor("#f00");
@@ -533,8 +533,8 @@ imagexApp.initDrawing = function(scope, canvas) {
             if ( scope.rightAnswersSet ) { dt.draw(); return; }
             if ( !scope.answer || !scope.answer.rightanswers ) return;
 
-            let rightdrags = scope.answer.rightanswers;
-            let dragtable = scope.objects;
+            const rightdrags = scope.answer.rightanswers;
+            const dragtable = scope.objects;
             let j = 0;
             for (j = 0; j < rightdrags.length; j++) {
                 let p = 0;
@@ -554,7 +554,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                         */
                         //values.ctx = doc_ctx.getContext("2d");
                         //give context and values for draw function.
-                        let line = new Line(dt, values);
+                        const line = new Line(dt, values);
                         line.did = "-";
                         this.drawObjects.push(line);
                         //line.draw();
@@ -734,7 +734,7 @@ imagexApp.initDrawing = function(scope, canvas) {
     // if (  isKeyDef(initValues, "pin", false) ...;
     // there is no sence to call this with true because then it allways returns true
     function isKeyDef(value, key, defaultValue) {
-        let keys = key.split(".");
+        const keys = key.split(".");
         let v = value;
         let p = scope.previousValue;
         let d = scope.defaults;
@@ -743,7 +743,7 @@ imagexApp.initDrawing = function(scope, canvas) {
 
         // Loop v and p to same level
         for (let i = 0; i < keys.length - 1; i++) {
-            let k = keys[i];
+            const k = keys[i];
             if (!p[k])  p[k] = {}; // if not on p, add
             p = p[k]; // for next round
             if (v && v[k]) v = v[k]; else v = null;
@@ -764,7 +764,7 @@ imagexApp.initDrawing = function(scope, canvas) {
 
     // Find value for key from value, prevous or defaults.  If nowhere return defaultValue
     function getValueDef(value, key, defaultValue, keepEmtpyAsNone = false) {
-        let keys = key.split(".");
+        const keys = key.split(".");
         let v = value;
         let p = scope.previousValue;
         let d = scope.defaults;
@@ -773,7 +773,7 @@ imagexApp.initDrawing = function(scope, canvas) {
 
         // Loop v and p to same level
         for (let i = 0; i < keys.length - 1; i++) {
-            let k = keys[i];
+            const k = keys[i];
             if (!p[k])  p[k] = {}; // if not on p, add
             p = p[k]; // for next round
             if (v && v[k]) v = v[k]; else v = null;
@@ -824,19 +824,19 @@ imagexApp.initDrawing = function(scope, canvas) {
         return typeof window.ontouchstart !== "undefined";
     }
 
-    let isTouch = isTouchDevice();
+    const isTouch = isTouchDevice();
     let grabOffset: number;
     if (isTouch) grabOffset = scope.extraGrabAreaHeight;
     else grabOffset = 0;
 
-    let to_radians = Math.PI / 180;
-    let doc_ctx = canvas;
-    let dt = new DragTask(doc_ctx);
+    const to_radians = Math.PI / 180;
+    const doc_ctx = canvas;
+    const dt = new DragTask(doc_ctx);
     scope.dt = dt;
 
     //var canvas = element[0];
 
-    let shapeFunctions = {
+    const shapeFunctions = {
         //Tama piirtaa viivan, mutta vain kerran.
         line: {
             init(initValues) {},
@@ -969,8 +969,8 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.init2();
                 },
             init2() {
-                    let initValues = this.initValues;
-                    let r1 = getValue(this.image.width, 0);
+                    const initValues = this.initValues;
+                    const r1 = getValue(this.image.width, 0);
                     let r2 = getValue(this.image.height, 0);
                     if ( r1 == 0 ) return;
                     // Look if size attribute overrides the image size
@@ -1035,16 +1035,16 @@ imagexApp.initDrawing = function(scope, canvas) {
                         this.x = getValue( this.textBoxOffset[0], 0);
                         this.y = getValue( this.textBoxOffset[1], 0); }
 
-                    let fontDraw = document.createElement("canvas");
+                    const fontDraw = document.createElement("canvas");
                     // TODO: scopessa voisi olla alustuksen aikana yksi dummy canvas
                     // joka sitten poistetaan
                     this.font = getValueDef(initValues, "textboxproperties.font", "14px Arial");
-                    let auxctx = fontDraw.getContext("2d");
+                    const auxctx = fontDraw.getContext("2d");
                     auxctx.font = this.font;
                     this.text = getValueDef(initValues, "textboxproperties.text", initValues.id);
                     if ( !this.text ) this.text = "";
                     this.lines = this.text.split("\n");
-                    let lineWidths = [];
+                    const lineWidths = [];
 
                     // measure widest line
                     for (let i = 0; i < this.lines.length; i++) {
@@ -1148,7 +1148,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.pinPositionStart = getValueDef(initValues, "pin.position.start", [0, 0]);
                     this.pinProperties.position.coord = getValueDef(initValues,
                                                                     "pin.position.coord", []);
-                    let pinst = getValueDef(initValues, "pin.position.start", [0, 0]);
+                    const pinst = getValueDef(initValues, "pin.position.start", [0, 0]);
                     this.pinsx = getValue(pinst[0], 0);
                     this.pinsy = getValue(pinst[1], 0);
                     this.pinInit2();
@@ -1230,7 +1230,7 @@ imagexApp.initDrawing = function(scope, canvas) {
     } catch (err) {
         scope.yamlobjects = [];
     }
-    let userObjects = scope.attrs.markup.objects;
+    const userObjects = scope.attrs.markup.objects;
 /*
     if (scope.attrs.state && scope.attrs.state.userAnswer ) {
         // used to reset object positions.
@@ -1252,18 +1252,18 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
 */
 
-    let userTargets = scope.attrs.markup.targets;
-    let userFixedObjects = scope.attrs.markup.fixedobjects;
-    let fixedobjects = [];
-    let targets = [];
-    let objects = [];
+    const userTargets = scope.attrs.markup.targets;
+    const userFixedObjects = scope.attrs.markup.fixedobjects;
+    const fixedobjects = [];
+    const targets = [];
+    const objects = [];
 
     scope.defaults = scope.attrs.markup.defaults;
     scope.previousValue = {};
 
     if (scope.attrs.markup.background) {
         scope.attrs.markup.background.name = "background";
-        let background = new FixedObject(dt, scope.attrs.markup.background);
+        const background = new FixedObject(dt, scope.attrs.markup.background);
         dt.drawObjects.push(background);
     }
 
@@ -1298,7 +1298,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         for (let i = 0; i < userObjects.length; i++) {
             if ( userObjects[i])
             try {
-                let newObject = new DragObject(dt, userObjects[i], "obj" + (i + 1));
+                const newObject = new DragObject(dt, userObjects[i], "obj" + (i + 1));
                 objects.push(newObject);
                 if (!scope.drags){
                     scope.drags = [];
@@ -1314,7 +1314,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         // used to reset object positions.
        // scope.yamlobjects = scope.attrs.state.markup.objects.yamlobjects;
         // lisatty oikeiden vastausten lukemiseen ja piirtamiseen.
-        let userDrags = scope.attrs.state.userAnswer.drags;
+        const userDrags = scope.attrs.state.userAnswer.drags;
         if (objects && userDrags && userDrags.length > 0) {
             for (let i = 0; i < objects.length; i++) {
                 if (!objects[i]) continue; // looks like the first may be null
@@ -1424,14 +1424,14 @@ imagexApp.initScope = function(scope, element, attrs) {
     scope.freeHandDrawing.params = scope; // to get 2 way binding to params
     if ( scope.freeHandData ) scope.freeHandDrawing.freeDrawing = scope.freeHandData;
     scope.freeHandDrawing.update = function() {
-        let phase = scope.$root.$$phase;
+        const phase = scope.$root.$$phase;
         if (phase == "$apply" || phase == "$digest") return;
         scope.$apply();
     };
 
     // Otsikot.  Oletetaan etta 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
     element[0].childNodes[0].outerHTML = timHelper.getHeading(scope, attrs, "header", "h4");
-    let n = element[0].childNodes.length;
+    const n = element[0].childNodes.length;
     if (n > 1) element[0].childNodes[n - 1].outerHTML =
         timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
     scope.canvas = element.find("#canvas")[0]; //element[0].childNodes[1].childNodes[0];
@@ -1473,7 +1473,7 @@ ImagexScope.prototype.watchDrags = function() {
 
 ImagexScope.prototype.initCode = function() {
     "use strict";
-    let $scope = this.scope;
+    const $scope = this.scope;
     $scope.error = "";
     $scope.result = "";
 };
@@ -1510,9 +1510,9 @@ ImagexScope.prototype.showAnswer = function(){
 
 // Get the important stuff from dragobjects
 ImagexScope.prototype.getDragObjectJson = function() {
-    let $scope = this.scope;
-    let dragtable = $scope.drags;
-    let json = [];
+    const $scope = this.scope;
+    const dragtable = $scope.drags;
+    const json = [];
     if (!dragtable){
         return json;
     }
@@ -1527,7 +1527,7 @@ ImagexScope.prototype.getDragObjectJson = function() {
 // show correct answer is also sent.
 ImagexScope.prototype.doshowAnswer = function(){
     "use strict";
-    let $scope = this.scope;
+    const $scope = this.scope;
     if ($scope.answer &&  $scope.answer.rightanswers ) {
         $scope.dt.addRightAnswers();
         return;
@@ -1541,7 +1541,7 @@ ImagexScope.prototype.doshowAnswer = function(){
     $scope.isRunning = true;
     $scope.result = "";
 
-    let params = {
+    const params = {
         input: {
             markup: {taskId: $scope.taskId, user_id: $scope.user_id},
             drags : this.getDragObjectJson(),
@@ -1552,7 +1552,7 @@ ImagexScope.prototype.doshowAnswer = function(){
     let url = "/imagex/answer";
     if ($scope.plugin) {
         url = $scope.plugin;
-        let i = url.lastIndexOf("/");
+        const i = url.lastIndexOf("/");
         if (i > 0) url = url.substring(i);
         url += "/" + $scope.taskId + "/answer/";  // Hack piti vahan muuttaa, jotta kone haviaa.
     }
@@ -1579,16 +1579,16 @@ ImagexScope.prototype.doshowAnswer = function(){
 ImagexScope.prototype.resetExercise = function(){
     "use strict";
     // Set scope.
-    let $scope = this.scope;
+    const $scope = this.scope;
     $scope.error = "";
     $scope.result = "";
     $scope.freeHandDrawing.clear();
     // Objects dragged by user.
-    let objects = $scope.objects; //$scope.objects;
+    const objects = $scope.objects; //$scope.objects;
 
     if (objects) {
         for (let i = 0; i < objects.length; i++) {
-            let obj = objects[i];
+            const obj = objects[i];
             obj.x = obj.origPos.x;
             obj.y = obj.origPos.y;
             obj.position = obj.origPos.pos;
@@ -1596,7 +1596,7 @@ ImagexScope.prototype.resetExercise = function(){
     }
     // Draw the excercise so that reset appears instantly.
 
-    let dobjs = $scope.dt.drawObjects;
+    const dobjs = $scope.dt.drawObjects;
 
     for (let i = dobjs.length - 1; i--; ) {
 	    if (dobjs[i].did === "-") dobjs.splice(i, 1);
@@ -1607,14 +1607,14 @@ ImagexScope.prototype.resetExercise = function(){
 };
 
 ImagexScope.prototype.svgImageSnippet = function() {
-    let $scope = this.scope;
-    let s = $scope.sce.trustAsHtml($scope.replyHTML);
+    const $scope = this.scope;
+    const s = $scope.sce.trustAsHtml($scope.replyHTML);
     return s;
 };
 
 ImagexScope.prototype.doSave = function(nosave) {
     "use strict";
-    let $scope = this.scope;
+    const $scope = this.scope;
     // These break the whole javascript if used, positions are updated somehow anyways.
     //$scope.$digest();
     //$scope.$apply();
@@ -1623,7 +1623,7 @@ ImagexScope.prototype.doSave = function(nosave) {
     $scope.isRunning = true;
     $scope.result = "";
 
-    let params = {
+    const params = {
         input: {
             markup: {taskId: $scope.taskId, user_id: $scope.user_id},
             drags : this.getDragObjectJson(),
@@ -1637,7 +1637,7 @@ ImagexScope.prototype.doSave = function(nosave) {
     let url = "/imagex/answer";
     if ($scope.plugin) {
         url = $scope.plugin;
-        let i = url.lastIndexOf("/");
+        const i = url.lastIndexOf("/");
         if (i > 0) url = url.substring(i);
         url += "/" + $scope.taskId + "/answer/";  // Hack piti vahan muuttaa, jotta kone haviaa.
     }

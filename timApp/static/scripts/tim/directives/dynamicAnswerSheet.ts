@@ -21,10 +21,10 @@ import {ParCompiler} from "../services/parCompiler";
 function uncheckRadio(e) {
     // set this to click-method if you want a radio that can be uncheked.  for the radio there
     // must be also property form that has other radios.
-    let elem = $(this);
-    let form = elem.prop("form");
+    const elem = $(this);
+    const form = elem.prop("form");
     if ( !form ) return;
-    let gn = elem.prop("name");
+    const gn = elem.prop("name");
     if ( elem.prop("previousValue") === true ) {
         elem.prop("checked", false);
     } else {
@@ -39,8 +39,8 @@ export function getJsonAnswers(answer) {
     if ( answer.length > 0 && answer[0] === "[" ) {
         return JSON.parse(answer);
     }
-    let single_answers = [];
-    let all_answers = answer.split("|");
+    const single_answers = [];
+    const all_answers = answer.split("|");
 
     for (let i = 0; i < all_answers.length; i++) {
         single_answers.push(all_answers[i].split(","));
@@ -50,22 +50,22 @@ export function getJsonAnswers(answer) {
 
 function deletePar(s) {
     if ( !s.startsWith("<p>") ) return s;
-    let rs = s.substring(3);
+    const rs = s.substring(3);
     if ( !rs.endsWith("</p>") ) return s;
     return rs.substring(0, rs.length - 4);
 }
 
 export function getPointsTable(markupPoints) {
     // Format of markupPoints: 1:1.1;2:1.2;3:1.3||2:3.2
-    let pointsTable = [];
+    const pointsTable = [];
     if (markupPoints && markupPoints !== "") {
-        let points = markupPoints.split("|");
+        const points = markupPoints.split("|");
         for (let i = 0; i < points.length; i++) {
-            let rowPoints = points[i].split(";");
-            let rowPointsDict = {};
+            const rowPoints = points[i].split(";");
+            const rowPointsDict = {};
             for (let k = 0; k < rowPoints.length; k++) {
                 if (rowPoints[k] !== "") {
-                    let colPoints = rowPoints[k].split(":", 2);
+                    const colPoints = rowPoints[k].split(":", 2);
                     rowPointsDict[colPoints[0]] = colPoints[1];
                 }
             }
@@ -77,7 +77,7 @@ export function getPointsTable(markupPoints) {
 
 export function minimizeJson(json) {
     // remove not needed fields from json, call when saving the question
-    let result: any = {};
+    const result: any = {};
     if ( json.headers ) {
         result.headers = [];
         for (let i = 0; i < json.headers.length; i++) {
@@ -87,10 +87,10 @@ export function minimizeJson(json) {
         }
     }
 
-    let ir = -1;
+    const ir = -1;
     let allText = true;
-    let rows = json.rows;
-    let rrows = [];
+    const rows = json.rows;
+    const rrows = [];
 
     for (let i = 0; i < rows.length; i++) {
         let row = rows[i];
@@ -118,15 +118,15 @@ export function minimizeJson(json) {
 function fixLineBreaks(s) {
     // var result = s.replace(" < "," &lt; ");
     //result = result.replace(" > "," &gt; ");
-    let parts = s.split("!!");
-    let result = parts[0];
+    const parts = s.split("!!");
+    const result = parts[0];
     return result;
     //return s.replace("\n","<br />");
 }
 
 export function fixQuestionJson(json) {
     // fill all missing fields from question json, call before use json
-    let columnHeaders = [];
+    const columnHeaders = [];
     if ( json.data ) {
         json.headers = json.data.headers;
         json.rows = json.data.rows;
@@ -134,11 +134,11 @@ export function fixQuestionJson(json) {
     if ( json.headers ) {
         let headers = json.headers;
         if ( Array !== headers.constructor ) { // if just on text string
-            let jrows = headers.split("\n");
+            const jrows = headers.split("\n");
             headers = [];
             let ir = -1;
             for (let i = 0; i < jrows.length; i++) {
-                let jrow = jrows[i];
+                const jrow = jrows[i];
                 if (jrow) {
                     ir++;
                     headers.push({text: jrow.toString(), type: "header", id: ir});
@@ -166,18 +166,18 @@ export function fixQuestionJson(json) {
 
     let rows =  json.rows;
     if ( Array !== rows.constructor ) { // if just on text string
-        let jrows = rows.split("\n");
+        const jrows = rows.split("\n");
         rows = [];
         for (let i = 0; i < jrows.length; i++) {
-            let jrow = jrows[i];
+            const jrow = jrows[i];
             if (jrow) rows.push({text: jrow.toString(), type: "question", id: i});
         }
     }
 
     let ir = -1;
-    let n = rows.length - 1;
+    const n = rows.length - 1;
     if ( n >= 0 ) {
-        let last = rows[n];  // remove ending object if needed
+        const last = rows[n];  // remove ending object if needed
         if ( typeof last === "object" && $.isEmptyObject(last)) rows.splice(n, 1); // trust that null is also object!
     }
 
@@ -225,7 +225,7 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                 $scope.gid = $scope.gid.replace(".", "_");
                 $scope.buttonText = params.markup.button || params.markup.buttonText || "Answer";
 
-                let answclass = params.answclass || "answerSheet";
+                const answclass = params.answclass || "answerSheet";
                 $scope.previousAnswer = params.previousAnswer;
 
                 let disabled = "";
@@ -236,8 +236,8 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                 $element.empty();
                 $scope.json = params.markup.json;
                 $scope.markup = params.markup;
-                let data = $scope.json.data || $scope.json; // compability to old format
-                let json = $scope.json;
+                const data = $scope.json.data || $scope.json; // compability to old format
+                const json = $scope.json;
 
                 fixQuestionJson(data);
 
@@ -245,19 +245,19 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
 
                 // If user has answer to question, create table of answers and select inputs according to it
                 if ($scope.previousAnswer) $scope.answerTable = getJsonAnswers($scope.previousAnswer);
-                let answerTable = $scope.answerTable;
-                let pointsTable = getPointsTable(params.points || params.markup.points);
+                const answerTable = $scope.answerTable;
+                const pointsTable = getPointsTable(params.points || params.markup.points);
 
                 $scope.expl = params.expl || params.markup.expl || params.markup.xpl;
                 $scope.askedTime = params.askedTime - params.clockOffset;
                 $scope.endTime = params.askedTime + $scope.json.timeLimit * 1000 - params.clockOffset;
 
                 // var htmlSheet = $('<div>', {class: answclass});
-                let htmlSheet = $("<form>", {class: answclass});
+                const htmlSheet = $("<form>", {class: answclass});
                 $scope.htmlSheet = htmlSheet;
                 params.htmlSheet = htmlSheet;
                 if ($scope.json.timeLimit !== "" && $scope.endTime  && !$scope.preview && !$scope.result) {
-                    let progress = $("<progress>", {
+                    const progress = $("<progress>", {
                         max: ($scope.endTime - $scope.askedTime),
                         id: "progressBar",
                     });
@@ -268,7 +268,7 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                         text: $scope.json.timeLimit + " s",
                     }));
                 }
-                let h5 = $("<h5>");
+                const h5 = $("<h5>");
                 h5.append(fixLineBreaks(json.questionText));
 
                 htmlSheet.append(h5);
@@ -277,18 +277,18 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                     htmlSheet.append($("<p>", {text: "Points: " + params.markup.userpoints }));
                 }
 
-                let table = $("<table>", {id: "answer-sheet-table", class: "table table-borderless"});
+                const table = $("<table>", {id: "answer-sheet-table", class: "table table-borderless"});
 
                 let totalBorderless = true;
 
                 if (data.headers &&
                     data.headers.length > 0 && !(data.headers[0].text === "" && data.headers.length === 1)) {
-                    let tr = $("<tr>", {class: "answer-heading-row"});
+                    const tr = $("<tr>", {class: "answer-heading-row"});
                     if (data.headers.length > 0) {
                         tr.append($("<th>"));
                     }
                     angular.forEach(data.headers, function(header) {
-                        let th = $("<th>");
+                        const th = $("<th>");
                         th.append( fixLineBreaks(header.text) );
                         totalBorderless = false;
                         tr.append(th);
@@ -304,10 +304,10 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                     ir++;
                     let pointsRow = {};
                     if ( params.result && pointsTable.length > ir &&  pointsTable[ir] ) pointsRow = pointsTable[ir];
-                    let rtext = fixLineBreaks(row.text);
-                    let tr = $("<tr>");
+                    const rtext = fixLineBreaks(row.text);
+                    const tr = $("<tr>");
                     if (json.questionType === "matrix" || json.questionType === "true-false") {
-                        let td = $("<td>");
+                        const td = $("<td>");
                         td.append(rtext);
                         if ( rtext && ir > 0 ) totalBorderless = false;
                         tr.append(td);
@@ -320,12 +320,12 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                         group = $scope.cg() + ir;
 
                         if (json.questionType === "matrix" || json.questionType === "true-false") {
-                            let value = "" + (ic + 1); // (row.columns[ic].id + 1).toString();
+                            const value = "" + (ic + 1); // (row.columns[ic].id + 1).toString();
 
                             let colTDPoints;
                             let colPtsClass = "qst-normal";
                             if ( value in pointsRow ) {
-                                let colPoints = pointsRow[value];
+                                const colPoints = pointsRow[value];
                                 colTDPoints = $("<p>", {class: "qst-points"}).append(colPoints);
                                 if ( colPoints > 0 ) colPtsClass =  "qst-correct";
                             }
@@ -337,7 +337,7 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                                 if (answerTable && ir < answerTable.length && ic < answerTable[ir].length) {
                                     text = answerTable[ir][ic];
                                 }
-                                let textArea = $("<textarea>", {
+                                const textArea = $("<textarea>", {
                                     id: "textarea-answer",
                                     name: group,
                                 });
@@ -354,7 +354,7 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                                 if (answerTable && ir < answerTable.length ) {
                                     checked = (answerTable[ir].indexOf(value) >= 0);
                                 }
-                                let input = $("<input>", {
+                                const input = $("<input>", {
                                     type: json.answerFieldType,
                                     name: group,
                                     value: ic + 1, // parseInt(row.columns[ic].id) + 1,
@@ -366,8 +366,8 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                                 }
                                 if (disabled !== "") input.attr("disabled", "disabled");
 
-                                let td = $("<td>", {class: "answer-button"});
-                                let ispan = $("<span>", {class: colPtsClass});
+                                const td = $("<td>", {class: "answer-button"});
+                                const ispan = $("<span>", {class: colPtsClass});
                                 ispan.append(input);
                                 td.append($("<label>").append(ispan));
 
@@ -376,25 +376,25 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                                 header++;
                             }
                         } else {
-                            let value = "" + (ir + 1); // (row.id + 1).toString();
+                            const value = "" + (ir + 1); // (row.id + 1).toString();
                             let colTDPoints;
                             let colPtsClass = "qst-normal";
                             let pointsRow = {};
                             if ( params.result && pointsTable.length > 0 &&  pointsTable[0] ) pointsRow = pointsTable[0];
                             if ( value in pointsRow ) {
-                                let colPoints = pointsRow[value];
+                                const colPoints = pointsRow[value];
                                 colTDPoints = $("<p>", {class: "qst-points"}).append(colPoints);
                                 if ( colPoints > 0 ) colPtsClass =  "qst-correct";
                             }
                             row.columns[ic].id = ic;
 
-                            let type = row.type || "question";
+                            const type = row.type || "question";
                             group = $scope.cg() + type.replace(/[^a-zA-Z0-9]/g, "");
                             let checked = false;
                             if (answerTable && answerTable.length > 0) {
                                 checked = (answerTable[0].indexOf(value) >= 0);
                             }
-                            let input = $("<input>", {
+                            const input = $("<input>", {
                                 type: json.answerFieldType,
                                 name: group,
                                 value: ir + 1, //parseInt(row.id) + 1,
@@ -405,11 +405,11 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                                 input.click(uncheckRadio);
                             }
                             if (disabled !== "") input.attr("disabled", "disabled");
-                            let label = $("<label>");
-                            let ispan = $("<span>", {class: colPtsClass});
+                            const label = $("<label>");
+                            const ispan = $("<span>", {class: colPtsClass});
                             ispan.append(input);
                             label.append(ispan).append(" " + deletePar("" + rtext));
-                            let td = $("<td>", {class: "answer-button2"});
+                            const td = $("<td>", {class: "answer-button2"});
                             td.append(label);
                             if ( colTDPoints ) td.append(colTDPoints);
                             tr.append(td);
@@ -418,9 +418,9 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                     // If showing question results, add question rows explanation
                     if ($scope.result && $scope.expl ) {
                         let expl = "";
-                        let ir1 = (ir + 1).toString();
+                        const ir1 = (ir + 1).toString();
                         if ( ir1 in $scope.expl ) expl = $scope.expl[ir1];
-                        let tde = $("<td>", {class: "explanation"});
+                        const tde = $("<td>", {class: "explanation"});
                         tde.append(expl);
                         // tr.append($('<td>', {class: 'explanation', text: expl}));
                         tr.append(tde);
@@ -436,9 +436,9 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                 $compile($scope);
 
                 if (!$scope.preview && !$scope.result) {
-                    let $table = $element.find("#answer-sheet-table");
+                    const $table = $element.find("#answer-sheet-table");
                     window.setTimeout(function() {
-                        let $table = $element.find("#answer-sheet-table");
+                        const $table = $element.find("#answer-sheet-table");
                         let $input = null;
                         if ($scope.json.answerFieldType !== "text")
                             $input = $table.find("input:first");
@@ -448,12 +448,12 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                     }, 0);
                     //
                     if ( !$scope.isText ) $table.on("keyup.send", $scope.answerWithEnter);
-                    let now = new Date().valueOf();
+                    const now = new Date().valueOf();
                     timeLeft = $scope.endTime - now;
                     barFilled = 0;
                     if ( $scope.endTime && $scope.json.timeLimit !== "") {
-                        let timeBetween = 500;
-                        let maxCount = timeLeft / timeBetween + 5 * timeBetween;
+                        const timeBetween = 500;
+                        const maxCount = timeLeft / timeBetween + 5 * timeBetween;
                         $scope.progressElem = $("#progressBar");
                         $scope.progressText = $("#progressLabel");
                         $scope.start = function() {
@@ -491,7 +491,7 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
              */
             $scope.internalControl.updateBar = function() {
                 //TODO: Problem with inactive tab.
-                let now = new Date().valueOf();
+                const now = new Date().valueOf();
                 if ( !$scope.endTime || !promise ) return;
                 timeLeft = $scope.endTime - now;
                 barFilled = ($scope.endTime - $scope.askedTime) - ($scope.endTime - now);
@@ -512,7 +512,7 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
             $scope.internalControl.endQuestion = function() {
                 if ( !promise ) return;
                 $interval.cancel(promise);
-                let max = $scope.progressElem.attr("max");
+                const max = $scope.progressElem.attr("max");
                 $scope.progressElem.attr("value", max);
                 $scope.progressText.text("Time's up");
             };
@@ -525,21 +525,21 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
             };
 
             $scope.internalControl.getAnswers = function() {
-                let answers = [];
-                let data = $scope.json.data || $scope.json;
+                const answers = [];
+                const data = $scope.json.data || $scope.json;
                 if (angular.isDefined(data.rows)) {
                     let groupName; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
                     if ($scope.json.questionType === "matrix" || $scope.json.questionType === "true-false") {
                         for (let ir = 0; ir < data.rows.length; ir++) {
                             groupName = $scope.cg() + ir;
-                            let answer = [];
+                            const answer = [];
                             let matrixInputs;
                             // groupName = $scope.cg() + ir; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
 
                             if ($scope.json.answerFieldType === "text") {
                                 matrixInputs = $("textarea[name=" + groupName + "]", $scope.htmlSheet);
                                 for (let ic = 0; ic < matrixInputs.length; ic++) {
-                                    let v = matrixInputs[ic].value || "";
+                                    const v = matrixInputs[ic].value || "";
                                     answer.push(v);
                                 }
 
@@ -550,7 +550,7 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                             matrixInputs = $("input[name=" + groupName + "]:checked", $scope.htmlSheet);
 
                             for (let k = 0; k < matrixInputs.length; k++) {
-                                let v = matrixInputs[k].value || "";
+                                const v = matrixInputs[k].value || "";
                                 answer.push(v);
                             }
                             if (matrixInputs.length <= 0) {
@@ -561,9 +561,9 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
                     }
                     else {
                         answers.push([]);
-                        let type = data.rows[0].type || "question";
+                        const type = data.rows[0].type || "question";
                         groupName = $scope.cg() + type.replace(/[^a-zA-Z0-9]/g, "");
-                        let checkedInputs = $("input[name=" + groupName + "]:checked", $scope.htmlSheet) as any as HTMLInputElement[];
+                        const checkedInputs = $("input[name=" + groupName + "]:checked", $scope.htmlSheet) as any as HTMLInputElement[];
                         for (let j = 0; j < checkedInputs.length; j++) {
                             answers[0].push(checkedInputs[j].value);
                         }
@@ -576,7 +576,7 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
 
                 if (angular.isDefined(data.columns)) {
                     angular.forEach(data.columns, function(column) {
-                        let groupName = $scope.cg() + column.Value.replace(/ /g, "");
+                        const groupName = $scope.cg() + column.Value.replace(/ /g, "");
                         answers.push($("input[name=" + groupName + "]:checked").val());
                     });
                 }
@@ -591,7 +591,7 @@ timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "
              */
             $scope.internalControl.answerToQuestion = function() {
 
-                let answers = $scope.internalControl.getAnswers();
+                const answers = $scope.internalControl.getAnswers();
 
                 if (!$scope.$parent.isLecturer) {
                     $element.empty();

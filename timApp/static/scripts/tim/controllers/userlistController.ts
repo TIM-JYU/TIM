@@ -8,7 +8,7 @@ timApp.controller("UserListController", ["$scope", "$element", "$filter", "$time
                 return $element[0].offsetHeight + $element[0].offsetWidth;
             },
             function(sum) {
-                let grid = $element.find(".grid");
+                const grid = $element.find(".grid");
                 grid.css("width", ($element[0].offsetWidth - 5) + "px");
                 grid.css("height", ($element[0].offsetHeight - 30) + "px");
             },
@@ -66,11 +66,11 @@ timApp.controller("UserListController", ["$scope", "$element", "$filter", "$time
             if (!options.taskPointField && !options.velpPointField && !options.totalPointField) {
                 return;
             }
-            let data = $scope.gridApi.grid.getVisibleRows();
+            const data = $scope.gridApi.grid.getVisibleRows();
             let dataKorppi = "";
 
-            let fields = ["task_points", "velp_points", "total_points"];
-            let fieldNames = {};
+            const fields = ["task_points", "velp_points", "total_points"];
+            const fieldNames = {};
             fieldNames[fields[0]] = options.taskPointField;
             fieldNames[fields[1]] = options.velpPointField;
             fieldNames[fields[2]] = options.totalPointField;
@@ -87,14 +87,14 @@ timApp.controller("UserListController", ["$scope", "$element", "$filter", "$time
                 }
             }
 
-            let filename = "korppi_" + $scope.docId + ".txt";
+            const filename = "korppi_" + $scope.docId + ".txt";
             // from https://stackoverflow.com/a/33542499
-            let blob = new Blob([dataKorppi], {type: "text/plain"});
+            const blob = new Blob([dataKorppi], {type: "text/plain"});
             if (window.navigator.msSaveOrOpenBlob) {
                 window.navigator.msSaveBlob(blob, filename);
             }
             else {
-                let elem = window.document.createElement("a");
+                const elem = window.document.createElement("a");
                 elem.href = window.URL.createObjectURL(blob);
                 elem.download = filename;
                 document.body.appendChild(elem);
@@ -132,7 +132,7 @@ timApp.controller("UserListController", ["$scope", "$element", "$filter", "$time
                     title: "Export to Korppi",
                     action($event) {
                         $timeout(function() {
-                            let instance = $uibModal.open({
+                            const instance = $uibModal.open({
                                 animation: false,
                                 ariaLabelledBy: "modal-title",
                                 ariaDescribedBy: "modal-body",
@@ -201,7 +201,7 @@ timApp.controller("UserListController", ["$scope", "$element", "$filter", "$time
 
 timApp.controller("KorppiExportCtrl", ["$uibModalInstance", function($uibModalInstance) {
     "use strict";
-    let $ctrl = this;
+    const $ctrl = this;
     $ctrl.options = {};
 
     $ctrl.ok = function() {

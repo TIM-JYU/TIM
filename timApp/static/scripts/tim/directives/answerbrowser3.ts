@@ -6,16 +6,16 @@ import {timLogTime} from "tim/timTiming";
 
 timLogTime("answerbrowser3 load", "answ");
 
-let LAZYWORD = "lazylazylazy";
-let LAZYSTART = "<!--lazy ";
-let LAZYEND = " lazy-->";
-let RLAZYSTART = new RegExp(LAZYSTART, "g");
-let RLAZYEND = new RegExp(LAZYEND, "g");
+const LAZYWORD = "lazylazylazy";
+const LAZYSTART = "<!--lazy ";
+const LAZYEND = " lazy-->";
+const RLAZYSTART = new RegExp(LAZYSTART, "g");
+const RLAZYEND = new RegExp(LAZYEND, "g");
 
 function makeNotLazy(html) {
     "use strict";
     let s = html.replace(RLAZYSTART, "");
-    let i = s.lastIndexOf(LAZYEND);
+    const i = s.lastIndexOf(LAZYEND);
     if ( i >= 0 ) s = s.substring(0, i);
     s = s.replace(RLAZYEND, "");
     s = s.replace(/-LAZY->/g, "-->");
@@ -25,14 +25,14 @@ function makeNotLazy(html) {
 
 function loadPlugin(html, $par, $compile, $scope, $timeout) {
     "use strict";
-    let newhtml = makeNotLazy(html);
-    let plugin = $par.find(".parContent");
+    const newhtml = makeNotLazy(html);
+    const plugin = $par.find(".parContent");
 
     // Set explicit height for the plugin temporarily.
     // Without this fix, if the plugin is at the bottom of the screen,
     // the browser's scroll position would jump inconveniently because
     // the plugin's height goes to zero until Angular has finished compiling it.
-    let height = plugin.height();
+    const height = plugin.height();
     plugin.height(height);
     plugin.html($compile(newhtml)($scope));
     plugin.css("opacity", "1.0");
@@ -67,19 +67,19 @@ timApp.directive("answerbrowserlazy", ["Upload", "$http", "$sce", "$compile", "$
                 };
 
                 $scope.loadAnswerBrowser = function() {
-                    let $par = $scope.$element.parents(".par");
+                    const $par = $scope.$element.parents(".par");
                     let plugin = $par.find(".parContent");
                     if ( $scope.compiled ) return;
                     $scope.compiled = true;
                     if (!$scope.$parent.noBrowser && $scope.isValidTaskId($scope.taskId)) {
-                        let newHtml = '<answerbrowser task-id="' + $scope.taskId + '"></answerbrowser>';
-                        let newElement = $compile(newHtml);
-                        let parent = $scope.$element.parents(".par")[0];
+                        const newHtml = '<answerbrowser task-id="' + $scope.taskId + '"></answerbrowser>';
+                        const newElement = $compile(newHtml);
+                        const parent = $scope.$element.parents(".par")[0];
                         parent.replaceChild(newElement($scope.$parent)[0], $scope.$element[0]);
                         $scope.parentElement = parent;
                     }
                     // Next the inside of the plugin to non lazy
-                    let origHtml = plugin[0].innerHTML;
+                    const origHtml = plugin[0].innerHTML;
                     if ( origHtml.indexOf(LAZYSTART) < 0 ) {
                         plugin = null;
                     }
@@ -155,8 +155,8 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                         return;
                     }
                     $scope.updatePoints();
-                    let $par = $scope.element;
-                    let ids = $scope.$parent.dereferencePar($par);
+                    const $par = $scope.element;
+                    const ids = $scope.$parent.dereferencePar($par);
                     $scope.loading++;
                     $http.get("/getState", {
                         params: {
@@ -173,7 +173,7 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                         if ($scope.review) {
                             $scope.element.find(".review").html(response.data.reviewHtml);
                         }
-                        let lata = $scope.$parent.loadAnnotationsToAnswer;
+                        const lata = $scope.$parent.loadAnnotationsToAnswer;
                         if ( lata ) lata($scope.selectedAnswer.id, $par[0], $scope.review, $scope.setFocus);
 
                     }, function(response) {
@@ -249,7 +249,7 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
 
                     $scope.changeStudent = function(dir) {
                         if ( $scope.users.length <= 0 ) return;
-                        let shouldRefocusPoints = $scope.shouldFocus;
+                        const shouldRefocusPoints = $scope.shouldFocus;
                         let newIndex = $scope.findSelectedUserIndex() + dir;
                         if (newIndex >= $scope.users.length) {
                             newIndex = 0;
@@ -336,7 +336,7 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                     $scope.loading++;
                     $http.get("/answers/" + $scope.taskId + "/" + $scope.user.id)
                         .then(function(response) {
-                            let data = response.data;
+                            const data = response.data;
                             if (data.length > 0 && ($scope.hasUserChanged() || data.length !== ($scope.answers || []).length)) {
                                 $scope.answers = data;
                                 $scope.updateFiltered();
@@ -351,7 +351,7 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                                     $scope.dimPlugin();
                                 }
                                 $scope.updateFilteredAndSetNewest();
-                                let i = $scope.findSelectedAnswerIndex();
+                                const i = $scope.findSelectedAnswerIndex();
                                 if (i >= 0) {
                                     $scope.selectedAnswer = $scope.filteredAnswers[i];
                                     $scope.updatePoints();

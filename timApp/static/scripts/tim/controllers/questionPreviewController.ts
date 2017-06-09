@@ -59,9 +59,9 @@ timApp.controller("QuestionPreviewController", ["$scope", "$window", "$http", "$
 
         $scope.editQuestion = function() {
         $scope.close();
-        let parId = $scope.questionParId;
-        let parNextId = $scope.questionParIdNext;
-        let docId = $scope.docId;
+        const parId = $scope.questionParId;
+        const parNextId = $scope.questionParIdNext;
+        const docId = $scope.docId;
         // $rootScope.$broadcast('toggleQuestion');
         http({
             url: "/getQuestionByParId",
@@ -118,7 +118,7 @@ timApp.controller("QuestionPreviewController", ["$scope", "$window", "$http", "$
          * @memberof module:questionPreviewController
          */
         $scope.deleteQuestion = function() {
-            let confirmDi = $window.confirm("Are you sure you want to delete this question?");
+            const confirmDi = $window.confirm("Are you sure you want to delete this question?");
             if (confirmDi) {
                 http.post("/deleteParagraph/" + $scope.docId, {par: $scope.questionParId})
                     .success(function(data) {

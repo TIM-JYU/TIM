@@ -210,7 +210,7 @@ timApp.controller("CreateLectureCtrl", ["$scope", "$http", "$window",
             $scope.isNumber($scope.maxStudents, "maxStudents");
 
             if ($scope.startTime !== null) {
-                let lecture_starting_in_past = moment().diff($scope.startTime) >= 0;
+                const lecture_starting_in_past = moment().diff($scope.startTime) >= 0;
 
                 /* Checks that are run if end date is used*/
                 if ($scope.useDate && $scope.endTime !== null) {
@@ -240,7 +240,7 @@ timApp.controller("CreateLectureCtrl", ["$scope", "$http", "$window",
                     }
                 }
                 let alert_message = "";
-                let lecture_ending_in_past = moment().diff($scope.endTime) >= 0;
+                const lecture_ending_in_past = moment().diff($scope.endTime) >= 0;
                 /* Confirmations if lecture starts and/or ends before the current date */
                 if (lecture_starting_in_past && !$scope.editMode) {
                     alert_message += "Are you sure you want the lecture to start before now? ";
@@ -318,7 +318,7 @@ timApp.controller("CreateLectureCtrl", ["$scope", "$http", "$window",
         $scope.removeErrors = function() {
             $scope.error_message = "";
 
-            let elementsToRemoveErrorsFrom = [
+            const elementsToRemoveErrorsFrom = [
                 "lCode",
                 "startDate",
                 "startHour",

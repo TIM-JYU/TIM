@@ -106,8 +106,8 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
             useNotPollingDialog: true,
         };
 
-        let wall = $("#wall");
-        let htmlMessageList = $("#wallMessageList");
+        const wall = $("#wall");
+        const htmlMessageList = $("#wallMessageList");
 
         /**
          * Makes http request to check if the current user is in lecture.
@@ -115,7 +115,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
          */
         $scope.checkIfInLecture = function() {
 
-            let showRightView = function(answer) {
+            const showRightView = function(answer) {
                 if (answer.isInLecture) {
                     $scope.showLectureView(answer);
                 } else {
@@ -134,7 +134,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
                      Check if the lecture parameter is autojoin.
                      If it is and there is only one lecture going on in the document, join it automatically.
                      Otherwise proceed as usual.*/
-                    let autoJoin = "autojoin";
+                    const autoJoin = "autojoin";
                     if (!answer.lectures && lectureCode === autoJoin) {
                         lectureCode = "";
                     }
@@ -161,7 +161,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
                                 buster: new Date().getTime(),
                             },
                         }).success(function(data) {
-                            let changeLecture = $scope.joinLecture(lectureCode, data, answer.isInLecture, answer.lectureCode);
+                            const changeLecture = $scope.joinLecture(lectureCode, data, answer.isInLecture, answer.lectureCode);
                             if (!changeLecture)
                                 showRightView(answer);
                         }).error(function() {
@@ -189,7 +189,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
         $scope.joinLecture = function(name, code_required, in_lecture, current_lecture) {
             let changeLecture = true;
             if (current_lecture) {
-                let inLecture = in_lecture || $scope.lectureSettings.inLecture;
+                const inLecture = in_lecture || $scope.lectureSettings.inLecture;
                 if (inLecture) {
                     if (current_lecture == name) {
                         changeLecture = false;
@@ -227,7 +227,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
             })
                 .success(function(answer) {
                     $scope.passwordQuess = "";
-                    let input = $("#passwordInput");
+                    const input = $("#passwordInput");
                     if (answer.lecture_ended) {
                         showDialog("Lecture '" + name + "' has ended");
                         return false;
@@ -277,10 +277,10 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
                 method: "GET",
                 params: {t1: new Date().valueOf()},
             }).success(function(data) {
-                let t4 = new Date().valueOf();
-                let t3 = parseInt(data.t3);
-                let t2 = parseInt(data.t2);
-                let t1 = parseInt(data.t1);
+                const t4 = new Date().valueOf();
+                const t3 = parseInt(data.t3);
+                const t2 = parseInt(data.t2);
+                const t1 = parseInt(data.t1);
                 $scope.clockOffset = ((t2 - t1) + (t3 - t4)) / 2;
                 window.setTimeout(function() {
                     setsetting("clock_offset", $scope.clockOffset.toString());
@@ -304,7 +304,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
          */
         $scope.$on("askQuestion", function(event, data) {
             $scope.markup = data.markup;
-            let args: any = {
+            const args: any = {
                 lecture_id: data.lecture_id,
                 doc_id: data.doc_id,
                 buster: new Date().getTime(),
@@ -327,7 +327,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
                             $scope.showStudentAnswers = false;
                         }, 1);
 
-                        let answer = {askedId: id};
+                        const answer = {askedId: id};
                         $scope.current_question_id = id;
                         $scope.getLectureAnswers(answer);
                     }
@@ -534,7 +534,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
          */
         $scope.hideWall = function() {
             $scope.lectureSettings.wallMinimized = !$scope.lectureSettings.wallMinimized;
-            let base = wall.find("#wallBase");
+            const base = wall.find("#wallBase");
             $scope.newMessagesAmount = 0;
             $scope.newMessagesAmountText = "";
             if ($scope.lectureSettings.wallMinimized) {
@@ -638,7 +638,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
                 }
 
                 if (!oldUser) {
-                    let student = {
+                    const student = {
                         id: people[i].user_id,
                         name: people[i].name,
                         active: people[i].active,
@@ -703,7 +703,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
          * @memberof module:lectureController
          */
         $scope.extendLecture = function() {
-            let endTimeDate = moment($scope.lectureEndTime).add($scope.extend.extendTime, "minutes");
+            const endTimeDate = moment($scope.lectureEndTime).add($scope.extend.extendTime, "minutes");
             console.log("extending lecture");
             $scope.answeredToLectureEnding = true;
             console.log(endTimeDate);
@@ -771,7 +771,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
             $scope.showLectureEnding = false;
 
             // TODO: Change to some better confirm dialog.
-            let confirmAnswer = $window.confirm("Do you really want to end this lecture?");
+            const confirmAnswer = $window.confirm("Do you really want to end this lecture?");
             if (confirmAnswer) {
                 http({
                     url: "/endLecture",
@@ -862,7 +862,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
                 .success(function() {
                     $scope.newMsg = "";
                     //TODO: Fix this to scroll bottom without cheating.
-                    let wallArea = $("#wallArea");
+                    const wallArea = $("#wallArea");
                     wallArea.animate({scrollTop: wallArea[0].scrollHeight * 10}, 1000);
 
                 })
@@ -897,7 +897,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
                     });
 
                     //TODO: Fix this to scroll bottom without cheating.
-                    let wallArea = $("#wallArea");
+                    const wallArea = $("#wallArea");
                     wallArea.animate({scrollTop: wallArea[0].scrollHeight * 10}, 1000);
 
                     $scope.lastID = answer.lastid;
@@ -1074,7 +1074,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
                                     $scope.newMessagesAmountText = "";
                                 $scope.wallName = "Wall - " + $scope.lectureName + $scope.newMessagesAmountText;
                                 $scope.lastID = answer.lastid;
-                                let wallArea = $("#wallArea");
+                                const wallArea = $("#wallArea");
                                 wallArea.scrollTop(wallArea[0].scrollHeight);
                             } else {
                                 $window.console.log("Sending new poll.");
@@ -1210,7 +1210,7 @@ timApp.controller("LectureController", ["$scope", "$http", "$window", "$rootScop
         $scope.eventKey = null;
 
         let stateKey;
-        let keys = {
+        const keys = {
             hidden: "visibilitychange",
             webkitHidden: "webkitvisibilitychange",
             mozHidden: "mozvisibilitychange",

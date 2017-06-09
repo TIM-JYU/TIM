@@ -71,14 +71,14 @@ export function defineParHelpers(sc, http, q, $injector, $compile, $window, $doc
     };
 
     sc.getNextPar = function($par) {
-        let $next = $par.next();
+        const $next = $par.next();
         if ($next.hasClass("par")) {
             return $next;
         }
         if ($next.hasClass("area")) {
-            let $content = $next.children(".areaContent");
+            const $content = $next.children(".areaContent");
             if ($content.length > 0) {
-                let $firstpar = $content.children(".par:first");
+                const $firstpar = $content.children(".par:first");
                 if ($firstpar.length > 0) {
                     return $firstpar;
                 }
@@ -121,15 +121,15 @@ export function defineParHelpers(sc, http, q, $injector, $compile, $window, $doc
     };
 
     sc.getParIndex = function($par) {
-        let par_id = sc.getParId($par);
-        let $pars = $(".par");
+        const par_id = sc.getParId($par);
+        const $pars = $(".par");
         let realIndex = 0;
 
         if ($par.find(".parContent").not(":empty").length === 0)
             return null;
 
         for (let i = 0; i < $pars.length; i++) {
-            let $node = $pars.eq(i);
+            const $node = $pars.eq(i);
             if ($node.find(".parContent").not(":empty").length === 0)
                 continue;
 
@@ -147,7 +147,7 @@ export function defineParHelpers(sc, http, q, $injector, $compile, $window, $doc
     };
 
     sc.getPars = function($par_first, $par_last) {
-        let pars = [$par_first];
+        const pars = [$par_first];
         let $par = $par_first;
         let $next = $par.next();
         let i = 1000000;

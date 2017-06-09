@@ -4,7 +4,7 @@ timApp.directive("focusMe", ["$timeout", "$parse", function($timeout, $parse) {
     "use strict";
     return {
         link(scope, element, attrs) {
-            let model = $parse(attrs.focusMe);
+            const model = $parse(attrs.focusMe);
             scope.$watch(model, function(value) {
                 if (value === true) {
                     $timeout(function() {
