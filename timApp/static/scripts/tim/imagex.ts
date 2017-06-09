@@ -1,86 +1,80 @@
 import angular from "angular";
 import ngSanitize from "angular-sanitize";
-import * as timHelper from "tim/timHelper";
 import {editorChangeValue} from "tim/editorScope";
+import * as timHelper from "tim/timHelper";
 import {markAsUsed} from "tim/utils";
 
 markAsUsed(ngSanitize);
 
-var imagexApp: any = angular.module('imagexApp', ['ngSanitize']);
+let imagexApp: any = angular.module("imagexApp", ["ngSanitize"]);
 imagexApp.TESTWITHOUTPLUGINS = false; // if one wants to test without imagex plugins
 
-imagexApp.directive('imagexRunner',
-    ['$sanitize','$compile',
-        function ($sanitize,$compile1) {
+imagexApp.directive("imagexRunner",
+    ["$sanitize", "$compile",
+        function($sanitize, $compile1) {
             "use strict";
             // Tata kutsutaan yhden kerran kun plugin otetaan kayttoon
             imagexApp.sanitize = $sanitize;
             imagexApp.compile = $compile1;
-            return imagexApp.directiveFunction(); }]
+            return imagexApp.directiveFunction(); }],
 );
 
-var globalPreviewColor = "#fff"
-
+let globalPreviewColor = "#fff";
 
 imagexApp.directiveFunction = function() {
     "use strict";
     // Koska tata kutsutaan direktiivista, tata kutsutaan yhden kerran
     return {
         scope: {},
-        controller: ['$scope', '$http', '$transclude', '$sce', '$interval', imagexApp.Controller],
+        controller: ["$scope", "$http", "$transclude", "$sce", "$interval", imagexApp.Controller],
         link: imagexApp.initScope,
-        restrict: 'AE',
+        restrict: "AE",
         /*
          compile: function(tElement, attrs) {
          var content = tElement.children();
          },
          */
         transclude: true,
-        replace: 'true',
-        template: imagexApp.directiveTemplate()
+        replace: "true",
+        template: imagexApp.directiveTemplate(),
         // templateUrl: 'html/paliTempl.html'
     };
 };
 
-
 function FreeHand() {
-    this.params = {}
+    this.params = {};
     this.params.w = 2;
     this.params.color = "Red";
     this.params.lineMode = false; // freeHand mode, true would be line mode
     this.prevPos = null;
     this.freeDrawing = [];
     this.redraw = null;
-};
-
+}
 
 FreeHand.prototype.draw = function(ctx) {
     drawFreeHand(ctx, this.freeDrawing);
 };
 
-
 FreeHand.prototype.startSegment = function(pxy) {
     if ( !pxy ) return;
-    var p = [Math.round(pxy.x), Math.round(pxy.y)];
-    var ns: any = {};
+    let p = [Math.round(pxy.x), Math.round(pxy.y)];
+    let ns: any = {};
     ns.color = this.params.color;
     ns.w = this.params.w;
     ns.lines = [p];
     this.freeDrawing.push(ns);
     this.prevPos = p;
 };
-
 
 FreeHand.prototype.endSegment = function() {
     this.drawingSurfaceImageData = null;
 };
 
-
 FreeHand.prototype.startSegmentDraw = function(redraw, pxy) {
     if ( !pxy ) return;
-    var p = [Math.round(pxy.x), Math.round(pxy.y)];
+    let p = [Math.round(pxy.x), Math.round(pxy.y)];
     this.redraw = redraw;
-    var ns: any = {};
+    let ns: any = {};
     ns.color = this.params.color;
     ns.w = this.params.w;
     ns.lines = [p];
@@ -88,34 +82,31 @@ FreeHand.prototype.startSegmentDraw = function(redraw, pxy) {
     this.prevPos = p;
 };
 
-
 FreeHand.prototype.addPoint = function(pxy) {
     if ( !pxy ) return;
-    var p = [Math.round(pxy.x), Math.round(pxy.y)];
-    var n = this.freeDrawing.length;
+    let p = [Math.round(pxy.x), Math.round(pxy.y)];
+    let n = this.freeDrawing.length;
     if ( n == 0 ) this.startSegment(p);
     else {
-        var ns = this.freeDrawing[n - 1];
+        let ns = this.freeDrawing[n - 1];
         ns.lines.push(p);
     }
     if ( !this.params.lineMode ) this.prevPos = p;
 };
 
 FreeHand.prototype.popPoint = function(minlen) {
-    var n = this.freeDrawing.length;
+    let n = this.freeDrawing.length;
     if ( n == 0 ) return;
-    var ns = this.freeDrawing[n - 1];
+    let ns = this.freeDrawing[n - 1];
     if ( ns.lines.length > minlen) ns.lines.pop();
 };
 
-
 FreeHand.prototype.popSegment = function(minlen) {
-    var n = this.freeDrawing.length;
+    let n = this.freeDrawing.length;
     if ( n <= minlen ) return;
     this.freeDrawing.pop();
     if ( this.redraw ) this.redraw();
 };
-
 
 FreeHand.prototype.addPointDraw = function(ctx, pxy) {
     if ( !pxy ) return;
@@ -123,23 +114,20 @@ FreeHand.prototype.addPointDraw = function(ctx, pxy) {
         this.popPoint(1);
         if ( this.redraw ) this.redraw();
     }
-    this.line(ctx,this.prevPos, [pxy.x, pxy.y]);
+    this.line(ctx, this.prevPos, [pxy.x, pxy.y]);
     this.addPoint(pxy);
 };
-
 
 FreeHand.prototype.clear = function() {
     this.freeDrawing = [];
     if ( this.redraw ) this.redraw();
 };
 
-
 FreeHand.prototype.setColor = function(newColor) {
     this.params.color = newColor;
     if ( this.update ) this.update();
     this.startSegment(this.prevPos);
 };
-
 
 FreeHand.prototype.setWidth = function(newWidth) {
     this.params.w = newWidth;
@@ -150,18 +138,16 @@ FreeHand.prototype.setWidth = function(newWidth) {
 
 FreeHand.prototype.incWidth = function(dw) {
     this.setWidth(parseInt(this.params.w) + dw);
-}
-
+};
 
 FreeHand.prototype.setLineMode = function(newMode) {
     this.params.lineMode = newMode;
     if ( this.update ) this.update();
-}
-
+};
 
 FreeHand.prototype.flipLineMode = function(newMode) {
     this.setLineMode(!this.params.lineMode);
-}
+};
 
 FreeHand.prototype.line = function(ctx, p1, p2) {
     if ( !p1 || !p2 ) return;
@@ -171,45 +157,43 @@ FreeHand.prototype.line = function(ctx, p1, p2) {
     ctx.moveTo(p1[0], p1[1]);
     ctx.lineTo(p2[0], p2[1]);
     ctx.stroke();
-}
-
+};
 
 function drawFreeHand(ctx, dr) {
-    for (var dri =0; dri < dr.length; dri++) {
-        var seg = dr[dri];
+    for (let dri = 0; dri < dr.length; dri++) {
+        let seg = dr[dri];
         if ( seg.lines.length < 2 ) continue;
         ctx.beginPath();
         ctx.strokeStyle = seg.color;
         ctx.lineWidth = seg.w;
         ctx.moveTo(seg.lines[0][0], seg.lines[0][1]);
-        for (var lni = 1; lni < seg.lines.length; lni++) {
+        for (let lni = 1; lni < seg.lines.length; lni++) {
             ctx.lineTo(seg.lines[lni][0], seg.lines[lni][1]);
         }
         ctx.stroke();
     }
 }
 
-
-imagexApp.directiveTemplate = function () {
+imagexApp.directiveTemplate = function() {
     "use strict";
     // Koska tata kutsutaan directiveFunction-metodista, tata kutsutaan yhden kerran
 
-    if ( imagexApp.TESTWITHOUTPLUGINS ) return '';
+    if ( imagexApp.TESTWITHOUTPLUGINS ) return "";
     return '<div class="csRunDiv no-popup-menu">' +
-        '<p>Header comes here</p>' +
+        "<p>Header comes here</p>" +
 	    '<p ng-if="stem" class="stem" ng-bind-html="stem"></p>' +
-        '<div>'+
-            '<canvas id="canvas" tabindex="1" width={{canvaswidth}} height={{canvasheight}} no-popup-menu ></canvas>'+
-            '<div class="content">'+
-            '</div>'+
-        '</div>'+
+        "<div>" +
+            '<canvas id="canvas" tabindex="1" width={{canvaswidth}} height={{canvasheight}} no-popup-menu ></canvas>' +
+            '<div class="content">' +
+            "</div>" +
+        "</div>" +
         '<p class="csRunMenu">&nbsp;<button ng-if="button" class="timButton" ng-disabled="isRunning" ng-click="imagexScope.save();">{{button}}</button>&nbsp&nbsp' +
         '<button ng-show="finalanswer && userHasAnswered" ng-disabled="isRunning" ng-click="imagexScope.showAnswer();">Showanswer</button>&nbsp&nbsp' +
         '<a ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.resetExercise();">{{resetText}}</a>&nbsp&nbsp' +
         '<a href="" ng-if="muokattu" ng-click="imagexScope.initCode()">{{resetText}}</a>' +
 
         '<label ng-show="freeHandVisible">FreeHand <input type="checkbox" name="freeHand" value="true" ng-model="freeHand"></label> ' +
-        '<span>' +
+        "<span>" +
             '<span ng-show="freeHand">' +
                 '<label ng-show="freeHandLineVisible">Line <input type="checkbox" name="freeHandLine" value="true" ng-model="lineMode"></label> ' +
                 '<span ng-show="freeHandToolbar">' +
@@ -219,32 +203,28 @@ imagexApp.directiveTemplate = function () {
                     '<span style="background-color: blue; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'#00f\');">B</span>' +
                     '<span style="background-color: yellow; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'#ff0\');">Y</span>' +
                     '<span style="background-color: #0f0; display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.setFColor(\'#0f0\');">G</span>' +
-                    '&nbsp;' +
+                    "&nbsp;" +
                     '<a href="" ng-click="imagexScope.undo()">Undo</a>' +
-                '</span>' +
-            '</span>' +
-        '</span>' +
-        '</p>' +
+                "</span>" +
+            "</span>" +
+        "</span>" +
+        "</p>" +
         '<div ng-show="preview" >' +
-        '<span>' +
+        "<span>" +
             '<span ng-style="{\'background-color\': previewColor}" style="display: table-cell; text-align: center; width: 30px;" ng-click="imagexScope.getPColor();">&lt;-</span> ' +
             '<input ng-model="previewColor" colorpicker="hex" type="text"  ng-model="previewColor" id="previewColorInput" ng-click="imagexScope.getPColor();" size="10"/> ' +
             '<label> Coord: <input  id="coords" ng-click="imagexScope.getPColor();" size="10"/></label>' +
-        '</span>' +
-        '</div>' +
+        "</span>" +
+        "</div>" +
         '<span class="tries" ng-if="max_tries"> Tries: {{tries}}/{{max_tries}}</span>' +
         '<pre class="" ng-if="error && preview">{{error}}</pre>' +
         '<pre class="" ng-show="result">{{result}}</pre>' +
-    	'<div  class="replyHTML" ng-if="replyHTML" ><span ng-bind-html="imagexScope.svgImageSnippet()"></span></div>'+
+    	'<div  class="replyHTML" ng-if="replyHTML" ><span ng-bind-html="imagexScope.svgImageSnippet()"></span></div>' +
         '<img ng-if="replyImage" class="grconsole" ng-src="{{replyImage}}" alt=""  />' +
 
-
         '<p class="plgfooter">Here comes footer</p>' +
-    '</div>'
+    "</div>";
 };
-
-
-
 
 imagexApp.initDrawing = function(scope, canvas) {
 
@@ -257,25 +237,24 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
 
     function getPos(canvas, p) {
-        var rect = canvas.getBoundingClientRect();
-        var posX = p.clientX;
-        var posY = p.clientY;
+        let rect = canvas.getBoundingClientRect();
+        let posX = p.clientX;
+        let posY = p.clientY;
         return {
             x: posX - rect.left,
-            y: posY - rect.top
+            y: posY - rect.top,
         };
     }
-    
+
     function isObjectOnTopOf(position, object, name, grabOffset) {
         if (!position)
             return false;
         if (!object)
             return false;
-        var sina = Math.sin(-object.a * to_radians);
-        var cosa = Math.cos(-object.a * to_radians);
-        var rotatedX = cosa * (position.x - object.x) - sina * (position.y - object.y);
-        var rotatedY = cosa * (position.y - object.y) + sina * (position.x - object.x);
-
+        let sina = Math.sin(-object.a * to_radians);
+        let cosa = Math.cos(-object.a * to_radians);
+        let rotatedX = cosa * (position.x - object.x) - sina * (position.y - object.y);
+        let rotatedY = cosa * (position.y - object.y) + sina * (position.x - object.x);
 
         if (object.name === "target") {
             if (object.type === "rectangle") {
@@ -284,10 +263,10 @@ imagexApp.initDrawing = function(scope, canvas) {
                     if (name && object.name === name) return true;
                     else if (!name) return true;
                 } }
-            
+
             else if (object.type === "ellipse") {
-                if ((Math.pow(rotatedX, 2) / Math.pow(object.r1/2, 2)) +
-                    (Math.pow(rotatedY, 2) / Math.pow(object.r2/2, 2)) <= 1) {
+                if ((Math.pow(rotatedX, 2) / Math.pow(object.r1 / 2, 2)) +
+                    (Math.pow(rotatedY, 2) / Math.pow(object.r2 / 2, 2)) <= 1) {
                     if (name && object.name === name) return true;
                     else if (!name) return true;
                 }
@@ -297,7 +276,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                 if (rotatedX >= - object.pinPosition.off.x - object.pinPosition.x &&
                     rotatedX <= object.r1 - object.pinPosition.off.x - object.pinPosition.x &&
                     rotatedY >= - object.pinPosition.off.y - object.pinPosition.y &&
-                    rotatedY <= object.r2 -object.pinPosition.off.y- object.pinPosition.y 
+                    rotatedY <= object.r2 - object.pinPosition.off.y - object.pinPosition.y
                     + grabOffset) {
                     if (name && object.name === name) return true;
                     else if (!name) return true; }
@@ -305,59 +284,59 @@ imagexApp.initDrawing = function(scope, canvas) {
             if (object.type === "vector") {
                 if (rotatedX >= - object.pinPosition.off.x - object.pinPosition.x &&
                     rotatedX <= object.r1 - object.pinPosition.off.x - object.pinPosition.x &&
-                    rotatedY >= -object.r2 / 2 - object.arrowHeadWidth  / 2 
+                    rotatedY >= -object.r2 / 2 - object.arrowHeadWidth  / 2
                     - object.pinPosition.off.y - object.pinPosition.y &&
-                    rotatedY <= object.r2 / 2 + object.arrowHeadWidth / 2 
-                    - object.pinPosition.off.y- object.pinPosition.y + grabOffset) {
+                    rotatedY <= object.r2 / 2 + object.arrowHeadWidth / 2
+                    - object.pinPosition.off.y - object.pinPosition.y + grabOffset) {
                     if (name && object.name === name) return true;
                     else if (!name) return true; }
             }
         }
     }
-    
+
     function areObjectsOnTopOf(position, objects, name) {
-        for (var i = objects.length-1; i >=0; i--) {
-            var collision = isObjectOnTopOf(position, objects[i], name, 0);
+        for (let i = objects.length - 1; i >= 0; i--) {
+            let collision = isObjectOnTopOf(position, objects[i], name, 0);
             if (collision) {
                 return objects[i];
             }
         }
         if (grabOffset) {
-            for (var i = objects.length-1; i >=0; i--) {
-                var collision = isObjectOnTopOf(position, objects[i], name, grabOffset);  
-                if (collision && objects[i].name === 'dragobject') {
+            for (let i = objects.length - 1; i >= 0; i--) {
+                let collision = isObjectOnTopOf(position, objects[i], name, grabOffset);
+                if (collision && objects[i].name === "dragobject") {
                     return objects[i];
                 }
             }
         }
         return null;
     }
-    
+
     function DragTask(canvas) {
-        var th = this;
+        let th = this;
         this.canvas = canvas;
         this.drawObjects = [];
         this.activeDragObject = null;
         this.mousePosition = { x: 0, y: 0 };
         this.freeHand = scope.freeHandDrawing;
-        var topmostIndex;
-        var topmostElement;
-        this.draw = function () {
-            this.ctx = canvas.getContext('2d');
-            this.ctx.fillStyle = getValue1(scope.background, "color", 'white');
+        let topmostIndex;
+        let topmostElement;
+        this.draw = function() {
+            this.ctx = canvas.getContext("2d");
+            this.ctx.fillStyle = getValue1(scope.background, "color", "white");
             this.ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             scope.incompleteImages = 0;
-            
-            for (var i = 0; i < this.drawObjects.length; i++) {
+
+            for (let i = 0; i < this.drawObjects.length; i++) {
                 try {
                     this.drawObjects[i].ctx = this.ctx;
                     if (this.activeDragObject) {
-                        var dobj = this.activeDragObject;
-                        var p;
-                        if (dobj.lock != 'x')
+                        let dobj = this.activeDragObject;
+                        let p;
+                        if (dobj.lock != "x")
                             dobj.x = toRange(dobj.xlimits, this.mousePosition.x - dobj.xoffset);
-                        if ( dobj.lock != 'y')
+                        if ( dobj.lock != "y")
                             dobj.y = toRange(dobj.ylimits, this.mousePosition.y - dobj.yoffset);
                         if (this.drawObjects[i] == dobj) {
                             topmostIndex = i;
@@ -365,24 +344,24 @@ imagexApp.initDrawing = function(scope, canvas) {
                     }
                     if (this.activeDragObject != this.drawObjects[i]) {
                         // kutsutaan objektin omaa piirtoa
-                        this.drawObjects[i].draw(this.drawObjects[i]); 
+                        this.drawObjects[i].draw(this.drawObjects[i]);
                     }
-                    if (this.drawObjects[i].name == 'dragobject') {
+                    if (this.drawObjects[i].name == "dragobject") {
                         if (this.activeDragObject) {
-                            var onTopOf = areObjectsOnTopOf(this.activeDragObject,
-                                                            this.drawObjects, 'target');
+                            let onTopOf = areObjectsOnTopOf(this.activeDragObject,
+                                                            this.drawObjects, "target");
                             if (onTopOf && onTopOf.objectCount < onTopOf.maxObjects) {
                                 onTopOf.color = onTopOf.snapColor;
                                 //this.drawObjects[i].objectCount++;
                             }
-                            var onTopOfB = areObjectsOnTopOf(this.drawObjects[i],
-                                                             this.drawObjects, 'target');
+                            let onTopOfB = areObjectsOnTopOf(this.drawObjects[i],
+                                                             this.drawObjects, "target");
                             if (onTopOfB && this.drawObjects[i] !== this.activeDragObject)
                                 onTopOfB.color = onTopOfB.dropColor;
                         }
                         else {
-                            var onTopOfA = areObjectsOnTopOf(this.drawObjects[i],
-                                                             this.drawObjects, 'target');
+                            let onTopOfA = areObjectsOnTopOf(this.drawObjects[i],
+                                                             this.drawObjects, "target");
                             if (onTopOfA) {
                                 onTopOfA.color = onTopOfA.dropColor;
                                 //onTopOfA.objectCount++;
@@ -390,13 +369,13 @@ imagexApp.initDrawing = function(scope, canvas) {
                         }
                     }
 
-                    else if (this.drawObjects[i].name === 'target') {
+                    else if (this.drawObjects[i].name === "target") {
                         this.drawObjects[i].color = this.drawObjects[i].origColor;
-                        
-                    } 
+
+                    }
                     //console.log(onTopOf);
                 }
-                    
+
                 catch (err) {
                     scope.error += "draw " + this.drawObjects[i].id + ": " + err + "\n";
                 }
@@ -411,49 +390,47 @@ imagexApp.initDrawing = function(scope, canvas) {
 
         this.interval = setTimeout(this.draw, 20);
 
-        var mouseDown = false;
+        let mouseDown = false;
 
         this.canvas.style.touchAction = "double-tap-zoom"; // To get IE and EDGE touch to work
 
         this.downEvent = function(event, p) {
-            this.mousePosition = getPos(this.canvas,p);
-            this.activeDragObject = 
-                areObjectsOnTopOf(this.mousePosition, this.drawObjects, 'dragobject');
+            this.mousePosition = getPos(this.canvas, p);
+            this.activeDragObject =
+                areObjectsOnTopOf(this.mousePosition, this.drawObjects, "dragobject");
 
             if (this.activeDragObject) {
-                this.canvas.style.cursor ="pointer";
+                this.canvas.style.cursor = "pointer";
                 this.activeDragObject.xoffset = this.mousePosition.x - this.activeDragObject.x;
                 this.activeDragObject.yoffset = this.mousePosition.y - this.activeDragObject.y;
                 // event.preventDefault();
                 this.draw();
             }
             else if ( scope.freeHand ) {
-                this.canvas.style.cursor ="pointer";
+                this.canvas.style.cursor = "pointer";
                 mouseDown = true;
                // this.freeHand.lineMode = scope.lineMode;
                 this.freeHand.startSegmentDraw(this.redraw, this.mousePosition);
             }
-            
 
             if (this.canvas.coords && scope.preview) {
                 this.canvas.coords.value =
-                    "[" + Math.round(this.mousePosition.x) + ", " 
+                    "[" + Math.round(this.mousePosition.x) + ", "
                     + Math.round(this.mousePosition.y) + "]";
                 //scope.coords.select();
                 //document.execCommand('copy');
-                if ( typeof(editorChangeValue) !== 'undefined' )
+                if ( typeof(editorChangeValue) !== "undefined" )
                     editorChangeValue(["position:"], this.canvas.coords.value);
             }
-            
-        };
 
+        };
 
         this.redraw = function() {
             th.draw();
-        }
+        };
         this.freeHand.redraw = this.redraw;
 
-        this.moveEvent = function(event,p) {
+        this.moveEvent = function(event, p) {
             if ( this.activeDragObject ) {
                 // if (this.activeDragObject)
                 if ( event != p ) event.preventDefault();
@@ -465,10 +442,9 @@ imagexApp.initDrawing = function(scope, canvas) {
             }
         };
 
-
         this.upEvent = function(event, p) {
             /*
-            var isObjectInTarget = 
+            var isObjectInTarget =
                 areObjectsOnTopOf(this.drawObjects[i], this.drawObjects, 'target');
             if (isObjectInTarget) {
                 //isObjectInTarget.objectCount++;
@@ -476,14 +452,13 @@ imagexApp.initDrawing = function(scope, canvas) {
             */
             //this.drawObjects[i].objectCount--;
 
-
             if (this.activeDragObject) {
-                this.canvas.style.cursor ="default";
+                this.canvas.style.cursor = "default";
                 if ( event != p ) event.preventDefault();
                 this.mousePosition = getPos(this.canvas, p);
 
-                var isTarget = areObjectsOnTopOf(this.activeDragObject,
-                    this.drawObjects, 'target');
+                let isTarget = areObjectsOnTopOf(this.activeDragObject,
+                    this.drawObjects, "target");
                 this.drawObjects.splice(topmostIndex, 1);
                 this.drawObjects.splice(this.drawObjects.length, 0, topmostElement);
 
@@ -496,41 +471,36 @@ imagexApp.initDrawing = function(scope, canvas) {
                     }
                     //isTarget.objectCount++;
                 }
-                
-                
-                
-                
+
                 this.activeDragObject = null;
                 this.draw();
-        
+
             } else if ( mouseDown ) {
-                this.canvas.style.cursor ="default";
+                this.canvas.style.cursor = "default";
                 mouseDown = false;
                 this.freeHand.endSegment();
             }
 
-            
             this.draw(); // TODO: Miksi tama on taalla?
         };
 
         function te(event) {
             return event.touches[0] || event.changedTouches[0];
-        };
+        }
 
-
-        this.canvas.style.msTouchAction = 'none';
-        this.canvas.addEventListener('mousemove', function(event) { th.moveEvent(event,event); } );
-        this.canvas.addEventListener('touchmove', function(event) { th.moveEvent(event,te(event)); } );
-        this.canvas.addEventListener('mousedown', function(event) { th.downEvent(event,event); } );
-        this.canvas.addEventListener('touchstart', function(event) { th.downEvent(event,te(event)); } );
-        this.canvas.addEventListener('mouseup', function(event) { th.upEvent(event,event); });
-        this.canvas.addEventListener('touchend', function(event) { th.upEvent(event,te(event)); });
+        this.canvas.style.msTouchAction = "none";
+        this.canvas.addEventListener("mousemove", function(event) { th.moveEvent(event, event); } );
+        this.canvas.addEventListener("touchmove", function(event) { th.moveEvent(event, te(event)); } );
+        this.canvas.addEventListener("mousedown", function(event) { th.downEvent(event, event); } );
+        this.canvas.addEventListener("touchstart", function(event) { th.downEvent(event, te(event)); } );
+        this.canvas.addEventListener("mouseup", function(event) { th.upEvent(event, event); });
+        this.canvas.addEventListener("touchend", function(event) { th.upEvent(event, te(event)); });
 
         if ( scope.freeHandShortCuts)
             // this.canvas.parentElement.parentElement.addEventListener( "keypress", function(event) {
             this.canvas.addEventListener( "keypress", function(event) {
-                var c = String.fromCharCode(event.keyCode);
-                if ( event.keyCode == 26 ) { th.freeHand.popSegment(0) }
+                let c = String.fromCharCode(event.keyCode);
+                if ( event.keyCode == 26 ) { th.freeHand.popSegment(0); }
                 if ( c == "c" ) { th.freeHand.clear(); th.draw(); }
                 if ( c == "r" ) th.freeHand.setColor("#f00");
                 if ( c == "b" ) th.freeHand.setColor("#00f");
@@ -543,7 +513,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                 if ( c == "3" ) th.freeHand.setWidth(3);
                 if ( c == "4" ) th.freeHand.setWidth(4);
                 if ( c == "l" ) th.freeHand.flipLineMode();
-                if ( c == "f" && scope.freeHandShortCut ) { scope.freeHand = !scope.freeHand; scope.$apply()}
+                if ( c == "f" && scope.freeHandShortCut ) { scope.freeHand = !scope.freeHand; scope.$apply(); }
             }, false);
 
         // Lisatty eventlistenereiden poistamiseen.
@@ -563,14 +533,14 @@ imagexApp.initDrawing = function(scope, canvas) {
             if ( scope.rightAnswersSet ) { dt.draw(); return; }
             if ( !scope.answer || !scope.answer.rightanswers ) return;
 
-            var rightdrags = scope.answer.rightanswers;
-            var dragtable = scope.objects;
-            var j = 0;
+            let rightdrags = scope.answer.rightanswers;
+            let dragtable = scope.objects;
+            let j = 0;
             for (j = 0; j < rightdrags.length; j++) {
-                var p = 0;
+                let p = 0;
                 for (p = 0; p < objects.length; p++) {
                     if (objects[p].id === rightdrags[j].id) {
-                        var values: any = { beg: objects[p], end: rightdrags[j] };
+                        let values: any = { beg: objects[p], end: rightdrags[j] };
                         rightdrags[j].x = rightdrags[j].position[0];
                         rightdrags[j].y = rightdrags[j].position[1];
                         // get positions for drawing.
@@ -584,7 +554,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                         */
                         //values.ctx = doc_ctx.getContext("2d");
                         //give context and values for draw function.
-                        var line = new Line(dt,values);
+                        let line = new Line(dt, values);
                         line.did = "-";
                         this.drawObjects.push(line);
                         //line.draw();
@@ -595,8 +565,7 @@ imagexApp.initDrawing = function(scope, canvas) {
             scope.rightAnswersSet = true;
 
             dt.draw();
-        }
-
+        };
 
     }
 
@@ -604,21 +573,21 @@ imagexApp.initDrawing = function(scope, canvas) {
 
     function DragObject(dt, values, defId) {
         this.did = defId;
-        this.id = getValue(values.id,defId);
+        this.id = getValue(values.id, defId);
         values.id = this.id;
 
         this.draw = Empty;
         this.draggableObject = {};
         this.draggablePin = getValueDef(values, "pin.draggable", false);
         if (this.draggablePin) {
-            this.type = 'pin';
+            this.type = "pin";
             this.draggableObject.type = getValueDef(values, "type", "textbox", true);
         }
         else
             this.type = getValueDef(values, "type", "textbox", true);
-        this.name = 'dragobject';
+        this.name = "dragobject";
         this.ctx = dt.ctx;
-        if (values.state === 'state') {
+        if (values.state === "state") {
             this.position = values.position;
             this.x = this.position[0] - values.pinpointoffsetx;
             this.y = this.position[1] - values.pinpointoffsety; }
@@ -638,50 +607,50 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.ylimits = getValueDef(values, "ylimits", null);
 
         // If default values of type, size, a or position are changed, check also imagex.py
-        if (this.type === 'vector') this.size = getValueDef(values, "size", [50, 4]);
+        if (this.type === "vector") this.size = getValueDef(values, "size", [50, 4]);
         else this.size = getValueDef(values, "size", [10, 10]);
         this.r1 = getValue(this.size[0], 10);
         this.r2 = getValue(this.size[1], this.r1);
         this.target = null;
         this.currentTarget = null;
-        this.ispin = isKeyDef(values,"pin", false);
+        this.ispin = isKeyDef(values, "pin", false);
         this.a = -getValueDef(values, "a", 0);
         this.imgproperties = {};
         this.textboxproperties = {};
         this.vectorproperties = {};
 
         this.init = shapeFunctions[this.type].init;
-        this.pinInit = shapeFunctions['pin'].init;
-        this.pinInit2 = shapeFunctions['pin'].init2;
+        this.pinInit = shapeFunctions.pin.init;
+        this.pinInit2 = shapeFunctions.pin.init2;
         this.textbox = {};
-        this.textbox.init = shapeFunctions['textbox'].init;
+        this.textbox.init = shapeFunctions.textbox.init;
         this.textbox.init(values);
 
-        if (this.type === 'vector' || this.draggableObject.type === 'vector') {
-            this.vectorInit = shapeFunctions['vector'].init;
+        if (this.type === "vector" || this.draggableObject.type === "vector") {
+            this.vectorInit = shapeFunctions.vector.init;
             this.vectorInit(values);
-            this.vectorDraw = shapeFunctions['vector'].draw;
+            this.vectorDraw = shapeFunctions.vector.draw;
         }
 
-        if (this.type === 'img' || this.draggableObject.type === 'img') {
-            this.init2 = shapeFunctions['img'].init2;
-            this.imageDraw = shapeFunctions['img'].draw;
+        if (this.type === "img" || this.draggableObject.type === "img") {
+            this.init2 = shapeFunctions.img.init2;
+            this.imageDraw = shapeFunctions.img.draw;
         }
 
         this.pinInit(values);
         // this.pinDraw = shapeFunctions['pin'].draw;
-        this.textbox.draw = shapeFunctions['textbox'].draw;
+        this.textbox.draw = shapeFunctions.textbox.draw;
 
         this.init(values);
-        this.draw = shapeFunctions['pin'].draw;
+        this.draw = shapeFunctions.pin.draw;
         // this.draw = shapeFunctions[this.type].draw;
     }
-    
+
     function Target(dt, values, defId) {
         this.did = defId;
         this.id = getValue(values.id, defId);
         values.id = this.id;
-        this.name = 'target';
+        this.name = "target";
         this.ctx = dt.ctx;
         this.maxObjects = getValue(values.maxObjects, 1000);
         this.objectCount = 0;
@@ -689,20 +658,20 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.position = getValueDef(values, "position", [0, 0]);
         this.x = this.position[0];
         this.y = this.position[1];
-        this.a = -getValueDef(values,"a", 0);
+        this.a = -getValueDef(values, "a", 0);
         this.snap = getValueDef(values, "snap", true);
         this.snapOffset = getValueDef(values, "snapOffset", [0, 0]);
-        this.type = getValueDef(values, "type", 'rectangle', true);
+        this.type = getValueDef(values, "type", "rectangle", true);
         this.size = getValueDef(values, "size", [10, 10]);
         this.imgproperties = {};
         this.textboxproperties = {};
         this.vectorproperties = {};
         this.r1 = getValue(this.size[0], 10);
         this.r2 = getValue(this.size[1], this.r1);
-        this.color =  getValueDef(values, "color", 'Blue');
-        this.origColor =  getValueDef(values, "color", 'Blue');
-        this.snapColor = getValueDef(values,"snapColor", 'Cyan');
-        this.dropColor = getValueDef(values,"dropColor", this.snapColor);
+        this.color =  getValueDef(values, "color", "Blue");
+        this.origColor =  getValueDef(values, "color", "Blue");
+        this.snapColor = getValueDef(values, "snapColor", "Cyan");
+        this.dropColor = getValueDef(values, "dropColor", this.snapColor);
         this.init = shapeFunctions[this.type].init;
         this.init(values);
         //this.textboxInit = shapeFunctions['textbox'].init;
@@ -710,24 +679,24 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.draw = shapeFunctions[this.type].draw;
 
     }
-    
+
     function FixedObject(dt, values, defId?) {
         this.did = defId;
         this.id = getValue(values.id, defId);
         values.id = this.id;
-        if (values.name === 'background') {
-            this.type = 'img';
-            this.name = 'background'; }
+        if (values.name === "background") {
+            this.type = "img";
+            this.name = "background"; }
         else {
-            this.type = getValueDef(values, "type", 'rectangle', true);
-            this.name = 'fixedobject'; }
+            this.type = getValueDef(values, "type", "rectangle", true);
+            this.name = "fixedobject"; }
         this.ctx = dt.ctx;
         // If default values of type, size, a or position are changed, check also imagex.py
-        this.position = getValueDef(values,"position", [0, 0]);
+        this.position = getValueDef(values, "position", [0, 0]);
         this.x = this.position[0];
         this.y = this.position[1];
-        this.a = -getValueDef(values,"a", 0);
-        this.color = getValueDef(values, "color", 'Blue');
+        this.a = -getValueDef(values, "a", 0);
+        this.color = getValueDef(values, "color", "Blue");
         this.size = getValueDef(values, "size", [10, 10]);
         this.r1 = getValue(this.size[0], 10);
         this.r2 = getValue(this.size[1], this.r1);
@@ -736,16 +705,16 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.vectorproperties = {};
 
         this.init = shapeFunctions[this.type].init;
-        if (this.name === 'fixedobject') {
+        if (this.name === "fixedobject") {
             this.textbox = {};
-            this.textbox.init = shapeFunctions['textbox'].init;
+            this.textbox.init = shapeFunctions.textbox.init;
             this.textbox.init(values);
-            this.textbox.draw = shapeFunctions['textbox'].draw; }
-        if (this.type === 'img') {
-            this.init2 = shapeFunctions['img'].init2;
+            this.textbox.draw = shapeFunctions.textbox.draw; }
+        if (this.type === "img") {
+            this.init2 = shapeFunctions.img.init2;
         }
-        this.imageDraw = shapeFunctions['img'].draw;
-        this.vectorDraw = shapeFunctions['vector'].draw;
+        this.imageDraw = shapeFunctions.img.draw;
+        this.vectorDraw = shapeFunctions.vector.draw;
 
         this.init(values);
         this.draw = shapeFunctions[this.type].draw;
@@ -755,26 +724,26 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.ctx = dt.ctx;
         this.beg = values.beg;
         this.end = values.end;
-        this.color = getValueDef(values, "answerproperties.color", 'green');
+        this.color = getValueDef(values, "answerproperties.color", "green");
         this.lineWidth = getValueDef(values, "answerproperties.lineWidth", 2);
 
-        this.draw = shapeFunctions["line"].draw;
+        this.draw = shapeFunctions.line.draw;
     }
 
     // Check if key exists in value, previous or defaults
     // if (  isKeyDef(initValues, "pin", false) ...;
     // there is no sence to call this with true because then it allways returns true
     function isKeyDef(value, key, defaultValue) {
-        var keys = key.split(".");
-        var v = value;
-        var p = scope.previousValue;
-        var d = scope.defaults;
-        var ret = defaultValue;
-        var k; // current key
+        let keys = key.split(".");
+        let v = value;
+        let p = scope.previousValue;
+        let d = scope.defaults;
+        let ret = defaultValue;
+        let k; // current key
 
         // Loop v and p to same level
-        for (var i = 0; i < keys.length-1; i++) {
-            var k = keys[i];
+        for (let i = 0; i < keys.length - 1; i++) {
+            let k = keys[i];
             if (!p[k])  p[k] = {}; // if not on p, add
             p = p[k]; // for next round
             if (v && v[k]) v = v[k]; else v = null;
@@ -782,29 +751,29 @@ imagexApp.initDrawing = function(scope, canvas) {
         }
 
         if ( keys.length < 1 ) return ret;
-        k = keys[keys.length-1];
-        if ( v && (typeof v[k] !== 'undefined')  ) {
+        k = keys[keys.length - 1];
+        if ( v && (typeof v[k] !== "undefined")  ) {
             if ( v[k] != null ) ret = true;
-            p["iskey" +k] = ret;
+            p["iskey" + k] = ret;
             return ret;
         }
-        if ( p && (typeof p["iskey"+k] !== 'undefined')  ) return p["iskey"+k];
-        if ( d && (typeof d[k] !== 'undefined')  ) return true;
+        if ( p && (typeof p["iskey" + k] !== "undefined")  ) return p["iskey" + k];
+        if ( d && (typeof d[k] !== "undefined")  ) return true;
         return ret;
      }
 
     // Find value for key from value, prevous or defaults.  If nowhere return defaultValue
-     function getValueDef(value, key, defaultValue, keepEmtpyAsNone = false) {
-        var keys = key.split(".");
-        var v = value;
-        var p = scope.previousValue;
-        var d = scope.defaults;
-        var ret = defaultValue;
-        var k; // current key
+    function getValueDef(value, key, defaultValue, keepEmtpyAsNone = false) {
+        let keys = key.split(".");
+        let v = value;
+        let p = scope.previousValue;
+        let d = scope.defaults;
+        let ret = defaultValue;
+        let k; // current key
 
         // Loop v and p to same level
-        for (var i = 0; i < keys.length-1; i++) {
-            var k = keys[i];
+        for (let i = 0; i < keys.length - 1; i++) {
+            let k = keys[i];
             if (!p[k])  p[k] = {}; // if not on p, add
             p = p[k]; // for next round
             if (v && v[k]) v = v[k]; else v = null;
@@ -812,8 +781,8 @@ imagexApp.initDrawing = function(scope, canvas) {
         }
 
         if ( keys.length < 1 ) return ret;
-        k = keys[keys.length-1];
-        if ( v && (typeof v[k] !== 'undefined')  ) {
+        k = keys[keys.length - 1];
+        if ( v && (typeof v[k] !== "undefined")  ) {
             if ( v[k] != null && ( !keepEmtpyAsNone || v[k] != "" )) {
                 ret = v[k];
                 p[k] = ret;
@@ -822,8 +791,8 @@ imagexApp.initDrawing = function(scope, canvas) {
 
             return ret;
         }
-        if ( p && (typeof p[k] !== 'undefined') && p[k] != null ) return p[k];
-        if ( d && (typeof d[k] !== 'undefined') && d[k] != null ) return d[k];
+        if ( p && (typeof p[k] !== "undefined") && p[k] != null ) return p[k];
+        if ( d && (typeof d[k] !== "undefined") && d[k] != null ) return d[k];
         return ret;
      }
 
@@ -848,51 +817,44 @@ imagexApp.initDrawing = function(scope, canvas) {
         if (value === null || value === undefined || value === "" ||
             (value.constructor === Array && value.length == 0))
             return defaultValue;
-        return getValue1(value[key1],key2, defaultValue);
+        return getValue1(value[key1], key2, defaultValue);
     }
-
 
     function isTouchDevice(){
-        return typeof window.ontouchstart !== 'undefined';
+        return typeof window.ontouchstart !== "undefined";
     }
-    
-    var isTouch = isTouchDevice();
+
+    let isTouch = isTouchDevice();
     let grabOffset: number;
     if (isTouch) grabOffset = scope.extraGrabAreaHeight;
     else grabOffset = 0;
 
-    var to_radians = Math.PI / 180;
-    var doc_ctx = canvas;
-    var dt = new DragTask(doc_ctx);
+    let to_radians = Math.PI / 180;
+    let doc_ctx = canvas;
+    let dt = new DragTask(doc_ctx);
     scope.dt = dt;
 
     //var canvas = element[0];
 
-
-
-    var shapeFunctions = {
+    let shapeFunctions = {
         //Tama piirtaa viivan, mutta vain kerran.
         line: {
-            init:
-                function (initValues) {},
-            draw:
-                function (objectValues) {
+            init(initValues) {},
+            draw(objectValues) {
                     this.ctx = objectValues.ctx;
                     //attribuuteista vari ja leveys seka aseta dash
                     this.ctx.beginPath();
-                    this.ctx.moveTo(this.beg.x,this.beg.y);
-                    this.ctx.lineTo(this.end.x,this.end.y);
+                    this.ctx.moveTo(this.beg.x, this.beg.y);
+                    this.ctx.lineTo(this.end.x, this.end.y);
                     this.ctx.lineWidth = this.lineWidth;
                     this.ctx.strokeStyle = this.color;
                     this.ctx.stroke();
-                }
+                },
         },
 
         ellipse: {
-            init:
-                function (initValues) {},
-            draw:
-                function (objectValues) {
+            init(initValues) {},
+            draw(objectValues) {
                     this.ctx = objectValues.ctx;
                     this.ctx.strokeStyle = this.color;
                     this.ctx.lineWidth = 2;
@@ -900,23 +862,21 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.beginPath();
                     this.ctx.translate(this.x, this.y);
                     this.ctx.rotate(this.a * to_radians);
-                    this.ctx.scale(this.r1/2, this.r2/2);
+                    this.ctx.scale(this.r1 / 2, this.r2 / 2);
                     this.ctx.arc(0, 0, 1, 0, 2 * Math.PI, false);
                     this.ctx.restore();
-                    this.ctx.stroke();}
+                    this.ctx.stroke(); },
         },
-        
+
         rectangle: {
-            init:
-                function (initValues) {
+            init(initValues) {
                     this.cornerRadius = getValue(initValues.cornerradius, 0);
-                    this.borderWidth = getValueDef(initValues,"borderWidth", 2);
+                    this.borderWidth = getValueDef(initValues, "borderWidth", 2);
                     if (this.cornerRadius > this.r1 / 2 || this.cornerRadius > this.r2 / 2) {
                         if (this.cornerRadius > this.r1 / 2) this.cornerRadius = this.r1 / 2;
                         if (this.cornerRadius > this.r2 / 2) this.cornerRadius = this.r2 / 2; }
                 },
-            draw:
-                function (objectValues) {
+            draw(objectValues) {
                     this.ctx = objectValues.ctx;
                     this.ctx.strokeStyle = this.color;
                     this.ctx.lineWidth = this.borderWidth;
@@ -935,26 +895,24 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.arc(-this.r1 / 2 + this.cornerRadius, this.r2 / 2 - this.cornerRadius,
                         this.cornerRadius, 0.5 * Math.PI, Math.PI);
                     this.ctx.lineTo(-this.r1 / 2, -this.r2 / 2 + this.cornerRadius);
-                    this.ctx.arc(-this.r1 / 2 + this.cornerRadius, -this.r2 / 2 + 
+                    this.ctx.arc(-this.r1 / 2 + this.cornerRadius, -this.r2 / 2 +
                                  this.cornerRadius, this.cornerRadius, Math.PI, 1.5 * Math.PI);
                     this.ctx.restore();
-                    this.ctx.stroke(); }
+                    this.ctx.stroke(); },
         },
 
         vector: {
-            init:
-                function (initValues) {
+            init(initValues) {
                     this.r1 = this.size[0];
                     this.r2 = this.size[1];
-                    this.arrowHeadWidth = 
+                    this.arrowHeadWidth =
                         getValueDef(initValues, "vectorproperties.arrowheadwidth", this.r2 * 3 );
-                    this.arrowHeadLength = 
+                    this.arrowHeadLength =
                         getValueDef(initValues, "vectorproperties.arrowheadlength", this.r2 * 5);
-                    this.vectorColor = getValueDef(initValues, "vectorproperties.color", 'Black');
+                    this.vectorColor = getValueDef(initValues, "vectorproperties.color", "Black");
                     this.drawtextbox = getValueDef(initValues, "vectorproperties.textbox", false);
                 },
-            draw:
-                function (objectValues) {
+            draw(objectValues) {
                     this.ctx = objectValues.ctx;
                     this.ctx.strokeStyle = this.vectorColor;
                     this.ctx.fillStyle = this.ctx.strokeStyle;
@@ -967,10 +925,10 @@ imagexApp.initDrawing = function(scope, canvas) {
                         this.vectorX = getValue(objectValues.position[0], 0);
                         this.vectorY = getValue(objectValues.position[1], 0); }
                     this.ctx.save();
-                    if (objectValues.name === 'fixedobject') {
+                    if (objectValues.name === "fixedobject") {
                         this.ctx.translate(this.x, this.y);
-                        this.ctx.rotate(this.a * to_radians);}
-                    if (objectValues.name === 'dragobject') {
+                        this.ctx.rotate(this.a * to_radians); }
+                    if (objectValues.name === "dragobject") {
                         this.ctx.translate(this.vectorX, this.vectorY); }
                     this.ctx.beginPath();
                     this.ctx.lineTo(0, this.r2);
@@ -987,17 +945,16 @@ imagexApp.initDrawing = function(scope, canvas) {
                     if ( this.drawtextbox ) {
                         this.textbox.draw(objectValues); }
                     this.ctx.restore();
-                }
+                },
         },
 
         img: {
-            init:
-                function (initValues) {
+            init(initValues) {
                     this.ready = false;  // to prevent to use wrong values
                     this.image = new Image();
-                    if (initValues.name === 'background') {
-                        this.image.src = getValue(initValues.src,"");
-                        this.size = getValue(initValues.size, [null, null]); 
+                    if (initValues.name === "background") {
+                        this.image.src = getValue(initValues.src, "");
+                        this.size = getValue(initValues.size, [null, null]);
                         // do not use bg size as a default
                     }
                     else {
@@ -1011,11 +968,10 @@ imagexApp.initDrawing = function(scope, canvas) {
                     if ( !this.image.complete ) return;
                     this.init2();
                 },
-            init2:
-                function () {
-                    var initValues = this.initValues;
-                    var r1 = getValue(this.image.width, 0);
-                    var r2 = getValue(this.image.height, 0);
+            init2() {
+                    let initValues = this.initValues;
+                    let r1 = getValue(this.image.width, 0);
+                    let r2 = getValue(this.image.height, 0);
                     if ( r1 == 0 ) return;
                     // Look if size attribute overrides the image size
                     this.r1 = getValue(this.size[0], r1);
@@ -1024,7 +980,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.size[0] = this.r1;
                     this.size[1] = this.r2;
                     this.ready = true;
-                    if (initValues.name === 'background')  return;
+                    if (initValues.name === "background")  return;
                     initValues.r1 = this.r1;
                     initValues.r2 = this.r2;
                     initValues.x = getValue(initValues.position[0], 0);
@@ -1032,10 +988,9 @@ imagexApp.initDrawing = function(scope, canvas) {
                     if (this.ispin) this.pinInit2();
                 },
 
-            draw:
-                function (objectValues) {
+            draw(objectValues) {
                     if (!this.image.complete) {
-                        scope.incompleteImages =+ 1;
+                        scope.incompleteImages = + 1;
                         return; }
                     if ( !this.ready ) this.init2();
                     this.ctx = objectValues.ctx;
@@ -1049,24 +1004,23 @@ imagexApp.initDrawing = function(scope, canvas) {
                         this.imageY = getValue(objectValues.position[1], 0); }
                     this.ctx.save();
                     this.ctx.translate(this.imageX, this.imageY);
-                    if (objectValues.name === 'fixedobject' || objectValues.name === 'background')
+                    if (objectValues.name === "fixedobject" || objectValues.name === "background")
                         this.ctx.rotate(this.a * to_radians);
                     this.ctx.drawImage(this.image, 0, 0, this.r1, this.r2);
                     if ( this.imgproperties.textbox ) this.textbox.draw(objectValues);
                     this.ctx.restore();
-                }
+                },
         },
 
         textbox: {
-            init:
-                function (initValues) {
-                    
+            init(initValues) {
+
                     this.margins = getValueDef(initValues, "textboxproperties.margins", [3]);
-                    if (typeof this.margins === 'number') {
+                    if (typeof this.margins === "number") {
                         this.margin = this.margins;
                         this.margins = [];
-                        this.margins.push(this.margin); 
-                        
+                        this.margins.push(this.margin);
+
                     }
                     this.topMargin = this.margins[0];
                     this.rightMargin = getValue(this.margins[1], this.topMargin);
@@ -1074,43 +1028,43 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.leftMargin = getValue(this.margins[3], this.rightMargin);
                     this.draggableObject = {};
                     this.type = getValueDef(initValues, "type", "textbox");
-                    this.draggableObject.type = getValueDef(initValues, 'type', null)
+                    this.draggableObject.type = getValueDef(initValues, "type", null);
                     this.textBoxOffset = getValueDef(initValues, "textboxproperties.position", [0, 0]);
-                    if (this.type === 'img' || this.type === 'vector') {
+                    if (this.type === "img" || this.type === "vector") {
                         // this.textBoxOffset = getValueDef(initValues, "textboxproperties.position", [0, 0]);
                         this.x = getValue( this.textBoxOffset[0], 0);
                         this.y = getValue( this.textBoxOffset[1], 0); }
 
-                    var fontDraw = document.createElement("canvas");
+                    let fontDraw = document.createElement("canvas");
                     // TODO: scopessa voisi olla alustuksen aikana yksi dummy canvas
                     // joka sitten poistetaan
-                    this.font = getValueDef(initValues, "textboxproperties.font", '14px Arial');
-                    var auxctx = fontDraw.getContext('2d');
+                    this.font = getValueDef(initValues, "textboxproperties.font", "14px Arial");
+                    let auxctx = fontDraw.getContext("2d");
                     auxctx.font = this.font;
                     this.text = getValueDef(initValues, "textboxproperties.text", initValues.id);
                     if ( !this.text ) this.text = "";
                     this.lines = this.text.split("\n");
-                    var lineWidths = [];
+                    let lineWidths = [];
 
                     // measure widest line
-                    for (var i = 0; i < this.lines.length; i++) {
+                    for (let i = 0; i < this.lines.length; i++) {
                         lineWidths[i] = auxctx.measureText(this.lines[i]).width;
                     }
-                    this.textwidth = Math.max.apply(null,lineWidths);  // Math.max(...lineWidths);
-                    this.textHeight = parseInt(auxctx.font, 10)*1.1;
+                    this.textwidth = Math.max.apply(null, lineWidths);  // Math.max(...lineWidths);
+                    this.textHeight = parseInt(auxctx.font, 10) * 1.1;
                     this.textBoxSize = getValueDef(initValues, "textboxproperties.size", []);
-                    this.r1 = getValue(this.textBoxSize[0], 
+                    this.r1 = getValue(this.textBoxSize[0],
                                        this.textwidth + this.leftMargin + this.rightMargin);
-                    this.r2 = getValue(this.textBoxSize[1], (this.textHeight * this.lines.length) 
+                    this.r2 = getValue(this.textBoxSize[1], (this.textHeight * this.lines.length)
                                        + this.topMargin + this.bottomMargin);
-                    this.borderColor = getValueDef(initValues, 
-                                                   "textboxproperties.borderColor", 'Black');
+                    this.borderColor = getValueDef(initValues,
+                                                   "textboxproperties.borderColor", "Black");
                     this.fillColor = getValueDef(initValues,
-                                                 "textboxproperties.fillColor", 'White');
+                                                 "textboxproperties.fillColor", "White");
                     this.textColor = getValueDef(initValues,
-                                                 "textboxproperties.textColor", 'Black');
+                                                 "textboxproperties.textColor", "Black");
                     this.borderWidth = getValueDef(initValues, "textboxproperties.borderWidth", 2);
-                    this.cornerRadius = getValueDef(initValues, 
+                    this.cornerRadius = getValueDef(initValues,
                                                     "textboxproperties.cornerradius", 0);
                     if (this.cornerRadius > this.r1 / 2 || this.cornerRadius > this.r2 / 2) {
                         if (this.cornerRadius > this.r1 / 2) this.cornerRadius = this.r1 / 2;
@@ -1124,17 +1078,16 @@ imagexApp.initDrawing = function(scope, canvas) {
                     }
                 },
 
-            draw:
-                function (objectValues) {
+            draw(objectValues) {
                     this.ctx = objectValues.ctx;
-                    this.ctx.font = getValue(this.font, '14px Arial');
-                    this.ctx.textBaseline = 'top';
-                    if (objectValues.type === 'textbox' && objectValues.name === 'dragobject') {
+                    this.ctx.font = getValue(this.font, "14px Arial");
+                    this.ctx.textBaseline = "top";
+                    if (objectValues.type === "textbox" && objectValues.name === "dragobject") {
                         this.textBoxX = - objectValues.pinPosition.off.x
                             - objectValues.pinPosition.x;
                         this.textBoxY = - objectValues.pinPosition.off.y
                             - objectValues.pinPosition.y; }
-                    else if (objectValues.name === 'fixedobject') {
+                    else if (objectValues.name === "fixedobject") {
                         this.textBoxX = objectValues.x;
                         this.textBoxY = objectValues.y; }
                     else {
@@ -1142,7 +1095,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                         this.textBoxY = objectValues.textbox.textBoxOffset[1]; }
                     this.ctx.save();
                     this.ctx.translate(this.textBoxX, this.textBoxY);
-                    if (objectValues.name === 'fixedobject') this.ctx.rotate(this.a * to_radians);
+                    if (objectValues.name === "fixedobject") this.ctx.rotate(this.a * to_radians);
                     this.ctx.beginPath();
                     this.ctx.moveTo(this.cornerRadius - 1, 0);
                     this.ctx.lineTo(this.r1 - this.cornerRadius, 0);
@@ -1162,8 +1115,8 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.fillStyle = this.textColor;
 
                     // taalla laitetaan tekstia
-                    var textStart = this.topMargin;
-                    for (var i = 0; i < this.lines.length; i++) {
+                    let textStart = this.topMargin;
+                    for (let i = 0; i < this.lines.length; i++) {
                         this.ctx.fillText(this.lines[i], this.leftMargin, textStart);
                         textStart += this.textHeight;
                     }
@@ -1171,12 +1124,11 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.ctx.strokeStyle = this.borderColor;
                     this.ctx.stroke();
                     this.ctx.restore();
-                }
+                },
         },
 
         pin: {
-            init:
-                function (initValues) {
+            init(initValues) {
                     this.pinProperties = {}; // getValue(initValues.pinPoint, {});
                     this.pinProperties.visible = getValueDef(initValues, "pin.visible", true);
                     this.pinProperties.position = {};
@@ -1185,25 +1137,24 @@ imagexApp.initDrawing = function(scope, canvas) {
                                                  (this.type === "vector") ? 0 : 15);
                     // this.pinLength = getValueDef(initValues, "pin.length", 15);
                     this.pinColor = getValueDef(initValues, "pin.color",
-                                                getValueDef(initValues, "borderColor", 'blue'));
+                                                getValueDef(initValues, "borderColor", "blue"));
                     this.lineWidth = getValueDef(initValues, "textboxproperties.borderWidth", 2);
                     this.pinDotRadius = getValueDef(initValues, "pin.dotRadius", 3);
-                    if (this.type === 'vector') 
-                        this.pinPositionAlign = 
+                    if (this.type === "vector")
+                        this.pinPositionAlign =
                         getValueDef(initValues, "pin.position.align", "west");
                     else this.pinPositionAlign = getValueDef(initValues,
-                                                             "pin.position.align", 'northwest');
-                    this.pinPositionStart = getValueDef(initValues, "pin.position.start", [0,0]);
+                                                             "pin.position.align", "northwest");
+                    this.pinPositionStart = getValueDef(initValues, "pin.position.start", [0, 0]);
                     this.pinProperties.position.coord = getValueDef(initValues,
                                                                     "pin.position.coord", []);
-                    var pinst = getValueDef(initValues, "pin.position.start", [0, 0]);
+                    let pinst = getValueDef(initValues, "pin.position.start", [0, 0]);
                     this.pinsx = getValue(pinst[0], 0);
                     this.pinsy = getValue(pinst[1], 0);
                     this.pinInit2();
                 },
 
-            init2:
-                function () {
+            init2() {
                     // TODO: pinlenght so that it is allways same length.
                     // Now 45 deg pins are longer
                     this.pinPositions = {
@@ -1218,11 +1169,11 @@ imagexApp.initDrawing = function(scope, canvas) {
                         southwest: {x: 0, y: this.r2,
                             off: {x: -this.pinLength, y: this.pinLength}},
                         northwest: {x: 0, y: 0, off: {x: -this.pinLength, y: -this.pinLength}},
-                        center: {x: this.r1 / 2, y: this.r2 / 2, off:{x: 0, y: 0}}
+                        center: {x: this.r1 / 2, y: this.r2 / 2, off: {x: 0, y: 0}},
                     };
-                    if (this.type === 'vector') {
+                    if (this.type === "vector") {
                         this.pinPosition = getValue(this.pinPositions[this.pinPositionAlign],
-                                                    this.pinPositions.west)
+                                                    this.pinPositions.west);
                     }
                     else this.pinPosition = getValue(this.pinPositions[this.pinPositionAlign],
                                                      this.pinPositions.northwest);
@@ -1232,12 +1183,11 @@ imagexApp.initDrawing = function(scope, canvas) {
                                                       this.pinPosition.off.y);
                     if (this.pinProperties && this.pinProperties.visible) {
                         this.dotPosition = {x: this.pinPosition.x + this.pinPosition.off.x,
-                            y: this.pinPosition.y + this.pinPosition.off.y}}
-                    else this.dotPosition = {x: this.pinPosition.x, y: this.pinPosition.y}
+                            y: this.pinPosition.y + this.pinPosition.off.y}; }
+                    else this.dotPosition = {x: this.pinPosition.x, y: this.pinPosition.y};
                 },
 
-            draw:
-                function (objectValues) {
+            draw(objectValues) {
                     this.ctx = objectValues.ctx;
                     this.ctx.save();
                     this.ctx.translate(objectValues.x, objectValues.y);
@@ -1258,17 +1208,16 @@ imagexApp.initDrawing = function(scope, canvas) {
                                         - this.pinPosition.off.y + this.pinsy);
                         this.ctx.stroke();
                     }
-                    if (this.type === 'textbox' || this.draggableObject.type === 'textbox')
+                    if (this.type === "textbox" || this.draggableObject.type === "textbox")
                         this.textbox.draw(objectValues);
-                    if (this.type === 'img' || this.draggableObject.type === 'img')
+                    if (this.type === "img" || this.draggableObject.type === "img")
                         this.imageDraw(objectValues);
-                    if (this.type === 'vector' || this.draggableObject.type === 'vector')
+                    if (this.type === "vector" || this.draggableObject.type === "vector")
                         this.vectorDraw(objectValues);
                     this.ctx.restore();
-                }
-        }
+                },
+        },
     };
-
 
     //scope.yamlobjects = scope.attrs.markup.objects;
 
@@ -1281,7 +1230,7 @@ imagexApp.initDrawing = function(scope, canvas) {
     } catch (err) {
         scope.yamlobjects = [];
     }
-    var userObjects = scope.attrs.markup.objects;
+    let userObjects = scope.attrs.markup.objects;
 /*
     if (scope.attrs.state && scope.attrs.state.userAnswer ) {
         // used to reset object positions.
@@ -1303,18 +1252,18 @@ imagexApp.initDrawing = function(scope, canvas) {
     }
 */
 
-    var userTargets = scope.attrs.markup.targets;
-    var userFixedObjects = scope.attrs.markup.fixedobjects;
-    var fixedobjects = [];
-    var targets = [];
-    var objects = [];
+    let userTargets = scope.attrs.markup.targets;
+    let userFixedObjects = scope.attrs.markup.fixedobjects;
+    let fixedobjects = [];
+    let targets = [];
+    let objects = [];
 
     scope.defaults = scope.attrs.markup.defaults;
     scope.previousValue = {};
 
     if (scope.attrs.markup.background) {
-        scope.attrs.markup.background.name = 'background';
-        var background = new FixedObject(dt, scope.attrs.markup.background);
+        scope.attrs.markup.background.name = "background";
+        let background = new FixedObject(dt, scope.attrs.markup.background);
         dt.drawObjects.push(background);
     }
 
@@ -1322,59 +1271,57 @@ imagexApp.initDrawing = function(scope, canvas) {
     scope.error = "";
 
     if (userFixedObjects) {
-        for (i = 0; i < userFixedObjects.length; i++) {
+        for (let i = 0; i < userFixedObjects.length; i++) {
             if ( userFixedObjects[i] )
             try {
-                fixedobjects.push(new FixedObject(dt, userFixedObjects[i], "fix" + (i+1)));
+                fixedobjects.push(new FixedObject(dt, userFixedObjects[i], "fix" + (i + 1)));
             } catch (err ) {
-                scope.error += "init fix" + (i+1)+": " + err +"\n";
+                scope.error += "init fix" + (i + 1) + ": " + err + "\n";
             }
         } }
 
     scope.previousValue = {};
 
     if (userTargets) {
-        for (i = 0; i < userTargets.length; i++) {
+        for (let i = 0; i < userTargets.length; i++) {
             if (userTargets[i])
             try {
-                targets.push(new Target(dt, userTargets[i], "trg" + (i+1)));
+                targets.push(new Target(dt, userTargets[i], "trg" + (i + 1)));
             } catch (err) {
-                scope.error += "init trg" + (i+1)+": " + err +"\n";
+                scope.error += "init trg" + (i + 1) + ": " + err + "\n";
             }
         } }
 
     scope.previousValue = {};
 
     if (userObjects) {
-        for (i = 0; i < userObjects.length; i++) {
+        for (let i = 0; i < userObjects.length; i++) {
             if ( userObjects[i])
             try {
-                var newObject = new DragObject(dt, userObjects[i], "obj" + (i+1))
+                let newObject = new DragObject(dt, userObjects[i], "obj" + (i + 1));
                 objects.push(newObject);
-                if(!scope.drags){
+                if (!scope.drags){
                     scope.drags = [];
                 }
                 scope.drags.push(newObject);
             } catch (err) {
-                scope.error += "init obj" + (i+1)+": " + err +"\n";
+                scope.error += "init obj" + (i + 1) + ": " + err + "\n";
             }
         } }
-
-
 
     if (scope.attrs.state && scope.attrs.state.userAnswer ) {
         scope.userHasAnswered = true;
         // used to reset object positions.
        // scope.yamlobjects = scope.attrs.state.markup.objects.yamlobjects;
         // lisatty oikeiden vastausten lukemiseen ja piirtamiseen.
-        var userDrags = scope.attrs.state.userAnswer.drags;
+        let userDrags = scope.attrs.state.userAnswer.drags;
         if (objects && userDrags && userDrags.length > 0) {
-            for (var i = 0; i < objects.length; i++) {
+            for (let i = 0; i < objects.length; i++) {
                 if (!objects[i]) continue; // looks like the first may be null
-                for (var j = 0; j < userDrags.length; j++) {
+                for (let j = 0; j < userDrags.length; j++) {
                     if (objects[i].did === userDrags[j].did) {
                         objects[i].position[0] = userDrags[j].position[0];
-                        objects[i].position[1] = userDrags[j].position[1]
+                        objects[i].position[1] = userDrags[j].position[1];
                         objects[i].x = objects[i].position[0];
                         objects[i].y = objects[i].position[1];
                     }
@@ -1383,24 +1330,22 @@ imagexApp.initDrawing = function(scope, canvas) {
         }
     }
 
-
-    for (i = 0; i < fixedobjects.length; i++) {
+    for (let i = 0; i < fixedobjects.length; i++) {
         dt.drawObjects.push(fixedobjects[i]);
     }
 
-    for (i = 0; i < targets.length; i++) {
+    for (let i = 0; i < targets.length; i++) {
         dt.drawObjects.push(targets[i]);
     }
 
-    for (i = 0; i < objects.length; i++) {
+    for (let i = 0; i < objects.length; i++) {
         dt.drawObjects.push(objects[i]);
     }
 
     dt.draw();
-    
+
     scope.objects = objects;
 };
-
 
 imagexApp.Controller = function($scope, $http, $transclude, $sce, $interval) {
     "use strict";
@@ -1416,14 +1361,13 @@ imagexApp.Controller = function($scope, $http, $transclude, $sce, $interval) {
     $scope.interval = $interval;
 
     // Luodaan $scope.attrs joka on avattuna sisallossa olev JSON tai HEX
-    $transclude(function(clone,scope) { timHelper.initAttributes(clone,$scope); });
+    $transclude(function(clone, scope) { timHelper.initAttributes(clone, $scope); });
     $scope.errors = [];
     $scope.muokattu = false;
     $scope.result = "";
 };
 
-
-imagexApp.initScope = function (scope, element, attrs) {
+imagexApp.initScope = function(scope, element, attrs) {
     "use strict";
     // Tata kutsutaan kerran jokaiselle pluginin esiintymalle.
     // Angular kutsuu tata koska se on sanottu direktiivifunktiossa Link-metodiksi.
@@ -1448,7 +1392,7 @@ imagexApp.initScope = function (scope, element, attrs) {
     timHelper.set(scope, attrs, "extraGrabAreaHeight", 30);
     timHelper.set(scope, attrs, "background");
     // Tassa on nyt kaikki raahattavat objektit
-    timHelper.set(scope, attrs, "objects","http://localhost/static/images/jyulogo.png");
+    timHelper.set(scope, attrs, "objects", "http://localhost/static/images/jyulogo.png");
     // Tassa pitaisi olla kaikki targetit
     timHelper.set(scope, attrs, "targets");
     timHelper.set(scope, attrs, "fixedobjects");
@@ -1461,7 +1405,7 @@ imagexApp.initScope = function (scope, element, attrs) {
 
     // Free hand drawing things:
     timHelper.set(scope, attrs, "freeHand", false); // is free hand drawing on, if "use", it it off, but usable
-    var use = false;
+    let use = false;
     if ( scope.freeHand == "use") { scope.freeHand = false; use = true; }
     timHelper.set(scope, attrs, "freeHandVisible", scope.freeHand || use); // is the checkbox visible
     timHelper.set(scope, attrs, "freeHandToolbar", true); // is toolbat visible
@@ -1474,32 +1418,30 @@ imagexApp.initScope = function (scope, element, attrs) {
     timHelper.set(scope, attrs, "state.freeHandData", null);
     timHelper.set(scope, attrs, "state.freeHandData", null);
 
-
     scope.w = scope.freeHandWidth;
     scope.color = scope.freeHandColor;
     scope.lineMode = scope.freeHandLine;
     scope.freeHandDrawing.params = scope; // to get 2 way binding to params
     if ( scope.freeHandData ) scope.freeHandDrawing.freeDrawing = scope.freeHandData;
     scope.freeHandDrawing.update = function() {
-        var phase = scope.$root.$$phase;
-        if(phase == '$apply' || phase == '$digest') return;
+        let phase = scope.$root.$$phase;
+        if (phase == "$apply" || phase == "$digest") return;
         scope.$apply();
     };
 
-
     // Otsikot.  Oletetaan etta 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
     element[0].childNodes[0].outerHTML = timHelper.getHeading(scope, attrs, "header", "h4");
-    var n = element[0].childNodes.length;
-    if (n > 1) element[0].childNodes[n - 1].outerHTML = 
+    let n = element[0].childNodes.length;
+    if (n > 1) element[0].childNodes[n - 1].outerHTML =
         timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
-    scope.canvas = element.find("#canvas")[0];//element[0].childNodes[1].childNodes[0];
-    scope.colorInput = element.find("#freeHandColor")[0];//element[0].childNodes[1].childNodes[0];
-    imagexApp.initDrawing(scope, scope.canvas);//element[0].childNodes[1].childNodes[0]);
+    scope.canvas = element.find("#canvas")[0]; //element[0].childNodes[1].childNodes[0];
+    scope.colorInput = element.find("#freeHandColor")[0]; //element[0].childNodes[1].childNodes[0];
+    imagexApp.initDrawing(scope, scope.canvas); //element[0].childNodes[1].childNodes[0]);
 
     scope.coords = element.find("#coords")[0];
     scope.previewColorInput = element.find("#previewColorInput")[0];
     scope.canvas.coords = scope.coords;
-    scope.previewColor= globalPreviewColor;
+    scope.previewColor = globalPreviewColor;
     /*
       $(scope.canvas).bind('keydown', function(event) {
       if (event.ctrlKey || event.metaKey) {
@@ -1517,7 +1459,6 @@ imagexApp.initScope = function (scope, element, attrs) {
     scope.attrs = {}; // not needed any more
 };
 
-
 // Tehdaan kaikista toiminnallisista funktioista oma luokka, jotta
 // niita ei erikseen lisata jokaisen pluginin esiintyman kohdalla uudelleen.
 function ImagexScope(scope) {
@@ -1525,49 +1466,41 @@ function ImagexScope(scope) {
     this.scope = scope;
 }
 
-
 ImagexScope.prototype.watchDrags = function() {
     "use strict";
     // var $scope = this.scope;
 };
 
-
 ImagexScope.prototype.initCode = function() {
     "use strict";
-    var $scope = this.scope;
+    let $scope = this.scope;
     $scope.error = "";
     $scope.result = "";
 };
 
-
 ImagexScope.prototype.undo = function() {
     this.scope.freeHandDrawing.popSegment(0);
-}
-
+};
 
 ImagexScope.prototype.setFColor = function(color) {
     this.scope.freeHandDrawing.setColor(color);
-}
-
-
+};
 
 ImagexScope.prototype.getPColor = function() {
     if (this.scope.preview) {
-        if ( typeof(editorChangeValue) !== 'undefined' ) {
+        if ( typeof(editorChangeValue) !== "undefined" ) {
             globalPreviewColor = this.scope.previewColorInput.value;
             editorChangeValue(["[a-zA-Z]*[cC]olor[a-zA-Z]*:"], '"' + globalPreviewColor + '"');
         }
     }
 
-}
-
+};
 
 ImagexScope.prototype.save = function() {
     "use strict";
     this.doSave(false);
     //$scope.evalAsync( $scope.drags);
 };
-
 
 ImagexScope.prototype.showAnswer = function(){
     "use strict";
@@ -1577,25 +1510,24 @@ ImagexScope.prototype.showAnswer = function(){
 
 // Get the important stuff from dragobjects
 ImagexScope.prototype.getDragObjectJson = function() {
-    var $scope = this.scope;
-    var dragtable = $scope.drags;
-    var json = [];
-    if(!dragtable){
+    let $scope = this.scope;
+    let dragtable = $scope.drags;
+    let json = [];
+    if (!dragtable){
         return json;
     }
-    for(var i = 0; i < dragtable.length ; i++) {
-        json.push({"did":dragtable[i].did, "id":dragtable[i].id,
-            "position":[dragtable[i].x, dragtable[i].y]});
+    for (let i = 0; i < dragtable.length ; i++) {
+        json.push({did: dragtable[i].did, id: dragtable[i].id,
+            position: [dragtable[i].x, dragtable[i].y]});
     }
     return json;
 };
-
 
 // This is pretty much identical to the normal save except that a query to
 // show correct answer is also sent.
 ImagexScope.prototype.doshowAnswer = function(){
     "use strict";
-    var $scope = this.scope;
+    let $scope = this.scope;
     if ($scope.answer &&  $scope.answer.rightanswers ) {
         $scope.dt.addRightAnswers();
         return;
@@ -1609,24 +1541,24 @@ ImagexScope.prototype.doshowAnswer = function(){
     $scope.isRunning = true;
     $scope.result = "";
 
-    var params = {
-        'input': {
-            'markup': {'taskId': $scope.taskId, 'user_id': $scope.user_id},
-            'drags' : this.getDragObjectJson(),
-            'freeHandData': this.scope.freeHandDrawing.freeDrawing,
-            'finalanswerquery' : true
-        }
+    let params = {
+        input: {
+            markup: {taskId: $scope.taskId, user_id: $scope.user_id},
+            drags : this.getDragObjectJson(),
+            freeHandData: this.scope.freeHandDrawing.freeDrawing,
+            finalanswerquery : true,
+        },
     };
-    var url = "/imagex/answer";
+    let url = "/imagex/answer";
     if ($scope.plugin) {
         url = $scope.plugin;
-        var i = url.lastIndexOf("/");
+        let i = url.lastIndexOf("/");
         if (i > 0) url = url.substring(i);
         url += "/" + $scope.taskId + "/answer/";  // Hack piti vahan muuttaa, jotta kone haviaa.
     }
 
-    $scope.http({method: 'PUT', url: url, data: params, headers: {'Content-Type': 'application/json'}, timeout: 20000}
-    ).success(function (data, status, headers, config) {
+    $scope.http({method: "PUT", url, data: params, headers: {"Content-Type": "application/json"}, timeout: 20000},
+    ).success(function(data, status, headers, config) {
         $scope.isRunning = false;
         $scope.error = data.web.error;
         $scope.result = data.web.result;
@@ -1636,7 +1568,7 @@ ImagexScope.prototype.doshowAnswer = function(){
         $scope.dt.addRightAnswers();
         //$scope.imagexScope.resetExercise();
 
-    }).error(function (data, status) {
+    }).error(function(data, status) {
         $scope.isRunning = false;
         $scope.errors.push(status);
         $scope.error = "Ikuinen silmukka tai jokin muu vika?";
@@ -1647,16 +1579,16 @@ ImagexScope.prototype.doshowAnswer = function(){
 ImagexScope.prototype.resetExercise = function(){
     "use strict";
     // Set scope.
-    var $scope = this.scope;
+    let $scope = this.scope;
     $scope.error = "";
     $scope.result = "";
     $scope.freeHandDrawing.clear();
     // Objects dragged by user.
-    var objects = $scope.objects; //$scope.objects;
+    let objects = $scope.objects; //$scope.objects;
 
-    if(objects) {
-        for (var i = 0; i < objects.length; i++) {
-            var obj = objects[i];
+    if (objects) {
+        for (let i = 0; i < objects.length; i++) {
+            let obj = objects[i];
             obj.x = obj.origPos.x;
             obj.y = obj.origPos.y;
             obj.position = obj.origPos.pos;
@@ -1664,9 +1596,9 @@ ImagexScope.prototype.resetExercise = function(){
     }
     // Draw the excercise so that reset appears instantly.
 
-    var dobjs = $scope.dt.drawObjects;
+    let dobjs = $scope.dt.drawObjects;
 
-    for (var i = dobjs.length-1; i--; ) {
+    for (let i = dobjs.length - 1; i--; ) {
 	    if (dobjs[i].did === "-") dobjs.splice(i, 1);
     }
     $scope.rightAnswersSet = false;
@@ -1674,17 +1606,15 @@ ImagexScope.prototype.resetExercise = function(){
     $scope.dt.draw();
 };
 
-
 ImagexScope.prototype.svgImageSnippet = function() {
-    var $scope = this.scope;
-    var s = $scope.sce.trustAsHtml($scope.replyHTML);
+    let $scope = this.scope;
+    let s = $scope.sce.trustAsHtml($scope.replyHTML);
     return s;
 };
 
-
 ImagexScope.prototype.doSave = function(nosave) {
     "use strict";
-    var $scope = this.scope;
+    let $scope = this.scope;
     // These break the whole javascript if used, positions are updated somehow anyways.
     //$scope.$digest();
     //$scope.$apply();
@@ -1693,27 +1623,27 @@ ImagexScope.prototype.doSave = function(nosave) {
     $scope.isRunning = true;
     $scope.result = "";
 
-    var params = {
-        'input': {
-            'markup': {'taskId': $scope.taskId, 'user_id': $scope.user_id},
-            'drags' : this.getDragObjectJson(),
-            'freeHandData': this.scope.freeHandDrawing.freeDrawing,
-            'nosave': false
-        }
+    let params = {
+        input: {
+            markup: {taskId: $scope.taskId, user_id: $scope.user_id},
+            drags : this.getDragObjectJson(),
+            freeHandData: this.scope.freeHandDrawing.freeDrawing,
+            nosave: false,
+        },
     };
     //    console.log(params);
 
     if (nosave) params.input.nosave = true;
-    var url = "/imagex/answer";
+    let url = "/imagex/answer";
     if ($scope.plugin) {
         url = $scope.plugin;
-        var i = url.lastIndexOf("/");
+        let i = url.lastIndexOf("/");
         if (i > 0) url = url.substring(i);
         url += "/" + $scope.taskId + "/answer/";  // Hack piti vahan muuttaa, jotta kone haviaa.
     }
 
-    $scope.http({method: 'PUT', url: url, data: params, headers: {'Content-Type': 'application/json'}, timeout: 20000}
-    ).success(function (data, status, headers, config) {
+    $scope.http({method: "PUT", url, data: params, headers: {"Content-Type": "application/json"}, timeout: 20000},
+    ).success(function(data, status, headers, config) {
         $scope.isRunning = false;
         $scope.error = data.web.error;
         $scope.result = data.web.result;
@@ -1721,7 +1651,7 @@ ImagexScope.prototype.doSave = function(nosave) {
         $scope.userHasAnswered = true;
         $scope.replyImage = data.web["-replyImage"];
         $scope.replyHTML = data.web["-replyHTML"];
-    }).error(function (data, status) {
+    }).error(function(data, status) {
         $scope.isRunning = false;
         $scope.errors.push(status);
         $scope.error = "Ikuinen silmukka tai jokin muu vika?";

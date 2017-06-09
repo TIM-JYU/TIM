@@ -1,6 +1,6 @@
 import angular from "angular";
-import {timApp} from "tim/app";
 import $ from "jquery";
+import {timApp} from "tim/app";
 import {ParCompiler} from "../services/parCompiler";
 
 /**
@@ -21,55 +21,51 @@ import {ParCompiler} from "../services/parCompiler";
 function uncheckRadio(e) {
     // set this to click-method if you want a radio that can be uncheked.  for the radio there
     // must be also property form that has other radios.
-    var elem = $(this);
-    var form = elem.prop("form");
+    let elem = $(this);
+    let form = elem.prop("form");
     if ( !form ) return;
-    var gn = elem.prop("name");
-    if ( elem.prop('previousValue') === true ) {
-        elem.prop('checked', false);
+    let gn = elem.prop("name");
+    if ( elem.prop("previousValue") === true ) {
+        elem.prop("checked", false);
     } else {
-        $('input[name=' + gn + ']', form).prop('previousValue', false);
+        $("input[name=" + gn + "]", form).prop("previousValue", false);
         // elem.prop('previousValue', false);
     }
-    elem.prop('previousValue', elem.prop('checked'));
+    elem.prop("previousValue", elem.prop("checked"));
 }
-
 
 export function getJsonAnswers(answer) {
     // Converts answer string to JSON table
     if ( answer.length > 0 && answer[0] === "[" ) {
         return JSON.parse(answer);
     }
-    var single_answers = [];
-    var all_answers = answer.split('|');
+    let single_answers = [];
+    let all_answers = answer.split("|");
 
-    for (var i = 0; i < all_answers.length; i++) {
-        single_answers.push(all_answers[i].split(','))
+    for (let i = 0; i < all_answers.length; i++) {
+        single_answers.push(all_answers[i].split(","));
     }
     return single_answers;
 }
 
-
 function deletePar(s) {
     if ( !s.startsWith("<p>") ) return s;
-    var rs = s.substring(3);
+    let rs = s.substring(3);
     if ( !rs.endsWith("</p>") ) return s;
-    return rs.substring(0,rs.length-4);
+    return rs.substring(0, rs.length - 4);
 }
-
-
 
 export function getPointsTable(markupPoints) {
     // Format of markupPoints: 1:1.1;2:1.2;3:1.3||2:3.2
-    var pointsTable = [];
-    if (markupPoints && markupPoints !== '') {
-        var points = markupPoints.split('|');
-        for (var i = 0; i < points.length; i++) {
-            var rowPoints = points[i].split(';');
-            var rowPointsDict = {};
-            for (var k = 0; k < rowPoints.length; k++) {
-                if (rowPoints[k] !== '') {
-                    var colPoints = rowPoints[k].split(':', 2);
+    let pointsTable = [];
+    if (markupPoints && markupPoints !== "") {
+        let points = markupPoints.split("|");
+        for (let i = 0; i < points.length; i++) {
+            let rowPoints = points[i].split(";");
+            let rowPointsDict = {};
+            for (let k = 0; k < rowPoints.length; k++) {
+                if (rowPoints[k] !== "") {
+                    let colPoints = rowPoints[k].split(":", 2);
                     rowPointsDict[colPoints[0]] = colPoints[1];
                 }
             }
@@ -79,27 +75,26 @@ export function getPointsTable(markupPoints) {
     return pointsTable;
 }
 
-
 export function minimizeJson(json) {
     // remove not needed fields from json, call when saving the question
-    var result: any = {};
+    let result: any = {};
     if ( json.headers ) {
         result.headers = [];
-        for (var i = 0; i < json.headers.length; i++) {
-            var header = json.headers[i]
+        for (let i = 0; i < json.headers.length; i++) {
+            let header = json.headers[i];
             if ( header.id == i  &&  header.type === "header" ) header = header.text;
             result.headers.push(header);
         }
     }
 
-    var ir = -1;
-    var allText = true;
-    var rows = json.rows;
-    var rrows = [];
+    let ir = -1;
+    let allText = true;
+    let rows = json.rows;
+    let rrows = [];
 
-    for (var i = 0; i < rows.length; i++) {
-        var row = rows[i];
-        if ( row.id == i+1 && (!row.type || row.type === "question") ) {
+    for (let i = 0; i < rows.length; i++) {
+        let row = rows[i];
+        if ( row.id == i + 1 && (!row.type || row.type === "question") ) {
             row = row.text; // { text: row.text};
         } else {
             allText = false;
@@ -120,43 +115,42 @@ export function minimizeJson(json) {
     return result;
 }
 
-
 function fixLineBreaks(s) {
     // var result = s.replace(" < "," &lt; ");
     //result = result.replace(" > "," &gt; ");
-    var parts = s.split("!!");
-    var result = parts[0];
+    let parts = s.split("!!");
+    let result = parts[0];
     return result;
     //return s.replace("\n","<br />");
 }
 
 export function fixQuestionJson(json) {
     // fill all missing fields from question json, call before use json
-    var columnHeaders = [];
+    let columnHeaders = [];
     if ( json.data ) {
         json.headers = json.data.headers;
         json.rows = json.data.rows;
     }
     if ( json.headers ) {
-        var headers = json.headers;
+        let headers = json.headers;
         if ( Array !== headers.constructor ) { // if just on text string
-            var jrows = headers.split("\n");
+            let jrows = headers.split("\n");
             headers = [];
-            var ir = -1;
-            for (var i=0; i<jrows.length; i++) {
-                var jrow = jrows[i];
+            let ir = -1;
+            for (let i = 0; i < jrows.length; i++) {
+                let jrow = jrows[i];
                 if (jrow) {
                     ir++;
-                    headers.push({text: jrow.toString(), type: "header", id: ir})
+                    headers.push({text: jrow.toString(), type: "header", id: ir});
                 }
             }
         }
 
         json.headers = headers;
 
-        for (var i = 0; i < json.headers.length; i++) {
-            var header = json.headers[i]
-            if (typeof(header.text) === 'undefined') header = {text: header.toString(), type: "header", id: i};
+        for (let i = 0; i < json.headers.length; i++) {
+            let header = json.headers[i];
+            if (typeof(header.text) === "undefined") header = {text: header.toString(), type: "header", id: i};
             if (!header.id) header.id = i;
             if (!header.type) header.type = "header";
             json.headers[i] = header;
@@ -166,87 +160,84 @@ export function fixQuestionJson(json) {
     if ( !json.answerFieldType ) json.answerFieldType = "radio";
 
     if (json.questionType === "true-false" && (!json.headers || json.headers.length == 0 ) ) {
-        json.headers[0] = {"type": "header", "id": 0, "text": "True"};
-        json.headers[1] = {"type": "header", "id": 1, "text": "False"};
+        json.headers[0] = {type: "header", id: 0, text: "True"};
+        json.headers[1] = {type: "header", id: 1, text: "False"};
     }
 
-
-    var rows =  json.rows;
+    let rows =  json.rows;
     if ( Array !== rows.constructor ) { // if just on text string
-        var jrows = rows.split("\n");
+        let jrows = rows.split("\n");
         rows = [];
-        for (var i=0; i<jrows.length; i++) {
-            var jrow = jrows[i];
-            if (jrow) rows.push({text: jrow.toString(), type: "question", id: i})
+        for (let i = 0; i < jrows.length; i++) {
+            let jrow = jrows[i];
+            if (jrow) rows.push({text: jrow.toString(), type: "question", id: i});
         }
     }
 
-
-
-    var ir = -1;
-    var n = rows.length-1;
+    let ir = -1;
+    let n = rows.length - 1;
     if ( n >= 0 ) {
-        var last = rows[n];  // remove ending object if needed
-        if ( typeof last === 'object' && $.isEmptyObject(last)) rows.splice(n,1); // trust that null is also object!
+        let last = rows[n];  // remove ending object if needed
+        if ( typeof last === "object" && $.isEmptyObject(last)) rows.splice(n, 1); // trust that null is also object!
     }
 
-    for (var i = 0; i < rows.length; i++) {
-        var row = rows[i];
-        if (typeof(row.text) === 'undefined') row = {text: row.toString(), type: "question"};
+    for (let i = 0; i < rows.length; i++) {
+        let row = rows[i];
+        if (typeof(row.text) === "undefined") row = {text: row.toString(), type: "question"};
         // if (!row.text) continue;
         ir++;
-        if (!row.id) row.id = ir+1;
+        if (!row.id) row.id = ir + 1;
         if (!row.columns ) {
             row.columns = [{}];
-            var nh = 0; if ( json.headers ) nh = json.headers.length;
-            for (var ic = 1; ic< nh; ic++) row.columns.push({});
+            let nh = 0; if ( json.headers ) nh = json.headers.length;
+            for (let ic = 1; ic < nh; ic++) row.columns.push({});
         }
         rows[i] = row;
     }
     json.rows = rows;
 }
 
-timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '$http', function ($interval, $compile, $rootScope, $http) {
+timApp.directive("dynamicAnswerSheet", ["$interval", "$compile", "$rootScope", "$http", function($interval, $compile, $rootScope, $http) {
     "use strict";
     return {
-        restrict: 'E',
+        restrict: "E",
         scope: {
-            control: '=',
-            preview: '@'
+            control: "=",
+            preview: "@",
         },
         transclude: true,
-        link: function ($scope, $element) {
-            var promise;
-            var timeLeft;
-            var barFilled;
+        link($scope, $element) {
+            let promise;
+            let timeLeft;
+            let barFilled;
             $scope.internalControl = $scope.control || {};
 
             $scope.cg = function() {
                 return "group"; // + $scope.gid;
-            }
+            };
 
             /**
              * Creates question answer/preview form.
              */
-            $scope.internalControl.createAnswer = function (params) {
+            $scope.internalControl.createAnswer = function(params) {
                 $scope.result = params.result;
                 $scope.gid = params.tid || "";
-                $scope.gid = $scope.gid.replace(".","_");
+                $scope.gid = $scope.gid.replace(".", "_");
                 $scope.buttonText = params.markup.button || params.markup.buttonText || "Answer";
 
-                var answclass = params.answclass || "answerSheet";
+                let answclass = params.answclass || "answerSheet";
                 $scope.previousAnswer = params.previousAnswer;
-                
-                var disabled = '';
+
+                let disabled = "";
                 // If showing preview or question result, inputs are disabled
-                if (params.preview || $scope.preview || $scope.result) disabled = ' disabled ';
-                if ( params.noDisable ) disabled = '';
-                
+                if (params.preview || $scope.preview || $scope.result) disabled = " disabled ";
+                if ( params.noDisable ) disabled = "";
+
                 $element.empty();
                 $scope.json = params.markup.json;
                 $scope.markup = params.markup;
-                var data = $scope.json.data || $scope.json; // compability to old format
-                var json = $scope.json;
+                let data = $scope.json.data || $scope.json; // compability to old format
+                let json = $scope.json;
 
                 fixQuestionJson(data);
 
@@ -254,173 +245,171 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
 
                 // If user has answer to question, create table of answers and select inputs according to it
                 if ($scope.previousAnswer) $scope.answerTable = getJsonAnswers($scope.previousAnswer);
-                var answerTable = $scope.answerTable;
-                var pointsTable = getPointsTable(params.points || params.markup.points);
+                let answerTable = $scope.answerTable;
+                let pointsTable = getPointsTable(params.points || params.markup.points);
 
                 $scope.expl = params.expl || params.markup.expl || params.markup.xpl;
                 $scope.askedTime = params.askedTime - params.clockOffset;
                 $scope.endTime = params.askedTime + $scope.json.timeLimit * 1000 - params.clockOffset;
 
                 // var htmlSheet = $('<div>', {class: answclass});
-                var htmlSheet = $('<form>', {class: answclass});
+                let htmlSheet = $("<form>", {class: answclass});
                 $scope.htmlSheet = htmlSheet;
                 params.htmlSheet = htmlSheet;
                 if ($scope.json.timeLimit !== "" && $scope.endTime  && !$scope.preview && !$scope.result) {
-                    var progress = $('<progress>', {
+                    let progress = $("<progress>", {
                         max: ($scope.endTime - $scope.askedTime),
-                        id: 'progressBar'
+                        id: "progressBar",
                     });
                     htmlSheet.append(progress);
-                    htmlSheet.append($('<span>', {
-                        class: 'progresslabel',
-                        id: 'progressLabel',
-                        text: $scope.json.timeLimit + " s"
+                    htmlSheet.append($("<span>", {
+                        class: "progresslabel",
+                        id: "progressLabel",
+                        text: $scope.json.timeLimit + " s",
                     }));
                 }
-                var h5 = $('<h5>');
+                let h5 = $("<h5>");
                 h5.append(fixLineBreaks(json.questionText));
 
                 htmlSheet.append(h5);
                 // htmlSheet.append($('<h5>', {text: json.questionText}));
                 if ( params.markup.userpoints !== undefined) {
-                    htmlSheet.append($('<p>', {text: "Points: " + params.markup.userpoints }));
+                    htmlSheet.append($("<p>", {text: "Points: " + params.markup.userpoints }));
                 }
 
+                let table = $("<table>", {id: "answer-sheet-table", class: "table table-borderless"});
 
-                var table = $('<table>', {id: 'answer-sheet-table', class: 'table table-borderless'});
-
-                var totalBorderless = true;
+                let totalBorderless = true;
 
                 if (data.headers &&
                     data.headers.length > 0 && !(data.headers[0].text === "" && data.headers.length === 1)) {
-                    var tr = $('<tr>', {class: 'answer-heading-row',});
+                    let tr = $("<tr>", {class: "answer-heading-row"});
                     if (data.headers.length > 0) {
-                        tr.append($('<th>'));
+                        tr.append($("<th>"));
                     }
-                    angular.forEach(data.headers, function (header) {
-                        var th = $('<th>')
+                    angular.forEach(data.headers, function(header) {
+                        let th = $("<th>");
                         th.append( fixLineBreaks(header.text) );
                         totalBorderless = false;
                         tr.append(th);
                         // tr.append($('<th>', {text: header.text || header}));
                     });
                     if ($scope.result && $scope.expl)
-                        tr.append($('<th>', {}));
+                        tr.append($("<th>", {}));
                     table.append(tr);
                 }
 
-                var ir = -1;
-                angular.forEach(data.rows, function (row) {
+                let ir = -1;
+                angular.forEach(data.rows, function(row) {
                     ir++;
-                    var pointsRow = {};
+                    let pointsRow = {};
                     if ( params.result && pointsTable.length > ir &&  pointsTable[ir] ) pointsRow = pointsTable[ir];
-                    var rtext = fixLineBreaks(row.text);
-                    var tr = $('<tr>');
+                    let rtext = fixLineBreaks(row.text);
+                    let tr = $("<tr>");
                     if (json.questionType === "matrix" || json.questionType === "true-false") {
-                        var td = $('<td>');
+                        let td = $("<td>");
                         td.append(rtext);
                         if ( rtext && ir > 0 ) totalBorderless = false;
                         tr.append(td);
                         //tr.append($('<td>', {text: row.text}));
                     }
-                    var header = 0;
+                    let header = 0;
                     //TODO: Needs correct JSON to be made better way
-                    for (var ic = 0; ic < row.columns.length; ic++) {
-                        var group;
+                    for (let ic = 0; ic < row.columns.length; ic++) {
+                        let group;
                         group = $scope.cg() + ir;
 
                         if (json.questionType === "matrix" || json.questionType === "true-false") {
-                            var value = "" +(ic + 1);// (row.columns[ic].id + 1).toString();
+                            let value = "" + (ic + 1); // (row.columns[ic].id + 1).toString();
 
-                            var colTDPoints = undefined;
-                            var colPtsClass = 'qst-normal';
+                            let colTDPoints;
+                            let colPtsClass = "qst-normal";
                             if ( value in pointsRow ) {
-                                var colPoints = pointsRow[value];
-                                colTDPoints = $('<p>', {class: 'qst-points'}).append(colPoints);
-                                if ( colPoints > 0 ) colPtsClass =  'qst-correct';
+                                let colPoints = pointsRow[value];
+                                colTDPoints = $("<p>", {class: "qst-points"}).append(colPoints);
+                                if ( colPoints > 0 ) colPtsClass =  "qst-correct";
                             }
                             row.columns[ic].id = ic;
 
                             if (json.answerFieldType === "text") {
                                 $scope.isText = true;
-                                var text = "";
+                                let text = "";
                                 if (answerTable && ir < answerTable.length && ic < answerTable[ir].length) {
                                     text = answerTable[ir][ic];
                                 }
-                                var textArea = $('<textarea>', {
-                                    id: 'textarea-answer',
-                                    name: group
+                                let textArea = $("<textarea>", {
+                                    id: "textarea-answer",
+                                    name: group,
                                 });
                                 textArea.text(text);
-                                if (disabled !== '') textArea.attr('disabled', "disabled");
+                                if (disabled !== "") textArea.attr("disabled", "disabled");
                                 if (data.headers && data.headers.length === 1 && data.headers[0].text === "" && data.rows.length === 1) {
                                     // textArea.attr('style', 'height:200px');
                                 }
-                                tr.append($('<td>', {class: 'answer-button'}).append($('<label>').append(textArea)));
+                                tr.append($("<td>", {class: "answer-button"}).append($("<label>").append(textArea)));
                                 header++;
                             } else {
                                 // group = $scope.cg() + rtext.replace(/[^a-zA-Z0-9]/g, "");
-                                var checked = false;
+                                let checked = false;
                                 if (answerTable && ir < answerTable.length ) {
                                     checked = (answerTable[ir].indexOf(value) >= 0);
                                 }
-                                var input = $('<input>', {
+                                let input = $("<input>", {
                                     type: json.answerFieldType,
                                     name: group,
                                     value: ic + 1, // parseInt(row.columns[ic].id) + 1,
-                                    checked: checked
+                                    checked,
                                 });
                                 if ( json.answerFieldType === "radio" ) {
-                                    input.prop("form", htmlSheet as any)
+                                    input.prop("form", htmlSheet as any);
                                     input.click(uncheckRadio);  // TODO: Tähän muutoskäsittely ja jokaiseen tyyppiin tämä
                                 }
-                                if (disabled !== '') input.attr('disabled', "disabled");
+                                if (disabled !== "") input.attr("disabled", "disabled");
 
-                                var td = $('<td>', {class: 'answer-button'});
-                                var ispan = $('<span>', {class:colPtsClass});
+                                let td = $("<td>", {class: "answer-button"});
+                                let ispan = $("<span>", {class: colPtsClass});
                                 ispan.append(input);
-                                td.append($('<label>').append(ispan))
+                                td.append($("<label>").append(ispan));
 
                                 if ( colTDPoints ) td.append(colTDPoints);
                                 tr.append(td);
                                 header++;
                             }
                         } else {
-                            var value = ""+(ir+1); // (row.id + 1).toString();
-                            var colTDPoints = undefined;
-                            var colPtsClass = 'qst-normal';
-                            var pointsRow = {};
+                            let value = "" + (ir + 1); // (row.id + 1).toString();
+                            let colTDPoints;
+                            let colPtsClass = "qst-normal";
+                            let pointsRow = {};
                             if ( params.result && pointsTable.length > 0 &&  pointsTable[0] ) pointsRow = pointsTable[0];
                             if ( value in pointsRow ) {
-                                var colPoints = pointsRow[value];
-                                colTDPoints = $('<p>', {class: 'qst-points'}).append(colPoints);
-                                if ( colPoints > 0 ) colPtsClass =  'qst-correct';
+                                let colPoints = pointsRow[value];
+                                colTDPoints = $("<p>", {class: "qst-points"}).append(colPoints);
+                                if ( colPoints > 0 ) colPtsClass =  "qst-correct";
                             }
                             row.columns[ic].id = ic;
 
-
-                            var type = row.type || "question";
+                            let type = row.type || "question";
                             group = $scope.cg() + type.replace(/[^a-zA-Z0-9]/g, "");
-                            var checked = false;
+                            let checked = false;
                             if (answerTable && answerTable.length > 0) {
                                 checked = (answerTable[0].indexOf(value) >= 0);
                             }
-                            var input = $('<input>', {
+                            let input = $("<input>", {
                                 type: json.answerFieldType,
                                 name: group,
                                 value: ir + 1, //parseInt(row.id) + 1,
-                                checked: checked
+                                checked,
                             });
                             if ( json.answerFieldType === "radio" ) {
-                                input.prop("form", htmlSheet as any)
+                                input.prop("form", htmlSheet as any);
                                 input.click(uncheckRadio);
                             }
-                            if (disabled !== '') input.attr('disabled', "disabled");
-                            var label = $('<label>');
-                            var ispan = $('<span>', {class:colPtsClass});
+                            if (disabled !== "") input.attr("disabled", "disabled");
+                            let label = $("<label>");
+                            let ispan = $("<span>", {class: colPtsClass});
                             ispan.append(input);
                             label.append(ispan).append(" " + deletePar("" + rtext));
-                            var td = $('<td>', {class: 'answer-button2'});
+                            let td = $("<td>", {class: "answer-button2"});
                             td.append(label);
                             if ( colTDPoints ) td.append(colTDPoints);
                             tr.append(td);
@@ -428,18 +417,18 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     }
                     // If showing question results, add question rows explanation
                     if ($scope.result && $scope.expl ) {
-                        var expl = '';
-                        var ir1 = (ir+1).toString()
+                        let expl = "";
+                        let ir1 = (ir + 1).toString();
                         if ( ir1 in $scope.expl ) expl = $scope.expl[ir1];
-                        var tde = $('<td>', {class: 'explanation'});
-                        tde.append(expl)
+                        let tde = $("<td>", {class: "explanation"});
+                        tde.append(expl);
                         // tr.append($('<td>', {class: 'explanation', text: expl}));
                         tr.append(tde);
                     }
                     table.append(tr);
                 });
 
-                htmlSheet.append($('<div>').append(table));
+                htmlSheet.append($("<div>").append(table));
 
                 if ( totalBorderless ) table.addClass("total-borderless");
 
@@ -447,27 +436,27 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 $compile($scope);
 
                 if (!$scope.preview && !$scope.result) {
-                    var $table = $element.find('#answer-sheet-table');
-                    window.setTimeout(function () {
-                        var $table = $element.find('#answer-sheet-table');
-                        var $input = null;
+                    let $table = $element.find("#answer-sheet-table");
+                    window.setTimeout(function() {
+                        let $table = $element.find("#answer-sheet-table");
+                        let $input = null;
                         if ($scope.json.answerFieldType !== "text")
-                            $input = $table.find('input:first');
+                            $input = $table.find("input:first");
                         else
-                            $input = $table.find('textarea:first');
+                            $input = $table.find("textarea:first");
                         if ( params.isAsking ) $input[0].focus();
                     }, 0);
                     //
-                    if ( !$scope.isText ) $table.on('keyup.send', $scope.answerWithEnter);
-                    var now = new Date().valueOf();
+                    if ( !$scope.isText ) $table.on("keyup.send", $scope.answerWithEnter);
+                    let now = new Date().valueOf();
                     timeLeft = $scope.endTime - now;
                     barFilled = 0;
                     if ( $scope.endTime && $scope.json.timeLimit !== "") {
-                        var timeBetween = 500;
-                        var maxCount = timeLeft / timeBetween + 5 * timeBetween;
+                        let timeBetween = 500;
+                        let maxCount = timeLeft / timeBetween + 5 * timeBetween;
                         $scope.progressElem = $("#progressBar");
                         $scope.progressText = $("#progressLabel");
-                        $scope.start = function () {
+                        $scope.start = function() {
                             promise = $interval($scope.internalControl.updateBar, timeBetween, maxCount);
                         };
                         $scope.start();
@@ -483,7 +472,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
              * If time is null, question/points is closed.
              * Else time is set as questions new end time.
              */
-            $scope.$on('update_end_time', function (event, time) {
+            $scope.$on("update_end_time", function(event, time) {
                 if (time !== null) {
                     $scope.endTime = time - $scope.$parent.clockOffset;
                     $scope.progressElem.attr("max", $scope.endTime - $scope.askedTime);
@@ -491,7 +480,7 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     if (!$scope.$parent.isLecturer) {
                         $interval.cancel(promise);
                         $element.empty();
-                        $scope.$emit('closeQuestion');
+                        $scope.$emit("closeQuestion");
                     }
                 }
             });
@@ -500,9 +489,9 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
              * Updates progressbar and time left text
              * @memberof module:dynamicAnswerSheet
              */
-            $scope.internalControl.updateBar = function () {
+            $scope.internalControl.updateBar = function() {
                 //TODO: Problem with inactive tab.
-                var now = new Date().valueOf();
+                let now = new Date().valueOf();
                 if ( !$scope.endTime || !promise ) return;
                 timeLeft = $scope.endTime - now;
                 barFilled = ($scope.endTime - $scope.askedTime) - ($scope.endTime - now);
@@ -520,38 +509,37 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 }
             };
 
-            $scope.internalControl.endQuestion = function () {
+            $scope.internalControl.endQuestion = function() {
                 if ( !promise ) return;
                 $interval.cancel(promise);
-                var max = $scope.progressElem.attr("max");
+                let max = $scope.progressElem.attr("max");
                 $scope.progressElem.attr("value", max);
                 $scope.progressText.text("Time's up");
             };
 
-            $scope.answerWithEnter = function (e) {
+            $scope.answerWithEnter = function(e) {
                 if (e.keyCode === 13) {
-                    $('#answer-sheet-table').off('keyup.send');
+                    $("#answer-sheet-table").off("keyup.send");
                     $scope.$parent.answer();
                 }
             };
 
-
             $scope.internalControl.getAnswers = function() {
-                var answers = [];
-                var data = $scope.json.data || $scope.json;
+                let answers = [];
+                let data = $scope.json.data || $scope.json;
                 if (angular.isDefined(data.rows)) {
-                    var groupName; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
+                    let groupName; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
                     if ($scope.json.questionType === "matrix" || $scope.json.questionType === "true-false") {
-                        for (var ir = 0; ir < data.rows.length; ir++) {
+                        for (let ir = 0; ir < data.rows.length; ir++) {
                             groupName = $scope.cg() + ir;
-                            var answer = [];
-                            var matrixInputs;
+                            let answer = [];
+                            let matrixInputs;
                             // groupName = $scope.cg() + ir; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
 
                             if ($scope.json.answerFieldType === "text") {
-                                matrixInputs = $('textarea[name=' + groupName + ']', $scope.htmlSheet);
-                                for (var ic = 0; ic < matrixInputs.length; ic++) {
-                                    var v = matrixInputs[ic].value || "";
+                                matrixInputs = $("textarea[name=" + groupName + "]", $scope.htmlSheet);
+                                for (let ic = 0; ic < matrixInputs.length; ic++) {
+                                    let v = matrixInputs[ic].value || "";
                                     answer.push(v);
                                 }
 
@@ -559,10 +547,10 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                                 continue;
                             }
 
-                            matrixInputs = $('input[name=' + groupName + ']:checked', $scope.htmlSheet);
+                            matrixInputs = $("input[name=" + groupName + "]:checked", $scope.htmlSheet);
 
-                            for (var k = 0; k < matrixInputs.length; k++) {
-                                var v = matrixInputs[k].value || "";
+                            for (let k = 0; k < matrixInputs.length; k++) {
+                                let v = matrixInputs[k].value || "";
                                 answer.push(v);
                             }
                             if (matrixInputs.length <= 0) {
@@ -573,10 +561,10 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                     }
                     else {
                         answers.push([]);
-                        var type = data.rows[0].type || "question";
-                        groupName = $scope.cg() + type.replace(/[^a-zA-Z0-9]/g, '');
-                        var checkedInputs = $('input[name=' + groupName + ']:checked', $scope.htmlSheet) as any as Array<HTMLInputElement>;
-                        for (var j = 0; j < checkedInputs.length; j++) {
+                        let type = data.rows[0].type || "question";
+                        groupName = $scope.cg() + type.replace(/[^a-zA-Z0-9]/g, "");
+                        let checkedInputs = $("input[name=" + groupName + "]:checked", $scope.htmlSheet) as any as HTMLInputElement[];
+                        for (let j = 0; j < checkedInputs.length; j++) {
                             answers[0].push(checkedInputs[j].value);
                         }
 
@@ -587,29 +575,29 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
                 }
 
                 if (angular.isDefined(data.columns)) {
-                    angular.forEach(data.columns, function (column) {
-                        var groupName = $scope.cg() + column.Value.replace(/ /g, '');
-                        answers.push($('input[name=' + groupName + ']:checked').val());
+                    angular.forEach(data.columns, function(column) {
+                        let groupName = $scope.cg() + column.Value.replace(/ /g, "");
+                        answers.push($("input[name=" + groupName + "]:checked").val());
                     });
                 }
 
                 return answers;
 
-            }
+            };
 
             /**
              * Function to create question answer and send it to server.
              * @memberof module:dynamicAnswerSheet
              */
-            $scope.internalControl.answerToQuestion = function () {
+            $scope.internalControl.answerToQuestion = function() {
 
-                var answers = $scope.internalControl.getAnswers();
+                let answers = $scope.internalControl.getAnswers();
 
                 if (!$scope.$parent.isLecturer) {
                     $element.empty();
                     $interval.cancel(promise);
                 }
-                $scope.$emit('answerToQuestion', {answer: answers, askedId: $scope.$parent.askedId});
+                $scope.$emit("answerToQuestion", {answer: answers, askedId: $scope.$parent.askedId});
             };
 
             /**
@@ -617,19 +605,19 @@ timApp.directive('dynamicAnswerSheet', ['$interval', '$compile', '$rootScope', '
              * If user is lecturer, also closes answer chart window.
              * @memberof module:dynamicAnswerSheet
              */
-            $scope.internalControl.closeQuestion = function () {
+            $scope.internalControl.closeQuestion = function() {
                 $interval.cancel(promise);
                 $element.empty();
-                $scope.$emit('closeQuestion');
-                if ($scope.$parent.isLecturer) $rootScope.$broadcast('closeAnswerSheetForGood');
+                $scope.$emit("closeQuestion");
+                if ($scope.$parent.isLecturer) $rootScope.$broadcast("closeAnswerSheetForGood");
             };
 
-            $scope.internalControl.closePreview = function () {
+            $scope.internalControl.closePreview = function() {
                 $element.empty();
             };
-        }
+        },
 
     };
-}
+},
 ])
 ;

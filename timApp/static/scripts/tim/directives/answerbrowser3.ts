@@ -1,59 +1,58 @@
 /* globals timLogTime, $ */
 
-import {timLogTime} from "tim/timTiming";
-import {timApp} from "tim/app";
 import $ from "jquery";
+import {timApp} from "tim/app";
+import {timLogTime} from "tim/timTiming";
 
-timLogTime("answerbrowser3 load","answ");
+timLogTime("answerbrowser3 load", "answ");
 
-var LAZYWORD = "lazylazylazy";
-var LAZYSTART="<!--lazy ";
-var LAZYEND =" lazy-->";
-var RLAZYSTART = new RegExp(LAZYSTART, 'g');
-var RLAZYEND = new RegExp(LAZYEND, 'g');
-
+let LAZYWORD = "lazylazylazy";
+let LAZYSTART = "<!--lazy ";
+let LAZYEND = " lazy-->";
+let RLAZYSTART = new RegExp(LAZYSTART, "g");
+let RLAZYEND = new RegExp(LAZYEND, "g");
 
 function makeNotLazy(html) {
     "use strict";
-    var s = html.replace(RLAZYSTART,"");
-    var i = s.lastIndexOf(LAZYEND);
-    if ( i >= 0 ) s = s.substring(0,i);
-    s = s.replace(RLAZYEND,""); 
-    s = s.replace(/-LAZY->/g,"-->");
-    s = s.replace(/<!-LAZY-/g,"<!--");
+    let s = html.replace(RLAZYSTART, "");
+    let i = s.lastIndexOf(LAZYEND);
+    if ( i >= 0 ) s = s.substring(0, i);
+    s = s.replace(RLAZYEND, "");
+    s = s.replace(/-LAZY->/g, "-->");
+    s = s.replace(/<!-LAZY-/g, "<!--");
     return s;
 }
 
 function loadPlugin(html, $par, $compile, $scope, $timeout) {
     "use strict";
-    var newhtml = makeNotLazy(html);
-    var plugin = $par.find('.parContent');
+    let newhtml = makeNotLazy(html);
+    let plugin = $par.find(".parContent");
 
     // Set explicit height for the plugin temporarily.
     // Without this fix, if the plugin is at the bottom of the screen,
     // the browser's scroll position would jump inconveniently because
     // the plugin's height goes to zero until Angular has finished compiling it.
-    var height = plugin.height();
+    let height = plugin.height();
     plugin.height(height);
     plugin.html($compile(newhtml)($scope));
-    plugin.css('opacity', '1.0');
+    plugin.css("opacity", "1.0");
     $scope.$parent.processAllMathDelayed(plugin);
-    $timeout(function () {
-        plugin.css('height', '');
+    $timeout(function() {
+        plugin.css("height", "");
     }, 500);
 }
 
-timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$window', '$timeout',
-    function (Upload, $http, $sce, $compile, $window, $timeout) {
+timApp.directive("answerbrowserlazy", ["Upload", "$http", "$sce", "$compile", "$window", "$timeout",
+    function(Upload, $http, $sce, $compile, $window, $timeout) {
         "use strict";
-        timLogTime("answerbrowserlazy directive function","answ");
+        timLogTime("answerbrowserlazy directive function", "answ");
         return {
-            restrict: 'E',
+            restrict: "E",
             scope: {
-                taskId: '@'
+                taskId: "@",
             },
 
-            controller: ['$scope', function ($scope) {
+            controller: ["$scope", function($scope) {
                 timLogTime("answerbrowserlazy ctrl function", "answ", 1);
                 $scope.compiled = false;
 
@@ -63,24 +62,24 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                  * @param taskId {string} The task id to validate.
                  * @returns {boolean} True if the task id is valid, false otherwise.
                  */
-                $scope.isValidTaskId = function (taskId) {
+                $scope.isValidTaskId = function(taskId) {
                     return taskId.slice(-1) !== ".";
                 };
 
-                $scope.loadAnswerBrowser = function () {
-                    var $par = $scope.$element.parents('.par');
-                    var plugin = $par.find('.parContent');
+                $scope.loadAnswerBrowser = function() {
+                    let $par = $scope.$element.parents(".par");
+                    let plugin = $par.find(".parContent");
                     if ( $scope.compiled ) return;
                     $scope.compiled = true;
                     if (!$scope.$parent.noBrowser && $scope.isValidTaskId($scope.taskId)) {
-                        var newHtml = '<answerbrowser task-id="' + $scope.taskId + '"></answerbrowser>';
-                        var newElement = $compile(newHtml);
-                        var parent = $scope.$element.parents(".par")[0];
+                        let newHtml = '<answerbrowser task-id="' + $scope.taskId + '"></answerbrowser>';
+                        let newElement = $compile(newHtml);
+                        let parent = $scope.$element.parents(".par")[0];
                         parent.replaceChild(newElement($scope.$parent)[0], $scope.$element[0]);
                         $scope.parentElement = parent;
                     }
                     // Next the inside of the plugin to non lazy
-                    var origHtml = plugin[0].innerHTML;
+                    let origHtml = plugin[0].innerHTML;
                     if ( origHtml.indexOf(LAZYSTART) < 0 ) {
                         plugin = null;
                     }
@@ -89,37 +88,34 @@ timApp.directive("answerbrowserlazy", ['Upload', '$http', '$sce', '$compile', '$
                     }
                 };
             }],
-            
-            link: function ($scope, $element, $attrs) {
-                timLogTime("answerbrowserlazy link function","answ",1);
+
+            link($scope, $element, $attrs) {
+                timLogTime("answerbrowserlazy link function", "answ", 1);
                 $scope.$element = $element;
-                $element.parent().on('mouseenter touchstart', $scope.loadAnswerBrowser);
-            }
+                $element.parent().on("mouseenter touchstart", $scope.loadAnswerBrowser);
+            },
         };
     }]);
 
-
-timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$window', '$filter', '$uibModal', '$log', '$timeout', 'Users',
-    function (Upload, $http, $sce, $compile, $window, $filter, $uibModal, $log, $timeout, Users) {
+timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$window", "$filter", "$uibModal", "$log", "$timeout", "Users",
+    function(Upload, $http, $sce, $compile, $window, $filter, $uibModal, $log, $timeout, Users) {
         "use strict";
-        timLogTime("answerbrowser directive function","answ");
+        timLogTime("answerbrowser directive function", "answ");
         return {
             templateUrl: "/static/templates/answerBrowser.html",
-            restrict: 'E',
+            restrict: "E",
             scope: {
-                taskId: '@'
+                taskId: "@",
             },
-            controller: ['$scope', function ($scope) {
+            controller: ["$scope", function($scope) {
             }],
-            link: function ($scope, $element, $attrs) {
-                $scope.element = $element.parents('.par');
-                $scope.parContent = $scope.element.find('.parContent');
+            link($scope, $element, $attrs) {
+                $scope.element = $element.parents(".par");
+                $scope.parContent = $scope.element.find(".parContent");
                 //$scope.$parent = $scope.$parent; // muutos koska scope on syntynyt tuon toisen lapseksi
-                timLogTime("answerbrowser link","answ");
+                timLogTime("answerbrowser link", "answ");
 
-
-
-                $scope.$watch("taskId", function (newValue, oldValue) {
+                $scope.$watch("taskId", function(newValue, oldValue) {
                     if (newValue === oldValue) {
                         return;
                     }
@@ -129,18 +125,18 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     $scope.getAvailableAnswers();
                 });
 
-                $scope.savePoints = function () {
-                    $http.put('/savePoints/' + $scope.user.id + '/' + $scope.selectedAnswer.id,
-                        {points: $scope.points}).then(function (response) {
+                $scope.savePoints = function() {
+                    $http.put("/savePoints/" + $scope.user.id + "/" + $scope.selectedAnswer.id,
+                        {points: $scope.points}).then(function(response) {
                         $scope.selectedAnswer.points = $scope.points;
-                    }, function (response) {
+                    }, function(response) {
                         $scope.showError(response);
-                    }).finally(function () {
+                    }).finally(function() {
                         $scope.shouldFocus = true;
                     });
                 };
 
-                $scope.updatePoints = function () {
+                $scope.updatePoints = function() {
                     $scope.points = $scope.selectedAnswer.points;
                     if ($scope.points !== null) {
                         $scope.giveCustomPoints = $scope.selectedAnswer.last_points_modifier !== null;
@@ -154,15 +150,15 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     $scope.element.focus();
                 };
 
-                $scope.changeAnswer = function () {
+                $scope.changeAnswer = function() {
                     if ($scope.selectedAnswer === null) {
                         return;
                     }
                     $scope.updatePoints();
-                    var $par = $scope.element;
-                    var ids = $scope.$parent.dereferencePar($par);
+                    let $par = $scope.element;
+                    let ids = $scope.$parent.dereferencePar($par);
                     $scope.loading++;
-                    $http.get('/getState', {
+                    $http.get("/getState", {
                         params: {
                             ref_from_doc_id: $scope.$parent.docId,
                             ref_from_par_id: $scope.$parent.getParId($par),
@@ -170,19 +166,19 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                             par_id: ids[1],
                             user_id: $scope.user.id,
                             answer_id: $scope.selectedAnswer.id,
-                            review: $scope.review
-                        }
-                    }).then(function (response) {
+                            review: $scope.review,
+                        },
+                    }).then(function(response) {
                         loadPlugin(response.data.html, $par, $compile, $scope, $timeout);
                         if ($scope.review) {
-                            $scope.element.find('.review').html(response.data.reviewHtml);
+                            $scope.element.find(".review").html(response.data.reviewHtml);
                         }
-                        var lata = $scope.$parent.loadAnnotationsToAnswer;
+                        let lata = $scope.$parent.loadAnnotationsToAnswer;
                         if ( lata ) lata($scope.selectedAnswer.id, $par[0], $scope.review, $scope.setFocus);
 
-                    }, function (response) {
+                    }, function(response) {
                         $scope.showError(response);
-                    }).finally(function () {
+                    }).finally(function() {
                         $scope.loading--;
                     });
                 };
@@ -190,8 +186,8 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 // Loads annotations to answer
                 setTimeout($scope.changeAnswer, 500); //TODO: Don't use timeout
 
-                $scope.nextAnswer = function () {
-                    var newIndex = $scope.findSelectedAnswerIndex() - 1;
+                $scope.nextAnswer = function() {
+                    let newIndex = $scope.findSelectedAnswerIndex() - 1;
                     if (newIndex < 0) {
                         newIndex = $scope.filteredAnswers.length - 1;
                     }
@@ -199,22 +195,21 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     $scope.changeAnswer();
                 };
 
-                $scope.previousAnswer = function () {
-                    var newIndex = $scope.findSelectedAnswerIndex() + 1;
+                $scope.previousAnswer = function() {
+                    let newIndex = $scope.findSelectedAnswerIndex() + 1;
                     if (newIndex >= $scope.filteredAnswers.length) {
-                        newIndex = 0; 
+                        newIndex = 0;
                     }
                     $scope.selectedAnswer = $scope.filteredAnswers[newIndex];
                     $scope.changeAnswer();
                 };
-
 
                 if ( $scope.$parent.teacherMode ) {
                     $scope.findSelectedUserIndex = function() {
                         if ($scope.users === null) {
                             return -1;
                         }
-                        for (var i = 0; i < $scope.users.length; i++) {
+                        for (let i = 0; i < $scope.users.length; i++) {
                             if ($scope.users[i].id === $scope.user.id) {
                                 return i;
                             }
@@ -252,10 +247,10 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     // ng-keypress will not fire if the textbox has focus
                     $scope.element[0].addEventListener("keydown", $scope.checkKeyPress);
 
-                    $scope.changeStudent = function (dir) {
+                    $scope.changeStudent = function(dir) {
                         if ( $scope.users.length <= 0 ) return;
-                        var shouldRefocusPoints = $scope.shouldFocus;
-                        var newIndex = $scope.findSelectedUserIndex() + dir;
+                        let shouldRefocusPoints = $scope.shouldFocus;
+                        let newIndex = $scope.findSelectedUserIndex() + dir;
                         if (newIndex >= $scope.users.length) {
                             newIndex = 0;
                         }
@@ -268,7 +263,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
 
                         // Be careful when modifying the following code. All browsers (IE/Chrome/FF)
                         // behave slightly differently when it comes to (de-)focusing something.
-                        $timeout(function () {
+                        $timeout(function() {
                             if (shouldRefocusPoints) {
                                 $scope.shouldFocus = shouldRefocusPoints;
                             } else {
@@ -278,8 +273,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     };
                 }
 
-
-                $scope.setNewest = function () {
+                $scope.setNewest = function() {
                     if ($scope.filteredAnswers.length > 0) {
                         $scope.selectedAnswer = $scope.filteredAnswers[0];
                         $scope.changeAnswer();
@@ -287,7 +281,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 };
 
                 $scope.setAnswerById = function(id) {
-                    for (var i=0; i<$scope.filteredAnswers.length; i++){
+                    for (let i = 0; i < $scope.filteredAnswers.length; i++){
                         if ($scope.filteredAnswers[i].id === id){
                             $scope.selectedAnswer = $scope.filteredAnswers[i];
                             $scope.changeAnswer();
@@ -296,7 +290,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     }
                 };
 
-                $scope.getBrowserData = function () {
+                $scope.getBrowserData = function() {
                     if ($scope.answers.length > 0 && $scope.selectedAnswer)
                         return {
                             answer_id: $scope.selectedAnswer.id,
@@ -305,33 +299,33 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                             points: $scope.points,
                             giveCustomPoints: $scope.giveCustomPoints,
                             userId: $scope.user.id,
-                            saveAnswer: !$scope.$parent.noBrowser
+                            saveAnswer: !$scope.$parent.noBrowser,
                         };
                     else
                         return {
                             saveTeacher: false,
                             teacher: $scope.$parent.teacherMode,
-                            saveAnswer: !$scope.$parent.noBrowser
+                            saveAnswer: !$scope.$parent.noBrowser,
                         };
                 };
 
-                $scope.getAvailableUsers = function () {
+                $scope.getAvailableUsers = function() {
                     $scope.loading++;
-                    $http.get('/getTaskUsers/' + $scope.taskId, {params: {group: $scope.$parent.group}})
-                        .then(function (response) {
+                    $http.get("/getTaskUsers/" + $scope.taskId, {params: {group: $scope.$parent.group}})
+                        .then(function(response) {
                             $scope.users = response.data;
-                        }, function (response) {
+                        }, function(response) {
                             $scope.showError(response);
-                        }).finally(function () {
+                        }).finally(function() {
                             $scope.loading--;
                         });
                 };
 
-                $scope.showError = function (response) {
-                    $scope.alerts.push({msg: 'Error: ' + response.data.error, type: 'danger'});
+                $scope.showError = function(response) {
+                    $scope.alerts.push({msg: "Error: " + response.data.error, type: "danger"});
                 };
 
-                $scope.getAvailableAnswers = function (updateHtml) {
+                $scope.getAvailableAnswers = function(updateHtml) {
                     updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
                     if ( !$scope.$parent.item.rights || !$scope.$parent.item.rights.browse_own_answers) {
                         return;
@@ -340,9 +334,9 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                         return;
                     }
                     $scope.loading++;
-                    $http.get('/answers/' + $scope.taskId + '/' + $scope.user.id)
-                        .then(function (response) {
-                            var data = response.data;
+                    $http.get("/answers/" + $scope.taskId + "/" + $scope.user.id)
+                        .then(function(response) {
+                            let data = response.data;
                             if (data.length > 0 && ($scope.hasUserChanged() || data.length !== ($scope.answers || []).length)) {
                                 $scope.answers = data;
                                 $scope.updateFiltered();
@@ -357,36 +351,36 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                                     $scope.dimPlugin();
                                 }
                                 $scope.updateFilteredAndSetNewest();
-                                var i = $scope.findSelectedAnswerIndex();
+                                let i = $scope.findSelectedAnswerIndex();
                                 if (i >= 0) {
                                     $scope.selectedAnswer = $scope.filteredAnswers[i];
                                     $scope.updatePoints();
                                 }
                             }
                             $scope.fetchedUser = $scope.user;
-                        }, function (response) {
+                        }, function(response) {
                             $scope.showError(response);
-                        }).finally(function () {
+                        }).finally(function() {
                             $scope.loading--;
                         });
                 };
 
-                $scope.$on('answerSaved', function (event, args) {
+                $scope.$on("answerSaved", function(event, args) {
                     if (args.taskId === $scope.taskId) {
                         $scope.getAvailableAnswers(false);
                         // HACK: for some reason the math mode is lost because of the above call, so we restore it here
-                        $scope.$parent.processAllMathDelayed($scope.element.find('.parContent'));
+                        $scope.$parent.processAllMathDelayed($scope.element.find(".parContent"));
                         if (args.error) {
-                            $scope.alerts.push({msg: args.error, type: 'warning'});
+                            $scope.alerts.push({msg: args.error, type: "warning"});
                         }
                     }
                 });
 
-                $scope.hasUserChanged = function () {
+                $scope.hasUserChanged = function() {
                     return ($scope.user || {}).id !== ($scope.fetchedUser || {}).id;
                 };
 
-                $scope.$on('userChanged', function (event, args) {
+                $scope.$on("userChanged", function(event, args) {
                     $scope.user = args.user;
                     $scope.firstLoad = false;
                     $scope.shouldUpdateHtml = true;
@@ -396,22 +390,22 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     else if ($scope.hasUserChanged()) {
                         $scope.dimPlugin();
                     } else {
-                        $scope.parContent.css('opacity', '1.0');
+                        $scope.parContent.css("opacity", "1.0");
                     }
                 });
 
-                $scope.dimPlugin = function () {
-                    $scope.parContent.css('opacity', '0.3');
+                $scope.dimPlugin = function() {
+                    $scope.parContent.css("opacity", "0.3");
                 };
 
-                $scope.allowCustomPoints = function () {
+                $scope.allowCustomPoints = function() {
                     if ($scope.taskInfo === null) {
                         return false;
                     }
                     return $scope.taskInfo.userMin !== null && $scope.taskInfo.userMax !== null;
                 };
 
-                $scope.loadIfChanged = function () {
+                $scope.loadIfChanged = function() {
                     if ($scope.hasUserChanged()) {
                         $scope.getAvailableAnswers($scope.shouldUpdateHtml);
                         $scope.loadInfo();
@@ -420,39 +414,38 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     }
                 };
 
-                $scope.showTeacher = function () {
+                $scope.showTeacher = function() {
                     return $scope.$parent.teacherMode && $scope.$parent.item.rights.teacher;
                 };
 
-                $scope.showVelpsCheckBox = function () {
+                $scope.showVelpsCheckBox = function() {
                     // return $scope.$parent.teacherMode || $window.velpMode; // && $scope.$parent.item.rights.teacher;
                     return $window.velpMode || $($scope.element).attr("class").indexOf("has-annotation") >= 0;
                 };
 
-                $scope.getTriesLeft = function () {
+                $scope.getTriesLeft = function() {
                     if ($scope.taskInfo === null) {
                         return null;
                     }
                     return Math.max($scope.taskInfo.answerLimit - $scope.answers.length, 0);
                 };
 
-                $scope.loadInfo = function () {
+                $scope.loadInfo = function() {
                     if ($scope.taskInfo !== null) {
                         return;
                     }
                     $scope.loading++;
-                    $http.get('/taskinfo/' + $scope.taskId)
-                        .then(function (response) {
+                    $http.get("/taskinfo/" + $scope.taskId)
+                        .then(function(response) {
                             $scope.taskInfo = response.data;
-                        }, function (response) {
+                        }, function(response) {
                             $scope.showError(response);
-                        }).finally(function () {
+                        }).finally(function() {
                             $scope.loading--;
                         });
                 };
 
-                
-                $scope.checkUsers = function () {
+                $scope.checkUsers = function() {
                     if ($scope.loading > 0) {
                         return;
                     }
@@ -465,32 +458,32 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     }
                 };
 
-                $scope.getAllAnswers = function () {
+                $scope.getAllAnswers = function() {
                     $uibModal.open({
                         animation: false,
-                        ariaLabelledBy: 'modal-title',
-                        ariaDescribedBy: 'modal-body',
-                        templateUrl: '/static/templates/allAnswersOptions.html',
-                        controller: 'AllAnswersCtrl',
-                        controllerAs: '$ctrl',
-                        size: 'md',
+                        ariaLabelledBy: "modal-title",
+                        ariaDescribedBy: "modal-body",
+                        templateUrl: "/static/templates/allAnswersOptions.html",
+                        controller: "AllAnswersCtrl",
+                        controllerAs: "$ctrl",
+                        size: "md",
                         resolve: {
-                            options: function () {
+                            options() {
                                 return {
-                                    url: '/allAnswersPlain/' + $scope.taskId,
+                                    url: "/allAnswersPlain/" + $scope.taskId,
                                     identifier: $scope.taskId,
-                                    allTasks: false
+                                    allTasks: false,
                                 };
-                            }
-                        }
+                            },
+                        },
                     });
                 };
 
-                $scope.findSelectedAnswerIndex = function () {
+                $scope.findSelectedAnswerIndex = function() {
                     if ($scope.filteredAnswers === null) {
                         return -1;
                     }
-                    for (var i = 0; i < $scope.filteredAnswers.length; i++) {
+                    for (let i = 0; i < $scope.filteredAnswers.length; i++) {
                         if ($scope.filteredAnswers[i].id === $scope.selectedAnswer.id) {
                             return i;
                         }
@@ -501,7 +494,7 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 if ( $scope.$parent.selectedUser ) {
                     $scope.user = $scope.$parent.selectedUser;
                 }
-                else if ($scope.$parent && $scope.$parent.users && $scope.$parent.users.length > 0) { 
+                else if ($scope.$parent && $scope.$parent.users && $scope.$parent.users.length > 0) {
                     $scope.user = $scope.$parent.users[0];
                 } else {
                     $scope.user = Users.getCurrent();
@@ -526,9 +519,9 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                 $scope.shouldFocus = false;
                 $scope.alerts = [];
 
-                $scope.updateFiltered = function () {
+                $scope.updateFiltered = function() {
                     $scope.anyInvalid = false;
-                    $scope.filteredAnswers = $filter('filter')($scope.answers, function (value, index, array) {
+                    $scope.filteredAnswers = $filter("filter")($scope.answers, function(value, index, array) {
                         if (value.valid) {
                             return true;
                         }
@@ -537,25 +530,25 @@ timApp.directive("answerbrowser", ['Upload', '$http', '$sce', '$compile', '$wind
                     });
                 };
 
-                $scope.updateFilteredAndSetNewest = function (newValues, oldValues, scope) {
+                $scope.updateFilteredAndSetNewest = function(newValues, oldValues, scope) {
                     $scope.updateFiltered();
                     if ($scope.findSelectedAnswerIndex() < 0) {
                         $scope.setNewest();
                     }
                 };
 
-                $scope.closeAlert = function (index) {
+                $scope.closeAlert = function(index) {
                     $scope.alerts.splice(index, 1);
                 };
 
-                $scope.$watch('review', $scope.changeAnswer);
-                $scope.$watchGroup(['onlyValid', 'answers'], $scope.updateFilteredAndSetNewest);
+                $scope.$watch("review", $scope.changeAnswer);
+                $scope.$watchGroup(["onlyValid", "answers"], $scope.updateFilteredAndSetNewest);
 
                 // call checkUsers automatically for now; suitable only for lazy mode!
                 $scope.checkUsers();
-                $element.parent().on('mouseenter touchstart', function () {
+                $element.parent().on("mouseenter touchstart", function() {
                     $scope.checkUsers();
                 });
-            }
+            },
         };
     }]);

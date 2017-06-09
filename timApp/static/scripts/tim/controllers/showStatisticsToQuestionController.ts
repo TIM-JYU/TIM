@@ -18,42 +18,42 @@ markAsUsed(chart);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$element',  '$http', function ($scope, $element) {
+timApp.controller("ShowStatisticsToQuestionController", ["$scope", "$element",  "$http", function($scope, $element) {
     "use strict";
     $scope.dynamicAnswerShowControl = {};
     $scope.canvas = "";
     $scope.questionTitle = "";
     $scope.lecturerAnswered = false;
 
-    $scope.$on("closeAnswerSheetForGood", function () {
-        $scope.$emit('closeAnswerShow');
+    $scope.$on("closeAnswerSheetForGood", function() {
+        $scope.$emit("closeAnswerShow");
         $scope.dynamicAnswerShowControl.close();
     });
     /**
      * Closes statistic window
      * @memberof module:showStatisticsToQuestionController
      */
-    $scope.close = function () {
-        $scope.$emit('closeAnswerShow');
+    $scope.close = function() {
+        $scope.$emit("closeAnswerShow");
         if ($scope.lecturerAnswered) {
             $scope.dynamicAnswerShowControl.close();
         }
     };
 
-    $scope.hide = function () {
-        $scope.$emit('closeAnswerShow');
+    $scope.hide = function() {
+        $scope.$emit("closeAnswerShow");
     };
 
-    $scope.$on("lecturerAnswered", function () {
+    $scope.$on("lecturerAnswered", function() {
         $scope.lecturerAnswered = true;
-        $scope.$emit('showAnswers', true);
+        $scope.$emit("showAnswers", true);
     });
 
     /**
      * Adds answer to statistic directive
      * @memberof module:showStatisticsToQuestionController
      */
-    $scope.$on("putAnswers", function (event, answer) {
+    $scope.$on("putAnswers", function(event, answer) {
         $scope.dynamicAnswerShowControl.addAnswer(answer.answers);
     });
 
@@ -61,18 +61,18 @@ timApp.controller('ShowStatisticsToQuestionController', ['$scope', '$element',  
      * Creates chart based on question json.
      * @memberof module:showStatisticsToQuestionController
      */
-    $scope.$on("createChart", async function (event, question) {
+    $scope.$on("createChart", async function(event, question) {
         $scope.lecturerAnswered = false;
         await $scope.dynamicAnswerShowControl.createChart(question);
         $scope.questionTitle = question.questionText;
         // GlobalParCompiler.processAllMath($element);
         // ParCompiler.processAllMath($element.parent());
 
-        window.setTimeout(function () { // give time to html to change
+        window.setTimeout(function() { // give time to html to change
             ParCompiler.processAllMath($element.parent());
         }, 200);
 
     });
 
 }]);
-
+

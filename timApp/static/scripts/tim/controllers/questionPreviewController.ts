@@ -16,8 +16,8 @@ markAsUsed(answerSheet);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$rootScope',
-    function ($scope, $window, http, $rootScope) {
+timApp.controller("QuestionPreviewController", ["$scope", "$window", "$http", "$rootScope",
+    function($scope, $window, http, $rootScope) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit questionPreview.html to repeat rows and columns
         "use strict";
@@ -28,7 +28,7 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         $scope.isLecturer = false;
         $scope.questionTitle = "";
 
-        $scope.$on("setPreviewJson", function (event, args) {
+        $scope.$on("setPreviewJson", function(event, args) {
             $scope.questionId = args.questionId;
             $scope.questionParId = args.questionParId;
             $scope.questionParIdNext = args.questionParIdNext;
@@ -57,50 +57,49 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
         };
         */
 
-    $scope.editQuestion = function () {
+        $scope.editQuestion = function() {
         $scope.close();
-        var parId = $scope.questionParId;
-        var parNextId = $scope.questionParIdNext;
-        var docId = $scope.docId;
+        let parId = $scope.questionParId;
+        let parNextId = $scope.questionParIdNext;
+        let docId = $scope.docId;
         // $rootScope.$broadcast('toggleQuestion');
         http({
-            url: '/getQuestionByParId',
-            method: 'GET',
-            params: {'par_id': parId, 'doc_id': docId, 'edit': true}
+            url: "/getQuestionByParId",
+            method: "GET",
+            params: {par_id: parId, doc_id: docId, edit: true},
         })
-            .success(function (data) {
+            .success(function(data) {
                 if ( !data.markup ) return; // not a question
                 $scope.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
                 $scope.markup = data.markup;
                 // data.markup.qst = true;
-                $rootScope.$broadcast('changeQuestionTitle', {'questionTitle': $scope.json.questionTitle});
-                $rootScope.$broadcast('editQuestion', {
-                    'par_id': parId,
-                    'par_id_next': parNextId,
-                    'markup': data.markup
+                $rootScope.$broadcast("changeQuestionTitle", {questionTitle: $scope.json.questionTitle});
+                $rootScope.$broadcast("editQuestion", {
+                    par_id: parId,
+                    par_id_next: parNextId,
+                    markup: data.markup,
                 });
 
             })
 
-            .error(function () {
+            .error(function() {
                 console.error("Could not get question.");
             });
 
         // $scope.par = $par;
     };
 
-
         /**
          * FILL WITH SUITABLE TEXT
          * @memberof module:questionPreviewController
          */
-        $scope.ask = function () {
-            $scope.$emit('askQuestion', {
-                "lecture_id": $scope.lectureId,
-                "question_id": $scope.questionId,
-                "par_id": $scope.questionParId,
-                "doc_id": $scope.docId,
-                "markup": $scope.markup
+        $scope.ask = function() {
+            $scope.$emit("askQuestion", {
+                lecture_id: $scope.lectureId,
+                question_id: $scope.questionId,
+                par_id: $scope.questionParId,
+                doc_id: $scope.docId,
+                markup: $scope.markup,
             });
             $scope.close();
         };
@@ -109,32 +108,30 @@ timApp.controller('QuestionPreviewController', ['$scope', '$window', '$http', '$
          * FILL WITH SUITABLE TEXT
          * @memberof module:questionPreviewController
          */
-        $scope.close = function () {
+        $scope.close = function() {
             $scope.dynamicAnswerSheetControl.closePreview();
-            $scope.$emit('closeQuestionPreview');
+            $scope.$emit("closeQuestionPreview");
         };
-
-
 
         /**
          * FILL WITH SUITABLE TEXT
          * @memberof module:questionPreviewController
          */
-        $scope.deleteQuestion = function () {
-            var confirmDi = $window.confirm("Are you sure you want to delete this question?");
+        $scope.deleteQuestion = function() {
+            let confirmDi = $window.confirm("Are you sure you want to delete this question?");
             if (confirmDi) {
-                http.post('/deleteParagraph/' + $scope.docId, {par: $scope.questionParId})
-                    .success(function (data) {
+                http.post("/deleteParagraph/" + $scope.docId, {par: $scope.questionParId})
+                    .success(function(data) {
                         $scope.handleDelete(data, {par: $scope.questionParId, area_start: null, area_end: null});
-                        $scope.$emit('closeQuestionPreview');
+                        $scope.$emit("closeQuestionPreview");
                         $window.console.log("Deleted question");
                     })
-                    .error(function (error) {
-                        $scope.$emit('closeQuestionPreview');
+                    .error(function(error) {
+                        $scope.$emit("closeQuestionPreview");
                         $window.console.log(error);
                     });
 
             }
         };
-    }
+    },
 ]);

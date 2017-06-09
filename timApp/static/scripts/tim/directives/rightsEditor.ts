@@ -1,76 +1,76 @@
+import moment from "moment";
+import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
 import {markAsUsed} from "tim/utils";
-import {timApp} from "tim/app";
-import moment from "moment";
 
 markAsUsed(focusMe);
 
-timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window, $log, $http) {
+timApp.directive("rightsEditor", ["$window", "$log", "$http", function($window, $log, $http) {
     "use strict";
     return {
-        restrict: 'E',
+        restrict: "E",
         scope: {
-            itemId: '=?',
-            urlRoot: '@?',
-            accessTypes: '=?',
-            control: '=?'
+            itemId: "=?",
+            urlRoot: "@?",
+            accessTypes: "=?",
+            control: "=?",
         },
         templateUrl: "/static/templates/rightsEditor.html",
-        link: function ($scope, $element) {
+        link($scope, $element) {
 
         },
 
-        controller: ['$scope', '$element', '$attrs', function ($scope, $element, $attrs) {
-            var sc = $scope;
+        controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
+            let sc = $scope;
             sc.internalControl = sc.control || {};
             sc.grouprights = [];
             sc.timeOpt = {};
             sc.selectedRight = null;
             sc.showActiveOnly = true;
-            sc.timeOpt.type = 'always';
-            sc.timeOpt.durationType = 'hours';
+            sc.timeOpt.type = "always";
+            sc.timeOpt.durationType = "hours";
             sc.timeOpt.durationAmount = 4;
-            sc.durationTypes = ['seconds', 'minutes', 'hours', 'days', 'weeks', 'months', 'years'];
+            sc.durationTypes = ["seconds", "minutes", "hours", "days", "weeks", "months", "years"];
             sc.datePickerOptionsFrom = {
-                format: 'D.M.YYYY HH:mm:ss',
+                format: "D.M.YYYY HH:mm:ss",
                 defaultDate: moment(),
-                showTodayButton: true
+                showTodayButton: true,
             };
             sc.datePickerOptionsTo = {
-                format: 'D.M.YYYY HH:mm:ss',
+                format: "D.M.YYYY HH:mm:ss",
                 defaultDate: moment(),
-                showTodayButton: true
+                showTodayButton: true,
             };
             sc.datePickerOptionsDurationFrom = {
-                format: 'D.M.YYYY HH:mm:ss',
-                showTodayButton: true
+                format: "D.M.YYYY HH:mm:ss",
+                showTodayButton: true,
             };
             sc.datePickerOptionsDurationTo = {
-                format: 'D.M.YYYY HH:mm:ss',
-                showTodayButton: true
+                format: "D.M.YYYY HH:mm:ss",
+                showTodayButton: true,
             };
             if (sc.accessTypes) {
                 sc.accessType = sc.accessTypes[0];
             }
 
-            sc.showAddRightFn = function (type) {
+            sc.showAddRightFn = function(type) {
                 sc.accessType = type;
                 sc.selectedRight = null;
                 sc.addingRight = true;
                 sc.focusEditor = true;
             };
 
-            sc.removeConfirm = function (group, type) {
+            sc.removeConfirm = function(group, type) {
                 if ($window.confirm("Remove " + type + " right from " + group.name + "?")) {
                     sc.removePermission(group, type);
                 }
             };
 
-            sc.getPermissions = function () {
+            sc.getPermissions = function() {
                 if (!sc.urlRoot || !sc.itemId) {
                     return;
                 }
-                $http.get('/' + sc.urlRoot + '/get/' + sc.itemId).success(function (data, status, headers, config) {
+                $http.get("/" + sc.urlRoot + "/get/" + sc.itemId).success(function(data, status, headers, config) {
                     sc.grouprights = data.grouprights;
                     if (data.accesstypes) {
                         sc.accessTypes = data.accesstypes;
@@ -78,111 +78,111 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
                             sc.accessType = sc.accessTypes[0];
                         }
                     }
-                }).error(function (data, status, headers, config) {
+                }).error(function(data, status, headers, config) {
                     $window.alert("Could not fetch permissions.");
                 });
             };
 
-            sc.removePermission = function (right, type) {
-                $http.put('/' + sc.urlRoot + '/remove/' + sc.itemId + '/' + right.gid + '/' + type, {}).success(
-                    function (data, status, headers, config) {
+            sc.removePermission = function(right, type) {
+                $http.put("/" + sc.urlRoot + "/remove/" + sc.itemId + "/" + right.gid + "/" + type, {}).success(
+                    function(data, status, headers, config) {
                         sc.getPermissions();
-                    }).error(function (data, status, headers, config) {
+                    }).error(function(data, status, headers, config) {
                     $window.alert(data.error);
                 });
             };
 
-            sc.cancel = function () {
+            sc.cancel = function() {
                 sc.addingRight = false;
                 sc.selectedRight = null;
             };
 
-            sc.editingRight = function () {
+            sc.editingRight = function() {
                 return sc.selectedRight !== null;
             };
 
-            sc.addOrEditPermission = function (groupname, type) {
-                $http.put('/' + sc.urlRoot + '/add/' + sc.itemId + '/' + groupname.split('\n').join(';') + '/' + type.name,
+            sc.addOrEditPermission = function(groupname, type) {
+                $http.put("/" + sc.urlRoot + "/add/" + sc.itemId + "/" + groupname.split("\n").join(";") + "/" + type.name,
                     sc.timeOpt).success(
-                    function (data, status, headers, config) {
+                    function(data, status, headers, config) {
                         sc.getPermissions();
                         sc.cancel();
-                    }).error(function (data, status, headers, config) {
+                    }).error(function(data, status, headers, config) {
                     $window.alert(data.error);
                 });
             };
 
-            sc.getPlaceholder = function () {
-                return 'enter username(s)/group name(s) separated by semicolons' + (sc.listMode ? ' or newlines' : '');
+            sc.getPlaceholder = function() {
+                return "enter username(s)/group name(s) separated by semicolons" + (sc.listMode ? " or newlines" : "");
             };
 
-            sc.getGroupDesc = function (group) {
-                return group.fullname ? group.fullname + ' (' + group.name + ')' : group.name;
+            sc.getGroupDesc = function(group) {
+                return group.fullname ? group.fullname + " (" + group.name + ")" : group.name;
             };
 
-            sc.shouldShowBeginTime = function (group) {
+            sc.shouldShowBeginTime = function(group) {
                 // having -1 here (instead of 0) avoids "begins in a few seconds" right after adding a right
-                return moment().diff(group.accessible_from, 'seconds') < -1;
+                return moment().diff(group.accessible_from, "seconds") < -1;
             };
 
-            sc.shouldShowEndTime = function (group) {
+            sc.shouldShowEndTime = function(group) {
                 return group.accessible_to !== null && moment().diff(group.accessible_to) <= 0;
             };
 
-            sc.shouldShowEndedTime = function (group) {
+            sc.shouldShowEndedTime = function(group) {
                 return group.accessible_to !== null && moment().diff(group.accessible_to) > 0;
             };
 
-            sc.shouldShowDuration = function (group) {
+            sc.shouldShowDuration = function(group) {
                 return group.duration !== null && group.accessible_from === null;
             };
 
-            sc.shouldShowUnlockable = function (group) {
+            sc.shouldShowUnlockable = function(group) {
                 return group.duration !== null &&
                     group.duration_from !== null &&
                     group.accessible_from === null &&
                     moment().diff(group.duration_from) < 0;
             };
 
-            sc.shouldShowNotUnlockable = function (group) {
+            sc.shouldShowNotUnlockable = function(group) {
                 return group.duration !== null &&
                     group.duration_to !== null &&
                     group.accessible_from === null &&
                     moment().diff(group.duration_to) <= 0;
             };
 
-            sc.shouldShowNotUnlockableAnymore = function (group) {
+            sc.shouldShowNotUnlockableAnymore = function(group) {
                 return group.duration !== null &&
                     group.duration_to !== null &&
                     group.accessible_from === null &&
                     moment().diff(group.duration_to) > 0;
             };
 
-            sc.isObsolete = function (group) {
+            sc.isObsolete = function(group) {
                 return sc.shouldShowEndedTime(group) || sc.shouldShowNotUnlockableAnymore(group);
             };
 
-            sc.obsoleteFilterFn = function (group) {
+            sc.obsoleteFilterFn = function(group) {
                 return !sc.showActiveOnly || !sc.isObsolete(group);
             };
 
-            sc.showClock = function (group) {
+            sc.showClock = function(group) {
                 return group.duration !== null || group.accessible_to !== null;
             };
 
             // TODO make duration editor its own component
-            sc.$watchGroup(['timeOpt.durationAmount', 'timeOpt.durationType'], function (newValues, oldValues, scope) {
+            sc.$watchGroup(["timeOpt.durationAmount", "timeOpt.durationType"], function(newValues, oldValues, scope) {
                 sc.timeOpt.duration = moment.duration(sc.timeOpt.durationAmount, sc.timeOpt.durationType);
             });
 
-            sc.expireRight = function (group) {
+            sc.expireRight = function(group) {
                 sc.editRight(group);
                 sc.timeOpt.to = moment();
-                sc.timeOpt.type = 'range';
+                sc.timeOpt.type = "range";
                 sc.addOrEditPermission(group.name, sc.accessType);
             };
 
-            sc.editRight = function (group) {
+            sc.editRight = function(group) {
                 sc.groupName = group.name;
                 sc.accessType = {id: group.access_type, name: group.access_name};
                 sc.addingRight = false;
@@ -211,10 +211,10 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
                 }
 
                 if (group.duration && group.accessible_from === null) {
-                    var d = moment.duration(group.duration);
-                    sc.timeOpt.type = 'duration';
-                    for (var i = sc.durationTypes.length - 1; i >= 0; --i) {
-                        var amount = d.as(sc.durationTypes[i]);
+                    let d = moment.duration(group.duration);
+                    sc.timeOpt.type = "duration";
+                    for (let i = sc.durationTypes.length - 1; i >= 0; --i) {
+                        let amount = d.as(sc.durationTypes[i]);
                         if (Math.floor(amount) === amount || i === 0) {
                             // preserve last duration type choice if the amount is zero
                             if (amount !== 0) {
@@ -225,11 +225,11 @@ timApp.directive("rightsEditor", ['$window', '$log', '$http', function ($window,
                         }
                     }
                 } else {
-                    sc.timeOpt.type = 'range';
+                    sc.timeOpt.type = "range";
                 }
             };
 
             sc.getPermissions();
-        }]
+        }],
     };
 }]);

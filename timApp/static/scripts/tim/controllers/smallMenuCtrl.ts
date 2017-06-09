@@ -1,6 +1,6 @@
-import {timApp} from "tim/app";
 import angular from "angular";
 import $ from "jquery";
+import {timApp} from "tim/app";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -14,18 +14,18 @@ import $ from "jquery";
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
-    function ($scope, $window, $http) {
+timApp.controller("SmallMenuCtrl", ["$scope", "$window", "$http",
+    function($scope, $window, $http) {
 		$scope.currentLecturesList = [];
-        $scope.futureLecturesList = [];
+  $scope.futureLecturesList = [];
 
         /**
          * FILL WITH SUITABLE TEXT
          * @memberof module:smallMenuCtrl
          */
-        var ready = function() {
-			$('#currentList').hide();
-			$('#futureList').hide();
+  let ready = function() {
+			$("#currentList").hide();
+			$("#futureList").hide();
 		};
 
         /**
@@ -33,22 +33,22 @@ timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
          * @memberof module:smallMenuCtrl
          */
 		$scope.openCurrentLectureMenu = function() {
-			$('#currentList').slideToggle();
-			$('#futureList').hide();
-			$('.menu').hide();
-			
-			 $http({
-                    url: '/getAllLecturesFromDocument',
-                    method: 'GET',
-                    params: {'doc_id': $scope.docId}
+			$("#currentList").slideToggle();
+			$("#futureList").hide();
+			$(".menu").hide();
+
+			$http({
+                    url: "/getAllLecturesFromDocument",
+                    method: "GET",
+                    params: {doc_id: $scope.docId},
                 })
-                    .success(function (lectures) {
+                    .success(function(lectures) {
                         $scope.currentLecturesList = lectures.currentLectures;
 
                     })
-                    .error(function () {
+                    .error(function() {
                     });
-			
+
 		};
 
         /**
@@ -56,21 +56,21 @@ timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
          * @memberof module:smallMenuCtrl
          */
 		$scope.openFutureLectureMenu = function() {
-			$('#futureList').slideToggle();
-			$('#currentList').hide();
-			$('.menu').hide();
-			
-			 $http({
-                    url: '/getAllLecturesFromDocument',
-                    method: 'GET',
-                    params: {'doc_id': $scope.docId}
+			$("#futureList").slideToggle();
+			$("#currentList").hide();
+			$(".menu").hide();
+
+			$http({
+                    url: "/getAllLecturesFromDocument",
+                    method: "GET",
+                    params: {doc_id: $scope.docId},
                 })
-                    .success(function (lectures) {
+                    .success(function(lectures) {
                         $scope.futureLecturesList = lectures.futureLectures;
                     })
-                    .error(function () {
+                    .error(function() {
                     });
-			
+
 		};
 
         /**
@@ -80,11 +80,11 @@ timApp.controller("SmallMenuCtrl", ['$scope', '$window', '$http',
 		$scope.selectCurrentLecture = function() {
 
 		};
-		
-		var w = angular.element($window);
-		w.bind('resize', function () {
-			$('#currentList').hide();
-			$('#futureList').hide();
+
+		let w = angular.element($window);
+		w.bind("resize", function() {
+			$("#currentList").hide();
+			$("#futureList").hide();
 		});
-    }
+    },
 ]);

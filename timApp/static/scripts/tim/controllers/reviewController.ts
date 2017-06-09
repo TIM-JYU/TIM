@@ -1,6 +1,6 @@
-import {timApp} from "tim/app";
 import angular from "angular";
 import $ from "jquery";
+import {timApp} from "tim/app";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
@@ -14,18 +14,17 @@ import $ from "jquery";
  * @copyright 2016 Timber project members
  */
 
-
-var UNDEFINED = "undefined";
+const UNDEFINED = "undefined";
 
 /**
  * Angular controller for handling annotations.
  * @lends module:reviewController
  */
-timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile', function ($scope, $http, $window, $compile) {
+timApp.controller("ReviewController", ["$scope", "$http", "$window", "$compile", function($scope, $http, $window, $compile) {
     "use strict";
-    var console = $window.console;
+    const console = $window.console;
 
-    var illegalClasses = ["annotation-element", "highlighted", "editorArea", "previewcontent"];
+    const illegalClasses = ["annotation-element", "highlighted", "editorArea", "previewcontent"];
 
     $scope.annotationsAdded = false;
     $scope.selectedArea = null;
@@ -34,7 +33,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
     $scope.annotations = [];
     $scope.annotationids = {0: 0};
     $scope.zIndex = 1;
-    var doc_id = $scope.docId;
+    const doc_id = $scope.docId;
 
     /**
      * Makes a post request to the given URL.
@@ -43,21 +42,21 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param params - Query parameters
      * @param successMethod - Method to run if the request was successful.
      */
-    $scope.makePostRequest = function (url, params, successMethod) {
+    $scope.makePostRequest = function(url, params, successMethod) {
         if (params === null){
-            throw "'params' can not be null";
+            throw new Error("'params' can not be null");
         }
 
         $http({
-            method: 'POST',
-            url: url,
-            data: params
-        }).then(function (data) {
+            method: "POST",
+            url,
+            data: params,
+        }).then(function(data) {
             successMethod(data);
         });
     };
 
-    $http.get('/{0}/get_annotations'.replace('{0}', doc_id)).success(function (data) {
+    $http.get("/{0}/get_annotations".replace("{0}", doc_id)).success(function(data) {
             $scope.annotations = data;
             $scope.loadDocumentAnnotations();
         });
@@ -66,13 +65,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Loads the document annotations into the view.
      * @method loadDocumentAnnotations
      */
-    $scope.loadDocumentAnnotations = function () {
-        var annotationsToRemove = [];
+    $scope.loadDocumentAnnotations = function() {
+        const annotationsToRemove = [];
 
-        for (var i = 0; i < $scope.annotations.length; i++) {
+        for (let i = 0; i < $scope.annotations.length; i++) {
 
-            var placeInfo = $scope.annotations[i].coord;
-            var parent = document.getElementById(placeInfo.start.par_id);
+            const placeInfo = $scope.annotations[i].coord;
+            const parent = document.getElementById(placeInfo.start.par_id);
 
             if (parent === null) {
                 // TODO: Decide what to do, when parent element has been deleted, for now remove annotation from list
@@ -90,20 +89,20 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             if (parent.getAttribute("t") === placeInfo.start.t && placeInfo.start.offset !== null) {
 
                 try {
-                    var elements = parent.querySelector(".parContent");
+                    let elements = parent.querySelector(".parContent");
 
-                    var start_elpath = placeInfo.start.el_path;
+                    const start_elpath = placeInfo.start.el_path;
 
-                    for (var j = 0; j < start_elpath.length; j++) {
-                        var elementChildren = getElementChildren(elements);
+                    for (let j = 0; j < start_elpath.length; j++) {
+                        const elementChildren = getElementChildren(elements);
                         if (elementChildren[start_elpath[j]] !== null)
                             elements = elementChildren[start_elpath[j]];
                     }
 
-                    var startel = elements.childNodes[placeInfo.start.node];
-                    var endel = elements.childNodes[placeInfo.end.node];
+                    const startel = elements.childNodes[placeInfo.start.node];
+                    const endel = elements.childNodes[placeInfo.end.node];
 
-                    var range = document.createRange();
+                    const range = document.createRange();
                     range.setStart(startel, placeInfo.start.offset);
                     range.setEnd(endel, placeInfo.end.offset);
                     $scope.addAnnotationToCoord(range, $scope.annotations[i], false);
@@ -116,8 +115,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             }
         }
 
-        for (var k = 0; k < annotationsToRemove.length; k++) {
-            var index = $scope.annotations.indexOf(annotationsToRemove[k]);
+        for (let k = 0; k < annotationsToRemove.length; k++) {
+            const index = $scope.annotations.indexOf(annotationsToRemove[k]);
             $scope.annotations.splice(index, 1);
         }
 
@@ -130,12 +129,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param element - Element whose children are requested
      * @returns {Array} Element children
      */
-    var getElementChildren = function (element) {
+    const getElementChildren = function(element) {
         /*if (typeof element.children !== "undefined")
          return element.children;
          */
-        var children = [];
-        for (var i = 0; i < element.childNodes.length; i++) {
+        const children = [];
+        for (let i = 0; i < element.childNodes.length; i++) {
             if (typeof element.childNodes[i].tagName !== "undefined") {
                 children.push(element.childNodes[i]);
             }
@@ -149,13 +148,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param element - Element whose parent is queried for
      * @returns {Element} Element parent
      */
-    var getElementParent = function (element) {
+    const getElementParent = function(element) {
         /*
          if (typeof element.parentElement !== "undefined")
          return element.parentElement;
          */
         if ( !element ) return null;
-        var parent = element.parentNode;
+        const parent = element.parentNode;
         if ( !parent ) return null;
         if (typeof parent.tagName !== "undefined") {
             return parent;
@@ -164,7 +163,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         getElementParent(parent);
     };
 
-
     /**
      * Gets element parent element until given attribute is present.
      * @method getElementParentUntilAttribute
@@ -172,7 +170,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param attribute - Attribute as a string
      * @returns {Element} First element that has the given attribute
      */
-    var getElementParentUntilAttribute = function (element, attribute) {
+    const getElementParentUntilAttribute = function(element, attribute) {
         element = getElementParent(element);
         while (!element.hasAttribute(attribute)) {
             element = getElementParent(element);
@@ -180,8 +178,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         return element;
     };
 
-
-    var getFirstChildUntilNull = function (element) {
+    const getFirstChildUntilNull = function(element) {
         if (typeof element.firstChild === UNDEFINED || element.firstChild === null){
             return element;
         }
@@ -193,7 +190,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param element
      * @returns Element
      */
-    var getLastChildUntilNull = function(element) {
+    const getLastChildUntilNull = function(element) {
         if (typeof element.lastChild === UNDEFINED || element.lastChild === null){
             return element;
         }
@@ -206,7 +203,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param element - Element to check
      * @returns {boolean} - Whether the element is an annotation or not
      */
-    var checkIfAnnotation = function (element) {
+    const checkIfAnnotation = function(element) {
         if (element.nodeName === "ANNOTATION")
             return true;
 
@@ -223,28 +220,28 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param answer_id - Answer ID
      * @param par - Paragraph element
      */
-    $scope.loadAnnotationsToAnswer = function (answer_id, par, showInPlace) {
-        var annotations = $scope.getAnnotationsByAnswerId(answer_id);
+    $scope.loadAnnotationsToAnswer = function(answer_id, par, showInPlace) {
+        const annotations = $scope.getAnnotationsByAnswerId(answer_id);
 
-        var oldAnnotations = par.querySelectorAll(".notes [aid]");
+        const oldAnnotations = par.querySelectorAll(".notes [aid]");
         if (oldAnnotations.length > 0) {
-            var annotationParent = getElementParent(oldAnnotations[0]);
-            for (var a = 0; a < oldAnnotations.length; a++) {
+            const annotationParent = getElementParent(oldAnnotations[0]);
+            for (let a = 0; a < oldAnnotations.length; a++) {
                 annotationParent.removeChild(oldAnnotations[a]);
             }
         }
 
-        for (var i = 0; i < annotations.length; i++) {
-            var placeInfo = annotations[i].coord;
+        for (let i = 0; i < annotations.length; i++) {
+            const placeInfo = annotations[i].coord;
 
-            var preElem =  par.getElementsByTagName("PRE")[0];
+            const preElem =  par.getElementsByTagName("PRE")[0];
             if ( !preElem ) continue;
-            var element = preElem.firstChild;
+            const element = preElem.firstChild;
 
             if (!showInPlace || placeInfo.start.offset === null) {
                 addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
             } else {
-                var range = document.createRange();
+                const range = document.createRange();
                 range.setStart(element, placeInfo.start.offset);
                 range.setEnd(element, placeInfo.end.offset);
                 $scope.addAnnotationToCoord(range, annotations[i], false);
@@ -260,14 +257,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param id - Answer ID
      * @returns {Array} Annotations of the answer
      */
-    $scope.getAnnotationsByAnswerId = function (id) {
-        var annotations = [];
-        $scope.annotations.forEach(function (a) {
+    $scope.getAnnotationsByAnswerId = function(id) {
+        const annotations = [];
+        $scope.annotations.forEach(function(a) {
             if (a.answer_id !== null && a.answer_id === id)
                 annotations.push(a);
         });
 
-        annotations.sort(function (a, b) {
+        annotations.sort(function(a, b) {
             return b.coord.start.offset - a.coord.start.offset;
         });
 
@@ -281,8 +278,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param annotation - Annotation info
      * @param show - Whether annotation is shown when created or not
      */
-    $scope.addAnnotationToCoord = function (range, annotation, show) {
-        var span = $scope.createPopOverElement(annotation, show);
+    $scope.addAnnotationToCoord = function(range, annotation, show) {
+        const span = $scope.createPopOverElement(annotation, show);
         try {
             range.surroundContents(span);
         } catch (err) {
@@ -313,10 +310,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param show - Whether annotation is shown when created or not
      * @param reason - The reason why the annotation is put here (not implemented yet)
      */
-    var addAnnotationToElement = function (el, annotation, show, reason) {
+    const addAnnotationToElement = function(el, annotation, show, reason) {
         annotation.reason = reason;
-        var span = $scope.createPopOverElement(annotation, show);
-        var text = document.createTextNode("\u00A0" + annotation.content + "\u00A0");
+        const span = $scope.createPopOverElement(annotation, show);
+        const text = document.createTextNode("\u00A0" + annotation.content + "\u00A0");
         span.appendChild(text);
         addElementToParagraphMargin(el, span);
 
@@ -329,8 +326,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param par - Paragraph where the element will be added
      * @param el - Element to add
      */
-    var addElementToParagraphMargin = function (par, el) {
-        var container = par.getElementsByClassName("notes");
+    const addElementToParagraphMargin = function(par, el) {
+        let container = par.getElementsByClassName("notes");
         if (container.length > 0) {
             container[0].appendChild(el);
         } else {
@@ -351,13 +348,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             //$compile($scope.velpBadge)($scope);
             return $scope.velpBadge;
         }
-        var btn = document.createElement("input");
+        const btn = document.createElement("input");
         btn.type = "button";
         btn.classList.add("velp-badge");
         btn.classList.add("timButton");
         btn.value = "V";
         btn.id = "velpBadge";
-        btn.onclick = function (e) {
+        btn.onclick = function(e) {
             $scope.clearVelpBadge(e);
         };
         //btn.setAttribute("ng-click", "clearVelpBadge($event)");
@@ -372,7 +369,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param oldElement - Element where the badge was
      * @param newElement - Element where the badge needs to be attached
      */
-    $scope.updateVelpBadge = function (oldElement, newElement) {
+    $scope.updateVelpBadge = function(oldElement, newElement) {
         if (newElement === null) {
             return null;
         } else if (oldElement === null) {
@@ -387,10 +384,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Removes the velp badge and clears the element selection.
      * @param e - Current click event
      */
-    $scope.clearVelpBadge = function (e) {
-        var btn = $scope.velpBadge;
+    $scope.clearVelpBadge = function(e) {
+        const btn = $scope.velpBadge;
         if ( btn ) {
-            var parent = getElementParent(btn);
+            const parent = getElementParent(btn);
             if ( parent ) parent.removeChild(btn);
         }
 
@@ -402,14 +399,13 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
-
     /**
      * Returns the real ID of an annotation.
      * @method getRealAnnotationId
      * @param id - Annotation ID generated by the client
      * @returns {int} Annotation ID generated by the server
      */
-    $scope.getRealAnnotationId = function (id) {
+    $scope.getRealAnnotationId = function(id) {
         if (id < 0) {
             return $scope.annotationids[id];
         }
@@ -422,15 +418,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param id - Annotation ID
      * @param inmargin - Whether annotation is a margin annotation or not
      */
-    $scope.deleteAnnotation = function (id, inmargin) {
-        var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
-        var annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
+    $scope.deleteAnnotation = function(id, inmargin) {
+        const annotationParents = document.querySelectorAll('[aid="{0}"]'.replace("{0}", id));
+        const annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
 
         if (annotationParents.length > 1) {
-            var savedHTML = "";
-            for (var i = 0; i < annotationHighlights.length; i++) {
-                var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
-                addHTML = addHTML.replace('</span>', '');
+            let savedHTML = "";
+            for (let i = 0; i < annotationHighlights.length; i++) {
+                let addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', "");
+                addHTML = addHTML.replace("</span>", "");
                 savedHTML += addHTML;
             }
             annotationParents[0].outerHTML = savedHTML;
@@ -439,14 +435,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             annotationParents[0].parentNode.removeChild(annotationParents[0]);
         }
 
-        for (var a = 0; a < $scope.annotations.length; a++) {
+        for (let a = 0; a < $scope.annotations.length; a++) {
             if (id === $scope.annotations[a].id)
                 $scope.annotations.splice(a, 1);
         }
 
-        var current_id = $scope.getRealAnnotationId(id);
+        const current_id = $scope.getRealAnnotationId(id);
 
-        $scope.makePostRequest("/invalidate_annotation", {annotation_id: current_id}, function (json) {
+        $scope.makePostRequest("/invalidate_annotation", {annotation_id: current_id}, function(json) {
         });
     };
 
@@ -456,26 +452,26 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param id - Annotation ID
      * @param inmargin - Whether the annotation is to be placed in the margin or not
      */
-    $scope.updateAnnotation = function (id, inmargin) {
-        var annotationParents = document.querySelectorAll('[aid="{0}"]'.replace('{0}', id));
-        var annotationElement = $('[aid="{0}"]'.replace('{0}', id));
-        var par = annotationElement.parents('.par');
-        var annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
-        if(!inmargin) {
-            for (var a = 0; a < $scope.annotations.length; a++) {
+    $scope.updateAnnotation = function(id, inmargin) {
+        const annotationParents = document.querySelectorAll('[aid="{0}"]'.replace("{0}", id));
+        const annotationElement = $('[aid="{0}"]'.replace("{0}", id));
+        const par = annotationElement.parents(".par");
+        const annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
+        if (!inmargin) {
+            for (let a = 0; a < $scope.annotations.length; a++) {
                 if (id === $scope.annotations[a].id){
                     annotationElement[1].parentNode.removeChild(annotationElement[1]);
-                    addAnnotationToElement(par[0], $scope.annotations[a], false,"Added also margin annotation");
+                    addAnnotationToElement(par[0], $scope.annotations[a], false, "Added also margin annotation");
                     //addAnnotationToElement($scope.annotations[a], false, "Added also margin annotation");
                 }
             }
 
         } else {
             if (annotationParents.length > 1) {
-                var savedHTML = "";
-                for (var i = 0; i < annotationHighlights.length; i++) {
-                    var addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', '');
-                    addHTML = addHTML.replace('</span>', '');
+                let savedHTML = "";
+                for (let i = 0; i < annotationHighlights.length; i++) {
+                    let addHTML = annotationHighlights[i].innerHTML.replace('<span class="ng-scope">', "");
+                    addHTML = addHTML.replace("</span>", "");
                     savedHTML += addHTML;
                 }
                 annotationParents[0].outerHTML = savedHTML;
@@ -486,16 +482,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
     };
 
-
-
     /**
      * Changes annotation points.
      * @method changeAnnotationPoints
      * @param id - Annotation ID
      * @param points - Annotation points
      */
-    $scope.changeAnnotationPoints = function (id, points) {
-        for (var i = 0; i < $scope.annotations.length; i++) {
+    $scope.changeAnnotationPoints = function(id, points) {
+        for (let i = 0; i < $scope.annotations.length; i++) {
             if ($scope.annotations[i].id === id) {
                 $scope.annotations[i].points = points;
                 break;
@@ -503,8 +497,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
     };
 
-    $scope.changeAnnotationColor = function (id, color) {
-        for (var i = 0; i < $scope.annotations.length; i++) {
+    $scope.changeAnnotationColor = function(id, color) {
+        for (let i = 0; i < $scope.annotations.length; i++) {
             if ($scope.annotations[i].id === id) {
                 $scope.annotations[i].color = color;
                 break;
@@ -519,14 +513,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param name - Commenter name
      * @param comment - Content of the given comment
      */
-     $scope.addComment = function (id, name, comment) {
-        for (var i = 0; i < $scope.annotations.length; i++) {
+    $scope.addComment = function(id, name, comment) {
+        for (let i = 0; i < $scope.annotations.length; i++) {
             if ($scope.annotations[i].id === id) {
                 $scope.annotations[i].comments.push({
                     commenter_username: name,
                     content: comment,
                     comment_time: "now",
-                    comment_relative_time: "just now"
+                    comment_relative_time: "just now",
                 });
                 break;
             }
@@ -545,11 +539,11 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param id - Annoation ID
      * @param visibility - Annotation visibility (1, 2, 3 or 4)
      */
-    $scope.changeVisibility = function (id, visiblity) {
-        for (var i = 0; i < $scope.annotations.length; i++) {
+    $scope.changeVisibility = function(id, visiblity) {
+        for (let i = 0; i < $scope.annotations.length; i++) {
             if ($scope.annotations[i].id === id) {
                  $scope.annotations[i].visible_to = visiblity;
-                break;
+                 break;
             }
         }
     };
@@ -560,14 +554,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @todo When annotations can break tags, check annotations from all elements in the selection.
      */
     $scope.selectText = function($event) {
-        var $par = $($event.target).parents('.par')[0];
+        const $par = $($event.target).parents(".par")[0];
 
-        var oldElement = null;
+        let oldElement = null;
         if ($scope.selectedElement !== null)
             oldElement = $scope.selectedElement;
 
         try {
-            var range;
+            let range;
             if ($window.getSelection) {
                 range = $window.getSelection();
             } else {
@@ -601,7 +595,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
 
         }
 
-        var newElement = $scope.selectedElement;
+        const newElement = $scope.selectedElement;
         $scope.updateVelpBadge(oldElement, newElement);
         if (newElement !== null)
             $scope.updateVelpList();
@@ -613,7 +607,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param range - Range object containing the user's selection
      * @returns {boolean} Whether the HTML tags were broken or not.
      */
-    var isSelectionTagParentsUnequal = function (range) {
+    const isSelectionTagParentsUnequal = function(range) {
         return getElementParent(range.startContainer) !== getElementParent(range.endContainer);
     };
 
@@ -623,15 +617,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param range - Range object containing the user's selection
      * @returns {boolean} Whether the element has an annotation element as its parent or not
      */
-    var hasSelectionParentAnnotation = function (range) {
-        var startcont = getElementParent(range.startContainer);
+    const hasSelectionParentAnnotation = function(range) {
+        let startcont = getElementParent(range.startContainer);
         while (!startcont.hasAttribute("t")) {
             startcont = getElementParent(startcont);
             if (checkIfAnnotation(startcont) || hasAnyIllegalClass(startcont))
                 return true;
         }
 
-        var endcont = getElementParent(range.endContainer);
+        let endcont = getElementParent(range.endContainer);
         while (!endcont.hasAttribute("t")) {
             endcont = getElementParent(endcont);
             if (checkIfAnnotation(endcont))
@@ -647,8 +641,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param element - Element to be checked
      * @returns {boolean} Whether illegal classes were found or not.
      */
-    var hasAnyIllegalClass = function (element) {
-        for (var i = 0; i < illegalClasses.length; i++) {
+    const hasAnyIllegalClass = function(element) {
+        for (let i = 0; i < illegalClasses.length; i++) {
             if (element.classList.contains(illegalClasses[i]))
                 return true;
         }
@@ -661,12 +655,12 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param range - Range object containing the user's selection
      * @returns {boolean} Whether the selection has any annotation elements as children or not
      */
-    var hasSelectionChildrenAnnotation = function (range) {
-        var div = document.createElement("div");
-        var clone = range.cloneContents();
+    const hasSelectionChildrenAnnotation = function(range) {
+        const div = document.createElement("div");
+        const clone = range.cloneContents();
         div.appendChild(clone);
-        var children = div.childNodes;
-        for (var i = 0; i < children.length; i++) {
+        const children = div.childNodes;
+        for (let i = 0; i < children.length; i++) {
             if (hasElementChildrenAnnotation(children[i])) {
                 return true;
             }
@@ -680,15 +674,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param element - Element to check
      * @returns {boolean} Whether annotation was found or not
      */
-    var hasElementChildrenAnnotation = function (element) {
+    const hasElementChildrenAnnotation = function(element) {
 
         if (checkIfAnnotation(element)) {
             return true;
         }
 
-        var children = element.childNodes;
+        const children = element.childNodes;
 
-        for (var i = 0; i < children.length; i++)
+        for (let i = 0; i < children.length; i++)
             if (hasElementChildrenAnnotation(children[i]))
                 return true;
 
@@ -701,10 +695,10 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param id - Velp to be found
      * @returns {Object|null} Velp or null
      */
-    $scope.getVelpById = function (id) {
+    $scope.getVelpById = function(id) {
         if (typeof $scope.velps === UNDEFINED) return null;
 
-        for (var i = 0; i < $scope.velps.length; i++)
+        for (let i = 0; i < $scope.velps.length; i++)
             if ($scope.velps[i].id === id)
                 return $scope.velps[i];
 
@@ -717,8 +711,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param points - Points given in marking
      * @returns {string} Highlight style
      */
-    $scope.getAnnotationHighlight = function (points) {
-        var highlightStyle = "positive";
+    $scope.getAnnotationHighlight = function(points) {
+        let highlightStyle = "positive";
         if (points === 0)
             highlightStyle = "neutral";
         else if (points < 0)
@@ -730,7 +724,6 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * Detect user right to annotation to document.
      * @param points - Points given in velp or annotation
      * @returns {boolean} - Right to make annotations
-
 
     $scope.notAnnotationRights = function (points) {
         if ($scope.item.rights.teacher) {
@@ -764,7 +757,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @todo Also get the paragraph element (parelement) according to endContainer.
      * @param velp - Velp selected in the `velpSelection` directive
      */
-    $scope.useVelp = function (velp) {
+    $scope.useVelp = function(velp) {
 
         if ($scope.velpToEdit.edit || $scope.selectedElement === null && $scope.selectedArea === null){
             return;
@@ -781,7 +774,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         }
         */
 
-        let newAnnotation: any = {
+        const newAnnotation: any = {
             id: -($scope.annotations.length + 1),
             velp: velp.id,
             points: velp.points,
@@ -798,25 +791,24 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             comments: [],
             default_comment: velp.default_comment,
             newannotation: true,
-            user_id: -1
+            user_id: -1,
         };
-
 
         if ($scope.selectedArea !== null) {
 
-            var parelement = getElementParent($scope.selectedArea.startContainer);
-            var startElement = getElementParent($scope.selectedArea.startContainer);
+            let parelement = getElementParent($scope.selectedArea.startContainer);
+            const startElement = getElementParent($scope.selectedArea.startContainer);
 
-            var innerDiv = document.createElement('div');
-            var cloned = $scope.selectedArea.cloneContents();
+            const innerDiv = document.createElement("div");
+            const cloned = $scope.selectedArea.cloneContents();
             innerDiv.appendChild(cloned);
 
             while (!parelement.hasAttribute("t")) {
                 parelement = getElementParent(parelement);
             }
 
-            var element_path = getElementPositionInTree(startElement, []);
-            var answer_id = getAnswerInfo(startElement);
+            const element_path = getElementPositionInTree(startElement, []);
+            const answer_id = getAnswerInfo(startElement);
 
             if (answer_id === null){
                 newAnnotation.user_id = null;
@@ -824,8 +816,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 newAnnotation.user_id = $scope.$parent.selectedUser.id;
             }
 
-            var startoffset = getRealStartOffset($scope.selectedArea.startContainer, $scope.selectedArea.startOffset);
-            var endOffset = $scope.selectedArea.endOffset;
+            const startoffset = getRealStartOffset($scope.selectedArea.startContainer, $scope.selectedArea.startOffset);
+            let endOffset = $scope.selectedArea.endOffset;
             if (innerDiv.childElementCount === 0)
                 endOffset = startoffset + (innerDiv.childNodes[innerDiv.childNodes.length - 1] as any).length;
 
@@ -835,15 +827,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                     t: parelement.getAttribute("t"),
                     el_path: element_path,
                     offset: startoffset,
-                    depth: element_path.length
+                    depth: element_path.length,
                 },
                 end: {
                     par_id: parelement.id,
                     t: parelement.getAttribute("t"),
                     el_path: element_path,
                     offset: endOffset,
-                    depth: element_path.length
-                }
+                    depth: element_path.length,
+                },
             };
 
             if (answer_id !== null)
@@ -854,7 +846,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             $scope.annotations.push(newAnnotation);
             $scope.annotationids[newAnnotation.id] = newAnnotation.id;
 
-            var nodeNums = getNodeNumbers($scope.selectedArea.startContainer, newAnnotation.id, innerDiv);
+            const nodeNums = getNodeNumbers($scope.selectedArea.startContainer, newAnnotation.id, innerDiv);
             newAnnotation.coord.start.node = nodeNums[0];
             newAnnotation.coord.end.node = nodeNums[1];
 
@@ -866,15 +858,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 start: {
                     par_id: $scope.selectedElement.id,
                     t: $scope.selectedElement.getAttribute("t"),
-                    offset: null
+                    offset: null,
                 },
                 end: {
                     par_id: $scope.selectedElement.id,
-                    t: $scope.selectedElement.getAttribute("t")
-                }
+                    t: $scope.selectedElement.getAttribute("t"),
+                },
             };
 
-            var el_answer_id = getAnswerInfo($scope.selectedElement);
+            const el_answer_id = getAnswerInfo($scope.selectedElement);
 
             if (el_answer_id !== null)
                 newAnnotation.answer_id = el_answer_id.selectedAnswer.id;
@@ -883,7 +875,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             $scope.annotationids[newAnnotation.id] = newAnnotation.id;
         }
 
-        $scope.makePostRequest("/add_annotation", newAnnotation, function (json) {
+        $scope.makePostRequest("/add_annotation", newAnnotation, function(json) {
             $scope.annotationids[newAnnotation.id] = json.data.id;
         });
 
@@ -898,18 +890,18 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param start - Paragraph where the answerbrowser element is searched for.
      * @returns {Element|null} answerbrowser element or null.
      */
-    var getAnswerInfo = function (start) {
+    const getAnswerInfo = function(start) {
 
         if (start.hasAttribute("attrs") && start.hasAttribute("t")) {
-            var answ = start.getElementsByTagName("answerbrowser");
+            const answ = start.getElementsByTagName("answerbrowser");
             if (answ.length > 0) {
-                var answScope = angular.element(answ[0]).isolateScope();
+                const answScope = angular.element(answ[0]).isolateScope();
                 return answScope;
             }
             return null;
         }
 
-        var myparent = getElementParent(start);
+        const myparent = getElementParent(start);
 
         if (myparent.tagName === "ANSWERBROWSER") {
             return angular.element(myparent).isolateScope();
@@ -933,17 +925,17 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param array - Array of indexes
      * @returns {Array} Array of element indexes
      */
-    var getElementPositionInTree = function (start, array) {
-        var myparent = getElementParent(start);
+    const getElementPositionInTree = function(start, array) {
+        const myparent = getElementParent(start);
 
         if (myparent.hasAttribute("t")) {
             return array.reverse();
         }
 
-        var count = 0;
+        let count = 0;
 
-        var children = getElementChildren(myparent);
-        for (var i = 0; i < children.length; i++) {
+        const children = getElementChildren(myparent);
+        for (let i = 0; i < children.length; i++) {
 
             if (children[i] === start) {
                 array.push(count);
@@ -951,8 +943,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             }
 
             if (checkIfAnnotation(children[i])) {
-                var innerElements = children[i].getElementsByClassName("highlighted")[0];
-                var innerChildren = getElementChildren(innerElements);
+                const innerElements = children[i].getElementsByClassName("highlighted")[0];
+                const innerChildren = getElementChildren(innerElements);
                 if (innerChildren.length > 2) {
                     count += innerChildren.length - 2;
                 }
@@ -962,7 +954,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             count++;
         }
 
-        throw "Element position in tree was not found";
+        throw new Error("Element position in tree was not found");
     };
 
     /**
@@ -974,18 +966,17 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param startoffset - Original start offset
      * @returns {int} Start offset according to the "original state" of the DOM.
      */
-    var getRealStartOffset = function (el, startoffset) {
+    const getRealStartOffset = function(el, startoffset) {
 
-        var startType = el.nodeName;
-        var storedOffset = startoffset;
-
+        const startType = el.nodeName;
+        let storedOffset = startoffset;
 
         while (el.previousSibling !== null) {
             el = el.previousSibling;
             if (checkIfAnnotation(el)) {
 
-                var innerElements = el.getElementsByClassName("highlighted")[0];
-                var lastInnerLastChild = getLastChildUntilNull(innerElements);
+                const innerElements = el.getElementsByClassName("highlighted")[0];
+                const lastInnerLastChild = getLastChildUntilNull(innerElements);
                 storedOffset += lastInnerLastChild.length;
 
                 // if (typeof innerElements.lastChild.innerHTML !== UNDEFINED)
@@ -1016,26 +1007,26 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param innerElement - Annotation content
      * @returns {Array} array with the start and end node numbers
      */
-    var getNodeNumbers = function (el, aid, innerElement) {
-        var parent = el;
-        var lastInnerFirstChild = getFirstChildUntilNull(innerElement);
-        var lastInnerLastChild = getLastChildUntilNull(innerElement);
+    const getNodeNumbers = function(el, aid, innerElement) {
+        let parent = el;
+        const lastInnerFirstChild = getFirstChildUntilNull(innerElement);
+        const lastInnerLastChild = getLastChildUntilNull(innerElement);
 
         while (parent.nodeName === "#text") {
             parent = parent.parentNode;
         }
 
-        var num = 0;
+        let num = 0;
 
-        var prevNodeName = parent.childNodes[0].nodeName;
+        let prevNodeName = parent.childNodes[0].nodeName;
 
-        for (var i = 0; i < parent.childNodes.length; i++) {
+        for (let i = 0; i < parent.childNodes.length; i++) {
 
             if (checkIfAnnotation(parent.childNodes[i])) {
 
                 if (parseInt(parent.childNodes[i].getAttribute("aid")) === aid) {
 
-                    var startnum = num - 1;
+                    let startnum = num - 1;
                     num += innerElement.childNodes.length;
 
                     if (lastInnerFirstChild.nodeName === prevNodeName) num--;
@@ -1045,7 +1036,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                     return [startnum, num];
 
                 } else {
-                    var innerEl = parent.childNodes[i].getElementsByClassName("highlighted")[0];
+                    const innerEl = parent.childNodes[i].getElementsByClassName("highlighted")[0];
                     num += innerEl.childNodes.length;
 
                     if (lastInnerFirstChild.nodeName === prevNodeName) num--;
@@ -1060,7 +1051,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
             prevNodeName = parent.childNodes[i].nodeName;
         }
 
-        throw "No node found";
+        throw new Error("No node found");
     };
 
     /**
@@ -1069,8 +1060,8 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param id - Annotation ID
      * @returns Object - Annotation
      */
-    $scope.getAnnotation = function (id) {
-        for (var i = 0; i < $scope.annotations.length; i++) {
+    $scope.getAnnotation = function(id) {
+        for (let i = 0; i < $scope.annotations.length; i++) {
             if (id === $scope.annotations[i].id)
                 return $scope.annotations[i];
         }
@@ -1083,15 +1074,15 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @param show - Whether to show the annotation on creation or not
      * @returns {Element} - Annotation element
      */
-    $scope.createPopOverElement = function (annotation, show) {
-        var element = document.createElement("span");
+    $scope.createPopOverElement = function(annotation, show) {
+        const element = document.createElement("span");
 
         //element.setAttribute("style", "line-height: 1em;");
         element.setAttribute("annotation", "");
         //element.classList.add("annotation-element");
-        var velp_data = $scope.getVelpById(annotation.velp);
+        const velp_data = $scope.getVelpById(annotation.velp);
 
-        var velp_content;
+        let velp_content;
 
         if (velp_data !== null) {
             velp_content = velp_data.content;
@@ -1129,7 +1120,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
         return element;
     };
 
-    var isUndefinedOrNull = function (attr) {
+    const isUndefinedOrNull = function(attr) {
         return typeof attr === UNDEFINED || attr === null;
     };
 
@@ -1139,14 +1130,14 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @method toggleAnnotation
      * @param annotation - Annotation to be showed.
      */
-    $scope.toggleAnnotation = function (annotation) {
-        var parent = document.getElementById(annotation.coord.start.par_id);
+    $scope.toggleAnnotation = function(annotation) {
+        const parent = document.getElementById(annotation.coord.start.par_id);
 
         try {
-                var annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
+                const annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
                 angular.element(annotationElement).isolateScope().showAnnotation();
                 if (annotation.parentNode.classname === "notes") {
-                    var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
+                    const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
                     abl.isolateScope().loadAnswerBrowser();
                 }
                 scrollToElement(annotationElement);
@@ -1161,27 +1152,27 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
                 let ab: any = parent.getElementsByTagName("ANSWERBROWSER")[0];
 
                 if (typeof ab === UNDEFINED) {
-                    var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
+                    const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
                     abl.isolateScope().loadAnswerBrowser();
                 }
                 if (this.selectedUser.id !== annotation.user_id){
-                    for (var i = 0; i < this.users.length; i++) {
+                    for (let i = 0; i < this.users.length; i++) {
                         if (this.users[i].id === annotation.user_id) {
                              $scope.changeUser(this.users[i], false);
-                            break;
+                             break;
                         }
                     }
 
                 }
 
-                setTimeout(function () {
+                setTimeout(function() {
                     ab = angular.element(parent.getElementsByTagName("ANSWERBROWSER")[0]);
-                    var abscope = ab.isolateScope();
+                    const abscope = ab.isolateScope();
                     abscope.review = true;
                     abscope.setAnswerById(annotation.answer_id);
 
-                    setTimeout(function () {
-                        var annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
+                    setTimeout(function() {
+                        const annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
                         angular.element(annotationElement).isolateScope().showAnnotation();
                         $scope.$apply();
                         scrollToElement(annotationElement);
@@ -1196,7 +1187,7 @@ timApp.controller("ReviewController", ['$scope', '$http', '$window', '$compile',
      * @method scrollToElement
      * @param element - Element to scroll to.
      */
-    var scrollToElement = function (element) {
+    const scrollToElement = function(element) {
         if (!!element && element.scrollIntoView) {
             element.scrollIntoView();
         }

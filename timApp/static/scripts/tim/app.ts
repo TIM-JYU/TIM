@@ -1,12 +1,12 @@
 import angular from "angular";
-import moment from "moment";
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import ngMessages from "angular-messages";
-import timer from "angular-timer";
-import humanizeDuration from "humanize-duration";
 import ngSanitize from "angular-sanitize";
+import timer from "angular-timer";
 import uibootstrap from "angular-ui-bootstrap";
+import humanizeDuration from "humanize-duration";
 import {Moment} from "moment";
+import moment from "moment";
 import ngFileUpload from "ng-file-upload";
 import ngStorage from "ngstorage";
 import oclazyload from "oclazyload";
@@ -54,7 +54,7 @@ timApp.config(["$httpProvider", ($httpProvider) => {
 
     $httpProvider.defaults.headers.get["If-Modified-Since"] = "Mon, 26 Jul 1997 05:00:00 GMT";
     $httpProvider.defaults.headers.get["Cache-Control"] = "no-cache";
-    $httpProvider.defaults.headers.get["Pragma"] = "no-cache";
+    $httpProvider.defaults.headers.get.Pragma = "no-cache";
 }]);
 
 // Filter to make string URL friendly
@@ -97,7 +97,7 @@ timApp.filter("timpreciseduration", ["$filter", ($filter) => {
 }]);
 
 timApp.filter("timtim", ["$filter", ($filter) => {
-    let dateFilter = $filter("date");
+    const dateFilter = $filter("date");
     return (date) => {
         return dateFilter(date, "HH:mm:ss");
     };

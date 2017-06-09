@@ -3,13 +3,13 @@ import $ from "jquery";
 export function defineEventHandlers(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";
 
-    sc.onClick = function (className, func, overrideModalCheck) {
-        var downEvent = null;
-        var downCoords = null;
-        var lastDownEvent = null;
-        var lastclicktime = -1;
+    sc.onClick = function(className, func, overrideModalCheck) {
+        let downEvent = null;
+        let downCoords = null;
+        let lastDownEvent = null;
+        let lastclicktime = -1;
 
-        $document.on('mousedown touchstart', className, function (e) {
+        $document.on("mousedown touchstart", className, function(e) {
             if (!overrideModalCheck && ($(".actionButtons").length > 0 || $(sc.EDITOR_CLASS_DOT).length > 0)) {
                 // Disable while there are modal gui elements
                 return;
@@ -27,24 +27,24 @@ export function defineEventHandlers(sc, http, q, $injector, $compile, $window, $
             downCoords = {left: downEvent.pageX, top: downEvent.pageY};
             lastclicktime = new Date().getTime();
         });
-        $document.on('mousemove touchmove', className, function (e) {
+        $document.on("mousemove touchmove", className, function(e) {
             if (downEvent === null) {
                 return;
             }
 
-            var e2 = sc.fixPageCoords(e);
+            let e2 = sc.fixPageCoords(e);
             if (sc.dist(downCoords, {left: e2.pageX, top: e2.pageY}) > 10) {
                 // Moved too far away, cancel the event
                 downEvent = null;
             }
         });
-        $document.on('touchcancel', className, function (e) {
+        $document.on("touchcancel", className, function(e) {
             downEvent = null;
         });
         // it is wrong to register both events at the same time; see https://stackoverflow.com/questions/8503453
-        var isIOS = ((/iphone|ipad/gi).test(navigator.appVersion));
-        var eventName = isIOS ? "touchend" : "mouseup";
-        $document.on(eventName, className, function (e) {
+        let isIOS = ((/iphone|ipad/gi).test(navigator.appVersion));
+        let eventName = isIOS ? "touchend" : "mouseup";
+        $document.on(eventName, className, function(e) {
             if (downEvent !== null) {
                 if (func($(this), downEvent)) {
                     //e.preventDefault();
@@ -55,8 +55,8 @@ export function defineEventHandlers(sc, http, q, $injector, $compile, $window, $
         });
     };
 
-    sc.onMouseOver = function (className, func) {
-        $document.on('mouseover', className, function (e) {
+    sc.onMouseOver = function(className, func) {
+        $document.on("mouseover", className, function(e) {
             if (func($(this), sc.fixPageCoords(e))) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -64,8 +64,8 @@ export function defineEventHandlers(sc, http, q, $injector, $compile, $window, $
         });
     };
 
-    sc.onMouseOut = function (className, func) {
-        $document.on('mouseout', className, function (e) {
+    sc.onMouseOut = function(className, func) {
+        $document.on("mouseout", className, function(e) {
             if (func($(this), sc.fixPageCoords(e))) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -73,29 +73,29 @@ export function defineEventHandlers(sc, http, q, $injector, $compile, $window, $
         });
     };
 
-    sc.onMouseOverOut = function (className, func) {
+    sc.onMouseOverOut = function(className, func) {
         // A combination function with a third parameter
         // true when over, false when out
 
-        $document.on('mouseover', className, function (e) {
+        $document.on("mouseover", className, function(e) {
             if (func($(this), sc.fixPageCoords(e), true)) {
                 e.preventDefault();
             }
         });
 
-        $document.on('mouseout', className, function (e) {
+        $document.on("mouseout", className, function(e) {
             if (func($(this), sc.fixPageCoords(e), false)) {
                 e.preventDefault();
             }
         });
     };
 
-    sc.fixPageCoords = function (e) {
-        if (!('pageX' in e) || (e.pageX === 0 && e.pageY === 0)) {
+    sc.fixPageCoords = function(e) {
+        if (!("pageX" in e) || (e.pageX === 0 && e.pageY === 0)) {
             e.pageX = e.originalEvent.touches[0].pageX;
             e.pageY = e.originalEvent.touches[0].pageY;
         }
         return e;
     };
 
-};
+}

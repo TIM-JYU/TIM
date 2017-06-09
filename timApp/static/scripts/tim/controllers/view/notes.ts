@@ -4,39 +4,39 @@ import $ from "jquery";
 export function defineNotes(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
     "use strict";
 
-    sc.toggleNoteEditor = function ($par_or_area, options) {
-        var caption = 'Edit comment';
-        var touch = typeof('ontouchstart' in window || navigator.msMaxTouchPoints) !== 'undefined';
-        var mobile = touch && (window.screen.width < 1200);
+    sc.toggleNoteEditor = function($par_or_area, options) {
+        let caption = "Edit comment";
+        let touch = typeof("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
+        let mobile = touch && (window.screen.width < 1200);
         if (!sc.item.rights.can_comment) {
             return;
         }
-        var url,
+        let url,
             data, initUrl;
         if (options.isNew) {
-            caption = 'Add comment';
-            url = '/postNote';
+            caption = "Add comment";
+            url = "/postNote";
             data = {
                 access: sc.$storage.noteAccess,
                 tags: {
                     difficult: false,
-                    unclear: false
-                }
+                    unclear: false,
+                },
             };
             initUrl = null;
         } else {
-            url = '/editNote';
+            url = "/editNote";
             data = {};
-            initUrl = '/note/' + options.noteData.id;
+            initUrl = "/note/" + options.noteData.id;
         }
-        var $par = sc.getFirstPar($par_or_area);
-        var par_id = sc.getFirstParId($par_or_area),
+        let $par = sc.getFirstPar($par_or_area);
+        let par_id = sc.getFirstParId($par_or_area),
             attrs = {
                 "save-url": url,
                 "extra-data": angular.extend({
                     docId: sc.docId,
                     par: par_id,
-                    isComment: true
+                    isComment: true,
                 }, data),
                 "options": {
                     localSaveTag: "note",
@@ -52,49 +52,49 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
                      */
                     choices: {
                         desc: [{
-                            desc: 'Show note to:',
-                            name: 'access',
+                            desc: "Show note to:",
+                            name: "access",
                             opts: [
-                                {desc: 'Everyone', value: 'everyone'},
-                                {desc: 'Just me', value: 'justme'}
-                            ]
-                        }]
+                                {desc: "Everyone", value: "everyone"},
+                                {desc: "Just me", value: "justme"},
+                            ],
+                        }],
                     },
-                    destroyAfterSave: true
+                    destroyAfterSave: true,
                 },
-                "after-save": 'handleNoteSave(saveData, extraData)',
-                "after-cancel": 'handleNoteCancel(extraData)',
-                "after-delete": 'handleNoteDelete(saveData, extraData)',
-                "preview-url": '/preview/' + sc.docId,
-                "delete-url": '/deleteNote',
+                "after-save": "handleNoteSave(saveData, extraData)",
+                "after-cancel": "handleNoteCancel(extraData)",
+                "after-delete": "handleNoteDelete(saveData, extraData)",
+                "preview-url": "/preview/" + sc.docId,
+                "delete-url": "/deleteNote",
                 "initial-text-url": initUrl,
-                "unread-url": '/unread/' + sc.docId
+                "unread-url": "/unread/" + sc.docId,
             };
 
         sc.toggleEditor($par, options, attrs, caption, "pareditor");
     };
 
-    sc.handleNoteCancel = function () {
+    sc.handleNoteCancel = function() {
         sc.editing = false;
     };
 
-    sc.handleNoteDelete = function (saveData, extraData) {
+    sc.handleNoteDelete = function(saveData, extraData) {
         sc.addSavedParToDom(saveData, extraData);
     };
 
-    sc.handleNoteSave = function (saveData, extraData) {
+    sc.handleNoteSave = function(saveData, extraData) {
         sc.addSavedParToDom(saveData, extraData);
     };
 
-    sc.showNoteWindow = function (e, $par) {
+    sc.showNoteWindow = function(e, $par) {
         sc.toggleNoteEditor($par, {isNew: true});
     };
 
-    sc.onClick(".note", function ($this, e) {
-        if (!$this.hasClass('editable')) {
+    sc.onClick(".note", function($this, e) {
+        if (!$this.hasClass("editable")) {
             return false;
         }
-        sc.toggleNoteEditor($this.parents('.par'), {isNew: false, noteData: {id: $this.attr('note-id')}});
+        sc.toggleNoteEditor($this.parents(".par"), {isNew: false, noteData: {id: $this.attr("note-id")}});
         return true;
     });
 
@@ -103,7 +103,7 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
      * @method createNoteBadge
      * @param $par - Element where the badge needs to be attached
      */
-    sc.createNoteBadge = function ($par) {
+    sc.createNoteBadge = function($par) {
         sc.noteBadgePar = $par;
         if (sc.noteBadge) {
             //var parent = getElementParent(sc.noteBadge);
@@ -111,7 +111,7 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
             return sc.noteBadge;
         }
 
-        var btn = document.createElement("input");
+        let btn = document.createElement("input");
         btn.type = "button";
         btn.classList.add("note-badge");
         if ($window.velpMode)
@@ -122,7 +122,7 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
         btn.id = "noteBadge";
         sc.noteBadge = btn;
         // btn.setAttribute("ng-click", "addNote()");
-        btn.onclick = function ($event) {
+        btn.onclick = function($event) {
             $event.stopPropagation();
             sc.toggleNoteEditor(sc.noteBadgePar, {isNew: true});
         };
@@ -130,17 +130,15 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
         return btn;
     };
 
-
-    sc.addNote = function () {
+    sc.addNote = function() {
         // sc.clearNoteBadge(null);
         sc.toggleNoteEditor(sc.noteBadgePar, {isNew: true});
     };
 
-
-    sc.setNotePadge = function ($event) {
+    sc.setNotePadge = function($event) {
         $event.stopPropagation();
-        var $par = $($event.target);
-        if (!$par.hasClass("par")) $par = $par.parents('.par');
+        let $par = $($event.target);
+        if (!$par.hasClass("par")) $par = $par.parents(".par");
         sc.updateNoteBadge($par);
     };
 
@@ -149,13 +147,13 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
      * @method updateNoteBadge
      * @param $par - Element where the badge needs to be attached
      */
-    sc.updateNoteBadge = function ($par) {
+    sc.updateNoteBadge = function($par) {
         if (!$par) return null;
-        if ($par.parents('.previewcontent').length > 0) {
+        if ($par.parents(".previewcontent").length > 0) {
             return;
         }
         sc.markParRead($par, sc.readingTypes.clickPar);
-        var newElement = $par[0];
+        let newElement = $par[0];
         if (!newElement) return null;
         sc.addElementToParagraphMargin(newElement, sc.createNoteBadge($par));
     };
@@ -164,10 +162,10 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
      * Removes the note badge and clears the element selection.
      * @param e - Current click event
      */
-    sc.clearNoteBadge = function (e) {
-        var btn = sc.noteBadge;
+    sc.clearNoteBadge = function(e) {
+        let btn = sc.noteBadge;
         if (btn) {
-            var parent = sc.getElementParent(btn);
+            let parent = sc.getElementParent(btn);
             if (parent) parent.removeChild(btn);
         }
 
@@ -182,8 +180,8 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
      * @param par - Paragraph where the element will be added
      * @param el - Element to add
      */
-    sc.addElementToParagraphMargin = function (par, el) {
-        var container = par.getElementsByClassName("notes");
+    sc.addElementToParagraphMargin = function(par, el) {
+        let container = par.getElementsByClassName("notes");
         if (container.length > 0) {
             container[0].appendChild(el);
         } else {

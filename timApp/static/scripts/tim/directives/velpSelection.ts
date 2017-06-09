@@ -1,8 +1,8 @@
 import angular from "angular";
-import {timApp} from "tim/app";
-import {colorPalette} from "tim/directives/velpWindow";
-import * as velpSummary from "tim/directives/velpSummary";
 import $ from "jquery";
+import {timApp} from "tim/app";
+import * as velpSummary from "tim/directives/velpSummary";
+import {colorPalette} from "tim/directives/velpWindow";
 import {markAsUsed} from "tim/utils";
 
 markAsUsed(velpSummary);
@@ -10,7 +10,7 @@ markAsUsed(velpSummary);
 /**
  * The directive retrieves all the data from the server including velps, labels, velp groups and annotations.
  * The directive also handles majority of the functionality that is relevant in handling velps, labels and velp groups.
- * 
+ *
  * @module velpSelection
  * @author Joonas Lattu
  * @author Petteri Palojärvi
@@ -19,37 +19,34 @@ markAsUsed(velpSummary);
  * @copyright 2016 Timber project members
  */
 
-
-let UNDEFINED = "undefined";
+const UNDEFINED = "undefined";
 
 // TODO: show velps with same name side by side. Make changes to the template.
 
 /**
  * Angular directive for velp selection
  */
-timApp.directive('velpSelection', function () {
+timApp.directive("velpSelection", function() {
     "use strict";
     return {
         templateUrl: "/static/templates/velpSelection.html",
-        controller: 'VelpSelectionController'
+        controller: "VelpSelectionController",
     };
 });
-
 
 /**
  * Controller for velp selection
  * @lends module:velpSelection
  */
-timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q', function ($scope, $window, $http, $q) {
+timApp.controller("VelpSelectionController", ["$scope", "$window", "$http", "$q", function($scope, $window, $http, $q) {
     "use strict";
-    var console = $window.console;
+    const console = $window.console;
 
     // Data
     $scope.velps = [];
     $scope.annotations = [];
     $scope.labels = [];
     $scope.velpGroups = [];
-
 
     $scope.newVelp = {content: "", default_comment: "", points: "", labels: [], edit: false, id: -2, velp_groups: [], visible_to: 4};
     $scope.velpToEdit = {content: "", default_comment: "",  points: "", labels: [], edit: false, id: -1, velp_groups: [], visible_to: 4};
@@ -66,20 +63,20 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     $scope.groupDefaults = {};
 
     // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
-    var doc_id = $scope.docId;
-    var default_velp_group = {
+    const doc_id = $scope.docId;
+    let default_velp_group = {
         id: -1,
         name: "No access to default group",
         edit_access: false,
         show: true,
         default: true,
-        selected: false
+        selected: false,
     }; // TODO Use route to add this information
-    var default_personal_velp_group = {id: -2, name: "Personal-default"};
+    let default_personal_velp_group = {id: -2, name: "Personal-default"};
 
-    var velpOrderingKey = "velpOrdering_" + doc_id;
-    var velpLabelsKey = "velpLabels_" + doc_id;
-    var advancedOnKey = "advancedOn"; // TODO: should this be document specific?
+    const velpOrderingKey = "velpOrdering_" + doc_id;
+    const velpLabelsKey = "velpLabels_" + doc_id;
+    const advancedOnKey = "advancedOn"; // TODO: should this be document specific?
 
     // Values to store in localstorage:
     $scope.order = getValuesFromLocalStorage(velpOrderingKey, "content");
@@ -87,31 +84,31 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     $scope.advancedOn = JSON.parse(getValuesFromLocalStorage(advancedOnKey, "false"));
 
     // Get velpgroup data
-    var promises = [];
+    const promises = [];
     promises.push();
-    var p = $http.get('/{0}/get_velp_groups'.replace('{0}', doc_id));
+    let p = $http.get("/{0}/get_velp_groups".replace("{0}", doc_id));
     promises.push(p);
-    p.success(function (data) {
+    p.success(function(data) {
         $scope.velpGroups = data;
 
         // Get default velp group data
 
-        p = $http.get('/{0}/get_default_velp_group'.replace('{0}', doc_id));
+        p = $http.get("/{0}/get_default_velp_group".replace("{0}", doc_id));
         promises.push(p);
-        p.success(function (data) {
+        p.success(function(data) {
             default_velp_group = data;
 
             // If doc_default exists already for some reason but isn't a velp group yet, remove it from fetched velp groups
-            $scope.velpGroups.some(function (g) {
+            $scope.velpGroups.some(function(g) {
                 if (g.name === default_velp_group.name && default_velp_group.id < 0) {
-                    var extraDefaultIndex = $scope.velpGroups.indexOf(g);
+                    const extraDefaultIndex = $scope.velpGroups.indexOf(g);
                     $scope.velpGroups.push(default_velp_group);
                     return $scope.velpGroups.splice(extraDefaultIndex, 1);
                 }
             });
 
             if (default_velp_group.edit_access) {
-                $scope.velpGroups.some(function (g) {
+                $scope.velpGroups.some(function(g) {
                     if (g.id === default_velp_group.id)
                         g.selected = true;
                 });
@@ -122,9 +119,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             // $scope.groupDefaults["0"] = [default_velp_group];
 
             // Get personal velp group data
-            p = $http.get('/get_default_personal_velp_group');
+            p = $http.get("/get_default_personal_velp_group");
             promises.push(p);
-            p.success(function (data) {
+            p.success(function(data) {
                 default_personal_velp_group = {id: data.id, name: data.name};
 
                 if (data.created_new_group) {
@@ -166,15 +163,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             if (default_velp_group.id < 0)
                 $scope.velpGroups.push(default_velp_group);
 
-
         });
 
         // Get velp and annotation data
-        p = $http.get('/{0}/get_velps'.replace('{0}', doc_id));
+        p = $http.get("/{0}/get_velps".replace("{0}", doc_id));
         promises.push(p);
-        p.success(function (data) {
+        p.success(function(data) {
             $scope.velps = data;
-            $scope.velps.forEach(function (v) {
+            $scope.velps.forEach(function(v) {
                 v.used = 0;
                 v.edit = false;
                 if (typeof v.labels === UNDEFINED)
@@ -206,14 +202,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         });
         */
         // Get label data
-        p = $http.get('/{0}/get_velp_labels'.replace('{0}', doc_id));
+        p = $http.get("/{0}/get_velp_labels".replace("{0}", doc_id));
         promises.push(p);
-        p.success(function (data) {
+        p.success(function(data) {
             $scope.labels = data;
-            $scope.labels.forEach(function (l) {
+            $scope.labels.forEach(function(l) {
                 l.edit = false;
                 l.selected = false;
-                for (var i=0; i<$scope.selectedLabels.length; i++){
+                for (let i = 0; i < $scope.selectedLabels.length; i++){
                     if (l.id === $scope.selectedLabels[i]){
                         l.selected = true;
                     }
@@ -221,18 +217,18 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             });
         });
 
-        p = $http.get('/{0}/get_velp_group_personal_selections'.replace('{0}', doc_id));
+        p = $http.get("/{0}/get_velp_group_personal_selections".replace("{0}", doc_id));
         promises.push(p);
-        p.success(function (data) {
+        p.success(function(data) {
             $scope.groupSelections = data;
             if (!$scope.groupSelections.hasOwnProperty("0"))
                 $scope.groupSelections["0"] = [];
 
-            var docSelections = $scope.groupSelections["0"];
+            const docSelections = $scope.groupSelections["0"];
 
-            $scope.velpGroups.forEach(function (g) {
+            $scope.velpGroups.forEach(function(g) {
                 g.show = false;
-                for (var i = 0; i < docSelections.length; i++) {
+                for (let i = 0; i < docSelections.length; i++) {
                     if (docSelections[i].id === g.id && docSelections[i].selected) {
                         g.show = true;
                         break;
@@ -243,16 +239,16 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
         });
 
-        p = $http.get('/{0}/get_velp_group_default_selections'.replace('{0}', doc_id));
+        p = $http.get("/{0}/get_velp_group_default_selections".replace("{0}", doc_id));
         promises.push(p);
-        p.success(function (data) {
+        p.success(function(data) {
             $scope.groupDefaults = data;
 
-            var docDefaults = $scope.groupDefaults["0"];
+            const docDefaults = $scope.groupDefaults["0"];
 
-            $scope.velpGroups.forEach(function (g) {
+            $scope.velpGroups.forEach(function(g) {
 
-                for (var i = 0; i < docDefaults.length; i++) {
+                for (let i = 0; i < docDefaults.length; i++) {
                     if (docDefaults[i].id === g.id && docDefaults[i].selected) {
                         g.default = true;
                         break;
@@ -285,12 +281,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         return $window.localStorage.getItem(key);
     }
 
-    $scope.changeOrdering = function (order) {
+    $scope.changeOrdering = function(order) {
         $window.localStorage.setItem(velpOrderingKey, order);
     };
 
-
-    $scope.changeSelectedLabels = function () {
+    $scope.changeSelectedLabels = function() {
         $window.localStorage.setItem(velpLabelsKey, JSON.stringify($scope.selectedLabels));
     };
 
@@ -299,7 +294,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @returns {boolean}
      */
 
-    $scope.allowChangePoints = function () {
+    $scope.allowChangePoints = function() {
         return $scope.$parent.item.rights.teacher;
     };
 
@@ -309,7 +304,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param index - Index of the color in the colorPalette variable (modulo by lenght of color palette)
      * @returns {string} String representation of the color
      */
-    $scope.getColor = function (index) {
+    $scope.getColor = function(index) {
         return colorPalette[index % colorPalette.length];
     };
 
@@ -318,9 +313,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @method toggleLabel
      * @param label - Label to toggle
      */
-    $scope.toggleLabel = function (label) {
+    $scope.toggleLabel = function(label) {
         label.selected = !label.selected;
-        var labelIndex = $scope.selectedLabels.indexOf(label.id);
+        const labelIndex = $scope.selectedLabels.indexOf(label.id);
         if (labelIndex < 0) {
             $scope.selectedLabels.push(label.id);
         } else {
@@ -340,7 +335,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     };
      */
 
-    $scope.setAdvancedOnlocalStorage = function (value) {
+    $scope.setAdvancedOnlocalStorage = function(value) {
         $window.localStorage.setItem(advancedOnKey, value.toString());
     };
 
@@ -349,21 +344,21 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @method addLabel
      * @param velp - Velp where the label is to be added.
      */
-    $scope.addLabel = function (velp) {
+    $scope.addLabel = function(velp) {
 
         if ($scope.newLabel.content.length < 1) {
             $scope.newLabel.valid = false;
             return;
         }
 
-        let labelToAdd = {
+        const labelToAdd = {
             id: null,
             content: $scope.newLabel.content,
             language_id: "FI", // TODO: Change to user language
-            selected: false
+            selected: false,
         };
 
-        $scope.makePostRequest("/add_velp_label", labelToAdd, function (json) {
+        $scope.makePostRequest("/add_velp_label", labelToAdd, function(json) {
             labelToAdd.id = parseInt(json.data.id);
             $scope.resetNewLabel();
             $scope.labels.push(labelToAdd);
@@ -397,7 +392,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                 if (oldGroupIndex >= 0)
                     $scope.newVelp.velp_groups.splice(oldGroupIndex, 1);
 
-
                 $scope.newVelp.velp_groups.push(default_velp_group.id);
 
                 addNewVelpToDatabase();
@@ -414,8 +408,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * Adds a new velp to the database. Requires values in `$scope.newVelp` variable.
      * @method addNewVelpToDatabase
      */
-    var addNewVelpToDatabase = function () {
-        var velpToAdd = {
+    const addNewVelpToDatabase = function() {
+        const velpToAdd = {
             id: null,
             labels: $scope.newVelp.labels,
             used: 0,
@@ -425,13 +419,13 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             icon_id: null,
             valid_until: null,
             visible_to: $scope.visible_options.value,
-            velp_groups: JSON.parse(JSON.stringify($scope.newVelp.velp_groups))
+            velp_groups: JSON.parse(JSON.stringify($scope.newVelp.velp_groups)),
 
         };
         $scope.velpToEdit.edit = false;
         $scope.newVelp.edit = false;
 
-        $scope.makePostRequest("/add_velp", velpToAdd, function (json) {
+        $scope.makePostRequest("/add_velp", velpToAdd, function(json) {
             velpToAdd.id = parseInt(json.data);
 
             $scope.resetNewVelp();
@@ -443,13 +437,12 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         });
     };
 
-
     /**
      * Deselects all the labels.
      * @method deselectLabels
      */
-    $scope.deselectLabels = function () {
-        for (var i = 0; i < $scope.labels.length; i++) {
+    $scope.deselectLabels = function() {
+        for (let i = 0; i < $scope.labels.length; i++) {
             if ($scope.labels[i].selected) {
                 $scope.toggleLabel($scope.labels[i]);
             }
@@ -480,16 +473,13 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     };
      */
 
-
-
-
     /**
      * Selects velp to edit
      * @method selectVelpToEdit
      */
-    $scope.openCreateNewVelpWindow = function () {
-        var velp = angular.element(
-            document.getElementById("newVelp")
+    $scope.openCreateNewVelpWindow = function() {
+        const velp = angular.element(
+            document.getElementById("newVelp"),
         ).isolateScope();
         velp.toggleVelpToEdit();
 
@@ -497,7 +487,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         //    $scope.resetEditVelp();
 
         //$scope.resetEditVelp = $scope.resetNewVelp;
-
 
         /*
         if (velp.id === $scope.velpToEdit.id && velp.edit) {
@@ -550,7 +539,6 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                 });
             });
 
-
         } else if ($scope.velpToEdit.velp_groups.length > 0) {
             $scope.makePostRequest("/{0}/update_velp".replace('{0}', doc_id), $scope.velpToEdit, function (json) {
             });
@@ -568,19 +556,18 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
     };
      */
 
-
     /**
      * Generates the default velp group and runs the custom method.
      * @method generateDefaultVelpGroup
      * @param method - Method to be run after this mehtod.
     */
-    $scope.generateDefaultVelpGroup = function (method) {
+    $scope.generateDefaultVelpGroup = function(method) {
         if (default_velp_group.edit_access) {
-            $scope.makePostRequest('/{0}/create_default_velp_group'.replace('{0}', doc_id), "{}", function (json) {
-                var new_default_velp_group = json.data;
+            $scope.makePostRequest("/{0}/create_default_velp_group".replace("{0}", doc_id), "{}", function(json) {
+                const new_default_velp_group = json.data;
                 new_default_velp_group.default = true;
 
-                var index = $scope.velpGroups.indexOf(default_velp_group);
+                const index = $scope.velpGroups.indexOf(default_velp_group);
                 $scope.velpGroups.splice(index, 1);
 
                 if ($scope.velpGroups.indexOf(new_default_velp_group) < 0)
@@ -600,7 +587,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param velp - Velp information, contains all edited info
      * @param resetFuction - Function to execute in cancel edit
      */
-    $scope.setVelpToEdit = function (velp, resetFunction) {
+    $scope.setVelpToEdit = function(velp, resetFunction) {
         $scope.velpToEdit = velp;
         $scope.resetEditVelp = resetFunction;
     };
@@ -619,11 +606,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * Returns whether velp is being edited or not.
      * @returns Boolean
      */
-    $scope.getVelpUnderEdit = function () {
+    $scope.getVelpUnderEdit = function() {
         return $scope.velpToEdit;
     };
-
-
 
     /**
      * Edits the label according to the $scope.labelToedit variable.
@@ -631,14 +616,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * including the ID of the label.
      * @method editLabel
      */
-    $scope.editLabel = function () {
+    $scope.editLabel = function() {
         if ($scope.labelToEdit.content.length < 1) {
             $scope.labelToEdit.edit = false;
             return;
         }
 
-        var updatedLabel = null;
-        for (var i = 0; i < $scope.labels.length; i++) {
+        let updatedLabel = null;
+        for (let i = 0; i < $scope.labels.length; i++) {
             if ($scope.labels[i].id === $scope.labelToEdit.id) {
                 $scope.labelToEdit.edit = false;
                 $scope.labels[i].content = $scope.labelToEdit.content;
@@ -648,7 +633,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             }
         }
 
-        $scope.makePostRequest("/update_velp_label", updatedLabel, function (json) {
+        $scope.makePostRequest("/update_velp_label", updatedLabel, function(json) {
         });
     };
 
@@ -656,20 +641,19 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * Reset new velp information to the initial (empty) state.
      * @method resetNewVelp
      */
-    $scope.resetNewVelp = function () {
+    $scope.resetNewVelp = function() {
         $scope.newVelp = {
             content: "",
             points: "",
             labels: [],
             edit: false,
             id: -2,
-            velp_groups: $scope.newVelp.velp_groups
+            velp_groups: $scope.newVelp.velp_groups,
         };
     };
 
-
-    $scope.updateVelp = function (velp) {
-        $scope.velps.forEach(function (v) {
+    $scope.updateVelp = function(velp) {
+        $scope.velps.forEach(function(v) {
             if (v.id = velp.id){
                 v = velp;
             }
@@ -681,17 +665,17 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * Reset new label information to the initial (empty) state.
      * @method resetNewLabel
      */
-    $scope.resetNewLabel = function () {
+    $scope.resetNewLabel = function() {
         $scope.newLabel = {content: "", selected: true, valid: true};
     };
 
     /** Velpgroup methods **/
 
-    $scope.getDefaultVelpGroup = function () {
+    $scope.getDefaultVelpGroup = function() {
         return default_velp_group;
     };
 
-    $scope.setDefaultVelpGroup = function (group) {
+    $scope.setDefaultVelpGroup = function(group) {
         default_velp_group = group;
     };
 
@@ -699,8 +683,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * Updates the velp list according to how the velp groups are selected in the area.
      * @method updateVelpList
      */
-    $scope.updateVelpList = function () {
-        $scope.velpGroups.forEach(function (g) {
+    $scope.updateVelpList = function() {
+        $scope.velpGroups.forEach(function(g) {
             if ($scope.selectedElement !== null && $scope.groupAttachment.target_type === 1) {
                 g.show = $scope.isVelpGroupShownHere(g.id, $scope.selectedElement.id);
                 g.default = $scope.isVelpGroupDefaultHere(g.id, $scope.selectedElement.id);
@@ -719,8 +703,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param paragraphId - Paragraph ID or "0" for the document
      * @returns {boolean} Whether the velp group is shown here or not
      */
-    $scope.isVelpGroupShownHere = function (groupId, paragraphId) {
-        var returnValue;
+    $scope.isVelpGroupShownHere = function(groupId, paragraphId) {
+        let returnValue;
         // Are we checking for the whole document? This "if" might be unnecessary.
         if (paragraphId === "0") {
             returnValue = $scope.lazyIsVelpGroupSelectedInParagraph(groupId, paragraphId);
@@ -752,8 +736,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param paragraphId - Paragraph ID or "0" for the document
      * @returns {boolean} Whether the velp group is default here or not.
      */
-    $scope.isVelpGroupDefaultHere = function (groupId, paragraphId) {
-        var returnValue;
+    $scope.isVelpGroupDefaultHere = function(groupId, paragraphId) {
+        let returnValue;
         // First check defaults here
         returnValue = $scope.lazyIsVelpGroupDefaultInParagraph(groupId, paragraphId);
         if (returnValue !== null)
@@ -773,7 +757,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param groupId - Velp group ID
      * @returns {boolean} Whether the group is personal default or document default group or not.
      */
-    $scope.isVelpGroupDefaultFallBack = function (groupId) {
+    $scope.isVelpGroupDefaultFallBack = function(groupId) {
         return (groupId === default_personal_velp_group.id || groupId === default_velp_group.id);
     };
 
@@ -785,7 +769,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param paragraphId - Paragraph ID or "0" for the document
      * @returns true/false/null
      */
-    $scope.lazyIsVelpGroupSelectedInParagraph = function (groupId, paragraphId) {
+    $scope.lazyIsVelpGroupSelectedInParagraph = function(groupId, paragraphId) {
         return $scope.checkCollectionForSelected(groupId, paragraphId, $scope.groupSelections);
     };
 
@@ -797,7 +781,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param paragraphId - Paragraph ID or "0" for the document
      * @returns true/false/null
      */
-    $scope.lazyIsVelpGroupDefaultInParagraph = function (groupId, paragraphId) {
+    $scope.lazyIsVelpGroupDefaultInParagraph = function(groupId, paragraphId) {
         return $scope.checkCollectionForSelected(groupId, paragraphId, $scope.groupDefaults);
     };
 
@@ -809,11 +793,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param collection - Shows or defaults
      * @returns {boolean|null} Whether the collection is selected or not. Null if paragraph is not found.
      */
-    $scope.checkCollectionForSelected = function (groupId, paragraphId, collection) {
+    $scope.checkCollectionForSelected = function(groupId, paragraphId, collection) {
         if (collection.hasOwnProperty(paragraphId)) {
-            var index;
-            var selectionsHere = collection[paragraphId];
-            for (var i = 0; i < selectionsHere.length; ++i) {
+            let index;
+            const selectionsHere = collection[paragraphId];
+            for (let i = 0; i < selectionsHere.length; ++i) {
                 if (selectionsHere[i].id === groupId) {
                     return selectionsHere[i].selected;
                 }
@@ -827,16 +811,16 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @method addVelpGroup
      * @param form - Velp group form
      */
-    $scope.addVelpGroup = function (form) {
-        var valid = form.$valid;
+    $scope.addVelpGroup = function(form) {
+        const valid = form.$valid;
         $scope.submitted.velpGroup = true;
         if (!valid) return;
 
         form.$setPristine();
 
         $scope.newVelpGroup.target_type = parseInt($scope.newVelpGroup.target_type);
-        $scope.makePostRequest("/{0}/create_velp_group".replace('{0}', doc_id), $scope.newVelpGroup, function (json) {
-            var group = json.data;
+        $scope.makePostRequest("/{0}/create_velp_group".replace("{0}", doc_id), $scope.newVelpGroup, function(json) {
+            const group = json.data;
             group.selected = false;
             group.show = true;
             $scope.velpGroups.push(json.data);
@@ -851,7 +835,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param group - Velp group
      * @param type - "show" or "default"
      */
-    $scope.changeVelpGroupSelection = function (group, type) {
+    $scope.changeVelpGroupSelection = function(group, type) {
 
         $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
 
@@ -864,18 +848,17 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         }
         group.selection_type = type;
 
-        var found = false;
+        const found = false;
 
         if (type === "show") {
-            $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {
+            $scope.makePostRequest("/{0}/change_selection".replace("{0}", doc_id), group, function(json) {
             });
 
             $scope.groupSelections[group.target_id] = [];
 
-                $scope.velpGroups.forEach(function (g) {
+            $scope.velpGroups.forEach(function(g) {
                     $scope.groupSelections[group.target_id].push({id: g.id, selected: g.show});
                 });
-
 
             /*
             if (!$scope.groupSelections.hasOwnProperty(group.target_id))
@@ -895,15 +878,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             */
         }
         else if (type === "default") {
-            $scope.makePostRequest("/{0}/change_selection".replace('{0}', doc_id), group, function (json) {
+            $scope.makePostRequest("/{0}/change_selection".replace("{0}", doc_id), group, function(json) {
             });
 
             $scope.groupDefaults[group.target_id] = [];
 
-            $scope.velpGroups.forEach(function (g) {
+            $scope.velpGroups.forEach(function(g) {
                 $scope.groupDefaults[group.target_id].push({id: g.id, selected: g.default});
             });
-
 
             /*if (!$scope.groupDefaults.hasOwnProperty(group.target_id))
                 $scope.groupDefaults[group.target_id] = [];
@@ -931,11 +913,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @method changeAllVelpGroupSelections
      * @param type - "show" or "default"
      */
-    $scope.changeAllVelpGroupSelections = function (type) {
+    $scope.changeAllVelpGroupSelections = function(type) {
 
         $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
 
-        var targetID, targetType;
+        let targetID, targetType;
 
         if ($scope.groupAttachment.target_type === 1 && $scope.selectedElement !== null) {
             targetID = $scope.selectedElement.id;
@@ -949,41 +931,40 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
             $scope.groupSelections[targetID] = [];
             if (!$scope.settings.selectedAllShows) {
 
-                $scope.velpGroups.forEach(function (g) {
+                $scope.velpGroups.forEach(function(g) {
                     $scope.groupSelections[targetID].push({id: g.id, selected: false});
                 });
             } else {
-                $scope.velpGroups.forEach(function (g) {
+                $scope.velpGroups.forEach(function(g) {
                     $scope.groupSelections[targetID].push({id: g.id, selected: true});
                 });
             }
 
-            $scope.makePostRequest("/{0}/change_all_selections".replace('{0}', doc_id), {
-                'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllShows,
-                'selection_type': type
-            }, function (json) {
+            $scope.makePostRequest("/{0}/change_all_selections".replace("{0}", doc_id), {
+                target_id: targetID, target_type: targetType, selection: $scope.settings.selectedAllShows,
+                selection_type: type,
+            }, function(json) {
             });
-
 
         }
         else if (type === "default") {
             $scope.groupDefaults[targetID] = [];
 
             if (!$scope.settings.selectedAllDefault) {
-                $scope.velpGroups.forEach(function (g) {
+                $scope.velpGroups.forEach(function(g) {
                     $scope.groupDefaults[targetID].push({id: g.id, selected: false});
                 });
             } else {
 
-                $scope.velpGroups.forEach(function (g) {
+                $scope.velpGroups.forEach(function(g) {
                     $scope.groupDefaults[targetID].push({id: g.id, selected: true});
                 });
             }
 
-            $scope.makePostRequest("/{0}/change_all_selections".replace('{0}', doc_id), {
-                'target_id': targetID, 'target_type': targetType, 'selection': $scope.settings.selectedAllDefault,
-                'selection_type': type
-            }, function (json) {
+            $scope.makePostRequest("/{0}/change_all_selections".replace("{0}", doc_id), {
+                target_id: targetID, target_type: targetType, selection: $scope.settings.selectedAllDefault,
+                selection_type: type,
+            }, function(json) {
             });
 
         }
@@ -996,9 +977,9 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * Sets all velp group show selections to defaults in the current element or in the document.
      * @method resetCurrentShowsToDefaults
      */
-    $scope.resetCurrentShowsToDefaults = function () {
+    $scope.resetCurrentShowsToDefaults = function() {
 
-        var targetID;
+        let targetID;
         $scope.groupAttachment.target_type = parseInt($scope.groupAttachment.target_type);
 
         if ($scope.groupAttachment.target_type === 1 && $scope.selectedElement !== null) {
@@ -1008,7 +989,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
         }
 
         $scope.groupSelections[targetID] = JSON.parse(JSON.stringify($scope.groupDefaults[targetID]));
-        $scope.makePostRequest("/{0}/reset_target_area_selections_to_defaults".replace('{0}', doc_id), {'target_id': targetID}, function (json) {
+        $scope.makePostRequest("/{0}/reset_target_area_selections_to_defaults".replace("{0}", doc_id), {target_id: targetID}, function(json) {
             $scope.updateVelpList();
         });
     };
@@ -1017,10 +998,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * Sets all the show-checkbox values according to the default-checkboxes.
      * @method resetAllShowsToDefaults
      */
-    $scope.resetAllShowsToDefaults = function () {
+    $scope.resetAllShowsToDefaults = function() {
         $scope.groupSelections = JSON.parse(JSON.stringify($scope.groupDefaults));
 
-        $scope.makePostRequest("/{0}/reset_all_selections_to_defaults".replace('{0}', doc_id), null, function (json) {
+        $scope.makePostRequest("/{0}/reset_all_selections_to_defaults".replace("{0}", doc_id), null, function(json) {
             $scope.updateVelpList();
         });
     };
@@ -1031,8 +1012,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param type - Paragraph ID or "0" for the document
      * @returns {boolean} Whether all velp groups are used in the selected element or document
      */
-    $scope.checkCheckBoxes = function (type) {
-        var targetID = null;
+    $scope.checkCheckBoxes = function(type) {
+        let targetID = null;
 
         if ($scope.groupAttachment.target_type === 1) {
             targetID = $scope.selectedElement.id;
@@ -1053,11 +1034,11 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param velp - Velp whose velp groups are retrieved
      * @returns {Array} - Array of the velp's velp groups
      */
-    $scope.getVelpsVelpGroups = function (velp) {
-        var groups = [];
+    $scope.getVelpsVelpGroups = function(velp) {
+        const groups = [];
 
-        for (var i = 0; i < velp.velp_groups.length; i++) {
-            for (var j = 0; j < $scope.velpGroups.length; j++) {
+        for (let i = 0; i < velp.velp_groups.length; i++) {
+            for (let j = 0; j < $scope.velpGroups.length; j++) {
                 groups.push($scope.velpGroups[j]);
                 groups[i].selected = velp.velp_groups.indexOf($scope.velpGroups[j].id) >= 0;
             }
@@ -1071,7 +1052,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param velp - Velp whose velp groups are checked
      * @returns {boolean} Whether velp has any groups selected or not
      */
-    $scope.isSomeVelpGroupSelected = function (velp) {
+    $scope.isSomeVelpGroupSelected = function(velp) {
         if (typeof velp.velp_groups === UNDEFINED)
             return false;
         return velp.velp_groups.length > 0;
@@ -1084,7 +1065,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param velp - Velp to check
      * @returns {boolean} Whether the added or modified velp is valid or not.
      */
-    $scope.isVelpValid = function (velp) {
+    $scope.isVelpValid = function(velp) {
         if (typeof velp.content === UNDEFINED)
             return false;
         return $scope.isSomeVelpGroupSelected(velp) && velp.content.length > 0;
@@ -1097,7 +1078,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param group - Velp group to check
      * @returns {boolean} Whether the velp contains the velp group or not
      */
-    $scope.isGroupInVelp = function (velp, group) {
+    $scope.isGroupInVelp = function(velp, group) {
         if (typeof velp.velp_groups === UNDEFINED || typeof group.id === UNDEFINED)
             return false;
         return velp.velp_groups.indexOf(group.id) >= 0;
@@ -1109,8 +1090,8 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @param velp - Velp to update
      * @param group - Group to be added or removed from the velp
      */
-    $scope.updateVelpGroups = function (velp, group) {
-        var index = velp.velp_groups.indexOf(group.id);
+    $scope.updateVelpGroups = function(velp, group) {
+        const index = velp.velp_groups.indexOf(group.id);
         if (index < 0) {
             velp.velp_groups.push(group.id);
         }
@@ -1124,14 +1105,14 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
      * @method releaseClicked
      */
 
-    $scope.releaseClicked = function () {
-                    var div = $("#selectVelpsDiv");
+    $scope.releaseClicked = function() {
+                    const div = $("#selectVelpsDiv");
                     $scope.previewReleased = !($scope.previewReleased);
-                    var top = div.offset().top;
-                    var left = div.offset().left - 270;
-                    var element = div.detach();
+                    const top = div.offset().top;
+                    const left = div.offset().left - 270;
+                    const element = div.detach();
                     if (div.css("position") === "fixed") {
-                        $('#selectVelpsStack').append(element);
+                        $("#selectVelpsStack").append(element);
                         // If preview has been clicked back in, save the preview position before making it static again
                         div.css("position", "static");
                         div.find(".draghandle").css("visibility", "hidden");
@@ -1141,12 +1122,10 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 
                         document.getElementById("releaseSelectVelpsButton").innerHTML = "&#8592;";
 
-
-
                     }
                     else {
                         // If preview has just been released or it was released last time editor was open
-                        $('#velpMenu').append(element);
+                        $("#velpMenu").append(element);
                         div.css("position", "fixed");
                         div.find(".draghandle").css("visibility", "visible");
                         div.find(".closedraggable").css("visibility", "visible");
@@ -1157,8 +1136,7 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
                         div.css("z-index", 9999);
                         document.getElementById("releaseSelectVelpsButton").innerHTML = "&#8594;";
 
-                        div.offset({'left': left, 'top': top});
-
+                        div.offset({left: left, top: top});
 
                     }
 
@@ -1168,27 +1146,27 @@ timApp.controller('VelpSelectionController', ['$scope', '$window', '$http', '$q'
 /**
  * Filter for ordering velps
  */
-timApp.filter('filterByLabels', function () {
+timApp.filter("filterByLabels", function() {
     "use strict";
-    return function (velps, labels, advancedOn) {
+    return function(velps, labels, advancedOn) {
 
-        var selectedVelps = {};
-        var selectedLabels = [];
+        const selectedVelps = {};
+        const selectedLabels = [];
 
         if (!advancedOn)
             return velps;
 
         if (labels !== undefined) {
-            for (var i = 0; i < labels.length; i++) {
+            for (let i = 0; i < labels.length; i++) {
                 if (labels[i].selected)
                     selectedLabels.push(labels[i].id);
             }
         }
 
         if (velps !== undefined) {
-            for (var j = 0; j < velps.length; j++) {
+            for (let j = 0; j < velps.length; j++) {
 
-                for (var k = 0; k < selectedLabels.length; k++) {
+                for (let k = 0; k < selectedLabels.length; k++) {
                     if (typeof velps[j].labels !== UNDEFINED && velps[j].labels.indexOf(selectedLabels[k]) !== -1)
                         if (!(j in selectedVelps))
                             selectedVelps[j] = [velps[j], 1];
@@ -1202,19 +1180,19 @@ timApp.filter('filterByLabels', function () {
         if (selectedLabels.length === 0)
             return velps;
 
-        var selectedArray = [];
-        var returnVelps = [];
+        const selectedArray = [];
+        const returnVelps = [];
 
-        for (var sv in selectedVelps) {
+        for (const sv in selectedVelps) {
             if (selectedVelps.hasOwnProperty(sv))
                 selectedArray.push(selectedVelps[sv]);
         }
 
-        selectedArray.sort(function (a, b) {
+        selectedArray.sort(function(a, b) {
             return b[1] - a[1];
         });
 
-        for (var l = 0; l < selectedArray.length; l++)
+        for (let l = 0; l < selectedArray.length; l++)
             returnVelps.push(selectedArray[l][0]);
 
         return returnVelps;
@@ -1222,27 +1200,27 @@ timApp.filter('filterByLabels', function () {
 
 });
 
-timApp.filter('filterByVelpGroups', function () {
+timApp.filter("filterByVelpGroups", function() {
     "use strict";
-    return function (velps, groups) {
+    return function(velps, groups) {
 
-        var selected = [];
-        var checkedGroups = [];
+        const selected = [];
+        const checkedGroups = [];
 
         if (typeof groups === UNDEFINED || typeof velps === UNDEFINED)
             return velps;
 
-        for (var j = 0; j < groups.length; j++)
+        for (let j = 0; j < groups.length; j++)
             if (groups[j].show) checkedGroups.push(groups[j].id);
 
-        for (var i = 0; i < velps.length; i++) {
+        for (let i = 0; i < velps.length; i++) {
             // always include velp that is being edited
             if (velps[i].edit){
                 selected.push(velps[i]);
                 continue;
             }
 
-            for (var k = 0; k < checkedGroups.length; k++) {
+            for (let k = 0; k < checkedGroups.length; k++) {
                 if (velps[i].velp_groups.indexOf(checkedGroups[k]) >= 0 && selected.indexOf(velps[i]) < 0)
                     selected.push(velps[i]);
             }
@@ -1252,18 +1230,18 @@ timApp.filter('filterByVelpGroups', function () {
     };
 });
 
-timApp.filter('orderByWhenNotEditing', function () {
+timApp.filter("orderByWhenNotEditing", function() {
    "use strict";
 
-    return function (velps, order, filteredVelps) {
-        for (var i=0; i<velps.length; i++){
+   return function(velps, order, filteredVelps) {
+        for (let i = 0; i < velps.length; i++){
             if (velps[i].edit) return filteredVelps;
         }
 
-        var list;
-        var reverse = false;
+        let list;
+        let reverse = false;
 
-        if (order[0] === '-'){
+        if (order[0] === "-"){
             reverse = true;
             order = order.substring(1);
         }
@@ -1272,11 +1250,11 @@ timApp.filter('orderByWhenNotEditing', function () {
             list = velps;
         }
         else if (order === "content"){
-            list = velps.sort(function (v1, v2) {
+            list = velps.sort(function(v1, v2) {
                 return v1[order].localeCompare(v2[order]);
             });
         } else {
-            list = velps.sort(function (v1, v2) {
+            list = velps.sort(function(v1, v2) {
                 if (v1[order] == null && v2[order] != null) return -1;
                 else if (v1[order] != null && v2[order] == null) return 1;
                 else if (v1[order] == null && v2[order] == null) return 0;
@@ -1290,5 +1268,5 @@ timApp.filter('orderByWhenNotEditing', function () {
         if (reverse) list = list.reverse();
 
         return list;
-    }
+    };
 });

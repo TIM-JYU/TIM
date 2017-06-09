@@ -10,8 +10,8 @@
  */
 
 import angular from "angular";
-import * as reviewController from "tim/controllers/reviewController";
 import {timApp} from "tim/app";
+import * as reviewController from "tim/controllers/reviewController";
 import {markAsUsed} from "tim/utils";
 
 markAsUsed(reviewController);
@@ -20,18 +20,18 @@ markAsUsed(reviewController);
  * Angular directive for phrase selection
  * @lends module:velpSummary
  */
-timApp.directive('velpSummary', function () {
+timApp.directive("velpSummary", function() {
     "use strict";
     return {
         templateUrl: "/static/templates/velpSummary.html",
-        controller: 'VelpSummaryController',
-        scope: {annotations: "="}
+        controller: "VelpSummaryController",
+        scope: {annotations: "="},
     };
 });
 
-timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', function ($scope, $http, $window) {
+timApp.controller("VelpSummaryController", ["$scope", "$http", "$window", function($scope, $http, $window) {
     "use strict";
-    var console = $window.console;
+    let console = $window.console;
     $scope.settings = {selectedAll: false};
 
     /**
@@ -39,7 +39,7 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
      * @method toggleAnnotation
      * @param annotation - Annotation to toggle
      */
-    $scope.toggleAnnotation = function (annotation) {
+    $scope.toggleAnnotation = function(annotation) {
         console.log("Annotation");
         $scope.$parent.toggleAnnotation(annotation);
     };
@@ -49,12 +49,12 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
      * @method getTotalPoints
      * @returns {number} Total number of points
      */
-    $scope.getTotalPoints = function (annotations) {
-        var p = 0;
+    $scope.getTotalPoints = function(annotations) {
+        let p = 0;
         if (annotations === undefined)
             return p;
 
-        for (var i = 0; i < annotations.length; i++) {
+        for (let i = 0; i < annotations.length; i++) {
 
                 p += $scope.annotations[i].points;
 
@@ -67,11 +67,10 @@ timApp.controller('VelpSummaryController', ['$scope', '$http', '$window', functi
      * Checks all checkboxes linked to the annotations in the velp summary.
      * @method checkAll
      */
-    $scope.checkAll = function () {
-        angular.forEach($scope.annotations, function (a) {
+    $scope.checkAll = function() {
+        angular.forEach($scope.annotations, function(a) {
             a.selected = $scope.settings.selectedAll;
         });
     };
-
 
 }]);

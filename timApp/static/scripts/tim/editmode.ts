@@ -1,23 +1,23 @@
 import $ from "jquery";
 export function watchEditMode(newVal, oldVal, $scope) {
-    let w: any = window;
+    const w: any = window;
     w.editMode = newVal;
-    $('.editmode').removeClass('editmode');
+    $(".editmode").removeClass("editmode");
 
     if (newVal === null) {
-        $('.parEditButton').removeClass('active');
-        $('.areaEditButton').removeClass('active');
+        $(".parEditButton").removeClass("active");
+        $(".areaEditButton").removeClass("active");
         enable_par_edit();
         enable_area_edit_passive();
     } else if (newVal === "par") {
-        $('.parEditButton').addClass('active');
-        $('.areaEditButton').removeClass('active');
+        $(".parEditButton").addClass("active");
+        $(".areaEditButton").removeClass("active");
         enable_par_edit();
         disable_area_edit();
         //$('.par').addClass('editmode');
     } else if (newVal === "area") {
-        $('.parEditButton').removeClass('active');
-        $('.areaEditButton').addClass('active');
+        $(".parEditButton").removeClass("active");
+        $(".areaEditButton").addClass("active");
         disable_par_edit();
         enable_area_edit_active();
         //$('.area').addClass('editmode');
@@ -27,11 +27,11 @@ export function watchEditMode(newVal, oldVal, $scope) {
 }
 
 function enable_par_edit() {
-    $('.editline-disabled').removeClass('editline-disabled').addClass('editline');
+    $(".editline-disabled").removeClass("editline-disabled").addClass("editline");
 }
 
-function disable_par_edit () {
-    $('.editline').removeClass('editline').addClass('editline-disabled');
+function disable_par_edit() {
+    $(".editline").removeClass("editline").addClass("editline-disabled");
 }
 
 function enable_area_edit_active() {
@@ -44,6 +44,6 @@ function disable_area_edit() {
 }
 
 function show_hidden(show_param) {
-    var display_value = show_param == null ? 'none' : 'initial';
-    $('.mdcontent').css('display', display_value)
+    const display_value = show_param == null ? "none" : "initial";
+    $(".mdcontent").css("display", display_value);
 }

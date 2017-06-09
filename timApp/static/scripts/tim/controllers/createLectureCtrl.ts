@@ -1,7 +1,7 @@
-import {timApp} from "tim/app";
 import angular from "angular";
 import $ from "jquery";
 import moment from "moment";
+import {timApp} from "tim/app";
 
 /**
  * Lecture creation controller which is used to handle and validate the form data.
@@ -15,9 +15,9 @@ import moment from "moment";
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
+timApp.controller("CreateLectureCtrl", ["$scope", "$http", "$window",
 
-    function ($scope, $http, $window) {
+    function($scope, $http, $window) {
         "use strict";
         $scope.showLectureCreation = false;
         $scope.useDate = false;
@@ -38,19 +38,19 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
         $scope.editMode = false;
 
         $scope.dateTimeOptions = {
-            format: 'D.M.YYYY HH:mm:ss',
-            showTodayButton: true
+            format: "D.M.YYYY HH:mm:ss",
+            showTodayButton: true,
         };
 
         /**
          * Function called when new lecture form button is pressed.
          * @memberof module:createLectureCtrl
          */
-        $scope.$on('initLectureFormVals', function () {
+        $scope.$on("initLectureFormVals", function() {
             $scope.initLectureForm();
         });
 
-        $scope.$on('editLecture', function (event, data) {
+        $scope.$on("editLecture", function(event, data) {
             $scope.lectureCode = data.lecture_name;
             $scope.lectureCodeEncoded = encodeURIComponent($scope.lectureCode);
 
@@ -66,29 +66,27 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.addKeyListeners();
         });
 
-
         $scope.addKeyListeners = function() {
             if ( $scope.dataform ) return; // allready keys binded
             $scope.dataform = $("#lectureForm")[0];
 
-            $scope.dataform.addEventListener('keydown', function(event) {
+            $scope.dataform.addEventListener("keydown", function(event) {
                 if (event.ctrlKey || event.metaKey) {
                     switch (String.fromCharCode(event.which).toLowerCase()) {
-                    case 's':
+                    case "s":
                         event.preventDefault();
                         $scope.submitLecture();
                         break;
                     }
                 }
             });
-        }
-
+        };
 
         /**
          * Lecture form initialized to have the current date and time as default starting time.
          * @memberof module:createLectureCtrl
          */
-        $scope.initLectureForm = function () {
+        $scope.initLectureForm = function() {
             $window.console.log("Lecture initialized.");
             $scope.startTime = moment();
             $scope.dueCheck = true;
@@ -98,7 +96,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
 
         };
 
-        $scope.populateLectureForm = function (name) {
+        $scope.populateLectureForm = function(name) {
             $scope.lectureCode = name;
         };
 
@@ -107,11 +105,11 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * the default end time to 2 hours ahead of start time.
          * @memberof module:createLectureCtrl
          */
-        $scope.enableDate2 = function () {
+        $scope.enableDate2 = function() {
             $scope.dateCheck = true;
             $scope.dueCheck = false;
             if ($scope.endTime == null) {
-                $scope.endTime = moment($scope.startTime).add(2, 'hours');
+                $scope.endTime = moment($scope.startTime).add(2, "hours");
             }
             $scope.useDate = true;
             $scope.useDuration = false;
@@ -124,7 +122,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * is called when duration is chosen and is chosen by default.
          * @memberof module:createLectureCtrl
          */
-        $scope.enableDue2 = function () {
+        $scope.enableDue2 = function() {
             $scope.dateCheck = false;
             $scope.dueCheck = true;
             $scope.useDuration = true;
@@ -138,7 +136,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param element ID of the field whose border will be removed.
          * @memberof module:createLectureCtrl
          */
-        $scope.defInputStyle = function (element) {
+        $scope.defInputStyle = function(element) {
             if (element !== null || !element.isDefined) {
                 angular.element("#" + element).css("border", "");
             }
@@ -150,13 +148,13 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param val The ID of the input field so user can be notified of the error.
          * @memberof module:createLectureCtrl
          */
-        $scope.isHour = function (element, val) {
+        $scope.isHour = function(element, val) {
             if (element === "" || isNaN(element) || element > 23 || element < 0) {
                 $scope.errorize(val, "Hour has to be between 0 and 23.");
             }
         };
 
-        $scope.isNumber = function (element, val) {
+        $scope.isNumber = function(element, val) {
             console.log(element);
             if (!(element === "") && (isNaN(element) || element < 0)) {
                 $scope.errorize(val, "Max number of students must be a positive number or empty.");
@@ -169,7 +167,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param val The ID of the input field so user can be notified of the error.
          * @memberof module:createLectureCtrl
          */
-        $scope.isMinute = function (element, val) {
+        $scope.isMinute = function(element, val) {
             if (element === "" || isNaN(element) || element > 59 || element < 0) {
                 $scope.errorize(val, "Minutes has to be between 0 and 59.");
             }
@@ -181,7 +179,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param val The ID of the input field so user can be notified of the error.
          * @memberof module:createLectureCtrl
          */
-        $scope.isPositiveNumber = function (element, val) {
+        $scope.isPositiveNumber = function(element, val) {
             if (element === "" || isNaN(element) || element < 0) {
                 $scope.errorize(val, "Number has to be positive.");
             }
@@ -191,7 +189,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * Function for creating a new lecture and validation.
          * @memberof module:createLectureCtrl
          */
-        $scope.submitLecture = function () {
+        $scope.submitLecture = function() {
             if ($scope.lectureId === undefined || $scope.lectureId === null) {
                 $scope.editMode = false;
             }
@@ -212,7 +210,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             $scope.isNumber($scope.maxStudents, "maxStudents");
 
             if ($scope.startTime !== null) {
-                var lecture_starting_in_past = moment().diff($scope.startTime) >= 0;
+                let lecture_starting_in_past = moment().diff($scope.startTime) >= 0;
 
                 /* Checks that are run if end date is used*/
                 if ($scope.useDate && $scope.endTime !== null) {
@@ -235,14 +233,14 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                         $scope.errorize("durationDiv", "Please give a duration.");
                     }
                     $scope.endTime = moment($scope.startTime)
-                        .add(parseInt($scope.durationHour), 'hours')
+                        .add(parseInt($scope.durationHour), "hours")
                         .add(parseInt($scope.durationMin));
                     if ($scope.endTime.diff($scope.startTime) < 120000) {
                         $scope.errorize("durationDiv", "Lecture has to last at least two minutes.");
                     }
                 }
-                var alert_message = "";
-                var lecture_ending_in_past = moment().diff($scope.endTime) >= 0;
+                let alert_message = "";
+                let lecture_ending_in_past = moment().diff($scope.endTime) >= 0;
                 /* Confirmations if lecture starts and/or ends before the current date */
                 if (lecture_starting_in_past && !$scope.editMode) {
                     alert_message += "Are you sure you want the lecture to start before now? ";
@@ -265,22 +263,22 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
             /* If no errors save the lecture to the database */
             if ($scope.error_message <= 0) {
                 if ($scope.earlyJoining) {
-                    $scope.startTime.subtract(15, 'minutes');
+                    $scope.startTime.subtract(15, "minutes");
                 }
                 $http({
-                    url: '/createLecture',
-                    method: 'POST',
+                    url: "/createLecture",
+                    method: "POST",
                     params: {
-                        'lecture_id': $scope.lectureId,
-                        'doc_id': $scope.docId,
-                        'lecture_code': $scope.lectureCode,
-                        'password': $scope.password,
-                        'start_date': $scope.startTime,
-                        'end_date': $scope.endTime,
-                        'max_students': $scope.maxStudents || ''
-                    }
+                        lecture_id: $scope.lectureId,
+                        doc_id: $scope.docId,
+                        lecture_code: $scope.lectureCode,
+                        password: $scope.password,
+                        start_date: $scope.startTime,
+                        end_date: $scope.endTime,
+                        max_students: $scope.maxStudents || "",
+                    },
                 })
-                    .success(function (answer) {
+                    .success(function(answer) {
                         if ($scope.editMode) {
                             $window.console.log("Lecture " + answer.lectureId + " updated.");
                         }
@@ -293,7 +291,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                         $scope.$emit("closeLectureForm", true);
                         $scope.$emit("lectureUpdated", $scope.lectureCode);
                     })
-                    .error(function (answer) {
+                    .error(function(answer) {
                         $scope.error_message += answer.error;
                         $window.console.log(answer);
                     });
@@ -306,8 +304,8 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * @param error_text Error text that will be printed if the error occurs.
          * @memberof module:createLectureCtrl
          */
-        $scope.errorize = function (div_val, error_text) {
-            angular.element("#" + div_val).css('border', "1px solid red");
+        $scope.errorize = function(div_val, error_text) {
+            angular.element("#" + div_val).css("border", "1px solid red");
             if (error_text.length > 0) {
                 $scope.error_message += error_text + "<br />";
             }
@@ -317,10 +315,10 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * Calls defInputStyle for all the form elements.
          * @memberof module:createLectureCtrl
          */
-        $scope.removeErrors = function () {
+        $scope.removeErrors = function() {
             $scope.error_message = "";
 
-            var elementsToRemoveErrorsFrom = [
+            let elementsToRemoveErrorsFrom = [
                 "lCode",
                 "startDate",
                 "startHour",
@@ -334,9 +332,9 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
                 "durationDiv",
                 "durationHour",
                 "durationMin",
-                "maxStudents"
+                "maxStudents",
             ];
-            for (var i = 0; i < elementsToRemoveErrorsFrom.length; i++) {
+            for (let i = 0; i < elementsToRemoveErrorsFrom.length; i++) {
                 if (elementsToRemoveErrorsFrom[i] !== undefined) {
                     $scope.defInputStyle(elementsToRemoveErrorsFrom[i]);
                 }
@@ -347,7 +345,7 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          *  Resets all the values of the form.
          *  @memberof module:createLectureCtrl
          */
-        $scope.clearForm = function () {
+        $scope.clearForm = function() {
             $scope.lectureCode = "";
             $scope.password = "";
             $scope.startDate = moment();
@@ -372,18 +370,18 @@ timApp.controller("CreateLectureCtrl", ['$scope', "$http", "$window",
          * Function for cancelling the lecture creation.
          * @memberof module:createLectureCtrl
          */
-        $scope.cancelCreation = function () {
+        $scope.cancelCreation = function() {
             $scope.editMode = false;
             $scope.$emit("closeLectureForm");
             $scope.clearForm();
         };
 
-        $scope.$watch('lectureCode', function () {
+        $scope.$watch("lectureCode", function() {
             $scope.lectureCodeEncoded = encodeURIComponent($scope.lectureCode);
         });
 
-        $scope.$watch('hostName', function () {
+        $scope.$watch("hostName", function() {
             $scope.hostName = encodeURIComponent(location.host);
         });
-    }
+    },
 ]);

@@ -1,27 +1,27 @@
 
 import {timApp} from "tim/app";
-timApp.directive("bootstrapPanel", ['$window', '$log', '$http', function ($window, $log, $http) {
+timApp.directive("bootstrapPanel", ["$window", "$log", "$http", function($window, $log, $http) {
     "use strict";
     return {
-        restrict: 'E',
+        restrict: "E",
         transclude: true,
         scope: {
-            title: '@?',
-            closeFn: '&',
-            showClose: '=?'
+            title: "@?",
+            closeFn: "&",
+            showClose: "=?",
         },
         templateUrl: "/static/templates/bootstrapPanel.html",
-        link: function ($scope, $element) {
+        link($scope, $element) {
 
         },
 
-        controller: ['$scope', '$element', '$attrs', function ($scope, $element, $attrs) {
-            var sc = $scope;
+        controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
+            let sc = $scope;
 
-            sc.close = function () {
-                $element.addClass('ng-hide');
+            sc.close = function() {
+                $element.addClass("ng-hide");
                 sc.closeFn();
             };
-        }]
+        }],
     };
 }]);

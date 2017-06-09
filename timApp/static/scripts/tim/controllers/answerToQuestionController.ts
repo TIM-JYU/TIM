@@ -17,7 +17,7 @@ markAsUsed(answerSheet);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http', function ($scope, $rootScope, $http) {
+timApp.controller("AnswerToQuestionController", ["$scope", "$rootScope", "$http", function($scope, $rootScope, $http) {
     "use strict";
     $scope.questionHeaders = [];
     $scope.answerTypes = [];
@@ -25,7 +25,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
     $scope.isLecturer = false;
     $scope.questionTitle = "";
 
-    $scope.$on("setQuestionJson", function (event, args) {
+    $scope.$on("setQuestionJson", function(event, args) {
         $scope.result = args.result;
         $scope.previousAnswer = args.answer;
         $scope.askedId = args.askedId;
@@ -47,7 +47,7 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
      * FILL WITH SUITABLE TEXT
      * @memberof module:answerToQuestionController
      */
-    $scope.answer = function () {
+    $scope.answer = function() {
         $scope.dynamicAnswerSheetControl.answerToQuestion();
         $scope.answered = true;
         if ($scope.isLecturer) {
@@ -59,29 +59,29 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
      * FILL WITH SUITABLE TEXT
      * @memberof module:answerToQuestionController
      */
-    $scope.close = function (callback) {
+    $scope.close = function(callback) {
         if ($scope.isLecturer) $scope.stopQuestion(callback);
-        if ($scope.result) $scope.$emit('pointsClosed', $scope.askedId);
+        if ($scope.result) $scope.$emit("pointsClosed", $scope.askedId);
         $scope.dynamicAnswerSheetControl.closeQuestion();
     };
 
-    $scope.stopQuestion = function (callback) {
+    $scope.stopQuestion = function(callback) {
         $http({
-            url: '/stopQuestion',
-            method: 'POST',
+            url: "/stopQuestion",
+            method: "POST",
             params: {
-                'asked_id': $scope.askedId,
-                'lecture_id': $scope.lectureId
-            }
+                asked_id: $scope.askedId,
+                lecture_id: $scope.lectureId,
+            },
         })
-            .success(function () {
-                $scope.$emit('questionStopped');
+            .success(function() {
+                $scope.$emit("questionStopped");
                 $scope.questionEnded = true;
                 $scope.dynamicAnswerSheetControl.endQuestion();
                 console.log("Question ", $scope.askedId, " stopped");
                 if (callback) callback();
             })
-            .error(function () {
+            .error(function() {
                 console.log("Failed to stop question");
             });
     };
@@ -89,79 +89,79 @@ timApp.controller('AnswerToQuestionController', ['$scope', '$rootScope', '$http'
     /**
      *
      */
-    $scope.showAnswers = function () {
-        $scope.$emit('showAnswers', true);
+    $scope.showAnswers = function() {
+        $scope.$emit("showAnswers", true);
     };
 
-    $scope.reAsk = function () {
+    $scope.reAsk = function() {
         $scope.close($scope.reAskEmit);
     };
 
-    $scope.askAsNew = function () {
+    $scope.askAsNew = function() {
         $scope.close($scope.askAsNewEmit);
     };
 
-    $scope.edit = function () {
+    $scope.edit = function() {
         $http({
-            url: '/getAskedQuestionById',
-            method: 'GET',
-            params: {'asked_id': $scope.askedId}
+            url: "/getAskedQuestionById",
+            method: "GET",
+            params: {asked_id: $scope.askedId},
         })
-            .success(function (data) {
-                var markup = JSON.parse(data.json);
+            .success(function(data) {
+                let markup = JSON.parse(data.json);
                 if (!markup.json) markup = {json: markup}; // compability for old
                 markup.points = data.points;
-                $rootScope.$broadcast('changeQuestionTitle', {'questionTitle': markup.questionTitle});
+                $rootScope.$broadcast("changeQuestionTitle", {questionTitle: markup.questionTitle});
                 $rootScope.$broadcast("editQuestion", {
-                    "asked_id": $scope.askedId,
-                    "markup": markup
+                    asked_id: $scope.askedId,
+                    markup: markup,
                 });
             })
-            .error(function () {
+            .error(function() {
                 console.log("There was some error getting question.");
             });
     };
 
-    $scope.showPoints = function () {
+    $scope.showPoints = function() {
         $http({
-            url: '/showAnswerPoints',
-            method: 'POST',
+            url: "/showAnswerPoints",
+            method: "POST",
             params: {
-                'asked_id': $scope.askedId,
-                'lecture_id': $scope.lectureId,
-                'current_question_id': $scope.askedId
-            }
+                asked_id: $scope.askedId,
+                lecture_id: $scope.lectureId,
+                current_question_id: $scope.askedId,
+            },
         })
-            .success(function (answer) {
+            .success(function(answer) {
                 $scope.current_points_id = $scope.askedId;
                 $scope.result = true;
                 $scope.points = answer.points;
                 if (answer.expl) $scope.expl = JSON.parse(answer.expl);
                 $scope.dynamicAnswerSheetControl.createAnswer($scope);
             })
-            .error(function () {
+            .error(function() {
                 console.log("Could not show points to students.");
             });
     };
 
-    $scope.reAskEmit = function () {
-        $scope.$emit('askQuestion', {
-            "lecture_id": $scope.lectureId,
-            "asked_id": $scope.askedId,
-            "par_id": $scope.questionParId,
-            "question_id": $scope.questionId,
-            "doc_id": $scope.docId,
-            "markup": $scope.markup,
+    $scope.reAskEmit = function() {
+        $scope.$emit("askQuestion", {
+            lecture_id: $scope.lectureId,
+            asked_id: $scope.askedId,
+            par_id: $scope.questionParId,
+            question_id: $scope.questionId,
+            doc_id: $scope.docId,
+            markup: $scope.markup,
         });
     };
 
-    $scope.askAsNewEmit = function () {
-        $scope.$emit('askQuestion', {
-            "lecture_id": $scope.lectureId,
-            "question_id": $scope.questionId,
-            "par_id": $scope.questionParId,
-            "doc_id": $scope.docId,
-            "markup": $scope.markup,
+    $scope.askAsNewEmit = function() {
+        $scope.$emit("askQuestion", {
+            lecture_id: $scope.lectureId,
+            question_id: $scope.questionId,
+            par_id: $scope.questionParId,
+            doc_id: $scope.docId,
+            markup: $scope.markup,
         });
     };
 }]);

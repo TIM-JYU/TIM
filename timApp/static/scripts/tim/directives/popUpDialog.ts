@@ -11,19 +11,19 @@ import {timApp} from "tim/app";
  * @copyright 2015 Timppa project authors
  */
 
-timApp.directive('popUpDialog', function () {
-    var toDragOrNot = function () {
-        var width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+timApp.directive("popUpDialog", function() {
+    const toDragOrNot = function() {
+        const width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
         if (width > 500) {
             return 'tim-draggable-fixed caption="{{caption}}"';
         }
     };
     return {
-        restrict: 'E',
+        restrict: "E",
         scope: {
-            show: '=',
-            caption: '=',
-            elemId : '='
+            show: "=",
+            caption: "=",
+            elemId : "=",
         },
         template: "<div class='pop-up' ng-show='show' id='popUpBack'>" +
         "<div class='pop-up-overlay'></div> " +
@@ -36,19 +36,19 @@ timApp.directive('popUpDialog', function () {
         replace: true,
         transclude: true,
 
-        link: function ($scope, $element) {
+        link($scope, $element) {
             /**
              * FILL WITH SUITABLE TEXT
              * @memberof module:popUpDialog
              * @param e
              */
-            $scope.checkDown = function (e) {
+            $scope.checkDown = function(e) {
                 $scope.mouseDownX = e.clientX;
                 $scope.mouseDownY = e.clientY;
-                let window = $element.find("popUpBack");
-                let ctx = window.context as HTMLElement;
+                const window = $element.find("popUpBack");
+                const ctx = window.context as HTMLElement;
                 ctx.style.position = "absolute";
-                ctx.style.bottom = 'auto';
+                ctx.style.bottom = "auto";
 
             };
 
@@ -56,12 +56,12 @@ timApp.directive('popUpDialog', function () {
              * FILL WITH SUITABLE TEXT
              * @memberof module:popUpDialog
              */
-            $scope.checkUp = function () {
-                let window = $element.find("popUpBack");
-                let ctx = window.context as HTMLElement;
+            $scope.checkUp = function() {
+                const window = $element.find("popUpBack");
+                const ctx = window.context as HTMLElement;
                 ctx.style.position = "fixed";
             };
-        }
+        },
 
     };
 });

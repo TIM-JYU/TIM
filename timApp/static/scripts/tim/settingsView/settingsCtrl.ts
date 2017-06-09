@@ -1,27 +1,27 @@
-import {timApp} from "tim/app";
 import $ from "jquery";
+import {timApp} from "tim/app";
 
-timApp.controller('SettingsCtrl', ['$scope', '$http', '$window', function (sc, http, $window) {
+timApp.controller("SettingsCtrl", ["$scope", "$http", "$window", function(sc, http, $window) {
     sc.settings = $window.settings;
-    sc.submit = function (saveUrl) {
+    sc.submit = function(saveUrl) {
         sc.saving = true;
         http.post(saveUrl, sc.settings).success(
-            function (data, status, error, headers) {
-            }).success(function (data) {
+            function(data, status, error, headers) {
+            }).success(function(data) {
                 sc.settings = data;
                 sc.updateCss();
-            }).error(function () {
-                alert('Failed to save settings.');
-            }).then(function () {
+            }).error(function() {
+                alert("Failed to save settings.");
+            }).then(function() {
                 sc.saving = false;
             });
     };
 
-    sc.updateCss = function () {
-        $('link[rel="stylesheet"]').first().attr('href', '/static/gen/' + sc.settings.css_combined + '.css');
+    sc.updateCss = function() {
+        $('link[rel="stylesheet"]').first().attr("href", "/static/gen/" + sc.settings.css_combined + ".css");
     };
 
-    sc.clearLocalStorage = function () {
+    sc.clearLocalStorage = function() {
         window.localStorage.clear();
     };
 
@@ -31,6 +31,6 @@ timApp.controller('SettingsCtrl', ['$scope', '$http', '$window', function (sc, h
 
     sc.updateCss();
     sc.style = document.createElement("style");
-    sc.style.type = 'text/css';
-    document.getElementsByTagName('head')[0].appendChild(sc.style);
+    sc.style.type = "text/css";
+    document.getElementsByTagName("head")[0].appendChild(sc.style);
 }]);

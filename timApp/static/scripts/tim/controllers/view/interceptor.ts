@@ -1,77 +1,76 @@
 
+import angular from "angular";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
-import angular from "angular";
 
-
-timApp.config(['$httpProvider', function ($httpProvider) {
+timApp.config(["$httpProvider", function($httpProvider) {
     "use strict";
     timLogTime("timApp config", "view");
     function escapeId(id) {
         return "#" + id.replace(/(:|\.|\[|\]|,|=)/g, "\\$1");
     }
 
-    var interceptor = [
-        '$q',
-        '$rootScope',
-        '$window',
-        function ($q, $rootScope, $window) {
-            var re = /\/[^/]+\/([^/]+)\/answer\/$/;
+    let interceptor = [
+        "$q",
+        "$rootScope",
+        "$window",
+        function($q, $rootScope, $window) {
+            let re = /\/[^/]+\/([^/]+)\/answer\/$/;
             return {
-                'request': function (config) {
+                request(config) {
                     if (re.test(config.url)) {
-                        var match = re.exec(config.url);
-                        var taskIdFull = match[1];
-                        var parts = taskIdFull.split('.');
-                        var docId = parseInt(parts[0], 10);
-                        var taskName = parts[1];
-                        var taskId = docId + '.' + taskName;
-                        if (taskName !== '') {
-                            var ab = angular.element("answerbrowser[task-id='" + taskId + "']");
+                        let match = re.exec(config.url);
+                        let taskIdFull = match[1];
+                        let parts = taskIdFull.split(".");
+                        let docId = parseInt(parts[0], 10);
+                        let taskName = parts[1];
+                        let taskId = docId + "." + taskName;
+                        if (taskName !== "") {
+                            let ab = angular.element("answerbrowser[task-id='" + taskId + "']");
                             if (ab.isolateScope()) {
-                                var browserScope = ab.isolateScope();
+                                let browserScope = ab.isolateScope();
                                 angular.extend(config.data, {abData: browserScope.getBrowserData()});
                             }
                         }
-                        var par = angular.element(escapeId(taskIdFull)).parents('.par');
-                        angular.extend(config.data, {ref_from: {docId: $window.item.id, par: par.attr('id')}});
+                        let par = angular.element(escapeId(taskIdFull)).parents(".par");
+                        angular.extend(config.data, {ref_from: {docId: $window.item.id, par: par.attr("id")}});
                     }
                     return config;
                 },
-                'response': function (response) {
+                response(response) {
                     if (re.test(response.config.url)) {
-                        var match = re.exec(response.config.url);
-                        var taskIdFull = match[1];
-                        var parts = taskIdFull.split('.');
-                        var docId = parseInt(parts[0], 10);
-                        var taskName = parts[1];
-                        var taskId = docId + '.' + taskName;
-                        $rootScope.$broadcast('answerSaved', {
-                            taskId: taskId,
+                        let match = re.exec(response.config.url);
+                        let taskIdFull = match[1];
+                        let parts = taskIdFull.split(".");
+                        let docId = parseInt(parts[0], 10);
+                        let taskName = parts[1];
+                        let taskId = docId + "." + taskName;
+                        $rootScope.$broadcast("answerSaved", {
+                            taskId,
                             savedNew: response.data.savedNew,
-                            error: response.data.error
+                            error: response.data.error,
                         });
                     }
                     return response;
                 },
-                'responseError': function (response) {
+                responseError(response) {
                     if (re.test(response.config.url)) {
-                        var match = re.exec(response.config.url);
-                        var taskIdFull = match[1];
-                        var parts = taskIdFull.split('.');
-                        var docId = parseInt(parts[0], 10);
-                        var taskName = parts[1];
-                        var taskId = docId + '.' + taskName;
-                        $rootScope.$broadcast('answerSaved', {
-                            taskId: taskId,
+                        let match = re.exec(response.config.url);
+                        let taskIdFull = match[1];
+                        let parts = taskIdFull.split(".");
+                        let docId = parseInt(parts[0], 10);
+                        let taskName = parts[1];
+                        let taskId = docId + "." + taskName;
+                        $rootScope.$broadcast("answerSaved", {
+                            taskId,
                             savedNew: false,
-                            error: response.data.error
+                            error: response.data.error,
                         });
                     }
                     return $q.reject(response);
-                }
+                },
             };
-        }
+        },
     ];
     $httpProvider.interceptors.push(interceptor);
 }]);

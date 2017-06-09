@@ -1,51 +1,51 @@
 import $ from "jquery";
 
-$(function () {
+$(function() {
     // Scale of the map
-    var scale = 0.5;
+    let scale = 0.5;
 
     // Show all building frames
-    var showAll = false;
+    let showAll = false;
 
     // Alpha value for the building frames
-    var alpha = 0.2;
+    let alpha = 0.2;
 
-    var json;
+    let json;
 
     // Get the div that will hold canvases
-    var $container = $(".mapContainer");
+    let $container = $(".mapContainer");
 
     // don't try to do anything if there are no maps on the page
     if ($container.length === 0) {
         return;
     }
 
-    var container = $container[0];
+    let container = $container[0];
     $container.css({
         "z-index": 0,
         "display": "none",
-        "position": "relative"
+        "position": "relative",
     });
 
     // Set properties for zoom input
-    var zoomInput = $(".mapZoom");
-    zoomInput.attr({"max": 1, "min": 0.3, "step": 0.05});
+    let zoomInput = $(".mapZoom");
+    zoomInput.attr({max: 1, min: 0.3, step: 0.05});
     zoomInput.val(scale);
     zoomInput.width(300);
 
     // Set properties for alpha input
-    var alphaInput = $(".alphaRange");
-    alphaInput.attr({"max": 1, "min": 0, "step": 0.05});
+    let alphaInput = $(".alphaRange");
+    alphaInput.attr({max: 1, min: 0, step: 0.05});
     alphaInput.val(alpha);
     alphaInput.width(300);
 
     // Title and description elements for the info box
-    var title = $("<p></p>");
+    let title = $("<p></p>");
     title.addClass("infoBoxTitle");
     title.css("position", "absolute");
     title.appendTo(container);
 
-    var description = $("<p></p>");
+    let description = $("<p></p>");
     description.addClass("infoBoxDescription");
     description.css("position", "absolute");
     description.appendTo(container);
@@ -56,14 +56,14 @@ $(function () {
      * @param callback Callback function
      */
     function loadImages(sources, callback) {
-        var images = {};
-        var loadedImages = 0;
-        var onload = function () {
+        let images = {};
+        let loadedImages = 0;
+        let onload = function() {
             if (++loadedImages >= sources.length) {
                 callback(images);
             }
         };
-        for (var i = 0; i < sources.length; i++) {
+        for (let i = 0; i < sources.length; i++) {
             images[i] = new Image();
             images[i].onload = onload;
             images[i].src = sources[i].replace("..", "/static");
@@ -76,8 +76,8 @@ $(function () {
         type: "post",
         dataType : "application/json",
         contentType: "application/json",
-        data: $container.attr('data-mapdata'),
-        success: function (newJson) {
+        data: $container.attr("data-mapdata"),
+        success(newJson) {
 
             json = JSON.parse(newJson);
 
@@ -93,11 +93,11 @@ $(function () {
                     canvases = [];
                 }
 
-                var canvas;
+                let canvas;
 
                 // Canvases used to draw the final map
-                for (var j = 0; j < 3; j++) {
-                    canvas = document.createElement('canvas');
+                for (let j = 0; j < 3; j++) {
+                    canvas = document.createElement("canvas");
                     container.appendChild(canvas);
 
                     // Set some attributes for the canvas
@@ -119,8 +119,8 @@ $(function () {
                 }
 
                 // Canvases used to draw the layers
-                for (j = 0; j < json.layers.length; j++) {
-                    canvas = document.createElement('canvas');
+                for (let j = 0; j < json.layers.length; j++) {
+                    canvas = document.createElement("canvas");
 
                     // Set some attributes for the canvas and get it's context
                     canvas.setAttribute("id", "layer" + j);
@@ -131,27 +131,27 @@ $(function () {
             }
 
             // Array for the image sources
-            var sources = [];
+            let sources = [];
 
             // Fill the sources array with tileset image sources
-            for (var k = 0; k < json.tilesets.length; k++) {
+            for (let k = 0; k < json.tilesets.length; k++) {
                 sources.push(json.tilesets[k].image);
             }
 
             // List of canvases that are used to help with drawing the full map
-            var canvases = [];
+            let canvases = [];
 
             // Used for event listener
-            var topCanvas;
+            let topCanvas;
             // Used for dynamic drawing
-            var middleCanvas;
+            let middleCanvas;
             // Used for drawing the map
-            var bottomCanvas;
+            let bottomCanvas;
 
             createCanvases();
 
             // Preload the images and draw the map
-            loadImages(sources, function (images) {
+            loadImages(sources, function(images) {
 
                 /**
                  * Find the position of a tile on spreadsheet
@@ -160,14 +160,14 @@ $(function () {
                  * @returns {{x: *, y: *}} Position of the tile on spreadsheet
                  */
                 function findTileImagePos(tileset, offset) {
-                    var currentX = 0;
-                    var currentY = 0;
+                    let currentX = 0;
+                    let currentY = 0;
 
-                    var x;
-                    var y;
+                    let x;
+                    let y;
 
                     // Find the position of gray tile on a spreadsheet
-                    for (var j = 0; j < tileset.columns - offset; j++) {
+                    for (let j = 0; j < tileset.columns - offset; j++) {
                         x = currentX++ * tileset.tilewidth;
                         y = currentY * tileset.tileheight;
 
@@ -178,11 +178,10 @@ $(function () {
                     }
 
                     return {
-                        x: x,
-                        y: y
+                        x,
+                        y,
                     };
                 }
-
 
                 function hasOwnProperty(json, tile, layerdelta, datadelta) {
                     if ( !json.layers[tile.layerNo + layerdelta] ) return false;
@@ -195,7 +194,7 @@ $(function () {
                  * @param tile Tile that the frame is drawn over
                  */
                 function drawFrame(tile) {
-                    var context = middleCanvas.getContext("2d");
+                    let context = middleCanvas.getContext("2d");
 
                     // if clicked on a "top tile", draw a full frame
                     if (tile.tileset.properties !== undefined &&
@@ -310,8 +309,8 @@ $(function () {
                         tile.tileset.properties.buildingProperty == 1 && // json.layers[tile.layerNo + 1] &&
                         !hasOwnProperty(json, tile, 1, -json.width) &&
                         hasOwnProperty(json, tile, -1, json.width) &&
-                        hasOwnProperty(json, tile, -2, json.width*2) &&
-                        hasOwnProperty(json, tile, -3, json.width*2) ) {
+                        hasOwnProperty(json, tile, -2, json.width * 2) &&
+                        hasOwnProperty(json, tile, -3, json.width * 2) ) {
                         /*
                         !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex - json.width).toString()) &&
                         json.layers[tile.layerNo - 1].data.hasOwnProperty((tile.dataIndex + json.width).toString()) &&
@@ -338,7 +337,7 @@ $(function () {
                  * @param tiles All tiles on the map
                  */
                 function drawOnActive(tiles) {
-                    tiles.forEach(function (t) {
+                    tiles.forEach(function(t) {
                         if (t.active && !t.frame) {
                             t.frame = true;
                             drawFrame(t);
@@ -346,10 +345,9 @@ $(function () {
                     });
                 }
 
-
                 function rround(d, des) {
-                    var mult = Math.pow(10,des);
-                    return Math.round(d*mult)/mult;
+                    let mult = Math.pow(10, des);
+                    return Math.round(d * mult) / mult;
                 }
 
                 /**
@@ -359,13 +357,13 @@ $(function () {
                  * @param tile Clicked tile
                  */
                 function drawInfo(x, y, tile) {
-                    var tscale = scale;
+                    let tscale = scale;
                     if ( tscale < 0.7 ) tscale = 0.7;
                     // Size and position of the box
-                    var height = json.tileheight * 10 * tscale;
-                    var width = json.tilewidth * 8 * tscale;
-                    var rectX = x - json.tilewidth * 4 * scale;
-                    var rectY = y - json.tileheight * 6 * scale - height;
+                    let height = json.tileheight * 10 * tscale;
+                    let width = json.tilewidth * 8 * tscale;
+                    let rectX = x - json.tilewidth * 4 * scale;
+                    let rectY = y - json.tileheight * 6 * scale - height;
 
                     if (rectY < json.tileheight * scale) {
                         rectY = y + json.tileheight * scale;
@@ -392,7 +390,7 @@ $(function () {
                         "overflow": "hidden",
                         "font-weight": "bold",
                         "font-size": (1.1 * tscale) + "em",
-                        "z-index": 4
+                        "z-index": 4,
                     });
                     description.css({
                         "min-width": (width - 20 * tscale) + "px",
@@ -404,15 +402,15 @@ $(function () {
                         "top": (rectY + 40 * tscale) + "px",
                         "font-size": (tscale) + "em",
                         "text-align": "left",
-                        "z-index": 4
+                        "z-index": 4,
                     });
 
-                    var totalMax = 0;
-                    var totalPoints = 0;
-                    var titles = [];
+                    let totalMax = 0;
+                    let totalPoints = 0;
+                    let titles = [];
 
-                    for (var i = 0; i < json.layers.length; i++) {
-                        if(!titles.includes(json.layers[i].properties.title)) {
+                    for (let i = 0; i < json.layers.length; i++) {
+                        if (!titles.includes(json.layers[i].properties.title)) {
                             totalMax += json.layers[i].properties.maxpoints;
                             titles.push(json.layers[i].properties.title);
                         }
@@ -424,15 +422,15 @@ $(function () {
                     // Set info box text
 
                     title.html("<a href='" + json.layers[tile.layerNo].properties.site + "'>" + json.layers[tile.layerNo].properties.title + "</a>");
-		                if(json.layers[tile.layerNo].properties.maxpoints !== 0) {
-                            description.html("Dokumentin pisteet: " + rround(json.layers[tile.layerNo].properties.studentpoints,2) + "/" +
-                                json.layers[tile.layerNo].properties.maxpoints + "<br>Kurssin pisteet yhteensä: " + rround(totalPoints,2) + "/" + totalMax);
+		                  if (json.layers[tile.layerNo].properties.maxpoints !== 0) {
+                            description.html("Dokumentin pisteet: " + rround(json.layers[tile.layerNo].properties.studentpoints, 2) + "/" +
+                                json.layers[tile.layerNo].properties.maxpoints + "<br>Kurssin pisteet yhteensä: " + rround(totalPoints, 2) + "/" + totalMax);
 			                } else {
-			                    description.html("Kurssin pisteet yhteensä: " + rround(totalPoints,2) + "/" + totalMax);
+			                    description.html("Kurssin pisteet yhteensä: " + rround(totalPoints, 2) + "/" + totalMax);
 			                }
 
                     // Draw the box on the canvas
-                    var context = middleCanvas.getContext("2d");
+                    let context = middleCanvas.getContext("2d");
 
                     context.beginPath();
                     context.fillStyle = "rgba(132,225,225,0.8)";
@@ -444,13 +442,13 @@ $(function () {
                  */
                 function addClickListener() {
                     // Add event listener for `click` events on top canvas.
-                    topCanvas.addEventListener('click', function (event) {
-                        var pos = absolutePosition(topCanvas);
-                        var x = event.pageX - pos.left;
-                        var y = event.pageY - pos.top;
+                    topCanvas.addEventListener("click", function(event) {
+                        let pos = absolutePosition(topCanvas);
+                        let x = event.pageX - pos.left;
+                        let y = event.pageY - pos.top;
 
-                        for (var i = 0; i < tiles.length; i++) {
-                            var tile = tiles[i];
+                        for (let i = 0; i < tiles.length; i++) {
+                            let tile = tiles[i];
                             // Check if clicked tile
                             if (tile.isPointInside(x, y)) {
                                 // Clear earlier selections
@@ -496,9 +494,9 @@ $(function () {
                     tile.active = true;
 
                     // Boolean for checking if iterated tile is next to the given tile
-                    var isNextTo;
+                    let isNextTo;
 
-                    tiles.forEach(function (t) {
+                    tiles.forEach(function(t) {
                         isNextTo = (t.x * scale <= (tile.x + json.tilewidth * 2) * scale &&
                         t.x * scale >= (tile.x - json.tilewidth * 2) * scale &&
                         (t.y * scale <= (tile.y + json.tileheight * 2) * scale &&
@@ -524,7 +522,7 @@ $(function () {
                  * @param tiles All tiles on the map
                  */
                 function activateAll(tiles) {
-                    tiles.forEach(function (t) {
+                    tiles.forEach(function(t) {
                         if (t.tileset.properties !== undefined &&
                             (t.tileset.properties.buildingProperty == 1 ||
                             t.tileset.properties.frameProperty == 1) && !t.active) {
@@ -539,7 +537,7 @@ $(function () {
                  * @returns {{top: number, left: number}} left and top position
                  */
                 function absolutePosition(element) {
-                    var top = 0, left = 0;
+                    let top = 0, left = 0;
                     do {
                         top += element.offsetTop || 0;
                         left += element.offsetLeft || 0;
@@ -547,8 +545,8 @@ $(function () {
                     } while (element);
 
                     return {
-                        top: top,
-                        left: left
+                        top,
+                        left,
                     };
                 }
 
@@ -558,7 +556,7 @@ $(function () {
                 function clearSelection(tiles) {
                     // Remove previous frame canvas and create a new one
                     $("#middleCanvas").remove();
-                    middleCanvas = document.createElement('canvas');
+                    middleCanvas = document.createElement("canvas");
 
                     // Set some attributes for the canvas
                     middleCanvas.setAttribute("id", "middleCanvas");
@@ -569,7 +567,7 @@ $(function () {
                     container.appendChild(middleCanvas);
 
                     // Deactivate currently active tiles
-                    tiles.forEach(function (t) {
+                    tiles.forEach(function(t) {
                         t.active = false;
                         t.frame = false;
                     });
@@ -639,11 +637,11 @@ $(function () {
                     }
 
                     // Current position on the tileset image
-                    var currentY = 0;
-                    var currentX = 0;
+                    let currentY = 0;
+                    let currentX = 0;
 
                     // Find the correct position on the tileset image
-                    for (var j = this.tileset.firstgid; j < this.imageIndex + 1; j++) {
+                    for (let j = this.tileset.firstgid; j < this.imageIndex + 1; j++) {
                         this.sourceX = currentX++ * this.tileset.tilewidth;
                         this.sourceY = currentY * this.tileset.tileheight;
 
@@ -654,8 +652,8 @@ $(function () {
                     }
 
                     // Draw the tile
-                    this.draw = function (canvas) {
-                        var context = canvas.getContext("2d");
+                    this.draw = function(canvas) {
+                        let context = canvas.getContext("2d");
 
                         context.drawImage(this.spreadsheet, this.sourceX, this.sourceY,
                             this.tileset.tilewidth, this.tileset.tileheight, (this.x + this.offsetX) * scale, (this.y + this.offsetY + this.heightCorr) * scale,
@@ -663,7 +661,7 @@ $(function () {
                     };
 
                     // Check if point is inside the tile
-                    this.isPointInside = function (x, y) {
+                    this.isPointInside = function(x, y) {
                         return ( x >= (this.x + this.offsetX) * scale &&
                         x <= (this.x + this.tileset.tilewidth + this.offsetX) * scale &&
                         y >= (this.y + this.offsetY + this.heightCorr) * scale &&
@@ -681,15 +679,15 @@ $(function () {
                  */
                 function drawTilesFromDict(dict, tiles, canvas, layer) {
                     // Get all keys from the data dictionarty
-                    var keys = Object.keys(dict);
+                    let keys = Object.keys(dict);
 
                     // Spreadsheet and tileset that tile uses
-                    var image;
-                    var tileset;
+                    let image;
+                    let tileset;
 
                     // Go through every key and select appropriate spreadsheet for the tile
-                    keys.forEach(function (key) {
-                        for (var j = 0; j < json.tilesets.length; j++) {
+                    keys.forEach(function(key) {
+                        for (let j = 0; j < json.tilesets.length; j++) {
                             if (json.tilesets[j].firstgid + json.tilesets[j].tilecount > dict[key]) {
                                 tileset = json.tilesets[j];
                                 image = images[j];
@@ -697,12 +695,12 @@ $(function () {
                             }
                         }
                         // Calculate the position for the tile
-                        var posIndex = parseInt(key);
-                        var posX = posIndex % json.width * json.tilewidth;
-                        var posY = Math.floor(posIndex / json.width) * json.tileheight;
+                        let posIndex = parseInt(key);
+                        let posX = posIndex % json.width * json.tilewidth;
+                        let posY = Math.floor(posIndex / json.width) * json.tileheight;
 
                         // Create tile object and draw it on the map
-                        var t = new Tile(dict[key], tileset, image, layer, posIndex, posX, posY);
+                        let t = new Tile(dict[key], tileset, image, layer, posIndex, posX, posY);
                         t.draw(canvas);
                         tiles.push(t);
                     });
@@ -714,16 +712,16 @@ $(function () {
                  */
                 function drawMap() {
                     // Array of tile objects on the map
-                    var tiles = [];
+                    let tiles = [];
 
                     // Current layer
-                    var layer;
+                    let layer;
 
                     // Current canvas
-                    var c;
+                    let c;
 
                     // Go through every layer of the map in reverse order so that the draw order will be correct
-                    for (var k = json.layers.length - 1; k >= 0; k--) {
+                    for (let k = json.layers.length - 1; k >= 0; k--) {
                         layer = json.layers[k];
 
                         // Helper canvas that the layer is drawn on
@@ -733,11 +731,10 @@ $(function () {
                     }
 
                     // Draw images in helper canvases on a single canvas
-                    for (var n = 0; n < canvases.length; n++) {
-                        var context = bottomCanvas.getContext("2d");
+                    for (let n = 0; n < canvases.length; n++) {
+                        let context = bottomCanvas.getContext("2d");
                         context.drawImage(canvases[n], 0, 0);
                     }
-
 
                     // View all frames if required
                     if (showAll) {
@@ -751,15 +748,15 @@ $(function () {
                 }
 
                 // Positions for tiles used in the building frames
-                var tileFrameSet;
-                var tileImage;
+                let tileFrameSet;
+                let tileImage;
 
-                var roofFrameSet;
-                var roofImage;
+                let roofFrameSet;
+                let roofImage;
 
                 // Find tilesets and spreadsheets needed for drawing a frame
 
-                for (var j = 0; j < json.tilesets.length; j++) {
+                for (let j = 0; j < json.tilesets.length; j++) {
                     if (json.tilesets[j].properties !== undefined && json.tilesets[j].properties.frameProperty == 2) {
                         tileFrameSet = json.tilesets[j];
                         tileImage = images[j];
@@ -771,19 +768,19 @@ $(function () {
                 }
 
                 // Tile images used to draw the building frames
-                var frameTile = findTileImagePos(tileFrameSet, 0);
+                let frameTile = findTileImagePos(tileFrameSet, 0);
 
-                var grayTile = findTileImagePos(tileFrameSet, 1);
+                let grayTile = findTileImagePos(tileFrameSet, 1);
 
-                var roofTile = findTileImagePos(roofFrameSet, 1);
+                let roofTile = findTileImagePos(roofFrameSet, 1);
 
-                var roofFrameTile = findTileImagePos(roofFrameSet, 0);
+                let roofFrameTile = findTileImagePos(roofFrameSet, 0);
 
                 // Draw the map
-                var tiles = drawMap();
+                let tiles = drawMap();
 
                 // Button click function for showing frames on all possible tiles
-                $(".showFrames").click(function () {
+                $(".showFrames").click(function() {
                     showAll = !showAll;
                     clearSelection(tiles);
 
@@ -794,7 +791,7 @@ $(function () {
                 });
 
                 // On change event for the zoom input
-                $(".mapZoom").on("change", function () {
+                $(".mapZoom").on("change", function() {
                     scale = $(".mapZoom").val();
                     clearSelection(tiles);
                     createCanvases();
@@ -802,7 +799,7 @@ $(function () {
                 });
 
                 // On change event for the alpha input
-                $(".alphaRange").on("change", function () {
+                $(".alphaRange").on("change", function() {
                     alpha = $(".alphaRange").val();
                     clearSelection(tiles);
                     createCanvases();
@@ -810,8 +807,8 @@ $(function () {
                 });
             });
         },
-        error: function (jqxhr, textStatus, error) {
-            console.log("Request Failed: " + textStatus + ', ' + error);
-        }
+        error(jqxhr, textStatus, error) {
+            console.log("Request Failed: " + textStatus + ", " + error);
+        },
     });
 });

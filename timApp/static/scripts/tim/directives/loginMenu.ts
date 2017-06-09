@@ -1,12 +1,12 @@
 import {timApp} from "tim/app";
 
-timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', function (Users, $http, $httpParamSerializer) {
+timApp.directive("loginMenu", ["Users", "$http", "$httpParamSerializer", function(Users, $http, $httpParamSerializer) {
     "use strict";
     return {
-        restrict: 'E',
+        restrict: "E",
         scope: {},
-        templateUrl: '/static/templates/loginMenu.html',
-        controller: ['$scope', '$element', function ($scope, $element) {
+        templateUrl: "/static/templates/loginMenu.html",
+        controller: ["$scope", "$element", function($scope, $element) {
             $scope.getCurrentUser = () => Users.getCurrent();
             $scope.getSessionUsers = () => Users.getSessionUsers();
             $scope.form = {};
@@ -14,35 +14,35 @@ timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', functio
             $scope.form.email = "";
             $scope.form.password = "";
             $scope.addingToSession = false;
-            $scope.addUser = function ($event) {
+            $scope.addUser = function($event) {
                 $event.stopPropagation();
                 $scope.addingToSession = !$scope.addingToSession;
             };
             $scope.logout = (...args) => Users.logout(...args);
             $scope.isLoggedIn = () => Users.isLoggedIn();
-            $scope.korppiLogin = function (addingToSession) {
+            $scope.korppiLogin = function(addingToSession) {
                 $scope.korppiLoading = true;
                 Users.korppiLogin(addingToSession);
             };
             $scope.isKorppi = () => Users.isKorppi();
-            $scope.stopClick = function ($event) {
+            $scope.stopClick = function($event) {
                 $event.stopPropagation();
             };
-            $scope.toggled = function (open) {
+            $scope.toggled = function(open) {
                 if (!open) {
                     $scope.addingToSession = false;
                 }
             };
-            $scope.addTestUser = function ($event) {
+            $scope.addTestUser = function($event) {
                 Users.addUser();
             };
-            $scope.loginWithEmail = function () {
+            $scope.loginWithEmail = function() {
                 Users.loginWithEmail($scope.form.email, $scope.form.password, $scope.addingToSession,
-                    function () {
+                    function() {
                         $scope.addingToSession = false;
                     });
             };
-            $scope.beginLogout = function ($event) {
+            $scope.beginLogout = function($event) {
                 if (Users.isKorppi()) {
                     $scope.loggingout = true;
                     $event.stopPropagation();
@@ -50,6 +50,6 @@ timApp.directive('loginMenu', ['Users', '$http', '$httpParamSerializer', functio
                     $scope.logout($scope.getCurrentUser());
                 }
             };
-        }]
+        }],
     };
 }]);

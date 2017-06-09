@@ -1,40 +1,40 @@
 
 import angular from "angular";
-import * as focusMe from "tim/directives/focusMe";
 import {timApp} from "tim/app";
+import * as focusMe from "tim/directives/focusMe";
 import {markAsUsed} from "tim/utils";
 
 markAsUsed(focusMe);
 
-timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeout', function ($window, $log, $http, $uibModal, $timeout) {
+timApp.directive("bookmarks", ["$window", "$log", "$http", "$uibModal", "$timeout", function($window, $log, $http, $uibModal, $timeout) {
     "use strict";
     return {
-        restrict: 'E',
+        restrict: "E",
         scope: {
-            userId: '=?',
-            data: '=?'
+            userId: "=?",
+            data: "=?",
         },
         templateUrl: "/static/templates/bookmarks.html",
-        link: function ($scope, $element) {
+        link($scope, $element) {
 
         },
 
-        controller: ['$scope', '$element', '$attrs', function ($scope, $element, $attrs) {
-            var sc = $scope;
+        controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
+            let sc = $scope;
             if ($window.bookmarks && !sc.data) {
                 sc.data = angular.copy($window.bookmarks);
             }
 
-            sc.getFromServer = function (response, groupToKeepOpen) {
+            sc.getFromServer = function(response, groupToKeepOpen) {
                 sc.data = response.data;
                 sc.keepGroupOpen(groupToKeepOpen);
             };
 
-            sc.keepGroupOpen = function (groupToKeepOpen) {
+            sc.keepGroupOpen = function(groupToKeepOpen) {
                 if (!groupToKeepOpen) {
                     return;
                 }
-                for (var i = 0; i < sc.data.length; ++i) {
+                for (let i = 0; i < sc.data.length; ++i) {
                     if (sc.data[i].name === groupToKeepOpen.name) {
                         sc.data[i].isOpen = true;
                         return;
@@ -42,127 +42,127 @@ timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeou
                 }
             };
 
-            sc.getTopLevelBookmarks = function () {
+            sc.getTopLevelBookmarks = function() {
                 if (!sc.data) {
                     return [];
                 }
-                for (var i = 0; i < sc.data.length; ++i) {
-                    if (sc.data[i].name === '') {
+                for (let i = 0; i < sc.data.length; ++i) {
+                    if (sc.data[i].name === "") {
                         return sc.data[i].items;
                     }
                 }
                 return [];
             };
 
-            sc.isSaveablePage = function () {
+            sc.isSaveablePage = function() {
                 return true;
             };
 
-            sc.newBookmark = function (group, e) {
+            sc.newBookmark = function(group, e) {
                 e.preventDefault();
-                var suggestedName = ($window.item || {}).title || document.title;
-                var modalInstance = $uibModal.open({
+                let suggestedName = ($window.item || {}).title || document.title;
+                let modalInstance = $uibModal.open({
                     animation: false,
-                    ariaLabelledBy: 'modal-title',
-                    ariaDescribedBy: 'modal-body',
-                    templateUrl: 'createBookmark.html',
-                    controller: 'CreateBookmarkCtrl',
-                    controllerAs: '$ctrl',
-                    size: 'md',
+                    ariaLabelledBy: "modal-title",
+                    ariaDescribedBy: "modal-body",
+                    templateUrl: "createBookmark.html",
+                    controller: "CreateBookmarkCtrl",
+                    controllerAs: "$ctrl",
+                    size: "md",
                     resolve: {
-                        bookmark: function () {
+                        bookmark() {
                             return {
-                                group: group || '',
+                                group: group || "",
                                 name: suggestedName,
-                                link: ''
+                                link: "",
                             };
-                        }
-                    }
+                        },
+                    },
                 });
 
-                modalInstance.result.then(function (bookmark) {
+                modalInstance.result.then(function(bookmark) {
                     if (!bookmark.name) {
                         return;
                     }
-                    $http.post('/bookmarks/add', bookmark)
-                        .then(sc.getFromServer, function (response) {
+                    $http.post("/bookmarks/add", bookmark)
+                        .then(sc.getFromServer, function(response) {
                             $window.alert("Could not add bookmark.");
                         });
-                }, function () {
+                }, function() {
                 });
             };
 
-            sc.editItem = function (group, item, e) {
+            sc.editItem = function(group, item, e) {
                 e.stopPropagation();
                 e.preventDefault();
-                var modalInstance = $uibModal.open({
+                let modalInstance = $uibModal.open({
                     animation: false,
-                    ariaLabelledBy: 'modal-title',
-                    ariaDescribedBy: 'modal-body',
-                    templateUrl: 'createBookmark.html',
-                    controller: 'CreateBookmarkCtrl',
-                    controllerAs: '$ctrl',
-                    size: 'md',
+                    ariaLabelledBy: "modal-title",
+                    ariaDescribedBy: "modal-body",
+                    templateUrl: "createBookmark.html",
+                    controller: "CreateBookmarkCtrl",
+                    controllerAs: "$ctrl",
+                    size: "md",
                     resolve: {
-                        bookmark: function () {
+                        bookmark() {
                             return {
                                 group: group.name,
                                 name: item.name,
-                                link: item.path
+                                link: item.path,
                             };
-                        }
-                    }
+                        },
+                    },
                 });
 
-                modalInstance.result.then(function (bookmark) {
+                modalInstance.result.then(function(bookmark) {
                     if (!bookmark.name) {
                         return;
                     }
-                    $http.post('/bookmarks/edit', {
+                    $http.post("/bookmarks/edit", {
                         old: {
                             group: group.name,
                             name: item.name,
-                            link: item.path
-                        }, 'new': bookmark
+                            link: item.path,
+                        }, new: bookmark,
                     })
-                        .then(function (response) {
+                        .then(function(response) {
                             sc.getFromServer(response, group);
-                        }, function (response) {
+                        }, function(response) {
                             $window.alert("Could not edit bookmark.");
                         });
-                }, function () {
-                    $timeout(function () {
+                }, function() {
+                    $timeout(function() {
                         sc.keepGroupOpen(group);
                     }, 0);
                 });
             };
 
-            sc.deleteItem = function (group, item, e) {
+            sc.deleteItem = function(group, item, e) {
                 e.stopPropagation();
                 e.preventDefault();
-                return $http.post('/bookmarks/delete', {
+                return $http.post("/bookmarks/delete", {
                     group: group.name,
-                    name: item.name
+                    name: item.name,
                 })
-                    .then(function (response) {
+                    .then(function(response) {
                         sc.getFromServer(response, group);
-                    }, function (response) {
+                    }, function(response) {
                         $window.alert("Could not delete bookmark.");
                     });
             };
 
-            sc.deleteGroup = function (group, e) {
+            sc.deleteGroup = function(group, e) {
                 e.stopPropagation();
                 e.preventDefault();
-                if ($window.confirm('Are you sure you want to delete this bookmark group?')) {
-                    $http.post('/bookmarks/deleteGroup', {group: group.name})
-                        .then(sc.getFromServer, function (response) {
+                if ($window.confirm("Are you sure you want to delete this bookmark group?")) {
+                    $http.post("/bookmarks/deleteGroup", {group: group.name})
+                        .then(sc.getFromServer, function(response) {
                             $window.alert("Could not delete bookmark group.");
                         });
                 }
             };
 
-            sc.toggleDelete = function (e) {
+            sc.toggleDelete = function(e) {
                 e.stopPropagation();
                 e.preventDefault();
                 sc.deleting = !sc.deleting;
@@ -171,28 +171,28 @@ timApp.directive("bookmarks", ['$window', '$log', '$http', '$uibModal', '$timeou
             sc.deleting = false;
 
             if (sc.userId && !sc.data) {
-                $http.get('/bookmarks/get/' + sc.userId).then(sc.getFromServer, function (response) {
+                $http.get("/bookmarks/get/" + sc.userId).then(sc.getFromServer, function(response) {
                     $window.alert("Could not fetch bookmarks.");
                 });
             }
-        }]
+        }],
     };
 }]);
 
-timApp.controller('CreateBookmarkCtrl', ['$uibModalInstance', '$window', 'bookmark', function ($uibModalInstance, $window, bookmark) {
+timApp.controller("CreateBookmarkCtrl", ["$uibModalInstance", "$window", "bookmark", function($uibModalInstance, $window, bookmark) {
     "use strict";
-    var $ctrl = this;
+    let $ctrl = this;
     $ctrl.bookmarkForm = {};
     $ctrl.bookmark = bookmark;
-    if (bookmark.group === 'Last edited' || bookmark.group === 'Last read') {
-        bookmark.group = '';
+    if (bookmark.group === "Last edited" || bookmark.group === "Last read") {
+        bookmark.group = "";
     }
     $ctrl.focusGroup = !bookmark.group;
     $ctrl.focusName = !$ctrl.focusGroup;
     $ctrl.showParamsCheckbox = $window.location.search.length > 1;
     $ctrl.showHashCheckbox = $window.location.hash.length > 1;
 
-    $ctrl.ok = function () {
+    $ctrl.ok = function() {
         if (!$ctrl.bookmark.link) {
             $ctrl.bookmark.link = $window.location.pathname;
             if ($ctrl.includeParams) {
@@ -206,7 +206,7 @@ timApp.controller('CreateBookmarkCtrl', ['$uibModalInstance', '$window', 'bookma
         $uibModalInstance.close($ctrl.bookmark);
     };
 
-    $ctrl.cancel = function () {
-        $uibModalInstance.dismiss('cancel');
+    $ctrl.cancel = function() {
+        $uibModalInstance.dismiss("cancel");
     };
 }]);
