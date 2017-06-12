@@ -8,7 +8,7 @@ SystemJS.config({
     "simcir/basicset": "/cs/simcir/simcir-basicset.js",
     "simcir/library": "/cs/simcir/simcir-library.js",
     "simcir/oma-kirjasto": "/cs/simcir/simcir-oma-kirjasto.js",
-    "mathjax": "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVG/MathJax.js",
+    "mathjax": "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVGTeX/MathJax.js",
     "sagecell": "https://sagecell.sagemath.org/static/embedded_sagecell.js",
     "cs/": "/cs/js/build/",
     "tim/": "tim/"
