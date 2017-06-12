@@ -124,13 +124,13 @@ SystemJS.config({
     "tim/session.ts": {
       "build": false
     },
-    "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVG/MathJax.js": {
+    "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVGTeX/MathJax.js": {
       "format": "global",
       "exports": "MathJax"
     },
     "https://sagecell.sagemath.org/static/embedded_sagecell.js": {
       "globals": {
-        "MathJax": "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVG/MathJax.js"
+        "MathJax": "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVGTeX/MathJax.js"
       },
       "exports": "sagecell"
     }
