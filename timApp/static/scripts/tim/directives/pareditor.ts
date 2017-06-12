@@ -1,6 +1,6 @@
 // TODO: save cursor postion when changing editor
 
-import angular from "angular";
+import angular, {IPromise} from "angular";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {timApp} from "tim/app";
@@ -15,7 +15,7 @@ import {IQService} from "angular";
 import * as acemodule from "tim/ace";
 import {IAceEditor} from "../ace-types";
 import {lazyLoadTS} from "../lazyLoad";
-import {$timeout} from "../ngimport";
+import {$http, $timeout} from "../ngimport";
 import {ParCompiler} from "../services/parCompiler";
 
 markAsUsed(draggable, rangyinputs);
@@ -70,12 +70,12 @@ interface IParEditorScope {
     settings: {editortab: string};
     snippetManager: {insertSnippet: (editor: Editor, text: string) => void};
     tables: any;
-    timer: number; // timer handle
+    timer: IPromise<void>;
     unreadUrl: string;
     uploadedFile: string;
 
     $on(name: string, func: () => void): void;
-    editorChanged(applyFn?): void;
+    editorChanged(): void;
     aceLoaded(editor: Editor): void;
     aceReady(): void;
     addAttribute(): void;
@@ -165,11 +165,12 @@ interface IParEditorScope {
     upClicked(): void;
     wrapFn(fn?: () => void): void;
     $apply(): void;
+    $evalAsync(fn: () => any): void;
 }
 
-timApp.directive("pareditor", ["Upload", "$http", "$sce", "$compile",
+timApp.directive("pareditor", ["Upload", "$sce", "$compile",
     "$window", "$localStorage", "$ocLazyLoad", "$log", "$q",
-    function(Upload, $http, $sce, $compile, $window, $localStorage, $ocLazyLoad, $log, $q: IQService) {
+    function(Upload, $sce, $compile, $window, $localStorage, $ocLazyLoad, $log, $q: IQService) {
         "use strict";
         return {
             templateUrl: "/static/templates/parEditor.html",
@@ -300,23 +301,24 @@ timApp.directive("pareditor", ["Upload", "$http", "$sce", "$compile",
                 $scope.setInitialText = function() {
                     if ( $scope.dataLoaded || !$scope.initialTextUrl ) return;
                     $scope.setEditorText("Loading text...");
-                    $http.get($scope.initialTextUrl, {
+                    $http.get<{text: string, extraData: any}>($scope.initialTextUrl, {
                         params: $scope.extraData,
-                    }).success(function(data, status, headers, config) {
+                    }).then(function(response) {
+                        const data = response.data;
                         $scope.setEditorText(data.text);
                         $scope.initialText = data.text;
                         angular.extend($scope.extraData, data.extraData);
                         $scope.editorChanged();
                         $scope.aceReady();
-                    }).error(function(data, status, headers, config) {
-                        if (status === 404) {
+                    }, function(response) {
+                        if (response.status === 404) {
                             if ($scope.extraData.isComment) {
                                 $window.alert("This comment has been deleted.");
                             } else {
                                 $window.alert("This paragraph has been deleted.");
                             }
                         } else {
-                            $window.alert("Error occurred: " + data.error);
+                            $window.alert("Error occurred: " + response.data.error);
                         }
                         $timeout(function() {
                             $scope.element.remove();
@@ -622,32 +624,33 @@ timApp.directive("pareditor", ["Upload", "$http", "$sce", "$compile",
 
                 $(".editorContainer").on("resize", $scope.adjustPreview);
 
-                $scope.editorChanged = async function(applyFn = () => {}) {
-                    $scope.outofdate = true;
-                    if ($scope.timer) {
-                        $window.clearTimeout($scope.timer);
-                    }
-
-                    $scope.timer = $window.setTimeout(function() {
-                        const text = $scope.getEditorText();
-                        $scope.scrollPos = $(".previewcontent").scrollTop();
-                        $http.post($scope.previewUrl, angular.extend({
-                            text,
-                        }, $scope.extraData)).success(async (data, status, headers, config) => {
-                            const compiled = await ParCompiler.compile(data, $scope);
-                            const $previewDiv = angular.element(".previewcontent");
-                            $previewDiv.empty().append(compiled);
-                            $scope.outofdate = false;
-                            $scope.parCount = $previewDiv.children().length;
-                            $(".editorContainer").resize();
-                            $scope.$apply();
-                        }).error(function(data, status, headers, config) {
-                            $window.alert("Failed to show preview: " + data.error);
-                        });
+                $scope.editorChanged = function() {
+                    $scope.$evalAsync(() => {
                         $scope.outofdate = true;
-                        applyFn();
-                    }, 500);
-                    applyFn();
+                        if ($scope.timer) {
+                            $timeout.cancel($scope.timer);
+                        }
+
+                        $scope.timer = $timeout(() => {
+                            const text = $scope.getEditorText();
+                            $scope.scrollPos = $(".previewcontent").scrollTop();
+                            $http.post($scope.previewUrl, angular.extend({
+                                text,
+                            }, $scope.extraData)).then(async (response) => {
+                                const data = response.data;
+                                const compiled = await ParCompiler.compile(data, $scope);
+                                const $previewDiv = angular.element(".previewcontent");
+                                $previewDiv.empty().append(compiled);
+                                $scope.outofdate = false;
+                                $scope.parCount = $previewDiv.children().length;
+                                $(".editorContainer").resize();
+                                $scope.$apply();
+                            }, (response) => {
+                                $window.alert("Failed to show preview: " + response.data.error);
+                            });
+                            $scope.outofdate = true;
+                        }, 500);
+                    });
                 };
 
                 /* Add citation info to help tab */
@@ -758,7 +761,8 @@ timApp.directive("pareditor", ["Upload", "$http", "$sce", "$compile",
                     $scope.deleting = true;
 
                     $http.post($scope.deleteUrl, $scope.extraData).
-                        success(function(data, status, headers, config) {
+                        then(function(response) {
+                            const data = response.data;
                             $scope.afterDelete({
                                 extraData: $scope.extraData,
                                 saveData: data,
@@ -767,9 +771,8 @@ timApp.directive("pareditor", ["Upload", "$http", "$sce", "$compile",
                                 $element.remove();
                             }
                             $scope.deleting = false;
-                        }).
-                        error(function(data, status, headers, config) {
-                            $window.alert("Failed to delete: " + data.error);
+                        }, function(response) {
+                            $window.alert("Failed to delete: " + response.data.error);
                             $scope.deleting = false;
                         });
                     if ($scope.options.touchDevice) $scope.changeMeta();
@@ -887,14 +890,14 @@ timApp.directive("pareditor", ["Upload", "$http", "$sce", "$compile",
                         originalPar: $scope.originalPar,
                         docId: $scope.extraData.docId,
                         parId: $scope.extraData.par,
-                    }, $scope.extraData)).success(function(data, status, headers, config) {
+                    }, $scope.extraData)).then(function(response) {
                         // Remove the form and return to editor
                         $element.find("#pluginRenameForm").get(0).remove();
                         $scope.renameFormShowing = false;
                         $scope.saving = false;
                         $scope.deleting = false;
-                    }).error(function(data, status, headers, config) {
-                        $window.alert("Failed to cancel save: " + data.error);
+                    }, function(response) {
+                        $window.alert("Failed to cancel save: " + response.data.error);
                     });
                 };
 
@@ -945,10 +948,11 @@ timApp.directive("pareditor", ["Upload", "$http", "$sce", "$compile",
                         }
                     }
                     // Save the new task names for duplicates
-                    $http.post("/postNewTaskNames/", angular.extend({
+                    $http.post<{duplicates: string[]}>("/postNewTaskNames/", angular.extend({
                         duplicates: duplicateData,
                         renameDuplicates,
-                    }, $scope.extraData)).success(function(data, status, headers, config) {
+                    }, $scope.extraData)).then(function(response) {
+                        const data = response.data;
                         // If no new duplicates were founds
                         if (data.duplicates.length <= 0) {
                             $scope.renameFormShowing = false;
@@ -968,8 +972,8 @@ timApp.directive("pareditor", ["Upload", "$http", "$sce", "$compile",
                         if (angular.isDefined($scope.extraData.access)) {
                             $scope.$storage.noteAccess = $scope.extraData.access;
                         }
-                    }).error(function(data, status, headers, config) {
-                        $window.alert("Failed to save: " + data.error);
+                    }, function(response) {
+                        $window.alert("Failed to save: " + response.data.error);
                     });
                     if ($scope.options.touchDevice) $scope.changeMeta();
                 };
@@ -1111,16 +1115,21 @@ timApp.directive("pareditor", ["Upload", "$http", "$sce", "$compile",
                         $scope.saving = false;
                         return;
                     }
-                    $http.post($scope.saveUrl, angular.extend({
+                    $http.post<{
+                        duplicates: string[],
+                        original_par: string,
+                        new_par_ids: string[],
+                    }>($scope.saveUrl, angular.extend({
                         text,
-                    }, $scope.extraData)).success(function(data, status, headers, config) {
+                    }, $scope.extraData)).then(function(response) {
+                        const data = response.data;
                         if (data.duplicates.length > 0) {
                             $scope.data = data;
                             $scope.createPluginRenameForm(data);
-                            if (data.original_par !== "undefined") {
+                            if (data.original_par !== null) {
                                 $scope.originalPar = data.original_par;
                             }
-                            if (data.new_par_ids !== "undefined") {
+                            if (data.new_par_ids !== null) {
                                 $scope.newPars = data.new_par_ids;
                             }
                         }
@@ -1147,8 +1156,8 @@ timApp.directive("pareditor", ["Upload", "$http", "$sce", "$compile",
                         }
                         $scope.saving = false;
 
-                    }).error(function(data, status, headers, config) {
-                        $window.alert("Failed to save: " + data.error);
+                    }, function(response) {
+                        $window.alert("Failed to save: " + response.data.error);
                         $scope.saving = false;
                     });
                     if ($scope.options.touchDevice) $scope.changeMeta();
@@ -2100,7 +2109,7 @@ timApp.directive("pareditor", ["Upload", "$http", "$sce", "$compile",
                         $scope.aceLoaded(neweditor);
                         $scope.editor = neweditor;
                         $scope.editor.getSession().on("change", () => {
-                            $scope.editorChanged(() => $scope.$apply());
+                            $scope.editorChanged();
                         });
                         neweditor.setBehavioursEnabled($scope.getLocalBool("acebehaviours", false));
                         neweditor.getSession().setUseWrapMode($scope.getLocalBool("acewrap", false));
