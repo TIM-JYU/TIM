@@ -2177,7 +2177,13 @@ csApp.Controller = function($scope,$transclude) {
 		// $http({method: 'POST', url:"/cs/", data:params, headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
 		).then(function(response) {
 		    let data = response.data;
-			if (data.msg !== '')
+
+		    // Server always seems to give text/plain as result, so prepare for it.
+		    if (typeof data === "string") {
+		        $scope.localcode = data;
+				$scope.showCodeLocal();
+            }
+			else if (data.msg !== '')
 			{
 				$scope.localcode = data.msg;
 				$scope.showCodeLocal();
