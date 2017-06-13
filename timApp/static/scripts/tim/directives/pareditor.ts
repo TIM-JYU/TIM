@@ -1,4 +1,4 @@
-// TODO: save cursor postion when changing editor
+// TODO: save cursor position when changing editor
 
 import angular, {IPromise} from "angular";
 import $ from "jquery";
@@ -11,11 +11,10 @@ import {setsetting} from "tim/utils";
 import Editor = AceAjax.Editor;
 import VirtualRenderer = AceAjax.VirtualRenderer;
 import Ace = AceAjax.Ace;
-import {IQService} from "angular";
 import * as acemodule from "tim/ace";
 import {IAceEditor} from "../ace-types";
 import {lazyLoadTS} from "../lazyLoad";
-import {$http, $timeout} from "../ngimport";
+import {$compile, $http, $localStorage, $log, $timeout, $upload, $window} from "../ngimport";
 import {ParCompiler} from "../services/parCompiler";
 
 markAsUsed(draggable, rangyinputs);
@@ -27,7 +26,6 @@ const MENU_BUTTON_CLASS_DOT = "." + MENU_BUTTON_CLASS;
 interface IParEditorScope {
     textAreaText: string;
     $parent: any;
-    $storage: Storage; // TODO what is the correct type here?
     ace: Ace;
     data: {original_par: any};
     dataLoaded: boolean;
@@ -168,9 +166,8 @@ interface IParEditorScope {
     $evalAsync(fn: () => any): void;
 }
 
-timApp.directive("pareditor", ["Upload", "$sce", "$compile",
-    "$window", "$localStorage", "$ocLazyLoad", "$log", "$q",
-    function(Upload, $sce, $compile, $window, $localStorage, $ocLazyLoad, $log, $q: IQService) {
+timApp.directive("pareditor", [
+    function() {
         "use strict";
         return {
             templateUrl: "/static/templates/parEditor.html",
@@ -216,9 +213,9 @@ timApp.directive("pareditor", ["Upload", "$sce", "$compile",
                     const editor = $("pareditor");
                     $scope.previewReleased = false;
 
-                    let editorOffset = storage.getItem("editorReleasedOffset" + tag);
-                    if ( editorOffset ) {
-                        editorOffset = JSON.parse(editorOffset);
+                    const editorOffsetStr = storage.getItem("editorReleasedOffset" + tag);
+                    if ( editorOffsetStr ) {
+                        const editorOffset = JSON.parse(editorOffsetStr);
                         editor.css("left", editorOffset.left - editor.offset().left);
                     }
 
@@ -282,7 +279,7 @@ timApp.directive("pareditor", ["Upload", "$sce", "$compile",
                                 "title": key,
                                 "ng-click": clickfunction,
                             });
-                            $plugintab.append($compile(button)($scope));
+                            $plugintab.append($compile(button)($scope as any));
                         }
                     }
                 }
@@ -530,8 +527,7 @@ timApp.directive("pareditor", ["Upload", "$sce", "$compile",
                         $scope.setEditorMinSize();
                     }
                     $scope.isAce = false;
-                    const $container = (".editorContainer");
-                    const $textarea = $.parseHTML(`
+                    const $textarea = $(`
 <textarea rows="10"
           ng-model="textAreaText"
           ng-change="editorChanged()"
@@ -539,8 +535,8 @@ timApp.directive("pareditor", ["Upload", "$sce", "$compile",
           id="teksti"
           wrap="off">
 </textarea>`);
-                    $compile($textarea)($scope);
-                    $($container).append($textarea);
+                    $compile($textarea)($scope as any);
+                    $(".editorContainer").append($textarea);
                     $scope.editor = $("#teksti");
 
                     $scope.editor.keydown(function(e) {
@@ -659,7 +655,6 @@ timApp.directive("pareditor", ["Upload", "$sce", "$compile",
             }],
             link($scope: IParEditorScope, $element, $attrs) {
                 $scope.element = $element;
-                $scope.$storage = $localStorage;
 
                 $scope.tables = {};
 
@@ -877,7 +872,7 @@ timApp.directive("pareditor", ["Upload", "$sce", "$compile",
                         const top = previewOffset.top - editorOffset.top;
                         storage.setItem("previewReleasedOffset" + tag, JSON.stringify({left, top}));
                     }
-                    storage.setItem("previewIsReleased" + tag, $scope.previewReleased);
+                    storage.setItem("previewIsReleased" + tag, $scope.previewReleased.toString());
                 };
 
                 /**
@@ -970,7 +965,7 @@ timApp.directive("pareditor", ["Upload", "$sce", "$compile",
                             $scope.createPluginRenameForm(data);
                         }
                         if (angular.isDefined($scope.extraData.access)) {
-                            $scope.$storage.noteAccess = $scope.extraData.access;
+                            $localStorage.noteAccess = $scope.extraData.access;
                         }
                     }, function(response) {
                         $window.alert("Failed to save: " + response.data.error);
@@ -1082,7 +1077,7 @@ timApp.directive("pareditor", ["Upload", "$sce", "$compile",
                     // Add the new divs to editor container
                     $actionDiv.append($form);
                     $actionDiv.append($buttonDiv);
-                    $actionDiv = $compile($actionDiv)($scope);
+                    $actionDiv = $compile($actionDiv)($scope as any);
                     $editorTop.append($actionDiv);
                     // Focus the first input element
                     $scope.inputs[0].focus();
@@ -1143,12 +1138,12 @@ timApp.directive("pareditor", ["Upload", "$sce", "$compile",
                             });
                         }
                         if (angular.isDefined($scope.extraData.access)) {
-                            $scope.$storage.noteAccess = $scope.extraData.access;
+                            $localStorage.noteAccess = $scope.extraData.access;
                         }
                         if (angular.isDefined($scope.extraData.tags.markread)) { // TODO: tee silmukassa
-                            $window.localStorage.setItem("markread", $scope.extraData.tags.markread);
+                            $window.localStorage.setItem("markread", $scope.extraData.tags.markread.toString());
                         }
-                        $window.localStorage.setItem("proeditor" + $scope.lstag, $scope.proeditor);
+                        $window.localStorage.setItem("proeditor" + $scope.lstag, $scope.proeditor.toString());
 
                         if ( $scope.isAce ) {
                             $scope.setLocalValue("acewrap", $scope.editor.getSession().getUseWrapMode());
@@ -1883,11 +1878,12 @@ timApp.directive("pareditor", ["Upload", "$sce", "$compile",
                     if (file) {
                         $scope.file.progress = 0;
                         $scope.file.error = null;
-                        file.upload = Upload.upload({
-                            url: "/upload/",
+                        file.upload = $upload.upload({
                             data: {
                                 file,
                             },
+                            method: "POST",
+                            url: "/upload/",
                         });
 
                         file.upload.then(function(response) {
@@ -1950,7 +1946,7 @@ timApp.directive("pareditor", ["Upload", "$sce", "$compile",
                     $actionDiv.append($scope.createMenuButton("Close menu", "", "closeMenu(null, true); wrapFn()"));
                     $actionDiv.offset(coords);
                     $actionDiv.css("position", "absolute"); // IE needs this
-                    $actionDiv = $compile($actionDiv)($scope);
+                    $actionDiv = $compile($actionDiv)($scope as any);
                     $button.parent().prepend($actionDiv);
                     $(document).on("mouseup.closemenu", $scope.closeMenu);
                 };
