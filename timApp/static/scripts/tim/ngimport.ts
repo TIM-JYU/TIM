@@ -1,5 +1,6 @@
 // idea from https://github.com/bcherny/ngimport
 import * as angular from "angular";
+import {ngStorage} from "ngstorage";
 import {ILazyLoad} from "oclazyload";
 
 export let $anchorScroll: angular.IAnchorScrollService = null;
@@ -18,6 +19,7 @@ export let $injector: angular.auto.IInjectorService = null;
 export let $interpolate: angular.IInterpolateService = null;
 export let $interval: angular.IIntervalService = null;
 export let $locale: angular.ILocaleService = null;
+export let $localStorage: ngStorage.StorageService = null;
 export let $location: angular.ILocationService = null;
 export let $log: angular.ILogService = null;
 export let $logProvider: angular.ILogProvider = null;
@@ -64,6 +66,7 @@ export function injectServices($i: angular.auto.IInjectorService) {
     $interpolate = $i.get("$interpolate") as angular.IInterpolateService;
     $interval = $i.get("$interval") as angular.IIntervalService;
     $locale = $i.get("$locale") as angular.ILocaleService;
+    $localStorage = $i.get("$localStorage") as ngStorage.StorageService;
     $location = $i.get("$location") as angular.ILocationService;
     $log = $i.get("$log") as angular.ILogService;
     $parse = $i.get("$parse") as angular.IParseService;
