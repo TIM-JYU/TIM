@@ -2,6 +2,7 @@ import angular from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
+import {$http, $log, $window} from "../ngimport";
 
 /**
  * Lecture creation controller which is used to handle and validate the form data.
@@ -15,9 +16,8 @@ import {timApp} from "tim/app";
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("CreateLectureCtrl", ["$scope", "$http", "$window",
-
-    function($scope, $http, $window) {
+timApp.controller("CreateLectureCtrl", ["$scope",
+    function($scope) {
         "use strict";
         $scope.showLectureCreation = false;
         $scope.useDate = false;
@@ -67,7 +67,9 @@ timApp.controller("CreateLectureCtrl", ["$scope", "$http", "$window",
         });
 
         $scope.addKeyListeners = function() {
-            if ( $scope.dataform ) return; // allready keys binded
+            if ( $scope.dataform ) {
+                return; // already keys binded
+            }
             $scope.dataform = $("#lectureForm")[0];
 
             $scope.dataform.addEventListener("keydown", function(event) {
@@ -87,7 +89,7 @@ timApp.controller("CreateLectureCtrl", ["$scope", "$http", "$window",
          * @memberof module:createLectureCtrl
          */
         $scope.initLectureForm = function() {
-            $window.console.log("Lecture initialized.");
+            $log.info("Lecture initialized.");
             $scope.startTime = moment();
             $scope.dueCheck = true;
             $scope.earlyJoining = true;
@@ -210,7 +212,7 @@ timApp.controller("CreateLectureCtrl", ["$scope", "$http", "$window",
             $scope.isNumber($scope.maxStudents, "maxStudents");
 
             if ($scope.startTime !== null) {
-                const lecture_starting_in_past = moment().diff($scope.startTime) >= 0;
+                const lectureStartingInPast = moment().diff($scope.startTime) >= 0;
 
                 /* Checks that are run if end date is used*/
                 if ($scope.useDate && $scope.endTime !== null) {
@@ -239,22 +241,22 @@ timApp.controller("CreateLectureCtrl", ["$scope", "$http", "$window",
                         $scope.errorize("durationDiv", "Lecture has to last at least two minutes.");
                     }
                 }
-                let alert_message = "";
-                const lecture_ending_in_past = moment().diff($scope.endTime) >= 0;
+                let alertMessage = "";
+                const lectureEndingInPast = moment().diff($scope.endTime) >= 0;
                 /* Confirmations if lecture starts and/or ends before the current date */
-                if (lecture_starting_in_past && !$scope.editMode) {
-                    alert_message += "Are you sure you want the lecture to start before now? ";
+                if (lectureStartingInPast && !$scope.editMode) {
+                    alertMessage += "Are you sure you want the lecture to start before now? ";
                 }
-                if (lecture_ending_in_past && !$scope.editMode) {
-                    alert_message += "Are you sure that the lecture ends in the past or now and will not run?";
+                if (lectureEndingInPast && !$scope.editMode) {
+                    alertMessage += "Are you sure that the lecture ends in the past or now and will not run?";
                 }
                 $window.console.log($scope.error_message.length);
-                if (alert_message !== "" && $scope.error_message.length <= 0) {
-                    if (!$window.confirm(alert_message)) {
-                        if (lecture_starting_in_past) {
+                if (alertMessage !== "" && $scope.error_message.length <= 0) {
+                    if (!$window.confirm(alertMessage)) {
+                        if (lectureStartingInPast) {
                             $scope.errorize("startInfo", "Please select another date and time.");
                         }
-                        if (lecture_ending_in_past) {
+                        if (lectureEndingInPast) {
                             $scope.errorize("endInfo", "Please select another date or duration.");
                         }
                     }
@@ -265,7 +267,7 @@ timApp.controller("CreateLectureCtrl", ["$scope", "$http", "$window",
                 if ($scope.earlyJoining) {
                     $scope.startTime.subtract(15, "minutes");
                 }
-                $http({
+                $http<{ lectureId: number }>({
                     url: "/createLecture",
                     method: "POST",
                     params: {
@@ -275,39 +277,37 @@ timApp.controller("CreateLectureCtrl", ["$scope", "$http", "$window",
                         password: $scope.password,
                         start_date: $scope.startTime,
                         end_date: $scope.endTime,
-                        max_students: $scope.maxStudents || "",
+                        max_students: $scope.maxStudents || "",
                     },
                 })
-                    .success(function(answer) {
+                    .then(function(response) {
                         if ($scope.editMode) {
-                            $window.console.log("Lecture " + answer.lectureId + " updated.");
-                        }
-                        else {
-                            $window.console.log("Lecture created: " + answer.lectureId);
+                            $window.console.log("Lecture " + response.data.lectureId + " updated.");
+                        } else {
+                            $window.console.log("Lecture created: " + response.data.lectureId);
                         }
                         $scope.$parent.lectureSettings.useWall = true;
                         $scope.$parent.useAnswers = true;
                         $scope.clearForm();
                         $scope.$emit("closeLectureForm", true);
                         $scope.$emit("lectureUpdated", $scope.lectureCode);
-                    })
-                    .error(function(answer) {
-                        $scope.error_message += answer.error;
-                        $window.console.log(answer);
+                    }, function(response) {
+                        $scope.error_message += response.error;
+                        $window.console.log(response);
                     });
             }
         };
 
         /**
          * Changes the border of the element to red.
-         * @param div_val The ID of the input field so user can be notified of the error.
-         * @param error_text Error text that will be printed if the error occurs.
+         * @param inputId The ID of the input field so user can be notified of the error.
+         * @param errorText Error text that will be printed if the error occurs.
          * @memberof module:createLectureCtrl
          */
-        $scope.errorize = function(div_val, error_text) {
-            angular.element("#" + div_val).css("border", "1px solid red");
-            if (error_text.length > 0) {
-                $scope.error_message += error_text + "<br />";
+        $scope.errorize = function(inputId, errorText) {
+            angular.element("#" + inputId).css("border", "1px solid red");
+            if (errorText.length > 0) {
+                $scope.error_message += errorText + "<br />";
             }
         };
 

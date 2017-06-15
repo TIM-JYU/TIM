@@ -1,6 +1,7 @@
 import {timApp} from "tim/app";
 import * as answerSheet from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed} from "tim/utils";
+import {$http, $rootScope, $window} from "../ngimport";
 
 markAsUsed(answerSheet);
 
@@ -16,8 +17,8 @@ markAsUsed(answerSheet);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("QuestionPreviewController", ["$scope", "$window", "$http", "$rootScope",
-    function($scope, $window, http, $rootScope) {
+timApp.controller("QuestionPreviewController", ["$scope",
+    function($scope) {
         //TODO parse json and set values from rows and columns to scope variables
         //TODO edit questionPreview.html to repeat rows and columns
         "use strict";
@@ -63,13 +64,16 @@ timApp.controller("QuestionPreviewController", ["$scope", "$window", "$http", "$
         const parNextId = $scope.questionParIdNext;
         const docId = $scope.docId;
         // $rootScope.$broadcast('toggleQuestion');
-        http({
+        $http<{ markup }>({
             url: "/getQuestionByParId",
             method: "GET",
             params: {par_id: parId, doc_id: docId, edit: true},
         })
-            .success(function(data) {
-                if ( !data.markup ) return; // not a question
+            .then(function(response) {
+                const data = response.data;
+                if ( !data.markup ) {
+                    return; // not a question
+                }
                 $scope.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
                 $scope.markup = data.markup;
                 // data.markup.qst = true;
@@ -80,9 +84,7 @@ timApp.controller("QuestionPreviewController", ["$scope", "$window", "$http", "$
                     markup: data.markup,
                 });
 
-            })
-
-            .error(function() {
+            }, function() {
                 console.error("Could not get question.");
             });
 
@@ -120,13 +122,13 @@ timApp.controller("QuestionPreviewController", ["$scope", "$window", "$http", "$
         $scope.deleteQuestion = function() {
             const confirmDi = $window.confirm("Are you sure you want to delete this question?");
             if (confirmDi) {
-                http.post("/deleteParagraph/" + $scope.docId, {par: $scope.questionParId})
-                    .success(function(data) {
+                $http.post("/deleteParagraph/" + $scope.docId, {par: $scope.questionParId})
+                    .then(function(response) {
+                        const data = response.data;
                         $scope.handleDelete(data, {par: $scope.questionParId, area_start: null, area_end: null});
                         $scope.$emit("closeQuestionPreview");
                         $window.console.log("Deleted question");
-                    })
-                    .error(function(error) {
+                    }, function(error) {
                         $scope.$emit("closeQuestionPreview");
                         $window.console.log(error);
                     });

@@ -1,7 +1,8 @@
 
 import {timApp} from "tim/app";
-timApp.controller("UserListController", ["$scope", "$element", "$filter", "$timeout", "$window", "$uibModal", "uiGridConstants",
-    function($scope, $element, $filter, $timeout, $window, $uibModal, uiGridConstants) {
+import {$timeout, $uibModal} from "../ngimport";
+timApp.controller("UserListController", ["$scope", "$element", "uiGridConstants",
+    function($scope, $element, uiGridConstants) {
         "use strict";
         $scope.$watch(
             function() {
@@ -81,8 +82,9 @@ timApp.controller("UserListController", ["$scope", "$element", "$filter", "$time
                         dataKorppi += "\n";
                     }
                     for (let j = 0; j < data.length; j++) {
-                        if (data[j].entity[fields[i]] !== null)
+                        if (data[j].entity[fields[i]] !== null) {
                             dataKorppi += data[j].entity.name + ";" + fieldNames[fields[i]] + ";" + data[j].entity[fields[i]] + "\n";
+                        }
                     }
                 }
             }
@@ -92,8 +94,7 @@ timApp.controller("UserListController", ["$scope", "$element", "$filter", "$time
             const blob = new Blob([dataKorppi], {type: "text/plain"});
             if (window.navigator.msSaveOrOpenBlob) {
                 window.navigator.msSaveBlob(blob, filename);
-            }
-            else {
+            } else {
                 const elem = window.document.createElement("a");
                 elem.href = window.URL.createObjectURL(blob);
                 elem.download = filename;

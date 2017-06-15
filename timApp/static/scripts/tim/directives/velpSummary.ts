@@ -13,6 +13,7 @@ import angular from "angular";
 import {timApp} from "tim/app";
 import * as reviewController from "tim/controllers/reviewController";
 import {markAsUsed} from "tim/utils";
+import {$window} from "../ngimport";
 
 markAsUsed(reviewController);
 
@@ -29,7 +30,7 @@ timApp.directive("velpSummary", function() {
     };
 });
 
-timApp.controller("VelpSummaryController", ["$scope", "$http", "$window", function($scope, $http, $window) {
+timApp.controller("VelpSummaryController", ["$scope", function($scope) {
     "use strict";
     const console = $window.console;
     $scope.settings = {selectedAll: false};
@@ -51,8 +52,9 @@ timApp.controller("VelpSummaryController", ["$scope", "$http", "$window", functi
      */
     $scope.getTotalPoints = function(annotations) {
         let p = 0;
-        if (annotations === undefined)
+        if (annotations === undefined) {
             return p;
+        }
 
         for (let i = 0; i < annotations.length; i++) {
 

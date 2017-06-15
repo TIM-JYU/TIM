@@ -1,20 +1,16 @@
-
 import angular from "angular";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
+import {$httpProvider, $q, $rootScope, $window} from "../../ngimport";
 
-timApp.config(["$httpProvider", function($httpProvider) {
-    "use strict";
+timApp.config([() => {
     timLogTime("timApp config", "view");
     function escapeId(id) {
         return "#" + id.replace(/(:|\.|\[|\]|,|=)/g, "\\$1");
     }
 
     const interceptor = [
-        "$q",
-        "$rootScope",
-        "$window",
-        function($q, $rootScope, $window) {
+        () => {
             const re = /\/[^/]+\/([^/]+)\/answer\/$/;
             return {
                 request(config) {

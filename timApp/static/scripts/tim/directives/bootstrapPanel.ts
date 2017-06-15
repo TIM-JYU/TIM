@@ -1,6 +1,6 @@
 
 import {timApp} from "tim/app";
-timApp.directive("bootstrapPanel", ["$window", "$log", "$http", function($window, $log, $http) {
+timApp.directive("bootstrapPanel", [function() {
     "use strict";
     return {
         restrict: "E",
@@ -15,7 +15,7 @@ timApp.directive("bootstrapPanel", ["$window", "$log", "$http", function($window
 
         },
 
-        controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
+        controller: ["$scope", "$element", function($scope, $element) {
             const sc = $scope;
 
             sc.close = function() {

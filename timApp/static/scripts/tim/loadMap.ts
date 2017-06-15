@@ -184,8 +184,12 @@ $(function() {
                 }
 
                 function hasOwnProperty(json, tile, layerdelta, datadelta) {
-                    if ( !json.layers[tile.layerNo + layerdelta] ) return false;
-                    if ( !json.layers[tile.layerNo + layerdelta].data ) return false;
+                    if ( !json.layers[tile.layerNo + layerdelta] ) {
+                        return false;
+                    }
+                    if ( !json.layers[tile.layerNo + layerdelta].data ) {
+                        return false;
+                    }
                     return ( json.layers[tile.layerNo + layerdelta].data.hasOwnProperty((tile.dataIndex + datadelta).toString()) );
                 }
 
@@ -358,7 +362,9 @@ $(function() {
                  */
                 function drawInfo(x, y, tile) {
                     let tscale = scale;
-                    if ( tscale < 0.7 ) tscale = 0.7;
+                    if ( tscale < 0.7 ) {
+                        tscale = 0.7;
+                    }
                     // Size and position of the box
                     const height = json.tileheight * 10 * tscale;
                     const width = json.tilewidth * 8 * tscale;
@@ -537,7 +543,8 @@ $(function() {
                  * @returns {{top: number, left: number}} left and top position
                  */
                 function absolutePosition(element) {
-                    let top = 0, left = 0;
+                    let top = 0;
+                    let left = 0;
                     do {
                         top += element.offsetTop || 0;
                         left += element.offsetLeft || 0;

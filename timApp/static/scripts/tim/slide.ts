@@ -62,14 +62,25 @@ function refresh() {
         },
         success(data) {
             const oldstate = Reveal.getState();
-            let oldh = 0, oldv = 0, newh = 0, newv = 0;
-            if (oldstate.indexh !== undefined) oldh = oldstate.indexh;
-            if (oldstate.indexv !== undefined) oldv = oldstate.indexv;
+            let oldh = 0;
+            let oldv = 0;
+            let newh = 0;
+            let newv = 0;
+            if (oldstate.indexh !== undefined) {
+                oldh = oldstate.indexh;
+            }
+            if (oldstate.indexv !== undefined) {
+                oldv = oldstate.indexv;
+            }
             data = JSON.parse(data);
             console.log(data);
             if (data !== null) {
-                if (data.indexh !== undefined) newh = data.indexh;
-                if (data.indexv !== undefined) newv = data.indexv;
+                if (data.indexh !== undefined) {
+                    newh = data.indexh;
+                }
+                if (data.indexv !== undefined) {
+                    newv = data.indexv;
+                }
                 if ((newh != oldh || newv != oldv
                     || data.indexf != oldstate.indexf) && receiving) {
                     console.log("Change slide");
@@ -82,7 +93,9 @@ function refresh() {
 }
 
 function updateSlideStatus(h, v, f) {
-    if (GetURLParameter("controls") !== undefined) return;
+    if (GetURLParameter("controls") !== undefined) {
+        return;
+    }
     receiving = false;
     clearTimeout(pollTimeout);
     $.ajax({
@@ -101,7 +114,9 @@ function updateSlideStatus(h, v, f) {
     });
 }
 
-if (GetURLParameter("controls") === undefined && is_owner) pollTimeout = setTimeout(refresh, pollInterval);
+if (GetURLParameter("controls") === undefined && is_owner) {
+    pollTimeout = setTimeout(refresh, pollInterval);
+}
 
 window.onload = function() {
     document.onkeyup = function(evt) {

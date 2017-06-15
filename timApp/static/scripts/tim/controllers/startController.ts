@@ -5,7 +5,7 @@ import {markAsUsed} from "tim/utils";
 
 markAsUsed(createItem);
 
-timApp.controller("StartCtrl", ["$scope", "$http", "$window", "$rootScope", "$log", function(sc, http, $window, $rootScope, $log) {
+timApp.controller("StartCtrl", ["$scope", function(sc) {
     "use strict";
 
     sc.creatingNew = false;

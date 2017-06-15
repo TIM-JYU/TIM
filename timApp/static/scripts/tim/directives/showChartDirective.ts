@@ -5,6 +5,7 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {getJsonAnswers} from "tim/directives/dynamicAnswerSheet";
 import {lazyLoad} from "../lazyLoad";
+import {$compile} from "../ngimport";
 
 /**
  * Created by hajoviin on 13.5.2015.
@@ -38,45 +39,43 @@ function qstCleanHtml(s) {
 /* takes a string phrase and breaks it into separate phrases
    no bigger than 'maxwidth', breaks are made at complete words.*/
 
-function qstFormatLabel(str, maxwidth, maxrows){
-    if ( str.length <= maxwidth ) return str;
+function qstFormatLabel(str, maxwidth, maxrows) {
+    if ( str.length <= maxwidth ) {
+        return str;
+    }
     const sections = [];
     const words = str.split(" ");
     let temp = "";
 
     words.forEach(function(item, index){
-        if ( sections.length >= maxrows ) return;
-        if (temp.length > 0)
-        {
+        if ( sections.length >= maxrows ) {
+            return;
+        }
+        if (temp.length > 0) {
             const concat = temp + " " + item;
 
-            if (concat.length > maxwidth){
+            if (concat.length > maxwidth) {
                 sections.push(temp);
                 temp = "";
-            }
-            else{
-                if (index == (words.length - 1))
-                {
+            } else {
+                if (index == (words.length - 1)) {
                     sections.push(concat);
                     return;
-                }
-                else{
+                } else {
                     temp = concat;
                     return;
                 }
             }
         }
 
-        if (index == (words.length - 1))
-        {
+        if (index == (words.length - 1)) {
             sections.push(item);
             return;
         }
 
         if (item.length < maxwidth) {
             temp = item;
-        }
-        else {
+        } else {
             sections.push(item);
         }
 
@@ -91,36 +90,49 @@ function qstShortText(s) {
     if ( parts.length >= 2 ) {
         text = qstCleanHtml(parts[1]);
     }
-    if ( text === "" )
+    if ( text === "" ) {
         text = qstCleanHtml(parts[0]);
+    }
     let max = 25;
     if ( parts.length >= 3) {
         max  = parseInt(parts[2]);
-        if ( isNaN(max) ) max = 25;
+        if ( isNaN(max) ) {
+            max = 25;
+        }
     }
     let maxrows = 3;
     if ( parts.length >= 4) {
         maxrows  = parseInt(parts[3]);
-        if ( isNaN(maxrows) ) maxrows = 3;
+        if ( isNaN(maxrows) ) {
+            maxrows = 3;
+        }
     }
     text = qstFormatLabel(text, max, maxrows);
-    if (text.length > max) text = text.substring(0, max - 1) + "...";
+    if (text.length > max) {
+        text = text.substring(0, max - 1) + "...";
+    }
     return text;
 }
 
 function timGetLSIntValue(key, def: number): number {
     let val: any = window.localStorage.getItem(key);
-    if ( val === undefined ) val = def;
+    if ( val === undefined ) {
+        val = def;
+    }
     val = parseInt(val);
-    if ( isNaN(val) ) val = def;
+    if ( isNaN(val) ) {
+        val = def;
+    }
     return val;
 }
 
 let qstChartIndex = timGetLSIntValue("qstChartIndex", 0);
 
-timApp.directive("showChartDirective", ["$compile", function($compile) {
+timApp.directive("showChartDirective", [function() {
     "use strict";
-    if ( !qstChartIndex ) qstChartIndex = 0;
+    if ( !qstChartIndex ) {
+        qstChartIndex = 0;
+    }
     return {
         restrict: "E",
         scope: {
@@ -345,7 +357,9 @@ timApp.directive("showChartDirective", ["$compile", function($compile) {
                     for (i = 0; i < data.headers.length; i++) {
                         usedDataSets[i].label = qstShortText(data.headers[i].text);
                         // if ( i > 0 ) usedDataSets[i].backgroundColor.push(basicSets[i % basicSets.length].fillColor);
-                        if ( i > 0 ) showLegend = true;
+                        if ( i > 0 ) {
+                            showLegend = true;
+                        }
                     }
                 } else {
                     fillValues(usedDataSets, 0);
@@ -371,8 +385,12 @@ timApp.directive("showChartDirective", ["$compile", function($compile) {
                 // experiment with: https://jsfiddle.net/4r26box7/85/
 */
                 $scope.intScale = function(value, axis) {
-                    if ( axis == $scope.chartIndex ) return value;
-                    if (value % 1 === 0) return value;
+                    if ( axis == $scope.chartIndex ) {
+                        return value;
+                    }
+                    if (value % 1 === 0) {
+                        return value;
+                    }
                 };
 
                 $scope.chartConfig = {
@@ -417,12 +435,14 @@ timApp.directive("showChartDirective", ["$compile", function($compile) {
 
                 await $scope.changeType();
                 //$scope.answerChart.options.animation = false;
-                $compile($scope);
+                $compile($scope as any); // TODO this seems wrong
             };
 
             $scope.internalControl.toggle = function() {
                 qstChartIndex = timGetLSIntValue("qstChartIndex", 0);
-                if ( qstChartIndex != $scope.chartIndex ) qstChartIndex = $scope.chartIndex;
+                if ( qstChartIndex != $scope.chartIndex ) {
+                    qstChartIndex = $scope.chartIndex;
+                }
                 qstChartIndex  = (qstChartIndex  + 1) % $scope.charts.length;
                 $scope.chartIndex = qstChartIndex;
                 window.localStorage.setItem("qstChartIndex", qstChartIndex.toString());
@@ -430,9 +450,13 @@ timApp.directive("showChartDirective", ["$compile", function($compile) {
             };
 
             $scope.changeType = async function() {
-                if ( $scope.isText ) return;
+                if ( $scope.isText ) {
+                    return;
+                }
                 const newType = $scope.charts[qstChartIndex ];
-                if ( $scope.answerChart ) $scope.answerChart.destroy();
+                if ( $scope.answerChart ) {
+                    $scope.answerChart.destroy();
+                }
                 if ( !$scope.ctx ) {
                      $scope.ctx = $("<canvas id=" + $scope.canvasId.substring(1) + ' width="' + canvasw + '" height="' + canvash + '"><canvas>');
                      $scope.div.append($scope.ctx);
@@ -451,15 +475,27 @@ timApp.directive("showChartDirective", ["$compile", function($compile) {
             };
 
             $scope.internalControl.resize = function(w, h) {
-                canvasw = w;  if ( canvasw < 100 ) canvasw = 100;
-                canvash = h;  if ( canvash < 100 ) canvash = 100;
+                canvasw = w;
+                if ( canvasw < 100 ) {
+                    canvasw = 100;
+                }
+                canvash = h;
+                if ( canvash < 100 ) {
+                    canvash = 100;
+                }
                 $scope.internalControl.close();
                 $scope.changeType();
             };
 
             $scope.internalControl.zoom = function(w, h) {
-                canvasw += w * 100;  if ( canvasw < 100 ) canvasw = 100;
-                canvash += h * 100;  if ( canvash < 100 ) canvash = 100;
+                canvasw += w * 100;
+                if ( canvasw < 100 ) {
+                    canvasw = 100;
+                }
+                canvash += h * 100;
+                if ( canvash < 100 ) {
+                    canvash = 100;
+                }
                 $scope.internalControl.close();
                 $scope.changeType();
             };
@@ -473,7 +509,9 @@ timApp.directive("showChartDirective", ["$compile", function($compile) {
             $scope.$on("resizeElement", function(event, data) {
                 // var w = $scope.div.width();  // data.size.width;
                 // var h = $scope.div.height(); //  data.size.height)
-                if ( $scope.isText ) return;
+                if ( $scope.isText ) {
+                    return;
+                }
                 $scope.internalControl.resizeDiv();
             });
 

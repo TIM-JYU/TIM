@@ -1,12 +1,13 @@
 import {timApp} from "tim/app";
+import {Users} from "../services/userService";
 
-timApp.directive("loginMenu", ["Users", "$http", "$httpParamSerializer", function(Users, $http, $httpParamSerializer) {
+timApp.directive("loginMenu", [function() {
     "use strict";
     return {
         restrict: "E",
         scope: {},
         templateUrl: "/static/templates/loginMenu.html",
-        controller: ["$scope", "$element", function($scope, $element) {
+        controller: ["$scope", function($scope) {
             $scope.getCurrentUser = () => Users.getCurrent();
             $scope.getSessionUsers = () => Users.getSessionUsers();
             $scope.form = {};
@@ -18,7 +19,7 @@ timApp.directive("loginMenu", ["Users", "$http", "$httpParamSerializer", functio
                 $event.stopPropagation();
                 $scope.addingToSession = !$scope.addingToSession;
             };
-            $scope.logout = (...args) => Users.logout(...args);
+            $scope.logout = (user, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);
             $scope.isLoggedIn = () => Users.isLoggedIn();
             $scope.korppiLogin = function(addingToSession) {
                 $scope.korppiLoading = true;

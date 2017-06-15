@@ -7,43 +7,43 @@ export function watchEditMode(newVal, oldVal, $scope) {
     if (newVal === null) {
         $(".parEditButton").removeClass("active");
         $(".areaEditButton").removeClass("active");
-        enable_par_edit();
-        enable_area_edit_passive();
+        enableParEdit();
+        enableAreaEditPassive();
     } else if (newVal === "par") {
         $(".parEditButton").addClass("active");
         $(".areaEditButton").removeClass("active");
-        enable_par_edit();
-        disable_area_edit();
-        //$('.par').addClass('editmode');
+        enableParEdit();
+        disableAreaEdit();
+        // $('.par').addClass('editmode');
     } else if (newVal === "area") {
         $(".parEditButton").removeClass("active");
         $(".areaEditButton").addClass("active");
-        disable_par_edit();
-        enable_area_edit_active();
-        //$('.area').addClass('editmode');
+        disableParEdit();
+        enableAreaEditActive();
+        // $('.area').addClass('editmode');
     }
 
-    show_hidden(newVal);
+    showHidden(newVal);
 }
 
-function enable_par_edit() {
+function enableParEdit() {
     $(".editline-disabled").removeClass("editline-disabled").addClass("editline");
 }
 
-function disable_par_edit() {
+function disableParEdit() {
     $(".editline").removeClass("editline").addClass("editline-disabled");
 }
 
-function enable_area_edit_active() {
+function enableAreaEditActive() {
 }
 
-function enable_area_edit_passive() {
+function enableAreaEditPassive() {
 }
 
-function disable_area_edit() {
+function disableAreaEdit() {
 }
 
-function show_hidden(show_param) {
-    const display_value = show_param == null ? "none" : "initial";
-    $(".mdcontent").css("display", display_value);
+function showHidden(showParam) {
+    const displayValue = showParam == null ? "none" : "initial";
+    $(".mdcontent").css("display", displayValue);
 }

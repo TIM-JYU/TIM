@@ -1,92 +1,89 @@
-
 import $ from "jquery";
 import {addEvents} from "tim/marktree";
 import {timLogTime} from "tim/timTiming";
+import {$document, $http, $log, $timeout, $window} from "../../ngimport";
+import {getActiveDocument} from "./document";
 
-export function defineIndex(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
-    "use strict";
+function totext(str) {
+    if (str.indexOf("{") > 0) {
+        return str.substring(0, str.indexOf("{")).trim();
+    }
+    return str;
+}
 
-    sc.showIndex = $window.showIndex;
+function tolink(str) {
+    if (str.indexOf("{") >= 0 && str.indexOf("}") > 0) {
+        const ob = str.indexOf("{");
+        const cb = str.indexOf("}");
+        return str.substring(ob + 1, cb);
+    }
+    return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").trim().replace(/ +/g, "-").toLowerCase();
+}
 
-    sc.totext = function(str) {
-        if (str.indexOf("{") > 0) {
-            return str.substring(0, str.indexOf("{")).trim();
+function findIndexLevel(str) {
+    for (let i = 0; i < str.length; i++) {
+        if (str.charAt(i) !== "#") {
+            return i;
         }
-        return str;
-    };
+    }
 
-    sc.tolink = function(str) {
-        if (str.indexOf("{") >= 0 && str.indexOf("}") > 0) {
-            const ob = str.indexOf("{");
-            const cb = str.indexOf("}");
-            return str.substring(ob + 1, cb);
-        }
-        return "#" + str.replace(/^(\d)+(\.\d+)*\.? /, "").trim().replace(/ +/g, "-").toLowerCase();
-    };
+    return 0;
+}
 
-    sc.findIndexLevel = function(str) {
-        for (let i = 0; i < str.length; i++) {
-            if (str.charAt(i) !== "#") {
-                return i;
-            }
-        }
+function invertState(state) {
+    if (state === "exp") {
+        return "col";
+    }
+    if (state === "col") {
+        return "exp";
+    }
+    return state;
+}
 
-        return 0;
-    };
+function clearSelection() {
+    if ($document.selection) {
+        $document.selection.empty();
+    }
+    else if ($window.getSelection) {
+        $window.getSelection().removeAllRanges();
+    }
+}
 
-    sc.getIndex = function() {
-        timLogTime("getindex", "view");
-        http.get("/index/" + sc.docId)
-            .success(function(data) {
-                timLogTime("getindex succ", "view");
-                if (data.empty) {
-                    sc.showIndex = false;
-                } else {
-                    const indexElement = $(".index-sidebar .sideBarContainer");
-                    $(indexElement).html(data);
-                    sc.showIndex = true;
-                }
-                timLogTime("getindex done", "view");
-            }).error(function() {
-            $log.error("Could not get index");
-        });
-    };
-
-    sc.invertState = function(state) {
-        if (state === "exp") {
-            return "col";
-        }
-        if (state === "col") {
-            return "exp";
-        }
+function invertStateClearSelection(event, state) {
+    if (event.which !== 1) {
+        // Listen only to the left mouse button
         return state;
-    };
+    }
 
-    sc.clearSelection = function() {
-        if ($document.selection) {
-            $document.selection.empty();
-        }
-        else if ($window.getSelection) {
-            $window.getSelection().removeAllRanges();
-        }
-    };
+    const newState = invertState(state);
+    if (newState !== state) {
+        clearSelection();
+    }
+    return newState;
+}
 
-    sc.invertStateClearSelection = function(event, state) {
-        if (event.which !== 1) {
-            // Listen only to the left mouse button
-            return state;
-        }
+async function getIndex() {
+    timLogTime("getindex", "view");
+    const doc = getActiveDocument();
+    try {
+        var response = await $http.get<any>("/index/" + doc.id);
+    } catch (e) {
+        $log.error("Could not get index");
+        return;
+    }
+    timLogTime("getindex succ", "view");
+    if (response.data.empty) {
+    } else {
+        const indexElement = $(".index-sidebar .sideBarContainer");
+        $(indexElement).html(response.data);
+    }
+    timLogTime("getindex done", "view");
+}
 
-        const newState = sc.invertState(state);
-        if (newState !== state) {
-            sc.clearSelection();
-        }
-        return newState;
-    };
-
+export function initIndex() {
     // call marktree.js initialization function so that TOC clicking works
     addEvents();
-    $timeout(function() {
+    $timeout(() => {
         const indexHeadings = $("#menuTabs").find(".subexp .exp");
         const subHeadings = indexHeadings.find("ul.sub li.basic");
         if (indexHeadings.length === 1 || indexHeadings.length + subHeadings.length < 40) {

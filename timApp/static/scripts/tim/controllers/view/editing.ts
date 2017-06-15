@@ -1,32 +1,42 @@
 import angular from "angular";
 import $ from "jquery";
+import {$compile, $http, $timeout, $window} from "../../ngimport";
+import {
+    getPars, getParIndex, isReference, getElementByRefId, getElementByParId, getRefAttrs, getNextPar,
+    getLastParId,
+    getFirstPar, getParAttributes, getParId, EDITOR_CLASS_DOT, EDITOR_CLASS,
+} from "./parhelpers";
+import {markPageDirty} from "tim/utils";
+import {onClick} from "./eventhandlers";
+import {ParCompiler} from "../../services/parCompiler";
 
-export function defineEditing(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+export function defineEditing(sc) {
     "use strict";
-    sc.EDITOR_CLASS = "editorArea";
-    sc.EDITOR_CLASS_DOT = "." + sc.EDITOR_CLASS;
+
     sc.editing = false;
 
     sc.toggleParEditor = function($pars, options) {
-        const $par = sc.getFirstPar($pars);
-        let area_start, area_end;
+        const $par = getFirstPar($pars);
+        let areaStart;
+        let areaEnd;
         let caption = "Add paragraph";
         const touch = typeof("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
         const mobile = touch && (window.screen.width < 1200);
         let url;
-        const par_id = sc.getParId($par);
-        let par_next_id = sc.getParId(sc.getNextPar($par));
-        if (par_next_id === "HELP_PAR")
-            par_next_id = null;
+        const parId = getParId($par);
+        let parNextId = getParId(getNextPar($par));
+        if (parNextId === "HELP_PAR") {
+            parNextId = null;
+        }
 
         if ($pars.length > 1) {
-            area_start = sc.getParId($par);
-            area_end = sc.getLastParId($pars);
+            areaStart = getParId($par);
+            areaEnd = getLastParId($pars);
             url = "/postParagraph/";
             options.showDelete = true;
         } else {
             // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
-            if (par_id === "HELP_PAR" || $pars.hasClass("new")) {
+            if (parId === "HELP_PAR" || $pars.hasClass("new")) {
                 url = "/newParagraph/";
                 options.showDelete = false;
             } else {
@@ -34,16 +44,16 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
                 options.showDelete = true;
             }
 
-            area_start = options.area ? sc.getParId(sc.selection.start) : null;
-            area_end = options.area ? sc.getParId(sc.selection.end) : null;
+            areaStart = options.area ? getParId(sc.selection.start) : null;
+            areaEnd = options.area ? getParId(sc.selection.end) : null;
         }
 
         if (options.area) {
-            area_end = sc.getParId(sc.selection.end);
-            area_start = sc.getParId(sc.selection.start);
+            areaEnd = getParId(sc.selection.end);
+            areaStart = getParId(sc.selection.start);
         } else {
-            area_start = null;
-            area_end = null;
+            areaStart = null;
+            areaEnd = null;
         }
 
         const tags = {markread: false};
@@ -54,10 +64,10 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
             "save-url": url,
             "extra-data": {
                 docId: sc.docId, // current document id
-                par: par_id, // the id of paragraph on which the editor was opened
-                par_next: par_next_id, // the id of the paragraph that follows par or null if par is the last one
-                area_start,
-                area_end,
+                par: parId, // the id of paragraph on which the editor was opened
+                par_next: parNextId, // the id of the paragraph that follows par or null if par is the last one
+                area_start: areaStart,
+                area_end: areaEnd,
                 tags,
             },
             "options": {
@@ -80,29 +90,30 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
         };
         if (options.showDelete) {
             caption = "Edit paragraph";
-            if (par_id !== "HELP_PAR")
-                attrs["initial-text-url"] = "/getBlock/" + sc.docId + "/" + par_id;
+            if (parId !== "HELP_PAR") {
+                attrs["initial-text-url"] = "/getBlock/" + sc.docId + "/" + parId;
+            }
         }
         sc.toggleEditor($par, options, attrs, caption, "pareditor");
     };
 
-    sc.toggleEditor = function($par, options, attrs: Object, caption, directive) {
-        if (sc.isReference($par)) {
-            angular.extend(attrs["extra-data"], sc.getRefAttrs($par));
+    sc.toggleEditor = function($par, options, attrs: object, caption, directive) {
+        if (isReference($par)) {
+            angular.extend(attrs["extra-data"], getRefAttrs($par));
         }
         Object.keys(attrs).forEach(function(key, index) {
             if (typeof attrs[key] === "object" && attrs[key] !== null) {
                 attrs[key] = JSON.stringify(attrs[key]);
             }
         });
-        if ($par.children(sc.EDITOR_CLASS_DOT).length) {
-            $par.children().remove(sc.EDITOR_CLASS_DOT);
+        if ($par.children(EDITOR_CLASS_DOT).length) {
+            $par.children().remove(EDITOR_CLASS_DOT);
             sc.editing = false;
         } else {
-            $(sc.EDITOR_CLASS_DOT).remove();
+            $(EDITOR_CLASS_DOT).remove();
 
-            const createEditor = function(attrs: Object) {
-                const $div = $("<" + directive + ">", {class: sc.EDITOR_CLASS}).attr(attrs);
+            const createEditor = function(attrs: object) {
+                const $div = $("<" + directive + ">", {class: EDITOR_CLASS}).attr(attrs);
                 $div.attr("tim-draggable-fixed", "");
                 if (caption) {
                     $div.attr("caption", caption);
@@ -122,10 +133,10 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
         }
     };
 
-    sc.editSettingsPars = function(recursiveCall) {
+    sc.editSettingsPars = async function(recursiveCall) {
         const pars = [];
         $(".par").each(function() {
-            if (sc.getParAttributes($(this)).hasOwnProperty("settings")) {
+            if (getParAttributes($(this)).hasOwnProperty("settings")) {
                 pars.push(this);
             }
         });
@@ -134,27 +145,27 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
                 throw new Error("Faulty recursion stopped, there should be a settings paragraph already");
             }
             const $first = $(".par:first");
-            let par_next = sc.getParId($first);
-            if (par_next === "HELP_PAR") {
-                par_next = null;
+            let parNext = getParId($first);
+            if (parNext === "HELP_PAR") {
+                parNext = null;
             }
             $first.before(sc.createNewPar());
             const parToReplace = "NEW_PAR";
-            http.post("/newParagraph/", {
-                text: '``` {settings=""}\nexample:\n```',
-                docId: sc.docId,
-                par_next,
-            }).success(function(data, status, headers, config) {
-                sc.addSavedParToDom(data, {par: parToReplace});
-                sc.editSettingsPars(true);
-            }).error(function(data, status, headers, config) {
-                $window.alert(data.error);
-            });
-        }
-        else if (pars.length === 1) {
+            try {
+                var response = await $http.post("/newParagraph/", {
+                    text: '``` {settings=""}\nexample:\n```',
+                    docId: sc.docId,
+                    par_next: parNext,
+                });
+            } catch (e) {
+                $window.alert(e.data.error);
+                return;
+            }
+            sc.addSavedParToDom(response.data, {par: parToReplace});
+            sc.editSettingsPars(true);
+        } else if (pars.length === 1) {
             sc.toggleParEditor($(pars[0]), {area: false});
-        }
-        else {
+        } else {
             const start = pars[0];
             const end = pars[pars.length - 1];
             sc.selection.start = $(start);
@@ -182,7 +193,7 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
     };
 
     sc.handleCancel = function(extraData) {
-        const $par = sc.getElementByParId(extraData.par);
+        const $par = getElementByParId(extraData.par);
         if ($par.hasClass("new")) {
             $par.remove();
         }
@@ -190,10 +201,10 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
     };
 
     sc.handleDelete = function(data, extraData) {
-        let $par = sc.getElementByParId(extraData.par);
+        let $par = getElementByParId(extraData.par);
         if (extraData.area_start !== null && extraData.area_end !== null) {
-            $par = sc.getElementByParId(extraData.area_start);
-            const $endpar = sc.getElementByParId(extraData.area_end);
+            $par = getElementByParId(extraData.area_start);
+            const $endpar = getElementByParId(extraData.area_end);
             if (extraData.area_start !== extraData.area_end) {
                 $par.nextUntil($endpar).add($endpar).remove();
             }
@@ -219,9 +230,9 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
     sc.addSavedParToDom = function(data, extraData) {
         let $par;
         if (angular.isDefined(extraData["ref-id"])) {
-            $par = sc.getElementByRefId(extraData["ref-id"]);
+            $par = getElementByRefId(extraData["ref-id"]);
         } else {
-            $par = sc.getElementByParId(extraData.par);
+            $par = getElementByParId(extraData.par);
         }
 
         // check if we were editing an area
@@ -229,26 +240,27 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
             angular.isDefined(extraData.area_start) &&
             extraData.area_start !== null &&
             extraData.area_end !== null) {
-            $par = sc.getElementByParId(extraData.area_start);
+            $par = getElementByParId(extraData.area_start);
 
             // remove all but the first element of the area because it'll be used
             // when replacing
-            const $endpar = sc.getElementByParId(extraData.area_end);
+            const $endpar = getElementByParId(extraData.area_end);
             $par.nextUntil($endpar).add($endpar).remove();
         }
 
         const $newPars = $($compile(data.texts)(sc));
 
-        if ($window.editMode === "area")
+        if ($window.editMode === "area") {
             $newPars.find(".editline").removeClass("editline").addClass("editline-disabled");
+        }
 
         $par.replaceWith($newPars);
-        sc.processAllMathDelayed($newPars);
+        ParCompiler.processAllMathDelayed($newPars);
         sc.docVersion = data.version;
         sc.editing = false;
         sc.cancelArea();
         sc.removeDefaultPars();
-        sc.markPageDirty();
+        markPageDirty();
         sc.beginUpdate();
     };
 
@@ -320,8 +332,8 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
         }
     };
 
-    sc.showAddParagraphMenu = function(e, $par_or_area, coords) {
-        sc.showPopupMenu(e, $par_or_area, coords, {actions: "addParagraphFunctions"});
+    sc.showAddParagraphMenu = function(e, $parOrArea, coords) {
+        sc.showPopupMenu(e, $parOrArea, coords, {actions: "addParagraphFunctions"});
     };
 
     sc.getAddParagraphFunctions = function() {
@@ -333,7 +345,7 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
     };
 
     sc.removeDefaultPars = function() {
-        sc.getElementByParId("HELP_PAR").remove();
+        getElementByParId("HELP_PAR").remove();
     };
 
     sc.extendSelection = function($par, allowShrink) {
@@ -342,10 +354,10 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
             sc.selection.end = $par;
         } else {
             const n = sc.selection.pars.length;
-            const startIndex = sc.getParIndex(sc.selection.pars.eq(0));
-            const endIndex = sc.getParIndex(sc.selection.pars.eq(n - 1));
+            const startIndex = getParIndex(sc.selection.pars.eq(0));
+            const endIndex = getParIndex(sc.selection.pars.eq(n - 1));
             const areaLength = endIndex - startIndex + 1;
-            const newIndex = sc.getParIndex($par);
+            const newIndex = getParIndex($par);
 
             if (newIndex < startIndex) {
                 sc.selection.start = $par;
@@ -360,19 +372,19 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
     };
 
     if (sc.item.rights.editable) {
-        sc.onClick(".addBottom", function($this, e) {
+        onClick(".addBottom", function($this, e) {
             $(".actionButtons").remove();
             //var $par = $('.par').last();
             //return sc.showAddParagraphBelow(e, $par);
             return sc.showAddParagraphAbove(e, $(".addBottomContainer"));
         });
 
-        sc.onClick(".pasteBottom", function($this, e) {
+        onClick(".pasteBottom", function($this, e) {
             $(".actionButtons").remove();
             sc.pasteAbove(e, $(".addBottomContainer"), false);
         });
 
-        sc.onClick(".pasteRefBottom", function($this, e) {
+        onClick(".pasteRefBottom", function($this, e) {
             $(".actionButtons").remove();
             sc.pasteAbove(e, $(".addBottomContainer"), true);
         });
@@ -390,7 +402,7 @@ export function defineEditing(sc, http, q, $injector, $compile, $window, $docume
             const $start = sc.selection.start;
             if (sc.selection.end !== null && !sc.selection.end.is(sc.selection.start)) {
                 const $end = sc.selection.end;
-                sc.selection.pars = sc.getPars($start, $end);
+                sc.selection.pars = getPars($start, $end);
             } else {
                 sc.selection.pars = $start;
             }

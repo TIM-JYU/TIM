@@ -3,6 +3,10 @@
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
+import {dereferencePar, getParId} from "../controllers/view/parhelpers";
+import {Users} from "../services/userService";
+import {ParCompiler} from "../services/parCompiler";
+import {$compile, $filter, $http, $timeout, $uibModal, $window} from "../ngimport";
 
 timLogTime("answerbrowser3 load", "answ");
 
@@ -36,14 +40,13 @@ function loadPlugin(html, $par, $compile, $scope, $timeout) {
     plugin.height(height);
     plugin.html($compile(newhtml)($scope));
     plugin.css("opacity", "1.0");
-    $scope.$parent.processAllMathDelayed(plugin);
+    ParCompiler.processAllMathDelayed(plugin);
     $timeout(function() {
         plugin.css("height", "");
     }, 500);
 }
 
-timApp.directive("answerbrowserlazy", ["Upload", "$http", "$sce", "$compile", "$window", "$timeout",
-    function(Upload, $http, $sce, $compile, $window, $timeout) {
+timApp.directive("answerbrowserlazy", [function() {
         "use strict";
         timLogTime("answerbrowserlazy directive function", "answ");
         return {
@@ -69,7 +72,9 @@ timApp.directive("answerbrowserlazy", ["Upload", "$http", "$sce", "$compile", "$
                 $scope.loadAnswerBrowser = function() {
                     const $par = $scope.$element.parents(".par");
                     let plugin = $par.find(".parContent");
-                    if ( $scope.compiled ) return;
+                    if ( $scope.compiled ) {
+                        return;
+                    }
                     $scope.compiled = true;
                     if (!$scope.$parent.noBrowser && $scope.isValidTaskId($scope.taskId)) {
                         const newHtml = '<answerbrowser task-id="' + $scope.taskId + '"></answerbrowser>';
@@ -97,8 +102,7 @@ timApp.directive("answerbrowserlazy", ["Upload", "$http", "$sce", "$compile", "$
         };
     }]);
 
-timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$window", "$filter", "$uibModal", "$log", "$timeout", "Users",
-    function(Upload, $http, $sce, $compile, $window, $filter, $uibModal, $log, $timeout, Users) {
+timApp.directive("answerbrowser", [function() {
         "use strict";
         timLogTime("answerbrowser directive function", "answ");
         return {
@@ -156,12 +160,12 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                     }
                     $scope.updatePoints();
                     const $par = $scope.element;
-                    const ids = $scope.$parent.dereferencePar($par);
+                    const ids = dereferencePar($par);
                     $scope.loading++;
-                    $http.get("/getState", {
+                    $http.get<{html: string, reviewHtml: string}>("/getState", {
                         params: {
                             ref_from_doc_id: $scope.$parent.docId,
-                            ref_from_par_id: $scope.$parent.getParId($par),
+                            ref_from_par_id: getParId($par),
                             doc_id: ids[0],
                             par_id: ids[1],
                             user_id: $scope.user.id,
@@ -174,7 +178,9 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                             $scope.element.find(".review").html(response.data.reviewHtml);
                         }
                         const lata = $scope.$parent.loadAnnotationsToAnswer;
-                        if ( lata ) lata($scope.selectedAnswer.id, $par[0], $scope.review, $scope.setFocus);
+                        if ( lata ) {
+                            lata($scope.selectedAnswer.id, $par[0], $scope.review, $scope.setFocus);
+                        }
 
                     }, function(response) {
                         $scope.showError(response);
@@ -226,16 +232,13 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                             if ((e.key === "ArrowUp" || e.which === 38)) {
                                 e.preventDefault();
                                 $scope.changeStudent(-1);
-                            }
-                            else if ((e.key === "ArrowDown" || e.which === 40)) {
+                            } else if ((e.key === "ArrowDown" || e.which === 40)) {
                                 e.preventDefault();
                                 $scope.changeStudent(1);
-                            }
-                            else if ((e.key === "ArrowLeft" || e.which === 37)) {
+                            } else if ((e.key === "ArrowLeft" || e.which === 37)) {
                                 e.preventDefault();
                                 $scope.previousAnswer();
-                            }
-                            else if ((e.key === "ArrowRight" || e.which === 39)) {
+                            } else if ((e.key === "ArrowRight" || e.which === 39)) {
                                 e.preventDefault();
                                 $scope.nextAnswer();
                             }
@@ -248,7 +251,9 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                     $scope.element[0].addEventListener("keydown", $scope.checkKeyPress);
 
                     $scope.changeStudent = function(dir) {
-                        if ( $scope.users.length <= 0 ) return;
+                        if ( $scope.users.length <= 0 ) {
+                            return;
+                        }
                         const shouldRefocusPoints = $scope.shouldFocus;
                         let newIndex = $scope.findSelectedUserIndex() + dir;
                         if (newIndex >= $scope.users.length) {
@@ -257,7 +262,9 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                         if (newIndex < 0 ) {
                             newIndex = $scope.users.length - 1;
                         }
-                        if (newIndex < 0) return;
+                        if (newIndex < 0) {
+                            return;
+                        }
                         $scope.user = $scope.users[newIndex];
                         $scope.getAvailableAnswers();
 
@@ -281,8 +288,8 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                 };
 
                 $scope.setAnswerById = function(id) {
-                    for (let i = 0; i < $scope.filteredAnswers.length; i++){
-                        if ($scope.filteredAnswers[i].id === id){
+                    for (let i = 0; i < $scope.filteredAnswers.length; i++) {
+                        if ($scope.filteredAnswers[i].id === id) {
                             $scope.selectedAnswer = $scope.filteredAnswers[i];
                             $scope.changeAnswer();
                             break;
@@ -291,7 +298,7 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                 };
 
                 $scope.getBrowserData = function() {
-                    if ($scope.answers.length > 0 && $scope.selectedAnswer)
+                    if ($scope.answers.length > 0 && $scope.selectedAnswer) {
                         return {
                             answer_id: $scope.selectedAnswer.id,
                             saveTeacher: $scope.saveTeacher,
@@ -301,12 +308,13 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                             userId: $scope.user.id,
                             saveAnswer: !$scope.$parent.noBrowser,
                         };
-                    else
+                    } else {
                         return {
                             saveTeacher: false,
                             teacher: $scope.$parent.teacherMode,
                             saveAnswer: !$scope.$parent.noBrowser,
                         };
+                    }
                 };
 
                 $scope.getAvailableUsers = function() {
@@ -334,7 +342,7 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                         return;
                     }
                     $scope.loading++;
-                    $http.get("/answers/" + $scope.taskId + "/" + $scope.user.id)
+                    $http.get<Array<{}>>("/answers/" + $scope.taskId + "/" + $scope.user.id)
                         .then(function(response) {
                             const data = response.data;
                             if (data.length > 0 && ($scope.hasUserChanged() || data.length !== ($scope.answers || []).length)) {
@@ -369,7 +377,7 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                     if (args.taskId === $scope.taskId) {
                         $scope.getAvailableAnswers(false);
                         // HACK: for some reason the math mode is lost because of the above call, so we restore it here
-                        $scope.$parent.processAllMathDelayed($scope.element.find(".parContent"));
+                        ParCompiler.processAllMathDelayed($scope.element.find(".parContent"));
                         if (args.error) {
                             $scope.alerts.push({msg: args.error, type: "warning"});
                         }
@@ -386,8 +394,7 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
                     $scope.shouldUpdateHtml = true;
                     if (args.updateAll) {
                         $scope.loadIfChanged();
-                    }
-                    else if ($scope.hasUserChanged()) {
+                    } else if ($scope.hasUserChanged()) {
                         $scope.dimPlugin();
                     } else {
                         $scope.parContent.css("opacity", "1.0");
@@ -493,8 +500,7 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
 
                 if ( $scope.$parent.selectedUser ) {
                     $scope.user = $scope.$parent.selectedUser;
-                }
-                else if ($scope.$parent && $scope.$parent.users && $scope.$parent.users.length > 0) {
+                } else if ($scope.$parent && $scope.$parent.users && $scope.$parent.users.length > 0) {
                     $scope.user = $scope.$parent.users[0];
                 } else {
                     $scope.user = Users.getCurrent();
@@ -521,7 +527,7 @@ timApp.directive("answerbrowser", ["Upload", "$http", "$sce", "$compile", "$wind
 
                 $scope.updateFiltered = function() {
                     $scope.anyInvalid = false;
-                    $scope.filteredAnswers = $filter("filter")($scope.answers, function(value, index, array) {
+                    $scope.filteredAnswers = $filter("filter")<{ valid }>($scope.answers, function(value, index, array) {
                         if (value.valid) {
                             return true;
                         }

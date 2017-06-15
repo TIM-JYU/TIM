@@ -2,10 +2,11 @@ import moment from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
 import {markAsUsed} from "tim/utils";
+import {$http, $window} from "../ngimport";
 
 markAsUsed(focusMe);
 
-timApp.directive("rightsEditor", ["$window", "$log", "$http", function($window, $log, $http) {
+timApp.directive("rightsEditor", [function() {
     "use strict";
     return {
         restrict: "E",
@@ -70,7 +71,8 @@ timApp.directive("rightsEditor", ["$window", "$log", "$http", function($window, 
                 if (!sc.urlRoot || !sc.itemId) {
                     return;
                 }
-                $http.get("/" + sc.urlRoot + "/get/" + sc.itemId).success(function(data, status, headers, config) {
+                $http.get<{grouprights, accesstypes}>("/" + sc.urlRoot + "/get/" + sc.itemId).then(function(response) {
+                    const data = response.data;
                     sc.grouprights = data.grouprights;
                     if (data.accesstypes) {
                         sc.accessTypes = data.accesstypes;
@@ -78,17 +80,16 @@ timApp.directive("rightsEditor", ["$window", "$log", "$http", function($window, 
                             sc.accessType = sc.accessTypes[0];
                         }
                     }
-                }).error(function(data, status, headers, config) {
+                }, function(response) {
                     $window.alert("Could not fetch permissions.");
                 });
             };
 
             sc.removePermission = function(right, type) {
-                $http.put("/" + sc.urlRoot + "/remove/" + sc.itemId + "/" + right.gid + "/" + type, {}).success(
-                    function(data, status, headers, config) {
+                $http.put("/" + sc.urlRoot + "/remove/" + sc.itemId + "/" + right.gid + "/" + type, {}).then(function(response) {
                         sc.getPermissions();
-                    }).error(function(data, status, headers, config) {
-                    $window.alert(data.error);
+                    }, function(response) {
+                    $window.alert(response.data.error);
                 });
             };
 
@@ -103,12 +104,11 @@ timApp.directive("rightsEditor", ["$window", "$log", "$http", function($window, 
 
             sc.addOrEditPermission = function(groupname, type) {
                 $http.put("/" + sc.urlRoot + "/add/" + sc.itemId + "/" + groupname.split("\n").join(";") + "/" + type.name,
-                    sc.timeOpt).success(
-                    function(data, status, headers, config) {
+                    sc.timeOpt).then(function(response) {
                         sc.getPermissions();
                         sc.cancel();
-                    }).error(function(data, status, headers, config) {
-                    $window.alert(data.error);
+                    }, function(response) {
+                    $window.alert(response.data.error);
                 });
             };
 

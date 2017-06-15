@@ -15,8 +15,10 @@ import extramodules from "tim/extramodules";
 import plugins from "tim/plugins";
 import {markAsUsed} from "tim/utils";
 import {injectProviders, injectServices} from "./ngimport";
+import {initUserService} from "./services/userService";
 
-markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize, uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, oclazyload);
+markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize,
+    uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, oclazyload);
 
 // timApp's Angular modules:
 // base: 'ngMessages', 'timer', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap'
@@ -105,3 +107,4 @@ timApp.filter("timtim", ["$filter", ($filter) => {
 
 timApp.config(injectProviders);
 timApp.run(injectServices);
+timApp.run(initUserService);

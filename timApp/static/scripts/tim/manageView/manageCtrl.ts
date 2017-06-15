@@ -1,23 +1,18 @@
 import angular from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
+import {$compile, $http, $log, $timeout, $upload, $window} from "../ngimport";
 
 timApp.controller("PermCtrl", [
     "$scope",
-    "$http",
-    "Upload",
-    "$window",
-    "$timeout",
-    "$compile",
-    "$log",
-    function(sc, $http, Upload, $window, $timeout, $compile, $log) {
+    function(sc) {
         "use strict";
         sc.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
 
         sc.showMoreChangelog = function() {
             const newLength = sc.item.versions.length + 100;
             sc.changelogLoading = true;
-            $http.get("/changelog/" + sc.item.id + "/" + (newLength)).then(function(response) {
+            $http.get<{ versions }>("/changelog/" + sc.item.id + "/" + (newLength)).then(function(response) {
                 sc.item.versions = response.data.versions;
                 sc.hasMoreChangelog = sc.item.versions.length === newLength;
             }, function(response) {
@@ -28,32 +23,35 @@ timApp.controller("PermCtrl", [
         };
 
         sc.getAliases = function() {
-            $http.get("/alias/" + sc.item.id, {
+            $http.get<Array<{path}>>("/alias/" + sc.item.id, {
             }).then(function(response) {
                 const data = response.data;
                 if (sc.aliases.length > 0 &&
                     data.length > 0 &&
-                    data[0].path !== sc.aliases[0].path)
-                        // The first name has changed, reload to update the links
-                        $window.location.replace("/manage/" + data[0].path);
-                else
+                    data[0].path !== sc.aliases[0].path) {
+                    // The first name has changed, reload to update the links
+                    $window.location.replace("/manage/" + data[0].path);
+                } else {
                     sc.aliases = data;
+                }
                 // mark the form pristine; otherwise it will complain about required field unnecessarily
                 sc.newAliasForm.$setPristine();
                 sc.newAlias = {location: sc.item.location};
-            }, function(data, status, headers, config) {
-                $window.alert("Error loading aliases: " + data.error);
+            }, function(response) {
+                $window.alert("Error loading aliases: " + response.data.error);
             });
 
             return [];
         };
 
         sc.getTranslations = function() {
-            if (sc.isFolder)
+            if (sc.isFolder) {
                 return [];
+            }
 
-            $http.get("/translations/" + sc.item.id, {
-            }).success(function(data, status, headers, config) {
+            $http.get<Array<{lang_id, title}>>("/translations/" + sc.item.id, {
+            }).then(function(response) {
+                const data = response.data;
                 sc.translations = [];
 
                 for (let i = 0; i < data.length; i++) {
@@ -66,8 +64,8 @@ timApp.controller("PermCtrl", [
 
                 sc.old_title = sc.item.title;
 
-            }).error(function(data, status, headers, config) {
-                $window.alert("Error loading translations: " + data.error);
+            }, function(response) {
+                $window.alert("Error loading translations: " + response.data.error);
             });
 
             return [];
@@ -82,13 +80,14 @@ timApp.controller("PermCtrl", [
                 new_langid: tr.lang_id,
                 new_title: tr.title,
                 old_title: tr.old_title,
-            }).success(function(data, status, headers, config) {
+            }).then(function(response) {
+                const data = response.data;
                 sc.getTranslations();
                 if (tr.id === sc.item.id) {
                     sc.syncTitle(tr.title);
                 }
-            }).error(function(data, status, headers, config) {
-                $window.alert(data.error);
+            }, function(response) {
+                $window.alert(response.data.error);
             });
         };
 
@@ -117,22 +116,24 @@ timApp.controller("PermCtrl", [
         sc.renameFolder = function(newName) {
             $http.put("/rename/" + sc.item.id, {
                 new_name: sc.oldFolderName + "/" + newName,
-            }).success(function(data, status, headers, config) {
+            }).then(function(response) {
+                const data = response.data;
                 // This is needed to update the breadcrumbs
                 location.reload();
-            }).error(function(data, status, headers, config) {
-                $window.alert(data.error);
+            }, function(response) {
+                $window.alert(response.data.error);
             });
         };
 
         sc.moveFolder = function(newLocation) {
             $http.put("/rename/" + sc.item.id, {
                 new_name: newLocation + "/" + sc.oldName,
-            }).success(function(data, status, headers, config) {
+            }).then(function(response) {
+                const data = response.data;
                 // This is needed to update the breadcrumbs
                 location.reload();
-            }).error(function(data, status, headers, config) {
-                $window.alert(data.error);
+            }, function(response) {
+                $window.alert(response.data.error);
             });
         };
 
@@ -152,19 +153,21 @@ timApp.controller("PermCtrl", [
         sc.addAlias = function(newAlias) {
             $http.put("/alias/" + sc.item.id + "/" + $window.encodeURIComponent(sc.combine(newAlias.location || "", newAlias.name)), {
                 public: Boolean(newAlias.public),
-            }).success(function(data, status, headers, config) {
+            }).then(function(response) {
+                const data = response.data;
                 sc.getAliases();
-            }).error(function(data, status, headers, config) {
-                $window.alert(data.error);
+            }, function(response) {
+                $window.alert(response.data.error);
             });
         };
 
         sc.removeAlias = function(alias) {
             $http.delete("/alias/" + $window.encodeURIComponent(alias.path), {
-            }).success(function(data, status, headers, config) {
+            }).then(function(response) {
+                const data = response.data;
                 sc.getAliases();
-            }).error(function(data, status, headers, config) {
-                $window.alert(data.error);
+            }, function(response) {
+                $window.alert(response.data.error);
             });
         };
 
@@ -173,25 +176,28 @@ timApp.controller("PermCtrl", [
             $http.post("/alias/" + $window.encodeURIComponent(alias.path), {
                 public: Boolean(alias.public),
                 new_name: new_alias,
-            }).success(function(data, status, headers, config) {
+            }).then(function(response) {
+                const data = response.data;
 
-                if (!first || new_alias === alias.path)
+                if (!first || new_alias === alias.path) {
                     sc.getAliases();
-                else
+                } else {
                     location.replace("/manage/" + new_alias);
+                }
 
-            }).error(function(data, status, headers, config) {
-                $window.alert(data.error);
+            }, function(response) {
+                $window.alert(response.data.error);
             });
         };
 
         sc.deleteDocument = function(docId) {
             if ($window.confirm("Are you sure you want to delete this document?")) {
                 $http.delete("/documents/" + docId)
-                    .success(function(data, status, headers, config) {
+                    .then(function(response) {
+                        const data = response.data;
                         location.replace("/view/");
-                    }).error(function(data, status, headers, config) {
-                        $window.alert(data.error);
+                    }, function(response) {
+                        $window.alert(response.data.error);
                     });
             }
         };
@@ -199,10 +205,11 @@ timApp.controller("PermCtrl", [
         sc.deleteFolder = function(folderId) {
             if ($window.confirm("Are you sure you want to delete this folder?")) {
                 $http.delete("/folders/" + folderId)
-                    .success(function(data, status, headers, config) {
+                    .then(function(response) {
+                        const data = response.data;
                         location.replace("/view/");
-                    }).error(function(data, status, headers, config) {
-                        $window.alert(data.error);
+                    }, function(response) {
+                        $window.alert(response.data.error);
                     });
             }
         };
@@ -212,13 +219,14 @@ timApp.controller("PermCtrl", [
             sc.fileUploadError = null;
             if (file) {
                 sc.file.progress = 0;
-                file.upload = Upload.upload({
+                file.upload = $upload.upload({
                     url: "/update/" + sc.item.id,
                     data: {
                         file,
                         original: sc.item.fulltext,
                         version: sc.item.versions[0],
                     },
+                    method: "POST",
                 });
 
                 file.upload.then(function(response) {
@@ -229,8 +237,9 @@ timApp.controller("PermCtrl", [
                         sc.fulltext = response.data.fulltext;
                     });
                 }, function(response) {
-                    if (response.status > 0)
+                    if (response.status > 0) {
                         sc.fileUploadError = "Error: " + response.data.error;
+                    }
                 }, function(evt) {
                     sc.file.progress = Math.min(100, Math.floor(100.0 *
                         evt.loaded / evt.total));
@@ -326,12 +335,13 @@ text = '\n'.join(a)
                 duplicate.push(duplicates[i][1]);
                 duplicateData.push(duplicate);
             }
-            $http.post("/postNewTaskNames/", angular.extend({
+            $http.post<{fulltext, versions, duplicates}>("/postNewTaskNames/", angular.extend({
                 duplicates: duplicateData,
                 renameDuplicates,
                 manageView: true,
                 docId: sc.item.id,
-            })).success(function(data, status, headers, config) {
+            })).then(function(response) {
+                const data = response.data;
                 sc.renameFormShowing = false;
                 sc.fulltext = data.fulltext;
                 sc.item.fulltext = sc.fulltext;
@@ -340,8 +350,8 @@ text = '\n'.join(a)
                 if (data.duplicates.length > 0) {
                     sc.createPluginRenameForm(data);
                 }
-            }).error(function(data, status, headers, config) {
-                $window.alert("Failed to save: " + data.error);
+            }, function(response) {
+                $window.alert("Failed to save: " + response.data.error);
             });
         };
 
@@ -436,13 +446,13 @@ text = '\n'.join(a)
 
         sc.saveDocument = function() {
             sc.saving = true;
-            $http.post("/update/" + sc.item.id,
+            $http.post<{duplicates, fulltext, versions}>("/update/" + sc.item.id,
                 {
                     fulltext: sc.fulltext,
                     original: sc.item.fulltext,
                     version: sc.item.versions[0],
-                }).success(
-                function(data, status, headers, config) {
+                }).then(function(response) {
+                    const data = response.data;
                     if (data.duplicates.length > 0) {
                         sc.createPluginRenameForm(data);
                     }
@@ -450,14 +460,14 @@ text = '\n'.join(a)
                     sc.item.fulltext = sc.fulltext;
                     sc.item.versions = data.versions;
                     sc.saving = false;
-                }).error(function(data, status, headers, config) {
+                }, function(response) {
+                    const data = response.data;
                     sc.saving = false;
                     if ("is_warning" in data && data.is_warning) {
                         if ( $window.confirm(data.error + "\n\nDo you still wish to save the document?") ) {
                             sc.saveDocumentWithWarnings();
                         }
-                    }
-                    else {
+                    } else {
                         $window.alert(data.error);
                     }
                 });
@@ -465,19 +475,19 @@ text = '\n'.join(a)
 
         sc.saveDocumentWithWarnings = function() {
             sc.saving = true;
-            $http.post("/update/" + sc.item.id,
+            $http.post<{fulltext, versions}>("/update/" + sc.item.id,
                 {
                     fulltext: sc.fulltext,
                     original: sc.item.fulltext,
                     ignore_warnings: true,
                     version: sc.item.versions[0],
-                }).success(
-                function(data, status, headers, config) {
+                }).then(function(response) {
+                    const data = response.data;
                     sc.fulltext = data.fulltext;
                     sc.item.fulltext = sc.fulltext;
                     sc.item.versions = data.versions;
-                }).error(function(data, status, headers, config) {
-                    $window.alert(data.error);
+                }, function(response) {
+                    $window.alert(response.data.error);
                 }).finally(function() {
                     sc.saving = false;
                 });
@@ -486,39 +496,42 @@ text = '\n'.join(a)
         sc.markAllAsRead = function() {
             sc.readUpdating = true;
             $http.put("/read/" + sc.item.id, {})
-                .success(function(data, status, headers, config) {
-
-                }).error(function(data, status, headers, config) {
+                .then(function(response) {
+                    const data = response.data;
+                }, function(response) {
                     $window.alert("Could not mark the document as read.");
-                }).finally(function(data, status, headers, config) {
+                }).finally(function() {
                     sc.readUpdating = false;
                 });
         };
 
         sc.createTranslation = function() {
-            $http.post("/translate/" + sc.item.id + "/" + sc.newTranslation.language, {
+            $http.post<{path}>("/translate/" + sc.item.id + "/" + sc.newTranslation.language, {
                 doc_title: sc.newTranslation.title,
-            }).success(function(data, status, headers, config) {
+            }).then(function(response) {
+                const data = response.data;
                 location.href = "/view/" + data.path;
-            }).error(function(data, status, headers, config) {
-                $window.alert(data.error);
+            }, function(response) {
+                $window.alert(response.data.error);
             });
         };
 
         sc.getNotifySettings = function() {
             $http.get("/notify/" + sc.item.id)
-                .success(function(data, status, headers, config) {
+                .then(function(response) {
+                    const data = response.data;
                     sc.notifySettings = data;
-                }).error(function(data, status, headers, config) {
-                    $window.alert("Could not get notification settings. Error message is: " + data.error);
-                }).finally(function(data, status, headers, config) {
+                }, function(response) {
+                    $window.alert("Could not get notification settings. Error message is: " + response.data.error);
+                }).finally(function() {
                 });
         };
 
         sc.notifyChanged = function() {
-            $http.post("/notify/" + sc.item.id, sc.notifySettings).success(function(data, status, headers, config) {
-            }).error(function(data, status, headers, config) {
-                $window.alert("Could not change notification settings. Error message is: " + data.error);
+            $http.post("/notify/" + sc.item.id, sc.notifySettings).then(function(response) {
+                const data = response.data;
+            }, function(response) {
+                $window.alert("Could not change notification settings. Error message is: " + response.data.error);
             });
         };
 

@@ -3,10 +3,11 @@ import angular from "angular";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
 import {markAsUsed} from "tim/utils";
+import {$http, $timeout, $uibModal, $window} from "../ngimport";
 
 markAsUsed(focusMe);
 
-timApp.directive("bookmarks", ["$window", "$log", "$http", "$uibModal", "$timeout", function($window, $log, $http, $uibModal, $timeout) {
+timApp.directive("bookmarks", [function() {
     "use strict";
     return {
         restrict: "E",
@@ -19,7 +20,7 @@ timApp.directive("bookmarks", ["$window", "$log", "$http", "$uibModal", "$timeou
 
         },
 
-        controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
+        controller: ["$scope", function($scope) {
             const sc = $scope;
             if ($window.bookmarks && !sc.data) {
                 sc.data = angular.copy($window.bookmarks);
@@ -179,7 +180,7 @@ timApp.directive("bookmarks", ["$window", "$log", "$http", "$uibModal", "$timeou
     };
 }]);
 
-timApp.controller("CreateBookmarkCtrl", ["$uibModalInstance", "$window", "bookmark", function($uibModalInstance, $window, bookmark) {
+timApp.controller("CreateBookmarkCtrl", ["$uibModalInstance", "bookmark", function($uibModalInstance, bookmark) {
     "use strict";
     const $ctrl = this;
     $ctrl.bookmarkForm = {};

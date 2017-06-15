@@ -18,7 +18,7 @@ markAsUsed(chart);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("ShowStatisticsToQuestionController", ["$scope", "$element",  "$http", function($scope, $element) {
+timApp.controller("ShowStatisticsToQuestionController", ["$scope", "$element", function($scope, $element) {
     "use strict";
     $scope.dynamicAnswerShowControl = {};
     $scope.canvas = "";
@@ -65,8 +65,6 @@ timApp.controller("ShowStatisticsToQuestionController", ["$scope", "$element",  
         $scope.lecturerAnswered = false;
         await $scope.dynamicAnswerShowControl.createChart(question);
         $scope.questionTitle = question.questionText;
-        // GlobalParCompiler.processAllMath($element);
-        // ParCompiler.processAllMath($element.parent());
 
         window.setTimeout(function() { // give time to html to change
             ParCompiler.processAllMath($element.parent());

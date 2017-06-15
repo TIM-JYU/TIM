@@ -1,161 +1,174 @@
+import {$http, $window} from "../../ngimport";
+import {dereferencePar, getAreaDocId, getFirstParId, getLastParId, getParId} from "./parhelpers";
 
-export function defineClipboard(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
-
-    sc.showPasteMenu = function(e, $par_or_area, coords) {
+export function defineClipboard(sc) {
+    sc.showPasteMenu = (e, $parOrArea, coords) => {
         sc.pasteFunctions = sc.getPasteFunctions();
-        sc.showPopupMenu(e, $par_or_area, coords, {actions: "pasteFunctions", contenturl: "/clipboard"});
+        sc.showPopupMenu(e, $parOrArea, coords, {actions: "pasteFunctions", contenturl: "/clipboard"});
     };
 
-    sc.showMoveMenu = function(e, $par_or_area, coords) {
+    sc.showMoveMenu = (e, $parOrArea, coords) => {
         sc.pasteFunctions = sc.getMoveFunctions();
-        sc.showPopupMenu(e, $par_or_area, coords, {actions: "pasteFunctions", contenturl: "/clipboard"});
+        sc.showPopupMenu(e, $parOrArea, coords, {actions: "pasteFunctions", contenturl: "/clipboard"});
     };
 
-    sc.pasteContentAbove = function(e, $par) {
+    sc.pasteContentAbove = (e, $par) => {
         sc.pasteAbove(e, $par, false);
     };
 
-    sc.pasteRefAbove = function(e, $par) {
+    sc.pasteRefAbove = (e, $par) => {
         sc.pasteAbove(e, $par, true);
     };
 
-    sc.pasteContentBelow = function(e, $par) {
+    sc.pasteContentBelow = (e, $par) => {
         sc.pasteBelow(e, $par, false);
     };
 
-    sc.pasteRefBelow = function(e, $par) {
+    sc.pasteRefBelow = (e, $par) => {
         sc.pasteBelow(e, $par, true);
     };
 
-    sc.deleteFromSource = function() {
-        http.post("/clipboard/deletesrc/" + sc.docId, {}).success(function(data, status, headers, config) {
-            const doc_ver = data.doc_ver;
-            const pars = data.pars;
-            if (pars.length > 0) {
-                const first_par = pars[0].id;
-                const last_par = pars[pars.length - 1].id;
-                sc.handleDelete({version: doc_ver}, {par: first_par, area_start: first_par, area_end: last_par});
-            }
+    sc.deleteFromSource = async () => {
+        try {
+            var response = await $http.post<{ doc_ver: any, pars: any[] }>("/clipboard/deletesrc/" + sc.docId, {});
+        } catch (e) {
+            $window.alert(e.data.error);
+            return;
+        }
+        const doc_ver = response.data.doc_ver;
+        const pars = response.data.pars;
+        if (pars.length > 0) {
+            const firstPar = pars[0].id;
+            const lastPar = pars[pars.length - 1].id;
+            sc.handleDelete({version: doc_ver}, {par: firstPar, area_start: firstPar, area_end: lastPar});
+        }
 
+        sc.allowPasteContent = false;
+        sc.allowPasteRef = false;
+    };
+
+    sc.moveAbove = async (e, $parOrArea) => {
+        try {
+            var response = await $http.post("/clipboard/paste/" + sc.docId, {
+                par_before: getFirstParId($parOrArea),
+            });
+        } catch (e) {
+            $window.alert(e.data.error);
+            return;
+        }
+        if (response.data === null) {
+            return;
+        }
+
+        const $newpar = sc.createNewPar();
+        $parOrArea.before($newpar);
+
+        const extraData = {
+            docId: sc.docId, // current document id
+            par: getFirstParId($newpar), // the id of paragraph on which the editor was opened
+            par_next: $parOrArea.id, // the id of the paragraph that follows par
+        };
+
+        sc.addSavedParToDom(response.data, extraData);
+        sc.deleteFromSource();
+    };
+
+    sc.moveBelow = async (e, $parOrArea) => {
+        try {
+            var response = await $http.post("/clipboard/paste/" + sc.docId, {
+                par_after: getLastParId($parOrArea),
+            });
+        } catch (e) {
+            $window.alert(e.data.error);
+            return;
+        }
+        if (response.data === null) {
+            return;
+        }
+
+        const $newpar = sc.createNewPar();
+        $parOrArea.after($newpar);
+
+        const extraData = {
+            docId: sc.docId, // current document id
+            par: getFirstParId($newpar), // the id of paragraph on which the editor was opened
+            par_next: $parOrArea.id, // the id of the paragraph that follows par
+        };
+
+        sc.addSavedParToDom(response.data, extraData);
+        sc.deleteFromSource();
+    };
+
+    sc.pasteAbove = async (e, $parOrArea, asRef) => {
+        try {
+            var response = await $http.post("/clipboard/paste/" + sc.docId, {
+                par_before: getFirstParId($parOrArea),
+                asRef,
+            });
+        } catch (e) {
+            $window.alert(e.data.error);
+            return;
+        }
+        if (response.data === null) {
+            return;
+        }
+
+        const $newpar = sc.createNewPar();
+        $parOrArea.before($newpar);
+
+        const extraData = {
+            docId: sc.docId, // current document id
+            par: getFirstParId($newpar), // the id of paragraph on which the editor was opened
+            par_next: $parOrArea.id, // the id of the paragraph that follows par
+        };
+
+        sc.addSavedParToDom(response.data, extraData);
+    };
+
+    sc.pasteBelow = async (e, $parOrArea, asRef) => {
+        try {
+            var response = await $http.post("/clipboard/paste/" + sc.docId, {
+                par_after: getLastParId($parOrArea),
+                asRef,
+            });
+        } catch (e) {
+            $window.alert(e.data.error);
+            return;
+        }
+        if (response.data === null) {
+            return;
+        }
+
+        const $newpar = sc.createNewPar();
+        $parOrArea.after($newpar);
+
+        const extraData = {
+            docId: sc.docId, // current document id
+            par: getFirstParId($newpar), // the id of paragraph on which the editor was opened
+            par_next: $parOrArea.id, // the id of the paragraph that follows par
+        };
+
+        sc.addSavedParToDom(response.data, extraData);
+    };
+
+    sc.updateClipboardStatus = async () => {
+        try {
+            var response = await $http.get<{ empty: any, disable_ref: any }>("/clipboardstatus", {});
+        } catch (e) {
             sc.allowPasteContent = false;
             sc.allowPasteRef = false;
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
-        });
-    };
-
-    sc.moveAbove = function(e, $par_or_area) {
-        http.post("/clipboard/paste/" + sc.docId, {
-            par_before: sc.getFirstParId($par_or_area),
-        }).success(function(data, status, headers, config) {
-            if (data === null)
-                return;
-
-            const $newpar = sc.createNewPar();
-            $par_or_area.before($newpar);
-
-            const extra_data = {
-                docId: sc.docId, // current document id
-                par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
-                par_next: $par_or_area.id, // the id of the paragraph that follows par
-            };
-
-            sc.addSavedParToDom(data, extra_data);
-            sc.deleteFromSource();
-
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
-        });
-    };
-
-    sc.moveBelow = function(e, $par_or_area) {
-        http.post("/clipboard/paste/" + sc.docId, {
-            par_after: sc.getLastParId($par_or_area),
-        }).success(function(data, status, headers, config) {
-            if (data === null)
-                return;
-
-            const $newpar = sc.createNewPar();
-            $par_or_area.after($newpar);
-
-            const extra_data = {
-                docId: sc.docId, // current document id
-                par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
-                par_next: $par_or_area.id, // the id of the paragraph that follows par
-            };
-
-            sc.addSavedParToDom(data, extra_data);
-            sc.deleteFromSource();
-
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
-        });
-    };
-
-    sc.pasteAbove = function(e, $par_or_area, as_ref) {
-        http.post("/clipboard/paste/" + sc.docId, {
-            par_before: sc.getFirstParId($par_or_area),
-            as_ref,
-        }).success(function(data, status, headers, config) {
-            if (data === null)
-                return;
-
-            const $newpar = sc.createNewPar();
-            $par_or_area.before($newpar);
-
-            const extra_data = {
-                docId: sc.docId, // current document id
-                par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
-                par_next: $par_or_area.id, // the id of the paragraph that follows par
-            };
-
-            sc.addSavedParToDom(data, extra_data);
-
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
-        });
-    };
-
-    sc.pasteBelow = function(e, $par_or_area, as_ref) {
-        http.post("/clipboard/paste/" + sc.docId, {
-            par_after: sc.getLastParId($par_or_area),
-            as_ref,
-        }).success(function(data, status, headers, config) {
-            if (data === null)
-                return;
-
-            const $newpar = sc.createNewPar();
-            $par_or_area.after($newpar);
-
-            const extra_data = {
-                docId: sc.docId, // current document id
-                par: sc.getFirstParId($newpar), // the id of paragraph on which the editor was opened
-                par_next: $par_or_area.id, // the id of the paragraph that follows par
-            };
-
-            sc.addSavedParToDom(data, extra_data);
-
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
-        });
-    };
-
-    sc.updateClipboardStatus = function() {
-        http.get("/clipboardstatus", {}).success(function(data, status, headers, config) {
-            if (!("empty" in data) || data.empty) {
-                sc.allowPasteContent = false;
-                sc.allowPasteRef = false;
-            } else {
-                sc.allowPasteContent = true;
-                sc.allowPasteRef = !("disable_ref" in data && data.disable_ref);
-            }
-        }).error(function(data, status, headers, config) {
+            return;
+        }
+        if (!("empty" in response.data) || response.data.empty) {
             sc.allowPasteContent = false;
             sc.allowPasteRef = false;
-        });
+        } else {
+            sc.allowPasteContent = true;
+            sc.allowPasteRef = !("disable_ref" in response.data && response.data.disable_ref);
+        }
     };
 
-    sc.getPasteFunctions = function() {
+    sc.getPasteFunctions = () => {
         sc.updateClipboardStatus();
         return [
             {func: sc.pasteRefAbove, desc: "Above, as a reference", show: sc.allowPasteRef},
@@ -166,105 +179,114 @@ export function defineClipboard(sc, http, q, $injector, $compile, $window, $docu
         ];
     };
 
-    sc.getMoveFunctions = function() {
-        return [
-            {func: sc.moveAbove, desc: "Above", show: sc.allowPasteContent},
-            {func: sc.moveBelow, desc: "Below", show: sc.allowPasteContent},
-            {func: sc.nothing, desc: "Cancel", show: true},
-        ];
+    sc.getMoveFunctions = () => [
+        {func: sc.moveAbove, desc: "Above", show: sc.allowPasteContent},
+        {func: sc.moveBelow, desc: "Below", show: sc.allowPasteContent},
+        {func: sc.nothing, desc: "Cancel", show: true},
+    ];
+
+    sc.cutPar = async (e, $par) => {
+        const docParId = [sc.docId, $par.attr("id")];
+
+        try {
+            var response = await $http.post<{ doc_ver: any, pars: any[] }>("/clipboard/cut/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {});
+        } catch (e) {
+            $window.alert(e.data.error);
+            return;
+        }
+        const doc_ver = response.data.doc_ver;
+        const pars = response.data.pars;
+        if (pars.length > 0) {
+            const firstPar = pars[0].id;
+            const lastPar = pars[pars.length - 1].id;
+            sc.handleDelete({version: doc_ver}, {par: firstPar, area_start: firstPar, area_end: lastPar});
+        }
+
+        sc.allowPasteContent = true;
+        sc.allowPasteRef = false;
     };
 
-    sc.cutPar = function(e, $par) {
-        const doc_par_id = [sc.docId, $par.attr("id")];
+    sc.copyPar = async (e, $par) => {
+        const docParId = dereferencePar($par);
 
-        http.post("/clipboard/cut/" + doc_par_id[0] + "/" + doc_par_id[1] + "/" + doc_par_id[1], {}).success(function(data, status, headers, config) {
-            const doc_ver = data.doc_ver;
-            const pars = data.pars;
-            if (pars.length > 0) {
-                const first_par = pars[0].id;
-                const last_par = pars[pars.length - 1].id;
-                sc.handleDelete({version: doc_ver}, {par: first_par, area_start: first_par, area_end: last_par});
-            }
-
-            sc.allowPasteContent = true;
-            sc.allowPasteRef = false;
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
-        });
+        try {
+            await $http.post("/clipboard/copy/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {});
+        } catch (e) {
+            $window.alert(e.data.error);
+            return;
+        }
+        sc.allowPasteContent = true;
+        sc.allowPasteRef = true;
     };
 
-    sc.copyPar = function(e, $par) {
-        const doc_par_id = sc.dereferencePar($par);
-
-        http.post("/clipboard/copy/" + doc_par_id[0] + "/" + doc_par_id[1] + "/" + doc_par_id[1], {}).success(function(data, status, headers, config) {
-            sc.allowPasteContent = true;
-            sc.allowPasteRef = true;
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
-        });
-    };
-
-    sc.copyArea = function(e, $par_or_area, override_doc_id, cut) {
-        let ref_doc_id, area_name, area_start, area_end;
+    sc.copyArea = async (e, $parOrArea, overrideDocId, cut) => {
+        let refDocId;
+        let areaName;
+        let areaStart;
+        let areaEnd;
 
         if ($window.editMode === "area") {
-            ref_doc_id = sc.getAreaDocId($par_or_area);
-            area_name = sc.getAreaId($par_or_area);
-            area_start = sc.getFirstParId($par_or_area);
-            area_end = sc.getLastParId($par_or_area);
+            refDocId = getAreaDocId($parOrArea);
+            areaName = sc.getAreaId($parOrArea);
+            areaStart = getFirstParId($parOrArea);
+            areaEnd = getLastParId($parOrArea);
         } else {
-            ref_doc_id = null;
-            area_name = null;
-            area_start = sc.getParId(sc.selection.start);
-            area_end = sc.getParId(sc.selection.end);
+            refDocId = null;
+            areaName = null;
+            areaStart = getParId(sc.selection.start);
+            areaEnd = getParId(sc.selection.end);
         }
 
-        const doc_id = override_doc_id ? override_doc_id : sc.docId;
+        const docId = overrideDocId ? overrideDocId : sc.docId;
 
         if (cut) {
-            http.post("/clipboard/cut/" + doc_id + "/" + area_start + "/" + area_end, {
-                area_name,
-            }).success(function(data, status, headers, config) {
-                sc.selection.start = null;
-                sc.selection.end = null;
+            try {
+                var response = await $http.post<{ doc_ver: any, pars: any[] }>("/clipboard/cut/" + docId + "/" + areaStart + "/" + areaEnd, {
+                    areaName,
+                });
+            } catch (e) {
+                $window.alert(e.data.error);
+                return;
+            }
+            sc.selection.start = null;
+            sc.selection.end = null;
 
-                if (doc_id === sc.docId) {
-                    const doc_ver = data.doc_ver;
-                    const pars = data.pars;
-                    if (pars.length > 0) {
-                        const first_par = pars[0].id;
-                        const last_par = pars[pars.length - 1].id;
-                        sc.handleDelete({version: doc_ver}, {
-                            par: first_par,
-                            area_start: first_par,
-                            area_end: last_par,
-                        });
+            if (docId === sc.docId) {
+                const doc_ver = response.data.doc_ver;
+                const pars = response.data.pars;
+                if (pars.length > 0) {
+                    const firstPar = pars[0].id;
+                    const lastPar = pars[pars.length - 1].id;
+                    sc.handleDelete({version: doc_ver}, {
+                        par: firstPar,
+                        area_start: firstPar,
+                        area_end: lastPar,
+                    });
 
-                        sc.allowPasteContent = true;
-                        sc.allowPasteRef = false;
-                    }
+                    sc.allowPasteContent = true;
+                    sc.allowPasteRef = false;
                 }
-            }).error(function(data, status, headers, config) {
-                $window.alert(data.error);
-            });
+            }
 
         } else {
-            http.post("/clipboard/copy/" + doc_id + "/" + area_start + "/" + area_end, {
-                ref_doc_id,
-                area_name,
-            }).success(function(data, status, headers, config) {
-                sc.selection.start = null;
-                sc.selection.end = null;
-                sc.allowPasteContent = true;
-                sc.allowPasteRef = true;
-            }).error(function(data, status, headers, config) {
-                $window.alert(data.error);
-            });
+            try {
+                await $http.post("/clipboard/copy/" + docId + "/" + areaStart + "/" + areaEnd, {
+                    refDocId,
+                    areaName,
+                });
+            } catch (e) {
+                $window.alert(e.data.error);
+                return;
+            }
+            sc.selection.start = null;
+            sc.selection.end = null;
+            sc.allowPasteContent = true;
+            sc.allowPasteRef = true;
         }
     };
 
-    sc.cutArea = function(e, $par_or_area, cut) {
-        sc.copyArea(e, $par_or_area, sc.docId, true);
+    sc.cutArea = (e, $parOrArea, cut) => {
+        sc.copyArea(e, $parOrArea, sc.docId, true);
     };
 
     sc.allowPasteContent = true;

@@ -17,7 +17,7 @@ export let colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "corn
 /**
  * Angular directive for velp selection
  */
-timApp.directive("velpWindow", function() {
+timApp.directive("velpWindow", function () {
     "use strict";
 
     return {
@@ -39,7 +39,7 @@ timApp.directive("velpWindow", function() {
  * Controller for velp Window
  * @lends module:velpWindow
  */
-timApp.controller("VelpWindowController", ["$scope", function($scope) {
+timApp.controller("VelpWindowController", ["$scope", function ($scope) {
     "use strict";
     $scope.velpLocal = JSON.parse(JSON.stringify($scope.velp)); // clone object
 
@@ -47,13 +47,13 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
     $scope.labelToEdit = {content: "", selected: false, edit: false, valid: true};
 
     $scope.visible_options = {
-                type: "select",
-                title: "Visible to",
-                values: [1, 2, 3, 4],
-                names: ["Just me", "Document owner", "Teachers", "Everyone"],
+        type: "select",
+        title: "Visible to",
+        values: [1, 2, 3, 4],
+        names: ["Just me", "Document owner", "Teachers", "Everyone"],
     };
 
-    if (typeof $scope.velp.visible_to === UNDEFINED){
+    if (typeof $scope.velp.visible_to === UNDEFINED) {
         $scope.velp.visible_to = 4; // Everyone by default
     }
 
@@ -75,25 +75,25 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
 
     $scope.hasEditAccess = false;
 
-    const doc_id = $scope.$parent.docId;
+    const docId = $scope.$parent.docId;
 
     /**
      * Toggles velp for editing. If another velp is currently open,
      * this method closes it.
      */
-    $scope.toggleVelpToEdit = function() {
+    $scope.toggleVelpToEdit = function () {
         const lastEdited = $scope.$parent.getVelpUnderEdit();
 
-        if (lastEdited.edit && lastEdited.id !== $scope.velp.id){
+        if (lastEdited.edit && lastEdited.id !== $scope.velp.id) {
             //if ($scope.new === "true") $scope.$parent.resetNewVelp();
             $scope.$parent.resetEditVelp();
         }
 
         $scope.velp.edit = !$scope.velp.edit;
-        if (!$scope.velp.edit){
+        if (!$scope.velp.edit) {
             $scope.cancelEdit();
         } else {
-            if ($scope.new){
+            if ($scope.new) {
                 $scope.velpLocal = JSON.parse(JSON.stringify($scope.velp));
                 // TODO: focus velp content textarea
             }
@@ -105,12 +105,14 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * Saves velp to database
      * @param form
      */
-    $scope.saveVelp = function(form) {
-        if (!form.$valid) return;
+    $scope.saveVelp = function (form) {
+        if (!form.$valid) {
+            return;
+        }
         form.$setPristine();
         //$scope.submitted = true;
 
-        if ($scope.new === "true"){ // add new velp
+        if ($scope.new === "true") { // add new velp
             $scope.addVelp();
         } else { // edit velp
             editVelp();
@@ -122,12 +124,12 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * Cancel edit and restore velp back to its original version
      * TODO: new velp reset does not work
      */
-    $scope.cancelEdit = function() {
+    $scope.cancelEdit = function () {
         $scope.velp = JSON.parse(JSON.stringify($scope.velpLocal));
         $scope.velp.edit = false;
     };
 
-    $scope.useVelp = function() {
+    $scope.useVelp = function () {
         if (!$scope.velp.edit && !$scope.notAnnotationRights($scope.velp.points)) {
             $scope.$parent.useVelp($scope.velp);
         }
@@ -139,7 +141,7 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * @param points - Points given in velp or annotation
      * @returns {boolean} - Right to make annotations
      */
-    $scope.notAnnotationRights = function(points) {
+    $scope.notAnnotationRights = function (points) {
         if ($scope.$parent.item.rights.teacher) {
             return false;
         } else {
@@ -151,15 +153,18 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
         }
     };
 
-    $scope.isVelpValid = function() {
-        if (typeof $scope.velp.content === UNDEFINED)
+    $scope.isVelpValid = function () {
+        if (typeof $scope.velp.content === UNDEFINED) {
             return false;
-        if (JSON.stringify($scope.velpLocal) === JSON.stringify($scope.velp)) // check if still original
+        }
+        // check if still original
+        if (JSON.stringify($scope.velpLocal) === JSON.stringify($scope.velp)) {
             return false;
-        return $scope.isSomeVelpGroupSelected() && $scope.velp.content.length > 0 ;
+        }
+        return $scope.isSomeVelpGroupSelected() && $scope.velp.content.length > 0;
     };
 
-    $scope.setLabelValid = function(label) {
+    $scope.setLabelValid = function (label) {
         label.valid = label.content.length > 0;
     };
 
@@ -169,7 +174,7 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * @param label - Label to check
      * @returns {boolean} Whether the velp contains the label or not.
      */
-    $scope.isLabelInVelp = function(label) {
+    $scope.isLabelInVelp = function (label) {
         return $scope.velp.labels.indexOf(label.id) >= 0;
     };
 
@@ -179,9 +184,10 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * @param group - Velp group to check
      * @returns {boolean} Whether the velp contains the velp group or not
      */
-    $scope.isGroupInVelp = function(group) {
-        if (typeof $scope.velp.velp_groups === UNDEFINED || typeof group.id === UNDEFINED)
+    $scope.isGroupInVelp = function (group) {
+        if (typeof $scope.velp.velp_groups === UNDEFINED || typeof group.id === UNDEFINED) {
             return false;
+        }
         return $scope.velp.velp_groups.indexOf(group.id) >= 0;
     };
 
@@ -190,13 +196,12 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * @method updateVelpLabels
      * @param label - Label to be added or removed from the velp
      */
-    $scope.updateVelpLabels = function(label) {
+    $scope.updateVelpLabels = function (label) {
 
         const index = $scope.velp.labels.indexOf(label.id);
         if (index < 0) {
             $scope.velp.labels.push(label.id);
-        }
-        else if (index >= 0) {
+        } else if (index >= 0) {
             $scope.velp.labels.splice(index, 1);
         }
     };
@@ -206,12 +211,11 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * @method updateVelpGroups
      * @param group - Group to be added or removed from the velp
      */
-    $scope.updateVelpGroups = function(group) {
+    $scope.updateVelpGroups = function (group) {
         const index = $scope.velp.velp_groups.indexOf(group.id);
         if (index < 0) {
             $scope.velp.velp_groups.push(group.id);
-        }
-        else if (index >= 0) {
+        } else if (index >= 0) {
             $scope.velp.velp_groups.splice(index, 1);
         }
     };
@@ -221,20 +225,23 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * @method isSomeVelpGroupSelected
      * @returns {boolean} Whether velp has any groups selected or not
      */
-    $scope.isSomeVelpGroupSelected = function() {
-        if (typeof $scope.velp.velp_groups === UNDEFINED)
+    $scope.isSomeVelpGroupSelected = function () {
+        if (typeof $scope.velp.velp_groups === UNDEFINED) {
             return false;
+        }
         return $scope.velp.velp_groups.length > 0;
     };
 
-    $scope.isSomeVelpGroupShown = function(){
-        if (typeof $scope.velp.velp_groups === UNDEFINED || $scope.velp.velp_groups.length === 0)
+    $scope.isSomeVelpGroupShown = function () {
+        if (typeof $scope.velp.velp_groups === UNDEFINED || $scope.velp.velp_groups.length === 0) {
             return true;
+        }
 
-        for (let i = 0; i < $scope.velp.velp_groups.length; i++){
-            for (let j = 0; j < $scope.velpGroups.length; j++){
-                if ($scope.velpGroups[j].id === $scope.velp.velp_groups[i] && $scope.velpGroups[j].show)
+        for (let i = 0; i < $scope.velp.velp_groups.length; i++) {
+            for (let j = 0; j < $scope.velpGroups.length; j++) {
+                if ($scope.velpGroups[j].id === $scope.velp.velp_groups[i] && $scope.velpGroups[j].show) {
                     return true;
+                }
             }
         }
         return false;
@@ -244,7 +251,7 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * Adds new label to this velp.
      * @method addLabel
      */
-    $scope.addLabel = function() {
+    $scope.addLabel = function () {
 
         if ($scope.newLabel.content.length < 1) {
             $scope.newLabel.valid = false;
@@ -258,7 +265,7 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
             id: null,
         };
 
-        $scope.$parent.makePostRequest("/add_velp_label", labelToAdd, function(json) {
+        $scope.$parent.makePostRequest("/add_velp_label", labelToAdd, function (json) {
             labelToAdd.id = parseInt(json.data.id);
             $scope.resetNewLabel();
             $scope.labels.push(labelToAdd);
@@ -272,9 +279,9 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * @method toggleLabelToEdit
      * @param label - Label to edit
      */
-    $scope.toggleLabelToEdit = function(label) {
+    $scope.toggleLabelToEdit = function (label) {
 
-        if ($scope.labelToEdit.edit && label.id === $scope.labelToEdit.id){
+        if ($scope.labelToEdit.edit && label.id === $scope.labelToEdit.id) {
             $scope.cancelLabelEdit(label);
             return;
         }
@@ -291,24 +298,27 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
         $scope.setLabelValid($scope.labelToEdit);
     };
 
-    $scope.cancelLabelEdit = function(label) {
+    $scope.cancelLabelEdit = function (label) {
         label.edit = false;
         $scope.labelToEdit = {content: "", selected: false, edit: false, valid: true};
     };
 
-    $scope.clearVelpColor = function() {
+    $scope.clearVelpColor = function () {
         $scope.velp.color = "";
     };
 
-    $scope.isVelpCustomColor = function() {
-        if ($scope.velp.color)
+    $scope.isVelpCustomColor = function () {
+        if ($scope.velp.color) {
             return $scope.velp.color.length === 7; // hex colors are 7 characters long
+        }
         return false;
     };
 
-    const copyLabelToEditLabel = function(label) {
-        for (const key in label){
-            if (!label.hasOwnProperty(key)) continue;
+    const copyLabelToEditLabel = function (label) {
+        for (const key in label) {
+            if (!label.hasOwnProperty(key)) {
+                continue;
+            }
 
             $scope.labelToEdit[key] = label[key];
         }
@@ -321,7 +331,7 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * TODO: This can be simplified
      * @method editLabel
      */
-    $scope.editLabel = function() {
+    $scope.editLabel = function () {
         if ($scope.labelToEdit.content.length < 1) {
             return;
         }
@@ -337,7 +347,7 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
             }
         }
 
-        $scope.$parent.makePostRequest("/update_velp_label", updatedLabel, function(json) {
+        $scope.$parent.makePostRequest("/update_velp_label", updatedLabel, function (json) {
         });
     };
 
@@ -345,7 +355,7 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * Reset new label information to the initial (empty) state.
      * @method resetNewLabel
      */
-    $scope.resetNewLabel = function() {
+    $scope.resetNewLabel = function () {
         $scope.newLabel = {content: "", selected: true, valid: true};
     };
 
@@ -353,11 +363,11 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * Return true if user has teacher rights.
      * @returns {boolean}
      */
-    $scope.allowChangePoints = function() {
+    $scope.allowChangePoints = function () {
         return $scope.$parent.item.rights.teacher;
     };
 
-    const editVelp = function() {
+    const editVelp = function () {
         const default_velp_group = $scope.$parent.getDefaultVelpGroup();
 
         if ($scope.isGroupInVelp(default_velp_group) && default_velp_group.id === -1) {
@@ -367,10 +377,10 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
         }
     };
 
-    const updateVelpInDatabase = function() {
-        $scope.$parent.makePostRequest("/{0}/update_velp".replace("{0}", doc_id), $scope.velp, function(json) {
-                $scope.velpLocal = JSON.parse(JSON.stringify($scope.velp));
-                $scope.toggleVelpToEdit();
+    const updateVelpInDatabase = function () {
+        $scope.$parent.makePostRequest("/{0}/update_velp".replace("{0}", docId), $scope.velp, function (json) {
+            $scope.velpLocal = JSON.parse(JSON.stringify($scope.velp));
+            $scope.toggleVelpToEdit();
         });
     };
 
@@ -378,11 +388,11 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * Adds a new velp on form submit event.
      * @method addVelp
      */
-    $scope.addVelp = function() {
+    $scope.addVelp = function () {
 
-        const default_velp_group = $scope.$parent.getDefaultVelpGroup();
+        const defaultVelpGroup = $scope.$parent.getDefaultVelpGroup();
 
-        if ($scope.isGroupInVelp(default_velp_group) && default_velp_group.id === -1) {
+        if ($scope.isGroupInVelp(defaultVelpGroup) && defaultVelpGroup.id === -1) {
             handleDefaultVelpGroupIssue(addNewVelpToDatabase);
         } else if ($scope.velp.velp_groups.length > 0) {
             addNewVelpToDatabase();
@@ -396,7 +406,7 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * Adds a new velp to the database. Requires values in `$scope.newVelp` variable.
      * @method addNewVelpToDatabase
      */
-    const addNewVelpToDatabase = function() {
+    const addNewVelpToDatabase = function () {
         const velpToAdd = {
             id: null,
             labels: $scope.velp.labels,
@@ -414,7 +424,7 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
 
         //$scope.velp.edit = false;
 
-        $scope.$parent.makePostRequest("/add_velp", velpToAdd, function(json) {
+        $scope.$parent.makePostRequest("/add_velp", velpToAdd, function (json) {
             velpToAdd.id = json.data;
             $scope.$parent.velps.push(velpToAdd);
 
@@ -427,15 +437,15 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
             //$scope.velp =  JSON.parse(JSON.stringify($scope.velpLocal));
             //$scope.velpLocal = JSON.parse(JSON.stringify($scope.velp));
             /*
-            velpToAdd.id = parseInt(json.data);
+             velpToAdd.id = parseInt(json.data);
 
-            $scope.resetNewVelp();
-            $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
+             $scope.resetNewVelp();
+             $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1};
 
-            $scope.velps.push(velpToAdd);
-            $scope.submitted.velp = false;
-            //$scope.resetLabels();
-            */
+             $scope.velps.push(velpToAdd);
+             $scope.submitted.velp = false;
+             //$scope.resetLabels();
+             */
 
         });
 
@@ -445,17 +455,18 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      *
      * @param method - Method to execute after default velp group is created
      */
-    const handleDefaultVelpGroupIssue = function(method) {
+    const handleDefaultVelpGroupIssue = function (method) {
 
-        const old_default_group = $scope.$parent.getDefaultVelpGroup();
+        const oldDefaultGroup = $scope.$parent.getDefaultVelpGroup();
 
-        $scope.$parent.generateDefaultVelpGroup(function(new_default_group) {
-            const oldGroupIndex = $scope.velp.velp_groups.indexOf(old_default_group.id);
-            if (oldGroupIndex >= 0)
+        $scope.$parent.generateDefaultVelpGroup(function (newDefaultGroup) {
+            const oldGroupIndex = $scope.velp.velp_groups.indexOf(oldDefaultGroup.id);
+            if (oldGroupIndex >= 0) {
                 $scope.velp.velp_groups.splice(oldGroupIndex, 1);
+            }
 
-            $scope.velp.velp_groups.push(new_default_group.id);
-            $scope.$parent.setDefaultVelpGroup(new_default_group);
+            $scope.velp.velp_groups.push(newDefaultGroup.id);
+            $scope.$parent.setDefaultVelpGroup(newDefaultGroup);
             method();
         });
 
@@ -467,21 +478,22 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * @param index - Index of the color in the colorPalette variable (modulo by lenght of color palette)
      * @returns {string} String representation of the color
      */
-    $scope.getColor = function(index) {
+    $scope.getColor = function (index) {
         return colorPalette[index % colorPalette.length];
     };
 
-    $scope.getCustomColor = function() {
-        if (typeof $scope.velp.color !== UNDEFINED || $scope.velp.color !== null)
+    $scope.getCustomColor = function () {
+        if (typeof $scope.velp.color !== UNDEFINED || $scope.velp.color !== null) {
             return $scope.velp.color;
+        }
     };
 
     // declare edit rights
     if ($scope.new === "true") {
         $scope.hasEditAccess = true;
     } else {
-        $scope.velpGroups.some(function(g) {
-            if (g.edit_access && $scope.isGroupInVelp(g)){
+        $scope.velpGroups.some(function (g) {
+            if (g.edit_access && $scope.isGroupInVelp(g)) {
                 $scope.hasEditAccess = true;
                 return;
             }

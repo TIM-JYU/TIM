@@ -1,96 +1,145 @@
-
 import $ from "jquery";
-export function defineReadings(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
-    "use strict";
+import {$http, $log, $timeout, $window} from "../../ngimport";
+import {getArea, getParId, getRefAttrs, isReference} from "./parhelpers";
+import {markPageDirty} from "../../utils";
+import {Users} from "../../services/userService";
+import {getActiveDocument} from "./document";
+import {onClick, onMouseOverOut} from "./eventhandlers";
 
-    sc.readingTypes = {
-        onScreen: 1,
-        hoverPar: 2,
-        clickPar: 3,
-        clickRed: 4,
-    };
-    sc.readClasses = {
-        1: "screen",
-        2: "hover",
-        3: "click",
-        4: "read",
-    };
+export const readClasses = {
+    1: "screen",
+    2: "hover",
+    3: "click",
+    4: "read",
+};
 
-    sc.markParsRead = function($pars) {
-        const parIds = $pars.map(function(i, e) {
-            return sc.getParId($(e));
-        }).get();
-        $pars.find(".readline").addClass(sc.readClasses[sc.readingTypes.clickRed]);
-        http.put("/read/" + sc.docId + "/" + "null" + "/" + sc.readingTypes.clickRed, {pars: parIds})
-            .then(function(response) {
-                sc.markPageDirty();
-            }, function(response) {
-                $log.error("Could not save the read markings");
-            });
-    };
+export const readingTypes = {
+    onScreen: 1,
+    hoverPar: 2,
+    clickPar: 3,
+    clickRed: 4,
+};
 
-    sc.markParRead = function($par, readingType) {
-        const $readline = $par.find(".readline");
-        const readClassName = sc.readClasses[readingType];
-        if ($readline.hasClass(readClassName)) {
-            return q.resolve(null);
-        }
+export async function markParRead($par, readingType) {
+    const $readline = $par.find(".readline");
+    const readClassName = readClasses[readingType];
+    if ($readline.hasClass(readClassName)) {
+        return;
+    }
 
-        // If the paragraph is only a preview, ignore it.
-        if ($par.parents(".previewcontent").length > 0 || $par.parents(".csrunPreview").length > 0) {
-            return q.resolve(null);
-        }
-        const par_id = sc.getParId($par);
-        if (par_id === "NEW_PAR" || par_id === null || par_id === "HELP_PAR") {
-            return q.resolve(null);
-        }
-        $readline.addClass(readClassName);
-        let data = {};
-        if (sc.isReference($par)) {
-            data = sc.getRefAttrs($par);
-        }
-        if (!Users.isLoggedIn()) return q.resolve(null);
-        return http.put("/read/" + sc.docId + "/" + par_id + "/" + readingType, data)
-            .then(function(response) {
-                $readline.removeClass(readClassName + "-modified");
-                if (readingType === sc.readingTypes.clickRed) {
-                    sc.markPageDirty();
-                    sc.refreshSectionReadMarks();
-                }
-            }, function(response) {
-                $log.error("Could not save the read marking for paragraph " + par_id);
-                $readline.removeClass(readClassName);
-            });
-    };
+    // If the paragraph is only a preview, ignore it.
+    if ($par.parents(".previewcontent").length > 0 || $par.parents(".csrunPreview").length > 0) {
+        return;
+    }
+    const parId = getParId($par);
+    if (parId === "NEW_PAR" || parId === null || parId === "HELP_PAR") {
+        return;
+    }
+    $readline.addClass(readClassName);
+    let data = {};
+    if (isReference($par)) {
+        data = getRefAttrs($par);
+    }
+    if (!Users.isLoggedIn()) return;
+    try {
+        await $http.put("/read/" + getActiveDocument().id + "/" + parId + "/" + readingType, data);
+    } catch (e) {
+        $log.error("Could not save the read marking for paragraph " + parId);
+        $readline.removeClass(readClassName);
+        return;
+    }
+    $readline.removeClass(readClassName + "-modified");
+    if (readingType === readingTypes.clickRed) {
+        markPageDirty();
+        getActiveDocument().refreshSectionReadMarks();
+    }
+}
 
-    sc.onClick(".readline", function($this, e) {
-        sc.markParRead($this.parents(".par"), sc.readingTypes.clickRed);
-        return true;
-    });
+async function markParsRead($pars) {
+    const parIds = $pars.map((i, e) => {
+        return getParId($(e));
+    }).get();
+    $pars.find(".readline").addClass(readClasses[readingTypes.clickRed]);
+    const doc = getActiveDocument();
+    try {
+        await $http.put("/read/" + doc.id + "/" + "null" + "/" + readingTypes.clickRed, {pars: parIds});
+    } catch (e) {
+        $log.error("Could not save the read markings");
+        return;
+    }
+    markPageDirty();
+}
 
-    sc.onClick(".areareadline", function($this, e) {
+async function markAllAsRead() {
+    const doc = getActiveDocument();
+    try {
+        await $http.put("/read/" + doc.id, {});
+    } catch (e) {
+        $window.alert("Could not mark the document as read.");
+        return;
+    }
+    $(".readline").attr("class", "readline read");
+}
+
+let readPromise = null;
+let readingParId = null;
+
+function queueParagraphForReading() {
+    //noinspection CssInvalidPseudoSelector
+    const visiblePars = $(".par:onScreen").find(".readline").not("." + readClasses[readingTypes.onScreen]);
+    const parToRead = visiblePars.first().parents(".par");
+    const parId = getParId(parToRead);
+
+    if (readPromise !== null && readingParId !== parId) {
+        $timeout.cancel(readPromise);
+    } else if (readingParId === parId) {
+        return;
+    }
+
+    if (parToRead.length === 0) {
+        return;
+    }
+    readingParId = parId;
+    const numWords = parToRead.find(".parContent").text().trim().split(/[\s\n]+/).length;
+    readPromise = $timeout((async () => {
+        await markParRead(parToRead, readingTypes.onScreen);
+        queueParagraphForReading();
+    }) as any, 300 * numWords);
+}
+
+function readlineHandler($this, e) {
+    markParRead($this.parents(".par"), readingTypes.clickRed);
+    return true;
+}
+
+export function initReadings(sc) {
+    onClick(".readline", readlineHandler);
+
+    onClick(".areareadline", function areareadlineHandler($this, e) {
         const oldClass = $this.attr("class");
         $this.attr("class", "readline read");
 
-        if (!Users.isLoggedIn()) return true;
+        if (!Users.isLoggedIn()) {
+            return true;
+        }
 
         // Collapsible area
-        const area_id = $this.parent().attr("data-area");
+        const areaId = $this.parent().attr("data-area");
         $log.info($this);
 
-        http.put("/read/" + sc.docId + "/" + area_id)
-            .success(function(data, status, headers, config) {
-                sc.getArea(area_id).find(".readline").attr("class", "areareadline read");
-                sc.markPageDirty();
-            }).error(function() {
-            $window.alert("Could not save the read marking.");
-            $this.attr("class", oldClass);
-        });
+        $http.put("/read/" + sc.docId + "/" + areaId, {})
+            .then((response) => {
+                getArea(areaId).find(".readline").attr("class", "areareadline read");
+                markPageDirty();
+            }, () => {
+                $window.alert("Could not save the read marking.");
+                $this.attr("class", oldClass);
+            });
 
         return false;
     });
 
-    $.expr[":"].onScreen = function(el) {
+    $.expr[":"].onScreen = function onScreenHandler(el) {
         const rect = el.getBoundingClientRect();
 
         return (
@@ -101,90 +150,33 @@ export function defineReadings(sc, http, q, $injector, $compile, $window, $docum
         );
     };
 
-    sc.jQuery = $;
-    sc.readPromise = null;
-    sc.readingParId = null;
+    $($window).scroll(queueParagraphForReading);
 
-    sc.queueParagraphForReading = function() {
-        //noinspection CssInvalidPseudoSelector
-        const visiblePars = sc.jQuery(".par:onScreen").find(".readline").not("." + sc.readClasses[sc.readingTypes.onScreen]);
-        const parToRead = visiblePars.first().parents(".par");
-        const parId = sc.getParId(parToRead);
+    queueParagraphForReading();
 
-        if (sc.readPromise !== null && sc.readingParId !== parId) {
-            $timeout.cancel(sc.readPromise);
-        } else if (sc.readingParId === parId) {
-            return;
-        }
-
-        if (parToRead.length === 0) {
-            return;
-        }
-        sc.readingParId = parId;
-        const numWords = parToRead.find(".parContent").text().trim().split(/[\s\n]+/).length;
-        sc.readPromise = $timeout(function() {
-            sc.markParRead(parToRead, sc.readingTypes.onScreen).finally(sc.queueParagraphForReading);
-        }, 300 * numWords);
-    };
-
-    $($window).scroll(sc.queueParagraphForReading);
-
-    sc.queueParagraphForReading();
-
-    sc.markAllAsRead = function() {
-        http.put("/read/" + sc.docId)
-            .success(function(data, status, headers, config) {
-                $(".readline").attr("class", "readline read");
-            }).error(function(data, status, headers, config) {
-            $window.alert("Could not mark the document as read.");
-        });
-    };
-
-    /**
-     * Refreshes the section read marks.
-     */
-    sc.refreshSectionReadMarks = function() {
-        $(".readsection").remove();
-        for (const key in sc.sections) {
-            if (sc.sections.hasOwnProperty(key)) {
-                const sectionPars = sc.sections[key];
-                const readlines = sectionPars.children(".readline");
-                const modifiedCount = readlines.filter(".read-modified").not(".read").length;
-                const unreadCount = readlines.not(".read-modified").not(".read").length;
-                if (modifiedCount + unreadCount > 0) {
-                    sectionPars.last().append($("<div>", {
-                        class: "readsection",
-                        title: "Mark preceding section as read (" +
-                        sectionPars.length + " paragraphs - " + unreadCount +
-                        " unread, " + modifiedCount + " modified)",
-                    }).html('<i class="glyphicon glyphicon-align-left"></i><i class="glyphicon glyphicon-ok"></i>'));
-                }
-            }
-        }
-    };
-
-    sc.onClick(".readsection", function($readsection, e) {
+    onClick(".readsection", function readSectionHandler($readsection, e) {
+        const doc = getActiveDocument();
         const $par = $readsection.parents(".par");
-        const $pars = sc.sections[sc.getParId($par)];
+        const $pars = doc.sections[getParId($par)];
         if ($par.length === 0) {
             $window.alert("Unable to mark this section as read");
             return;
         }
-        sc.markParsRead($pars);
+        markParsRead($pars);
         $readsection.remove();
     });
 
-    sc.onMouseOverOut(".par", function($this, e, select) {
+    onMouseOverOut(".par", function mouseOverHandler($this, e, select) {
         if (select) {
-            sc.markParRead($this, sc.readingTypes.hoverPar);
+            markParRead($this, readingTypes.hoverPar);
         }
     });
 
     if (Users.isLoggedIn()) {
-        $timeout(function() {
-            http.post("/bookmarks/markLastRead/" + sc.docId, {}).then(function() {
+        $timeout(() => {
+            $http.post("/bookmarks/markLastRead/" + sc.docId, {}).then(() => {
                 // all ok
-            }, function() {
+            }, () => {
                 $log.error("Failed to mark document as last read");
             });
         }, 10000);

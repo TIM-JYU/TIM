@@ -1,9 +1,10 @@
 
 import {timApp} from "tim/app";
+import {$http} from "../ngimport";
 /**
  * A reference popup window directive that is used in the document view.
  */
-timApp.directive("refPopup", ["$window", "$filter", "$http", function($window, $filter, $http) {
+timApp.directive("refPopup", [function() {
     return {
         restrict: "E",
         scope: true, // we need functions from parent scope

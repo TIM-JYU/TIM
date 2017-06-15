@@ -1,6 +1,8 @@
 
 import {timApp} from "tim/app";
-timApp.controller("Breadcrumbs", ["$scope", "$window", function(sc, $window) {
+import {$window} from "../ngimport";
+
+timApp.controller("Breadcrumbs", ["$scope", function(sc) {
     "use strict";
     sc.crumbs = $window.breadcrumbs;
     sc.item = $window.item;

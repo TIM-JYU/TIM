@@ -2226,8 +2226,6 @@ csApp.Controller = function($scope,$transclude) {
             var html = $compile(s)($scope as any)
             $previewDiv.empty().append(html);
 
-            //MathJax.Hub.Queue(["Typeset", MathJax.Hub, $previewDiv[0]]);
-            // $scope.$parent.processAllMath($previewDiv[0]);
             ParCompiler.processAllMath($previewDiv);
             //$scope.outofdate = false;
             //$scope.parCount = len;

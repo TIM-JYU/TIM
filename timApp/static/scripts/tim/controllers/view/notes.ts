@@ -1,10 +1,15 @@
 import angular from "angular";
 import $ from "jquery";
+import {$compile, $window} from "../../ngimport";
+import {getFirstPar, getFirstParId} from "./parhelpers";
+import {onClick} from "./eventhandlers";
+import {markParRead, readingTypes} from "./readings";
+import {getElementParent} from "../../utils";
 
-export function defineNotes(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+export function defineNotes(sc) {
     "use strict";
 
-    sc.toggleNoteEditor = function($par_or_area, options) {
+    sc.toggleNoteEditor = function($parOrArea, options) {
         let caption = "Edit comment";
         const touch = typeof("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
         const mobile = touch && (window.screen.width < 1200);
@@ -29,8 +34,8 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
             data = {};
             initUrl = "/note/" + options.noteData.id;
         }
-        const $par = sc.getFirstPar($par_or_area);
-        const par_id = sc.getFirstParId($par_or_area),
+        const $par = getFirstPar($parOrArea);
+        const par_id = getFirstParId($parOrArea),
             attrs = {
                 "save-url": url,
                 "extra-data": angular.extend({
@@ -90,7 +95,7 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
         sc.toggleNoteEditor($par, {isNew: true});
     };
 
-    sc.onClick(".note", function($this, e) {
+    onClick(".note", function($this, e) {
         if (!$this.hasClass("editable")) {
             return false;
         }
@@ -152,7 +157,7 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
         if ($par.parents(".previewcontent").length > 0) {
             return;
         }
-        sc.markParRead($par, sc.readingTypes.clickPar);
+        markParRead($par, readingTypes.clickPar);
         const newElement = $par[0];
         if (!newElement) return null;
         sc.addElementToParagraphMargin(newElement, sc.createNoteBadge($par));
@@ -165,7 +170,7 @@ export function defineNotes(sc, http, q, $injector, $compile, $window, $document
     sc.clearNoteBadge = function(e) {
         const btn = sc.noteBadge;
         if (btn) {
-            const parent = sc.getElementParent(btn);
+            const parent = getElementParent(btn);
             if (parent) parent.removeChild(btn);
         }
 

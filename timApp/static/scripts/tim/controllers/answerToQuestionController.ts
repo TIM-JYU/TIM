@@ -1,6 +1,7 @@
 import {timApp} from "tim/app";
 import * as answerSheet from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed} from "tim/utils";
+import {$http, $rootScope} from "../ngimport";
 
 markAsUsed(answerSheet);
 
@@ -17,7 +18,7 @@ markAsUsed(answerSheet);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("AnswerToQuestionController", ["$scope", "$rootScope", "$http", function($scope, $rootScope, $http) {
+timApp.controller("AnswerToQuestionController", ["$scope", function($scope) {
     "use strict";
     $scope.questionHeaders = [];
     $scope.answerTypes = [];
@@ -40,7 +41,9 @@ timApp.controller("AnswerToQuestionController", ["$scope", "$rootScope", "$http"
         $scope.answered = false;
         $scope.buttonText = $scope.markup.button || $scope.markup.buttonText || "Answer";
         $scope.dynamicAnswerSheetControl.createAnswer($scope);
-        if ( args.isAsking ) $scope.isAsking = true;
+        if ( args.isAsking ) {
+            $scope.isAsking = true;
+        }
     });
 
     /**
@@ -60,8 +63,12 @@ timApp.controller("AnswerToQuestionController", ["$scope", "$rootScope", "$http"
      * @memberof module:answerToQuestionController
      */
     $scope.close = function(callback) {
-        if ($scope.isLecturer) $scope.stopQuestion(callback);
-        if ($scope.result) $scope.$emit("pointsClosed", $scope.askedId);
+        if ($scope.isLecturer) {
+            $scope.stopQuestion(callback);
+        }
+        if ($scope.result) {
+            $scope.$emit("pointsClosed", $scope.askedId);
+        }
         $scope.dynamicAnswerSheetControl.closeQuestion();
     };
 
@@ -74,14 +81,15 @@ timApp.controller("AnswerToQuestionController", ["$scope", "$rootScope", "$http"
                 lecture_id: $scope.lectureId,
             },
         })
-            .success(function() {
+            .then(function() {
                 $scope.$emit("questionStopped");
                 $scope.questionEnded = true;
                 $scope.dynamicAnswerSheetControl.endQuestion();
                 console.log("Question ", $scope.askedId, " stopped");
-                if (callback) callback();
-            })
-            .error(function() {
+                if (callback) {
+                    callback();
+                }
+            }, function() {
                 console.log("Failed to stop question");
             });
     };
@@ -102,28 +110,27 @@ timApp.controller("AnswerToQuestionController", ["$scope", "$rootScope", "$http"
     };
 
     $scope.edit = function() {
-        $http({
+        $http<{ json: string, points }>({
             url: "/getAskedQuestionById",
             method: "GET",
             params: {asked_id: $scope.askedId},
         })
-            .success(function(data) {
-                let markup = JSON.parse(data.json);
+            .then(function(response) {
+                let markup = JSON.parse(response.data.json);
                 if (!markup.json) markup = {json: markup}; // compability for old
-                markup.points = data.points;
+                markup.points = response.data.points;
                 $rootScope.$broadcast("changeQuestionTitle", {questionTitle: markup.questionTitle});
                 $rootScope.$broadcast("editQuestion", {
                     asked_id: $scope.askedId,
                     markup,
                 });
-            })
-            .error(function() {
+            }, function() {
                 console.log("There was some error getting question.");
             });
     };
 
     $scope.showPoints = function() {
-        $http({
+        $http<{ points, expl? }>({
             url: "/showAnswerPoints",
             method: "POST",
             params: {
@@ -132,14 +139,13 @@ timApp.controller("AnswerToQuestionController", ["$scope", "$rootScope", "$http"
                 current_question_id: $scope.askedId,
             },
         })
-            .success(function(answer) {
+            .then(function(response) {
                 $scope.current_points_id = $scope.askedId;
                 $scope.result = true;
-                $scope.points = answer.points;
-                if (answer.expl) $scope.expl = JSON.parse(answer.expl);
+                $scope.points = response.data.points;
+                if (response.data.expl) $scope.expl = JSON.parse(response.data.expl);
                 $scope.dynamicAnswerSheetControl.createAnswer($scope);
-            })
-            .error(function() {
+            }, function() {
                 console.log("Could not show points to students.");
             });
     };

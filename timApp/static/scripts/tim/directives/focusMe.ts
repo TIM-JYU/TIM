@@ -1,6 +1,8 @@
 // from https://stackoverflow.com/a/14837021
 import {timApp} from "tim/app";
-timApp.directive("focusMe", ["$timeout", "$parse", function($timeout, $parse) {
+import {$parse, $timeout} from "../ngimport";
+
+timApp.directive("focusMe", [function() {
     "use strict";
     return {
         link(scope, element, attrs) {

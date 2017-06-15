@@ -1,69 +1,67 @@
-
 import $ from "jquery";
 import * as nameArea from "tim/directives/nameArea";
 import {markAsUsed} from "tim/utils";
+import {$compile, $http, $timeout, $window} from "../../ngimport";
+import {getArea, getFirstParId, getLastParId} from "./parhelpers";
+import {onClick, onMouseOverOut} from "./eventhandlers";
+import {closeOptionsWindow} from "./parmenu";
 
 markAsUsed(nameArea);
 
-export function defineAreas(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+function selectArea(areaName, className, selected) {
+    const $selection = $(".area.area_" + areaName).children(className);
+    if (selected) {
+        $selection.addClass("manualhover");
+    } else {
+        $selection.removeClass("manualhover");
+    }
+}
 
-    sc.onMouseOverOut(".areaeditline1", function($this, e, select) {
+export function defineAreas(sc) {
+    onMouseOverOut(".areaeditline1", ($this, e, select) => {
         const areaName = $this.attr("data-area");
-        sc.selectArea(areaName, ".areaeditline1", select);
+        selectArea(areaName, ".areaeditline1", select);
     });
 
-    sc.onMouseOverOut(".areaeditline2", function($this, e, select) {
+    onMouseOverOut(".areaeditline2", ($this, e, select) => {
         const areaName = $this.attr("data-area");
-        sc.selectArea(areaName, ".areaeditline2", select);
+        selectArea(areaName, ".areaeditline2", select);
     });
 
-    sc.onMouseOverOut(".areaeditline3", function($this, e, select) {
+    onMouseOverOut(".areaeditline3", ($this, e, select) => {
         const areaName = $this.attr("data-area");
-        sc.selectArea(areaName, ".areaeditline3", select);
+        selectArea(areaName, ".areaeditline3", select);
     });
 
-    sc.onClick(".areaeditline1", function($this, e) {
-        return sc.onAreaEditClicked($this, e, ".areaeditline1");
-    });
+    onClick(".areaeditline1", ($this, e) => sc.onAreaEditClicked($this, e, ".areaeditline1"));
 
-    sc.onClick(".areaeditline2", function($this, e) {
-        return sc.onAreaEditClicked($this, e, ".areaeditline2");
-    });
+    onClick(".areaeditline2", ($this, e) => sc.onAreaEditClicked($this, e, ".areaeditline2"));
 
-    sc.onClick(".areaeditline3", function($this, e) {
-        return sc.onAreaEditClicked($this, e, ".areaeditline3");
-    });
+    onClick(".areaeditline3", ($this, e) => sc.onAreaEditClicked($this, e, ".areaeditline3"));
 
-    sc.selectArea = function(areaName, className, selected) {
-        const $selection = $(".area.area_" + areaName).children(className);
-        if (selected)
-            $selection.addClass("manualhover");
-        else
-            $selection.removeClass("manualhover");
-    };
-
-    sc.onAreaEditClicked = function($this, e, className) {
-        sc.closeOptionsWindow();
+    sc.onAreaEditClicked = ($this, e, className) => {
+        closeOptionsWindow();
         const areaName = $this.attr("data-area");
-        const $pars = sc.getArea(areaName).find(".par");
-        const $area_part = $this.parent().filter(".area");
-        const coords = {left: e.pageX - $area_part.offset().left, top: e.pageY - $area_part.offset().top};
+        const $pars = getArea(areaName).find(".par");
+        const $areaPart = $this.parent().filter(".area");
+        const coords = {left: e.pageX - $areaPart.offset().left, top: e.pageY - $areaPart.offset().top};
 
         sc.selectedAreaName = areaName;
         $(".area.area_" + areaName).children(className).addClass("menuopen");
 
         // We need the timeout so we don't trigger the ng-clicks on the buttons
-        $timeout(function() {
-            sc.showAreaOptionsWindow(e, $area_part, $pars, coords);
+        $timeout(() => {
+            sc.showAreaOptionsWindow(e, $areaPart, $pars, coords);
         }, 80);
         return false;
     };
 
-    sc.onClick(".areaexpand, .areacollapse", function($this, e) {
+    onClick(".areaexpand, .areacollapse", ($this, e) => {
         if ($(e.target).hasClass("areareadline") ||
             $(e.target).hasClass("readline") ||
-            $(e.target).hasClass("editline"))
+            $(e.target).hasClass("editline")) {
             return;
+        }
         let expanding = true;
         let newClass = "areacollapse";
         if ($this.hasClass("areacollapse")) {
@@ -71,32 +69,32 @@ export function defineAreas(sc, http, q, $injector, $compile, $window, $document
             newClass = "areaexpand";
         }
         $this.removeClass("areaexpand areacollapse");
-        const area_name = $this.attr("data-area");
+        const areaName = $this.attr("data-area");
         const toggle = $this.children(".areatoggle");
         toggle.attr("class", "");
         if (expanding) {
-            sc.getArea(area_name).removeClass("collapsed");
-            $(".areawidget_" + area_name).removeClass("collapsed");
+            getArea(areaName).removeClass("collapsed");
+            $(".areawidget_" + areaName).removeClass("collapsed");
             toggle.attr("class", "areatoggle glyphicon glyphicon-minus");
         } else {
-            sc.getArea(area_name).addClass("collapsed");
-            $(".areawidget_" + area_name).addClass("collapsed");
+            getArea(areaName).addClass("collapsed");
+            $(".areawidget_" + areaName).addClass("collapsed");
             toggle.attr("class", "areatoggle glyphicon glyphicon-plus");
         }
 
         $this.addClass(newClass);
     });
 
-    sc.showAreaOptionsWindow = function(e, $area, $pars, coords) {
+    sc.showAreaOptionsWindow = (e, $area, $pars, coords) => {
         sc.updateClipboardStatus();
         sc.showPopupMenu(e, $pars, coords, sc.popupMenuAttrs, $area, "area");
     };
 
-    sc.startArea = function(e, $par) {
+    sc.startArea = (e, $par) => {
         sc.extendSelection($par);
     };
 
-    sc.nameArea = function(e, $pars) {
+    sc.nameArea = (e, $pars) => {
         let $newArea = $('<div class="area" id="newarea" />');
         $newArea.attr("data-doc-id", sc.docId);
         sc.selection.pars.wrapAll($newArea);
@@ -111,45 +109,45 @@ export function defineAreas(sc, http, q, $injector, $compile, $window, $document
         $compile($popup[0])(sc);
     };
 
-    sc.nameAreaOk = function($area, areaName, options) {
+    sc.nameAreaOk = async ($area, areaName, options) => {
         $area.attr("data-name", areaName);
 
-        http.post("/name_area/" + sc.docId + "/" + areaName, {
-            area_start: sc.getFirstParId($area.first()),
-            area_end: sc.getLastParId($area.last()),
-            options,
-        }).success(function(data, status, headers, config) {
+        try {
+            await $http.post("/name_area/" + sc.docId + "/" + areaName, {
+                area_start: getFirstParId($area.first()),
+                area_end: getLastParId($area.last()),
+                options,
+            });
             //$area.children().wrapAll('<div class="areaContent">');
             //$area.append('<div class="areaeditline1">');
-
             //if (options.collapsible)
             sc.reload();
-
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
+        } catch (e) {
+            $window.alert(e.data.error);
             sc.nameAreaCancel($area);
-        });
+        }
     };
 
-    sc.nameAreaCancel = function($area) {
+    sc.nameAreaCancel = ($area) => {
         $area.children().unwrap();
     };
 
-    sc.cancelArea = function(e, $par) {
+    sc.cancelArea = (e, $par) => {
         sc.selection.start = null;
         sc.selection.end = null;
     };
 
-    sc.removeAreaMarking = function(e, $pars) {
-        const area_name = sc.selectedAreaName;
-        if (!area_name) {
+    sc.removeAreaMarking = async (e, $pars) => {
+        const areaName = sc.selectedAreaName;
+        if (!areaName) {
             $window.alert("Could not get area name");
         }
 
-        http.post("/unwrap_area/" + sc.docId + "/" + area_name, {}).success(function(data, status, headers, config) {
+        try {
+            await $http.post("/unwrap_area/" + sc.docId + "/" + areaName, {});
             sc.reload();
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
-        });
+        } catch (e) {
+            $window.alert(e.data.error);
+        }
     };
 }

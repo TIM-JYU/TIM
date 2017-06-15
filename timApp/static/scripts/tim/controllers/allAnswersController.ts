@@ -1,8 +1,10 @@
 
 import moment from "moment";
 import {timApp} from "tim/app";
-timApp.controller("AllAnswersCtrl", ["$uibModalInstance", "$window", "$httpParamSerializer", "$localStorage", "$http", "$log", "options",
-    function($uibModalInstance, $window, $httpParamSerializer, $localStorage, $http, $log, options) {
+import {$http, $httpParamSerializer, $localStorage, $log, $window} from "../ngimport";
+
+timApp.controller("AllAnswersCtrl", ["$uibModalInstance", "options",
+    function($uibModalInstance, options) {
         "use strict";
         moment.locale("en", {
             week: {dow: 1, doy: 4}, // set Monday as the first day of the week
@@ -49,7 +51,7 @@ timApp.controller("AllAnswersCtrl", ["$uibModalInstance", "$window", "$httpParam
         };
 
         $ctrl.lastFetch = null;
-        $http.get("/settings/get/last_answer_fetch").then(function(response) {
+        $http.get<{ last_answer_fetch }>("/settings/get/last_answer_fetch").then(function(response) {
             if (response.data.last_answer_fetch) {
                 $ctrl.lastFetch = response.data.last_answer_fetch[options.identifier];
                 if (!$ctrl.lastFetch) {

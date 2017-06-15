@@ -2,12 +2,13 @@
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {watchEditMode} from "tim/editmode";
+import {$http, $window} from "../ngimport";
 /**
  * A popup menu directive that is used in the document view.
  * Requires a paragraph (element with class "par") or
  * an area (element with a class "area") as its ancestor.
  */
-timApp.directive("popupMenu", ["$http", "$window", "$filter", function($http, $window, $filter) {
+timApp.directive("popupMenu", [function() {
     "use strict";
     return {
         restrict: "E",
@@ -24,17 +25,22 @@ timApp.directive("popupMenu", ["$http", "$window", "$filter", function($http, $w
             $scope.editContext = null;
 
             $scope.getContent($attrs.contenturl);
-            if ($attrs.save)
+            if ($attrs.save) {
                 $scope.storageAttribute = "$scope.$storage." + $attrs.save;
-            if ($attrs.onclose)
+            }
+            if ($attrs.onclose) {
                 $scope.onClose = eval("$scope." + $attrs.onclose);
+            }
 
-            if ($attrs.editcontext)
+            if ($attrs.editcontext) {
                 $scope.editContext = $attrs.editcontext;
-            if ($attrs.editbutton)
+            }
+            if ($attrs.editbutton) {
                 $scope.editButton = eval($attrs.editbutton);
-            if ($attrs.areaeditbutton)
+            }
+            if ($attrs.areaeditbutton) {
                 $scope.areaEditButton = eval($attrs.areaeditbutton);
+            }
 
             $scope.colClass = $scope.storageAttribute ? "col-xs-10" : "col-xs-12";
             $scope.halfColClass = $scope.storageAttribute ? "col-xs-5" : "col-xs-6";
@@ -54,8 +60,9 @@ timApp.directive("popupMenu", ["$http", "$window", "$filter", function($http, $w
                 $scope.$destroy();
                 $element.remove();
 
-                if ($scope.onClose)
+                if ($scope.onClose) {
                     $scope.onClose($scope.$pars);
+                }
             };
 
             /**
@@ -69,17 +76,20 @@ timApp.directive("popupMenu", ["$http", "$window", "$filter", function($http, $w
             };
 
             $scope.getChecked = function(fDesc) {
-                if (fDesc === null || $scope.$storage.defaultAction === null)
+                if (fDesc === null || $scope.$storage.defaultAction === null) {
                     return "";
+                }
 
                 return fDesc === $scope.$storage.defaultAction ? "checked" : "";
             };
 
             $scope.clicked = function(fDesc) {
-                if (eval($scope.storageAttribute) === fDesc)
+                if (eval($scope.storageAttribute) === fDesc) {
                     eval($scope.storageAttribute + " = null;");
-                else
+                }
+                else {
                     eval($scope.storageAttribute + " = fDesc;");
+                }
             };
 
             $scope.getContent = function(contentUrl) {
@@ -88,11 +98,11 @@ timApp.directive("popupMenu", ["$http", "$window", "$filter", function($http, $w
                     return;
                 }
 
-                $http.get(contentUrl, {},
-                ).success(function(data, status, headers, config) {
+                $http.get<{ texts }>(contentUrl, {},
+                ).then(function(response) {
                     //$scope.content = data.texts;
-                    $("#content").append(data.texts);
-                }).error(function() {
+                    $("#content").append(response.data.texts);
+                }, function() {
                     $window.alert("Error occurred when getting contents.");
                 });
             };

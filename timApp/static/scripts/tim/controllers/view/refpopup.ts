@@ -1,13 +1,15 @@
 import $ from "jquery";
 import * as refPopup from "tim/directives/refPopup";
 import {markAsUsed} from "tim/utils";
+import {$compile} from "../../ngimport";
+import {onMouseOut, onMouseOver} from "./eventhandlers";
 
 markAsUsed(refPopup);
 
-export function defineRefPopup(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+export function defineRefPopup(sc) {
     "use strict";
 
-    sc.onMouseOver(".parlink", function($this, e) {
+    onMouseOver(".parlink", function($this, e) {
         sc.over_reflink = true;
 
         const $par = $this.parents(".par").find(".parContent");
@@ -27,16 +29,16 @@ export function defineRefPopup(sc, http, q, $injector, $compile, $window, $docum
         sc.showRefPopup(e, $this, coords, params);
     });
 
-    sc.onMouseOver(".ref-popup", function($this, e) {
+    onMouseOver(".ref-popup", function($this, e) {
         sc.over_popup = true;
     });
 
-    sc.onMouseOut(".ref-popup", function($this, e) {
+    onMouseOut(".ref-popup", function($this, e) {
         sc.over_popup = false;
         sc.hideRefPopup();
     });
 
-    sc.onMouseOut(".parlink", function($this, e) {
+    onMouseOut(".parlink", function($this, e) {
         sc.over_reflink = false;
         sc.hideRefPopup();
     });
@@ -57,8 +59,9 @@ export function defineRefPopup(sc, http, q, $injector, $compile, $window, $docum
     };
 
     sc.hideRefPopup = function() {
-        if (sc.over_reflink || sc.over_popup)
+        if (sc.over_reflink || sc.over_popup) {
             return;
+        }
 
         $(".refPopup").remove();
     };

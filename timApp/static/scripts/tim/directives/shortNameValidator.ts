@@ -1,6 +1,7 @@
 import {timApp} from "tim/app";
+import {slugify} from "../services/slugify";
 
-timApp.directive("timShortName", ["Slugify", function(Slugify) {
+timApp.directive("timShortName", [function() {
     "use strict";
     return {
         require: "?ngModel",
@@ -10,14 +11,14 @@ timApp.directive("timShortName", ["Slugify", function(Slugify) {
                     if (ctrl.$isEmpty(modelValue)) {
                         return true;
                     }
-                    return viewValue.toLowerCase() === Slugify.slugify(viewValue);
+                    return viewValue.toLowerCase() === slugify(viewValue);
                 };
             }
         },
     };
 }]);
 
-timApp.directive("timLocation", ["Slugify", function(Slugify) {
+timApp.directive("timLocation", [function() {
     "use strict";
     return {
         require: "?ngModel",
@@ -28,7 +29,7 @@ timApp.directive("timLocation", ["Slugify", function(Slugify) {
                         return true;
                     }
                     viewValue = viewValue.replace(/\//g, "");
-                    return viewValue.toLowerCase() === Slugify.slugify(viewValue);
+                    return viewValue.toLowerCase() === slugify(viewValue);
                 };
             }
         },

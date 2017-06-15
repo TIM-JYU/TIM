@@ -1,9 +1,10 @@
 import {timApp} from "tim/app";
+import {$http, $timeout, $upload, $window} from "../ngimport";
 
 // Controller used in document index and folders
-timApp.controller("IndexCtrl", [ "$scope", "$controller", "$http", "$q", "Upload", "$window", "$timeout",
+timApp.controller("IndexCtrl", [ "$scope",
 
-function(sc, controller, http, q, Upload, $window, $timeout) {
+function(sc) {
     "use strict";
     sc.endsWith = function(str, suffix) {
         return str.indexOf(suffix, str.length - suffix.length) !== -1;
@@ -17,40 +18,40 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
     };
 
     sc.copyDocument = function(docId, templateName) {
-        http.post("/update/" + docId, {
+        $http.post("/update/" + docId, {
             template_name : templateName,
-        }).success(function(data, status, headers, config) {
+        }).then(function(response) {
             $window.location.reload();
-        }).error(function(data, status, headers, config) {
-            $window.alert(data.error);
+        }, function(response) {
+            $window.alert(response.data.error);
         });
     };
 
     sc.getItems = function() {
-       http({
+       $http({
             method : "GET",
             url : "/getItems",
             params: {
                 folder: sc.item.location,
             },
-        }).success(function(data, status, headers, config) {
-            sc.itemList = data;
-        }).error(function(data, status, headers, config) {
+        }).then(function(response) {
+            sc.itemList = response.data;
+        }, function(response) {
             sc.itemList = [];
             // TODO: Show some error message.
         });
     };
 
     sc.getTemplates = function() {
-       http({
+       $http({
             method : "GET",
             url : "/getTemplates",
             params: {
                 item_path: sc.item.path,
             },
-        }).success(function(data, status, headers, config) {
-            sc.templateList = data;
-        }).error(function(data, status, headers, config) {
+        }).then(function(response) {
+            sc.templateList = response.data;
+        }, function(response) {
             // TODO: Show some error message.
         });
     };
@@ -62,8 +63,7 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
     sc.item = $window.item;
     sc.templateList = [];
     sc.templates = $window.templates;
-    if (sc.templates)
-    {
+    if (sc.templates) {
         sc.getTemplates();
     }
 
@@ -71,12 +71,13 @@ function(sc, controller, http, q, Upload, $window, $timeout) {
         sc.file = file;
         if (file) {
             sc.file.progress = 0;
-            file.upload = Upload.upload({
+            file.upload = $upload.upload({
                 url: "/upload/",
                 data: {
                     file,
                     folder: sc.item.location,
                 },
+                method: "POST",
             });
 
             file.upload.then(function(response) {

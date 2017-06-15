@@ -1,6 +1,9 @@
 
 import $ from "jquery";
-export function defineQuestions(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
+import {$http, $log, $rootScope, $window} from "../../ngimport";
+import {getElementByParId, getParId} from "./parhelpers";
+import {onClick} from "./eventhandlers";
+export function defineQuestions(sc) {
     "use strict";
 
     if (sc.lectureMode) {
@@ -15,26 +18,23 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
         sc.markup.json = "No data";
         sc.qId = questionId;
 
-        http({
+        $http<{ questionjson: string, points: any, expl: string }>({
             url: "/getQuestionById",
             method: "GET",
             params: {question_id: sc.qId},
-        })
-            .success(function(data) {
-                sc.markup.json = JSON.parse(data.questionjson);
-                sc.markup.points = data.points;
-                sc.markup.expl = data.expl;
-                $rootScope.$broadcast("changeQuestionTitle", {questionTitle: sc.json.questionTitle});
-                $rootScope.$broadcast("setPreviewJson", {
-                    markup: sc.markup,
-                    questionId: sc.qId,
-                    isLecturer: sc.isLecturer,
-                });
-            })
-
-            .error(function() {
-                $log.error("There was some error creating question to database.");
+        }).then(function (response) {
+            sc.markup.json = JSON.parse(response.data.questionjson);
+            sc.markup.points = response.data.points;
+            sc.markup.expl = response.data.expl;
+            $rootScope.$broadcast("changeQuestionTitle", {questionTitle: sc.json.questionTitle});
+            $rootScope.$broadcast("setPreviewJson", {
+                markup: sc.markup,
+                questionId: sc.qId,
+                isLecturer: sc.isLecturer,
             });
+        }, function () {
+            $log.error("There was some error creating question to database.");
+        });
 
         sc.lectureId = -1;
         sc.inLecture = false;
@@ -58,25 +58,22 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
         sc.questionParId = parId;
         sc.questionParIdNext = parIdNext;
 
-        http({
+        $http<{ markup: string }>({
             url: "/getQuestionByParId",
             method: "GET",
             params: {par_id: sc.questionParId, doc_id: sc.docId},
-        })
-            .success(function(data) {
-                sc.markup = data.markup;
-                $rootScope.$broadcast("changeQuestionTitle", {questionTitle: sc.markup.json.questionTitle});
-                $rootScope.$broadcast("setPreviewJson", {
-                    markup: sc.markup,
-                    questionParId: sc.questionParId,
-                    questionParIdNext: sc.questionParIdNext,
-                    isLecturer: sc.isLecturer,
-                });
-            })
-
-            .error(function() {
-                $log.error("Could not get question.");
+        }).then(function (response) {
+            sc.markup = response.data.markup;
+            $rootScope.$broadcast("changeQuestionTitle", {questionTitle: sc.markup.json.questionTitle});
+            $rootScope.$broadcast("setPreviewJson", {
+                markup: sc.markup,
+                questionParId: sc.questionParId,
+                questionParIdNext: sc.questionParIdNext,
+                isLecturer: sc.isLecturer,
             });
+        }, function () {
+            $log.error("Could not get question.");
+        });
 
         sc.lectureId = -1;
         sc.inLecture = false;
@@ -97,8 +94,8 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
     sc.addQuestionQst = function(e, $par) {
-        const parId = sc.getParId($par);
-        const parNextId = parId; // sc.getParId($par.next());
+        const parId = getParId($par);
+        const parNextId = parId; // getParId($par.next());
         const $newpar = sc.createNewPar();
         $par.before($newpar);
         $rootScope.$broadcast("toggleQuestion");
@@ -106,41 +103,41 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
         sc.par = $par;
     };
 
-    sc.editQst = function(e, $par) {
-        const parId = sc.getParId($par);
-        const parNextId = sc.getParId($par.next());
-        // $rootScope.$broadcast('toggleQuestion');
-        http({
-            url: "/getQuestionByParId",
-            method: "GET",
-            params: {par_id: parId, doc_id: sc.docId, edit: true},
-        })
-            .success(function(data) {
-                if ( !data.markup ) return; // not a question
-                sc.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
-                sc.markup = data.markup;
-                // data.markup.qst = true;
-                $rootScope.$broadcast("changeQuestionTitle", {questionTitle: sc.json.questionTitle});
-                $rootScope.$broadcast("editQuestion", {
-                    par_id: parId,
-                    par_id_next: parNextId,
-                    markup: data.markup,
-                });
-
-            })
-
-            .error(function() {
-                $log.error("Could not get question.");
-            });
-
+    sc.editQst = async function(e, $par) {
+        const parId = getParId($par);
+        const parNextId = getParId($par.next());
         sc.par = $par;
+        // $rootScope.$broadcast('toggleQuestion');
+        try {
+            var response = await $http<{ markup: {json: string} }>({
+                url: "/getQuestionByParId",
+                method: "GET",
+                params: {par_id: parId, doc_id: sc.docId, edit: true},
+            });
+        } catch (e) {
+            $log.error("Could not get question.");
+            return;
+        }
+        const data = response.data;
+        if (!data.markup) {
+            return; // not a question
+        }
+        sc.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
+        sc.markup = data.markup;
+        // data.markup.qst = true;
+        $rootScope.$broadcast("changeQuestionTitle", {questionTitle: sc.json.questionTitle});
+        $rootScope.$broadcast("editQuestion", {
+            par_id: parId,
+            par_id_next: parNextId,
+            markup: data.markup,
+        });
     };
 
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
     sc.addQuestion = function(e, $par) {
-        const parId = sc.getParId($par);
-        const parNextId = sc.getParId($par.next());
+        const parId = getParId($par);
+        const parNextId = getParId($par.next());
         const $newpar = sc.createNewPar();
         $par.after($newpar);
         $rootScope.$broadcast("toggleQuestion");
@@ -148,18 +145,18 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
         sc.par = $par;
     };
 
-    sc.onClick(".questionAdded", function($this, e) {
+    onClick(".questionAdded", function($this, e) {
         const question = $this;
         const questionId = question[0].getAttribute("id");
         sc.showQuestion(questionId);
         sc.par = ($(question).parent().parent());
     });
 
-    sc.onClick(".questionAddedNew", function($this, e) {
+    onClick(".questionAddedNew", function($this, e) {
         const question = $this;
         const $par = $(question).parent().parent();
         const parId = $($par)[0].getAttribute("id");
-        const parNextId = sc.getParId($par.next());
+        const parNextId = getParId($par.next());
         sc.showQuestionNew(parId, parNextId);
         sc.par = ($(question).parent());
     });
@@ -200,19 +197,21 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
                 const $par = questions.eq(i);
                 const questionChildren = $par.children();
                 const questionNumber = questionChildren.find(".questionNumber");
-                // var questionTitle = sc.getParAttributes($par).question;
+                // var questionTitle = getParAttributes($par).question;
                 let questionTitle = questionNumber[0].innerHTML;
                 if (questionTitle.length > 10) {
                     questionTitle = questionTitle.substr(0, 10) + "\r\n...";
                 }
                 const nt = parseInt(questionTitle);
                 let nr = "";
-                if ( isNaN(nt) ) nr = (n) + "" + separator + "\r\n";
-                else {
+                if ( isNaN(nt) ) {
+                    nr = (n) + "" + separator + "\r\n";
+                } else {
                     n = nt;
                     const nrt = "" + n;
-                    if ( questionTitle.length  > nrt.length )
+                    if ( questionTitle.length  > nrt.length ) {
                         separator = questionTitle[nrt.length];
+                    }
                 }
                 if (questionNumber[0] && questionNumber[0].innerHTML) {
                     if (sc.noQuestionAutoNumbering) {
@@ -228,27 +227,26 @@ export function defineQuestions(sc, http, q, $injector, $compile, $window, $docu
         }
     };
 
-    sc.getQuestions = function() {
-        http.get("/questions/" + sc.docId)
-            .success(function(data) {
-                const pars = {};
-                const questionCount = data.length;
-                for (let i = 0; i < questionCount; i++) {
-                    const pi = data[i].par_id;
-                    if (!(pi in pars)) {
-                        pars[pi] = {questions: []};
-                    }
+    sc.getQuestions = async function() {
+        const response = await $http.get<Array<{ par_id: string }>>("/questions/" + sc.docId);
+        const data = response.data;
+        const pars = {};
+        const questionCount = data.length;
+        for (let i = 0; i < questionCount; i++) {
+            const pi = data[i].par_id;
+            if (!(pi in pars)) {
+                pars[pi] = {questions: []};
+            }
 
-                    pars[pi].questions.push(data[i]);
-                }
+            pars[pi].questions.push(data[i]);
+        }
 
-                Object.keys(pars).forEach(function(par_id, index) {
-                    const $par = sc.getElementByParId(par_id);
-                    $par.find(".questions").remove();
-                    const $questionsDiv = sc.getQuestionHtml(pars[par_id].questions);
-                    $par.append($questionsDiv);
-                });
-            });
+        Object.keys(pars).forEach(function (par_id, index) {
+            const $par = getElementByParId(par_id);
+            $par.find(".questions").remove();
+            const $questionsDiv = sc.getQuestionHtml(pars[par_id].questions);
+            $par.append($questionsDiv);
+        });
     };
 
     sc.$on("getQuestions", function() {

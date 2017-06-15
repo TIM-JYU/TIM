@@ -14,13 +14,14 @@
 
 import angular from "angular";
 import {timApp} from "tim/app";
+import {$window} from "../ngimport";
 
 const UNDEFINED = "undefined";
 
 /** Directive for a single annotation.
  * @lends module:reviewController
  */
-timApp.directive("annotation", ["$window", function($window) {
+timApp.directive("annotation", [function() {
     "use strict";
     const console = $window.console;
     return {
@@ -59,7 +60,9 @@ timApp.directive("annotation", ["$window", function($window) {
             scope.newannotation = false;
             scope.marginonly = false;
 
-            if (scope.newcomment === null) scope.newcomment = "";
+            if (scope.newcomment === null) {
+                scope.newcomment = "";
+            }
 
             scope.isvalid = {
                 points: {value: true, msg: ""},
@@ -89,10 +92,10 @@ timApp.directive("annotation", ["$window", function($window) {
 
                 scope.toggleAnnotationShow();
 
-                if ( elementName === "notes" &&  annotationElements.length > 1 ){
-                    for (let i = 0; i < annotationElements.length; i++){
+                if ( elementName === "notes" &&  annotationElements.length > 1 ) {
+                    for (let i = 0; i < annotationElements.length; i++) {
                         const e = annotationElements[i].parentNode as HTMLElement;
-                        if (e.offsetParent.className !== "notes"){
+                        if (e.offsetParent.className !== "notes") {
                             angular.element(
                                 annotationElements[i],
                             ).isolateScope().toggleAnnotationShow();
@@ -173,7 +176,7 @@ timApp.directive("annotation", ["$window", function($window) {
              */
             scope.updateAnnotation = function() {
                 let margin = false;
-                if (scope.velpElement.parentNode.offsetParent.className === "notes"){
+                if (scope.velpElement.parentNode.offsetParent.className === "notes") {
                     margin = true;
                 }
                 scope.$parent.updateAnnotation(scope.aid, margin);
@@ -185,7 +188,7 @@ timApp.directive("annotation", ["$window", function($window) {
              * @method changePoints
              */
             scope.changePoints = function() {
-                if (typeof scope.points !== UNDEFINED){
+                if (typeof scope.points !== UNDEFINED) {
                     scope.isvalid.points.value = true;
                     scope.$parent.changeAnnotationPoints(scope.aid, scope.points);
                 } else {
@@ -245,8 +248,9 @@ timApp.directive("annotation", ["$window", function($window) {
             };
 
             scope.getCustomColor = function() {
-                if (typeof scope.color !== UNDEFINED || scope.color !== null)
+                if (typeof scope.color !== UNDEFINED || scope.color !== null) {
                     return scope.color;
+                }
             };
 
             /**
@@ -290,12 +294,14 @@ timApp.directive("annotation", ["$window", function($window) {
              * @returns {boolean} - Whether any modifications were made or not
              */
             scope.checkIfChanged = function() {
-                if (!scope.showHidden)
+                if (!scope.showHidden) {
                     return false;
+                }
                 if (scope.original.points !== scope.points || scope.original.comment !== scope.newcomment ||
                     scope.original.visible_to !== scope.visible_options.value || scope.original.velp !== scope.velp ||
-                    scope.original.color !== scope.color)
+                    scope.original.color !== scope.color) {
                     return true;
+                }
                 return false;
             };
 
@@ -311,7 +317,7 @@ timApp.directive("annotation", ["$window", function($window) {
                  if (scope.ctrlDown && (String.fromCharCode(event.which).toLowerCase() === "s" || event.keyCode === 13 )) {
                     event.preventDefault();
                     scope.ctrlDown = false;
-                    if (scope.checkIfChanged()){
+                    if (scope.checkIfChanged()) {
                         scope.saveChanges();
                     } else {
                         scope.toggleAnnotation();
@@ -343,7 +349,7 @@ timApp.directive("annotation", ["$window", function($window) {
                    const pos = element[0].getBoundingClientRect().top;
                    element.find("textarea").focus();
 
-                   if (0 < pos && pos < window.innerHeight){
+                   if (0 < pos && pos < window.innerHeight) {
                         window.scrollTo(x, y);
                    }
 
@@ -353,7 +359,9 @@ timApp.directive("annotation", ["$window", function($window) {
             });
 
             setTimeout(function(){
-                if (scope.show) scope.updateVelpZIndex();
+                if (scope.show) {
+                    scope.updateVelpZIndex();
+                }
             }, 0);
         },
     };

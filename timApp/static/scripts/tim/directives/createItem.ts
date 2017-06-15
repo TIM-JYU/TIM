@@ -3,12 +3,13 @@ import angular from "angular";
 import {timApp} from "tim/app";
 import * as formErrorMessage from "tim/directives/formErrorMessage";
 import * as shortNameValidator from "tim/directives/shortNameValidator";
-import * as slugify from "tim/services/slugify";
 import {markAsUsed} from "tim/utils";
+import {$http, $window} from "../ngimport";
+import {slugify} from "../services/slugify";
 
-markAsUsed(formErrorMessage, shortNameValidator, slugify);
+markAsUsed(formErrorMessage, shortNameValidator);
 
-timApp.directive("createItem", ["$window", "$log", "$http", "Slugify", function($window, $log, $http, Slugify) {
+timApp.directive("createItem", [function() {
     "use strict";
     return {
         restrict: "E",
@@ -36,13 +37,13 @@ timApp.directive("createItem", ["$window", "$log", "$http", "Slugify", function(
                 sc.itemTitle = str.substring(str.lastIndexOf("/") + 1, str.length);
             }
             if (sc.itemTitle) {
-                sc.itemName = Slugify.slugify(sc.itemTitle);
+                sc.itemName = slugify(sc.itemTitle);
             }
 
             sc.alerts = [];
 
             sc.createItem = function() {
-                $http.post("/createItem", angular.extend({
+                $http.post<{ path }>("/createItem", angular.extend({
                     item_path: sc.itemLocation + "/" + sc.itemName,
                     item_type: sc.itemType,
                     item_title: sc.itemTitle,
@@ -62,7 +63,7 @@ timApp.directive("createItem", ["$window", "$log", "$http", "Slugify", function(
                 if (!sc.automaticShortName) {
                     return;
                 }
-                sc.itemName = Slugify.slugify(sc.itemTitle);
+                sc.itemName = slugify(sc.itemTitle);
             };
 
             sc.nameChanged = function() {

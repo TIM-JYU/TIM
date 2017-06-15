@@ -2,6 +2,8 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import * as userService from "tim/services/userService";
 import {markAsUsed} from "tim/utils";
+import {Users} from "../services/userService";
+import {$http, $log, $window} from "../ngimport";
 
 markAsUsed(userService);
 
@@ -17,9 +19,9 @@ markAsUsed(userService);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("SidebarMenuCtrl", ["$scope", "$http", "$window", "Users", "$log",
+timApp.controller("SidebarMenuCtrl", ["$scope",
 
-    function($scope, $http, $window, Users, $log) {
+    function($scope) {
         "use strict";
         $scope.currentLecturesList = [];
         $scope.futureLecturesList = [];
@@ -97,17 +99,17 @@ timApp.controller("SidebarMenuCtrl", ["$scope", "$http", "$window", "Users", "$l
          * @memberof module:sidebarMenuCtrl
          */
         $scope.toggleLectures = function() {
-            $http({
+            $http<{currentLectures, futureLectures, pastLectures}>({
                 url: "/getAllLecturesFromDocument",
                 method: "GET",
                 params: {doc_id: $scope.docId},
             })
-                .success(function(lectures) {
+                .then(function(response) {
+                    const lectures = response.data;
                     $scope.currentLecturesList = lectures.currentLectures;
                     $scope.futureLecturesList = lectures.futureLectures;
                     $scope.pastLecturesList = lectures.pastLectures;
-                })
-                .error(function() {
+                }, function() {
                     $log.error("Couldn't fetch the lectures");
                 });
         };
@@ -119,11 +121,12 @@ timApp.controller("SidebarMenuCtrl", ["$scope", "$http", "$window", "Users", "$l
         $scope.toggleQuestions = function() {
             // Does not work anymore after changing questions part of document
             $scope.lectureQuestions = [];
-            $http({
+            $http<Array<{ question_id, questionjson }>>({
                 url: "/questions/" + $scope.docId,
                 method: "GET",
             })
-                .success(function(questions) {
+                .then(function(response) {
+                    const questions = response.data;
                     for (let i = 0; i < questions.length; i++) {
                         const question = {
                             questionId: questions[i].question_id,
@@ -131,8 +134,7 @@ timApp.controller("SidebarMenuCtrl", ["$scope", "$http", "$window", "Users", "$l
                         };
                         $scope.lectureQuestions.push(question);
                     }
-                })
-                .error(function() {
+                }, function() {
                     $log.error("Couldn't fetch the questions");
                 });
         };

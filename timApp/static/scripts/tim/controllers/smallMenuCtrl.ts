@@ -1,6 +1,7 @@
 import angular from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
+import {$http, $window} from "../ngimport";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -14,77 +15,75 @@ import {timApp} from "tim/app";
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("SmallMenuCtrl", ["$scope", "$window", "$http",
-    function($scope, $window, $http) {
-		$scope.currentLecturesList = [];
-  $scope.futureLecturesList = [];
+timApp.controller("SmallMenuCtrl", ["$scope",
+    function ($scope) {
+        $scope.currentLecturesList = [];
+        $scope.futureLecturesList = [];
 
         /**
          * FILL WITH SUITABLE TEXT
          * @memberof module:smallMenuCtrl
          */
-  const ready = function() {
-			$("#currentList").hide();
-			$("#futureList").hide();
-		};
+        const ready = function () {
+            $("#currentList").hide();
+            $("#futureList").hide();
+        };
 
         /**
          * FILL WITH SUITABLE TEXT
          * @memberof module:smallMenuCtrl
          */
-		$scope.openCurrentLectureMenu = function() {
-			$("#currentList").slideToggle();
-			$("#futureList").hide();
-			$(".menu").hide();
+        $scope.openCurrentLectureMenu = function () {
+            $("#currentList").slideToggle();
+            $("#futureList").hide();
+            $(".menu").hide();
 
-			$http({
-                    url: "/getAllLecturesFromDocument",
-                    method: "GET",
-                    params: {doc_id: $scope.docId},
-                })
-                    .success(function(lectures) {
-                        $scope.currentLecturesList = lectures.currentLectures;
+            $http<{ currentLectures }>({
+                url: "/getAllLecturesFromDocument",
+                method: "GET",
+                params: {doc_id: $scope.docId},
+            })
+                .then(function (response) {
+                    $scope.currentLecturesList = response.data.currentLectures;
 
-                    })
-                    .error(function() {
-                    });
+                }, function () {
+                });
 
-		};
-
-        /**
-         * FILL WITH SUITABLE TEXT
-         * @memberof module:smallMenuCtrl
-         */
-		$scope.openFutureLectureMenu = function() {
-			$("#futureList").slideToggle();
-			$("#currentList").hide();
-			$(".menu").hide();
-
-			$http({
-                    url: "/getAllLecturesFromDocument",
-                    method: "GET",
-                    params: {doc_id: $scope.docId},
-                })
-                    .success(function(lectures) {
-                        $scope.futureLecturesList = lectures.futureLectures;
-                    })
-                    .error(function() {
-                    });
-
-		};
+        };
 
         /**
          * FILL WITH SUITABLE TEXT
          * @memberof module:smallMenuCtrl
          */
-		$scope.selectCurrentLecture = function() {
+        $scope.openFutureLectureMenu = function () {
+            $("#futureList").slideToggle();
+            $("#currentList").hide();
+            $(".menu").hide();
 
-		};
+            $http<{ futureLectures }>({
+                url: "/getAllLecturesFromDocument",
+                method: "GET",
+                params: {doc_id: $scope.docId},
+            })
+                .then(function (response) {
+                    $scope.futureLecturesList = response.data.futureLectures;
+                }, function () {
+                });
 
-		const w = angular.element($window);
-		w.bind("resize", function() {
-			$("#currentList").hide();
-			$("#futureList").hide();
-		});
+        };
+
+        /**
+         * FILL WITH SUITABLE TEXT
+         * @memberof module:smallMenuCtrl
+         */
+        $scope.selectCurrentLecture = function () {
+
+        };
+
+        const w = angular.element($window);
+        w.bind("resize", function () {
+            $("#currentList").hide();
+            $("#futureList").hide();
+        });
     },
 ]);

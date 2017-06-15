@@ -1,21 +1,35 @@
-
 import $ from "jquery";
-export function defineParMenu(sc, http, q, $injector, $compile, $window, $document, $rootScope, $localStorage, $filter, $timeout, $log, Users) {
-    "use strict";
+import {$compile, $log, $timeout, $window} from "../../ngimport";
+import {dist} from "../../utils";
+import {onClick} from "./eventhandlers";
 
-    sc.selectionToStr = function(selection) {
-        return selection.toArray().map(function(e) {
-            return "#" + e.id;
-        }).join(",");
-    };
+export function closeOptionsWindow() {
+    const $actionButtons = $(".actionButtons");
+    const $parOrArea = $actionButtons.parent();
+    $actionButtons.remove();
+    optionsWindowClosed($parOrArea);
+}
 
-    sc.showPopupMenu = function(e, $pars, coords, attrs, $rootElement, editcontext) {
-        if (!$rootElement)
+export function optionsWindowClosed($parOrArea) {
+    const $editline = $(".menuopen");
+    $editline.removeClass("menuopen");
+}
+
+function selectionToStr(selection: JQuery) {
+    return selection.toArray().map(function (e) {
+        return "#" + e.id;
+    }).join(",");
+}
+
+export function defineParMenu(sc) {
+    sc.showPopupMenu = function (e, $pars, coords, attrs, $rootElement, editcontext) {
+        if (!$rootElement) {
             $rootElement = $pars;
+        }
 
         const $popup = $("<popup-menu>");
         $popup.attr("tim-draggable-fixed", "");
-        $popup.attr("srcid", sc.selectionToStr($pars));
+        $popup.attr("srcid", selectionToStr($pars));
         $popup.attr("editcontext", editcontext);
         for (const key in attrs) {
             if (attrs.hasOwnProperty(key)) {
@@ -41,8 +55,7 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
         let y = $(window).scrollTop();
         if (bounds.bottom > viewport.bottom) {
             y += (bounds.bottom - viewport.bottom);
-        }
-        else if (bounds.top < viewport.top) {
+        } else if (bounds.top < viewport.top) {
             y += (bounds.top - viewport.top);
         }
         $("html, body").animate({
@@ -50,7 +63,7 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
         }, 500);
     };
 
-    sc.onClick(".paragraphs .parContent", function($this, e) {
+    onClick(".paragraphs .parContent", function ($this, e) {
         if (sc.editing) {
             return false;
         }
@@ -65,7 +78,7 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
         // Don't show paragraph menu on these specific tags or classes
         const ignoredTags = ["BUTTON", "INPUT", "TEXTAREA", "A", "QUESTIONADDEDNEW"];
         const ignoredClasses = ["no-popup-menu", "ace_editor"];
-        const classSelector = ignoredClasses.map(function(c) {
+        const classSelector = ignoredClasses.map(function (c) {
             return "." + c;
         }).join(",");
         if (ignoredTags.indexOf(tag) > -1 || $target.parents(classSelector).length > 0) {
@@ -74,22 +87,21 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
 
         if (sc.selection.start !== null) {
             sc.extendSelection($par, true);
-        }
-        else {
+        } else {
             const coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
             const toggle1 = $par.find(".actionButtons").length === 0;
             const toggle2 = $par.hasClass("lightselect");
 
             $(".par.selected").removeClass("selected");
             $(".par.lightselect").removeClass("lightselect");
-            sc.closeOptionsWindow();
+            closeOptionsWindow();
             sc.toggleActionButtons(e, $par, toggle1, toggle2, coords);
         }
         sc.$apply();
         return true;
     }, true);
 
-    sc.toggleActionButtons = function(e, $par, toggle1, toggle2, coords) {
+    sc.toggleActionButtons = function (e, $par, toggle1, toggle2, coords) {
         if (!sc.item.rights.editable && !sc.item.rights.can_comment) {
             return;
         }
@@ -97,19 +109,17 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
         if (toggle2) {
             // Clicked twice successively
             const clicktime = new Date().getTime() - sc.lastclicktime;
-            const clickdelta = sc.dist(coords, sc.lastclickplace);
+            const clickdelta = dist(coords, sc.lastclickplace);
             $par.addClass("selected");
 
             if (clickdelta > 10) {
                 // Selecting text
                 $par.removeClass("selected");
                 $par.removeClass("lightselect");
-            }
-            else if (clicktime < 500 && sc.defaultAction !== null) {
+            } else if (clicktime < 500 && sc.defaultAction !== null) {
                 // Double click
                 sc.defaultAction.func(e, $par, coords);
-            }
-            else {
+            } else {
                 // Two clicks
                 sc.showOptionsWindow(e, $par, coords);
             }
@@ -126,7 +136,7 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
         }
     };
 
-    sc.showOptionsWindow = function(e, $par, coords) {
+    sc.showOptionsWindow = function (e, $par, coords) {
         sc.updateClipboardStatus();
         $par.children(".editline").addClass("menuopen");
         sc.showPopupMenu(e, $par, coords, sc.popupMenuAttrs, null, "par");
@@ -134,19 +144,9 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
 
     sc.defaultAction = {func: sc.showOptionsWindow, desc: "Show options window"};
 
-    sc.closeOptionsWindow = function() {
-        const $actionButtons = $(".actionButtons");
-        const $par_or_area = $actionButtons.parent();
-        $actionButtons.remove();
-        sc.optionsWindowClosed($par_or_area);
-    };
+    sc.optionsWindowClosed = optionsWindowClosed;
 
-    sc.optionsWindowClosed = function($par_or_area) {
-        const $editline = $(".menuopen");
-        $editline.removeClass("menuopen");
-    };
-
-    sc.updatePopupMenu = function() {
+    sc.updatePopupMenu = function () {
         sc.editorFunctions = sc.getEditorFunctions();
         if (sc.selection.start !== null && $window.editMode) {
             sc.popupMenuAttrs.save = null;
@@ -157,8 +157,8 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
         }
     };
 
-    sc.onClick(".editline", function($this, e) {
-        sc.closeOptionsWindow();
+    onClick(".editline", function ($this, e) {
+        closeOptionsWindow();
         const $par = $this.parent().filter(".par");
         if (sc.selection.start !== null) {
             sc.extendSelection($par);
@@ -166,7 +166,7 @@ export function defineParMenu(sc, http, q, $injector, $compile, $window, $docume
         const coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
 
         // We need the timeout so we don't trigger the ng-clicks on the buttons
-        $timeout(function() {
+        $timeout(function () {
             sc.showOptionsWindow(e, $par, coords);
         }, 80);
         return false;

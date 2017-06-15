@@ -2,6 +2,7 @@
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
+import {$document, $parse} from "../ngimport";
 function setStorage(key, value) {
     value = JSON.stringify(value);
     window.localStorage.setItem(key, value);
@@ -9,7 +10,9 @@ function setStorage(key, value) {
 
 function getStorage(key: string) {
     let s = window.localStorage.getItem(key);
-    if  ( !s ) return s;
+    if  ( !s ) {
+        return s;
+    }
     s = JSON.parse(s);
     return s;
 }
@@ -20,16 +23,24 @@ function getPixels(s) {
 }
 
 function wmax(value, min, max) {
-    if ( !value ) return min + "px";
-    if ( value == "auto" ) return value;
+    if ( !value ) {
+        return min + "px";
+    }
+    if ( value == "auto" ) {
+        return value;
+    }
     const v = getPixels(value);
 
-    if ( v <=  min ) return min + "px";
-    if ( v >=  max ) return max + "px";
+    if ( v <=  min ) {
+        return min + "px";
+    }
+    if ( v >=  max ) {
+        return max + "px";
+    }
     return value;
 }
 
-timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootScope", function($document, $window, $parse, $rootScope) {
+timApp.directive("timDraggableFixed", [function() {
 
     const resizableConfig = {};
 
@@ -69,10 +80,11 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
             let delta;
 
             if (attr.click) {
-                if ( attr.click === "true" )
+                if ( attr.click === "true" ) {
                     clickFn = minimize;
-                else
+                } else {
                     clickFn = $parse(attr.click);
+                }
             }
 
             let closeFn = null;
@@ -91,7 +103,9 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
                     element.css("min-height", "0");
                     setStorage(posKey + "min", true);
                     handles = element.find(".resizehandle");
-                    if ( handles.length ) handles.css("display", "none");
+                    if ( handles.length ) {
+                        handles.css("display", "none");
+                    }
 
                 } else {
                     base.css("display", "");
@@ -100,7 +114,9 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
                     setStorage(posKey + "min", false);
                     element.find(".resizehandle").css("display", "");
                 }
-                if ( handles && handles.length ) scope.$apply();
+                if ( handles && handles.length ) {
+                    scope.$apply();
+                }
             }
 
             scope.minimize = minimize;
@@ -171,7 +187,9 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
 
                 if ( areaMinimized ) {
                     const handles = element.find(".resizehandle");
-                    if ( handles.length ) handles.css("display", "none");
+                    if ( handles.length ) {
+                        handles.css("display", "none");
+                    }
                 }
             }
 
@@ -243,14 +261,18 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
 
             function getPageXYnull(e) {
                 if (!("pageX" in e) || (e.pageX == 0 && e.pageY == 0)) {
-                    if ( e.originalEvent.touches.length ) return {
-                        X: e.originalEvent.touches[0].pageX,
-                        Y: e.originalEvent.touches[0].pageY,
-                    };
-                    if ( e.originalEvent.changedTouches.length ) return {
-                        X: e.originalEvent.changedTouches[0].pageX,
-                        Y: e.originalEvent.changedTouches[0].pageY,
-                    };
+                    if ( e.originalEvent.touches.length ) {
+                        return {
+                            X: e.originalEvent.touches[0].pageX,
+                            Y: e.originalEvent.touches[0].pageY,
+                        };
+                    }
+                    if ( e.originalEvent.changedTouches.length ) {
+                        return {
+                            X: e.originalEvent.changedTouches[0].pageX,
+                            Y: e.originalEvent.changedTouches[0].pageY,
+                        };
+                    }
                     return null;
                 }
 
@@ -261,7 +283,9 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
 
             function getPageXY(e) {
                 const pos = getPageXYnull(e);
-                if ( pos ) lastPageXYPos = pos;
+                if ( pos ) {
+                    lastPageXYPos = pos;
+                }
                 return lastPageXYPos;
             }
 
@@ -313,14 +337,18 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
                 pos = getPageXY(e);
                 delta = {X: pos.X - lastPos.X, Y: pos.Y - lastPos.Y};
 
-                if (setTop)
+                if (setTop) {
                     element.css("top", prevTop + delta.Y);
-                if (setLeft)
+                }
+                if (setLeft) {
                     element.css("left", prevLeft + delta.X);
-                if (setBottom)
+                }
+                if (setBottom) {
                     element.css("bottom", prevBottom - delta.Y);
-                if (setRight)
+                }
+                if (setRight) {
                     element.css("right", prevRight - delta.X);
+                }
 
                 e.preventDefault();
                 e.stopPropagation();
@@ -332,23 +360,27 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
 
                 if (upResize) {
                     element.css("height", prevHeight - delta.Y);
-                    if (setTop)
+                    if (setTop) {
                         element.css("top", prevTop + delta.Y);
+                    }
                 }
                 if (leftResize) {
                     element.css("width", prevWidth - delta.X);
-                    if (setLeft)
+                    if (setLeft) {
                         element.css("left", prevLeft + delta.X);
+                    }
                 }
                 if (downResize) {
                     element.css("height", prevHeight + delta.Y);
-                    if (setBottom)
+                    if (setBottom) {
                         element.css("bottom", prevBottom - delta.Y);
+                    }
                 }
                 if (rightResize) {
                     element.css("width", prevWidth + delta.X);
-                    if (setRight && delta.X >= 0)
+                    if (setRight && delta.X >= 0) {
                         element.css("right", prevRight - delta.X);
+                    }
                 }
 
                 e.preventDefault();
@@ -358,9 +390,10 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
                 if ( posKey ) {
                     setStorage(posKey + "Size", size );
                 }
-                if ( broadcastMsg )
+                if ( broadcastMsg ) {
                     scope.$broadcast(broadcastMsg, {size});
                     // $rootScope.$broadcast(broadcastMsg, {size: size});
+                }
             }
 
             // TODO context is deprecated
@@ -370,8 +403,12 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
                 getSetDirs();
                 const oldSize: any = getStorage(posKey + "Size");
                 if ( oldSize ) {
-                    if (oldSize.width) element.css("width", oldSize.width);
-                    if (oldSize.height) element.css("height", oldSize.height);
+                    if (oldSize.width) {
+                        element.css("width", oldSize.width);
+                    }
+                    if (oldSize.height) {
+                        element.css("height", oldSize.height);
+                    }
                 }
                 const oldPos: any = getStorage(posKey);
                 const w = window.innerWidth;
@@ -379,14 +416,24 @@ timApp.directive("timDraggableFixed", ["$document", "$window", "$parse", "$rootS
                 const ew = element.width();
                 const eh = element.height();
                 if ( oldPos ) {
-                    if (oldPos.top && setTop) element.css("top", wmax(oldPos.top, 0, h - 20));
-                    if (oldPos.left && setLeft) element.css("left", wmax(oldPos.left, 0 - ew + 20, w - 20));
-                    if (oldPos.right && setRight) element.css("right", wmax(oldPos.right, 20, w));
-                    if (oldPos.bottom && setBottom) element.css("bottom", wmax(oldPos.bottom, 20, h));
+                    if (oldPos.top && setTop) {
+                        element.css("top", wmax(oldPos.top, 0, h - 20));
+                    }
+                    if (oldPos.left && setLeft) {
+                        element.css("left", wmax(oldPos.left, 0 - ew + 20, w - 20));
+                    }
+                    if (oldPos.right && setRight) {
+                        element.css("right", wmax(oldPos.right, 20, w));
+                    }
+                    if (oldPos.bottom && setBottom) {
+                        element.css("bottom", wmax(oldPos.bottom, 20, h));
+                    }
                     // element.css("background", "red");
                     timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
                 }
-                if ( getStorage(posKey + "min") ) scope.minimize();
+                if ( getStorage(posKey + "min") ) {
+                    scope.minimize();
+                }
             }
 
         },

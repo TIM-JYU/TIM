@@ -6,6 +6,7 @@ import {fixQuestionJson} from "tim/directives/dynamicAnswerSheet";
 import * as showChart from "tim/directives/showChartDirective";
 import {markAsUsed} from "tim/utils";
 import {ParCompiler} from "../services/parCompiler";
+import {$http, $log, $rootScope, $window} from "../ngimport";
 
 markAsUsed(showChart);
 
@@ -23,7 +24,7 @@ markAsUsed(showChart);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$window", "$log", "$element", function($rootScope, $scope, $http, $window, $log, $element) {
+timApp.controller("LectureInfoController", ["$scope", "$element", function($scope, $element) {
     "use strict";
     $scope.item = $window.item;
     $scope.docId = $scope.item.id;
@@ -49,13 +50,13 @@ timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$w
      * @memberof module:lectureInfoController
      */
     $scope.getLectureInfo = function() {
-        $http({
+        $http<{messages, answers, questions, isLecturer, answerers, user}>({
             url: "/getLectureInfo",
-            type: "GET",
+            method: "GET",
             params: {lecture_id: $scope.lectureId},
         })
-            .success(function(answer) {
-
+            .then(function(response) {
+                const answer = response.data;
                 /*Update the header links to correct urls*/
                 $scope.updateHeaderLinks();
                 /*Add a return link icon to lecture header if user is in lecture*/
@@ -81,29 +82,30 @@ timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$w
                 $scope.isLecturer = answer.isLecturer;
                 $scope.answerers = answer.answerers;
                 $scope.selectedUser = answer.user;
-            })
-            .error(function() {
+            }, function() {
                 $window.console.log("fail");
             });
     };
 
-    $scope.editPoints = function(asked_id) {
-        $http({
+    $scope.editPoints = function(askedId) {
+        $http<{json: string, points}>({
             url: "/getAskedQuestionById",
             method: "GET",
-            params: {asked_id},
+            params: {asked_id: askedId},
         })
-            .success(function(data) {
+            .then(function(response) {
+                const data = response.data;
                 let markup = JSON.parse(data.json);
-                if ( !markup.json ) markup = { json: markup}; // compability for old
+                if ( !markup.json ) {
+                    markup = {json: markup}; // compability for old
+                }
                 markup.points = data.points;
                 $rootScope.$broadcast("changeQuestionTitle", {questionTitle: markup.json.questionTitle});
                 $rootScope.$broadcast("editQuestion", {
-                    asked_id,
+                    asked_id: askedId,
                     markup,
                 });
-            })
-            .error(function() {
+            }, function() {
                 $log.error("There was some error creating question to database.");
             });
     };
@@ -165,10 +167,9 @@ timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$w
                 method: "POST",
                 params: {doc_id: $scope.docId, lecture_id: $scope.lectureId},
             })
-                .success(function() {
+                .then(function() {
                     window.history.back();
-                })
-                .error(function() {
+                }, function() {
                     $window.console.log("Failed to delete the lecture");
                 });
         }
@@ -177,12 +178,13 @@ timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$w
     $scope.editLecture = function() {
         $("#currentList").hide();
         $("#futureList").hide();
-        $http({
+        $http<{lectureId, lectureCode, lectureStartTime, lectureEndTime, password}>({
             url: "/showLectureInfoGivenName",
             method: "GET",
             params: {lecture_code: $scope.code, doc_id: $scope.docId},
         })
-            .success(function(lecture) {
+            .then(function(response) {
+                const lecture = response.data;
                 $scope.$broadcast("editLecture", {
                     lecture_id: lecture.lectureId,
                     lecture_name: lecture.lectureCode,
@@ -192,25 +194,24 @@ timApp.controller("LectureInfoController", ["$rootScope", "$scope", "$http", "$w
                     editMode: true,
                 });
                 $scope.showLectureForm = true;
-            })
-            .error(function() {
+            }, function() {
                 $window.console.log("Failed to fetch lecture.");
             });
     };
 
     $scope.$on("lectureUpdated", function(event, data) {
-        $http({
+        $http<{lectureId, lectureCode, lectureStartTime, lectureEndTime, password}>({
             url: "/showLectureInfoGivenName",
             method: "GET",
             params: {lecture_id: $scope.lectureId},
         })
-            .success(function(lecture) {
+            .then(function(response) {
+                const lecture = response.data;
                 $scope.code = lecture.lectureCode;
                 $scope.lectureCode = "Lecture info: " + lecture.lectureCode;
                 $scope.lectureEndTime = moment(lecture.lectureEndTime);
                 $scope.lectureStartTime = moment(lecture.lectureStartTime);
-            })
-            .error(function() {
+            }, function() {
                 $window.console.log("Failed to fetch lecture.");
             });
         $scope.showLectureForm = false;

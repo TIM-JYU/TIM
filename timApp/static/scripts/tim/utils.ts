@@ -1,5 +1,61 @@
+import angular from "angular";
 import $ from "jquery";
 import sessionsettings from "tim/session";
+
+/**
+ * Scroll window to the given element.
+ * @method scrollToElement
+ * @param element - Element to scroll to.
+ */
+export function scrollToElement(element) {
+    if (!!element && element.scrollIntoView) {
+        element.scrollIntoView();
+    }
+}
+
+/**
+ * Gets the parent element of the given element.
+ * @method getElementParent
+ * @param element - Element whose parent is queried for
+ * @returns {Element} Element parent
+ */
+export function getElementParent(element) {
+    /*
+     if (typeof element.parentElement !== "undefined")
+     return element.parentElement;
+     */
+    if (!element) {
+        return null;
+    }
+    const parent = element.parentNode;
+    if (!parent) {
+        return null;
+    }
+    if (typeof parent.tagName !== "undefined") {
+        return parent;
+    }
+
+    getElementParent(parent);
+}
+
+export function dist(coords1, coords2) {
+    return Math.sqrt(Math.pow(coords2.left - coords1.left, 2) + Math.pow(coords2.top - coords1.top, 2));
+}
+
+export function markPageDirty() {
+    const e = angular.element("#page_is_dirty");
+    e.val("1");
+}
+
+export function markPageNotDirty() {
+    const e = angular.element("#page_is_dirty");
+    e.val("0");
+}
+
+export function isPageDirty() {
+    const e = angular.element("#page_is_dirty");
+    return e.val() === "1";
+}
 
 export function GetURLParameter(sParam: string) {
     const sPageURL = window.location.search.substring(1);

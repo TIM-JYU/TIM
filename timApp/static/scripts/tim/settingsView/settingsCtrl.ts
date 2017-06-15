@@ -1,20 +1,20 @@
 import $ from "jquery";
 import {timApp} from "tim/app";
+import {$http, $window} from "../ngimport";
 
-timApp.controller("SettingsCtrl", ["$scope", "$http", "$window", function(sc, http, $window) {
+timApp.controller("SettingsCtrl", ["$scope", function(sc) {
     sc.settings = $window.settings;
-    sc.submit = function(saveUrl) {
+    sc.submit = async function(saveUrl) {
         sc.saving = true;
-        http.post(saveUrl, sc.settings).success(
-            function(data, status, error, headers) {
-            }).success(function(data) {
-                sc.settings = data;
-                sc.updateCss();
-            }).error(function() {
-                alert("Failed to save settings.");
-            }).then(function() {
-                sc.saving = false;
-            });
+        try {
+            const data = await $http.post(saveUrl, sc.settings);
+            sc.settings = data;
+            sc.updateCss();
+        } catch (e) {
+            alert("Failed to save settings.");
+        } finally {
+            sc.saving = false;
+        }
     };
 
     sc.updateCss = function() {
