@@ -69,7 +69,7 @@ class ItemLockedException(Exception):
     access that has not yet begun."""
 
     def __init__(self, access: BlockAccess):
-        self.access = access  # type: BlockAccess
+        self.access = access
 
 
 def abort_if_not_access_and_required(access_obj: BlockAccess,
@@ -83,12 +83,12 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
     if check_duration:
         ba = BlockAccess.query.filter_by(block_id=block_id,
                                          type=get_access_type_id(access_type),
-                                         usergroup_id=get_current_user_group()).first()  # type: BlockAccess
+                                         usergroup_id=get_current_user_group()).first()
         if ba is None:
-            ba_group = BlockAccess.query.filter_by(block_id=block_id,
-                                                   type=get_access_type_id(access_type)).filter(
+            ba_group: BlockAccess = BlockAccess.query.filter_by(block_id=block_id,
+                                                                type=get_access_type_id(access_type)).filter(
                 BlockAccess.usergroup_id.in_(get_current_user_object().get_groups().with_entities(UserGroup.id))
-            ).first()  # type: BlockAccess
+            ).first()
             if ba_group is not None:
                 ba = BlockAccess(block_id=ba_group.block_id,
                                  type=ba_group.type,

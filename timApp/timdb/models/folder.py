@@ -107,7 +107,7 @@ class Folder(db.Model, Item):
         self.path = new_path
 
         # Rename contents
-        docs_in_folder = DocEntry.query.filter(DocEntry.name.like(old_name + '/%')).all()  # type: List[DocEntry]
+        docs_in_folder: List[DocEntry] = DocEntry.query.filter(DocEntry.name.like(old_name + '/%')).all()
         for d in docs_in_folder:
             d.name = d.name.replace(old_name, new_path, 1)
 

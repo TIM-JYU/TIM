@@ -37,8 +37,8 @@ def fast_getaddrinfo(host, port, family=0, addrtype=0, proto=0, flags=0):
 
 socket.getaddrinfo = fast_getaddrinfo
 
-testclient = timApp.tim.app.test_client()
-testclient = testclient.__enter__()  # type: FlaskClient
+testclient: FlaskClient = timApp.tim.app.test_client()
+testclient = testclient.__enter__()
 
 
 class TimRouteTest(TimDbTest):

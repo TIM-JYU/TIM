@@ -832,7 +832,7 @@ def get_velp_groups_from_tree(document_id: int):
     personal_velps_path = user.get_personal_folder().path + "/" + velp_group_folder
     # owner_group_id = 3  # TODO: Choose owner group correctly, now uses All Korppi users
 
-    velp_groups = []  # type: List[DocEntry]
+    velp_groups: List[DocEntry] = []
     viewable = get_viewable_blocks(get_current_user_id())
 
     # Velp groups for areas, plugins etc

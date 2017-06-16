@@ -125,7 +125,7 @@ def notify_doc_watchers(doc: DocInfo,
     full_msg = msg + '\n\n' + content_msg
 
     for note in doc.get_notifications(notify_type):
-        user = note.user  # type: User
+        user: User = note.user
         if user.id == me.id or not user.email or not user.has_view_access(doc.id):
             continue
 

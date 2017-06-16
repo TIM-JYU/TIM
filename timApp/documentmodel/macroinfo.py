@@ -20,7 +20,7 @@ class MacroInfo:
                  macro_map: Optional[Dict[str, str]] = None,
                  macro_delimiter: Optional[str] = None,
                  user: Optional['User'] = None):
-        self.macro_map = macro_map or {}  # type: Dict[str, str]
+        self.macro_map: Dict[str, str] = macro_map or {}
         self.macro_delimiter = macro_delimiter or '%%'
         self._user = user
         self.preserve_user_macros = False

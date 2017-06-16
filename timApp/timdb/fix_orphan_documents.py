@@ -14,11 +14,11 @@ def fix_orphans():
     with app.test_request_context():
         orphan_folder_title = 'orphans'
         f = Folder.create('orphans', get_admin_group_id())
-        orphans = Block.query.filter(
+        orphans: List[Block] = Block.query.filter(
             (Block.type_id == 0) &
             Block.id.notin_(DocEntry.query.with_entities(DocEntry.id)) &
             Block.id.notin_(Translation.query.with_entities(Translation.doc_id))
-        ).all()  # type: List[Block]
+        ).all()
 
         for o in orphans:
             print('Fixing document with id {}'.format(o.id))

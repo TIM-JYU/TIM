@@ -43,7 +43,7 @@ class CommentTest(TimRouteTest):
                                             'access': 'everyone' if public else 'justme',
                                             'docId': par.doc.doc_id,
                                             'par': par.get_id()})
-        h = html.fromstring(resp['texts'])  # type: HtmlElement
+        h: HtmlElement = html.fromstring(resp['texts'])
         comments = comment_selector(h)
         return comments
 

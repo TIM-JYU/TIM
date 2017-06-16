@@ -71,7 +71,7 @@ class DocumentParser:
         self._doc_text = doc_text
         self._blocks = None
         self._break_on_empty_line = False
-        self._last_setting = None  # type: DocumentParserOptions
+        self._last_setting: DocumentParserOptions = None
 
     def get_blocks(self, options: Optional[DocumentParserOptions]=None):
         if options is None:

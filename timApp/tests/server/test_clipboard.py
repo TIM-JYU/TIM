@@ -179,8 +179,8 @@ test
             ids = [p.get_id() for p in pars]
             self.assertEqual(len(ids), len(set(ids)))
             self.assertEqual(21, len(pars), msg=message)
-            first = random.choice(pars)  # type: DocParagraph
-            second = random.choice(pars)  # type: DocParagraph
+            first: DocParagraph = random.choice(pars)
+            second: DocParagraph = random.choice(pars)
             first_index = pars.index(first)
             second_index = pars.index(second)
             if first_index > second_index:

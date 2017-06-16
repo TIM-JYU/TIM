@@ -67,7 +67,7 @@ class Readings(TimDbBase):
                                          ))
 
     def get_common_readings(self, usergroup_ids: List[int], doc: Document):
-        users = []  # type: List[Dict[str, ReadParagraph]]
+        users: List[Dict[str, ReadParagraph]] = []
         for u in usergroup_ids:
             reading_map = defaultdict(lambda: defaultdict(lambda: ReadParagraph(par_hash=None)))
             rs = self.get_readings(u, doc)

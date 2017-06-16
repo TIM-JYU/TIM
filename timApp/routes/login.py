@@ -121,11 +121,11 @@ def login_with_korppi():
     real_name = pieces[1]
     email = pieces[2]
 
-    user = User.query.filter_by(name=user_name).first()  # type: User
+    user: User = User.query.filter_by(name=user_name).first()
 
     if user is None:
         # Try email
-        user = User.query.filter_by(email=email).first()  # type: User
+        user: User = User.query.filter_by(email=email).first()
         if user is not None:
             # An email user signs in using Korppi for the first time. We update the user's username and personal
             # usergroup.

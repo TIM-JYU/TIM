@@ -50,9 +50,9 @@ def search(query):
     all_js = []
     all_css = []
     all_modules = []
-    results = set()  # type: Set[SearchResult]
+    results: Set[SearchResult] = set()
     query_lower = query.lower()
-    found_docs = set()  # type: Set[DocInfo]
+    found_docs: Set[DocInfo] = set()
     for d in docs:
         doc = d.document
         pars = doc.get_paragraphs()
