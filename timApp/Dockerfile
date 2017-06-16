@@ -96,7 +96,7 @@ run chown -R agent /service
 
 run apt-get install --no-install-recommends -y npm
 run ln -s /usr/bin/nodejs /usr/bin/node
-run npm install -g typescript tslint jspm
+run npm install -g typescript tslint jspm typescript-formatter
 
 run mkdir /var/run/sshd
 run echo 'root:test' | chpasswd
