@@ -41,7 +41,7 @@ timApp.controller("AnswerToQuestionController", ["$scope", function($scope) {
         $scope.answered = false;
         $scope.buttonText = $scope.markup.button || $scope.markup.buttonText || "Answer";
         $scope.dynamicAnswerSheetControl.createAnswer($scope);
-        if ( args.isAsking ) {
+        if (args.isAsking) {
             $scope.isAsking = true;
         }
     });
@@ -110,7 +110,7 @@ timApp.controller("AnswerToQuestionController", ["$scope", function($scope) {
     };
 
     $scope.edit = function() {
-        $http<{ json: string, points }>({
+        $http<{json: string, points}>({
             url: "/getAskedQuestionById",
             method: "GET",
             params: {asked_id: $scope.askedId},
@@ -130,7 +130,7 @@ timApp.controller("AnswerToQuestionController", ["$scope", function($scope) {
     };
 
     $scope.showPoints = function() {
-        $http<{ points, expl? }>({
+        $http<{points, expl?}>({
             url: "/showAnswerPoints",
             method: "POST",
             params: {

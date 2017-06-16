@@ -165,7 +165,7 @@ export function getPars($parFirst, $parLast) {
         i -= 1;
     }
 
-    return $(pars).map(function () {
+    return $(pars).map(function() {
         return this.toArray();
     });
 }

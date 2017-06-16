@@ -41,8 +41,8 @@ export let $window: angular.IWindowService = null;
 export let $xhrFactory: angular.IXhrFactory<any> = null;
 
 export function injectProviders($a: angular.auto.IProvideService,
-                                $b: angular.IHttpProvider,
-                                $c: angular.ILogProvider) {
+    $b: angular.IHttpProvider,
+    $c: angular.ILogProvider) {
     $provide = $a;
     $httpProvider = $b;
     $logProvider = $c;

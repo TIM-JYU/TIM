@@ -121,7 +121,7 @@ timApp.controller("ViewCtrl", [
 
         sc.showQuestions = function() {
             return (sc.item.rights.teacher && (sc.lectureMode || sc.inLecture)) ||
-            ($window.editMode && sc.item.rights.editable);
+                ($window.editMode && sc.item.rights.editable);
         };
 
         sc.applyDynamicStyles = function($par) {
@@ -239,13 +239,13 @@ timApp.controller("ViewCtrl", [
 
         sc.$watchGroup(["lectureMode", "selection.start", "selection.end", "editing", "getEditMode()",
             "allowPasteContent", "allowPasteRef", "getAllowMove()"], function(newValues, oldValues, scope) {
-            sc.updatePopupMenu();
-            if (sc.editing) {
-                sc.notification = "Editor is already open.";
-            } else {
-                sc.notification = "";
-            }
-        });
+                sc.updatePopupMenu();
+                if (sc.editing) {
+                    sc.notification = "Editor is already open.";
+                } else {
+                    sc.notification = "";
+                }
+            });
 
         sc.$storage = $localStorage.$default({
             defaultAction: "Show options window",
@@ -259,7 +259,7 @@ timApp.controller("ViewCtrl", [
 
         if (Users.isLoggedIn() && sc.liveUpdates) {
             $interval(async () => {
-                const response = await $http.get<{ version: any, diff: any[] }>("/getParDiff/" + sc.docId + "/" + sc.docVersion[0] + "/" + sc.docVersion[1]);
+                const response = await $http.get<{version: any, diff: any[]}>("/getParDiff/" + sc.docId + "/" + sc.docVersion[0] + "/" + sc.docVersion[1]);
                 sc.docVersion = response.data.version;
                 const replaceFn = async (d, parId) => {
                     const compiled = await ParCompiler.compile(d.content, sc);
@@ -303,7 +303,7 @@ timApp.controller("ViewCtrl", [
                         replaceFn(d, d.id);
                     }
                 }
-                $timeout(function () {
+                $timeout(function() {
                     document.rebuildSections();
                 }, 1000);
             }, 1000 * sc.liveUpdates);

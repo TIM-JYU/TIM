@@ -92,7 +92,7 @@ timApp.directive("annotation", [function() {
 
                 scope.toggleAnnotationShow();
 
-                if ( elementName === "notes" &&  annotationElements.length > 1 ) {
+                if (elementName === "notes" && annotationElements.length > 1) {
                     for (let i = 0; i < annotationElements.length; i++) {
                         const e = annotationElements[i].parentNode as HTMLElement;
                         if (e.offsetParent.className !== "notes") {
@@ -151,8 +151,8 @@ timApp.directive("annotation", [function() {
              * Focuses on the comment field of the annotation.
              * @method focusTextarea
              */
-            scope.focusTextarea = function(){
-               return true;
+            scope.focusTextarea = function() {
+                return true;
             };
 
             /**
@@ -311,10 +311,10 @@ timApp.directive("annotation", [function() {
              * @param event - Current event
              */
             scope.keyDownFunc = function(event) {
-                 if (event.keyCode === scope.ctrlKey) {
-                     scope.ctrlDown = true;
-                 }
-                 if (scope.ctrlDown && (String.fromCharCode(event.which).toLowerCase() === "s" || event.keyCode === 13 )) {
+                if (event.keyCode === scope.ctrlKey) {
+                    scope.ctrlDown = true;
+                }
+                if (scope.ctrlDown && (String.fromCharCode(event.which).toLowerCase() === "s" || event.keyCode === 13)) {
                     event.preventDefault();
                     scope.ctrlDown = false;
                     if (scope.checkIfChanged()) {
@@ -323,7 +323,7 @@ timApp.directive("annotation", [function() {
                         scope.toggleAnnotation();
                     }
                 }
-		    };
+            };
 
             /**
              * Detects if `Ctrl`-key is released.
@@ -331,10 +331,10 @@ timApp.directive("annotation", [function() {
              * @param event - Current event
              */
             scope.keyUpFunc = function(event) {
-                 if (event.keyCode === scope.ctrlKey) {
-                     scope.ctrlDown = false;
-                 }
-		    };
+                if (event.keyCode === scope.ctrlKey) {
+                    scope.ctrlDown = false;
+                }
+            };
 
             /**
              * Watches changes on newannotation attribute. Shoulc scroll window
@@ -342,23 +342,23 @@ timApp.directive("annotation", [function() {
              * TODO: Check scroll positions according to textarea element
              */
             scope.$watch("newannotation", function(newValue) {
-               if (newValue === "true" && scope.show) { // this check is necessary
+                if (newValue === "true" && scope.show) { // this check is necessary
 
-                   const x = window.scrollX, y = window.scrollY;
+                    const x = window.scrollX, y = window.scrollY;
 
-                   const pos = element[0].getBoundingClientRect().top;
-                   element.find("textarea").focus();
+                    const pos = element[0].getBoundingClientRect().top;
+                    element.find("textarea").focus();
 
-                   if (0 < pos && pos < window.innerHeight) {
+                    if (0 < pos && pos < window.innerHeight) {
                         window.scrollTo(x, y);
-                   }
+                    }
 
-                   scope.newannotation = false;
-               }
+                    scope.newannotation = false;
+                }
 
             });
 
-            setTimeout(function(){
+            setTimeout(function() {
                 if (scope.show) {
                     scope.updateVelpZIndex();
                 }

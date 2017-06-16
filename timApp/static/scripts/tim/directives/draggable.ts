@@ -10,7 +10,7 @@ function setStorage(key, value) {
 
 function getStorage(key: string) {
     let s = window.localStorage.getItem(key);
-    if  ( !s ) {
+    if (!s) {
         return s;
     }
     s = JSON.parse(s);
@@ -23,18 +23,18 @@ function getPixels(s) {
 }
 
 function wmax(value, min, max) {
-    if ( !value ) {
+    if (!value) {
         return min + "px";
     }
-    if ( value == "auto" ) {
+    if (value == "auto") {
         return value;
     }
     const v = getPixels(value);
 
-    if ( v <=  min ) {
+    if (v <= min) {
         return min + "px";
     }
-    if ( v >=  max ) {
+    if (v >= max) {
         return max + "px";
     }
     return value;
@@ -50,7 +50,7 @@ timApp.directive("timDraggableFixed", [function() {
 
         link(scope, element: JQuery, attr) {
             let posKey;
-            if ( attr.save ) {
+            if (attr.save) {
                 const pageId = window.location.pathname.split("/")[1];  // /velp/???
                 posKey = attr.save.replace("%%PAGEID%%", pageId);
             }
@@ -80,7 +80,7 @@ timApp.directive("timDraggableFixed", [function() {
             let delta;
 
             if (attr.click) {
-                if ( attr.click === "true" ) {
+                if (attr.click === "true") {
                     clickFn = minimize;
                 } else {
                     clickFn = $parse(attr.click);
@@ -103,7 +103,7 @@ timApp.directive("timDraggableFixed", [function() {
                     element.css("min-height", "0");
                     setStorage(posKey + "min", true);
                     handles = element.find(".resizehandle");
-                    if ( handles.length ) {
+                    if (handles.length) {
                         handles.css("display", "none");
                     }
 
@@ -114,7 +114,7 @@ timApp.directive("timDraggableFixed", [function() {
                     setStorage(posKey + "min", false);
                     element.find(".resizehandle").css("display", "");
                 }
-                if ( handles && handles.length ) {
+                if (handles && handles.length) {
                     scope.$apply();
                 }
             }
@@ -185,9 +185,9 @@ timApp.directive("timDraggableFixed", [function() {
                 });
                 element.append(handleRightDown);
 
-                if ( areaMinimized ) {
+                if (areaMinimized) {
                     const handles = element.find(".resizehandle");
-                    if ( handles.length ) {
+                    if (handles.length) {
                         handles.css("display", "none");
                     }
                 }
@@ -261,13 +261,13 @@ timApp.directive("timDraggableFixed", [function() {
 
             function getPageXYnull(e) {
                 if (!("pageX" in e) || (e.pageX == 0 && e.pageY == 0)) {
-                    if ( e.originalEvent.touches.length ) {
+                    if (e.originalEvent.touches.length) {
                         return {
                             X: e.originalEvent.touches[0].pageX,
                             Y: e.originalEvent.touches[0].pageY,
                         };
                     }
-                    if ( e.originalEvent.changedTouches.length ) {
+                    if (e.originalEvent.changedTouches.length) {
                         return {
                             X: e.originalEvent.changedTouches[0].pageX,
                             Y: e.originalEvent.changedTouches[0].pageY,
@@ -283,7 +283,7 @@ timApp.directive("timDraggableFixed", [function() {
 
             function getPageXY(e) {
                 const pos = getPageXYnull(e);
-                if ( pos ) {
+                if (pos) {
                     lastPageXYPos = pos;
                 }
                 return lastPageXYPos;
@@ -316,7 +316,7 @@ timApp.directive("timDraggableFixed", [function() {
                 // element.css("background", "red");
                 pos = getPageXY(e);
                 // element.css("background", "blue");
-                if ( posKey ) {
+                if (posKey) {
                     // element.css("background", "yellow");
                     const css = element.css(["top", "bottom", "left", "right"]);
                     setStorage(posKey, css);
@@ -387,10 +387,10 @@ timApp.directive("timDraggableFixed", [function() {
                 e.stopPropagation();
 
                 const size = element.css(["width", "height"]);
-                if ( posKey ) {
-                    setStorage(posKey + "Size", size );
+                if (posKey) {
+                    setStorage(posKey + "Size", size);
                 }
-                if ( broadcastMsg ) {
+                if (broadcastMsg) {
                     scope.$broadcast(broadcastMsg, {size});
                     // $rootScope.$broadcast(broadcastMsg, {size: size});
                 }
@@ -399,10 +399,10 @@ timApp.directive("timDraggableFixed", [function() {
             // TODO context is deprecated
             (element.context as HTMLElement).style.msTouchAction = "none";
 
-            if ( attr.save ) {
+            if (attr.save) {
                 getSetDirs();
                 const oldSize: any = getStorage(posKey + "Size");
-                if ( oldSize ) {
+                if (oldSize) {
                     if (oldSize.width) {
                         element.css("width", oldSize.width);
                     }
@@ -415,7 +415,7 @@ timApp.directive("timDraggableFixed", [function() {
                 const h = window.innerHeight;
                 const ew = element.width();
                 const eh = element.height();
-                if ( oldPos ) {
+                if (oldPos) {
                     if (oldPos.top && setTop) {
                         element.css("top", wmax(oldPos.top, 0, h - 20));
                     }
@@ -431,7 +431,7 @@ timApp.directive("timDraggableFixed", [function() {
                     // element.css("background", "red");
                     timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
                 }
-                if ( getStorage(posKey + "min") ) {
+                if (getStorage(posKey + "min")) {
                     scope.minimize();
                 }
             }

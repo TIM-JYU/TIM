@@ -23,7 +23,7 @@ timApp.directive("popUpDialog", function() {
         scope: {
             show: "=",
             caption: "=",
-            elemId : "=",
+            elemId: "=",
         },
         template: "<div class='pop-up' ng-show='show' id='popUpBack'>" +
         "<div class='pop-up-overlay'></div> " +

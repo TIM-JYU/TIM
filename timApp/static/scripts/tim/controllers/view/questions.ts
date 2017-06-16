@@ -18,11 +18,11 @@ export function defineQuestions(sc) {
         sc.markup.json = "No data";
         sc.qId = questionId;
 
-        $http<{ questionjson: string, points: any, expl: string }>({
+        $http<{questionjson: string, points: any, expl: string}>({
             url: "/getQuestionById",
             method: "GET",
             params: {question_id: sc.qId},
-        }).then(function (response) {
+        }).then(function(response) {
             sc.markup.json = JSON.parse(response.data.questionjson);
             sc.markup.points = response.data.points;
             sc.markup.expl = response.data.expl;
@@ -32,7 +32,7 @@ export function defineQuestions(sc) {
                 questionId: sc.qId,
                 isLecturer: sc.isLecturer,
             });
-        }, function () {
+        }, function() {
             $log.error("There was some error creating question to database.");
         });
 
@@ -58,11 +58,11 @@ export function defineQuestions(sc) {
         sc.questionParId = parId;
         sc.questionParIdNext = parIdNext;
 
-        $http<{ markup: string }>({
+        $http<{markup: string}>({
             url: "/getQuestionByParId",
             method: "GET",
             params: {par_id: sc.questionParId, doc_id: sc.docId},
-        }).then(function (response) {
+        }).then(function(response) {
             sc.markup = response.data.markup;
             $rootScope.$broadcast("changeQuestionTitle", {questionTitle: sc.markup.json.questionTitle});
             $rootScope.$broadcast("setPreviewJson", {
@@ -71,7 +71,7 @@ export function defineQuestions(sc) {
                 questionParIdNext: sc.questionParIdNext,
                 isLecturer: sc.isLecturer,
             });
-        }, function () {
+        }, function() {
             $log.error("Could not get question.");
         });
 
@@ -109,7 +109,7 @@ export function defineQuestions(sc) {
         sc.par = $par;
         // $rootScope.$broadcast('toggleQuestion');
         try {
-            var response = await $http<{ markup: {json: string} }>({
+            var response = await $http<{markup: {json: string}}>({
                 url: "/getQuestionByParId",
                 method: "GET",
                 params: {par_id: parId, doc_id: sc.docId, edit: true},
@@ -204,12 +204,12 @@ export function defineQuestions(sc) {
                 }
                 const nt = parseInt(questionTitle);
                 let nr = "";
-                if ( isNaN(nt) ) {
+                if (isNaN(nt)) {
                     nr = (n) + "" + separator + "\r\n";
                 } else {
                     n = nt;
                     const nrt = "" + n;
-                    if ( questionTitle.length  > nrt.length ) {
+                    if (questionTitle.length > nrt.length) {
                         separator = questionTitle[nrt.length];
                     }
                 }
@@ -228,7 +228,7 @@ export function defineQuestions(sc) {
     };
 
     sc.getQuestions = async function() {
-        const response = await $http.get<Array<{ par_id: string }>>("/questions/" + sc.docId);
+        const response = await $http.get<Array<{par_id: string}>>("/questions/" + sc.docId);
         const data = response.data;
         const pars = {};
         const questionCount = data.length;
@@ -241,7 +241,7 @@ export function defineQuestions(sc) {
             pars[pi].questions.push(data[i]);
         }
 
-        Object.keys(pars).forEach(function (par_id, index) {
+        Object.keys(pars).forEach(function(par_id, index) {
             const $par = getElementByParId(par_id);
             $par.find(".questions").remove();
             const $questionsDiv = sc.getQuestionHtml(pars[par_id].questions);

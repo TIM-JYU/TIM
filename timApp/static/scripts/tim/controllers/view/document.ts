@@ -1,14 +1,15 @@
 import {getParAttributes, getParId, getRefAttrs} from "./parhelpers";
 
 export class Document {
-    get sections(): { [p: string]: JQuery } {
+    get sections(): {[p: string]: JQuery} {
         return this._sections;
     }
+
     get id(): number {
         return this._id;
     }
 
-    private _sections: { [name: string]: JQuery };
+    private _sections: {[name: string]: JQuery};
     private _id: number;
 
     constructor(id: number) {
@@ -60,8 +61,7 @@ export class Document {
         while (child.length > 0) {
             if (child.hasClass("area")) {
                 currentSectionPars = this.buildSections(currentSectionPars, child.find(".areaContent"));
-            }
-            else if (child.hasClass("par")) {
+            } else if (child.hasClass("par")) {
                 const attrs = getParAttributes(child);
                 const refAttrs = getRefAttrs(child)["ref-attrs"];
                 const content = child.children(".parContent");
@@ -76,8 +76,7 @@ export class Document {
                         currentSectionPars = currentSectionPars.add(child);
                     }
                 }
-            }
-            else if (child.hasClass("addBottomContainer")) {
+            } else if (child.hasClass("addBottomContainer")) {
                 this._sections[getParId(currentSectionPars.last())] = currentSectionPars;
             }
             child = child.next();

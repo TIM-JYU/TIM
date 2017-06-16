@@ -28,7 +28,7 @@ function timStripHtml(s) {
 }
 
 function timFillArray(len, value) {
-    return Array.apply(null, new Array(len)).map(function(){ return value; });
+    return Array.apply(null, new Array(len)).map(function() {return value;});
 }
 
 function qstCleanHtml(s) {
@@ -40,15 +40,15 @@ function qstCleanHtml(s) {
    no bigger than 'maxwidth', breaks are made at complete words.*/
 
 function qstFormatLabel(str, maxwidth, maxrows) {
-    if ( str.length <= maxwidth ) {
+    if (str.length <= maxwidth) {
         return str;
     }
     const sections = [];
     const words = str.split(" ");
     let temp = "";
 
-    words.forEach(function(item, index){
-        if ( sections.length >= maxrows ) {
+    words.forEach(function(item, index) {
+        if (sections.length >= maxrows) {
             return;
         }
         if (temp.length > 0) {
@@ -87,23 +87,23 @@ function qstFormatLabel(str, maxwidth, maxrows) {
 function qstShortText(s) {
     const parts = s.split("!!");
     let text = "";
-    if ( parts.length >= 2 ) {
+    if (parts.length >= 2) {
         text = qstCleanHtml(parts[1]);
     }
-    if ( text === "" ) {
+    if (text === "") {
         text = qstCleanHtml(parts[0]);
     }
     let max = 25;
-    if ( parts.length >= 3) {
-        max  = parseInt(parts[2]);
-        if ( isNaN(max) ) {
+    if (parts.length >= 3) {
+        max = parseInt(parts[2]);
+        if (isNaN(max)) {
             max = 25;
         }
     }
     let maxrows = 3;
-    if ( parts.length >= 4) {
-        maxrows  = parseInt(parts[3]);
-        if ( isNaN(maxrows) ) {
+    if (parts.length >= 4) {
+        maxrows = parseInt(parts[3]);
+        if (isNaN(maxrows)) {
             maxrows = 3;
         }
     }
@@ -116,11 +116,11 @@ function qstShortText(s) {
 
 function timGetLSIntValue(key, def: number): number {
     let val: any = window.localStorage.getItem(key);
-    if ( val === undefined ) {
+    if (val === undefined) {
         val = def;
     }
     val = parseInt(val);
-    if ( isNaN(val) ) {
+    if (isNaN(val)) {
         val = def;
     }
     return val;
@@ -130,7 +130,7 @@ let qstChartIndex = timGetLSIntValue("qstChartIndex", 0);
 
 timApp.directive("showChartDirective", [function() {
     "use strict";
-    if ( !qstChartIndex ) {
+    if (!qstChartIndex) {
         qstChartIndex = 0;
     }
     return {
@@ -282,7 +282,7 @@ timApp.directive("showChartDirective", [function() {
              */
             $scope.internalControl.createChart = async function(question) {
 
-                if ( $scope.divresize ) {
+                if ($scope.divresize) {
                     canvasw = $scope.div.width();
                     canvash = $scope.div.height();
                 }
@@ -332,16 +332,16 @@ timApp.directive("showChartDirective", [function() {
                 const usedDataSets = [];
 
                 function fillValues(dataSets, index) {
-                        dataSets.push(basicSets[index % basicSets.length]);
-                        dataSets[index].data = emptyData.slice();
-                        let color = basicSets[index % basicSets.length].fillColor;
-                        dataSets[index].backgroundColor = timFillArray(emptyData.length, color);
-                        color = basicSets[index % basicSets.length].strokeColor;
-                        dataSets[index].borderColor = timFillArray(emptyData.length, color);
-                        dataSets[index].borderWidth = 1;
+                    dataSets.push(basicSets[index % basicSets.length]);
+                    dataSets[index].data = emptyData.slice();
+                    let color = basicSets[index % basicSets.length].fillColor;
+                    dataSets[index].backgroundColor = timFillArray(emptyData.length, color);
+                    color = basicSets[index % basicSets.length].strokeColor;
+                    dataSets[index].borderColor = timFillArray(emptyData.length, color);
+                    dataSets[index].borderWidth = 1;
                 }
 
-                if (question.questionType === "true-false" && !question.headers ) {
+                if (question.questionType === "true-false" && !question.headers) {
                     question.headers[0] = {type: "header", id: 0, text: "True"};
                     question.headers[1] = {type: "header", id: 1, text: "False"};
                 }
@@ -357,7 +357,7 @@ timApp.directive("showChartDirective", [function() {
                     for (i = 0; i < data.headers.length; i++) {
                         usedDataSets[i].label = qstShortText(data.headers[i].text);
                         // if ( i > 0 ) usedDataSets[i].backgroundColor.push(basicSets[i % basicSets.length].fillColor);
-                        if ( i > 0 ) {
+                        if (i > 0) {
                             showLegend = true;
                         }
                     }
@@ -378,14 +378,14 @@ timApp.directive("showChartDirective", [function() {
                 ctx.canvas.style.width = "300px";
                 ctx.canvas.style.height = "300px";
                 */
-/*
-                $scope.answerChart = new Chart($scope.ctx).Bar(bardata, {animation: false} ,{
-                    multiTooltipTemplate: "<%= datasetLabel %> - <%= fvalue %>"
-                });
-                // experiment with: https://jsfiddle.net/4r26box7/85/
-*/
+                /*
+                                $scope.answerChart = new Chart($scope.ctx).Bar(bardata, {animation: false} ,{
+                                    multiTooltipTemplate: "<%= datasetLabel %> - <%= fvalue %>"
+                                });
+                                // experiment with: https://jsfiddle.net/4r26box7/85/
+                */
                 $scope.intScale = function(value, axis) {
-                    if ( axis == $scope.chartIndex ) {
+                    if (axis == $scope.chartIndex) {
                         return value;
                     }
                     if (value % 1 === 0) {
@@ -401,7 +401,7 @@ timApp.directive("showChartDirective", [function() {
                     options: {
                         responsive: false,
                         maintainAspectRatio: true,
-                        animation: false ,
+                        animation: false,
                         multiTooltipTemplate: "<%= datasetLabel %> - <%= fvalue %>",
                         legend: {
                             display: showLegend,
@@ -415,22 +415,22 @@ timApp.directive("showChartDirective", [function() {
                                 ticks: {
                                     min: 0,
                                     beginAtZero: true,
-                                    callback(value) { return $scope.intScale(value, 0); },
+                                    callback(value) {return $scope.intScale(value, 0);},
                                     // stepSize: 1
                                 },
                             }],
                             yAxes: [{
                                 //stacked: true
-                                 ticks: {
-                                     min: 0,
-                                     beginAtZero: true,
-                                     callback(value) { return $scope.intScale(value, 1); },
-                                     // stepSize: 1
-                                 },
+                                ticks: {
+                                    min: 0,
+                                    beginAtZero: true,
+                                    callback(value) {return $scope.intScale(value, 1);},
+                                    // stepSize: 1
+                                },
                             }],
                         },
 
-                       },
+                    },
                 };
 
                 await $scope.changeType();
@@ -440,30 +440,30 @@ timApp.directive("showChartDirective", [function() {
 
             $scope.internalControl.toggle = function() {
                 qstChartIndex = timGetLSIntValue("qstChartIndex", 0);
-                if ( qstChartIndex != $scope.chartIndex ) {
+                if (qstChartIndex != $scope.chartIndex) {
                     qstChartIndex = $scope.chartIndex;
                 }
-                qstChartIndex  = (qstChartIndex  + 1) % $scope.charts.length;
+                qstChartIndex = (qstChartIndex + 1) % $scope.charts.length;
                 $scope.chartIndex = qstChartIndex;
                 window.localStorage.setItem("qstChartIndex", qstChartIndex.toString());
                 $scope.changeType();
             };
 
             $scope.changeType = async function() {
-                if ( $scope.isText ) {
+                if ($scope.isText) {
                     return;
                 }
-                const newType = $scope.charts[qstChartIndex ];
-                if ( $scope.answerChart ) {
+                const newType = $scope.charts[qstChartIndex];
+                if ($scope.answerChart) {
                     $scope.answerChart.destroy();
                 }
-                if ( !$scope.ctx ) {
-                     $scope.ctx = $("<canvas id=" + $scope.canvasId.substring(1) + ' width="' + canvasw + '" height="' + canvash + '"><canvas>');
-                     $scope.div.append($scope.ctx);
-                     // var zoom = $('<a ng-click="zoom()">[+]</a>');
-                     // $scope.div.append(zoom);
+                if (!$scope.ctx) {
+                    $scope.ctx = $("<canvas id=" + $scope.canvasId.substring(1) + ' width="' + canvasw + '" height="' + canvash + '"><canvas>');
+                    $scope.div.append($scope.ctx);
+                    // var zoom = $('<a ng-click="zoom()">[+]</a>');
+                    // $scope.div.append(zoom);
                 }
-                const config = jQuery.extend(true, {}, $scope.chartConfig );
+                const config = jQuery.extend(true, {}, $scope.chartConfig);
                 config.type = newType;
                 const Chart = (await lazyLoad<typeof chartmodule>("chart.js")).Chart;
                 $scope.answerChart = new Chart($scope.ctx, config);
@@ -476,11 +476,11 @@ timApp.directive("showChartDirective", [function() {
 
             $scope.internalControl.resize = function(w, h) {
                 canvasw = w;
-                if ( canvasw < 100 ) {
+                if (canvasw < 100) {
                     canvasw = 100;
                 }
                 canvash = h;
-                if ( canvash < 100 ) {
+                if (canvash < 100) {
                     canvash = 100;
                 }
                 $scope.internalControl.close();
@@ -489,11 +489,11 @@ timApp.directive("showChartDirective", [function() {
 
             $scope.internalControl.zoom = function(w, h) {
                 canvasw += w * 100;
-                if ( canvasw < 100 ) {
+                if (canvasw < 100) {
                     canvasw = 100;
                 }
                 canvash += h * 100;
-                if ( canvash < 100 ) {
+                if (canvash < 100) {
                     canvash = 100;
                 }
                 $scope.internalControl.close();
@@ -509,7 +509,7 @@ timApp.directive("showChartDirective", [function() {
             $scope.$on("resizeElement", function(event, data) {
                 // var w = $scope.div.width();  // data.size.width;
                 // var h = $scope.div.height(); //  data.size.height)
-                if ( $scope.isText ) {
+                if ($scope.isText) {
                     return;
                 }
                 $scope.internalControl.resizeDiv();
@@ -530,7 +530,7 @@ timApp.directive("showChartDirective", [function() {
                     datasets = $scope.answerChart.data.datasets;
                 }
                 for (let answerersIndex = 0; answerersIndex < answers.length; answerersIndex++) {
-                    const answ =  answers[answerersIndex].answer;
+                    const answ = answers[answerersIndex].answer;
 
                     const onePersonAnswers = getJsonAnswers(answ);
                     for (let a = 0; a < onePersonAnswers.length; a++) {
@@ -539,8 +539,8 @@ timApp.directive("showChartDirective", [function() {
                             const singleAnswer = singleAnswers[sa];
 
                             if ($scope.isText) {
-                               // $scope.ctx.fillText(singleAnswer, $scope.x, $scope.y);
-                               // $scope.y += 20;
+                                // $scope.ctx.fillText(singleAnswer, $scope.x, $scope.y);
+                                // $scope.y += 20;
                                 const t = $("<p>" + singleAnswer + "</p>");
                                 $scope.div.append(t);
                                 continue;
@@ -575,7 +575,7 @@ timApp.directive("showChartDirective", [function() {
 
                 $scope.chartConfig.data.datasets = datasets;
 
-                if (!$scope.isText ) {
+                if (!$scope.isText) {
                     $scope.answerChart.update();
                 }
             };
@@ -603,5 +603,4 @@ timApp.directive("showChartDirective", [function() {
             };
         },
     };
-}])
-;
+}]);

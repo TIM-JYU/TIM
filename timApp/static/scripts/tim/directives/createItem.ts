@@ -43,7 +43,7 @@ timApp.directive("createItem", [function() {
             sc.alerts = [];
 
             sc.createItem = function() {
-                $http.post<{ path }>("/createItem", angular.extend({
+                $http.post<{path}>("/createItem", angular.extend({
                     item_path: sc.itemLocation + "/" + sc.itemName,
                     item_type: sc.itemType,
                     item_title: sc.itemTitle,

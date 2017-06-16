@@ -152,7 +152,7 @@ function get_link(n) {
 function set_lastnode(n) {
     /*var d = new Date();
      var t_mil = d.getMilliseconds();*/
-// testattu nopeuksia explorerilla, ei merkittäviä eroja
+    // testattu nopeuksia explorerilla, ei merkittäviä eroja
     if (lastnode == n) return;
     /*  deactivate(lastnode)
      lastnode=n;
@@ -423,7 +423,7 @@ function expandAll(node) {
     }
     let i;
     if (node.childNodes != null)
-    //if (node.hasChildNodes())
+        //if (node.hasChildNodes())
         for (i = 0; i < node.childNodes.length; i++)
             expandAll(node.childNodes[i]);
 }
@@ -436,7 +436,7 @@ function collapseAll(node) {
     }
     let i;
     if (node.childNodes != null)
-    // for opera   if (node.hasChildNodes())
+        // for opera   if (node.hasChildNodes())
         for (i = 0; i < node.childNodes.length; i++)
             collapseAll(node.childNodes[i]);
 }

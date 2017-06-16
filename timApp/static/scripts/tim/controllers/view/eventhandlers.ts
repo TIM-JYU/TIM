@@ -17,7 +17,7 @@ export function onClick(className, func, overrideModalCheck = false) {
     let lastDownEvent = null;
     let lastclicktime = -1;
 
-    $document.on("mousedown touchstart", className, function (e) {
+    $document.on("mousedown touchstart", className, function(e) {
         if (!overrideModalCheck && ($(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0)) {
             // Disable while there are modal gui elements
             return;
@@ -35,7 +35,7 @@ export function onClick(className, func, overrideModalCheck = false) {
         downCoords = {left: downEvent.pageX, top: downEvent.pageY};
         lastclicktime = new Date().getTime();
     });
-    $document.on("mousemove touchmove", className, function (e) {
+    $document.on("mousemove touchmove", className, function(e) {
         if (downEvent === null) {
             return;
         }
@@ -46,13 +46,13 @@ export function onClick(className, func, overrideModalCheck = false) {
             downEvent = null;
         }
     });
-    $document.on("touchcancel", className, function (e) {
+    $document.on("touchcancel", className, function(e) {
         downEvent = null;
     });
     // it is wrong to register both events at the same time; see https://stackoverflow.com/questions/8503453
     const isIOS = ((/iphone|ipad/gi).test(navigator.appVersion));
     const eventName = isIOS ? "touchend" : "mouseup";
-    $document.on(eventName, className, function (e) {
+    $document.on(eventName, className, function(e) {
         if (downEvent !== null) {
             if (func($(this), downEvent)) {
                 //e.preventDefault();
@@ -64,7 +64,7 @@ export function onClick(className, func, overrideModalCheck = false) {
 }
 
 export function onMouseOver(className, func) {
-    $document.on("mouseover", className, function (e) {
+    $document.on("mouseover", className, function(e) {
         if (func($(this), fixPageCoords(e))) {
             e.preventDefault();
             e.stopPropagation();
@@ -73,7 +73,7 @@ export function onMouseOver(className, func) {
 }
 
 export function onMouseOut(className, func) {
-    $document.on("mouseout", className, function (e) {
+    $document.on("mouseout", className, function(e) {
         if (func($(this), fixPageCoords(e))) {
             e.preventDefault();
             e.stopPropagation();
@@ -85,13 +85,13 @@ export function onMouseOverOut(className, func) {
     // A combination function with a third parameter
     // true when over, false when out
 
-    $document.on("mouseover", className, function (e) {
+    $document.on("mouseover", className, function(e) {
         if (func($(this), fixPageCoords(e), true)) {
             e.preventDefault();
         }
     });
 
-    $document.on("mouseout", className, function (e) {
+    $document.on("mouseout", className, function(e) {
         if (func($(this), fixPageCoords(e), false)) {
             e.preventDefault();
         }

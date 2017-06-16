@@ -124,7 +124,7 @@ timApp.controller("LectureController", ["$scope",
                 }
             };
 
-            $http<{ lectures: Array<{ lecture_code }>, isInLecture, lectureCode }>({
+            $http<{lectures: Array<{lecture_code}>, isInLecture, lectureCode}>({
                 url: "/checkLecture",
                 method: "GET",
                 params: {doc_id: $scope.docId, buster: new Date().getTime()},
@@ -280,7 +280,7 @@ timApp.controller("LectureController", ["$scope",
          * Checks time offset between client server. Used to set question end time right.
          */
         $scope.getClockOffset = function() {
-            $http<{ t1, t2, t3 }>({
+            $http<{t1, t2, t3}>({
                 url: "/getServerTime",
                 method: "GET",
                 params: {t1: new Date().valueOf()},
@@ -438,7 +438,7 @@ timApp.controller("LectureController", ["$scope",
                 mark = "|";
             });
             */
-            $http<{ questionLate? }>({
+            $http<{questionLate?}>({
                 url: "/answerToQuestion",
                 method: "PUT",
                 params: {
@@ -469,7 +469,7 @@ timApp.controller("LectureController", ["$scope",
                     buster: new Date().getTime(),
                 },
             }).then(() => {
-            }, function () {
+            }, function() {
                 $window.console.log("Failed to answer to question");
             });
         });
@@ -533,8 +533,8 @@ timApp.controller("LectureController", ["$scope",
          * @param useQuestions Whether or not to display questions?
          * @param useWall Whether or not to display the wall?
          */
-            //TODO: Change showLectureView so that it doesn't set useWall and useQuestions if they are set in
-            // lectureOptions dialog
+        //TODO: Change showLectureView so that it doesn't set useWall and useQuestions if they are set in
+        // lectureOptions dialog
         $scope.useOptions = function(useQuestions, useWall) {
             $scope.showLectureView($scope.lectureAnswer);
             $scope.lectureSettings.useWall = useWall;
@@ -952,12 +952,12 @@ timApp.controller("LectureController", ["$scope",
                     const answer = response.data;
                     $rootScope.$broadcast("putAnswers", {answers: answer.answers});
                     if ($scope.gettingAnswers && !angular.isDefined(answer.noAnswer)) {
-                            $window.clearTimeout(timeoutLectureAnswers);
+                        $window.clearTimeout(timeoutLectureAnswers);
 
-                            // Odottaa sekunnin ennen kuin pollaa uudestaan.
-                            timeoutLectureAnswers = setTimeout(function() {
-                                $scope.getLectureAnswers(answer);
-                            }, 1000);
+                        // Odottaa sekunnin ennen kuin pollaa uudestaan.
+                        timeoutLectureAnswers = setTimeout(function() {
+                            $scope.getLectureAnswers(answer);
+                        }, 1000);
                     }
 
                 }, function() {
@@ -984,8 +984,10 @@ timApp.controller("LectureController", ["$scope",
                     return;
                 }
                 $scope.requestOnTheWay = true;
-                $http<{isLecture, lectureId, lectureEnding, students,
-                    lecturers, new_end_time, points_closed, question, result, askedId, status, data, lastid}>({
+                $http<{
+                    isLecture, lectureId, lectureEnding, students,
+                    lecturers, new_end_time, points_closed, question, result, askedId, status, data, lastid
+                }>({
                     url: "/getUpdates",
                     method: "GET",
                     params: {
@@ -1127,7 +1129,7 @@ timApp.controller("LectureController", ["$scope",
             }
             $scope.showAnswerWindow = true;
             let markup = JSON.parse(answer.questionjson);
-            if ( !markup.json ) {
+            if (!markup.json) {
                 markup = {json: markup}; // compability for old
             }
             markup.expl = {};
@@ -1159,7 +1161,7 @@ timApp.controller("LectureController", ["$scope",
         };
 
         $scope.getQuestionManually = function(event) {
-            $http<{ already_answered }>({
+            $http<{already_answered}>({
                 url: "/getQuestionManually",
                 method: "GET",
                 params: {
@@ -1290,5 +1292,4 @@ timApp.controller("LectureController", ["$scope",
 
         $scope.focusOn();
     },
-])
-;
+]);

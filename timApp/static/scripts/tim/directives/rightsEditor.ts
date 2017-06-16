@@ -87,8 +87,8 @@ timApp.directive("rightsEditor", [function() {
 
             sc.removePermission = function(right, type) {
                 $http.put("/" + sc.urlRoot + "/remove/" + sc.itemId + "/" + right.gid + "/" + type, {}).then(function(response) {
-                        sc.getPermissions();
-                    }, function(response) {
+                    sc.getPermissions();
+                }, function(response) {
                     $window.alert(response.data.error);
                 });
             };
@@ -108,8 +108,8 @@ timApp.directive("rightsEditor", [function() {
                         sc.getPermissions();
                         sc.cancel();
                     }, function(response) {
-                    $window.alert(response.data.error);
-                });
+                        $window.alert(response.data.error);
+                    });
             };
 
             sc.getPlaceholder = function() {

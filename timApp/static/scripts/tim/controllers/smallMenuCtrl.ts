@@ -16,7 +16,7 @@ import {$http, $window} from "../ngimport";
  */
 
 timApp.controller("SmallMenuCtrl", ["$scope",
-    function ($scope) {
+    function($scope) {
         $scope.currentLecturesList = [];
         $scope.futureLecturesList = [];
 
@@ -24,7 +24,7 @@ timApp.controller("SmallMenuCtrl", ["$scope",
          * FILL WITH SUITABLE TEXT
          * @memberof module:smallMenuCtrl
          */
-        const ready = function () {
+        const ready = function() {
             $("#currentList").hide();
             $("#futureList").hide();
         };
@@ -33,20 +33,20 @@ timApp.controller("SmallMenuCtrl", ["$scope",
          * FILL WITH SUITABLE TEXT
          * @memberof module:smallMenuCtrl
          */
-        $scope.openCurrentLectureMenu = function () {
+        $scope.openCurrentLectureMenu = function() {
             $("#currentList").slideToggle();
             $("#futureList").hide();
             $(".menu").hide();
 
-            $http<{ currentLectures }>({
+            $http<{currentLectures}>({
                 url: "/getAllLecturesFromDocument",
                 method: "GET",
                 params: {doc_id: $scope.docId},
             })
-                .then(function (response) {
+                .then(function(response) {
                     $scope.currentLecturesList = response.data.currentLectures;
 
-                }, function () {
+                }, function() {
                 });
 
         };
@@ -55,19 +55,19 @@ timApp.controller("SmallMenuCtrl", ["$scope",
          * FILL WITH SUITABLE TEXT
          * @memberof module:smallMenuCtrl
          */
-        $scope.openFutureLectureMenu = function () {
+        $scope.openFutureLectureMenu = function() {
             $("#futureList").slideToggle();
             $("#currentList").hide();
             $(".menu").hide();
 
-            $http<{ futureLectures }>({
+            $http<{futureLectures}>({
                 url: "/getAllLecturesFromDocument",
                 method: "GET",
                 params: {doc_id: $scope.docId},
             })
-                .then(function (response) {
+                .then(function(response) {
                     $scope.futureLecturesList = response.data.futureLectures;
-                }, function () {
+                }, function() {
                 });
 
         };
@@ -76,12 +76,12 @@ timApp.controller("SmallMenuCtrl", ["$scope",
          * FILL WITH SUITABLE TEXT
          * @memberof module:smallMenuCtrl
          */
-        $scope.selectCurrentLecture = function () {
+        $scope.selectCurrentLecture = function() {
 
         };
 
         const w = angular.element($window);
-        w.bind("resize", function () {
+        w.bind("resize", function() {
             $("#currentList").hide();
             $("#futureList").hide();
         });

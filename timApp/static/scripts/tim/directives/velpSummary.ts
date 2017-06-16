@@ -58,7 +58,7 @@ timApp.controller("VelpSummaryController", ["$scope", function($scope) {
 
         for (let i = 0; i < annotations.length; i++) {
 
-                p += $scope.annotations[i].points;
+            p += $scope.annotations[i].points;
 
         }
         //cast back to a number, the string has trailing zeros.

@@ -67,7 +67,7 @@ timApp.controller("CreateLectureCtrl", ["$scope",
         });
 
         $scope.addKeyListeners = function() {
-            if ( $scope.dataform ) {
+            if ($scope.dataform) {
                 return; // already keys binded
             }
             $scope.dataform = $("#lectureForm")[0];
@@ -75,10 +75,10 @@ timApp.controller("CreateLectureCtrl", ["$scope",
             $scope.dataform.addEventListener("keydown", function(event) {
                 if (event.ctrlKey || event.metaKey) {
                     switch (String.fromCharCode(event.which).toLowerCase()) {
-                    case "s":
-                        event.preventDefault();
-                        $scope.submitLecture();
-                        break;
+                        case "s":
+                            event.preventDefault();
+                            $scope.submitLecture();
+                            break;
                     }
                 }
             });
@@ -267,7 +267,7 @@ timApp.controller("CreateLectureCtrl", ["$scope",
                 if ($scope.earlyJoining) {
                     $scope.startTime.subtract(15, "minutes");
                 }
-                $http<{ lectureId: number }>({
+                $http<{lectureId: number}>({
                     url: "/createLecture",
                     method: "POST",
                     params: {

@@ -12,7 +12,7 @@ timApp.controller("PermCtrl", [
         sc.showMoreChangelog = function() {
             const newLength = sc.item.versions.length + 100;
             sc.changelogLoading = true;
-            $http.get<{ versions }>("/changelog/" + sc.item.id + "/" + (newLength)).then(function(response) {
+            $http.get<{versions}>("/changelog/" + sc.item.id + "/" + (newLength)).then(function(response) {
                 sc.item.versions = response.data.versions;
                 sc.hasMoreChangelog = sc.item.versions.length === newLength;
             }, function(response) {
@@ -270,7 +270,7 @@ timApp.controller("PermCtrl", [
             const lines = text.split("\n");
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i];
-                if ( true || line.lastIndexOf("    ", 0) !== 0 ) {
+                if (true || line.lastIndexOf("    ", 0) !== 0) {
                     line = line.replace(/\[((https?|mms):\/\/[^\s\[\]]+)\s+([^\[\]]+)\]/g, "[$3]($1)"); // ordinary links
                     line = line.replace(/\[((https?|mms):\/\/[^\s\[\]]+)\s+(\[.*?\])\]/g, "[$3]($1)");   // links like [url [text]]
                     line = line.replace(/\[wiki:([^\s\[\]]+)\]/g, "[$1](" + (sc.wikiRoot || "") + "$1)"); // [wiki:local] -> [local](URL)
@@ -284,30 +284,30 @@ timApp.controller("PermCtrl", [
             }
             text = lines.join("\n");
 
-/*
-
-text = re.sub(r'(?m)^====\s+(.*?)\s+====.*$', r'#-\n#### \1', text)
-text = re.sub(r'(?m)^===\s+(.*?)\s+===.*$', r'#-\n### \1', text)
-text = re.sub(r'(?m)^==\s+(.*?)\s+==.*$', r'#-\n## \1', text)
-text = re.sub(r'(?m)^=\s+(.*?)\s+=.*$', r'#-\n# \1', text)
-#text = re.sub(r'^       * ', r'****', text)
-#text = re.sub(r'^     * ', r'***', text)
-#text = re.sub(r'^   * ', r'**', text)
-#text = re.sub(r'^ * ', r'*', text)
-text = re.sub(r'^ \d+. ', r'1.', text)
-
-a = []
-for line in text.split('\n'):
-    if True or not line.startswith('    '):
-        line = re.sub(r'\[(https?://[^\s\[\]]+)\s([^\[\]]+)\]', r'[\2](\1)', line)
-        line = re.sub(r'\[(wiki:[^\s\[\]]+)\s([^\[\]]+)\]', r'[\2](/\1/)', line)
-        line = re.sub(r'\!(([A-Z][a-z0-9]+){2,})', r'\1', line)
-        line = re.sub(r'\'\'\'(.*?)\'\'\'', r'*\1*', line)
-        line = re.sub(r'\'\'(.*?)\'\'', r'_\1_', line)
-        line = re.sub(r'\(/wiki:', r'(https://trac.cc.jyu.fi/projects/ohj2/wiki/', line)
-    a.append(line)
-text = '\n'.join(a)
-*/
+            /*
+            
+            text = re.sub(r'(?m)^====\s+(.*?)\s+====.*$', r'#-\n#### \1', text)
+            text = re.sub(r'(?m)^===\s+(.*?)\s+===.*$', r'#-\n### \1', text)
+            text = re.sub(r'(?m)^==\s+(.*?)\s+==.*$', r'#-\n## \1', text)
+            text = re.sub(r'(?m)^=\s+(.*?)\s+=.*$', r'#-\n# \1', text)
+            #text = re.sub(r'^       * ', r'****', text)
+            #text = re.sub(r'^     * ', r'***', text)
+            #text = re.sub(r'^   * ', r'**', text)
+            #text = re.sub(r'^ * ', r'*', text)
+            text = re.sub(r'^ \d+. ', r'1.', text)
+            
+            a = []
+            for line in text.split('\n'):
+                if True or not line.startswith('    '):
+                    line = re.sub(r'\[(https?://[^\s\[\]]+)\s([^\[\]]+)\]', r'[\2](\1)', line)
+                    line = re.sub(r'\[(wiki:[^\s\[\]]+)\s([^\[\]]+)\]', r'[\2](/\1/)', line)
+                    line = re.sub(r'\!(([A-Z][a-z0-9]+){2,})', r'\1', line)
+                    line = re.sub(r'\'\'\'(.*?)\'\'\'', r'*\1*', line)
+                    line = re.sub(r'\'\'(.*?)\'\'', r'_\1_', line)
+                    line = re.sub(r'\(/wiki:', r'(https://trac.cc.jyu.fi/projects/ohj2/wiki/', line)
+                a.append(line)
+            text = '\n'.join(a)
+            */
             //sc.tracWikiText = text;
             sc.fulltext = text;
         };
@@ -464,7 +464,7 @@ text = '\n'.join(a)
                     const data = response.data;
                     sc.saving = false;
                     if ("is_warning" in data && data.is_warning) {
-                        if ( $window.confirm(data.error + "\n\nDo you still wish to save the document?") ) {
+                        if ($window.confirm(data.error + "\n\nDo you still wish to save the document?")) {
                             sc.saveDocumentWithWarnings();
                         }
                     } else {

@@ -24,11 +24,11 @@ function uncheckRadio(e) {
     // must be also property form that has other radios.
     const elem = $(this);
     const form = elem.prop("form");
-    if ( !form ) {
+    if (!form) {
         return;
     }
     const gn = elem.prop("name");
-    if ( elem.prop("previousValue") === true ) {
+    if (elem.prop("previousValue") === true) {
         elem.prop("checked", false);
     } else {
         $("input[name=" + gn + "]", form).prop("previousValue", false);
@@ -39,7 +39,7 @@ function uncheckRadio(e) {
 
 export function getJsonAnswers(answer) {
     // Converts answer string to JSON table
-    if ( answer.length > 0 && answer[0] === "[" ) {
+    if (answer.length > 0 && answer[0] === "[") {
         return JSON.parse(answer);
     }
     const singleAnswers = [];
@@ -52,11 +52,11 @@ export function getJsonAnswers(answer) {
 }
 
 function deletePar(s) {
-    if ( !s.startsWith("<p>") ) {
+    if (!s.startsWith("<p>")) {
         return s;
     }
     const rs = s.substring(3);
-    if ( !rs.endsWith("</p>") ) {
+    if (!rs.endsWith("</p>")) {
         return s;
     }
     return rs.substring(0, rs.length - 4);
@@ -85,11 +85,11 @@ export function getPointsTable(markupPoints) {
 export function minimizeJson(json) {
     // remove not needed fields from json, call when saving the question
     const result: any = {};
-    if ( json.headers ) {
+    if (json.headers) {
         result.headers = [];
         for (let i = 0; i < json.headers.length; i++) {
             let header = json.headers[i];
-            if ( header.id == i  &&  header.type === "header" ) {
+            if (header.id == i && header.type === "header") {
                 header = header.text;
             }
             result.headers.push(header);
@@ -103,14 +103,14 @@ export function minimizeJson(json) {
 
     for (let i = 0; i < rows.length; i++) {
         let row = rows[i];
-        if ( row.id == i + 1 && (!row.type || row.type === "question") ) {
+        if (row.id == i + 1 && (!row.type || row.type === "question")) {
             row = row.text; // { text: row.text};
         } else {
             allText = false;
         }
         rrows.push(row);
     }
-   // rrows.push({}); // push empty object to force Python json yaml dump to put rows in separate lines. Remember to remove it
+    // rrows.push({}); // push empty object to force Python json yaml dump to put rows in separate lines. Remember to remove it
 
     // if ( allText ) rrows = rrows.join("\n"); // oletuksena menee samalle riville kaikki json text muunnoksessa.
 
@@ -120,7 +120,7 @@ export function minimizeJson(json) {
     result.questionType = json.questionType;
     result.answerFieldType = json.answerFieldType;
     result.matrixType = json.matrixType;
-    if ( json.timeLimit ) {
+    if (json.timeLimit) {
         result.timeLimit = json.timeLimit;
     }
     return result;
@@ -138,13 +138,13 @@ function fixLineBreaks(s) {
 export function fixQuestionJson(json) {
     // fill all missing fields from question json, call before use json
     const columnHeaders = [];
-    if ( json.data ) {
+    if (json.data) {
         json.headers = json.data.headers;
         json.rows = json.data.rows;
     }
-    if ( json.headers ) {
+    if (json.headers) {
         let headers = json.headers;
-        if ( Array !== headers.constructor ) { // if just on text string
+        if (Array !== headers.constructor) { // if just on text string
             const jrows = headers.split("\n");
             headers = [];
             let ir = -1;
@@ -161,7 +161,7 @@ export function fixQuestionJson(json) {
 
         for (let i = 0; i < json.headers.length; i++) {
             let header = json.headers[i];
-            if (typeof(header.text) === "undefined") {
+            if (typeof (header.text) === "undefined") {
                 header = {text: header.toString(), type: "header", id: i};
             }
             if (!header.id) {
@@ -174,17 +174,17 @@ export function fixQuestionJson(json) {
         }
     }
 
-    if ( !json.answerFieldType ) {
+    if (!json.answerFieldType) {
         json.answerFieldType = "radio";
     }
 
-    if (json.questionType === "true-false" && (!json.headers || json.headers.length == 0 ) ) {
+    if (json.questionType === "true-false" && (!json.headers || json.headers.length == 0)) {
         json.headers[0] = {type: "header", id: 0, text: "True"};
         json.headers[1] = {type: "header", id: 1, text: "False"};
     }
 
-    let rows =  json.rows;
-    if ( Array !== rows.constructor ) { // if just on text string
+    let rows = json.rows;
+    if (Array !== rows.constructor) { // if just on text string
         const jrows = rows.split("\n");
         rows = [];
         for (let i = 0; i < jrows.length; i++) {
@@ -197,16 +197,16 @@ export function fixQuestionJson(json) {
 
     let ir = -1;
     const n = rows.length - 1;
-    if ( n >= 0 ) {
+    if (n >= 0) {
         const last = rows[n];  // remove ending object if needed
-        if ( typeof last === "object" && $.isEmptyObject(last)) {
+        if (typeof last === "object" && $.isEmptyObject(last)) {
             rows.splice(n, 1); // trust that null is also object!
         }
     }
 
     for (let i = 0; i < rows.length; i++) {
         let row = rows[i];
-        if (typeof(row.text) === "undefined") {
+        if (typeof (row.text) === "undefined") {
             row = {text: row.toString(), type: "question"};
         }
         // if (!row.text) continue;
@@ -214,10 +214,10 @@ export function fixQuestionJson(json) {
         if (!row.id) {
             row.id = ir + 1;
         }
-        if (!row.columns ) {
+        if (!row.columns) {
             row.columns = [{}];
             let nh = 0;
-            if ( json.headers ) {
+            if (json.headers) {
                 nh = json.headers.length;
             }
             for (let ic = 1; ic < nh; ic++) {
@@ -265,7 +265,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
                 if (params.preview || $scope.preview || $scope.result) {
                     disabled = " disabled ";
                 }
-                if ( params.noDisable ) {
+                if (params.noDisable) {
                     disabled = "";
                 }
 
@@ -294,7 +294,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
                 const htmlSheet = $("<form>", {class: answclass});
                 $scope.htmlSheet = htmlSheet;
                 params.htmlSheet = htmlSheet;
-                if ($scope.json.timeLimit !== "" && $scope.endTime  && !$scope.preview && !$scope.result) {
+                if ($scope.json.timeLimit !== "" && $scope.endTime && !$scope.preview && !$scope.result) {
                     const progress = $("<progress>", {
                         max: ($scope.endTime - $scope.askedTime),
                         id: "progressBar",
@@ -311,8 +311,8 @@ timApp.directive("dynamicAnswerSheet", [function() {
 
                 htmlSheet.append(h5);
                 // htmlSheet.append($('<h5>', {text: json.questionText}));
-                if ( params.markup.userpoints !== undefined) {
-                    htmlSheet.append($("<p>", {text: "Points: " + params.markup.userpoints }));
+                if (params.markup.userpoints !== undefined) {
+                    htmlSheet.append($("<p>", {text: "Points: " + params.markup.userpoints}));
                 }
 
                 const table = $("<table>", {id: "answer-sheet-table", class: "table table-borderless"});
@@ -327,7 +327,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
                     }
                     angular.forEach(data.headers, function(header) {
                         const th = $("<th>");
-                        th.append( fixLineBreaks(header.text) );
+                        th.append(fixLineBreaks(header.text));
                         totalBorderless = false;
                         tr.append(th);
                         // tr.append($('<th>', {text: header.text || header}));
@@ -342,7 +342,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
                 angular.forEach(data.rows, function(row) {
                     ir++;
                     let pointsRow = {};
-                    if ( params.result && pointsTable.length > ir &&  pointsTable[ir] ) {
+                    if (params.result && pointsTable.length > ir && pointsTable[ir]) {
                         pointsRow = pointsTable[ir];
                     }
                     const rtext = fixLineBreaks(row.text);
@@ -350,7 +350,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
                     if (json.questionType === "matrix" || json.questionType === "true-false") {
                         const td = $("<td>");
                         td.append(rtext);
-                        if ( rtext && ir > 0 ) {
+                        if (rtext && ir > 0) {
                             totalBorderless = false;
                         }
                         tr.append(td);
@@ -367,10 +367,10 @@ timApp.directive("dynamicAnswerSheet", [function() {
 
                             let colTDPoints;
                             let colPtsClass = "qst-normal";
-                            if ( value in pointsRow ) {
+                            if (value in pointsRow) {
                                 const colPoints = pointsRow[value];
                                 colTDPoints = $("<p>", {class: "qst-points"}).append(colPoints);
-                                if ( colPoints > 0 ) {
+                                if (colPoints > 0) {
                                     colPtsClass = "qst-correct";
                                 }
                             }
@@ -398,7 +398,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
                             } else {
                                 // group = $scope.cg() + rtext.replace(/[^a-zA-Z0-9]/g, "");
                                 let checked = false;
-                                if (answerTable && ir < answerTable.length ) {
+                                if (answerTable && ir < answerTable.length) {
                                     checked = (answerTable[ir].indexOf(value) >= 0);
                                 }
                                 const input = $("<input>", {
@@ -407,7 +407,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
                                     value: ic + 1, // parseInt(row.columns[ic].id) + 1,
                                     checked,
                                 });
-                                if ( json.answerFieldType === "radio" ) {
+                                if (json.answerFieldType === "radio") {
                                     input.prop("form", htmlSheet as any);
                                     input.click(uncheckRadio);  // TODO: Tähän muutoskäsittely ja jokaiseen tyyppiin tämä
                                 }
@@ -420,7 +420,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
                                 ispan.append(input);
                                 td.append($("<label>").append(ispan));
 
-                                if ( colTDPoints ) {
+                                if (colTDPoints) {
                                     td.append(colTDPoints);
                                 }
                                 tr.append(td);
@@ -431,11 +431,11 @@ timApp.directive("dynamicAnswerSheet", [function() {
                             let colTDPoints;
                             let colPtsClass = "qst-normal";
                             let pointsRow = {};
-                            if ( params.result && pointsTable.length > 0 &&  pointsTable[0] ) pointsRow = pointsTable[0];
-                            if ( value in pointsRow ) {
+                            if (params.result && pointsTable.length > 0 && pointsTable[0]) pointsRow = pointsTable[0];
+                            if (value in pointsRow) {
                                 const colPoints = pointsRow[value];
                                 colTDPoints = $("<p>", {class: "qst-points"}).append(colPoints);
-                                if ( colPoints > 0 ) {
+                                if (colPoints > 0) {
                                     colPtsClass = "qst-correct";
                                 }
                             }
@@ -453,7 +453,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
                                 value: ir + 1, //parseInt(row.id) + 1,
                                 checked,
                             });
-                            if ( json.answerFieldType === "radio" ) {
+                            if (json.answerFieldType === "radio") {
                                 input.prop("form", htmlSheet as any);
                                 input.click(uncheckRadio);
                             }
@@ -466,17 +466,17 @@ timApp.directive("dynamicAnswerSheet", [function() {
                             label.append(ispan).append(" " + deletePar("" + rtext));
                             const td = $("<td>", {class: "answer-button2"});
                             td.append(label);
-                            if ( colTDPoints ) {
+                            if (colTDPoints) {
                                 td.append(colTDPoints);
                             }
                             tr.append(td);
                         }
                     }
                     // If showing question results, add question rows explanation
-                    if ($scope.result && $scope.expl ) {
+                    if ($scope.result && $scope.expl) {
                         let expl = "";
                         const ir1 = (ir + 1).toString();
-                        if ( ir1 in $scope.expl ) {
+                        if (ir1 in $scope.expl) {
                             expl = $scope.expl[ir1];
                         }
                         const tde = $("<td>", {class: "explanation"});
@@ -489,7 +489,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
 
                 htmlSheet.append($("<div>").append(table));
 
-                if ( totalBorderless ) {
+                if (totalBorderless) {
                     table.addClass("total-borderless");
                 }
 
@@ -506,18 +506,18 @@ timApp.directive("dynamicAnswerSheet", [function() {
                         } else {
                             $input = $table.find("textarea:first");
                         }
-                        if ( params.isAsking ) {
+                        if (params.isAsking) {
                             $input[0].focus();
                         }
                     }, 0);
                     //
-                    if ( !$scope.isText ) {
+                    if (!$scope.isText) {
                         $table.on("keyup.send", $scope.answerWithEnter);
                     }
                     const now = new Date().valueOf();
                     timeLeft = $scope.endTime - now;
                     barFilled = 0;
-                    if ( $scope.endTime && $scope.json.timeLimit !== "") {
+                    if ($scope.endTime && $scope.json.timeLimit !== "") {
                         const timeBetween = 500;
                         const maxCount = timeLeft / timeBetween + 5 * timeBetween;
                         $scope.progressElem = $("#progressBar");
@@ -558,7 +558,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
             $scope.internalControl.updateBar = function() {
                 //TODO: Problem with inactive tab.
                 const now = new Date().valueOf();
-                if ( !$scope.endTime || !promise ) {
+                if (!$scope.endTime || !promise) {
                     return;
                 }
                 timeLeft = $scope.endTime - now;
@@ -578,7 +578,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
             };
 
             $scope.internalControl.endQuestion = function() {
-                if ( !promise ) {
+                if (!promise) {
                     return;
                 }
                 $interval.cancel(promise);
@@ -690,5 +690,4 @@ timApp.directive("dynamicAnswerSheet", [function() {
 
     };
 },
-])
-;
+]);

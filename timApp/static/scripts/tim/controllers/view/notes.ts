@@ -11,7 +11,7 @@ export function defineNotes(sc) {
 
     sc.toggleNoteEditor = function($parOrArea, options) {
         let caption = "Edit comment";
-        const touch = typeof("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
+        const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
         const mobile = touch && (window.screen.width < 1200);
         if (!sc.item.rights.can_comment) {
             return;

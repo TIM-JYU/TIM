@@ -53,8 +53,8 @@ export class ParagraphCompiler {
      * @returns null if KaTeX processed the element successfully. Otherwise, the failed element.
      */
     public processMath(katexFunction: (e: Element) => void,
-                       elem: Element,
-                       tryMathJax: boolean): Element {
+        elem: Element,
+        tryMathJax: boolean): Element {
         try {
             katexFunction(elem);
             return null;

@@ -74,7 +74,7 @@ $(function() {
     $.ajax({
         url: "/generateMap",
         type: "post",
-        dataType : "application/json",
+        dataType: "application/json",
         contentType: "application/json",
         data: $container.attr("data-mapdata"),
         success(newJson) {
@@ -184,13 +184,13 @@ $(function() {
                 }
 
                 function hasOwnProperty(json, tile, layerdelta, datadelta) {
-                    if ( !json.layers[tile.layerNo + layerdelta] ) {
+                    if (!json.layers[tile.layerNo + layerdelta]) {
                         return false;
                     }
-                    if ( !json.layers[tile.layerNo + layerdelta].data ) {
+                    if (!json.layers[tile.layerNo + layerdelta].data) {
                         return false;
                     }
-                    return ( json.layers[tile.layerNo + layerdelta].data.hasOwnProperty((tile.dataIndex + datadelta).toString()) );
+                    return (json.layers[tile.layerNo + layerdelta].data.hasOwnProperty((tile.dataIndex + datadelta).toString()));
                 }
 
                 /**
@@ -202,11 +202,11 @@ $(function() {
 
                     // if clicked on a "top tile", draw a full frame
                     if (tile.tileset.properties !== undefined &&
-                        tile.tileset.properties.frameProperty == 1  && !hasOwnProperty(json, tile, 1, 0) ) {
-/*
-                        && json.layers[tile.layerNo + 1] && json.layers[tile.layerNo + 1].data &&
-                        !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex).toString()))  {
-*/
+                        tile.tileset.properties.frameProperty == 1 && !hasOwnProperty(json, tile, 1, 0)) {
+                        /*
+                                                && json.layers[tile.layerNo + 1] && json.layers[tile.layerNo + 1].data &&
+                                                !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex).toString()))  {
+                        */
                         context.globalAlpha = alpha;
                         context.drawImage(tileImage, grayTile.x, grayTile.y,
                             tileFrameSet.tilewidth, tileFrameSet.tileheight, tile.x * scale, tile.y * scale,
@@ -243,10 +243,10 @@ $(function() {
                             tileFrameSet.tilewidth * scale, tileFrameSet.tileheight * scale);
                         // If clicked on a bulding with one floor, draw two frame tiles and a roof frame
                     } else if (tile.tileset.properties !== undefined &&
-                        tile.tileset.properties.buildingProperty === 1  && //&& json.layers[tile.layerNo + 1] &&
+                        tile.tileset.properties.buildingProperty === 1 && //&& json.layers[tile.layerNo + 1] &&
 
                         !hasOwnProperty(json, tile, 1, -json.width) &&
-                        hasOwnProperty(json, tile, -1, 0) ) {
+                        hasOwnProperty(json, tile, -1, 0)) {
                         /*
                         !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex - json.width).toString()) &&
                         json.layers[tile.layerNo - 1].data.hasOwnProperty((tile.dataIndex).toString())) {
@@ -283,7 +283,7 @@ $(function() {
                         tile.tileset.properties.buildingProperty == 1 && // json.layers[tile.layerNo + 1] &&
                         !hasOwnProperty(json, tile, 1, -json.width) &&
                         hasOwnProperty(json, tile, -1, json.width) &&
-                        hasOwnProperty(json, tile, -2, json.width) ) {
+                        hasOwnProperty(json, tile, -2, json.width)) {
                         /*
                         !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex - json.width).toString()) &&
                         json.layers[tile.layerNo - 1].data.hasOwnProperty((tile.dataIndex + json.width).toString()) &&
@@ -314,7 +314,7 @@ $(function() {
                         !hasOwnProperty(json, tile, 1, -json.width) &&
                         hasOwnProperty(json, tile, -1, json.width) &&
                         hasOwnProperty(json, tile, -2, json.width * 2) &&
-                        hasOwnProperty(json, tile, -3, json.width * 2) ) {
+                        hasOwnProperty(json, tile, -3, json.width * 2)) {
                         /*
                         !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex - json.width).toString()) &&
                         json.layers[tile.layerNo - 1].data.hasOwnProperty((tile.dataIndex + json.width).toString()) &&
@@ -362,7 +362,7 @@ $(function() {
                  */
                 function drawInfo(x, y, tile) {
                     let tscale = scale;
-                    if ( tscale < 0.7 ) {
+                    if (tscale < 0.7) {
                         tscale = 0.7;
                     }
                     // Size and position of the box
@@ -428,12 +428,12 @@ $(function() {
                     // Set info box text
 
                     title.html("<a href='" + json.layers[tile.layerNo].properties.site + "'>" + json.layers[tile.layerNo].properties.title + "</a>");
-		                  if (json.layers[tile.layerNo].properties.maxpoints !== 0) {
-                            description.html("Dokumentin pisteet: " + rround(json.layers[tile.layerNo].properties.studentpoints, 2) + "/" +
-                                json.layers[tile.layerNo].properties.maxpoints + "<br>Kurssin pisteet yhteensä: " + rround(totalPoints, 2) + "/" + totalMax);
-			                } else {
-			                    description.html("Kurssin pisteet yhteensä: " + rround(totalPoints, 2) + "/" + totalMax);
-			                }
+                    if (json.layers[tile.layerNo].properties.maxpoints !== 0) {
+                        description.html("Dokumentin pisteet: " + rround(json.layers[tile.layerNo].properties.studentpoints, 2) + "/" +
+                            json.layers[tile.layerNo].properties.maxpoints + "<br>Kurssin pisteet yhteensä: " + rround(totalPoints, 2) + "/" + totalMax);
+                    } else {
+                        description.html("Kurssin pisteet yhteensä: " + rround(totalPoints, 2) + "/" + totalMax);
+                    }
 
                     // Draw the box on the canvas
                     const context = middleCanvas.getContext("2d");
@@ -463,8 +463,8 @@ $(function() {
                                 // If clicked tile is a "top tile" or a building
                                 if (tile.tileset.properties !== undefined &&
                                     (tile.tileset.properties.frameProperty === 1 ||
-                                    tile.tileset.properties.buildingProperty === 1 ||
-                                    tile.tileset.properties.buildingProperty === 2)) {
+                                        tile.tileset.properties.buildingProperty === 1 ||
+                                        tile.tileset.properties.buildingProperty === 2)) {
                                     if (!tile.active) {
                                         if (!showAll) {
                                             // Activate clicked tile cluster
@@ -504,19 +504,19 @@ $(function() {
 
                     tiles.forEach(function(t) {
                         isNextTo = (t.x * scale <= (tile.x + json.tilewidth * 2) * scale &&
-                        t.x * scale >= (tile.x - json.tilewidth * 2) * scale &&
-                        (t.y * scale <= (tile.y + json.tileheight * 2) * scale &&
-                        t.y * scale >= (tile.y - json.tileheight * 2) * scale));
+                            t.x * scale >= (tile.x - json.tilewidth * 2) * scale &&
+                            (t.y * scale <= (tile.y + json.tileheight * 2) * scale &&
+                                t.y * scale >= (tile.y - json.tileheight * 2) * scale));
 
                         // If the iterated tile is a building or a "top tile" and it is next to
                         // or above the given tile, call this function in  recursion.
                         if (t.tileset.properties !== undefined &&
                             (t.tileset.properties.buildingProperty == 1 ||
-                            t.tileset.properties.frameProperty == 1) && !t.active &&
-                            ( isNextTo || ((t.layerNo === tile.layerNo + 1 ||
-                            t.layerNo === tile.layerNo - 1) &&
-                            t.x === tile.x && (t.y === tile.y - json.tileheight ||
-                            t.y === tile.y + json.tileheight)))) {
+                                t.tileset.properties.frameProperty == 1) && !t.active &&
+                            (isNextTo || ((t.layerNo === tile.layerNo + 1 ||
+                                t.layerNo === tile.layerNo - 1) &&
+                                t.x === tile.x && (t.y === tile.y - json.tileheight ||
+                                    t.y === tile.y + json.tileheight)))) {
                             activateCluster(t, tiles);
                         }
                     });
@@ -531,7 +531,7 @@ $(function() {
                     tiles.forEach(function(t) {
                         if (t.tileset.properties !== undefined &&
                             (t.tileset.properties.buildingProperty == 1 ||
-                            t.tileset.properties.frameProperty == 1) && !t.active) {
+                                t.tileset.properties.frameProperty == 1) && !t.active) {
                             t.active = true;
                         }
                     });
@@ -669,10 +669,10 @@ $(function() {
 
                     // Check if point is inside the tile
                     this.isPointInside = function(x, y) {
-                        return ( x >= (this.x + this.offsetX) * scale &&
-                        x <= (this.x + this.tileset.tilewidth + this.offsetX) * scale &&
-                        y >= (this.y + this.offsetY + this.heightCorr) * scale &&
-                        y <= (this.y + this.tileset.tileheight + this.offsetY + this.heightCorr) * scale);
+                        return (x >= (this.x + this.offsetX) * scale &&
+                            x <= (this.x + this.tileset.tilewidth + this.offsetX) * scale &&
+                            y >= (this.y + this.offsetY + this.heightCorr) * scale &&
+                            y <= (this.y + this.tileset.tileheight + this.offsetY + this.heightCorr) * scale);
                     };
 
                 }

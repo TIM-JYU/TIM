@@ -22,12 +22,12 @@ export class UserService {
     }
 
     public logout(user, logoutFromKorppi = false) {
-        $http.post<{ other_users: object[], current_user: object }>("/logout", {user_id: user.id}).then((response) => {
+        $http.post<{other_users: object[], current_user: object}>("/logout", {user_id: user.id}).then((response) => {
             this.group = response.data.other_users;
             this.current = response.data.current_user;
             if (!this.isLoggedIn()) {
                 if (logoutFromKorppi) {
-                    this.korppiLogout(function () {
+                    this.korppiLogout(function() {
                         $window.location.reload();
                     });
                 } else {
@@ -52,12 +52,12 @@ export class UserService {
         const cameFrom = encodeURIComponent(cameFromRaw.replace("#", "%23"));
         const anchorRaw = $window.anchor || window.location.hash.replace("#", "");
         const anchor = encodeURIComponent(anchorRaw);
-        const redirectFn = function () {
+        const redirectFn = function() {
             $window.location.replace(targetUrl + separator + $httpParamSerializer({
-                    came_from: cameFrom,
-                    anchor,
-                    add_user: addUser,
-                }));
+                came_from: cameFrom,
+                anchor,
+                add_user: addUser,
+            }));
         };
         if (addUser) {
             this.korppiLogout(redirectFn);
@@ -76,22 +76,22 @@ export class UserService {
                     "Cache-Control": undefined,
                     "Pragma": undefined,
                 },
-            }).finally(function () {
-            $http(
-                {
-                    withCredentials: true,
-                    method: "POST",
-                    url: "https://korppi.jyu.fi/openid/manage/manage",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    data: $httpParamSerializer({logout: "Logout"}),
-                }).finally(redirectFn);
-        });
+            }).finally(function() {
+                $http(
+                    {
+                        withCredentials: true,
+                        method: "POST",
+                        url: "https://korppi.jyu.fi/openid/manage/manage",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                        data: $httpParamSerializer({logout: "Logout"}),
+                    }).finally(redirectFn);
+            });
     }
 
     public loginWithEmail(email, password, addUser, successFn) {
-        $http<{ other_users: object[], current_user: object }>(
+        $http<{other_users: object[], current_user: object}>(
             {
                 method: "POST",
                 url: "/altlogin",
@@ -105,15 +105,15 @@ export class UserService {
                     add_user: addUser,
                 }),
             }).then((response) => {
-            this.group = response.data.other_users;
-            this.current = response.data.current_user;
-            successFn();
-            if (!addUser) {
-                $window.location.reload();
-            }
-        }, function (response) {
-            $window.alert(response.data.error);
-        });
+                this.group = response.data.other_users;
+                this.current = response.data.current_user;
+                successFn();
+                if (!addUser) {
+                    $window.location.reload();
+                }
+            }, function(response) {
+                $window.alert(response.data.error);
+            });
     }
 }
 

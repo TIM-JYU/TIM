@@ -121,7 +121,7 @@ timApp.controller("SidebarMenuCtrl", ["$scope",
         $scope.toggleQuestions = function() {
             // Does not work anymore after changing questions part of document
             $scope.lectureQuestions = [];
-            $http<Array<{ question_id, questionjson }>>({
+            $http<Array<{question_id, questionjson}>>({
                 url: "/questions/" + $scope.docId,
                 method: "GET",
             })
@@ -139,5 +139,4 @@ timApp.controller("SidebarMenuCtrl", ["$scope",
                 });
         };
     },
-])
-;
+]);

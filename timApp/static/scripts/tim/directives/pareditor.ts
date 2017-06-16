@@ -193,11 +193,11 @@ timApp.directive("pareditor", [
 
                 $scope.getLocalBool = function(name, def) {
                     let ret = def;
-                    if ( !ret ) {
+                    if (!ret) {
                         ret = false;
                     }
                     const val = storage.getItem(name + $scope.lstag);
-                    if ( !val ) {
+                    if (!val) {
                         return ret;
                     }
                     return val === "true";
@@ -205,9 +205,9 @@ timApp.directive("pareditor", [
 
                 setEditorScope($scope);
 
-                $scope.$on("$destroy", () => { setEditorScope(null); });
+                $scope.$on("$destroy", () => {setEditorScope(null);});
 
-                const proeditor = $scope.getLocalBool("proeditor",  tag === "par");
+                const proeditor = $scope.getLocalBool("proeditor", tag === "par");
                 $scope.proeditor = proeditor;
 
                 $scope.setLocalValue = function(name, val) {
@@ -219,7 +219,7 @@ timApp.directive("pareditor", [
                     $scope.previewReleased = false;
 
                     const editorOffsetStr = storage.getItem("editorReleasedOffset" + tag);
-                    if ( editorOffsetStr ) {
+                    if (editorOffsetStr) {
                         const editorOffset = JSON.parse(editorOffsetStr);
                         editor.css("left", editorOffset.left - editor.offset().left);
                     }
@@ -303,7 +303,7 @@ timApp.directive("pareditor", [
                 $scope.dataLoaded = false; // allow load in first time what ever editor
 
                 $scope.setInitialText = function() {
-                    if ( $scope.dataLoaded || !$scope.initialTextUrl ) {
+                    if ($scope.dataLoaded || !$scope.initialTextUrl) {
                         return;
                     }
                     $scope.setEditorText("Loading text...");
@@ -341,11 +341,11 @@ timApp.directive("pareditor", [
                         // If preview is released make sure that preview doesn't go out of bounds
                         if ($scope.previewReleased) {
                             const previewOffset = previewDiv.offset();
-                            if (previewOffset.top < 0 /*|| previewOffset.top > $window.innerHeight */ ) {
+                            if (previewOffset.top < 0 /*|| previewOffset.top > $window.innerHeight */) {
                                 previewDiv.offset({top: 0, left: previewDiv.offset().left});
                             }
                             if (previewOffset.left < 0 || previewOffset.left > $window.innerWidth) {
-                                previewDiv.offset({top: previewDiv.offset().top, left: 0 });
+                                previewDiv.offset({top: previewDiv.offset().top, left: 0});
                             }
                         }
                         // Check that editor doesn't go out of bounds
@@ -760,7 +760,7 @@ timApp.directive("pareditor", [
                 };
 
                 $scope.deleteClicked = function() {
-                    if ( !$scope.options.showDelete ) {
+                    if (!$scope.options.showDelete) {
                         $scope.cancelClicked(); // when empty and save clicked there is no par
                         return;
                     }
@@ -1107,7 +1107,7 @@ timApp.directive("pareditor", [
                     $scope.inputs[0].focus();
                     $scope.pluginRenameForm = $actionDiv;
                     // Add hotkey for quick saving (Ctrl + S)
-                    $scope.pluginRenameForm.keydown( function(e) {
+                    $scope.pluginRenameForm.keydown(function(e) {
                         if (e.ctrlKey) {
                             if (e.keyCode === 83) {
                                 $scope.renameTaskNamesClicked($scope.inputs, $scope.duplicates, true);
@@ -1131,7 +1131,7 @@ timApp.directive("pareditor", [
                         $scope.savePreviewData(false);
                     }
                     const text = $scope.getEditorText();
-                    if ( text.trim() === "" ) {
+                    if (text.trim() === "") {
                         $scope.deleteClicked();
                         $scope.saving = false;
                         return;
@@ -1171,7 +1171,7 @@ timApp.directive("pareditor", [
                         }
                         $window.localStorage.setItem("proeditor" + $scope.lstag, $scope.proeditor.toString());
 
-                        if ( $scope.isAce ) {
+                        if ($scope.isAce) {
                             $scope.setLocalValue("acewrap", $scope.editor.getSession().getUseWrapMode());
                             $scope.setLocalValue("acebehaviours", $scope.editor.getBehavioursEnabled()); // some of these are in editor and some in session?
                         }
@@ -1489,39 +1489,38 @@ timApp.directive("pareditor", [
                         $scope.wrapFn();
                     };
 
-                    $scope.editorStartsWith = function(text)
-                    {
+                    $scope.editorStartsWith = function(text) {
                         return $scope.editor.val().startsWith(text);
                     };
 
                     $scope.changeValue = function(attributes, text) {
                         const sel = $scope.editor.getSelection();
                         const t = $scope.editor.val();
-                        if ( t.length === 0 ) {
+                        if (t.length === 0) {
                             return;
                         }
                         let st = sel.start;
-                        if ( t[st] === "\n" ) {
+                        if (t[st] === "\n") {
                             st--;
                         }
                         let b = t.lastIndexOf("\n", st);
                         let e = t.indexOf("\n", st);
-                        if ( b < 0 ) {
+                        if (b < 0) {
                             b = 0;
                         } else {
                             b++;
                         }
-                        if ( e < 0 ) {
+                        if (e < 0) {
                             e = t.length;
                         }
-                        if ( e <= b ) {
+                        if (e <= b) {
                             return;
                         }
 
                         let line = t.substring(b, e);
                         for (let i = 0; i < attributes.length; i++) {
                             const ma = line.match(" *" + attributes[i]);
-                            if ( ma ) {
+                            if (ma) {
                                 line = ma[0] + " " + text;
                                 $scope.editor.setSelection(b, e);
                                 $scope.editor.replaceSelectedText(line);
@@ -1831,8 +1830,7 @@ timApp.directive("pareditor", [
                         $scope.wrapFn();
                     };
 
-                    $scope.editorStartsWith = function(text)
-                    {
+                    $scope.editorStartsWith = function(text) {
                         return $scope.editor.session.getLine(0).startsWith(text);
                     };
 
@@ -1841,7 +1839,7 @@ timApp.directive("pareditor", [
                         let line = $scope.editor.session.getLine(pos.row);
                         for (let i = 0; i < attributes.length; i++) {
                             const ma = line.match(" *" + attributes[i]);
-                            if ( ma ) {
+                            if (ma) {
                                 const len = line.length;
                                 line = ma[0] + " " + text;
                                 const range = $scope.editor.getSelectionRange();
@@ -1948,7 +1946,7 @@ timApp.directive("pareditor", [
                             $timeout(function() {
                                 if (response.data.image) {
                                     $scope.uploadedFile = "/images/" + response.data.image;
-                                    if ( $scope.editorStartsWith("``` {") ) {
+                                    if ($scope.editorStartsWith("``` {")) {
                                         $scope.insertTemplate($scope.uploadedFile);
                                     }
                                     else {
@@ -1964,7 +1962,7 @@ timApp.directive("pareditor", [
                                 $scope.file.error = response.data.error;
                             }
                         }, function(evt) {
-                                $scope.file.progress = Math.min(100, Math.floor(100.0 *
+                            $scope.file.progress = Math.min(100, Math.floor(100.0 *
                                 evt.loaded / evt.total));
                         });
 
@@ -2102,7 +2100,7 @@ timApp.directive("pareditor", [
                         div.webkitRequestFullScreen ||
                         div.mozRequestFullScreen ||
                         div.msRequestFullscreen;
-                    return (typeof(requestMethod) !== "undefined");
+                    return (typeof (requestMethod) !== "undefined");
                 };
 
                 /**
@@ -2139,7 +2137,7 @@ timApp.directive("pareditor", [
                     }
                 };
 
-                $scope.getEditorText = function() { return ""; }; // for first time use this
+                $scope.getEditorText = function() {return "";}; // for first time use this
 
                 /**
                  * Switched editor between ace and textarea
@@ -2185,7 +2183,7 @@ timApp.directive("pareditor", [
                     }
                 };
 
-                const oldMode = $window.localStorage.getItem("oldMode" + $scope.options.localSaveTag) || ( $scope.options.touchDevice ? "text" : "ace");
+                const oldMode = $window.localStorage.getItem("oldMode" + $scope.options.localSaveTag) || ($scope.options.touchDevice ? "text" : "ace");
                 $scope.changeEditor(oldMode);
 
                 if ($scope.options.touchDevice) {

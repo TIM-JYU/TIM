@@ -30,7 +30,7 @@ export function defineClipboard(sc) {
 
     sc.deleteFromSource = async () => {
         try {
-            var response = await $http.post<{ doc_ver: any, pars: any[] }>("/clipboard/deletesrc/" + sc.docId, {});
+            var response = await $http.post<{doc_ver: any, pars: any[]}>("/clipboard/deletesrc/" + sc.docId, {});
         } catch (e) {
             $window.alert(e.data.error);
             return;
@@ -153,7 +153,7 @@ export function defineClipboard(sc) {
 
     sc.updateClipboardStatus = async () => {
         try {
-            var response = await $http.get<{ empty: any, disable_ref: any }>("/clipboardstatus", {});
+            var response = await $http.get<{empty: any, disable_ref: any}>("/clipboardstatus", {});
         } catch (e) {
             sc.allowPasteContent = false;
             sc.allowPasteRef = false;
@@ -189,7 +189,7 @@ export function defineClipboard(sc) {
         const docParId = [sc.docId, $par.attr("id")];
 
         try {
-            var response = await $http.post<{ doc_ver: any, pars: any[] }>("/clipboard/cut/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {});
+            var response = await $http.post<{doc_ver: any, pars: any[]}>("/clipboard/cut/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {});
         } catch (e) {
             $window.alert(e.data.error);
             return;
@@ -241,7 +241,7 @@ export function defineClipboard(sc) {
 
         if (cut) {
             try {
-                var response = await $http.post<{ doc_ver: any, pars: any[] }>("/clipboard/cut/" + docId + "/" + areaStart + "/" + areaEnd, {
+                var response = await $http.post<{doc_ver: any, pars: any[]}>("/clipboard/cut/" + docId + "/" + areaStart + "/" + areaEnd, {
                     areaName,
                 });
             } catch (e) {

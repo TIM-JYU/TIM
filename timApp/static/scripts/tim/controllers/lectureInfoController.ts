@@ -96,7 +96,7 @@ timApp.controller("LectureInfoController", ["$scope", "$element", function($scop
             .then(function(response) {
                 const data = response.data;
                 let markup = JSON.parse(data.json);
-                if ( !markup.json ) {
+                if (!markup.json) {
                     markup = {json: markup}; // compability for old
                 }
                 markup.points = data.points;
@@ -122,19 +122,20 @@ timApp.controller("LectureInfoController", ["$scope", "$element", function($scop
         if (document.getElementById("headerView")) {
             document.getElementById("headerView").setAttribute("href", "/view/" + $scope.item.path);
         }
-        if (document.getElementById("headerManage")) { document.getElementById("headerManage").setAttribute("href",  "/manage/" + $scope.item.path);
+        if (document.getElementById("headerManage")) {
+            document.getElementById("headerManage").setAttribute("href", "/manage/" + $scope.item.path);
         }
         if (document.getElementById("headerTeacher")) {
-            document.getElementById("headerTeacher").setAttribute("href",  "/teacher/" + $scope.item.path);
+            document.getElementById("headerTeacher").setAttribute("href", "/teacher/" + $scope.item.path);
         }
         if (document.getElementById("headerAnswers")) {
-            document.getElementById("headerAnswers").setAttribute("href",  "/answers/" + $scope.item.path);
+            document.getElementById("headerAnswers").setAttribute("href", "/answers/" + $scope.item.path);
         }
         if (document.getElementById("headerLecture")) {
-            document.getElementById("headerLecture").setAttribute("href",  "/lecture/" + $scope.item.path);
+            document.getElementById("headerLecture").setAttribute("href", "/lecture/" + $scope.item.path);
         }
         if (document.getElementById("headerSlide")) {
-            document.getElementById("headerSlide").setAttribute("href",  "/slide/" + $scope.item.path);
+            document.getElementById("headerSlide").setAttribute("href", "/slide/" + $scope.item.path);
         }
     };
 

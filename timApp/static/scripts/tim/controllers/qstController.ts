@@ -9,23 +9,23 @@ const qstApp: any = angular.module("qstApp", ["ngSanitize"]);
 
 qstApp.TESTWITHOUTPLUGINS = false; // if one wants to test without qst plugins
 
-qstApp.directive("qstRunner", [function () {
-        "use strict";
-        // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
-        return qstApp.directiveFunction(qstApp.directiveTemplate);
-    }],
-);
-
-qstApp.directive("questionRunner", [function () {
-        "use strict";
-        // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
-        return qstApp.directiveFunction(qstApp.directiveTemplateQuestion);
-    }],
-);
-
-qstApp.directiveFunction = function (tf) {
+qstApp.directive("qstRunner", [function() {
     "use strict";
-// Koska tätä kutsutaan direktiivistä, tätä kutsutaan yhden kerran
+    // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
+    return qstApp.directiveFunction(qstApp.directiveTemplate);
+}],
+);
+
+qstApp.directive("questionRunner", [function() {
+    "use strict";
+    // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
+    return qstApp.directiveFunction(qstApp.directiveTemplateQuestion);
+}],
+);
+
+qstApp.directiveFunction = function(tf) {
+    "use strict";
+    // Koska tätä kutsutaan direktiivistä, tätä kutsutaan yhden kerran
     return {
         scope: {},
         controller: qstApp.Controller,
@@ -43,9 +43,9 @@ qstApp.directiveFunction = function (tf) {
     };
 };
 
-qstApp.directiveTemplate = function () {
+qstApp.directiveTemplate = function() {
     "use strict";
-// Koska tätä kutsutaan directiveFunction-metodista, tätä kutsutaan yhden kerran
+    // Koska tätä kutsutaan directiveFunction-metodista, tätä kutsutaan yhden kerran
     if (qstApp.TESTWITHOUTPLUGINS) {
         return "";
     }
@@ -62,9 +62,9 @@ qstApp.directiveTemplate = function () {
         "</div>";
 };
 
-qstApp.directiveTemplateQuestion = function () {
+qstApp.directiveTemplateQuestion = function() {
     "use strict";
-// Koska tätä kutsutaan directiveFunction-metodista, tätä kutsutaan yhden kerran
+    // Koska tätä kutsutaan directiveFunction-metodista, tätä kutsutaan yhden kerran
     if (qstApp.TESTWITHOUTPLUGINS) {
         return "";
     }
@@ -77,12 +77,12 @@ qstApp.directiveTemplateQuestion = function () {
         "</div>";
 };
 
-qstApp.Controller = function ($scope, $transclude) {
+qstApp.Controller = function($scope, $transclude) {
     "use strict";
-// Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
-// Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Controlleriksi.
-// Tähän tullaan ensin ja sitten initScope-metodiin
-// Siitä ei ole mitään hajua mistä se keksii tälle nuo parametrit???
+    // Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
+    // Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Controlleriksi.
+    // Tähän tullaan ensin ja sitten initScope-metodiin
+    // Siitä ei ole mitään hajua mistä se keksii tälle nuo parametrit???
     if (qstApp.TESTWITHOUTPLUGINS) {
         return;
     }
@@ -102,7 +102,7 @@ qstApp.Controller = function ($scope, $transclude) {
     $scope.attrs = {};
 
     // Luodaan $scope.attrs joka on avattuna sisällössä olev JSON tai HEX
-    $transclude(function (clone, scope) {
+    $transclude(function(clone, scope) {
         timHelper.initAttributes(clone, $scope);
     });
 
@@ -116,10 +116,10 @@ qstApp.Controller = function ($scope, $transclude) {
 
 qstApp.Controller.$inject = ["$scope", "$transclude"];
 
-qstApp.initScope = function (scope, element, attrs) {
+qstApp.initScope = function(scope, element, attrs) {
     "use strict";
-// Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
-// Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Link-metodiksi.
+    // Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
+    // Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Link-metodiksi.
     scope.cursor = "\u0383"; //"\u0347"; // "\u02FD";
     scope.plugin = element.parent().attr("data-plugin");
     scope.taskId = element.parent().attr("id");
@@ -174,7 +174,7 @@ function QstScope(scope) {
     this.scope = scope;
 }
 
-QstScope.prototype.initCode = function () {
+QstScope.prototype.initCode = function() {
     "use strict";
     const $scope = this.scope;
     $scope.muokattu = false;
@@ -182,19 +182,19 @@ QstScope.prototype.initCode = function () {
     $scope.result = "";
 };
 
-QstScope.prototype.saveText = function () {
+QstScope.prototype.saveText = function() {
     "use strict";
     this.doSaveText(false);
 };
 
-QstScope.prototype.checkQstMode = function (nosave) {
+QstScope.prototype.checkQstMode = function(nosave) {
     "use strict";
     const $scope = this.scope;
     const w: any = window;
     return (w.in_lecture || w.lectureMode) && w.item.rights.teacher; //  $scope.$parent.$parent.wallName; // TODO: better check if in lecture page
 };
 
-QstScope.prototype.doSaveText = function (nosave) {
+QstScope.prototype.doSaveText = function(nosave) {
     "use strict";
     const $scope = this.scope;
     $scope.error = "... saving ...";
@@ -224,14 +224,14 @@ QstScope.prototype.doSaveText = function (nosave) {
         url += "/" + $scope.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
     }
 
-    $http<{ web: { error, result, show_result, state, markup } }>({
-            method: "PUT",
-            url,
-            data: params,
-            headers: {"Content-Type": "application/json"},
-            timeout: 20000,
-        },
-    ).then(function (response) {
+    $http<{web: {error, result, show_result, state, markup}}>({
+        method: "PUT",
+        url,
+        data: params,
+        headers: {"Content-Type": "application/json"},
+        timeout: 20000,
+    },
+    ).then(function(response) {
         const data = response.data;
         $scope.isRunning = false;
         $scope.error = data.web.error;
@@ -256,7 +256,7 @@ QstScope.prototype.doSaveText = function (nosave) {
             $scope.dynamicAnswerSheetControl.createAnswer(params);
 
         }
-    }, function (response) {
+    }, function(response) {
         $scope.isRunning = false;
         $scope.errors.push(status);
         $scope.error = "Ikuinen silmukka tai jokin muu vika?";

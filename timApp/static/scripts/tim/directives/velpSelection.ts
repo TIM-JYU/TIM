@@ -50,7 +50,7 @@ timApp.controller("VelpSelectionController", ["$scope", function($scope) {
     $scope.velpGroups = [];
 
     $scope.newVelp = {content: "", default_comment: "", points: "", labels: [], edit: false, id: -2, velp_groups: [], visible_to: 4};
-    $scope.velpToEdit = {content: "", default_comment: "",  points: "", labels: [], edit: false, id: -1, velp_groups: [], visible_to: 4};
+    $scope.velpToEdit = {content: "", default_comment: "", points: "", labels: [], edit: false, id: -1, velp_groups: [], visible_to: 4};
     $scope.newLabel = {content: "", selected: false, edit: false, valid: true};
     $scope.labelToEdit = {content: "", selected: false, edit: false, id: -3};
     $scope.newVelpGroup = {name: "", target_type: 0};
@@ -266,7 +266,7 @@ timApp.controller("VelpSelectionController", ["$scope", function($scope) {
 
         });
 
-        $q.all(promises).then(function(){
+        $q.all(promises).then(function() {
             $scope.updateVelpList();
         });
 
@@ -605,8 +605,8 @@ timApp.controller("VelpSelectionController", ["$scope", function($scope) {
      * this mehtod resets the velp that is being edited to its original state.
      * @method resetEditVelp
      */
-    $scope.resetEditVelp = function(){
-            $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
+    $scope.resetEditVelp = function() {
+        $scope.velpToEdit = {content: "", points: "", labels: [], edit: false, id: -1, velp_groups: []};
     };
 
     /**
@@ -858,8 +858,8 @@ timApp.controller("VelpSelectionController", ["$scope", function($scope) {
             $scope.groupSelections[group.target_id] = [];
 
             $scope.velpGroups.forEach(function(g) {
-                    $scope.groupSelections[group.target_id].push({id: g.id, selected: g.show});
-                });
+                $scope.groupSelections[group.target_id].push({id: g.id, selected: g.show});
+            });
 
             /*
             if (!$scope.groupSelections.hasOwnProperty(group.target_id))
@@ -1108,40 +1108,40 @@ timApp.controller("VelpSelectionController", ["$scope", function($scope) {
      */
 
     $scope.releaseClicked = function() {
-                    const div = $("#selectVelpsDiv");
-                    $scope.previewReleased = !($scope.previewReleased);
-                    const top = div.offset().top;
-                    const left = div.offset().left - 270;
-                    const element = div.detach();
-                    if (div.css("position") === "fixed") {
-                        $("#selectVelpsStack").append(element);
-                        // If preview has been clicked back in, save the preview position before making it static again
-                        div.css("position", "static");
-                        div.find(".draghandle").css("visibility", "hidden");
-                        div.find(".closedraggable").css("visibility", "hidden");
-                        div.css("display", "default");
-                        div.css("padding", 0);
+        const div = $("#selectVelpsDiv");
+        $scope.previewReleased = !($scope.previewReleased);
+        const top = div.offset().top;
+        const left = div.offset().left - 270;
+        const element = div.detach();
+        if (div.css("position") === "fixed") {
+            $("#selectVelpsStack").append(element);
+            // If preview has been clicked back in, save the preview position before making it static again
+            div.css("position", "static");
+            div.find(".draghandle").css("visibility", "hidden");
+            div.find(".closedraggable").css("visibility", "hidden");
+            div.css("display", "default");
+            div.css("padding", 0);
 
-                        document.getElementById("releaseSelectVelpsButton").innerHTML = "&#8592;";
+            document.getElementById("releaseSelectVelpsButton").innerHTML = "&#8592;";
 
-                    } else {
-                        // If preview has just been released or it was released last time editor was open
-                        $("#velpMenu").append(element);
-                        div.css("position", "fixed");
-                        div.find(".draghandle").css("visibility", "visible");
-                        div.find(".closedraggable").css("visibility", "visible");
+        } else {
+            // If preview has just been released or it was released last time editor was open
+            $("#velpMenu").append(element);
+            div.css("position", "fixed");
+            div.find(".draghandle").css("visibility", "visible");
+            div.find(".closedraggable").css("visibility", "visible");
 
-                        div.css("display", "table");
-                        div.css("width", "19em");
-                        div.css("padding", 5);
-                        div.css("z-index", 9999);
-                        document.getElementById("releaseSelectVelpsButton").innerHTML = "&#8594;";
+            div.css("display", "table");
+            div.css("width", "19em");
+            div.css("padding", 5);
+            div.css("z-index", 9999);
+            document.getElementById("releaseSelectVelpsButton").innerHTML = "&#8594;";
 
-                        div.offset({left, top});
+            div.offset({left, top});
 
-                    }
+        }
 
-                };
+    };
 }]);
 
 /**
@@ -1244,9 +1244,9 @@ timApp.filter("filterByVelpGroups", function() {
 });
 
 timApp.filter("orderByWhenNotEditing", function() {
-   "use strict";
+    "use strict";
 
-   return function(velps, order, filteredVelps) {
+    return function(velps, order, filteredVelps) {
         for (let i = 0; i < velps.length; i++) {
             if (velps[i].edit) {
                 return filteredVelps;

@@ -20,7 +20,7 @@ export function defineEditing(sc) {
         let areaStart;
         let areaEnd;
         let caption = "Add paragraph";
-        const touch = typeof("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
+        const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
         const mobile = touch && (window.screen.width < 1200);
         let url;
         const parId = getParId($par);

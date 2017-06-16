@@ -59,37 +59,37 @@ timApp.controller("QuestionPreviewController", ["$scope",
         */
 
         $scope.editQuestion = function() {
-        $scope.close();
-        const parId = $scope.questionParId;
-        const parNextId = $scope.questionParIdNext;
-        const docId = $scope.docId;
-        // $rootScope.$broadcast('toggleQuestion');
-        $http<{ markup }>({
-            url: "/getQuestionByParId",
-            method: "GET",
-            params: {par_id: parId, doc_id: docId, edit: true},
-        })
-            .then(function(response) {
-                const data = response.data;
-                if ( !data.markup ) {
-                    return; // not a question
-                }
-                $scope.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
-                $scope.markup = data.markup;
-                // data.markup.qst = true;
-                $rootScope.$broadcast("changeQuestionTitle", {questionTitle: $scope.json.questionTitle});
-                $rootScope.$broadcast("editQuestion", {
-                    par_id: parId,
-                    par_id_next: parNextId,
-                    markup: data.markup,
+            $scope.close();
+            const parId = $scope.questionParId;
+            const parNextId = $scope.questionParIdNext;
+            const docId = $scope.docId;
+            // $rootScope.$broadcast('toggleQuestion');
+            $http<{markup}>({
+                url: "/getQuestionByParId",
+                method: "GET",
+                params: {par_id: parId, doc_id: docId, edit: true},
+            })
+                .then(function(response) {
+                    const data = response.data;
+                    if (!data.markup) {
+                        return; // not a question
+                    }
+                    $scope.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
+                    $scope.markup = data.markup;
+                    // data.markup.qst = true;
+                    $rootScope.$broadcast("changeQuestionTitle", {questionTitle: $scope.json.questionTitle});
+                    $rootScope.$broadcast("editQuestion", {
+                        par_id: parId,
+                        par_id_next: parNextId,
+                        markup: data.markup,
+                    });
+
+                }, function() {
+                    console.error("Could not get question.");
                 });
 
-            }, function() {
-                console.error("Could not get question.");
-            });
-
-        // $scope.par = $par;
-    };
+            // $scope.par = $par;
+        };
 
         /**
          * FILL WITH SUITABLE TEXT

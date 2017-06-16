@@ -21,7 +21,7 @@ import {$http, $rootScope, $window} from "../ngimport";
 
 function cleanParId(id) {
     const i = id.lastIndexOf(".");
-    if ( i < 0 ) {
+    if (i < 0) {
         return id;
     }
     return id.substring(i + 1);
@@ -38,7 +38,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
     };
 
     scope.putBackQuotations = function(x) {
-        const ox =  x.replace(/<br>/g, "\n");
+        const ox = x.replace(/<br>/g, "\n");
         return ox.replace(/&quot;/g, '"');
     };
 
@@ -74,193 +74,193 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
         scope.par_id_next = data.par_id_next;
         scope.markup.qst = !!data.qst;
         scope.titleChanged = false;
-        if ( scope.markup.qst ) {
+        if (scope.markup.qst) {
             scope.question.endTimeSelected = false; // default no time
         }
         scope.addKeyListeners();
     });
 
     scope.$on("editQuestion", function(event, data) {
-            const id = data.question_id;
-            const par_id = data.par_id;
-            const par_id_next = data.par_id_next;
-            const asked_id = data.asked_id;
-            const json = data.markup.json;
-            scope.markup = data.markup;
+        const id = data.question_id;
+        const par_id = data.par_id;
+        const par_id_next = data.par_id_next;
+        const asked_id = data.asked_id;
+        const json = data.markup.json;
+        scope.markup = data.markup;
 
-            scope.asked_id = false;
-            scope.new_question = false;
-            scope.titleChanged = false;
-            if (id) {
-                scope.question.question_id = id;
-            } else if (asked_id) {
-                scope.asked_id = data.asked_id;
-            } else {
-                scope.par_id = par_id;
-                scope.par_id_next = par_id_next;
-            }
+        scope.asked_id = false;
+        scope.new_question = false;
+        scope.titleChanged = false;
+        if (id) {
+            scope.question.question_id = id;
+        } else if (asked_id) {
+            scope.asked_id = data.asked_id;
+        } else {
+            scope.par_id = par_id;
+            scope.par_id_next = par_id_next;
+        }
 
-            if (json.questionTitle) {
-                scope.question.questionTitle = scope.putBackQuotations(json.questionTitle);
-            }
-            if (scope.question.questionTitle == "Untitled") {
-                scope.question.questionTitle = "";
-                scope.titleChanged = true;
-            }
-            if (json.questionText) {
-                scope.question.question = scope.putBackQuotations(json.questionText);
-            }
-            if (json.questionType) {
-                scope.question.type = json.questionType;
-            }
-            if (json.matrixType) {
-                scope.question.matrixType = json.matrixType;
-            }
-            if (json.answerFieldType) {
-                scope.question.answerFieldType = (json.answerFieldType);
-            }
+        if (json.questionTitle) {
+            scope.question.questionTitle = scope.putBackQuotations(json.questionTitle);
+        }
+        if (scope.question.questionTitle == "Untitled") {
+            scope.question.questionTitle = "";
+            scope.titleChanged = true;
+        }
+        if (json.questionText) {
+            scope.question.question = scope.putBackQuotations(json.questionText);
+        }
+        if (json.questionType) {
+            scope.question.type = json.questionType;
+        }
+        if (json.matrixType) {
+            scope.question.matrixType = json.matrixType;
+        }
+        if (json.answerFieldType) {
+            scope.question.answerFieldType = (json.answerFieldType);
+        }
 
-            const jsonData = json.data || json;  // compability for old
-            fixQuestionJson(jsonData);
-            const jsonHeaders = jsonData.headers;
-            const jsonRows = jsonData.rows;
+        const jsonData = json.data || json;  // compability for old
+        fixQuestionJson(jsonData);
+        const jsonHeaders = jsonData.headers;
+        const jsonRows = jsonData.rows;
 
-            const columnHeaders = [];
-            if ( jsonHeaders ) {
-                for (let i = 0; i < jsonHeaders.length; i++) {
-                    columnHeaders[i] = {
-                        id: i,
-                        type: jsonHeaders[i].type,
-                        text: scope.putBackQuotations(jsonHeaders[i].text),
-                    };
-                }
-            }
-            scope.columnHeaders = columnHeaders;
-            scope.pointsTable = getPointsTable(data.markup.points );
-
-            const rows = [];
-
-            for (let i = 0; i < jsonRows.length; i++) {
-                const row = jsonRows[i];
-
-                rows[i] = {
-                    id: row.id,
-                    text: scope.putBackQuotations(row.text),
-                    type: row.type,
-                    value: row.value,  // TODO: mikä on value?
+        const columnHeaders = [];
+        if (jsonHeaders) {
+            for (let i = 0; i < jsonHeaders.length; i++) {
+                columnHeaders[i] = {
+                    id: i,
+                    type: jsonHeaders[i].type,
+                    text: scope.putBackQuotations(jsonHeaders[i].text),
                 };
-
-                const idString = "" + (i + 1); // rows[i].id.toString();
-                if (data.markup.expl && idString in data.markup.expl) {
-                    rows[i].expl = data.markup.expl[idString];
-                }
-
-                let jsonColumns = jsonRows[i].columns;
-                if (!jsonColumns ) {
-                    jsonColumns = [{}];
-                    let nh = 0;
-                    if ( columnHeaders ) {
-                        nh = columnHeaders.length;
-                    }
-                    for (let ic = 1; ic < nh; ic++) {
-                        jsonColumns.push({});
-                    }
-                }
-
-                const columns = [];
-                for (let j = 0; j < jsonColumns.length; j++) {
-                    let columnPoints = "";
-
-                    if (scope.question.type === "matrix" || scope.question.type === "true-false") {
-                        if (scope.question.matrixType !== "textArea") {
-                            if (scope.pointsTable.length > i) {
-                                if ((j + 1).toString() in scope.pointsTable[i]) {
-                                    columnPoints = scope.pointsTable[i][(j + 1).toString()];
-                                }
-                            }
-                        }
-                    } else {
-                        if (scope.pointsTable.length > 0) {
-                            if ((i + 1).toString() in scope.pointsTable[0]) {
-                                columnPoints = scope.pointsTable[0][(i + 1).toString()];
-                            }
-                        }
-                    }
-                    columns[j] = {
-                        id: j,
-                        rowId: i,
-                        text: jsonColumns[j].text,
-                        points: columnPoints,
-                        type: jsonColumns[j].type,
-                        answerFieldType: jsonColumns[j].answerFieldType,
-                    };
-                }
-                rows[i].columns = columns;
             }
-            scope.rows = rows;
+        }
+        scope.columnHeaders = columnHeaders;
+        scope.pointsTable = getPointsTable(data.markup.points);
 
-            if (json.timeLimit && json.timeLimit > 0) {
-                let time = json.timeLimit;
-                scope.question.endTimeSelected = true;
-                if (time > 3600) {
-                    scope.question.timeLimit.hours = Math.floor(time / 3600);
-                    time = time % 3600;
-                } else {
-                    scope.question.timeLimit.hours = 0;
+        const rows = [];
+
+        for (let i = 0; i < jsonRows.length; i++) {
+            const row = jsonRows[i];
+
+            rows[i] = {
+                id: row.id,
+                text: scope.putBackQuotations(row.text),
+                type: row.type,
+                value: row.value,  // TODO: mikä on value?
+            };
+
+            const idString = "" + (i + 1); // rows[i].id.toString();
+            if (data.markup.expl && idString in data.markup.expl) {
+                rows[i].expl = data.markup.expl[idString];
+            }
+
+            let jsonColumns = jsonRows[i].columns;
+            if (!jsonColumns) {
+                jsonColumns = [{}];
+                let nh = 0;
+                if (columnHeaders) {
+                    nh = columnHeaders.length;
                 }
-
-                if (time > 60) {
-                    scope.question.timeLimit.minutes = Math.floor(time / 60);
-                    time = time % 60;
-                } else {
-                    scope.question.timeLimit.minutes = 0;
+                for (let ic = 1; ic < nh; ic++) {
+                    jsonColumns.push({});
                 }
+            }
 
-                if (time > 0) {
-                    scope.question.timeLimit.seconds = time;
+            const columns = [];
+            for (let j = 0; j < jsonColumns.length; j++) {
+                let columnPoints = "";
+
+                if (scope.question.type === "matrix" || scope.question.type === "true-false") {
+                    if (scope.question.matrixType !== "textArea") {
+                        if (scope.pointsTable.length > i) {
+                            if ((j + 1).toString() in scope.pointsTable[i]) {
+                                columnPoints = scope.pointsTable[i][(j + 1).toString()];
+                            }
+                        }
+                    }
                 } else {
-                    scope.question.timeLimit.seconds = 0;
+                    if (scope.pointsTable.length > 0) {
+                        if ((i + 1).toString() in scope.pointsTable[0]) {
+                            columnPoints = scope.pointsTable[0][(i + 1).toString()];
+                        }
+                    }
                 }
+                columns[j] = {
+                    id: j,
+                    rowId: i,
+                    text: jsonColumns[j].text,
+                    points: columnPoints,
+                    type: jsonColumns[j].type,
+                    answerFieldType: jsonColumns[j].answerFieldType,
+                };
+            }
+            rows[i].columns = columns;
+        }
+        scope.rows = rows;
 
+        if (json.timeLimit && json.timeLimit > 0) {
+            let time = json.timeLimit;
+            scope.question.endTimeSelected = true;
+            if (time > 3600) {
+                scope.question.timeLimit.hours = Math.floor(time / 3600);
+                time = time % 3600;
             } else {
-                scope.question.endTimeSelected = false;
+                scope.question.timeLimit.hours = 0;
             }
 
-            scope.$emit("toggleQuestion");
+            if (time > 60) {
+                scope.question.timeLimit.minutes = Math.floor(time / 60);
+                time = time % 60;
+            } else {
+                scope.question.timeLimit.minutes = 0;
+            }
 
-            scope.addKeyListeners();
+            if (time > 0) {
+                scope.question.timeLimit.seconds = time;
+            } else {
+                scope.question.timeLimit.seconds = 0;
+            }
 
-            scope.textAreas = $(".questiontext");
-            // ParCompiler.processAllMath($element.parent());
-            window.setTimeout(function() { // give time to html to change
-                ParCompiler.processAllMath($element.parent());
-            }, 1000);
+        } else {
+            scope.question.endTimeSelected = false;
+        }
 
-   /*
-            scope.questionForm.addEventListener( "keydown", function(event) {
-            // $("#question-form").keypress(function(event) {
-                var c = String.fromCharCode(event.keyCode);
-                if ( (event.which == 115 && event.ctrlKey) || (event.which == 19) ) { // ctrl-s
-                    event.preventDefault();
-                }
-            });
-            */
-        },
+        scope.$emit("toggleQuestion");
+
+        scope.addKeyListeners();
+
+        scope.textAreas = $(".questiontext");
+        // ParCompiler.processAllMath($element.parent());
+        window.setTimeout(function() { // give time to html to change
+            ParCompiler.processAllMath($element.parent());
+        }, 1000);
+
+        /*
+                 scope.questionForm.addEventListener( "keydown", function(event) {
+                 // $("#question-form").keypress(function(event) {
+                     var c = String.fromCharCode(event.keyCode);
+                     if ( (event.which == 115 && event.ctrlKey) || (event.which == 19) ) { // ctrl-s
+                         event.preventDefault();
+                     }
+                 });
+                 */
+    },
     );
 
     scope.moveToElement = function(event, dir) {
         event.preventDefault();
         const activeObj = document.activeElement;
         const id = activeObj.id;
-        if ( !id || id[0] !== "r" ) {
+        if (!id || id[0] !== "r") {
             return 0;
         }
         const edits = $("#question-form").find(".questiontext");
         const ind = parseInt(id.substr(1)) + dir - 1;
-        if ( ind < 0 ) {
+        if (ind < 0) {
             return 0;
         }
-        if ( ind >= edits.length ) {
+        if (ind >= edits.length) {
             scope.addRow(-1);
             edits[ind - 2].focus();
             edits[ind - 1].focus();
@@ -272,7 +272,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
     };
 
     scope.addKeyListeners = function() {
-        if ( scope.questionForm ) {
+        if (scope.questionForm) {
             return; // already keys binded
         }
 
@@ -340,19 +340,19 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
      */
     scope.createMatrix = function(type) {
 
-        if ( !scope.oldHeaders ) {
+        if (!scope.oldHeaders) {
             scope.oldHeaders = [];
         }
 
         for (let i = 0; i < scope.columnHeaders.length; i++) {
-            if ( scope.columnHeaders[i].text ) {
+            if (scope.columnHeaders[i].text) {
                 scope.oldHeaders[i] = scope.columnHeaders[i].text;
             }
         }
 
         const oldRows = scope.rows.count || 1;
         let oldCols = 1;
-        if ( scope.rows.count ) {
+        if (scope.rows.count) {
             oldCols = scope.rows[0].columns.length;
         }
 
@@ -364,10 +364,10 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
         if (type === "matrix" || type === "true-false") {
             rowsCount = Math.max(2, oldRows);
             columnsCount = Math.max(2, oldCols);
-        } else  if (type === "textarea" ) {
+        } else if (type === "textarea") {
             rowsCount = Math.max(1, oldRows);
             columnsCount = Math.max(1, oldCols);
-        } else  if ( type === "likert") {
+        } else if (type === "likert") {
             rowsCount = Math.max(2, oldRows);
             columnsCount = Math.max(5, oldCols);
         } else {
@@ -401,7 +401,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
         }
 
         const t = type;
-        if (type === "textarea" ||  type === "likert") {
+        if (type === "textarea" || type === "likert") {
             type = "matrix";
         }
 
@@ -410,10 +410,10 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
             for (let i = 0; i < scope.rows[0].columns.length; i++) {
                 let text = "";
                 const ch = constHeaders[t];
-                if ( ch && i < ch.length  ) {
+                if (ch && i < ch.length) {
                     text = ch[i];
                 }
-                if ( i < scope.oldHeaders.length && scope.oldHeaders[i] ) {
+                if (i < scope.oldHeaders.length && scope.oldHeaders[i]) {
                     text = scope.oldHeaders[i];
                 }
                 scope.columnHeaders[i] = {
@@ -424,11 +424,11 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
             }
         }
 
-        if ( t === "likert" ) {
+        if (t === "likert") {
             scope.question.matrixType = "radiobutton-horizontal";
         }
 
-        if ( t == "textarea") {
+        if (t == "textarea") {
             scope.question.matrixType = "textArea";
         }
 
@@ -685,7 +685,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
      * @returns {boolean} Whether or not the row headings are empty.
      */
     scope.rowHeadingsEmpty = function(rows) {
-        if ( rows.length < 2 ) {
+        if (rows.length < 2) {
             return false;
         }
         for (let i = 0; i < rows.length; i++) {
@@ -748,7 +748,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
                 }
             }
         }
-        if ( n ) {
+        if (n) {
             return points;
         }
         return null;
@@ -768,7 +768,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
                 n++;
             }
         }
-        if ( n ) {
+        if (n) {
             return expl;
         }
         return null;
@@ -781,7 +781,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
      */
     scope.createJson = function(showPreview) {
         let showingPreview = false;
-        if ( showPreview ) showingPreview = true;
+        if (showPreview) showingPreview = true;
         if (scope.asked_id) {
             return scope.updatePoints();
         }
@@ -864,7 +864,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
         scope.question.questionTitle = scope.replaceLinebreaksWithHTML(scope.question.questionTitle);
 
         const headersJson = [];
-        if (scope.question.type === "matrix" || scope.question.type === "true-false" || scope.question.type == "" ) {
+        if (scope.question.type === "matrix" || scope.question.type === "true-false" || scope.question.type == "") {
             for (let i = 0; i < scope.columnHeaders.length; i++) {
                 const header = {
                     type: scope.columnHeaders[i].type,
@@ -909,7 +909,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
         };
 
         scope.markup.json = questionjson;
-        if ( showingPreview ) {
+        if (showingPreview) {
             scope.showPreviewJson();
         } else {
             scope.dynamicAnswerSheetControl.createAnswer(scope);
@@ -926,13 +926,13 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
         const docId = scope.docId;
         let md = scope.markup;
         const points = scope.createPoints();
-        if ( points ) {
+        if (points) {
             md.points = points;
         } else {
             delete md.points;
         }
         const expl = scope.createExplanation();
-        if ( expl ) {
+        if (expl) {
             md.expl = expl;
         } else {
             delete md.expl;
@@ -957,7 +957,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
             params.points = markup.points;
             params.expl = markup.expl;
             // var preview = element.parents('.previewcontent').length > 0;
-            params.preview =  false; // scope.$parent.previewUrl; // Released;
+            params.preview = false; // scope.$parent.previewUrl; // Released;
             params.result = true;
             params.answclass = "qstAnswerSheet";
             params.noDisable = true;
@@ -981,13 +981,13 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
 
         let md = scope.markup;
         const points = scope.createPoints();
-        if ( points ) {
+        if (points) {
             md.points = points;
         } else {
             delete md.points;
         }
         const expl = scope.createExplanation();
-        if ( expl ) {
+        if (expl) {
             md.expl = expl;
         } else {
             delete md.expl;
@@ -1002,10 +1002,10 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
         scope.settings.timelimit = questionjson.timeLimit || "";
         setTimeout(function() {
             let v = questionjson.timeLimit || "";
-            if ( !v ) {
+            if (!v) {
                 v = 0;
             }
-            setsetting("timelimit", "" + v );
+            setsetting("timelimit", "" + v);
         }, 1000);
 
         let route = "/postParagraphQ/";
@@ -1021,20 +1021,20 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
             const data = response.data;
             $window.console.log("The question was successfully added to database");
             const oldid = scope.par_id;
-            if ( scope.par_id === "NEW_PAR" ) {
+            if (scope.par_id === "NEW_PAR") {
                 scope.par_id = data.new_par_ids[0];
             }
             scope.removeErrors();
             const parToReplace = "NEW_PAR";
-           // if ( scope.new_question )
-           //     scope.addSavedParToDom(data, {par: parToReplace});
-           // else
+            // if ( scope.new_question )
+            //     scope.addSavedParToDom(data, {par: parToReplace});
+            // else
             scope.addSavedParToDom(data, {docId: scope.docId, par: oldid, par_next: scope.par_id_next});
             //TODO: This can be optimized to get only the new one.
             // scope.$parent.getQuestions(); // TODO hae tallennettu kysymys!
             if (ask) {
 
-                $http<{ markup }>({
+                $http<{markup}>({
                     url: "/getQuestionByParId",
                     method: "GET",
                     params: {par_id: scope.par_id, doc_id: scope.docId},
@@ -1063,59 +1063,59 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
                         console.error("Could not get question.");
                     });
 
-/*
-                var pid = scope.par_id;
-                if ( data.new_par_ids.length > 0 ) pid = data.new_par_ids[0];
-                scope.json = questionjson;
-                scope.$emit('askQuestion', {
-                    "lecture_id": scope.lectureId,
-                    "question_id": scope.qId,
-                    "doc_id": scope.docId,
-                    "par_id": pid,
-                    "markup": scope.markup
-                });
-*/
+                /*
+                                var pid = scope.par_id;
+                                if ( data.new_par_ids.length > 0 ) pid = data.new_par_ids[0];
+                                scope.json = questionjson;
+                                scope.$emit('askQuestion', {
+                                    "lecture_id": scope.lectureId,
+                                    "question_id": scope.qId,
+                                    "doc_id": scope.docId,
+                                    "par_id": pid,
+                                    "markup": scope.markup
+                                });
+                */
             }
             scope.close();
         }, function() {
             showDialog("Could not create question");
             $window.console.log("There was some error creating question to database.");
         });
-/*
-        http({
-            method: 'POST',
-            url: '/addQuestion/',
-            params: {
-                'question_id': scope.question.question_id,
-                'question_title': scope.question.title,
-                'answer': "test", //answerVal,
-                'par_id': par_id,
-                'doc_id': doc_id,
-                'points': points,
-                'expl': JSON.stringify(expl),
-                'questionjson': JSON.stringify(questionjson)
-            }
-        })
-            .success(function (data) {
-                $window.console.log("The question was successfully added to database");
-                scope.removeErrors();
-                //TODO: This can be optimized to get only the new one.
-                scope.$parent.getQuestions();
-                if (ask) {
-                    scope.json = JSON.parse(data.questionjson);
-                    scope.qId = data.question_id;
-                    scope.$emit('askQuestion', {
-                        "lecture_id": scope.lectureId,
-                        "question_id": scope.qId,
-                        "doc_id": scope.docId,
-                        "json": scope.json
+        /*
+                http({
+                    method: 'POST',
+                    url: '/addQuestion/',
+                    params: {
+                        'question_id': scope.question.question_id,
+                        'question_title': scope.question.title,
+                        'answer': "test", //answerVal,
+                        'par_id': par_id,
+                        'doc_id': doc_id,
+                        'points': points,
+                        'expl': JSON.stringify(expl),
+                        'questionjson': JSON.stringify(questionjson)
+                    }
+                })
+                    .success(function (data) {
+                        $window.console.log("The question was successfully added to database");
+                        scope.removeErrors();
+                        //TODO: This can be optimized to get only the new one.
+                        scope.$parent.getQuestions();
+                        if (ask) {
+                            scope.json = JSON.parse(data.questionjson);
+                            scope.qId = data.question_id;
+                            scope.$emit('askQuestion', {
+                                "lecture_id": scope.lectureId,
+                                "question_id": scope.qId,
+                                "doc_id": scope.docId,
+                                "json": scope.json
+                            });
+                        }
+                    }).error(function () {
+                        $window.console.log("There was some error creating question to database.");
                     });
-                }
-            }).error(function () {
-                $window.console.log("There was some error creating question to database.");
-            });
-        scope.close();
-*/
+                scope.close();
+        */
     };
 
     /**
@@ -1137,8 +1137,8 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
             .then(function() {
                 $window.console.log("Points successfully updated.");
             }, function() {
-            $window.console.log("There was some error when updating points.");
-        });
+                $window.console.log("There was some error when updating points.");
+            });
         scope.close();
     };
 
@@ -1198,5 +1198,4 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
     scope.titleIsChanged = function() {
         scope.titleChanged = true;
     };
-}])
-;
+}]);
