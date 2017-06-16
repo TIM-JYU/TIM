@@ -172,5 +172,20 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         TimLiveServer.tearDown(self)
         self.drv.quit()
 
-    def goto_document(self, d: DocEntry):
-        self.goto('/view/' + d.path)
+    def goto_document(self, d: DocEntry, view='view'):
+        self.goto(f'/{view}/{d.path}')
+
+    def wait_until_hidden(self, selector):
+        self.wait.until(ec.invisibility_of_element_located((By.CSS_SELECTOR, selector)))
+
+    def wait_until_present(self, selector):
+        self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, selector)))
+
+    def select_text(self, selector: str, start_offset: int, end_offset: int):
+        self.drv.execute_script(f"""
+        var range = document.createRange();
+        var element = document.querySelector('{selector}').childNodes[0];
+        range.setStart(element, {start_offset});
+        range.setEnd(element, {end_offset});
+        window.getSelection().addRange(range);
+        """)
