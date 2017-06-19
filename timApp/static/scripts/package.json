@@ -113,7 +113,7 @@
       "process": "npm:jspm-nodelibs-process@^0.2.0",
       "stream": "npm:jspm-nodelibs-stream@^0.2.0",
       "string_decoder": "npm:jspm-nodelibs-string_decoder@^0.2.0",
-      "typescript": "npm:typescript@^2.2.2",
+      "typescript": "npm:typescript@^2.4.0",
       "url": "npm:jspm-nodelibs-url@^0.2.0",
       "util": "npm:jspm-nodelibs-util@^0.2.0",
       "vm": "npm:jspm-nodelibs-vm@^0.2.0"
