@@ -2393,7 +2393,9 @@ csApp.Controller = function($scope,$transclude) {
             editorDiv.empty().append($scope.edit);
             var editor = ace.edit(editorDiv.find('.csAceEditor')[0]);
             $scope.aceLoaded(ace, editor as IAceEditor);
-            $scope.aceEditor.getSession().setMode('ace/mode/' + $scope.mode);
+            if ($scope.mode) {
+                $scope.aceEditor.getSession().setMode('ace/mode/' + $scope.mode);
+            }
             $scope.aceEditor.setOptions({
                 enableBasicAutocompletion: true,
                 enableLiveAutocompletion: true,
