@@ -163,7 +163,7 @@
             </div>
         {% endif %}
     </div>
-    {% if not text %}
+    {% if not text and item.rights.manage %}
         <bootstrap-panel title="Review document permissions" show-close="true">
             <p>These are the current permissions for this document; please modify if needed.
                 You can always modify these permissions from the manage page.</p>
