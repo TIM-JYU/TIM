@@ -4,6 +4,8 @@ from copy import deepcopy
 from flask import Blueprint
 from flask import request
 
+from timApp.responsehelper import json_response
+
 generateMap = Blueprint('generateMap', __name__, url_prefix='')
 
 
@@ -105,11 +107,8 @@ def generate_map():
     for dellayer in dellayers:
         g_map['layers'].remove(dellayer)
 
-    # Python for some reason modifies certain characters in the JSON and it has to be modified back to the proper form.
-    g_map = str.replace(str(g_map), "\'", "\"")
-    g_map = str.replace(str(g_map), "True", "true")
     # layers = create_lecture_layers(map['layers'],2,mapwidth)
-    return str(g_map)
+    return json_response(g_map)
 
 
 # Creates zero to three layers on top of a demo layer

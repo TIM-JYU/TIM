@@ -27,14 +27,13 @@ import * as v from "tim/directives/pareditor";
 import * as w from "tim/directives/popUpDialog";
 import * as x from "tim/directives/rightsEditor";
 import * as y from "tim/directives/velpSelection";
-import * as z from "tim/loadMap";
 import * as ab from "tim/manageView/manageCtrl";
 import * as ac from "tim/settingsView/settingsCtrl";
 import {markAsUsed} from "tim/utils";
 import {ParCompiler} from "./services/parCompiler";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./timTiming";
 
-markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, ab, ac, ad, ae);
+markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, ab, ac, ad, ae);
 
 timLogInit(document.location.search.slice(1));
 
