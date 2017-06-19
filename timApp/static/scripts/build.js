@@ -4,7 +4,7 @@ var builder = new Builder('.', 'jspm.config.js');
 
 var bundles = [
     {
-        modules: 'tim/main + tim/slide - [tim/**/*] - reveal + jquery', // all non-lazy external dependencies
+        modules: 'tim/main + tim/slide - [tim/**/*] - reveal + jquery + tslib', // all non-lazy external dependencies
         file: 'build/deps.js'
     },
     {

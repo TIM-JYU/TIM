@@ -8,9 +8,8 @@
     "build": "node build.js",
     "buildDev": "jspm bundle tim/main + tim/slide - \"(tim/main + tim/slide - [tim/**/*])\" build/tim.js -wd",
     "fixKatex": "node fix-katex-auto-render.js",
-    "fixSourceMaps": "node fix-sourcemaps.js",
     "fixWatcher": "node fix-watcher.js",
-    "fixAll": "npm run fixKatex && npm run fixSourceMaps && npm run fixWatcher"
+    "fixAll": "npm run fixKatex && npm run fixWatcher"
   },
   "repository": {
     "type": "git",
@@ -37,14 +36,15 @@
     "@types/oclazyload": "^0.0.31",
     "@types/rangyinputs": "^1.2.0",
     "@types/systemjs": "^0.20.2",
-    "@types/ui-grid": "^0.0.35"
+    "@types/ui-grid": "^0.0.35",
+    "tslib": "^1.7.1"
   },
   "devDependencies": {
-    "jspm": "^0.17.0-beta.41",
+    "jspm": "^0.17.0-beta.42",
     "replace-in-file": "^2.5.0",
-    "systemjs-builder": "latest",
+    "systemjs-builder": "^0.16.9",
     "tslint": "^5.0.0",
-    "typescript": "^2.2.2"
+    "typescript": "^2.4.0"
   },
   "jspm": {
     "dependencies": {
@@ -83,7 +83,8 @@
       "oclazyload": "npm:oclazyload@^1.1.0",
       "rangyinputs": "github:jigargosar/rangyinputs@^1.2.0",
       "text": "github:systemjs/plugin-text@^0.0.9",
-      "ts": "github:frankwallis/plugin-typescript@^7.0.6"
+      "ts": "github:frankwallis/plugin-typescript@^7.0.6",
+      "tslib": "npm:tslib@^1.7.1"
     },
     "devDependencies": {
       "core-js": "npm:core-js@^1.1.4",
@@ -200,6 +201,11 @@
           "test.js"
         ]
       },
+      "npm:inherits@2.0.3": {
+        "ignore": [
+          "test.js"
+        ]
+      },
       "npm:jquery@2.2.4": {
         "format": "amd"
       },
@@ -209,7 +215,24 @@
       "npm:moment@2.6.0": {
         "jspmNodeConversion": false
       },
-      "npm:typescript@2.2.2": {
+      "npm:pbkdf2@3.0.12": {
+        "main": "browser.js"
+      },
+      "npm:safe-buffer@5.0.1": {
+        "browser": "index.js"
+      },
+      "npm:safe-buffer@5.1.0": {
+        "browser": "index.js"
+      },
+      "npm:tslib@1.7.1": {
+        "format": "cjs",
+        "meta": {
+          "tslib.js": {
+            "esModule": true
+          }
+        }
+      },
+      "npm:typescript@2.4.0": {
         "browser": {},
         "map": {
           "buffer": "@empty",

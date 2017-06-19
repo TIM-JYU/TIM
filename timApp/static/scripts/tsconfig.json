@@ -20,7 +20,8 @@
     ],
     "noEmit": false,
     "declarationDir": "decls",
-    "declaration": true
+    "declaration": true,
+    "importHelpers": true
   },
   "exclude": [
     "node_modules",
