@@ -86,6 +86,15 @@ SystemJS.config({
         "eonasdan-bootstrap-datetimepicker"
       ]
     },
+    "npm:angular-timer@1.3.5/dist/angular-timer.js": {
+      "deps": [
+        "angular"
+      ],
+      "globals": {
+        "humanizeDuration": "npm:humanize-duration@3.10.0/humanize-duration.js",
+        "moment": "npm:moment@2.18.1/moment.js"
+      }
+    },
     "npm:katex@0.7.1/dist/contrib/auto-render.min.js": {
       "globals": {
         "katex": "npm:katex@0.7.1/katex.js"
