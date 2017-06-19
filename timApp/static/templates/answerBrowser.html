@@ -106,7 +106,16 @@
         <span ng-show="answers.length == 0 && $parent.teacherMode">(no answers)</span>
     </div>
     <span ng-show="taskInfo.starttime || taskInfo.deadline">
-        Answering time: {{ taskInfo.starttime | timdate }} - {{ taskInfo.deadline | timdate }}
+        Answering time:
+        <span ng-show="taskInfo.starttime && !taskInfo.deadline">
+            Since {{ taskInfo.starttime | timdate }}
+        </span>
+        <span ng-show="!taskInfo.starttime && taskInfo.deadline">
+            Until {{ taskInfo.deadline | timdate }}
+        </span>
+        <span ng-show="taskInfo.starttime && taskInfo.deadline">
+            {{ taskInfo.starttime | timdate }} - {{ taskInfo.deadline | timdate }}
+        </span>
     </span>
     <span ng-show="$parent.teacherMode && hasUserChanged() && !firstLoad && !loading">(hover/click to update)</span>
     <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="loading"> -->
