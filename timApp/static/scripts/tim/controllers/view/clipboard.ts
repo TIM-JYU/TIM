@@ -248,7 +248,7 @@ export function defineClipboard(sc) {
         if (cut) {
             try {
                 var response = await $http.post<{doc_ver: any, pars: any[]}>("/clipboard/cut/" + docId + "/" + areaStart + "/" + areaEnd, {
-                    areaName,
+                    area_name: areaName,
                 });
             } catch (e) {
                 $window.alert(e.data.error);
