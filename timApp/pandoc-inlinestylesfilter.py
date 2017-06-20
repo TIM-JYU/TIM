@@ -1,19 +1,19 @@
-#!/usr/local/env python3
+#!/usr/bin/env python3
 
 """
 Pandoc filter to convert class values to commands of same name in latex. Leaves
 (should leave...) ids, other, predefined classes and key-values intact.
 """
 
-from pandocfilters import toJSONFilter, Span, attributes, Str, RawInline
+from pandocfilters import toJSONFilter, Span, RawInline
 
 
-def classes_to_latex_cmds(key, value, format, meta):
-    if key == 'Span' and format == 'latex':
-        [[ident, classes, kvs], contents] = value
+def classes_to_latex_cmds(key, value, fmt, meta):
+    if key == 'Span' and fmt == 'latex':
+        ([ident, classes, kvs], contents) = value
 
-        # debugging
-        # return Span([id, classes, kvs], contents)
+        #debugging
+        #return Span([ident, classes, kvs], contents)
 
         classes_to_wrap = []
         for c in classes:
@@ -26,13 +26,18 @@ def classes_to_latex_cmds(key, value, format, meta):
 
         content = wrap_with_latex_cmds(contents, classes_to_wrap)
 
-        return Span([ident, classes, kvs], content)
+        return Span([ident, list(set(classes) - set(classes_to_wrap)), kvs], content)
 
 
 def wrap_with_latex_cmds(content, classes_to_wrap):
     if len(classes_to_wrap) <= 0:
         return content
     else:
+        #c = classes_to_wrap[0]
+        #if len(classes_to_wrap) == 1:
+        #    return [latex("\\%s{" % c)] + content + [latex("}")]
+        #else:
+        #    wrap_with_latex_cmds(content, classes_to_wrap[1:])
         c = classes_to_wrap[0]
         if len(classes_to_wrap) > 1:
             content = wrap_with_latex_cmds(content, classes_to_wrap[1:])
