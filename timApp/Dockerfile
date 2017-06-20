@@ -150,6 +150,20 @@ run apt-get install --no-install-recommends -y texlive-full
 # Install pylatex, the python lib for using latex
 run pip3 install pylatex
 
+# Update pandoc //TODO: needs to be written in a better form
+run apt-get install --no-install-recommends -y wget
+env path "https://github.com/jgm/pandoc/releases/download/1.19.1/pandoc-1.19.1-1-amd64.deb"
+run mkdir -p "/var/tmp/timApp/installtemp"
+env installfile "/var/tmp/timApp/installtemp/pandocinstaller1.19.1-1-amd64.deb"
+run wget -qO $installfile $path
+run dpkg -i $installfile
+
+run apt-get install --no-install-recommends -y python-pandocfilters
+run apt-get install --no-install-recommends -y python3-pandocfilters
+run apt-get install -y python-pip
+run pip install pandocfilters -U
+
+
 # Default startup command.
 cmd cd /service/timApp && source /service/scripts/_initenv.sh && python3 launch.py
 
