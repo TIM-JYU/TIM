@@ -94,7 +94,7 @@ class DocumentPrinter:
                 raise PrintingError("No template chosen for the printing. Printing was cancelled.")
 
             template_content = DocumentPrinter.parse_template_content(self._template_to_use)
-            print("template-content:\n\n" + template_content)
+            #print("template-content:\n\n" + template_content)
 
             if template_content is None:
                 raise PrintingError("The content in the template document %s is not valid." % self._template_to_use.path)
@@ -103,12 +103,17 @@ class DocumentPrinter:
             template_file.write(bytearray(template_content, encoding='utf-8'))
             # template_file.seek(0)
             # print("Wrote template:\n %s" % template_file.read().decode(encoding='utf-8'))
-            print("Printing to format: %s" % target_format.value)
+            # print("Printing to format: %s" % target_format.value)
 
-            print("Image root set @ %s" % self._images_root)
+            # print("Image root set @ %s" % self._images_root)
+            # print("####### SYSPATH:\n" + "\n".join(sys.path))
+
+            # print("pypandoc module filename:\n" + pypandoc.__file__)
+            # print("####### PANDOCFILTERS INSTALLED:\n")
+            # print("pandocfilters" in sys.modules)
 
             # TODO: getting the path could probably be done with more finesse
-            filters = [os.path.join(os.getcwd(), "..", "converters", "pandoc-inlinestylesfilter.py")]
+            filters = [os.path.join(os.getcwd(), "pandoc-inlinestylesfilter.py")]
             # print("Python path is: %r" % sys.path)
             # print("Flask installed: %s" % ("flask" in sys.modules))
             # print("Pandocfilters installed: %s" % ("pandocfilters" in sys.modules))
@@ -120,7 +125,8 @@ class DocumentPrinter:
                                       to=target_format.value,
                                       outputfile=output_file.name,
                                       extra_args=['--template=' + template_file.name,
-                                                  '-V', 'graphics-root:' + self._images_root])
+                                                  '-V', 'graphics-root:' + self._images_root],
+                                      filters=filters)
                 template_file.seek(0)
                 output_bytes = bytearray(output_file.read())
             except Exception as ex:
