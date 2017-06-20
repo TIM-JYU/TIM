@@ -1,5 +1,6 @@
 import {$http, $window} from "../../ngimport";
 import {dereferencePar, getAreaDocId, getFirstParId, getLastParId, getParId} from "./parhelpers";
+import {Users} from "../../services/userService";
 
 export function defineClipboard(sc) {
     sc.showPasteMenu = (e, $parOrArea, coords) => {
@@ -152,6 +153,11 @@ export function defineClipboard(sc) {
     };
 
     sc.updateClipboardStatus = async () => {
+        if (!Users.isLoggedIn()) {
+            sc.allowPasteContent = false;
+            sc.allowPasteRef = false;
+            return;
+        }
         try {
             var response = await $http.get<{empty: any, disable_ref: any}>("/clipboardstatus", {});
         } catch (e) {
