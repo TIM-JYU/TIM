@@ -13,8 +13,10 @@ from flask import current_app
 from flask import make_response
 from flask import request
 
+import pluginControl
 import sessioninfo
 from accesshelper import verify_logged_in
+from routes.view import get_document
 from timdb.models.docentry import DocEntry
 from documentprinter import DocumentPrinter, PrintingError
 from timdb.printsettings import PrintSettings
@@ -97,11 +99,6 @@ def get_templates(doc_path):
     return jsonify(templates)
 
 
-@print_blueprint.route("/editSettings", methods=['POST'])
-def edit_settings():
-    return
-
-
 def get_mimetype_for_format(file_type: PrintFormat):
     if file_type == PrintFormat.PDF:
         return 'application/pdf'
@@ -144,9 +141,9 @@ def create_printed_doc(doc_entry: DocEntry, template_doc: DocEntry, file_type: P
 
     existing_doc_path = printer.get_printed_document_path_from_db(file_type=file_type)
 
-    if existing_doc_path is not None:
-        print("already exists:\n" + existing_doc_path)
-        return existing_doc_path
+    #if existing_doc_path is not None:
+    #    print("already exists:\n" + existing_doc_path)
+    #    return existing_doc_path
 
     try:
         path = printer.get_print_path(temp=temp, file_type=file_type)
