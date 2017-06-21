@@ -1,8 +1,13 @@
 //Tuomas Porvali
 //The collection of fixes and band-aids for TIM browser printing.
-[id='break']{
+[id='CSSpagebreak']{
   text-align: center;
   color: deeppink;
+  //display: none;
+}
+
+[id='CSSpagebreak'] p{
+  display: none;
 }
 
 @page{
@@ -18,18 +23,19 @@
   //background-color: green !important;
   //}
 
+
   .firstH1 {
     page-break-before: initial !important;
     //background-color: green !important;
   }
 
   //Forces page-break.
-  [id='break'] {
+  [id='CSSpagebreak'] {
     page-break-after: always !important;
-    //display: none;
+    //display: initial;
   }
 
-  [id='break'] p{
+  [id='CSSpagebreak'] p{
     display: none;
   }
 
@@ -40,6 +46,8 @@
   //Makes printing possible. I was unable to find any other solution
   * {
     float: none !important;
+    overflow: visible !important;
+    //margin: 0 !important;
   }
 
   //Useful to highlight pars
@@ -57,8 +65,9 @@
     color: #000000;
   }
 
-  code {
+  .paragraphs pre code {
     word-wrap: break-word;
+    white-space: normal !important;
   }
 
   h1 {
@@ -79,6 +88,11 @@
 
 
   .csRunMenu, .answerBrowser, .answerBrowser, .actionButtons, .readsection, .par > .headerlink, .headerlink, dialog, .editline {
+    display: none;
+  }
+
+  //Video
+  .paragraphs .showVideo{
     display: none;
   }
 
@@ -123,7 +137,7 @@
   //Work in progress
   .notes {
     position: inherit;
-    display: inherit;
+    display: none;
     margin-bottom: 15px;
     margin-left: 23em;
     width: 60%;

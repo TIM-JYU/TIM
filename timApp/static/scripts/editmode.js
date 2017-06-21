@@ -43,5 +43,8 @@ function disable_area_edit() {
 
 function show_hidden(show_param) {
     var display_value = show_param == null ? 'none' : 'initial';
-    $('.mdcontent').css('display', display_value)
+    $('.mdcontent').css('display', display_value);
+
+    //css hide/show page break for edit mode
+    $('#CSSpagebreak > p').css('display', display_value);
 }

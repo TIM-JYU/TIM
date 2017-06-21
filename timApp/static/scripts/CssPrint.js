@@ -6,22 +6,24 @@ if($(".par:eq(0)").has(".parContent").has(".docsettings").length)
 
 //Automatic page break
 function AutoPageBreak() {
-    $(".par").has(".parContent").has("h5:only-child").each(function (i, e) {
-        //$(e).nextUntil(".par:has(:header)").addBack().andSelf().wrapAll("<div id='noBreak'>");
-        $(e).next(".par").andSelf().wrapAll("<div id='noBreak'>")//.css("background-color", GenerateColor());
-    });
-    $(".par").has(".parContent").has("h4:only-child").each(function (i, e) {
-        //$(e).nextUntil(".par:has(:header)").addBack().andSelf().wrapAll("<div id='noBreak'>");
-        $(e).next(".par").andSelf().wrapAll("<div id='noBreak'>")//.css("background-color", GenerateColor());
-    });
-    $(".par").has(".parContent").has("h3:only-child").each(function (i, e) {
-        //$(e).nextUntil(".par:has(:header)").addBack().andSelf().wrapAll("<div id='noBreak'>");
-        $(e).next(".par").andSelf().wrapAll("<div id='noBreak'>")//.css("background-color", GenerateColor());
-    });
-    $(".par").has(".parContent").has("h2:only-child").each(function (i, e) {
-        //$(e).nextUntil(".par:has(:header)").addBack().andSelf().wrapAll("<div id='noBreak'>");
-        $(e).next(".par").andSelf().wrapAll("<div id='noBreak'>")//.css("background-color", GenerateColor());
-    });
+    var selectedPars = [];
+    var headersFound = 0;
+    pars = $("#pars").children();
+    for(var i = 0; i <  pars.length; i++){
+        if(headersFound){
+            selectedPars.push(pars[i]);
+            if(!$(pars[i]).has("h2:only-child").length && !$(pars[i]).has("h3:only-child").length && !$(pars[i]).has("h4:only-child").length && !$(pars[i]).has("h5:only-child").length){
+                headersFound = 0;
+                $(selectedPars).wrapAll("<div id='noBreak'>")//.css("background-color", GenerateColor());
+            }
+        }else{
+            if($(pars[i]).has("h2:only-child").length || $(pars[i]).has("h3:only-child").length || $(pars[i]).has("h4:only-child").length || $(pars[i]).has("h5:only-child").length){
+                headersFound = 1;
+                selectedPars = [];
+                selectedPars.push(pars[i]);
+            }
+        }
+    }
 }
 
 //Undoing autoprint settings to minimize or prevent possible errors when editing the document after the printing event is done.
@@ -43,7 +45,7 @@ function GenerateColor() {
 //Printing events
 function AfterPrint(){
     console.log('Undoing the print settings');
-    //UndoAutoPageBreak();
+    UndoAutoPageBreak();
 }
 
 function  BeforePrint() {
