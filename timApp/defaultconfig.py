@@ -7,7 +7,7 @@ COMPRESS_DEBUG = True
 COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript']
 COMPRESS_MIN_SIZE = 50
 DEBUG = False
-FILES_PATH = 'tim_files'
+FILES_PATH = '/tim_files'
 LOG_DIR = "../tim_logs/"
 LOG_FILE = "timLog.log"
 LOG_LEVEL = logging.INFO
@@ -26,7 +26,7 @@ LIBSASS_INCLUDES = ["static/scripts/jspm_packages/github/twbs/bootstrap-sass@3.3
                     "static"]
 TIM_NAME = os.environ.get('COMPOSE_PROJECT_NAME', 'tim')
 TIM_HOST = os.environ.get('TIM_HOST', 'http://localhost')
-OLD_SQLITE_DATABASE = 'tim_files/tim.db'
+OLD_SQLITE_DATABASE = '/tim_files/tim.db'
 DB_HOST = 'postgresql'
 TEMPDB_HOST = 'postgresql-tempdb'
 DATABASE = "postgresql://postgres@{}:5432/{}".format(DB_HOST, TIM_NAME)

@@ -252,6 +252,3 @@ user agent
 
 # Avataan portti 5000 ulos containerista.
 expose 5000
-
-#volume /tim_files/:/service/tim_files/
-

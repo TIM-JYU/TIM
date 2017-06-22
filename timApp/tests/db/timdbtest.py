@@ -30,7 +30,7 @@ class TimDbTest(unittest.TestCase):
     def setUpClass(cls):
         if os.path.exists(cls.test_files_path):
             # Safety mechanism
-            assert cls.test_files_path != 'tim_files'
+            assert cls.test_files_path != '/tim_files'
             del_content(cls.test_files_path, onerror=change_permission_and_retry)
             for f in glob.glob('/tmp/heading_cache_*'):
                 os.remove(f)

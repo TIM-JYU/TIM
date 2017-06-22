@@ -23,7 +23,7 @@ class DocParagraph:
     """Represents a paragraph that is associated with a :class:`Document`. See :doc:`docparagraph` for more info.
     """
 
-    default_files_root = 'tim_files'
+    default_files_root = '/tim_files'
 
     def __init__(self, doc, files_root: Optional[str] = None):
         """Constructs a DocParagraph.

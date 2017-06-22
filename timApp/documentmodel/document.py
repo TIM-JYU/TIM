@@ -22,7 +22,7 @@ from timApp.utils import get_error_html
 
 
 class Document:
-    default_files_root = 'tim_files'
+    default_files_root = '/tim_files'
 
     def __init__(self, doc_id: Optional[int]=None, files_root = None, modifier_group_id: Optional[int] = 0):
         self.doc_id = doc_id if doc_id is not None else Document.get_next_free_id(files_root)

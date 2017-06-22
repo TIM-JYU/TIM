@@ -18,6 +18,7 @@ services:
   volumes:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
+   - ${FILES_ROOT}:/tim_files
   working_dir: /service/timApp
   command: python3 launch.py --with-gunicorn
   environment:

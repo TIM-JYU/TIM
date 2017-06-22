@@ -170,8 +170,6 @@ RUN echo agent:kissa | chpasswd
 # Avataan portti 5000 ulos containerista.
 expose 5000
 
-#volume /tim_files/:/service/tim_files/
-
 run export LANG=en_US.UTF-8
 run Xvfb :1 -screen 0 1280x1024x24 &
 run export DISPLAY=:1
