@@ -172,9 +172,13 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
         };*/
 
         $scope.cssPrint = function () {
-            AutoPageBreak();
-            //window.print();
-            //UndoAutoPageBreak();
+            // FOR DEBUGGING 
+	    // AutoPageBreak();
+
+            window.print();
+
+	    // FOR DEBUGGING
+            // UndoAutoPageBreak();
         };
     }
 ])
