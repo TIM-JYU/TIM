@@ -10,6 +10,7 @@ import pprint
 import codecs
 import bleach
 import os
+import shlex
 
 CACHE_DIR = "/tmp/cache/"
 
@@ -1247,3 +1248,41 @@ def is_review(query):
     # print(query)
     result = get_param(query, "review", False)
     return result
+
+
+def mkdirs(path):
+    if os.path.exists(path):
+        return
+    os.makedirs(path)
+
+
+def remove(fname):
+    # noinspection PyBroadException
+    try:
+        os.remove(fname)
+    except:
+        return
+
+
+def remove_before(what, s):
+    # print("=================================== WHAT ==============")
+    # print(what, " ", s)
+    i = s.find(what)
+    if i < 0:
+        return s
+    s = s[i + 1:]
+    i = s.find("\n")
+    if i < 0:
+        return ""
+    return s[i + 1:]
+
+
+def tquote(s):
+    if s.startswith("$"):
+        return s
+    r = shlex.quote(s)
+    if r.find("$") < 0:
+        return r
+    return r.replace("'", '"')
+
+

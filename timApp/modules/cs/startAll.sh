@@ -36,6 +36,6 @@ export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtes
 export MONO_PATH=/cs/jypeli
 
 # Run the server as agent
-su -p - agent -c 'python3 -O /cs/cs3.py'
+su -p - agent -c 'python3 -O /cs/cs.py'
 
  

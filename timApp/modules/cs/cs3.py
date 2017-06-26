@@ -17,7 +17,11 @@ import itertools
 import shutil
 from subprocess import PIPE, Popen, check_output
 
-from fileParams3 import *
+import sys
+
+sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
+
+from fileParams import *  # noqa
 
 nunit = ""  # globaali arvo johon haetaan kerraan nunitin paikka
 

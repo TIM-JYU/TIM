@@ -30,9 +30,12 @@ import socketserver
 import subprocess
 # import nltk
 import re
-import math
-from fileParams3 import *
 import time
+import math
+import sys
+sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
+from fileParams import *  # noqa
+
 
 PORT = 5000
 

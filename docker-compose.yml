@@ -53,6 +53,7 @@ services:
    - /var/run/docker.sock:/var/run/docker.sock
    - ./timApp/modules/cs/generated:/csgenerated
    - ./timApp/modules/cs/static:/csstatic:ro
+   - ./timApp/modules/py:/py:ro
    - /tmp/${COMPOSE_PROJECT_NAME}_uhome:/tmp
   working_dir: /cs
   command: ./startPlugins.sh
@@ -75,6 +76,7 @@ services:
   build: ./timApp/modules/svn
   volumes:
    - ./timApp/modules/svn:/svn:ro
+   - ./timApp/modules/py:/py:ro
   working_dir: /svn
   command: ./startAll.sh
  imagex:
