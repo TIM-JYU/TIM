@@ -1,27 +1,28 @@
-
+import {IRootElementService} from "angular";
 import {timApp} from "tim/app";
-timApp.directive("bootstrapPanel", [function() {
-    "use strict";
-    return {
-        restrict: "E",
-        transclude: true,
-        scope: {
-            title: "@?",
-            closeFn: "&",
-            showClose: "=?",
-        },
-        templateUrl: "/static/templates/bootstrapPanel.html",
-        link($scope, $element) {
 
-        },
+class BootstrapPanelController {
+    private static $inject = ["$element"];
+    private element: IRootElementService;
+    private closeFn: () => void;
 
-        controller: ["$scope", "$element", function($scope, $element) {
-            const sc = $scope;
+    constructor(element: IRootElementService) {
+        this.element = element;
+    }
 
-            sc.close = function() {
-                $element.addClass("ng-hide");
-                sc.closeFn();
-            };
-        }],
-    };
-}]);
+    public close() {
+        this.element.addClass("ng-hide");
+        this.closeFn();
+    }
+}
+
+timApp.component("bootstrapPanel", {
+    bindings: {
+        closeFn: "&",
+        showClose: "=?",
+        title: "@?",
+    },
+    controller: BootstrapPanelController,
+    templateUrl: "/static/templates/bootstrapPanel.html",
+    transclude: true,
+});
