@@ -83,7 +83,7 @@ timApp.controller("LectureInfoController", ["$scope", "$element", function($scop
                 $scope.answerers = answer.answerers;
                 $scope.selectedUser = answer.user;
             }, function() {
-                $window.console.log("fail");
+                $log.info("fail");
             });
     };
 
@@ -171,7 +171,7 @@ timApp.controller("LectureInfoController", ["$scope", "$element", function($scop
                 .then(function() {
                     window.history.back();
                 }, function() {
-                    $window.console.log("Failed to delete the lecture");
+                    $log.info("Failed to delete the lecture");
                 });
         }
     };
@@ -196,7 +196,7 @@ timApp.controller("LectureInfoController", ["$scope", "$element", function($scop
                 });
                 $scope.showLectureForm = true;
             }, function() {
-                $window.console.log("Failed to fetch lecture.");
+                $log.info("Failed to fetch lecture.");
             });
     };
 
@@ -213,7 +213,7 @@ timApp.controller("LectureInfoController", ["$scope", "$element", function($scop
                 $scope.lectureEndTime = moment(lecture.lectureEndTime);
                 $scope.lectureStartTime = moment(lecture.lectureStartTime);
             }, function() {
-                $window.console.log("Failed to fetch lecture.");
+                $log.info("Failed to fetch lecture.");
             });
         $scope.showLectureForm = false;
     });

@@ -1,4 +1,4 @@
-<div uib-alert ng-show="!for.$pristine && for.$invalid" ng-messages="for.$error" class="alert-danger">
+<div uib-alert ng-show="!$ctrl.for.$pristine && $ctrl.for.$invalid" ng-messages="$ctrl.for.$error" class="alert-danger">
     <span class="glyphicon glyphicon-exclamation-sign"></span>
     <div ng-messages-include="/static/templates/errorMessages.html"></div>
 </div>

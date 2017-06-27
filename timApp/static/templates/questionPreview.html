@@ -1,15 +1,15 @@
-<div ng-controller="QuestionPreviewController" class="popUpWindow questionPopUp">
+<div ng-controller="QuestionPreviewController as qpctrl" class="popUpWindow questionPopUp">
     <div class="questionPreview">
         <div id="questionTypeAndTimeLimit">
-            <span ng-if="markup.json.timeLimit > 0" >Time limit: {{ markup.json.timeLimit }} seconds</span>
-            <span ng-if="!markup.json.timeLimit">No time limit.</span>
+            <span ng-if="qpctrl.markup.json.timeLimit > 0" >Time limit: {{ qpctrl.markup.json.timeLimit }} seconds</span>
+            <span ng-if="!qpctrl.markup.json.timeLimit">No time limit.</span>
         </div>
-        <dynamic-answer-sheet preview="true" control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
+        <dynamic-answer-sheet preview="true" control="qpctrl.dynamicAnswerSheetControl"></dynamic-answer-sheet>
     </div>
     <div class="buttons">
         <!-- <button ng-click="deleteQuestion()" class="btn btn-danger pull-left">Delete</button> -->
-        <button ng-show="inLecture" ng-click="ask()" class="timButton">Ask</button>&nbsp;&nbsp;
-        <button ng-click="editQuestion()" class="timButton">Edit</button>
-        <button ng-click="close()" class="timButton">Close</button>
+        <button ng-show="lctrl.inLecture" ng-click="qpctrl.ask()" class="timButton">Ask</button>&nbsp;&nbsp;
+        <button ng-click="qpctrl.editQuestion()" class="timButton">Edit</button>
+        <button ng-click="qpctrl.close()" class="timButton">Close</button>
     </div>
 </div>

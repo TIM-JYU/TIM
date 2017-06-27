@@ -16,8 +16,8 @@
             <p>Click left side to edit. You can get help with editing from editor's Help tab.</p>
             <p>This is an automatically added help paragraph. It will disappear when you add content.</p>
         </div>
-        <div ng-controller="IndexCtrl" class="index">
-            <div ng-if="templateList.length">
+        <div ng-controller="IndexCtrl as index" class="index">
+            <div ng-if="index.templateList.length">
                 <div class="parContent">
                     <p>You may also choose to use one of the templates below.</p>
                 </div>
@@ -31,12 +31,12 @@
                             <td></td>
                         </tr>
                     </thead>
-                    <tr ng-repeat="template in templateList">
+                    <tr ng-repeat="template in index.templateList">
                         <td>
                             {{ '{{ template.name }}' }}
                         </td>
                         <td>
-                            <button class="timButton" ng-click="copyDocument({{ item.id }}, template.path)">Load</button>
+                            <button class="timButton" ng-click="index.copyDocument({{ item.id }}, template.path)">Load</button>
                         </td>
                     </tr>
                 </table>

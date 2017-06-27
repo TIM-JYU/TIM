@@ -75,7 +75,7 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
 
     $scope.hasEditAccess = false;
 
-    const docId = $scope.$parent.docId;
+    const docId = $scope.$parent.vctrl.docId;
 
     /**
      * Toggles velp for editing. If another velp is currently open,
@@ -142,7 +142,7 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * @returns {boolean} - Right to make annotations
      */
     $scope.notAnnotationRights = function(points) {
-        if ($scope.$parent.item.rights.teacher) {
+        if ($scope.$parent.vctrl.item.rights.teacher) {
             return false;
         } else {
             if (points === null) {
@@ -364,7 +364,7 @@ timApp.controller("VelpWindowController", ["$scope", function($scope) {
      * @returns {boolean}
      */
     $scope.allowChangePoints = function() {
-        return $scope.$parent.item.rights.teacher;
+        return $scope.$parent.vctrl.item.rights.teacher;
     };
 
     const editVelp = function() {

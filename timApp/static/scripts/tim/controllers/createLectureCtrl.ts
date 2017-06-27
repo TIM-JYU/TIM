@@ -157,7 +157,7 @@ timApp.controller("CreateLectureCtrl", ["$scope",
         };
 
         $scope.isNumber = function(element, val) {
-            console.log(element);
+            $log.info(element);
             if (!(element === "") && (isNaN(element) || element < 0)) {
                 $scope.errorize(val, "Max number of students must be a positive number or empty.");
             }
@@ -250,7 +250,7 @@ timApp.controller("CreateLectureCtrl", ["$scope",
                 if (lectureEndingInPast && !$scope.editMode) {
                     alertMessage += "Are you sure that the lecture ends in the past or now and will not run?";
                 }
-                $window.console.log($scope.error_message.length);
+                $log.info($scope.error_message.length);
                 if (alertMessage !== "" && $scope.error_message.length <= 0) {
                     if (!$window.confirm(alertMessage)) {
                         if (lectureStartingInPast) {
@@ -282,9 +282,9 @@ timApp.controller("CreateLectureCtrl", ["$scope",
                 })
                     .then(function(response) {
                         if ($scope.editMode) {
-                            $window.console.log("Lecture " + response.data.lectureId + " updated.");
+                            $log.info("Lecture " + response.data.lectureId + " updated.");
                         } else {
-                            $window.console.log("Lecture created: " + response.data.lectureId);
+                            $log.info("Lecture created: " + response.data.lectureId);
                         }
                         $scope.$parent.lectureSettings.useWall = true;
                         $scope.$parent.useAnswers = true;
@@ -293,7 +293,7 @@ timApp.controller("CreateLectureCtrl", ["$scope",
                         $scope.$emit("lectureUpdated", $scope.lectureCode);
                     }, function(response) {
                         $scope.error_message += response.error;
-                        $window.console.log(response);
+                        $log.info(response);
                     });
             }
         };

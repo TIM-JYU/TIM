@@ -2,105 +2,116 @@ import {timApp} from "tim/app";
 import {$http, $timeout, $upload, $window} from "../ngimport";
 
 // Controller used in document index and folders
-timApp.controller("IndexCtrl", ["$scope",
 
-    function(sc) {
-        "use strict";
-        sc.endsWith = function(str, suffix) {
-            return str.indexOf(suffix, str.length - suffix.length) !== -1;
-        };
+class IndexCtrl {
+    private user: any;
+    private folderOwner: string;
+    private parentfolder: string;
+    private itemList: any[];
+    private item: any;
+    private templateList: any[];
+    private templates: any[];
+    private showUpload: boolean;
+    private file: any;
 
-        sc.getParameterByName = function(name) {
-            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-            const regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-                results = regex.exec($window.location.search);
-            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-        };
-
-        sc.copyDocument = function(docId, templateName) {
-            $http.post("/update/" + docId, {
-                template_name: templateName,
-            }).then(function(response) {
-                $window.location.reload();
-            }, function(response) {
-                $window.alert(response.data.error);
-            });
-        };
-
-        sc.getItems = function() {
-            $http({
-                method: "GET",
-                url: "/getItems",
-                params: {
-                    folder: sc.item.location,
-                },
-            }).then(function(response) {
-                sc.itemList = response.data;
-            }, function(response) {
-                sc.itemList = [];
-                // TODO: Show some error message.
-            });
-        };
-
-        sc.getTemplates = function() {
-            $http({
-                method: "GET",
-                url: "/getTemplates",
-                params: {
-                    item_path: sc.item.path,
-                },
-            }).then(function(response) {
-                sc.templateList = response.data;
-            }, function(response) {
-                // TODO: Show some error message.
-            });
-        };
-
-        sc.user = $window.current_user;
-        sc.folderOwner = $window.current_user.name;
-        sc.parentfolder = "";
-        sc.itemList = $window.items;
-        sc.item = $window.item;
-        sc.templateList = [];
-        sc.templates = $window.templates;
-        if (sc.templates) {
-            sc.getTemplates();
+    constructor() {
+        this.user = $window.current_user;
+        this.folderOwner = $window.current_user.name;
+        this.parentfolder = "";
+        this.itemList = $window.items;
+        this.item = $window.item;
+        this.templateList = [];
+        this.templates = $window.templates;
+        if (this.templates) {
+            this.getTemplates();
         }
+    }
 
-        sc.onFileSelect = function(file) {
-            sc.file = file;
-            if (file) {
-                sc.file.progress = 0;
-                file.upload = $upload.upload({
-                    url: "/upload/",
-                    data: {
-                        file,
-                        folder: sc.item.location,
-                    },
-                    method: "POST",
+    endsWith(str, suffix) {
+        return str.indexOf(suffix, str.length - suffix.length) !== -1;
+    }
+
+    getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        const regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec($window.location.search);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    copyDocument(docId, templateName) {
+        $http.post("/update/" + docId, {
+            template_name: templateName,
+        }).then(function(response) {
+            $window.location.reload();
+        }, function(response) {
+            $window.alert(response.data.error);
+        });
+    }
+
+    getItems() {
+        $http({
+            method: "GET",
+            url: "/getItems",
+            params: {
+                folder: this.item.location,
+            },
+        }).then(function(response) {
+            this.itemList = response.data;
+        }, function(response) {
+            this.itemList = [];
+            // TODO: Show some error message.
+        });
+    }
+
+    getTemplates() {
+        $http({
+            method: "GET",
+            url: "/getTemplates",
+            params: {
+                item_path: this.item.path,
+            },
+        }).then(function(response) {
+            this.templateList = response.data;
+        }, function(response) {
+            // TODO: Show some error message.
+        });
+    }
+
+    onFileSelect(file) {
+        this.file = file;
+        if (file) {
+            this.file.progress = 0;
+            file.upload = $upload.upload({
+                url: "/upload/",
+                data: {
+                    file,
+                    folder: this.item.location,
+                },
+                method: "POST",
+            });
+
+            file.upload.then(function(response) {
+                $timeout(function() {
+                    this.getItems();
                 });
+            }, function(response) {
+                if (response.status > 0)
+                    this.file.progress = "Error occurred: " + response.data.error;
+            }, function(evt) {
+                this.file.progress = Math.min(100, Math.floor(100.0 *
+                    evt.loaded / evt.total));
+            });
 
-                file.upload.then(function(response) {
-                    $timeout(function() {
-                        sc.getItems();
-                    });
-                }, function(response) {
-                    if (response.status > 0)
-                        sc.file.progress = "Error occurred: " + response.data.error;
-                }, function(evt) {
-                    sc.file.progress = Math.min(100, Math.floor(100.0 *
-                        evt.loaded / evt.total));
-                });
+            file.upload.finally(function() {
+                this.uploadInProgress = false;
+            });
+        }
+    }
 
-                file.upload.finally(function() {
-                    sc.uploadInProgress = false;
-                });
-            }
-        };
+    showUploadFnfunction() {
+        this.showUpload = true;
+        this.file = null;
+    }
+}
 
-        sc.showUploadFn = function() {
-            sc.showUpload = true;
-            sc.file = null;
-        };
-
-    }]);
+timApp.controller("IndexCtrl", IndexCtrl);

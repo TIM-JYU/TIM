@@ -11,13 +11,13 @@ function fixPageCoords(e) {
     return e;
 }
 
-export function onClick(className, func, overrideModalCheck = false) {
+export function onClick(className: string, func: (obj: JQuery, e: MouseEvent) => boolean | void, overrideModalCheck = false) {
     let downEvent = null;
     let downCoords = null;
     let lastDownEvent = null;
     let lastclicktime = -1;
 
-    $document.on("mousedown touchstart", className, function(e) {
+    $document.on("mousedown touchstart", className, (e) => {
         if (!overrideModalCheck && ($(".actionButtons").length > 0 || $(EDITOR_CLASS_DOT).length > 0)) {
             // Disable while there are modal gui elements
             return;
@@ -35,7 +35,7 @@ export function onClick(className, func, overrideModalCheck = false) {
         downCoords = {left: downEvent.pageX, top: downEvent.pageY};
         lastclicktime = new Date().getTime();
     });
-    $document.on("mousemove touchmove", className, function(e) {
+    $document.on("mousemove touchmove", className, (e) => {
         if (downEvent === null) {
             return;
         }
@@ -46,7 +46,7 @@ export function onClick(className, func, overrideModalCheck = false) {
             downEvent = null;
         }
     });
-    $document.on("touchcancel", className, function(e) {
+    $document.on("touchcancel", className, (e) => {
         downEvent = null;
     });
     // it is wrong to register both events at the same time; see https://stackoverflow.com/questions/8503453

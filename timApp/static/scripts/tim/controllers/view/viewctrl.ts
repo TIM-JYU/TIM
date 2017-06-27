@@ -1,76 +1,438 @@
-
-import angular from "angular";
+import angular, {IScope} from "angular";
 import $ from "jquery";
-import ngStorage from "ngstorage";
+import ngs, {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
-import {defineAreas} from "tim/controllers/view/areas";
-import {defineClipboard} from "tim/controllers/view/clipboard";
-import {defineEditing} from "tim/controllers/view/editing";
+import {AreaHandler} from "tim/controllers/view/areas";
+import {ClipboardHandler} from "tim/controllers/view/clipboard";
 //noinspection TypeScriptPreferShortImport
 import {initIndex} from "tim/controllers/view/index";
 import * as interceptor from "tim/controllers/view/interceptor";
-import {defineNotes} from "tim/controllers/view/notes";
+import {NotesHandler} from "tim/controllers/view/notes";
 import {getElementByParId} from "tim/controllers/view/parhelpers";
-import {closeOptionsWindow, defineParMenu} from "tim/controllers/view/parmenu";
-import {defineQuestions} from "tim/controllers/view/questions";
+import {closeOptionsWindow, ParmenuHandler} from "tim/controllers/view/parmenu";
+import {QuestionHandler} from "tim/controllers/view/questions";
 import {initReadings} from "tim/controllers/view/readings";
-import {defineRefPopup} from "tim/controllers/view/refpopup";
 import * as popupMenu from "tim/directives/popupMenu";
 import {timLogTime} from "tim/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty} from "tim/utils";
+import {applyMixins, isPageDirty, markAsUsed, markPageNotDirty} from "tim/utils";
 import {ParCompiler} from "../../services/parCompiler";
 import {$compile, $http, $window, $localStorage, $interval, $timeout, $filter} from "../../ngimport";
 import {Users} from "../../services/userService";
 import {Document, setActiveDocument} from "./document";
 import {onClick} from "./eventhandlers";
+import {MenuFunction, MenuFunctionCollection} from "./IViewCtrl";
+import {EditingHandler} from "./editing";
+import {RefPopupHandler} from "./refpopup";
 
-markAsUsed(ngStorage, popupMenu, interceptor);
+markAsUsed(ngs, popupMenu, interceptor);
 
-timApp.controller("ViewCtrl", [
-    "$scope",
-    function(sc) {
-        "use strict";
+export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
+    EditingHandler, NotesHandler, ParmenuHandler, RefPopupHandler {
+    overReflink: boolean;
+    overPopup: boolean;
+
+    initRefPopup(sc: IScope, view: ViewCtrl): any {
+        return undefined;
+    }
+
+    showRefPopup(e, $ref, coords, attrs): JQuery {
+        return undefined;
+    }
+
+    hideRefPopup(): any {
+        return undefined;
+    }
+
+    lastclicktime: number;
+    lastclickplace: {left; top};
+
+    initParMenu(sc: IScope, view: ViewCtrl): any {
+        return undefined;
+    }
+
+    toggleActionButtons(e, $par, toggle1, toggle2, coords): any {
+        return undefined;
+    }
+
+    optionsWindowClosed(): any {
+        return undefined;
+    }
+
+    updatePopupMenu(): any {
+        return undefined;
+    }
+
+    noteBadgePar: JQuery;
+    noteBadge: HTMLElement;
+
+    initNotes(sc: IScope, view: ViewCtrl): any {
+        return undefined;
+    }
+
+    toggleNoteEditor($parOrArea, options): any {
+        return undefined;
+    }
+
+    handleNoteCancel(): any {
+        return undefined;
+    }
+
+    handleNoteDelete(saveData, extraData): any {
+        return undefined;
+    }
+
+    handleNoteSave(saveData, extraData): any {
+        return undefined;
+    }
+
+    createNoteBadge($par): HTMLElement {
+        return undefined;
+    }
+
+    addNote(): any {
+        return undefined;
+    }
+
+    setNotePadge($event): any {
+        return undefined;
+    }
+
+    updateNoteBadge($par): any | any {
+        return undefined;
+    }
+
+    clearNoteBadge(e): any {
+        return undefined;
+    }
+
+    initQuestions(sc: IScope, view: ViewCtrl): void {
+    }
+
+    initClipboard(sc: IScope, view: ViewCtrl): any {
+        return undefined;
+    }
+
+    initEditing(sc: IScope, view: ViewCtrl): any {
+        return undefined;
+    }
+
+    initAreas(sc: IScope, view: ViewCtrl): any {
+        return undefined;
+    }
+
+    toggleParEditor($pars, options): any {
+        return undefined;
+    }
+
+    toggleEditor($par, options, attrs: Object, caption, directive): any {
+        return undefined;
+    }
+
+    editSettingsPars(recursiveCall): Promise<any> {
+        return undefined;
+    }
+
+    showEditWindow(e, $par): any {
+        return undefined;
+    }
+
+    beginAreaEditing(e, $par): any {
+        return undefined;
+    }
+
+    handleCancel(extraData): any {
+        return undefined;
+    }
+
+    showAddParagraphAbove(e, $par): any {
+        return undefined;
+    }
+
+    showAddParagraphBelow(e, $par): any {
+        return undefined;
+    }
+
+    goToEditor(): any {
+        return undefined;
+    }
+
+    closeAndSave(e, $par): any {
+        return undefined;
+    }
+
+    closeWithoutSaving(e, $par): any {
+        return undefined;
+    }
+
+    getEditorFunctions(): MenuFunctionCollection {
+        return undefined;
+    }
+
+    showAddParagraphMenu(e, $parOrArea, coords): any {
+        return undefined;
+    }
+
+    getAddParagraphFunctions(): MenuFunctionCollection {
+        return undefined;
+    }
+
+    removeDefaultPars(): any {
+        return undefined;
+    }
+
+    showNoteWindow: MenuFunction;
+
+    showOptionsWindow(e: any, $par: any, coords?): void {
+    }
+
+    addParagraphFunctions: MenuFunctionCollection;
+
+    pasteFunctions: MenuFunctionCollection;
+    allowPasteRef: boolean;
+    allowPasteContent: boolean;
+
+    showPasteMenu(e, $parOrArea, coords?): any {
+        throw new Error(this.mixinMsg);
+    }
+
+    showMoveMenu(e, $parOrArea, coords?): any {
+        throw new Error(this.mixinMsg);
+    }
+
+    pasteContentAbove(e, $par): any {
+        throw new Error(this.mixinMsg);
+    }
+
+    pasteRefAbove(e, $par): any {
+        throw new Error(this.mixinMsg);
+    }
+
+    pasteContentBelow(e, $par): any {
+        throw new Error(this.mixinMsg);
+    }
+
+    pasteRefBelow(e, $par): any {
+        throw new Error(this.mixinMsg);
+    }
+
+    deleteFromSource(): Promise<any> {
+        throw new Error(this.mixinMsg);
+    }
+
+    moveAbove(e, $parOrArea): Promise<any> {
+        throw new Error(this.mixinMsg);
+    }
+
+    moveBelow(e, $parOrArea): Promise<any> {
+        throw new Error(this.mixinMsg);
+    }
+
+    pasteAbove(e, $parOrArea, asRef): Promise<any> {
+        throw new Error(this.mixinMsg);
+    }
+
+    pasteBelow(e, $parOrArea, asRef): Promise<any> {
+        throw new Error(this.mixinMsg);
+    }
+
+    updateClipboardStatus(): Promise<any> {
+        throw new Error(this.mixinMsg);
+    }
+
+    getPasteFunctions(): MenuFunctionCollection {
+        throw new Error(this.mixinMsg);
+    }
+
+    getMoveFunctions(): MenuFunctionCollection {
+        throw new Error(this.mixinMsg);
+    }
+
+    cutPar(e, $par): Promise<any> {
+        throw new Error(this.mixinMsg);
+    }
+
+    copyPar(e, $par): Promise<any> {
+        throw new Error(this.mixinMsg);
+    }
+
+    copyArea(e, $parOrArea, overrideDocId?, cut?): Promise<any> {
+        throw new Error(this.mixinMsg);
+    }
+
+    cutArea(e, $parOrArea, cut?): any {
+        throw new Error(this.mixinMsg);
+    }
+
+    handleDelete(param: {version: any}, param2: {par: any; area_start: any; area_end: any}): void {
+    }
+
+    addSavedParToDom(data, extraData: {docId: number; par: string; par_next}): void {
+    }
+
+    selectedAreaName: string;
+    popupMenuAttrs: any;
+    selection: {pars; start; end};
+
+    onAreaEditClicked($this, e, className): boolean {
+        throw new Error(this.mixinMsg);
+    }
+
+    showAreaOptionsWindow(e, $area, $pars, coords): any {
+        throw new Error(this.mixinMsg);
+    }
+
+    startArea(e, $par): any {
+        throw new Error(this.mixinMsg);
+    }
+
+    nameArea(e, $pars): any {
+        throw new Error(this.mixinMsg);
+    }
+
+    nameAreaOk($area, areaName, options): Promise<any> {
+        throw new Error(this.mixinMsg);
+    }
+
+    nameAreaCancel($area): any {
+        throw new Error(this.mixinMsg);
+    }
+
+    cancelArea(): any {
+        throw new Error(this.mixinMsg);
+    }
+
+    removeAreaMarking(e, $pars): Promise<any> {
+        throw new Error(this.mixinMsg);
+    }
+
+    extendSelection($par: any, allowShrink?: boolean): void {
+        throw new Error(this.mixinMsg);
+    }
+
+    showPopupMenu(e: any, $pars: any, coords: any, popupMenuAttrs: any, $area?: any, s?: string): void {
+        throw new Error(this.mixinMsg);
+    }
+
+    public questionShown: boolean;
+    public firstTimeQuestions: boolean;
+    public noQuestionAutoNumbering: boolean;
+    public par: JQuery;
+    public markup: {json?; points?; expl?};
+    public questionParId: string;
+    public qId: string;
+    public json: {questionTitle};
+    public viewctrl: ViewCtrl;
+    public showQuestionPreview: boolean;
+    public questionParIdNext: string;
+    private mixinMsg = "This method is implemented in a mixin.";
+
+    showQuestion(questionId: string): void {
+        throw new Error(this.mixinMsg);
+    }
+
+    showQuestionNew(parId: string, parIdNext: string): void {
+        throw new Error(this.mixinMsg);
+    }
+
+    addQuestionQst(e: any, $par: any): void {
+        throw new Error(this.mixinMsg);
+    }
+
+    editQst(e: any, $par: any): Promise<void> {
+        throw new Error(this.mixinMsg);
+    }
+
+    addQuestion(e: any, $par: any): void {
+        throw new Error(this.mixinMsg);
+    }
+
+    getQuestionHtml(questions: any): JQuery {
+        throw new Error(this.mixinMsg);
+    }
+
+    processQuestions(): void {
+        throw new Error(this.mixinMsg);
+    }
+
+    getQuestions(): Promise<void> {
+        throw new Error(this.mixinMsg);
+    }
+
+    showQuestions(): boolean {
+        throw new Error(this.mixinMsg);
+    }
+
+    private static $inject = ["$scope"];
+
+    public isLecturer: boolean;
+    public lectureId: number;
+    public lectureMode: boolean;
+    public inLecture: boolean;
+    public item: any;
+    public docId: number;
+
+    public sc: IScope;
+    private hidePending: boolean;
+    private group: any;
+    private scope: IScope;
+    private noBrowser: boolean;
+    private docName: string;
+    public docVersion: any;
+    private crumbs: any;
+    private startIndex: number;
+    private users: any[];
+    private teacherMode: boolean;
+    private velpMode: boolean;
+
+    private pendingUpdates: {};
+    private document: Document;
+    private showRefresh: boolean;
+    private selectedUser: {};
+    public editing: boolean;
+    public $storage: ngStorage.StorageService & {defaultAction: string; noteAccess: string};
+    private liveUpdates: number;
+    private oldWidth: number;
+    public editorFunctions: any[];
+    public defaultAction: any;
+
+    constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
-        sc.noBrowser = $window.noBrowser;
-        sc.docId = $window.item.id;
-        sc.docName = $window.item.path;
-        sc.docVersion = $window.docVersion;
-        sc.crumbs = $window.crumbs;
-        sc.item = $window.item;
-        sc.startIndex = $window.startIndex;
-        sc.users = $window.users;
-        sc.group = $window.group;
-        sc.teacherMode = $window.teacherMode;
-        sc.velpMode = $window.velpMode;
-        sc.lectureMode = $window.lectureMode;
-        sc.inLecture = $window.in_lecture;
+        this.initQuestions(sc, this);
+        this.initAreas(sc, this);
+        this.initClipboard(sc, this);
+        this.initEditing(sc, this);
+        this.initNotes(sc, this);
+        this.initParMenu(sc, this);
+        this.initRefPopup(sc, this);
+        initReadings(sc);
 
-        const document = new Document(sc.docId);
-        setActiveDocument(document);
+        this.noBrowser = $window.noBrowser;
+        this.docId = $window.item.id;
+        this.docName = $window.item.path;
+        this.docVersion = $window.docVersion;
+        this.crumbs = $window.crumbs;
+        this.item = $window.item;
+        this.startIndex = $window.startIndex;
+        this.users = $window.users;
+        this.group = $window.group;
+        this.teacherMode = $window.teacherMode;
+        this.velpMode = $window.velpMode;
+        this.lectureMode = $window.lectureMode;
+        this.inLecture = $window.in_lecture;
+        this.scope = sc;
 
-        if (sc.users.length > 0) {
-            sc.selectedUser = sc.users[0];
+        this.document = new Document(this.docId);
+        setActiveDocument(this.document);
+
+        if (this.users.length > 0) {
+            this.selectedUser = this.users[0];
         } else {
-            sc.selectedUser = Users.getCurrent();
+            this.selectedUser = Users.getCurrent();
         }
-        sc.hidePending = false;
-        sc.pendingUpdates = {};
+        this.hidePending = false;
+        this.pendingUpdates = {};
 
-        sc.reload = function() {
-            markPageNotDirty();
-            $window.location.reload();
-        };
-
-        sc.closeRefreshDlg = function() {
-            sc.showRefresh = false;
-        };
-
-        sc.changeUser = function(user, updateAll) {
-            sc.selectedUser = user;
-            sc.$broadcast("userChanged", {user, updateAll});
-        };
-
-        $($window).resize(function(e) {
+        $($window).resize((e) => {
             if (e.target === $window as any) {
                 const newWidth = $($window).width();
                 if (newWidth !== sc.oldWidth) {
@@ -83,115 +445,26 @@ timApp.controller("ViewCtrl", [
             }
         });
 
-        sc.beginUpdate = async function() {
-            const response = await $http.get<{changed_pars: any[]}>("/getUpdatedPars/" + sc.docId);
-            sc.updatePendingPars(response.data.changed_pars);
-        };
-
-        sc.pendingUpdatesCount = function() {
-            return Object.keys(sc.pendingUpdates).length;
-        };
-
-        sc.showUpdateDialog = function() {
-            return !sc.hidePending && sc.pendingUpdatesCount() > 0;
-        };
-
-        sc.updatePendingPars = function(pars) {
-            angular.extend(sc.pendingUpdates, pars);
-            sc.hidePending = false;
-            if (sc.pendingUpdatesCount() < 10) {
-                sc.updatePending();
-            }
-        };
-
-        sc.updatePending = function() {
-            for (const key in sc.pendingUpdates) {
-                if (sc.pendingUpdates.hasOwnProperty(key)) {
-                    const $par = getElementByParId(key);
-                    const $newPar = $($compile(sc.pendingUpdates[key])(sc));
-                    $par.replaceWith($newPar);
-                    sc.applyDynamicStyles($newPar);
-                    ParCompiler.processAllMathDelayed($newPar);
-                }
-            }
-            document.rebuildSections();
-            sc.pendingUpdates = {};
-            sc.processQuestions();
-        };
-
-        sc.showQuestions = function() {
-            return (sc.item.rights.teacher && (sc.lectureMode || sc.inLecture)) ||
-                ($window.editMode && sc.item.rights.editable);
-        };
-
-        sc.applyDynamicStyles = function($par) {
-            if ($window.editMode) {
-                $par.addClass("editmode");
-
-                // Show hidden paragraphs if in edit mode
-                $par.find(".mdcontent").css("display", "initial");
-            }
-        };
-
-        sc.setHeaderLinks = function() {
-            const pars = $(".parContent");
-            pars.each(function() {
-                const $p = $(this);
-                $p.find("h1, h2, h3, h4, h5, h6").each(function() {
-                    const $h = $(this);
-                    const id = $h.attr("id");
-                    if (angular.isDefined(id)) {
-                        $h.append($("<a>", {
-                            text: "#",
-                            href: "#" + id,
-                            class: "headerlink",
-                            title: "Permanent link",
-                        }));
-                    }
-                });
-            });
-        };
-
-        sc.getEditMode = function() {
-            return $window.editMode;
-        };
-        sc.getAllowMove = function() {
-            return $window.allowMove;
-        };
-
-        sc.nothing = function() {
-        };
-
-        defineAreas(sc);
-        defineClipboard(sc);
-        defineEditing(sc);
         initIndex();
-        defineNotes(sc);
-        defineParMenu(sc);
-        defineQuestions(sc);
-        initReadings(sc);
-        defineRefPopup(sc);
-
-        // Call necessary initialization functions below this line. Define any scope functions above this line.
 
         // from https://stackoverflow.com/a/7317311
         $(() => {
-            sc.processQuestions();
-            $window.addEventListener("beforeunload", function(e) {
-                if (!sc.editing) {
+            this.processQuestions();
+            $window.addEventListener("beforeunload", (e) => {
+                if (!this.editing) {
                     return undefined;
                 }
 
                 const msg = "You are currently editing something. Are you sure you want to leave the page?";
 
-                (e || $window.event).returnValue = msg; //Gecko + IE
-                return msg; //Gecko + Webkit, Safari, Chrome etc.
+                (e || $window.event).returnValue = msg; // Gecko + IE
+                return msg; // Gecko + Webkit, Safari, Chrome etc.
             });
         });
 
-        onClick("html.ng-scope", function($this, e) {
+        onClick("html.ng-scope", ($this, e) => {
             // Clicking anywhere
-            const tagName = e.target.tagName.toLowerCase();
+            const tagName = (e.target as Element).tagName.toLowerCase();
             const jqTarget = $(e.target);
             const ignoreTags = ["button", "input", "label", "i"];
             const ignoreClasses = ["menu-icon", "editline", "areaeditline", "draghandle", "actionButtons"];
@@ -199,7 +472,7 @@ timApp.controller("ViewCtrl", [
             let curElement = jqTarget;
             let limit = 10;
             while (curElement !== null) {
-                if (sc.editing || $.inArray(tagName, ignoreTags) >= 0 || curElement.attr("position") === "absolute") {
+                if (this.editing || $.inArray(tagName, ignoreTags) >= 0 || curElement.attr("position") === "absolute") {
                     return false;
                 }
 
@@ -222,45 +495,51 @@ timApp.controller("ViewCtrl", [
                 $(".lightselect").removeClass("lightselect");
             }
 
-            //$log.info(e.target);
             return false;
 
         }, true);
 
-        sc.setHeaderLinks();
-        document.rebuildSections();
+        this.setHeaderLinks();
+        this.document.rebuildSections();
 
         // If you add 'mousedown' to bind, scrolling upon opening the menu doesn't work on Android
-        $("body,html").bind("scroll wheel DOMMouseScroll mousewheel", function(e) {
+        $("body,html").bind("scroll wheel DOMMouseScroll mousewheel", (e) => {
             if (e.which > 0 || e.type === "mousedown" || e.type === "mousewheel") {
                 $("html,body").stop();
             }
         });
 
-        sc.$watchGroup(["lectureMode", "selection.start", "selection.end", "editing", "getEditMode()",
-            "allowPasteContent", "allowPasteRef", "getAllowMove()"], function(newValues, oldValues, scope) {
-                sc.updatePopupMenu();
-                if (sc.editing) {
-                    sc.notification = "Editor is already open.";
-                } else {
-                    sc.notification = "";
-                }
-            });
+        this.scope.$watchGroup([
+            () => this.lectureMode,
+            () => this.selection.start,
+            () => this.selection.end,
+            () => this.editing,
+            () => this.getEditMode(),
+            () => this.allowPasteContent,
+            () => this.allowPasteRef,
+            () => this.getAllowMove()], function(newValues, oldValues, scope) {
+            this.updatePopupMenu();
+            if (this.editing) {
+                this.notification = "Editor is already open.";
+            } else {
+                this.notification = "";
+            }
+        });
 
-        sc.$storage = $localStorage.$default({
+        this.$storage = $localStorage.$default({
             defaultAction: "Show options window",
             noteAccess: "everyone",
         });
 
         $window.allowMove = false;
-        sc.oldWidth = $($window).width();
-        sc.showRefresh = isPageDirty();
-        sc.liveUpdates = $window.liveUpdates;
+        this.oldWidth = $($window).width();
+        this.showRefresh = isPageDirty();
+        this.liveUpdates = $window.liveUpdates;
 
-        if (Users.isLoggedIn() && sc.liveUpdates) {
+        if (Users.isLoggedIn() && this.liveUpdates) {
             $interval(async () => {
-                const response = await $http.get<{version: any, diff: any[]}>("/getParDiff/" + sc.docId + "/" + sc.docVersion[0] + "/" + sc.docVersion[1]);
-                sc.docVersion = response.data.version;
+                const response = await $http.get<{version: any, diff: any[]}>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]);
+                this.docVersion = response.data.version;
                 const replaceFn = async (d, parId) => {
                     const compiled = await ParCompiler.compile(d.content, sc);
                     const e = getElementByParId(parId);
@@ -304,19 +583,113 @@ timApp.controller("ViewCtrl", [
                     }
                 }
                 $timeout(function() {
-                    document.rebuildSections();
+                    this.document.rebuildSections();
                 }, 1000);
-            }, 1000 * sc.liveUpdates);
+            }, 1000 * this.liveUpdates);
         }
 
         try {
-            const found = $filter("filter")(sc.editorFunctions,
-                {desc: sc.$storage.defaultAction}, true);
+            const found = $filter("filter")(this.editorFunctions,
+                {desc: this.$storage.defaultAction}, true);
             if (found.length) {
-                sc.defaultAction = found[0];
+                this.defaultAction = found[0];
             }
         } catch (e) {
         }
         timLogTime("ViewCtrl end", "view");
-    },
-]);
+    }
+
+    reload() {
+        markPageNotDirty();
+        $window.location.reload();
+    }
+
+    closeRefreshDlg() {
+        this.showRefresh = false;
+    }
+
+    changeUser(user, updateAll) {
+        this.selectedUser = user;
+        this.scope.$broadcast("userChanged", {user, updateAll});
+    }
+
+    async beginUpdate() {
+        const response = await $http.get<{changed_pars: any[]}>("/getUpdatedPars/" + this.docId);
+        this.updatePendingPars(response.data.changed_pars);
+    }
+
+    pendingUpdatesCount() {
+        return Object.keys(this.pendingUpdates).length;
+    }
+
+    showUpdateDialog() {
+        return !this.hidePending && this.pendingUpdatesCount() > 0;
+    }
+
+    updatePendingPars(pars) {
+        angular.extend(this.pendingUpdates, pars);
+        this.hidePending = false;
+        if (this.pendingUpdatesCount() < 10) {
+            this.updatePending();
+        }
+    }
+
+    updatePending() {
+        for (const key in this.pendingUpdates) {
+            if (this.pendingUpdates.hasOwnProperty(key)) {
+                const $par = getElementByParId(key);
+                const $newPar = $($compile(this.pendingUpdates[key])(this.scope));
+                $par.replaceWith($newPar);
+                this.applyDynamicStyles($newPar);
+                ParCompiler.processAllMathDelayed($newPar);
+            }
+        }
+        this.document.rebuildSections();
+        this.pendingUpdates = {};
+        this.processQuestions();
+    }
+
+    applyDynamicStyles($par) {
+        if ($window.editMode) {
+            $par.addClass("editmode");
+
+            // Show hidden paragraphs if in edit mode
+            $par.find(".mdcontent").css("display", "initial");
+        }
+    }
+
+    setHeaderLinks() {
+        const pars = $(".parContent");
+        pars.each(function() {
+            const $p = $(this);
+            $p.find("h1, h2, h3, h4, h5, h6").each(function() {
+                const $h = $(this);
+                const id = $h.attr("id");
+                if (angular.isDefined(id)) {
+                    $h.append($("<a>", {
+                        text: "#",
+                        href: "#" + id,
+                        class: "headerlink",
+                        title: "Permanent link",
+                    }));
+                }
+            });
+        });
+    }
+
+    getEditMode() {
+        return $window.editMode;
+    }
+
+    getAllowMove() {
+        return $window.allowMove;
+    }
+
+    nothing() {
+    }
+}
+
+applyMixins(ViewCtrl, [QuestionHandler, AreaHandler, ClipboardHandler,
+    EditingHandler, NotesHandler, ParmenuHandler, RefPopupHandler]);
+
+timApp.controller("ViewCtrl", ViewCtrl);

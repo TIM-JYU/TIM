@@ -235,17 +235,17 @@ timApp.directive("timDraggableFixed", [function() {
              $(element).find('.scrollable').on('scroll wheel DOMMouseScroll mousewheel', function (e) {
              var e0 = e.originalEvent,
              delta = e0.wheelDelta || -e0.detail;
-             console.log(delta);
+             $log.info(delta);
              e.preventDefault();
              if (isNaN(delta)) {
              return;
              }
              if ($(e.target).hasClass('scrollable')) {
-             console.log('target ', e.target);
+             $log.info('target ', e.target);
              e.target.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
              } else {
              e.target.closest('.scrollable').scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
-             console.log('closest ', e.target.closest('.scrollable'));
+             $log.info('closest ', e.target.closest('.scrollable'));
              }
              });*/
 

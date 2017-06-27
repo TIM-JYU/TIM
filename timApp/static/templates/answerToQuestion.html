@@ -1,17 +1,17 @@
-<div class="popUpWindow" ng-controller="AnswerToQuestionController">
+<div class="popUpWindow" ng-controller="AnswerToQuestionController as atqc">
     <div class="questionAskedWindow">
-        <dynamic-answer-sheet control="dynamicAnswerSheetControl"></dynamic-answer-sheet>
+        <dynamic-answer-sheet control="atqc.dynamicAnswerSheetControl"></dynamic-answer-sheet>
     </div>
     <div class="buttons">
-        <button ng-show="isLecturer && questionEnded" class="timButton" ng-click="edit()">Edit points</button>
-        <button ng-show="isLecturer && questionEnded" class="timButton" ng-click="askAsNew()">Ask as new</button>
-        <button ng-show="isLecturer && questionEnded" class="timButton" ng-click="reAsk()">Reask</button>
-<button ng-show="!questionEnded && !answered && !result"  class="answerButton timButton" ng-click="answer()">{{buttonText}}</button>
+        <button ng-show="lctrl.isLecturer && atqc.questionEnded" class="timButton" ng-click="atqc.edit()">Edit points</button>
+        <button ng-show="lctrl.isLecturer && atqc.questionEnded" class="timButton" ng-click="atqc.askAsNew()">Ask as new</button>
+        <button ng-show="lctrl.isLecturer && atqc.questionEnded" class="timButton" ng-click="atqc.reAsk()">Reask</button>
+<button ng-show="!atqc.questionEnded && !atqc.answered && !atqc.result"  class="answerButton timButton" ng-click="atqc.answer()">{{buttonText}}</button>
         <br />
 
-        <button ng-show="isLecturer" class="timButton" ng-click="showAnswers()">Show answers</button>
-        <button ng-show="isLecturer && questionEnded" class="timButton" ng-click="showPoints()">Show points</button>
-        <button ng-show="(isLecturer && questionEnded) || result" class="timButton" ng-click="close()">Close</button>
-        <button ng-show="isLecturer && !questionEnded" class="timButton" ng-click="stopQuestion()">End question</button>
+        <button ng-show="lctrl.isLecturer" class="timButton" ng-click="atqc.showAnswers()">Show answers</button>
+        <button ng-show="lctrl.isLecturer && atqc.questionEnded" class="timButton" ng-click="atqc.showPoints()">Show points</button>
+        <button ng-show="(lctrl.isLecturer && atqc.questionEnded) || atqc.result" class="timButton" ng-click="atqc.close()">Close</button>
+        <button ng-show="lctrl.isLecturer && !atqc.questionEnded" class="timButton" ng-click="atqc.stopQuestion()">End question</button>
     </div>
 </div>

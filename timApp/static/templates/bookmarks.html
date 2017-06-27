@@ -1,4 +1,4 @@
-<div ng-repeat="group in data" class="btn-group btn-group-sm margin-4" uib-dropdown is-open="group.isOpen">
+<div ng-repeat="group in bmctrl.data" class="btn-group btn-group-sm margin-4" uib-dropdown is-open="group.isOpen">
     <button type="button" class="btn btn-default" uib-dropdown-toggle>
         {{ group.name || 'Top level' }} <span class="caret"></span>
     </button>
@@ -8,35 +8,35 @@
         aria-labelledby="single-button">
         <li ng-repeat="item in group.items" role="menuitem">
             <a ng-href="{{ item.path }}">{{ item.name }}
-                <i ng-click="editItem(group, item, $event)" ng-show="deleting"
+                <i ng-click="editItem(group, item, $event)" ng-show="bmctrl.deleting"
                    class="glyphicon glyphicon-pencil"></i>
-                <i ng-click="deleteItem(group, item, $event)" ng-show="deleting"
+                <i ng-click="deleteItem(group, item, $event)" ng-show="bmctrl.deleting"
                    class="glyphicon glyphicon-remove"></i>
             </a>
         </li>
         <li ng-show="group.items.length > 0"
             class="divider"></li>
         <li role="menuitem">
-            <a ng-click="newBookmark(group.name, $event)"
+            <a ng-click="bmctrl.newBookmark(group.name, $event)"
                href="#">New bookmark...</a>
         </li>
         <li ng-show="group.editable"
             class="divider"></li>
         <li ng-show="group.editable" role="menuitem">
-            <a ng-click="toggleDelete($event)"
-               href="#">{{ deleting ? 'Done editing' : 'Edit...' }}</a>
+            <a ng-click="bmctrl.toggleDelete($event)"
+               href="#">{{ bmctrl.deleting ? 'Done editing' : 'Edit...' }}</a>
         </li>
-        <li ng-show="group.editable && deleting" role="menuitem">
-            <a ng-click="deleteGroup(group, $event)"
+        <li ng-show="group.editable && bmctrl.deleting" role="menuitem">
+            <a ng-click="bmctrl.deleteGroup(group, $event)"
                href="#">Delete this group</a>
         </li>
     </ul>
 </div>
-<a ng-repeat="bookmark in getTopLevelBookmarks()"
+<a ng-repeat="bookmark in bmctrl.getTopLevelBookmarks()"
    ng-href="{{ bookmark.path }}"
    ng-bind="bookmark.name"
    class="btn btn-sm btn-default"></a>
-<button ng-show="data.length == 0" ng-click="newBookmark(null, $event)" class="btn btn-sm btn-default">
+<button ng-show="bmctrl.data.length == 0" ng-click="bmctrl.newBookmark(null, $event)" class="btn btn-sm btn-default">
     <i class="glyphicon glyphicon-plus"></i> New bookmark...
 </button>
 <script type="text/ng-template" id="createBookmark.html">

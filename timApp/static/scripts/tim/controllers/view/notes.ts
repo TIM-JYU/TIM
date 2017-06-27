@@ -1,19 +1,35 @@
-import angular from "angular";
+import angular, {IScope} from "angular";
 import $ from "jquery";
 import {$compile, $window} from "../../ngimport";
-import {getFirstPar, getFirstParId} from "./parhelpers";
+import {addElementToParagraphMargin, getFirstPar, getFirstParId} from "./parhelpers";
 import {onClick} from "./eventhandlers";
 import {markParRead, readingTypes} from "./readings";
 import {getElementParent} from "../../utils";
+import {ViewCtrl} from "./ViewCtrl";
 
-export function defineNotes(sc) {
-    "use strict";
+export class NotesHandler {
+    public sc: IScope;
+    public viewctrl: ViewCtrl;
+    public noteBadgePar: JQuery;
+    public noteBadge: HTMLElement;
 
-    sc.toggleNoteEditor = function($parOrArea, options) {
+    initNotes(sc: IScope, view: ViewCtrl) {
+        this.sc = sc;
+        this.viewctrl = view;
+        onClick(".note", ($this, e) => {
+            if (!$this.hasClass("editable")) {
+                return false;
+            }
+            this.toggleNoteEditor($this.parents(".par"), {isNew: false, noteData: {id: $this.attr("note-id")}});
+            return true;
+        });
+    }
+
+    toggleNoteEditor($parOrArea, options) {
         let caption = "Edit comment";
         const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
         const mobile = touch && (window.screen.width < 1200);
-        if (!sc.item.rights.can_comment) {
+        if (!this.viewctrl.item.rights.can_comment) {
             return;
         }
         let url,
@@ -22,7 +38,7 @@ export function defineNotes(sc) {
             caption = "Add comment";
             url = "/postNote";
             data = {
-                access: sc.$storage.noteAccess,
+                access: this.viewctrl.$storage.noteAccess,
                 tags: {
                     difficult: false,
                     unclear: false,
@@ -39,7 +55,7 @@ export function defineNotes(sc) {
             attrs = {
                 "save-url": url,
                 "extra-data": angular.extend({
-                    docId: sc.docId,
+                    docId: this.viewctrl.docId,
                     par: par_id,
                     isComment: true,
                 }, data),
@@ -70,50 +86,42 @@ export function defineNotes(sc) {
                 "after-save": "handleNoteSave(saveData, extraData)",
                 "after-cancel": "handleNoteCancel(extraData)",
                 "after-delete": "handleNoteDelete(saveData, extraData)",
-                "preview-url": "/preview/" + sc.docId,
+                "preview-url": "/preview/" + this.viewctrl.docId,
                 "delete-url": "/deleteNote",
                 "initial-text-url": initUrl,
-                "unread-url": "/unread/" + sc.docId,
+                "unread-url": "/unread/" + this.viewctrl.docId,
             };
 
-        sc.toggleEditor($par, options, attrs, caption, "pareditor");
-    };
+        this.viewctrl.toggleEditor($par, options, attrs, caption, "pareditor");
+    }
 
-    sc.handleNoteCancel = function() {
-        sc.editing = false;
-    };
+    handleNoteCancel() {
+        this.viewctrl.editing = false;
+    }
 
-    sc.handleNoteDelete = function(saveData, extraData) {
-        sc.addSavedParToDom(saveData, extraData);
-    };
+    handleNoteDelete(saveData, extraData) {
+        this.viewctrl.addSavedParToDom(saveData, extraData);
+    }
 
-    sc.handleNoteSave = function(saveData, extraData) {
-        sc.addSavedParToDom(saveData, extraData);
-    };
+    handleNoteSave(saveData, extraData) {
+        this.viewctrl.addSavedParToDom(saveData, extraData);
+    }
 
-    sc.showNoteWindow = function(e, $par) {
-        sc.toggleNoteEditor($par, {isNew: true});
-    };
-
-    onClick(".note", function($this, e) {
-        if (!$this.hasClass("editable")) {
-            return false;
-        }
-        sc.toggleNoteEditor($this.parents(".par"), {isNew: false, noteData: {id: $this.attr("note-id")}});
-        return true;
-    });
+    showNoteWindow(e, $par) {
+        this.toggleNoteEditor($par, {isNew: true});
+    }
 
     /**
      * Creates the note badge button (the button with letter 'C' on it).
      * @method createNoteBadge
      * @param $par - Element where the badge needs to be attached
      */
-    sc.createNoteBadge = function($par) {
-        sc.noteBadgePar = $par;
-        if (sc.noteBadge) {
+    createNoteBadge($par) {
+        this.noteBadgePar = $par;
+        if (this.noteBadge) {
             //var parent = getElementParent(sc.noteBadge);
             //if ( !parent ) $compile(sc.noteBadge)(sc);
-            return sc.noteBadge;
+            return this.noteBadge;
         }
 
         const btn = document.createElement("input");
@@ -125,34 +133,34 @@ export function defineNotes(sc) {
         btn.value = "C";
         btn.title = "Add comment/note";
         btn.id = "noteBadge";
-        sc.noteBadge = btn;
+        this.noteBadge = btn;
         // btn.setAttribute("ng-click", "addNote()");
-        btn.onclick = function($event) {
+        btn.onclick = ($event) => {
             $event.stopPropagation();
-            sc.toggleNoteEditor(sc.noteBadgePar, {isNew: true});
+            this.toggleNoteEditor(this.noteBadgePar, {isNew: true});
         };
-        $compile(btn)(sc);
+        $compile(btn)(this.sc);
         return btn;
-    };
+    }
 
-    sc.addNote = function() {
+    addNote() {
         // sc.clearNoteBadge(null);
-        sc.toggleNoteEditor(sc.noteBadgePar, {isNew: true});
-    };
+        this.toggleNoteEditor(this.noteBadgePar, {isNew: true});
+    }
 
-    sc.setNotePadge = function($event) {
+    setNotePadge($event) {
         $event.stopPropagation();
         let $par = $($event.target);
         if (!$par.hasClass("par")) $par = $par.parents(".par");
-        sc.updateNoteBadge($par);
-    };
+        this.updateNoteBadge($par);
+    }
 
     /**
      * Moves the note badge to the correct element.
      * @method updateNoteBadge
      * @param $par - Element where the badge needs to be attached
      */
-    sc.updateNoteBadge = function($par) {
+    updateNoteBadge($par) {
         if (!$par) return null;
         if ($par.parents(".previewcontent").length > 0) {
             return;
@@ -160,15 +168,15 @@ export function defineNotes(sc) {
         markParRead($par, readingTypes.clickPar);
         const newElement = $par[0];
         if (!newElement) return null;
-        sc.addElementToParagraphMargin(newElement, sc.createNoteBadge($par));
-    };
+        addElementToParagraphMargin(newElement, this.createNoteBadge($par));
+    }
 
     /**
      * Removes the note badge and clears the element selection.
      * @param e - Current click event
      */
-    sc.clearNoteBadge = function(e) {
-        const btn = sc.noteBadge;
+    clearNoteBadge(e) {
+        const btn = this.noteBadge;
         if (btn) {
             const parent = getElementParent(btn);
             if (parent) parent.removeChild(btn);
@@ -177,23 +185,5 @@ export function defineNotes(sc) {
         if (e !== null) {
             e.stopPropagation();
         }
-    };
-
-    /**
-     * Adds an element to the paragraph margin.
-     * @method addElementToParagraphMargin
-     * @param par - Paragraph where the element will be added
-     * @param el - Element to add
-     */
-    sc.addElementToParagraphMargin = function(par, el) {
-        let container = par.getElementsByClassName("notes");
-        if (container.length > 0) {
-            container[0].appendChild(el);
-        } else {
-            container = document.createElement("div");
-            container.classList.add("notes");
-            container.appendChild(el);
-            par.appendChild(container);
-        }
-    };
+    }
 }

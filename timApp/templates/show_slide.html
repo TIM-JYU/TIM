@@ -28,7 +28,7 @@
 {% endblock %}
 
 {% block body %}
-    <div class="reveal" ng-controller="ViewCtrl">
+    <div class="reveal" ng-controller="ViewCtrl as vctrl">
         <div class="slides">
             <section>
                 {# Because of Jinja2 scoping rules, we need to use a single-element array #}

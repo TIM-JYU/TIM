@@ -1584,7 +1584,7 @@ timApp.directive("pareditor", [
                     //Special characters
                     $scope.charClicked = function($event, char) {
                         let character = $($event.target).text();
-                        console.log(char);
+                        $log.info(char);
                         if (typeof char !== "undefined") {
                             character = char;
                         }
@@ -1886,7 +1886,7 @@ timApp.directive("pareditor", [
                     //Special characters
                     $scope.charClicked = function($event, char) {
                         let character = $($event.target).text();
-                        console.log(char);
+                        $log.info(char);
                         if (typeof char !== "undefined") {
                             character = char;
                         }

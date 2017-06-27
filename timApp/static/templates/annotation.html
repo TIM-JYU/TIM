@@ -1,37 +1,37 @@
-<!-- Pop over element --><span class="annotation-element"><span   ng-init="showHidden=newannotation" ng-show="show" ng-click="updateVelpZIndex()"
-                                                                ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
-                                                                ng-keydown="keyDownFunc($event)" ng-keyup="keyUpFunc($event)"
-                                                                ng-style="{backgroundColor: getCustomColor()}">
+<!-- Pop over element --><span class="annotation-element"><span   ng-init="actrl.showHidden=actrl.newannotation" ng-show="actrl.show" ng-click="actrl.updateVelpZIndex()"
+                                                                ng-class="['annotation-info', 'emphasise', 'default', {neutral: actrl.points == 0, negative: actrl.points<0, positive: actrl.points > 0}]"
+                                                                ng-keydown="actrl.keyDownFunc($event)" ng-keyup="actrl.keyUpFunc($event)"
+                                                                ng-style="{backgroundColor: actrl.getCustomColor()}">
     <span class="fulldiv">
         <span class="div-90 annTopSection">
             <p><span class="annHeader"><strong>{{ velp }}</strong></span></p>
-            <p ng-show="showHidden"><a class="username" href="mailto:{{ email }}">{{ annotator }}</a>
-                    <span class="timestamp" title="{{ creationtime }}">{{ timesince }}</span></p>
+            <p ng-show="actrl.showHidden"><a class="username" href="mailto:{{ actrl.email }}">{{ actrl.annotator }}</a>
+                    <span class="timestamp" title="{{ actrl.creationtime }}">{{ actrl.timesince }}</span></p>
         </span>
         <span class="div-10">
             <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon closeAnn"
-                  ng-click="toggleAnnotation();showHidden=false"></span>
+                  ng-click="actrl.toggleAnnotation();actrl.showHidden=false"></span>
         </span>
     </span>
 
 
-        <div ng-mouseenter="showHidden=true;updateVelpZIndex()">
-            <div ng-show="showHidden">
-            <p ng-hide="checkRights() || !allowChangePoints()"><label>Points: <input type="number" ng-model="points" ng-disabled="checkRights()"
-                                                                                     ng-change="changePoints()"/></label>
+        <div ng-mouseenter="actrl.showHidden=true;actrl.updateVelpZIndex()">
+            <div ng-show="actrl.showHidden">
+            <p ng-hide="actrl.checkRights() || !actrl.allowChangePoints()"><label>Points: <input type="number" ng-model="actrl.points" ng-disabled="actrl.checkRights()"
+                                                                                     ng-change="actrl.changePoints()"/></label>
             </p>
-                <p ng-hide="isvalid.points.value" class="error">{{ isvalid.points.msg }}</p>
-                <p ng-show="checkRights()"><label ng-hide="points == null">Points:  {{ points }}</label></p>
+                <p ng-hide="actrl.isvalid.points.value" class="error">{{ actrl.isvalid.points.msg }}</p>
+                <p ng-show="actrl.checkRights()"><label ng-hide="actrl.points == null">Points:  {{ actrl.points }}</label></p>
             </div>
-            <div ng-hide="showHidden">
-              <div ng-show="points != null">
-                <p><label>Points: {{ points }}</label></p>
+            <div ng-hide="actrl.showHidden">
+              <div ng-show="actrl.points != null">
+                <p><label>Points: {{ actrl.points }}</label></p>
             </div>
                 </div>
 
     <span class="fulldiv">
         <ul class="comments">
-            <li ng-repeat="comment in comments">
+            <li ng-repeat="comment in actrl.comments">
                 <p>{{ comment["content"] }}
                     <span class="comment-info"><a class="username" title="{{ comment.commenter_real_name }}"
                    href="mailto:{{ comment.commenter_email }}">
@@ -44,17 +44,17 @@
         </ul>
 
     </span>
-    <div ng-show="showHidden" >
-        <textarea placeholder="Add comment" ng-model="newcomment" >{{ newcomment }}</textarea>
+    <div ng-show="actrl.showHidden" >
+        <textarea placeholder="Add comment" ng-model="actrl.newcomment" >{{ actrl.newcomment }}</textarea>
         <div>
             <form class="form-inline adjustAnnForm">
                 <!--<div class="form-group"> -->
 
                     <div>
-                    <span ng-hide="checkRights()">
-                        <label ng-class="{disabled: checkRights()}"><div title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></div></label>
-                        <select ng-model="visible_options.value" ng-disabled="checkRights()"
-                            ng-options="v as visible_options.names[v-1] for v in visible_options.values">
+                    <span ng-hide="actrl.checkRights()">
+                        <label ng-class="{disabled: actrl.checkRights()}"><div title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></div></label>
+                        <select ng-model="actrl.visible_options.value" ng-disabled="actrl.checkRights()"
+                            ng-options="v as actrl.visible_options.names[v-1] for v in actrl.visible_options.values">
                         </select>
                         <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
                          uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
@@ -62,10 +62,10 @@
                         </div>
                     </span>
 
-                    <span ng-show="checkRights()" class="annotationVisibleText">
+                    <span ng-show="actrl.checkRights()" class="annotationVisibleText">
 
                         <span title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></span>
-                        {{ visible_options.names[visible_options.value - 1] }}
+                        {{ actrl.visible_options.names[visible_options.value - 1] }}
 
                         <span ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
                          uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
@@ -74,8 +74,8 @@
 
                     </span>
                     <span style="float: right">
-                        <input type="color" ng-model="color" ng-change="changeColor()" class="colorchange-button" title="Change annotation color">
-                        <input ng-if="isVelpCustomColor()" class="smallButton" type="button" ng-click="clearColor()" title="Reset color to original value" value="R">
+                        <input type="color" ng-model="actrl.color" ng-change="actrl.changeColor()" class="colorchange-button" title="Change annotation color">
+                        <input ng-if="actrl.isVelpCustomColor()" class="smallButton" type="button" ng-click="actrl.clearColor()" title="Reset color to original value" value="R">
                     </span>
                     </div>
               <!--  </div> -->
@@ -83,22 +83,22 @@
         </div>
     </div>
     <span>
-        <button class="saveChanges timButton" ng-show="checkIfChanged()" ng-click="saveChanges()">Save
+        <button class="saveChanges timButton" ng-show="actrl.checkIfChanged()" ng-click="actrl.saveChanges()">Save
         </button>
     </span>
-        <div ng-show="showHidden">
+        <div ng-show="actrl.showHidden">
         <span class="annDelAnnotation" title="Delete annotation"
-                     ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: comments.length > 1} ]"
-                     ng-hide="checkRights()"
+                     ng-class="['delAnnotation', 'float-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: actrl.comments.length > 1} ]"
+                     ng-hide="actrl.checkRights()"
 
-                     ng-click="deleteAnnotation()"></span>
+                     ng-click="actrl.deleteAnnotation()"></span>
         </div>
-         <div class="annotationVisibleText" ng-hide="showHidden">
-            {{ visible_options.names[visible_options.value - 1] }}
+         <div class="annotationVisibleText" ng-hide="actrl.showHidden">
+            {{ actrl.visible_options.names[actrl.visible_options.value - 1] }}
         </div>
     </div>
 
 </span></span><!--
-Highlighted text--><span ng-click="showHidden=false;toggleAnnotation()" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
-{neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude
-ng-style="{backgroundColor: getCustomColor()}"></span>
+Highlighted text--><span ng-click="actrl.showHidden=false;actrl.toggleAnnotation()" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
+{neutral: actrl.points == 0, negative: actrl.points < 0, positive: actrl.points > 0}]" ng-transclude
+ng-style="{backgroundColor: actrl.getCustomColor()}"></span>

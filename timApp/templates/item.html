@@ -22,12 +22,12 @@
         <li role="presentation" {{ active('view_page.view_document') }}><a id="headerView" href="/view/{{ item.path }}">View</a></li>
         <li role="presentation" {{ active('manage_page.manage') }}><a id="headerManage" href="/manage/{{ item.path }}">Manage</a></li>
     {% endblock %}</div>
-        <div ng-controller="Breadcrumbs" ng-show="crumbs" ng-cloak>
+        <div ng-controller="Breadcrumbs as bc" ng-show="bc.crumbs" ng-cloak>
             <ol class="breadcrumb">
-                <li ng-repeat="c in crumbs | orderBy:'-'">
+                <li ng-repeat="c in bc.crumbs | orderBy:'-'">
                     <a href="/{{ route or 'view' }}/{{ '{{ c.path | escape }}' }}">{{ '{{ c.title }}' }}</a>
                 </li>
-                <li class="active">{{ '{{ item.title }}' }}</li>
+                <li class="active">{{ '{{ bc.item.title }}' }}</li>
             </ol>
         </div>
     {% endif %}

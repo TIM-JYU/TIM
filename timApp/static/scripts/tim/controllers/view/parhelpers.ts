@@ -2,18 +2,31 @@ import angular from "angular";
 import $ from "jquery";
 import {getActiveDocument} from "./document";
 
-export function getParId($par) {
+export function createNewPar(): JQuery {
+    return $("<div>", {class: "par new", id: "NEW_PAR", attrs: "{}"})
+        .append($("<div>", {class: "parContent"}).html("New paragraph"));
+}
+
+export function getParId($par: JQuery): string {
     if ($par === null || $par.length === 0 || !$par.hasClass("par")) {
         return null;
     }
     return $par.attr("id");
 }
 
-export function getParAttributes($par) {
+export function getParAttributes($par: JQuery) {
     return JSON.parse($par.attr("attrs"));
 }
 
-export function getAreaDocId($area) {
+export function getAreaId($area: JQuery) {
+    if (!$area.hasClass("area")) {
+        return null;
+    }
+
+    return $area.attr("data-name");
+}
+
+export function getAreaDocId($area: JQuery) {
     if (!$area.hasClass("area")) {
         return null;
     }
@@ -21,7 +34,7 @@ export function getAreaDocId($area) {
     return $area.attr("data-doc-id");
 }
 
-export function getFirstPar($parOrArea) {
+export function getFirstPar($parOrArea: JQuery) {
     if ($parOrArea.length > 1) {
         return getFirstPar($parOrArea.first());
     }
@@ -35,7 +48,7 @@ export function getFirstPar($parOrArea) {
     return null;
 }
 
-export function getLastPar($parOrArea) {
+export function getLastPar($parOrArea: JQuery) {
     if ($parOrArea.length > 1) {
         return getLastPar($parOrArea.last());
     }
@@ -49,15 +62,15 @@ export function getLastPar($parOrArea) {
     return null;
 }
 
-export function getFirstParId($parOrArea) {
+export function getFirstParId($parOrArea: JQuery) {
     return getParId(getFirstPar($parOrArea));
 }
 
-export function getLastParId($parOrArea) {
+export function getLastParId($parOrArea: JQuery) {
     return getParId(getLastPar($parOrArea));
 }
 
-export function getNextPar($par) {
+export function getNextPar($par: JQuery) {
     const $next = $par.next();
     if ($next.hasClass("par")) {
         return $next;
@@ -74,15 +87,15 @@ export function getNextPar($par) {
     return null;
 }
 
-export function getElementByParId(id) {
+export function getElementByParId(id: string) {
     return $("#" + id);
 }
 
-export function getElementByParHash(t) {
+export function getElementByParHash(t: string) {
     return $("[t='" + t + "']");
 }
 
-export function getRefAttrs($par) {
+export function getRefAttrs($par: JQuery) {
     return {
         "ref-id": $par.attr("ref-id"),
         "ref-t": $par.attr("ref-t"),
@@ -99,11 +112,11 @@ export function getElementByRefId(ref) {
     return $(".par[ref-id='" + ref + "']");
 }
 
-export function isReference($par) {
+export function isReference($par: JQuery) {
     return angular.isDefined($par.attr("ref-id"));
 }
 
-export function getParIndex($par) {
+export function getParIndex($par: JQuery) {
     const parId = getParId($par);
     const $pars = $(".par");
     let realIndex = 0;
@@ -127,11 +140,11 @@ export function getParIndex($par) {
     }
 }
 
-export function getArea(area) {
+export function getArea(area: string) {
     return $(".area_" + area);
 }
 
-export function getPars($parFirst, $parLast) {
+export function getPars($parFirst: JQuery, $parLast: JQuery) {
     const pars = [$parFirst];
     let $par = $parFirst;
     let $next = $par.next();
@@ -170,7 +183,7 @@ export function getPars($parFirst, $parLast) {
     });
 }
 
-export function dereferencePar($par) {
+export function dereferencePar($par: JQuery) {
     if ($par.length === 0 || !$par.hasClass("par")) {
         return null;
     }
@@ -179,6 +192,24 @@ export function dereferencePar($par) {
     }
     const doc = getActiveDocument();
     return [doc.id, $par.attr("id")];
+}
+
+/**
+ * Adds an element to the paragraph margin.
+ * @method addElementToParagraphMargin
+ * @param par - Paragraph where the element will be added
+ * @param el - Element to add
+ */
+export function addElementToParagraphMargin(par: HTMLElement, el: Element) {
+    const container = par.getElementsByClassName("notes");
+    if (container.length > 0) {
+        container[0].appendChild(el);
+    } else {
+        const newContainer = document.createElement("div");
+        newContainer.classList.add("notes");
+        newContainer.appendChild(el);
+        par.appendChild(newContainer);
+    }
 }
 
 export const EDITOR_CLASS = "editorArea";

@@ -540,10 +540,10 @@ timApp.directive("dynamicAnswerSheet", [function() {
              */
             $scope.$on("update_end_time", function(event, time) {
                 if (time !== null) {
-                    $scope.endTime = time - $scope.$parent.clockOffset;
+                    $scope.endTime = time - $scope.$parent.vctrl.clockOffset;
                     $scope.progressElem.attr("max", $scope.endTime - $scope.askedTime);
                 } else {
-                    if (!$scope.$parent.isLecturer) {
+                    if (!$scope.$parent.lctrl.isLecturer) {
                         $interval.cancel(promise);
                         $element.empty();
                         $scope.$emit("closeQuestion");
@@ -568,7 +568,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
                 $scope.progressElem.attr("content", (Math.max((timeLeft / 1000), 0).toFixed(0) + " s"));
                 if (barFilled >= $scope.progressElem.attr("max")) {
                     $interval.cancel(promise);
-                    if (!$scope.$parent.isLecturer && !$scope.$parent.questionEnded) {
+                    if (!$scope.$parent.lctrl.isLecturer && !$scope.$parent.lctrl.questionEnded) {
                         $scope.internalControl.answerToQuestion();
                     } else {
                         $scope.progressText.text("Time's up");
@@ -662,7 +662,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
 
                 const answers = $scope.internalControl.getAnswers();
 
-                if (!$scope.$parent.isLecturer) {
+                if (!$scope.$parent.lctrl.isLecturer) {
                     $element.empty();
                     $interval.cancel(promise);
                 }

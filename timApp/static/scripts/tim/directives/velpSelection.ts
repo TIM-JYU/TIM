@@ -41,7 +41,6 @@ timApp.directive("velpSelection", function() {
  */
 timApp.controller("VelpSelectionController", ["$scope", function($scope) {
     "use strict";
-    const console = $window.console;
 
     // Data
     $scope.velps = [];
@@ -302,7 +301,7 @@ timApp.controller("VelpSelectionController", ["$scope", function($scope) {
      */
 
     $scope.allowChangePoints = function() {
-        return $scope.$parent.item.rights.teacher;
+        return $scope.$parent.vctrl.item.rights.teacher;
     };
 
     /**

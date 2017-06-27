@@ -1,119 +1,166 @@
-
 import $ from "jquery";
 import {$http, $log, $rootScope, $window} from "../../ngimport";
-import {getElementByParId, getParId} from "./parhelpers";
+import {createNewPar, getElementByParId, getParId} from "./parhelpers";
 import {onClick} from "./eventhandlers";
-export function defineQuestions(sc) {
-    "use strict";
+import {IScope} from "angular";
+import {ViewCtrl} from "./viewctrl";
 
-    if (sc.lectureMode) {
-        sc.noQuestionAutoNumbering = $window.noQuestionAutoNumbering;
+export class QuestionHandler {
+    public sc: IScope;
+    public questionShown: boolean;
+    public firstTimeQuestions: boolean;
+    public noQuestionAutoNumbering: boolean;
+    public par: JQuery;
+    public markup: {json?, points?, expl?};
+    public questionParId: string;
+    public qId: string;
+    public json: {questionTitle};
+    public viewctrl: ViewCtrl;
+    public showQuestionPreview: boolean;
+    public questionParIdNext: string;
+
+    public initQuestions(sc: IScope, view: ViewCtrl): void {
+        this.sc = sc;
+        this.viewctrl = view;
+        if (view.lectureMode) {
+            this.noQuestionAutoNumbering = $window.noQuestionAutoNumbering;
+        }
+
+        this.questionShown = false;
+        this.firstTimeQuestions = true;
+
+        onClick(".questionAdded", ($this, e) => {
+            const question = $this;
+            const questionId = question[0].getAttribute("id");
+            this.showQuestion(questionId);
+            this.par = ($(question).parent().parent());
+        });
+
+        onClick(".questionAddedNew", ($this, e) => {
+            const question = $this;
+            const $par = $(question).parent().parent();
+            const parId = $($par)[0].getAttribute("id");
+            const parNextId = getParId($par.next());
+            this.showQuestionNew(parId, parNextId);
+            this.par = ($(question).parent());
+        });
+
+        this.sc.$on("getQuestions", () => {
+                if (this.firstTimeQuestions) {
+                    this.getQuestions();
+                    this.firstTimeQuestions = false;
+                }
+            },
+        );
+
+        this.sc.$on("closeQuestionPreview", function() {
+                this.showQuestionPreview = false;
+            },
+        );
     }
 
-    sc.questionShown = false;
-    sc.firstTimeQuestions = true;
-
-    sc.showQuestion = function(questionId) {
-        sc.markup = {};
-        sc.markup.json = "No data";
-        sc.qId = questionId;
+    showQuestion(questionId: string) {
+        this.markup = {};
+        this.markup.json = "No data";
+        this.qId = questionId;
 
         $http<{questionjson: string, points: any, expl: string}>({
             url: "/getQuestionById",
             method: "GET",
-            params: {question_id: sc.qId},
-        }).then(function(response) {
-            sc.markup.json = JSON.parse(response.data.questionjson);
-            sc.markup.points = response.data.points;
-            sc.markup.expl = response.data.expl;
-            $rootScope.$broadcast("changeQuestionTitle", {questionTitle: sc.json.questionTitle});
+            params: {question_id: this.qId},
+        }).then((response) => {
+            this.markup.json = JSON.parse(response.data.questionjson);
+            this.markup.points = response.data.points;
+            this.markup.expl = response.data.expl;
+            $rootScope.$broadcast("changeQuestionTitle", {questionTitle: this.json.questionTitle});
             $rootScope.$broadcast("setPreviewJson", {
-                markup: sc.markup,
-                questionId: sc.qId,
-                isLecturer: sc.isLecturer,
+                markup: this.markup,
+                questionId: this.qId,
+                isLecturer: this.viewctrl.isLecturer,
             });
-        }, function() {
+        }, () => {
             $log.error("There was some error creating question to database.");
         });
 
-        sc.lectureId = -1;
-        sc.inLecture = false;
+        this.viewctrl.lectureId = -1;
+        this.viewctrl.inLecture = false;
 
-        sc.$on("postLectureId", function(event, response) {
-            sc.lectureId = response;
+        this.sc.$on("postLectureId", function(event, response) {
+            this.lectureId = response;
         });
 
-        sc.$on("postInLecture", function(event, response) {
-            sc.inLecture = response;
+        this.sc.$on("postInLecture", function(event, response) {
+            this.inLecture = response;
         });
 
         $rootScope.$broadcast("getLectureId");
         $rootScope.$broadcast("getInLecture");
-        sc.showQuestionPreview = true;
-    };
+        this.showQuestionPreview = true;
+    }
 
-    sc.showQuestionNew = function(parId, parIdNext) {
-        sc.markup = {};
-        sc.markup.json = "No data";
-        sc.questionParId = parId;
-        sc.questionParIdNext = parIdNext;
+    showQuestionNew(parId: string, parIdNext: string) {
+        this.markup = {};
+        this.markup.json = "No data";
+        this.questionParId = parId;
+        this.questionParIdNext = parIdNext;
 
         $http<{markup: string}>({
             url: "/getQuestionByParId",
             method: "GET",
-            params: {par_id: sc.questionParId, doc_id: sc.docId},
-        }).then(function(response) {
-            sc.markup = response.data.markup;
-            $rootScope.$broadcast("changeQuestionTitle", {questionTitle: sc.markup.json.questionTitle});
+            params: {par_id: this.questionParId, doc_id: this.viewctrl.docId},
+        }).then((response) => {
+            this.markup = response.data.markup;
+            $rootScope.$broadcast("changeQuestionTitle", {questionTitle: this.markup.json.questionTitle});
             $rootScope.$broadcast("setPreviewJson", {
-                markup: sc.markup,
-                questionParId: sc.questionParId,
-                questionParIdNext: sc.questionParIdNext,
-                isLecturer: sc.isLecturer,
+                markup: this.markup,
+                questionParId: this.questionParId,
+                questionParIdNext: this.questionParIdNext,
+                isLecturer: this.viewctrl.isLecturer,
             });
-        }, function() {
+        }, () => {
             $log.error("Could not get question.");
         });
 
-        sc.lectureId = -1;
-        sc.inLecture = false;
+        this.viewctrl.lectureId = -1;
+        this.viewctrl.inLecture = false;
 
-        sc.$on("postLectureId", function(event, response) {
-            sc.lectureId = response;
+        this.sc.$on("postLectureId", function(event, response) {
+            this.lectureId = response;
         });
 
-        sc.$on("postInLecture", function(event, response) {
-            sc.inLecture = response;
+        this.sc.$on("postInLecture", function(event, response) {
+            this.inLecture = response;
         });
 
         $rootScope.$broadcast("getLectureId");
         $rootScope.$broadcast("getInLecture");
-        sc.showQuestionPreview = true;
-    };
+        this.showQuestionPreview = true;
+    }
 
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
-    sc.addQuestionQst = function(e, $par) {
+    addQuestionQst(e, $par) {
         const parId = getParId($par);
         const parNextId = parId; // getParId($par.next());
-        const $newpar = sc.createNewPar();
+        const $newpar = createNewPar();
         $par.before($newpar);
         $rootScope.$broadcast("toggleQuestion");
         $rootScope.$broadcast("newQuestion", {par_id: parId, par_id_next: parNextId, qst: true});
-        sc.par = $par;
-    };
+        this.par = $par;
+    }
 
-    sc.editQst = async function(e, $par) {
+    async editQst(e, $par) {
         const parId = getParId($par);
         const parNextId = getParId($par.next());
-        sc.par = $par;
+        this.par = $par;
         // $rootScope.$broadcast('toggleQuestion');
         try {
-            var response = await $http<{markup: {json: string}}>({
-                url: "/getQuestionByParId",
-                method: "GET",
-                params: {par_id: parId, doc_id: sc.docId, edit: true},
-            });
+            var response = await
+                $http<{markup: {json: {questionTitle}}}>({
+                    url: "/getQuestionByParId",
+                    method: "GET",
+                    params: {par_id: parId, doc_id: this.viewctrl.docId, edit: true},
+                });
         } catch (e) {
             $log.error("Could not get question.");
             return;
@@ -122,46 +169,30 @@ export function defineQuestions(sc) {
         if (!data.markup) {
             return; // not a question
         }
-        sc.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
-        sc.markup = data.markup;
+        this.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
+        this.markup = data.markup;
         // data.markup.qst = true;
-        $rootScope.$broadcast("changeQuestionTitle", {questionTitle: sc.json.questionTitle});
+        $rootScope.$broadcast("changeQuestionTitle", {questionTitle: this.json.questionTitle});
         $rootScope.$broadcast("editQuestion", {
             par_id: parId,
             par_id_next: parNextId,
             markup: data.markup,
         });
-    };
+    }
 
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
-    sc.addQuestion = function(e, $par) {
+    addQuestion(e, $par) {
         const parId = getParId($par);
         const parNextId = getParId($par.next());
-        const $newpar = sc.createNewPar();
+        const $newpar = createNewPar();
         $par.after($newpar);
         $rootScope.$broadcast("toggleQuestion");
         $rootScope.$broadcast("newQuestion", {par_id: parId, par_id_next: parNextId});
-        sc.par = $par;
-    };
+        this.par = $par;
+    }
 
-    onClick(".questionAdded", function($this, e) {
-        const question = $this;
-        const questionId = question[0].getAttribute("id");
-        sc.showQuestion(questionId);
-        sc.par = ($(question).parent().parent());
-    });
-
-    onClick(".questionAddedNew", function($this, e) {
-        const question = $this;
-        const $par = $(question).parent().parent();
-        const parId = $($par)[0].getAttribute("id");
-        const parNextId = getParId($par.next());
-        sc.showQuestionNew(parId, parNextId);
-        sc.par = ($(question).parent());
-    });
-
-    sc.getQuestionHtml = function(questions) {
+    getQuestionHtml(questions) {
         const questionImage = "/static/images/show-question-icon.png";
         const $questionsDiv = $("<div>", {class: "questions"});
 
@@ -186,13 +217,13 @@ export function defineQuestions(sc) {
             $questionsDiv.append($questionDiv);
         }
         return $questionsDiv;
-    };
+    }
 
-    sc.processQuestions = function() {
+    processQuestions() {
         const questions = $(".questionPar");
         let n = 1;
         let separator = ")";
-        if (sc.showQuestions()) {
+        if (this.showQuestions()) {
             for (let i = 0; i < questions.length; i++) {
                 const $par = questions.eq(i);
                 const questionChildren = $par.children();
@@ -214,7 +245,7 @@ export function defineQuestions(sc) {
                     }
                 }
                 if (questionNumber[0] && questionNumber[0].innerHTML) {
-                    if (sc.noQuestionAutoNumbering) {
+                    if (this.noQuestionAutoNumbering) {
                         questionNumber[0].innerHTML = questionTitle;
                     } else {
                         questionNumber[0].innerHTML = nr + questionTitle;
@@ -225,10 +256,10 @@ export function defineQuestions(sc) {
         } else {
             questions.hide();
         }
-    };
+    }
 
-    sc.getQuestions = async function() {
-        const response = await $http.get<Array<{par_id: string}>>("/questions/" + sc.docId);
+    async getQuestions() {
+        const response = await $http.get<Array<{par_id: string}>>("/questions/" + this.viewctrl.docId);
         const data = response.data;
         const pars = {};
         const questionCount = data.length;
@@ -241,23 +272,16 @@ export function defineQuestions(sc) {
             pars[pi].questions.push(data[i]);
         }
 
-        Object.keys(pars).forEach(function(par_id, index) {
-            const $par = getElementByParId(par_id);
+        Object.keys(pars).forEach((parId, index) => {
+            const $par = getElementByParId(parId);
             $par.find(".questions").remove();
-            const $questionsDiv = sc.getQuestionHtml(pars[par_id].questions);
+            const $questionsDiv = this.getQuestionHtml(pars[parId].questions);
             $par.append($questionsDiv);
         });
-    };
+    }
 
-    sc.$on("getQuestions", function() {
-        if (sc.firstTimeQuestions) {
-            sc.getQuestions();
-            sc.firstTimeQuestions = false;
-        }
-    });
-
-    sc.$on("closeQuestionPreview", function() {
-        sc.showQuestionPreview = false;
-    });
-
+    showQuestions() {
+        return (this.viewctrl.item.rights.teacher && (this.viewctrl.lectureMode || this.viewctrl.inLecture)) ||
+            ($window.editMode && this.viewctrl.item.rights.editable);
+    }
 }

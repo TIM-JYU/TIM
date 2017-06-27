@@ -1,27 +1,27 @@
 <div  tim-draggable-fixed="" class="velpFixed" save="%%PAGEID%%velpMenu" click="true" resize="true" caption="Velp menu" id="velpSelection">
   <div class="velpMenu draggable-content" >
 
-    <uib-tabset active="active" class="velpFill">
+    <uib-tabset active="vsctrl.active" class="velpFill">
         <uib-tab index="0" heading="Select">
             <br/>
-            <label><input type="checkbox" ng-model="advancedOn" ng-change="setAdvancedOnlocalStorage(advancedOn)"> Advanced view</label>
+            <label><input type="checkbox" ng-model="vsctrl.advancedOn" ng-change="vsctrl.setAdvancedOnlocalStorage(advancedOn)"> Advanced view</label>
             <div class="velpArea">
 
                 <!-- LABELS -->
-                <div id="labels" ng-show="advancedOn">
+                <div id="labels" ng-show="vsctrl.advancedOn">
                     <form class="form-inline adjustForm">
                         <div class="form-group">
                             <label class="formLabel" for="searchLabels">Search labels:</label>
-                            <input class="formInput" id="searchLabels" ng-model="filterLabel"
+                            <input class="formInput" id="searchLabels" ng-model="vsctrl.filterLabel"
                                    placeholder="Filter labels">
                         </div>
                     </form>
                     <div>
                         <div class="fulldiv">
-                            <p ng-repeat="label in filteredLabels = ( labels | filter:{content:filterLabel} )"
+                            <p ng-repeat="label in filteredLabels = ( labels | filter:{content:vsctrl.filterLabel} )"
                                class="label tag-false"
-                               ng-style="{ backgroundColor: getColor(label.id) };"
-                               ng-click="toggleLabel(label)" ng-model="test" value="{{ label.id }}">
+                               ng-style="{ backgroundColor: vsctrl.getColor(label.id) };"
+                               ng-click="vsctrl.toggleLabel(label)" ng-model="vsctrl.test" value="{{ label.id }}">
                                 {{ label.content }} <span class="glyphicon glyphicon-ok"
                                                           ng-show="label.selected"></span>
                             </p>
@@ -33,15 +33,15 @@
                     <form class="form-inline adjustForm">
                         <div class="form-group">
                             <label class="formLabel" for="searchVelps">Search velps:</label>
-                            <input class="formInput" id="searchVelps" ng-model="filterVelp" placeholder="Filter velps">
+                            <input class="formInput" id="searchVelps" ng-model="vsctrl.filterVelp" placeholder="Filter velps">
                         </div>
                     </form>
                 </div>
-                <div ng-show="advancedOn">
+                <div ng-show="vsctrl.advancedOn">
                     <form class="form-inline adjustForm">
                         <div class="form-group">
                             <label class="formLabel" for="orderVelps">Order velps:</label>
-                            <select id="orderVelps" ng-model="order" ng-change="changeOrdering(order)">
+                            <select id="orderVelps" ng-model="vsctrl.order" ng-change="vsctrl.changeOrdering(order)">
                                 <option value="content">Alphabetical</option>
                                 <option value="-used">Most used</option>
                                 <option value="label">Labels</option>
@@ -52,142 +52,39 @@
                     </form>
                 </div>
 
-                <input id="createVelpButton" class="timButton" type="button" ng-click="openCreateNewVelpWindow(newVelp)"
+                <input id="createVelpButton" class="timButton" type="button" ng-click="vsctrl.openCreateNewVelpWindow(newVelp)"
                        value="Create new velp">
 
                 <div class="stack" id="selectVelpsStack">
 
                     <velp-window id="newVelp"
                                  class="velp" ng-style="{top: 0}"
-                                 ng-show="newVelp.edit"
-                                 velp="newVelp"
+                                 ng-show="vsctrl.newVelp.edit"
+                                 velp="vsctrl.newVelp"
                                  index="-1"
-                                 velp-groups="velpGroups"
-                                 labels="labels"
+                                 velp-groups="vsctrl.velpGroups"
+                                 labels="vsctrl.labels"
                                  new="true"
-                                 advanced-on="advancedOn"></velp-window>
+                                 advanced-on="vsctrl.advancedOn"></velp-window>
 
-
-                    <!-- NEW VELP
-                    <div ng-model="newVelp" class="velp" ng-style="{top: 0}" ng-hide="!newVelp.edit">
-    <div ng-class="['emphasise', 'new', { neutral: newVelp.points == 0, positive: newVelp.points > 0, negative: newVelp.points < 0,
-        edit: newVelp.edit}]">
-        <div ng-class="['content']">
-            <p ng-hide="newVelp.edit">
-                <span>Add velp!&ensp;</span>
-                <span class="points">{{ newVelp.points }}</span>
-            </p>
-            <form ng-class="[{hide: !newVelp.edit}]" name="addVelpForm"
-                  ng-submit="addVelp(addVelpForm)" novalidate>
-
-                <p><input name="velpName" type="text"
-                          ng-model="newVelp['content']"
-                          required placeholder="Velp name" autofocus>
-                        <span ng-class="['glyphicon', 'glyphicon-tag', {hide: !advancedOn}]"
-                              ng-repeat="label in newVelp.labels"
-                              ng-style="{ color: getColor(label) }"></span></p>
-
-                <p class="error"
-                   ng-show="(addVelpForm.velpName.$invalid && !addVelpForm.velpName.$pristine) || (submitted.velp && addVelpForm.velpName.$invalid)">
-                    Velp content is required!
-                </p>
-
-                <p ng-show="allowChangePoints()"><input type="number" ng-model="newVelp['points']"
-                          placeholder="Points" value="0"></p>
-                <p ng-hide="allowChangePoints()" class="velpInfoText">You need to have teacher rights set points in this document.</p>
-
-
-                <fieldset ng-show="advancedOn">
-                    <legend>Labels</legend>
-                                <span ng-repeat="l in labels">
-                                    <span ng-show="!l.edit">
-                                    <label><input type="checkbox"
-                                                  ng-click="updateVelpLabels(newVelp, l)"
-                                                  ng-checked="isLabelInVelp(newVelp, l)"> {{ l.content }}
-                                    </label>
-                                    <span class="float-right" ng-click="toggleLabelToEdit(l)"
-                                          ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
-                                    <br>
-                                    </span>
-                                    <span ng-show="l.edit">
-                                        <input type="text" placeholder="Add label"
-                                               ng-model="labelToEdit.content">
-                                        <span class="float-right" ng-click="toggleLabelToEdit(l)"
-                                              ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']"></span>
-                                        <input class="timButton" type="button" value="Save"
-                                               ng-click="editLabel(newVelp)">
-                                        <input
-                                                class="timButton"
-                                                type="button" value="Cancel"
-                                                ng-click="toggleLabelToEdit(l)">
-                                        <br>
-                                    </span>
-                                    </span>
-                    <input class="addLabelField" placeholder="Add label"
-                           ng-model="newLabel['content']">
-                    <input class="addLabelBtn" type="button" value="Add"
-                           ng-click="addLabel(newVelp)">
-                    <span ng-hide="newLabel['valid']" class="error">Label content too short</span>
-                </fieldset>
-
-                <fieldset>
-                    <legend>Velp groups</legend>
-                    <span ng-repeat="gr in velpGroups">
-                        <span ng-if="gr.edit_access">
-                            <label><input type="checkbox"
-                                          ng-click="updateVelpGroups(newVelp, gr)"
-                                          ng-model="gr.selected"> {{ gr.name }}</label>
-                            <br>
-                        </span>
-                    </span>
-                </fieldset>
-                 <label class="annotationVisibleText">
-                                <div title="Visible to" ng-class="['annqmark', 'glyphicon', 'glyphicon-eye-open', ]"></div>
-                                <select ng-model="visible_options.value"
-                                ng-options="v as visible_options.names[v-1] for v in visible_options.values">
-                                </select>
-                                <div ng-class="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
-                                 uib-popover="'Just me' means that the annotation is visible only to yourself. 'Document owner' refers to the person or group who has been named as the document owner. 'Teachers' refers to the users that have teacher access to this document. 'Everyone' means that the annotation is visible to everyone who can view the assessed content."
-                                 popover-placement="left">
-                                </div>
-                            </label>
-                <button colorpicker type="button" colorpicker-position="top" ng-model="velp.color">Color</button>
-                <p class="error" ng-show="!isSomeVelpGroupSelected(newVelp)">
-                    You need to select at least one velpgroup.
-                </p>
-                <p>
-                    <!-- The double click handler prevents adding two velps by accident.
-
-                    <input id="addVelpBtn" class="timButton" type="submit" value="Create velp"
-                          ng-disabled="!isVelpValid(newVelp)"/>
-                </p>
-            </form>
-        </div>
-    </div>
-
-</div>-->
-
-                    <button ng-click="releaseClicked()" class="timButton" id="releaseSelectVelpsButton" style="padding-top: 0px;padding-bottom: 0px;margin-bottom: 10px ">&#8592;</button>
+                    <button ng-click="vsctrl.releaseClicked()" class="timButton" id="releaseSelectVelpsButton" style="padding-top: 0px;padding-bottom: 0px;margin-bottom: 10px ">&#8592;</button>
     <div id="selectVelpsDiv" save="%%PAGEID%%selectVelpsDiv" tim-draggable-fixed>
-        <span title="Close" class="glyphicon glyphicon-remove clickable-icon closedraggable" ng-click="releaseClicked()" style="visibility: hidden;position: absolute; margin-left: 16.7em;margin-top: 0.2em"></span>
+        <span title="Close" class="glyphicon glyphicon-remove clickable-icon closedraggable" ng-click="vsctrl.releaseClicked()" style="visibility: hidden;position: absolute; margin-left: 16.7em;margin-top: 0.2em"></span>
                     <!-- EDIT VELPS -->
 
-        <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderByWhenNotEditing:order:filteredVelps | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn
+        <span ng-repeat="velp in filteredVelps = (velps | filter:{content:filterVelp} | orderByWhenNotEditing:order:filteredVelps | filterByVelpGroups:vsctrl.velpGroups | filterByLabels:labels:vsctrl.advancedOn
                                                  ) track by $index">
                 <velp-window velp="velp"
                              index="{{ $index }}"
-                             velp-groups="velpGroups"
-                             labels="labels"
+                             velp-groups="vsctrl.velpGroups"
+                             labels="vsctrl.labels"
                              new="false"
-                             advanced-on="advancedOn"
+                             advanced-on="vsctrl.advancedOn"
                              ></velp-window>
         </span>
 
                 </div>
-                <!--p ng-hide="filteredVelps.length">No velps :'(</p -->
             </div>
-            <!--  </td>
-          </tr>-->
    </div>
         </uib-tab>
 
@@ -196,52 +93,42 @@
 
             <div class="velpArea">
                 <div class="velpSummary">
-                    <!-- table class="velpTable">
-                        <tr>
-                            <td>
-                                <label>Search velp groups</label>
-                            </td>
-                            <td>
-                                <input placeholder="Enter text...">
-                            </td>
-                        </tr>
-                    </table -->
                     <form>
                         <table class="fulldiv">
 
                             <h5>Choose area for velp group:</h5>
                             <fieldset>
-                                <input type="radio" ng-click="updateVelpList()" ng-model="groupAttachment.target_type"
+                                <input type="radio" ng-click="vsctrl.updateVelpList()" ng-model="vsctrl.groupAttachment.target_type"
                                        ng-value="0" name="selArea" id="selDoc">
                                 <label for="selDoc">Whole document</label><br/>
                                 <input title="A paragraph must be clicked to choose this option" type="radio"
-                                       ng-click="updateVelpList()" ng-model="groupAttachment.target_type" ng-value="1"
-                                       name="selArea" id="selPar" ng-class="{disabled: selectedElement == null}"
-                                       ng-disabled="selectedElement == null">
-                                <label for="selPar" ng-class="{'disabled':selectedElement == null}">Selected paragraph</label>
+                                       ng-click="vsctrl.updateVelpList()" ng-model="vsctrl.groupAttachment.target_type" ng-value="1"
+                                       name="selArea" id="selPar" ng-class="{disabled: rctrl.selectedElement == null}"
+                                       ng-disabled="rctrl.selectedElement == null">
+                                <label for="selPar" ng-class="{'disabled':rctrl.selectedElement == null}">Selected paragraph</label>
                             </fieldset>
 
                             <tr>
                                 <th><label class="comment-info small"><input type="checkbox"
-                                                                            ng-model="settings.selectedAllShows"
-                                                                            ng-click="changeAllVelpGroupSelections('show')">Show</label>
+                                                                            ng-model="vsctrl.settings.selectedAllShows"
+                                                                            ng-click="vsctrl.changeAllVelpGroupSelections('show')">Show</label>
                                 </th>
-                                <th><label ng-class="['comment-info', 'small', {disabled: !item.rights.manage}]"><input type="checkbox"
-                                                                            ng-model="settings.selectedAllDefault"
-                                                                            ng-disabled="!item.rights.manage"
-                                                                            ng-click="changeAllVelpGroupSelections('default')">Default</label>
+                                <th><label ng-class="['comment-info', 'small', {disabled: !vctrl.item.rights.manage}]"><input type="checkbox"
+                                                                            ng-model="vsctrl.settings.selectedAllDefault"
+                                                                            ng-disabled="!vctrl.item.rights.manage"
+                                                                            ng-click="vsctrl.changeAllVelpGroupSelections('default')">Default</label>
                                 </th>
                                 <th><span class="small">Velp group</span></th>
                             </tr>
 
-                            <tr ng-repeat="group in velpGroups" ng-hide="group.id<0">
+                            <tr ng-repeat="group in vsctrl.velpGroups" ng-hide="group.id<0">
                                 <td>
                                     <input type="checkbox" ng-model="group.show"
-                                           ng-click="changeVelpGroupSelection(group, 'show')">
+                                           ng-click="vsctrl.changeVelpGroupSelection(group, 'show')">
                                 </td>
                                 <td>
-                                    <input type="checkbox" ng-model="group.default" ng-disabled="!item.rights.manage"
-                                           ng-click="changeVelpGroupSelection(group, 'default')">
+                                    <input type="checkbox" ng-model="group.default" ng-disabled="!vctrl.item.rights.manage"
+                                           ng-click="vsctrl.changeVelpGroupSelection(group, 'default')">
                                 </td>
                                 <td>
                                     <a ng-href="/manage/{{ group.location }}">{{ group.name }}</a>
@@ -249,27 +136,27 @@
                             </tr>
                         </table>
                         <input type="button" class="timButton" title="Shows only the default velp groups in current area (document or paragraph)"
-                               value="Set area default groups visible" ng-click="resetCurrentShowsToDefaults()"/>
+                               value="Set area default groups visible" ng-click="vsctrl.resetCurrentShowsToDefaults()"/>
                         <input id="resetAllSelBtn" type="button" class="timButton"
                                title="Shows only the default velp groups in all areas"
-                               value="Set all default groups visible" ng-click="resetAllShowsToDefaults()"/>
+                               value="Set all default groups visible" ng-click="vsctrl.resetAllShowsToDefaults()"/>
                     </form>
                     <hr>
-                    <form ng-submit="addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
-                        <p><label>Create new velp group:</label><input type="text" ng-model="newVelpGroup.name"
+                    <form ng-submit="vsctrl.addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
+                        <p><label>Create new velp group:</label><input type="text" ng-model="vsctrl.newVelpGroup.name"
                                                                        placeholder="Velp group name" required></p>
                         <fieldset>
-                            <p><input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioPar"
+                            <p><input type="radio" name="group1" ng-model="vsctrl.newVelpGroup.target_type" id="radioPar"
                                       ng-value="0" checked="checked"> <label for="radioPar">Personal
                                 collection</label><br>
-                                <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioDoc"
-                                       ng-value="1" ng-disabled="!item.rights.editable"> <label for="radioDoc" ng-class="{'disabled':!item.rights.editable}">Document</label><br>
-                                <input type="radio" name="group1" ng-model="newVelpGroup.target_type" id="radioFolder"
-                                       ng-value="2" ng-disabled="!item.rights.editable"> <label for="radioFolder" ng-class="{'disabled':!item.rights.editable}">Folder</label></p>
+                                <input type="radio" name="group1" ng-model="vsctrl.newVelpGroup.target_type" id="radioDoc"
+                                       ng-value="1" ng-disabled="!vctrl.item.rights.editable"> <label for="radioDoc" ng-class="{'disabled':!vctrl.item.rights.editable}">Document</label><br>
+                                <input type="radio" name="group1" ng-model="vsctrl.newVelpGroup.target_type" id="radioFolder"
+                                       ng-value="2" ng-disabled="!vctrl.item.rights.editable"> <label for="radioFolder" ng-class="{'disabled':!vctrl.item.rights.editable}">Folder</label></p>
                         </fieldset>
 
                         <p><input type="submit" class="timButton" value="Create velp group"></p>
-                        <p ng-show="(addVelpGroupForm.newVelpGroup.name.$invalid && !addVelpGroupForm.newVelpGroup.name.$pristine) || (submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.$invalid)"
+                        <p ng-show="(addVelpGroupForm.newVelpGroup.name.$invalid && !addVelpGroupForm.newVelpGroup.name.$pristine) || (vsctrl.submitted.velpGroup && addVelpGroupForm.newVelpGroup.name.$invalid)"
                            class="error">
                             Velp group name is required!
                         </p>

@@ -1,6 +1,7 @@
 import angular from "angular";
 import $ from "jquery";
 import sessionsettings from "tim/session";
+import {$log} from "./ngimport";
 
 /**
  * Scroll window to the given element.
@@ -73,12 +74,20 @@ export function setsetting(setting, value) {
         type: "POST",
         url: "/sessionsetting/" + setting + "/" + value,
         success(data) {
-            console.log(data);
+            $log.info(data);
             sessionsettings[setting] = value;
         },
         error() {
-            console.log("Could not set setting.");
+            $log.info("Could not set setting.");
         },
+    });
+}
+
+export function applyMixins(derivedCtor: any, baseCtors: any[]) {
+    baseCtors.forEach((baseCtor) => {
+        Object.getOwnPropertyNames(baseCtor.prototype).forEach((name) => {
+            derivedCtor.prototype[name] = baseCtor.prototype[name];
+        });
     });
 }
 

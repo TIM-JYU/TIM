@@ -1,16 +1,16 @@
 <div class="lectureEnding popUpWindow">
-    <h1 ng-show="!lectureEnded">Lecture ends in 5 minutes</h1>
+    <h1 ng-show="!lctrl.lectureEnded">Lecture ends in 5 minutes</h1>
 
-    <h1 ng-show="lectureEnded">Lecture ends</h1>
+    <h1 ng-show="lctrl.lectureEnded">Lecture ends</h1>
     <form class="extendLectureOptions">
         <label> Extend by
-            <select ng-model="extend.extendTime" ng-options="choice for choice in extend.choices">
+            <select ng-model="lctrl.extend.extendTime" ng-options="choice for choice in lctrl.extend.choices">
             </select>
         </label>
     </form>
     <div class="buttons">
-        <button class="timButton" autofocus ng-click="extendLecture()">Extend</button>
-        <button class="timButton" ng-show="lectureEnded" ng-click="endLecture()">End</button>
-        <button class="timButton" ng-show="!lectureEnded" ng-click="continueLecture()">Don't extend</button>
+        <button class="timButton" autofocus ng-click="lctrl.extendLecture()">Extend</button>
+        <button class="timButton" ng-show="lctrl.lectureEnded" ng-click="lctrl.endLecture()">End</button>
+        <button class="timButton" ng-show="!lctrl.lectureEnded" ng-click="lctrl.continueLecture()">Don't extend</button>
     </div>
 </div>

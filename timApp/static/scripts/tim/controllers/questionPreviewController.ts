@@ -1,7 +1,7 @@
 import {timApp} from "tim/app";
 import * as answerSheet from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed} from "tim/utils";
-import {$http, $rootScope, $window} from "../ngimport";
+import {$http, $log, $rootScope, $window} from "../ngimport";
 
 markAsUsed(answerSheet);
 
@@ -127,10 +127,10 @@ timApp.controller("QuestionPreviewController", ["$scope",
                         const data = response.data;
                         $scope.handleDelete(data, {par: $scope.questionParId, area_start: null, area_end: null});
                         $scope.$emit("closeQuestionPreview");
-                        $window.console.log("Deleted question");
+                        $log.info("Deleted question");
                     }, function(error) {
                         $scope.$emit("closeQuestionPreview");
-                        $window.console.log(error);
+                        $log.info(error);
                     });
 
             }

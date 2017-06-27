@@ -90,7 +90,7 @@ qstApp.Controller = function($scope, $transclude) {
     let isLecturer = false;
     let sc = $scope;
     while (sc != null) {
-        if (sc.isLecturer) {
+        if (sc.lctrl.isLecturer) {
             isLecturer = true;
             break;
         }

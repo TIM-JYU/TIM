@@ -11,6 +11,7 @@
  see timLogTime comments.
 
  */
+import {$log} from "./ngimport";
 const timJavaScriptStartTime = new Date();
 let timJavaScriptLastTime = timJavaScriptStartTime;
 let timDivLogger;

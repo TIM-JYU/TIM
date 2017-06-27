@@ -3,6 +3,7 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {getElementParent, scrollToElement} from "../utils";
 import {$compile, $http, $window} from "../ngimport";
+import {addElementToParagraphMargin} from "./view/parhelpers";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
@@ -24,7 +25,6 @@ const UNDEFINED = "undefined";
  */
 timApp.controller("ReviewController", ["$scope", function($scope) {
     "use strict";
-    const console = $window.console;
 
     const illegalClasses = ["annotation-element", "highlighted", "editorArea", "previewcontent"];
 
@@ -304,24 +304,6 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
         addElementToParagraphMargin(el, span);
 
         $compile(span)($scope); // Gives error [$compile:nonassign]
-    };
-
-    /**
-     * Adds an element to the paragraph margin.
-     * @method addElementToParagraphMargin
-     * @param par - Paragraph where the element will be added
-     * @param el - Element to add
-     */
-    const addElementToParagraphMargin = function(par, el) {
-        let container = par.getElementsByClassName("notes");
-        if (container.length > 0) {
-            container[0].appendChild(el);
-        } else {
-            container = document.createElement("div");
-            container.classList.add("notes");
-            container.appendChild(el);
-            par.appendChild(container);
-        }
     };
 
     /**
@@ -814,7 +796,7 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
             if (answerInfo === null) {
                 newAnnotation.user_id = null;
             } else {
-                newAnnotation.user_id = $scope.$parent.selectedUser.id;
+                newAnnotation.user_id = $scope.$parent.vctrl.selectedUser.id;
             }
 
             const startoffset = getRealStartOffset($scope.selectedArea.startContainer, $scope.selectedArea.startOffset);

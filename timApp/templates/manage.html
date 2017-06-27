@@ -8,7 +8,7 @@
     </script>
 {% endblock %}
 {% block content %}
-    <div ng-controller="PermCtrl" class="manage">
+    <div ng-controller="PermCtrl as pctrl" class="manage">
         {% if item.rights.manage %}
             <div class="panel panel-default">
                 <div class="panel-heading">{{ obj_name|capitalize }} permissions</div>
@@ -18,21 +18,21 @@
                             <rights-editor
                                     item-id="item.id"
                                     url-root="permissions"
-                                    access-types="accessTypes">
+                                    access-types="pctrl.accessTypes">
                             </rights-editor>
                         </uib-tab>
-                        <uib-tab ng-if="item.isFolder" heading="Default rights for new documents">
+                        <uib-tab ng-if="pctrl.item.isFolder" heading="Default rights for new documents">
                             <rights-editor
-                                    item-id="item.id"
+                                    item-id="pctrl.item.id"
                                     url-root="defaultPermissions/document"
-                                    access-types="accessTypes">
+                                    access-types="pctrl.accessTypes">
                             </rights-editor>
                         </uib-tab>
-                        <uib-tab ng-if="item.isFolder" heading="Default rights for new folders">
+                        <uib-tab ng-if="pctrl.item.isFolder" heading="Default rights for new folders">
                             <rights-editor
-                                    item-id="item.id"
+                                    item-id="pctrl.item.id"
                                     url-root="defaultPermissions/folder"
-                                    access-types="accessTypes">
+                                    access-types="pctrl.accessTypes">
                             </rights-editor>
                         </uib-tab>
                     </uib-tabset>
@@ -46,10 +46,10 @@
                     <form>
                         <div class="form-group">
                             <div class="input-group">
-                                <input class="form-control" id="newTitle" type="text" ng-model="newTitle">
+                                <input class="form-control" id="newTitle" type="text" ng-model="pctrl.newTitle">
                                 <span class="input-group-btn">
-                            <button ng-click="changeTitle(newTitle)" class="timButton"
-                                    ng-disabled="newTitle === item.title">
+                            <button ng-click="pctrl.changeTitle(newTitle)" class="timButton"
+                                    ng-disabled="pctrl.newTitle === pctrl.item.title">
                             Update
                         </button>
                         </span>

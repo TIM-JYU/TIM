@@ -1,25 +1,25 @@
-<div class="popUpWindow" ng-controller="CreateLectureCtrl">
+<div class="popUpWindow" ng-controller="CreateLectureCtrl as clctrl">
     <form class="createLecture" id="lectureForm" name="form">
         <div id="infoFields">
             <div>
                 <label for="lCode">Lecture name:</label>
-                <input id="lCode" type="text" name="code" ng-model="lectureCode"/>
+                <input id="lCode" type="text" name="code" ng-model="clctrl.lectureCode"/>
             </div>
             <div>
                 <label for="lPassword">Lecture access code:<br>(Optional)</label>
-                <input id="lPassword" type="text" name="password" ng-model="password"/>
+                <input id="lPassword" type="text" name="password" ng-model="clctrl.password"/>
             </div>
             <div>
                 <label for="maxStudents">Max number of students:<br>(Optional)</label>
-                <input size="3" maxlength="3" id="maxStudents" type="text" name="max" ng-model="maxStudents"/>
+                <input size="3" maxlength="3" id="maxStudents" type="text" name="max" ng-model="clctrl.maxStudents"/>
             </div>
         </div>
         <div class="startingTime">
             Starting time:
             <div id="startInfo">
                 <div class="form-inline">
-                    <div class="input-group date" datetimepicker ng-model="startTime"
-                         data-options="dateTimeOptions">
+                    <div class="input-group date" datetimepicker ng-model="clctrl.startTime"
+                         data-options="clctrl.dateTimeOptions">
                         <input type="text"
                                class="form-control"/>
                         <span class="input-group-addon">
@@ -27,38 +27,38 @@
                         </span>
                     </div>
                 </div>
-                <div id="studentsJoinEarly"><label><input type="checkbox" ng-model="earlyJoining">Allow students to join
+                <div id="studentsJoinEarly"><label><input type="checkbox" ng-model="clctrl.earlyJoining">Allow students to join
                     15 minutes prior to the start of the lecture.</label></div>
             </div>
         </div>
         <div class="endingTime">
             Ending time:
             <div id="endInfo">
-                <input type="radio" id="dateChosen2" name="dateStop" ng-click="enableDate2()"
-                       ng-model="dateChosen" ng-checked="dateCheck"/>
+                <input type="radio" id="dateChosen2" name="dateStop" ng-click="clctrl.enableDate2()"
+                       ng-model="clctrl.dateChosen" ng-checked="clctrl.dateCheck"/>
                 Use date:
                 <div class="form-inline">
-                    <div class="input-group date" datetimepicker ng-model="endTime"
-                         data-options="dateTimeOptions">
+                    <div class="input-group date" datetimepicker ng-model="clctrl.endTime"
+                         data-options="clctrl.dateTimeOptions">
                         <input type="text"
                                class="form-control"
-                               ng-disabled="!dateCheck"/>
+                               ng-disabled="!clctrl.dateCheck"/>
                         <span class="input-group-addon">
                         <span class="glyphicon glyphicon-calendar"></span>
                         </span>
                     </div>
                 </div>
 
-                <input type="radio" id="durationChosen" name="dueStop" ng-click="enableDue2()" ng-model="durationChosen"
-                       ng-checked="dueCheck"/>
+                <input type="radio" id="durationChosen" name="dueStop" ng-click="clctrl.enableDue2()" ng-model="clctrl.durationChosen"
+                       ng-checked="clctrl.dueCheck"/>
                 Duration:
                 <div id="durationDiv">
                     <label>Hours:
                         <input id="durationHour" type="text" name="durationHour" maxlength="2" size="2"
-                               ng-model="durationHour" ng-disabled="!useDuration"/></label>
+                               ng-model="clctrl.durationHour" ng-disabled="!clctrl.useDuration"/></label>
                     <label>Min:
                         <input id="durationMin" type="text" name="durationMin" maxlength="3" size="3"
-                               ng-model="durationMin" ng-disabled="!useDuration"/></label>
+                               ng-model="clctrl.durationMin" ng-disabled="!clctrl.useDuration"/></label>
                 </div>
             </div>
         </div>
@@ -72,12 +72,12 @@
                    style="background-color: #DCDCDC" readonly id="lLink2" type="text" name="link2"
                    ng-value='"https://" + hostName + "/lecture/" + docNamePath + "?lecture=autojoin"'/>
         </div>
-        <p id="errorMessage" ng-if="error_message.length" ng-bind-html="error_message"></p>
+        <p id="errorMessage" ng-if="clctrl.error_message.length" ng-bind-html="clctrl.error_message"></p>
 
     </form>
     <div class="buttons">
-        <button class="timButton" type="button" ng-click="submitLecture()" ng-show="!editMode">Create</button>
-        <button class="timButton" type="button" ng-click="submitLecture()" ng-show="editMode">Update</button>
-        <button class="timButton" type="button" ng-click="cancelCreation()">Cancel</button>
+        <button class="timButton" type="button" ng-click="clctrl.submitLecture()" ng-show="!clctrl.editMode">Create</button>
+        <button class="timButton" type="button" ng-click="clctrl.submitLecture()" ng-show="clctrl.editMode">Update</button>
+        <button class="timButton" type="button" ng-click="clctrl.cancelCreation()">Cancel</button>
     </div>
 </div>

@@ -2,6 +2,7 @@ import $ from "jquery";
 import Reveal from "reveal";
 import {background_color, background_url, is_owner, item} from "tim/show_slide_vars";
 import {GetURLParameter} from "tim/utils";
+import {$log} from "./ngimport";
 
 // Full list of configuration options available here:
 // https://github.com/hakimel/reveal.js#configuration
@@ -57,7 +58,7 @@ function refresh() {
         data: {doc_id: item.id},
         dataType: "json",
         error(xhr, status, err) {
-            console.log("error");
+            $log.info("error");
             pollTimeout = setTimeout(refresh, pollInterval);
         },
         success(data) {
@@ -73,7 +74,7 @@ function refresh() {
                 oldv = oldstate.indexv;
             }
             data = JSON.parse(data);
-            console.log(data);
+            $log.info(data);
             if (data !== null) {
                 if (data.indexh !== undefined) {
                     newh = data.indexh;
@@ -83,7 +84,7 @@ function refresh() {
                 }
                 if ((newh != oldh || newv != oldv
                     || data.indexf != oldstate.indexf) && receiving) {
-                    console.log("Change slide");
+                    $log.info("Change slide");
                     Reveal.slide(newh, newv, data.indexf, "remote");
                 }
             }
@@ -107,7 +108,7 @@ function updateSlideStatus(h, v, f) {
             receiving = true;
         },
         error() {
-            console.log("error");
+            $log.info("error");
             pollTimeout = setTimeout(refresh, pollInterval);
             receiving = true;
         },

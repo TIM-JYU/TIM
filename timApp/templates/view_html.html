@@ -59,7 +59,7 @@
 {% set col_2_sm = 12 %}
 {% set col_3_sm = 0 %}
 
-{% block mainctrl %}ng-controller="ViewCtrl"{% endblock %}
+{% block mainctrl %}ng-controller="ViewCtrl as vctrl"{% endblock %}
 
 {% block extramoduledefinitions %}
     {{ super() }}
@@ -96,11 +96,11 @@
 
     {% if teacher_mode %}
         <div  save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed resize="true"  click="true"  caption="Users with answers ({{ plugin_users|length }})">
-           <div ng-controller="UserListController" class="userlist draggable-content" >
+           <div ng-controller="UserListController as ulctrl" class="userlist draggable-content" >
             {% if plugin_users %}
                 {% raw %}
-                <div ui-grid="gridOptions" ui-grid-selection ui-grid-exporter ui-grid-auto-resize ui-grid-cellNav class="grid"></div>
-                <!-- <div ui-grid="gridOptions" ui-grid-selection ui-grid-exporter  class="grid"></div> -->
+                <div ui-grid="ulctrl.gridOptions" ui-grid-selection ui-grid-exporter ui-grid-auto-resize ui-grid-cellNav class="grid"></div>
+                <!-- <div ui-grid="ulctrl.gridOptions" ui-grid-selection ui-grid-exporter  class="grid"></div> -->
                 {% endraw %}
             {% else %}
                 No answerers.
@@ -149,10 +149,10 @@
                 <a id="showSlidesLink" href="/show_slide/{{ item.path }}">Show slides only</a>
             </div>
         {% else %}
-            <div ng-controller="ReviewController">
-                <div id="pars" {% if velp_mode or teacher_mode %}ng-click="selectText($event)"{% endif %}>
+            <div ng-controller="ReviewController as rctrl">
+                <div id="pars" {% if velp_mode or teacher_mode %}ng-click="rctrl.selectText($event)"{% endif %}>
                     {% include 'partials/paragraphs.html' %}
-                    <div class="addBottomContainer hidden-print" ng-show="item.rights.editable"
+                    <div class="addBottomContainer hidden-print" ng-show="vctrl.item.rights.editable"
                          ng-class="{'height-35': editing}">
                         <button class="addBottom timButton">Add paragraph</button>
                     </div>

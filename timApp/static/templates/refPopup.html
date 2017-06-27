@@ -1,22 +1,22 @@
-<div ng-show="over_reflink" class="refPopup">
-    <span ng-show="!loaded">
+<div ng-show="vctrl.overReflink" class="refPopup">
+    <span ng-show="!rpctrl.loaded">
         Loading...
     </span>
 
-    <span ng-show="error">
-        <label>ERROR:</label> {{ error }}
+    <span ng-show="rpctrl.error">
+        <label>ERROR:</label> {{ rpctrl.error }}
     </span>
 
-    <span ng-show="doc_author">
-        <label>Author:</label> {{ doc_author }}
+    <span ng-show="rpctrl.doc_author">
+        <label>Author:</label> {{ rpctrl.doc_author }}
     </span>
 
-    <span ng-show="doc_name">
-        <label>Document:</label> {{ doc_name }}
+    <span ng-show="rpctrl.doc_name">
+        <label>Document:</label> {{ rpctrl.doc_name }}
     </span>
 
-    <span ng-show="par_name">
-        <label>Paragraph:</label> {{ par_name }}
+    <span ng-show="rpctrl.par_name">
+        <label>Paragraph:</label> {{ rpctrl.par_name }}
     </span>
 
 </div>

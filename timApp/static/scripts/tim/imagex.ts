@@ -379,7 +379,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                         this.drawObjects[i].color = this.drawObjects[i].origColor;
 
                     }
-                    //console.log(onTopOf);
+                    //$log.info(onTopOf);
                 }
 
                 catch (err) {
@@ -1672,7 +1672,7 @@ ImagexScope.prototype.doSave = function(nosave) {
             nosave: false,
         },
     };
-    //    console.log(params);
+    //    $log.info(params);
 
     if (nosave) params.input.nosave = true;
     let url = "/imagex/answer";

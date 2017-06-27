@@ -108,7 +108,7 @@ timApp.directive("popupMenu", [function() {
             };
 
             $scope.watchEditMode = function(newEditMode, oldEditMode) {
-                //console.log("Edit context set from " + oldEditMode + " to " + newEditMode);
+                //$log.info("Edit context set from " + oldEditMode + " to " + newEditMode);
                 if ($scope.editContext && newEditMode && newEditMode != $scope.editContext) {
                     // We don't want to destroy our scope before returning from this function
                     $window.setTimeout($scope.closePopup, 0.1);

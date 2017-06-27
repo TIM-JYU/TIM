@@ -1,7 +1,7 @@
 import {timApp} from "tim/app";
 import * as answerSheet from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed} from "tim/utils";
-import {$http, $rootScope} from "../ngimport";
+import {$http, $log, $rootScope} from "../ngimport";
 
 markAsUsed(answerSheet);
 
@@ -85,12 +85,12 @@ timApp.controller("AnswerToQuestionController", ["$scope", function($scope) {
                 $scope.$emit("questionStopped");
                 $scope.questionEnded = true;
                 $scope.dynamicAnswerSheetControl.endQuestion();
-                console.log("Question ", $scope.askedId, " stopped");
+                $log.info("Question ", $scope.askedId, " stopped");
                 if (callback) {
                     callback();
                 }
             }, function() {
-                console.log("Failed to stop question");
+                $log.info("Failed to stop question");
             });
     };
 
@@ -125,7 +125,7 @@ timApp.controller("AnswerToQuestionController", ["$scope", function($scope) {
                     markup,
                 });
             }, function() {
-                console.log("There was some error getting question.");
+                $log.info("There was some error getting question.");
             });
     };
 
@@ -146,7 +146,7 @@ timApp.controller("AnswerToQuestionController", ["$scope", function($scope) {
                 if (response.data.expl) $scope.expl = JSON.parse(response.data.expl);
                 $scope.dynamicAnswerSheetControl.createAnswer($scope);
             }, function() {
-                console.log("Could not show points to students.");
+                $log.info("Could not show points to students.");
             });
     };
 

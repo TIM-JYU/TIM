@@ -2,6 +2,8 @@ import $ from "jquery";
 import {$compile, $log, $timeout, $window} from "../../ngimport";
 import {dist} from "../../utils";
 import {onClick} from "./eventhandlers";
+import {IScope} from "angular";
+import {ViewCtrl} from "./ViewCtrl";
 
 export function closeOptionsWindow() {
     const $actionButtons = $(".actionButtons");
@@ -10,19 +12,82 @@ export function closeOptionsWindow() {
     optionsWindowClosed($parOrArea);
 }
 
-export function optionsWindowClosed($parOrArea) {
+export function optionsWindowClosed($parOrArea?) {
     const $editline = $(".menuopen");
     $editline.removeClass("menuopen");
 }
 
 function selectionToStr(selection: JQuery) {
-    return selection.toArray().map(function(e) {
-        return "#" + e.id;
-    }).join(",");
+    return selection.toArray().map((e) => "#" + e.id).join(",");
 }
 
-export function defineParMenu(sc) {
-    sc.showPopupMenu = function(e, $pars, coords, attrs, $rootElement, editcontext) {
+export class ParmenuHandler {
+    public sc: IScope;
+    public viewctrl: ViewCtrl;
+    public lastclicktime: number;
+    public lastclickplace: {left, top};
+
+    initParMenu(sc: IScope, view: ViewCtrl) {
+        this.sc = sc;
+        this.viewctrl = view;
+        onClick(".paragraphs .parContent", ($this, e) => {
+            if (this.viewctrl.editing) {
+                return false;
+            }
+
+            const $target = $(e.target);
+            const tag = $target.prop("tagName");
+            const $par = $this.parents(".par");
+            if ($par.parents(".previewcontent").length > 0) {
+                return;
+            }
+
+            // Don't show paragraph menu on these specific tags or classes
+            const ignoredTags = ["BUTTON", "INPUT", "TEXTAREA", "A", "QUESTIONADDEDNEW"];
+            const ignoredClasses = ["no-popup-menu", "ace_editor"];
+            const classSelector = ignoredClasses.map((c) => "." + c).join(",");
+            if (ignoredTags.indexOf(tag) > -1 || $target.parents(classSelector).length > 0) {
+                return false;
+            }
+
+            if (this.viewctrl.selection.start !== null) {
+                this.viewctrl.extendSelection($par, true);
+            } else {
+                const coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
+                const toggle1 = $par.find(".actionButtons").length === 0;
+                const toggle2 = $par.hasClass("lightselect");
+
+                $(".par.selected").removeClass("selected");
+                $(".par.lightselect").removeClass("lightselect");
+                closeOptionsWindow();
+                this.toggleActionButtons(e, $par, toggle1, toggle2, coords);
+            }
+            sc.$apply();
+            return true;
+        }, true);
+
+        this.viewctrl.defaultAction = {func: this.showOptionsWindow, desc: "Show options window"};
+
+        onClick(".editline", ($this, e) => {
+            closeOptionsWindow();
+            const $par = $this.parent().filter(".par");
+            if (this.viewctrl.selection.start !== null) {
+                this.viewctrl.extendSelection($par);
+            }
+            const coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
+
+            // We need the timeout so we don't trigger the ng-clicks on the buttons
+            $timeout(() => {
+                this.viewctrl.showOptionsWindow(e, $par, coords);
+            }, 80);
+            return false;
+        }, true);
+
+        this.viewctrl.popupMenuAttrs = {actions: "editorFunctions", save: "defaultAction", onclose: "optionsWindowClosed"};
+        this.updatePopupMenu();
+    }
+
+    showPopupMenu(e, $pars, coords, attrs, $rootElement, editcontext) {
         if (!$rootElement) {
             $rootElement = $pars;
         }
@@ -43,7 +108,7 @@ export function defineParMenu(sc) {
         }
 
         $rootElement.prepend($popup); // need to prepend to DOM before compiling
-        $compile($popup[0])(sc);
+        $compile($popup[0])(this.sc);
         // TODO: Set offset for the popup
         const element = $popup;
         const viewport: any = {};
@@ -61,118 +126,61 @@ export function defineParMenu(sc) {
         $("html, body").animate({
             scrollTop: y,
         }, 500);
-    };
+    }
 
-    onClick(".paragraphs .parContent", function($this, e) {
-        if (sc.editing) {
-            return false;
-        }
-
-        const $target = $(e.target);
-        const tag = $target.prop("tagName");
-        const $par = $this.parents(".par");
-        if ($par.parents(".previewcontent").length > 0) {
-            return;
-        }
-
-        // Don't show paragraph menu on these specific tags or classes
-        const ignoredTags = ["BUTTON", "INPUT", "TEXTAREA", "A", "QUESTIONADDEDNEW"];
-        const ignoredClasses = ["no-popup-menu", "ace_editor"];
-        const classSelector = ignoredClasses.map(function(c) {
-            return "." + c;
-        }).join(",");
-        if (ignoredTags.indexOf(tag) > -1 || $target.parents(classSelector).length > 0) {
-            return false;
-        }
-
-        if (sc.selection.start !== null) {
-            sc.extendSelection($par, true);
-        } else {
-            const coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
-            const toggle1 = $par.find(".actionButtons").length === 0;
-            const toggle2 = $par.hasClass("lightselect");
-
-            $(".par.selected").removeClass("selected");
-            $(".par.lightselect").removeClass("lightselect");
-            closeOptionsWindow();
-            sc.toggleActionButtons(e, $par, toggle1, toggle2, coords);
-        }
-        sc.$apply();
-        return true;
-    }, true);
-
-    sc.toggleActionButtons = function(e, $par, toggle1, toggle2, coords) {
-        if (!sc.item.rights.editable && !sc.item.rights.can_comment) {
+    toggleActionButtons(e, $par, toggle1, toggle2, coords) {
+        if (!this.viewctrl.item.rights.editable && !this.viewctrl.item.rights.can_comment) {
             return;
         }
 
         if (toggle2) {
             // Clicked twice successively
-            const clicktime = new Date().getTime() - sc.lastclicktime;
-            const clickdelta = dist(coords, sc.lastclickplace);
+            const clicktime = new Date().getTime() - this.lastclicktime;
+            const clickdelta = dist(coords, this.lastclickplace);
             $par.addClass("selected");
 
             if (clickdelta > 10) {
                 // Selecting text
                 $par.removeClass("selected");
                 $par.removeClass("lightselect");
-            } else if (clicktime < 500 && sc.defaultAction !== null) {
+            } else if (clicktime < 500 && this.viewctrl.defaultAction !== null) {
                 // Double click
-                sc.defaultAction.func(e, $par, coords);
+                this.viewctrl.defaultAction.func(e, $par, coords);
             } else {
                 // Two clicks
-                sc.showOptionsWindow(e, $par, coords);
+                this.showOptionsWindow(e, $par, coords);
             }
         } else if (toggle1) {
             // Clicked once
             $par.addClass("lightselect");
-            sc.lastclicktime = new Date().getTime();
-            sc.lastclickplace = coords;
+            this.lastclicktime = new Date().getTime();
+            this.lastclickplace = coords;
         } else {
             $log.info("This line is new: " + $par);
             $par.children().remove(".actionButtons");
             $par.removeClass("selected");
             $par.removeClass("lightselect");
         }
-    };
+    }
 
-    sc.showOptionsWindow = function(e, $par, coords) {
-        sc.updateClipboardStatus();
+    showOptionsWindow(e, $par, coords) {
+        this.viewctrl.updateClipboardStatus();
         $par.children(".editline").addClass("menuopen");
-        sc.showPopupMenu(e, $par, coords, sc.popupMenuAttrs, null, "par");
-    };
+        this.viewctrl.showPopupMenu(e, $par, coords, this.viewctrl.popupMenuAttrs, null, "par");
+    }
 
-    sc.defaultAction = {func: sc.showOptionsWindow, desc: "Show options window"};
+    optionsWindowClosed() {
+        optionsWindowClosed();
+    }
 
-    sc.optionsWindowClosed = optionsWindowClosed;
-
-    sc.updatePopupMenu = function() {
-        sc.editorFunctions = sc.getEditorFunctions();
-        if (sc.selection.start !== null && $window.editMode) {
-            sc.popupMenuAttrs.save = null;
-            sc.popupMenuAttrs.editbutton = false;
+    updatePopupMenu() {
+        this.viewctrl.editorFunctions = this.viewctrl.getEditorFunctions();
+        if (this.viewctrl.selection.start !== null && $window.editMode) {
+            this.viewctrl.popupMenuAttrs.save = null;
+            this.viewctrl.popupMenuAttrs.editbutton = false;
         } else {
-            sc.popupMenuAttrs.save = "defaultAction";
-            sc.popupMenuAttrs.editbutton = true;
+            this.viewctrl.popupMenuAttrs.save = "defaultAction";
+            this.viewctrl.popupMenuAttrs.editbutton = true;
         }
-    };
-
-    onClick(".editline", function($this, e) {
-        closeOptionsWindow();
-        const $par = $this.parent().filter(".par");
-        if (sc.selection.start !== null) {
-            sc.extendSelection($par);
-        }
-        const coords = {left: e.pageX - $par.offset().left, top: e.pageY - $par.offset().top};
-
-        // We need the timeout so we don't trigger the ng-clicks on the buttons
-        $timeout(function() {
-            sc.showOptionsWindow(e, $par, coords);
-        }, 80);
-        return false;
-    }, true);
-
-    sc.popupMenuAttrs = {actions: "editorFunctions", save: "defaultAction", onclose: "optionsWindowClosed"};
-    sc.updatePopupMenu();
-
+    }
 }

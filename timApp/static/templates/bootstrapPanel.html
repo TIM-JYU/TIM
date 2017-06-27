@@ -1,7 +1,7 @@
 <div class="panel panel-default">
     <div class="panel-heading">
         {{ title }}
-        <a><span title="Close" ng-show="showClose" class="glyphicon glyphicon-remove pull-right" ng-click="close()"></span></a>
+        <a><span title="Close" ng-show="$ctrl.showClose" class="glyphicon glyphicon-remove pull-right" ng-click="$ctrl.close()"></span></a>
     </div>
     <div class="panel-body">
         <div ng-transclude></div>

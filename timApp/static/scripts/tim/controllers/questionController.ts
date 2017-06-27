@@ -5,7 +5,7 @@ import {fixQuestionJson, getPointsTable, minimizeJson} from "tim/directives/dyna
 import {setsetting} from "tim/utils";
 import {showDialog} from "../dialog";
 import {ParCompiler} from "../services/parCompiler";
-import {$http, $rootScope, $window} from "../ngimport";
+import {$http, $log, $rootScope, $window} from "../ngimport";
 
 /**
  * Controller for creating and editing questions
@@ -996,7 +996,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
         md = JSON.stringify(md, null, 4);
 
         // var yaml = JSON2YAML(questionjson);
-        // console.log(yaml);
+        // $log.info(yaml);
 
         // Without timeout 'timelimit' won't be saved in settings session variable. Thread issue?
         scope.settings.timelimit = questionjson.timeLimit || "";
@@ -1019,7 +1019,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
             par_next: scope.par_id_next,
         })).then(function(response) {
             const data = response.data;
-            $window.console.log("The question was successfully added to database");
+            $log.info("The question was successfully added to database");
             const oldid = scope.par_id;
             if (scope.par_id === "NEW_PAR") {
                 scope.par_id = data.new_par_ids[0];
@@ -1079,7 +1079,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
             scope.close();
         }, function() {
             showDialog("Could not create question");
-            $window.console.log("There was some error creating question to database.");
+            $log.info("There was some error creating question to database.");
         });
         /*
                 http({
@@ -1097,7 +1097,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
                     }
                 })
                     .success(function (data) {
-                        $window.console.log("The question was successfully added to database");
+                        $log.info("The question was successfully added to database");
                         scope.removeErrors();
                         //TODO: This can be optimized to get only the new one.
                         scope.$parent.getQuestions();
@@ -1112,7 +1112,7 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
                             });
                         }
                     }).error(function () {
-                        $window.console.log("There was some error creating question to database.");
+                        $log.info("There was some error creating question to database.");
                     });
                 scope.close();
         */
@@ -1135,9 +1135,9 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
             },
         })
             .then(function() {
-                $window.console.log("Points successfully updated.");
+                $log.info("Points successfully updated.");
             }, function() {
-                $window.console.log("There was some error when updating points.");
+                $log.info("There was some error when updating points.");
             });
         scope.close();
     };
@@ -1148,12 +1148,12 @@ timApp.controller("QuestionController", ["$scope", "$element", function(scope, $
             $http.post("/deleteParagraph/" + scope.docId, {par: scope.par_id})
                 .then(function(response) {
                     const data = response.data;
-                    $window.console.log("Deleted question done!");
+                    $log.info("Deleted question done!");
                     scope.handleDelete(data, {par: scope.par_id, area_start: null, area_end: null});
                     scope.close();
                     scope.getQuestions();
                 }, function(error) {
-                    $window.console.log(error);
+                    $log.info(error);
                     scope.getQuestions();
                 });
         }

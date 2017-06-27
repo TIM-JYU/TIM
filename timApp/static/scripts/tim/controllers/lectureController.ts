@@ -19,7 +19,7 @@ import sessionsettings from "tim/session";
 import * as utils from "tim/utils";
 import {setsetting} from "tim/utils";
 import {showDialog} from "../dialog";
-import {$http, $rootScope, $timeout, $window} from "../ngimport";
+import {$http, $log, $rootScope, $timeout, $window} from "../ngimport";
 
 //TODO: Painike, josta voisi hakea kysymyksiä.
 //TODO: Button, to get questions and wall.
@@ -294,7 +294,7 @@ timApp.controller("LectureController", ["$scope",
                 window.setTimeout(function() {
                     setsetting("clock_offset", $scope.clockOffset.toString());
                 }, 1000);
-                console.log("Clock offset: ", $scope.clockOffset);
+                $log.info("Clock offset: ", $scope.clockOffset);
             }, function() {
                 if ($scope.settings.clock_offset) {
                     $scope.clockOffset = $scope.settings.clock_offset;
@@ -356,7 +356,7 @@ timApp.controller("LectureController", ["$scope",
                     });
                     $scope.showAnswerWindow = true;
                 }, function(error) {
-                    $window.console.log(error);
+                    $log.info(error);
                 });
         });
 
@@ -454,7 +454,7 @@ timApp.controller("LectureController", ["$scope",
                         showDialog(answer.questionLate);
                     }
                 }, function() {
-                    $window.console.log("Failed to answer to question");
+                    $log.info("Failed to answer to question");
                 });
         });
 
@@ -470,7 +470,7 @@ timApp.controller("LectureController", ["$scope",
                 },
             }).then(() => {
             }, function() {
-                $window.console.log("Failed to answer to question");
+                $log.info("Failed to answer to question");
             });
         });
 
@@ -669,8 +669,8 @@ timApp.controller("LectureController", ["$scope",
          * @memberof module:lectureController
          */
         $scope.showBasicView = function(answer) {
-            if ($scope.$parent && $scope.$parent.item) {
-                $scope.docNamePath = encodeURI($scope.$parent.item.path);
+            if ($scope.$parent && $scope.$parent.vctrl.item) {
+                $scope.docNamePath = encodeURI($scope.$parent.vctrl.item.path);
             }
             $scope.isLecturer = answer.isLecturer;
             if ($scope.isLecturer) {
@@ -721,9 +721,9 @@ timApp.controller("LectureController", ["$scope",
          */
         $scope.extendLecture = function() {
             const endTimeDate = moment($scope.lectureEndTime).add($scope.extend.extendTime, "minutes");
-            console.log("extending lecture");
+            $log.info("extending lecture");
             $scope.answeredToLectureEnding = true;
-            console.log(endTimeDate);
+            $log.info(endTimeDate);
             $http({
                 url: "/extendLecture",
                 method: "POST",
@@ -734,9 +734,9 @@ timApp.controller("LectureController", ["$scope",
                     $scope.showLectureEnding = false;
                     $scope.lectureEnded = false;
                     $scope.answeredToLectureEnding = false;
-                    $window.console.log("Lecture extended");
+                    $log.info("Lecture extended");
                 }, function() {
-                    $window.console.log("Failed to extend the lecture");
+                    $log.info("Failed to extend the lecture");
                 });
         };
 
@@ -777,7 +777,7 @@ timApp.controller("LectureController", ["$scope",
                     });
                     $scope.showLectureForm = true;
                 }, function() {
-                    $window.console.log("Failed to fetch lecture.");
+                    $log.info("Failed to fetch lecture.");
                 });
         };
 
@@ -801,10 +801,10 @@ timApp.controller("LectureController", ["$scope",
                         $scope.showBasicView(answer);
                         $scope.chosenLecture = "";
                         $scope.msg = "";
-                        $window.console.log("Lecture ended, not deleted");
+                        $log.info("Lecture ended, not deleted");
 
                     }, function() {
-                        $window.console.log("Failed to delete the lecture");
+                        $log.info("Failed to delete the lecture");
                     });
             }
         };
@@ -825,10 +825,10 @@ timApp.controller("LectureController", ["$scope",
                     $scope.lectures.splice($scope.lectureId, 1);
                     $scope.chosenLecture = "";
                     $scope.msg = "";
-                    $window.console.log("Lecture deleted");
+                    $log.info("Lecture deleted");
 
                 }, function() {
-                    $window.console.log("Failed to delete the lecture");
+                    $log.info("Failed to delete the lecture");
                 });
         };
 
@@ -885,7 +885,7 @@ timApp.controller("LectureController", ["$scope",
                     wallArea.animate({scrollTop: wallArea[0].scrollHeight * 10}, 1000);
 
                 }, function() {
-                    $window.console.log("Can't send message or something");
+                    $log.info("Can't send message or something");
                 });
 
         };
@@ -961,7 +961,7 @@ timApp.controller("LectureController", ["$scope",
                     }
 
                 }, function() {
-                    $window.console.log("Couldn't get answers");
+                    $log.info("Couldn't get answers");
                 });
         };
 
@@ -980,7 +980,7 @@ timApp.controller("LectureController", ["$scope",
                     lastID = -1;
                 }
                 if ($scope.requestOnTheWay === true) {
-                    $window.console.log("Poll multiplication prevented");
+                    $log.info("Poll multiplication prevented");
                     return;
                 }
                 $scope.requestOnTheWay = true;
@@ -1100,12 +1100,12 @@ timApp.controller("LectureController", ["$scope",
                                 const wallArea = $("#wallArea");
                                 wallArea.scrollTop(wallArea[0].scrollHeight);
                             } else {
-                                $window.console.log("Sending new poll.");
+                                $log.info("Sending new poll.");
 
                             }
                         } else {
                             $scope.pollingStopped = true;
-                            $window.console.log("Got answer but not polling anymore.");
+                            $log.info("Got answer but not polling anymore.");
                         }
                     }, function() {
                         // $scope.newMsg = "Virhe";
@@ -1122,7 +1122,7 @@ timApp.controller("LectureController", ["$scope",
         };
 
         $scope.showQuestion = function(answer) {
-            console.log("Showing question");
+            $log.info("Showing question");
             let showPoints = "";
             if (answer.result) {
                 showPoints = "Show points: ";
@@ -1179,7 +1179,7 @@ timApp.controller("LectureController", ["$scope",
                         $scope.showQuestion(answer);
                     }
                 }, function() {
-                    $window.console.log("Couldn't get questions.");
+                    $log.info("Couldn't get questions.");
                 });
         };
 
@@ -1209,7 +1209,7 @@ timApp.controller("LectureController", ["$scope",
             if (!$scope.lectureSettings.inLecture) {
                 return;
             }
-            console.log("Got focus");
+            $log.info("Got focus");
             if (typeof $scope.timeout !== "undefined") {
                 $window.clearTimeout($scope.timeout);
             }
@@ -1237,7 +1237,7 @@ timApp.controller("LectureController", ["$scope",
          };*/
 
         $scope.lostFocus = function() {
-            console.log("Lost focus");
+            $log.info("Lost focus");
             $scope.polling = false;
             angular.element($window).on("focus.gotfocus", function() {
                 $scope.gotFocus();
@@ -1257,20 +1257,20 @@ timApp.controller("LectureController", ["$scope",
         for (stateKey in keys) {
             if (stateKey in document) {
                 $scope.eventKey = keys[stateKey];
-                console.log(keys[stateKey]);
+                $log.info(keys[stateKey]);
                 break;
             }
         }
 
         $(document).on("visibilitychange", function() {
             if (document.visibilityState == "hidden") {
-                console.log("hidden");
+                $log.info("hidden");
                 $scope.timeout = $window.setTimeout(function() {
                     $scope.lostFocus();
                 }, 1000);
             } else {
                 $scope.gotFocus();
-                console.log("visible");
+                $log.info("visible");
             }
         });
 

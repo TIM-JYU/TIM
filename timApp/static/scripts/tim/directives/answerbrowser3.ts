@@ -1,5 +1,3 @@
-/* globals timLogTime, $ */
-
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
@@ -7,6 +5,7 @@ import {dereferencePar, getParId} from "../controllers/view/parhelpers";
 import {Users} from "../services/userService";
 import {ParCompiler} from "../services/parCompiler";
 import {$compile, $filter, $http, $timeout, $uibModal, $window} from "../ngimport";
+import {ICompileService, IScope, IRootElementService, ITimeoutService} from "angular";
 
 timLogTime("answerbrowser3 load", "answ");
 
@@ -27,8 +26,7 @@ function makeNotLazy(html) {
     return s;
 }
 
-function loadPlugin(html, $par, $compile, $scope, $timeout) {
-    "use strict";
+function loadPlugin(html: string, $par: JQuery, $compile: ICompileService, scope: IScope, $timeout: ITimeoutService) {
     const newhtml = makeNotLazy(html);
     const plugin = $par.find(".parContent");
 
@@ -38,523 +36,555 @@ function loadPlugin(html, $par, $compile, $scope, $timeout) {
     // the plugin's height goes to zero until Angular has finished compiling it.
     const height = plugin.height();
     plugin.height(height);
-    plugin.html($compile(newhtml)($scope));
+    plugin.empty().append($compile(newhtml)(scope));
     plugin.css("opacity", "1.0");
     ParCompiler.processAllMathDelayed(plugin);
-    $timeout(function() {
+    $timeout(() => {
         plugin.css("height", "");
     }, 500);
 }
 
-timApp.directive("answerbrowserlazy", [function() {
-    "use strict";
-    timLogTime("answerbrowserlazy directive function", "answ");
-    return {
-        restrict: "E",
-        scope: {
-            taskId: "@",
-        },
+class AnswerBrowserLazyController {
+    private static $inject = ["$element", "$scope"];
+    private compiled: boolean;
+    private element: angular.IRootElementService;
+    private $parent: any; // TODO require viewctrl
+    private taskId: string;
+    private parentElement: HTMLElement;
+    private scope: angular.IScope;
 
-        controller: ["$scope", function($scope) {
-            timLogTime("answerbrowserlazy ctrl function", "answ", 1);
-            $scope.compiled = false;
+    constructor($element: IRootElementService, scope: IScope) {
+        this.element = $element;
+        this.scope = scope;
+        timLogTime("answerbrowserlazy ctrl function", "answ", 1);
+        this.compiled = false;
+        $element.parent().on("mouseenter touchstart", () => this.loadAnswerBrowser());
+    }
 
-            /**
-             * Returns whether the given task id is valid.
-             * A valid task id is of the form '1.taskname'.
-             * @param taskId {string} The task id to validate.
-             * @returns {boolean} True if the task id is valid, false otherwise.
-             */
-            $scope.isValidTaskId = function(taskId) {
-                return taskId.slice(-1) !== ".";
-            };
+    /**
+     * Returns whether the given task id is valid.
+     * A valid task id is of the form '1.taskname'.
+     * @param taskId {string} The task id to validate.
+     * @returns {boolean} True if the task id is valid, false otherwise.
+     */
+    isValidTaskId(taskId) {
+        return taskId.slice(-1) !== ".";
+    }
 
-            $scope.loadAnswerBrowser = function() {
-                const $par = $scope.$element.parents(".par");
-                let plugin = $par.find(".parContent");
-                if ($scope.compiled) {
-                    return;
-                }
-                $scope.compiled = true;
-                if (!$scope.$parent.noBrowser && $scope.isValidTaskId($scope.taskId)) {
-                    const newHtml = '<answerbrowser task-id="' + $scope.taskId + '"></answerbrowser>';
-                    const newElement = $compile(newHtml);
-                    const parent = $scope.$element.parents(".par")[0];
-                    parent.replaceChild(newElement($scope.$parent)[0], $scope.$element[0]);
-                    $scope.parentElement = parent;
-                }
-                // Next the inside of the plugin to non lazy
-                const origHtml = plugin[0].innerHTML;
-                if (origHtml.indexOf(LAZYSTART) < 0) {
-                    plugin = null;
-                }
-                if (plugin) {
-                    loadPlugin(origHtml, $par, $compile, $scope, $timeout);
-                }
-            };
-        }],
+    loadAnswerBrowser() {
+        const $par = this.element.parents(".par");
+        let plugin = $par.find(".parContent");
+        if (this.compiled) {
+            return;
+        }
+        this.compiled = true;
+        if (!this.$parent.noBrowser && this.isValidTaskId(this.taskId)) {
+            const newHtml = '<answerbrowser task-id="' + this.taskId + '"></answerbrowser>';
+            const newElement = $compile(newHtml);
+            const parent = this.element.parents(".par")[0];
+            parent.replaceChild(newElement(this.$parent)[0], this.element[0]);
+            this.parentElement = parent;
+        }
+        // Next the inside of the plugin to non lazy
+        const origHtml = plugin[0].innerHTML;
+        if (origHtml.indexOf(LAZYSTART) < 0) {
+            plugin = null;
+        }
+        if (plugin) {
+            loadPlugin(origHtml, $par, $compile, this.scope, $timeout);
+        }
+    }
+}
 
-        link($scope, $element, $attrs) {
-            timLogTime("answerbrowserlazy link function", "answ", 1);
-            $scope.$element = $element;
-            $element.parent().on("mouseenter touchstart", $scope.loadAnswerBrowser);
-        },
-    };
-}]);
+timApp.component("answerbrowserlazy", {
+    bindings: {
+        taskId: "@",
+    },
+    controller: AnswerBrowserLazyController,
+});
 
-timApp.directive("answerbrowser", [function() {
-    "use strict";
-    timLogTime("answerbrowser directive function", "answ");
-    return {
-        templateUrl: "/static/templates/answerBrowser.html",
-        restrict: "E",
-        scope: {
-            taskId: "@",
-        },
-        controller: ["$scope", function($scope) {
-        }],
-        link($scope, $element, $attrs) {
-            $scope.element = $element.parents(".par");
-            $scope.parContent = $scope.element.find(".parContent");
-            //$scope.$parent = $scope.$parent; // muutos koska scope on syntynyt tuon toisen lapseksi
-            timLogTime("answerbrowser link", "answ");
+type User = {id: number};
+type Answer = {id: number, points: number, last_points_modifier: number, valid: boolean};
 
-            $scope.$watch("taskId", function(newValue, oldValue) {
-                if (newValue === oldValue) {
-                    return;
-                }
-                if ($scope.$parent.teacherMode) {
-                    $scope.getAvailableUsers();
-                }
-                $scope.getAvailableAnswers();
-            });
+class AnswerBrowserController {
+    private static $inject = ["$scope", "$element"];
+    private element: JQuery;
+    private taskId: string;
+    private loading: number;
+    private $parent: any; // TODO require viewctrl
+    private parContent: JQuery;
+    private user: User;
+    private fetchedUser: User;
+    private firstLoad: boolean;
+    private shouldUpdateHtml: boolean;
+    private saveTeacher: boolean;
+    private users: User[];
+    private answers: Answer[];
+    private filteredAnswers: Answer[];
+    private onlyValid: boolean;
+    private selectedAnswer: Answer;
+    private anyInvalid: boolean;
+    private giveCustomPoints: boolean;
+    private review: boolean;
+    private shouldFocus: boolean;
+    private alerts: {}[];
+    private taskInfo: {userMin: number, userMax: number, answerLimit: number};
+    private points: number;
+    private scope: IScope;
 
-            $scope.savePoints = function() {
-                $http.put("/savePoints/" + $scope.user.id + "/" + $scope.selectedAnswer.id,
-                    {points: $scope.points}).then(function(response) {
-                        $scope.selectedAnswer.points = $scope.points;
-                    }, function(response) {
-                        $scope.showError(response);
-                    }).finally(function() {
-                        $scope.shouldFocus = true;
-                    });
-            };
+    constructor(scope, element) {
+        this.scope = scope;
+        this.element = element.parents(".par");
+        this.parContent = this.element.find(".parContent");
+        this.loading = 0;
 
-            $scope.updatePoints = function() {
-                $scope.points = $scope.selectedAnswer.points;
-                if ($scope.points !== null) {
-                    $scope.giveCustomPoints = $scope.selectedAnswer.last_points_modifier !== null;
-                } else {
-                    $scope.giveCustomPoints = false;
-                }
-            };
-
-            $scope.loading = 0;
-            $scope.setFocus = function() {
-                $scope.element.focus();
-            };
-
-            $scope.changeAnswer = function() {
-                if ($scope.selectedAnswer === null) {
-                    return;
-                }
-                $scope.updatePoints();
-                const $par = $scope.element;
-                const ids = dereferencePar($par);
-                $scope.loading++;
-                $http.get<{html: string, reviewHtml: string}>("/getState", {
-                    params: {
-                        ref_from_doc_id: $scope.$parent.docId,
-                        ref_from_par_id: getParId($par),
-                        doc_id: ids[0],
-                        par_id: ids[1],
-                        user_id: $scope.user.id,
-                        answer_id: $scope.selectedAnswer.id,
-                        review: $scope.review,
-                    },
-                }).then(function(response) {
-                    loadPlugin(response.data.html, $par, $compile, $scope, $timeout);
-                    if ($scope.review) {
-                        $scope.element.find(".review").html(response.data.reviewHtml);
-                    }
-                    const lata = $scope.$parent.loadAnnotationsToAnswer;
-                    if (lata) {
-                        lata($scope.selectedAnswer.id, $par[0], $scope.review, $scope.setFocus);
-                    }
-
-                }, function(response) {
-                    $scope.showError(response);
-                }).finally(function() {
-                    $scope.loading--;
-                });
-            };
-
-            // Loads annotations to answer
-            setTimeout($scope.changeAnswer, 500); //TODO: Don't use timeout
-
-            $scope.nextAnswer = function() {
-                let newIndex = $scope.findSelectedAnswerIndex() - 1;
-                if (newIndex < 0) {
-                    newIndex = $scope.filteredAnswers.length - 1;
-                }
-                $scope.selectedAnswer = $scope.filteredAnswers[newIndex];
-                $scope.changeAnswer();
-            };
-
-            $scope.previousAnswer = function() {
-                let newIndex = $scope.findSelectedAnswerIndex() + 1;
-                if (newIndex >= $scope.filteredAnswers.length) {
-                    newIndex = 0;
-                }
-                $scope.selectedAnswer = $scope.filteredAnswers[newIndex];
-                $scope.changeAnswer();
-            };
-
-            if ($scope.$parent.teacherMode) {
-                $scope.findSelectedUserIndex = function() {
-                    if ($scope.users === null) {
-                        return -1;
-                    }
-                    for (let i = 0; i < $scope.users.length; i++) {
-                        if ($scope.users[i].id === $scope.user.id) {
-                            return i;
-                        }
-                    }
-                    return -1;
-                };
-
-                $scope.checkKeyPress = function(e) {
-                    if ($scope.loading > 0) {
-                        return;
-                    }
-                    if (e.ctrlKey) {
-                        // e.key does not work on IE but it is more readable, so let's use both
-                        if ((e.key === "ArrowUp" || e.which === 38)) {
-                            e.preventDefault();
-                            $scope.changeStudent(-1);
-                        } else if ((e.key === "ArrowDown" || e.which === 40)) {
-                            e.preventDefault();
-                            $scope.changeStudent(1);
-                        } else if ((e.key === "ArrowLeft" || e.which === 37)) {
-                            e.preventDefault();
-                            $scope.previousAnswer();
-                        } else if ((e.key === "ArrowRight" || e.which === 39)) {
-                            e.preventDefault();
-                            $scope.nextAnswer();
-                        }
-                    }
-                };
-                $scope.element.attr("tabindex", 1);
-                $scope.element.css("outline", "none");
-
-                // ng-keypress will not fire if the textbox has focus
-                $scope.element[0].addEventListener("keydown", $scope.checkKeyPress);
-
-                $scope.changeStudent = function(dir) {
-                    if ($scope.users.length <= 0) {
-                        return;
-                    }
-                    const shouldRefocusPoints = $scope.shouldFocus;
-                    let newIndex = $scope.findSelectedUserIndex() + dir;
-                    if (newIndex >= $scope.users.length) {
-                        newIndex = 0;
-                    }
-                    if (newIndex < 0) {
-                        newIndex = $scope.users.length - 1;
-                    }
-                    if (newIndex < 0) {
-                        return;
-                    }
-                    $scope.user = $scope.users[newIndex];
-                    $scope.getAvailableAnswers();
-
-                    // Be careful when modifying the following code. All browsers (IE/Chrome/FF)
-                    // behave slightly differently when it comes to (de-)focusing something.
-                    $timeout(function() {
-                        if (shouldRefocusPoints) {
-                            $scope.shouldFocus = shouldRefocusPoints;
-                        } else {
-                            $scope.setFocus();
-                        }
-                    }, 200);
-                };
+        scope.$watch(() => this.taskId, (newValue, oldValue) => {
+            if (newValue === oldValue) {
+                return;
             }
+            if (this.$parent.teacherMode) {
+                this.getAvailableUsers();
+            }
+            this.getAvailableAnswers();
+        });
 
-            $scope.setNewest = function() {
-                if ($scope.filteredAnswers.length > 0) {
-                    $scope.selectedAnswer = $scope.filteredAnswers[0];
-                    $scope.changeAnswer();
+        // Loads annotations to answer
+        setTimeout(() => this.changeAnswer(), 500); // TODO: Don't use timeout
+
+        if (this.$parent.teacherMode) {
+            this.element.attr("tabindex", 1);
+            this.element.css("outline", "none");
+
+            // ng-keypress will not fire if the textbox has focus
+            this.element[0].addEventListener("keydown", this.checkKeyPress);
+        }
+
+        scope.$on("answerSaved", function(event, args) {
+            if (args.taskId === this.taskId) {
+                this.getAvailableAnswers(false);
+                // HACK: for some reason the math mode is lost because of the above call, so we restore it here
+                ParCompiler.processAllMathDelayed(this.element.find(".parContent"));
+                if (args.error) {
+                    this.alerts.push({msg: args.error, type: "warning"});
                 }
-            };
+            }
+        });
 
-            $scope.setAnswerById = function(id) {
-                for (let i = 0; i < $scope.filteredAnswers.length; i++) {
-                    if ($scope.filteredAnswers[i].id === id) {
-                        $scope.selectedAnswer = $scope.filteredAnswers[i];
-                        $scope.changeAnswer();
-                        break;
-                    }
-                }
-            };
+        if (this.$parent.selectedUser) {
+            this.user = this.$parent.selectedUser;
+        } else if (this.$parent && this.$parent.users && this.$parent.users.length > 0) {
+            this.user = this.$parent.users[0];
+        } else {
+            this.user = Users.getCurrent();
+        }
 
-            $scope.getBrowserData = function() {
-                if ($scope.answers.length > 0 && $scope.selectedAnswer) {
-                    return {
-                        answer_id: $scope.selectedAnswer.id,
-                        saveTeacher: $scope.saveTeacher,
-                        teacher: $scope.$parent.teacherMode,
-                        points: $scope.points,
-                        giveCustomPoints: $scope.giveCustomPoints,
-                        userId: $scope.user.id,
-                        saveAnswer: !$scope.$parent.noBrowser,
-                    };
-                } else {
-                    return {
-                        saveTeacher: false,
-                        teacher: $scope.$parent.teacherMode,
-                        saveAnswer: !$scope.$parent.noBrowser,
-                    };
-                }
-            };
+        this.fetchedUser = null;
+        this.firstLoad = true;
+        this.shouldUpdateHtml = this.$parent.users.length > 0 && this.user !== this.$parent.users[0];
+        if (this.shouldUpdateHtml) {
+            this.dimPlugin();
+        }
+        this.saveTeacher = false;
+        this.users = null;
+        this.answers = [];
+        this.filteredAnswers = [];
+        this.onlyValid = true;
+        this.selectedAnswer = null;
+        this.taskInfo = null;
+        this.anyInvalid = false;
+        this.giveCustomPoints = false;
+        this.review = false;
+        this.shouldFocus = false;
+        this.alerts = [];
 
-            $scope.getAvailableUsers = function() {
-                $scope.loading++;
-                $http.get("/getTaskUsers/" + $scope.taskId, {params: {group: $scope.$parent.group}})
-                    .then(function(response) {
-                        $scope.users = response.data;
-                    }, function(response) {
-                        $scope.showError(response);
-                    }).finally(function() {
-                        $scope.loading--;
-                    });
-            };
+        scope.$watch("review", this.changeAnswer);
+        scope.$watchGroup(["onlyValid", "answers"], this.updateFilteredAndSetNewest);
 
-            $scope.showError = function(response) {
-                $scope.alerts.push({msg: "Error: " + response.data.error, type: "danger"});
-            };
+        // call checkUsers automatically for now; suitable only for lazy mode!
+        this.checkUsers();
+        element.parent().on("mouseenter touchstart", function() {
+            this.checkUsers();
+        });
 
-            $scope.getAvailableAnswers = function(updateHtml) {
-                updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
-                if (!$scope.$parent.item.rights || !$scope.$parent.item.rights.browse_own_answers) {
-                    return;
-                }
-                if ($scope.user === null) {
-                    return;
-                }
-                $scope.loading++;
-                $http.get<Array<{}>>("/answers/" + $scope.taskId + "/" + $scope.user.id)
-                    .then(function(response) {
-                        const data = response.data;
-                        if (data.length > 0 && ($scope.hasUserChanged() || data.length !== ($scope.answers || []).length)) {
-                            $scope.answers = data;
-                            $scope.updateFiltered();
-                            $scope.selectedAnswer = $scope.filteredAnswers[0];
-                            $scope.updatePoints();
-                            if (updateHtml) {
-                                $scope.changeAnswer();
-                            }
-                        } else {
-                            $scope.answers = data;
-                            if ($scope.answers.length === 0 && $scope.$parent.teacherMode) {
-                                $scope.dimPlugin();
-                            }
-                            $scope.updateFilteredAndSetNewest();
-                            const i = $scope.findSelectedAnswerIndex();
-                            if (i >= 0) {
-                                $scope.selectedAnswer = $scope.filteredAnswers[i];
-                                $scope.updatePoints();
-                            }
-                        }
-                        $scope.fetchedUser = $scope.user;
-                    }, function(response) {
-                        $scope.showError(response);
-                    }).finally(function() {
-                        $scope.loading--;
-                    });
-            };
-
-            $scope.$on("answerSaved", function(event, args) {
-                if (args.taskId === $scope.taskId) {
-                    $scope.getAvailableAnswers(false);
-                    // HACK: for some reason the math mode is lost because of the above call, so we restore it here
-                    ParCompiler.processAllMathDelayed($scope.element.find(".parContent"));
-                    if (args.error) {
-                        $scope.alerts.push({msg: args.error, type: "warning"});
-                    }
-                }
-            });
-
-            $scope.hasUserChanged = function() {
-                return ($scope.user || {}).id !== ($scope.fetchedUser || {}).id;
-            };
-
-            $scope.$on("userChanged", function(event, args) {
-                $scope.user = args.user;
-                $scope.firstLoad = false;
-                $scope.shouldUpdateHtml = true;
+        scope.$on("userChanged", function(event, args) {
+                this.user = args.user;
+                this.firstLoad = false;
+                this.shouldUpdateHtml = true;
                 if (args.updateAll) {
-                    $scope.loadIfChanged();
-                } else if ($scope.hasUserChanged()) {
-                    $scope.dimPlugin();
+                    this.loadIfChanged();
+                } else if (this.hasUserChanged()) {
+                    this.dimPlugin();
                 } else {
-                    $scope.parContent.css("opacity", "1.0");
+                    this.parContent.css("opacity", "1.0");
                 }
-            });
+            },
+        );
+    }
 
-            $scope.dimPlugin = function() {
-                $scope.parContent.css("opacity", "0.3");
-            };
+    savePoints() {
+        $http.put("/savePoints/" + this.user.id + "/" + this.selectedAnswer.id,
+            {points: this.points}).then(function(response) {
+            this.selectedAnswer.points = this.points;
+        }, function(response) {
+            this.showError(response);
+        }).finally(function() {
+            this.shouldFocus = true;
+        });
+    }
 
-            $scope.allowCustomPoints = function() {
-                if ($scope.taskInfo === null) {
-                    return false;
-                }
-                return $scope.taskInfo.userMin !== null && $scope.taskInfo.userMax !== null;
-            };
+    updatePoints() {
+        this.points = this.selectedAnswer.points;
+        if (this.points !== null) {
+            this.giveCustomPoints = this.selectedAnswer.last_points_modifier !== null;
+        } else {
+            this.giveCustomPoints = false;
+        }
+    }
 
-            $scope.loadIfChanged = function() {
-                if ($scope.hasUserChanged()) {
-                    $scope.getAvailableAnswers($scope.shouldUpdateHtml);
-                    $scope.loadInfo();
-                    $scope.firstLoad = false;
-                    $scope.shouldUpdateHtml = false;
-                }
-            };
 
-            $scope.showTeacher = function() {
-                return $scope.$parent.teacherMode && $scope.$parent.item.rights.teacher;
-            };
+    setFocus() {
+        this.element.focus();
+    }
 
-            $scope.showVelpsCheckBox = function() {
-                // return $scope.$parent.teacherMode || $window.velpMode; // && $scope.$parent.item.rights.teacher;
-                return $window.velpMode || $($scope.element).attr("class").indexOf("has-annotation") >= 0;
-            };
+    changeAnswer() {
+        if (this.selectedAnswer === null) {
+            return;
+        }
+        this.updatePoints();
+        const $par = this.element;
+        const ids = dereferencePar($par);
+        this.loading++;
+        $http.get<{html: string, reviewHtml: string}>("/getState", {
+            params: {
+                ref_from_doc_id: this.$parent.docId,
+                ref_from_par_id: getParId($par),
+                doc_id: ids[0],
+                par_id: ids[1],
+                user_id: this.user.id,
+                answer_id: this.selectedAnswer.id,
+                review: this.review,
+            },
+        }).then((response) => {
+            loadPlugin(response.data.html, $par, $compile, this.scope, $timeout);
+            if (this.review) {
+                this.element.find(".review").html(response.data.reviewHtml);
+            }
+            const lata = this.$parent.loadAnnotationsToAnswer;
+            if (lata) {
+                lata(this.selectedAnswer.id, $par[0], this.review, this.setFocus);
+            }
 
-            $scope.getTriesLeft = function() {
-                if ($scope.taskInfo === null) {
-                    return null;
-                }
-                return Math.max($scope.taskInfo.answerLimit - $scope.answers.length, 0);
-            };
+        }, function(response) {
+            this.showError(response);
+        }).finally(function() {
+            this.loading--;
+        });
+    }
 
-            $scope.loadInfo = function() {
-                if ($scope.taskInfo !== null) {
-                    return;
-                }
-                $scope.loading++;
-                $http.get("/taskinfo/" + $scope.taskId)
-                    .then(function(response) {
-                        $scope.taskInfo = response.data;
-                    }, function(response) {
-                        $scope.showError(response);
-                    }).finally(function() {
-                        $scope.loading--;
-                    });
-            };
+    nextAnswer() {
+        let newIndex = this.findSelectedAnswerIndex() - 1;
+        if (newIndex < 0) {
+            newIndex = this.filteredAnswers.length - 1;
+        }
+        this.selectedAnswer = this.filteredAnswers[newIndex];
+        this.changeAnswer();
+    }
 
-            $scope.checkUsers = function() {
-                if ($scope.loading > 0) {
-                    return;
-                }
-                $scope.loadIfChanged();
-                if ($scope.$parent.teacherMode && $scope.users === null) {
-                    $scope.users = [];
-                    if ($scope.$parent.users.length > 0) {
-                        $scope.getAvailableUsers();
-                    }
-                }
-            };
+    previousAnswer() {
+        let newIndex = this.findSelectedAnswerIndex() + 1;
+        if (newIndex >= this.filteredAnswers.length) {
+            newIndex = 0;
+        }
+        this.selectedAnswer = this.filteredAnswers[newIndex];
+        this.changeAnswer();
+    }
 
-            $scope.getAllAnswers = function() {
-                $uibModal.open({
-                    animation: false,
-                    ariaLabelledBy: "modal-title",
-                    ariaDescribedBy: "modal-body",
-                    templateUrl: "/static/templates/allAnswersOptions.html",
-                    controller: "AllAnswersCtrl",
-                    controllerAs: "$ctrl",
-                    size: "md",
-                    resolve: {
-                        options() {
-                            return {
-                                url: "/allAnswersPlain/" + $scope.taskId,
-                                identifier: $scope.taskId,
-                                allTasks: false,
-                            };
-                        },
-                    },
-                });
-            };
+    findSelectedUserIndex() {
+        if (this.users === null) {
+            return -1;
+        }
+        for (let i = 0; i < this.users.length; i++) {
+            if (this.users[i].id === this.user.id) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
-            $scope.findSelectedAnswerIndex = function() {
-                if ($scope.filteredAnswers === null) {
-                    return -1;
-                }
-                for (let i = 0; i < $scope.filteredAnswers.length; i++) {
-                    if ($scope.filteredAnswers[i].id === $scope.selectedAnswer.id) {
-                        return i;
-                    }
-                }
-                return -1;
-            };
+    checkKeyPress(e) {
+        if (this.loading > 0) {
+            return;
+        }
+        if (e.ctrlKey) {
+            // e.key does not work on IE but it is more readable, so let's use both
+            if ((e.key === "ArrowUp" || e.which === 38)) {
+                e.preventDefault();
+                this.changeStudent(-1);
+            } else if ((e.key === "ArrowDown" || e.which === 40)) {
+                e.preventDefault();
+                this.changeStudent(1);
+            } else if ((e.key === "ArrowLeft" || e.which === 37)) {
+                e.preventDefault();
+                this.previousAnswer();
+            } else if ((e.key === "ArrowRight" || e.which === 39)) {
+                e.preventDefault();
+                this.nextAnswer();
+            }
+        }
+    }
 
-            if ($scope.$parent.selectedUser) {
-                $scope.user = $scope.$parent.selectedUser;
-            } else if ($scope.$parent && $scope.$parent.users && $scope.$parent.users.length > 0) {
-                $scope.user = $scope.$parent.users[0];
+
+    changeStudent(dir) {
+        if (this.users.length <= 0) {
+            return;
+        }
+        const shouldRefocusPoints = this.shouldFocus;
+        let newIndex = this.findSelectedUserIndex() + dir;
+        if (newIndex >= this.users.length) {
+            newIndex = 0;
+        }
+        if (newIndex < 0) {
+            newIndex = this.users.length - 1;
+        }
+        if (newIndex < 0) {
+            return;
+        }
+        this.user = this.users[newIndex];
+        this.getAvailableAnswers();
+
+        // Be careful when modifying the following code. All browsers (IE/Chrome/FF)
+        // behave slightly differently when it comes to (de-)focusing something.
+        $timeout(function() {
+            if (shouldRefocusPoints) {
+                this.shouldFocus = shouldRefocusPoints;
             } else {
-                $scope.user = Users.getCurrent();
+                this.setFocus();
             }
+        }, 200);
+    }
 
-            $scope.fetchedUser = null;
-            $scope.firstLoad = true;
-            $scope.shouldUpdateHtml = $scope.$parent.users.length > 0 && $scope.user !== $scope.$parent.users[0];
-            if ($scope.shouldUpdateHtml) {
-                $scope.dimPlugin();
+
+    setNewest() {
+        if (this.filteredAnswers.length > 0) {
+            this.selectedAnswer = this.filteredAnswers[0];
+            this.changeAnswer();
+        }
+    }
+
+    setAnswerById(id) {
+        for (let i = 0; i < this.filteredAnswers.length; i++) {
+            if (this.filteredAnswers[i].id === id) {
+                this.selectedAnswer = this.filteredAnswers[i];
+                this.changeAnswer();
+                break;
             }
-            $scope.saveTeacher = false;
-            $scope.users = null;
-            $scope.answers = [];
-            $scope.filteredAnswers = [];
-            $scope.onlyValid = true;
-            $scope.selectedAnswer = null;
-            $scope.taskInfo = null;
-            $scope.anyInvalid = false;
-            $scope.giveCustomPoints = false;
-            $scope.review = false;
-            $scope.shouldFocus = false;
-            $scope.alerts = [];
+        }
+    }
 
-            $scope.updateFiltered = function() {
-                $scope.anyInvalid = false;
-                $scope.filteredAnswers = $filter("filter")<{valid}>($scope.answers, function(value, index, array) {
-                    if (value.valid) {
-                        return true;
+    getBrowserData() {
+        if (this.answers.length > 0 && this.selectedAnswer) {
+            return {
+                answer_id: this.selectedAnswer.id,
+                saveTeacher: this.saveTeacher,
+                teacher: this.$parent.teacherMode,
+                points: this.points,
+                giveCustomPoints: this.giveCustomPoints,
+                userId: this.user.id,
+                saveAnswer: !this.$parent.noBrowser,
+            };
+        } else {
+            return {
+                saveTeacher: false,
+                teacher: this.$parent.teacherMode,
+                saveAnswer: !this.$parent.noBrowser,
+            };
+        }
+    }
+
+    getAvailableUsers() {
+        this.loading++;
+        $http.get("/getTaskUsers/" + this.taskId, {params: {group: this.$parent.group}})
+            .then(function(response) {
+                this.users = response.data;
+            }, function(response) {
+                this.showError(response);
+            }).finally(function() {
+            this.loading--;
+        });
+    }
+
+    showError(response) {
+        this.alerts.push({msg: "Error: " + response.data.error, type: "danger"});
+    }
+
+    getAvailableAnswers(updateHtml = false) {
+        updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
+        if (!this.$parent.item.rights || !this.$parent.item.rights.browse_own_answers) {
+            return;
+        }
+        if (this.user === null) {
+            return;
+        }
+        this.loading++;
+        $http.get<Array<{}>>("/answers/" + this.taskId + "/" + this.user.id)
+            .then(function(response) {
+                const data = response.data;
+                if (data.length > 0 && (this.hasUserChanged() || data.length !== (this.answers || []).length)) {
+                    this.answers = data;
+                    this.updateFiltered();
+                    this.selectedAnswer = this.filteredAnswers[0];
+                    this.updatePoints();
+                    if (updateHtml) {
+                        this.changeAnswer();
                     }
-                    $scope.anyInvalid = true;
-                    return !$scope.onlyValid;
-                });
-            };
-
-            $scope.updateFilteredAndSetNewest = function(newValues, oldValues, scope) {
-                $scope.updateFiltered();
-                if ($scope.findSelectedAnswerIndex() < 0) {
-                    $scope.setNewest();
+                } else {
+                    this.answers = data;
+                    if (this.answers.length === 0 && this.$parent.teacherMode) {
+                        this.dimPlugin();
+                    }
+                    this.updateFilteredAndSetNewest();
+                    const i = this.findSelectedAnswerIndex();
+                    if (i >= 0) {
+                        this.selectedAnswer = this.filteredAnswers[i];
+                        this.updatePoints();
+                    }
                 }
-            };
+                this.fetchedUser = this.user;
+            }, function(response) {
+                this.showError(response);
+            }).finally(function() {
+            this.loading--;
+        });
+    }
 
-            $scope.closeAlert = function(index) {
-                $scope.alerts.splice(index, 1);
-            };
+    hasUserChanged() {
+        return (this.user || {id: null}).id !== (this.fetchedUser || {id: null}).id;
+    }
 
-            $scope.$watch("review", $scope.changeAnswer);
-            $scope.$watchGroup(["onlyValid", "answers"], $scope.updateFilteredAndSetNewest);
+    dimPlugin() {
+        this.parContent.css("opacity", "0.3");
+    }
 
-            // call checkUsers automatically for now; suitable only for lazy mode!
-            $scope.checkUsers();
-            $element.parent().on("mouseenter touchstart", function() {
-                $scope.checkUsers();
-            });
-        },
-    };
-}]);
+    allowCustomPoints() {
+        if (this.taskInfo === null) {
+            return false;
+        }
+        return this.taskInfo.userMin !== null && this.taskInfo.userMax !== null;
+    }
+
+    loadIfChanged() {
+        if (this.hasUserChanged()) {
+            this.getAvailableAnswers(this.shouldUpdateHtml);
+            this.loadInfo();
+            this.firstLoad = false;
+            this.shouldUpdateHtml = false;
+        }
+    }
+
+    showTeacher() {
+        return this.$parent.teacherMode && this.$parent.item.rights.teacher;
+    }
+
+    showVelpsCheckBox() {
+        // return this.$parent.teacherMode || $window.velpMode; // && this.$parent.item.rights.teacher;
+        return $window.velpMode || $(this.element).attr("class").indexOf("has-annotation") >= 0;
+    }
+
+    getTriesLeft() {
+        if (this.taskInfo === null) {
+            return null;
+        }
+        return Math.max(this.taskInfo.answerLimit - this.answers.length, 0);
+    }
+
+    loadInfo() {
+        if (this.taskInfo !== null) {
+            return;
+        }
+        this.loading++;
+        $http.get("/taskinfo/" + this.taskId)
+            .then(function(response) {
+                this.taskInfo = response.data;
+            }, function(response) {
+                this.showError(response);
+            }).finally(function() {
+            this.loading--;
+        });
+    }
+
+    checkUsers() {
+        if (this.loading > 0) {
+            return;
+        }
+        this.loadIfChanged();
+        if (this.$parent.teacherMode && this.users === null) {
+            this.users = [];
+            if (this.$parent.users.length > 0) {
+                this.getAvailableUsers();
+            }
+        }
+    }
+
+    getAllAnswers() {
+        $uibModal.open({
+            animation: false,
+            ariaLabelledBy: "modal-title",
+            ariaDescribedBy: "modal-body",
+            templateUrl: "/static/templates/allAnswersOptions.html",
+            controller: "AllAnswersCtrl",
+            controllerAs: "$ctrl",
+            size: "md",
+            resolve: {
+                options() {
+                    return {
+                        url: "/allAnswersPlain/" + this.taskId,
+                        identifier: this.taskId,
+                        allTasks: false,
+                    };
+                },
+            },
+        });
+    }
+
+    findSelectedAnswerIndex() {
+        if (this.filteredAnswers === null) {
+            return -1;
+        }
+        for (let i = 0; i < this.filteredAnswers.length; i++) {
+            if (this.filteredAnswers[i].id === this.selectedAnswer.id) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    updateFiltered() {
+        this.anyInvalid = false;
+        this.filteredAnswers = $filter("filter")<Answer>(this.answers, function(value, index, array) {
+            if (value.valid) {
+                return true;
+            }
+            this.anyInvalid = true;
+            return !this.onlyValid;
+        });
+    }
+
+    updateFilteredAndSetNewest(newValues, oldValues, scope) {
+        this.updateFiltered();
+        if (this.findSelectedAnswerIndex() < 0) {
+            this.setNewest();
+        }
+    }
+
+    closeAlert(index) {
+        this.alerts.splice(index, 1);
+    }
+}
+
+timApp.component("answerbrowser", {
+    bindings: {
+        taskId: "@",
+    },
+    controller: AnswerBrowserController,
+    templateUrl: "/static/templates/answerBrowser.html",
+});

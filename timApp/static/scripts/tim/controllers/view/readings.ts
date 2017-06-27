@@ -20,7 +20,7 @@ export const readingTypes = {
     clickRed: 4,
 };
 
-export async function markParRead($par, readingType) {
+export async function markParRead($par: JQuery, readingType: number) {
     const $readline = $par.find(".readline");
     const readClassName = readClasses[readingType];
     if ($readline.hasClass(readClassName)) {
@@ -55,7 +55,7 @@ export async function markParRead($par, readingType) {
     }
 }
 
-async function markParsRead($pars) {
+async function markParsRead($pars: JQuery) {
     const parIds = $pars.map((i, e) => {
         return getParId($(e));
     }).get();
@@ -107,7 +107,7 @@ function queueParagraphForReading() {
     }) as any, 300 * numWords);
 }
 
-function readlineHandler($this, e) {
+function readlineHandler($this: JQuery, e) {
     markParRead($this.parents(".par"), readingTypes.clickRed);
     return true;
 }

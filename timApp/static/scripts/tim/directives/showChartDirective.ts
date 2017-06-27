@@ -5,7 +5,7 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {getJsonAnswers} from "tim/directives/dynamicAnswerSheet";
 import {lazyLoad} from "../lazyLoad";
-import {$compile} from "../ngimport";
+import {$compile, $log} from "../ngimport";
 
 /**
  * Created by hajoviin on 13.5.2015.
@@ -369,7 +369,7 @@ timApp.directive("showChartDirective", [function() {
                     labels,
                     datasets: usedDataSets,
                 };
-                console.log(usedDataSets);
+                $log.info(usedDataSets);
 
                 /*
                 var ctx  = $scope.ctx;
