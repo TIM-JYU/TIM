@@ -1,4 +1,3 @@
-
 import angular from "angular";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
@@ -7,207 +6,221 @@ import {$http, $timeout, $uibModal, $window} from "../ngimport";
 
 markAsUsed(focusMe);
 
-timApp.directive("bookmarks", [function() {
-    "use strict";
-    return {
-        restrict: "E",
-        scope: {
-            userId: "=?",
-            data: "=?",
-        },
-        templateUrl: "/static/templates/bookmarks.html",
-        link($scope, $element) {
+class BookmarksController {
+    private data: {name, isOpen, items: {}[]}[];
+    private deleting: boolean;
+    private userId: number;
 
-        },
+    constructor() {
+        if ($window.bookmarks && !this.data) {
+            this.data = angular.copy($window.bookmarks);
+        }
+        this.deleting = false;
 
-        controller: ["$scope", function($scope) {
-            const sc = $scope;
-            if ($window.bookmarks && !sc.data) {
-                sc.data = angular.copy($window.bookmarks);
+        if (this.userId && !this.data) {
+            (async () => {
+                const response = await $http.get("/bookmarks/get/" + this.userId);
+                this.getFromServer(response);
+            })();
+        }
+    }
+
+    getFromServer(response, groupToKeepOpen?) {
+        this.data = response.data;
+        this.keepGroupOpen(groupToKeepOpen);
+    }
+
+    keepGroupOpen(groupToKeepOpen) {
+        if (!groupToKeepOpen) {
+            return;
+        }
+        for (let i = 0; i < this.data.length; ++i) {
+            if (this.data[i].name === groupToKeepOpen.name) {
+                this.data[i].isOpen = true;
+                return;
             }
+        }
+    }
 
-            sc.getFromServer = function(response, groupToKeepOpen) {
-                sc.data = response.data;
-                sc.keepGroupOpen(groupToKeepOpen);
-            };
+    getTopLevelBookmarks() {
+        if (!this.data) {
+            return [];
+        }
+        for (let i = 0; i < this.data.length; ++i) {
+            if (this.data[i].name === "") {
+                return this.data[i].items;
+            }
+        }
+        return [];
+    }
 
-            sc.keepGroupOpen = function(groupToKeepOpen) {
-                if (!groupToKeepOpen) {
-                    return;
-                }
-                for (let i = 0; i < sc.data.length; ++i) {
-                    if (sc.data[i].name === groupToKeepOpen.name) {
-                        sc.data[i].isOpen = true;
-                        return;
-                    }
-                }
-            };
+    isSaveablePage() {
+        return true;
+    }
 
-            sc.getTopLevelBookmarks = function() {
-                if (!sc.data) {
-                    return [];
-                }
-                for (let i = 0; i < sc.data.length; ++i) {
-                    if (sc.data[i].name === "") {
-                        return sc.data[i].items;
-                    }
-                }
-                return [];
-            };
+    newBookmark(group, e) {
+        e.preventDefault();
+        const suggestedName = ($window.item || {}).title || document.title;
+        const modalInstance = $uibModal.open({
+            animation: false,
+            ariaLabelledBy: "modal-title",
+            ariaDescribedBy: "modal-body",
+            templateUrl: "createBookmark.html",
+            controller: "CreateBookmarkCtrl",
+            controllerAs: "$ctrl",
+            size: "md",
+            resolve: {
+                bookmark() {
+                    return {
+                        group: group || "",
+                        name: suggestedName,
+                        link: "",
+                    };
+                },
+            },
+        });
 
-            sc.isSaveablePage = function() {
-                return true;
-            };
-
-            sc.newBookmark = function(group, e) {
-                e.preventDefault();
-                const suggestedName = ($window.item || {}).title || document.title;
-                const modalInstance = $uibModal.open({
-                    animation: false,
-                    ariaLabelledBy: "modal-title",
-                    ariaDescribedBy: "modal-body",
-                    templateUrl: "createBookmark.html",
-                    controller: "CreateBookmarkCtrl",
-                    controllerAs: "$ctrl",
-                    size: "md",
-                    resolve: {
-                        bookmark() {
-                            return {
-                                group: group || "",
-                                name: suggestedName,
-                                link: "",
-                            };
-                        },
-                    },
+        modalInstance.result.then((bookmark) => {
+            if (!bookmark.name) {
+                return;
+            }
+            $http.post("/bookmarks/add", bookmark)
+                .then(this.getFromServer, (response) => {
+                    $window.alert("Could not add bookmark.");
                 });
+        }, () => {
+        });
+    }
 
-                modalInstance.result.then(function(bookmark) {
-                    if (!bookmark.name) {
-                        return;
-                    }
-                    $http.post("/bookmarks/add", bookmark)
-                        .then(sc.getFromServer, function(response) {
-                            $window.alert("Could not add bookmark.");
-                        });
-                }, function() {
-                });
-            };
+    editItem(group, item, e) {
+        e.stopPropagation();
+        e.preventDefault();
+        const modalInstance = $uibModal.open({
+            animation: false,
+            ariaLabelledBy: "modal-title",
+            ariaDescribedBy: "modal-body",
+            templateUrl: "createBookmark.html",
+            controller: "CreateBookmarkCtrl",
+            controllerAs: "$ctrl",
+            size: "md",
+            resolve: {
+                bookmark() {
+                    return {
+                        group: group.name,
+                        name: item.name,
+                        link: item.path,
+                    };
+                },
+            },
+        });
 
-            sc.editItem = function(group, item, e) {
-                e.stopPropagation();
-                e.preventDefault();
-                const modalInstance = $uibModal.open({
-                    animation: false,
-                    ariaLabelledBy: "modal-title",
-                    ariaDescribedBy: "modal-body",
-                    templateUrl: "createBookmark.html",
-                    controller: "CreateBookmarkCtrl",
-                    controllerAs: "$ctrl",
-                    size: "md",
-                    resolve: {
-                        bookmark() {
-                            return {
-                                group: group.name,
-                                name: item.name,
-                                link: item.path,
-                            };
-                        },
-                    },
-                });
-
-                modalInstance.result.then(function(bookmark) {
-                    if (!bookmark.name) {
-                        return;
-                    }
-                    $http.post("/bookmarks/edit", {
-                        old: {
-                            group: group.name,
-                            name: item.name,
-                            link: item.path,
-                        }, new: bookmark,
-                    })
-                        .then(function(response) {
-                            sc.getFromServer(response, group);
-                        }, function(response) {
-                            $window.alert("Could not edit bookmark.");
-                        });
-                }, function() {
-                    $timeout(function() {
-                        sc.keepGroupOpen(group);
-                    }, 0);
-                });
-            };
-
-            sc.deleteItem = function(group, item, e) {
-                e.stopPropagation();
-                e.preventDefault();
-                return $http.post("/bookmarks/delete", {
+        modalInstance.result.then(function(bookmark) {
+            if (!bookmark.name) {
+                return;
+            }
+            $http.post("/bookmarks/edit", {
+                old: {
                     group: group.name,
                     name: item.name,
-                })
-                    .then(function(response) {
-                        sc.getFromServer(response, group);
-                    }, function(response) {
-                        $window.alert("Could not delete bookmark.");
-                    });
-            };
-
-            sc.deleteGroup = function(group, e) {
-                e.stopPropagation();
-                e.preventDefault();
-                if ($window.confirm("Are you sure you want to delete this bookmark group?")) {
-                    $http.post("/bookmarks/deleteGroup", {group: group.name})
-                        .then(sc.getFromServer, function(response) {
-                            $window.alert("Could not delete bookmark group.");
-                        });
-                }
-            };
-
-            sc.toggleDelete = function(e) {
-                e.stopPropagation();
-                e.preventDefault();
-                sc.deleting = !sc.deleting;
-            };
-
-            sc.deleting = false;
-
-            if (sc.userId && !sc.data) {
-                $http.get("/bookmarks/get/" + sc.userId).then(sc.getFromServer, function(response) {
-                    $window.alert("Could not fetch bookmarks.");
+                    link: item.path,
+                }, new: bookmark,
+            })
+                .then((response) => {
+                    this.getFromServer(response, group);
+                }, response => {
+                    $window.alert("Could not edit bookmark.");
                 });
-            }
-        }],
-    };
-}]);
-
-timApp.controller("CreateBookmarkCtrl", ["$uibModalInstance", "bookmark", function($uibModalInstance, bookmark) {
-    "use strict";
-    const $ctrl = this;
-    $ctrl.bookmarkForm = {};
-    $ctrl.bookmark = bookmark;
-    if (bookmark.group === "Last edited" || bookmark.group === "Last read") {
-        bookmark.group = "";
+        }, () => {
+            $timeout(() => {
+                this.keepGroupOpen(group);
+            }, 0);
+        });
     }
-    $ctrl.focusGroup = !bookmark.group;
-    $ctrl.focusName = !$ctrl.focusGroup;
-    $ctrl.showParamsCheckbox = $window.location.search.length > 1;
-    $ctrl.showHashCheckbox = $window.location.hash.length > 1;
 
-    $ctrl.ok = function() {
-        if (!$ctrl.bookmark.link) {
-            $ctrl.bookmark.link = $window.location.pathname;
-            if ($ctrl.includeParams) {
-                $ctrl.bookmark.link += $window.location.search;
+    deleteItem(group, item, e) {
+        e.stopPropagation();
+        e.preventDefault();
+        return $http.post("/bookmarks/delete", {
+            group: group.name,
+            name: item.name,
+        })
+            .then((response) => {
+                this.getFromServer(response, group);
+            }, (response) => {
+                $window.alert("Could not delete bookmark.");
+            });
+    }
+
+    deleteGroup(group, e) {
+        e.stopPropagation();
+        e.preventDefault();
+        if ($window.confirm("Are you sure you want to delete this bookmark group?")) {
+            $http.post("/bookmarks/deleteGroup", {group: group.name})
+                .then(this.getFromServer, response => {
+                    $window.alert("Could not delete bookmark group.");
+                });
+        }
+    }
+
+    toggleDelete(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        this.deleting = !this.deleting;
+    }
+}
+
+timApp.component("bookmarks", {
+    bindings: {
+        data: "=?",
+        userId: "=?",
+    },
+    controller: BookmarksController,
+    templateUrl: "/static/templates/bookmarks.html",
+});
+
+class CreateBookmarkCtrl {
+    private static $inject = ["bookmark", "$uibModalInstance"];
+
+    private bookmarkForm: {};
+    private focusName: boolean;
+    private focusGroup: boolean;
+    private showParamsCheckbox: boolean;
+    private showHashCheckbox: boolean;
+    private bookmark: {link: string};
+    private includeParams: boolean;
+    private includeHash: boolean;
+    private uibModalInstance: angular.ui.bootstrap.IModalServiceInstance;
+
+    constructor(bookmark, uibModalInstance: angular.ui.bootstrap.IModalServiceInstance) {
+        this.uibModalInstance = uibModalInstance;
+        this.bookmarkForm = {};
+        this.bookmark = bookmark;
+        if (bookmark.group === "Last edited" || bookmark.group === "Last read") {
+            bookmark.group = "";
+        }
+        this.focusGroup = !bookmark.group;
+        this.focusName = !this.focusGroup;
+        this.showParamsCheckbox = $window.location.search.length > 1;
+        this.showHashCheckbox = $window.location.hash.length > 1;
+    }
+
+    public ok() {
+        if (!this.bookmark.link) {
+            this.bookmark.link = $window.location.pathname;
+            if (this.includeParams) {
+                this.bookmark.link += $window.location.search;
             }
-            if ($ctrl.includeHash) {
-                $ctrl.bookmark.link += $window.location.hash;
+            if (this.includeHash) {
+                this.bookmark.link += $window.location.hash;
             }
         }
 
-        $uibModalInstance.close($ctrl.bookmark);
-    };
+        this.uibModalInstance.close(this.bookmark);
+    }
 
-    $ctrl.cancel = function() {
-        $uibModalInstance.dismiss("cancel");
-    };
-}]);
+    public cancel() {
+        this.uibModalInstance.dismiss("cancel");
+    }
+}
+
+timApp.controller("CreateBookmarkCtrl", CreateBookmarkCtrl);
