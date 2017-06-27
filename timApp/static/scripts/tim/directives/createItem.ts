@@ -1,4 +1,3 @@
-
 import angular from "angular";
 import {timApp} from "tim/app";
 import * as formErrorMessage from "tim/directives/formErrorMessage";
@@ -9,66 +8,69 @@ import {slugify} from "../services/slugify";
 
 markAsUsed(formErrorMessage, shortNameValidator);
 
-timApp.directive("createItem", [function() {
-    "use strict";
-    return {
-        restrict: "E",
-        scope: {
-            itemType: "@", // folder or document
-            itemTitle: "@?",
-            itemName: "@?",
-            itemLocation: "@?",
-            fullPath: "@?",
-            params: "=?", // any additional parameters to be sent to server
-        },
-        templateUrl: "/static/templates/createItem.html",
-        link($scope, $element) {
+class CreateItemController {
+    private fullPath: string;
+    private automaticShortName: boolean;
+    private itemLocation: string;
+    private itemTitle: string;
+    private itemName: string;
+    private alerts: {}[];
+    private itemType: string;
+    private params: {};
 
-        },
+    constructor() {
+        this.automaticShortName = true;
 
-        controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
-            const sc = $scope;
+        if (this.fullPath) {
+            const str = this.fullPath;
+            this.itemLocation = str.substring(0, str.lastIndexOf("/"));
+            this.itemTitle = str.substring(str.lastIndexOf("/") + 1, str.length);
+        }
+        if (this.itemTitle) {
+            this.itemName = slugify(this.itemTitle);
+        }
 
-            sc.automaticShortName = true;
+        this.alerts = [];
+    }
 
-            if (sc.fullPath) {
-                const str = sc.fullPath;
-                sc.itemLocation = str.substring(0, str.lastIndexOf("/"));
-                sc.itemTitle = str.substring(str.lastIndexOf("/") + 1, str.length);
-            }
-            if (sc.itemTitle) {
-                sc.itemName = slugify(sc.itemTitle);
-            }
+    createItem() {
+        $http.post<{path}>("/createItem", angular.extend({
+            item_path: this.itemLocation + "/" + this.itemName,
+            item_type: this.itemType,
+            item_title: this.itemTitle,
+        }, this.params)).then((response) => {
+            $window.location.href = "/view/" + response.data.path;
+        }, (response) => {
+            this.alerts = [];
+            this.alerts.push({msg: response.data.error, type: "danger"});
+        });
+    }
 
-            sc.alerts = [];
+    closeAlert(index) {
+        this.alerts.splice(index, 1);
+    }
 
-            sc.createItem = function() {
-                $http.post<{path}>("/createItem", angular.extend({
-                    item_path: sc.itemLocation + "/" + sc.itemName,
-                    item_type: sc.itemType,
-                    item_title: sc.itemTitle,
-                }, sc.params)).then(function(response) {
-                    $window.location.href = "/view/" + response.data.path;
-                }, function(response) {
-                    sc.alerts = [];
-                    sc.alerts.push({msg: response.data.error, type: "danger"});
-                });
-            };
+    titleChanged() {
+        if (!this.automaticShortName) {
+            return;
+        }
+        this.itemName = slugify(this.itemTitle);
+    }
 
-            sc.closeAlert = function(index) {
-                sc.alerts.splice(index, 1);
-            };
+    nameChanged() {
+        this.automaticShortName = (this.itemName || []).length === 0;
+    }
+}
 
-            sc.titleChanged = function() {
-                if (!sc.automaticShortName) {
-                    return;
-                }
-                sc.itemName = slugify(sc.itemTitle);
-            };
-
-            sc.nameChanged = function() {
-                sc.automaticShortName = (sc.itemName || []).length === 0;
-            };
-        }],
-    };
-}]);
+timApp.component("createItem", {
+    bindings: {
+        itemType: "@", // folder or document
+        itemTitle: "@?",
+        itemName: "@?",
+        itemLocation: "@?",
+        fullPath: "@?",
+        params: "=?", // any additional parameters to be sent to server
+    },
+    controller: CreateItemController,
+    templateUrl: "/static/templates/createItem.html",
+});
