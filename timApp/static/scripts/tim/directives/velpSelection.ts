@@ -5,6 +5,7 @@ import * as velpSummary from "tim/directives/velpSummary";
 import {colorPalette} from "tim/directives/velpWindow";
 import {markAsUsed} from "tim/utils";
 import {$http, $q, $window} from "../ngimport";
+import {IAnnotation, ILabel, IUIFields, IVelp, IVelpGroup, VelpGroupSelectionType} from "./velptypes";
 
 markAsUsed(velpSummary);
 
@@ -24,49 +25,12 @@ const UNDEFINED = "undefined";
 
 // TODO: show velps with same name side by side. Make changes to the template.
 
-type VelpGroupSelectionType = "show" | "default";
-
-interface IUIFields {
-    show?: boolean;
-    selected?: boolean;
-    edit?: boolean;
-    valid?: boolean;
-}
-
-interface IAnnotation {
-
-}
-
-interface IVelp {
-    content: string;
-    default_comment: string;
-    points: string;
-    labels: ILabel[];
-    used?: number;
-    id: number;
-    velp_groups: number[];
-    visible_to: number;
-}
-
-interface ILabel {
-    content: string;
-    id: number;
-}
-
-interface IVelpGroup {
-    name: string;
-    target_type: number;
-    id: number;
-    default: boolean;
-    edit_access?: boolean;
-}
-
 /**
  * Controller for velp selection
  * @lends module:velpSelection
  */
 export class VelpSelectionController {
-    private velps: (IVelp & IUIFields)[];
+    public velps: (IVelp & IUIFields)[];
     private annotations: IAnnotation[];
     private labels: (ILabel & IUIFields)[];
     private velpGroups: (IVelpGroup & IUIFields)[];
@@ -110,6 +74,10 @@ export class VelpSelectionController {
             id: -2,
             velp_groups: [],
             visible_to: 4,
+            icon_id: null,
+            language_id: "FI",
+            color: null,
+            valid_until: null,
         };
         this.velpToEdit = {
             content: "",
@@ -120,6 +88,10 @@ export class VelpSelectionController {
             id: -1,
             velp_groups: [],
             visible_to: 4,
+            icon_id: null,
+            language_id: "FI",
+            color: null,
+            valid_until: null,
         };
         this.newLabel = {content: "", selected: false, edit: false, valid: true, id: null};
         this.labelToEdit = {content: "", selected: false, edit: false, id: -3};
@@ -500,6 +472,7 @@ export class VelpSelectionController {
             visible_to: this.visible_options.value,
             velp_groups: JSON.parse(JSON.stringify(this.newVelp.velp_groups)),
             default_comment: "",
+            color: null,
         };
         this.velpToEdit.edit = false;
         this.newVelp.edit = false;
@@ -516,6 +489,10 @@ export class VelpSelectionController {
             default_comment: "",
             velp_groups: [],
             visible_to: null,
+            icon_id: null,
+            language_id: "FI",
+            color: null,
+            valid_until: null,
         };
         this.velps.push(velpToAdd);
         this.submitted.velp = false;
@@ -645,7 +622,7 @@ export class VelpSelectionController {
      * Generates the default velp group and runs the custom method.
      * @method generateDefaultVelpGroup
      */
-    async generateDefaultVelpGroup() {
+    async generateDefaultVelpGroup(): Promise<IVelpGroup> {
         if (this.default_velp_group.edit_access) {
             const json = await $http.post<IVelpGroup>("/{0}/create_default_velp_group".replace("{0}", this.docId.toString()), "{}");
             const new_default_velp_group = json.data;
@@ -691,7 +668,11 @@ export class VelpSelectionController {
             id: -1,
             velp_groups: [],
             default_comment: "",
-            visible_to: null
+            visible_to: null,
+            icon_id: null,
+            language_id: "FI",
+            color: null,
+            valid_until: null,
         };
     }
 
@@ -743,6 +724,10 @@ export class VelpSelectionController {
             velp_groups: this.newVelp.velp_groups,
             default_comment: "",
             visible_to: null,
+            icon_id: null,
+            language_id: "FI",
+            color: null,
+            valid_until: null,
         };
     }
 

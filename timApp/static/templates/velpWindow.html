@@ -165,7 +165,7 @@
 
             <!-- submit executes 'saveVelp'-function -->
             <p>
-            <input type="submit" class="timButton" ng-value="vwctrl.settings.saveButtonText" ng-disabled="!vwctrl.isVelpValid()"/>
+            <input type="submit" class="timButton" ng-value="vwctrl.saveButtonText()" ng-disabled="!vwctrl.isVelpValid()"/>
             <input type="button" class="timButton" value="Cancel" ng-click="vwctrl.toggleVelpToEdit(); $event.stopPropagation();">
             </p>
         </form>
