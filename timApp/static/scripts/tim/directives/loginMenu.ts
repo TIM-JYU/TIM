@@ -1,56 +1,69 @@
 import {timApp} from "tim/app";
 import {Users} from "../services/userService";
 
-timApp.directive("loginMenu", [function() {
-    "use strict";
-    return {
-        restrict: "E",
-        scope: {},
-        templateUrl: "/static/templates/loginMenu.html",
-        controller: ["$scope", function($scope) {
-            $scope.getCurrentUser = () => Users.getCurrent();
-            $scope.getSessionUsers = () => Users.getSessionUsers();
-            $scope.form = {};
-            $scope.loggingout = false;
-            $scope.form.email = "";
-            $scope.form.password = "";
-            $scope.addingToSession = false;
-            $scope.addUser = function($event) {
-                $event.stopPropagation();
-                $scope.addingToSession = !$scope.addingToSession;
-            };
-            $scope.logout = (user, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);
-            $scope.isLoggedIn = () => Users.isLoggedIn();
-            $scope.korppiLogin = function(addingToSession) {
-                $scope.korppiLoading = true;
-                Users.korppiLogin(addingToSession);
-            };
-            $scope.isKorppi = () => Users.isKorppi();
-            $scope.stopClick = function($event) {
-                $event.stopPropagation();
-            };
-            $scope.toggled = function(open) {
-                if (!open) {
-                    $scope.addingToSession = false;
-                }
-            };
-            $scope.addTestUser = function($event) {
-                Users.addUser();
-            };
-            $scope.loginWithEmail = function() {
-                Users.loginWithEmail($scope.form.email, $scope.form.password, $scope.addingToSession,
-                    function() {
-                        $scope.addingToSession = false;
-                    });
-            };
-            $scope.beginLogout = function($event) {
-                if (Users.isKorppi()) {
-                    $scope.loggingout = true;
-                    $event.stopPropagation();
-                } else {
-                    $scope.logout($scope.getCurrentUser());
-                }
-            };
-        }],
-    };
-}]);
+class LoginMenuController {
+    private loggingout: boolean;
+    private form: {email: string, password: string};
+    private addingToSession: boolean;
+    private korppiLoading: boolean;
+
+    constructor() {
+        this.form = {email: "", password: ""};
+        this.loggingout = false;
+        this.addingToSession = false;
+    }
+
+    getCurrentUser = () => Users.getCurrent();
+    getSessionUsers = () => Users.getSessionUsers();
+
+    addUser($event) {
+        $event.stopPropagation();
+        this.addingToSession = !this.addingToSession;
+    }
+
+    logout = (user, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);
+    isLoggedIn = () => Users.isLoggedIn();
+
+    korppiLogin(addingToSession) {
+        this.korppiLoading = true;
+        Users.korppiLogin(addingToSession);
+    }
+
+    isKorppi = () => Users.isKorppi();
+
+    stopClick($event) {
+        $event.stopPropagation();
+    }
+
+    toggled(open) {
+        if (!open) {
+            this.addingToSession = false;
+        }
+    }
+
+    addTestUser($event) {
+        Users.addUser();
+    }
+
+    loginWithEmail() {
+        Users.loginWithEmail(this.form.email, this.form.password, this.addingToSession,
+            function() {
+                this.addingToSession = false;
+            });
+    }
+
+    beginLogout($event) {
+        if (Users.isKorppi()) {
+            this.loggingout = true;
+            $event.stopPropagation();
+        } else {
+            this.logout(this.getCurrentUser());
+        }
+    }
+}
+
+timApp.component("loginMenu", {
+    bindings: {},
+    controller: LoginMenuController,
+    templateUrl: "/static/templates/loginMenu.html",
+});
