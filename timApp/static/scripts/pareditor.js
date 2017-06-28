@@ -1427,7 +1427,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }
                         toNextLine = toNextLine.trim();
 
-                        var breakline = '\n#-\n<div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>\n#-\n';
+                        var breakline = '\n#-{print="false"}\n<div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>\n#-\n';
 
                         $scope.editor.replaceSelectedText(toKeepInLine + breakline +"\n" + toNextLine);
                     };
@@ -1759,7 +1759,7 @@ timApp.directive("pareditor", ['Upload', '$http', '$sce', '$compile',
                         }
                         toNextLine = toNextLine.trim();
 
-                        var breakline = '\n#-\n<div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>\n#-\n';
+                        var breakline = '\n#-{print="false"}\n<div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>\n#-\n';
 
                         $scope.editor.selection.setRange(range);
                         $scope.editor.insert(toKeepInLine + breakline +"\n" + toNextLine);

@@ -28,7 +28,7 @@ function AutoPageBreak() {
 
 //Undoing autoprint settings to minimize or prevent possible errors when editing the document after the printing event is done.
 function  UndoAutoPageBreak() {
-    $(".par").unwrap();
+    $("#noBreak > .par").unwrap();
 }
 
 
