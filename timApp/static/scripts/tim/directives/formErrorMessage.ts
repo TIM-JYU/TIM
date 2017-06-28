@@ -1,31 +1,27 @@
-
+import {IAttributes, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
+
 /**
  * Displays an error message for the given form element when it is invalid.
  */
-timApp.directive("timErrorMessage", [function() {
-    "use strict";
-    return {
-        restrict: "E",
-        scope: {
-            for: "=",
-        },
-        templateUrl: "/static/templates/formErrorMessage.html",
-    };
-}]);
+timApp.component("timErrorMessage", {
+    bindings: {
+        for: "=",
+    },
+    templateUrl: "/static/templates/formErrorMessage.html",
+});
 
 /**
  * Adds 'has-error' class to the element if the given form element is invalid and dirty; otherwise removes it.
  */
 timApp.directive("timErrorState", [function() {
-    "use strict";
     return {
         restrict: "A",
         scope: {
             for: "=",
         },
-        link($scope, $element, $attrs) {
-            $scope.$watch("for.$invalid", function(newVal, oldVal) {
+        link($scope: IScope, $element: IRootElementService, $attrs: IAttributes) {
+            $scope.$watch("for.$invalid", (newVal, oldVal) => {
                 if (newVal && $scope.for.$dirty) {
                     $element.addClass("has-error");
                 } else {

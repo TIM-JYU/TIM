@@ -1,20 +1,20 @@
 // from https://stackoverflow.com/a/14837021
+import {IAttributes, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import {$parse, $timeout} from "../ngimport";
 
-timApp.directive("focusMe", [function() {
-    "use strict";
+timApp.directive("focusMe", [() => {
     return {
-        link(scope, element, attrs) {
+        link(scope: IScope, element: IRootElementService, attrs: IAttributes) {
             const model = $parse(attrs.focusMe);
-            scope.$watch(model, function(value) {
+            scope.$watch(model, (value) => {
                 if (value === true) {
-                    $timeout(function() {
+                    $timeout(() => {
                         element[0].focus();
                     });
                 }
             });
-            element.bind("blur", function() {
+            element.bind("blur", () => {
                 // Catch "model.assign is not a function"
                 try {
                     scope.$apply(model.assign(scope, false));

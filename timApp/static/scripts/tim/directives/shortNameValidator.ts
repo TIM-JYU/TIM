@@ -1,13 +1,13 @@
+import {IAttributes, INgModelController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import {slugify} from "../services/slugify";
 
-timApp.directive("timShortName", [function() {
-    "use strict";
+timApp.directive("timShortName", [() => {
     return {
         require: "?ngModel",
-        link(scope, elm, attrs, ctrl: any) {
+        link(scope: IScope, elm: IRootElementService, attrs: IAttributes, ctrl: INgModelController) {
             if (ctrl) {
-                ctrl.$validators.timShortName = function(modelValue, viewValue) {
+                ctrl.$validators.timShortName = (modelValue, viewValue) => {
                     if (ctrl.$isEmpty(modelValue)) {
                         return true;
                     }
@@ -18,13 +18,12 @@ timApp.directive("timShortName", [function() {
     };
 }]);
 
-timApp.directive("timLocation", [function() {
-    "use strict";
+timApp.directive("timLocation", [() => {
     return {
         require: "?ngModel",
-        link(scope, elm, attrs, ctrl: any) {
+        link(scope: IScope, elm: IRootElementService, attrs: IAttributes, ctrl: INgModelController) {
             if (ctrl) {
-                ctrl.$validators.timLocation = function(modelValue, viewValue) {
+                ctrl.$validators.timLocation = (modelValue, viewValue) => {
                     if (ctrl.$isEmpty(modelValue)) {
                         return true;
                     }
