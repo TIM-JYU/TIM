@@ -1,4 +1,4 @@
-import angular from "angular";
+import angular, {IPromise, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {ParCompiler} from "../services/parCompiler";
@@ -14,7 +14,7 @@ import {$compile, $interval, $rootScope} from "../ngimport";
  * @author Minna Lehtomäki
  * @author Juhani Sihvonen
  * @author Hannu Viinikainen
- * @authos Vesa Lappalainen
+ * @author Vesa Lappalainen
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
@@ -229,465 +229,495 @@ export function fixQuestionJson(json) {
     json.rows = rows;
 }
 
-timApp.directive("dynamicAnswerSheet", [function() {
-    "use strict";
-    return {
-        restrict: "E",
-        scope: {
-            control: "=",
-            preview: "@",
-        },
-        transclude: true,
-        link($scope, $element) {
-            let promise;
-            let timeLeft;
-            let barFilled;
-            $scope.internalControl = $scope.control || {};
+type JSONData = {
+    headers: {text: string}[],
+    text: string,
+    rows: {
+        type: string,
+        text: string,
+        columns: {id: number}[],
+    }[],
+    columns?: {Value: string}[],
+};
 
-            $scope.cg = function() {
-                return "group"; // + $scope.gid;
-            };
+class AnswerSheetController {
+    private static $inject = ["$scope", "$element"];
 
-            /**
-             * Creates question answer/preview form.
-             */
-            $scope.internalControl.createAnswer = function(params) {
-                $scope.result = params.result;
-                $scope.gid = params.tid || "";
-                $scope.gid = $scope.gid.replace(".", "_");
-                $scope.buttonText = params.markup.button || params.markup.buttonText || "Answer";
+    private promise: IPromise<any>;
+    private timeLeft;
+    private barFilled;
+    private element: IRootElementService;
+    private buttonText: string;
+    private preview: boolean;
+    private gid: string;
+    private result: {};
+    private previousAnswer: {};
+    private json: {data: JSONData, timeLimit: number, questionText: string, questionType: string, answerFieldType: string} & JSONData;
+    private markup: string;
+    private answerTable: string[][];
+    private expl: string;
+    private askedTime: number;
+    private endTime: number;
+    private htmlSheet: JQuery;
+    private scope: IScope;
+    private progressElem: JQuery;
+    private isText: boolean;
+    private progressText: JQuery;
+    private $parent: any; // TODO require questioncontroller
 
-                const answclass = params.answclass || "answerSheet";
-                $scope.previousAnswer = params.previousAnswer;
+    constructor(scope: IScope, element: IRootElementService) {
+        this.element = element;
+        this.scope = scope;
 
-                let disabled = "";
-                // If showing preview or question result, inputs are disabled
-                if (params.preview || $scope.preview || $scope.result) {
-                    disabled = " disabled ";
+        /**
+         * Use time parameter to either close question/points window or extend question end time.
+         * If time is null, question/points is closed.
+         * Else time is set as questions new end time.
+         */
+        scope.$on("update_end_time", function(event, time) {
+            if (time !== null) {
+                this.endTime = time - this.$parent.vctrl.clockOffset;
+                this.progressElem.attr("max", this.endTime - this.askedTime);
+            } else {
+                if (!this.$parent.lctrl.isLecturer) {
+                    $interval.cancel(this.promise);
+                    this.element.empty();
+                    scope.$emit("closeQuestion");
                 }
-                if (params.noDisable) {
-                    disabled = "";
+            }
+        });
+    }
+
+    cg() {
+        return "group"; // + this.gid;
+    }
+
+    /**
+     * Creates question answer/preview form.
+     */
+    createAnswer(params) {
+        this.result = params.result;
+        this.gid = params.tid || "";
+        this.gid = this.gid.replace(".", "_");
+        this.buttonText = params.markup.button || params.markup.buttonText || "Answer";
+
+        const answclass = params.answclass || "answerSheet";
+        this.previousAnswer = params.previousAnswer;
+
+        let disabled = "";
+        // If showing preview or question result, inputs are disabled
+        if (params.preview || this.preview || this.result) {
+            disabled = " disabled ";
+        }
+        if (params.noDisable) {
+            disabled = "";
+        }
+
+        this.element.empty();
+        this.json = params.markup.json;
+        this.markup = params.markup;
+        const data = this.json.data || this.json; // compability to old format
+        const json = this.json;
+
+        fixQuestionJson(data);
+
+        this.answerTable = params.answerTable || [];
+
+        // If user has answer to question, create table of answers and select inputs according to it
+        if (this.previousAnswer) {
+            this.answerTable = getJsonAnswers(this.previousAnswer);
+        }
+        const answerTable = this.answerTable;
+        const pointsTable = getPointsTable(params.points || params.markup.points);
+
+        this.expl = params.expl || params.markup.expl || params.markup.xpl;
+        this.askedTime = params.askedTime - params.clockOffset;
+        this.endTime = params.askedTime + this.json.timeLimit * 1000 - params.clockOffset;
+
+        // var htmlSheet = $('<div>', {class: answclass});
+        const htmlSheet = $("<form>", {class: answclass});
+        this.htmlSheet = htmlSheet;
+        params.htmlSheet = htmlSheet;
+        if (this.json.timeLimit && this.endTime && !this.preview && !this.result) {
+            const progress = $("<progress>", {
+                max: (this.endTime - this.askedTime),
+                id: "progressBar",
+            });
+            htmlSheet.append(progress);
+            htmlSheet.append($("<span>", {
+                class: "progresslabel",
+                id: "progressLabel",
+                text: this.json.timeLimit + " s",
+            }));
+        }
+        const h5 = $("<h5>");
+        h5.append(fixLineBreaks(json.questionText));
+
+        htmlSheet.append(h5);
+        // htmlSheet.append($('<h5>', {text: json.questionText}));
+        if (params.markup.userpoints !== undefined) {
+            htmlSheet.append($("<p>", {text: "Points: " + params.markup.userpoints}));
+        }
+
+        const table = $("<table>", {id: "answer-sheet-table", class: "table table-borderless"});
+
+        let totalBorderless = true;
+
+        if (data.headers &&
+            data.headers.length > 0 && !(data.headers[0].text === "" && data.headers.length === 1)) {
+            const tr = $("<tr>", {class: "answer-heading-row"});
+            if (data.headers.length > 0) {
+                tr.append($("<th>"));
+            }
+            angular.forEach(data.headers, function(header) {
+                const th = $("<th>");
+                th.append(fixLineBreaks(header.text));
+                totalBorderless = false;
+                tr.append(th);
+                // tr.append($('<th>', {text: header.text || header}));
+            });
+            if (this.result && this.expl) {
+                tr.append($("<th>", {}));
+            }
+            table.append(tr);
+        }
+
+        let ir = -1;
+        angular.forEach(data.rows, function(row) {
+            ir++;
+            let pointsRow = {};
+            if (params.result && pointsTable.length > ir && pointsTable[ir]) {
+                pointsRow = pointsTable[ir];
+            }
+            const rtext = fixLineBreaks(row.text);
+            const tr = $("<tr>");
+            if (json.questionType === "matrix" || json.questionType === "true-false") {
+                const td = $("<td>");
+                td.append(rtext);
+                if (rtext && ir > 0) {
+                    totalBorderless = false;
                 }
+                tr.append(td);
+                //tr.append($('<td>', {text: row.text}));
+            }
+            let header = 0;
+            //TODO: Needs correct JSON to be made better way
+            for (let ic = 0; ic < row.columns.length; ic++) {
+                let group;
+                group = this.cg() + ir;
 
-                $element.empty();
-                $scope.json = params.markup.json;
-                $scope.markup = params.markup;
-                const data = $scope.json.data || $scope.json; // compability to old format
-                const json = $scope.json;
+                if (json.questionType === "matrix" || json.questionType === "true-false") {
+                    const value = "" + (ic + 1); // (row.columns[ic].id + 1).toString();
 
-                fixQuestionJson(data);
-
-                $scope.answerTable = params.answerTable || [];
-
-                // If user has answer to question, create table of answers and select inputs according to it
-                if ($scope.previousAnswer) {
-                    $scope.answerTable = getJsonAnswers($scope.previousAnswer);
-                }
-                const answerTable = $scope.answerTable;
-                const pointsTable = getPointsTable(params.points || params.markup.points);
-
-                $scope.expl = params.expl || params.markup.expl || params.markup.xpl;
-                $scope.askedTime = params.askedTime - params.clockOffset;
-                $scope.endTime = params.askedTime + $scope.json.timeLimit * 1000 - params.clockOffset;
-
-                // var htmlSheet = $('<div>', {class: answclass});
-                const htmlSheet = $("<form>", {class: answclass});
-                $scope.htmlSheet = htmlSheet;
-                params.htmlSheet = htmlSheet;
-                if ($scope.json.timeLimit !== "" && $scope.endTime && !$scope.preview && !$scope.result) {
-                    const progress = $("<progress>", {
-                        max: ($scope.endTime - $scope.askedTime),
-                        id: "progressBar",
-                    });
-                    htmlSheet.append(progress);
-                    htmlSheet.append($("<span>", {
-                        class: "progresslabel",
-                        id: "progressLabel",
-                        text: $scope.json.timeLimit + " s",
-                    }));
-                }
-                const h5 = $("<h5>");
-                h5.append(fixLineBreaks(json.questionText));
-
-                htmlSheet.append(h5);
-                // htmlSheet.append($('<h5>', {text: json.questionText}));
-                if (params.markup.userpoints !== undefined) {
-                    htmlSheet.append($("<p>", {text: "Points: " + params.markup.userpoints}));
-                }
-
-                const table = $("<table>", {id: "answer-sheet-table", class: "table table-borderless"});
-
-                let totalBorderless = true;
-
-                if (data.headers &&
-                    data.headers.length > 0 && !(data.headers[0].text === "" && data.headers.length === 1)) {
-                    const tr = $("<tr>", {class: "answer-heading-row"});
-                    if (data.headers.length > 0) {
-                        tr.append($("<th>"));
+                    let colTDPoints;
+                    let colPtsClass = "qst-normal";
+                    if (value in pointsRow) {
+                        const colPoints = pointsRow[value];
+                        colTDPoints = $("<p>", {class: "qst-points"}).append(colPoints);
+                        if (colPoints > 0) {
+                            colPtsClass = "qst-correct";
+                        }
                     }
-                    angular.forEach(data.headers, function(header) {
-                        const th = $("<th>");
-                        th.append(fixLineBreaks(header.text));
-                        totalBorderless = false;
-                        tr.append(th);
-                        // tr.append($('<th>', {text: header.text || header}));
-                    });
-                    if ($scope.result && $scope.expl) {
-                        tr.append($("<th>", {}));
-                    }
-                    table.append(tr);
-                }
+                    row.columns[ic].id = ic;
 
-                let ir = -1;
-                angular.forEach(data.rows, function(row) {
-                    ir++;
-                    let pointsRow = {};
-                    if (params.result && pointsTable.length > ir && pointsTable[ir]) {
-                        pointsRow = pointsTable[ir];
-                    }
-                    const rtext = fixLineBreaks(row.text);
-                    const tr = $("<tr>");
-                    if (json.questionType === "matrix" || json.questionType === "true-false") {
-                        const td = $("<td>");
-                        td.append(rtext);
-                        if (rtext && ir > 0) {
-                            totalBorderless = false;
+                    if (json.answerFieldType === "text") {
+                        this.isText = true;
+                        let text = "";
+                        if (answerTable && ir < answerTable.length && ic < answerTable[ir].length) {
+                            text = answerTable[ir][ic];
+                        }
+                        const textArea = $("<textarea>", {
+                            id: "textarea-answer",
+                            name: group,
+                        });
+                        textArea.text(text);
+                        if (disabled !== "") {
+                            textArea.attr("disabled", "disabled");
+                        }
+                        if (data.headers && data.headers.length === 1 && data.headers[0].text === "" && data.rows.length === 1) {
+                            // textArea.attr('style', 'height:200px');
+                        }
+                        tr.append($("<td>", {class: "answer-button"}).append($("<label>").append(textArea)));
+                        header++;
+                    } else {
+                        // group = this.cg() + rtext.replace(/[^a-zA-Z0-9]/g, "");
+                        let checked = false;
+                        if (answerTable && ir < answerTable.length) {
+                            checked = (answerTable[ir].indexOf(value) >= 0);
+                        }
+                        const input = $("<input>", {
+                            type: json.answerFieldType,
+                            name: group,
+                            value: ic + 1, // parseInt(row.columns[ic].id) + 1,
+                            checked,
+                        });
+                        if (json.answerFieldType === "radio") {
+                            input.prop("form", htmlSheet as any);
+                            input.click(uncheckRadio);  // TODO: Tähän muutoskäsittely ja jokaiseen tyyppiin tämä
+                        }
+                        if (disabled !== "") {
+                            input.attr("disabled", "disabled");
+                        }
+
+                        const td = $("<td>", {class: "answer-button"});
+                        const ispan = $("<span>", {class: colPtsClass});
+                        ispan.append(input);
+                        td.append($("<label>").append(ispan));
+
+                        if (colTDPoints) {
+                            td.append(colTDPoints);
                         }
                         tr.append(td);
-                        //tr.append($('<td>', {text: row.text}));
+                        header++;
                     }
-                    let header = 0;
-                    //TODO: Needs correct JSON to be made better way
-                    for (let ic = 0; ic < row.columns.length; ic++) {
-                        let group;
-                        group = $scope.cg() + ir;
-
-                        if (json.questionType === "matrix" || json.questionType === "true-false") {
-                            const value = "" + (ic + 1); // (row.columns[ic].id + 1).toString();
-
-                            let colTDPoints;
-                            let colPtsClass = "qst-normal";
-                            if (value in pointsRow) {
-                                const colPoints = pointsRow[value];
-                                colTDPoints = $("<p>", {class: "qst-points"}).append(colPoints);
-                                if (colPoints > 0) {
-                                    colPtsClass = "qst-correct";
-                                }
-                            }
-                            row.columns[ic].id = ic;
-
-                            if (json.answerFieldType === "text") {
-                                $scope.isText = true;
-                                let text = "";
-                                if (answerTable && ir < answerTable.length && ic < answerTable[ir].length) {
-                                    text = answerTable[ir][ic];
-                                }
-                                const textArea = $("<textarea>", {
-                                    id: "textarea-answer",
-                                    name: group,
-                                });
-                                textArea.text(text);
-                                if (disabled !== "") {
-                                    textArea.attr("disabled", "disabled");
-                                }
-                                if (data.headers && data.headers.length === 1 && data.headers[0].text === "" && data.rows.length === 1) {
-                                    // textArea.attr('style', 'height:200px');
-                                }
-                                tr.append($("<td>", {class: "answer-button"}).append($("<label>").append(textArea)));
-                                header++;
-                            } else {
-                                // group = $scope.cg() + rtext.replace(/[^a-zA-Z0-9]/g, "");
-                                let checked = false;
-                                if (answerTable && ir < answerTable.length) {
-                                    checked = (answerTable[ir].indexOf(value) >= 0);
-                                }
-                                const input = $("<input>", {
-                                    type: json.answerFieldType,
-                                    name: group,
-                                    value: ic + 1, // parseInt(row.columns[ic].id) + 1,
-                                    checked,
-                                });
-                                if (json.answerFieldType === "radio") {
-                                    input.prop("form", htmlSheet as any);
-                                    input.click(uncheckRadio);  // TODO: Tähän muutoskäsittely ja jokaiseen tyyppiin tämä
-                                }
-                                if (disabled !== "") {
-                                    input.attr("disabled", "disabled");
-                                }
-
-                                const td = $("<td>", {class: "answer-button"});
-                                const ispan = $("<span>", {class: colPtsClass});
-                                ispan.append(input);
-                                td.append($("<label>").append(ispan));
-
-                                if (colTDPoints) {
-                                    td.append(colTDPoints);
-                                }
-                                tr.append(td);
-                                header++;
-                            }
-                        } else {
-                            const value = "" + (ir + 1); // (row.id + 1).toString();
-                            let colTDPoints;
-                            let colPtsClass = "qst-normal";
-                            let pointsRow = {};
-                            if (params.result && pointsTable.length > 0 && pointsTable[0]) pointsRow = pointsTable[0];
-                            if (value in pointsRow) {
-                                const colPoints = pointsRow[value];
-                                colTDPoints = $("<p>", {class: "qst-points"}).append(colPoints);
-                                if (colPoints > 0) {
-                                    colPtsClass = "qst-correct";
-                                }
-                            }
-                            row.columns[ic].id = ic;
-
-                            const type = row.type || "question";
-                            group = $scope.cg() + type.replace(/[^a-zA-Z0-9]/g, "");
-                            let checked = false;
-                            if (answerTable && answerTable.length > 0) {
-                                checked = (answerTable[0].indexOf(value) >= 0);
-                            }
-                            const input = $("<input>", {
-                                type: json.answerFieldType,
-                                name: group,
-                                value: ir + 1, //parseInt(row.id) + 1,
-                                checked,
-                            });
-                            if (json.answerFieldType === "radio") {
-                                input.prop("form", htmlSheet as any);
-                                input.click(uncheckRadio);
-                            }
-                            if (disabled !== "") {
-                                input.attr("disabled", "disabled");
-                            }
-                            const label = $("<label>");
-                            const ispan = $("<span>", {class: colPtsClass});
-                            ispan.append(input);
-                            label.append(ispan).append(" " + deletePar("" + rtext));
-                            const td = $("<td>", {class: "answer-button2"});
-                            td.append(label);
-                            if (colTDPoints) {
-                                td.append(colTDPoints);
-                            }
-                            tr.append(td);
-                        }
-                    }
-                    // If showing question results, add question rows explanation
-                    if ($scope.result && $scope.expl) {
-                        let expl = "";
-                        const ir1 = (ir + 1).toString();
-                        if (ir1 in $scope.expl) {
-                            expl = $scope.expl[ir1];
-                        }
-                        const tde = $("<td>", {class: "explanation"});
-                        tde.append(expl);
-                        // tr.append($('<td>', {class: 'explanation', text: expl}));
-                        tr.append(tde);
-                    }
-                    table.append(tr);
-                });
-
-                htmlSheet.append($("<div>").append(table));
-
-                if (totalBorderless) {
-                    table.addClass("total-borderless");
-                }
-
-                $element.append(htmlSheet);
-                $compile($scope as any); // TODO this seems wrong
-
-                if (!$scope.preview && !$scope.result) {
-                    const $table = $element.find("#answer-sheet-table");
-                    window.setTimeout(function() {
-                        const $table = $element.find("#answer-sheet-table");
-                        let $input = null;
-                        if ($scope.json.answerFieldType !== "text") {
-                            $input = $table.find("input:first");
-                        } else {
-                            $input = $table.find("textarea:first");
-                        }
-                        if (params.isAsking) {
-                            $input[0].focus();
-                        }
-                    }, 0);
-                    //
-                    if (!$scope.isText) {
-                        $table.on("keyup.send", $scope.answerWithEnter);
-                    }
-                    const now = new Date().valueOf();
-                    timeLeft = $scope.endTime - now;
-                    barFilled = 0;
-                    if ($scope.endTime && $scope.json.timeLimit !== "") {
-                        const timeBetween = 500;
-                        const maxCount = timeLeft / timeBetween + 5 * timeBetween;
-                        $scope.progressElem = $("#progressBar");
-                        $scope.progressText = $("#progressLabel");
-                        $scope.start = function() {
-                            promise = $interval($scope.internalControl.updateBar, timeBetween, maxCount);
-                        };
-                        $scope.start();
-                    }
-                }
-                //GlobalParCompiler = ParCompiler;
-                ParCompiler.processAllMath($scope.htmlSheet);
-            };
-            // createAnswer ends
-
-            /**
-             * Use time parameter to either close question/points window or extend question end time.
-             * If time is null, question/points is closed.
-             * Else time is set as questions new end time.
-             */
-            $scope.$on("update_end_time", function(event, time) {
-                if (time !== null) {
-                    $scope.endTime = time - $scope.$parent.vctrl.clockOffset;
-                    $scope.progressElem.attr("max", $scope.endTime - $scope.askedTime);
                 } else {
-                    if (!$scope.$parent.lctrl.isLecturer) {
-                        $interval.cancel(promise);
-                        $element.empty();
-                        $scope.$emit("closeQuestion");
-                    }
-                }
-            });
-
-            /**
-             * Updates progressbar and time left text
-             * @memberof module:dynamicAnswerSheet
-             */
-            $scope.internalControl.updateBar = function() {
-                //TODO: Problem with inactive tab.
-                const now = new Date().valueOf();
-                if (!$scope.endTime || !promise) {
-                    return;
-                }
-                timeLeft = $scope.endTime - now;
-                barFilled = ($scope.endTime - $scope.askedTime) - ($scope.endTime - now);
-                $scope.progressElem.attr("value", (barFilled));
-                $scope.progressText.text(Math.max((timeLeft / 1000), 0).toFixed(0) + " s");
-                $scope.progressElem.attr("content", (Math.max((timeLeft / 1000), 0).toFixed(0) + " s"));
-                if (barFilled >= $scope.progressElem.attr("max")) {
-                    $interval.cancel(promise);
-                    if (!$scope.$parent.lctrl.isLecturer && !$scope.$parent.lctrl.questionEnded) {
-                        $scope.internalControl.answerToQuestion();
-                    } else {
-                        $scope.progressText.text("Time's up");
-                    }
-                    $scope.$parent.questionEnded = true;
-                }
-            };
-
-            $scope.internalControl.endQuestion = function() {
-                if (!promise) {
-                    return;
-                }
-                $interval.cancel(promise);
-                const max = $scope.progressElem.attr("max");
-                $scope.progressElem.attr("value", max);
-                $scope.progressText.text("Time's up");
-            };
-
-            $scope.answerWithEnter = function(e) {
-                if (e.keyCode === 13) {
-                    $("#answer-sheet-table").off("keyup.send");
-                    $scope.$parent.answer();
-                }
-            };
-
-            $scope.internalControl.getAnswers = function() {
-                const answers = [];
-                const data = $scope.json.data || $scope.json;
-                if (angular.isDefined(data.rows)) {
-                    let groupName; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
-                    if ($scope.json.questionType === "matrix" || $scope.json.questionType === "true-false") {
-                        for (let ir = 0; ir < data.rows.length; ir++) {
-                            groupName = $scope.cg() + ir;
-                            const answer = [];
-                            let matrixInputs;
-                            // groupName = $scope.cg() + ir; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
-
-                            if ($scope.json.answerFieldType === "text") {
-                                matrixInputs = $("textarea[name=" + groupName + "]", $scope.htmlSheet);
-                                for (let ic = 0; ic < matrixInputs.length; ic++) {
-                                    const v = matrixInputs[ic].value || "";
-                                    answer.push(v);
-                                }
-
-                                answers.push(answer);
-                                continue;
-                            }
-
-                            matrixInputs = $("input[name=" + groupName + "]:checked", $scope.htmlSheet);
-
-                            for (let k = 0; k < matrixInputs.length; k++) {
-                                const v = matrixInputs[k].value || "";
-                                answer.push(v);
-                            }
-                            if (matrixInputs.length <= 0) {
-                                answer.push("");
-                            }
-                            answers.push(answer);
-                        }
-                    } else {
-                        answers.push([]);
-                        const type = data.rows[0].type || "question";
-                        groupName = $scope.cg() + type.replace(/[^a-zA-Z0-9]/g, "");
-                        const checkedInputs = $("input[name=" + groupName + "]:checked", $scope.htmlSheet) as any as HTMLInputElement[];
-                        for (let j = 0; j < checkedInputs.length; j++) {
-                            answers[0].push(checkedInputs[j].value);
-                        }
-
-                        if (checkedInputs.length <= 0) {
-                            answers[0].push(""); // was "undefined"
+                    const value = "" + (ir + 1); // (row.id + 1).toString();
+                    let colTDPoints;
+                    let colPtsClass = "qst-normal";
+                    let pointsRow = {};
+                    if (params.result && pointsTable.length > 0 && pointsTable[0]) pointsRow = pointsTable[0];
+                    if (value in pointsRow) {
+                        const colPoints = pointsRow[value];
+                        colTDPoints = $("<p>", {class: "qst-points"}).append(colPoints);
+                        if (colPoints > 0) {
+                            colPtsClass = "qst-correct";
                         }
                     }
-                }
+                    row.columns[ic].id = ic;
 
-                if (angular.isDefined(data.columns)) {
-                    angular.forEach(data.columns, function(column) {
-                        const groupName = $scope.cg() + column.Value.replace(/ /g, "");
-                        answers.push($("input[name=" + groupName + "]:checked").val());
+                    const type = row.type || "question";
+                    group = this.cg() + type.replace(/[^a-zA-Z0-9]/g, "");
+                    let checked = false;
+                    if (answerTable && answerTable.length > 0) {
+                        checked = (answerTable[0].indexOf(value) >= 0);
+                    }
+                    const input = $("<input>", {
+                        type: json.answerFieldType,
+                        name: group,
+                        value: ir + 1, //parseInt(row.id) + 1,
+                        checked,
                     });
+                    if (json.answerFieldType === "radio") {
+                        input.prop("form", htmlSheet as any);
+                        input.click(uncheckRadio);
+                    }
+                    if (disabled !== "") {
+                        input.attr("disabled", "disabled");
+                    }
+                    const label = $("<label>");
+                    const ispan = $("<span>", {class: colPtsClass});
+                    ispan.append(input);
+                    label.append(ispan).append(" " + deletePar("" + rtext));
+                    const td = $("<td>", {class: "answer-button2"});
+                    td.append(label);
+                    if (colTDPoints) {
+                        td.append(colTDPoints);
+                    }
+                    tr.append(td);
+                }
+            }
+            // If showing question results, add question rows explanation
+            if (this.result && this.expl) {
+                let expl = "";
+                const ir1 = (ir + 1).toString();
+                if (ir1 in this.expl) {
+                    expl = this.expl[ir1];
+                }
+                const tde = $("<td>", {class: "explanation"});
+                tde.append(expl);
+                // tr.append($('<td>', {class: 'explanation', text: expl}));
+                tr.append(tde);
+            }
+            table.append(tr);
+        });
+
+        htmlSheet.append($("<div>").append(table));
+
+        if (totalBorderless) {
+            table.addClass("total-borderless");
+        }
+
+        this.element.append(htmlSheet);
+        $compile(this.scope as any); // TODO this seems wrong
+
+        if (!this.preview && !this.result) {
+            const $table = this.element.find("#answer-sheet-table");
+            window.setTimeout(function() {
+                const $table = this.element.find("#answer-sheet-table");
+                let $input = null;
+                if (this.json.answerFieldType !== "text") {
+                    $input = $table.find("input:first");
+                } else {
+                    $input = $table.find("textarea:first");
+                }
+                if (params.isAsking) {
+                    $input[0].focus();
+                }
+            }, 0);
+            //
+            if (!this.isText) {
+                $table.on("keyup.send", this.answerWithEnter);
+            }
+            const now = new Date().valueOf();
+            this.timeLeft = this.endTime - now;
+            this.barFilled = 0;
+            if (this.endTime && this.json.timeLimit) {
+                const timeBetween = 500;
+                const maxCount = this.timeLeft / timeBetween + 5 * timeBetween;
+                this.progressElem = $("#progressBar");
+                this.progressText = $("#progressLabel");
+                this.start(timeBetween, maxCount);
+            }
+        }
+        ParCompiler.processAllMath(this.htmlSheet);
+    }
+
+    start(timeBetween, maxCount) {
+        this.promise = $interval(this.updateBar, timeBetween, maxCount);
+    }
+
+    // createAnswer ends
+
+    /**
+     * Updates progressbar and time left text
+     * @memberof module:dynamicAnswerSheet
+     */
+    updateBar() {
+        //TODO: Problem with inactive tab.
+        const now = new Date().valueOf();
+        if (!this.endTime || !this.promise) {
+            return;
+        }
+        this.timeLeft = this.endTime - now;
+        this.barFilled = (this.endTime - this.askedTime) - (this.endTime - now);
+        this.progressElem.attr("value", (this.barFilled));
+        this.progressText.text(Math.max((this.timeLeft / 1000), 0).toFixed(0) + " s");
+        this.progressElem.attr("content", (Math.max((this.timeLeft / 1000), 0).toFixed(0) + " s"));
+        if (this.barFilled >= this.progressElem.attr("max")) {
+            $interval.cancel(this.promise);
+            if (!this.$parent.lctrl.isLecturer && !this.$parent.lctrl.questionEnded) {
+                this.answerToQuestion();
+            } else {
+                this.progressText.text("Time's up");
+            }
+            this.$parent.questionEnded = true;
+        }
+    }
+
+    endQuestion() {
+        if (!this.promise) {
+            return;
+        }
+        $interval.cancel(this.promise);
+        const max = this.progressElem.attr("max");
+        this.progressElem.attr("value", max);
+        this.progressText.text("Time's up");
+    }
+
+    answerWithEnter = (e) => {
+        if (e.keyCode === 13) {
+            $("#answer-sheet-table").off("keyup.send");
+            this.$parent.answer();
+        }
+    }
+
+    getAnswers() {
+        const answers = [];
+        const data = this.json.data || this.json;
+        if (angular.isDefined(data.rows)) {
+            let groupName; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
+            if (this.json.questionType === "matrix" || this.json.questionType === "true-false") {
+                for (let ir = 0; ir < data.rows.length; ir++) {
+                    groupName = this.cg() + ir;
+                    const answer = [];
+                    let matrixInputs;
+                    // groupName = this.cg() + ir; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
+
+                    if (this.json.answerFieldType === "text") {
+                        matrixInputs = $("textarea[name=" + groupName + "]", this.htmlSheet);
+                        for (let ic = 0; ic < matrixInputs.length; ic++) {
+                            const v = matrixInputs[ic].value || "";
+                            answer.push(v);
+                        }
+
+                        answers.push(answer);
+                        continue;
+                    }
+
+                    matrixInputs = $("input[name=" + groupName + "]:checked", this.htmlSheet);
+
+                    for (let k = 0; k < matrixInputs.length; k++) {
+                        const v = matrixInputs[k].value || "";
+                        answer.push(v);
+                    }
+                    if (matrixInputs.length <= 0) {
+                        answer.push("");
+                    }
+                    answers.push(answer);
+                }
+            } else {
+                answers.push([]);
+                const type = data.rows[0].type || "question";
+                groupName = this.cg() + type.replace(/[^a-zA-Z0-9]/g, "");
+                const checkedInputs = $("input[name=" + groupName + "]:checked", this.htmlSheet) as any as HTMLInputElement[];
+                for (let j = 0; j < checkedInputs.length; j++) {
+                    answers[0].push(checkedInputs[j].value);
                 }
 
-                return answers;
-
-            };
-
-            /**
-             * Function to create question answer and send it to server.
-             * @memberof module:dynamicAnswerSheet
-             */
-            $scope.internalControl.answerToQuestion = function() {
-
-                const answers = $scope.internalControl.getAnswers();
-
-                if (!$scope.$parent.lctrl.isLecturer) {
-                    $element.empty();
-                    $interval.cancel(promise);
+                if (checkedInputs.length <= 0) {
+                    answers[0].push(""); // was "undefined"
                 }
-                $scope.$emit("answerToQuestion", {answer: answers, askedId: $scope.$parent.askedId});
-            };
+            }
+        }
 
-            /**
-             * Closes question window and clears updateBar interval.
-             * If user is lecturer, also closes answer chart window.
-             * @memberof module:dynamicAnswerSheet
-             */
-            $scope.internalControl.closeQuestion = function() {
-                $interval.cancel(promise);
-                $element.empty();
-                $scope.$emit("closeQuestion");
-                if ($scope.$parent.isLecturer) {
-                    $rootScope.$broadcast("closeAnswerSheetForGood");
-                }
-            };
+        if (angular.isDefined(data.columns)) {
+            angular.forEach(data.columns, function(column) {
+                const groupName = this.cg() + column.Value.replace(/ /g, "");
+                answers.push($("input[name=" + groupName + "]:checked").val());
+            });
+        }
+        return answers;
+    }
 
-            $scope.internalControl.closePreview = function() {
-                $element.empty();
-            };
-        },
+    /**
+     * Function to create question answer and send it to server.
+     * @memberof module:dynamicAnswerSheet
+     */
+    answerToQuestion() {
 
-    };
-},
-]);
+        const answers = this.getAnswers();
+
+        if (!this.$parent.lctrl.isLecturer) {
+            this.element.empty();
+            $interval.cancel(this.promise);
+        }
+        this.scope.$emit("answerToQuestion", {answer: answers, askedId: this.$parent.askedId});
+    }
+
+    /**
+     * Closes question window and clears updateBar interval.
+     * If user is lecturer, also closes answer chart window.
+     * @memberof module:dynamicAnswerSheet
+     */
+    closeQuestion() {
+        $interval.cancel(this.promise);
+        this.element.empty();
+        this.scope.$emit("closeQuestion");
+        if (this.$parent.isLecturer) {
+            $rootScope.$broadcast("closeAnswerSheetForGood");
+        }
+    }
+
+    closePreview() {
+        this.element.empty();
+    }
+}
+
+timApp.component("dynamicAnswerSheet", {
+    bindings: {
+        control: "=",
+        preview: "@",
+    },
+    controller: AnswerSheetController,
+    transclude: true,
+});
