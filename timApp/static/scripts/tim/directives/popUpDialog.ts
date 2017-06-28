@@ -1,4 +1,6 @@
+import {IRootElementService} from "angular";
 import {timApp} from "tim/app";
+
 /**
  * FILL WITH SUITABLE TEXT
  * @module popUpDialog
@@ -11,57 +13,67 @@ import {timApp} from "tim/app";
  * @copyright 2015 Timppa project authors
  */
 
-timApp.directive("popUpDialog", function() {
-    const toDragOrNot = function() {
-        const width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
-        if (width > 500) {
-            return 'tim-draggable-fixed caption="{{caption}}"';
-        }
-    };
-    return {
-        restrict: "E",
-        scope: {
-            show: "=",
-            caption: "=",
-            elemId: "=",
-        },
-        template: "<div class='pop-up' ng-show='show' id='popUpBack'>" +
-        "<div class='pop-up-overlay'></div> " +
-        "<div id='{{elemId}}' class='pop-up-dialog' " + toDragOrNot() + " ng-mousedown='checkDown($event)' " +
-        "ng-mouseup='checkUp($event)' style='top:0; left: 0'>" +
-        "<div class='pop-up-dialog-content' ng-transclude></div>" +
-        "</div>" +
-        "</div>",
+function toDragOrNot() {
+    const width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+    if (width > 500) {
+        return 'tim-draggable-fixed caption="{{caption}}"';
+    }
+}
 
-        replace: true,
-        transclude: true,
+class PopupDialogController {
+    private element: IRootElementService;
+    private mouseDownX: number;
+    private mouseDownY: number;
 
-        link($scope, $element) {
-            /**
-             * FILL WITH SUITABLE TEXT
-             * @memberof module:popUpDialog
-             * @param e
-             */
-            $scope.checkDown = function(e) {
-                $scope.mouseDownX = e.clientX;
-                $scope.mouseDownY = e.clientY;
-                const window = $element.find("popUpBack");
-                const ctx = window.context as HTMLElement;
-                ctx.style.position = "absolute";
-                ctx.style.bottom = "auto";
+    constructor(element: IRootElementService) {
+        this.element = element;
+    }
 
-            };
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:popUpDialog
+     * @param e
+     */
+    checkDown(e: MouseEvent) {
+        this.mouseDownX = e.clientX;
+        this.mouseDownY = e.clientY;
+        const window = this.element.find("popUpBack");
+        const ctx = window.context as HTMLElement;
+        ctx.style.position = "absolute";
+        ctx.style.bottom = "auto";
 
-            /**
-             * FILL WITH SUITABLE TEXT
-             * @memberof module:popUpDialog
-             */
-            $scope.checkUp = function() {
-                const window = $element.find("popUpBack");
-                const ctx = window.context as HTMLElement;
-                ctx.style.position = "fixed";
-            };
-        },
+    }
 
-    };
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:popUpDialog
+     */
+    checkUp() {
+        const window = this.element.find("popUpBack");
+        const ctx = window.context as HTMLElement;
+        ctx.style.position = "fixed";
+    }
+}
+
+timApp.component("popUpDialog", {
+    bindings: {
+        caption: "=",
+        elemId: "=",
+        show: "=",
+    },
+    controller: PopupDialogController,
+    template: `<div class='pop-up' ng-show='show' id='popUpBack'>
+    <div class='pop-up-overlay'></div>
+    <div id='{{elemId}}'
+         class='pop-up-dialog'
+         ${toDragOrNot()}
+         ng-mousedown='$ctrl.checkDown($event)'
+         ng-mouseup='$ctrl.checkUp($event)'
+         style='top:0; left: 0'>
+        <div class='pop-up-dialog-content' ng-transclude>
+
+        </div>
+    </div>
+</div>`,
+    transclude: true,
 });
