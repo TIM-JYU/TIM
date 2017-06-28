@@ -1,125 +1,107 @@
-
+import {IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {watchEditMode} from "tim/editmode";
 import {$http, $window} from "../ngimport";
+
+class PopupMenuController {
+    private model: {editState: any};
+    private element: IRootElementService;
+    private contenturl: string;
+    private srcid: string;
+    private $pars: JQuery;
+    private editContext: string;
+    private editButton: boolean;
+    private areaEditButton: boolean;
+    private onClose: (pars: JQuery) => void;
+    private colClass: string;
+    private halfColClass: string;
+    private storageAttribute: false; // TODO
+
+    constructor(scope: IScope, element: IRootElementService) {
+        this.$pars = $(this.srcid);
+        this.editButton = false;
+        this.areaEditButton = false;
+        this.editContext = null;
+
+        this.getContent(this.contenturl);
+        this.colClass = this.storageAttribute ? "col-xs-10" : "col-xs-12";
+        this.halfColClass = this.storageAttribute ? "col-xs-5" : "col-xs-6";
+
+        this.model = {editState: $window.editMode};
+        this.element = element;
+        scope.$watch("model.editState", watchEditMode);
+        scope.$watch("model.editState", this.watchEditMode);
+
+        element.css("position", "absolute"); // IE needs this
+
+    }
+
+    closePopup() {
+        this.element.remove();
+
+        if (this.onClose) {
+            this.onClose(this.$pars);
+        }
+    }
+
+    /**
+     * Angular expressions can't reference DOM elements, so we use a "proxy" function.
+     * @param e Event object
+     * @param f The function to call
+     */
+    callFunc(e, f) {
+        f.func(e, this.$pars);
+        this.closePopup();
+    }
+
+    getChecked(fDesc) {
+        return ""; // TODO
+    }
+
+    clicked(fDesc) {
+        // TODO
+    }
+
+    getContent(contentUrl) {
+        if (!contentUrl) {
+            $("#content").remove();
+            return;
+        }
+
+        $http.get<{texts}>(contentUrl, {},
+        ).then((response) => {
+            //this.content = data.texts;
+            $("#content").append(response.data.texts);
+        }, () => {
+            $window.alert("Error occurred when getting contents.");
+        });
+    }
+
+    watchEditMode(newEditMode, oldEditMode) {
+        //$log.info("Edit context set from " + oldEditMode + " to " + newEditMode);
+        if (this.editContext && newEditMode && newEditMode != this.editContext) {
+            // We don't want to destroy our scope before returning from this function
+            $window.setTimeout(this.closePopup, 0.1);
+        }
+    }
+}
+
 /**
  * A popup menu directive that is used in the document view.
  * Requires a paragraph (element with class "par") or
  * an area (element with a class "area") as its ancestor.
  */
-timApp.directive("popupMenu", [function() {
-    "use strict";
-    return {
-        restrict: "E",
-        scope: true, // we need functions from parent scope
-        templateUrl: "/static/templates/popupMenu.html",
-        replace: true,
-
-        link($scope, $element, $attrs) {
-            $scope.$pars = $($attrs.srcid);
-            $scope.actions = eval("$scope." + $attrs.actions);
-            $scope.actionsAttr = $attrs.actions;
-            $scope.editButton = false;
-            $scope.areaEditButton = false;
-            $scope.editContext = null;
-
-            $scope.getContent($attrs.contenturl);
-            if ($attrs.save) {
-                $scope.storageAttribute = "$scope.$storage." + $attrs.save;
-            }
-            if ($attrs.onclose) {
-                $scope.onClose = eval("$scope." + $attrs.onclose);
-            }
-
-            if ($attrs.editcontext) {
-                $scope.editContext = $attrs.editcontext;
-            }
-            if ($attrs.editbutton) {
-                $scope.editButton = eval($attrs.editbutton);
-            }
-            if ($attrs.areaeditbutton) {
-                $scope.areaEditButton = eval($attrs.areaeditbutton);
-            }
-
-            $scope.colClass = $scope.storageAttribute ? "col-xs-10" : "col-xs-12";
-            $scope.halfColClass = $scope.storageAttribute ? "col-xs-5" : "col-xs-6";
-        },
-
-        controller: ["$scope", "$element", function($scope, $element) {
-            $scope.$watchGroup(["getLatestActions()"], function(newValues, oldValues, scope) {
-                // Update the menu if its items are changed
-                $scope.actions = newValues[0];
-            });
-
-            $scope.getLatestActions = function() {
-                return eval("$scope." + $scope.actionsAttr);
-            };
-
-            $scope.closePopup = function() {
-                $scope.$destroy();
-                $element.remove();
-
-                if ($scope.onClose) {
-                    $scope.onClose($scope.$pars);
-                }
-            };
-
-            /**
-             * Angular expressions can't reference DOM elements, so we use a "proxy" function.
-             * @param e Event object
-             * @param f The function to call
-             */
-            $scope.callFunc = function(e, f) {
-                f.func(e, $scope.$pars);
-                $scope.closePopup();
-            };
-
-            $scope.getChecked = function(fDesc) {
-                if (fDesc === null || $scope.$storage.defaultAction === null) {
-                    return "";
-                }
-
-                return fDesc === $scope.$storage.defaultAction ? "checked" : "";
-            };
-
-            $scope.clicked = function(fDesc) {
-                if (eval($scope.storageAttribute) === fDesc) {
-                    eval($scope.storageAttribute + " = null;");
-                }
-                else {
-                    eval($scope.storageAttribute + " = fDesc;");
-                }
-            };
-
-            $scope.getContent = function(contentUrl) {
-                if (!contentUrl) {
-                    $("#content").remove();
-                    return;
-                }
-
-                $http.get<{texts}>(contentUrl, {},
-                ).then(function(response) {
-                    //$scope.content = data.texts;
-                    $("#content").append(response.data.texts);
-                }, function() {
-                    $window.alert("Error occurred when getting contents.");
-                });
-            };
-
-            $scope.watchEditMode = function(newEditMode, oldEditMode) {
-                //$log.info("Edit context set from " + oldEditMode + " to " + newEditMode);
-                if ($scope.editContext && newEditMode && newEditMode != $scope.editContext) {
-                    // We don't want to destroy our scope before returning from this function
-                    $window.setTimeout($scope.closePopup, 0.1);
-                }
-            };
-
-            $scope.model = {editState: $window.editMode};
-            $scope.$watch("model.editState", watchEditMode);
-            $scope.$watch("model.editState", $scope.watchEditMode);
-
-            $element.css("position", "absolute"); // IE needs this
-        }],
-    };
-}]);
+timApp.component("popupMenu", {
+    bindings: {
+        save: "@",
+        onClose: "&",
+        editcontext: "@",
+        editbutton: "@",
+        areaEditButton: "<",
+        actions: "=",
+        srcid: "@",
+    },
+    controller: PopupMenuController,
+    templateUrl: "/static/templates/popupMenu.html",
+});
