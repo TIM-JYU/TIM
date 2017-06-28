@@ -1,3 +1,4 @@
+import {IScope} from "angular";
 import moment from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
@@ -6,230 +7,249 @@ import {$http, $window} from "../ngimport";
 
 markAsUsed(focusMe);
 
-timApp.directive("rightsEditor", [function() {
-    "use strict";
-    return {
-        restrict: "E",
-        scope: {
-            itemId: "=?",
-            urlRoot: "@?",
-            accessTypes: "=?",
-            control: "=?",
-        },
-        templateUrl: "/static/templates/rightsEditor.html",
-        link($scope, $element) {
-
-        },
-
-        controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
-            const sc = $scope;
-            sc.internalControl = sc.control || {};
-            sc.grouprights = [];
-            sc.timeOpt = {};
-            sc.selectedRight = null;
-            sc.showActiveOnly = true;
-            sc.timeOpt.type = "always";
-            sc.timeOpt.durationType = "hours";
-            sc.timeOpt.durationAmount = 4;
-            sc.durationTypes = ["seconds", "minutes", "hours", "days", "weeks", "months", "years"];
-            sc.datePickerOptionsFrom = {
-                format: "D.M.YYYY HH:mm:ss",
-                defaultDate: moment(),
-                showTodayButton: true,
-            };
-            sc.datePickerOptionsTo = {
-                format: "D.M.YYYY HH:mm:ss",
-                defaultDate: moment(),
-                showTodayButton: true,
-            };
-            sc.datePickerOptionsDurationFrom = {
-                format: "D.M.YYYY HH:mm:ss",
-                showTodayButton: true,
-            };
-            sc.datePickerOptionsDurationTo = {
-                format: "D.M.YYYY HH:mm:ss",
-                showTodayButton: true,
-            };
-            if (sc.accessTypes) {
-                sc.accessType = sc.accessTypes[0];
-            }
-
-            sc.showAddRightFn = function(type) {
-                sc.accessType = type;
-                sc.selectedRight = null;
-                sc.addingRight = true;
-                sc.focusEditor = true;
-            };
-
-            sc.removeConfirm = function(group, type) {
-                if ($window.confirm("Remove " + type + " right from " + group.name + "?")) {
-                    sc.removePermission(group, type);
-                }
-            };
-
-            sc.getPermissions = function() {
-                if (!sc.urlRoot || !sc.itemId) {
-                    return;
-                }
-                $http.get<{grouprights, accesstypes}>("/" + sc.urlRoot + "/get/" + sc.itemId).then(function(response) {
-                    const data = response.data;
-                    sc.grouprights = data.grouprights;
-                    if (data.accesstypes) {
-                        sc.accessTypes = data.accesstypes;
-                        if (!sc.accessType) {
-                            sc.accessType = sc.accessTypes[0];
-                        }
-                    }
-                }, function(response) {
-                    $window.alert("Could not fetch permissions.");
-                });
-            };
-
-            sc.removePermission = function(right, type) {
-                $http.put("/" + sc.urlRoot + "/remove/" + sc.itemId + "/" + right.gid + "/" + type, {}).then(function(response) {
-                    sc.getPermissions();
-                }, function(response) {
-                    $window.alert(response.data.error);
-                });
-            };
-
-            sc.cancel = function() {
-                sc.addingRight = false;
-                sc.selectedRight = null;
-            };
-
-            sc.editingRight = function() {
-                return sc.selectedRight !== null;
-            };
-
-            sc.addOrEditPermission = function(groupname, type) {
-                $http.put("/" + sc.urlRoot + "/add/" + sc.itemId + "/" + groupname.split("\n").join(";") + "/" + type.name,
-                    sc.timeOpt).then(function(response) {
-                        sc.getPermissions();
-                        sc.cancel();
-                    }, function(response) {
-                        $window.alert(response.data.error);
-                    });
-            };
-
-            sc.getPlaceholder = function() {
-                return "enter username(s)/group name(s) separated by semicolons" + (sc.listMode ? " or newlines" : "");
-            };
-
-            sc.getGroupDesc = function(group) {
-                return group.fullname ? group.fullname + " (" + group.name + ")" : group.name;
-            };
-
-            sc.shouldShowBeginTime = function(group) {
-                // having -1 here (instead of 0) avoids "begins in a few seconds" right after adding a right
-                return moment().diff(group.accessible_from, "seconds") < -1;
-            };
-
-            sc.shouldShowEndTime = function(group) {
-                return group.accessible_to !== null && moment().diff(group.accessible_to) <= 0;
-            };
-
-            sc.shouldShowEndedTime = function(group) {
-                return group.accessible_to !== null && moment().diff(group.accessible_to) > 0;
-            };
-
-            sc.shouldShowDuration = function(group) {
-                return group.duration !== null && group.accessible_from === null;
-            };
-
-            sc.shouldShowUnlockable = function(group) {
-                return group.duration !== null &&
-                    group.duration_from !== null &&
-                    group.accessible_from === null &&
-                    moment().diff(group.duration_from) < 0;
-            };
-
-            sc.shouldShowNotUnlockable = function(group) {
-                return group.duration !== null &&
-                    group.duration_to !== null &&
-                    group.accessible_from === null &&
-                    moment().diff(group.duration_to) <= 0;
-            };
-
-            sc.shouldShowNotUnlockableAnymore = function(group) {
-                return group.duration !== null &&
-                    group.duration_to !== null &&
-                    group.accessible_from === null &&
-                    moment().diff(group.duration_to) > 0;
-            };
-
-            sc.isObsolete = function(group) {
-                return sc.shouldShowEndedTime(group) || sc.shouldShowNotUnlockableAnymore(group);
-            };
-
-            sc.obsoleteFilterFn = function(group) {
-                return !sc.showActiveOnly || !sc.isObsolete(group);
-            };
-
-            sc.showClock = function(group) {
-                return group.duration !== null || group.accessible_to !== null;
-            };
-
-            // TODO make duration editor its own component
-            sc.$watchGroup(["timeOpt.durationAmount", "timeOpt.durationType"], function(newValues, oldValues, scope) {
-                sc.timeOpt.duration = moment.duration(sc.timeOpt.durationAmount, sc.timeOpt.durationType);
-            });
-
-            sc.expireRight = function(group) {
-                sc.editRight(group);
-                sc.timeOpt.to = moment();
-                sc.timeOpt.type = "range";
-                sc.addOrEditPermission(group.name, sc.accessType);
-            };
-
-            sc.editRight = function(group) {
-                sc.groupName = group.name;
-                sc.accessType = {id: group.access_type, name: group.access_name};
-                sc.addingRight = false;
-                sc.selectedRight = group;
-
-                if (group.duration_from) {
-                    sc.timeOpt.durationFrom = moment(group.duration_from);
-                } else {
-                    sc.timeOpt.durationFrom = null;
-                }
-                if (group.duration_to) {
-                    sc.timeOpt.durationTo = moment(group.duration_to);
-                } else {
-                    sc.timeOpt.durationTo = null;
-                }
-
-                if (group.accessible_from) {
-                    sc.timeOpt.from = moment(group.accessible_from);
-                } else {
-                    sc.timeOpt.from = null;
-                }
-                if (group.accessible_to) {
-                    sc.timeOpt.to = moment(group.accessible_to);
-                } else {
-                    sc.timeOpt.to = null;
-                }
-
-                if (group.duration && group.accessible_from === null) {
-                    const d = moment.duration(group.duration);
-                    sc.timeOpt.type = "duration";
-                    for (let i = sc.durationTypes.length - 1; i >= 0; --i) {
-                        const amount = d.as(sc.durationTypes[i]);
-                        if (Math.floor(amount) === amount || i === 0) {
-                            // preserve last duration type choice if the amount is zero
-                            if (amount !== 0) {
-                                sc.timeOpt.durationType = sc.durationTypes[i];
-                            }
-                            sc.timeOpt.durationAmount = amount;
-                            break;
-                        }
-                    }
-                } else {
-                    sc.timeOpt.type = "range";
-                }
-            };
-
-            sc.getPermissions();
-        }],
+class RightsEditorController {
+    private static $inject = ["$scope"];
+    private timeOpt: {
+        type: string,
+        durationType: moment.unitOfTime.Base,
+        durationAmount: number,
+        duration?: moment.Duration,
+        to?: moment.Moment,
+        from?: moment.Moment,
+        durationTo?: moment.Moment,
+        durationFrom?: moment.Moment,
     };
-}]);
+    private grouprights: {}[];
+    private showActiveOnly: boolean;
+    private durationTypes: moment.unitOfTime.Base[];
+    private selectedRight: {};
+    private datePickerOptionsFrom: EonasdanBootstrapDatetimepicker.SetOptions;
+    private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
+    private datePickerOptionsDurationFrom: EonasdanBootstrapDatetimepicker.SetOptions;
+    private datePickerOptionsDurationTo: EonasdanBootstrapDatetimepicker.SetOptions;
+    private accessTypes: {}[];
+    private accessType: {};
+    private addingRight: boolean;
+    private focusEditor: boolean;
+    private urlRoot: string;
+    private itemId: number;
+    private listMode: boolean;
+    private groupName: string;
+
+    constructor(scope: IScope) {
+        this.grouprights = [];
+        this.timeOpt = {type: "always", durationType: "hours", durationAmount: 4};
+        this.selectedRight = null;
+        this.showActiveOnly = true;
+        this.durationTypes = ["seconds", "minutes", "hours", "days", "weeks", "months", "years"];
+        this.datePickerOptionsFrom = {
+            format: "D.M.YYYY HH:mm:ss",
+            defaultDate: moment(),
+            showTodayButton: true,
+        };
+        this.datePickerOptionsTo = {
+            format: "D.M.YYYY HH:mm:ss",
+            defaultDate: moment(),
+            showTodayButton: true,
+        };
+        this.datePickerOptionsDurationFrom = {
+            format: "D.M.YYYY HH:mm:ss",
+            showTodayButton: true,
+        };
+        this.datePickerOptionsDurationTo = {
+            format: "D.M.YYYY HH:mm:ss",
+            showTodayButton: true,
+        };
+        if (this.accessTypes) {
+            this.accessType = this.accessTypes[0];
+        }
+
+        this.getPermissions();
+
+        // TODO make duration editor its own component
+        scope.$watchGroup([() => this.timeOpt.durationAmount, () => this.timeOpt.durationType], (newValues, oldValues, scope) => {
+            this.timeOpt.duration = moment.duration(this.timeOpt.durationAmount, this.timeOpt.durationType);
+        });
+    }
+
+    showAddRightFn(type) {
+        this.accessType = type;
+        this.selectedRight = null;
+        this.addingRight = true;
+        this.focusEditor = true;
+    }
+
+    removeConfirm(group, type) {
+        if ($window.confirm("Remove " + type + " right from " + group.name + "?")) {
+            this.removePermission(group, type);
+        }
+    }
+
+    getPermissions() {
+        if (!this.urlRoot || !this.itemId) {
+            return;
+        }
+        $http.get<{grouprights, accesstypes}>("/" + this.urlRoot + "/get/" + this.itemId).then((response) => {
+            const data = response.data;
+            this.grouprights = data.grouprights;
+            if (data.accesstypes) {
+                this.accessTypes = data.accesstypes;
+                if (!this.accessType) {
+                    this.accessType = this.accessTypes[0];
+                }
+            }
+        }, (response) => {
+            $window.alert("Could not fetch permissions.");
+        });
+    }
+
+    removePermission(right, type) {
+        $http.put("/" + this.urlRoot + "/remove/" + this.itemId + "/" + right.gid + "/" + type, {}).then((response) => {
+            this.getPermissions();
+        }, (response) => {
+            $window.alert(response.data.error);
+        });
+    }
+
+    cancel() {
+        this.addingRight = false;
+        this.selectedRight = null;
+    }
+
+    editingRight() {
+        return this.selectedRight !== null;
+    }
+
+    addOrEditPermission(groupname, type) {
+        $http.put("/" + this.urlRoot + "/add/" + this.itemId + "/" + groupname.split("\n").join(";") + "/" + type.name,
+            this.timeOpt).then((response) => {
+            this.getPermissions();
+            this.cancel();
+        }, (response) => {
+            $window.alert(response.data.error);
+        });
+    }
+
+    getPlaceholder() {
+        return "enter username(s)/group name(s) separated by semicolons" + (this.listMode ? " or newlines" : "");
+    }
+
+    getGroupDesc(group) {
+        return group.fullname ? group.fullname + " (" + group.name + ")" : group.name;
+    }
+
+    shouldShowBeginTime(group) {
+        // having -1 here (instead of 0) avoids "begins in a few seconds" right after adding a right
+        return moment().diff(group.accessible_from, "seconds") < -1;
+    }
+
+    shouldShowEndTime(group) {
+        return group.accessible_to !== null && moment().diff(group.accessible_to) <= 0;
+    }
+
+    shouldShowEndedTime(group) {
+        return group.accessible_to !== null && moment().diff(group.accessible_to) > 0;
+    }
+
+    shouldShowDuration(group) {
+        return group.duration !== null && group.accessible_from === null;
+    }
+
+    shouldShowUnlockable(group) {
+        return group.duration !== null &&
+            group.duration_from !== null &&
+            group.accessible_from === null &&
+            moment().diff(group.duration_from) < 0;
+    }
+
+    shouldShowNotUnlockable(group) {
+        return group.duration !== null &&
+            group.duration_to !== null &&
+            group.accessible_from === null &&
+            moment().diff(group.duration_to) <= 0;
+    }
+
+    shouldShowNotUnlockableAnymore(group) {
+        return group.duration !== null &&
+            group.duration_to !== null &&
+            group.accessible_from === null &&
+            moment().diff(group.duration_to) > 0;
+    }
+
+    isObsolete(group) {
+        return this.shouldShowEndedTime(group) || this.shouldShowNotUnlockableAnymore(group);
+    }
+
+    obsoleteFilterFn(group) {
+        return !this.showActiveOnly || !this.isObsolete(group);
+    }
+
+    showClock(group) {
+        return group.duration !== null || group.accessible_to !== null;
+    }
+
+    expireRight(group) {
+        this.editRight(group);
+        this.timeOpt.to = moment();
+        this.timeOpt.type = "range";
+        this.addOrEditPermission(group.name, this.accessType);
+    }
+
+    editRight(group) {
+        this.groupName = group.name;
+        this.accessType = {id: group.access_type, name: group.access_name};
+        this.addingRight = false;
+        this.selectedRight = group;
+
+        if (group.duration_from) {
+            this.timeOpt.durationFrom = moment(group.duration_from);
+        } else {
+            this.timeOpt.durationFrom = null;
+        }
+        if (group.duration_to) {
+            this.timeOpt.durationTo = moment(group.duration_to);
+        } else {
+            this.timeOpt.durationTo = null;
+        }
+
+        if (group.accessible_from) {
+            this.timeOpt.from = moment(group.accessible_from);
+        } else {
+            this.timeOpt.from = null;
+        }
+        if (group.accessible_to) {
+            this.timeOpt.to = moment(group.accessible_to);
+        } else {
+            this.timeOpt.to = null;
+        }
+
+        if (group.duration && group.accessible_from === null) {
+            const d = moment.duration(group.duration);
+            this.timeOpt.type = "duration";
+            for (let i = this.durationTypes.length - 1; i >= 0; --i) {
+                const amount = d.as(this.durationTypes[i]);
+                if (Math.floor(amount) === amount || i === 0) {
+                    // preserve last duration type choice if the amount is zero
+                    if (amount !== 0) {
+                        this.timeOpt.durationType = this.durationTypes[i];
+                    }
+                    this.timeOpt.durationAmount = amount;
+                    break;
+                }
+            }
+        } else {
+            this.timeOpt.type = "range";
+        }
+    }
+}
+
+timApp.component("rightsEditor", {
+    bindings: {
+        accessTypes: "=?",
+        control: "=?",
+        itemId: "=?",
+        urlRoot: "@?",
+    },
+    controller: RightsEditorController,
+    templateUrl: "/static/templates/rightsEditor.html",
+});
