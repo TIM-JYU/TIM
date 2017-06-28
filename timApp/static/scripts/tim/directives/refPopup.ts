@@ -1,62 +1,46 @@
-
+import {IRootElementService} from "angular";
 import {timApp} from "tim/app";
 import {$http} from "../ngimport";
+
+class RefPopupController {
+    private loaded: boolean;
+    private ref_loaded: boolean;
+    private docid: number;
+    private parid: string;
+    private error: string;
+    private doc_name: string;
+    private doc_author: string;
+    private par_name: string;
+
+    constructor(element: IRootElementService) {
+        this.loaded = false;
+        $http.get("/par_info/" + this.docid + "/" + this.parid).then(this.loadSuccess, this.loadFail);
+        this.ref_loaded = true;
+        this.loaded = true;
+        element.css("position", "absolute"); // IE needs this
+    }
+
+    loadSuccess(response) {
+        this.doc_name = response.data.doc_name;
+        this.doc_author = response.data.doc_author;
+        this.par_name = response.data.par_name;
+        this.loaded = true;
+    }
+
+    loadFail(response) {
+        this.error = response.data.error;
+        this.loaded = true;
+    }
+}
+
 /**
  * A reference popup window directive that is used in the document view.
  */
-timApp.directive("refPopup", [function() {
-    return {
-        restrict: "E",
-        scope: true, // we need functions from parent scope
-        templateUrl: "/static/templates/refPopup.html",
-        replace: true,
-
-        link($scope, $element, $attrs) {
-            $scope.loaded = false;
-            if ("docid" in $attrs && "parid" in $attrs) {
-                //$scope.ref_docid = $attrs.docid;
-                //$scope.ref_parid = $attrs.parid;
-                $http.get("/par_info/" + $attrs.docid + "/" + $attrs.parid).then($scope.loadSuccess, $scope.loadFail);
-                $scope.ref_loaded = true;
-            }
-        },
-
-        controller: ["$scope", "$element", function($scope, $element) {
-            $scope.closePopup = function() {
-                $scope.$destroy();
-                $element.remove();
-            };
-
-            /**
-             * Angular expressions can't reference DOM elements, so we use a "proxy" function.
-             * @param e Event object
-             * @param f The function to call
-             */
-            $scope.callFunc = function(e, f) {
-                f.func(e, $scope.$par);
-                $scope.closePopup();
-            };
-
-            $scope.loadSuccess = function(response) {
-                const known_attrs = ["doc_name", "doc_author", "par_name"];
-
-                for (const i in known_attrs) {
-                    const attr = known_attrs[i];
-                    if (attr in response.data) {
-                        $scope[attr] = response.data[attr];
-                    }
-                }
-
-                $scope.loaded = true;
-            };
-
-            $scope.loadFail = function(response) {
-                $scope.error = response.data.error;
-                $scope.loaded = true;
-            };
-
-            $scope.loaded = true;
-            $element.css("position", "absolute"); // IE needs this
-        }],
-    };
-}]);
+timApp.component("refPopup", {
+    bindings: {
+        docid: "<",
+        parid: "<",
+    },
+    controller: RefPopupController,
+    templateUrl: "/static/templates/refPopup.html",
+});
