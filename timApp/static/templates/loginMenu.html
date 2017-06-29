@@ -1,4 +1,4 @@
-    <button ng-show="!loginCtrl.isLoggedIn()"
+    <button ng-show="!$ctrl.isLoggedIn()"
             uib-popover-template="'loginTemplate.html'"
             popover-title="Log in"
             popover-placement="bottom"
@@ -9,17 +9,17 @@
     </button>
 
     <script type="text/ng-template" id="loginTemplate.html">
-        <div class="row" ng-click="loginCtrl.stopClick($event)">
+        <div class="row" ng-click="$ctrl.stopClick($event)">
             <div class="col-sm-12">
-                <form ng-submit="loginCtrl.loginWithEmail()">
+                <form ng-submit="$ctrl.loginWithEmail()">
                     <p class="text-center">
                         JYU students and staff, please log in with Korppi:
                     </p>
 
-                    <button class="timButton center-block" type="button" ng-click="loginCtrl.korppiLogin(loginCtrl.addingToSession)">Log in
+                    <button class="timButton center-block" type="button" ng-click="$ctrl.korppiLogin($ctrl.addingToSession)">Log in
                         with Korppi
                     </button>
-                    <img class="center-block" ng-show="loginCtrl.korppiLoading" src="/static/images/loading.gif">
+                    <img class="center-block" ng-show="$ctrl.korppiLoading" src="/static/images/loading.gif">
                     <hr>
                     <p class="text-center">
                         Others, please log in with your TIM account.
@@ -27,12 +27,12 @@
 
                     <div class="form-group">
                         <label for="email" class="control-label">Email</label>
-                        <input class="form-control" id="email" ng-model="loginCtrl.form.email" type="email">
+                        <input class="form-control" id="email" ng-model="$ctrl.form.email" type="email">
                     </div>
 
                     <div class="form-group">
                         <label for="password" class="control-label">Password</label>
-                        <input class="form-control" id="password" ng-model="loginCtrl.form.password" type="password">
+                        <input class="form-control" id="password" ng-model="$ctrl.form.password" type="password">
                     </div>
 
                     <button class="center-block timButton" type="submit">Log in</button>
@@ -40,9 +40,9 @@
                     <p class="text-center">
                         Not a JYU student or staff member and don't have a TIM account?
                     </p>
-                    <button ng-show="!loginCtrl.showSignup" class="center-block timButton" type="button" ng-click="loginCtrl.showSignup = true">Sign up</button>
+                    <button ng-show="!$ctrl.showSignup" class="center-block timButton" type="button" ng-click="$ctrl.showSignup = true">Sign up</button>
                 </form>
-                <form ng-show="loginCtrl.showSignup" action="/altsignup" autocomplete="off"
+                <form ng-show="$ctrl.showSignup" action="/altsignup" autocomplete="off"
                       method="post">
                     <div class="form-group">
                         <label for="email-signup" class="control-label">Email</label>
@@ -59,11 +59,11 @@
         </div>
     </script>
 
-    <div ng-show="loginCtrl.isLoggedIn()" class="btn-group margin-4" uib-dropdown on-toggle="loginCtrl.toggled(open)">
+    <div ng-show="$ctrl.isLoggedIn()" class="btn-group margin-4" uib-dropdown on-toggle="$ctrl.toggled(open)">
         <button type="button" title="You're logged in" class="btn btn-primary" uib-dropdown-toggle>
-            {{ loginCtrl.getCurrentUser().real_name }} <span
-                ng-show="loginCtrl.getSessionUsers().length > 0">and {{ loginCtrl.getSessionUsers().length }} <ng-pluralize
-                count="loginCtrl.getSessionUsers().length"
+            {{ $ctrl.getCurrentUser().real_name }} <span
+                ng-show="$ctrl.getSessionUsers().length > 0">and {{ $ctrl.getSessionUsers().length }} <ng-pluralize
+                count="$ctrl.getSessionUsers().length"
                 when="{'1': 'other',
                      'other': 'others'}">
         </ng-pluralize></span> <span class="caret"></span>
@@ -72,29 +72,29 @@
             uib-dropdown-menu
             role="menu"
             aria-labelledby="single-button">
-            <li role="menuitem"><a ng-href="/view/{{ loginCtrl.getCurrentUser().folder.path }}">My documents</a></li>
+            <li role="menuitem"><a ng-href="/view/{{ $ctrl.getCurrentUser().folder.path }}">My documents</a></li>
             <li role="menuitem"><a
-                    ng-click="loginCtrl.addUser($event)"
+                    ng-click="$ctrl.addUser($event)"
                     uib-popover-template="'loginTemplate.html'"
-                    popover-is-open="loginCtrl.addingToSession"
+                    popover-is-open="$ctrl.addingToSession"
                     popover-title="Add a user to this session"
                     popover-placement="auto bottom"
                     popover-append-to-body="true"
                     popover-animation="false"
                     href="#">Add a user to this session...</a></li>
             <li class="divider"></li>
-            <li ng-show="!loginCtrl.loggingout" role="menuitem">
-                <a ng-click="loginCtrl.beginLogout($event)" href="#">Log <span
-                    ng-show="loginCtrl.getSessionUsers().length > 0">everyone</span>
-                out<span ng-show="loginCtrl.isKorppi()">...</span></a>
+            <li ng-show="!$ctrl.loggingout" role="menuitem">
+                <a ng-click="$ctrl.beginLogout($event)" href="#">Log <span
+                    ng-show="$ctrl.getSessionUsers().length > 0">everyone</span>
+                out<span ng-show="$ctrl.isKorppi()">...</span></a>
             </li>
-            <li ng-show="loginCtrl.loggingout" role="menuitem">
+            <li ng-show="$ctrl.loggingout" role="menuitem">
                 <a ng-click="logout(getCurrentUser(), true)" href="#">Log out (TIM + Korppi)</a>
             </li>
-            <li ng-show="loginCtrl.loggingout" role="menuitem">
-                <a ng-click="loginCtrl.logout(loginCtrl.getCurrentUser(), false)" href="#">Log out (TIM only)</a>
+            <li ng-show="$ctrl.loggingout" role="menuitem">
+                <a ng-click="$ctrl.logout($ctrl.getCurrentUser(), false)" href="#">Log out (TIM only)</a>
             </li>
-            <li role="menuitem" ng-repeat="u in loginCtrl.getSessionUsers()"><a ng-click="logout(u)"
+            <li role="menuitem" ng-repeat="u in $ctrl.getSessionUsers()"><a ng-click="logout(u)"
                                                                       href="#">Log {{ u.real_name }} out</a></li>
         </ul>
     </div>
