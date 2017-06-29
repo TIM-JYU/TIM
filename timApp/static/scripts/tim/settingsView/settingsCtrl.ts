@@ -2,35 +2,47 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {$http, $window} from "../ngimport";
 
-timApp.controller("SettingsCtrl", ["$scope", function(sc) {
-    sc.settings = $window.settings;
-    sc.submit = async function(saveUrl) {
-        sc.saving = true;
+export class SettingsCtrl {
+    private saving: boolean;
+    private style: HTMLElementTagNameMap["style"];
+    private settings: {css_combined: string};
+
+    constructor() {
+        this.settings = $window.settings;
+        $(".docEditor").change(function() {
+            this.style.innerHTML = this.settings.custom_css;
+        });
+
+        this.updateCss();
+        this.style = document.createElement("style");
+        this.style.type = "text/css";
+        document.getElementsByTagName("head")[0].appendChild(this.style);
+    }
+
+    async submit(saveUrl) {
+        this.saving = true;
         try {
-            const data = await $http.post(saveUrl, sc.settings);
-            sc.settings = data;
-            sc.updateCss();
+            const response = await $http.post<{css_combined: string}>(saveUrl, this.settings);
+            this.settings = response.data;
+            this.updateCss();
         } catch (e) {
             alert("Failed to save settings.");
         } finally {
-            sc.saving = false;
+            this.saving = false;
         }
-    };
+    }
 
-    sc.updateCss = function() {
-        $('link[rel="stylesheet"]').first().attr("href", "/static/gen/" + sc.settings.css_combined + ".css");
-    };
+    updateCss() {
+        $('link[rel="stylesheet"]').first().attr("href", "/static/gen/" + this.settings.css_combined + ".css");
+    }
 
-    sc.clearLocalStorage = function() {
+    clearLocalStorage() {
         window.localStorage.clear();
-    };
+    }
+}
 
-    $(".docEditor").change(function() {
-        sc.style.innerHTML = sc.settings.custom_css;
-    });
-
-    sc.updateCss();
-    sc.style = document.createElement("style");
-    sc.style.type = "text/css";
-    document.getElementsByTagName("head")[0].appendChild(sc.style);
-}]);
+timApp.component("timSettings", {
+    controller: SettingsCtrl,
+    template: "<div ng-transclude></div>",
+    transclude: true,
+});
