@@ -11,7 +11,7 @@
 {% endblock %}
 {% block content %}
     <tim-settings>
-        <div class="panel panel-default">
+        <div ng-init="$ctrl = $parent.$ctrl" class="panel panel-default">
             <div class="panel-heading">Styles</div>
             <div class="panel-body">
                 <form ng-submit="submit('{{ request.path + 'save' }}')">
@@ -24,21 +24,21 @@
                     {% for css_file in css_files %}
                         <div class="checkbox"><label><input type="checkbox"
                                       name="settings.css_files.{{ css_file.name }}"
-                                      ng-model="$parent.$ctrl.settings.css_files.{{ css_file.name }}"
-                                      ng-change="$parent.$ctrl.submit('{{ request.path + 'save' }}')"
-                                      ng-disabled="$parent.$ctrl.saving">
+                                      ng-model="$ctrl.settings.css_files.{{ css_file.name }}"
+                                      ng-change="$ctrl.submit('{{ request.path + 'save' }}')"
+                                      ng-disabled="$ctrl.saving">
                             <a href="{{ url_for('static', filename='css/' + css_file.name + '.scss') }}">
                                 {{ css_file.name }}</a> - {{ css_file.desc }}
                         </label></div>
                     {% endfor %}
                     <div class="form-group">
                         <label for="customCssArea">Custom CSS:</label>
-                    <textarea rows="15" id="customCssArea" class="form-control" ng-model="$parent.$ctrl.settings.custom_css"></textarea>
+                    <textarea rows="15" id="customCssArea" class="form-control" ng-model="$ctrl.settings.custom_css"></textarea>
                     </div>
 
-                    <button class="timButton" type="submit" ng-disabled="$parent.$ctrl.saving">Save custom CSS</button>
-                    <span ng-show="$parent.$ctrl.saving">Saving...</span>
-                    <button class="timButton" ng-click="$parent.$ctrl.clearLocalStorage()">Clear local settings storage</button>
+                    <button class="timButton" type="submit" ng-disabled="$ctrl.saving">Save custom CSS</button>
+                    <span ng-show="$ctrl.saving">Saving...</span>
+                    <button class="timButton" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
                 </form>
             </div>
         </div>
