@@ -96,16 +96,9 @@
 
     {% if teacher_mode %}
         <div  save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed resize="true"  click="true"  caption="Users with answers ({{ plugin_users|length }})">
-           <div ng-controller="UserListController as ulctrl" class="userlist draggable-content" >
-            {% if plugin_users %}
-                {% raw %}
-                <div ui-grid="ulctrl.gridOptions" ui-grid-selection ui-grid-exporter ui-grid-auto-resize ui-grid-cellNav class="grid"></div>
-                <!-- <div ui-grid="ulctrl.gridOptions" ui-grid-selection ui-grid-exporter  class="grid"></div> -->
-                {% endraw %}
-            {% else %}
-                No answerers.
-            {% endif %}
-           </div>
+            <tim-user-list class="draggable-content userlist">
+
+            </tim-user-list>
         </div>
     {% endif %}
 {% endblock %}
