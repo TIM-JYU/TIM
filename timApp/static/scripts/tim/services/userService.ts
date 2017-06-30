@@ -117,7 +117,7 @@ export class UserService {
     }
 }
 
-export let Users: UserService = null;
+export let Users: UserService = null as any;
 
 export function initUserService() {
     if (Users != null) {

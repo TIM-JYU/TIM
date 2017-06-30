@@ -10,7 +10,7 @@ class PopupMenuController {
     private contenturl: string;
     private srcid: string;
     private $pars: JQuery;
-    private editContext: string;
+    private editContext: string | null;
     private editButton: boolean;
     private areaEditButton: boolean;
     private onClose: (pars: JQuery) => void;

@@ -1,4 +1,6 @@
-let currentEditorScope = null;
+import {IParEditorScope} from "./directives/pareditor";
+let currentEditorScope: IParEditorScope | null = null;
+
 export function editorChangeValue(attributes, text) {
     if (!currentEditorScope) {
         return;

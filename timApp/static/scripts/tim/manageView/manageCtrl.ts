@@ -41,7 +41,7 @@ export class PermCtrl implements IController {
     private citeParams: {cite: number};
     private aliases: IItem[];
     private old_title: string;
-    private fileUploadError: string;
+    private fileUploadError: string | null;
     private tracWikiText: string;
     private renameFormShowing: boolean;
     private inputs: JQuery[];
@@ -406,7 +406,7 @@ export class PermCtrl implements IController {
             //$element.find("#pluginRenameForm").get(0).remove();
             return;
         }
-        const duplicateData = [];
+        const duplicateData: {}[] = [];
         let duplicate;
         // use given names from the input fields
         for (let i = 0; i < duplicates.length; i++) {

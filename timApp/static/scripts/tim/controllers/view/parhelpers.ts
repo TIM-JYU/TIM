@@ -7,7 +7,7 @@ export function createNewPar(): JQuery {
         .append($("<div>", {class: "parContent"}).html("New paragraph"));
 }
 
-export function getParId($par: JQuery): string {
+export function getParId($par: JQuery): string | null {
     if ($par === null || $par.length === 0 || !$par.hasClass("par")) {
         return null;
     }

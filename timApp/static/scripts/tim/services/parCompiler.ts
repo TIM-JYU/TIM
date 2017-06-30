@@ -20,7 +20,7 @@ export class ParagraphCompiler {
     }
 
     public async processAllMath($elem: JQuery) {
-        const katexFailures = [];
+        const katexFailures: Element[] = [];
         const mathelems = $elem.find(".math");
         if (mathelems.length === 0) {
             return;
@@ -41,7 +41,7 @@ export class ParagraphCompiler {
 
     public async processMathJax(elements: Element[] | Element) {
         const MathJax = await lazyLoad<jax.IMathJax>("mathjax");
-        MathJax.Hub.Queue(["Typeset", MathJax.Hub, elements]);
+        MathJax.Hub!.Queue(["Typeset", MathJax.Hub, elements]);
     }
 
     /**
@@ -54,7 +54,7 @@ export class ParagraphCompiler {
      */
     public processMath(katexFunction: (e: Element) => void,
         elem: Element,
-        tryMathJax: boolean): Element {
+        tryMathJax: boolean): Element | null {
         try {
             katexFunction(elem);
             return null;

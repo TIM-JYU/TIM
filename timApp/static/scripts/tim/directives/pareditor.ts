@@ -24,7 +24,7 @@ const MENU_BUTTON_CLASS = "menuButtons";
 const MENU_BUTTON_CLASS_DOT = "." + MENU_BUTTON_CLASS;
 
 // don't extend from IScope because then type checking is too lousy
-interface IParEditorScope {
+export interface IParEditorScope {
     textAreaText: string;
     $parent: any;
     ace: Ace;

@@ -11,9 +11,9 @@ markAsUsed(formErrorMessage, shortNameValidator);
 class CreateItemController {
     private fullPath: string;
     private automaticShortName: boolean;
-    private itemLocation: string;
-    private itemTitle: string;
-    private itemName: string;
+    private itemLocation: string | undefined;
+    private itemTitle: string | undefined;
+    private itemName: string | undefined;
     private alerts: {}[];
     private itemType: string;
     private params: {};
@@ -54,7 +54,9 @@ class CreateItemController {
         if (!this.automaticShortName) {
             return;
         }
-        this.itemName = slugify(this.itemTitle);
+        if (this.itemTitle !== undefined) {
+            this.itemName = slugify(this.itemTitle);
+        }
     }
 
     nameChanged() {
