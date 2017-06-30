@@ -94,7 +94,8 @@
 {% set col_m_xs = col_m_xs|default(12) %}
 
 {% block body %}
-    <div class="container-fluid" {% block mainctrl %}{% endblock %}>
+<{% block mainctrl %}{% endblock %}>
+    <div ng-init="$ctrl = $parent.$ctrl" class="container-fluid">
         <div {% if lecture_assets %}ng-controller="LectureController as lctrl"{% endif %}>
             <div class="row hidden-print">
                 <div class="col-lg-{{ col_1_lg }}
@@ -191,6 +192,7 @@
             </div>
         </div>
     </div>
+</{{ self.mainctrl() }}>
     <footer class="footer hidden-print">
         <div class="container-fluid">
             <div class="row">

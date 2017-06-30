@@ -20,4 +20,8 @@ export class StartCtrl {
     }
 }
 
-timApp.controller("StartCtrl", StartCtrl);
+timApp.component("timStart", {
+    controller: StartCtrl,
+    template: "<div ng-transclude></div>",
+    transclude: true,
+});
