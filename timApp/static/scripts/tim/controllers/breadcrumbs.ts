@@ -1,9 +1,18 @@
-
 import {timApp} from "tim/app";
 import {$window} from "../ngimport";
 
-timApp.controller("Breadcrumbs", ["$scope", function(sc) {
-    "use strict";
-    sc.crumbs = $window.breadcrumbs;
-    sc.item = $window.item;
-}]);
+export class Breadcrumbs {
+    private crumbs: any;
+    private item: any;
+
+    constructor() {
+        this.crumbs = $window.breadcrumbs;
+        this.item = $window.item;
+    }
+}
+
+timApp.component("timBreadcrumbs", {
+    controller: Breadcrumbs,
+    template: "<div ng-transclude></div>",
+    transclude: true,
+});
