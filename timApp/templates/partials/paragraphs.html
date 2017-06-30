@@ -3,11 +3,7 @@
     {%- set editline = '<div class="editline" title="Click to edit this paragraph"></div>' -%}
 {%- endif -%}
 
-{# TODO This template list should not be here! #}
 {%- if route == "view" and text|length == 0 and item.rights.editable -%}
-    <script>
-        var templates = true;
-    </script>
     <div class="par"
          id="HELP_PAR"
          t=""
@@ -15,32 +11,6 @@
         <div class="parContent">
             <p>Click left side to edit. You can get help with editing from editor's Help tab.</p>
             <p>This is an automatically added help paragraph. It will disappear when you add content.</p>
-        </div>
-        <div ng-controller="IndexCtrl as index" class="index">
-            <div ng-if="index.templateList.length">
-                <div class="parContent">
-                    <p>You may also choose to use one of the templates below.</p>
-                </div>
-                <br>
-                <table>
-                    <thead>
-                        <tr>
-                            <td>
-                                <b>Template name</b>
-                            </td>
-                            <td></td>
-                        </tr>
-                    </thead>
-                    <tr ng-repeat="template in index.templateList">
-                        <td>
-                            {{ '{{ template.name }}' }}
-                        </td>
-                        <td>
-                            <button class="timButton" ng-click="index.copyDocument({{ item.id }}, template.path)">Load</button>
-                        </td>
-                    </tr>
-                </table>
-            </div>
         </div>
         {{ editline | safe }}
     </div>
