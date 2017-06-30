@@ -105,9 +105,7 @@ export class UserListController {
                                 animation: false,
                                 ariaLabelledBy: "modal-title",
                                 ariaDescribedBy: "modal-body",
-                                templateUrl: "/static/templates/korppiExport.html",
-                                controller: "KorppiExportCtrl",
-                                controllerAs: "$ctrl",
+                                component: "timKorppiExport",
                                 size: "md",
                             });
                             instance.result.then(this.exportKorppi, () => {
@@ -230,16 +228,27 @@ timApp.component("timUserList", {
 </div>`,
 });
 
-timApp.controller("KorppiExportCtrl", ["$uibModalInstance", function($uibModalInstance) {
-    "use strict";
-    const $ctrl = this;
-    $ctrl.options = {};
+export class KorppiExportCtrl {
+    private static $inject = ["$uibModalInstance"];
 
-    $ctrl.ok = function() {
-        $uibModalInstance.close($ctrl.options);
-    };
+    private options: {};
+    private uibModalInstance: angular.ui.bootstrap.IModalInstanceService;
 
-    $ctrl.cancel = function() {
-        $uibModalInstance.dismiss("cancel");
-    };
-}]);
+    constructor(uibModalInstance: angular.ui.bootstrap.IModalInstanceService) {
+        this.uibModalInstance = uibModalInstance;
+        this.options = {};
+    }
+
+    ok() {
+        this.uibModalInstance.close(this.options);
+    }
+
+    cancel() {
+        this.uibModalInstance.dismiss("cancel");
+    }
+}
+
+timApp.component("timKorppiExport", {
+    controller: KorppiExportCtrl,
+    templateUrl: "/static/templates/korppiExport.html",
+});
