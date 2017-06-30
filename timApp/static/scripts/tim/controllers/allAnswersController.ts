@@ -54,7 +54,7 @@ export class AllAnswersCtrl {
         };
 
         this.lastFetch = null;
-        $http.get<{ last_answer_fetch }>("/settings/get/last_answer_fetch").then(function (response) {
+        $http.get<{ last_answer_fetch }>("/settings/get/last_answer_fetch").then((response) => {
             if (response.data.last_answer_fetch) {
                 this.lastFetch = response.data.last_answer_fetch[options.identifier];
                 if (!this.lastFetch) {
