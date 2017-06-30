@@ -1,64 +1,88 @@
-
 import moment from "moment";
 import {timApp} from "tim/app";
 import {$http, $httpParamSerializer, $localStorage, $log, $window} from "../ngimport";
+import {ngStorage} from "ngstorage";
 
-timApp.controller("AllAnswersCtrl", ["$uibModalInstance", "options",
-    function($uibModalInstance, options) {
-        "use strict";
+type Options = { age: string, valid: string, name: string, sort: string; periodFrom: any; periodTo: any; };
+
+export class AllAnswersCtrl {
+    private static $inject = ["$uibModalInstance", "options"];
+    private showSort: boolean;
+    private options: Options;
+    private $storage: ngStorage.StorageService & { allAnswersOptions: Options };
+    private datePickerOptionsFrom: EonasdanBootstrapDatetimepicker.SetOptions;
+    private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
+    private lastFetch: any;
+    private uibModalInstance: angular.ui.bootstrap.IModalInstanceService;
+    private url: string;
+
+    constructor(uibModalInstance: angular.ui.bootstrap.IModalInstanceService, options) {
+        this.uibModalInstance = uibModalInstance;
         moment.locale("en", {
             week: {dow: 1, doy: 4}, // set Monday as the first day of the week
         });
-        const $ctrl = this;
-
-        $ctrl.showSort = options.allTasks;
-        $ctrl.options = {};
-        $ctrl.options.age = "max";
-        $ctrl.options.valid = "1";
-        $ctrl.options.name = "both";
-        $ctrl.options.sort = "username";
-        $ctrl.$storage = $localStorage.$default({
-            allAnswersOptions: $ctrl.options,
+        this.showSort = options.allTasks;
+        this.options = {
+            age: "max",
+            valid: "1",
+            name: "both",
+            sort: "username",
+            periodFrom: null,
+            periodTo: null,
+        };
+        this.url = options.url;
+        this.options.age = "max";
+        this.options.valid = "1";
+        this.options.name = "both";
+        this.options.sort = "username";
+        this.$storage = $localStorage.$default({
+            allAnswersOptions: this.options,
         });
 
-        $ctrl.options = $ctrl.$storage.allAnswersOptions;
-        $ctrl.options.periodFrom = $ctrl.options.periodFrom || Date.now();
-        $ctrl.options.periodTo = $ctrl.options.periodTo || Date.now();
-        $ctrl.datePickerOptionsFrom = {
+        this.options = this.$storage.allAnswersOptions;
+        this.options.periodFrom = this.options.periodFrom || Date.now();
+        this.options.periodTo = this.options.periodTo || Date.now();
+        this.datePickerOptionsFrom = {
             format: "D.M.YYYY HH:mm:ss",
-            defaultDate: moment($ctrl.options.periodFrom),
+            defaultDate: moment(this.options.periodFrom),
             showTodayButton: true,
         };
-        $ctrl.datePickerOptionsTo = {
+        this.datePickerOptionsTo = {
             format: "D.M.YYYY HH:mm:ss",
-            defaultDate: moment($ctrl.options.periodTo),
+            defaultDate: moment(this.options.periodTo),
             showTodayButton: true,
         };
 
-        $ctrl.ok = function() {
-            if ($ctrl.options.periodFrom) {
-                $ctrl.options.periodFrom = $ctrl.options.periodFrom.toDate();
-            }
-            if ($ctrl.options.periodTo) {
-                $ctrl.options.periodTo = $ctrl.options.periodTo.toDate();
-            }
-            $window.open(options.url + "?" + $httpParamSerializer($ctrl.options), "_blank");
-            $uibModalInstance.close("close");
-        };
-
-        $ctrl.cancel = function() {
-            $uibModalInstance.dismiss("cancel");
-        };
-
-        $ctrl.lastFetch = null;
-        $http.get<{last_answer_fetch}>("/settings/get/last_answer_fetch").then(function(response) {
+        this.lastFetch = null;
+        $http.get<{ last_answer_fetch }>("/settings/get/last_answer_fetch").then(function (response) {
             if (response.data.last_answer_fetch) {
-                $ctrl.lastFetch = response.data.last_answer_fetch[options.identifier];
-                if (!$ctrl.lastFetch) {
-                    $ctrl.lastFetch = "no fetches yet";
+                this.lastFetch = response.data.last_answer_fetch[options.identifier];
+                if (!this.lastFetch) {
+                    this.lastFetch = "no fetches yet";
                 }
             }
-        }, function(response) {
+        }, (response) => {
             $log.error("Failed to fetch last answer time");
         });
-    }]);
+    }
+
+    ok() {
+        if (this.options.periodFrom) {
+            this.options.periodFrom = this.options.periodFrom.toDate();
+        }
+        if (this.options.periodTo) {
+            this.options.periodTo = this.options.periodTo.toDate();
+        }
+        $window.open(this.url + "?" + $httpParamSerializer(this.options), "_blank");
+        this.uibModalInstance.close("close");
+    }
+
+    cancel() {
+        this.uibModalInstance.dismiss("cancel");
+    }
+}
+
+timApp.component("AllAnswers", {
+    controller: AllAnswersCtrl,
+    templateUrl: "/static/templates/allAnswersOptions.html",
+});

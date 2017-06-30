@@ -178,9 +178,7 @@ timApp.controller("UserListController", ["$scope", "$element", "uiGridConstants"
                             animation: false,
                             ariaLabelledBy: "modal-title",
                             ariaDescribedBy: "modal-body",
-                            templateUrl: "/static/templates/allAnswersOptions.html",
-                            controller: "AllAnswersCtrl",
-                            controllerAs: "$ctrl",
+                            component: "AllAnswers",
                             size: "md",
                             resolve: {
                                 options() {
