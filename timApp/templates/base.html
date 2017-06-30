@@ -94,7 +94,7 @@
 {% set col_m_xs = col_m_xs|default(12) %}
 
 {% block body %}
-<{% block mainctrl %}{% endblock %}>
+<{% block mainctrl %}div{% endblock %}>
     <div ng-init="$ctrl = $parent.$ctrl" class="container-fluid">
         <div {% if lecture_assets %}ng-controller="LectureController as lctrl"{% endif %}>
             <div class="row hidden-print">
