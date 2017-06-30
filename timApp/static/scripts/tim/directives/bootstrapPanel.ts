@@ -11,7 +11,6 @@ class BootstrapPanelController {
     }
 
     public close() {
-        this.element.addClass("ng-hide");
         this.closeFn();
     }
 }

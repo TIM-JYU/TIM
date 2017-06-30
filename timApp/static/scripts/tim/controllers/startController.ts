@@ -1,16 +1,23 @@
-
 import {timApp} from "tim/app";
 import * as createItem from "tim/directives/createItem";
 import {markAsUsed} from "tim/utils";
 
 markAsUsed(createItem);
 
-timApp.controller("StartCtrl", ["$scope", function(sc) {
-    "use strict";
+export class StartCtrl {
+    private creatingNew: boolean;
 
-    sc.creatingNew = false;
+    constructor() {
+        this.creatingNew = false;
+    }
 
-    sc.cancelCreate = function() {
-        sc.creatingNew = false;
-    };
-}]);
+    cancelCreate() {
+        this.creatingNew = false;
+    }
+
+    enableCreate() {
+        this.creatingNew = true;
+    }
+}
+
+timApp.controller("StartCtrl", StartCtrl);

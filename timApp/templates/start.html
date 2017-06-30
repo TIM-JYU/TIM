@@ -4,7 +4,7 @@
     {{ super() }}
 {% endblock %}
 
-{% block mainctrl %}ng-controller="StartCtrl as sctrl"{% endblock %}
+{% block mainctrl %}ng-controller="StartCtrl as $ctrl"{% endblock %}
 
 {% block content %}
     <div class="row">
@@ -26,12 +26,12 @@
                         <ul class="list-unstyled">
                             <li class="h5"><a href="/view/{{ current_user.get_personal_folder().path }}">My documents</a></li>
                             <li class="h5"><a href="/view/">All documents</a></li>
-                            <li class="h5"><a ng-click="sctrl.creatingNew = true" href="#">Create a new document</a></li>
+                            <li class="h5"><a ng-click="$ctrl.enableCreate()" href="#">Create a new document</a></li>
                         </ul>
-                        <bootstrap-panel ng-show="sctrl.creatingNew"
+                        <bootstrap-panel ng-show="$ctrl.creatingNew"
                                          title="Create a new document"
                                          show-close="true"
-                                         close-fn="sctrl.cancelCreate()">
+                                         close-fn="$ctrl.cancelCreate()">
                             <create-item item-title="My document"
                                          item-location="{{ current_user.get_personal_folder().path }}"
                                          item-type="document">
@@ -54,9 +54,9 @@
                                        value="{{ session.real_name }}">
                             </div>
                             <div class="form-group">
-                                <label for="email">Email</label>
+                                <label>Email</label>
 
-                                <p id="realname">{{ session.email }}</p>
+                                <p>{{ session.email }}</p>
                             </div>
                             <div class="form-group">
                                 <label for="password">New password</label>
