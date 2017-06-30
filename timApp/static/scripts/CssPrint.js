@@ -53,15 +53,22 @@ function  BeforePrint() {
     AutoPageBreak();
 }
 
+//OPERA, CHROME
 if(window.matchMedia){
     var mediaQueryList = window.matchMedia('print');
     mediaQueryList.addListener(function (mql) {
         (mql.matches) ? BeforePrint() : AfterPrint();
     });
-}else{
-    window.addEventListener('beforeprint', BeforePrint, false);
-    window.addEventListener('afterprint', AfterPrint, false);
 }
 
-//window.onbeforeprint = AutoPageBreak();
-//window.onafterprint = UndoAutoPageBreak();
+//MOZILLA FIREFOX, MICROSOFT EDGE
+window.addEventListener('beforeprint', BeforePrint, false);
+window.addEventListener('afterprint', AfterPrint, false);
+
+
+//INTERNET EXPLORER
+var ua = window.navigator.userAgent;
+if(ua.indexOf("MSIE ") > 0){
+	window.onbeforeprint = BeforePrint();
+	window.onafterprint = AfterPrint();
+}
