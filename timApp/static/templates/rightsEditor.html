@@ -10,7 +10,7 @@
     <span ng-show="filtered.length == 0">none</span>
 
     <ul>
-        <li ng-repeat="right in filtered = (grouprights | filter: {access_type: type.id}:true | filter: $ctrl.obsoleteFilterFn | orderBy: ['!fullname', 'fullname', 'name'])">
+        <li ng-repeat="right in filtered = ($ctrl.grouprights | filter: {access_type: type.id}:true | filter: $ctrl.obsoleteFilterFn | orderBy: ['!fullname', 'fullname', 'name'])">
             <span ng-show="!$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></span>
             <s ng-show="$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></s>
             <i ng-show="$ctrl.showClock(right)"
@@ -46,7 +46,7 @@
 <button class="timButton" ng-show="!$ctrl.addingRight && !$ctrl.editingRight()" ng-click="$ctrl.showAddRightFn($ctrl.accessType)">Add right...
 </button>
 <div ng-show="$ctrl.addingRight || $ctrl.editingRight()" class="rights-list">
-    <form ng-submit="$ctrl.addOrEditPermission(groupName, $ctrl.accessType)">
+    <form ng-submit="$ctrl.addOrEditPermission($ctrl.groupName, $ctrl.accessType)">
         <div class="row" ng-show="$ctrl.addingRight">
             <div class="form-group col-md-6 input-group-sm">
                 <label for="{{ $ctrl.listMode ? 'groupNameList' : 'groupName' }}">Name: </label>

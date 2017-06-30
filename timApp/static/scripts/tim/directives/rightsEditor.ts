@@ -180,7 +180,7 @@ class RightsEditorController {
         return this.shouldShowEndedTime(group) || this.shouldShowNotUnlockableAnymore(group);
     }
 
-    obsoleteFilterFn(group) {
+    obsoleteFilterFn = (group) => {
         return !this.showActiveOnly || !this.isObsolete(group);
     }
 
@@ -245,9 +245,8 @@ class RightsEditorController {
 
 timApp.component("rightsEditor", {
     bindings: {
-        accessTypes: "=?",
-        control: "=?",
-        itemId: "=?",
+        accessTypes: "<?",
+        itemId: "<?",
         urlRoot: "@?",
     },
     controller: RightsEditorController,
