@@ -113,7 +113,8 @@ class DocumentPrinter:
             # print("pandocfilters" in sys.modules)
 
             # TODO: getting the path could probably be done with more finesse
-            filters = [os.path.join(os.getcwd(), "pandoc-inlinestylesfilter.py")]
+            filters = [os.path.join(os.getcwd(), "pandoc-inlinestylesfilter.py"),
+                       os.path.join(os.getcwd(), "pandoc-imagefilepathsfilter.py")]
             # print("Python path is: %r" % sys.path)
             # print("Flask installed: %s" % ("flask" in sys.modules))
             # print("Pandocfilters installed: %s" % ("pandocfilters" in sys.modules))
@@ -124,8 +125,7 @@ class DocumentPrinter:
                                       format='markdown',
                                       to=target_format.value,
                                       outputfile=output_file.name,
-                                      extra_args=['--template=' + template_file.name,
-                                                  '-V', 'graphics-root:' + self._images_root],
+                                      extra_args=['--template=' + template_file.name],
                                       filters=filters)
                 template_file.seek(0)
                 output_bytes = bytearray(output_file.read())
