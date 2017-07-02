@@ -25,6 +25,9 @@ APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 IMAGE_ROOT = os.path.join(APP_ROOT, FILES_PATH, 'blocks')
 
+# protocol + hostname
+CURRENT_HOST_MACHINE = TIM_HOST
+
 
 def handle_images(key, value, fmt, meta):
 
@@ -48,7 +51,8 @@ def handle_images(key, value, fmt, meta):
             path = path[1:]
 
         # handle internal absolute urls
-        if scheme + '://' + host == 'http://tim.jyu.fi':
+        base_address = scheme + '://' + host
+        if base_address == CURRENT_HOST_MACHINE:
             image_path = os.path.join(APP_ROOT, path)
 
         # handle internal relative urls
