@@ -198,7 +198,7 @@ def throw_ex():
 
 @app.errorhandler(ItemLockedException)
 def item_locked(error: ItemLockedException):
-    item = DocEntry.find_by_id(error.access.block_id)
+    item = DocEntry.find_by_id(error.access.block_id, try_translation=True)
     is_folder = False
     if not item:
         is_folder = True
