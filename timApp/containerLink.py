@@ -9,6 +9,7 @@ from documentmodel.timjsonencoder import TimJsonEncoder
 from dumboclient import call_dumbo
 from logger import log_info, log_warning
 from plugin import PluginException
+from pluginOutputFormat import PluginOutputFormat
 from tim_app import app
 
 TIM_URL = ""
@@ -86,7 +87,7 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
         raise PluginException("Read timeout occurred when calling {}.".format(plugin))
 
 
-def call_plugin_html(doc: Document, plugin, plugin_data, params=None):
+def render_plugin(doc: Document, plugin, plugin_data, output_format: PluginOutputFormat, params=None):
     plugin_data.update(params or {})
     if doc.get_settings().plugin_md():
         convert_md(plugin_data)
@@ -94,7 +95,7 @@ def call_plugin_html(doc: Document, plugin, plugin_data, params=None):
                              cls=TimJsonEncoder)
     return call_plugin_generic(plugin,
                                'post',
-                               'html',
+                               output_format.value,
                                data=plugin_data,
                                headers={'Content-type': 'application/json'},
                                params=params)
@@ -170,7 +171,7 @@ def convert_md(plugin_data):
             p['markup'] = h
 
 
-def call_plugin_multihtml(doc: Document, plugin, plugin_data, params=None):
+def render_plugin_multihtml(doc: Document, plugin, plugin_data, params=None, render_markdown: bool = False):
     if params is not None:
         for p in plugin_data:
             p.update(params)
@@ -180,7 +181,7 @@ def call_plugin_multihtml(doc: Document, plugin, plugin_data, params=None):
 
     return call_plugin_generic(plugin,
                                'post',
-                               'multihtml',
+                               ('multimd' if render_markdown else 'multihtml'),
                                data=json.dumps(plugin_data, cls=TimJsonEncoder),
                                headers={'Content-type': 'application/json'},
                                params=params)
