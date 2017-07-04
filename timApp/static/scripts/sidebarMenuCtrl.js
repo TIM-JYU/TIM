@@ -144,7 +144,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
                     $uibModal.open({
                         templateUrl: '/static/templates/printDialog.html',
                         controller: 'PrintCtrl',
-                        size: 'sm',
+                        size: 'md',
                         resolve: {
                             document: function () {
                                 return $window.item;

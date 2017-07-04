@@ -22,7 +22,13 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
         $scope.notificationmsg = null;
 
         $scope.chosenTemplate = {
-            'id' : null
+           // 'id' : null
+
+           'id': $scope.userTemplates[0].doc_id // TODO: Check if exists. 
+        };
+
+        $scope.selected = {
+            name: 'PDF'
         };
 
 
@@ -72,6 +78,16 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
             $window.open(url, '_blank');
         };
 
+        $scope.create = function () {
+            if ($scope.selected.name === 'PDF'){
+                $scope.getPrintedDocument('pdf');
+            }
+            else if ($scope.selected.name === 'LaTeX'){
+                $scope.getPrintedDocument('latex');
+            }
+        }
+
+        /*
         $scope.createLatex = function() {
             $scope.getPrintedDocument('latex');
         };
@@ -79,7 +95,7 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
         $scope.createPdf = function() {
             $scope.getPrintedDocument('pdf');
         };
-
+        */
 
         $scope.cancel = function () {
             $uibModalInstance.dismiss('cancel');
