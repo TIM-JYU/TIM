@@ -10,6 +10,7 @@ import sys
 import pypandoc
 from flask import jsonify
 
+from documentmodel.docparagraph import DocParagraph
 from pluginOutputFormat import PluginOutputFormat
 from accesshelper import has_view_access
 from dbaccess import get_timdb
@@ -81,6 +82,9 @@ class DocumentPrinter:
 
         # Get the markdown for each par dict
         for pd in par_dicts:
+            if not pd['is_plugin'] and not pd['is_question']:
+                tmp_par = DocParagraph.create(doc= self._doc_entry.document, md=pd['md'])
+                pd['md'] = tmp_par.get_expanded_markdown()
             export_pars.append(pd['md'])
 
         content = '\n\n'.join(export_pars)
