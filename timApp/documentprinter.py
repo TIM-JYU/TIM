@@ -10,8 +10,12 @@ import sys
 import pypandoc
 from flask import jsonify
 
+from pluginOutputFormat import PluginOutputFormat
 from accesshelper import has_view_access
+from dbaccess import get_timdb
 from documentmodel.documentversion import DocumentVersion
+from pluginControl import pluginify
+from sessioninfo import get_current_user_object
 from timdb.documents import Documents
 from timdb.models.docentry import DocEntry
 from timdb.models.folder import Folder
@@ -62,9 +66,24 @@ class DocumentPrinter:
             if print_flag is not None and str.lower(print_flag) is not 'false':
                 continue
 
-            pars_to_print.append(par.get_markdown())
+            pars_to_print.append(par)
 
-        content = '\n\n'.join(pars_to_print)
+        # Dereference pars and render markdown for plugins
+        # Only the 1st return value (the pars) is needed here
+        par_dicts, _, _, _ = pluginify(doc=self._doc_entry.document,
+                                pars=pars_to_print,
+                                timdb=get_timdb(),
+                                user=get_current_user_object(),
+                                output_format=PluginOutputFormat.MD,
+                                wrap_in_div=False)
+
+        export_pars = []
+
+        # Get the markdown for each par dict
+        for pd in par_dicts:
+            export_pars.append(pd['md'])
+
+        content = '\n\n'.join(export_pars)
         # print(content)
         return content
 
