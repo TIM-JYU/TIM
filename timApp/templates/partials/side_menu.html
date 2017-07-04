@@ -26,14 +26,14 @@
             {% endif %}
             <!-- TODO: check rights -->
             {% if item %}
-                <h5>Print document</h5>
+                <h5 style="display: inline-block">Print document</h5>
+                <a style="display: inline-block" href="/view/tim/TIM-ohjeet">
+                    <span class="glyphicon glyphicon-question-sign"></span>
+                </a>
                 <button class="timButton btn btn-block" ng-click="printDocument()">Print document</button><br>
             {% endif %}
             {% if item %}
                 <button class="timButton btn btn-block" ng-click="cssPrint()">Browser print</button><br>
-            {% endif %}
-            {% if item %}
-                <button class="timButton btn btn-block" ng-click="cssPrint()">Help <span class="glyphicon glyphicon-question-sign"></span></button>
             {% endif %}
             <div ng-show="lectureSettings.inLecture">
                 <h5>Lecture settings</h5>

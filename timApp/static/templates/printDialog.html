@@ -22,7 +22,10 @@
                     <div class="radio">
                         <label>
                             <input type="radio" ng-model="chosenTemplate.id" ng-value="item.doc_id" name="template-selection">
-                            <a ng-href="/view/{{ item.doc_path }}" class="force-hyphenate-link">{{ item.doc_path }}</a>
+                            <span>{{ item.doc_path }}</span>
+                            <a ng-href="/view/{{ item.doc_path }}" class="force-hyphenate-link">
+                                <span class="glyphicon glyphicon-pencil"></span>
+                            </a>
                         </label>
                     </div>
                 </div>
@@ -36,7 +39,10 @@
                     <div class="radio">
                         <label>
                             <input type="radio" ng-model="chosenTemplate.id" ng-value="item.doc_id" name="template-selection">
-                            <a ng-href="/view/{{ item.doc_path }}" class="force-hyphenate-link">{{ item.doc_path }}</a>
+                            <span>{{ item.doc_path }}</span>
+                            <a ng-href="/view/{{ item.doc_path }}" class="force-hyphenate-link">
+                                <span class="glyphicon glyphicon-pencil"></span>
+                            </a>
                         </label>
                     </div>
                 </div>
@@ -68,7 +74,17 @@
 
 <div class="modal-footer">
     <div>
-        <button class="btn btn-primary" type="button" ng-click="createLatex()">Create LaTeX</button>
-        <button class="btn btn-primary" type="button" ng-click="createPdf()">Create PDF</button>
+        <label>
+            <input type="radio" ng-model="selected.name" value="PDF">
+            PDF
+        </label>
+        <label>
+            <input type="radio" ng-model="selected.name" value="LaTeX">
+            LaTeX
+        </label>
+        <button class="btn btn-primary" type="button" ng-click="create()">Create</button>
+
+        <!--<button class="btn btn-primary" type="button" ng-click="createLatex()">Create LaTeX</button>
+        <button class="btn btn-primary" type="button" ng-click="createPdf()">Create PDF</button>-->
     </div>
 </div>
