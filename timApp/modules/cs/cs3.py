@@ -407,7 +407,7 @@ def get_md(ttype, query):
     if "sage" in ttype:
         runner = 'cs-sage-runner'
 
-    usercode = get_json_eparam(query.jso, "state", "usercode", "")
+    usercode = get_json_eparam(query.jso, "state", "usercode", "", escape_html_special_chars=False)
 
     r = runner + is_input
 
