@@ -1,5 +1,7 @@
-import {IParEditorScope} from "./directives/pareditor";
-let currentEditorScope: IParEditorScope | null = null;
+import {AceParEditor} from "./directives/AceParEditor";
+import {TextAreaParEditor} from "./directives/TextAreaParEditor";
+
+let currentEditorScope: AceParEditor | TextAreaParEditor | null = null;
 
 export function editorChangeValue(attributes, text) {
     if (!currentEditorScope) {
@@ -8,6 +10,6 @@ export function editorChangeValue(attributes, text) {
     currentEditorScope.changeValue(attributes, text);
 }
 
-export function setEditorScope(scope) {
+export function setEditorScope(scope: AceParEditor | TextAreaParEditor) {
     currentEditorScope = scope;
 }

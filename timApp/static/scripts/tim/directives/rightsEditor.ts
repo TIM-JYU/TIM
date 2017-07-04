@@ -35,8 +35,10 @@ class RightsEditorController {
     private itemId: number;
     private listMode: boolean;
     private groupName: string;
+    private scope: IScope;
 
     constructor(scope: IScope) {
+        this.scope = scope;
         this.grouprights = [];
         this.timeOpt = {type: "always", durationType: "hours", durationAmount: 4};
         this.selectedRight = null;
@@ -63,11 +65,13 @@ class RightsEditorController {
         if (this.accessTypes) {
             this.accessType = this.accessTypes[0];
         }
+    }
 
+    $onInit() {
         this.getPermissions();
 
         // TODO make duration editor its own component
-        scope.$watchGroup([() => this.timeOpt.durationAmount, () => this.timeOpt.durationType], (newValues, oldValues, scope) => {
+        this.scope.$watchGroup([() => this.timeOpt.durationAmount, () => this.timeOpt.durationType], (newValues, oldValues, scope) => {
             this.timeOpt.duration = moment.duration(this.timeOpt.durationAmount, this.timeOpt.durationType);
         });
     }

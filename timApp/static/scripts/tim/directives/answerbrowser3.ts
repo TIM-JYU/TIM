@@ -5,7 +5,10 @@ import {dereferencePar, getParId} from "../controllers/view/parhelpers";
 import {Users} from "../services/userService";
 import {ParCompiler} from "../services/parCompiler";
 import {$compile, $filter, $http, $timeout, $uibModal, $window} from "../ngimport";
-import {ICompileService, IScope, IRootElementService, ITimeoutService} from "angular";
+import {ICompileService, IScope, IRootElementService, ITimeoutService, IController} from "angular";
+import {ViewCtrl} from "../controllers/view/viewctrl";
+import {IUser} from "../IUser";
+import {IAnswer} from "../IAnswer";
 
 timLogTime("answerbrowser3 load", "answ");
 
@@ -44,11 +47,11 @@ function loadPlugin(html: string, $par: JQuery, $compile: ICompileService, scope
     }, 500);
 }
 
-class AnswerBrowserLazyController {
+class AnswerBrowserLazyController implements IController {
     private static $inject = ["$element", "$scope"];
     private compiled: boolean;
     private element: angular.IRootElementService;
-    private $parent: any; // TODO require viewctrl
+    private viewctrl: ViewCtrl;
     private taskId: string;
     private parentElement: HTMLElement;
     private scope: angular.IScope;
@@ -58,7 +61,10 @@ class AnswerBrowserLazyController {
         this.scope = scope;
         timLogTime("answerbrowserlazy ctrl function", "answ", 1);
         this.compiled = false;
-        $element.parent().on("mouseenter touchstart", () => this.loadAnswerBrowser());
+    }
+
+    $postLink() {
+        this.element.parent().on("mouseenter touchstart", () => this.loadAnswerBrowser());
     }
 
     /**
@@ -78,11 +84,11 @@ class AnswerBrowserLazyController {
             return;
         }
         this.compiled = true;
-        if (!this.$parent.noBrowser && this.isValidTaskId(this.taskId)) {
+        if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId)) {
             const newHtml = '<answerbrowser task-id="' + this.taskId + '"></answerbrowser>';
             const newElement = $compile(newHtml);
             const parent = this.element.parents(".par")[0];
-            parent.replaceChild(newElement(this.$parent)[0], this.element[0]);
+            parent.replaceChild(newElement(this.scope)[0], this.element[0]);
             this.parentElement = parent;
         }
         // Next the inside of the plugin to non lazy
@@ -101,28 +107,28 @@ timApp.component("answerbrowserlazy", {
         taskId: "@",
     },
     controller: AnswerBrowserLazyController,
+    require: {
+        viewctrl: "timView",
+    },
 });
-
-type User = {id: number};
-type Answer = {id: number, points: number, last_points_modifier: number, valid: boolean};
 
 class AnswerBrowserController {
     private static $inject = ["$scope", "$element"];
     private element: JQuery;
     private taskId: string;
     private loading: number;
-    private $parent: any; // TODO require viewctrl
+    private viewctrl: ViewCtrl;
     private parContent: JQuery;
-    private user: User;
-    private fetchedUser: User;
+    private user: IUser;
+    private fetchedUser: IUser;
     private firstLoad: boolean;
     private shouldUpdateHtml: boolean;
     private saveTeacher: boolean;
-    private users: User[];
-    private answers: Answer[];
-    private filteredAnswers: Answer[];
+    private users: IUser[];
+    private answers: IAnswer[];
+    private filteredAnswers: IAnswer[];
     private onlyValid: boolean;
-    private selectedAnswer: Answer;
+    private selectedAnswer: IAnswer;
     private anyInvalid: boolean;
     private giveCustomPoints: boolean;
     private review: boolean;
@@ -142,7 +148,7 @@ class AnswerBrowserController {
             if (newValue === oldValue) {
                 return;
             }
-            if (this.$parent.teacherMode) {
+            if (this.viewctrl.teacherMode) {
                 this.getAvailableUsers();
             }
             this.getAvailableAnswers();
@@ -151,7 +157,7 @@ class AnswerBrowserController {
         // Loads annotations to answer
         setTimeout(() => this.changeAnswer(), 500); // TODO: Don't use timeout
 
-        if (this.$parent.teacherMode) {
+        if (this.viewctrl.teacherMode) {
             this.element.attr("tabindex", 1);
             this.element.css("outline", "none");
 
@@ -170,17 +176,17 @@ class AnswerBrowserController {
             }
         });
 
-        if (this.$parent.selectedUser) {
-            this.user = this.$parent.selectedUser;
-        } else if (this.$parent && this.$parent.users && this.$parent.users.length > 0) {
-            this.user = this.$parent.users[0];
+        if (this.viewctrl.selectedUser) {
+            this.user = this.viewctrl.selectedUser;
+        } else if (this.viewctrl.users && this.viewctrl.users.length > 0) {
+            this.user = this.viewctrl.users[0];
         } else {
             this.user = Users.getCurrent();
         }
 
         this.fetchedUser = null;
         this.firstLoad = true;
-        this.shouldUpdateHtml = this.$parent.users.length > 0 && this.user !== this.$parent.users[0];
+        this.shouldUpdateHtml = this.viewctrl.users.length > 0 && this.user !== this.viewctrl.users[0];
         if (this.shouldUpdateHtml) {
             this.dimPlugin();
         }
@@ -256,7 +262,7 @@ class AnswerBrowserController {
         this.loading++;
         $http.get<{html: string, reviewHtml: string}>("/getState", {
             params: {
-                ref_from_doc_id: this.$parent.docId,
+                ref_from_doc_id: this.viewctrl.docId,
                 ref_from_par_id: getParId($par),
                 doc_id: ids[0],
                 par_id: ids[1],
@@ -269,7 +275,7 @@ class AnswerBrowserController {
             if (this.review) {
                 this.element.find(".review").html(response.data.reviewHtml);
             }
-            const lata = this.$parent.loadAnnotationsToAnswer;
+            const lata = this.viewctrl.loadAnnotationsToAnswer;
             if (lata) {
                 lata(this.selectedAnswer.id, $par[0], this.review, this.setFocus);
             }
@@ -386,24 +392,24 @@ class AnswerBrowserController {
             return {
                 answer_id: this.selectedAnswer.id,
                 saveTeacher: this.saveTeacher,
-                teacher: this.$parent.teacherMode,
+                teacher: this.viewctrl.teacherMode,
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: this.user.id,
-                saveAnswer: !this.$parent.noBrowser,
+                saveAnswer: !this.viewctrl.noBrowser,
             };
         } else {
             return {
                 saveTeacher: false,
-                teacher: this.$parent.teacherMode,
-                saveAnswer: !this.$parent.noBrowser,
+                teacher: this.viewctrl.teacherMode,
+                saveAnswer: !this.viewctrl.noBrowser,
             };
         }
     }
 
     getAvailableUsers() {
         this.loading++;
-        $http.get("/getTaskUsers/" + this.taskId, {params: {group: this.$parent.group}})
+        $http.get("/getTaskUsers/" + this.taskId, {params: {group: this.viewctrl.group}})
             .then(function(response) {
                 this.users = response.data;
             }, function(response) {
@@ -419,7 +425,7 @@ class AnswerBrowserController {
 
     getAvailableAnswers(updateHtml = false) {
         updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
-        if (!this.$parent.item.rights || !this.$parent.item.rights.browse_own_answers) {
+        if (!this.viewctrl.item.rights || !this.viewctrl.item.rights.browse_own_answers) {
             return;
         }
         if (this.user === null) {
@@ -482,7 +488,7 @@ class AnswerBrowserController {
     }
 
     showTeacher() {
-        return this.$parent.teacherMode && this.$parent.item.rights.teacher;
+        return this.viewctrl.teacherMode && this.viewctrl.item.rights.teacher;
     }
 
     showVelpsCheckBox() {
@@ -517,9 +523,9 @@ class AnswerBrowserController {
             return;
         }
         this.loadIfChanged();
-        if (this.$parent.teacherMode && this.users === null) {
+        if (this.viewctrl.teacherMode && this.users === null) {
             this.users = [];
-            if (this.$parent.users.length > 0) {
+            if (this.viewctrl.users.length > 0) {
                 this.getAvailableUsers();
             }
         }
@@ -560,7 +566,7 @@ class AnswerBrowserController {
 
     updateFiltered() {
         this.anyInvalid = false;
-        this.filteredAnswers = $filter("filter")<Answer>(this.answers, function(value, index, array) {
+        this.filteredAnswers = $filter("filter")<IAnswer>(this.answers, function(value, index, array) {
             if (value.valid) {
                 return true;
             }
@@ -586,5 +592,8 @@ timApp.component("answerbrowser", {
         taskId: "@",
     },
     controller: AnswerBrowserController,
+    require: {
+        viewctrl: "timView",
+    },
     templateUrl: "/static/templates/answerBrowser.html",
 });

@@ -6,6 +6,7 @@ import {colorPalette} from "tim/directives/velpWindow";
 import {markAsUsed} from "tim/utils";
 import {$http, $q, $window} from "../ngimport";
 import {IAnnotation, ILabel, IUIFields, IVelp, IVelpGroup, VelpGroupSelectionType} from "./velptypes";
+import {ReviewController} from "../controllers/reviewController";
 
 markAsUsed(velpSummary);
 
@@ -41,7 +42,7 @@ export class VelpSelectionController {
     private newVelpGroup: IVelpGroup & IUIFields;
     private settings: {selectedAllShows: boolean; selectedAllDefault: boolean};
     private submitted: {velp: boolean; velpGroup: boolean};
-    private groupAttachment: {target_type: number; id: any};
+    private groupAttachment: {target_type: number; id: number};
     private groupSelections: {};
     private groupDefaults: {};
     private docId: number;
@@ -53,10 +54,11 @@ export class VelpSelectionController {
     private advancedOnKey: string;
     private default_velp_group: IVelpGroup;
     private labelAdded: boolean;
-    private selectedElement: HTMLElement;
+    private rctrl: ReviewController;
     private default_personal_velp_group: IVelpGroup;
     private previewReleased: boolean;
-    private $parent: any; // TODO use bindings
+    private teacherRight: boolean;
+    private onInit: (params: {$API: VelpSelectionController}) => void;
 
     // Data
     constructor() {
@@ -104,7 +106,9 @@ export class VelpSelectionController {
 
         this.groupSelections = {};
         this.groupDefaults = {};
+    }
 
+    $onInit() {
         // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
         const doc_id = this.docId;
         let default_velp_group = {
@@ -316,6 +320,8 @@ export class VelpSelectionController {
             });
 
         });
+
+        this.onInit({$API: this});
     }
 
     // Methods
@@ -348,7 +354,7 @@ export class VelpSelectionController {
      */
 
     allowChangePoints() {
-        return this.$parent.vctrl.item.rights.teacher;
+        return this.teacherRight;
     }
 
     /**
@@ -469,7 +475,7 @@ export class VelpSelectionController {
             language_id: "FI",
             icon_id: null,
             valid_until: null,
-            visible_to: this.visible_options.value,
+            visible_to: this.newVelp.visible_to,
             velp_groups: JSON.parse(JSON.stringify(this.newVelp.velp_groups)),
             default_comment: "",
             color: null,
@@ -755,9 +761,9 @@ export class VelpSelectionController {
      */
     updateVelpList() {
         this.velpGroups.forEach((g) => {
-            if (this.selectedElement !== null && this.groupAttachment.target_type === 1) {
-                g.show = this.isVelpGroupShownHere(g.id, this.selectedElement.id);
-                g.default = this.isVelpGroupDefaultHere(g.id, this.selectedElement.id);
+            if (this.isAttachedToParagraph()) {
+                g.show = this.isVelpGroupShownHere(g.id, this.rctrl.selectedElement.id);
+                g.default = this.isVelpGroupDefaultHere(g.id, this.rctrl.selectedElement.id);
             } else {
                 g.show = this.isVelpGroupShownHere(g.id, 0);
                 g.default = this.isVelpGroupDefaultHere(g.id, 0);
@@ -913,8 +919,8 @@ export class VelpSelectionController {
 
         let target_id: string;
         let target_type: number;
-        if (this.groupAttachment.target_type === 1 && this.selectedElement !== null) {
-            target_id = this.selectedElement.id;
+        if (this.isAttachedToParagraph()) {
+            target_id = this.rctrl.selectedElement.id;
             target_type = 1;
         } else {
             target_id = "0";
@@ -988,8 +994,8 @@ export class VelpSelectionController {
         let targetID;
         let targetType;
 
-        if (this.groupAttachment.target_type === 1 && this.selectedElement !== null) {
-            targetID = this.selectedElement.id;
+        if (this.isAttachedToParagraph()) {
+            targetID = this.rctrl.selectedElement.id;
             targetType = 1;
         } else {
             targetID = "0";
@@ -1043,6 +1049,10 @@ export class VelpSelectionController {
 
     }
 
+    private isAttachedToParagraph() {
+        return this.groupAttachment.target_type === 1 && this.rctrl.selectedElement !== null;
+    }
+
     /**
      * Sets all velp group show selections to defaults in the current element or in the document.
      * @method resetCurrentShowsToDefaults
@@ -1050,8 +1060,8 @@ export class VelpSelectionController {
     async resetCurrentShowsToDefaults() {
 
         let targetID;
-        if (this.groupAttachment.target_type === 1 && this.selectedElement !== null) {
-            targetID = this.selectedElement.id;
+        if (this.isAttachedToParagraph()) {
+            targetID = this.rctrl.selectedElement.id;
         } else {
             targetID = "0";
         }
@@ -1082,7 +1092,7 @@ export class VelpSelectionController {
         let targetID = null;
 
         if (this.groupAttachment.target_type === 1) {
-            targetID = this.selectedElement.id;
+            targetID = this.rctrl.selectedElement.id;
         } else {
             targetID = "0";
         }
@@ -1362,6 +1372,11 @@ timApp.filter("orderByWhenNotEditing", () => {
 timApp.component("velpSelection", {
     bindings: {
         docId: "<",
+        onInit: "&",
+        teacherRight: "<",
+    },
+    require: {
+        rctrl: "timReview",
     },
     controller: VelpSelectionController,
     templateUrl: "/static/templates/velpSelection.html",

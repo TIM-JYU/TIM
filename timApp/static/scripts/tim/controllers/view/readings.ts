@@ -5,6 +5,7 @@ import {markPageDirty} from "../../utils";
 import {Users} from "../../services/userService";
 import {getActiveDocument} from "./document";
 import {onClick, onMouseOverOut} from "./eventhandlers";
+import {ViewCtrl} from "./viewctrl";
 
 export const readClasses = {
     1: "screen",
@@ -112,7 +113,7 @@ function readlineHandler($this: JQuery, e) {
     return true;
 }
 
-export function initReadings(sc) {
+export function initReadings(sc: ViewCtrl) {
     onClick(".readline", readlineHandler);
 
     onClick(".areareadline", function areareadlineHandler($this, e) {

@@ -18,6 +18,7 @@
       "es7",
       "scripthost"
     ],
+    "experimentalDecorators": true,
     "noEmit": false,
     "declarationDir": "decls",
     "declaration": true,

@@ -59,7 +59,7 @@
 {% set col_2_sm = 12 %}
 {% set col_3_sm = 0 %}
 
-{% block mainctrl %}ng-controller="ViewCtrl as vctrl"{% endblock %}
+{% block mainctrl %}tim-view{% endblock %}
 
 {% block extramoduledefinitions %}
     {{ super() }}
@@ -107,17 +107,17 @@
     <form name="ignore_me">
         <input type="text" id="page_is_dirty" name="page_is_dirty" value="0" style="display: none;"/>
     </form>
-    <div class="paragraphs" ng-click="setNotePadge($event)" >
-        <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="showRefresh">
+    <div class="paragraphs" ng-click="$ctrl.setNotePadge($event)" >
+        <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="$ctrl.showRefresh">
             <p>The page has been modified since the last reload. Refresh now?</p>
-            <button class="timButton" ng-click="reload()">Refresh</button>
-            <button class="timButton" ng-click="closeRefreshDlg()">No</button>
+            <button class="timButton" ng-click="$ctrl.reload()">Refresh</button>
+            <button class="timButton" ng-click="$ctrl.closeRefreshDlg()">No</button>
         </div>
         {% raw %}
-        <div ng-cloak="" class="dialog" caption="Updates pending" tim-draggable-fixed="" ng-show="showUpdateDialog()">
-            <p>There are {{ pendingUpdatesCount() }} pending paragraph updates.</p>
-            <button class="timButton" ng-click="updatePending()">Update</button>
-            <button class="timButton" ng-click="hidePending = true">Dismiss</button>
+        <div ng-cloak="" class="dialog" caption="Updates pending" tim-draggable-fixed="" ng-show="$ctrl.showUpdateDialog()">
+            <p>There are {{ $ctrl.pendingUpdatesCount() }} pending paragraph updates.</p>
+            <button class="timButton" ng-click="$ctrl.updatePending()">Update</button>
+            <button class="timButton" ng-click="$ctrl.hidePending = true">Dismiss</button>
         </div>
         {% endraw %}
         {% if task_info and task_info.total_points %}
@@ -142,16 +142,16 @@
                 <a id="showSlidesLink" href="/show_slide/{{ item.path }}">Show slides only</a>
             </div>
         {% else %}
-            <div ng-controller="ReviewController as rctrl">
-                <div id="pars" {% if velp_mode or teacher_mode %}ng-click="rctrl.selectText($event)"{% endif %}>
+            <div>
+                <div id="pars" {% if velp_mode or teacher_mode %}ng-click="$parent.$ctrl.selectText($event)"{% endif %}>
                     {% include 'partials/paragraphs.html' %}
-                    <div class="addBottomContainer hidden-print" ng-show="vctrl.item.rights.editable"
+                    <div class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
                          ng-class="{'height-35': editing}">
                         <button class="addBottom timButton">Add paragraph</button>
                     </div>
                 </div>
                 {% if velp_mode or teacher_mode %}
-                    <velp-selection id="velpMenu"></velp-selection>
+                    <velp-selection on-init="$parent.$ctrl.initVelpSelection($API)" id="velpMenu"></velp-selection>
                 {% endif %}
             </div>
         {% endif %}
@@ -161,7 +161,7 @@
             <p>These are the current permissions for this document; please modify if needed.
                 You can always modify these permissions from the manage page.</p>
             <rights-editor
-                    item-id="docId"
+                    item-id="$ctrl.docId"
                     url-root="permissions">
             </rights-editor>
         </bootstrap-panel>

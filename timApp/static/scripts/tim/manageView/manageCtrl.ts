@@ -2,23 +2,7 @@ import angular, {IFormController, IScope, IController, IRootElementService} from
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {$compile, $http, $log, $timeout, $upload, $window} from "../ngimport";
-
-interface IRights {
-    teacher: boolean;
-    manage: boolean;
-}
-
-interface IItem {
-    id: number;
-    name: string;
-    location: string;
-    title: string;
-    isFolder: boolean;
-    fulltext: string;
-    rights: IRights;
-    versions: {}[];
-    path: string;
-}
+import {IItem} from "../IItem";
 
 export class PermCtrl implements IController {
     private static $inject = ["$scope", "$element"];

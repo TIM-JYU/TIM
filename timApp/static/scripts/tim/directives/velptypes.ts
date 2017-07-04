@@ -7,8 +7,44 @@ export interface IUIFields {
     valid?: boolean;
 }
 
-export interface IAnnotation {
+export interface IAnnotationCoordinate {
+    par_id: string;
+    t: string;
+    offset: number;
+    el_path: number[];
+    node: number;
+    depth: number;
+}
 
+export interface IAnnotationInterval {
+    start: IAnnotationCoordinate;
+    end: IAnnotationCoordinate;
+}
+
+export interface IAnnotationComment {
+
+}
+
+export interface IAnnotation {
+    id: number;
+    user_id: number;
+    doc_id: number;
+    reason: string;
+    email: string;
+    edit_access: boolean;
+    timesince: string;
+    creationtime: string;
+    newannotation: boolean;
+    content: string;
+    velp: number;
+    points: string;
+    color: string;
+    coord: IAnnotationInterval;
+    answer_id: number;
+    comments: IAnnotationComment[];
+    visible_to: number;
+    default_comment: string;
+    annotator_name: string;
 }
 
 export interface IVelp {

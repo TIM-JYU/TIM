@@ -22,6 +22,7 @@ export let colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "corn
  * @lends module:velpWindow
  */
 export class VelpWindowController {
+    private onVelpSelect: (velp: IVelp) => void;
     private velpLocal: IVelp;
     private velp: IVelp & IUIFields;
     private newLabel: ILabel & IUIFields;
@@ -135,7 +136,7 @@ export class VelpWindowController {
 
     useVelp() {
         if (!this.velp.edit && !this.notAnnotationRights(this.velp.points)) {
-            this.velpSelection.useVelp(this.velp);
+            this.onVelpSelect(this.velp);
         }
 
     }
@@ -145,7 +146,7 @@ export class VelpWindowController {
      * @param points - Points given in velp or annotation
      * @returns {boolean} - Right to make annotations
      */
-    notAnnotationRights(points) {
+    notAnnotationRights(points: string) {
         if (this.teacherRight) {
             return false;
         } else {
@@ -498,6 +499,7 @@ timApp.component("velpWindow", {
         index: "<",
         docId: "<",
         teacherRight: "<",
+        onVelpSelect: "&",
     },
     require: {
         velpSelection: "velpSelection",

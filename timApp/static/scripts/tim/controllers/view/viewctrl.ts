@@ -23,6 +23,8 @@ import {onClick} from "./eventhandlers";
 import {MenuFunction, MenuFunctionCollection} from "./IViewCtrl";
 import {EditingHandler} from "./editing";
 import {RefPopupHandler} from "./refpopup";
+import {IUser} from "../../IUser";
+import {IItem} from "../../IItem";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -30,159 +32,161 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
     EditingHandler, NotesHandler, ParmenuHandler, RefPopupHandler {
     overReflink: boolean;
     overPopup: boolean;
+    private notification: string;
 
     initRefPopup(sc: IScope, view: ViewCtrl): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     showRefPopup(e, $ref, coords, attrs): JQuery {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     hideRefPopup(): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     lastclicktime: number;
     lastclickplace: {left; top};
 
     initParMenu(sc: IScope, view: ViewCtrl): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     toggleActionButtons(e, $par, toggle1, toggle2, coords): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     optionsWindowClosed(): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     updatePopupMenu(): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     noteBadgePar: JQuery;
     noteBadge: HTMLElement;
 
     initNotes(sc: IScope, view: ViewCtrl): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     toggleNoteEditor($parOrArea, options): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     handleNoteCancel(): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     handleNoteDelete(saveData, extraData): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     handleNoteSave(saveData, extraData): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     createNoteBadge($par): HTMLElement {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     addNote(): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     setNotePadge($event): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     updateNoteBadge($par): any | any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     clearNoteBadge(e): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     initQuestions(sc: IScope, view: ViewCtrl): void {
     }
 
     initClipboard(sc: IScope, view: ViewCtrl): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     initEditing(sc: IScope, view: ViewCtrl): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     initAreas(sc: IScope, view: ViewCtrl): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     toggleParEditor($pars, options): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     toggleEditor($par, options, attrs: Object, caption, directive): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     editSettingsPars(recursiveCall): Promise<any> {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     showEditWindow(e, $par): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     beginAreaEditing(e, $par): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     handleCancel(extraData): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     showAddParagraphAbove(e, $par): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     showAddParagraphBelow(e, $par): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     goToEditor(): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     closeAndSave(e, $par): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     closeWithoutSaving(e, $par): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     getEditorFunctions(): MenuFunctionCollection {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     showAddParagraphMenu(e, $parOrArea, coords): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     getAddParagraphFunctions(): MenuFunctionCollection {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     removeDefaultPars(): any {
-        return undefined;
+        throw new Error(this.mixinMsg);
     }
 
     showNoteWindow: MenuFunction;
 
     showOptionsWindow(e: any, $par: any, coords?): void {
+        throw new Error(this.mixinMsg);
     }
 
     addParagraphFunctions: MenuFunctionCollection;
@@ -264,9 +268,11 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
     }
 
     handleDelete(param: {version: any}, param2: {par: any; area_start: any; area_end: any}): void {
+        throw new Error(this.mixinMsg);
     }
 
     addSavedParToDom(data, extraData: {docId: number; par: string; par_next}): void {
+        throw new Error(this.mixinMsg);
     }
 
     selectedAreaName: string;
@@ -368,26 +374,26 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
     public lectureId: number;
     public lectureMode: boolean;
     public inLecture: boolean;
-    public item: any;
+    public item: IItem;
     public docId: number;
 
     public sc: IScope;
     private hidePending: boolean;
-    private group: any;
+    public group: any;
     private scope: IScope;
-    private noBrowser: boolean;
+    public noBrowser: boolean;
     private docName: string;
     public docVersion: any;
     private crumbs: any;
     private startIndex: number;
-    private users: any[];
-    private teacherMode: boolean;
+    public users: IUser[];
+    public teacherMode: boolean;
     private velpMode: boolean;
 
     private pendingUpdates: {};
     private document: Document;
     private showRefresh: boolean;
-    private selectedUser: {};
+    public selectedUser: IUser;
     public editing: boolean;
     public $storage: ngStorage.StorageService & {defaultAction: string; noteAccess: string};
     private liveUpdates: number;
@@ -397,14 +403,6 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
-        this.initQuestions(sc, this);
-        this.initAreas(sc, this);
-        this.initClipboard(sc, this);
-        this.initEditing(sc, this);
-        this.initNotes(sc, this);
-        this.initParMenu(sc, this);
-        this.initRefPopup(sc, this);
-        initReadings(sc);
 
         this.noBrowser = $window.noBrowser;
         this.docId = $window.item.id;
@@ -445,6 +443,14 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
             }
         });
 
+        this.initQuestions(sc, this);
+        this.initAreas(sc, this);
+        this.initClipboard(sc, this);
+        this.initEditing(sc, this);
+        this.initNotes(sc, this);
+        this.initParMenu(sc, this);
+        this.initRefPopup(sc, this);
+        initReadings(this);
         initIndex();
 
         // from https://stackoverflow.com/a/7317311
@@ -509,23 +515,6 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
             }
         });
 
-        this.scope.$watchGroup([
-            () => this.lectureMode,
-            () => this.selection.start,
-            () => this.selection.end,
-            () => this.editing,
-            () => this.getEditMode(),
-            () => this.allowPasteContent,
-            () => this.allowPasteRef,
-            () => this.getAllowMove()], function(newValues, oldValues, scope) {
-            this.updatePopupMenu();
-            if (this.editing) {
-                this.notification = "Editor is already open.";
-            } else {
-                this.notification = "";
-            }
-        });
-
         this.$storage = $localStorage.$default({
             defaultAction: "Show options window",
             noteAccess: "everyone",
@@ -582,7 +571,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
                         replaceFn(d, d.id);
                     }
                 }
-                $timeout(function() {
+                $timeout(() => {
                     this.document.rebuildSections();
                 }, 1000);
             }, 1000 * this.liveUpdates);
@@ -597,6 +586,25 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         } catch (e) {
         }
         timLogTime("ViewCtrl end", "view");
+    }
+
+    $onInit() {
+        this.scope.$watchGroup([
+            () => this.lectureMode,
+            () => this.selection.start,
+            () => this.selection.end,
+            () => this.editing,
+            () => this.getEditMode(),
+            () => this.allowPasteContent,
+            () => this.allowPasteRef,
+            () => this.getAllowMove()], (newValues, oldValues, scope) => {
+            this.updatePopupMenu();
+            if (this.editing) {
+                this.notification = "Editor is already open.";
+            } else {
+                this.notification = "";
+            }
+        });
     }
 
     reload() {
@@ -660,9 +668,9 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
 
     setHeaderLinks() {
         const pars = $(".parContent");
-        pars.each(function() {
+        pars.each(() => {
             const $p = $(this);
-            $p.find("h1, h2, h3, h4, h5, h6").each(function() {
+            $p.find("h1, h2, h3, h4, h5, h6").each(() => {
                 const $h = $(this);
                 const id = $h.attr("id");
                 if (angular.isDefined(id)) {
@@ -692,4 +700,8 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
 applyMixins(ViewCtrl, [QuestionHandler, AreaHandler, ClipboardHandler,
     EditingHandler, NotesHandler, ParmenuHandler, RefPopupHandler]);
 
-timApp.controller("ViewCtrl", ViewCtrl);
+timApp.component("timView", {
+    controller: ViewCtrl,
+    template: "<div ng-transclude></div>",
+    transclude: true,
+});

@@ -44,7 +44,6 @@ function wmax(value, min, max) {
 timApp.directive("timDraggableFixed", [function() {
     return {
         controller: DraggableController,
-        replace: false,
         restrict: "A",
     };
 }]);
@@ -80,9 +79,11 @@ class DraggableController {
     private lastPageXYPos = {X: 0, Y: 0};
     private handle = $("<div>", {class: "draghandle"});
     private broadcastMsg: string;
+    private attr: IAttributes;
 
     constructor(scope: IScope, attr: IAttributes, element: IRootElementService) {
         this.element = element;
+        this.attr = attr;
         if (attr.save) {
             const pageId = window.location.pathname.split("/")[1];  // /velp/???
             this.posKey = attr.save.replace("%%PAGEID%%", pageId);
@@ -97,7 +98,10 @@ class DraggableController {
                 this.clickFn = $parse(attr.click);
             }
         }
+    }
 
+    $postLink() {
+        const attr = this.attr;
         let closeFn = null;
         if (attr.close) {
             closeFn = $parse(attr.close);
@@ -109,14 +113,14 @@ class DraggableController {
                 class: "titlebutton minimize",
             });
             minimizeElem.on("click", () => {
-                this.clickFn(scope);
+                this.clickFn(this.scope);
             });
             this.handle.append(minimizeElem);
         }
         if (attr.close) {
             const close = $("<img>", {src: "/static/images/close-window-16.png", class: "titlebutton close"});
             close.on("click", () => {
-                closeFn(scope);
+                closeFn(this.scope);
             });
             this.handle.append(close);
         }
@@ -197,7 +201,7 @@ class DraggableController {
                 timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
             }
             if (getStorage(this.posKey + "min")) {
-                scope.minimize();
+                this.minimize();
             }
         }
     }

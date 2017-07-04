@@ -3,6 +3,10 @@ import $ from "jquery";
 import sessionsettings from "tim/session";
 import {$log} from "./ngimport";
 
+export function checkIfElement(x: any): x is Element {
+    return typeof ((x as any).hasAttribute) === "function";
+}
+
 /**
  * Scroll window to the given element.
  * @method scrollToElement
@@ -20,7 +24,7 @@ export function scrollToElement(element) {
  * @param element - Element whose parent is queried for
  * @returns {Element} Element parent
  */
-export function getElementParent(element) {
+export function getElementParent(element: Node): Element {
     /*
      if (typeof element.parentElement !== "undefined")
      return element.parentElement;
@@ -32,7 +36,7 @@ export function getElementParent(element) {
     if (!parent) {
         return null;
     }
-    if (typeof parent.tagName !== "undefined") {
+    if (checkIfElement(parent)) {
         return parent;
     }
 

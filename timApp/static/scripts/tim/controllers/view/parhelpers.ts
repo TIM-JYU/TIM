@@ -200,7 +200,7 @@ export function dereferencePar($par: JQuery) {
  * @param par - Paragraph where the element will be added
  * @param el - Element to add
  */
-export function addElementToParagraphMargin(par: HTMLElement, el: Element) {
+export function addElementToParagraphMargin(par: Element, el: Element) {
     const container = par.getElementsByClassName("notes");
     if (container.length > 0) {
         container[0].appendChild(el);
