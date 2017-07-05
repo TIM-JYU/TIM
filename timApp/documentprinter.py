@@ -61,10 +61,9 @@ class DocumentPrinter:
         pars_to_print = []
 
         for par in self._doc_entry.document.get_paragraphs():
-            print_flag = par.get_attr('print')
+            par_classes = par.get_attr('classes', [])
 
-            # print("Attritube 'print' of par %s has value %s" % (par.get_id(), print_flag))
-            if print_flag is not None and str.lower(print_flag) is not 'false':
+            if 'hidden-print' in par_classes:
                 continue
 
             pars_to_print.append(par)
