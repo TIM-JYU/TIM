@@ -66,7 +66,10 @@ export class ParmenuHandler {
             return true;
         }, true);
 
-        this.viewctrl.defaultAction = {func: this.showOptionsWindow, desc: "Show options window"};
+        this.viewctrl.defaultAction = {
+            func: (e, $par) => this.showOptionsWindow(e, $par, null),
+            desc: "Show options window"
+        };
 
         onClick(".editline", ($this, e) => {
             closeOptionsWindow();
@@ -83,7 +86,11 @@ export class ParmenuHandler {
             return false;
         }, true);
 
-        this.viewctrl.popupMenuAttrs = {actions: "editorFunctions", save: "defaultAction", onclose: "optionsWindowClosed"};
+        this.viewctrl.popupMenuAttrs = {
+            actions: "$ctrl.editorFunctions",
+            save: "$ctrl.defaultAction",
+            onclose: "$ctrl.optionsWindowClosed"
+        };
         this.updatePopupMenu();
     }
 
@@ -179,7 +186,7 @@ export class ParmenuHandler {
             this.viewctrl.popupMenuAttrs.save = null;
             this.viewctrl.popupMenuAttrs.editbutton = false;
         } else {
-            this.viewctrl.popupMenuAttrs.save = "defaultAction";
+            this.viewctrl.popupMenuAttrs.save = "$ctrl.defaultAction";
             this.viewctrl.popupMenuAttrs.editbutton = true;
         }
     }

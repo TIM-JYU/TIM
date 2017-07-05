@@ -22,12 +22,12 @@ export class ClipboardHandler {
 
     showPasteMenu(e, $parOrArea, coords) {
         this.viewctrl.pasteFunctions = this.getPasteFunctions();
-        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "pasteFunctions", contenturl: "/clipboard"});
+        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "$ctrl.pasteFunctions", contenturl: "/clipboard"});
     }
 
     showMoveMenu(e, $parOrArea, coords) {
         this.viewctrl.pasteFunctions = this.getMoveFunctions();
-        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "pasteFunctions", contenturl: "/clipboard"});
+        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "$ctrl.pasteFunctions", contenturl: "/clipboard"});
     }
 
     pasteContentAbove(e, $par) {
@@ -194,19 +194,19 @@ export class ClipboardHandler {
     getPasteFunctions() {
         this.updateClipboardStatus();
         return [
-            {func: this.pasteRefAbove, desc: "Above, as a reference", show: this.viewctrl.allowPasteRef},
-            {func: this.pasteContentAbove, desc: "Above, as content", show: this.viewctrl.allowPasteContent},
-            {func: this.pasteRefBelow, desc: "Below, as a reference", show: this.viewctrl.allowPasteRef},
-            {func: this.pasteContentBelow, desc: "Below, as content", show: this.viewctrl.allowPasteContent},
-            {func: this.viewctrl.nothing, desc: "Cancel", show: true},
+            {func: (e, $par) => this.pasteRefAbove(e, $par), desc: "Above, as a reference", show: this.viewctrl.allowPasteRef},
+            {func: (e, $par) => this.pasteContentAbove(e, $par), desc: "Above, as content", show: this.viewctrl.allowPasteContent},
+            {func: (e, $par) => this.pasteRefBelow(e, $par), desc: "Below, as a reference", show: this.viewctrl.allowPasteRef},
+            {func: (e, $par) => this.pasteContentBelow(e, $par), desc: "Below, as content", show: this.viewctrl.allowPasteContent},
+            {func: (e, $par) => this.viewctrl.nothing(), desc: "Cancel", show: true},
         ];
     }
 
     getMoveFunctions() {
         return [
-            {func: this.moveAbove, desc: "Above", show: this.viewctrl.allowPasteContent},
-            {func: this.moveBelow, desc: "Below", show: this.viewctrl.allowPasteContent},
-            {func: this.viewctrl.nothing, desc: "Cancel", show: true},
+            {func: (e, $par) => this.moveAbove(e, $par), desc: "Above", show: this.viewctrl.allowPasteContent},
+            {func: (e, $par) => this.moveBelow(e, $par), desc: "Below", show: this.viewctrl.allowPasteContent},
+            {func: (e, $par) => this.viewctrl.nothing(), desc: "Cancel", show: true},
         ];
     }
 

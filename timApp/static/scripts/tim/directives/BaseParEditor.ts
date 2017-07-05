@@ -8,16 +8,30 @@ export function focusAfter(target: BaseParEditor, key: string, descriptor: Prope
     };
 }
 
-export class BaseParEditor {
+export abstract class BaseParEditor {
     public wrapFn: () => void;
+    public saveClicked: () => void;
     protected editor: IAceEditor | JQuery;
 
-    constructor(editor: IAceEditor | JQuery, wrapFn: () => void) {
+    constructor(editor: IAceEditor | JQuery, wrapFn: () => void, saveClicked: () => void) {
         this.editor = editor;
         this.wrapFn = wrapFn;
+        this.saveClicked = saveClicked;
     }
 
     public focus() {
         this.editor.focus();
+    }
+
+    public abstract surroundClicked(before: string, after: string, func?);
+
+    public italicSurroundClicked() {
+        this.surroundClicked("*", "*", () => this.surroundedByItalic());
+    }
+
+    public abstract surroundedBy(before: string, after: string): boolean;
+
+    public surroundedByItalic() {
+        return (this.surroundedBy("*", "*") && !this.surroundedBy("**", "**")) || this.surroundedBy("***", "***");
     }
 }

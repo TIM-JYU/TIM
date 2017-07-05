@@ -1,15 +1,15 @@
 import {$log} from "../ngimport";
-import {BaseParEditor} from "./BaseParEditor";
+import {BaseParEditor, focusAfter} from "./BaseParEditor";
 
 export class TextAreaParEditor extends BaseParEditor {
     public editor: JQuery;
     private editorElement: HTMLTextAreaElement;
 
-    constructor(editor: JQuery, wrapFn: () => void) {
-        super(editor, wrapFn);
+    constructor(editor: JQuery, wrapFn: () => void, saveClicked: () => void) {
+        super(editor, wrapFn, saveClicked);
         this.editor = editor;
         this.editorElement = editor.get(0) as HTMLTextAreaElement;
-        this.editor.keydown(function(e) {
+        this.editor.keydown((e) => {
             if (e.ctrlKey) {
                 if (e.keyCode === 83) {
                     this.saveClicked();
@@ -18,7 +18,7 @@ export class TextAreaParEditor extends BaseParEditor {
                     this.surroundClicked("**", "**");
                     e.preventDefault();
                 } else if (e.keyCode === 73) {
-                    this.surroundClicked("*", "*", this.surroundedByItalic);
+                    this.italicSurroundClicked();
                     e.preventDefault();
                 } else if (e.altKey) {
                     if (e.keyCode === 79) {
@@ -61,10 +61,12 @@ export class TextAreaParEditor extends BaseParEditor {
     }
 
     //Navigation
+    @focusAfter
     undoClicked() {
         document.execCommand("undo", false, null);
     }
 
+    @focusAfter
     redoClicked() {
         document.execCommand("redo", false, null);
     }
@@ -84,18 +86,21 @@ export class TextAreaParEditor extends BaseParEditor {
         }
     }
 
+    @focusAfter
     leftClicked() {
         const editor = this.editorElement;
         editor.selectionStart = editor.selectionEnd -= 1;
         this.scrollToCaret();
     }
 
+    @focusAfter
     rightClicked() {
         const editor = this.editorElement;
         editor.selectionStart = editor.selectionEnd += 1;
         this.scrollToCaret();
     }
 
+    @focusAfter
     upClicked() {
         const editor = this.editorElement;
         let pos = editor.selectionEnd;
@@ -109,6 +114,7 @@ export class TextAreaParEditor extends BaseParEditor {
         this.scrollToCaret();
     }
 
+    @focusAfter
     downClicked() {
         const editor = this.editorElement;
         let pos = editor.selectionEnd;
@@ -122,6 +128,7 @@ export class TextAreaParEditor extends BaseParEditor {
         this.scrollToCaret();
     }
 
+    @focusAfter
     homeClicked() {
         const editor = this.editorElement;
         editor.selectionEnd = editor.selectionStart =
@@ -129,6 +136,7 @@ export class TextAreaParEditor extends BaseParEditor {
         this.scrollToCaret();
     }
 
+    @focusAfter
     endClicked() {
         const editor = this.editorElement;
         const pos = editor.selectionEnd;
@@ -140,18 +148,21 @@ export class TextAreaParEditor extends BaseParEditor {
         this.scrollToCaret();
     }
 
+    @focusAfter
     topClicked() {
         const editor = this.editorElement;
         editor.selectionStart = editor.selectionEnd = 0;
         this.editor.scrollTop(0);
     }
 
+    @focusAfter
     bottomClicked() {
         const editor = this.editorElement;
         editor.selectionStart = editor.selectionEnd = editor.value.length;
         this.editor.scrollTop(this.editor.prop("scrollHeight"));
     }
 
+    @focusAfter
     insertClicked() {
         const input = document.getElementById("teksti") as HTMLInputElement;
         input.addEventListener("keypress", () => {
@@ -220,14 +231,17 @@ export class TextAreaParEditor extends BaseParEditor {
 
     //Navigation
     //Style
+    @focusAfter
     indentClicked() {
         this.indent();
     }
 
+    @focusAfter
     outdentClicked() {
         this.indent(true);
     }
 
+    @focusAfter
     surroundClicked(before, after, func = null) {
         if (this.editor.getSelection().text === "") {
             this.selectWord();
@@ -245,10 +259,12 @@ export class TextAreaParEditor extends BaseParEditor {
         }
     }
 
+    @focusAfter
     codeBlockClicked() {
         this.editor.surroundSelectedText("```\n", "\n```", "select");
     }
 
+    @focusAfter
     headerClicked(head) {
         const selection = this.selectLine(true);
         const tempEnd = selection.end;
@@ -293,7 +309,7 @@ export class TextAreaParEditor extends BaseParEditor {
         return false;
     }
 
-    surroundedBy(before, after) {
+    surroundedBy(before: string, after: string): boolean {
         const value = this.editor.val();
         const selection = this.editor.getSelection();
         const word = value.substring(selection.start - before.length, selection.end + after.length);
@@ -307,6 +323,7 @@ export class TextAreaParEditor extends BaseParEditor {
      * @param linkDefault Placeholder for link address
      * @param isImage true, if link is an image
      */
+    @focusAfter
     linkClicked(descDefault, linkDefault, isImage) {
         const image = (isImage) ? "!" : "";
         if (this.editor.getSelection().text === "") {
@@ -343,11 +360,13 @@ export class TextAreaParEditor extends BaseParEditor {
         return {start: tempStart, end: tempEnd};
     }
 
+    @focusAfter
     listClicked() {
         this.selectLine(true);
         this.editor.replaceSelectedText("- " + this.editor.getSelection().text);
     }
 
+    @focusAfter
     insertTemplate(text) {
         const pluginnamehere = "PLUGINNAMEHERE";
         const searchEndIndex = this.editor.getSelection().start;
@@ -399,11 +418,13 @@ export class TextAreaParEditor extends BaseParEditor {
         }
     }
 
+    @focusAfter
     ruleClicked() {
         this.endClicked();
         this.editor.replaceSelectedText("\n#-\n---\n#-\n");
     }
 
+    @focusAfter
     paragraphClicked() {
         this.endClicked();
         this.editor.replaceSelectedText("\n#-\n");
@@ -412,6 +433,7 @@ export class TextAreaParEditor extends BaseParEditor {
     /*
      * Creates a comment section of selected text, comment block or comments the cursor line
      */
+    @focusAfter
     commentClicked() {
         const editor = this.editorElement;
         // If text is selected surround selected text with comment brackets
@@ -426,6 +448,7 @@ export class TextAreaParEditor extends BaseParEditor {
         this.surroundClicked("{!!!", "!!!}");
     }
 
+    @focusAfter
     endLineClicked() {
         const editor = this.editorElement;
         const selection = this.editor.getSelection();
@@ -452,6 +475,7 @@ export class TextAreaParEditor extends BaseParEditor {
 
     //Insert
     //Special characters
+    @focusAfter
     charClicked($event, char) {
         let character = $($event.target).text();
         $log.info(char);
@@ -461,16 +485,19 @@ export class TextAreaParEditor extends BaseParEditor {
         this.editor.replaceSelectedText(character);
     }
 
+    @focusAfter
     //Special characters
     //TEX
     indexClicked() {
         this.editor.surroundSelectedText("_{", "}", "select");
     }
 
+    @focusAfter
     powerClicked() {
         this.editor.surroundSelectedText("^{", "}", "select");
     }
 
+    @focusAfter
     squareClicked() {
         this.editor.surroundSelectedText("\\sqrt {", "}", "select");
     }

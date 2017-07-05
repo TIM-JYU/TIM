@@ -366,7 +366,7 @@ export class PareditorController implements angular.IController {
       wrap="off">
 </textarea>`);
         $(".editorContainer").append($textarea);
-        this.editor = new TextAreaParEditor($("#teksti"), () => this.wrapFn());
+        this.editor = new TextAreaParEditor($("#teksti"), () => this.wrapFn(), () => this.saveClicked());
         this.editor.setEditorText(text);
     }
 
@@ -860,10 +860,6 @@ export class PareditorController implements angular.IController {
         $window.localStorage.setItem("oldMode" + this.options.localSaveTag, oldMode);
     }
 
-    surroundedByItalic() {
-        return ((this.editor.surroundedBy("*", "*") && !this.editor.surroundedBy("**", "**")) || this.editor.surroundedBy("***", "***"));
-    }
-
     onFileSelect(file) {
         this.uploadedFile = "";
         this.editor.focus();
@@ -962,9 +958,9 @@ export class PareditorController implements angular.IController {
 
     slideClicked($event) {
         const buttons = [];
-        buttons.push(this.createMenuButton("Slide break", "Break text to start a new slide", "$ctrl.wrapFn(ruleClicked)"));
-        buttons.push(this.createMenuButton("Slide fragment", "Content inside the fragment will be hidden and shown when next is clicked in slide view", "$ctrl.surroundClicked('§§', '§§'); $ctrl.wrapFn()"));
-        buttons.push(this.createMenuButton("Fragment block", "Content inside will show as a fragment and may contain inner slide fragments", "$ctrl.surroundClicked('<§', '§>'); $ctrl.wrapFn()"));
+        buttons.push(this.createMenuButton("Slide break", "Break text to start a new slide", "$ctrl.ruleClicked(); $ctrl.wrapFn()"));
+        buttons.push(this.createMenuButton("Slide fragment", "Content inside the fragment will be hidden and shown when next is clicked in slide view", "$ctrl.editor.surroundClicked('§§', '§§')"));
+        buttons.push(this.createMenuButton("Fragment block", "Content inside will show as a fragment and may contain inner slide fragments", "$ctrl.editor.surroundClicked('<§', '§>')"));
         this.createMenu($event, buttons);
     }
 
@@ -1088,7 +1084,7 @@ export class PareditorController implements angular.IController {
             $(".editorContainer").append(neweditorElem);
             const neweditor = ace.edit("ace_editor");
 
-            this.editor = new AceParEditor(ace, neweditor, () => this.wrapFn());
+            this.editor = new AceParEditor(ace, neweditor, () => this.wrapFn(), () => this.saveClicked());
             if (!this.minSizeSet) {
                 this.setEditorMinSize();
             }

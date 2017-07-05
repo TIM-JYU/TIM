@@ -10,8 +10,8 @@ export class AceParEditor extends BaseParEditor {
     public editor: IAceEditor;
     private snippetManager: ISnippetManager;
 
-    constructor(ace: AceAjax.Ace, editor: AceAjax.Editor, wrapFn: () => void) {
-        super(editor as IAceEditor, wrapFn);
+    constructor(ace: AceAjax.Ace, editor: AceAjax.Editor, wrapFn: () => void, saveClicked: () => void) {
+        super(editor as IAceEditor, wrapFn, saveClicked);
         this.editor = editor as IAceEditor;
         this.snippetManager = ace.require("ace/snippets").snippetManager;
         const line = editor.renderer.lineHeight;
@@ -41,7 +41,7 @@ export class AceParEditor extends BaseParEditor {
                 mac: "Command-S",
                 sender: "editor|cli",
             },
-            exec(env, args, request) {
+            exec: (env, args, request) => {
                 this.saveClicked();
             },
         });
@@ -52,7 +52,7 @@ export class AceParEditor extends BaseParEditor {
                 mac: "Command-B",
                 sender: "editor|cli",
             },
-            exec(env, args, request) {
+            exec: (env, args, request) => {
                 this.surroundClicked("**", "**");
             },
         });
@@ -63,8 +63,8 @@ export class AceParEditor extends BaseParEditor {
                 mac: "Command-I",
                 sender: "editor|cli",
             },
-            exec(env, args, request) {
-                this.surroundClicked("*", "*", this.surroundedByItalic);
+            exec: (env, args, request) => {
+                this.surroundClicked("*", "*", () => this.surroundedByItalic());
             },
         });
         this.editor.commands.addCommand({
@@ -74,7 +74,7 @@ export class AceParEditor extends BaseParEditor {
                 mac: "Command-O",
                 sender: "editor|cli",
             },
-            exec(env, args, request) {
+            exec: (env, args, request) => {
                 this.surroundClicked("`", "`");
             },
         });
@@ -85,7 +85,7 @@ export class AceParEditor extends BaseParEditor {
                 mac: "Command-Alt-O",
                 sender: "editor|cli",
             },
-            exec(env, args, request) {
+            exec: (env, args, request) => {
                 this.codeBlockClicked();
             },
         });
@@ -96,7 +96,7 @@ export class AceParEditor extends BaseParEditor {
                 mac: "Command-1",
                 sender: "editor|cli",
             },
-            exec(env, args, request) {
+            exec: (env, args, request) => {
                 this.headerClicked("#");
             },
         });
@@ -107,7 +107,7 @@ export class AceParEditor extends BaseParEditor {
                 mac: "Command-2",
                 sender: "editor|cli",
             },
-            exec(env, args, request) {
+            exec: (env, args, request) => {
                 this.headerClicked("##");
             },
         });
@@ -118,7 +118,7 @@ export class AceParEditor extends BaseParEditor {
                 mac: "Command-3",
                 sender: "editor|cli",
             },
-            exec(env, args, request) {
+            exec: (env, args, request) => {
                 this.headerClicked("###");
             },
         });
@@ -129,7 +129,7 @@ export class AceParEditor extends BaseParEditor {
                 mac: "Command-4",
                 sender: "editor|cli",
             },
-            exec(env, args, request) {
+            exec: (env, args, request) => {
                 this.headerClicked("####");
             },
         });
@@ -140,7 +140,7 @@ export class AceParEditor extends BaseParEditor {
                 mac: "Command-Enter",
                 sender: "editor|cli",
             },
-            exec(env, args, request) {
+            exec: (env, args, request) => {
                 this.endLineClicked();
             },
         });
@@ -151,7 +151,7 @@ export class AceParEditor extends BaseParEditor {
                 mac: "Shift-Enter",
                 sender: "editor|cli",
             },
-            exec(env, args, request) {
+            exec: (env, args, request) => {
                 this.paragraphClicked();
             },
         });
@@ -162,7 +162,7 @@ export class AceParEditor extends BaseParEditor {
                 mac: "Command-Y",
                 sender: "editor|cli",
             },
-            exec(env, args, request) {
+            exec: (env, args, request) => {
                 this.commentClicked();
             },
         });
@@ -290,7 +290,7 @@ export class AceParEditor extends BaseParEditor {
         return true;
     }
 
-    surroundedBy(before, after) {
+    surroundedBy(before: string, after: string): boolean {
         const range = this.editor.getSelectionRange();
         range.start.column -= before.length;
         range.end.column += after.length;

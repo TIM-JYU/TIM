@@ -5,13 +5,14 @@ import {watchEditMode} from "tim/editmode";
 import {$http, $window} from "../ngimport";
 
 class PopupMenuController {
-    private model: {editState: any};
+    private static $inject = ["$scope", "$element"];
+    private model: {editState: boolean};
     private element: IRootElementService;
     private contenturl: string;
     private srcid: string;
     private $pars: JQuery;
     private editContext: string | null;
-    private editButton: boolean;
+    private editbutton: boolean;
     private areaEditButton: boolean;
     private onClose: (pars: JQuery) => void;
     private colClass: string;
@@ -20,7 +21,7 @@ class PopupMenuController {
 
     constructor(scope: IScope, element: IRootElementService) {
         this.$pars = $(this.srcid);
-        this.editButton = false;
+        this.editbutton = false;
         this.areaEditButton = false;
         this.editContext = null;
 
@@ -30,8 +31,8 @@ class PopupMenuController {
 
         this.model = {editState: $window.editMode};
         this.element = element;
-        scope.$watch("model.editState", watchEditMode);
-        scope.$watch("model.editState", this.watchEditMode);
+        scope.$watch(() => this.model.editState, watchEditMode);
+        scope.$watch(() => this.model.editState, (newEditMode, oldEditMode) => this.watchEditMode(newEditMode, oldEditMode));
 
         element.css("position", "absolute"); // IE needs this
 
@@ -103,5 +104,8 @@ timApp.component("popupMenu", {
         srcid: "@",
     },
     controller: PopupMenuController,
+    require: {
+        vctrl: "^timView",
+    },
     templateUrl: "/static/templates/popupMenu.html",
 });

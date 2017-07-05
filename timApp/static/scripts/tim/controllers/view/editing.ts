@@ -128,9 +128,9 @@ export class EditingHandler {
                     {name: "markread", desc: "Mark as read"},
                 ],
             },
-            "after-save": "addSavedParToDom(saveData, extraData)",
-            "after-cancel": "handleCancel(extraData)",
-            "after-delete": "handleDelete(saveData, extraData)",
+            "after-save": "$ctrl.addSavedParToDom(saveData, extraData)",
+            "after-cancel": "$ctrl.handleCancel(extraData)",
+            "after-delete": "$ctrl.handleDelete(saveData, extraData)",
             "preview-url": "/preview/" + this.viewctrl.docId,
             "delete-url": "/deleteParagraph/" + this.viewctrl.docId,
             "unread-url": "/unread/" + this.viewctrl.docId,
@@ -361,8 +361,8 @@ export class EditingHandler {
                     desc: "Copy paragraph",
                     show: $window.editMode !== "area",
                 },
-                //{func: this.cutArea, desc: 'Cut area', show: $window.editMode === 'area'},
-                //{func: this.copyArea, desc: 'Copy area', show: $window.editMode === 'area'},
+                //{func: (e, par) => this.cutArea(e, par), desc: 'Cut area', show: $window.editMode === 'area'},
+                //{func: (e, par) => this.copyArea(e, par), desc: 'Copy area', show: $window.editMode === 'area'},
                 {
                     func: (e, par) => this.viewctrl.showPasteMenu(e, par),
                     desc: "Paste...",
@@ -405,14 +405,14 @@ export class EditingHandler {
     }
 
     showAddParagraphMenu(e, $parOrArea, coords) {
-        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "addParagraphFunctions"});
+        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "$ctrl.addParagraphFunctions"});
     }
 
     getAddParagraphFunctions() {
         return [
-            {func: this.showAddParagraphAbove, desc: "Above", show: true},
-            {func: this.showAddParagraphBelow, desc: "Below", show: true},
-            {func: this.viewctrl.nothing, desc: "Cancel", show: true},
+            {func: (e, $par) => this.showAddParagraphAbove(e, $par), desc: "Above", show: true},
+            {func: (e, $par) => this.showAddParagraphBelow(e, $par), desc: "Below", show: true},
+            {func: (e, $par) => this.viewctrl.nothing(), desc: "Cancel", show: true},
         ];
     }
 
