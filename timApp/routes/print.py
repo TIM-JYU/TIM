@@ -50,6 +50,8 @@ def pull_doc_path(endpoint, values):
 @print_blueprint.route("/<path:doc_path>", methods=['GET'])
 def print_document(doc_path):
     doc = g.doc_entry
+    if os.environ.get('TIM_HOST', None) is None:
+        os.environ['TIM_HOST'] = request.url_root
 
     file_type = request.args.get('file_type')
     template_doc_id = request.args.get('template_doc_id')
