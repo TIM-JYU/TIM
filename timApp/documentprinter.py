@@ -11,6 +11,7 @@ import pypandoc
 from flask import jsonify
 
 from documentmodel.docparagraph import DocParagraph
+from plugin import Plugin, parse_plugin_values
 from pluginOutputFormat import PluginOutputFormat
 from accesshelper import has_view_access
 from dbaccess import get_timdb
@@ -66,6 +67,17 @@ class DocumentPrinter:
             if 'hidden-print' in par_classes:
                 continue
 
+            # Replace plugin- and question pars with regular docpars with the md defined in the 'print' block
+            # of their yaml as the md content of the replacement par
+            if par.is_plugin() or par.is_question():
+                plugin_yaml = parse_plugin_values(par=par,
+                                           global_attrs=self._doc_entry.document.get_settings().global_plugin_attrs(),
+                                           macroinfo=self._doc_entry.document.get_settings().get_macroinfo(get_current_user_object()))
+                plugin_yaml_print = plugin_yaml.get('markup').get('print') if (plugin_yaml.get('markup') is not None) else None
+
+                if plugin_yaml_print is not None:
+                    par = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_print)
+
             pars_to_print.append(par)
 
         # Dereference pars and render markdown for plugins
@@ -84,6 +96,7 @@ class DocumentPrinter:
             if not pd['is_plugin'] and not pd['is_question']:
                 tmp_par = DocParagraph.create(doc= self._doc_entry.document, md=pd['md'])
                 pd['md'] = tmp_par.get_expanded_markdown()
+
             export_pars.append(pd['md'])
 
         content = '\n\n'.join(export_pars)
