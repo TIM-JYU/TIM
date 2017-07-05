@@ -15,8 +15,11 @@ TODO: BETTER DOCUMENTATION
 
 """
 import os
+import tempfile
+import urllib
+import uuid
 
-from defaultconfig import TIM_HOST, FILES_PATH
+from defaultconfig import FILES_PATH
 
 from pandocfilters import toJSONFilter, RawInline, Image, Link, Str
 
@@ -26,8 +29,13 @@ APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 IMAGE_ROOT = os.path.join(APP_ROOT, FILES_PATH, 'blocks')
 
 # protocol + hostname
-CURRENT_HOST_MACHINE = TIM_HOST
+CURRENT_HOST_MACHINE = os.environ.get('TIM_HOST', None)
 
+ALLOWED_EXTERNAL_HOSTS = ['www.google.fi']
+
+# Get the os temp directoryls
+TEMP_DIR_PATH = tempfile.gettempdir()
+DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, 'tim-img-dls')
 
 def handle_images(key, value, fmt, meta):
 
@@ -51,8 +59,8 @@ def handle_images(key, value, fmt, meta):
             path = path[1:]
 
         # handle internal absolute urls
-        base_address = scheme + '://' + host
-        if base_address == CURRENT_HOST_MACHINE:
+        base_address = scheme + '://' + host + '/'
+        if CURRENT_HOST_MACHINE is not None and base_address == CURRENT_HOST_MACHINE:
             image_path = os.path.join(APP_ROOT, path)
 
         # handle internal relative urls
@@ -63,6 +71,35 @@ def handle_images(key, value, fmt, meta):
 
         # handle external urls
         else:
+
+
+            # Download images from allowed external urls to be attached to the document.
+            if host in ALLOWED_EXTERNAL_HOSTS:
+
+                # create folder for image dls, if it does not exist already
+                if not os.path.exists(DOWNLOADED_IMAGES_ROOT):
+                    os.makedirs(DOWNLOADED_IMAGES_ROOT, )
+
+                # download img to the folder and give the file a random but unique name
+                img_uuid = str(uuid.uuid1()).replace('-', '') # remove hyphens
+                try:
+                    _, ext = os.path.splitext(url)
+                    img_dl_path = os.path.join(DOWNLOADED_IMAGES_ROOT, img_uuid + ext)
+                    urllib.URLopener().retrieve(url, img_dl_path)
+
+                    img_dl_path = img_dl_path.replace('\\', '/') # Ensure UNIX form
+                    return Image(attrs, alt_text_inlines, [img_dl_path, title])
+
+                except IOError:
+                    # could not download image, so display the image as a link to the imageURL
+                    return [
+                        RawInline('latex', "\externalimagelink{"),
+                        Link(attrs, [Str(url)], [url, title]),
+                        RawInline('latex', "}")
+                    ]
+
+            # For other external images, transform the element to appear as a link
+            # to the image resource in the LaTeX-output.
             return [
                 RawInline('latex', "\externalimagelink{"),
                 Link(attrs, [Str(url)], [url, title]),
