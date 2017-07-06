@@ -205,11 +205,11 @@ export class ReviewController implements IController {
     /**
      * Loads the annotations to the given answer.
      * @method loadAnnotationsToAnswer
-     * @param answer_id - Answer ID
+     * @param answerId - Answer ID
      * @param par - Paragraph element
      */
-    loadAnnotationsToAnswer(answer_id: number, par, showInPlace): void {
-        const annotations = this.getAnnotationsByAnswerId(answer_id);
+    loadAnnotationsToAnswer(answerId: number, par: Element, showInPlace: boolean): void {
+        const annotations = this.getAnnotationsByAnswerId(answerId);
 
         const oldAnnotations = par.querySelectorAll(".notes [aid]");
         if (oldAnnotations.length > 0) {
