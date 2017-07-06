@@ -56,35 +56,25 @@
     <div ng-if="errormsg" class="alert alert-danger">
         <strong>Error!</strong><p>{{ errormsg }}</p>
     </div>
-
 </div>
-    <!-- A working version. Short but creates ugly headers for categories
-    <form>
-        <div class="form-group input-group-sm">
-            <h4>Template</h4>
-            <div ng-repeat="(cat, items) in $ctrl.templatesJSON">
-                <h4>{{ cat }}</h4>
-                <div ng-repeat="item in items">
-                    {{ item.doc_path }}
-                </div>
-            </div>
-        </div>
-    </form>
-    -->
 
 <div class="modal-footer">
-    <div>
-        <label>
+    <div class="footerDiv">
+        <label class="footerLabel">
             <input type="radio" ng-model="selected.name" value="PDF">
             PDF
         </label>
-        <label>
+        <label class="footerLabel">
             <input type="radio" ng-model="selected.name" value="LaTeX">
             LaTeX
         </label>
-        <button class="btn btn-primary" type="button" ng-click="create()">Create</button>
-
-        <!--<button class="btn btn-primary" type="button" ng-click="createLatex()">Create LaTeX</button>
-        <button class="btn btn-primary" type="button" ng-click="createPdf()">Create PDF</button>-->
+        <button class="btn btn-primary has-spinner type="button" ng-click="create()">
+            <span ng-if="loading" class="spinner"><i class="icon-spin icon-refresh"></i></span>
+            Create
+        </button>
+    </div>
+    <div class="footerDiv">
+        <span ng-if="loading" class="glyphicon glyphicon-refresh lg"></span>
+        <a ng-if="createdUrl" ng-href="{{ createdUrl }}">View created document</a>
     </div>
 </div>
