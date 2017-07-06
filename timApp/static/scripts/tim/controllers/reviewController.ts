@@ -197,8 +197,9 @@ export class ReviewController implements IController {
         }
 
         if (element.nodeName === "SPAN") {
-            if (typeof ((element as any).hasAttribute) === "function")
-            return (element as any).hasAttribute("annotation");
+            if (typeof ((element as any).hasAttribute) === "function") {
+                return (element as any).hasAttribute("annotation");
+            }
         }
 
         return false;
@@ -1042,7 +1043,7 @@ export class ReviewController implements IController {
                     }
                     return [startnum, num];
 
-                } else if (checkIfElement(child)){
+                } else if (checkIfElement(child)) {
                     const innerEl = child.getElementsByClassName("highlighted")[0];
                     num += innerEl.childNodes.length;
 
