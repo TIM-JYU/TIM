@@ -5,26 +5,44 @@
 var angular, $;
 var timApp = angular.module('timApp');
 
-timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '$uibModal', 'document', '$uibModalInstance', '$location', 'templates',
+timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '$uibModal', 'document', '$uibModalInstance', '$location', 'templates', '$localStorage',
 
-    function ($scope, $http, $window, $uibModal, Users, $log, document, $uibModalInstance, $location, templates) {
+    function ($scope, $http, $window, $uibModal, Users, $log, document, $uibModalInstance, $location, templates, $localStorage) {
         $scope.dismissModal = function() {
             $uibModalInstance.dismiss();
         };
-
+        $scope.$storage = $localStorage.$default({
+            id: null
+        });
+        $scope.options = $scope.$storage.id;
+        
         $scope.document = document;
-        // console.log($scope.document);
         $scope.templatesObject = angular.fromJson(templates);
-        // console.log($scope.templatesObject);
         $scope.defaultTemplates = $scope.templatesObject.defaultTemplates;
         $scope.userTemplates = $scope.templatesObject.userTemplates;
         $scope.errormsg = null;
         $scope.notificationmsg = null;
+        $scope.createdUrl;
+        $scope.loading = false;
 
-        $scope.chosenTemplate = {
-           // 'id' : null
-
-           'id': $scope.userTemplates[0].doc_id // TODO: Check if exists. 
+        $scope.chosenTemplate = initTemplate();
+        function initTemplate() {
+            if ($scope.$storage.id) {
+                var tmp = { 'id' : $scope.$storage.id };
+                return tmp;
+            }
+            else if ($scope.defaultTemplates[0] && $scope.defaultTemplates[0].doc_id) {
+                var tmp = { 'id' : $scope.defaultTemplates[0].doc_id}
+                return tmp;   
+            }  
+            else if ($scope.userTemplates[0] && $scope.userTemplates[0].doc_id) {
+                var tmp = { 'id' : $scope.userTemplates[0].doc_id}
+                return tmp;
+            }
+            else {
+                var tmp =  {'id' : null }
+                return tmp;
+            }            
         };
 
         $scope.selected = {
@@ -39,11 +57,12 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
                 // TODO: also kind of pointless as the filetype comes from the predefined functions
             }
             var chosenTemplateId = $scope.chosenTemplate.id;
+            $scope.$storage.id = chosenTemplateId;
+
             if (chosenTemplateId) {
                 $scope.notificationmsg = null;
                 var requestURL = '/print/' + $scope.document.path + '?file_type=' + fileType + '&template_doc_id=' + chosenTemplateId;
 
-                // console.log('request url: ' + requestURL);
                 $http({
                     method: 'GET',
                     url: requestURL,
@@ -52,22 +71,13 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
                     }
                 }).then(function success(response) {
                     $scope.errormsg = null;
-                    // console.log(response);
-
-                    // A nice way of doing this without accessing the resource a second time,
-                    // but messes up the resource name which seems inconvenient
-                    // TODO: investigate if the ObjcetURL could be the same one that is first accessed
-                    // var file = new Blob([response.data], {type: 'text/plain'});
-                    // var fileURL = URL.createObjectURL(file);
-                    // window.open(fileURL);
-
-                    // The dumber(?) way of doing the same thing.
                     $scope.openURLinNewTab(requestURL);
+                    $scope.createdUrl = requestURL;
+                    $scope.loading = false;
 
                 }, function error(response) {
-                    // Check if the error routes correctly.
-                    // console.log(response.data.error);
                     $scope.errormsg = response.data.error;
+                    $scope.loading = false;
                 });
             } else {
                 $scope.notificationmsg = "You need to choose a template first!";
@@ -79,6 +89,8 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
         };
 
         $scope.create = function () {
+            $scope.loading = true;
+            $scope.createdUrl = null;
             if ($scope.selected.name === 'PDF'){
                 $scope.getPrintedDocument('pdf');
             }
@@ -86,16 +98,6 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
                 $scope.getPrintedDocument('latex');
             }
         }
-
-        /*
-        $scope.createLatex = function() {
-            $scope.getPrintedDocument('latex');
-        };
-
-        $scope.createPdf = function() {
-            $scope.getPrintedDocument('pdf');
-        };
-        */
 
         $scope.cancel = function () {
             $uibModalInstance.dismiss('cancel');
