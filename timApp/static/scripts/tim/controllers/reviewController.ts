@@ -1,4 +1,4 @@
-import angular, {IController} from "angular";
+import angular, {IController, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {checkIfElement, getElementParent, scrollToElement} from "../utils";
@@ -43,6 +43,7 @@ export class ReviewController implements IController {
     private velpBadgePar: string;
     private vctrl: ViewCtrl;
     private velpSelection: VelpSelectionController;
+    private onInit: (params: {$SCOPE: IScope}) => void;
 
     constructor(scope: angular.IScope) {
         this.scope = scope;
@@ -57,6 +58,7 @@ export class ReviewController implements IController {
     }
 
     async $onInit() {
+        this.onInit({$SCOPE: this.scope});
         const response = await $http.get<IAnnotation[]>("/{0}/get_annotations".replace("{0}", this.docId.toString()));
         this.annotations = response.data;
         this.loadDocumentAnnotations();
@@ -1198,6 +1200,9 @@ export class ReviewController implements IController {
 
 timApp.component("timReview", {
     controller: ReviewController,
+    bindings: {
+        onInit: "&",
+    },
     require: {
         vctrl: "^timView",
     },

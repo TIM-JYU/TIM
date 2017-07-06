@@ -25,6 +25,7 @@ import {EditingHandler} from "./editing";
 import {RefPopupHandler} from "./refpopup";
 import {IUser} from "../../IUser";
 import {IItem} from "../../IItem";
+import {ReviewController} from "../reviewController";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -400,6 +401,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
     private oldWidth: number;
     public editorFunctions: any[];
     public defaultAction: any;
+    public reviewCtrlScope: IScope;
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -605,6 +607,10 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
                 this.notification = "";
             }
         });
+    }
+
+    setReviewCtrlScope(scope: IScope) {
+        this.reviewCtrlScope = scope;
     }
 
     reload() {

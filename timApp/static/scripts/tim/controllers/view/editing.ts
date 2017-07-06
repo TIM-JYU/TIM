@@ -272,7 +272,7 @@ export class EditingHandler {
     }
 
     addSavedParToDom(data, extraData) {
-        let $par;
+        let $par: JQuery;
         if (angular.isDefined(extraData["ref-id"])) {
             $par = getElementByRefId(extraData["ref-id"]);
         } else {
@@ -292,8 +292,14 @@ export class EditingHandler {
             $par.nextUntil($endpar).add($endpar).remove();
         }
 
-        const $newPars = $($compile(data.texts)(this.sc));
-
+        const $newPars = $($compile(data.texts)(this.viewctrl.reviewCtrlScope, undefined,
+            {
+                transcludeControllers: {
+                    timReview: {instance: this.viewctrl.reviewCtrlScope.$ctrl},
+                    timView: {instance: this.viewctrl},
+                },
+            }));
+        // const $newPars = $($compile($par)(this.sc.$new(true, this.viewctrl.reviewCtrlScope)));
         if ($window.editMode === "area") {
             $newPars.find(".editline").removeClass("editline").addClass("editline-disabled");
         }

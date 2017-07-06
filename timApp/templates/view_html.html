@@ -142,7 +142,7 @@
                 <a id="showSlidesLink" href="/show_slide/{{ item.path }}">Show slides only</a>
             </div>
         {% else %}
-            <div>
+            <tim-review on-init="$ctrl.setReviewCtrlScope($SCOPE)">
                 <div id="pars" {% if velp_mode or teacher_mode %}ng-click="$parent.$ctrl.selectText($event)"{% endif %}>
                     {% include 'partials/paragraphs.html' %}
                     <div class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
@@ -153,7 +153,7 @@
                 {% if velp_mode or teacher_mode %}
                     <velp-selection on-init="$parent.$ctrl.initVelpSelection($API)" id="velpMenu"></velp-selection>
                 {% endif %}
-            </div>
+            </tim-review>
         {% endif %}
     </div>
     {% if not text and item.rights.manage %}

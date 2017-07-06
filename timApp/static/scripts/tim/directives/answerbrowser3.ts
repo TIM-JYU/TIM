@@ -5,10 +5,11 @@ import {dereferencePar, getParId} from "../controllers/view/parhelpers";
 import {Users} from "../services/userService";
 import {ParCompiler} from "../services/parCompiler";
 import {$compile, $filter, $http, $timeout, $uibModal, $window} from "../ngimport";
-import {ICompileService, IScope, IRootElementService, ITimeoutService, IController} from "angular";
+import {IScope, IRootElementService, IController} from "angular";
 import {ViewCtrl} from "../controllers/view/viewctrl";
 import {IUser} from "../IUser";
 import {IAnswer} from "../IAnswer";
+import {ReviewController} from "../controllers/reviewController";
 
 timLogTime("answerbrowser3 load", "answ");
 
@@ -29,7 +30,7 @@ function makeNotLazy(html) {
     return s;
 }
 
-function loadPlugin(html: string, $par: JQuery, $compile: ICompileService, scope: IScope, $timeout: ITimeoutService) {
+function loadPlugin(html: string, $par: JQuery, scope: IScope) {
     const newhtml = makeNotLazy(html);
     const plugin = $par.find(".parContent");
 
@@ -53,7 +54,6 @@ class AnswerBrowserLazyController implements IController {
     private element: angular.IRootElementService;
     private viewctrl: ViewCtrl;
     private taskId: string;
-    private parentElement: HTMLElement;
     private scope: angular.IScope;
 
     constructor($element: IRootElementService, scope: IScope) {
@@ -61,6 +61,9 @@ class AnswerBrowserLazyController implements IController {
         this.scope = scope;
         timLogTime("answerbrowserlazy ctrl function", "answ", 1);
         this.compiled = false;
+    }
+
+    $onInit() {
     }
 
     $postLink() {
@@ -78,18 +81,16 @@ class AnswerBrowserLazyController implements IController {
     }
 
     loadAnswerBrowser() {
-        const $par = this.element.parents(".par");
-        let plugin = $par.find(".parContent");
         if (this.compiled) {
             return;
         }
+        const par: JQuery = this.element.parents(".par");
+        let plugin = par.find(".parContent");
         this.compiled = true;
         if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId)) {
             const newHtml = '<answerbrowser task-id="' + this.taskId + '"></answerbrowser>';
             const newElement = $compile(newHtml);
-            const parent = this.element.parents(".par")[0];
-            parent.replaceChild(newElement(this.scope)[0], this.element[0]);
-            this.parentElement = parent;
+            par.prepend(newElement(this.scope)[0]);
         }
         // Next the inside of the plugin to non lazy
         const origHtml = plugin[0].innerHTML;
@@ -97,7 +98,7 @@ class AnswerBrowserLazyController implements IController {
             plugin = null;
         }
         if (plugin) {
-            loadPlugin(origHtml, $par, $compile, this.scope, $timeout);
+            loadPlugin(origHtml, par, this.scope);
         }
     }
 }
@@ -108,9 +109,15 @@ timApp.component("answerbrowserlazy", {
     },
     controller: AnswerBrowserLazyController,
     require: {
-        viewctrl: "timView",
+        viewctrl: "^timView",
     },
 });
+
+interface ITaskInfo {
+    userMin: number;
+    userMax: number;
+    answerLimit: number;
+}
 
 class AnswerBrowserController {
     private static $inject = ["$scope", "$element"];
@@ -118,6 +125,7 @@ class AnswerBrowserController {
     private taskId: string;
     private loading: number;
     private viewctrl: ViewCtrl;
+    private rctrl: ReviewController;
     private parContent: JQuery;
     private user: IUser;
     private fetchedUser: IUser;
@@ -134,7 +142,7 @@ class AnswerBrowserController {
     private review: boolean;
     private shouldFocus: boolean;
     private alerts: {}[];
-    private taskInfo: {userMin: number, userMax: number, answerLimit: number};
+    private taskInfo: ITaskInfo;
     private points: number;
     private scope: IScope;
 
@@ -143,8 +151,10 @@ class AnswerBrowserController {
         this.element = element.parents(".par");
         this.parContent = this.element.find(".parContent");
         this.loading = 0;
+    }
 
-        scope.$watch(() => this.taskId, (newValue, oldValue) => {
+    $onInit() {
+        this.scope.$watch(() => this.taskId, (newValue, oldValue) => {
             if (newValue === oldValue) {
                 return;
             }
@@ -165,7 +175,7 @@ class AnswerBrowserController {
             this.element[0].addEventListener("keydown", this.checkKeyPress);
         }
 
-        scope.$on("answerSaved", function(event, args) {
+        this.scope.$on("answerSaved", (event, args) => {
             if (args.taskId === this.taskId) {
                 this.getAvailableAnswers(false);
                 // HACK: for some reason the math mode is lost because of the above call, so we restore it here
@@ -203,16 +213,19 @@ class AnswerBrowserController {
         this.shouldFocus = false;
         this.alerts = [];
 
-        scope.$watch("review", this.changeAnswer);
-        scope.$watchGroup(["onlyValid", "answers"], this.updateFilteredAndSetNewest);
+        this.scope.$watch(() => this.review, () => this.changeAnswer());
+        this.scope.$watchGroup([
+            () => this.onlyValid,
+            () => this.answers,
+        ], (newValues, oldValues, scope) => this.updateFilteredAndSetNewest());
 
         // call checkUsers automatically for now; suitable only for lazy mode!
         this.checkUsers();
-        element.parent().on("mouseenter touchstart", function() {
+        this.element.parent().on("mouseenter touchstart", () => {
             this.checkUsers();
         });
 
-        scope.$on("userChanged", function(event, args) {
+        this.scope.$on("userChanged", (event, args) => {
                 this.user = args.user;
                 this.firstLoad = false;
                 this.shouldUpdateHtml = true;
@@ -229,11 +242,11 @@ class AnswerBrowserController {
 
     savePoints() {
         $http.put("/savePoints/" + this.user.id + "/" + this.selectedAnswer.id,
-            {points: this.points}).then(function(response) {
+            {points: this.points}).then((response) => {
             this.selectedAnswer.points = this.points;
-        }, function(response) {
+        }, (response) => {
             this.showError(response);
-        }).finally(function() {
+        }).finally(() => {
             this.shouldFocus = true;
         });
     }
@@ -271,18 +284,15 @@ class AnswerBrowserController {
                 review: this.review,
             },
         }).then((response) => {
-            loadPlugin(response.data.html, $par, $compile, this.scope, $timeout);
+            loadPlugin(response.data.html, $par, this.scope);
             if (this.review) {
                 this.element.find(".review").html(response.data.reviewHtml);
             }
-            const lata = this.viewctrl.loadAnnotationsToAnswer;
-            if (lata) {
-                lata(this.selectedAnswer.id, $par[0], this.review, this.setFocus);
-            }
+            this.rctrl.loadAnnotationsToAnswer(this.selectedAnswer.id, $par[0], this.review);
 
-        }, function(response) {
+        }, (response) => {
             this.showError(response);
-        }).finally(function() {
+        }).finally(() => {
             this.loading--;
         });
     }
@@ -360,7 +370,7 @@ class AnswerBrowserController {
 
         // Be careful when modifying the following code. All browsers (IE/Chrome/FF)
         // behave slightly differently when it comes to (de-)focusing something.
-        $timeout(function() {
+        $timeout(() => {
             if (shouldRefocusPoints) {
                 this.shouldFocus = shouldRefocusPoints;
             } else {
@@ -409,12 +419,12 @@ class AnswerBrowserController {
 
     getAvailableUsers() {
         this.loading++;
-        $http.get("/getTaskUsers/" + this.taskId, {params: {group: this.viewctrl.group}})
-            .then(function(response) {
+        $http.get<IUser[]>("/getTaskUsers/" + this.taskId, {params: {group: this.viewctrl.group}})
+            .then((response) => {
                 this.users = response.data;
-            }, function(response) {
+            }, (response) => {
                 this.showError(response);
-            }).finally(function() {
+            }).finally(() => {
             this.loading--;
         });
     }
@@ -432,8 +442,8 @@ class AnswerBrowserController {
             return;
         }
         this.loading++;
-        $http.get<Array<{}>>("/answers/" + this.taskId + "/" + this.user.id)
-            .then(function(response) {
+        $http.get<IAnswer[]>("/answers/" + this.taskId + "/" + this.user.id)
+            .then((response) => {
                 const data = response.data;
                 if (data.length > 0 && (this.hasUserChanged() || data.length !== (this.answers || []).length)) {
                     this.answers = data;
@@ -445,7 +455,7 @@ class AnswerBrowserController {
                     }
                 } else {
                     this.answers = data;
-                    if (this.answers.length === 0 && this.$parent.teacherMode) {
+                    if (this.answers.length === 0 && this.viewctrl.teacherMode) {
                         this.dimPlugin();
                     }
                     this.updateFilteredAndSetNewest();
@@ -456,9 +466,9 @@ class AnswerBrowserController {
                     }
                 }
                 this.fetchedUser = this.user;
-            }, function(response) {
+            }, (response) => {
                 this.showError(response);
-            }).finally(function() {
+            }).finally(() => {
             this.loading--;
         });
     }
@@ -508,12 +518,12 @@ class AnswerBrowserController {
             return;
         }
         this.loading++;
-        $http.get("/taskinfo/" + this.taskId)
-            .then(function(response) {
+        $http.get<ITaskInfo>("/taskinfo/" + this.taskId)
+            .then((response) => {
                 this.taskInfo = response.data;
-            }, function(response) {
+            }, (response) => {
                 this.showError(response);
-            }).finally(function() {
+            }).finally(() => {
             this.loading--;
         });
     }
@@ -566,7 +576,7 @@ class AnswerBrowserController {
 
     updateFiltered() {
         this.anyInvalid = false;
-        this.filteredAnswers = $filter("filter")<IAnswer>(this.answers, function(value, index, array) {
+        this.filteredAnswers = $filter("filter")<IAnswer>(this.answers, (value, index, array) => {
             if (value.valid) {
                 return true;
             }
@@ -575,7 +585,7 @@ class AnswerBrowserController {
         });
     }
 
-    updateFilteredAndSetNewest(newValues, oldValues, scope) {
+    updateFilteredAndSetNewest() {
         this.updateFiltered();
         if (this.findSelectedAnswerIndex() < 0) {
             this.setNewest();
@@ -593,7 +603,8 @@ timApp.component("answerbrowser", {
     },
     controller: AnswerBrowserController,
     require: {
-        viewctrl: "timView",
+        rctrl: "^timReview",
+        viewctrl: "^timView",
     },
     templateUrl: "/static/templates/answerBrowser.html",
 });
