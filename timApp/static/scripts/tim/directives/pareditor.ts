@@ -974,9 +974,9 @@ export class PareditorController implements angular.IController {
             url: "/" + plugin + "/template/" + template + "/" + index,
             dataType: "text",
             processData: false,
-            success(data) {
+            success: (data) => {
                 data = data.replace(/\\/g, "\\\\");
-                this.insertTemplate(data);
+                this.editor.insertTemplate(data);
             },
             error() {
                 $log.error("Error getting template");

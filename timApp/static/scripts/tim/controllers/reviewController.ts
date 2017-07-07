@@ -1,7 +1,7 @@
 import angular, {IController, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {checkIfElement, getElementParent, scrollToElement} from "../utils";
+import {checkIfElement, getElementParent, assertIsText, scrollToElement, stringOrNull, angularWait} from "../utils";
 import {$compile, $http, $window} from "../ngimport";
 import {addElementToParagraphMargin} from "./view/parhelpers";
 import {IItem} from "../IItem";
@@ -33,23 +33,25 @@ export class ReviewController implements IController {
     private annotationsAdded: boolean;
     private selectedArea: Range;
     public selectedElement: Element;
-    private item: IItem;
+    public item: IItem;
     private annotations: IAnnotation[];
     private annotationids: {0: number};
-    private zIndex: number;
-    private docId: number;
+    public zIndex: number;
+    public docId: number;
     private scope: angular.IScope;
     private velpBadge: HTMLElementTagNameMap["input"];
     private velpBadgePar: string;
     private vctrl: ViewCtrl;
     private velpSelection: VelpSelectionController;
     private onInit: (params: {$SCOPE: IScope}) => void;
+    private velpMode: boolean;
 
     constructor(scope: angular.IScope) {
         this.scope = scope;
         this.annotationsAdded = false;
         this.selectedArea = null;
         this.selectedElement = null;
+        this.velpMode = $window.velpMode;
         this.item = $window.item;
         this.docId = this.item.id;
         this.annotations = [];
@@ -61,11 +63,11 @@ export class ReviewController implements IController {
         this.onInit({$SCOPE: this.scope});
         const response = await $http.get<IAnnotation[]>("/{0}/get_annotations".replace("{0}", this.docId.toString()));
         this.annotations = response.data;
-        this.loadDocumentAnnotations();
     }
 
     initVelpSelection(velpSelection: VelpSelectionController) {
         this.velpSelection = velpSelection;
+        this.loadDocumentAnnotations();
     }
 
     /**
@@ -186,22 +188,15 @@ export class ReviewController implements IController {
     }
 
     /**
-     * Checks if the given element is an annotation or not.
+     * Checks if the given node is an annotation or not.
      * @method checkIfAnnotation
-     * @param element - Element to check
-     * @returns {boolean} - Whether the element is an annotation or not
+     * @param node - Element to check
+     * @returns {boolean} - Whether the node is an annotation or not
      */
-    checkIfAnnotation(element: Node): element is Element {
-        if (element.nodeName === "ANNOTATION") {
+    checkIfAnnotation(node: Node): node is Element {
+        if (node.nodeName === "ANNOTATION") {
             return true;
         }
-
-        if (element.nodeName === "SPAN") {
-            if (typeof ((element as any).hasAttribute) === "function") {
-                return (element as any).hasAttribute("annotation");
-            }
-        }
-
         return false;
     }
 
@@ -269,7 +264,7 @@ export class ReviewController implements IController {
      * @param annotation - Annotation info
      * @param show - Whether annotation is shown when created or not
      */
-    addAnnotationToCoord(range, annotation: IAnnotation, show): void {
+    addAnnotationToCoord(range, annotation: IAnnotation, show: boolean): void {
         const span = this.createPopOverElement(annotation, show);
         try {
             range.surroundContents(span);
@@ -290,7 +285,7 @@ export class ReviewController implements IController {
              */
         }
 
-        $compile(span)(this.scope); // Gives error [$compile:nonassign]
+        $compile(span)(this.scope);
     }
 
     /**
@@ -301,14 +296,14 @@ export class ReviewController implements IController {
      * @param show - Whether annotation is shown when created or not
      * @param reason - The reason why the annotation is put here (not implemented yet)
      */
-    addAnnotationToElement(el: Element, annotation: IAnnotation, show, reason): void {
+    addAnnotationToElement(el: Element, annotation: IAnnotation, show: boolean, reason: string): void {
         annotation.reason = reason;
         const span = this.createPopOverElement(annotation, show);
         const text = document.createTextNode("\u00A0" + annotation.content + "\u00A0");
         span.appendChild(text);
         addElementToParagraphMargin(el, span);
 
-        $compile(span)(this.scope); // Gives error [$compile:nonassign]
+        $compile(span)(this.scope);
     }
 
     /**
@@ -391,9 +386,8 @@ export class ReviewController implements IController {
      * Deletes the given annotation.
      * @method deleteAnnotation
      * @param id - Annotation ID
-     * @param inmargin - Whether annotation is a margin annotation or not
      */
-    async deleteAnnotation(id, inmargin): Promise<void> {
+    async deleteAnnotation(id): Promise<void> {
         const annotationParents = document.querySelectorAll('[aid="{0}"]'.replace("{0}", id));
         const annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
 
@@ -808,7 +802,10 @@ export class ReviewController implements IController {
             const startoffset = this.getRealStartOffset(this.selectedArea.startContainer, this.selectedArea.startOffset);
             let endOffset = this.selectedArea.endOffset;
             if (innerDiv.childElementCount === 0) {
-                endOffset = startoffset + (innerDiv.childNodes[innerDiv.childNodes.length - 1] as any).length;
+                const lastChild = innerDiv.childNodes[innerDiv.childNodes.length - 1];
+                if (assertIsText(lastChild)) {
+                    endOffset = startoffset + lastChild.length;
+                }
             }
 
             newAnnotation.coord = {
@@ -836,6 +833,7 @@ export class ReviewController implements IController {
 
             this.addAnnotationToElement(this.selectedElement, newAnnotation, false, "Added also margin annotation");
             this.addAnnotationToCoord(this.selectedArea, newAnnotation, true);
+            await angularWait();
             this.annotations.push(newAnnotation);
             this.annotationids[newAnnotation.id] = newAnnotation.id;
 
@@ -978,7 +976,9 @@ export class ReviewController implements IController {
 
                 const innerElements = el.getElementsByClassName("highlighted")[0];
                 const lastInnerLastChild = this.getLastChildUntilNull(innerElements);
-                storedOffset += lastInnerLastChild.length;
+                if (assertIsText(lastInnerLastChild)) {
+                    storedOffset += lastInnerLastChild.length;
+                }
 
                 // if (typeof innerElements.lastChild.innerHTML !== UNDEFINED)
                 //     storedOffset += innerElements.lastChild.innerHTML.length;
@@ -990,7 +990,9 @@ export class ReviewController implements IController {
             } else if (el.nodeName !== startType) {
                 return storedOffset;
             } else {
-                storedOffset += el.length;
+                if (assertIsText(el)) {
+                    storedOffset += el.length;
+                }
             }
         }
 
@@ -999,7 +1001,7 @@ export class ReviewController implements IController {
 
     /**
      * Gets the start and end node numbers of created annotation element.
-     * Ignores annoations elements, but not elements inside it.
+     * Ignores annotations elements, but not elements inside it.
      *
      * @method getNodeNumbers
      * @param el - Start container
@@ -1089,12 +1091,9 @@ export class ReviewController implements IController {
      * @param show - Whether to show the annotation on creation or not
      * @returns {Element} - Annotation element
      */
-    createPopOverElement(annotation: IAnnotation, show): HTMLElementTagNameMap["span"] {
-        const element = document.createElement("span");
+    createPopOverElement(annotation: IAnnotation, show: boolean): HTMLElementTagNameMap["span"] {
+        const element = document.createElement("annotation");
 
-        //element.setAttribute("style", "line-height: 1em;");
-        element.setAttribute("annotation", "");
-        //element.classList.add("annotation-element");
         const velpData = this.getVelpById(annotation.velp);
 
         let velpContent;
@@ -1114,24 +1113,12 @@ export class ReviewController implements IController {
         }
 
         element.setAttribute("velp", velpContent);
-        element.setAttribute("points", annotation.points.toString());
-        element.setAttribute("aid", annotation.id.toString());
-        element.setAttribute("newcomment", annotation.default_comment);
-        element.setAttribute("annotator", annotation.annotator_name);
-        element.setAttribute("editaccess", annotation.edit_access.toString());
-        element.setAttribute("timesince", annotation.timesince);
-        element.setAttribute("creationtime", annotation.creationtime);
-        element.setAttribute("email", annotation.email);
-        element.setAttribute("visibleto", annotation.visible_to.toString());
-        element.setAttribute("color", annotation.color);
-        element.setAttribute("show", show);
-        element.setAttribute("newannotation", annotation.newannotation.toString());
-        if (typeof annotation.reason !== "undefined") {
-            element.setAttribute("ismargin", "true");
-        } else {
-            element.setAttribute("ismargin", "false");
-        }
-        element.setAttribute("comments", JSON.stringify(annotation.comments));
+        element.setAttribute("show-str", show.toString());
+
+        element.setAttribute("annotationdata", JSON.stringify(annotation));
+
+        // The getNodeNumbers method uses aid attribute, so we include that. Otherwise it's not needed.
+        element.setAttribute("aid", stringOrNull(annotation.id));
 
         return element;
     }
@@ -1150,7 +1137,7 @@ export class ReviewController implements IController {
         const parent = document.getElementById(annotation.coord.start.par_id);
 
         try {
-            const annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id.toString()))[0];
+            const annotationElement = parent.querySelectorAll("annotation[aid='{0}']".replace("{0}", annotation.id.toString()))[0];
             angular.element(annotationElement).isolateScope().showAnnotation();
             if (annotation.parentNode.classname === "notes") {
                 const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
@@ -1188,7 +1175,7 @@ export class ReviewController implements IController {
                     abscope.setAnswerById(annotation.answer_id);
 
                     setTimeout(() => {
-                        const annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id.toString()))[0];
+                        const annotationElement = parent.querySelectorAll("annotation[aid='{0}']".replace("{0}", annotation.id.toString()))[0];
                         angular.element(annotationElement).isolateScope().showAnnotation();
                         this.scope.$apply();
                         scrollToElement(annotationElement);
@@ -1207,6 +1194,17 @@ timApp.component("timReview", {
     require: {
         vctrl: "^timView",
     },
-    template: "<div ng-transclude></div>",
+    template: `
+<div ng-transclude></div>
+<velp-selection
+ ng-if="$ctrl.velpMode || $ctrl.vctrl.teacherMode"
+ id="velpMenu"
+ teacher-right="$ctrl.vctrl.item.rights.teacher"
+ on-init="$ctrl.initVelpSelection($API)" 
+ doc-id="$ctrl.docId"
+ >
+ 
+</velp-selection>
+`,
     transclude: true,
 });

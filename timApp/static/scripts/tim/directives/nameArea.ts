@@ -18,7 +18,7 @@ class NameAreaController {
         this.$area = element.parents(".area").first();
 
         const area = $("#areaname");
-        area.keypress(function(e) {
+        area.keypress((e) => {
             if (e.which == 13) {
                 this.addArea();
             }

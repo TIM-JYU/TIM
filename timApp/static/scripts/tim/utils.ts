@@ -1,7 +1,25 @@
-import angular from "angular";
+import angular, {IPromise} from "angular";
 import $ from "jquery";
 import sessionsettings from "tim/session";
-import {$log} from "./ngimport";
+import {$log, $q, $timeout} from "./ngimport";
+
+export function angularWait(): IPromise<void> {
+    return $timeout(() => {}, 100);
+}
+
+export function assertIsText(n: Node): n is Text {
+    if (n.nodeType !== Node.TEXT_NODE) {
+        throw new Error("Expected a Text node, got " + n);
+    }
+    return true;
+}
+
+export function stringOrNull(x: {toString: () => string}): string {
+    if (x !== null && x !== undefined) {
+        return x.toString();
+    }
+    return "null";
+}
 
 export function checkIfElement(x: any): x is Element {
     return typeof ((x as any).hasAttribute) === "function";

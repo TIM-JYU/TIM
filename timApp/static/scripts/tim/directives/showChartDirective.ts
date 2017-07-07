@@ -427,7 +427,7 @@ class ShowChartController {
                         ticks: {
                             min: 0,
                             // beginAtZero: true,
-                            callback(value) {
+                            callback: (value) => {
                                 return this.intScale(value, 0);
                             },
                             // stepSize: 1
@@ -438,7 +438,7 @@ class ShowChartController {
                         ticks: {
                             min: 0,
                             // beginAtZero: true,
-                            callback(value) {
+                            callback: (value) => {
                                 return this.intScale(value, 1);
                             },
                             // stepSize: 1

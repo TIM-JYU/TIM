@@ -60,6 +60,11 @@ timApp.config(["$httpProvider", ($httpProvider) => {
     $httpProvider.defaults.headers.get.Pragma = "no-cache";
 }]);
 
+timApp.config(["$qProvider", ($qProvider: angular.IQProvider) => {
+    // Available in AngularJS 1.6
+    // $qProvider.errorOnUnhandledRejections(true);
+}]);
+
 // Filter to make string URL friendly
 timApp.filter("escape", () => {
     "use strict";
@@ -112,6 +117,6 @@ timApp.run(initUserService);
 timApp.run(loadMap);
 
 // https://stackoverflow.com/questions/35629246/typescript-async-await-and-angular-q-service/41825004#41825004
-timApp.run(["$window", "$q", ($window, $q) => {
+timApp.run(["$window", "$q", ($window: angular.IWindowService, $q: angular.IQService) => {
     $window.Promise = $q;
 }]);

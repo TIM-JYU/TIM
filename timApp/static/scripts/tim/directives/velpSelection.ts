@@ -2,7 +2,7 @@ import angular from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import * as velpSummary from "tim/directives/velpSummary";
-import {colorPalette} from "tim/directives/velpWindow";
+import {colorPalette, VelpWindowController} from "tim/directives/velpWindow";
 import {markAsUsed} from "tim/utils";
 import {$http, $q, $window} from "../ngimport";
 import {IAnnotation, ILabel, IUIFields, IVelp, IVelpGroup, VelpGroupSelectionType} from "./velptypes";
@@ -52,7 +52,7 @@ export class VelpSelectionController {
     private velpOrderingKey: string;
     private velpLabelsKey: string;
     private advancedOnKey: string;
-    private default_velp_group: IVelpGroup;
+    private default_velp_group: IVelpGroup & IUIFields;
     private labelAdded: boolean;
     private rctrl: ReviewController;
     private default_personal_velp_group: IVelpGroup;
@@ -111,7 +111,7 @@ export class VelpSelectionController {
     $onInit() {
         // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
         const doc_id = this.docId;
-        let default_velp_group = {
+        this.default_velp_group = {
             id: -1,
             name: "No access to default group",
             edit_access: false,
@@ -120,7 +120,6 @@ export class VelpSelectionController {
             selected: false,
             target_type: null,
         }; // TODO Use route to add this information
-        this.default_velp_group = default_velp_group;
         this.default_personal_velp_group = {id: -2, name: "Personal-default", target_type: null, default: true};
 
         this.velpOrderingKey = "velpOrdering_" + doc_id;
@@ -142,29 +141,29 @@ export class VelpSelectionController {
 
             // Get default velp group data
 
-            const p2 = $http.get<typeof default_velp_group>("/{0}/get_default_velp_group".replace("{0}", doc_id.toString()));
+            const p2 = $http.get<IVelpGroup>("/{0}/get_default_velp_group".replace("{0}", doc_id.toString()));
             promises.push(p2);
             p2.then((response2) => {
-                default_velp_group = response2.data;
+                this.default_velp_group = response2.data;
 
                 // If doc_default exists already for some reason but isn't a velp group yet, remove it from fetched velp groups
                 for (const g of this.velpGroups) {
-                    if (g.name === default_velp_group.name && default_velp_group.id < 0) {
+                    if (g.name === this.default_velp_group.name && this.default_velp_group.id < 0) {
                         const extraDefaultIndex = this.velpGroups.indexOf(g);
-                        this.velpGroups.push(default_velp_group);
+                        this.velpGroups.push(this.default_velp_group);
                         this.velpGroups.splice(extraDefaultIndex, 1);
                         break;
                     }
                 }
 
-                if (default_velp_group.edit_access) {
+                if (this.default_velp_group.edit_access) {
                     this.velpGroups.forEach((g) => {
-                        if (g.id === default_velp_group.id) {
+                        if (g.id === this.default_velp_group.id) {
                             g.selected = true;
                         }
                     });
-                    default_velp_group.selected = true;
-                    this.newVelp.velp_groups.push(default_velp_group.id);
+                    this.default_velp_group.selected = true;
+                    this.newVelp.velp_groups.push(this.default_velp_group.id);
                 }
 
                 // this.groupDefaults["0"] = [default_velp_group];
@@ -180,7 +179,7 @@ export class VelpSelectionController {
                         this.velpGroups.push(data);
                     }
 
-                    if (!default_velp_group.edit_access) {
+                    if (!this.default_velp_group.edit_access) {
                         this.newVelp.velp_groups.push(this.default_personal_velp_group.id);
                         /*this.velpGroups.some(function (g) {
                          if (g.id === default_personal_velp_group.id)
@@ -189,7 +188,7 @@ export class VelpSelectionController {
                     }
 
                     if (this.default_personal_velp_group.id < 0) {
-                        this.velpGroups.push(default_velp_group);
+                        this.velpGroups.push(this.default_velp_group);
                     }
 
                     /*
@@ -213,8 +212,8 @@ export class VelpSelectionController {
                     this.updateVelpList();
                 });
 
-                if (default_velp_group.id < 0) {
-                    this.velpGroups.push(default_velp_group);
+                if (this.default_velp_group.id < 0) {
+                    this.velpGroups.push(this.default_velp_group);
                 }
 
             });
@@ -426,86 +425,6 @@ export class VelpSelectionController {
     }
 
     /**
-     * Adds a new velp on form submit event.
-     * @method addVelp
-     * @param form - Form information
-
-     this.addVelp = function (form) {
-        var valid = form.$valid;
-        this.submitted.velp = true;
-        if (!valid) return;
-
-        // Form is valid:
-        form.$setPristine();
-
-        if (this.isGroupInVelp(this.newVelp, default_velp_group) && default_velp_group.id === -1) {
-            // this.isGroupInVelp(this.newVelp, -1);
-            //this.newVelp.velp_groups = [default_velp_group];
-
-            var old_default_group = default_velp_group;
-            this.generateDefaultVelpGroup(function () {
-
-                var oldGroupIndex = this.newVelp.velp_groups.indexOf(old_default_group.id); // -1 = old
-                if (oldGroupIndex >= 0)
-                    this.newVelp.velp_groups.splice(oldGroupIndex, 1);
-
-                this.newVelp.velp_groups.push(default_velp_group.id);
-
-                addNewVelpToDatabase();
-            });
-
-        } else if (this.newVelp.velp_groups.length > 0) {
-            addNewVelpToDatabase();
-        }
-
-        this.updateVelpList();
-    };
-     */
-    /**
-     * Adds a new velp to the database. Requires values in `this.newVelp` variable.
-     * @method addNewVelpToDatabase
-     */
-    async addNewVelpToDatabase() {
-        const velpToAdd = {
-            id: null,
-            labels: this.newVelp.labels,
-            used: 0,
-            points: this.newVelp.points,
-            content: this.newVelp.content,
-            language_id: "FI",
-            icon_id: null,
-            valid_until: null,
-            visible_to: this.newVelp.visible_to,
-            velp_groups: JSON.parse(JSON.stringify(this.newVelp.velp_groups)),
-            default_comment: "",
-            color: null,
-        };
-        this.velpToEdit.edit = false;
-        this.newVelp.edit = false;
-
-        const json = await $http.post<number>("/add_velp", velpToAdd);
-        velpToAdd.id = json.data;
-        this.resetNewVelp();
-        this.velpToEdit = {
-            content: "",
-            points: "",
-            labels: [],
-            edit: false,
-            id: -1,
-            default_comment: "",
-            velp_groups: [],
-            visible_to: null,
-            icon_id: null,
-            language_id: "FI",
-            color: null,
-            valid_until: null,
-        };
-        this.velps.push(velpToAdd);
-        this.submitted.velp = false;
-        //this.resetLabels();
-    }
-
-    /**
      * Deselects all the labels.
      * @method deselectLabels
      */
@@ -546,9 +465,9 @@ export class VelpSelectionController {
      * @method selectVelpToEdit
      */
     openCreateNewVelpWindow() {
-        const velp = angular.element(
+        const velp: VelpWindowController = angular.element(
             document.getElementById("newVelp"),
-        ).isolateScope();
+        ).isolateScope().$ctrl;
         velp.toggleVelpToEdit();
 
         //if (this.getVelpUnderEdit().id !== this.newVelp.id)
@@ -625,7 +544,7 @@ export class VelpSelectionController {
      */
 
     /**
-     * Generates the default velp group and runs the custom method.
+     * Generates the default velp group.
      * @method generateDefaultVelpGroup
      */
     async generateDefaultVelpGroup(): Promise<IVelpGroup> {
@@ -1376,7 +1295,7 @@ timApp.component("velpSelection", {
         teacherRight: "<",
     },
     require: {
-        rctrl: "timReview",
+        rctrl: "^timReview",
     },
     controller: VelpSelectionController,
     templateUrl: "/static/templates/velpSelection.html",

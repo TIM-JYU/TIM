@@ -274,7 +274,7 @@ class AnswerSheetController {
          * If time is null, question/points is closed.
          * Else time is set as questions new end time.
          */
-        scope.$on("update_end_time", function(event, time) {
+        scope.$on("update_end_time", (event, time) => {
             if (time !== null) {
                 this.endTime = time - this.$parent.vctrl.clockOffset;
                 this.progressElem.attr("max", this.endTime - this.askedTime);
@@ -383,7 +383,7 @@ class AnswerSheetController {
         }
 
         let ir = -1;
-        angular.forEach(data.rows, function(row) {
+        angular.forEach(data.rows, (row) => {
             ir++;
             let pointsRow = {};
             if (params.result && pointsTable.length > ir && pointsTable[ir]) {
@@ -542,7 +542,7 @@ class AnswerSheetController {
 
         if (!this.preview && !this.result) {
             const $table = this.element.find("#answer-sheet-table");
-            window.setTimeout(function() {
+            window.setTimeout(() => {
                 const $table = this.element.find("#answer-sheet-table");
                 let $input = null;
                 if (this.json.answerFieldType !== "text") {
@@ -671,7 +671,7 @@ class AnswerSheetController {
         }
 
         if (angular.isDefined(data.columns)) {
-            angular.forEach(data.columns, function(column) {
+            angular.forEach(data.columns, (column) => {
                 const groupName = this.cg() + column.Value.replace(/ /g, "");
                 answers.push($("input[name=" + groupName + "]:checked").val());
             });

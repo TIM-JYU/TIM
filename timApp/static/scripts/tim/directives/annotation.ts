@@ -14,14 +14,15 @@
 
 import angular from "angular";
 import {timApp} from "tim/app";
-import {$window} from "../ngimport";
+import {$http, $window} from "../ngimport";
+import {ReviewController} from "../controllers/reviewController";
+import {IUser} from "../IUser";
+import {IAnnotation} from "./velptypes";
 
 const UNDEFINED = "undefined";
 
 class AnnotationController {
     private static $inject = ["$scope", "$element"];
-
-    private $parent: any; // TODO require ReviewController
     private ctrlKey: number;
     private ctrlDown: boolean;
     private visible_options: {
@@ -29,50 +30,54 @@ class AnnotationController {
         values: [number, number, number, number];
         names: [string, string, string, string]
     };
-    private visibleto: number;
     private newcomment: string;
-    private newannotation: boolean;
     private marginonly: boolean;
     private isvalid: {points: {value: boolean; msg: string}};
     private element: angular.IRootElementService;
     private velpElement: HTMLElement;
     private showHidden: boolean;
-    private color: string;
     private show: boolean;
-    private editaccess: boolean;
-    private comments: {}[];
+    private showStr: string;
     private original: {
-        points: number;
+        points: string;
         velp: {};
         color: string;
         visible_to: number;
         comment: string;
-        aid: string,
+        aid: number,
         annotation_id: number,
         doc_id: number
     };
-    private points: number;
     private velp: {};
-    private aid: string;
-    private ismargin: boolean;
+    private rctrl: ReviewController;
+    private scope: angular.IScope;
+    private annotationdata: string;
+    private annotation: IAnnotation;
 
     constructor(scope: angular.IScope, element: angular.IRootElementService) {
+        this.scope = scope;
         this.element = element;
-        this.velpElement = element[0].getElementsByClassName("annotation-info")[0] as HTMLElement;
         this.ctrlDown = false;
         this.ctrlKey = 17;
+        this.newcomment = "";
+        this.showHidden = false;
+    }
+
+    $onInit() {
+        this.show = this.showStr === "true";
+        this.annotation = JSON.parse(this.annotationdata);
         this.visible_options = {
             type: "select",
-            value: this.visibleto,
+            value: this.annotation.visible_to,
             title: "Visible to",
             values: [1, 2, 3, 4],
             names: ["Just me", "Document owner", "Teachers", "Everyone"],
         };
-        this.newannotation = false;
+        this.annotation.newannotation = false;
         this.marginonly = false;
 
-        if (this.newcomment === null) {
-            this.newcomment = "";
+        if (this.annotation.default_comment !== null) {
+            this.newcomment = this.annotation.default_comment;
         }
 
         this.isvalid = {
@@ -84,37 +89,43 @@ class AnnotationController {
         this.original = {
             annotation_id: null,
             doc_id: null,
-            points: this.points,
+            points: this.annotation.points,
             velp: this.velp,
-            color: this.color,
-            visible_to: this.visibleto,
+            color: this.annotation.color,
+            visible_to: this.annotation.visible_to,
             comment: "", //this.newcomment,
-            aid: this.aid,
+            aid: this.annotation.id,
         };
+    }
 
+    $postLink() {
+        this.velpElement = this.element.find(".fulldiv")[0].parentElement as HTMLElement;
+        if (!this.velpElement) {
+            throw new Error("Could not find velpElement from template");
+        }
         /**
          * Watches changes on newannotation attribute. Should scroll window
          * only if annotation is not inside browser window.
          * TODO: Check scroll positions according to textarea element
          */
-        scope.$watch(() => this.newannotation, function(newValue) {
+        this.scope.$watch(() => this.annotation.newannotation, (newValue) => {
             if (newValue && this.show) { // this check is necessary
 
                 const x = window.scrollX, y = window.scrollY;
 
-                const pos = element[0].getBoundingClientRect().top;
-                element.find("textarea").focus();
+                const pos = this.element[0].getBoundingClientRect().top;
+                this.element.find("textarea").focus();
 
                 if (0 < pos && pos < window.innerHeight) {
                     window.scrollTo(x, y);
                 }
 
-                this.newannotation = false;
+                this.annotation.newannotation = false;
             }
 
         });
 
-        setTimeout(function() {
+        setTimeout(() => {
             if (this.show) {
                 this.updateVelpZIndex();
             }
@@ -127,7 +138,7 @@ class AnnotationController {
      */
     toggleAnnotation() {
         const elementName = this.velpElement.parentElement.offsetParent.className;
-        const annotationElements = document.querySelectorAll('[aid="{0}"]'.replace("{0}", this.aid));
+        const annotationElements = document.querySelectorAll('[aid="{0}"]'.replace("{0}", this.annotation.id.toString()));
 
         this.toggleAnnotationShow();
 
@@ -137,7 +148,7 @@ class AnnotationController {
                 if (e.offsetParent.className !== "notes") {
                     angular.element(
                         annotationElements[i],
-                    ).isolatethis().toggleAnnotationShow();
+                    ).isolateScope().actrl.toggleAnnotationShow();
                     this.toggleAnnotationShow();
                 }
             }
@@ -151,12 +162,12 @@ class AnnotationController {
     }
 
     clearColor() {
-        this.color = "";
+        this.annotation.color = "";
         this.changeColor();
     }
 
     isVelpCustomColor() {
-        return this.color.length === 7; // hex colors are 7 characters long
+        return this.annotation.color.length === 7; // hex colors are 7 characters long
     }
 
     /**
@@ -164,8 +175,8 @@ class AnnotationController {
      * @method updateVelpZIndex
      */
     updateVelpZIndex() {
-        this.velpElement.style.zIndex = this.$parent.zIndex.toString();
-        this.$parent.zIndex++;
+        this.velpElement.style.zIndex = this.rctrl.zIndex.toString();
+        this.rctrl.zIndex++;
     }
 
     /**
@@ -174,7 +185,7 @@ class AnnotationController {
      */
     showAnnotation() {
         this.showHidden = false;
-        this.newannotation = false;
+        this.annotation.newannotation = false;
         this.show = true;
 
         this.updateVelpZIndex();
@@ -195,11 +206,11 @@ class AnnotationController {
      */
     deleteAnnotation() {
 
-        if (this.comments.length < 2) {
+        if (this.annotation.comments.length < 2) {
             if (!$window.confirm("Delete - are you sure?")) {
                 return;
             }
-            this.$parent.deleteAnnotation(this.aid, this.ismargin);
+            this.rctrl.deleteAnnotation(this.annotation.id);
         }
     }
 
@@ -212,7 +223,7 @@ class AnnotationController {
         if (this.velpElement.parentElement.offsetParent.className === "notes") {
             margin = true;
         }
-        this.$parent.updateAnnotation(this.aid, margin);
+        this.rctrl.updateAnnotation(this.annotation.id, margin);
     }
 
     /**
@@ -221,9 +232,9 @@ class AnnotationController {
      * @method changePoints
      */
     changePoints() {
-        if (typeof this.points !== UNDEFINED) {
+        if (typeof this.annotation.points !== UNDEFINED) {
             this.isvalid.points.value = true;
-            this.$parent.changeAnnotationPoints(this.aid, this.points);
+            this.rctrl.changeAnnotationPoints(this.annotation.id, this.annotation.points);
         } else {
             this.isvalid.points.value = false;
             this.isvalid.points.msg = "Insert a number or leave empty";
@@ -231,7 +242,7 @@ class AnnotationController {
     }
 
     changeColor() {
-        this.$parent.changeAnnotationColor(this.aid, this.color);
+        this.rctrl.changeAnnotationColor(this.annotation.id, this.annotation.color);
     }
 
     /**
@@ -239,51 +250,47 @@ class AnnotationController {
      * and updates the changes of the corresponding annotation.
      * @method saveChanges
      */
-    saveChanges() {
-        const id = this.$parent.getRealAnnotationId(this.aid);
+    async saveChanges() {
+        const id = this.rctrl.getRealAnnotationId(this.annotation.id);
 
         // Add comment
         if (this.newcomment.length > 0) {
             const comment = this.newcomment;
 
             const data = {annotation_id: id, content: this.newcomment};
-            this.$parent.makePostRequest("/add_annotation_comment", data, function(json) {
-                this.comments.push({
-                    commenter_username: json.data.name,
-                    content: comment,
-                    comment_time: "now",
-                    comment_relative_time: "just now",
-                });
-                this.$parent.addComment(this.aid, json.data.name, comment);
-                this.updateAnnotation();
+            const response = await $http.post<IUser>("/add_annotation_comment", data);
+            this.annotation.comments.push({
+                commenter_username: response.data.name,
+                content: comment,
+                comment_time: "now",
+                comment_relative_time: "just now",
             });
-
+            this.rctrl.addComment(this.annotation.id, response.data.name, comment);
+            this.updateAnnotation();
         } else {
             this.updateAnnotation();
         }
         this.newcomment = "";
         if (this.visible_options.value !== this.original.visible_to) {
-            this.$parent.changeVisibility(this.aid, this.visible_options.value);
+            this.rctrl.changeVisibility(this.annotation.id, this.visible_options.value);
         }
         this.original = {
-            aid: this.aid,
-            points: this.points,
+            aid: this.annotation.id,
+            points: this.annotation.points,
             annotation_id: id,
             visible_to: this.visible_options.value,
             velp: this.velp,
-            color: this.color,
+            color: this.annotation.color,
             comment: this.newcomment,
-            doc_id: this.$parent.vctrl.docId,
+            doc_id: this.rctrl.docId,
         };
 
-        this.$parent.makePostRequest("/update_annotation", this.original, function(json) {
-            //$log.info(json);
-        });
+        $http.post("/update_annotation", this.original);
     }
 
     getCustomColor() {
-        if (typeof this.color !== UNDEFINED || this.color !== null) {
-            return this.color;
+        if (typeof this.annotation.color !== UNDEFINED || this.annotation.color !== null) {
+            return this.annotation.color;
         }
     }
 
@@ -293,33 +300,15 @@ class AnnotationController {
      * @returns {boolean} Whether the user has rights or not
      */
     checkRights() {
-        return this.editaccess !== true;
+        return this.annotation.edit_access !== true;
     }
-
-    /**
-     * Detect user right to annotation to document.
-     * @param points - Points given in velp or annotation
-     * @returns {boolean} - Whether user has rights to make annotations
-
-     this.notAnnotationRights = function (points) {
-            if (this.$parent.item.rights.teacher) {
-                return false;
-            } else {
-                if (points === null) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        };
-     */
 
     /**
      * Return true if user has teacher rights.
      * @returns {boolean} Whether the user has teacher rights or not
      */
     allowChangePoints() {
-        return this.$parent.vctrl.item.rights.teacher;
+        return this.rctrl.item.rights.teacher;
     }
 
     /**
@@ -331,9 +320,9 @@ class AnnotationController {
         if (!this.showHidden) {
             return false;
         }
-        if (this.original.points !== this.points || this.original.comment !== this.newcomment ||
+        if (this.original.points !== this.annotation.points || this.original.comment !== this.newcomment ||
             this.original.visible_to !== this.visible_options.value || this.original.velp !== this.velp ||
-            this.original.color !== this.color) {
+            this.original.color !== this.annotation.color) {
             return true;
         }
         return false;
@@ -375,27 +364,17 @@ class AnnotationController {
  * @lends module:reviewController
  */
 timApp.component("annotation", {
-    templateUrl: "/static/templates/annotation.html",
-    transclude: true,
     bindings: {
-        show: "=",
-        points: "=",
-        visibleto: "=",
-        comments: "=",
-        aid: "=",
-        ismargin: "=",
-        annotator: "@",
-        editaccess: "=",
+        annotationdata: "@",
         newcomment: "@",
-        //email: '@',
-        timesince: "@",
-        creationtime: "@",
+        showStr: "@",
         velp: "@",
-        color: "@",
-        newannotation: "<", // TODO: should this be "@" ?
-        showHidden: "@",
     },
-
     controller: AnnotationController,
     controllerAs: "actrl",
+    require: {
+        rctrl: "^timReview",
+    },
+    templateUrl: "/static/templates/annotation.html",
+    transclude: true,
 });

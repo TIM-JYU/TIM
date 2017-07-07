@@ -37,8 +37,8 @@ export interface IAnnotation {
     newannotation: boolean;
     content: string;
     velp: number;
-    points: string;
-    color: string;
+    points: string | null;
+    color: string | null;
     coord: IAnnotationInterval;
     answer_id: number;
     comments: IAnnotationComment[];

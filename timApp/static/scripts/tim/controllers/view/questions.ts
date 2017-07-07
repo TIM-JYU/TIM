@@ -53,7 +53,7 @@ export class QuestionHandler {
             },
         );
 
-        this.sc.$on("closeQuestionPreview", function() {
+        this.sc.$on("closeQuestionPreview", () => {
                 this.showQuestionPreview = false;
             },
         );
@@ -85,12 +85,12 @@ export class QuestionHandler {
         this.viewctrl.lectureId = -1;
         this.viewctrl.inLecture = false;
 
-        this.sc.$on("postLectureId", function(event, response) {
-            this.lectureId = response;
+        this.sc.$on("postLectureId", (event, response) => {
+            this.viewctrl.lectureId = response;
         });
 
-        this.sc.$on("postInLecture", function(event, response) {
-            this.inLecture = response;
+        this.sc.$on("postInLecture", (event, response) => {
+            this.viewctrl.inLecture = response;
         });
 
         $rootScope.$broadcast("getLectureId");
@@ -124,12 +124,12 @@ export class QuestionHandler {
         this.viewctrl.lectureId = -1;
         this.viewctrl.inLecture = false;
 
-        this.sc.$on("postLectureId", function(event, response) {
-            this.lectureId = response;
+        this.sc.$on("postLectureId", (event, response) => {
+            this.viewctrl.lectureId = response;
         });
 
-        this.sc.$on("postInLecture", function(event, response) {
-            this.inLecture = response;
+        this.sc.$on("postInLecture", (event, response) => {
+            this.viewctrl.inLecture = response;
         });
 
         $rootScope.$broadcast("getLectureId");

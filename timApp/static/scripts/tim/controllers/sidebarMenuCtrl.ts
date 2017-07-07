@@ -111,7 +111,7 @@ export class SidebarMenuCtrl {
             method: "GET",
             params: {doc_id: this.docId},
         })
-            .then(function(response) {
+            .then((response) => {
                 const lectures = response.data;
                 this.currentLecturesList = lectures.currentLectures;
                 this.futureLecturesList = lectures.futureLectures;
@@ -132,7 +132,7 @@ export class SidebarMenuCtrl {
             url: "/questions/" + this.docId,
             method: "GET",
         })
-            .then(function(response) {
+            .then((response) => {
                 const questions = response.data;
                 for (let i = 0; i < questions.length; i++) {
                     const question = {
@@ -141,7 +141,7 @@ export class SidebarMenuCtrl {
                     };
                     this.lectureQuestions.push(question);
                 }
-            }, function() {
+            }, () => {
                 $log.error("Couldn't fetch the questions");
             });
     }

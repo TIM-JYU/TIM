@@ -2,14 +2,19 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {$http, $window} from "../ngimport";
 
+interface ISettings {
+    css_combined: string;
+    custom_css: string;
+}
+
 export class SettingsCtrl {
     private saving: boolean;
     private style: HTMLElementTagNameMap["style"];
-    private settings: {css_combined: string};
+    private settings: ISettings;
 
     constructor() {
         this.settings = $window.settings;
-        $(".docEditor").change(function() {
+        $(".docEditor").change(() => {
             this.style.innerHTML = this.settings.custom_css;
         });
 
@@ -22,7 +27,7 @@ export class SettingsCtrl {
     async submit(saveUrl) {
         this.saving = true;
         try {
-            const response = await $http.post<{css_combined: string}>(saveUrl, this.settings);
+            const response = await $http.post<ISettings>(saveUrl, this.settings);
             this.settings = response.data;
             this.updateCss();
         } catch (e) {

@@ -1,6 +1,7 @@
 import {IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import {$timeout, $uibModal} from "../ngimport";
+import {ViewCtrl} from "./view/viewctrl";
 
 interface IUser {
     name: string;
@@ -13,27 +14,31 @@ export class UserListController {
     private scope: IScope;
     private gridApi: uiGrid.IGridApiOf<IUser>;
     private instantUpdate: boolean;
-    private users: IUser[];
-    private docId: number;
     private columns: Array<uiGrid.IColumnDefOf<IUser>>;
     private onUserChange: (user: IUser, updateAll: boolean) => void;
+    private viewctrl: ViewCtrl;
+    private element: IRootElementService;
 
     constructor(scope: IScope, element: IRootElementService) {
         this.scope = scope;
-        scope.$watch(
-            () => element[0].offsetHeight + element[0].offsetWidth,
+        this.element = element;
+    }
+
+    $onInit() {
+        this.scope.$watch(
+            () => this.element[0].offsetHeight + this.element[0].offsetWidth,
             (sum) => {
-                const grid = element.find(".grid");
-                grid.css("width", (element[0].offsetWidth - 5) + "px");
-                grid.css("height", (element[0].offsetHeight - 30) + "px");
+                const grid = this.element.find(".grid");
+                grid.css("width", (this.element[0].offsetWidth - 5) + "px");
+                grid.css("height", (this.element[0].offsetHeight - 30) + "px");
             },
         );
 
         let anyAnnotations = false;
         let smallFieldWidth = 59;
 
-        for (let i = 0; i < this.users.length; ++i) {
-            if (this.users[i].velped_task_count > 0) {
+        for (let i = 0; i < this.viewctrl.users.length; ++i) {
+            if (this.viewctrl.users[i].velped_task_count > 0) {
                 anyAnnotations = true;
                 smallFieldWidth = 40;
                 break;
@@ -81,25 +86,25 @@ export class UserListController {
             enableFiltering: true,
             enableColumnMenus: false,
             enableGridMenu: true,
-            data: this.users,
+            data: this.viewctrl.users,
             enableSorting: true,
             columnDefs: this.columns,
             onRegisterApi: (gridApi) => {
                 this.gridApi = gridApi;
 
-                gridApi.selection.on.rowSelectionChanged(scope, (row) => {
+                gridApi.selection.on.rowSelectionChanged(this.scope, (row) => {
                     this.fireUserChange(row, this.instantUpdate);
                 });
                 gridApi.grid.modifyRows(this.gridOptions.data as any[]);
                 gridApi.selection.selectRow(this.gridOptions.data[0]);
-                gridApi.cellNav.on.navigate(scope, (newRowCol, oldRowCol) => {
+                gridApi.cellNav.on.navigate(this.scope, (newRowCol, oldRowCol) => {
                     this.gridApi.selection.selectRow(newRowCol.row.entity);
                 });
             },
             gridMenuCustomItems: [
                 {
                     title: "Export to Korppi",
-                    action($event) {
+                    action: ($event) => {
                         $timeout(() => {
                             const instance = $uibModal.open({
                                 animation: false,
@@ -108,7 +113,7 @@ export class UserListController {
                                 component: "timKorppiExport",
                                 size: "md",
                             });
-                            instance.result.then(this.exportKorppi, () => {
+                            instance.result.then((options) => this.exportKorppi(options), () => {
 
                             });
                         });
@@ -117,10 +122,10 @@ export class UserListController {
                 },
                 {
                     title: "Enable instant update",
-                    action($event) {
+                    action: ($event) => {
                         this.instantUpdate = true;
                     },
-                    shown() {
+                    shown: () => {
                         return !this.instantUpdate;
                     },
                     leaveOpen: true,
@@ -128,10 +133,10 @@ export class UserListController {
                 },
                 {
                     title: "Disable instant update",
-                    action($event) {
+                    action: ($event) => {
                         this.instantUpdate = false;
                     },
-                    shown() {
+                    shown: () => {
                         return this.instantUpdate;
                     },
                     leaveOpen: true,
@@ -139,7 +144,7 @@ export class UserListController {
                 },
                 {
                     title: "Answers as plain text",
-                    action($event) {
+                    action: ($event) => {
                         $uibModal.open({
                             animation: false,
                             ariaLabelledBy: "modal-title",
@@ -194,7 +199,7 @@ export class UserListController {
             }
         }
 
-        const filename = "korppi_" + this.docId + ".txt";
+        const filename = "korppi_" + this.viewctrl.docId + ".txt";
         // from https://stackoverflow.com/a/33542499
         const blob = new Blob([dataKorppi], {type: "text/plain"});
         if (window.navigator.msSaveOrOpenBlob) {
@@ -216,7 +221,12 @@ timApp.component("timUserList", {
         users: "<",
     },
     controller: UserListController,
-    template: `<div ng-if="$ctrl.users"
+    require: {
+        viewctrl: "^timView",
+    },
+    template: `<div
+     class="userlist"
+     ng-if="$ctrl.users"
      ui-grid="$ctrl.gridOptions"
      ui-grid-selection
      ui-grid-exporter

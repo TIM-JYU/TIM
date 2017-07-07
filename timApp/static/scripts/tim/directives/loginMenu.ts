@@ -47,7 +47,7 @@ class LoginMenuController {
 
     loginWithEmail() {
         Users.loginWithEmail(this.form.email, this.form.password, this.addingToSession,
-            function() {
+            () => {
                 this.addingToSession = false;
             });
     }

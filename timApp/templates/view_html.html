@@ -96,9 +96,7 @@
 
     {% if teacher_mode %}
         <div  save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed resize="true"  click="true"  caption="Users with answers ({{ plugin_users|length }})">
-            <tim-user-list class="draggable-content userlist">
-
-            </tim-user-list>
+            <tim-user-list class="draggable-content" users="$ctrl.users"></tim-user-list>
         </div>
     {% endif %}
 {% endblock %}
@@ -150,9 +148,6 @@
                         <button class="addBottom timButton">Add paragraph</button>
                     </div>
                 </div>
-                {% if velp_mode or teacher_mode %}
-                    <velp-selection on-init="$parent.$ctrl.initVelpSelection($API)" id="velpMenu"></velp-selection>
-                {% endif %}
             </tim-review>
         {% endif %}
     </div>

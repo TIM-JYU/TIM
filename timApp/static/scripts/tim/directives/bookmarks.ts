@@ -114,7 +114,7 @@ class BookmarksController {
             },
         });
 
-        modalInstance.result.then(function(bookmark) {
+        modalInstance.result.then((bookmark) => {
             if (!bookmark.name) {
                 return;
             }

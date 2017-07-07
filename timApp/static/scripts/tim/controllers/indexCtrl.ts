@@ -1,6 +1,7 @@
 import {timApp} from "tim/app";
 import {$http, $timeout, $upload, $window} from "../ngimport";
 import {Users} from "../services/userService";
+import {IItem} from "../IItem";
 
 // Controller used in document index and folders
 
@@ -8,13 +9,14 @@ class IndexCtrl {
     private user: any;
     private folderOwner: string;
     private parentfolder: string;
-    private itemList: any[];
+    private itemList: IItem[];
     private item: any;
-    private templateList: any[];
+    private templateList: IItem[];
     private templates: any[];
     private showUpload: boolean;
     private file: any;
     private canCreate: boolean;
+    private uploadInProgress: boolean;
 
     constructor() {
         this.user = $window.current_user;
@@ -52,30 +54,30 @@ class IndexCtrl {
     }
 
     getItems() {
-        $http({
+        $http<IItem[]>({
             method: "GET",
             url: "/getItems",
             params: {
                 folder: this.item.location,
             },
-        }).then(function(response) {
+        }).then((response) => {
             this.itemList = response.data;
-        }, function(response) {
+        }, (response) => {
             this.itemList = [];
             // TODO: Show some error message.
         });
     }
 
     getTemplates() {
-        $http({
+        $http<IItem[]>({
             method: "GET",
             url: "/getTemplates",
             params: {
                 item_path: this.item.path,
             },
-        }).then(function(response) {
+        }).then((response) => {
             this.templateList = response.data;
-        }, function(response) {
+        }, (response) => {
             // TODO: Show some error message.
         });
     }
@@ -93,19 +95,19 @@ class IndexCtrl {
                 method: "POST",
             });
 
-            file.upload.then(function(response) {
-                $timeout(function() {
+            file.upload.then((response) => {
+                $timeout(() => {
                     this.getItems();
                 });
-            }, function(response) {
+            }, (response) => {
                 if (response.status > 0)
                     this.file.progress = "Error occurred: " + response.data.error;
-            }, function(evt) {
+            }, (evt) => {
                 this.file.progress = Math.min(100, Math.floor(100.0 *
                     evt.loaded / evt.total));
             });
 
-            file.upload.finally(function() {
+            file.upload.finally(() => {
                 this.uploadInProgress = false;
             });
         }

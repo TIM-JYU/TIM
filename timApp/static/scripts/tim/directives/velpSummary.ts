@@ -48,7 +48,7 @@ export class VelpSummaryController {
      * @method checkAll
      */
     checkAll() {
-        angular.forEach(this.annotations, function(a) {
+        angular.forEach(this.annotations, (a) => {
             a.selected = this.settings.selectedAll;
         });
     }

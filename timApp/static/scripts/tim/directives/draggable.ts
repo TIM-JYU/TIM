@@ -82,6 +82,7 @@ class DraggableController {
     private attr: IAttributes;
 
     constructor(scope: IScope, attr: IAttributes, element: IRootElementService) {
+        this.scope = scope;
         this.element = element;
         this.attr = attr;
         if (attr.save) {
