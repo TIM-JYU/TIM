@@ -171,7 +171,12 @@
 
         <!-- SUMMARY -->
         <uib-tab index="2" heading="Summary">
-            <div velp-summary="" annotations="annotations"></div>
+            <velp-summary
+                    annotations="$ctrl.rctrl.annotations"
+                    toggle-annotation="$ctrl.rctrl.toggleAnnotation($ANNOTATION)"
+                    selected-user="$ctrl.rctrl.vctrl.selectedUser"
+            >
+            </velp-summary>
         </uib-tab>
     </uib-tabset>
     </div>

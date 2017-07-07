@@ -290,7 +290,7 @@ export class PareditorController implements angular.IController {
                         for (let k = 0; k < data.templates[j].length; k++) {
                             const template = data.templates[j][k];
                             const text = (template.text || template.file);
-                            const clickfn = "$ctrl.getTemplate('" + plugin + "','" + template.file + "', '" + j + "'); $ctrl.wrapFn()";
+                            const clickfn = `$ctrl.getTemplate('${plugin}','${template.file}', '${j}'); $ctrl.wrapFn()`;
                             this.pluginButtonList[tab].push(this.createMenuButton(text, template.expl, clickfn));
                         }
                     }
@@ -389,7 +389,7 @@ export class PareditorController implements angular.IController {
                     text,
                 }, this.extraData)).then(async (response) => {
                     const data = response.data;
-                    const compiled = await ParCompiler.compile(data, this);
+                    const compiled = await ParCompiler.compile(data, this.scope);
                     const $previewDiv = angular.element(".previewcontent");
                     $previewDiv.empty().append(compiled);
                     this.outofdate = false;

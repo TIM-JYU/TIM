@@ -32,7 +32,6 @@ const UNDEFINED = "undefined";
  */
 export class VelpSelectionController {
     public velps: (IVelp & IUIFields)[];
-    private annotations: IAnnotation[];
     private labels: (ILabel & IUIFields)[];
     private velpGroups: (IVelpGroup & IUIFields)[];
     private newVelp: IVelp & IUIFields;
@@ -63,7 +62,6 @@ export class VelpSelectionController {
     // Data
     constructor() {
         this.velps = [];
-        this.annotations = [];
         this.labels = [];
         this.velpGroups = [];
 

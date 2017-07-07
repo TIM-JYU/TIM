@@ -1,10 +1,11 @@
+import {IScope} from "angular";
 import katex from "katex-auto-render";
 import {$compile, $log, $ocLazyLoad, $timeout} from "tim/ngimport";
 import {timLogTime} from "tim/timTiming";
 import {lazyLoad, lazyLoadMany} from "../lazyLoad";
 
 export class ParagraphCompiler {
-    public async compile(data, scope) {
+    public async compile(data, scope: IScope) {
         await lazyLoadMany(data.js);
         await $ocLazyLoad.inject(data.angularModule);
         await $ocLazyLoad.load(data.css);

@@ -16,10 +16,13 @@ import {IAnnotation, IUIFields} from "./velptypes";
 export class VelpSummaryController {
     private settings: {selectedAll: boolean};
     private annotations: (IAnnotation & IUIFields)[];
-    private toggleAnnotation: (annotation) => void;
+    private toggleAnnotation: (params: {$ANNOTATION: IAnnotation}) => void;
 
     constructor() {
         this.settings = {selectedAll: false};
+    }
+
+    $onInit() {
     }
 
     /**
@@ -38,7 +41,7 @@ export class VelpSummaryController {
             p += this.annotations[i].points;
 
         }
-        //cast back to a number, the string has trailing zeros.
+        // cast back to a number, the string has trailing zeros.
         return Number(p.toPrecision(4));
     }
 
@@ -58,7 +61,11 @@ export class VelpSummaryController {
  * @lends module:velpSummary
  */
 timApp.component("velpSummary", {
-        bindings: {annotations: "=", toggleAnnotation: "&", selectedUser: "<"},
+        bindings: {
+            annotations: "<",
+            selectedUser: "<",
+            toggleAnnotation: "&",
+        },
         controller: VelpSummaryController,
         controllerAs: "vsumctrl",
         templateUrl: "/static/templates/velpSummary.html",

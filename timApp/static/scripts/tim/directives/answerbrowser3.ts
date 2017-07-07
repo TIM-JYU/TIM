@@ -119,7 +119,7 @@ interface ITaskInfo {
     answerLimit: number;
 }
 
-class AnswerBrowserController {
+export class AnswerBrowserController {
     private static $inject = ["$scope", "$element"];
     private element: JQuery;
     private taskId: string;
@@ -136,7 +136,7 @@ class AnswerBrowserController {
     private answers: IAnswer[];
     private filteredAnswers: IAnswer[];
     private onlyValid: boolean;
-    private selectedAnswer: IAnswer;
+    public selectedAnswer: IAnswer;
     private anyInvalid: boolean;
     private giveCustomPoints: boolean;
     private review: boolean;

@@ -1,6 +1,6 @@
 <div class="velpArea">
     <div class="velpSummary">
-        <h5>{{ selectedUser.name }} task annotations</h5>
+        <h5>{{ vsumctrl.selectedUser.name }} task annotations</h5>
         <table>
             <tr>
                 <!-- Commented out for now, these are intended for publishing annotations.
@@ -9,9 +9,9 @@
                 <th class="summSecColumn">Annotation</th>
                 <th class="summThiColumn">Points</th>
             </tr>
-            <tr ng-repeat="a in ( filteredList1 = (annotations | orderBy:'creationtime' | filter: {'user_id': selectedUser.id}:true)) ">
+            <tr ng-repeat="a in ( filteredList1 = (vsumctrl.annotations | orderBy:'creationtime' | filter: {'user_id': vsumctrl.selectedUser.id}:true)) ">
                 <!--<td class="summCheckbox"><input type="checkbox" ng-model="a.selected"></td> See comment above^-->
-                <td class="summSecColumn"><a ng-click="vsumctrl.toggleAnnotation(a)">{{ a.content }}</a></td>
+                <td class="summSecColumn"><a ng-click="vsumctrl.toggleAnnotation({$ANNOTATION: a})">{{ a.content }}</a></td>
                 <td class="summThiColumn"><span>{{ a.points }}</span></td>
             </tr>
             <tr>
@@ -31,7 +31,7 @@
             </tr>
             <tr ng-repeat="b in vsumctrl.annotations | orderBy:'creationtime' | filter: {'user_id': null}:true ">
                 <!--<td class="summCheckbox"><input type="checkbox" ng-model="a.selected"></td> See comment above^-->
-                <td class="summSecColumn"><a ng-click="vsumctrl.toggleAnnotation(b)">{{ b.content }}</a></td>
+                <td class="summSecColumn"><a ng-click="vsumctrl.toggleAnnotation({$ANNOTATION: b})">{{ b.content }}</a></td>
                 <td class="summThiColumn"><span>{{ b.points }}</span></td>
             </tr>
             <!--<tr>

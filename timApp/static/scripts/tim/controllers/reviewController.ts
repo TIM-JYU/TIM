@@ -8,6 +8,8 @@ import {IItem} from "../IItem";
 import {IAnnotation, IVelp} from "../directives/velptypes";
 import {ViewCtrl} from "./view/viewctrl";
 import {VelpSelectionController} from "../directives/velpSelection";
+import {IAnswer} from "../IAnswer";
+import {AnswerBrowserController} from "../directives/answerbrowser3";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
@@ -702,23 +704,6 @@ export class ReviewController implements IController {
     }
 
     /**
-     * Detect user right to annotation to document.
-     * @param points - Points given in velp or annotation
-     * @returns {boolean} - Right to make annotations
-
-     this.notAnnotationRights = function (points) {
-        if (this.item.rights.teacher) {
-            return false;
-        } else {
-            if (points === null) {
-                return false;
-            } else {
-                return true;
-            }
-        }
-    };
-     */
-    /**
      * Return caption text if the user has no rights to the annotation.
      * @param state - Whether the annotation is disabled to the user or not
      * @returns {string} - Caption text
@@ -828,7 +813,7 @@ export class ReviewController implements IController {
             };
 
             if (answerInfo !== null) {
-                newAnnotation.answer_id = answerInfo.selectedAnswer.id;
+                newAnnotation.answer_id = answerInfo.id;
             }
 
             this.addAnnotationToElement(this.selectedElement, newAnnotation, false, "Added also margin annotation");
@@ -867,7 +852,7 @@ export class ReviewController implements IController {
             const answerInfo = this.getAnswerInfo(this.selectedElement);
 
             if (answerInfo !== null) {
-                newAnnotation.answer_id = answerInfo.selectedAnswer.id;
+                newAnnotation.answer_id = answerInfo.id;
             }
 
             this.addAnnotationToElement(this.selectedElement, newAnnotation, true, "No coordinate found");
@@ -888,13 +873,13 @@ export class ReviewController implements IController {
      * @param start - Paragraph where the answerbrowser element is searched for.
      * @returns {Element|null} answerbrowser element or null.
      */
-    getAnswerInfo(start: Element): angular.IScope {
+    getAnswerInfo(start: Element): IAnswer {
 
         if (start.hasAttribute("attrs") && start.hasAttribute("t")) {
             const answ = start.getElementsByTagName("answerbrowser");
             if (answ.length > 0) {
-                const answScope = angular.element(answ[0]).isolateScope();
-                return answScope;
+                const ctrl = angular.element(answ[0]).isolateScope().$ctrl as AnswerBrowserController;
+                return ctrl.selectedAnswer;
             }
             return null;
         }
@@ -902,7 +887,8 @@ export class ReviewController implements IController {
         const myparent = getElementParent(start);
 
         if (myparent.tagName === "ANSWERBROWSER") {
-            return angular.element(myparent).isolateScope();
+            const ctrl = angular.element(myparent).isolateScope().$ctrl as AnswerBrowserController;
+            return ctrl.selectedAnswer;
         }
 
         if (myparent.hasAttribute("t")) {
@@ -1138,16 +1124,9 @@ export class ReviewController implements IController {
 
         try {
             const annotationElement = parent.querySelectorAll("annotation[aid='{0}']".replace("{0}", annotation.id.toString()))[0];
-            angular.element(annotationElement).isolateScope().showAnnotation();
-            if (annotation.parentNode.classname === "notes") {
-                const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-                abl.isolateScope().loadAnswerBrowser();
-            }
-            scrollToElement(annotationElement);
-            //addAnnotationToElement(par, annotation, false, "Added also margin annotation");
-
+            angular.element(annotationElement).isolateScope().actrl.showAnnotation();
         } catch (e) {
-            // Find answer browser and isolate its scope
+            // Find answer browser and its scope
             // set answer id -> change answer to that
             // query selector element -> toggle annotation
             if (e.name === "TypeError" && annotation.answer_id !== null) {
@@ -1156,7 +1135,7 @@ export class ReviewController implements IController {
 
                 if (typeof ab === UNDEFINED) {
                     const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-                    abl.isolateScope().loadAnswerBrowser();
+                    abl.isolateScope().$ctrl.loadAnswerBrowser();
                 }
                 if (this.vctrl.selectedUser.id !== annotation.user_id) {
                     for (let i = 0; i < this.vctrl.users.length; i++) {
@@ -1170,13 +1149,13 @@ export class ReviewController implements IController {
 
                 setTimeout(() => {
                     ab = angular.element(parent.getElementsByTagName("ANSWERBROWSER")[0]);
-                    const abscope = ab.isolateScope();
+                    const abscope = ab.isolateScope().$ctrl;
                     abscope.review = true;
                     abscope.setAnswerById(annotation.answer_id);
 
                     setTimeout(() => {
                         const annotationElement = parent.querySelectorAll("annotation[aid='{0}']".replace("{0}", annotation.id.toString()))[0];
-                        angular.element(annotationElement).isolateScope().showAnnotation();
+                        angular.element(annotationElement).isolateScope().actrl.showAnnotation();
                         this.scope.$apply();
                         scrollToElement(annotationElement);
                     }, 500);
