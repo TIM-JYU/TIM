@@ -15,7 +15,7 @@ export class UserListController {
     private gridApi: uiGrid.IGridApiOf<IUser>;
     private instantUpdate: boolean;
     private columns: Array<uiGrid.IColumnDefOf<IUser>>;
-    private onUserChange: (user: IUser, updateAll: boolean) => void;
+    private onUserChange: (params: {$USER: IUser, $UPDATEALL: boolean}) => void;
     private viewctrl: ViewCtrl;
     private element: IRootElementService;
 
@@ -170,7 +170,7 @@ export class UserListController {
     }
 
     fireUserChange(row, updateAll) {
-        this.onUserChange(row.entity, updateAll);
+        this.onUserChange({$USER: row.entity, $UPDATEALL: updateAll});
     }
 
     exportKorppi(options) {

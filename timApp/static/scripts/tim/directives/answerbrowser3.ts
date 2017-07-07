@@ -221,7 +221,7 @@ export class AnswerBrowserController {
 
         // call checkUsers automatically for now; suitable only for lazy mode!
         this.checkUsers();
-        this.element.parent().on("mouseenter touchstart", () => {
+        this.element.on("mouseenter touchstart", () => {
             this.checkUsers();
         });
 
@@ -433,8 +433,7 @@ export class AnswerBrowserController {
         this.alerts.push({msg: "Error: " + response.data.error, type: "danger"});
     }
 
-    getAvailableAnswers(updateHtml = false) {
-        updateHtml = (typeof updateHtml === "undefined") ? true : updateHtml;
+    getAvailableAnswers(updateHtml = true) {
         if (!this.viewctrl.item.rights || !this.viewctrl.item.rights.browse_own_answers) {
             return;
         }
