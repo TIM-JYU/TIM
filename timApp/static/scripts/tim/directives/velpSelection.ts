@@ -70,7 +70,7 @@ export class VelpSelectionController {
         this.newVelp = {
             content: "",
             default_comment: "",
-            points: "",
+            points: null,
             labels: [],
             edit: false,
             id: -2,
@@ -84,7 +84,7 @@ export class VelpSelectionController {
         this.velpToEdit = {
             content: "",
             default_comment: "",
-            points: "",
+            points: null,
             labels: [],
             edit: false,
             id: -1,
@@ -587,7 +587,7 @@ export class VelpSelectionController {
     resetEditVelp() {
         this.velpToEdit = {
             content: "",
-            points: "",
+            points: null,
             labels: [],
             edit: false,
             id: -1,
@@ -642,7 +642,7 @@ export class VelpSelectionController {
     resetNewVelp() {
         this.newVelp = {
             content: "",
-            points: "",
+            points: null,
             labels: [],
             edit: false,
             id: -2,

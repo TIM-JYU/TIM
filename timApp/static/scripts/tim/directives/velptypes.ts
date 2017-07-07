@@ -37,7 +37,7 @@ export interface IAnnotation {
     newannotation: boolean;
     content: string;
     velp: number;
-    points: string | null;
+    points: number;
     color: string | null;
     coord: IAnnotationInterval;
     answer_id: number;
@@ -50,7 +50,7 @@ export interface IAnnotation {
 export interface IVelp {
     content: string;
     default_comment: string;
-    points: string;
+    points: number;
     labels: ILabel[];
     used?: number;
     id: number;

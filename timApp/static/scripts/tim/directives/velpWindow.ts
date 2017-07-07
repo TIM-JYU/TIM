@@ -146,7 +146,7 @@ export class VelpWindowController {
      * @param points - Points given in velp or annotation
      * @returns {boolean} - Right to make annotations
      */
-    notAnnotationRights(points: string) {
+    notAnnotationRights(points: number) {
         if (this.teacherRight) {
             return false;
         } else {

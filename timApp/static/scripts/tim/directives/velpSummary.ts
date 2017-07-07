@@ -11,12 +11,11 @@
 
 import angular from "angular";
 import {timApp} from "tim/app";
-
-type Annotation = {points, selected: boolean};
+import {IAnnotation, IUIFields} from "./velptypes";
 
 export class VelpSummaryController {
     private settings: {selectedAll: boolean};
-    private annotations: Annotation[];
+    private annotations: (IAnnotation & IUIFields)[];
     private toggleAnnotation: (annotation) => void;
 
     constructor() {

@@ -39,7 +39,7 @@ class AnnotationController {
     private show: boolean;
     private showStr: string;
     private original: {
-        points: string;
+        points: number;
         velp: {};
         color: string;
         visible_to: number;
