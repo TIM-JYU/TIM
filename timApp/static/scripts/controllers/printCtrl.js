@@ -11,9 +11,11 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
         $scope.dismissModal = function() {
             $uibModalInstance.dismiss();
         };
+
         $scope.$storage = $localStorage.$default({
             id: null
         });
+
         $scope.options = $scope.$storage.id;
         
         $scope.document = document;
@@ -24,7 +26,7 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
         $scope.loading = false;
         $scope.showPaths = true;
 
-        $scope.chosenTemplate = initTemplate();
+        $scope.selectedTemplate = initTemplate();
 
         function initTemplate() {
             var id = null;
@@ -32,15 +34,12 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
             if ($scope.$storage.id) {
                 id = $scope.$storage.id;
             }
-            else if ($scope.defaultTemplates[0] && $scope.defaultTemplates[0].doc_id) {
-                id = $scope.defaultTemplates[0].doc_id;
-            }  
-            else if ($scope.userTemplates[0] && $scope.userTemplates[0].doc_id) {
-                id = $scope.userTemplates[0].doc_id;
+            else if ($scope.templates && $scope.templates[0]) {
+                id = $scope.templates[0].id;
             }
 
             return { 'id': id };
-        };
+        }
 
         $scope.selected = {
             name: 'PDF'
@@ -53,7 +52,7 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
                 return; //TODO: the error should do something visible
                 // TODO: also kind of pointless as the filetype comes from the predefined functions
             }
-            var chosenTemplateId = $scope.chosenTemplate.id;
+            var chosenTemplateId = $scope.selectedTemplate.id;
             $scope.$storage.id = chosenTemplateId;
 
             if (chosenTemplateId) {

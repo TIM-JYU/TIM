@@ -22,7 +22,7 @@
             <div ng-repeat="item in templates">
                 <div class="radio">
                     <label>
-                        <input type="radio" ng-model="chosenTemplate.id" ng-value="item.id" name="template-selection">
+                        <input type="radio" ng-model="selectedTemplate.id" ng-value="item.id" name="template-selection">
                         <span>{{ item.name }} <span ng-show="showPaths">({{ formatPath(item.path) }})</span></span>
                         <a ng-href="/view/{{ item.path }}" target="_blank" class="force-hyphenate-link">
                             <span class="glyphicon glyphicon-pencil"></span>
