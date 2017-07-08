@@ -19,6 +19,7 @@ from timApp.tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_U
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tests.timliveserver import TimLiveServer
 from timApp.timdb.models.docentry import DocEntry
+from timApp.utils import pycharm_running
 
 
 class BrowserTest(TimLiveServer, TimRouteTest):
@@ -55,7 +56,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.drv.delete_all_cookies()
         self.drv.add_cookie(
             {'class': 'org.openqa.selenium.Cookie',
-             'domain': 'tim',
+             'domain': 'tim' if pycharm_running() else 'tests',
              'expiry': 7544144177,
              'hCode': 1984987798,
              'httpOnly': True,

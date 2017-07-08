@@ -10,9 +10,9 @@
 # ./run_tests.sh 1 unit.test_attributeparser.AttributeParserTest              # Runs all tests in a class
 # ./run_tests.sh 1 unit.test_attributeparser                                  # Runs all tests in a module
 
-export TEST_PARAMS="discover tests/$1 'test_*.py' ."
+export TEST_PARAMS="discover timApp/tests/$1 'test_*.py' ."
 if [ "$1" = "1" ] ; then
-    export TEST_PARAMS="tests.$2"
+    export TEST_PARAMS="timApp.tests.$2"
 fi
 
-./docker-compose.dev.sh up tests
+./docker-compose.sh up tests
