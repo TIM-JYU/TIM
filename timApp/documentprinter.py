@@ -11,6 +11,8 @@ import pypandoc
 from flask import jsonify
 
 from documentmodel.docparagraph import DocParagraph
+from documentmodel.document import dereference_pars
+from documentmodel.macroinfo import MacroInfo
 from plugin import Plugin, parse_plugin_values
 from pluginOutputFormat import PluginOutputFormat
 from accesshelper import has_view_access
@@ -35,7 +37,6 @@ DEFAULT_TEMPLATE_NAME = 'Default'
 class PrintingError(Exception):
     pass
 
-
 class DocumentPrinter:
 
     def __init__(self, doc_entry: DocEntry, template_to_use: DocEntry):
@@ -58,6 +59,8 @@ class DocumentPrinter:
         :return: The TIM documents contents in markdown format. Excludes the paragraphs that have attribute
                  print="false"
         """
+
+        # Get paragraphs that are to be printed
 
         pars_to_print = []
 
@@ -114,12 +117,6 @@ class DocumentPrinter:
         :return: Converted document as bytearray
         """
 
-        #### TEST SECTION
-
-        toc = False
-
-        ####
-
         output_bytes = None
 
         with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file,\
@@ -128,7 +125,7 @@ class DocumentPrinter:
             if self._template_to_use is None:
                 raise PrintingError("No template chosen for the printing. Printing was cancelled.")
 
-            template_content = DocumentPrinter.parse_template_content(self._template_to_use)
+            template_content = DocumentPrinter.parse_template_content(doc_to_print=self._doc_entry, template_doc=self._template_to_use)
             #print("template-content:\n\n" + template_content)
 
             if template_content is None:
@@ -337,20 +334,19 @@ class DocumentPrinter:
 
         default_templates = list(set(all_templates) - set(user_templates))
 
-        templates_dict = {}
+        templates_list = []
 
         user_templates_list = []
         for t in user_templates:
-            user_templates_list.append({'doc_id':t.id,'doc_path':t.name})
+            user_templates_list.append({'id':t.id,'path':t.name,'origin':'user','name':t.title})
 
         default_templates_list = []
         for t in default_templates:
-            default_templates_list.append({'doc_id':t.id,'doc_path':t.name})
+            default_templates_list.append({'id':t.id,'path':t.name,'origin':'doctree','name':t.title})
 
-        templates_dict.update({'userTemplates': user_templates_list})
-        templates_dict.update({'defaultTemplates': default_templates_list})
+        templates_list = user_templates_list + default_templates_list
 
-        return templates_dict
+        return templates_list
 
 
     @staticmethod
@@ -364,14 +360,21 @@ class DocumentPrinter:
         return "\n".join(out)
 
     @staticmethod
-    def parse_template_content(template_doc: DocEntry) -> str:
-        pars = []
-        for par in template_doc.document.get_paragraphs():
-            if par.get_attr('printing_template') is not None:
-                par_content = par.get_markdown()
-                pars.append(DocumentPrinter.remove_block_markers(par_content))
+    def parse_template_content(template_doc: DocEntry, doc_to_print: DocEntry) -> str:
+        pars = template_doc.document.get_paragraphs()
 
-        return "\n\n".join(pars)
+        pars = dereference_pars(pars, source_doc=template_doc.document.get_original_document())
+
+        out_pars = []
+        for par in pars:
+            if par.get_attr('printing_template') is not None:
+                macroinfo = MacroInfo()
+                macroinfo.get_macros().update(template_doc.document.get_settings().get_macroinfo().get_macros())
+                macroinfo.get_macros().update(doc_to_print.document.get_settings().get_macroinfo().get_macros())
+                exp_md = par.get_expanded_markdown(macroinfo=macroinfo, ignore_errors=True)
+                out_pars.append(DocumentPrinter.remove_block_markers(exp_md))
+
+        return "\n\n".join(out_pars)
 
     def get_document_version_as_float(self) -> float:
         doc_v = self._doc_entry.document.get_latest_version().get_version()
