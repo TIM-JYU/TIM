@@ -144,7 +144,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         im = self.save_element_screenshot(element, move_to_element=move_to_element)
         ref = Image(filename=f'tests/browser/expected_screenshots/{filename}.png')
         diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
-        if result > 0.0001:
+        if result > 0.001:
             self.save_element_screenshot(element, f'{filename}_FAIL', move_to_element)
             diff.save(filename=f'{self.screenshot_dir}/{filename}_FAIL_DIFF.png')
             self.assertTrue(False,
