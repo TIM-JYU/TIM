@@ -92,7 +92,7 @@ def print_document(doc_path):
     return response
 
 
-@print_blueprint.route("/getTemplatesJSON/<path:doc_path>", methods=['GET'])
+@print_blueprint.route("/templates/<path:doc_path>", methods=['GET'])
 def get_templates(doc_path):
     doc = g.doc_entry
     user = g.user
