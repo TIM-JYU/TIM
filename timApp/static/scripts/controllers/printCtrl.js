@@ -12,11 +12,11 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
             $uibModalInstance.dismiss();
         };
 
-        $scope.$storage = $localStorage.$default({
-            id: null
+        $scope.storage = $localStorage.$default({
+            timPrintingTemplateId: null
         });
 
-        $scope.options = $scope.$storage.id;
+        $scope.options = $scope.storage.id;
         
         $scope.document = document;
         $scope.templates = angular.fromJson(templates);
@@ -31,11 +31,14 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
         function initTemplate() {
             var id = null;
 
-            if ($scope.$storage.id) {
-                id = $scope.$storage.id;
-            }
-            else if ($scope.templates && $scope.templates[0]) {
-                id = $scope.templates[0].id;
+            if ($scope.storage.timPrintingTemplateId && $scope.templates) {
+
+                angular.forEach($scope.templates, function(template, key) {
+                    if (template.id === $scope.storage.timPrintingTemplateId) {
+                        id = template.id
+                    }
+                });
+
             }
 
             return { 'id': id };
@@ -53,7 +56,7 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
                 // TODO: also kind of pointless as the filetype comes from the predefined functions
             }
             var chosenTemplateId = $scope.selectedTemplate.id;
-            $scope.$storage.id = chosenTemplateId;
+            $scope.storage.timPrintingTemplateId = chosenTemplateId;
 
             if (chosenTemplateId) {
                 $scope.notificationmsg = null;
