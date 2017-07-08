@@ -375,18 +375,19 @@ class DocParagraph:
         """Returns the markdown of this paragraph."""
         return self.__data['md']
 
-    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None) -> str:
+    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None, ignore_errors: bool = False) -> str:
         """Returns the macro-processed markdown for this paragraph.
 
         :param macroinfo: The MacroInfo to use. If None, the MacroInfo is taken from the document that has the
         paragraph.
+        :param ignoreErrors: Whether or not to ignore errors when expanding the macros
         :return: The expanded markdown.
 
         """
         if macroinfo is None:
             macroinfo = self.doc.get_settings().get_macroinfo()
         return expand_macros(self.get_markdown(), macroinfo.get_macros(),
-                             macroinfo.get_macro_delimiter())
+                             macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
 
     def get_title(self) -> Optional[str]:
         """Attempts heuristically to return a title for this paragraph.
