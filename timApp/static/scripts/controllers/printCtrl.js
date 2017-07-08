@@ -17,32 +17,29 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
         $scope.options = $scope.$storage.id;
         
         $scope.document = document;
-        $scope.templatesObject = angular.fromJson(templates);
-        $scope.defaultTemplates = $scope.templatesObject.defaultTemplates;
-        $scope.userTemplates = $scope.templatesObject.userTemplates;
+        $scope.templates = angular.fromJson(templates);
         $scope.errormsg = null;
         $scope.notificationmsg = null;
-        $scope.createdUrl;
+        $scope.createdUrl = null;
         $scope.loading = false;
+        $scope.showPaths = true;
 
         $scope.chosenTemplate = initTemplate();
+
         function initTemplate() {
+            var id = null;
+
             if ($scope.$storage.id) {
-                var tmp = { 'id' : $scope.$storage.id };
-                return tmp;
+                id = $scope.$storage.id;
             }
             else if ($scope.defaultTemplates[0] && $scope.defaultTemplates[0].doc_id) {
-                var tmp = { 'id' : $scope.defaultTemplates[0].doc_id}
-                return tmp;   
+                id = $scope.defaultTemplates[0].doc_id;
             }  
             else if ($scope.userTemplates[0] && $scope.userTemplates[0].doc_id) {
-                var tmp = { 'id' : $scope.userTemplates[0].doc_id}
-                return tmp;
+                id = $scope.userTemplates[0].doc_id;
             }
-            else {
-                var tmp =  {'id' : null }
-                return tmp;
-            }            
+
+            return { 'id': id };
         };
 
         $scope.selected = {
@@ -71,8 +68,12 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
                     }
                 }).then(function success(response) {
                     $scope.errormsg = null;
-                    $scope.openURLinNewTab(requestURL);
+
+                    // Uncomment this line to automatically open the created doc in a popup tab.
+                    // $scope.openURLinNewTab(requestURL);
+
                     $scope.createdUrl = requestURL;
+
                     $scope.loading = false;
 
                 }, function error(response) {
@@ -97,10 +98,14 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
             else if ($scope.selected.name === 'LaTeX'){
                 $scope.getPrintedDocument('latex');
             }
-        }
+        };
 
         $scope.cancel = function () {
             $uibModalInstance.dismiss('cancel');
+        };
+
+        $scope.formatPath = function (path) {
+            return path.replace('Templates/Printing', '../..');
         };
 
     }

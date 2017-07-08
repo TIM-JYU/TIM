@@ -7,48 +7,35 @@
     <h4 class="modal-title">Printing {{ document.title }}</h4>
 </div>
 <div class="modal-body" id="modal-body">
-    <p ng-if="(defaultTemplates.length > 0) || (userTemplates.length > 0)">
-        The following LaTeX-templates were found that you can use. Please choose a template.
-    </p>
-    <p ng-if="(defaultTemplates.length <= 0) && (userTemplates.length <= 0)" class="text-danger">
-        No templates were found.
-    </p>
+    <div ng-show="(templates.length > 0)"></div>
+    <p>The following LaTeX-templates were found that you can use.</p>
 
-    <form>
-        <div ng-if="defaultTemplates.length > 0">
-            <h5>Templates from document tree:</h5>
-            <div class="form-group input-group-sm">
-                <div ng-repeat="item in defaultTemplates">
-                    <div class="radio">
-                        <label>
-                            <input type="radio" ng-model="chosenTemplate.id" ng-value="item.doc_id" name="template-selection">
-                            <span>{{ item.doc_path }}</span>
-                            <a ng-href="/view/{{ item.doc_path }}" class="force-hyphenate-link">
-                                <span class="glyphicon glyphicon-pencil"></span>
-                            </a>
-                        </label>
-                    </div>
-                </div>
-            </div>
+    <form id="template-picker">
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" ng-model="showPaths" ng-checked="showPaths">
+                Show paths
+            </label>
         </div>
-
-        <div ng-if="userTemplates.length > 0">
-            <h5>Templates from user home:</h5>
-            <div class="form-group input-group-sm">
-                <div ng-repeat="item in userTemplates">
-                    <div class="radio">
-                        <label>
-                            <input type="radio" ng-model="chosenTemplate.id" ng-value="item.doc_id" name="template-selection">
-                            <span>{{ item.doc_path }}</span>
-                            <a ng-href="/view/{{ item.doc_path }}" class="force-hyphenate-link">
-                                <span class="glyphicon glyphicon-pencil"></span>
-                            </a>
-                        </label>
-                    </div>
+        <h5>Please choose a template:</h5>
+        <div class="form-group input-group-sm">
+            <div ng-repeat="item in templates">
+                <div class="radio">
+                    <label>
+                        <input type="radio" ng-model="chosenTemplate.id" ng-value="item.id" name="template-selection">
+                        <span>{{ item.name }} <span ng-show="showPaths">({{ formatPath(item.path) }})</span></span>
+                        <a ng-href="/view/{{ item.path }}" target="_blank" class="force-hyphenate-link">
+                            <span class="glyphicon glyphicon-pencil"></span>
+                        </a>
+                    </label>
                 </div>
             </div>
         </div>
     </form>
+
+    <p ng-hide="(templates.length > 0)" class="text-danger">
+        No printing templates were found.
+    </p>
 
     <div ng-if="notificationmsg" class="alert alert-warning">
         <strong>Warning!</strong><p>{{ notificationmsg }}</p>
@@ -59,22 +46,20 @@
 </div>
 
 <div class="modal-footer">
-    <div class="footerDiv">
-        <label class="footerLabel">
-            <input type="radio" ng-model="selected.name" value="PDF">
-            PDF
-        </label>
-        <label class="footerLabel">
-            <input type="radio" ng-model="selected.name" value="LaTeX">
-            LaTeX
-        </label>
-        <button class="btn btn-primary has-spinner type="button" ng-click="create()">
-            <span ng-if="loading" class="spinner"><i class="icon-spin icon-refresh"></i></span>
-            Create
-        </button>
-    </div>
-    <div class="footerDiv">
-        <span ng-if="loading" class="glyphicon glyphicon-refresh lg"></span>
-        <a ng-if="createdUrl" ng-href="{{ createdUrl }}">View created document</a>
+    <label class="footerLabel">
+        <input type="radio" ng-model="selected.name" value="PDF">
+        PDF
+    </label>
+    <label class="footerLabel">
+        <input type="radio" ng-model="selected.name" value="LaTeX">
+        LaTeX
+    </label>
+    <button class="btn timButton" ng-click="create()">
+        <span ng-show="loading"><i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
+        Creating</span>
+        <span ng-hide="loading">Create</span>
+    </button>
+    <div id="print-success" ng-show="createdUrl" class="alert alert-success">
+        <p><span class="glyphicon glyphicon-ok"></span>Creation succeeded! <a ng-href="{{ createdUrl }}" target="_blank">View the document.</a></p>
     </div>
 </div>

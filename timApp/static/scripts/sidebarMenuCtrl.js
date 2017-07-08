@@ -137,9 +137,9 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
          * @param settings_data : print settings
          */
         $scope.printDocument = function (settings_data) {
-            var api_address_for_templates = '/print/getTemplatesJSON/' + $window.item.path;
+            var api_address_for_templates = '/print/templates/' + $window.item.path;
             $http.get(api_address_for_templates)
-                .then(function success(templatesJSON) {
+                .then(function success(templates) {
                     // console.log(JSON.stringify(templatesJSON.data));
                     $uibModal.open({
                         templateUrl: '/static/templates/printDialog.html',
@@ -150,7 +150,7 @@ timApp.controller("SidebarMenuCtrl", ['$scope', "$http", "$window", 'Users', '$l
                                 return $window.item;
                             },
                             templates: function () {
-                                return templatesJSON.data;
+                                return templates.data;
                             }
                         }
                     })
