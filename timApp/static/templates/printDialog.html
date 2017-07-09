@@ -11,20 +11,14 @@
     <p>The following LaTeX-templates were found that you can use.</p>
 
     <form id="template-picker">
-        <div class="checkbox">
-            <label>
-                <input type="checkbox" ng-model="showPaths" ng-checked="showPaths">
-                Show paths
-            </label>
-        </div>
         <h5>Please choose a template:</h5>
         <div class="form-group input-group-sm">
             <div ng-repeat="item in templates">
                 <div class="radio">
                     <label>
                         <input type="radio" ng-model="selectedTemplate.id" ng-value="item.id" name="template-selection">
-                        <span>{{ item.name }} <span ng-show="showPaths">({{ formatPath(item.path) }})</span></span>
-                        <a ng-href="/view/{{ item.path }}" target="_blank" class="force-hyphenate-link">
+                        <span>{{ item.name }} <span ng-show="showPaths">({{ item.path }})</span></span>
+                        <a ng-show="showPaths" ng-href="/view/{{ item.path }}" target="_blank" class="force-hyphenate-link">
                             <span class="glyphicon glyphicon-pencil"></span>
                         </a>
                     </label>
@@ -46,6 +40,10 @@
 </div>
 
 <div class="modal-footer">
+    <label id="printing-dialog-show-paths">
+        <input type="checkbox" ng-model="showPaths" ng-checked="showPaths">
+        Edit
+    </label>
     <label class="footerLabel">
         <input type="radio" ng-model="selected.name" value="PDF">
         PDF

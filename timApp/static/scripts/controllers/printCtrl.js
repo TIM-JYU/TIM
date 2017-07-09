@@ -24,7 +24,7 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
         $scope.notificationmsg = null;
         $scope.docUrl = null;
         $scope.loading = false;
-        $scope.showPaths = true;
+        $scope.showPaths = false;
 
         $scope.selectedTemplate = initTemplate();
 
@@ -39,6 +39,10 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
                     }
                 });
 
+            } else if ($scope.templates) {
+                if ($scope.templates.length > 0) {
+                    id = templates[0].id
+                }
             }
 
             return { 'id': id };
@@ -65,13 +69,13 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
                 var data = JSON.stringify({ 'fileType' : fileType, 'templateDocId' : chosenTemplateId });
                 $http.post(postURL, data)
                     .then(function success(response) {
-                        console.log(response);
+                        // console.log(response);
                         $scope.errormsg = null;
 
                         // Uncomment this line to automatically open the created doc in a popup tab.
                         // $scope.openURLinNewTab(requestURL);
 
-                        $scope.docURL = '/print/' + $scope.document.path + '?file_type=' + fileType
+                        $scope.docUrl = '/print/' + $scope.document.path + '?file_type=' + fileType
                             + '&template_doc_id=' + chosenTemplateId;
 
                         $scope.loading = false;
