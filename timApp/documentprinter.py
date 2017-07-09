@@ -65,6 +65,11 @@ class DocumentPrinter:
         pars_to_print = []
 
         for par in self._doc_entry.document.get_paragraphs():
+
+            # do not print document settings pars
+            if par.get_attr('settings') is not None:
+                continue
+
             par_classes = par.get_attr('classes', [])
 
             if 'hidden-print' in par_classes:
