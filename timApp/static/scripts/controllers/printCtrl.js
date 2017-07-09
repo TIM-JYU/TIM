@@ -22,7 +22,7 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
         $scope.templates = angular.fromJson(templates);
         $scope.errormsg = null;
         $scope.notificationmsg = null;
-        $scope.createdUrl = null;
+        $scope.docUrl = null;
         $scope.loading = false;
         $scope.showPaths = true;
 
@@ -60,28 +60,27 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
 
             if (chosenTemplateId) {
                 $scope.notificationmsg = null;
-                var requestURL = '/print/' + $scope.document.path + '?file_type=' + fileType + '&template_doc_id=' + chosenTemplateId;
 
-                $http({
-                    method: 'GET',
-                    url: requestURL,
-                    headers: {
-                        'Cache-Control': 'no-cache'
-                    }
-                }).then(function success(response) {
-                    $scope.errormsg = null;
+                var postURL = '/print/' + $scope.document.path;
+                var data = JSON.stringify({ 'fileType' : fileType, 'templateDocId' : chosenTemplateId });
+                $http.post(postURL, data)
+                    .then(function success(response) {
+                        console.log(response);
+                        $scope.errormsg = null;
 
-                    // Uncomment this line to automatically open the created doc in a popup tab.
-                    // $scope.openURLinNewTab(requestURL);
+                        // Uncomment this line to automatically open the created doc in a popup tab.
+                        // $scope.openURLinNewTab(requestURL);
 
-                    $scope.createdUrl = requestURL;
+                        $scope.docURL = '/print/' + $scope.document.path + '?file_type=' + fileType
+                            + '&template_doc_id=' + chosenTemplateId;
 
-                    $scope.loading = false;
+                        $scope.loading = false;
 
-                }, function error(response) {
-                    $scope.errormsg = response.data.error;
-                    $scope.loading = false;
-                });
+                    }, function error(response) {
+                        $scope.errormsg = response.data.error;
+                        $scope.loading = false;
+                    })
+                ;
             } else {
                 $scope.notificationmsg = "You need to choose a template first!";
             }
