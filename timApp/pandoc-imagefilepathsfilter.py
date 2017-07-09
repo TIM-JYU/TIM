@@ -31,7 +31,32 @@ IMAGE_ROOT = os.path.join(APP_ROOT, FILES_PATH, 'blocks')
 # protocol + hostname
 CURRENT_HOST_MACHINE = os.environ.get('TIM_HOST', None)
 
-ALLOWED_EXTERNAL_HOSTS = ['www.google.fi']
+ALLOWED_EXTERNAL_HOSTS = []
+
+PRINTING_WHITELIST_FILE = os.path.join(APP_ROOT, '.printing_whitelist.config')
+
+
+def init_whitelist():
+    """ Init whitelist for trusted image source domains. """
+    if not os.path.exists(PRINTING_WHITELIST_FILE):
+        try:
+            os.makedirs(os.path.dirname(PRINTING_WHITELIST_FILE))
+        except OSError:
+            pass
+
+        try:
+            open(PRINTING_WHITELIST_FILE, 'a').close()
+        except IOError:
+            pass
+
+    content = []
+    try:
+        with open(PRINTING_WHITELIST_FILE, 'r') as f:
+            content = f.readlines()
+    except IOError:
+        pass
+
+    return [x.strip() for x in content]
 
 # Get the os temp directoryls
 TEMP_DIR_PATH = tempfile.gettempdir()
@@ -60,6 +85,7 @@ def handle_images(key, value, fmt, meta):
 
         # handle internal absolute urls
         base_address = scheme + '://' + host + '/'
+        base_address += scheme + '://' if scheme != '' else ''
         if CURRENT_HOST_MACHINE is not None and base_address == CURRENT_HOST_MACHINE:
             image_path = os.path.join(APP_ROOT, path)
 
@@ -120,5 +146,7 @@ if __name__ == "__main__":
         from urllib.parse import urlparse
     except ImportError:
         from urlparse import urlparse
+
+    ALLOWED_EXTERNAL_HOSTS = init_whitelist()
 
     toJSONFilter(handle_images)
