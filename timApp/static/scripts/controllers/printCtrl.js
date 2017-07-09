@@ -54,6 +54,8 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
 
 
         $scope.getPrintedDocument = function(fileType) {
+            $scope.docUrl = null;
+
             if (fileType !== 'latex' && fileType !== 'pdf') {
                 console.log("The filetype '" + fileType + "' is not valid");
                 return; //TODO: the error should do something visible
