@@ -153,6 +153,7 @@ def call_plugin_multihtml(doc: Document, plugin, plugin_data, params=None):
     return call_plugin_generic(plugin,
                                'post',
                                'multihtml',
+                               #  'multimd',  #  test Timantti request
                                data=json.dumps(plugin_data, cls=TimJsonEncoder),
                                headers={'Content-type': 'application/json'},
                                params=params)

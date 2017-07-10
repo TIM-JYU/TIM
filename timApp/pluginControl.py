@@ -143,11 +143,13 @@ def pluginify(doc: Document,
                 if not task_id.endswith('.'):
                     state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx, 'obj': plugin}
                 state = None
+            user_print = False  # change this somehow what Timantti needs
             plugins[plugin_name][idx] = {"markup": vals,
                                          "state": state,
                                          "taskID": task_id,
                                          "taskIDExt": task_id + '.' + block.get_id(),
                                          "doLazy": do_lazy,
+                                         "userPrint": user_print,
                                          # added preview here so that whether or not the window is in preview can be
                                          # checked in python so that decisions on what data is sent can be made.
                                          "preview": edit_window,
