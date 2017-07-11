@@ -35,7 +35,7 @@
         <strong>Warning!</strong><p>{{ notificationmsg }}</p>
     </div>
     <div ng-if="errormsg" class="alert alert-danger">
-        <strong>Error!</strong><p>{{ errormsg }}</p>
+        <strong>Error!</strong><p ng-bind-html="errormsg"></p>
     </div>
 </div>
 
@@ -43,6 +43,10 @@
     <label id="printing-dialog-show-paths">
         <input type="checkbox" ng-model="showPaths" ng-checked="showPaths">
         Edit
+    </label>
+    <label class="footerLabel">
+        <input type="checkbox" ng-model="pluginsUserCode" ng-checked="pluginsUserCode">
+        Use user code for plugins
     </label>
     <label class="footerLabel">
         <input type="radio" ng-model="selected.name" value="PDF">

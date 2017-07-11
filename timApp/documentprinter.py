@@ -45,8 +45,7 @@ class DocumentPrinter:
             template_to_use = DocumentPrinter.get_default_template(doc_entry)
         self._template_to_use = template_to_use
 
-    @property
-    def _content(self) -> str:
+    def get_content(self, plugins_user_print: bool = False) -> str:
         """
         Gets the content of the DocEntry assigned for this DocumentPrinter object.
         Fetches the markdown for the documents paragraphs, checks whether the
@@ -95,7 +94,8 @@ class DocumentPrinter:
                                 timdb=get_timdb(),
                                 user=get_current_user_object(),
                                 output_format=PluginOutputFormat.MD,
-                                wrap_in_div=False)
+                                wrap_in_div=False,
+                                user_print=plugins_user_print)
 
         export_pars = []
 
@@ -115,7 +115,7 @@ class DocumentPrinter:
     def _images_root(self) -> str:
         return os.path.join(os.path.abspath(FILES_ROOT), 'blocks')
 
-    def write_to_format(self, target_format: PrintFormat) -> bytearray:
+    def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False) -> bytearray:
         """
         Converts the document to latex and returns the converted document as a bytearray
         :param target_format: The target file format
@@ -158,7 +158,7 @@ class DocumentPrinter:
             # print("Pip freeze:\n%s" % os.system("pip list"))
             # rint("Pip3 freeze:\n%s" % os.system("pip3 list"))
             try:
-                pypandoc.convert_text(source=self._content,
+                pypandoc.convert_text(source=self.get_content(plugins_user_print=plugins_user_print),
                                       format='markdown',
                                       to=target_format.value,
                                       outputfile=output_file.name,
@@ -180,7 +180,7 @@ class DocumentPrinter:
 
         return output_bytes
 
-    def get_print_path(self, file_type: PrintFormat, temp: bool = True) -> str:
+    def get_print_path(self, file_type: PrintFormat, temp: bool = True, plugins_user_print: bool = False) -> str:
         """
         Formulates the printing path for the given document
 
@@ -192,7 +192,9 @@ class DocumentPrinter:
         doc_version = self._doc_entry.document.get_latest_version().get_version()
         print("Document id: %s, version (%s, %s)" % (self._doc_entry.document.doc_id, doc_version[0], doc_version[1]))
         path = os.path.join(TEMPORARY_PRINTING_FOLDER if temp else DEFAULT_PRINTING_FOLDER,
-                            self._doc_entry.name + "." + file_type.value)
+                            self._doc_entry.name +
+                            ('-' + get_current_user_object().name if plugins_user_print else '') +
+                            "." + file_type.value)
 
         return path
 

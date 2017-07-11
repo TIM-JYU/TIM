@@ -25,6 +25,7 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
         $scope.docUrl = null;
         $scope.loading = false;
         $scope.showPaths = false;
+        $scope.pluginsUserCode = false;
 
         $scope.selectedTemplate = initTemplate();
 
@@ -54,6 +55,7 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
 
 
         $scope.getPrintedDocument = function(fileType) {
+            $scope.errormsg = null;
             $scope.docUrl = null;
 
             if (fileType !== 'latex' && fileType !== 'pdf') {
@@ -64,26 +66,32 @@ timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '
             var chosenTemplateId = $scope.selectedTemplate.id;
             $scope.storage.timPrintingTemplateId = chosenTemplateId;
 
+            var pluginsUserCode = $scope.pluginsUserCode;
+
             if (chosenTemplateId) {
                 $scope.notificationmsg = null;
 
                 var postURL = '/print/' + $scope.document.path;
-                var data = JSON.stringify({ 'fileType' : fileType, 'templateDocId' : chosenTemplateId });
+                var data = JSON.stringify({
+                    'fileType' : fileType,
+                    'templateDocId' : chosenTemplateId,
+                    'printPluginsUserCode' : pluginsUserCode
+                });
                 $http.post(postURL, data)
                     .then(function success(response) {
                         // console.log(response);
-                        $scope.errormsg = null;
 
                         // Uncomment this line to automatically open the created doc in a popup tab.
                         // $scope.openURLinNewTab(requestURL);
 
                         $scope.docUrl = '/print/' + $scope.document.path + '?file_type=' + fileType
-                            + '&template_doc_id=' + chosenTemplateId;
+                            + '&template_doc_id=' + chosenTemplateId + '&plugins_user_code=' + pluginsUserCode;
 
                         $scope.loading = false;
 
                     }, function error(response) {
-                        $scope.errormsg = response.data.error;
+                        var reformatted = response.data.error.split("\\n").join("<br/>");
+                        $scope.errormsg = reformatted;
                         $scope.loading = false;
                     })
                 ;

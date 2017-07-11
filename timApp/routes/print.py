@@ -53,6 +53,7 @@ def print_document(doc_path):
     data = request.get_json(silent=True)
     file_type = data.get('fileType')
     template_doc_id = data.get('templateDocId')
+    plugins_user_print = data.get('printPluginsUserCode')
 
     if file_type is None:
         abort(400, "No filetype selected.")
@@ -60,10 +61,13 @@ def print_document(doc_path):
     if template_doc_id is None:
         abort(400, "No template doc selected.")
 
+    if plugins_user_print is None:
+        abort(400, "No value for printPluginsUserCode submitted.")
+
     file_type = str(file_type)
     template_doc_id = int(float(template_doc_id))
 
-    if (file_type.lower() not in [f.value for f in PrintFormat]):
+    if file_type.lower() not in [f.value for f in PrintFormat]:
         abort(400, "The supplied parameter 'fileType' is invalid.")
 
     doc = g.doc_entry
@@ -80,9 +84,14 @@ def print_document(doc_path):
         abort(400, "The supplied parameter 'templateDocId' is invalid.")
 
     try:
-        create_printed_doc(doc_entry=doc, file_type=type, template_doc=template_doc, temp=True)
+        create_printed_doc(doc_entry=doc,
+                           file_type=type,
+                           template_doc=template_doc,
+                           temp=True,
+                           plugins_user_print=plugins_user_print)
     except PrintingError as err:
-        abort(500, str(err))
+        print("Error occurred: " + str(err))
+        abort(400, str(err)) #TODO: maybe there's a better error code?
 
     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
@@ -93,12 +102,16 @@ def get_printed_document(doc_path):
 
     file_type = request.args.get('file_type')
     template_doc_id = request.args.get('template_doc_id')
+    plugins_user_print = request.args.get('plugins_user_code')
 
     if file_type is None or file_type.lower() not in [f.value for f in PrintFormat]:
         abort(400, "The supplied query parameter 'file_type' was invalid.")
 
     if template_doc_id is None:
         abort(400, "The supplied query parameter 'template_doc_id' was invalid.")
+
+    if plugins_user_print is None or isinstance(plugins_user_print, bool):
+        abort(400, "The supplied query parameter 'plugins_user_code' was invalid.")
 
     template_doc_id = int(float(template_doc_id))
     template_doc = DocEntry.find_by_id(template_doc_id)
@@ -108,9 +121,12 @@ def get_printed_document(doc_path):
 
     type = PrintFormat[file_type.upper()]
 
-    path_to_doc = get_document_print(doc_entry=doc, template=template_doc, file_type=type)
+    path_to_doc = get_document_print(doc_entry=doc,
+                                     template=template_doc,
+                                     file_type=type,
+                                     plugins_user_print=plugins_user_print)
 
-    if path_to_doc is None:
+    if path_to_doc is None or not os.path.exists(path_to_doc):
         abort(404, "The document you tried to fetch does not exist.")
 
     mime = get_mimetype_for_format(type)
@@ -147,22 +163,33 @@ def get_mimetype_for_format(file_type: PrintFormat):
         return None
 
 
-def get_document_print(doc_entry: DocEntry, template: DocEntry, file_type: PrintFormat) -> Optional[str]:
+def get_document_print(doc_entry: DocEntry,
+                       template: DocEntry,
+                       file_type: PrintFormat,
+                       plugins_user_print: bool = False) -> Optional[str]:
     """
     Fetches the given document from the database.
 
     :param doc_entry:
     :param template:
     :param file_type:
+    :param plugins_user_print:
     :return:
     """
 
     printer = DocumentPrinter(doc_entry=doc_entry, template_to_use=template)
 
+    if plugins_user_print:
+        return printer.get_print_path(file_type=file_type, plugins_user_print=plugins_user_print)
+
     return printer.get_printed_document_path_from_db(file_type=file_type)
 
 
-def create_printed_doc(doc_entry: DocEntry, template_doc: DocEntry, file_type: PrintFormat, temp: bool) -> str:
+def create_printed_doc(doc_entry: DocEntry,
+                       template_doc: DocEntry,
+                       file_type: PrintFormat,
+                       temp: bool,
+                       plugins_user_print: bool = False) -> str:
     """
     Adds a marking for a printed document to the db
 
@@ -179,14 +206,17 @@ def create_printed_doc(doc_entry: DocEntry, template_doc: DocEntry, file_type: P
     printer = DocumentPrinter(doc_entry=doc_entry,
                               template_to_use=template_doc)
 
-    existing_doc_path = printer.get_printed_document_path_from_db(file_type=file_type)
+    if not plugins_user_print:
+        existing_doc_path = printer.get_printed_document_path_from_db(file_type=file_type)
 
-    if existing_doc_path is not None:
-        print("already exists:\n" + existing_doc_path)
-        return existing_doc_path
+        if existing_doc_path is not None:
+            # print("already exists:\n" + existing_doc_path)
+            return existing_doc_path
 
     try:
-        path = printer.get_print_path(temp=temp, file_type=file_type)
+        path = printer.get_print_path(temp=temp,
+                                      file_type=file_type,
+                                      plugins_user_print=plugins_user_print)
 
         if os.path.exists(path):
             os.remove(path)
@@ -195,9 +225,12 @@ def create_printed_doc(doc_entry: DocEntry, template_doc: DocEntry, file_type: P
         if not os.path.exists(folder):
             os.makedirs(folder)
         with open(path, mode='wb') as doc_file:
-            doc_file.write(printer.write_to_format(target_format=file_type))
+            doc_file.write(printer.write_to_format(target_format=file_type, plugins_user_print=plugins_user_print))
 
         doc_version = printer.get_document_version_as_float()
+
+        if plugins_user_print:
+            return path
 
         p_doc = PrintedDoc(doc_id=doc_entry.document.doc_id,
                            doc_version=doc_version,
@@ -212,4 +245,4 @@ def create_printed_doc(doc_entry: DocEntry, template_doc: DocEntry, file_type: P
 
         return p_doc.path_to_file
     except PrintingError as err:
-        abort(500, str(err))
+        raise PrintingError(str(err))

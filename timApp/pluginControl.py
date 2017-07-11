@@ -72,7 +72,8 @@ def pluginify(doc: Document,
               load_states=True,
               plugin_params=None,
               wrap_in_div=True,
-              output_format: PluginOutputFormat = PluginOutputFormat.HTML):
+              output_format: PluginOutputFormat = PluginOutputFormat.HTML,
+              user_print: bool = False):
     """"Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
 
@@ -85,6 +86,8 @@ def pluginify(doc: Document,
     :param sanitize: Whether the blocks should be sanitized before processing.
     :param do_lazy Whether to use lazy versions of the plugins.
     :param edit_window Whether the method is called from the edit window or not.
+    :param output_format: Desired output format (html/md) for plugins
+    :param user_print: Whether the plugins should output the original values or user's input (when exporting markdown).
     :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
 
     :type pars: list[DocParagraph]
@@ -150,6 +153,7 @@ def pluginify(doc: Document,
                                          "taskID": task_id,
                                          "taskIDExt": task_id + '.' + block.get_id(),
                                          "doLazy": do_lazy,
+                                         "userPrint": user_print,
                                          # added preview here so that whether or not the window is in preview can be
                                          # checked in python so that decisions on what data is sent can be made.
                                          "preview": edit_window,
