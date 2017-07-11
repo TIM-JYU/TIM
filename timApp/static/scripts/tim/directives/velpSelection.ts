@@ -1,4 +1,5 @@
 import angular from "angular";
+import {IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import * as velpSummary from "tim/directives/velpSummary";
@@ -30,7 +31,7 @@ const UNDEFINED = "undefined";
  * Controller for velp selection
  * @lends module:velpSelection
  */
-export class VelpSelectionController {
+export class VelpSelectionController implements IController {
     public velps: (IVelp & IUIFields)[];
     private labels: (ILabel & IUIFields)[];
     private velpGroups: (IVelpGroup & IUIFields)[];

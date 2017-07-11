@@ -1,5 +1,6 @@
+import {IController} from "angular";
 import {timApp} from "../app";
-class TemplateListCtrl {
+class TemplateListCtrl implements IController {
 
 }
 

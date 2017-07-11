@@ -1,3 +1,4 @@
+import {IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {$http, $window} from "../ngimport";
@@ -7,7 +8,7 @@ interface ISettings {
     custom_css: string;
 }
 
-export class SettingsCtrl {
+export class SettingsCtrl implements IController {
     private saving: boolean;
     private style: HTMLElementTagNameMap["style"];
     private settings: ISettings;

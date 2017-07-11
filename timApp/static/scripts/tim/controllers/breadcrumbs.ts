@@ -1,7 +1,8 @@
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import {$window} from "../ngimport";
 
-export class Breadcrumbs {
+export class Breadcrumbs implements IController {
     private crumbs: any;
     private item: any;
 

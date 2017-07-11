@@ -1,3 +1,5 @@
+import angular from "angular";
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as chart from "tim/directives/showChartDirective";
 import {markAsUsed} from "tim/utils";
@@ -18,58 +20,69 @@ markAsUsed(chart);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("ShowStatisticsToQuestionController", ["$scope", "$element", function($scope, $element) {
-    "use strict";
-    $scope.dynamicAnswerShowControl = {};
-    $scope.canvas = "";
-    $scope.questionTitle = "";
-    $scope.lecturerAnswered = false;
+export class ShowStatisticsToQuestionController implements IController {
+    private static $inject = ["$scope", "$element"];
+    private scope: angular.IScope;
+    private canvas: string;
+    private questionTitle: string;
+    private lecturerAnswered: boolean;
+    private element: angular.IRootElementService;
+    private dynamicAnswerShowControl: any;
 
-    $scope.$on("closeAnswerSheetForGood", function() {
-        $scope.$emit("closeAnswerShow");
-        $scope.dynamicAnswerShowControl.close();
-    });
+    constructor(scope: angular.IScope, element: angular.IRootElementService) {
+        this.scope = scope;
+        this.element = element;
+        this.dynamicAnswerShowControl = {};
+        this.canvas = "";
+        this.questionTitle = "";
+        this.lecturerAnswered = false;
+
+        this.scope.$on("closeAnswerSheetForGood", () => {
+            this.scope.$emit("closeAnswerShow");
+            this.dynamicAnswerShowControl.close();
+        });
+
+        this.scope.$on("lecturerAnswered", () => {
+            this.lecturerAnswered = true;
+            this.scope.$emit("showAnswers", true);
+        });
+
+        /**
+         * Adds answer to statistic directive
+         * @memberof module:showStatisticsToQuestionController
+         */
+        this.scope.$on("putAnswers", (event, answer) => {
+            this.dynamicAnswerShowControl.addAnswer(answer.answers);
+        });
+
+        /**
+         * Creates chart based on question json.
+         * @memberof module:showStatisticsToQuestionController
+         */
+        this.scope.$on("createChart", async (event, question) => {
+            this.lecturerAnswered = false;
+            await this.dynamicAnswerShowControl.createChart(question);
+            this.questionTitle = question.questionText;
+
+            window.setTimeout(() => { // give time to html to change
+                ParCompiler.processAllMath(this.element.parent());
+            }, 200);
+
+        });
+    }
+
     /**
      * Closes statistic window
      * @memberof module:showStatisticsToQuestionController
      */
-    $scope.close = function() {
-        $scope.$emit("closeAnswerShow");
-        if ($scope.lecturerAnswered) {
-            $scope.dynamicAnswerShowControl.close();
+    close() {
+        this.scope.$emit("closeAnswerShow");
+        if (this.lecturerAnswered) {
+            this.dynamicAnswerShowControl.close();
         }
-    };
+    }
 
-    $scope.hide = function() {
-        $scope.$emit("closeAnswerShow");
-    };
-
-    $scope.$on("lecturerAnswered", function() {
-        $scope.lecturerAnswered = true;
-        $scope.$emit("showAnswers", true);
-    });
-
-    /**
-     * Adds answer to statistic directive
-     * @memberof module:showStatisticsToQuestionController
-     */
-    $scope.$on("putAnswers", function(event, answer) {
-        $scope.dynamicAnswerShowControl.addAnswer(answer.answers);
-    });
-
-    /**
-     * Creates chart based on question json.
-     * @memberof module:showStatisticsToQuestionController
-     */
-    $scope.$on("createChart", async function(event, question) {
-        $scope.lecturerAnswered = false;
-        await $scope.dynamicAnswerShowControl.createChart(question);
-        $scope.questionTitle = question.questionText;
-
-        window.setTimeout(function() { // give time to html to change
-            ParCompiler.processAllMath($element.parent());
-        }, 200);
-
-    });
-
-}]);
+    hide() {
+        this.scope.$emit("closeAnswerShow");
+    }
+}

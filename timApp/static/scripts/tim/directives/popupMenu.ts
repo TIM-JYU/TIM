@@ -1,10 +1,10 @@
-import {IRootElementService, IScope} from "angular";
+import {IRootElementService, IScope, IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {watchEditMode} from "tim/editmode";
 import {$http, $window} from "../ngimport";
 
-class PopupMenuController {
+class PopupMenuController implements IController {
     private static $inject = ["$scope", "$element"];
     private model: {editState: boolean};
     private element: IRootElementService;

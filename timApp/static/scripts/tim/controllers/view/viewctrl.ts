@@ -1,4 +1,4 @@
-import angular, {IScope} from "angular";
+import angular, {IScope, IController} from "angular";
 import $ from "jquery";
 import ngs, {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
@@ -25,12 +25,12 @@ import {EditingHandler} from "./editing";
 import {RefPopupHandler} from "./refpopup";
 import {IUser} from "../../IUser";
 import {IItem} from "../../IItem";
-import {ReviewController} from "../reviewController";
+import {IAskedJsonJson, IAskedJsonJsonJson} from "../../lecturetypes";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
 export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
-    EditingHandler, NotesHandler, ParmenuHandler, RefPopupHandler {
+    EditingHandler, NotesHandler, ParmenuHandler, RefPopupHandler, IController {
     overReflink: boolean;
     overPopup: boolean;
     private notification: string;
@@ -324,10 +324,10 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
     public firstTimeQuestions: boolean;
     public noQuestionAutoNumbering: boolean;
     public par: JQuery;
-    public markup: {json?; points?; expl?};
+    public markup: IAskedJsonJson;
     public questionParId: string;
     public qId: string;
-    public json: {questionTitle};
+    public json: IAskedJsonJsonJson;
     public viewctrl: ViewCtrl;
     public showQuestionPreview: boolean;
     public questionParIdNext: string;

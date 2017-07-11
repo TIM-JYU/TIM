@@ -1,4 +1,4 @@
-import {IRootElementService} from "angular";
+import {IRootElementService, IController} from "angular";
 import {timApp} from "tim/app";
 
 /**
@@ -20,7 +20,7 @@ function toDragOrNot() {
     }
 }
 
-class PopupDialogController {
+class PopupDialogController implements IController {
     private element: IRootElementService;
     private mouseDownX: number;
     private mouseDownY: number;

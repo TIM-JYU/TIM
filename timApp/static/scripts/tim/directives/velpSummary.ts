@@ -10,10 +10,11 @@
  */
 
 import angular from "angular";
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import {IAnnotation, IUIFields} from "./velptypes";
 
-export class VelpSummaryController {
+export class VelpSummaryController implements IController {
     private settings: {selectedAll: boolean};
     private annotations: (IAnnotation & IUIFields)[];
     private toggleAnnotation: (params: {$ANNOTATION: IAnnotation}) => void;

@@ -1,3 +1,4 @@
+import {IController} from "angular";
 import {IScope, IRootElementService, IAttributes} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
@@ -50,7 +51,7 @@ timApp.directive("timDraggableFixed", [function() {
 
 type Pos = {X: number, Y: number};
 
-class DraggableController {
+class DraggableController implements IController {
     private static $inject = ["$scope", "$attrs", "$element"];
 
     private posKey: string;

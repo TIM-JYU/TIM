@@ -13,6 +13,7 @@
  */
 
 import angular from "angular";
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import {$http, $window} from "../ngimport";
 import {ReviewController} from "../controllers/reviewController";
@@ -21,7 +22,7 @@ import {IAnnotation} from "./velptypes";
 
 const UNDEFINED = "undefined";
 
-class AnnotationController {
+class AnnotationController implements IController {
     private static $inject = ["$scope", "$element"];
     private ctrlKey: number;
     private ctrlDown: boolean;

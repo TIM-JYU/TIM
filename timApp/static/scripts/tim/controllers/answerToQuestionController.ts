@@ -1,7 +1,9 @@
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as answerSheet from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed} from "tim/utils";
 import {$http, $log, $rootScope} from "../ngimport";
+import {IAskedQuestion, IAskedJson, IAskedJsonJson} from "../lecturetypes";
 
 markAsUsed(answerSheet);
 
@@ -18,156 +20,164 @@ markAsUsed(answerSheet);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("AnswerToQuestionController", ["$scope", function($scope) {
-    "use strict";
-    $scope.questionHeaders = [];
-    $scope.answerTypes = [];
-    $scope.dynamicAnswerSheetControl = {};
-    $scope.isLecturer = false;
-    $scope.questionTitle = "";
+export class AnswerToQuestionController implements IController {
+    private scope: angular.IScope;
+    private questionHeaders: {}[];
+    private answerTypes: {}[];
+    private isLecturer: boolean;
+    private questionTitle: string;
+    private isAsking: boolean;
+    constructor(scope: angular.IScope) {
+        this.scope = scope;
+        this.questionHeaders = [];
+        this.answerTypes = [];
+        this.dynamicAnswerSheetControl = {};
+        this.isLecturer = false;
+        this.questionTitle = "";
 
-    $scope.$on("setQuestionJson", function(event, args) {
-        $scope.result = args.result;
-        $scope.previousAnswer = args.answer;
-        $scope.askedId = args.askedId;
-        $scope.questionId = args.questionId;
-        $scope.questionParId = args.questionParId;
-        $scope.isLecturer = args.isLecturer;
-        $scope.markup = args.markup;
-        $scope.questionTitle = args.markup.json.questionTitle;
-        $scope.askedTime = args.askedTime;
-        $scope.clockOffset = args.clockOffset;
-        $scope.questionEnded = false;
-        $scope.answered = false;
-        $scope.buttonText = $scope.markup.button || $scope.markup.buttonText || "Answer";
-        $scope.dynamicAnswerSheetControl.createAnswer($scope);
-        if (args.isAsking) {
-            $scope.isAsking = true;
-        }
-    });
+        this.scope.$on("setQuestionJson", (event, args) => {
+            this.result = args.result;
+            this.previousAnswer = args.answer;
+            this.askedId = args.askedId;
+            this.questionId = args.questionId;
+            this.questionParId = args.questionParId;
+            this.isLecturer = args.isLecturer;
+            this.markup = args.markup;
+            this.questionTitle = args.markup.json.questionTitle;
+            this.askedTime = args.askedTime;
+            this.clockOffset = args.clockOffset;
+            this.questionEnded = false;
+            this.answered = false;
+            this.buttonText = this.markup.button || this.markup.buttonText || "Answer";
+            this.dynamicAnswerSheetControl.createAnswer(this);
+            if (args.isAsking) {
+                this.isAsking = true;
+            }
+        });
+    }
 
     /**
      * FILL WITH SUITABLE TEXT
      * @memberof module:answerToQuestionController
      */
-    $scope.answer = function() {
-        $scope.dynamicAnswerSheetControl.answerToQuestion();
-        $scope.answered = true;
-        if ($scope.isLecturer) {
+    answer() {
+        this.dynamicAnswerSheetControl.answerToQuestion();
+        this.answered = true;
+        if (this.isLecturer) {
             $rootScope.$broadcast("lecturerAnswered");
         }
-    };
+    }
 
     /**
      * FILL WITH SUITABLE TEXT
      * @memberof module:answerToQuestionController
      */
-    $scope.close = function(callback) {
-        if ($scope.isLecturer) {
-            $scope.stopQuestion(callback);
+    close(callback) {
+        if (this.isLecturer) {
+            this.stopQuestion(callback);
         }
-        if ($scope.result) {
-            $scope.$emit("pointsClosed", $scope.askedId);
+        if (this.result) {
+            this.scope.$emit("pointsClosed", this.askedId);
         }
-        $scope.dynamicAnswerSheetControl.closeQuestion();
-    };
+        this.dynamicAnswerSheetControl.closeQuestion();
+    }
 
-    $scope.stopQuestion = function(callback) {
+    stopQuestion(callback) {
         $http({
             url: "/stopQuestion",
             method: "POST",
             params: {
-                asked_id: $scope.askedId,
-                lecture_id: $scope.lectureId,
+                asked_id: this.askedId,
+                lecture_id: this.lectureId,
             },
         })
             .then(function() {
-                $scope.$emit("questionStopped");
-                $scope.questionEnded = true;
-                $scope.dynamicAnswerSheetControl.endQuestion();
-                $log.info("Question ", $scope.askedId, " stopped");
+                this.scope.$emit("questionStopped");
+                this.questionEnded = true;
+                this.dynamicAnswerSheetControl.endQuestion();
+                $log.info("Question ", this.askedId, " stopped");
                 if (callback) {
                     callback();
                 }
-            }, function() {
+            }, () => {
                 $log.info("Failed to stop question");
             });
-    };
+    }
 
     /**
      *
      */
-    $scope.showAnswers = function() {
-        $scope.$emit("showAnswers", true);
-    };
+    showAnswers() {
+        this.scope.$emit("showAnswers", true);
+    }
 
-    $scope.reAsk = function() {
-        $scope.close($scope.reAskEmit);
-    };
+    reAsk() {
+        this.close(this.reAskEmit);
+    }
 
-    $scope.askAsNew = function() {
-        $scope.close($scope.askAsNewEmit);
-    };
+    askAsNew() {
+        this.close(this.askAsNewEmit);
+    }
 
-    $scope.edit = function() {
-        $http<{json: string, points}>({
+    edit() {
+        $http<IAskedQuestion>({
             url: "/getAskedQuestionById",
             method: "GET",
-            params: {asked_id: $scope.askedId},
+            params: {asked_id: this.askedId},
         })
-            .then(function(response) {
-                let markup = JSON.parse(response.data.json);
-                if (!markup.json) markup = {json: markup}; // compability for old
+            .then((response) => {
+                let markup: IAskedJsonJson = JSON.parse(response.data.json);
+                if (!markup.json) markup = {json: markup} as any; // compability for old
                 markup.points = response.data.points;
-                $rootScope.$broadcast("changeQuestionTitle", {questionTitle: markup.questionTitle});
+                $rootScope.$broadcast("changeQuestionTitle", {questionTitle: markup.json.questionTitle});
                 $rootScope.$broadcast("editQuestion", {
-                    asked_id: $scope.askedId,
+                    asked_id: this.askedId,
                     markup,
                 });
-            }, function() {
+            }, () => {
                 $log.info("There was some error getting question.");
             });
-    };
+    }
 
-    $scope.showPoints = function() {
+    showPoints() {
         $http<{points, expl?}>({
             url: "/showAnswerPoints",
             method: "POST",
             params: {
-                asked_id: $scope.askedId,
-                lecture_id: $scope.lectureId,
-                current_question_id: $scope.askedId,
+                asked_id: this.askedId,
+                lecture_id: this.lectureId,
+                current_question_id: this.askedId,
             },
         })
-            .then(function(response) {
-                $scope.current_points_id = $scope.askedId;
-                $scope.result = true;
-                $scope.points = response.data.points;
-                if (response.data.expl) $scope.expl = JSON.parse(response.data.expl);
-                $scope.dynamicAnswerSheetControl.createAnswer($scope);
-            }, function() {
+            .then((response) => {
+                this.current_points_id = this.askedId;
+                this.result = true;
+                this.points = response.data.points;
+                if (response.data.expl) this.expl = JSON.parse(response.data.expl);
+                this.dynamicAnswerSheetControl.createAnswer(this);
+            }, () => {
                 $log.info("Could not show points to students.");
             });
-    };
+    }
 
-    $scope.reAskEmit = function() {
-        $scope.$emit("askQuestion", {
-            lecture_id: $scope.lectureId,
-            asked_id: $scope.askedId,
-            par_id: $scope.questionParId,
-            question_id: $scope.questionId,
-            doc_id: $scope.docId,
-            markup: $scope.markup,
+    reAskEmit() {
+        this.scope.$emit("askQuestion", {
+            lecture_id: this.lectureId,
+            asked_id: this.askedId,
+            par_id: this.questionParId,
+            question_id: this.questionId,
+            doc_id: this.docId,
+            markup: this.markup,
         });
-    };
+    }
 
-    $scope.askAsNewEmit = function() {
-        $scope.$emit("askQuestion", {
-            lecture_id: $scope.lectureId,
-            question_id: $scope.questionId,
-            par_id: $scope.questionParId,
-            doc_id: $scope.docId,
-            markup: $scope.markup,
+    askAsNewEmit() {
+        this.scope.$emit("askQuestion", {
+            lecture_id: this.lectureId,
+            question_id: this.questionId,
+            par_id: this.questionParId,
+            doc_id: this.docId,
+            markup: this.markup,
         });
-    };
-}]);
+    }
+}

@@ -1,4 +1,5 @@
-import {IRootElementService, IScope} from "angular";
+import angular from "angular";
+import {IRootElementService, IScope, IController} from "angular";
 import {timApp} from "tim/app";
 import {$timeout, $uibModal} from "../ngimport";
 import {ViewCtrl} from "./view/viewctrl";
@@ -8,7 +9,7 @@ interface IUser {
     velped_task_count: number;
 }
 
-export class UserListController {
+export class UserListController implements IController {
     private static $inject = ["$scope", "$element"];
     private gridOptions: uiGrid.IGridOptions & {gridMenuCustomItems: any};
     private scope: IScope;
@@ -238,7 +239,7 @@ timApp.component("timUserList", {
 </div>`,
 });
 
-export class KorppiExportCtrl {
+export class KorppiExportCtrl implements IController {
     private static $inject = ["$uibModalInstance"];
 
     private options: {};

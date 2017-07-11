@@ -1,8 +1,8 @@
-import {IRootElementService} from "angular";
+import {IRootElementService, IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 
-class NameAreaController {
+class NameAreaController implements IController {
     private static $inject = ["$element"];
     private $area: JQuery;
     private areaName: string;

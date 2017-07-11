@@ -1,4 +1,5 @@
 import angular from "angular";
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as formErrorMessage from "tim/directives/formErrorMessage";
 import * as shortNameValidator from "tim/directives/shortNameValidator";
@@ -8,7 +9,7 @@ import {slugify} from "../services/slugify";
 
 markAsUsed(formErrorMessage, shortNameValidator);
 
-class CreateItemController {
+class CreateItemController implements IController {
     private fullPath: string;
     private automaticShortName: boolean;
     private itemLocation: string | undefined;

@@ -1,4 +1,5 @@
 import angular from "angular";
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
 import {markAsUsed} from "tim/utils";
@@ -6,7 +7,7 @@ import {$http, $timeout, $uibModal, $window} from "../ngimport";
 
 markAsUsed(focusMe);
 
-class BookmarksController {
+class BookmarksController implements IController {
     private data: {name, isOpen, items: {}[]}[];
     private deleting: boolean;
     private userId: number;
@@ -178,7 +179,7 @@ timApp.component("bookmarks", {
     templateUrl: "/static/templates/bookmarks.html",
 });
 
-class CreateBookmarkCtrl {
+class CreateBookmarkCtrl implements IController {
     private static $inject = ["bookmark", "$uibModalInstance"];
 
     private bookmarkForm: {};
@@ -189,9 +190,9 @@ class CreateBookmarkCtrl {
     private bookmark: {link: string};
     private includeParams: boolean;
     private includeHash: boolean;
-    private uibModalInstance: angular.ui.bootstrap.IModalServiceInstance;
+    private uibModalInstance: angular.ui.bootstrap.IModalInstanceService;
 
-    constructor(bookmark, uibModalInstance: angular.ui.bootstrap.IModalServiceInstance) {
+    constructor(bookmark, uibModalInstance: angular.ui.bootstrap.IModalInstanceService) {
         this.uibModalInstance = uibModalInstance;
         this.bookmarkForm = {};
         this.bookmark = bookmark;

@@ -62,14 +62,13 @@ def get_lecture_info():
             question_ids.append(singleDict['question_id'])
         if singleDict['user_id'] not in added_users:
             added_users.append(singleDict['user_id'])
-            answerers.append({'user_name': singleDict['user_name'], 'user_id': singleDict['user_id']})
+            answerers.append({'name': singleDict['user_name'], 'id': singleDict['user_id']})
 
     lecture_questions = timdb.questions.get_multiple_asked_questions(question_ids)
 
     return json_response(
         {"messages": messages, "answerers": answerers, "answers": answer_dicts, "questions": lecture_questions,
-         "isLecturer": is_lecturer, "user": {'user_name': timdb.users.get_user(current_user)['name'],
-                                             'user_id': current_user}})
+         "isLecturer": is_lecturer})
 
 
 @lecture_routes.route('/getLectureAnswerTotals/<int:lecture_id>')
@@ -660,8 +659,8 @@ def create_lecture():
     doc_id = int(request.args.get("doc_id"))
     verify_ownership(doc_id)
     timdb = get_timdb()
-    start_time = request.args.get("start_date")
-    end_time = request.args.get("end_date")
+    start_time = request.args.get("start_time")
+    end_time = request.args.get("end_time")
     lecture_code = request.args.get("lecture_code")
     password = request.args.get("password")
     if 'max_students' in request.args:

@@ -1,12 +1,17 @@
 import angular from "angular";
+import {IController} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
 import {fixQuestionJson} from "tim/directives/dynamicAnswerSheet";
 import * as showChart from "tim/directives/showChartDirective";
 import {markAsUsed} from "tim/utils";
-import {ParCompiler} from "../services/parCompiler";
 import {$http, $log, $rootScope, $window} from "../ngimport";
+import {IItem} from "../IItem";
+import {IAskedQuestion, ILecture, ILectureMessage, IQuestionAnswer} from "../lecturetypes";
+import {IUser} from "../IUser";
+import {Users} from "../services/userService";
+import {showLectureDialog} from "./createLectureCtrl";
 
 markAsUsed(showChart);
 
@@ -24,129 +29,139 @@ markAsUsed(showChart);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("LectureInfoController", ["$scope", "$element", function($scope, $element) {
-    "use strict";
-    $scope.item = $window.item;
-    $scope.docId = $scope.item.id;
-    $scope.docName = $window.item.path;
-    $scope.inLecture = $window.inLecture;
-    $scope.lectureId = $window.lectureId;
-    $scope.code = $window.lectureCode;
-    $scope.lectureCode = "Lecture info: " + $window.lectureCode;
-    $scope.lectureStartTime = moment($window.lectureStartTime);
-    $scope.lectureEndTime = moment($window.lectureEndTime);
-    $scope.msg = "";
-    $scope.dynamicAnswerShowControls = [];
-    $scope.dynamicAnswerShowControl = {};
-    $scope.index = 0;
-    $scope.isLecturer = false;
-    $scope.answerers = [];
-    $scope.showPoints = false;
-    $scope.points = [];
-    $scope.showLectureForm = false;
-    $scope.element = $element;
+export class LectureInfoController implements IController {
+    private static $inject = ["$element"];
+    private element: angular.IRootElementService;
+    private item: IItem;
+    private lecture: ILecture;
+    private inLecture: boolean;
+    private msg: string;
+    private isLecturer: boolean;
+    private answerers: IUser[];
+    private showPoints: boolean;
+    private points: number[];
+    private answers: IQuestionAnswer[];
+    private questions: IAskedQuestion[];
+    private questionAnswerData: Array<{question: any, answers: any}>;
+    private selectedUser: IUser;
+
+    constructor(element: angular.IRootElementService) {
+        this.item = $window.item;
+        this.inLecture = $window.inLecture;
+        this.lecture = {
+            max_students: null,
+            lecture_code: $window.lectureCode,
+            doc_id: this.item.id,
+            end_time: moment($window.lectureEndTime),
+            start_time: moment($window.lectureStartTime),
+            lecture_id: $window.lectureId,
+            password: "",
+        };
+        this.msg = "";
+        this.isLecturer = false;
+        this.answerers = [];
+        this.showPoints = false;
+        this.points = [];
+        this.element = element;
+
+        this.getLectureInfo();
+    }
+
     /**
      * Sends http request to get info about the specific lecture.
      * @memberof module:lectureInfoController
      */
-    $scope.getLectureInfo = function() {
-        $http<{messages, answers, questions, isLecturer, answerers, user}>({
+    async getLectureInfo() {
+        const response = await $http<{
+            messages: ILectureMessage[],
+            answers: IQuestionAnswer[],
+            questions: IAskedQuestion[],
+            isLecturer: boolean,
+            answerers: IUser[],
+        }>({
             url: "/getLectureInfo",
             method: "GET",
-            params: {lecture_id: $scope.lectureId},
-        })
-            .then(function(response) {
-                const answer = response.data;
-                /*Update the header links to correct urls*/
-                $scope.updateHeaderLinks();
-                /*Add a return link icon to lecture header if user is in lecture*/
-                if ($scope.inLecture) {
-                    $scope.addReturnLinkToHeader();
-                }
+            params: {lecture_id: this.lecture.lecture_id},
+        });
+        const answer = response.data;
+        /*Update the header links to correct urls*/
+        this.updateHeaderLinks();
+        /*Add a return link icon to lecture header if user is in lecture*/
+        if (this.inLecture) {
+            this.addReturnLinkToHeader();
+        }
 
-                angular.forEach(answer.messages, function(msg) {
-                    $scope.msg = $scope.msg + msg.sender + " <" + msg.time + ">: " + msg.message + "\n";
-                });
-                $scope.answers = answer.answers;
-                for (let i = 0; i < answer.questions.length; i++) {
-                    $scope.dynamicAnswerShowControls.push({});
-                    $scope.points.push(0);
-                    let markup = JSON.parse(answer.questions[i].json);
-                    if (!markup.json) markup = {json: markup}; // compability for old
-                    const json = markup.json;
-                    fixQuestionJson(json);
-                    answer.questions[i].nr = i + 1;
-                    answer.questions[i].json = json;
-                }
-                $scope.questions = answer.questions;
-                $scope.isLecturer = answer.isLecturer;
-                $scope.answerers = answer.answerers;
-                $scope.selectedUser = answer.user;
-            }, function() {
-                $log.info("fail");
-            });
-    };
+        angular.forEach(answer.messages, (msg) => {
+            this.msg += msg.sender + " <" + msg.time + ">: " + msg.message + "\n";
+        });
+        this.answers = answer.answers;
+        for (let i = 0; i < answer.questions.length; i++) {
+            this.points.push(0);
+            let markup = JSON.parse(answer.questions[i].json);
+            if (!markup.json) {
+                markup = {json: markup}; // compatibility for old
+            }
+            const json = markup.json;
+            fixQuestionJson(json);
+            answer.questions[i].json = json;
+        }
+        this.questions = answer.questions;
+        this.isLecturer = answer.isLecturer;
+        this.answerers = answer.answerers;
+        this.selectedUser = Users.getCurrent();
+    }
 
-    $scope.editPoints = function(askedId) {
-        $http<{json: string, points}>({
+    async editPoints(askedId: number) {
+        const response = await $http<{json: string, points}>({
             url: "/getAskedQuestionById",
             method: "GET",
             params: {asked_id: askedId},
-        })
-            .then(function(response) {
-                const data = response.data;
-                let markup = JSON.parse(data.json);
-                if (!markup.json) {
-                    markup = {json: markup}; // compability for old
-                }
-                markup.points = data.points;
-                $rootScope.$broadcast("changeQuestionTitle", {questionTitle: markup.json.questionTitle});
-                $rootScope.$broadcast("editQuestion", {
-                    asked_id: askedId,
-                    markup,
-                });
-            }, function() {
-                $log.error("There was some error creating question to database.");
-            });
-    };
-
-    /*
-     Gets the lecture info when loading page.
-     */
-    $scope.getLectureInfo();
+        });
+        const data = response.data;
+        let markup = JSON.parse(data.json);
+        if (!markup.json) {
+            markup = {json: markup}; // compatibility for old
+        }
+        markup.points = data.points;
+        $rootScope.$broadcast("changeQuestionTitle", {questionTitle: markup.json.questionTitle});
+        $rootScope.$broadcast("editQuestion", {
+            asked_id: askedId,
+            markup,
+        });
+    }
 
     /*
      Updates the header links in base.html
      */
-    $scope.updateHeaderLinks = function() {
+    updateHeaderLinks() {
         if (document.getElementById("headerView")) {
-            document.getElementById("headerView").setAttribute("href", "/view/" + $scope.item.path);
+            document.getElementById("headerView").setAttribute("href", "/view/" + this.item.path);
         }
         if (document.getElementById("headerManage")) {
-            document.getElementById("headerManage").setAttribute("href", "/manage/" + $scope.item.path);
+            document.getElementById("headerManage").setAttribute("href", "/manage/" + this.item.path);
         }
         if (document.getElementById("headerTeacher")) {
-            document.getElementById("headerTeacher").setAttribute("href", "/teacher/" + $scope.item.path);
+            document.getElementById("headerTeacher").setAttribute("href", "/teacher/" + this.item.path);
         }
         if (document.getElementById("headerAnswers")) {
-            document.getElementById("headerAnswers").setAttribute("href", "/answers/" + $scope.item.path);
+            document.getElementById("headerAnswers").setAttribute("href", "/answers/" + this.item.path);
         }
         if (document.getElementById("headerLecture")) {
-            document.getElementById("headerLecture").setAttribute("href", "/lecture/" + $scope.item.path);
+            document.getElementById("headerLecture").setAttribute("href", "/lecture/" + this.item.path);
         }
         if (document.getElementById("headerSlide")) {
-            document.getElementById("headerSlide").setAttribute("href", "/slide/" + $scope.item.path);
+            document.getElementById("headerSlide").setAttribute("href", "/slide/" + this.item.path);
         }
-    };
+    }
 
     /**
      * Adds a header to lectureMenu that allows user to return to lecture
      * if user is currently on the lecture.
      */
-    $scope.addReturnLinkToHeader = function() {
+    addReturnLinkToHeader() {
         const menu = document.getElementById("inLectureIconSection");
         const linkToLecture = document.createElement("a");
-        linkToLecture.setAttribute("href", /* "https://" + location.host + */ "/lecture/" + $scope.item.path + "?Lecture=" + $scope.lectureCode);
+        linkToLecture.setAttribute("href", /* "https://" + location.host + */ "/lecture/" + this.item.path + "?Lecture=" + this.lecture.lecture_code);
         linkToLecture.setAttribute("title", "Return to lecture");
         const returnImg = document.createElement("img");
         returnImg.setAttribute("src", "/static/images/join-icon3.png");
@@ -154,116 +169,161 @@ timApp.controller("LectureInfoController", ["$scope", "$element", function($scop
         returnImg.setAttribute("title", "Return to lecture");
         linkToLecture.appendChild(returnImg);
         menu.appendChild(linkToLecture);
-    };
+    }
 
     /**
      * Sends http request to delete the lecture.
      * @memberof module:lectureInfoController
      */
-    $scope.deleteLecture = function() {
+    async deleteLecture() {
         const confirmAnswer = $window.confirm("Do you really want to delete this lecture?");
         if (confirmAnswer) {
-            $http({
+            await $http({
                 url: "/deleteLecture",
                 method: "POST",
-                params: {doc_id: $scope.docId, lecture_id: $scope.lectureId},
-            })
-                .then(function() {
-                    window.history.back();
-                }, function() {
-                    $log.info("Failed to delete the lecture");
-                });
+                params: {doc_id: this.item.id, lecture_id: this.lecture.lecture_id},
+            });
+            $window.history.back();
         }
-    };
+    }
 
-    $scope.editLecture = function() {
-        $("#currentList").hide();
-        $("#futureList").hide();
-        $http<{lectureId, lectureCode, lectureStartTime, lectureEndTime, password}>({
+    async editLecture() {
+        const response = await $http<{lectureId, lectureCode, lectureStartTime, lectureEndTime, password}>({
             url: "/showLectureInfoGivenName",
             method: "GET",
-            params: {lecture_code: $scope.code, doc_id: $scope.docId},
-        })
-            .then(function(response) {
-                const lecture = response.data;
-                $scope.$broadcast("editLecture", {
-                    lecture_id: lecture.lectureId,
-                    lecture_name: lecture.lectureCode,
-                    start_date: moment(lecture.lectureStartTime),
-                    end_date: moment(lecture.lectureEndTime),
-                    password: lecture.password || "",
-                    editMode: true,
-                });
-                $scope.showLectureForm = true;
-            }, function() {
-                $log.info("Failed to fetch lecture.");
-            });
-    };
-
-    $scope.$on("lectureUpdated", function(event, data) {
-        $http<{lectureId, lectureCode, lectureStartTime, lectureEndTime, password}>({
-            url: "/showLectureInfoGivenName",
-            method: "GET",
-            params: {lecture_id: $scope.lectureId},
-        })
-            .then(function(response) {
-                const lecture = response.data;
-                $scope.code = lecture.lectureCode;
-                $scope.lectureCode = "Lecture info: " + lecture.lectureCode;
-                $scope.lectureEndTime = moment(lecture.lectureEndTime);
-                $scope.lectureStartTime = moment(lecture.lectureStartTime);
-            }, function() {
-                $log.info("Failed to fetch lecture.");
-            });
-        $scope.showLectureForm = false;
-    });
-
-    $scope.$on("closeLectureForm", function(event, data) {
-        $scope.showLectureForm = false;
-    });
-
-    $scope.toggle = function() {
-        $scope.dynamicAnswerShowControls[0].toggle();
-
-    };
+            params: {lecture_code: this.lecture.lecture_code, doc_id: this.item.id},
+        });
+        const lecture = response.data;
+        const lectureNew = await showLectureDialog(this.item, {
+            doc_id: this.item.id,
+            end_time: moment(lecture.lectureEndTime),
+            lecture_code: lecture.lectureCode,
+            lecture_id: lecture.lectureId,
+            max_students: null,
+            password: lecture.password || "",
+            start_time: moment(lecture.lectureStartTime),
+        });
+        this.lecture = lectureNew;
+    }
 
     /**
      * Draws charts from the answer of the current lecture.
      * @param userToShow Which users answers to shows. If undefined shows from every user.
      * @memberof module:lectureInfoController
      */
-    $scope.drawCharts = async function(userToShow) {
-        for (let p = 0; p < $scope.points.length; p++) {
-            $scope.points[p] = 0;
+    async drawCharts(userToShow: IUser = null) {
+        for (let p = 0; p < this.points.length; p++) {
+            this.points[p] = 0;
         }
-        $scope.showPoints = true;
-        let user;
-        if (typeof userToShow === "undefined") {
-            user = "";
+        this.showPoints = true;
+        let userId: number;
+        if (userToShow === null) {
+            userId = null;
         } else {
-            user = userToShow.user_id;
+            userId = userToShow.id;
         }
-        const questionIndexes = [];
-        for (let i = 0; i < $scope.dynamicAnswerShowControls.length; i++) {
-            await $scope.dynamicAnswerShowControls[i].createChart($scope.questions[i].json);
-            questionIndexes.push($scope.questions[i].asked_id);
+        const questionIds = [];
+        for (let i = 0; i < this.questions.length; i++) {
+            await this.dynamicAnswerShowControls[i].createChart(this.questions[i].json);
+            questionIds.push(this.questions[i].asked_id);
         }
 
-        for (let j = 0; j < $scope.answers.length; j++) {
-            if (($scope.isLecturer && user === "") || $scope.answers[j].user_id === user) {
-                $scope.dynamicAnswerShowControls[questionIndexes.indexOf($scope.answers[j].question_id)]
-                    .addAnswer([{answer: $scope.answers[j].answer}]);
-                $scope.points[questionIndexes.indexOf($scope.answers[j].question_id)] += $scope.answers[j].points;
+        for (let j = 0; j < this.answers.length; j++) {
+            if ((this.isLecturer && userId === null) || this.answers[j].user_id === userId) {
+                const index = questionIds.indexOf(this.answers[j].question_id);
+                this.dynamicAnswerShowControls[index]
+                    .addAnswer([{answer: this.answers[j].answer}]);
+                this.points[index] += this.answers[j].points;
             }
         }
+    }
+}
 
-        if ($scope.answers.length <= 0) {
-            const elem = $("#infoBox");
-            elem.empty();
-            elem.append("No answers from this lecture");
-        }
-        $window.setTimeout(function() { // give time to html to change
-            ParCompiler.processAllMath($element.parent());
-        }, 200);
-    };
-}]);
+timApp.component("timLectureInfo", {
+    controller: LectureInfoController,
+    controllerAs: "lictrl",
+    // language=HTML
+    template: `
+        <div class="panel panel-default">
+            <div class="panel-heading">Lecture info</div>
+            <div class="panel-body">
+                <strong>Lecture code:</strong>
+
+                <p ng-bind="lictrl.lecture.lecture_code"></p>
+
+                <strong>Start time:</strong>
+
+                <p ng-bind="lictrl.lecture.start_time | timdate"></p>
+
+                <strong>End time:</strong>
+
+                <p ng-bind="lictrl.lecture.end_time | timdate"></p>
+
+                <div ng-show="lictrl.isLecturer">
+                    <!--TODO: Preview questions. Needs directive from the question preview and then just use it.-->
+                    <strong>Questions asked:</strong>
+                    <ul>
+                        <li ng-repeat="question in lictrl.questions">
+                            {{ $index + 1 }}. <span ng-bind="question.asked_time | timtim"></span>
+                            <a ng-click="lictrl.editPoints(question.asked_id)">{{ question.json.questionTitle }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">Lecture wall</div>
+            <div class="panel-body">
+                <textarea class="form-control" data-ng-model="lictrl.msg" readonly id="lectureInfoWall"></textarea>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">Find answers <span ng-show="!lictrl.isLecturer"
+                                                          ng-bind="lictrl.selectedUser.name"></span>
+            </div>
+            <div class="panel-body">
+                <label ng-show="isLecturer">User name
+                    <select class="form-control" ng-model="lictrl.selectedUser"
+                            ng-options="user.name for user in lictrl.answerers track by user.id">
+                    </select>
+                </label>
+                <button class="timButton" ng-click="lictrl.drawCharts(lictrl.selectedUser)">Show answers</button>
+                <button class="timButton" ng-show="lictrl.isLecturer" ng-click="lictrl.drawCharts()">Show all</button>
+                <a class="timButton"
+                   href="/getLectureAnswerTotals/{{ lictrl.lectureId }}?sum_field_name=sum&count_field_name=cnt">
+                    Download as plain text</a>
+                <div>
+                    <div ng-repeat="question in lictrl.questions" style="margin-bottom: 2em">
+                        <div ng-show="lictrl.showPoints">
+                            <p>{{ $index + 1 }}. <span class="bold" ng-bind-html="question.json.questionTitle"></span>
+                                /
+                                <span ng-bind="question.asked_time | timtim"></span>
+                            </p>
+                            <p ng-bind-html="question.json.questionText"
+                               ng-click="lictrl.dynamicAnswerShowControls[$index].toggle()"></p>
+                        </div>
+                        <show-chart-directive data="lictrl.questionAnswerData">
+                        </show-chart-directive>
+                        <p ng-show="lictrl.showPoints">Points: <span ng-bind="lictrl.points[$index]"> </span></p>
+                    </div>
+                </div>
+
+                <p ng-show="lictrl.answers.length">
+                    No answers from this lecture
+                </p>
+            </div>
+        </div>
+
+        <div ng-show="lictrl.isLecturer" class="panel panel-default">
+            <div class="panel-heading">
+                Actions
+            </div>
+            <div class="panel-body">
+                <button class="timButton" ng-click="lictrl.editLecture(lectureName)">Edit lecture</button>
+                <button class="btn btn-danger" ng-click="lictrl.deleteLecture()">Delete lecture</button>
+            </div>
+        </div>
+    `,
+});

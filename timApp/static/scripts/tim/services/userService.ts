@@ -1,4 +1,5 @@
 import {$http, $httpParamSerializer, $window} from "../ngimport";
+import {IUser} from "../IUser";
 
 export class UserService {
     private current: any; // currently logged in user
@@ -9,7 +10,7 @@ export class UserService {
         this.group = group;
     }
 
-    public getCurrent() {
+    public getCurrent(): IUser {
         return this.current;
     }
 
@@ -22,7 +23,7 @@ export class UserService {
     }
 
     public logout(user, logoutFromKorppi = false) {
-        $http.post<{other_users: object[], current_user: object}>("/logout", {user_id: user.id}).then((response) => {
+        $http.post<{other_users: object[], current_user: IUser}>("/logout", {user_id: user.id}).then((response) => {
             this.group = response.data.other_users;
             this.current = response.data.current_user;
             if (!this.isLoggedIn()) {

@@ -1,3 +1,4 @@
+import {IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {Users, UserService} from "../services/userService";
@@ -15,7 +16,7 @@ import {$http, $log, $window} from "../ngimport";
  * @copyright 2015 Timppa project authors
  */
 
-export class SidebarMenuCtrl {
+export class SidebarMenuCtrl implements IController {
     private currentLecturesList: {}[];
     private futureLecturesList: {}[];
     private pastLecturesList: {}[];

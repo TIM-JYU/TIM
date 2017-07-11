@@ -1,8 +1,8 @@
-import {IRootElementService} from "angular";
+import {IRootElementService, IController} from "angular";
 import {timApp} from "tim/app";
 import {$http} from "../ngimport";
 
-class RefPopupController {
+class RefPopupController implements IController {
     private loaded: boolean;
     private ref_loaded: boolean;
     private docid: number;

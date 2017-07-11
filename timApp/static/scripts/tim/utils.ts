@@ -3,8 +3,19 @@ import $ from "jquery";
 import sessionsettings from "tim/session";
 import {$log, $q, $timeout} from "./ngimport";
 
+export function checkBindings(controller: any, bindings: {[name: string]: string}) {
+    for (const k of Object.keys(bindings)) {
+        if (!bindings[k].startsWith("?")) {
+            if (controller[k] === undefined) {
+                throw new Error(`Binding is undefined: ${k}`);
+            }
+        }
+    }
+}
+
 export function angularWait(): IPromise<void> {
-    return $timeout(() => {}, 100);
+    return $timeout(() => {
+    }, 100);
 }
 
 export function assertIsText(n: Node): n is Text {

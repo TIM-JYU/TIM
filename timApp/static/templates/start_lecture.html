@@ -1,5 +1,5 @@
-<div class="popUpWindow" ng-controller="CreateLectureCtrl as clctrl">
-    <form class="createLecture" id="lectureForm" name="form">
+<div class="popUpWindow">
+    <form class="createLecture" name="form">
         <div id="infoFields">
             <div>
                 <label for="lCode">Lecture name:</label>
@@ -11,7 +11,7 @@
             </div>
             <div>
                 <label for="maxStudents">Max number of students:<br>(Optional)</label>
-                <input size="3" maxlength="3" id="maxStudents" type="text" name="max" ng-model="clctrl.maxStudents"/>
+                <input size="3" maxlength="3" id="maxStudents" type="number" name="max" ng-model="clctrl.maxStudents"/>
             </div>
         </div>
         <div class="startingTime">
@@ -27,7 +27,8 @@
                         </span>
                     </div>
                 </div>
-                <div id="studentsJoinEarly"><label><input type="checkbox" ng-model="clctrl.earlyJoining">Allow students to join
+                <div id="studentsJoinEarly"><label><input type="checkbox" ng-model="clctrl.earlyJoining">Allow students
+                    to join
                     15 minutes prior to the start of the lecture.</label></div>
             </div>
         </div>
@@ -49,7 +50,8 @@
                     </div>
                 </div>
 
-                <input type="radio" id="durationChosen" name="dueStop" ng-click="clctrl.enableDue2()" ng-model="clctrl.durationChosen"
+                <input type="radio" id="durationChosen" name="dueStop" ng-click="clctrl.enableDue2()"
+                       ng-model="clctrl.durationChosen"
                        ng-checked="clctrl.dueCheck"/>
                 Duration:
                 <div id="durationDiv">
@@ -66,18 +68,20 @@
             <label for="lLink" class="linkLabelWide">Direct link to join lecture:</label>
             <input onclick="document.getElementById('lLink').setSelectionRange(0, 9999)"
                    style="background-color: #DCDCDC" readonly id="lLink" type="text" name="link"
-                   ng-value='"https://" + hostName + "/lecture/" + docNamePath + "?lecture=" + lectureCodeEncoded'/>
+                   ng-value="clctrl.getJoinLectureLink()"/>
             <label for="lLink2" class="linkLabelWide">Link to automatically join lectures for this document:</label>
             <input onclick="document.getElementById('lLink2').setSelectionRange(0, 9999)"
                    style="background-color: #DCDCDC" readonly id="lLink2" type="text" name="link2"
-                   ng-value='"https://" + hostName + "/lecture/" + docNamePath + "?lecture=autojoin"'/>
+                   ng-value="clctrl.getAutoJoinLink()"/>
         </div>
-        <p id="errorMessage" ng-if="clctrl.error_message.length" ng-bind-html="clctrl.error_message"></p>
+        <p id="errorMessage" ng-if="clctrl.errorMessage.length" ng-bind-html="clctrl.errorMessage"></p>
 
     </form>
     <div class="buttons">
-        <button class="timButton" type="button" ng-click="clctrl.submitLecture()" ng-show="!clctrl.editMode">Create</button>
-        <button class="timButton" type="button" ng-click="clctrl.submitLecture()" ng-show="clctrl.editMode">Update</button>
+        <button class="timButton" type="button" ng-click="clctrl.submitLecture()" ng-show="clctrl.creatingNew()">Create
+        </button>
+        <button class="timButton" type="button" ng-click="clctrl.submitLecture()" ng-show="!clctrl.creatingNew()">Update
+        </button>
         <button class="timButton" type="button" ng-click="clctrl.cancelCreation()">Cancel</button>
     </div>
 </div>

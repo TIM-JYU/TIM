@@ -1,4 +1,4 @@
-import {IScope} from "angular";
+import {IScope, IController} from "angular";
 import moment from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
@@ -7,7 +7,7 @@ import {$http, $window} from "../ngimport";
 
 markAsUsed(focusMe);
 
-class RightsEditorController {
+class RightsEditorController implements IController {
     private static $inject = ["$scope"];
     private timeOpt: {
         type: string,

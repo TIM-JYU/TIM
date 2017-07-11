@@ -1,11 +1,12 @@
 import angular from "angular";
+import {IController} from "angular";
 import {ChartData} from "chart.js";
 import * as chartmodule from "chart.js";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {getJsonAnswers} from "tim/directives/dynamicAnswerSheet";
 import {lazyLoad} from "../lazyLoad";
-import {$compile, $log} from "../ngimport";
+import {$log} from "../ngimport";
 
 /**
  * Created by hajoviin on 13.5.2015.
@@ -128,7 +129,7 @@ function timGetLSIntValue(key, def: number): number {
 
 let qstChartIndex = timGetLSIntValue("qstChartIndex", 0);
 
-class ShowChartController {
+class ShowChartController implements IController {
     private static $inject = ["$scope", "$element"];
     private canvasId: string;
     private canvas: string;
@@ -270,10 +271,10 @@ class ShowChartController {
         },
     ];
 
-    constructor(scope, element) {
+    constructor(scope: angular.IScope, element: angular.IRootElementService) {
         this.canvasId = "#" + this.canvas || "";
         this.isText = false;
-        this.div = $(element).parent();
+        this.div = element.find(".canvasContainer");
         this.charts = ["bar", "horizontalBar"];
         this.chartIndex = qstChartIndex;
         scope.$on("resizeElement", (event, data) => {
@@ -336,7 +337,7 @@ class ShowChartController {
         const backgroundColor = [];
         if (angular.isDefined(data.rows)) {
             const i = 0;
-            angular.forEach(data.rows, row => {
+            angular.forEach(data.rows, (row) => {
                 const text = qstShortText(row.text);
                 labels.push(text);
                 emptyData.push(0);
@@ -346,8 +347,8 @@ class ShowChartController {
         backgroundColor.push(this.basicSets[0].fillColor);
 
         if (angular.isDefined(data.columns)) {
-            angular.forEach(data.columns, column => {
-                angular.forEach(column.rows, row => {
+            angular.forEach(data.columns, (column) => {
+                angular.forEach(column.rows, (row) => {
                     labels.push(qstShortText(row.Value));
                     emptyData.push(0);
                 });
@@ -450,8 +451,8 @@ class ShowChartController {
         };
 
         await this.changeType();
-        //this.answerChart.options.animation = false;
-        $compile(this as any);
+        // this.answerChart.options.animation = false;
+        // $compile(this as any);
         // TODO this seems wrong
     }
 
@@ -481,7 +482,7 @@ class ShowChartController {
             // var zoom = $('<a ng-click="zoom()">[+]</a>');
             // this.div.append(zoom);
         }
-        const config = jQuery.extend(true, {},
+        const config: Chart.ChartConfiguration = jQuery.extend(true, {},
             this.chartConfig);
         config.type = newType;
         const Chart = (await lazyLoad<typeof chartmodule>(
@@ -495,7 +496,7 @@ class ShowChartController {
          */
     }
 
-    resize(w, h) {
+    resize(w: number, h: number) {
         this.canvasw = w;
         if (this.canvasw < 100) {
             this.canvasw = 100;
@@ -508,7 +509,7 @@ class ShowChartController {
         this.changeType();
     }
 
-    zoom(w, h) {
+    zoom(w: number, h: number) {
         this.canvasw += w * 100;
         if (this.canvasw < 100) {
             this.canvasw = 100;
@@ -529,16 +530,15 @@ class ShowChartController {
 
     /**
      * FILL WITH SUITABLE TEXT
-
      * @memberof module:showChartDirective
      * @param answers FILL WITH SUITABLE TEXT
      */
-    addAnswer(answers) {
+    addAnswer(answers: Array<{answer: string}>) {
         if (!angular.isDefined(answers)) {
             return;
         }
         // this.ctx.font = "20px Georgia";
-        let datasets;
+        let datasets: Chart.ChartDataSets[];
         if (!this.isText) {
             datasets = this.answerChart.data.datasets;
         }
@@ -600,29 +600,31 @@ class ShowChartController {
      * @memberof module:showChartDirective
      */
     close() {
-        /*
-         this.ctx.clearRect(0, 0, $(this.canvasId)[0].width, $(this.canvasId)[0].height);
-         if (typeof this.answerChart !== "undefined") {
-         this.answerChart.destroy();
-         }
-         $(this.canvasId).remove(); // this is my <canvas> element
-         $('#chartDiv').append('<canvas id=' + this.canvasId.substring(1) + ' width="400" height="300"><canvas>');
-         */
         if (this.answerChart && typeof this.answerChart !== "undefined") {
             this.answerChart.destroy();
         }
         this.ctx = null;
         this.answerChart = null;
-        //$element.empty();
         this.div.empty();
     }
 }
 
 timApp.component("showChartDirective", {
     bindings: {
-        canvas: "@",
-        control: "=",
-        divresize: "=",
+        data: "<",
+        divresize: "<",
     },
     controller: ShowChartController,
+    template: `
+<div class="canvasContainer">
+
+</div>
+<p ng-show="$ctrl.showControls" class="chart-menu">
+    <span ng-click="$ctrl.toggle()">Bar</span>
+    <span ng-click="$ctrl.zoom(-1,0)">w-</span>
+    <span ng-click="$ctrl.zoom(1,0)">w+</span>
+    <span ng-click="$ctrl.zoom(0,-1)">h-</span>
+    <span ng-click="$ctrl.zoom(0,1)">h+</span>
+</p>
+    `,
 });

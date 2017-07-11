@@ -119,7 +119,7 @@ interface ITaskInfo {
     answerLimit: number;
 }
 
-export class AnswerBrowserController {
+export class AnswerBrowserController implements IController {
     private static $inject = ["$scope", "$element"];
     private element: JQuery;
     private taskId: string;

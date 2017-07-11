@@ -1,3 +1,4 @@
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import {ILabel, IUIFields, IVelp, IVelpGroup} from "./velptypes";
 import {VelpSelectionController} from "./velpSelection";
@@ -21,7 +22,7 @@ export let colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "corn
  * Controller for velp Window
  * @lends module:velpWindow
  */
-export class VelpWindowController {
+export class VelpWindowController implements IController {
     private onVelpSelect: (params: {$VELP: IVelp}) => void;
     private velpLocal: IVelp;
     private velp: IVelp & IUIFields;

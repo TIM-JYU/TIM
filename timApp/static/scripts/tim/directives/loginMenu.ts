@@ -1,7 +1,8 @@
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import {Users} from "../services/userService";
 
-class LoginMenuController {
+class LoginMenuController implements IController {
     private loggingout: boolean;
     private form: {email: string, password: string};
     private addingToSession: boolean;

@@ -4,17 +4,13 @@ import {createNewPar, getElementByParId, getParId} from "./parhelpers";
 import {onClick} from "./eventhandlers";
 import {IScope} from "angular";
 import {ViewCtrl} from "./viewctrl";
+import {IAskedJsonJson, IAskedJsonJsonJson} from "../../lecturetypes";
 
 export class QuestionHandler {
     public sc: IScope;
-    public questionShown: boolean;
     public firstTimeQuestions: boolean;
     public noQuestionAutoNumbering: boolean;
     public par: JQuery;
-    public markup: {json?, points?, expl?};
-    public questionParId: string;
-    public qId: string;
-    public json: {questionTitle};
     public viewctrl: ViewCtrl;
     public showQuestionPreview: boolean;
     public questionParIdNext: string;
@@ -26,15 +22,15 @@ export class QuestionHandler {
             this.noQuestionAutoNumbering = $window.noQuestionAutoNumbering;
         }
 
-        this.questionShown = false;
+        this.viewctrl.questionShown = false;
         this.firstTimeQuestions = true;
 
-        onClick(".questionAdded", ($this, e) => {
+/*        onClick(".questionAdded", ($this, e) => {
             const question = $this;
             const questionId = question[0].getAttribute("id");
-            this.showQuestion(questionId);
+            this.viewctrl.showQuestion(questionId);
             this.par = ($(question).parent().parent());
-        });
+        });*/
 
         onClick(".questionAddedNew", ($this, e) => {
             const question = $this;
@@ -59,7 +55,7 @@ export class QuestionHandler {
         );
     }
 
-    showQuestion(questionId: string) {
+/*    showQuestion(questionId: string) {
         this.markup = {};
         this.markup.json = "No data";
         this.qId = questionId;
@@ -96,24 +92,25 @@ export class QuestionHandler {
         $rootScope.$broadcast("getLectureId");
         $rootScope.$broadcast("getInLecture");
         this.showQuestionPreview = true;
-    }
+    }*/
 
     showQuestionNew(parId: string, parIdNext: string) {
-        this.markup = {};
-        this.markup.json = "No data";
-        this.questionParId = parId;
+        this.viewctrl.questionParId = parId;
         this.questionParIdNext = parIdNext;
 
-        $http<{markup: string}>({
+        $http<{markup: IAskedJsonJson}>({
             url: "/getQuestionByParId",
             method: "GET",
-            params: {par_id: this.questionParId, doc_id: this.viewctrl.docId},
+            params: {
+                par_id: this.viewctrl.questionParId,
+                doc_id: this.viewctrl.docId,
+            },
         }).then((response) => {
-            this.markup = response.data.markup;
-            $rootScope.$broadcast("changeQuestionTitle", {questionTitle: this.markup.json.questionTitle});
+            this.viewctrl.markup = response.data.markup;
+            $rootScope.$broadcast("changeQuestionTitle", {questionTitle: this.viewctrl.markup.json.questionTitle});
             $rootScope.$broadcast("setPreviewJson", {
-                markup: this.markup,
-                questionParId: this.questionParId,
+                markup: this.viewctrl.markup,
+                questionParId: this.viewctrl.questionParId,
                 questionParIdNext: this.questionParIdNext,
                 isLecturer: this.viewctrl.isLecturer,
             });
@@ -156,7 +153,7 @@ export class QuestionHandler {
         // $rootScope.$broadcast('toggleQuestion');
         try {
             var response = await
-                $http<{markup: {json: {questionTitle}}}>({
+                $http<{markup: IAskedJsonJson}>({
                     url: "/getQuestionByParId",
                     method: "GET",
                     params: {par_id: parId, doc_id: this.viewctrl.docId, edit: true},
@@ -169,10 +166,10 @@ export class QuestionHandler {
         if (!data.markup) {
             return; // not a question
         }
-        this.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
-        this.markup = data.markup;
+        this.viewctrl.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
+        this.viewctrl.markup = data.markup;
         // data.markup.qst = true;
-        $rootScope.$broadcast("changeQuestionTitle", {questionTitle: this.json.questionTitle});
+        $rootScope.$broadcast("changeQuestionTitle", {questionTitle: this.viewctrl.json.questionTitle});
         $rootScope.$broadcast("editQuestion", {
             par_id: parId,
             par_id_next: parNextId,

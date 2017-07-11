@@ -57,62 +57,7 @@
             </div>
         </div>
     </div>
-    <div ng-controller="SmallMenuCtrl as smctrl">
-        <div class="smallMenu" ng-show="!lctrl.lectureSettings.inLecture">
-            <div class="current">
-                <h1 ng-click="smctrl.openCurrentLectureMenu()">Show current
-                    <br>lectures</h1>
-            </div>
-            <div class="future">
-                <h1 ng-click="smctrl.openFutureLectureMenu()">Show future
-                    <br>lectures</h1>
-            </div>
-        </div>
-        <div class="smallMenu" ng-show="lectureSettings.inLecture">
-            <div class="currently">
-                <h2 ng-bind="lctrl.lectureName"></h2>
-
-                <div class="smallIconSection">
-                {{ lecbtn('log-out', 'Leave this lecture', 'lctrl.leaveLecture()', 'lctrl.lectureSettings.inLecture') }}
-                {{ lecbtn('stop', 'End this lecture', 'lctrl.endLecture()', 'lctrl.canStop') }}
-                {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(lectureName)', 'lctrl.canStop') }}
-                </div>
-            </div>
-        </div>
-        <div class="lecturesList">
-            <div id="currentList">
-                {% raw %}
-                <ul>
-                    <li ng-show="smctrl.currentLecturesList.length > 0" ng-repeat="lecture in smctrl.currentLecturesList">
-                        <p ng-click="smctrl.selectCurrentLecture()">{{ lecture.lecture_code }}
-                            <button class="timButton" value="Join"
-                                   ng-click="lctrl.joinLecture(lecture.lecture_code,lecture.is_access_code)">Join</button>
-                        </p>
-                    </li>
-                    <li ng-show="smctrl.currentLecturesList.length == 0">
-                        <p>No lectures</p>
-                    </li>
-                    <li ng-show="lctrl.isLecturer"><p ng-click="lctrl.toggleLecture()" id="addLecture1"> Add new lecture </p></li>
-                    {% endraw %}
-                </ul>
-            </div>
-            <div id="futureList">
-                {% raw %}
-                <ul>
-                    <li ng-repeat="lecture in smctrl.futureLecturesList">
-                        <p> {{ lecture.lecture_code }}
-                            <button class="timButton" ng-show="lctrl.isLecturer" value="Start">Start</button>
-                        </p>
-                    </li>
-                    <li ng-show="smctrl.futureLecturesList.length == 0">
-                        <p>No lectures</p>
-                    </li>
-                    <li ng-show="isLecturer"><p ng-click="lctrl.toggleLecture()" id="addLecture2"> Add new lecture </p></li>
-                </ul>
-                {% endraw %}
-            </div>
-        </div>
-    </div>
+    <tim-small-menu></tim-small-menu>
 </div>
 
     <div class="wall-behind" save="wall" id="wall" ng-show="lctrl.lectureSettings.useWall && lctrl.lectureSettings.inLecture" ng-cloak
@@ -148,8 +93,7 @@
                 src="'{{ url_for('static', filename='templates/lectureOptions.html') }}'"></ng-include>
     </pop-up-dialog> #}
     <pop-up-dialog show="lctrl.showLectureForm" caption="'Create lecture'">
-        <ng-include
-                src="'{{ url_for('static', filename='templates/start_lecture.html') }}'"></ng-include>
+        <tim-create-lecture></tim-create-lecture>
     </pop-up-dialog>
 
 

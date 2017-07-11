@@ -1,8 +1,9 @@
-import angular, {IPromise, IRootElementService, IScope} from "angular";
+import angular, {IPromise, IRootElementService, IScope, IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {ParCompiler} from "../services/parCompiler";
 import {$compile, $interval, $rootScope} from "../ngimport";
+import {IAskedJsonJsonJson} from "../lecturetypes";
 
 /**
  * Created by localadmin on 25.5.2015.
@@ -37,12 +38,12 @@ function uncheckRadio(e) {
     elem.prop("previousValue", elem.prop("checked"));
 }
 
-export function getJsonAnswers(answer) {
+export function getJsonAnswers(answer: string): string[][] {
     // Converts answer string to JSON table
     if (answer.length > 0 && answer[0] === "[") {
         return JSON.parse(answer);
     }
-    const singleAnswers = [];
+    const singleAnswers: string[][] = [];
     const allAnswers = answer.split("|");
 
     for (let i = 0; i < allAnswers.length; i++) {
@@ -51,7 +52,7 @@ export function getJsonAnswers(answer) {
     return singleAnswers;
 }
 
-function deletePar(s) {
+function deletePar(s: string) {
     if (!s.startsWith("<p>")) {
         return s;
     }
@@ -62,14 +63,14 @@ function deletePar(s) {
     return rs.substring(0, rs.length - 4);
 }
 
-export function getPointsTable(markupPoints) {
+export function getPointsTable(markupPoints: string): Array<{[points: string]: string}> {
     // Format of markupPoints: 1:1.1;2:1.2;3:1.3||2:3.2
-    const pointsTable = [];
+    const pointsTable: Array<{[points: string]: string}> = [];
     if (markupPoints && markupPoints !== "") {
         const points = markupPoints.split("|");
         for (let i = 0; i < points.length; i++) {
             const rowPoints = points[i].split(";");
-            const rowPointsDict = {};
+            const rowPointsDict: {[points: string]: string} = {};
             for (let k = 0; k < rowPoints.length; k++) {
                 if (rowPoints[k] !== "") {
                     const colPoints = rowPoints[k].split(":", 2);
@@ -82,9 +83,18 @@ export function getPointsTable(markupPoints) {
     return pointsTable;
 }
 
-export function minimizeJson(json) {
+export function minimizeJson(json): IAskedJsonJsonJson {
     // remove not needed fields from json, call when saving the question
-    const result: any = {};
+    const result: IAskedJsonJsonJson = {
+        questionType: null,
+        questionText: null,
+        headers: null,
+        timeLimit: null,
+        answerFieldType: null,
+        matrixType: null,
+        questionTitle: null,
+        rows: null,
+    };
     if (json.headers) {
         result.headers = [];
         for (let i = 0; i < json.headers.length; i++) {
@@ -135,16 +145,15 @@ function fixLineBreaks(s) {
     //return s.replace("\n","<br />");
 }
 
-export function fixQuestionJson(json) {
+export function fixQuestionJson(json: any) {
     // fill all missing fields from question json, call before use json
-    const columnHeaders = [];
     if (json.data) {
         json.headers = json.data.headers;
         json.rows = json.data.rows;
     }
     if (json.headers) {
         let headers = json.headers;
-        if (Array !== headers.constructor) { // if just on text string
+        if (typeof headers === "string") { // if just on text string
             const jrows = headers.split("\n");
             headers = [];
             let ir = -1;
@@ -240,7 +249,7 @@ type JSONData = {
     columns?: {Value: string}[],
 };
 
-class AnswerSheetController {
+class AnswerSheetController implements IController {
     private static $inject = ["$scope", "$element"];
 
     private promise: IPromise<any>;

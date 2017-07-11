@@ -1,3 +1,4 @@
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import {$http, $timeout, $upload, $window} from "../ngimport";
 import {Users} from "../services/userService";
@@ -5,7 +6,7 @@ import {IItem} from "../IItem";
 
 // Controller used in document index and folders
 
-class IndexCtrl {
+class IndexCtrl implements IController {
     private user: any;
     private folderOwner: string;
     private parentfolder: string;

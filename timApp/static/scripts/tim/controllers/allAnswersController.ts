@@ -1,3 +1,4 @@
+import {IController} from "angular";
 import moment from "moment";
 import {timApp} from "tim/app";
 import {$http, $httpParamSerializer, $localStorage, $log, $window} from "../ngimport";
@@ -5,7 +6,7 @@ import {ngStorage} from "ngstorage";
 
 type Options = { age: string, valid: string, name: string, sort: string; periodFrom: any; periodTo: any; };
 
-export class AllAnswersCtrl {
+export class AllAnswersCtrl implements IController {
     private static $inject = ["$uibModalInstance", "options"];
     private showSort: boolean;
     private options: Options;

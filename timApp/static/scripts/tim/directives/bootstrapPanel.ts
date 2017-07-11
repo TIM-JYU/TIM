@@ -1,7 +1,8 @@
+import {IController} from "angular";
 import {IRootElementService} from "angular";
 import {timApp} from "tim/app";
 
-class BootstrapPanelController {
+class BootstrapPanelController implements IController {
     private static $inject = ["$element"];
     private element: IRootElementService;
     private closeFn: () => void;

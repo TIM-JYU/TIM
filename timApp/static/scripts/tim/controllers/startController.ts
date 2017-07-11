@@ -1,10 +1,11 @@
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as createItem from "tim/directives/createItem";
 import {markAsUsed} from "tim/utils";
 
 markAsUsed(createItem);
 
-export class StartCtrl {
+export class StartCtrl implements IController {
     private creatingNew: boolean;
 
     constructor() {

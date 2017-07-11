@@ -1,6 +1,6 @@
 // TODO: save cursor position when changing editor
 
-import angular, {IPromise} from "angular";
+import angular, {IPromise, IController} from "angular";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {timApp} from "tim/app";
@@ -24,7 +24,7 @@ markAsUsed(draggable, rangyinputs);
 const MENU_BUTTON_CLASS = "menuButtons";
 const MENU_BUTTON_CLASS_DOT = "." + MENU_BUTTON_CLASS;
 
-export class PareditorController implements angular.IController {
+export class PareditorController implements IController {
     private static $inject = ["$scope", "$element"];
     private afterDelete: (params: {extraData: {}, saveData: {}}) => void;
     private afterCancel: (params: {extraData: {}}) => void;
