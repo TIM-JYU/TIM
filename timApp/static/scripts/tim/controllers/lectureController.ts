@@ -42,7 +42,7 @@ export interface ILectureSettings {
     gettingAnswers: boolean;
     answeredToLectureEnding: boolean;
     showLectureEnding: boolean;
-    lectureEnded: boolean; showLectureForm: boolean;
+    lectureEnded: boolean;
     showLectureOptions: boolean;
     useQuestions: boolean;
     useWall: boolean;
@@ -195,7 +195,6 @@ export class LectureController implements IController {
             answeredToLectureEnding: false,
             showLectureEnding: false,
             lectureEnded: false,
-            showLectureForm: false,
             showLectureOptions: false,
             useQuestions: true,
             useWall: true,

@@ -92,12 +92,6 @@
         <ng-include
                 src="'{{ url_for('static', filename='templates/lectureOptions.html') }}'"></ng-include>
     </pop-up-dialog> #}
-    <pop-up-dialog show="lctrl.showLectureForm" caption="'Create lecture'">
-        <tim-create-lecture></tim-create-lecture>
-    </pop-up-dialog>
-
-
-
     <pop-up-dialog show="lctrl.showAnswerWindow" caption="questionTitle" class="answerWindow">
         <ng-include
                 src="'{{ url_for('static', filename='templates/answerToQuestion.html') }}'"></ng-include>
