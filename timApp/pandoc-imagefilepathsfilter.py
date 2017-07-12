@@ -85,15 +85,16 @@ def handle_images(key, value, fmt, meta):
 
         # handle internal absolute urls
         base_address = scheme + '://' if scheme != '' else ''
-        base_address += host + '/' if scheme != '' else ''
-        if CURRENT_HOST_MACHINE is not None and base_address == CURRENT_HOST_MACHINE:
+        base_address += host + '/' if host != '' else ''
+        if (CURRENT_HOST_MACHINE is not None) and base_address == CURRENT_HOST_MACHINE:
             image_path = os.path.join(APP_ROOT, path)
 
         # handle internal relative urls
-        elif (host == "") and \
-            (parsed_url.path.startswith(("images/", "/images/"))):
+        elif (host == "") and os.path.exists(os.path.join(APP_ROOT, path)):
+            image_path = os.path.join(APP_ROOT, path)
 
-            image_path = os.path.join(IMAGE_ROOT, path)
+	elif (host == "") and os.path.exists(os.path.join(IMAGE_ROOT, path)):
+	    image_path = os.path.join(IMAGE_ROOT, path)
 
         # handle external urls
         else:
