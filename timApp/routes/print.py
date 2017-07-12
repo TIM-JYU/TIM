@@ -74,7 +74,11 @@ def print_document(doc_path):
     template_doc = DocEntry.find_by_id(template_doc_id)
     type = PrintFormat[file_type.upper()]
 
-    if get_document_print(doc_entry=doc, template=template_doc, file_type=type) is not None:
+    if not plugins_user_print and \
+        check_print_cache(doc_entry=doc,
+                          template=template_doc,
+                          file_type=type,plugins_user_print=plugins_user_print) is not None:
+
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
     if os.environ.get('TIM_HOST', None) != request.url_root:
@@ -83,6 +87,7 @@ def print_document(doc_path):
     if template_doc is None:
         abort(400, "The supplied parameter 'templateDocId' is invalid.")
 
+    #print(plugins_user_print)
     try:
         create_printed_doc(doc_entry=doc,
                            file_type=type,
@@ -113,6 +118,8 @@ def get_printed_document(doc_path):
     if plugins_user_print is None or isinstance(plugins_user_print, bool):
         abort(400, "The supplied query parameter 'plugins_user_code' was invalid.")
 
+    plugins_user_print = plugins_user_print.lower() == 'true'
+
     template_doc_id = int(float(template_doc_id))
     template_doc = DocEntry.find_by_id(template_doc_id)
 
@@ -121,12 +128,12 @@ def get_printed_document(doc_path):
 
     type = PrintFormat[file_type.upper()]
 
-    path_to_doc = get_document_print(doc_entry=doc,
-                                     template=template_doc,
-                                     file_type=type,
-                                     plugins_user_print=plugins_user_print)
+    cached = check_print_cache(doc_entry=doc,
+                               template=template_doc,
+                               file_type=type,
+                               plugins_user_print=plugins_user_print)
 
-    if path_to_doc is None or not os.path.exists(path_to_doc):
+    if cached is None:
         abort(404, "The document you tried to fetch does not exist.")
 
     mime = get_mimetype_for_format(type)
@@ -134,7 +141,7 @@ def get_printed_document(doc_path):
     if mime is None:
         abort(400, "An unexpected error occurred.")
 
-    response = make_response(send_file(filename_or_fp=path_to_doc, mimetype=mime))
+    response = make_response(send_file(filename_or_fp=cached, mimetype=mime))
 
     # Add headers to stop the documents from caching
     # This is needed for making sure the current version of the document is actually retrieved
@@ -163,7 +170,7 @@ def get_mimetype_for_format(file_type: PrintFormat):
         return None
 
 
-def get_document_print(doc_entry: DocEntry,
+def check_print_cache(doc_entry: DocEntry,
                        template: DocEntry,
                        file_type: PrintFormat,
                        plugins_user_print: bool = False) -> Optional[str]:
@@ -180,9 +187,21 @@ def get_document_print(doc_entry: DocEntry,
     printer = DocumentPrinter(doc_entry=doc_entry, template_to_use=template)
 
     if plugins_user_print:
-        return printer.get_print_path(file_type=file_type, plugins_user_print=plugins_user_print)
+        path = printer.get_print_path(file_type=file_type, plugins_user_print=plugins_user_print)
+        if path is not None and os.path.exists(path):
+            return path
+        return None
 
-    return printer.get_printed_document_path_from_db(file_type=file_type)
+    path = printer.get_printed_document_path_from_db(file_type=file_type)
+    if path is not None and os.path.exists(path):
+        return path
+
+    return None
+
+    #if plugins_user_print:
+    #    return printer.get_print_path(file_type=file_type, plugins_user_print=plugins_user_print)
+
+    #return printer.get_printed_document_path_from_db(file_type=file_type)
 
 
 def create_printed_doc(doc_entry: DocEntry,
@@ -205,13 +224,6 @@ def create_printed_doc(doc_entry: DocEntry,
 
     printer = DocumentPrinter(doc_entry=doc_entry,
                               template_to_use=template_doc)
-
-    if not plugins_user_print:
-        existing_doc_path = printer.get_printed_document_path_from_db(file_type=file_type)
-
-        if existing_doc_path is not None:
-            # print("already exists:\n" + existing_doc_path)
-            return existing_doc_path
 
     try:
         path = printer.get_print_path(temp=temp,
