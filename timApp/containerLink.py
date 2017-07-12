@@ -171,7 +171,8 @@ def convert_md(plugin_data):
             p['markup'] = h
 
 
-def render_plugin_multihtml(doc: Document, plugin, plugin_data, params=None, render_markdown: bool = False):
+def render_plugin_multi(doc: Document, plugin, plugin_data, params=None,
+                        plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML):
     if params is not None:
         for p in plugin_data:
             p.update(params)
@@ -181,7 +182,7 @@ def render_plugin_multihtml(doc: Document, plugin, plugin_data, params=None, ren
 
     return call_plugin_generic(plugin,
                                'post',
-                               ('multimd' if render_markdown else 'multihtml'),
+                               ('multimd' if plugin_output_format == PluginOutputFormat.MD else 'multihtml'),
                                data=json.dumps(plugin_data, cls=TimJsonEncoder),
                                headers={'Content-type': 'application/json'},
                                params=params)
