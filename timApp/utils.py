@@ -158,6 +158,17 @@ def get_error_html(message: Union[str, Exception], response: Optional[str]=None)
                                                                     response) if response is not None else ''))
 
 
+def get_error_md(title, message: Union[str, Exception], response: Optional[str]=None):
+    """Wraps an error message in a markdown element with class 'error'.
+
+    :param response: The plugin response string.
+    :param message: The message to be displayed in the error.
+    :return: The sanitized error message HTML.
+    """
+
+    return '\\timpluginerror{{ {} }}{{ {} }}'.format(title, str(message))
+
+
 def del_content(directory, onerror=None):
     for f in os.listdir(directory):
         f_path = os.path.join(directory, f)
