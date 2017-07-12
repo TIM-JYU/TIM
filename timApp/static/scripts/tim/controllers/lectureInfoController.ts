@@ -1,5 +1,5 @@
 import angular from "angular";
-import {IController} from "angular";
+import {IController, IRootElementService} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
@@ -31,7 +31,7 @@ markAsUsed(showChart);
 
 export class LectureInfoController implements IController {
     private static $inject = ["$element"];
-    private element: angular.IRootElementService;
+    private element: IRootElementService;
     private item: IItem;
     private lecture: ILecture;
     private inLecture: boolean;
@@ -45,7 +45,7 @@ export class LectureInfoController implements IController {
     private questionAnswerData: Array<{question: any, answers: any}>;
     private selectedUser: IUser;
 
-    constructor(element: angular.IRootElementService) {
+    constructor(element: IRootElementService) {
         this.item = $window.item;
         this.inLecture = $window.inLecture;
         this.lecture = {
@@ -188,20 +188,20 @@ export class LectureInfoController implements IController {
     }
 
     async editLecture() {
-        const response = await $http<{lectureId, lectureCode, lectureStartTime, lectureEndTime, password}>({
+        const response = await $http<ILecture>({
             url: "/showLectureInfoGivenName",
             method: "GET",
             params: {lecture_code: this.lecture.lecture_code, doc_id: this.item.id},
         });
         const lecture = response.data;
         const lectureNew = await showLectureDialog(this.item, {
-            doc_id: this.item.id,
-            end_time: moment(lecture.lectureEndTime),
-            lecture_code: lecture.lectureCode,
-            lecture_id: lecture.lectureId,
+            doc_id: lecture.doc_id,
+            end_time: moment(lecture.end_time),
+            lecture_code: lecture.lecture_code,
+            lecture_id: lecture.lecture_id,
             max_students: null,
             password: lecture.password || "",
-            start_time: moment(lecture.lectureStartTime),
+            start_time: moment(lecture.start_time),
         });
         this.lecture = lectureNew;
     }

@@ -40,7 +40,7 @@ export class ReviewController implements IController {
     private annotationids: {0: number};
     public zIndex: number;
     public docId: number;
-    private scope: angular.IScope;
+    private scope: IScope;
     private velpBadge: HTMLElementTagNameMap["input"];
     private velpBadgePar: string;
     private vctrl: ViewCtrl;
@@ -48,7 +48,7 @@ export class ReviewController implements IController {
     private onInit: (params: {$SCOPE: IScope}) => void;
     private velpMode: boolean;
 
-    constructor(scope: angular.IScope) {
+    constructor(scope: IScope) {
         this.scope = scope;
         this.annotationsAdded = false;
         this.selectedArea = null;

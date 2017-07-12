@@ -1,4 +1,4 @@
-import {IController} from "angular";
+import {IController, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as answerSheet from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed} from "tim/utils";
@@ -21,13 +21,13 @@ markAsUsed(answerSheet);
  */
 
 export class AnswerToQuestionController implements IController {
-    private scope: angular.IScope;
+    private scope: IScope;
     private questionHeaders: {}[];
     private answerTypes: {}[];
     private isLecturer: boolean;
     private questionTitle: string;
     private isAsking: boolean;
-    constructor(scope: angular.IScope) {
+    constructor(scope: IScope) {
         this.scope = scope;
         this.questionHeaders = [];
         this.answerTypes = [];

@@ -39,7 +39,7 @@ export class UserService {
     }
 
     public isLoggedIn() {
-        return this.current.id > 0;
+        return this.current.id > 0; // TODO: maybe !== 0
     }
 
     public addUser() {

@@ -1,5 +1,4 @@
-import angular from "angular";
-import {IController} from "angular";
+import {IController, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as answerSheet from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed} from "tim/utils";
@@ -22,11 +21,11 @@ markAsUsed(answerSheet);
 
 export class QuestionPreviewController implements IController {
     private static $inject = ["$scope"];
-    private scope: angular.IScope;
+    private scope: IScope;
     //TODO parse json and set values from rows and columns to scope variables
     //TODO edit questionPreview.html to repeat rows and columns
 
-    constructor(scope: angular.IScope) {
+    constructor(scope: IScope) {
         this.scope = scope;
         this.questionHeaders = [];
         this.answerTypes = [];

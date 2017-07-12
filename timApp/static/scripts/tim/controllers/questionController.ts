@@ -1,4 +1,4 @@
-import angular from "angular";
+import angular, {IRootElementService, IScope} from "angular";
 import {IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
@@ -41,7 +41,7 @@ interface IAnswerField {
 
 export class QuestionController implements IController {
     private static $inject = ["$scope", "$element"];
-    private scope: angular.IScope;
+    private scope: IScope;
     private answerFieldTypes: IAnswerField[];
     private error_message: string;
     private asked_id: number;
@@ -72,14 +72,14 @@ export class QuestionController implements IController {
     private markup: IAskedJsonJson;
     private pointsTable: Array<{[p: string]: string}>;
     private textAreas: JQuery;
-    private element: angular.IRootElementService;
+    private element: IRootElementService;
     private questionForm: Element;
     private lctrl: LectureController;
     private viewctrl: ViewCtrl;
     private oldHeaders: string[];
     private answer: string;
 
-    constructor(scope: angular.IScope, element: angular.IRootElementService) {
+    constructor(scope: IScope, element: IRootElementService) {
         this.scope = scope;
         this.element = element;
         this.dynamicAnswerSheetControl = {};

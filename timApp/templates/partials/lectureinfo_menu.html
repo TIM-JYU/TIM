@@ -22,20 +22,20 @@
             </div>
             <div ng-show="lctrl.lectures.length <= 0">
                 <p>No running lectures</p>
-                {{ lecbtn('plus-sign', 'Add new lecture', 'lctrl.toggleLecture()', 'isLecturer') }}
+                {{ lecbtn('plus-sign', 'Add new lecture', 'lctrl.toggleLecture()', 'lctrl.isLecturer') }}
             </div>
         </div>
         <div class="lectureSection" ng-show="lctrl.lectureSettings.inLecture">
-            <h1 ng-bind="lectureName"></h1>
+            <h1 ng-bind="lctrl.lecture.lecture_code"></h1>
             {% raw %}
-            <p>Started: {{ lectureStartTime | timdate }}</p>
+            <p>Started: {{ lctrl.lecture.start_time | timdate }}</p>
 
-            <p>Ends: {{ lectureEndTime | timdate }}</p>
+            <p>Ends: {{ lctrl.lecture.end_time | timdate }}</p>
             {% endraw %}
             <div id="inLectureIconSection">
                 {{ lecbtn('log-out', 'Leave this lecture', 'lctrl.leaveLecture()', 'lctrl.lectureSettings.inLecture') }}
-                {{ lecbtn('stop', 'End this lecture', 'lctrl.endLecture()', 'canStop') }}
-                {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(lectureName)', 'canStop') }}
+                {{ lecbtn('stop', 'End this lecture', 'lctrl.endLecture()', 'lctrl.canStop') }}
+                {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(lectureName)', 'lctrl.canStop') }}
             </div>
         </div>
 
@@ -51,47 +51,28 @@
                     </select>
                 </div>
                 <div class="iconSection" ng-show="futureLectures.length > 0">
-                    {{ lecbtn('play', 'Start lecture now', 'startFutureLecture()', 'isLecturer') }}
-                    {{ lecbtn('edit', 'Edit this lecture', 'editLecture(futureLecture.lecture_code)', 'isLecturer') }}
+                    {{ lecbtn('play', 'Start lecture now', 'lctrl.startFutureLecture()', 'lctrl.isLecturer') }}
+                    {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(lctrl.futureLecture.lecture_code)', 'lctrl.isLecturer') }}
                 </div>
             </div>
         </div>
     </div>
     <tim-small-menu></tim-small-menu>
 </div>
-
+{% raw %}
     <div class="wall-behind" save="wall" id="wall" ng-show="lctrl.lectureSettings.useWall && lctrl.lectureSettings.inLecture" ng-cloak
-         tim-draggable-fixed close="lctrl.changeUsingWall(false)" click="lctrl.hideWall()"
-         caption="{% raw %}{{ lctrl.wallName }}{% endraw %}"
-         resize="{% raw %}{{ !lctrl.lectureSettings.wallMinimized }}{% endraw %}">
-        <div class="wall-base" id="wallBase">
-            <div class="wall-message-area">
-                <textarea id="wallArea" readonly cols="100">{{ "{{lctrl.msg}}" }}</textarea>
-            </div>
-            <div class="wall-footer">
-                <div class="wall-buttons">
-                    <input id="messagebox" ng-model="lctrl.newMsg" width="200"
-                           ng-keypress="lctrl.chatEnterPressed($event)">
-                </div>
-                <div class="wall-info-buttons">
-                    <label title="Shows name of the sender">
-                        <input type="checkbox" ng-change="lctrl.showInfo()" ng-model="lctrl.messageName"/>Name
-                    </label>
-                    <label title="Shows sending time">
-                        <input type="checkbox" ng-change="lctrl.showInfo()" ng-model="lctrl.messageTime"/>Time
-                    </label>
-                </div>
-            </div>
-        </div>
+         tim-draggable-fixed close="lctrl.changeUsingWall(false)"
+         caption="{{ lctrl.wallName }}">
+        <tim-lecture-wall
+                lecture-id="lctrl.lecture.lecture_id"
+                messages="lctrl.wallMessages">
+        </tim-lecture-wall>
     </div>
+{% endraw %}
     <pop-up-dialog show="lctrl.pollingStopped && lctrl.lectureSettings.useNotPollingDialog" caption="'Polling paused'" elem-id="'pausedWindow'">
         <ng-include
                 src="'{{ url_for('static', filename='templates/paused.html') }}'"></ng-include>
     </pop-up-dialog>
-    {# <pop-up-dialog show="lctrl.showLectureOptions" caption="'Join the lecture'">
-        <ng-include
-                src="'{{ url_for('static', filename='templates/lectureOptions.html') }}'"></ng-include>
-    </pop-up-dialog> #}
     <pop-up-dialog show="lctrl.showAnswerWindow" caption="questionTitle" class="answerWindow">
         <ng-include
                 src="'{{ url_for('static', filename='templates/answerToQuestion.html') }}'"></ng-include>
@@ -115,8 +96,3 @@
         <ng-include
                 src="'{{ url_for('static', filename='templates/showStatisticsToQuestion.html') }}'"></ng-include>
     </div>
-
-    <pop-up-dialog show="lctrl.pollingStopped" caption="'Polling paused'" elem-id="'pausedWindow'">
-        <ng-include
-                src="'{{ url_for('static', filename='templates/paused.html') }}'"></ng-include>
-    </pop-up-dialog>

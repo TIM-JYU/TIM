@@ -15,7 +15,7 @@ from timApp.common import has_ownership, \
     get_user_settings
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.randutils import hashfunc
-from timApp.requesthelper import get_option
+from timApp.requesthelper import get_option, verify_json_params
 from timApp.responsehelper import json_response, ok_response
 from timApp.routes.login import log_in_as_anonymous
 from timApp.routes.qst import get_question_data_from_document, delete_key, create_points_table, \
@@ -48,7 +48,7 @@ def get_lecture_info():
 
     is_lecturer = False
     current_user = get_current_user_id()
-    if timdb.lectures.get_lecture(lecture_id)[0].get("lecturer") == current_user:
+    if timdb.lectures.get_lecture(lecture_id).lecturer== current_user:
         is_lecturer = True
 
     if is_lecturer:
@@ -76,7 +76,7 @@ def get_lecture_answer_totals(lecture_id):
     is_lecturer = False
     current_user = get_current_user_id()
     timdb = get_timdb()
-    if timdb.lectures.get_lecture(lecture_id)[0].get("lecturer") == current_user:
+    if timdb.lectures.get_lecture(lecture_id).lecturer == current_user:
         is_lecturer = True
     results = timdb.lecture_answers.get_totals(lecture_id, None if is_lecturer else get_current_user_id())
     sum_field_name = get_option(request, 'sum_field_name', 'sum')
@@ -256,7 +256,7 @@ def get_updates():
                 return json_response(resp)
 
         if len(list_of_new_messages) > 0:
-            if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
+            if lecture and lecture.lecturer == current_user:
                 lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                 lecturers, students = get_lecture_users(timdb, tempdb, lecture_id)
             return json_response(
@@ -271,7 +271,7 @@ def get_updates():
         # time.sleep(1)
         step += 1
 
-    if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
+    if lecture and lecture.lecturer == current_user:
         lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
 
     if lecture_ending != 100 or len(lecturers) or len(students):
@@ -363,7 +363,7 @@ def check_if_lecture_is_ending(current_user, timdb, lecture_id):
     """
     lecture = timdb.lectures.get_lecture(lecture_id)
     lecture_ending = 100
-    if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
+    if lecture.lecturer == current_user:
         time_now = datetime.now(timezone.utc)
         ending_time = lecture[0].get("end_time")
         time_left = ending_time - time_now
@@ -443,8 +443,7 @@ def check_lecture():
     students = []
     if lecture:
         if check_if_lecture_is_running(lecture_id):
-            lecture_code = lecture[0].get("lecture_code")
-            if lecture[0].get("lecturer") == current_user:
+            if lecture.lecturer == current_user:
                 is_lecturer = True
                 lecturers, students = get_lecture_users(timdb, tempdb, lecture_id)
             else:
@@ -462,12 +461,15 @@ def check_lecture():
                 use_question = True
                 session['use_questions'] = True
 
-            doc_name = DocEntry.find_by_id(lecture[0].get("doc_id")).path
-
-            return json_response({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
-                                 "isLecturer": is_lecturer, "startTime": lecture[0].get("start_time"),
-                                 "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students,
-                                 "useWall": use_wall, "useQuestions": use_question, "doc_name": doc_name})
+            return json_response({
+                "lecture": lecture,
+                "isInLecture": is_in_lecture,
+                "isLecturer": is_lecturer,
+                "lecturers": lecturers,
+                "students": students,
+                "useWall": use_wall,
+                "useQuestions": use_question
+            })
         else:
             leave_lecture_function(lecture_id)
             timdb.lectures.delete_users_from_lecture(lecture_id)
@@ -490,13 +492,16 @@ def start_future_lecture():
     verify_ownership(doc_id)
     lecture = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
     time_now = datetime.now(timezone.utc)
-    lecture = timdb.lectures.update_lecture_starting_time(lecture, time_now)
-    timdb.lectures.join_lecture(lecture.get("lecture_id"), get_current_user_id(), True)
-    students, lecturers = get_lecture_users(timdb, tempdb, lecture.get("lecture_id"))
-    return json_response({"isLecturer": True, "lectureCode": lecture_code, "startTime": lecture.get("start_time"),
-                         "endTime": lecture.get("end_time"), "lectureId": lecture.get("lecture_id"),
-                         "students": students,
-                         "lecturers": lecturers})
+    lecture.start_time = time_now
+    db.session.commit()
+    timdb.lectures.join_lecture(lecture.lecture_id, get_current_user_id(), True)
+    students, lecturers = get_lecture_users(timdb, tempdb, lecture.lecture_id)
+    return json_response({
+        "lecture": lecture,
+        "isLecturer": True,
+        "students": students,
+        "lecturers": lecturers
+    })
 
 
 @lecture_routes.route('/getAllLecturesFromDocument', methods=['GET'])
@@ -513,15 +518,12 @@ def get_all_lectures():
     past_lectures = []
     future_lectures = []
     for lecture in lectures:
-        lecture_info = {"lecture_id": lecture.get("lecture_id"), "lecture_code": lecture.get('lecture_code'),
-                        "target": "/showLectureInfo/" + str(lecture.get("lecture_id")),
-                        "is_access_code": not (lecture.get("password") == "")}
-        if lecture.get("start_time") <= time_now < lecture.get("end_time"):
-            current_lectures.append(lecture_info)
-        elif lecture.get("end_time") <= time_now:
-            past_lectures.append(lecture_info)
+        if lecture.start_time <= time_now < lecture.end_time:
+            current_lectures.append(lecture)
+        elif lecture.end_time <= time_now:
+            past_lectures.append(lecture)
         else:
-            future_lectures.append(lecture_info)
+            future_lectures.append(lecture)
 
     return json_response(
         {"currentLectures": current_lectures, "futureLectures": future_lectures, "pastLectures": past_lectures})
@@ -531,19 +533,18 @@ def get_all_lectures():
 def show_lecture_info(lecture_id):
     timdb = get_timdb()
     lecture = timdb.lectures.get_lecture(lecture_id)
-    if len(lecture) <= 0:
-        abort(400)
+    if not lecture:
+        abort(400, 'Lecture not found')
 
-    lecture = lecture[0]
-    doc = DocEntry.find_by_id(lecture.get('doc_id'))
+    doc = DocEntry.find_by_id(lecture.doc_id)
     in_lecture, lecture_ids = timdb.lectures.check_if_in_any_lecture(get_current_user_id())
     settings = get_user_settings()
     return render_template("lectureInfo.html",
                            item=doc,
                            lectureId=lecture_id,
-                           lectureCode=lecture.get("lecture_code"),
-                           lectureStartTime=lecture.get("start_time"),
-                           lectureEndTime=lecture.get("end_time"),
+                           lectureCode=lecture.lecture_code,
+                           lectureStartTime=lecture.start_time,
+                           lectureEndTime=lecture.end_time,
                            in_lecture=in_lecture,
                            settings=settings,
                            translations=doc.translations)
@@ -556,20 +557,12 @@ def show_lecture_info_given_name():
         lecture = timdb.lectures.get_lecture(int(request.args.get('lecture_id')))
     else:
         lecture = timdb.lectures.get_lecture_by_name(request.args.get('lecture_code'), int(request.args.get('doc_id')))
-    if len(lecture) <= 0:
+    if not lecture:
         abort(400)
 
-    lecture = lecture[0]
-    lecturer = lecture.get("lecturer")
     current_user = get_current_user_id()
 
-    response = {"docId": lecture.get("doc_id"), "lectureId": lecture.get("lecture_id"),
-                "lectureCode": lecture.get("lecture_code"), "lectureStartTime": lecture.get("start_time"),
-                "lectureEndTime": lecture.get("end_time")}
-    if lecturer == current_user:
-        response["password"] = lecture.get("password")
-
-    return json_response(response)
+    return json_response(lecture.to_json(show_password=lecture.lecturer == current_user))
 
 
 @lecture_routes.route('/lectureNeedsPassword/', methods=['GET'])
@@ -579,10 +572,9 @@ def lecture_needs_password():
         lecture = timdb.lectures.get_lecture(int(request.args.get('lecture_id')))
     else:
         lecture = timdb.lectures.get_lecture_by_name(request.args.get('lecture_code'), int(request.args.get('doc_id')))
-    if len(lecture) <= 0:
+    if not lecture:
         abort(400)
-    lecture = lecture[0]
-    return json_response(lecture.get("password") != '')
+    return json_response(lecture.password != '')
 
 
 def get_lecture_users(timdb, tempdb, lecture_id):
@@ -595,14 +587,15 @@ def get_lecture_users(timdb, tempdb, lecture_id):
     for user in activity:
         user_id = user.user_id
         active = user.active
-        if lecture[0].get("lecturer") == user_id:
-            lecturer = {"name": timdb.users.get_user(user_id).get("name"),
-                        "active": active}
-            lecturers.append(lecturer)
+        person = {
+            "name": timdb.users.get_user(user_id).get("name"),
+            "active": active,
+            "user_id": user_id
+        }
+        if lecture.lecturer == user_id:
+            lecturers.append(person)
         else:
-            student = {"name": timdb.users.get_user(user_id).get("name"),
-                       "active": active, "user_id": user_id}
-            students.append(student)
+            students.append(person)
 
     return lecturers, students
 
@@ -626,25 +619,24 @@ def get_running_lectures(doc_id=None):
     """
     timdb = get_timdb()
     time_now = datetime.now(timezone.utc)
-    lecture_code = "Not running"
     list_of_lectures = []
     is_lecturer = False
     if doc_id:
         list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
         is_lecturer = bool(has_ownership(doc_id))
-    current_lecture_codes = []
+    current_lectures = []
     future_lectures = []
     for lecture in list_of_lectures:
-        if lecture.get("start_time") <= time_now < lecture.get("end_time"):
-            current_lecture_codes.append({"lecture_code": lecture.get("lecture_code"),
-                                          "is_access_code": not (lecture.get("password") == "")})
+        if lecture.start_time <= time_now < lecture.end_time:
+            current_lectures.append(lecture)
         else:
-            future_lectures.append(
-                {"lecture_code": lecture.get("lecture_code"),
-                 "lecture_start": lecture.get("start_time")})
+            future_lectures.append(lecture)
     return json_response(
-        {"isLecturer": is_lecturer, "lectures": current_lecture_codes, "futureLectures": future_lectures,
-         "lectureCode": lecture_code})
+        {
+            "isLecturer": is_lecturer,
+            "lectures": current_lectures,
+            "futureLectures": future_lectures,
+        })
 
 
 @lecture_routes.route('/createLecture', methods=['POST'])
@@ -777,60 +769,63 @@ def join_lecture():
     doc_id = int(request.args.get("doc_id"))
     lecture_code = request.args.get("lecture_code")
     password_quess = request.args.get("password_quess")
-    lecture_id = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
+    lecture = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
+    lecture_id = lecture.lecture_id
     current_user = get_current_user_id()
 
-    if not check_if_lecture_is_running(lecture_id):
-        return json_response({'lecture_ended': True})
+    lecture_ended = not check_if_lecture_is_running(lecture_id)
 
     # TODO Allow lecturer always join, even if the lecture is full
-    if check_if_lecture_is_full(lecture_id):
-        return json_response({'lecture_full': True})
+    lecture_full = check_if_lecture_is_full(lecture_id)
 
-    lecture = timdb.lectures.get_lecture(lecture_id)
-    if lecture[0].get("password") != password_quess:
-        return json_response({"correctPassword": False})
+    correct_password = True
+    if lecture.password != password_quess:
+        correct_password = False
 
-    anon_login = False
-    if not logged_in():
-        anon_user = log_in_as_anonymous(session)
-        current_user = anon_user.id
-        anon_login = True
-
-    doc_name = DocEntry.find_by_id(lecture[0].get("doc_id")).path
-
+    joined = False
     in_lecture, current_lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
-    if in_lecture:
-        leave_lecture_function(current_lecture_id)
-    timdb.lectures.join_lecture(lecture_id, current_user, True)
+    if not lecture_ended and not lecture_full and correct_password:
+        if not logged_in():
+            anon_user = log_in_as_anonymous(session)
+            current_user = anon_user.id
+        if in_lecture:
+            leave_lecture_function(current_lecture_id)
+        timdb.lectures.join_lecture(lecture_id, current_user, True)
+        joined = True
 
-    time_now = str(datetime.now(timezone.utc).strftime("%H:%M:%S"))
-    tempdb.useractivity.update_or_add_activity(lecture_id, current_user, time_now)
+        time_now = str(datetime.now(timezone.utc).strftime("%H:%M:%S"))
+        tempdb.useractivity.update_or_add_activity(lecture_id, current_user, time_now)
 
-    session['in_lecture'] = [lecture_id]
+        session['in_lecture'] = [lecture_id]
 
     lecturers = []
     students = []
-    if lecture[0].get("lecturer") == current_user:
+    if lecture.lecturer == current_user:
         is_lecturer = True
         lecturers, students = get_lecture_users(timdb, tempdb, lecture_id)
     else:
         is_lecturer = False
     return json_response(
-        {"correctPassword": True, "inLecture": True, "lectureId": lecture_id, "isLecturer": is_lecturer,
-         "lectureCode": lecture_code, "startTime": lecture[0].get("start_time"),
-         "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students, "doc_name": doc_name,
-         "anonLogin": anon_login})
+        {
+            "correctPassword": correct_password,
+            "isInLecture": joined or in_lecture,
+            "isLecturer": is_lecturer,
+            "lecture": lecture,
+            "lecturers": lecturers,
+            "students": students,
+            "lecture_ended": lecture_ended,
+            "lecture_full": lecture_full,
+        })
 
 
 @lecture_routes.route('/leaveLecture', methods=['POST'])
 def leave_lecture():
-    lecture_id = int(request.args.get("lecture_id"))
+    lecture_id = get_option(request, 'lecture_id', None, cast=int)
+    doc_id = get_option(request, 'doc_id', None, cast=int)
+    if not lecture_id or not doc_id:
+        abort(400)
     leave_lecture_function(lecture_id)
-    if 'doc_id' in request.args:
-        return get_running_lectures(int(request.args['doc_id']))
-    else:
-        return json_response("")
+    return get_running_lectures(doc_id)
 
 
 def leave_lecture_function(lecture_id):
@@ -853,14 +848,6 @@ def get_questions(doc_id):
     timdb = get_timdb()
     questions = timdb.questions.get_doc_questions(doc_id)
     return json_response(questions)
-
-
-@lecture_routes.route("/getLectureWithName", methods=['POST'])
-def get_lecture_with_name(lecture_code, doc_id):
-    verify_ownership(doc_id)
-    timdb = get_timdb()
-    lecture = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
-    return json_response(lecture)
 
 
 @lecture_routes.route("/extendQuestion", methods=['POST'])
@@ -933,7 +920,7 @@ def ask_question():
         question_json_str = asked_json["json"]  # actually now markup
         markup = json.loads(question_json_str)
 
-    if "json" not in markup:  # compability for old version
+    if "json" not in markup:  # compatibility for old version
         markup = {"json": markup}
 
     question_timelimit = 0
@@ -1087,7 +1074,7 @@ def get_asked_question_by_id():
 def check_if_is_lecturer(lecture_id):
     timdb = get_timdb()
     current_user = get_current_user_id()
-    return timdb.lectures.get_lecture(lecture_id)[0].get("lecturer") == current_user
+    return timdb.lectures.get_lecture(lecture_id).lecturer == current_user
 
 
 @lecture_routes.route("/stopQuestion", methods=['POST'])
@@ -1102,7 +1089,7 @@ def stop_question():
     current_user = get_current_user_id()
     lecture = timdb.lectures.get_lecture(lecture_id)
     if lecture:
-        if lecture[0].get("lecturer") != current_user:
+        if lecture.lecturer != current_user:
             abort(400, "You cannot stop questions on someone elses lecture.")
         tempdb.runningquestions.delete_running_question(asked_id)
         tempdb.usersshown.delete_all_from_question(asked_id)

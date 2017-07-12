@@ -165,6 +165,19 @@ class Lecture(db.Model):
     def find_by_id(lecture_id: int) -> 'Lecture':
         return Lecture.query.get(lecture_id)
 
+    def to_json(self, show_password=False):
+        return {
+            'lecture_id': self.lecture_id,
+            'lecture_code': self.lecture_code,
+            'doc_id': self.doc_id,
+            'lecturer': self.lecturer,
+            'start_time': self.start_time,
+            'end_time': self.end_time,
+            'options': self.options,
+            'is_access_code': self.password != "",  # don't expose password to client directly unless explicitly requested with the parameter
+            'password': self.password if show_password else None,
+        }
+
 
 class LectureAnswer(db.Model):
     __bind_key__ = 'tim_main'

@@ -1,6 +1,6 @@
 // TODO: save cursor position when changing editor
 
-import angular, {IPromise, IController} from "angular";
+import angular, {IPromise, IController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {timApp} from "tim/app";
@@ -85,13 +85,13 @@ export class PareditorController implements IController {
     private timer: IPromise<void>;
     private unreadUrl: string;
     private uploadedFile: string;
-    private scope: angular.IScope;
+    private scope: IScope;
     private storage: Storage;
     private touchDevice: boolean;
     private tag: string;
     private plugintab: JQuery;
 
-    constructor(scope: angular.IScope, element: angular.IRootElementService) {
+    constructor(scope: IScope, element: IRootElementService) {
         this.scope = scope;
         this.tag = this.options.localSaveTag || "";
         this.storage = localStorage;

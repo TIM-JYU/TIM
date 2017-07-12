@@ -13,7 +13,7 @@
  */
 
 import angular from "angular";
-import {IController} from "angular";
+import {IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import {$http, $window} from "../ngimport";
 import {ReviewController} from "../controllers/reviewController";
@@ -34,7 +34,7 @@ class AnnotationController implements IController {
     private newcomment: string;
     private marginonly: boolean;
     private isvalid: {points: {value: boolean; msg: string}};
-    private element: angular.IRootElementService;
+    private element: IRootElementService;
     private velpElement: HTMLElement;
     private showHidden: boolean;
     private show: boolean;
@@ -51,11 +51,11 @@ class AnnotationController implements IController {
     };
     private velp: {};
     private rctrl: ReviewController;
-    private scope: angular.IScope;
+    private scope: IScope;
     private annotationdata: string;
     private annotation: IAnnotation;
 
-    constructor(scope: angular.IScope, element: angular.IRootElementService) {
+    constructor(scope: IScope, element: IRootElementService) {
         this.scope = scope;
         this.element = element;
         this.ctrlDown = false;

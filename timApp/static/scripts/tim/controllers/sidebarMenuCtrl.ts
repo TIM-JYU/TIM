@@ -3,6 +3,7 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {Users, UserService} from "../services/userService";
 import {$http, $log, $window} from "../ngimport";
+import {ILecture, ILectureListResponse2} from "../lecturetypes";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -17,9 +18,9 @@ import {$http, $log, $window} from "../ngimport";
  */
 
 export class SidebarMenuCtrl implements IController {
-    private currentLecturesList: {}[];
-    private futureLecturesList: {}[];
-    private pastLecturesList: {}[];
+    private currentLecturesList: ILecture[];
+    private futureLecturesList: ILecture[];
+    private pastLecturesList: ILecture[];
     private lectureQuestions: {}[];
     private materialQuestions: {}[];
     private users: UserService;
@@ -60,7 +61,7 @@ export class SidebarMenuCtrl implements IController {
         }
     }
 
-    bookmarkTabSelected(isSelected) {
+    bookmarkTabSelected(isSelected: boolean) {
         const tabContent = $("#menuTabs").find(".tab-content");
         if (isSelected) {
             // The dropdown menu is clipped if it's near right side of the menu without applying this hack
@@ -106,20 +107,16 @@ export class SidebarMenuCtrl implements IController {
      * FILL WITH SUITABLE TEXT
      * @memberof module:sidebarMenuCtrl
      */
-    toggleLectures() {
-        $http<{currentLectures, futureLectures, pastLectures}>({
+    async toggleLectures() {
+        const response = await $http<ILectureListResponse2>({
             url: "/getAllLecturesFromDocument",
             method: "GET",
             params: {doc_id: this.docId},
-        })
-            .then((response) => {
-                const lectures = response.data;
-                this.currentLecturesList = lectures.currentLectures;
-                this.futureLecturesList = lectures.futureLectures;
-                this.pastLecturesList = lectures.pastLectures;
-            }, function() {
-                $log.error("Couldn't fetch the lectures");
-            });
+        });
+        const lectures = response.data;
+        this.currentLecturesList = lectures.currentLectures;
+        this.futureLecturesList = lectures.futureLectures;
+        this.pastLecturesList = lectures.pastLectures;
     }
 
     /**

@@ -79,3 +79,53 @@ export interface IQuestionAnswer {
     points: number;
     answer: string;
 }
+
+export interface IMessage {
+    time: string;
+    sender: string;
+    message: string;
+}
+
+export interface ILecturePerson {
+    name: string;
+    active: boolean;
+    user_id: number;
+}
+
+export function isLectureListResponse(response: any): response is ILectureListResponse {
+    return response.lectures !== undefined && response.futureLectures !== undefined;
+}
+
+export interface ILectureListResponse2 {
+    currentLectures: ILecture[];
+    futureLectures: ILecture[];
+    pastLectures: ILecture[];
+}
+
+export interface ILectureListResponse {
+    isLecturer: boolean;
+    lectures: ILecture[];
+    futureLectures: ILecture[];
+}
+
+export interface ILectureResponse {
+    lecture_full: boolean;
+    lecture_ended: boolean;
+    isInLecture: boolean; // missing in startFutureLecture
+    isLecturer: boolean;
+    lecture: ILecture;
+    students: ILecturePerson[];
+    lecturers: ILecturePerson[];
+    useWall: boolean; // missing in startFutureLecture
+    useQuestions: boolean; // missing in startFutureLecture
+    correctPassword?: boolean;
+}
+
+export interface ILectureSettings {
+    inLecture: boolean;
+    lectureMode: boolean;
+    useAnswers: boolean;
+    useNotPollingDialog: boolean;
+    useQuestions: boolean;
+    useWall: boolean;
+}

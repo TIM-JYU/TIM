@@ -44,7 +44,7 @@ export class CreateLectureCtrl implements IController {
 
     constructor(modal: IModalInstanceService,
                 item: IItem,
-                lecture: ILectureFormParams) {
+                lecture: ILectureFormParams | null) {
         this.modal = modal;
         this.item = item;
         this.useDate = false;
@@ -70,7 +70,9 @@ export class CreateLectureCtrl implements IController {
         this.dueCheck = true;
         this.earlyJoining = true;
         this.enableDue2();
-        this.setLecture(lecture);
+        if (lecture !== null) {
+            this.setLecture(lecture);
+        }
     }
 
     setLecture(data: ILectureFormParams) {
@@ -369,7 +371,7 @@ timApp.component("timCreateLecture", {
     templateUrl: "/static/templates/start_lecture.html",
 });
 
-export async function showLectureDialog(item: IItem, lecture: ILectureFormParams): Promise<ILecture> {
+export async function showLectureDialog(item: IItem, lecture: ILectureFormParams | null = null): Promise<ILecture> {
     const instance: IModalInstanceService = $uibModal.open({
         component: "timCreateLecture",
         resolve: {

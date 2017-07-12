@@ -2,7 +2,7 @@ import angular from "angular";
 import {IController} from "angular";
 import {timApp} from "tim/app";
 import {$http, $window} from "../ngimport";
-import {ILecture} from "../lecturetypes";
+import {ILecture, ILectureListResponse2} from "../lecturetypes";
 import {LectureController} from "./lectureController";
 import {ViewCtrl} from "./view/viewctrl";
 
@@ -62,7 +62,7 @@ export class SmallMenuCtrl implements IController {
     }
 
     private async getLectures() {
-        const response = await $http<{currentLectures, futureLectures}>({
+        const response = await $http<ILectureListResponse2>({
             url: "/getAllLecturesFromDocument",
             method: "GET",
             params: {doc_id: this.viewctrl.docId},

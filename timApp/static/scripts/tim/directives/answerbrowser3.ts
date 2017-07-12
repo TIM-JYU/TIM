@@ -51,10 +51,10 @@ function loadPlugin(html: string, $par: JQuery, scope: IScope) {
 class AnswerBrowserLazyController implements IController {
     private static $inject = ["$element", "$scope"];
     private compiled: boolean;
-    private element: angular.IRootElementService;
+    private element: IRootElementService;
     private viewctrl: ViewCtrl;
     private taskId: string;
-    private scope: angular.IScope;
+    private scope: IScope;
 
     constructor($element: IRootElementService, scope: IScope) {
         this.element = $element;

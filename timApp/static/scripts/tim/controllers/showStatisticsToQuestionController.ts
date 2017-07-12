@@ -1,4 +1,4 @@
-import angular from "angular";
+import angular, {IRootElementService, IScope} from "angular";
 import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as chart from "tim/directives/showChartDirective";
@@ -22,14 +22,14 @@ markAsUsed(chart);
 
 export class ShowStatisticsToQuestionController implements IController {
     private static $inject = ["$scope", "$element"];
-    private scope: angular.IScope;
+    private scope: IScope;
     private canvas: string;
     private questionTitle: string;
     private lecturerAnswered: boolean;
-    private element: angular.IRootElementService;
+    private element: IRootElementService;
     private dynamicAnswerShowControl: any;
 
-    constructor(scope: angular.IScope, element: angular.IRootElementService) {
+    constructor(scope: IScope, element: IRootElementService) {
         this.scope = scope;
         this.element = element;
         this.dynamicAnswerShowControl = {};

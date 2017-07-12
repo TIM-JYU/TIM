@@ -1,5 +1,5 @@
-import angular from "angular";
-import {IController} from "angular";
+import angular, {IScope} from "angular";
+import {IController, IRootElementService} from "angular";
 import {ChartData} from "chart.js";
 import * as chartmodule from "chart.js";
 import $ from "jquery";
@@ -271,7 +271,7 @@ class ShowChartController implements IController {
         },
     ];
 
-    constructor(scope: angular.IScope, element: angular.IRootElementService) {
+    constructor(scope: IScope, element: IRootElementService) {
         this.canvasId = "#" + this.canvas || "";
         this.isText = false;
         this.div = element.find(".canvasContainer");
