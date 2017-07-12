@@ -423,7 +423,7 @@ def get_md(ttype, query):
     if "csconsole" in ttype:  # erillinen konsoli
         r = "cs-console"
 
-    s = '\\begin{verbatim}\n' + usercode + '\\end{verbatim}'
+    s = '\\begin{verbatim}\n' + usercode + '\n\\end{verbatim}'
 
     return s
 
