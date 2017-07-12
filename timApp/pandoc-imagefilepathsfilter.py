@@ -84,8 +84,8 @@ def handle_images(key, value, fmt, meta):
             path = path[1:]
 
         # handle internal absolute urls
-        base_address = scheme + '://' + host + '/'
-        base_address += scheme + '://' if scheme != '' else ''
+        base_address = scheme + '://' if scheme != '' else ''
+        base_address += host + '/' if scheme != '' else ''
         if CURRENT_HOST_MACHINE is not None and base_address == CURRENT_HOST_MACHINE:
             image_path = os.path.join(APP_ROOT, path)
 
