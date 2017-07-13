@@ -49,6 +49,7 @@ export class LectureInfoController implements IController {
         this.item = $window.item;
         this.inLecture = $window.inLecture;
         this.lecture = {
+            is_full: null,
             max_students: null,
             lecture_code: $window.lectureCode,
             doc_id: this.item.id,
@@ -195,13 +196,14 @@ export class LectureInfoController implements IController {
         });
         const lecture = response.data;
         const lectureNew = await showLectureDialog(this.item, {
+            is_full: lecture.is_full,
             doc_id: lecture.doc_id,
-            end_time: moment(lecture.end_time),
+            end_time: lecture.end_time,
             lecture_code: lecture.lecture_code,
             lecture_id: lecture.lecture_id,
             max_students: null,
             password: lecture.password || "",
-            start_time: moment(lecture.start_time),
+            start_time: lecture.start_time,
         });
         this.lecture = lectureNew;
     }

@@ -2,7 +2,7 @@ import {IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {Users, UserService} from "../services/userService";
-import {$http, $log, $window} from "../ngimport";
+import {$http, $window} from "../ngimport";
 import {ILecture, ILectureListResponse2} from "../lecturetypes";
 
 /**
@@ -21,8 +21,6 @@ export class SidebarMenuCtrl implements IController {
     private currentLecturesList: ILecture[];
     private futureLecturesList: ILecture[];
     private pastLecturesList: ILecture[];
-    private lectureQuestions: {}[];
-    private materialQuestions: {}[];
     private users: UserService;
     private leftSide: JQuery;
     private active: number;
@@ -34,8 +32,6 @@ export class SidebarMenuCtrl implements IController {
         this.currentLecturesList = [];
         this.futureLecturesList = [];
         this.pastLecturesList = [];
-        this.lectureQuestions = [];
-        this.materialQuestions = [];
         this.users = Users;
         this.bookmarks = $window.bookmarks; // from base.html
         this.leftSide = $(".left-fixed-side");
@@ -117,31 +113,6 @@ export class SidebarMenuCtrl implements IController {
         this.currentLecturesList = lectures.currentLectures;
         this.futureLecturesList = lectures.futureLectures;
         this.pastLecturesList = lectures.pastLectures;
-    }
-
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:sidebarMenuCtrl
-     */
-    toggleQuestions() {
-        // Does not work anymore after changing questions part of document
-        this.lectureQuestions = [];
-        $http<Array<{question_id, questionjson}>>({
-            url: "/questions/" + this.docId,
-            method: "GET",
-        })
-            .then((response) => {
-                const questions = response.data;
-                for (let i = 0; i < questions.length; i++) {
-                    const question = {
-                        questionId: questions[i].question_id,
-                        questionTitle: (JSON.parse(questions[i].questionjson)).questionTitle,
-                    };
-                    this.lectureQuestions.push(question);
-                }
-            }, () => {
-                $log.error("Couldn't fetch the questions");
-            });
     }
 }
 

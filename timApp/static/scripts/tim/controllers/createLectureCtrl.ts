@@ -21,7 +21,7 @@ import {$http, $log, $uibModal, $window} from "../ngimport";
  */
 
 export class CreateLectureCtrl implements IController {
-    private static $inject = ["$uibModalInstance", "item", "lecture"];
+    private static $inject = [];
     private useDate: boolean;
     private useDuration: boolean;
     private dateChosen: boolean;
@@ -39,14 +39,13 @@ export class CreateLectureCtrl implements IController {
     private dateTimeOptions: EonasdanBootstrapDatetimepicker.SetOptions;
     private startTime: moment.Moment;
     private endTime: moment.Moment;
-    private readonly item: IItem;
-    private readonly modal: IModalInstanceService;
+    private item: IItem;
 
-    constructor(modal: IModalInstanceService,
-                item: IItem,
-                lecture: ILectureFormParams | null) {
-        this.modal = modal;
-        this.item = item;
+    // injected:
+    private modalInstance: IModalInstanceService;
+    private resolve: {item: IItem, lecture: ILectureFormParams};
+
+    constructor() {
         this.useDate = false;
         this.useDuration = false;
         this.dateChosen = false;
@@ -70,9 +69,7 @@ export class CreateLectureCtrl implements IController {
         this.dueCheck = true;
         this.earlyJoining = true;
         this.enableDue2();
-        if (lecture !== null) {
-            this.setLecture(lecture);
-        }
+
     }
 
     setLecture(data: ILectureFormParams) {
@@ -87,7 +84,10 @@ export class CreateLectureCtrl implements IController {
     }
 
     $onInit() {
-
+        this.item = this.resolve.item;
+        if (this.resolve.lecture !== null) {
+            this.setLecture(this.resolve.lecture);
+        }
     }
 
     $postLink() {
@@ -280,6 +280,7 @@ export class CreateLectureCtrl implements IController {
                 this.startTime.subtract(15, "minutes");
             }
             const lectureParams: ILecture = {
+                is_full: null,
                 lecture_id: this.lectureId,
                 doc_id: this.item.id,
                 lecture_code: this.lectureCode,
@@ -298,7 +299,7 @@ export class CreateLectureCtrl implements IController {
             } else {
                 $log.info("Lecture created: " + response.data.lectureId);
             }
-            this.modal.close(lectureParams);
+            this.modalInstance.close(lectureParams);
         }
     }
 
@@ -361,11 +362,15 @@ export class CreateLectureCtrl implements IController {
      * @memberof module:createLectureCtrl
      */
     cancelCreation() {
-        this.modal.dismiss(null);
+        this.modalInstance.dismiss(null);
     }
 }
 
 timApp.component("timCreateLecture", {
+    bindings: {
+        modalInstance: "<",
+        resolve: "<",
+    },
     controller: CreateLectureCtrl,
     controllerAs: "clctrl",
     templateUrl: "/static/templates/start_lecture.html",

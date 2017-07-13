@@ -11,6 +11,7 @@ Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs
 
 """
 import datetime
+import json
 from datetime import timezone
 
 from flask_sqlalchemy import SQLAlchemy
@@ -165,6 +166,17 @@ class Lecture(db.Model):
     def find_by_id(lecture_id: int) -> 'Lecture':
         return Lecture.query.get(lecture_id)
 
+    @property
+    def is_full(self):
+        if not hasattr(self, 'options_parsed'):
+            self.options_parsed = json.loads(self.options)
+        max_students = self.options_parsed.get('max_students')
+        if max_students is None:
+            return False
+        max_students = int(max_students)  # TODO is this needed?
+        cnt = LectureUsers.query.filter_by(lecture_id=self.lecture_id).count()
+        return cnt >= max_students
+
     def to_json(self, show_password=False):
         return {
             'lecture_id': self.lecture_id,
@@ -176,6 +188,7 @@ class Lecture(db.Model):
             'options': self.options,
             'is_access_code': self.password != "",  # don't expose password to client directly unless explicitly requested with the parameter
             'password': self.password if show_password else None,
+            'is_full': self.is_full,
         }
 
 

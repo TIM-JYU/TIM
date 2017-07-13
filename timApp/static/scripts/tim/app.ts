@@ -13,7 +13,7 @@ import oclazyload from "oclazyload";
 import angularmodules from "tim/angularmodules";
 import extramodules from "tim/extramodules";
 import plugins from "tim/plugins";
-import {markAsUsed} from "tim/utils";
+import {convertDateStringsToMoments, markAsUsed} from "tim/utils";
 import {injectProviders, injectServices} from "./ngimport";
 import {initUserService} from "./services/userService";
 import {loadMap} from "./loadMap";
@@ -49,15 +49,21 @@ timApp.config(["$provide", ($provide) => {
     }]);
 }]);
 
-// disable IE ajax request caching; from https://stackoverflow.com/a/19771501
-timApp.config(["$httpProvider", ($httpProvider) => {
+timApp.config(["$httpProvider", ($httpProvider: angular.IHttpProvider) => {
     if (!$httpProvider.defaults.headers.get) {
         $httpProvider.defaults.headers.get = {};
     }
 
+    // disable IE ajax request caching; from https://stackoverflow.com/a/19771501
     $httpProvider.defaults.headers.get["If-Modified-Since"] = "Mon, 26 Jul 1997 05:00:00 GMT";
     $httpProvider.defaults.headers.get["Cache-Control"] = "no-cache";
     $httpProvider.defaults.headers.get.Pragma = "no-cache";
+
+    // convert ISO 8601 date strings to moment objects
+    ($httpProvider.defaults.transformResponse as angular.IHttpResponseTransformer[]).push((responseData) => {
+        convertDateStringsToMoments(responseData);
+        return responseData;
+    });
 }]);
 
 timApp.config(["$qProvider", ($qProvider: angular.IQProvider) => {

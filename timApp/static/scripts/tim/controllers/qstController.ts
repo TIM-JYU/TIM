@@ -149,7 +149,6 @@ qstApp.initScope = function(scope, element, attrs) {
     const markup = scope.attrs.markup;
     const params: any = {};
     params.answerTable = scope.attrs.state;
-    params.questionId = 1; //args.questionId;
     params.questionParId = 1; // args.questionParId;
     params.questionParIdNext = 2; //args.questionParIdNext;
     params.isLecturer = false;
@@ -239,7 +238,6 @@ QstScope.prototype.doSaveText = function(nosave) {
         if (data.web.markup && data.web.show_result) {
             const params: any = {};
             params.answerTable = data.web.state;
-            params.questionId = 1; //args.questionId;
             params.questionParId = 1; // args.questionParId;
             params.questionParIdNext = 2; //args.questionParIdNext;
             params.isLecturer = false;

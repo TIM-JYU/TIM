@@ -1,7 +1,8 @@
 import angular, {IPromise} from "angular";
 import $ from "jquery";
 import sessionsettings from "tim/session";
-import {$log, $q, $timeout} from "./ngimport";
+import {$log, $timeout} from "./ngimport";
+import moment from "moment";
 
 export function checkBindings(controller: any, bindings: {[name: string]: string}) {
     for (const k of Object.keys(bindings)) {
@@ -9,6 +10,25 @@ export function checkBindings(controller: any, bindings: {[name: string]: string
             if (controller[k] === undefined) {
                 throw new Error(`Binding is undefined: ${k}`);
             }
+        }
+    }
+}
+
+// adapted from http://aboutcode.net/2013/07/27/json-date-parsing-angularjs.html
+export function convertDateStringsToMoments(input): void {
+    if (input === null || typeof input !== "object") {
+        return;
+    }
+
+    for (const key of Object.keys(input)) {
+        const value = input[key];
+        if (typeof value === "string") {
+            const m = moment(value, moment.ISO_8601, true);
+            if (m.isValid()) {
+                input[key] = m;
+            }
+        } else {
+            convertDateStringsToMoments(value);
         }
     }
 }
@@ -91,15 +111,16 @@ export function isPageDirty() {
     return e.val() === "1";
 }
 
-export function GetURLParameter(sParam: string) {
+export function GetURLParameter(sParam: string): string | null {
     const sPageURL = window.location.search.substring(1);
     const sURLVariables = sPageURL.split("&");
-    for (let i = 0; i < sURLVariables.length; i++) {
-        const sParameterName = sURLVariables[i].split("=");
-        if (sParameterName[0] == sParam) {
+    for (const urlvar of sURLVariables) {
+        const sParameterName = urlvar.split("=");
+        if (sParameterName[0] === sParam) {
             return decodeURIComponent(sParameterName[1]);
         }
     }
+    return null;
 }
 
 export function setsetting(setting, value) {

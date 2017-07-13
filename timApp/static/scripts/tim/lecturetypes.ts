@@ -71,6 +71,7 @@ export interface ILecture {
     end_time: moment.Moment;
     password: string;
     max_students: number;
+    is_full: boolean;
 }
 
 export interface IQuestionAnswer {
@@ -109,15 +110,13 @@ export interface ILectureListResponse {
 }
 
 export interface ILectureResponse {
-    lecture_full: boolean;
-    lecture_ended: boolean;
-    isInLecture: boolean; // missing in startFutureLecture
+    isInLecture: boolean;
     isLecturer: boolean;
     lecture: ILecture;
     students: ILecturePerson[];
     lecturers: ILecturePerson[];
-    useWall: boolean; // missing in startFutureLecture
-    useQuestions: boolean; // missing in startFutureLecture
+    useWall: boolean;
+    useQuestions: boolean;
     correctPassword?: boolean;
 }
 

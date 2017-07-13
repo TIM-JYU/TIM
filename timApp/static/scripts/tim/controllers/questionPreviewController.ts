@@ -33,8 +33,7 @@ export class QuestionPreviewController implements IController {
         this.isLecturer = false;
         this.questionTitle = "";
 
-        this.scope.$on("setPreviewJson", function(event, args) {
-            this.questionId = args.questionId;
+        this.scope.$on("setPreviewJson", (event, args) => {
             this.questionParId = args.questionParId;
             this.questionParIdNext = args.questionParIdNext;
             this.isLecturer = args.isLecturer;
@@ -46,22 +45,6 @@ export class QuestionPreviewController implements IController {
 
         });
     }
-
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:questionPreviewController
-     */
-    /*
-     this.editQuestion = function () {
-     this.close();
-     $rootScope.$broadcast("editQuestion", {
-     "question_id": this.questionId,
-     "par_id": this.questionParId,
-     "par_id_next": this.questionParIdNext,
-     "markup": this.markup,
-     });
-     };
-     */
 
     editQuestion() {
         this.close();
@@ -103,7 +86,6 @@ export class QuestionPreviewController implements IController {
     ask() {
         this.scope.$emit("askQuestion", {
             lecture_id: this.lectureId,
-            question_id: this.questionId,
             par_id: this.questionParId,
             doc_id: this.docId,
             markup: this.markup,
@@ -128,12 +110,12 @@ export class QuestionPreviewController implements IController {
         const confirmDi = $window.confirm("Are you sure you want to delete this question?");
         if (confirmDi) {
             $http.post("/deleteParagraph/" + this.docId, {par: this.questionParId})
-                .then(function(response) {
+                .then((response) => {
                     const data = response.data;
                     this.handleDelete(data, {par: this.questionParId, area_start: null, area_end: null});
                     this.$emit("closeQuestionPreview");
                     $log.info("Deleted question");
-                }, function(error) {
+                }, (error) => {
                     this.$emit("closeQuestionPreview");
                     $log.info(error);
                 });

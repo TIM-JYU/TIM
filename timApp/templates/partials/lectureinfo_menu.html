@@ -13,9 +13,6 @@
                 <select ng-change="lctrl.clearChange()" ng-model="lctrl.chosenLecture"
                         ng-options="lctrl.lecture.lecture_code for lecture in lctrl.lectures">
                 </select>
-                <!--<input id="passwordInput" ng-model="passwordQuess" placeholder="Access code"
-                       ng-keypress="passEnterPressed($event)" size="7" ng-disabled="!chosenLecture.is_access_code">-->
-
                 {{ lecbtn('log-in', 'Join the lecture', 'lctrl.joinLecture(_,chosenLecture.is_access_code)', 'lctrl.lectureSettings') }}
                 {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(chosenLecture.lecture_code)', 'lctrl.isLecturer') }}
                 {{ lecbtn('plus-sign', 'Add new lecture', 'lctrl.toggleLecture()', 'lctrl.isLecturer') }}
@@ -35,7 +32,7 @@
             <div id="inLectureIconSection">
                 {{ lecbtn('log-out', 'Leave this lecture', 'lctrl.leaveLecture()', 'lctrl.lectureSettings.inLecture') }}
                 {{ lecbtn('stop', 'End this lecture', 'lctrl.endLecture()', 'lctrl.canStop') }}
-                {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(lectureName)', 'lctrl.canStop') }}
+                {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(lctrl.lecture.lecture_code)', 'lctrl.canStop') }}
             </div>
         </div>
 
@@ -92,7 +89,7 @@
         </div>
     </pop-up-dialog>
 
-    <div ng-cloak save="lctrl.chartAnswers" class="userFixed chartAnswers"   tim-draggable-fixed="" resize="true" broadcastmsg="resizeElement"  ng-show="lctrl.showStudentAnswers" caption="Statistics">
+    <div ng-cloak save="chartAnswers" class="userFixed chartAnswers"   tim-draggable-fixed="" resize="true" broadcastmsg="resizeElement"  ng-show="lctrl.showStudentAnswers" caption="Statistics">
         <ng-include
                 src="'{{ url_for('static', filename='templates/showStatisticsToQuestion.html') }}'"></ng-include>
     </div>

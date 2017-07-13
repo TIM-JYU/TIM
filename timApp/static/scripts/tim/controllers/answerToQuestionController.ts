@@ -39,7 +39,6 @@ export class AnswerToQuestionController implements IController {
             this.result = args.result;
             this.previousAnswer = args.answer;
             this.askedId = args.askedId;
-            this.questionId = args.questionId;
             this.questionParId = args.questionParId;
             this.isLecturer = args.isLecturer;
             this.markup = args.markup;
@@ -91,7 +90,7 @@ export class AnswerToQuestionController implements IController {
                 lecture_id: this.lectureId,
             },
         })
-            .then(function() {
+            .then(() => {
                 this.scope.$emit("questionStopped");
                 this.questionEnded = true;
                 this.dynamicAnswerSheetControl.endQuestion();
@@ -165,7 +164,6 @@ export class AnswerToQuestionController implements IController {
             lecture_id: this.lectureId,
             asked_id: this.askedId,
             par_id: this.questionParId,
-            question_id: this.questionId,
             doc_id: this.docId,
             markup: this.markup,
         });
@@ -174,7 +172,6 @@ export class AnswerToQuestionController implements IController {
     askAsNewEmit() {
         this.scope.$emit("askQuestion", {
             lecture_id: this.lectureId,
-            question_id: this.questionId,
             par_id: this.questionParId,
             doc_id: this.docId,
             markup: this.markup,

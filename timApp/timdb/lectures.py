@@ -144,85 +144,9 @@ class Lectures(TimDbBase):
 
         return True
 
-    def check_if_lecture_is_full(self, lecture_id: int) -> bool:
-        cursor = self.db.cursor()
-
-        cursor.execute(
-            """
-            SELECT COUNT(*)
-            FROM LectureUsers
-            WHERE lecture_id = %s;
-            """, [lecture_id]
-        )
-
-        students = int(cursor.fetchone()[0])
-
-        cursor.execute(
-            """
-            SELECT options
-            FROM Lecture
-            WHERE Lecture_id = %s
-            """, [lecture_id]
-        )
-
-        options = cursor.fetchone()
-        options = json.loads(options[0])
-
-        max = None
-        if 'max_students' in options:
-            max = int(options['max_students'])
-
-        if max is None:
-            return False
-        else:
-            return students + 1 >= max
-
-    def check_if_in_lecture(self, doc_id: int, user_id: int) -> Tuple:
-        """Check if user is in lecture from specific document.
-
-        :param doc_id: document id
-        :param user_id: user id
-        :return:
-
-        """
-
-        cursor = self.db.cursor()
-
-        cursor.execute("""
-                           SELECT lecture_id
-                           FROM Lecture
-                           WHERE doc_id = %s
-                           """, [doc_id])
-
-        lecture_ids = cursor.fetchall()
-        if len(lecture_ids) <= 0:
-            return False, 0
-
-        string_of_lectures = ""
-        comma = ""
-        for lecture in lecture_ids:
-            string_of_lectures += comma + str(lecture[0])
-            comma = ","
-
-        if len(string_of_lectures) <= 0:
-            return False, -1
-
-        cursor.execute("""
-                           SELECT lecture_id, user_id
-                           FROM LectureUsers
-                           WHERE lecture_id IN """ + "(" + string_of_lectures + ")" + """ AND user_id = %s
-                            """, [user_id])
-
-        result = cursor.fetchall()
-        if len(result) > 0:
-            return True, result[0][0]
-        else:
-            return False, -1
-
     def check_if_in_any_lecture(self, user_id: int) -> Tuple[bool, int]:
-        """Check if user is in lecture from specific document.
+        """Checks if the user is in any lecture.
 
-        :param doc_id: document id
         :param user_id: user id
         :return:
 
@@ -241,17 +165,6 @@ class Lectures(TimDbBase):
             return True, result[0][0]
         else:
             return False, -1
-
-    def get_users_from_leture(self, lecture_id: int) -> List[dict]:
-        cursor = self.db.cursor()
-
-        cursor.execute("""
-                            SELECT user_id
-                            FROM LectureUsers
-                            WHERE lecture_id = %s
-                      """, [lecture_id])
-
-        return self.resultAsDictionary(cursor)
 
     def extend_lecture(self, lecture_id: int, new_end_time: str, commit: bool=True):
         cursor = self.db.cursor()

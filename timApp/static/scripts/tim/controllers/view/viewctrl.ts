@@ -326,7 +326,6 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
     public par: JQuery;
     public markup: IAskedJsonJson;
     public questionParId: string;
-    public qId: string;
     public json: IAskedJsonJsonJson;
     public viewctrl: ViewCtrl;
     public showQuestionPreview: boolean;
@@ -353,15 +352,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    getQuestionHtml(questions: any): JQuery {
-        throw new Error(this.mixinMsg);
-    }
-
     processQuestions(): void {
-        throw new Error(this.mixinMsg);
-    }
-
-    getQuestions(): Promise<void> {
         throw new Error(this.mixinMsg);
     }
 
@@ -371,8 +362,6 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
 
     private static $inject = ["$scope"];
 
-    public isLecturer: boolean;
-    public lectureId: number;
     public lectureMode: boolean;
     public inLecture: boolean;
     public item: IItem;

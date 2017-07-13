@@ -984,7 +984,6 @@ export class QuestionController implements IController {
             const markup = response.data.md;
             const params: any = {};
             params.answerTable = [];
-            params.questionId = 1; //args.questionId;
             params.questionParId = 1; // args.questionParId;
             params.questionParIdNext = 2; //args.questionParIdNext;
             params.isLecturer = false;
@@ -1089,8 +1088,7 @@ export class QuestionController implements IController {
                         // if ( data.new_par_ids.length > 0 ) pid = data.new_par_ids[0];
                         this.viewctrl.json = questionjson;
                         this.scope.$emit("askQuestion", {
-                            lecture_id: this.lctrl.lectureId,
-                            question_id: this.viewctrl.qId,
+                            lecture_id: this.lctrl.lecture.lecture_id,
                             doc_id: this.viewctrl.docId,
                             par_id: pid,
                             markup: this.markup,
@@ -1098,60 +1096,12 @@ export class QuestionController implements IController {
                     }, () => {
                         console.error("Could not get question.");
                     });
-
-                /*
-                 var pid = this.par_id;
-                 if ( data.new_par_ids.length > 0 ) pid = data.new_par_ids[0];
-                 this.json = questionjson;
-                 this.$emit('askQuestion', {
-                 "lecture_id": this.lectureId,
-                 "question_id": this.qId,
-                 "doc_id": this.docId,
-                 "par_id": pid,
-                 "markup": this.markup
-                 });
-                 */
             }
             this.close();
         }, () => {
             showDialog("Could not create question");
             $log.info("There was some error creating question to database.");
         });
-        /*
-         http({
-         method: 'POST',
-         url: '/addQuestion/',
-         params: {
-         'question_id': this.question.question_id,
-         'question_title': this.question.title,
-         'answer': "test", //answerVal,
-         'par_id': par_id,
-         'doc_id': doc_id,
-         'points': points,
-         'expl': JSON.stringify(expl),
-         'questionjson': JSON.stringify(questionjson)
-         }
-         })
-         .success(function (data) {
-         $log.info("The question was successfully added to database");
-         this.removeErrors();
-         //TODO: This can be optimized to get only the new one.
-         this.$parent.getQuestions();
-         if (ask) {
-         this.json = JSON.parse(data.questionjson);
-         this.qId = data.question_id;
-         this.$emit('askQuestion', {
-         "lecture_id": this.lectureId,
-         "question_id": this.qId,
-         "doc_id": this.docId,
-         "json": this.json
-         });
-         }
-         }).error(function () {
-         $log.info("There was some error creating question to database.");
-         });
-         this.close();
-         */
     }
 
     /**
@@ -1178,20 +1128,14 @@ export class QuestionController implements IController {
         this.close();
     }
 
-    deleteQuestion() {
+    async deleteQuestion() {
         const confirmDi = $window.confirm("Are you sure you want to delete this question?");
         if (confirmDi) {
-            $http.post<{version}>("/deleteParagraph/" + this.viewctrl.docId, {par: this.par_id})
-                .then((response) => {
-                    const data = response.data;
-                    $log.info("Deleted question done!");
-                    this.viewctrl.handleDelete(data, {par: this.par_id, area_start: null, area_end: null});
-                    this.close();
-                    this.viewctrl.getQuestions();
-                }, (error) => {
-                    $log.info(error);
-                    this.viewctrl.getQuestions();
-                });
+            const response = await $http.post<{version}>("/deleteParagraph/" + this.viewctrl.docId, {par: this.par_id});
+            const data = response.data;
+            $log.info("Deleted question done!");
+            this.viewctrl.handleDelete(data, {par: this.par_id, area_start: null, area_end: null});
+            this.close();
         }
     }
 

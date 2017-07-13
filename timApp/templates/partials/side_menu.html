@@ -96,30 +96,6 @@
                 {% endraw %}
             </uib-tab>
 
-            <uib-tab index="3" ng-show="$ctrl.lctrl.isLecturer" select="$ctrl.toggleQuestions()">
-                <uib-tab-heading>
-                    <i class="glyphicon glyphicon-question-sign"></i>
-                </uib-tab-heading>
-                {% raw %}
-                <h5>Lecture questions</h5>
-                <ul>
-                    <li ng-repeat="question in $ctrl.lectureQuestions">
-                        <a ng-click="$ctrl.lctrl.showQuestion(question.questionId)">{{
-                            question.questionTitle
-                            }}</a>
-                    </li>
-                    <li ng-show="$ctrl.lectureQuestions.length == 0"><p>No lecture questions</p></li>
-                </ul>
-                <h5>Material questions</h5>
-                <ul>
-                    <li ng-repeat="question in $ctrl.materialQuestions">
-                        <a>{{ question.question }}</a>
-                    </li>
-                    <li ng-show="$ctrl.materialQuestions.length == 0"><p>No material questions</p></li>
-                </ul>
-                {% endraw %}
-            </uib-tab>
-
             <uib-tab index="4" ng-show="$ctrl.lctrl.lectureSettings.inLecture && !$ctrl.lctrl.isLecturer"
                      select="$ctrl.lctrl.getQuestionManually()">
                 <uib-tab-heading>

@@ -28,6 +28,10 @@ import {
 } from "../lecturetypes";
 import {Users} from "../services/userService";
 
+function hasLectureEnded(lecture: ILecture) {
+    return lecture.end_time < moment();
+}
+
 // TODO: Painike, josta voisi hakea kysymyksiä.
 // TODO: Button, to get questions and wall.
 export class LectureController implements IController {
@@ -105,6 +109,7 @@ export class LectureController implements IController {
         this.currentQuestionId = null;
         this.currentPointsId = null;
         this.settings = sessionsettings;
+        this.lecture = null;
 
         this.lectureSettings = {
             inLecture: false,
@@ -114,10 +119,14 @@ export class LectureController implements IController {
             useQuestions: true,
             useWall: true,
         };
+    }
 
+    $onInit() {
         this.checkIfInLecture();
         this.getClockOffset();
+    }
 
+    $postLink() {
         $(document).on("visibilitychange", () => {
             if (document.visibilityState === "hidden") {
                 $log.info("hidden");
@@ -137,10 +146,6 @@ export class LectureController implements IController {
         });
 
         this.focusOn();
-    }
-
-    $onInit() {
-        this.lecture = null;
     }
 
     showRightView(answer) {
@@ -163,30 +168,30 @@ export class LectureController implements IController {
         });
         const answer = response.data;
         let lectureCode = GetURLParameter("lecture");
-        /*
-         Check if the lecture parameter is autojoin.
-         If it is and there is only one lecture going on in the document, join it automatically.
-         Otherwise proceed as usual.*/
-        const autoJoin = "autojoin";
+
+        // Check if the lecture parameter is autojoin.
+        // If it is and there is only one lecture going on in the document, join it automatically.
+        // Otherwise proceed as usual.
+        const tryToJoin = lectureCode !== null;
+        let tryToAutoJoin = lectureCode === "autojoin";
         if (isLectureListResponse(answer)) {
-            if (!answer.lectures && lectureCode === autoJoin) {
-                lectureCode = "";
-            }
-            if (answer.lectures) {
-                if (lectureCode === autoJoin && answer.lectures.length === 1) {
-                    this.chosenLecture = answer.lectures[0];
-                    lectureCode = answer.lectures[0].lecture_code;
+            if (tryToAutoJoin && answer.lectures.length === 1) {
+                this.chosenLecture = answer.lectures[0];
+                lectureCode = answer.lectures[0].lecture_code;
+            } else {
+                if (tryToAutoJoin && answer.lectures.length > 1) {
+                    showDialog("Cannot autojoin a lecture because there are more than one lecture in this document going on.");
                 }
-                if (lectureCode === autoJoin && answer.lectures.length > 1) {
-                    lectureCode = "";
-                }
-                if (lectureCode === autoJoin && answer.lectures.length <= 0) {
+                if (tryToAutoJoin && answer.lectures.length <= 0) {
                     showDialog("There are no ongoing lectures for this document.");
-                    return this.showRightView(answer);
                 }
+                return this.showRightView(answer);
             }
-        } else if (lectureCode) {
-            $http({
+        } else {
+            tryToAutoJoin = false;
+        }
+        if (tryToJoin) {
+            $http<boolean>({
                 url: "/lectureNeedsPassword",
                 method: "GET",
                 params: {
@@ -195,13 +200,13 @@ export class LectureController implements IController {
                     buster: new Date().getTime(),
                 },
             }).then((resp) => {
-                const data = resp.data;
-                const changeLecture = this.joinLecture(lectureCode, data, answer.isInLecture, answer.lecture.lecture_code);
+                const needsPassword = resp.data;
+                const changeLecture = this.joinLecture(lectureCode, needsPassword);
                 if (!changeLecture) {
                     this.showRightView(answer);
                 }
             }, () => {
-                if (lectureCode === autoJoin) {
+                if (tryToAutoJoin) {
                     showDialog("Could not find a lecture for this document.");
                 } else {
                     showDialog(`Lecture ${lectureCode} not found.`);
@@ -216,19 +221,19 @@ export class LectureController implements IController {
     /**
      * Method to join selected lecture. Checks that lecture is chosen and sends http request to server.
      * @memberof module:lectureController
-     * @param name Name of the lecture to be joined.
+     * @param lectureCode Name of the lecture to be joined.
      * @param codeRequired True if lecture needs password, else false
      * @return {boolean} true, if successfully joined lecture, else false
      */
-    async joinLecture(name?, codeRequired?, isInLecture?, currentLecture?) {
+    async joinLecture(lectureCode: string, codeRequired: boolean) {
         let changeLecture = true;
-        if (currentLecture) {
-            const inLecture = isInLecture || this.lectureSettings.inLecture;
+        if (this.lecture !== null) {
+            const inLecture = this.lectureSettings.inLecture;
             if (inLecture) {
-                if (currentLecture == name) {
+                if (this.lecture.lecture_code === lectureCode) {
                     changeLecture = false;
                 } else {
-                    changeLecture = $window.confirm(`You are already in lecture ${currentLecture}. Do you want to switch to lecture ${name}?`);
+                    changeLecture = $window.confirm(`You are already in lecture ${this.lecture.lecture_code}. Do you want to switch to lecture ${lectureCode}?`);
                 }
             }
         }
@@ -239,17 +244,9 @@ export class LectureController implements IController {
         if (codeRequired) {
             this.passwordQuess = $window.prompt("Please enter a password:", "");
         }
-        if (this.chosenLecture === null && name === "") {
+        if (this.chosenLecture === null && lectureCode === "") {
             $window.alert("Choose lecture to join");
             return false;
-        }
-
-        let lectureName = "";
-        if (angular.isDefined(name)) {
-            lectureName = name;
-            $("#currentList").slideUp();
-        } else {
-            lectureName = this.chosenLecture.lecture_code;
         }
 
         const response = await $http<ILectureResponse>({
@@ -257,7 +254,7 @@ export class LectureController implements IController {
             method: "POST",
             params: {
                 doc_id: this.viewctrl.docId,
-                lecture_code: lectureName,
+                lecture_code: lectureCode,
                 password_quess: this.passwordQuess,
                 buster: new Date().getTime(),
             },
@@ -265,11 +262,11 @@ export class LectureController implements IController {
         const answer = response.data;
         this.passwordQuess = "";
         const input = $("#passwordInput");
-        if (answer.lecture_ended) {
-            showDialog(`Lecture '${name}' has ended`);
+        if (hasLectureEnded(answer.lecture)) {
+            showDialog(`Lecture '${lectureCode}' has ended`);
             return false;
-        } else if (answer.lecture_full) {
-            showDialog(`Lecture '${name}' is full`);
+        } else if (answer.lecture.is_full) {
+            showDialog(`Lecture '${lectureCode}' is full`);
             return false;
         } else if (!answer.correctPassword) {
             showDialog("Wrong access code!");
@@ -279,6 +276,7 @@ export class LectureController implements IController {
             // to update the plugins (they may require login)
             $window.location.reload();
         } else {
+            $("#currentList").slideUp();
             this.focusOn();
             this.studentTable = [];
             this.lecturerTable = [];
@@ -328,7 +326,6 @@ export class LectureController implements IController {
 
     async initEventHandlers() {
         /**
-         * Use data.question_id to ask question as new.
          * Use data.asked_id to reask question.
          * Use data.par_id to ask a question from document.
          */
@@ -341,8 +338,6 @@ export class LectureController implements IController {
             };
             if (data.asked_id) {
                 args.asked_id = data.asked_id;
-            } else if (data.question_id) {
-                args.question_id = data.question_id; // Remove when moving questions to document finished
             } else {
                 args.par_id = data.par_id;
             }
@@ -367,7 +362,6 @@ export class LectureController implements IController {
             $rootScope.$broadcast("setQuestionJson", {
                 markup: this.markup,
                 questionParId: data.par_id,
-                questionId: data.question_id,
                 askedId: id,
                 isAsking: true,
                 isLecturer: this.isLecturer,
@@ -377,16 +371,8 @@ export class LectureController implements IController {
             this.showAnswerWindow = true;
         });
 
-        /*
-         Event listener for getLectureId. Emits the lectureId back
-         */
-        this.scope.$on("getLectureId", () => {
-            this.scope.$emit("postLectureId", this.lecture.lecture_id);
-        });
-
         this.scope.$on("joinLecture", (event, lecture) => {
-            this.joinLecture(lecture.lecture_code, lecture.is_access_code, this.lectureSettings.inLecture,
-                this.lecture.lecture_code);
+            this.joinLecture(lecture.lecture_code, lecture.is_access_code);
         });
 
         this.scope.$on("changeQuestionTitle", (event, data) => {
@@ -396,13 +382,6 @@ export class LectureController implements IController {
         this.scope.$on("toggleQuestion", (event, data) => {
             this.questionShown = !this.questionShown;
             this.scope.$emit("newQuestion", data);
-        });
-
-        /*
-         Event listener for getLecture. Emits the boolean value if the user is in lecture
-         */
-        this.scope.$on("getInLecture", () => {
-            this.scope.$emit("postInLecture", this.lectureSettings.inLecture);
         });
 
         this.scope.$on("showAnswers", (event, x) => {
@@ -567,7 +546,6 @@ export class LectureController implements IController {
         this.getAllMessages();
 
         if (this.isLecturer) {
-            $rootScope.$broadcast("getQuestions");
             this.canStop = true;
             this.addPeopleToList(response.students, this.studentTable);
             this.addPeopleToList(response.lecturers, this.lecturerTable);
@@ -610,7 +588,6 @@ export class LectureController implements IController {
     showBasicView(answer: ILectureListResponse) {
         this.isLecturer = answer.isLecturer;
         if (this.isLecturer) {
-            $rootScope.$broadcast("getQuestions");
             this.canStart = true;
             this.canStop = false;
         }
@@ -691,12 +668,13 @@ export class LectureController implements IController {
         const lecture = response.data;
         await showLectureDialog(this.viewctrl.item, {
             doc_id: this.viewctrl.docId,
-            lecture_id: lecture.lecture_id,
+            end_time: lecture.end_time,
+            is_full: lecture.is_full,
             lecture_code: lecture.lecture_code,
-            start_time: moment(lecture.start_time),
-            end_time: moment(lecture.end_time),
-            password: lecture.password,
+            lecture_id: lecture.lecture_id,
             max_students: null, // TODO server doesn't give this
+            password: lecture.password,
+            start_time: lecture.start_time,
         });
     }
 
@@ -987,37 +965,22 @@ export class LectureController implements IController {
         });
     }
 
-    getQuestionManually(event) {
-        $http<{already_answered}>({
+    async getQuestionManually(event) {
+        const response = await $http<{already_answered}>({
             url: "/getQuestionManually",
             method: "GET",
             params: {
                 lecture_id: this.lecture.lecture_id,
                 buster: new Date().getTime(),
             },
-        })
-            .then((response) => {
-                const answer = response.data;
-                if (!answer) {
-                    showDialog("No running questions.");
-                } else if (answer.already_answered) {
-                    showDialog("You have already answered to the current question.");
-                } else {
-                    this.showQuestion(answer);
-                }
-            }, () => {
-                $log.info("Couldn't get questions.");
-            });
-    }
-
-    /**
-     * Event when pressing enter while writing password for lecture. Tries to join lecture
-     * @param event The key press.
-     * @memberof module:lectureController
-     */
-    passEnterPressed(event) {
-        if (event.which === 13) {
-            this.joinLecture();
+        });
+        const answer = response.data;
+        if (!answer) {
+            showDialog("No running questions.");
+        } else if (answer.already_answered) {
+            showDialog("You have already answered to the current question.");
+        } else {
+            this.showQuestion(answer);
         }
     }
 
@@ -1059,6 +1022,9 @@ export class LectureController implements IController {
 
 timApp.component("timLecture", {
     controller: LectureController,
+    require: {
+        viewctrl: "^timView",
+    },
     template: "<div ng-transclude></div>",
     transclude: true,
 });

@@ -21,6 +21,7 @@ function toDragOrNot() {
 }
 
 class PopupDialogController implements IController {
+    private static $inject = ["$element"];
     private element: IRootElementService;
     private mouseDownX: number;
     private mouseDownY: number;
