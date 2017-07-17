@@ -3,6 +3,7 @@ Functions for calling pandoc and constructing the calls
 """
 import os
 import tempfile
+import timeit
 from typing import Optional, List
 import re
 import sys
@@ -13,6 +14,7 @@ from flask import jsonify
 from documentmodel.docparagraph import DocParagraph
 from documentmodel.document import dereference_pars
 from documentmodel.macroinfo import MacroInfo
+from markdownconverter import expand_macros, create_environment
 from plugin import Plugin, parse_plugin_values
 from pluginOutputFormat import PluginOutputFormat
 from accesshelper import has_view_access
@@ -59,66 +61,80 @@ class DocumentPrinter:
                  print="false"
         """
 
-        # Get paragraphs that are to be printed
 
-        pars_to_print = []
+        pdoc_plugin_attrs = self._doc_entry.document.get_settings().global_plugin_attrs()
+        pdoc_macroinfo = self._doc_entry.document.get_settings().get_macroinfo(get_current_user_object())
+        pdoc_macro_delimiter = pdoc_macroinfo.get_macro_delimiter()
+        pdoc_macros = pdoc_macroinfo.get_macros()
+        pdoc_macro_env = create_environment(pdoc_macro_delimiter)
 
-        for par in self._doc_entry.document.get_paragraphs():
+        # Remove paragraphs that are not to be printed and replace plugin pars,
+        # that have a defined 'print' block in their yaml, with the 'print'-blocks content
+        print("Tutkii kappaleet")
+        pars = self._doc_entry.document.get_paragraphs()
+        for par in pars:
 
             # do not print document settings pars
-            if par.get_attr('settings') is not None:
+            if 'settings' in par.get_attrs():
+                pars.remove(par)
                 continue
 
-            par_classes = par.get_attr('classes', [])
+            par_classes = par.get_attr('classes')
 
-            if 'hidden-print' in par_classes:
+            if par_classes is not None and 'hidden-print' in par_classes:
+                pars.remove(par)
                 continue
 
             # Replace plugin- and question pars with regular docpars with the md defined in the 'print' block
             # of their yaml as the md content of the replacement par
             if par.is_plugin() or par.is_question():
+                #print("... parsii pluginia")
                 plugin_yaml = parse_plugin_values(par=par,
-                                           global_attrs=self._doc_entry.document.get_settings().global_plugin_attrs(),
-                                           macroinfo=self._doc_entry.document.get_settings().get_macroinfo(get_current_user_object()))
-                plugin_yaml_print = plugin_yaml.get('markup').get('print') if (plugin_yaml.get('markup') is not None) else None
+                                                  global_attrs=pdoc_plugin_attrs,
+                                                  macroinfo=pdoc_macroinfo)
+                plugin_yaml_print = plugin_yaml.get('markup').get('print')\
+                    if (plugin_yaml.get('markup') is not None) \
+                    else None
 
                 if plugin_yaml_print is not None:
                     par = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_print)
 
-            pars_to_print.append(par)
-
+        print("Pluginifoi")
         # Dereference pars and render markdown for plugins
         # Only the 1st return value (the pars) is needed here
         par_dicts, _, _, _ = pluginify(doc=self._doc_entry.document,
-                                pars=pars_to_print,
-                                timdb=get_timdb(),
-                                user=get_current_user_object(),
-                                output_format=PluginOutputFormat.MD,
-                                wrap_in_div=False,
-                                user_print=plugins_user_print)
+                                       pars=pars,
+                                       timdb=get_timdb(),
+                                       user=get_current_user_object(),
+                                       output_format=PluginOutputFormat.MD,
+                                       wrap_in_div=False,
+                                       user_print=plugins_user_print)
 
         export_pars = []
 
+        print("Hankkii exp md:t")
+        pdoc = self._doc_entry.document
         # Get the markdown for each par dict
         for pd in par_dicts:
             if not pd['is_plugin'] and not pd['is_question']:
-                tmp_par = DocParagraph.create(doc= self._doc_entry.document, md=pd['md'])
-                pd['md'] = tmp_par.get_expanded_markdown()
+                pd['md'] = expand_macros(text=pd['md'],
+                                         macros=pdoc_macros,
+                                         macro_delimiter=pdoc_macro_delimiter,
+                                         env=pdoc_macro_env,
+                                         ignore_errors=True)
 
             export_pars.append(pd['md'])
 
         content = '\n\n'.join(export_pars)
+        print("Alkaa kirjoittaa pdf:ää")
         # print(content)
         return content
-
-    @property
-    def _images_root(self) -> str:
-        return os.path.join(os.path.abspath(FILES_ROOT), 'blocks')
 
     def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False) -> bytearray:
         """
         Converts the document to latex and returns the converted document as a bytearray
         :param target_format: The target file format
+        :param plugins_user_print: Whether or not to print user input from plugins (instead of default values)
         :return: Converted document as bytearray
         """
 
@@ -138,27 +154,15 @@ class DocumentPrinter:
 
             self._template_doc = self._template_to_use
             template_file.write(bytearray(template_content, encoding='utf-8'))
-            # template_file.seek(0)
-            # print("Wrote template:\n %s" % template_file.read().decode(encoding='utf-8'))
-            # print("Printing to format: %s" % target_format.value)
-
-            # print("Image root set @ %s" % self._images_root)
-            # print("####### SYSPATH:\n" + "\n".join(sys.path))
-
-            # print("pypandoc module filename:\n" + pypandoc.__file__)
-            # print("####### PANDOCFILTERS INSTALLED:\n")
-            # print("pandocfilters" in sys.modules)
 
             # TODO: getting the path could probably be done with more finesse
-            filters = [os.path.join(os.getcwd(), "pandoc-inlinestylesfilter.py"),
-                       os.path.join(os.getcwd(), "pandoc-imagefilepathsfilter.py")]
-            # print("Python path is: %r" % sys.path)
-            # print("Flask installed: %s" % ("flask" in sys.modules))
-            # print("Pandocfilters installed: %s" % ("pandocfilters" in sys.modules))
-            # print("Pip freeze:\n%s" % os.system("pip list"))
-            # rint("Pip3 freeze:\n%s" % os.system("pip3 list"))
+            cwd = os.getcwd()
+            filters = [os.path.join(cwd, "pandoc-inlinestylesfilter.py"),
+                       os.path.join(cwd, "pandoc-imagefilepathsfilter.py")]
+
+            src = self.get_content(plugins_user_print=plugins_user_print)
             try:
-                pypandoc.convert_text(source=self.get_content(plugins_user_print=plugins_user_print),
+                pypandoc.convert_text(source=src,
                                       format='markdown',
                                       to=target_format.value,
                                       outputfile=output_file.name,
@@ -197,73 +201,6 @@ class DocumentPrinter:
                             "." + file_type.value)
 
         return path
-
-    @staticmethod
-    def _recurse_search_default_template_from_folder(folder: Folder) -> Optional[DocEntry]:
-        print("Searching for default template in folder %s%s" % (os.sep, folder.path))
-        template_path = os.path.join(TEMPLATES_FOLDER, DEFAULT_TEMPLATE_NAME)
-        template_doc = folder.get_document(template_path)
-
-        if template_doc is not None:
-            print("Found template @ %s" % template_doc.path)
-            return template_doc
-        else:
-            if folder.is_root():
-                print("Reached root...")
-                return None
-            else:
-                return DocumentPrinter._recurse_search_default_template_from_folder(folder=folder.parent)
-
-
-    @staticmethod
-    def _recurse_search_default_templates_from_folder(folder: Folder) -> List[DocEntry]:
-        # print("Searching for default templates in folder %s%s" % (os.sep, folder.path))
-
-        Folder.query.filter(Folder.location)
-
-        docs_in_folder = folder.get_all_documents()
-
-        template_path = os.path.join(TEMPLATES_FOLDER, DEFAULT_TEMPLATE_NAME)
-        template_doc = folder.get_document(template_path)
-
-        if template_doc is not None:
-            # print("Found template @ %s" % template_doc.path)
-            return [template_doc].append(template_doc)
-        else:
-            if folder.is_root():
-                # print("Reached root...")
-                return []
-            else:
-                return DocumentPrinter._recurse_search_default_template_from_folder(folder=folder.parent)
-
-
-    @staticmethod
-    def get_default_template(doc_entry: DocEntry) -> Optional[DocEntry]:
-        doc_folder = Folder.find_by_path(doc_entry.location)
-        return DocumentPrinter._recurse_search_default_template_from_folder(doc_folder)
-
-    @staticmethod
-    def get_custom_template(doc_entry: DocEntry) -> DocEntry:
-        # print("Getting custom template...")
-        folder = Folder.find_by_path(doc_entry.location)
-        doc_name = os.path.split(doc_entry.name)[1] # get the filename i.e. the last name in path
-        # print("Doc name is %s " % doc_name)
-        template_path = os.path.join(TEMPLATES_FOLDER, doc_name)
-        template_doc = folder.get_document(relative_path=template_path)
-
-        if template_doc is not None:
-            # print("Found document template at %s " % template_doc.location)
-            return template_doc
-        else:
-            # print("The document template does not exist. Creating one...")
-            default_template = DocumentPrinter.get_default_template(doc_entry=doc_entry)
-            if default_template is None:
-                raise PrintingError("No default template is defined in the document tree.")
-            print("Using default template @ %s to create document template @ %s" % (default_template.path, template_path))
-            template_doc = folder.get_document(relative_path=template_path, create_if_not_exist=True)
-            template_doc.document.update(default_template.document.export_markdown(),
-                                         template_doc.document.export_markdown())
-            return template_doc
 
     @staticmethod
     def get_user_templates(doc_entry: DocEntry, current_user: User) -> List[DocEntry]:
@@ -372,12 +309,18 @@ class DocumentPrinter:
 
         pars = dereference_pars(pars, source_doc=template_doc.document.get_original_document())
 
+        # attach macros from target document to template
+        macroinfo = MacroInfo()
+
+        macros = macroinfo.get_macros()
+        macros.update(template_doc.document.get_settings().get_macroinfo().get_macros())
+        macros.update(doc_to_print.document.get_settings().get_macroinfo().get_macros())
+
         out_pars = []
+
+        # go through doc pars to get all the template pars
         for par in pars:
             if par.get_attr('printing_template') is not None:
-                macroinfo = MacroInfo()
-                macroinfo.get_macros().update(template_doc.document.get_settings().get_macroinfo().get_macros())
-                macroinfo.get_macros().update(doc_to_print.document.get_settings().get_macroinfo().get_macros())
                 exp_md = par.get_expanded_markdown(macroinfo=macroinfo, ignore_errors=True)
                 out_pars.append(DocumentPrinter.remove_block_markers(exp_md))
 
