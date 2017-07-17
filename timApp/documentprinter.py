@@ -71,36 +71,36 @@ class DocumentPrinter:
         # Remove paragraphs that are not to be printed and replace plugin pars,
         # that have a defined 'print' block in their yaml, with the 'print'-blocks content
         pars = self._doc_entry.document.get_paragraphs()
+        pars_to_print = []
         for par in pars:
 
             # do not print document settings pars
             if 'settings' in par.get_attrs():
-                pars.remove(par)
                 continue
 
             par_classes = par.get_attr('classes')
 
             if par_classes is not None and 'hidden-print' in par_classes:
-                pars.remove(par)
                 continue
 
+            ppar = par
             # Replace plugin- and question pars with regular docpars with the md defined in the 'print' block
             # of their yaml as the md content of the replacement par
             if par.is_plugin() or par.is_question():
                 plugin_yaml = parse_plugin_values(par=par,
                                                   global_attrs=pdoc_plugin_attrs,
                                                   macroinfo=pdoc_macroinfo)
-                plugin_yaml_print = plugin_yaml.get('markup').get('print')\
-                    if (plugin_yaml.get('markup') is not None) \
-                    else None
+                plugin_yaml_print = plugin_yaml.get('markup').get('print') if (plugin_yaml.get('markup') is not None) else None
 
                 if plugin_yaml_print is not None:
-                    par = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_print)
+                    ppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_print)
+
+            pars_to_print.append(ppar)
 
         # Dereference pars and render markdown for plugins
         # Only the 1st return value (the pars) is needed here
         par_dicts, _, _, _ = pluginify(doc=self._doc_entry.document,
-                                       pars=pars,
+                                       pars=pars_to_print,
                                        timdb=get_timdb(),
                                        user=get_current_user_object(),
                                        output_format=PluginOutputFormat.MD,
