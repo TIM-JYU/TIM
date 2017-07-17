@@ -104,7 +104,11 @@ def pluginify(doc: Document,
         for par in pars:
             par.sanitize_html()
 
-    html_pars = [par.html_dict(include_md=(output_format == PluginOutputFormat.MD)) for par in pars]
+    # init these for performance as they stay the same for all pars
+    md_out = (output_format == PluginOutputFormat.MD)
+    html_out = False if md_out else (output_format == PluginOutputFormat.HTML)
+
+    html_pars = [par.html_dict(use_md=md_out) for par in pars]
 
     # taketime("answ", "sansitize")
 
@@ -222,8 +226,8 @@ def pluginify(doc: Document,
 
         plugin_url = get_plugin_tim_url(plugin_name)
         needs_browser = get_plugin_needs_browser(plugin_name)
-        if (output_format == PluginOutputFormat.HTML and 'multihtml' in reqs and reqs['multihtml']) or \
-            (output_format == PluginOutputFormat.MD and 'multimd' in reqs and reqs['multimd']):
+        if (html_out and 'multihtml' in reqs and reqs['multihtml']) or \
+            (md_out and 'multimd' in reqs and reqs['multimd']):
             try:
                 response = render_plugin_multi(
                                 doc,
@@ -253,29 +257,30 @@ def pluginify(doc: Document,
                                                                   html)) if wrap_in_div else html
         else:
             for idx, val in plugin_block_map.items():
-                try:
-                    html = render_plugin(doc=doc,
-                                         plugin=plugin_name,
-                                         plugin_data=val,
-                                         params=plugin_params,
-                                         output_format=output_format)
-                except PluginException as e:
-                    html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e), plugin_output_format=output_format)
-                    continue
-                if output_format == PluginOutputFormat.MD:
+                if md_out:
                     err_msg_md = "Plugin does not support printing yet. " \
                                  "Please refer to TIM help pages if you want to learn how you can manually " \
                                  "define what to print here."
                     html_pars[idx][output_format.value] = get_error_plugin(plugin_name,
                                                                     err_msg_md,
                                                                     plugin_output_format=output_format)
+                else:
+                    try:
+                        html = render_plugin(doc=doc,
+                                             plugin=plugin_name,
+                                             plugin_data=val,
+                                             params=plugin_params,
+                                             output_format=output_format)
+                    except PluginException as e:
+                        html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e), plugin_output_format=output_format)
+                        continue
 
-                html, is_lazy = make_lazy(html, val, do_lazy)
-                html_pars[idx]['needs_browser'] = needs_browser or is_lazy
-                html_pars[idx]['html'] = ("<div id='{}' data-plugin='{}'>{}</div>"
-                                                          .format(val['taskIDExt'],
-                                                                  plugin_url,
-                                                                  html)) if wrap_in_div else html
+                    html, is_lazy = make_lazy(html, val, do_lazy)
+                    html_pars[idx]['needs_browser'] = needs_browser or is_lazy
+                    html_pars[idx]['html'] = ("<div id='{}' data-plugin='{}'>{}</div>"
+                                                              .format(val['taskIDExt'],
+                                                                      plugin_url,
+                                                                      html)) if wrap_in_div else html
 
     # taketime("phtml done")
 
