@@ -70,7 +70,6 @@ class DocumentPrinter:
 
         # Remove paragraphs that are not to be printed and replace plugin pars,
         # that have a defined 'print' block in their yaml, with the 'print'-blocks content
-        print("Tutkii kappaleet")
         pars = self._doc_entry.document.get_paragraphs()
         for par in pars:
 
@@ -88,7 +87,6 @@ class DocumentPrinter:
             # Replace plugin- and question pars with regular docpars with the md defined in the 'print' block
             # of their yaml as the md content of the replacement par
             if par.is_plugin() or par.is_question():
-                #print("... parsii pluginia")
                 plugin_yaml = parse_plugin_values(par=par,
                                                   global_attrs=pdoc_plugin_attrs,
                                                   macroinfo=pdoc_macroinfo)
@@ -99,7 +97,6 @@ class DocumentPrinter:
                 if plugin_yaml_print is not None:
                     par = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_print)
 
-        print("Pluginifoi")
         # Dereference pars and render markdown for plugins
         # Only the 1st return value (the pars) is needed here
         par_dicts, _, _, _ = pluginify(doc=self._doc_entry.document,
@@ -112,7 +109,6 @@ class DocumentPrinter:
 
         export_pars = []
 
-        print("Hankkii exp md:t")
         pdoc = self._doc_entry.document
         # Get the markdown for each par dict
         for pd in par_dicts:
@@ -128,7 +124,6 @@ class DocumentPrinter:
             export_pars.append(pd['md'])
 
         content = '\n\n'.join(export_pars)
-        print("Alkaa kirjoittaa pdf:ää")
         # print(content)
         return content
 
