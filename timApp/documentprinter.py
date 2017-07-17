@@ -117,6 +117,8 @@ class DocumentPrinter:
         # Get the markdown for each par dict
         for pd in par_dicts:
             if not pd['is_plugin'] and not pd['is_question']:
+                if pd['md'].startswith('#'):
+                    pd['md'] += ' {{ {} }}'.format(' '.join(['.{}'.format(class_name) for class_name in pd['attrs'].get('classes', [])]))
                 pd['md'] = expand_macros(text=pd['md'],
                                          macros=pdoc_macros,
                                          macro_delimiter=pdoc_macro_delimiter,
@@ -158,7 +160,8 @@ class DocumentPrinter:
             # TODO: getting the path could probably be done with more finesse
             cwd = os.getcwd()
             filters = [os.path.join(cwd, "pandoc-inlinestylesfilter.py"),
-                       os.path.join(cwd, "pandoc-imagefilepathsfilter.py")]
+                       os.path.join(cwd, "pandoc-imagefilepathsfilter.py"),
+                       os.path.join(cwd, "pandoc-headernumberingfilter.py")]
 
             src = self.get_content(plugins_user_print=plugins_user_print)
             try:
