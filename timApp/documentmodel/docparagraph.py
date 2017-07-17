@@ -281,7 +281,7 @@ class DocParagraph:
         """Returns the internal data dictionary."""
         return self.__data
 
-    def _mkhtmldata(self, from_preview: bool = True, include_md: bool = False):
+    def _mkhtmldata(self, from_preview: bool = True, output_md: bool = False):
         """Prepares the internal __htmldata dictionary that contains all the information required for embedding the
         paragraph in HTML."""
         self._cache_props()
@@ -301,13 +301,14 @@ class DocParagraph:
             self.__htmldata['attrs_str'] = self.get_attrs_str()
             self.__htmldata['doc_id'] = self.doc.doc_id
 
-        try:
-            self.__htmldata['html'] = self.get_html(from_preview=from_preview)
-            if not self.__htmldata['html'] or include_md:
-                self.__htmldata['md'] = self.get_markdown()
+        if output_md:
+            self.__htmldata['md'] = self.get_markdown()
+        else:
+            try:
+                self.__htmldata['html'] = self.get_html(from_preview=from_preview)
 
-        except Exception as e:
-            self.__htmldata['html'] = get_error_html(e)
+            except Exception as e:
+                self.__htmldata['html'] = get_error_html(e)
 
         self.__htmldata['cls'] = ' '.join(['par']
                                           + self.get_classes()
@@ -325,9 +326,9 @@ class DocParagraph:
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
         self.__is_setting = 'settings' in self.get_attrs()
 
-    def html_dict(self, include_md: bool = False) -> Dict:
+    def html_dict(self, use_md: bool = False) -> Dict:
         """Returns a dictionary that contains all the information required for embedding the paragraph in HTML."""
-        self._mkhtmldata(include_md)
+        self._mkhtmldata(output_md=use_md)
         return self.__htmldata
 
     def get_doc_id(self) -> int:
