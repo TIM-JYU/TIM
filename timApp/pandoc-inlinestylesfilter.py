@@ -17,7 +17,11 @@ def classes_to_latex_cmds(key, value, fmt, meta):
 
         classes_to_wrap = []
         for c in classes:
-            if c not in ["csl-no-emph", "csl-no-strong", "csl-no-smallcaps"]:
+            if c == 'hidden-print':
+                return []
+	    if c == 'visible-print':
+                continue
+	    if c not in ["csl-no-emph", "csl-no-strong", "csl-no-smallcaps"]:
                 classes_to_wrap.append(c)
 
         # TODO: should preserve also the aforementioned predef styles
