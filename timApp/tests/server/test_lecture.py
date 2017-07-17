@@ -18,12 +18,12 @@ class LectureTest(TimRouteTest):
         start_time = (current_time - datetime.timedelta(minutes=15))
         end_time = (current_time + datetime.timedelta(hours=2))
         lecture_code = 'test lecture'
-        j = self.post('/createLecture', query_string=dict(doc_id=doc.id,
-                                                          end_date=end_time,
-                                                          lecture_code=lecture_code,
-                                                          max_students=50,
-                                                          password='1234',
-                                                          start_date=start_time))
+        j = self.json_post('/createLecture', json_data=dict(doc_id=doc.id,
+                                                            end_time=end_time,
+                                                            lecture_code=lecture_code,
+                                                            max_students=50,
+                                                            password='1234',
+                                                            start_time=start_time))
         lecture_id = j['lectureId']
         self.assertIsInstance(lecture_id, int)
         j = self.get('/checkLecture', query_string=dict(doc_id=doc.id))
@@ -85,12 +85,12 @@ class LectureTest(TimRouteTest):
         db.session.add(aj)
         db.session.flush()
         aq = AskedQuestion(lecture_id=lecture_id,
-                          doc_id=doc.id,
-                          par_id='test',
-                          asked_time=datetime.datetime.now(tz=timezone.utc),
-                          points='1',
-                          asked_json_id=aj.asked_json_id,
-                          expl='testing')
+                           doc_id=doc.id,
+                           par_id='test',
+                           asked_time=datetime.datetime.now(tz=timezone.utc),
+                           points='1',
+                           asked_json_id=aj.asked_json_id,
+                           expl='testing')
         db.session.add(aq)
         la = LectureAnswer(user_id=self.current_user.id,
                            question_id=aq.asked_id,

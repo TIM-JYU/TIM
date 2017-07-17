@@ -20,7 +20,7 @@ from timApp.timdb.useractivity import UserActivity
 class Runningquestion(db.Model):
     __bind_key__ = 'tempdb'
     asked_id = db.Column(db.Integer, primary_key=True)
-    lecture_id = db.Column(db.Integer, primary_key=True)
+    lecture_id = db.Column(db.Integer, primary_key=True)  # TODO should not be part of primary key (asked_id is enough)
     ask_time = db.Column(db.BigInteger, nullable=False)
     end_time = db.Column(db.BigInteger)
 

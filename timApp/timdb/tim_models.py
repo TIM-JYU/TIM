@@ -167,13 +167,19 @@ class Lecture(db.Model):
         return Lecture.query.get(lecture_id)
 
     @property
-    def is_full(self):
+    def max_students(self):
         if not hasattr(self, 'options_parsed'):
             self.options_parsed = json.loads(self.options)
-        max_students = self.options_parsed.get('max_students')
+        m = self.options_parsed.get('max_students')
+        if m is not None:
+            m = int(m)  # TODO is this needed?
+        return m
+
+    @property
+    def is_full(self):
+        max_students = self.max_students
         if max_students is None:
             return False
-        max_students = int(max_students)  # TODO is this needed?
         cnt = LectureUsers.query.filter_by(lecture_id=self.lecture_id).count()
         return cnt >= max_students
 
@@ -189,6 +195,7 @@ class Lecture(db.Model):
             'is_access_code': self.password != "",  # don't expose password to client directly unless explicitly requested with the parameter
             'password': self.password if show_password else None,
             'is_full': self.is_full,
+            'max_students': self.max_students,
         }
 
 

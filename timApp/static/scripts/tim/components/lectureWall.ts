@@ -5,52 +5,18 @@ import {showDialog} from "../dialog";
 import {$http} from "../ngimport";
 
 class LectureWallController implements IController {
-    private static $inject = ["$scope"];
     private messageName: boolean;
     private messageTime: boolean;
-    private msg: string;
     private newMsg: string;
     private readonly messages: IMessage[];
     private readonly lectureId: number;
-    private scope: IScope;
 
-    constructor(scope: IScope) {
-        this.scope = scope;
+    constructor() {
         this.messageName = true;
         this.messageTime = true;
     }
 
     $onInit() {
-        this.scope.$watch(() => this.messages, () => this.showInfo());
-    }
-
-    /**
-     * Depending on what users wants to see on the wall, makes the msg to correct form. Able to show the
-     * name of the sender, time and message. Sender and time are optional.
-     */
-    showInfo() {
-        this.msg = "";
-        if (this.messageName && this.messageTime) {
-            for (const msg of this.messages) {
-                this.msg += msg.sender;
-                this.msg += " <" + msg.time + ">: ";
-                this.msg += msg.message + "\r\n";
-            }
-        } else if (!this.messageName && this.messageTime) {
-            for (const msg of this.messages) {
-                this.msg += " <" + msg.time + ">: ";
-                this.msg += msg.message + "\r\n";
-            }
-        } else if (this.messageName && !this.messageTime) {
-            for (const msg of this.messages) {
-                this.msg += msg.sender + ": ";
-                this.msg += msg.message + "\r\n";
-            }
-        } else if (!this.messageName && !this.messageTime) {
-            for (const msg of this.messages) {
-                this.msg += ">" + msg.message + "\r\n";
-            }
-        }
     }
 
     /**
@@ -93,24 +59,28 @@ timApp.component("timLectureWall", {
         messages: "<",
     },
     controller: LectureWallController,
-    template: `
-<div class="wall-base" id="wallBase">
-    <div class="wall-message-area">
-        <textarea id="wallArea" readonly cols="100">{{$ctrl.msg}}</textarea>
+    template: `<div class="wall-message-area">
+    <ul class="list-unstyled" id="wallArea">
+        <li ng-repeat="m in $ctrl.messages">
+            <span ng-if="$ctrl.messageName">{{m.sender}}</span>
+            <span ng-if="$ctrl.messageTime">&lt;{{m.time}}&gt;</span>
+            <span ng-if="$ctrl.messageTime || $ctrl.messageName">:</span>
+            {{m.message}}
+        </li>
+    </ul>
+</div>
+<div class="wall-footer">
+    <div class="wall-buttons">
+        <input id="messagebox" ng-model="$ctrl.newMsg" width="200"
+               ng-keypress="$ctrl.chatEnterPressed($event)">
     </div>
-    <div class="wall-footer">
-        <div class="wall-buttons">
-            <input id="messagebox" ng-model="$ctrl.newMsg" width="200"
-                   ng-keypress="$ctrl.chatEnterPressed($event)">
-        </div>
-        <div class="wall-info-buttons">
-            <label title="Shows name of the sender">
-                <input type="checkbox" ng-change="$ctrl.showInfo()" ng-model="$ctrl.messageName"/>Name
-            </label>
-            <label title="Shows sending time">
-                <input type="checkbox" ng-change="$ctrl.showInfo()" ng-model="$ctrl.messageTime"/>Time
-            </label>
-        </div>
+    <div class="wall-info-buttons">
+        <label title="Shows name of the sender">
+            <input type="checkbox" ng-model="$ctrl.messageName"/>Name
+        </label>
+        <label title="Shows sending time">
+            <input type="checkbox" ng-model="$ctrl.messageTime"/>Time
+        </label>
     </div>
 </div>
 `,

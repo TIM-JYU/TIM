@@ -11,10 +11,10 @@
             <h1>Now:</h1>
             <div ng-show="lctrl.lectures.length > 0" class="lectureArea">
                 <select ng-change="lctrl.clearChange()" ng-model="lctrl.chosenLecture"
-                        ng-options="lctrl.lecture.lecture_code for lecture in lctrl.lectures">
+                        ng-options="lecture.lecture_code for lecture in lctrl.lectures">
                 </select>
-                {{ lecbtn('log-in', 'Join the lecture', 'lctrl.joinLecture(_,chosenLecture.is_access_code)', 'lctrl.lectureSettings') }}
-                {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(chosenLecture.lecture_code)', 'lctrl.isLecturer') }}
+                {{ lecbtn('log-in', 'Join the lecture', 'lctrl.joinLecture(lctrl.chosenLecture.lecture_code, lctrl.chosenLecture.is_access_code)', 'lctrl.lectureSettings') }}
+                {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(lctrl.chosenLecture.lecture_id)', 'lctrl.isLecturer') }}
                 {{ lecbtn('plus-sign', 'Add new lecture', 'lctrl.toggleLecture()', 'lctrl.isLecturer') }}
             </div>
             <div ng-show="lctrl.lectures.length <= 0">
@@ -32,7 +32,7 @@
             <div id="inLectureIconSection">
                 {{ lecbtn('log-out', 'Leave this lecture', 'lctrl.leaveLecture()', 'lctrl.lectureSettings.inLecture') }}
                 {{ lecbtn('stop', 'End this lecture', 'lctrl.endLecture()', 'lctrl.canStop') }}
-                {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(lctrl.lecture.lecture_code)', 'lctrl.canStop') }}
+                {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(lctrl.lecture.lecture_id)', 'lctrl.canStop') }}
             </div>
         </div>
 
@@ -44,12 +44,12 @@
 
                 <div ng-show="lctrl.futureLectures.length > 0">
                     <select ng-model="lctrl.futureLecture"
-                            ng-options="lecture.lecture_code + ' ' + (lecture.lecture_start | timdate) for lecture in lctrl.futureLectures">
+                            ng-options="lecture.lecture_code + ' ' + (lecture.start_time | timdate) for lecture in lctrl.futureLectures">
                     </select>
                 </div>
-                <div class="iconSection" ng-show="futureLectures.length > 0">
+                <div class="iconSection" ng-show="lctrl.futureLectures.length > 0">
                     {{ lecbtn('play', 'Start lecture now', 'lctrl.startFutureLecture()', 'lctrl.isLecturer') }}
-                    {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(lctrl.futureLecture.lecture_code)', 'lctrl.isLecturer') }}
+                    {{ lecbtn('edit', 'Edit this lecture', 'lctrl.editLecture(lctrl.futureLecture.lecture_id)', 'lctrl.isLecturer') }}
                 </div>
             </div>
         </div>
@@ -66,7 +66,7 @@
         </tim-lecture-wall>
     </div>
 {% endraw %}
-    <pop-up-dialog show="lctrl.pollingStopped && lctrl.lectureSettings.useNotPollingDialog" caption="'Polling paused'" elem-id="'pausedWindow'">
+    <pop-up-dialog show="!lctrl.polling && lctrl.lectureSettings.useNotPollingDialog" caption="'Polling paused'" elem-id="'pausedWindow'">
         <ng-include
                 src="'{{ url_for('static', filename='templates/paused.html') }}'"></ng-include>
     </pop-up-dialog>

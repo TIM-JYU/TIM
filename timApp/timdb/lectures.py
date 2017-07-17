@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Tuple
 
-from timApp.timdb.tim_models import Lecture
+from timApp.timdb.tim_models import Lecture, LectureUsers
 from timApp.timdb.timdbbase import TimDbBase
 import json
 
@@ -144,27 +144,14 @@ class Lectures(TimDbBase):
 
         return True
 
-    def check_if_in_any_lecture(self, user_id: int) -> Tuple[bool, int]:
+    def check_if_in_any_lecture(self, user_id: int) -> List[Lecture]:
         """Checks if the user is in any lecture.
 
         :param user_id: user id
         :return:
 
         """
-
-        cursor = self.db.cursor()
-
-        cursor.execute("""
-                           SELECT lecture_id, user_id
-                           FROM LectureUsers
-                           WHERE user_id = %s
-                            """, [user_id])
-
-        result = cursor.fetchall()
-        if len(result) > 0:
-            return True, result[0][0]
-        else:
-            return False, -1
+        return Lecture.query.join(LectureUsers, LectureUsers.lecture_id == Lecture.lecture_id).filter(LectureUsers.user_id == user_id).with_entities(Lecture).all()
 
     def extend_lecture(self, lecture_id: int, new_end_time: str, commit: bool=True):
         cursor = self.db.cursor()

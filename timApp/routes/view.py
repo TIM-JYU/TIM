@@ -157,9 +157,10 @@ def parse_range(start_index: Union[int, str, None], end_index: Union[int, str, N
 def try_return_folder(item_name):
     timdb = get_timdb()
     user = get_current_user_id()
-    is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(user)
-    if is_in_lecture:
-        is_in_lecture = timApp.routes.lecture.check_if_lecture_is_running(lecture_id)
+    lectures = timdb.lectures.check_if_in_any_lecture(user)
+    is_in_lecture = False
+    if lectures:
+        is_in_lecture = timApp.routes.lecture.check_if_lecture_is_running(lectures[0])
 
     settings = get_user_settings()
 
@@ -292,9 +293,9 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     is_in_lecture = False
     if logged_in():
-        is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user.id)
-        if is_in_lecture:
-            is_in_lecture = timApp.routes.lecture.check_if_lecture_is_running(lecture_id)
+        lectures = timdb.lectures.check_if_in_any_lecture(current_user.id)
+        if lectures:
+            is_in_lecture = timApp.routes.lecture.check_if_lecture_is_running(lectures[0])
 
     # Close database here because we won't need it for a while
     timdb.close()

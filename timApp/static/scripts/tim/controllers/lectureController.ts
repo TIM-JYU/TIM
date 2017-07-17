@@ -17,16 +17,19 @@ import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
 import sessionsettings from "tim/session";
-import {GetURLParameter, setsetting} from "tim/utils";
+import {GetURLParameter, markAsUsed, setsetting} from "tim/utils";
 import {showDialog} from "../dialog";
 import {$http, $log, $rootScope, $timeout, $window} from "../ngimport";
 import {ViewCtrl} from "./view/viewctrl";
 import {showLectureDialog} from "./createLectureCtrl";
+import * as wall from "../components/lectureWall";
 import {
     ILecture, ILectureListResponse, ILecturePerson, ILectureResponse, ILectureSettings,
     IMessage, isLectureListResponse,
 } from "../lecturetypes";
 import {Users} from "../services/userService";
+
+markAsUsed(wall);
 
 function hasLectureEnded(lecture: ILecture) {
     return lecture.end_time < moment();
@@ -44,12 +47,12 @@ export class LectureController implements IController {
     private answeredToLectureEnding: boolean;
     private canStart: boolean;
     private canStop: boolean;
-    private chosenLecture: ILecture;
+    private chosenLecture: ILecture | null;
     private clockOffset: number;
-    private currentPointsId: number;
-    private currentQuestionId: number;
+    private currentPointsId: number | null;
+    private currentQuestionId: number | null;
     private extend: {extendTime: string, choices: number[]};
-    private futureLecture: ILecture;
+    private futureLecture: ILecture | null;
     private futureLectures: ILecture[];
     private gettingAnswers: boolean;
     private lastID: number;
@@ -59,10 +62,9 @@ export class LectureController implements IController {
     private markup: {json: string};
     private newMessagesAmount: number;
     private newMessagesAmountText: string;
-    private passwordQuess: string;
+    private passwordQuess: string | null;
     private polling: boolean;
     private pollingLectures: number[];
-    private pollingStopped: boolean;
     private questionTitle: string;
     private requestOnTheWay: boolean;
     private scope: IScope;
@@ -73,7 +75,7 @@ export class LectureController implements IController {
     private showStudentAnswers: boolean;
     private studentTable: ILecturePerson[];
     private timeout: any;
-    private viewctrl: ViewCtrl;
+    private viewctrl: ViewCtrl | undefined;
     private wallMessages: IMessage[];
     private wallName: string;
 
@@ -156,6 +158,13 @@ export class LectureController implements IController {
         }
     }
 
+    getDocIdOrNull(): number | null {
+        if (this.viewctrl) {
+            return this.viewctrl.docId;
+        }
+        return null;
+    }
+
     /**
      * Makes http request to check if the current user is in lecture.
      * @memberof module:lectureController
@@ -164,7 +173,7 @@ export class LectureController implements IController {
         const response = await $http<ILectureResponse | ILectureListResponse>({
             url: "/checkLecture",
             method: "GET",
-            params: {doc_id: this.viewctrl.docId, buster: new Date().getTime()},
+            params: {doc_id: this.getDocIdOrNull(), buster: new Date().getTime()},
         });
         const answer = response.data;
         let lectureCode = GetURLParameter("lecture");
@@ -181,8 +190,7 @@ export class LectureController implements IController {
             } else {
                 if (tryToAutoJoin && answer.lectures.length > 1) {
                     showDialog("Cannot autojoin a lecture because there are more than one lecture in this document going on.");
-                }
-                if (tryToAutoJoin && answer.lectures.length <= 0) {
+                } else if (tryToAutoJoin && answer.lectures.length <= 0) {
                     showDialog("There are no ongoing lectures for this document.");
                 }
                 return this.showRightView(answer);
@@ -195,12 +203,15 @@ export class LectureController implements IController {
                 url: "/lectureNeedsPassword",
                 method: "GET",
                 params: {
-                    doc_id: this.viewctrl.docId,
+                    doc_id: this.viewctrl!.docId,
                     lecture_code: lectureCode,
                     buster: new Date().getTime(),
                 },
             }).then((resp) => {
                 const needsPassword = resp.data;
+                if (lectureCode === null) {
+                    throw new Error("lectureCode was unexpectedly null");
+                }
                 const changeLecture = this.joinLecture(lectureCode, needsPassword);
                 if (!changeLecture) {
                     this.showRightView(answer);
@@ -253,7 +264,7 @@ export class LectureController implements IController {
             url: "/joinLecture",
             method: "POST",
             params: {
-                doc_id: this.viewctrl.docId,
+                doc_id: this.viewctrl!.docId,
                 lecture_code: lectureCode,
                 password_quess: this.passwordQuess,
                 buster: new Date().getTime(),
@@ -324,6 +335,13 @@ export class LectureController implements IController {
         });
     }
 
+    lectureOrThrow(): ILecture {
+        if (this.lecture === null) {
+            throw new Error("this.lecture was null");
+        }
+        return this.lecture;
+    }
+
     async initEventHandlers() {
         /**
          * Use data.asked_id to reask question.
@@ -389,16 +407,6 @@ export class LectureController implements IController {
         });
 
         /*
-         Event listener for closeLectureForm. Closes lecture form.
-         */
-        this.scope.$on("closeLectureForm", (event, showWall) => {
-            if (showWall) {
-                this.lectureSettings.useWall = true;
-            }
-            this.checkIfInLecture();
-        });
-
-        /*
          Event listener for closeQuestion. Closes question pop-up.
          */
         this.scope.$on("closeQuestion", () => {
@@ -418,20 +426,12 @@ export class LectureController implements IController {
             if (!this.isLecturer) {
                 this.showAnswerWindow = false;
             }
-            /*
-             var mark = "";
-             var answerString = "";
-             angular.forEach(answer.answer, function (singleAnswer) {
-             answerString += mark + singleAnswer;
-             mark = "|";
-             });
-             */
             $http<{questionLate?}>({
                 url: "/answerToQuestion",
                 method: "PUT",
                 params: {
                     asked_id: answer.askedId,
-                    lecture_id: this.lecture.lecture_id,
+                    lecture_id: this.lectureOrThrow().lecture_id,
                     input: {answers: answer.answer},        // 'answer': answerString,
                     buster: new Date().getTime(),
                 },
@@ -453,7 +453,7 @@ export class LectureController implements IController {
                 method: "PUT",
                 params: {
                     asked_id: askedId,
-                    lecture_id: this.lecture.lecture_id,
+                    lecture_id: this.lectureOrThrow().lecture_id,
                     buster: new Date().getTime(),
                 },
             }).then(() => {
@@ -497,8 +497,10 @@ export class LectureController implements IController {
      * @memberof module:lectureController
      */
     async toggleLecture() {
-        await showLectureDialog(this.viewctrl.item);
-        // lecture list is updated via polling - no need to do it here
+        const result = await showLectureDialog(this.viewctrl!.item);
+        if (result !== null) {
+            await this.checkIfInLecture();
+        }
     }
 
     /**
@@ -506,10 +508,13 @@ export class LectureController implements IController {
      * @memberof module:lectureController
      */
     async startFutureLecture() {
+        if (this.futureLecture === null) {
+            throw new Error("futureLecture was null");
+        }
         const response = await $http<ILectureResponse>({
             url: "/startFutureLecture",
             method: "POST",
-            params: {doc_id: this.viewctrl.docId, lecture_code: this.futureLecture.lecture_code},
+            params: {doc_id: this.viewctrl!.docId, lecture_code: this.futureLecture.lecture_code},
         });
         const answer = response.data;
         this.showLectureView(answer);
@@ -530,7 +535,7 @@ export class LectureController implements IController {
      * @param response The lecture to be shown.
      * @memberof module:lectureController
      */
-    showLectureView(response: ILectureResponse) {
+    async showLectureView(response: ILectureResponse) {
         this.lecture = response.lecture;
         this.isLecturer = response.isLecturer;
 
@@ -543,7 +548,7 @@ export class LectureController implements IController {
         this.lectureSettings.useWall = response.useWall;
         this.lectureSettings.useQuestions = response.useQuestions;
 
-        this.getAllMessages();
+        await this.getAllMessages();
 
         if (this.isLecturer) {
             this.canStop = true;
@@ -626,16 +631,17 @@ export class LectureController implements IController {
      * @memberof module:lectureController
      */
     async extendLecture() {
-        const endTimeDate = moment(this.lecture.end_time).add(this.extend.extendTime, "minutes");
+        const lecture = this.lectureOrThrow();
+        const endTimeDate = moment(lecture.end_time).add(this.extend.extendTime, "minutes");
         $log.info("extending lecture");
         this.answeredToLectureEnding = true;
         $log.info(endTimeDate);
         await $http({
             url: "/extendLecture",
             method: "POST",
-            params: {lecture_id: this.lecture.lecture_id, new_end_time: endTimeDate},
+            params: {lecture_id: lecture.lecture_id, new_end_time: endTimeDate},
         });
-        this.lecture.end_time = endTimeDate;
+        lecture.end_time = endTimeDate;
         this.showLectureEnding = false;
         this.lectureEnded = false;
         this.answeredToLectureEnding = false;
@@ -655,27 +661,15 @@ export class LectureController implements IController {
      * Gets lectureInfo and shows editLecture dialog
      * @memberof module:lectureController
      */
-    async editLecture(lectureCode: string) {
-        let params: any = {lecture_code: lectureCode, doc_id: this.viewctrl.docId};
-        if (this.lecture !== null) {
-            params = {lecture_id: this.lecture.lecture_id};
-        }
+    async editLecture(lectureId: string) {
+        let params = {lecture_id: lectureId};
         const response = await $http<ILecture>({
             url: "/showLectureInfoGivenName",
             method: "GET",
             params,
         });
         const lecture = response.data;
-        await showLectureDialog(this.viewctrl.item, {
-            doc_id: this.viewctrl.docId,
-            end_time: lecture.end_time,
-            is_full: lecture.is_full,
-            lecture_code: lecture.lecture_code,
-            lecture_id: lecture.lecture_id,
-            max_students: null, // TODO server doesn't give this
-            password: lecture.password,
-            start_time: lecture.start_time,
-        });
+        await showLectureDialog(this.viewctrl!.item, lecture);
     }
 
     /**
@@ -691,35 +685,13 @@ export class LectureController implements IController {
             const response = await $http<ILectureListResponse>({
                 url: "/endLecture",
                 method: "POST",
-                params: {lecture_id: this.lecture.lecture_id},
+                params: {lecture_id: this.lectureOrThrow().lecture_id},
             });
             const answer = response.data;
             this.showBasicView(answer);
             this.chosenLecture = null;
             $log.info("Lecture ended, not deleted");
         }
-    }
-
-    /**
-     * Sends http request to delete the lecture.
-     * @memberof module:lectureController
-     */
-    deleteLecture() {
-        $http<ILectureListResponse>({
-            url: "/deleteLecture",
-            method: "POST",
-            params: {doc_id: this.viewctrl.docId, lecture_id: this.lecture.lecture_id, buster: new Date().getTime()},
-        })
-            .then((response) => {
-                const answer = response.data;
-                this.showBasicView(answer);
-                this.lectures.splice(this.lecture.lecture_id, 1);
-                this.chosenLecture = null;
-                $log.info("Lecture deleted");
-
-            }, () => {
-                $log.info("Failed to delete the lecture");
-            });
     }
 
     /**
@@ -731,13 +703,11 @@ export class LectureController implements IController {
             url: "/leaveLecture",
             method: "POST",
             params: {
-                lecture_id: this.lecture.lecture_id,
-                doc_id: this.viewctrl.docId,
                 buster: new Date().getTime(),
+                lecture_id: this.lectureOrThrow().lecture_id,
             },
         });
-        const answer = response.data;
-        this.showBasicView(answer);
+        await this.checkIfInLecture();
     }
 
     /**
@@ -748,7 +718,7 @@ export class LectureController implements IController {
         const response = await $http<{lastid, lectureId, data: IMessage[]}>({
             url: "/getAllMessages",
             method: "GET",
-            params: {lecture_id: this.lecture.lecture_id, buster: new Date().getTime()},
+            params: {lecture_id: this.lectureOrThrow().lecture_id, buster: new Date().getTime()},
         });
         const answer = response.data;
         answer.data.forEach((msg) => {
@@ -772,35 +742,25 @@ export class LectureController implements IController {
      * @param answer Lecture to get the answers from.
      * @memberof module:lectureController
      */
-    getLectureAnswers(answer) {
+    async getLectureAnswers(answer) {
         let timeoutLectureAnswers;
         this.gettingAnswers = true;
-        $http<{answers, noAnswer}>({
-            url: "/getLectureAnswers",
-            method: "GET",
+        const response = await $http.get<{answers, noAnswer}>("/getLectureAnswers", {
             params: {
                 asked_id: answer.askedId,
-                doc_id: this.viewctrl.docId,
-                lecture_id: this.lecture.lecture_id,
-                time: answer.latestAnswer,
                 buster: new Date().getTime(),
             },
-        })
-            .then((response) => {
-                const answer = response.data;
-                $rootScope.$broadcast("putAnswers", {answers: answer.answers});
-                if (this.gettingAnswers && !angular.isDefined(answer.noAnswer)) {
-                    $window.clearTimeout(timeoutLectureAnswers);
+        });
+        const respData = response.data;
+        $rootScope.$broadcast("putAnswers", {answers: respData.answers});
+        if (this.gettingAnswers && !angular.isDefined(respData.noAnswer)) {
+            $window.clearTimeout(timeoutLectureAnswers);
 
-                    // Odottaa sekunnin ennen kuin pollaa uudestaan.
-                    timeoutLectureAnswers = setTimeout(() => {
-                        this.getLectureAnswers(answer);
-                    }, 1000);
-                }
-
-            }, () => {
-                $log.info("Couldn't get answers");
-            });
+            // Odottaa sekunnin ennen kuin pollaa uudestaan.
+            timeoutLectureAnswers = setTimeout(() => {
+                this.getLectureAnswers(respData);
+            }, 1000);
+        }
     }
 
     /**
@@ -822,6 +782,9 @@ export class LectureController implements IController {
             $log.info("Poll multiplication prevented");
             return;
         }
+        if (this.lecture === null) {
+            return;
+        }
         this.requestOnTheWay = true;
         $http<{
             isLecture, lectureId, lectureEnding, students,
@@ -832,7 +795,7 @@ export class LectureController implements IController {
             params: {
                 client_message_id: lastID,
                 lecture_id: this.lecture.lecture_id,
-                doc_id: this.viewctrl.docId,
+                doc_id: this.getDocIdOrNull(),
                 is_lecturer: this.isLecturer, // Tarkista mielummin serverin päässä
                 get_messages: this.lectureSettings.useWall,
                 get_questions: this.lectureSettings.useQuestions,
@@ -847,8 +810,11 @@ export class LectureController implements IController {
                 if (isLectureListResponse(answer)) {
                     this.showBasicView(answer);
                     return;
-                } else if (answer.isLecture != -1) {
+                } else if (answer.isLecture !== null) {
                     this.pollingLectures.splice(this.pollingLectures.indexOf(answer.lectureId), 1);
+                    if (this.lecture === null) {
+                        return;
+                    }
                     if (answer.lectureId !== this.lecture.lecture_id) {
                         return;
                     }
@@ -891,6 +857,9 @@ export class LectureController implements IController {
 
                 $window.clearTimeout(timeout);
                 if (this.polling) {
+                    if (this.lecture === null) {
+                        return;
+                    }
                     this.pollingLectures.push(this.lecture.lecture_id);
                     // Odottaa sekunnin ennen kuin pollaa uudestaan.
                     timeout = setTimeout(() => {
@@ -913,7 +882,6 @@ export class LectureController implements IController {
                         $log.info("Sending new poll.");
                     }
                 } else {
-                    this.pollingStopped = true;
                     $log.info("Got answer but not polling anymore.");
                 }
             }, () => {
@@ -970,7 +938,7 @@ export class LectureController implements IController {
             url: "/getQuestionManually",
             method: "GET",
             params: {
-                lecture_id: this.lecture.lecture_id,
+                lecture_id: this.lectureOrThrow().lecture_id,
                 buster: new Date().getTime(),
             },
         });
@@ -993,7 +961,6 @@ export class LectureController implements IController {
             $window.clearTimeout(this.timeout);
         }
         this.polling = true;
-        this.pollingStopped = false;
         this.scope.$apply();
         if (!this.requestOnTheWay) {
             this.startLongPolling(this.lastID);
@@ -1023,7 +990,7 @@ export class LectureController implements IController {
 timApp.component("timLecture", {
     controller: LectureController,
     require: {
-        viewctrl: "^timView",
+        viewctrl: "?^timView",
     },
     template: "<div ng-transclude></div>",
     transclude: true,

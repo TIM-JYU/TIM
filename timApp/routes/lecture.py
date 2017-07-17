@@ -3,6 +3,7 @@ import threading
 import time
 from datetime import timezone, datetime
 
+import dateutil.parser
 from flask import Blueprint, render_template
 from flask import Response
 from flask import abort
@@ -23,7 +24,7 @@ from timApp.routes.qst import get_question_data_from_document, delete_key, creat
 from timApp.sessioninfo import get_current_user_id, logged_in
 from timApp.tim_app import app
 from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.tempdb_models import TempDb
+from timApp.timdb.tempdb_models import TempDb, Runningquestion
 from timApp.timdb.tim_models import db, Message, LectureUsers, AskedQuestion, LectureAnswer, Lecture
 
 lecture_routes = Blueprint('lecture',
@@ -173,7 +174,7 @@ def get_updates():
     lecture = Lecture.query.get(lecture_id)
 
     doc_id = request.args.get("doc_id")
-    if doc_id:
+    if doc_id is not None:
         doc_id = int(doc_id)
     if not lecture or not check_if_lecture_is_running(lecture):
         timdb.lectures.delete_users_from_lecture(lecture_id)
@@ -189,8 +190,6 @@ def get_updates():
 
     time_now = str(datetime.now(timezone.utc).strftime("%H:%M:%S"))
     tempdb.useractivity.update_or_add_activity(lecture_id, current_user, time_now)
-
-    lecture = timdb.lectures.get_lecture(lecture_id)
 
     lecture_ending = 100
 
@@ -249,7 +248,7 @@ def get_updates():
         if use_questions:
             new_question = get_new_question(lecture_id, current_question_id, current_points_id)
             if new_question is not None:
-                lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
+                lecture_ending = check_if_lecture_is_ending(current_user, lecture)
                 resp = {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
                         "lectureId": lecture_id, "isLecture": True, "lecturers": lecturers,
                         "students": students, "lectureEnding": lecture_ending}
@@ -258,7 +257,7 @@ def get_updates():
 
         if len(list_of_new_messages) > 0:
             if lecture and lecture.lecturer == current_user:
-                lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
+                lecture_ending = check_if_lecture_is_ending(current_user, lecture)
                 lecturers, students = get_lecture_users(timdb, tempdb, lecture_id)
             return json_response(
                 {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
@@ -273,7 +272,7 @@ def get_updates():
         step += 1
 
     if lecture and lecture.lecturer == current_user:
-        lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
+        lecture_ending = check_if_lecture_is_ending(current_user, lecture)
 
     if lecture_ending != 100 or len(lecturers) or len(students):
         return json_response(
@@ -318,7 +317,6 @@ def get_new_question(lecture_id, current_question_id=None, current_points_id=Non
             else:
                 return None
         if (not already_shown or force) or (asked_id != current_question_id):
-            ask_time = question.ask_time
             question_json = timdb.questions.get_asked_question(asked_id)[0]["json"]
             answer = timdb.lecture_answers.get_user_answer_to_question(asked_id, current_user)
             tempdb.usersshown.add_user_info(lecture_id, asked_id, current_user)
@@ -327,7 +325,7 @@ def get_new_question(lecture_id, current_question_id=None, current_points_id=Non
                 answer = answer[0]['answer']
             else:
                 answer = ''
-            return {'question': True, 'askedId': asked_id, 'asked': ask_time, 'questionjson': question_json,
+            return {'question': True, 'askedId': question.asked_id, 'asked': question.ask_time, 'questionjson': question_json,
                     "answer": answer}
     else:
         question_to_show_points = tempdb.showpoints.get_currently_shown_points(lecture_id)
@@ -353,20 +351,19 @@ def get_new_question(lecture_id, current_question_id=None, current_points_id=Non
         return None
 
 
-def check_if_lecture_is_ending(current_user, timdb, lecture_id):
+def check_if_lecture_is_ending(current_user, lecture: Lecture):
     """Checks if the lecture is about to end. 1 -> ends in 1 min. 5 -> ends in 5 min. 100 -> goes on atleast for 5 mins.
 
     :param current_user: The current user id.
     :param timdb: The TimDb object.
-    :param lecture_id: The lecture id.
+    :param lecture: The lecture object.
     :return:
 
     """
-    lecture = timdb.lectures.get_lecture(lecture_id)
     lecture_ending = 100
     if lecture.lecturer == current_user:
         time_now = datetime.now(timezone.utc)
-        ending_time = lecture[0].get("end_time")
+        ending_time = lecture.end_time
         time_left = ending_time - time_now
         if time_left.total_seconds() <= 60:
             return 1
@@ -403,32 +400,34 @@ def check_lecture():
     timdb = get_timdb()
     tempdb = get_tempdb()
     current_user = get_current_user_id()
-    is_in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
-    lecture = timdb.lectures.get_lecture(lecture_id)
+    lectures = timdb.lectures.check_if_in_any_lecture(current_user)
+    lecture = lectures[0] if lectures else None
+
     lecturers = []
     students = []
     if lecture:
         if check_if_lecture_is_running(lecture):
             if lecture.lecturer == current_user:
                 is_lecturer = True
-                lecturers, students = get_lecture_users(timdb, tempdb, lecture_id)
+                lecturers, students = get_lecture_users(timdb, tempdb, lecture.lecture_id)
             else:
                 is_lecturer = False
 
             return json_response({
                 "lecture": lecture,
-                "isInLecture": is_in_lecture,
+                "isInLecture": True,
                 "isLecturer": is_lecturer,
                 "lecturers": lecturers,
                 "students": students,
                 **get_lecture_session_data(),
             })
         else:
-            leave_lecture_function(lecture_id)
-            timdb.lectures.delete_users_from_lecture(lecture_id)
-            clean_dictionaries_by_lecture(lecture_id)
-    if 'doc_id' in request.args:
-        return get_running_lectures(int(request.args['doc_id']))
+            leave_lecture_function(lecture.lecture_id)
+            timdb.lectures.delete_users_from_lecture(lecture.lecture_id)
+            clean_dictionaries_by_lecture(lecture.lecture_id)
+    doc_id = request.args.get('doc_id')
+    if doc_id is not None:
+        return get_running_lectures(int(doc_id))
     else:
         return json_response("")
 
@@ -492,7 +491,7 @@ def show_lecture_info(lecture_id):
         abort(400, 'Lecture not found')
 
     doc = DocEntry.find_by_id(lecture.doc_id)
-    in_lecture, lecture_ids = timdb.lectures.check_if_in_any_lecture(get_current_user_id())
+    lectures = timdb.lectures.check_if_in_any_lecture(get_current_user_id())
     settings = get_user_settings()
     return render_template("lectureInfo.html",
                            item=doc,
@@ -500,7 +499,7 @@ def show_lecture_info(lecture_id):
                            lectureCode=lecture.lecture_code,
                            lectureStartTime=lecture.start_time,
                            lectureEndTime=lecture.end_time,
-                           in_lecture=in_lecture,
+                           in_lecture=len(lectures) > 0,
                            settings=settings,
                            translations=doc.translations)
 
@@ -590,27 +589,15 @@ def get_running_lectures(doc_id=None):
 
 @lecture_routes.route('/createLecture', methods=['POST'])
 def create_lecture():
-    # TODO: Check right to create lecture
-    if not request.args.get("doc_id") or not request.args.get("start_date") or not request.args.get(
-            "end_date") or not request.args.get("lecture_code"):
-        abort(400, "Missing parameters")
-    lecture_id = -1
-    if request.args.get("lecture_id"):
-        lecture_id = int(request.args.get("lecture_id"))
-    doc_id = int(request.args.get("doc_id"))
+    doc_id, start_time, end_time, lecture_code = verify_json_params('doc_id', 'start_time', 'end_time', 'lecture_code')
+    start_time = dateutil.parser.parse(start_time)
+    end_time = dateutil.parser.parse(end_time)
+    lecture_id, password, max_students = verify_json_params('lecture_id', 'password', 'max_students', require=False)
     verify_ownership(doc_id)
     timdb = get_timdb()
-    start_time = request.args.get("start_time")
-    end_time = request.args.get("end_time")
-    lecture_code = request.args.get("lecture_code")
-    password = request.args.get("password")
-    if 'max_students' in request.args:
-        max_students = request.args.get('max_students')
-    else:
-        max_students = ''
 
     options = {}
-    if max_students != "":
+    if max_students is not None:
         options['max_students'] = max_students
 
     if not password:
@@ -620,16 +607,15 @@ def create_lecture():
         abort(400, "Can't create two or more lectures with the same name to the same document.")
 
     options = json.dumps(options)
-    if lecture_id < 0:
+    if lecture_id is None:
         lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password,
                                                    options, True)
     else:
         timdb.lectures.update_lecture(lecture_id, doc_id, current_user, start_time, end_time, lecture_code, password,
                                       options)
 
-    current_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+    current_time = datetime.now(timezone.utc)
 
-    # TODO Perform this comparison using datetime objects
     if start_time <= current_time <= end_time:
         timdb.lectures.join_lecture(lecture_id, current_user, True)
     return json_response({"lectureId": lecture_id})
@@ -732,13 +718,13 @@ def join_lecture():
         correct_password = False
 
     joined = False
-    in_lecture, current_lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
+    lectures = timdb.lectures.check_if_in_any_lecture(current_user)
     if not lecture_ended and not lecture_full and correct_password:
         if not logged_in():
             anon_user = log_in_as_anonymous(session)
             current_user = anon_user.id
-        if in_lecture:
-            leave_lecture_function(current_lecture_id)
+        if lectures:
+            leave_lecture_function(lectures[0].lecture_id)
         timdb.lectures.join_lecture(lecture_id, current_user, True)
         joined = True
 
@@ -769,11 +755,10 @@ def join_lecture():
 @lecture_routes.route('/leaveLecture', methods=['POST'])
 def leave_lecture():
     lecture_id = get_option(request, 'lecture_id', None, cast=int)
-    doc_id = get_option(request, 'doc_id', None, cast=int)
-    if not lecture_id or not doc_id:
+    if not lecture_id:
         abort(400)
     leave_lecture_function(lecture_id)
-    return get_running_lectures(doc_id)
+    return ok_response()
 
 
 def leave_lecture_function(lecture_id):
@@ -1030,13 +1015,14 @@ def stop_question():
 @lecture_routes.route("/getLectureAnswers", methods=['GET'])
 def get_lecture_answers():
     """Changing this to long poll requires removing threads."""
-    if not request.args.get('asked_id') or not request.args.get('doc_id') or not request.args.get('lecture_id'):
+    if not request.args.get('asked_id'):
         abort(400, "Bad request")
 
-    verify_ownership(int(request.args.get('doc_id')))
     asked_id = int(request.args.get('asked_id'))
-    lecture_id = int(request.args.get('lecture_id'))
 
+    rq = Runningquestion.query.filter_by(asked_id=asked_id).one()
+    lecture = Lecture.query.get(rq.lecture_id)
+    verify_ownership(lecture.doc_id)
     tempdb = get_tempdb()
 
     step = 0
@@ -1127,9 +1113,10 @@ def close_points():
 def user_in_lecture():
     timdb = get_timdb()
     current_user = get_current_user_id()
-    in_lecture, lecture_id, = timdb.lectures.check_if_in_any_lecture(current_user)
-    if in_lecture:
-        lecture = Lecture.query.get(lecture_id)
+    lectures = timdb.lectures.check_if_in_any_lecture(current_user)
+    in_lecture = False
+    if lectures:
+        lecture = lectures[0]
         in_lecture = lecture and check_if_lecture_is_running(lecture)
     return in_lecture
 

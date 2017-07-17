@@ -192,19 +192,10 @@ export class LectureInfoController implements IController {
         const response = await $http<ILecture>({
             url: "/showLectureInfoGivenName",
             method: "GET",
-            params: {lecture_code: this.lecture.lecture_code, doc_id: this.item.id},
+            params: {lecture_id: this.lecture.lecture_id},
         });
         const lecture = response.data;
-        const lectureNew = await showLectureDialog(this.item, {
-            is_full: lecture.is_full,
-            doc_id: lecture.doc_id,
-            end_time: lecture.end_time,
-            lecture_code: lecture.lecture_code,
-            lecture_id: lecture.lecture_id,
-            max_students: null,
-            password: lecture.password || "",
-            start_time: lecture.start_time,
-        });
+        const lectureNew = await showLectureDialog(this.item, lecture);
         this.lecture = lectureNew;
     }
 
@@ -213,7 +204,7 @@ export class LectureInfoController implements IController {
      * @param userToShow Which users answers to shows. If undefined shows from every user.
      * @memberof module:lectureInfoController
      */
-    async drawCharts(userToShow: IUser = null) {
+    async drawCharts(userToShow: IUser | null = null) {
         for (let p = 0; p < this.points.length; p++) {
             this.points[p] = 0;
         }
@@ -323,7 +314,7 @@ timApp.component("timLectureInfo", {
                 Actions
             </div>
             <div class="panel-body">
-                <button class="timButton" ng-click="lictrl.editLecture(lectureName)">Edit lecture</button>
+                <button class="timButton" ng-click="lictrl.editLecture()">Edit lecture</button>
                 <button class="btn btn-danger" ng-click="lictrl.deleteLecture()">Delete lecture</button>
             </div>
         </div>

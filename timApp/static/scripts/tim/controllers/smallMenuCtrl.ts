@@ -108,7 +108,7 @@ timApp.component("timSmallMenu", {
 </div>
 <div class="smallMenu" ng-show="$ctrl.lctrl.lectureSettings.inLecture">
     <div class="currently">
-        <h2 ng-bind="$ctrl.lctrl.lectureName"></h2>
+        <h2 ng-bind="$ctrl.lctrl.lecture.lecture_code"></h2>
 
         <div class="smallIconSection">
             <button class="timButton btn-lg"
@@ -126,7 +126,7 @@ timApp.component("timSmallMenu", {
                       aria-hidden="true"></span>
             </button>
             <button class="timButton btn-lg"
-                    ng-click="$ctrl.lctrl.editLecture(lectureName)"
+                    ng-click="$ctrl.lctrl.editLecture($ctrl.lctrl.lecture.lecture_id)"
                     title="Edit this lecture"
                     ng-show="$ctrl.lctrl.canStop">
                 <span class="glyphicon glyphicon-edit"

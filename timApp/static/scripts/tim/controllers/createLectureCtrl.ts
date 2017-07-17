@@ -21,13 +21,12 @@ import {$http, $log, $uibModal, $window} from "../ngimport";
  */
 
 export class CreateLectureCtrl implements IController {
-    private static $inject = [];
     private useDate: boolean;
     private useDuration: boolean;
     private dateChosen: boolean;
     private durationChosen: boolean;
-    private durationHour: string;
-    private durationMin: string;
+    private durationHour: number;
+    private durationMin: number;
     private lectureId: number;
     private dateCheck: boolean;
     private dueCheck: boolean;
@@ -36,6 +35,7 @@ export class CreateLectureCtrl implements IController {
     private password: string;
     private maxStudents: number;
     private earlyJoining: boolean;
+    private showEarlyJoin: boolean;
     private dateTimeOptions: EonasdanBootstrapDatetimepicker.SetOptions;
     private startTime: moment.Moment;
     private endTime: moment.Moment;
@@ -46,33 +46,28 @@ export class CreateLectureCtrl implements IController {
     private resolve: {item: IItem, lecture: ILectureFormParams};
 
     constructor() {
-        this.useDate = false;
-        this.useDuration = false;
         this.dateChosen = false;
         this.durationChosen = false;
-        this.durationHour = "";
-        this.durationMin = "";
         this.lectureId = null;
         this.dateCheck = false;
-        this.dueCheck = false;
+        this.showEarlyJoin = true;
         this.errorMessage = "";
         this.lectureCode = "";
         this.password = "";
         this.maxStudents = 100;
-        this.earlyJoining = true;
 
         this.dateTimeOptions = {
             format: "D.M.YYYY HH:mm:ss",
             showTodayButton: true,
         };
         this.startTime = moment();
-        this.dueCheck = true;
         this.earlyJoining = true;
         this.enableDue2();
-
     }
 
     setLecture(data: ILectureFormParams) {
+        this.showEarlyJoin = false;
+        this.earlyJoining = false;
         this.lectureCode = data.lecture_code;
         this.lectureId = data.lecture_id;
         this.startTime = data.start_time;
@@ -81,6 +76,7 @@ export class CreateLectureCtrl implements IController {
         if (data.password !== undefined) {
             this.password = data.password;
         }
+        this.maxStudents = data.max_students;
     }
 
     $onInit() {
@@ -126,8 +122,6 @@ export class CreateLectureCtrl implements IController {
         }
         this.useDate = true;
         this.useDuration = false;
-        this.durationHour = "";
-        this.durationMin = "";
     }
 
     /**
@@ -140,8 +134,8 @@ export class CreateLectureCtrl implements IController {
         this.dueCheck = true;
         this.useDuration = true;
         this.useDate = false;
-        this.durationHour = "02";
-        this.durationMin = "00";
+        this.durationHour = 2;
+        this.durationMin = 0;
     }
 
     /**
@@ -186,18 +180,6 @@ export class CreateLectureCtrl implements IController {
         }
     }
 
-    /**
-     * Checks if the number given is positive.
-     * @param element The value of the element to be validated.
-     * @param val The ID of the input field so user can be notified of the error.
-     * @memberof module:createLectureCtrl
-     */
-    isPositiveNumber(element, val) {
-        if (element === "" || isNaN(element) || element < 0) {
-            this.errorize(val, "Number has to be positive.");
-        }
-    }
-
     creatingNew() {
         return this.lectureId === null;
     }
@@ -229,28 +211,17 @@ export class CreateLectureCtrl implements IController {
             /* Checks that are run if end date is used*/
             if (this.useDate && this.endTime !== null) {
                 if (this.endTime.diff(this.startTime) < 120000) {
-                    this.errorize("endDateDiv", "Lecture has to last at least two minutes.");
+                    this.errorize("endDateDiv", "Lecture has to last at least two minutes a.");
                 }
             }
 
-            /* Check that are run if duration is used. */
+            /* Checks that are run if duration is used. */
             if (this.useDuration) {
-                if (this.durationHour === "") {
-                    this.durationHour = "00";
-                }
-                if (this.durationMin === "") {
-                    this.durationMin = "00";
-                }
-                this.isPositiveNumber(this.durationHour, "durationHour");
-                this.isPositiveNumber(this.durationMin, "durationMin");
-                if (this.durationHour.length <= 0 && this.durationMin.length <= 0) {
-                    this.errorize("durationDiv", "Please give a duration.");
-                }
                 this.endTime = moment(this.startTime)
-                    .add(parseInt(this.durationHour), "hours")
-                    .add(parseInt(this.durationMin));
+                    .add(this.durationHour, "hours")
+                    .add(this.durationMin);
                 if (this.endTime.diff(this.startTime) < 120000) {
-                    this.errorize("durationDiv", "Lecture has to last at least two minutes.");
+                    this.errorize("durationDiv", "Lecture has to last at least two minutes b.");
                 }
             }
             let alertMessage = "";
@@ -262,7 +233,6 @@ export class CreateLectureCtrl implements IController {
             if (lectureEndingInPast && this.creatingNew()) {
                 alertMessage += "Are you sure that the lecture ends in the past or now and will not run?";
             }
-            $log.info(this.errorMessage.length);
             if (alertMessage !== "" && this.errorMessage.length <= 0) {
                 if (!$window.confirm(alertMessage)) {
                     if (lectureStartingInPast) {
@@ -289,11 +259,7 @@ export class CreateLectureCtrl implements IController {
                 end_time: this.endTime,
                 max_students: this.maxStudents,
             };
-            const response = await $http<{lectureId: number}>({
-                url: "/createLecture",
-                method: "POST",
-                params: lectureParams,
-            });
+            const response = await $http.post<{lectureId: number}>("/createLecture", lectureParams);
             if (!this.creatingNew()) {
                 $log.info("Lecture " + response.data.lectureId + " updated.");
             } else {
@@ -337,24 +303,6 @@ export class CreateLectureCtrl implements IController {
                 this.defInputStyle(elementsToRemoveErrorsFrom[i]);
             }
         }
-    }
-
-    /**
-     *  Resets all the values of the form.
-     *  @memberof module:createLectureCtrl
-     */
-    clearForm() {
-        this.lectureCode = "";
-        this.password = "";
-        this.durationMin = "";
-        this.durationHour = "";
-        this.removeErrors();
-        this.useDate = false;
-        this.useDuration = true;
-        this.dateChosen = false;
-        this.durationChosen = false;
-        this.dateCheck = false;
-        this.lectureId = null;
     }
 
     /**

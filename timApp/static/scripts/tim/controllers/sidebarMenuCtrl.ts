@@ -4,6 +4,7 @@ import {timApp} from "tim/app";
 import {Users, UserService} from "../services/userService";
 import {$http, $window} from "../ngimport";
 import {ILecture, ILectureListResponse2} from "../lecturetypes";
+import {ViewCtrl} from "./view/viewctrl";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -25,8 +26,8 @@ export class SidebarMenuCtrl implements IController {
     private leftSide: JQuery;
     private active: number;
     private lastTab: number;
+    private vctrl: ViewCtrl | undefined;
     private bookmarks: {};
-    private docId: number;
 
     constructor() {
         this.currentLecturesList = [];
@@ -107,7 +108,7 @@ export class SidebarMenuCtrl implements IController {
         const response = await $http<ILectureListResponse2>({
             url: "/getAllLecturesFromDocument",
             method: "GET",
-            params: {doc_id: this.docId},
+            params: {doc_id: this.vctrl.docId},
         });
         const lectures = response.data;
         this.currentLecturesList = lectures.currentLectures;
@@ -119,7 +120,7 @@ export class SidebarMenuCtrl implements IController {
 timApp.component("timSidebarMenu", {
     controller: SidebarMenuCtrl,
     require: {
-        lctrl: "?^timLectureView",
+        lctrl: "?^timLecture",
         vctrl: "?^timView",
     },
     template: "<div ng-transclude></div>",

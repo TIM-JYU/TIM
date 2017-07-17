@@ -27,9 +27,8 @@
                         </span>
                     </div>
                 </div>
-                <div id="studentsJoinEarly"><label><input type="checkbox" ng-model="clctrl.earlyJoining">Allow students
-                    to join
-                    15 minutes prior to the start of the lecture.</label></div>
+                <div ng-show="clctrl.showEarlyJoin" id="studentsJoinEarly"><label><input type="checkbox" ng-model="clctrl.earlyJoining">
+                    Allow students to join 15 minutes prior to the start of the lecture.</label></div>
             </div>
         </div>
         <div class="endingTime">
@@ -56,10 +55,10 @@
                 Duration:
                 <div id="durationDiv">
                     <label>Hours:
-                        <input id="durationHour" type="text" name="durationHour" maxlength="2" size="2"
+                        <input type="number" name="durationHour" min="0"
                                ng-model="clctrl.durationHour" ng-disabled="!clctrl.useDuration"/></label>
                     <label>Min:
-                        <input id="durationMin" type="text" name="durationMin" maxlength="3" size="3"
+                        <input type="number" name="durationMin" min="0" max="59"
                                ng-model="clctrl.durationMin" ng-disabled="!clctrl.useDuration"/></label>
                 </div>
             </div>
