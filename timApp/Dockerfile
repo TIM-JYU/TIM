@@ -38,17 +38,11 @@ run apt-get install --no-install-recommends -y texlive-full
 
 # Install pandoc document converter and pypandoc, a python interface for pandoc
 run apt-get install --no-install-recommends -y pandoc
-run apt-get install --no-install-recommends -y python-pandocfilters
-run apt-get install --no-install-recommends -y python3-pandocfilters
 
 # Update pandoc
 run apt-get install --no-install-recommends -y wget
 env PANDOC_URL "https://github.com/jgm/pandoc/releases/download/1.19.1/pandoc-1.19.1-1-amd64.deb"
 run FILE=`mktemp`; wget "$PANDOC_URL" -qO $FILE && dpkg -i $FILE && rm $FILE
-
-# Pandoc uses Python 2 so need to install filters for it too
-run apt-get install -y python-pip
-run pip install pandocfilters -U
 
 run pip3 install wheel
 run pip3 install psycopg2
