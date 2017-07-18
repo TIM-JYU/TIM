@@ -12,16 +12,16 @@ def classes_to_latex_cmds(key, value, fmt, meta):
     if key == 'Span' and fmt == 'latex':
         ([ident, classes, kvs], contents) = value
 
-        #debugging
-        #return Span([ident, classes, kvs], contents)
+        # debugging
+        # return Span([ident, classes, kvs], contents)
 
         classes_to_wrap = []
         for c in classes:
             if c == 'hidden-print':
                 return []
-	    if c == 'visible-print':
+            if c == 'visible-print':
                 continue
-	    if c not in ["csl-no-emph", "csl-no-strong", "csl-no-smallcaps"]:
+            if c not in ["csl-no-emph", "csl-no-strong", "csl-no-smallcaps"]:
                 classes_to_wrap.append(c)
 
         # TODO: should preserve also the aforementioned predef styles
@@ -37,10 +37,10 @@ def wrap_with_latex_cmds(content, classes_to_wrap):
     if len(classes_to_wrap) <= 0:
         return content
     else:
-        #c = classes_to_wrap[0]
-        #if len(classes_to_wrap) == 1:
+        # c = classes_to_wrap[0]
+        # if len(classes_to_wrap) == 1:
         #    return [latex("\\%s{" % c)] + content + [latex("}")]
-        #else:
+        # else:
         #    wrap_with_latex_cmds(content, classes_to_wrap[1:])
         c = classes_to_wrap[0]
         if len(classes_to_wrap) > 1:
@@ -52,6 +52,7 @@ def wrap_with_latex_cmds(content, classes_to_wrap):
 
 def latex(content):
     return RawInline('latex', content)
+
 
 if __name__ == "__main__":
     toJSONFilter(classes_to_latex_cmds)

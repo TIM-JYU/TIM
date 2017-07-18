@@ -18,5 +18,6 @@ def remove_header_numbering(key, value, fmt, meta):
 
         return Header(level, [ident, classes, kvs], contents)
 
+
 if __name__ == "__main__":
     toJSONFilter(remove_header_numbering)

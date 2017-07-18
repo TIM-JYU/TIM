@@ -58,12 +58,13 @@ def init_whitelist():
 
     return [x.strip() for x in content]
 
+
 # Get the os temp directoryls
 TEMP_DIR_PATH = tempfile.gettempdir()
 DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, 'tim-img-dls')
 
-def handle_images(key, value, fmt, meta):
 
+def handle_images(key, value, fmt, meta):
     if key == 'Image' and fmt == 'latex':
         (attrs, alt_text_inlines, target) = value
         (url, title) = target
@@ -93,12 +94,11 @@ def handle_images(key, value, fmt, meta):
         elif (host == "") and os.path.exists(os.path.join(APP_ROOT, path)):
             image_path = os.path.join(APP_ROOT, path)
 
-	elif (host == "") and os.path.exists(os.path.join(IMAGE_ROOT, path)):
-	    image_path = os.path.join(IMAGE_ROOT, path)
+        elif (host == "") and os.path.exists(os.path.join(IMAGE_ROOT, path)):
+            image_path = os.path.join(IMAGE_ROOT, path)
 
         # handle external urls
         else:
-
 
             # Download images from allowed external urls to be attached to the document.
             if host in ALLOWED_EXTERNAL_HOSTS:
@@ -108,13 +108,13 @@ def handle_images(key, value, fmt, meta):
                     os.makedirs(DOWNLOADED_IMAGES_ROOT, )
 
                 # download img to the folder and give the file a random but unique name
-                img_uuid = str(uuid.uuid1()).replace('-', '') # remove hyphens
+                img_uuid = str(uuid.uuid1()).replace('-', '')  # remove hyphens
                 try:
                     _, ext = os.path.splitext(url)
                     img_dl_path = os.path.join(DOWNLOADED_IMAGES_ROOT, img_uuid + ext)
                     urllib.URLopener().retrieve(url, img_dl_path)
 
-                    img_dl_path = img_dl_path.replace('\\', '/') # Ensure UNIX form
+                    img_dl_path = img_dl_path.replace('\\', '/')  # Ensure UNIX form
                     return Image(attrs, alt_text_inlines, [img_dl_path, title])
 
                 except IOError:
