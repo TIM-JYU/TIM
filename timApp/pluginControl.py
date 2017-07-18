@@ -155,7 +155,6 @@ def pluginify(doc: Document,
                 if not task_id.endswith('.'):
                     state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx, 'obj': plugin}
                 state = None
-            user_print = False  # change this somehow what Timantti needs
             plugins[plugin_name][idx] = {"markup": vals,
                                          "state": state,
                                          "taskID": task_id,
