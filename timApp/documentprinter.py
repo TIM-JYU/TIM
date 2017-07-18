@@ -38,8 +38,6 @@ class DocumentPrinter:
 
     def __init__(self, doc_entry: DocEntry, template_to_use: DocEntry):
         self._doc_entry = doc_entry
-        if template_to_use is None:
-            template_to_use = DocumentPrinter.get_default_template(doc_entry)
         self._template_to_use = template_to_use
 
     def get_content(self, plugins_user_print: bool = False) -> str:
