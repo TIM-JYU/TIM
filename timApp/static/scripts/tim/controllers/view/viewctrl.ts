@@ -24,8 +24,9 @@ import {Users} from "../../services/userService";
 import {Document, setActiveDocument} from "./document";
 import {onClick} from "./eventhandlers";
 import {initCssPrint} from "../../cssPrint";
+import * as printctrl from "../printCtrl";
 
-markAsUsed(ngStorage, popupMenu, interceptor);
+markAsUsed(ngStorage, popupMenu, interceptor, printctrl);
 
 timApp.controller("ViewCtrl", [
     "$scope",
