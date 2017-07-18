@@ -19,9 +19,9 @@ markAsUsed(userService);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("SidebarMenuCtrl", ['$scope', 'Users', '$uibModal',
+timApp.controller("SidebarMenuCtrl", ['$scope', '$uibModal',
 
-    function ($scope, Users, $uibModal) {
+    function ($scope, $uibModal) {
         "use strict";
         $scope.currentLecturesList = [];
         $scope.futureLecturesList = [];
