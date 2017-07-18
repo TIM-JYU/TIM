@@ -870,7 +870,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 print(parts)
                 if print_file == "2":
                     return self.wout(json.dumps(parts))
-                s = join_file_parts(p0, parts)
+                s = join_file_parts(parts)
             else:
                 s = get_file_to_output(query, False and print_file)
             slines = ""
