@@ -249,7 +249,7 @@ class DocumentPrinter:
                     continue
 
                 for d in docs:
-                    if has_view_access(d.id):
+                    if has_view_access(d.id) and d.name.find('/Templates/') < 0:
                         # print("Found the document " + d.name)
                         templates.append(d)
 
