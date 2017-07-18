@@ -19,9 +19,9 @@ markAsUsed(userService);
  * @copyright 2015 Timppa project authors
  */
 
-timApp.controller("SidebarMenuCtrl", ["$scope",
+timApp.controller("SidebarMenuCtrl", ['$scope', 'Users', '$uibModal',
 
-    function($scope) {
+    function ($scope, Users, $uibModal) {
         "use strict";
         $scope.currentLecturesList = [];
         $scope.futureLecturesList = [];
@@ -138,5 +138,56 @@ timApp.controller("SidebarMenuCtrl", ["$scope",
                     $log.error("Couldn't fetch the questions");
                 });
         };
-    },
-]);
+
+
+        /**
+         *
+         * @param settings_data : print settings
+         */
+        $scope.printDocument = function (settings_data) {
+            var api_address_for_templates = '/print/templates/' + $window.item.path;
+            $http.get(api_address_for_templates)
+                .then(function success(templates) {
+                    // console.log(JSON.stringify(templatesJSON.data));
+                    $uibModal.open({
+                        templateUrl: '/static/templates/printDialog.html',
+                        controller: 'PrintCtrl',
+                        size: 'md',
+                        resolve: {
+                            document: function () {
+                                return $window.item;
+                            },
+                            templates: function () {
+                                return templates.data;
+                            }
+                        }
+                    })
+                }, function error(response) {
+                    console.log(response.toString());
+                });
+        };
+
+        /**
+         *  Gets print settings
+         *
+        $scope.printDocument = function () {
+            var api_address_for_templates = '/print/getTemplatesJSON/' + $window.item.path;
+            $http.get(api_address_for_templates)
+                .then(function (data) {
+                    console.log(data.data);
+                    $scope.openPrintDialog(data.data);
+                });
+        };*/
+
+        $scope.cssPrint = function () {
+            // FOR DEBUGGING 
+	    // AutoPageBreak();
+
+            window.print();
+
+	    // FOR DEBUGGING
+            // UndoAutoPageBreak();
+        };
+    }
+])
+;

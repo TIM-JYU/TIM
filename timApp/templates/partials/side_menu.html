@@ -22,7 +22,18 @@
             <a href="/settings">Customize TIM</a>
             {% if route and item.rights.manage %}
                 <h5>Document settings</h5>
-                <button class="timButton" ng-click="editSettingsPars()">Edit settings</button>
+                <button class="timButton btn btn-block" ng-click="editSettingsPars()">Edit settings</button>
+            {% endif %}
+            <!-- TODO: check rights -->
+            {% if item %}
+                <h5 style="display: inline-block">Print document</h5>
+                <a style="display: inline-block" href="https://tim.jyu.fi/view/tim/TIM-ohjeet">
+                    <span class="glyphicon glyphicon-question-sign"></span>
+                </a>
+                <button class="timButton btn btn-block" ng-click="printDocument()">Print document</button><br>
+            {% endif %}
+            {% if item %}
+                <button class="timButton btn btn-block" ng-click="cssPrint()">Browser print</button><br>
             {% endif %}
             <div ng-show="lectureSettings.inLecture">
                 <h5>Lecture settings</h5>

@@ -172,7 +172,7 @@ def check(matcher, line):
     return match
 
 
-def get_json_eparam(jso, key1, key2, default):
+def get_json_eparam(jso, key1, key2, default, escape_html_special_chars: bool = True):
     # escaped param
     result = get_json_param(jso, key1, key2, default)
     if (result == None):
@@ -180,7 +180,9 @@ def get_json_eparam(jso, key1, key2, default):
     if type(result) != type(''):
         # print("Ei ollut string: ", result, jso)
         result = '' + str(result)
-    return html.escape(result)
+    if escape_html_special_chars:
+        return html.escape(result)
+    return html.unescape(result)
 
 
 def get_json_param(jso, key1, key2, default):

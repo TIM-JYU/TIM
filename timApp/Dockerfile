@@ -28,6 +28,28 @@ run apt-get install --no-install-recommends -y libmagic1 # python-magic dependen
 run apt-get install --no-install-recommends -y gcc g++
 run apt-get install --no-install-recommends -y libmagickwand-dev
 
+# Install texlive
+#
+# Full install of texlive is needed for the latex-pdf printing functionality, as
+# texlive doesn't have an (MiKTeX/MacTeX-esque) auto-install functionality for missing latex packages
+# i.e. the whole package archive needs to be pre-installed or the set of usable packages needs to be
+# severely limited
+run apt-get install --no-install-recommends -y texlive-full
+
+# Install pandoc document converter and pypandoc, a python interface for pandoc
+run apt-get install --no-install-recommends -y pandoc
+run apt-get install --no-install-recommends -y python-pandocfilters
+run apt-get install --no-install-recommends -y python3-pandocfilters
+
+# Update pandoc
+run apt-get install --no-install-recommends -y wget
+env PANDOC_URL "https://github.com/jgm/pandoc/releases/download/1.19.1/pandoc-1.19.1-1-amd64.deb"
+run FILE=`mktemp`; wget "$PANDOC_URL" -qO $FILE && dpkg -i $FILE && rm $FILE
+
+# Pandoc uses Python 2 so need to install filters for it too
+run apt-get install -y python-pip
+run pip install pandocfilters -U
+
 run pip3 install wheel
 run pip3 install psycopg2
 run pip3 install SQLAlchemy
@@ -42,6 +64,9 @@ run pip3 install pyaml
 run pip3 install ansi2html
 run pip3 install cssutils
 run pip3 install mmh3
+run pip3 install pandocfilters
+run pip3 install pypandoc
+run pip3 install pylatex
 
 run apt-get install --no-install-recommends -y libffi-dev
 env LD_LIBRARY_PATH /usr/local/lib

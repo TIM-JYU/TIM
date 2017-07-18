@@ -1,0 +1,8 @@
+@charset "UTF-8";
+/* Näytä kommentit tulosteessa */
+
+@media print {
+  .notes {
+    display: inherit !important;
+  }
+}

@@ -127,6 +127,7 @@ interface ICSApp extends IModule {
 type Vid = { vid: string; w: any; h: any };
 
 interface ICSAppScope extends IConsolePWDScope {
+    cssPrint: boolean;
     safeApply(fn?: () => any);
     out: {write: Function, writeln: Function, canvas: Element};
     canvasHeight: number;
@@ -949,6 +950,7 @@ csApp.directiveFunction = function(t,isInput) {
 			csApp.set(scope,attrs,"rows",1);
 			csApp.set(scope,attrs,"cols",10);
 			csApp.set(scope,attrs,"maxrows",100);
+			csApp.set(scope,attrs,"cssPrint",false);// For changing code editors to pre-defined paragraphs.
 			csApp.set(scope,attrs,"attrs.bycode");
 			csApp.set(scope,attrs,"placeholder", scope.tiny ? "" : english ? "Write your code here": "Kirjoita koodi tähän:");
 			csApp.set(scope,attrs,"inputplaceholder",english ? "Write your input here": "Kirjoita syöte tähän");
@@ -1095,7 +1097,7 @@ csApp.directiveFunction = function(t,isInput) {
             //scope.out = element[0].getElementsByClassName('console');
             if ( scope.attrs.autorun ) scope.runCodeLink(true);
             scope.editorIndex = 0;
-            if ( scope.editorMode != 0 || scope.editorModes !== "01" ) scope.showOtherEditor(scope.editorMode);
+            if ( scope.editorMode != 0 || scope.editorModes !== "01" || scope.cssPrint) scope.showOtherEditor(scope.editorMode); //Forces code editor to change to pre
             scope.mode = languageTypes.getAceModeType(scope.type,"");
             
             var styleArgs = csApp.getParam(scope,"style-args","");
@@ -1643,7 +1645,7 @@ csApp.Controller = function($scope,$transclude) {
 		// $scope.viewCode = false;
         window.clearInterval($scope.runTimer);
         $scope.closeDocument();
-        // alert("moi");
+        //alert("moi");
         
         if ( $scope.isSage ) {
             await alustaSage($scope, true);
@@ -2357,6 +2359,7 @@ csApp.Controller = function($scope,$transclude) {
         if ( $scope.parson ) {
             $scope.usercode = $scope.getJsParsonsCode();
         }
+
         $scope.parson = null;
         $scope.csparson = null;
         
@@ -2376,8 +2379,17 @@ csApp.Controller = function($scope,$transclude) {
                    '</div>'+
                    */
                    '</div>';
+
+        var cssHtml = '<pre>{{usercode}}</pre>';
+
         var parsonsHtml = '<div class="no-popup-menu"></div>';
-        var html = [editorHtml,aceHtml,parsonsHtml,parsonsHtml];                    
+
+        var html;
+        if ($scope.cssPrint)
+            html = [cssHtml, cssHtml, cssHtml, cssHtml];
+        else
+            html = [editorHtml,aceHtml,parsonsHtml,parsonsHtml];
+
         $scope.mode = languageTypes.getAceModeType($scope.type,"");
         if (typeof editorMode !== 'undefined') $scope.editorMode = editorMode;
         else $scope.editorMode++; 
@@ -2641,7 +2653,6 @@ csApp.Controller = function($scope,$transclude) {
             this.$apply(fn);
         }
     };
-
 };
 
      /* Heh, lisätäänpä fillCircle kontekstiin :) */

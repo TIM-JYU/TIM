@@ -52,6 +52,7 @@ from timApp.routes.login import login_page, logout
 from timApp.routes.manage import manage_page
 from timApp.routes.notes import notes
 from timApp.routes.notify import notify, send_email
+from timApp.routes.print import print_blueprint
 from timApp.routes.qst import qst_plugin
 from timApp.routes.readings import readings
 from timApp.routes.search import search_routes
@@ -97,6 +98,8 @@ app.register_blueprint(notify)
 app.register_blueprint(bookmarks)
 app.register_blueprint(global_notification)
 app.register_blueprint(static_blueprint)
+app.register_blueprint(print_blueprint)
+
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 

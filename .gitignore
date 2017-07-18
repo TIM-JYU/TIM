@@ -37,3 +37,4 @@ yubi.key
 /timApp/modules/Haskell/PluginConstructionKit/
 /timApp/tim_files/
 /tim_logs/
+*.printing_whitelist.*

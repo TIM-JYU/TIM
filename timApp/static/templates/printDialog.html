@@ -1,0 +1,67 @@
+<!-- Controller defined to be PrintCtrl when creating the modal @ SidebarMenuCtrl -->
+
+<div class="modal-header">
+    <button type="button" ng-click="dismissModal()" class="close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title">Printing {{ document.title }}</h4>
+</div>
+<div class="modal-body" id="modal-body">
+    <div ng-show="(templates.length > 0)"></div>
+    <p>The following LaTeX-templates were found that you can use.</p>
+
+    <form id="template-picker">
+        <h5>Please choose a template:</h5>
+        <div class="form-group input-group-sm">
+            <div ng-repeat="item in templates">
+                <div class="radio">
+                    <label>
+                        <input type="radio" ng-model="selectedTemplate.id" ng-value="item.id" name="template-selection">
+                        <span>{{ item.name }} <span ng-show="showPaths">({{ item.path }})</span></span>
+                        <a ng-show="showPaths" ng-href="/view/{{ item.path }}" target="_blank" class="force-hyphenate-link">
+                            <span class="glyphicon glyphicon-pencil"></span>
+                        </a>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <p ng-hide="(templates.length > 0)" class="text-danger">
+        No printing templates were found.
+    </p>
+
+    <div ng-if="notificationmsg" class="alert alert-warning">
+        <strong>Warning!</strong><p>{{ notificationmsg }}</p>
+    </div>
+    <div ng-if="errormsg" class="alert alert-danger">
+        <strong>Error!</strong><p ng-bind-html="errormsg"></p>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <label id="printing-dialog-show-paths">
+        <input type="checkbox" ng-model="showPaths" ng-checked="showPaths">
+        Edit
+    </label>
+    <label class="footerLabel">
+        <input type="checkbox" ng-model="pluginsUserCode" ng-checked="pluginsUserCode">
+        Use user code for plugins
+    </label>
+    <label class="footerLabel">
+        <input type="radio" ng-model="selected.name" value="PDF">
+        PDF
+    </label>
+    <label class="footerLabel">
+        <input type="radio" ng-model="selected.name" value="LaTeX">
+        LaTeX
+    </label>
+    <button class="btn timButton" ng-click="create()">
+        <span ng-show="loading"><i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
+        Creating</span>
+        <span ng-hide="loading">Create</span>
+    </button>
+    <div id="print-success" ng-show="docUrl" class="alert alert-success">
+        <p><span class="glyphicon glyphicon-ok"></span>Creation succeeded! <a ng-href="{{ docUrl }}" target="_blank">View the document.</a></p>
+    </div>
+</div>

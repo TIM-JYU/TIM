@@ -23,6 +23,7 @@ import {$compile, $http, $window, $localStorage, $interval, $timeout, $filter} f
 import {Users} from "../../services/userService";
 import {Document, setActiveDocument} from "./document";
 import {onClick} from "./eventhandlers";
+import {initCssPrint} from "../../cssPrint";
 
 markAsUsed(ngStorage, popupMenu, interceptor);
 
@@ -171,6 +172,7 @@ timApp.controller("ViewCtrl", [
         defineQuestions(sc);
         initReadings(sc);
         defineRefPopup(sc);
+        initCssPrint();
 
         // Call necessary initialization functions below this line. Define any scope functions above this line.
 

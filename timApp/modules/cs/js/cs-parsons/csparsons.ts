@@ -59,7 +59,7 @@ export class CsParsonsWidget {
             this.options.separator = " ";
             type = "span";
         }
-        var words = this.lines
+        var words = this.lines;
         parsonsEditDiv.innerHTML = "";
         for (var i = 0; i < words.length; i++) {
             var div;

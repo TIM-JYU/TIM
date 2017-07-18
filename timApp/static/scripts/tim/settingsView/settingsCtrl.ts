@@ -25,6 +25,13 @@ timApp.controller("SettingsCtrl", ["$scope", function(sc) {
         window.localStorage.clear();
     };
 
+    sc.addPrintSettings = function() {
+        jQuery.get('/static/userPrintSettings.css', function(data) {
+            $('#customCssArea').val(data);
+            $('#customCssArea').serialize();
+        }, 'text');
+    };
+
     $(".docEditor").change(function() {
         sc.style.innerHTML = sc.settings.custom_css;
     });

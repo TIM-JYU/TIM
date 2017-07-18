@@ -224,7 +224,7 @@ class DocParagraph:
         """Returns the internal data dictionary."""
         return self.__data
 
-    def _mkhtmldata(self, from_preview: bool = True):
+    def _mkhtmldata(self, from_preview: bool = True, output_md: bool = False):
         """Prepares the internal __htmldata dictionary that contains all the information required for embedding the
         paragraph in HTML."""
         self._cache_props()
@@ -244,13 +244,14 @@ class DocParagraph:
             self.__htmldata['attrs_str'] = self.get_attrs_str()
             self.__htmldata['doc_id'] = self.doc.doc_id
 
-        try:
-            self.__htmldata['html'] = self.get_html(from_preview=from_preview)
-            if not self.__htmldata['html']:
-                self.__htmldata['md'] = self.get_markdown()
+        if output_md:
+            self.__htmldata['md'] = self.get_markdown()
+        else:
+            try:
+                self.__htmldata['html'] = self.get_html(from_preview=from_preview)
 
-        except Exception as e:
-            self.__htmldata['html'] = get_error_html(e)
+            except Exception as e:
+                self.__htmldata['html'] = get_error_html(e)
 
         self.__htmldata['cls'] = ' '.join(['par']
                                           + self.get_classes()
@@ -268,9 +269,9 @@ class DocParagraph:
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
         self.__is_setting = 'settings' in self.get_attrs()
 
-    def html_dict(self) -> Dict:
+    def html_dict(self, use_md: bool = False) -> Dict:
         """Returns a dictionary that contains all the information required for embedding the paragraph in HTML."""
-        self._mkhtmldata()
+        self._mkhtmldata(output_md=use_md)
         return self.__htmldata
 
     def get_doc_id(self) -> int:
@@ -318,18 +319,19 @@ class DocParagraph:
         """Returns the markdown of this paragraph."""
         return self.__data['md']
 
-    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None) -> str:
+    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None, ignore_errors: bool = False) -> str:
         """Returns the macro-processed markdown for this paragraph.
 
         :param macroinfo: The MacroInfo to use. If None, the MacroInfo is taken from the document that has the
-         paragraph.
+        paragraph.
+        :param ignore_errors: Whether or not to ignore errors when expanding the macros
         :return: The expanded markdown.
 
         """
         if macroinfo is None:
             macroinfo = self.doc.get_settings().get_macroinfo()
         return expand_macros(self.get_markdown(), macroinfo.get_macros(),
-                             macroinfo.get_macro_delimiter())
+                             macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
 
     def get_title(self) -> Optional[str]:
         """Attempts heuristically to return a title for this paragraph.
