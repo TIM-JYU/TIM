@@ -1,13 +1,14 @@
 import angular from "angular";
 import {timApp} from "../app";
+import {$http, $window} from "../ngimport";
 
 /**
  * Created by miimatku on 27.3.2017.
  */
 
-timApp.controller("PrintCtrl", ['$scope', "$http", "$window", 'Users', '$log', '$uibModal', 'document', '$uibModalInstance', '$location', 'templates', '$localStorage',
+timApp.controller("PrintCtrl", ['$scope', '$uibModal', 'document', '$uibModalInstance', '$location', 'templates', '$localStorage',
 
-    function ($scope, $http, $window, $uibModal, Users, $log, document, $uibModalInstance, $location, templates, $localStorage) {
+    function ($scope, $uibModal, document, $uibModalInstance, $location, templates, $localStorage) {
         $scope.dismissModal = function() {
             $uibModalInstance.dismiss();
         };
