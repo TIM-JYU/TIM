@@ -31,14 +31,16 @@ TEMPORARY_PRINTING_FOLDER = os.path.join(DEFAULT_PRINTING_FOLDER, 'tmp')
 TEMPLATES_FOLDER = os.path.join('Templates', 'Printing')
 DEFAULT_TEMPLATE_NAME = 'Default'
 
+
 class PrintingError(Exception):
     pass
 
-class DocumentPrinter:
 
+class DocumentPrinter:
     def __init__(self, doc_entry: DocEntry, template_to_use: DocEntry):
         self._doc_entry = doc_entry
         self._template_to_use = template_to_use
+        self._template_doc = None
 
     def get_content(self, plugins_user_print: bool = False) -> str:
         """
@@ -53,7 +55,6 @@ class DocumentPrinter:
         :return: The TIM documents contents in markdown format. Excludes the paragraphs that have attribute
                  print="false"
         """
-
 
         pdoc_plugin_attrs = self._doc_entry.document.get_settings().global_plugin_attrs()
         pdoc_macroinfo = self._doc_entry.document.get_settings().get_macroinfo(get_current_user_object())
@@ -83,7 +84,8 @@ class DocumentPrinter:
                 plugin_yaml = parse_plugin_values(par=par,
                                                   global_attrs=pdoc_plugin_attrs,
                                                   macroinfo=pdoc_macroinfo)
-                plugin_yaml_print = plugin_yaml.get('markup').get('print') if (plugin_yaml.get('markup') is not None) else None
+                plugin_yaml_print = \
+                    plugin_yaml.get('markup').get('print') if (plugin_yaml.get('markup') is not None) else None
 
                 if plugin_yaml_print is not None:
                     ppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_print)
@@ -107,7 +109,8 @@ class DocumentPrinter:
         for pd in par_dicts:
             if not pd['is_plugin'] and not pd['is_question']:
                 if pd['md'].startswith('#'):
-                    pd['md'] += ' {{ {} }}'.format(' '.join(['.{}'.format(class_name) for class_name in pd['attrs'].get('classes', [])]))
+                    pd['md'] += ' {{ {} }}'.format(
+                        ' '.join(['.{}'.format(class_name) for class_name in pd['attrs'].get('classes', [])]))
                 pd['md'] = expand_macros(text=pd['md'],
                                          macros=pdoc_macros,
                                          macro_delimiter=pdoc_macro_delimiter,
@@ -130,17 +133,23 @@ class DocumentPrinter:
 
         output_bytes = None
 
-        with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file,\
-             tempfile.NamedTemporaryFile(suffix='.' + target_format.value, delete=True) as output_file:
+        with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file, \
+                tempfile.NamedTemporaryFile(suffix='.' + target_format.value, delete=True) as output_file:
 
             if self._template_to_use is None:
                 raise PrintingError("No template chosen for the printing. Printing was cancelled.")
 
-            template_content = DocumentPrinter.parse_template_content(doc_to_print=self._doc_entry, template_doc=self._template_to_use)
-            #print("template-content:\n\n" + template_content)
+            template_content = DocumentPrinter.parse_template_content(doc_to_print=self._doc_entry,
+                                                                      template_doc=self._template_to_use)
+            # print("template-content:\n\n" + template_content)
 
             if template_content is None:
-                raise PrintingError("The content in the template document %s is not valid." % self._template_to_use.path)
+                raise PrintingError(
+                    "The content in the template document %s is not valid." % self._template_to_use.path)
+
+            top_level = 'section'
+            if re.search("^\\\\documentclass\[[^\n]*(book|report)\}", template_content, flags=re.S):
+                top_level = 'chapter'
 
             self._template_doc = self._template_to_use
             template_file.write(bytearray(template_content, encoding='utf-8'))
@@ -157,7 +166,8 @@ class DocumentPrinter:
                                       format='markdown',
                                       to=target_format.value,
                                       outputfile=output_file.name,
-                                      extra_args=['--template=' + template_file.name],
+                                      extra_args=['--template=' + template_file.name, '--variable=TTrue:1',
+                                                  '--variable=T1:1', '--top-level-division=' + top_level],
                                       filters=filters)
                 template_file.seek(0)
                 output_bytes = bytearray(output_file.read())
@@ -181,7 +191,8 @@ class DocumentPrinter:
 
         :param file_type: File format for the output
         :param temp: 
-        :return: 
+        :param plugins_user_print: should print user answers
+        :return:
         """
 
         doc_version = self._doc_entry.document.get_latest_version().get_version()
@@ -227,7 +238,6 @@ class DocumentPrinter:
         if doc_entry is None or current_user is None:
             raise PrintingError("You need to supply both the DocEntry and User to fetch the printing templates.")
 
-
         # print("Crawling up the document tree searching for all accessible templates")
         current_folder = doc_entry.parent
         while current_folder is not None:
@@ -257,7 +267,6 @@ class DocumentPrinter:
 
         return templates
 
-
     @staticmethod
     def get_templates_as_dict(doc_entry: DocEntry, current_user: User):
 
@@ -273,16 +282,15 @@ class DocumentPrinter:
 
         user_templates_list = []
         for t in user_templates:
-            user_templates_list.append({'id':t.id,'path':t.name,'origin':'user','name':t.title})
+            user_templates_list.append({'id': t.id, 'path': t.name, 'origin': 'user', 'name': t.title})
 
         default_templates_list = []
         for t in default_templates:
-            default_templates_list.append({'id':t.id,'path':t.name,'origin':'doctree','name':t.title})
+            default_templates_list.append({'id': t.id, 'path': t.name, 'origin': 'doctree', 'name': t.title})
 
         templates_list = user_templates_list + default_templates_list
 
         return templates_list
-
 
     @staticmethod
     def remove_block_markers(template_md: str) -> str:
@@ -320,7 +328,7 @@ class DocumentPrinter:
     def get_document_version_as_float(self) -> float:
         doc_v = self._doc_entry.document.get_latest_version().get_version()
         doc_v_fst, doc_v_snd = doc_v[0], doc_v[1]
-        return doc_v_fst + doc_v_snd/10
+        return doc_v_fst + doc_v_snd / 10
 
     def get_template_version_as_float(self) -> Optional[float]:
         if self._template_to_use is None:
@@ -328,18 +336,18 @@ class DocumentPrinter:
 
         doc_v = self._template_to_use.document.get_latest_version().get_version()
         doc_v_fst, doc_v_snd = doc_v[0], doc_v[1]
-        return doc_v_fst + doc_v_snd/10
+        return doc_v_fst + doc_v_snd / 10
 
     def get_printed_document_path_from_db(self, file_type: PrintFormat) -> Optional[str]:
         current_doc_version = self.get_document_version_as_float()
         current_template_version = self.get_template_version_as_float()
 
         existing_print = db.session.query(PrintedDoc). \
-            filter(PrintedDoc.doc_id == self._doc_entry.id).\
-            filter(PrintedDoc.template_doc_id == self._template_to_use.id).\
-            filter(PrintedDoc.file_type == file_type.value).\
-            filter(PrintedDoc.doc_version == current_doc_version).\
-            filter(PrintedDoc.template_doc_version == current_template_version).\
+            filter(PrintedDoc.doc_id == self._doc_entry.id). \
+            filter(PrintedDoc.template_doc_id == self._template_to_use.id). \
+            filter(PrintedDoc.file_type == file_type.value). \
+            filter(PrintedDoc.doc_version == current_doc_version). \
+            filter(PrintedDoc.template_doc_version == current_template_version). \
             first()
 
         if existing_print is None or not os.path.exists(existing_print.path_to_file):
