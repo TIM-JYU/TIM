@@ -39,6 +39,8 @@ class PrintingError(Exception):
 class DocumentPrinter:
     def __init__(self, doc_entry: DocEntry, template_to_use: DocEntry):
         self._doc_entry = doc_entry
+        # if template_to_use is None:
+        #    template_to_use = DocumentPrinter.get_default_template(doc_entry)
         self._template_to_use = template_to_use
         self._template_doc = None
 
@@ -136,7 +138,7 @@ class DocumentPrinter:
         with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file, \
                 tempfile.NamedTemporaryFile(suffix='.' + target_format.value, delete=True) as output_file:
 
-            if self._template_to_use is None: 
+            if self._template_to_use is None:
                 raise PrintingError("No template chosen for the printing. Printing was cancelled.")
 
             template_content = DocumentPrinter.parse_template_content(doc_to_print=self._doc_entry,
@@ -161,6 +163,7 @@ class DocumentPrinter:
                        os.path.join(cwd, "pandoc-headernumberingfilter.py")]
 
             src = self.get_content(plugins_user_print=plugins_user_print)
+            print(top_level)
             try:
                 pypandoc.convert_text(source=src,
                                       format='markdown',
