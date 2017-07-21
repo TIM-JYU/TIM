@@ -136,7 +136,7 @@ class DocumentPrinter:
         with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file, \
                 tempfile.NamedTemporaryFile(suffix='.' + target_format.value, delete=True) as output_file:
 
-            if self._template_to_use is None:
+            if self._template_to_use is None: 
                 raise PrintingError("No template chosen for the printing. Printing was cancelled.")
 
             template_content = DocumentPrinter.parse_template_content(doc_to_print=self._doc_entry,
