@@ -940,6 +940,20 @@ def get_heading(query, key, def_elem):
     h = str(h)
     return "<" + def_elem + ">" + h + "</" + def_elem + ">\n"
 
+
+def get_md_heading(query, key, def_elem):
+    if not query:
+        return ""
+    # return "kana"
+    h = get_param(query, key, None)
+    # print("h=",h)
+    if not h:
+        return ""
+    h = str(h)
+    if not def_elem:
+        return h
+    return "\\" + def_elem + "{" + h + "}\n"
+
     # Loppu on liian hidasta koodia, kannattaa muuten vaihtaa järjestys jos tuota vielä käyttää, samoin js-koodissa
     #  st = h.split("!!")  # h4 class="h3" width="23"!!Tehtava 1
     #  elem = def_elem
@@ -969,6 +983,14 @@ def get_surrounding_headers2(query):
     return result, get_heading(query, "footer", 'p class="plgfooter"')
 
 
+def get_surrounding_md_headers2(query, header_style, footer_style):
+    result = get_md_heading(query, "header", header_style)
+    stem = allow(get_param(query, "stem", None))
+    if stem:
+        result += "\n\n" + stem
+    return result, get_md_heading(query, "footer", footer_style)
+
+
 def get_tiny_surrounding_headers(query, inside):
     result = get_heading(query, "header", "h4")
     stem = allow(get_param(query, "stem", None))
@@ -985,6 +1007,16 @@ def get_surrounding_headers(query, inside):
         result += '<p class="stem" >' + stem + '</p>\n'
     result += inside + '\n'
     result += get_heading(query, "footer", 'p class="plgfooter"')
+    return result
+
+
+def get_surrounding_md_headers(query, inside):
+    result = get_md_heading(query, "header", "pluginHeader")
+    stem = allow(get_param(query, "stem", None))
+    if stem:
+        result += "\n\n" + stem
+    result += '\n```\n' + inside + '\n```\n'
+    result += get_md_heading(query, "footer", "plgfooter")
     return result
 
 

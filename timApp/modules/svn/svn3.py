@@ -36,6 +36,7 @@ from fileParams import *  # noqa
 
 PORT = 5000
 
+csstatic = '/service/timApp/modules/cs/static/'
 
 regx_hm = re.compile(r"[ ,/;:.hm]")
 
@@ -131,11 +132,11 @@ def get_image_md(query):
     w = get_clean_param(query, "width", "")
     h = get_clean_param(query, "height", "")
     if w:
-        w = 'width="' + w + '" '
+        w = 'width=' + w + ' '
     if h:
-        h = 'height="' + h + '" '
-    header, footer = get_surrounding_headers2(query)
-    result = header + '<img ' + w + h + 'src="' + url + '">' + footer
+        h = 'height=' + h + ' '
+    header, footer = get_surrounding_md_headers2(query, "pluginHeader", None)
+    result = header + "\n\n" + "![{0}]({1}){{{2}{3}}}".format(footer, url, w, h)
     return result
 
 
@@ -188,6 +189,23 @@ def small__and_list_html(query, duration_template):
         icon = replace_template_param(
             query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon", "/csstatic/book.png")
         s += ' <a href="" target="timdoc">' + icon + di + '</a>'
+    return s
+
+
+def small_and_list_md(query, duration_template):
+    s = replace_template_param(query, '{{stem}}', "stem")
+    di = replace_template_param(query, ' {{videoname}}', "videoname")
+    if di:
+        dur = replace_time_params(query, duration_template)
+        icon = replace_template_param(
+            query, ' \\includegraphics[width=0.1in]{{{{videoicon}}}}',
+            "videoicon", csstatic + "video_small.png")
+        s += '' + icon + di + ' ' + dur + ''
+    di = replace_template_param(query, ' {{doctext}}', "doctext")
+    if di:
+        icon = replace_template_param(
+            query, '\\includegraphics[width=0.1in]{{{{docicon}}}}', "docicon", csstatic + "book.png")
+        s += ' ' + icon + di + ''
     return s
 
 
@@ -261,6 +279,87 @@ def get_video_html(query):
         #    '<video-runner \n##QUERYPARAMS##\n></video-runner>', "##QUERYPARAMS##", query)
         s = '<video-runner ng-cloak>xxxHEXJSONxxx' + hx.decode() + '</list-video-runner>'
         s = make_lazy(s, query, video_html)
+        return s
+
+    url = get_clean_param(query, "file", "")
+    w = get_clean_param(query, "width", "")
+    h = get_clean_param(query, "height", "")
+    if w:
+        w = 'width="' + w + '" '
+    if h:
+        h = 'height="' + h + '" '
+
+    if iframe:
+        return '<iframe class="showVideo" src="' + url + '" ' + w + h + 'autoplay="false" ></iframe>'
+
+        #  result = '<video class="showVideo"
+        #      src="' + url + '" type="video/mp4" ' + w + h + 'autoplay="false" controls="" ></video>'
+    result = '<video class="showVideo" ng-cloak src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
+    return result
+
+
+def small_video_md(query):
+    # Kokeiltu myös listoilla, ei mitattavasti parempi
+    s = '\\smallVideoRunDiv{'
+    s += replace_template_param(query, '\\pluginHeader{{{{header}}}}\n\n', "header")
+    s += '' + small_and_list_md(query, "{{duration}}") + ''
+    s += replace_template_params(query, '\\plgfooter{{{{footer}}}}\n', "footer")
+    s += '}'
+    return s
+
+
+def list_video_md(query):
+    s = '\\listVideoRunDiv{'
+    s += replace_template_param(query, '\\pluginHeader{{{{header}}}}\n\n', "header")
+    s += '\\begin{itemize}\n\\item\n' + small_and_list_md(query, "{{startt}} {{duration}}") + '\\end{itemize}\n'
+    s += replace_template_params(query, '\\plgfooter{{{{footer}}}}\n', "footer")
+    s += '}'
+    return s
+
+
+def video_md(query):
+    s = '\\videoRunDiv{'
+    s += replace_template_param(query, '\\pluginHeader{{{{header}}}}\n\n', "header")
+    s += replace_template_param(query, '\\stem{{{{stem}}}}\n', "stem")
+    s += '''
+\\begin{figure}
+\\centering
+\\includegraphics[width=1.5in]{/service/timApp/modules/cs/static/video.png}
+\\end{figure}
+'''
+    di = replace_template_param(query, ' {{doctext}}', "doctext")
+    # if di:
+    #    icon = replace_template_param(
+    #        query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon", "/csstatic/book.png")
+    #    s += ' <a href="" target="timdoc">' + icon + di + '</a>'
+    s += replace_template_params(query, '\\plgfooter{{{{footer}}}}\n', "footer")
+    s += '}'
+    return s
+
+
+def get_video_md(query):
+    """Muodostaa videon näyttämiseksi tarvittavan MD-koodin.
+
+    :param query: pyynnön paramterit
+    :return: videon html-jono
+
+    """
+    iframe = get_param(query, "iframe", False) or True
+    js = query_params_to_map_check_parts(query)
+    jso = json.dumps(js)
+    hx = binascii.hexlify(jso.encode("UTF8"))
+
+    video_type = get_param(query, "type", "icon")
+    # print ("iframe " + iframe + " url: " + url)
+    video_app = True
+    if video_type == "small":
+        s = small_video_md(query)
+        return s
+    if video_type == "list":
+        s = list_video_md(query)
+        return s
+    if video_app:
+        s = video_md(query)
         return s
 
     url = get_clean_param(query, "file", "")
@@ -430,7 +529,7 @@ def get_md(self, query):
     if is_video:
         if is_template:
             return file_to_string('templates/video/' + tempfile)
-        s = get_video_html(query)
+        s = get_video_md(query)
         return s
 
     # Was none of special, so print the file(s) in query
@@ -445,7 +544,7 @@ def get_md(self, query):
     s = ""
 
     s += get_file_to_output(query, False)
-    # s = get_surrounding_md_headers(query, s)
+    s = get_surrounding_md_headers(query, s)
     return s
 
 

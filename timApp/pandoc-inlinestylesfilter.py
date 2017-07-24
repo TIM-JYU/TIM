@@ -5,10 +5,20 @@ Pandoc filter to convert class values to commands of same name in latex. Leaves
 (should leave...) ids, other, predefined classes and key-values intact.
 """
 
-from pandocfilters import toJSONFilter, Span, RawInline
+from pandocfilters import toJSONFilter, Span, Str, RawInline
 
 
 def classes_to_latex_cmds(key, value, fmt, meta):
+    # open("Output.txt", "a").write("Key:"+key + " fmt:" + fmt + " value:" + str(value) + "\n")
+    if key == 'Str' and fmt == 'latex':
+        if value.startswith("RAWTEX"):
+            cls = value[6:]
+            return RawInline("latex","\\" + cls + "{")
+            # return RawInline("tex", "\\begin(red)")
+        if value == "ENDRAWTEX":
+            return RawInline("latex","}")
+            # return RawInline("tex", "\\end(red)")
+
     if key == 'Span' and fmt == 'latex':
         ([ident, classes, kvs], contents) = value
 
@@ -55,4 +65,5 @@ def latex(content):
 
 
 if __name__ == "__main__":
+    # open("Output.txt", "a").write("Alkaa inlinestylefilter\n")
     toJSONFilter(classes_to_latex_cmds)

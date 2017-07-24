@@ -31,6 +31,7 @@ def qst_reqs():
         # "css": [],dynami
         "angularModule": ["qstApp"],
         "multihtml": True,
+        "multimd": True
     }
 
     return json_response(reqs)
@@ -75,6 +76,33 @@ def qst_multihtml():
     return json_response(multi)
 
 
+@qst_plugin.route("/qst/multimd/", methods=["POST"])
+def qst_multimd():
+    jsondata = request.get_json()
+    multi = []
+    for jso in jsondata:
+        multi.append(qst_get_html(jso, is_review(request)))
+    return json_response(multi)
+
+
+@qst_plugin.route("/qst/mcq/multimd/", methods=["POST"])
+def qst_mcq_multimd():
+    jsondata = request.get_json()
+    multi = []
+    for jso in jsondata:
+        multi.append(mcq_get_md(jso))
+    return json_response(multi)
+
+
+@qst_plugin.route("/qst/mmcq/multimd/", methods=["POST"])
+def qst_mmcq_multimd():
+    jsondata = request.get_json()
+    multi = []
+    for jso in jsondata:
+        multi.append(mmcq_get_md(jso))
+    return json_response(multi)
+
+
 @qst_plugin.route("/qst/qetQuestionMD/", methods=['POST'])
 def get_question_md():
     doc_id, md = verify_json_params('docId', 'text')
@@ -113,9 +141,10 @@ def set_explanation(markup):
     for key in expl:
         try:
             n = int(key)
-            xpl[n+1] = expl[key]
+            xpl[n + 1] = expl[key]
         except ValueError:
             pass
+
 
 NOLAZY = "<!--nolazy-->"
 
@@ -128,6 +157,141 @@ def qst_str(state):
     s = s.replace("''", "-")
     s = s.replace("'", "")
     return s
+
+
+def mcq_get_md(jso):
+    """
+    Gives question in format:
+        \mcq{Onko kuu}{Valitse tosi lause}
+        {|l l|}
+        {
+        \hline $\bigcirc$ & Kuu on lähempänä kuin aurinko \\
+        \hline $\bigcirc$ & Kuu on yhtä iso kuin aurinko \\
+        \hline $\bigcirc$ & Kuu on juustoa \\
+        \hline
+        }
+
+    :param jso: json block to make the markdown or TeX
+    :param review:
+    :return:
+    """
+    info = jso['info']
+    markup = jso['markup']
+    user_print = jso.get('userPrint', False)
+
+    header = markup.get('header', markup.get('headerText', 'Check your understanding'))
+    stem = markup.get('stem', '')
+    texcolumns = markup.get('texcolumns', '|l l|')
+    user_answer = jso.get('state', None)
+    if user_answer is None:
+        user_print = False
+    if user_print:
+        texcolumns = markup.get('texusercolumns', '|l l l|')
+    texhline = markup.get('texhline', '\\hline')
+    if texhline:
+        texhline += ' '
+    choices = markup.get('choices', [])
+    cstr = ''
+    idx = 0
+    for choice in choices:
+        user_mark = ''
+        correct = choice.get('correct', False)
+        reason = ''
+        checked = ' '
+        if user_print:
+            reason = ' & ' + choice.get('reason', '')
+            if idx == user_answer:
+                user_mark = ' \, \\cmark' if correct else ' \, \\xmark'
+                checked = '*'
+        line = texhline + '\\radiobutton' + checked + user_mark + '& ' + choice.get('text', '') + reason + ' \\\\\n'
+        cstr += line
+        idx += 1
+
+    if cstr and texhline:
+        cstr += texhline + '\n'
+
+    result = '''
+\\mcq{{{header}}}{{{stem}}}
+{{{texcolumns}}}
+{{
+{cstr}
+}}
+'''.format(header=header, stem=stem, texcolumns=texcolumns, cstr=cstr)
+
+    return result
+
+
+def mmcq_get_md(jso):
+    """
+    Gives question in format:
+        \mcq{Onko kuu}{Valitse tosi lause}
+        {|l l|}
+        {
+        \hline $\bigcirc$ & Kuu on lähempänä kuin aurinko \\
+        \hline $\bigcirc$ & Kuu on yhtä iso kuin aurinko \\
+        \hline $\bigcirc$ & Kuu on juustoa \\
+        \hline
+        }
+
+    :param jso: json block to make the markdown or TeX
+    :param review:
+    :return:
+    """
+    info = jso['info']
+    markup = jso['markup']
+    user_print = jso.get('userPrint', False)
+
+    header = markup.get('header', markup.get('headerText', 'Check your understanding'))
+    stem = markup.get('stem', '')
+    true_text = markup.get('trueText', 'True')
+    false_text = markup.get('falseText', 'False')
+    correct_mark = markup.get('texcorrectText', '\\cmark')
+    wrong_mark = markup.get('texwrongText', '\\xmark')
+
+    texcolumns = markup.get('texcolumns', '|l c c|')
+    user_answer = jso.get('state', [])
+    if not user_answer:
+        user_print = False
+    if user_print:
+        texcolumns = markup.get('texusercolumns', '|l c c c l|')
+    texhline = markup.get('texhline', '\\hline')
+    if texhline:
+        texhline += ' '
+    choices = markup.get('choices', [])
+    reason = ' & ' + ' ' + ' & ' + ' ' if user_print else ''
+    cstr = texhline + ' & ' + true_text + ' & ' + false_text + reason + ' \\\\\n'
+    idx = 0
+    for choice in choices:
+        correct = choice.get('correct', False)
+        reason = ''
+        leftbox = '\\checkbox'
+        rightbox = '\\checkbox'
+        if user_print and user_answer:
+            ua = None
+            if len(user_answer) >= idx:
+                ua = user_answer[idx]
+            correct_or_wrong_mark = correct_mark if ua == correct else wrong_mark
+            if ua:  leftbox += '*'
+            if ua == False:  rightbox += '*'  # do not replace with not ua because it can be None
+            reason = ' & & '
+            if ua is not None:
+                reason = ' & ' + correct_or_wrong_mark + ' & ' + choice.get('reason', '')
+        line = texhline + choice.get('text', '') + '& ' + leftbox + ' & ' + rightbox + reason + ' \\\\\n'
+        cstr += line
+        idx += 1
+
+    if cstr and texhline:
+        cstr += texhline + '\n'
+
+    result = '''
+\\mcq{{{header}}}{{{stem}}}
+{{{texcolumns}}}
+{{
+{cstr}
+}}
+'''.format(header=header, stem=stem, texcolumns=texcolumns, cstr=cstr)
+
+    return result
 
 
 def qst_get_html(jso, review):
@@ -148,19 +312,17 @@ def qst_get_html(jso, review):
     jso['show_result'] = result
 
     if review:
-        usercode = qst_str(jso.get("state","-"))
+        usercode = qst_str(jso.get("state", "-"))
         s = ""
         result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>' + s + '</div>'
         return result
-
-
 
     attrs = json.dumps(jso)
 
     hx = 'xxxHEXJSONxxx' + binascii.hexlify(attrs.encode("UTF8")).decode()
     attrs = hx
     runner = 'qst-runner'
-    if markup.get('isQuestion',''):
+    if markup.get('isQuestion', ''):
         runner = 'question-runner'
     s = '<' + runner + '>' + attrs + '</' + runner + '>'
     return s

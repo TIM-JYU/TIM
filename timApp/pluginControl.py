@@ -196,8 +196,9 @@ def pluginify(doc: Document,
             continue
         try:
             reqs = json.loads(resp)
-            if plugin_name == 'mmcq':
+            if plugin_name == 'mmcq' or plugin_name == 'mcq':
                 reqs['multihtml'] = True
+                reqs['multimd'] = True
         except ValueError as e:
             for idx in plugin_block_map.keys():
                 html_pars[idx][output_format.value] = get_error_plugin(

@@ -47,7 +47,11 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
         # test cannot process the request properly because it tries to call itself during a request.
         # By using a small timeout value, the test finishes more quickly.
         read_timeout = 30 if plugin != 'qst' else 1
-        request = requests.request(method, plug['host'] + route + "/", data=data,
+        host = plug['host']
+        if route == 'multimd' and (plugin == "mmcq" or plugin == "mcq"):  # hack to handle mcq and mmcq in tim
+            plug = get_plugin('qst')
+            host = plug['host'] + plugin + '/'
+        request = requests.request(method, host + route + "/", data=data,
                                    timeout=(0.5, read_timeout), headers=headers, params=params)
         request.encoding = 'utf-8'
         return request.text

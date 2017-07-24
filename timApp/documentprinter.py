@@ -36,6 +36,33 @@ class PrintingError(Exception):
     pass
 
 
+def add_nonumber(md: str) -> str:
+    """
+    add's {.unnumbered} after every heading line that starts with #
+        Special cases:
+            - many # lines in same md
+                - before #-line there must be at least two cr
+                - split bteween two cr
+            - line statring with # may continue by ordinary line
+                - the unnumbered must be added before first cr
+            - line starting with # may continue next line and have \ at the end
+                 - undefined
+    :param md: markdown to be converted
+    :return: markdown with headings marked as unnumbered
+    """
+    mds = md.split("\n\n")
+    result = ""
+    for m in mds:
+        if m.startswith("#"):
+            ms = m.split("\n")
+            if not ms[0].endswith("\\"):
+                ms[0] += "{.unnumbered}"
+            m = "\n".join(ms)
+        result += m + "\n\n"
+
+    return result
+
+
 class DocumentPrinter:
     def __init__(self, doc_entry: DocEntry, template_to_use: DocEntry):
         self._doc_entry = doc_entry
@@ -86,13 +113,29 @@ class DocumentPrinter:
                 plugin_yaml = parse_plugin_values(par=par,
                                                   global_attrs=pdoc_plugin_attrs,
                                                   macroinfo=pdoc_macroinfo)
+                plugin_yaml_beforeprint = \
+                    plugin_yaml.get('markup').get('-beforeprint') if (plugin_yaml.get('markup') is not None) else None
+
+                if plugin_yaml_beforeprint is not None:
+                    bppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_beforeprint)
+                    pars_to_print.append(bppar)
+
                 plugin_yaml_print = \
                     plugin_yaml.get('markup').get('print') if (plugin_yaml.get('markup') is not None) else None
 
                 if plugin_yaml_print is not None:
                     ppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_print)
+                pars_to_print.append(ppar)
 
-            pars_to_print.append(ppar)
+                plugin_yaml_afterprint = \
+                    plugin_yaml.get('markup').get('-afterprint') if (plugin_yaml.get('markup') is not None) else None
+
+                if plugin_yaml_afterprint is not None:
+                    appar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_afterprint)
+                    pars_to_print.append(appar)
+
+            else:
+                pars_to_print.append(ppar)
 
         # Dereference pars and render markdown for plugins
         # Only the 1st return value (the pars) is needed here
@@ -109,7 +152,31 @@ class DocumentPrinter:
         pdoc = self._doc_entry.document
         # Get the markdown for each par dict
         for pd in par_dicts:
+            md = pd['md']
             if not pd['is_plugin'] and not pd['is_question']:
+                md = expand_macros(text=md,
+                                   macros=pdoc_macros,
+                                   macro_delimiter=pdoc_macro_delimiter,
+                                   env=pdoc_macro_env,
+                                   ignore_errors=True)
+                classes = pd['attrs'].get('classes', [])
+                if len(classes):
+                    endraw = ""
+                    beginraw = ""
+                    nonumber = ""
+                    for cls in classes:
+                        if cls == 'visible-print':
+                            continue
+                        if cls == "nonumber":
+                            nonumber = "{.unnumbered}"
+                        else:
+                            beginraw += "RAWTEX" + cls + "\n\n"
+                            endraw += "\n\nENDRAWTEX"
+                    if nonumber:
+                        md = add_nonumber(md)
+                    md = beginraw + md + endraw
+
+                '''
                 if pd['md'].startswith('#'):
                     pd['md'] += ' {{ {} }}'.format(
                         ' '.join(['.{}'.format(class_name) for class_name in pd['attrs'].get('classes', [])]))
@@ -118,8 +185,8 @@ class DocumentPrinter:
                                          macro_delimiter=pdoc_macro_delimiter,
                                          env=pdoc_macro_env,
                                          ignore_errors=True)
-
-            export_pars.append(pd['md'])
+                '''
+            export_pars.append(md)
 
         content = '\n\n'.join(export_pars)
         # print(content)
@@ -158,12 +225,14 @@ class DocumentPrinter:
 
             # TODO: getting the path could probably be done with more finesse
             cwd = os.getcwd()
-            filters = [os.path.join(cwd, "pandoc-inlinestylesfilter.py"),
-                       os.path.join(cwd, "pandoc-imagefilepathsfilter.py"),
-                       os.path.join(cwd, "pandoc-headernumberingfilter.py")]
+            filters = [
+                os.path.join(cwd, "pandoc-inlinestylesfilter.py"),
+                os.path.join(cwd, "pandoc-imagefilepathsfilter.py"),
+                #  os.path.join(cwd, "pandoc-headernumberingfilter.py")  # handled allready when making md
+                ]
 
             src = self.get_content(plugins_user_print=plugins_user_print)
-            print(top_level)
+            # print(top_level)
             try:
                 pypandoc.convert_text(source=src,
                                       format='markdown',
@@ -193,7 +262,7 @@ class DocumentPrinter:
         Formulates the printing path for the given document
 
         :param file_type: File format for the output
-        :param temp: 
+        :param temp:
         :param plugins_user_print: should print user answers
         :return:
         """
@@ -228,8 +297,8 @@ class DocumentPrinter:
 
             if docs is not None:
                 for d in docs:
-                    if has_view_access(d.id):
-                        print("Found the document " + d.name)
+                    if has_view_access(d.id) and not re.search("/Printing/.*Templates/", d.name):
+                        # print("Found the document " + d.name)
                         templates.append(d)
 
         return templates
@@ -262,7 +331,7 @@ class DocumentPrinter:
                     continue
 
                 for d in docs:
-                    if has_view_access(d.id) and d.name.find('/Templates/') < 0:
+                    if has_view_access(d.id) and not re.search("/Printing/.*Templates/", d.name):
                         # print("Found the document " + d.name)
                         templates.append(d)
 
@@ -274,7 +343,7 @@ class DocumentPrinter:
     def get_templates_as_dict(doc_entry: DocEntry, current_user: User):
 
         try:
-            user_templates = DocumentPrinter.get_all_templates(doc_entry=doc_entry, current_user=current_user)
+            user_templates = DocumentPrinter.get_user_templates(doc_entry=doc_entry, current_user=current_user)
             all_templates = DocumentPrinter.get_all_templates(doc_entry=doc_entry, current_user=current_user)
         except PrintingError as err:
             raise PrintingError(str(err))
@@ -290,6 +359,9 @@ class DocumentPrinter:
         default_templates_list = []
         for t in default_templates:
             default_templates_list.append({'id': t.id, 'path': t.name, 'origin': 'doctree', 'name': t.title})
+
+        user_templates_list.sort(key=lambda x: x['name'])
+        default_templates_list.sort(key=lambda x: x['name'])
 
         templates_list = user_templates_list + default_templates_list
 

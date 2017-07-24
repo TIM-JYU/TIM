@@ -65,6 +65,7 @@ DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, 'tim-img-dls')
 
 
 def handle_images(key, value, fmt, meta):
+    # open("Output.txt", "a").write("Key:" + key + " fmt:" + fmt + " value:" + str(value) + "\n")
     if key == 'Image' and fmt == 'latex':
         (attrs, alt_text_inlines, target) = value
         (url, title) = target
@@ -135,6 +136,8 @@ def handle_images(key, value, fmt, meta):
 
         # Makes sure the paths are in the UNIX form, as that is what LaTeX uses for paths even on Windows
         image_path = image_path.replace('\\', '/')
+        # if len(alt_text_inlines) == 0: # with this it is possible to take the empty caption away
+        #    title = ''                  # but then centered is lost. On should return raw inline TeX
 
         return Image(attrs, alt_text_inlines, [image_path, title])
 
