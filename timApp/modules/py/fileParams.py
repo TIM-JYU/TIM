@@ -1010,12 +1010,13 @@ def get_surrounding_headers(query, inside):
     return result
 
 
-def get_surrounding_md_headers(query, inside):
+def get_surrounding_md_headers(query, inside, extra):
     result = get_md_heading(query, "header", "pluginHeader")
     stem = allow(get_param(query, "stem", None))
     if stem:
         result += "\n\n" + stem
     result += '\n```\n' + inside + '\n```\n'
+    result += extra
     result += get_md_heading(query, "footer", "plgfooter")
     return result
 

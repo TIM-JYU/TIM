@@ -544,7 +544,9 @@ def get_md(self, query):
     s = ""
 
     s += get_file_to_output(query, False)
-    s = get_surrounding_md_headers(query, s)
+    filename = query.jso.get('markup',{}).get('file','')
+    name = filename[filename.rfind('/')+1:]
+    s = get_surrounding_md_headers(query, s, '\\smallhref{' + filename + '}{' + name +'}')
     return s
 
 
