@@ -48,7 +48,7 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
         # By using a small timeout value, the test finishes more quickly.
         read_timeout = 30 if plugin != 'qst' else 1
         host = plug['host']
-        if route == 'multimd' and (plugin == "mmcq" or plugin == "mcq"):  # hack to handle mcq and mmcq in tim
+        if route == 'multimd' and (plugin == "mmcq" or plugin == "mcq"):  # hack to handle mcq and mmcq in tim by qst
             plug = get_plugin('qst')
             host = plug['host'] + plugin + '/'
         request = requests.request(method, host + route + "/", data=data,

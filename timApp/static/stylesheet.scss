@@ -217,6 +217,21 @@ a .glyphicon {
     .border      { border: 1.00pt solid #000000; }
     .radius      { border-radius: 0.3em; }
     .obs         { border: 1.00pt solid #000000; padding: 0.1em; background: #e6e6e6;}
+    img.smallimage {
+        display: inline;
+    }
+    span.button {
+        border: black;
+        border-style: solid;
+        background: lightgray;
+        border-color: black;
+        border-width: 1pt;
+        border-radius: 4pt;
+        padding-left: 3pt;
+        padding-right: 3pt;
+    }
+
+
      /* ready styles end */
 
 

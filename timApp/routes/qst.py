@@ -81,7 +81,7 @@ def qst_multimd():
     jsondata = request.get_json()
     multi = []
     for jso in jsondata:
-        multi.append(qst_get_html(jso, is_review(request)))
+        multi.append(qst_get_md(jso))
     return json_response(multi)
 
 
@@ -326,6 +326,78 @@ def qst_get_html(jso, review):
         runner = 'question-runner'
     s = '<' + runner + '>' + attrs + '</' + runner + '>'
     return s
+
+
+def qst_get_md(jso):
+    result = False
+    info = jso['info']
+    markup = jso['markup']
+    if info and info['max_answers'] and info['max_answers'] <= info.get('earlier_answers', 0):
+        result = True
+    set_explanation(markup)
+    jso['show_result'] = result
+
+    # attrs = json.dumps(jso)
+    usercode = qst_str(jso.get("state", "-"))
+    user_print = jso.get('userPrint', False)
+
+    header = markup.get('header', '')
+    footer = markup.get('footer', '')
+    stem = markup.get('stem', '')
+    stem += '\par' if stem else ''
+    qjson = markup.get('json',{})
+    question_text = qjson.get('questionText','')
+
+    texcolumns = markup.get('texcolumns', 'l l')
+    user_answer = jso.get('state', [])
+    if not user_answer:
+        user_print = False
+    if user_print:
+        texcolumns = markup.get('texusercolumns', '|l c c c l|')
+    texhline = markup.get('texhline', '')
+    if texhline:
+        texhline += ' '
+    rows = qjson.get('rows', [])
+    reason = ' & ' + ' ' + ' & ' + ' ' if user_print else ''
+    cstr = texhline + ' & ' + reason + ' \\\\\n'
+    cstr = ''
+    expl = markup.get('expl', {})
+    idx = 0
+    for row in rows:
+        correct = '' # choice.get('correct', False)
+        exp = expl.get(str(idx+1),'')
+        reason = ''
+        leftbox = '\\radiobutton'
+        rightbox = '\\checkbox'
+        if user_print and user_answer:
+            ua = None
+            if len(user_answer) >= idx:
+                ua = user_answer[idx]
+            correct_or_wrong_mark = ''
+            if ua:  leftbox += '*'
+            if ua == False:  rightbox += '*'  # do not replace with not ua because it can be None
+            reason = ' & & '
+            if ua is not None:
+                reason = ' & ' + correct_or_wrong_mark + ' & ' + exp
+        line = texhline + leftbox+ ' & ' + row  + reason + ' \\\\\n'
+        cstr += line
+        idx += 1
+
+    if cstr and texhline:
+        cstr += texhline + '\n'
+
+    result = '''
+\\qst{{{header}}}{{{stem}}}
+{{{question_text}}}
+{{{texcolumns}}}
+{{
+{cstr}
+}}
+{{{footer}}}
+    '''.format(header=header, stem=stem, question_text=question_text, texcolumns=texcolumns, cstr=cstr, footer=footer)
+
+    return result
+
 
 
 def question_convert_js_to_yaml(md):

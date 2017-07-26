@@ -24,6 +24,7 @@ from timApp.timdb.models.printeddoc import PrintedDoc
 from timApp.timdb.models.user import User
 from timApp.timdb.printsettings import PrintFormat
 from timApp.timdb.tim_models import db
+from timApp.plugin import get_value
 
 FILES_ROOT = os.path.abspath('tim_files')
 DEFAULT_PRINTING_FOLDER = os.path.join(FILES_ROOT, 'printed_documents')
@@ -70,6 +71,7 @@ class DocumentPrinter:
         #    template_to_use = DocumentPrinter.get_default_template(doc_entry)
         self._template_to_use = template_to_use
         self._template_doc = None
+        self._macros = {}
 
     def get_content(self, plugins_user_print: bool = False) -> str:
         """
@@ -90,6 +92,7 @@ class DocumentPrinter:
         pdoc_macro_delimiter = pdoc_macroinfo.get_macro_delimiter()
         pdoc_macros = pdoc_macroinfo.get_macros()
         pdoc_macro_env = create_environment(pdoc_macro_delimiter)
+        self._macros = pdoc_macros
 
         # Remove paragraphs that are not to be printed and replace plugin pars,
         # that have a defined 'print' block in their yaml, with the 'print'-blocks content
@@ -113,23 +116,17 @@ class DocumentPrinter:
                 plugin_yaml = parse_plugin_values(par=par,
                                                   global_attrs=pdoc_plugin_attrs,
                                                   macroinfo=pdoc_macroinfo)
-                plugin_yaml_beforeprint = \
-                    plugin_yaml.get('markup').get('-beforeprint') if (plugin_yaml.get('markup') is not None) else None
-
+                plugin_yaml_beforeprint = get_value(plugin_yaml.get('markup'), 'texbeforeprint')
                 if plugin_yaml_beforeprint is not None:
                     bppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_beforeprint)
                     pars_to_print.append(bppar)
 
-                plugin_yaml_print = \
-                    plugin_yaml.get('markup').get('print') if (plugin_yaml.get('markup') is not None) else None
-
+                plugin_yaml_print = get_value(plugin_yaml.get('markup'), 'texprint')
                 if plugin_yaml_print is not None:
                     ppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_print)
                 pars_to_print.append(ppar)
 
-                plugin_yaml_afterprint = \
-                    plugin_yaml.get('markup').get('-afterprint') if (plugin_yaml.get('markup') is not None) else None
-
+                plugin_yaml_afterprint = get_value(plugin_yaml.get('markup'), 'texafterprint')
                 if plugin_yaml_afterprint is not None:
                     appar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_afterprint)
                     pars_to_print.append(appar)
@@ -232,6 +229,10 @@ class DocumentPrinter:
                 ]
 
             src = self.get_content(plugins_user_print=plugins_user_print)
+            ftop = self._macros.get('texforcetoplevel', None)
+            if ftop:
+                top_level = ftop
+
             # print(top_level)
             try:
                 pypandoc.convert_text(source=src,

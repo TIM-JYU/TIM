@@ -15,6 +15,23 @@ from timApp.utils import parse_yaml, merge
 date_format = '%Y-%m-%d %H:%M:%S'
 
 
+def get_value(values, key, default=None):
+    """
+    Gets the value either from key or -key
+    :param values: dict where to find
+    :param key: key to use
+    :param default: value returned if key not found from either of key or -key
+    :return: value for key, -key or default
+    """
+    if not values:
+        return default
+    if key in values:
+        return values.get(key, default)
+    if '-' + key in values:
+        return values.get('-' + key, default)
+    return default
+
+
 class Plugin:
     deadline_key = 'deadline'
     starttime_key = 'starttime'
@@ -27,6 +44,7 @@ class Plugin:
         self.values = values
         self.type = plugin_type
         self.par = par
+        self.points_rule_cache = None  # cache for points rule
 
     @property
     def full_task_id(self):
@@ -97,31 +115,30 @@ class Plugin:
         return doc_id, task_id_name, par_id
 
     def deadline(self, default=None):
-        return self.get_date(self.values.get(self.deadline_key, default))
+        return self.get_date(get_value(self.values, self.deadline_key, default))
 
     def starttime(self, default=None):
-        return self.get_date(self.values.get(self.starttime_key, default))
+        return self.get_date(get_value(self.values, self.starttime_key, default))
 
-    def points_rule(self, default=None):
-        pr = self.values.get(self.points_rule_key, default)
-        if pr:
-            return pr
-        return self.values.get("-" + self.points_rule_key, default)
+    def points_rule(self):
+        if self.points_rule_cache is None:
+            self.points_rule_cache = get_value(self.values, self.points_rule_key, {})
+        return self.points_rule_cache
 
     def max_points(self, default=None):
-        return self.points_rule({}).get('maxPoints', default)
+        return self.points_rule().get('maxPoints', default)
 
     def user_min_points(self, default=None):
-        return self.points_rule({}).get('allowUserMin', default)
+        return self.points_rule().get('allowUserMin', default)
 
     def user_max_points(self, default=None):
-        return self.points_rule({}).get('allowUserMax', default)
+        return self.points_rule().get('allowUserMax', default)
 
     def answer_limit(self):
-        return self.values.get(self.answer_limit_key, self.limit_defaults.get(self.type))
+        return get_value(self.values, self.answer_limit_key, self.limit_defaults.get(self.type))
 
     def points_multiplier(self, default=1):
-        return self.points_rule({}).get('multiplier', default)
+        return self.points_rule().get('multiplier', default)
 
     def validate_points(self, points: Union[str, float]):
         try:
@@ -139,7 +156,8 @@ class Plugin:
     def to_paragraph(self) -> DocParagraph:
         text = '```\n' + yaml.dump(self.values) + '\n```'
         if self.task_id:
-            return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs={'taskId': self.task_id, 'plugin': self.type})
+            return DocParagraph.create(self.par.doc, par_id=self.par.get_id(),
+                                       md=text, attrs={'taskId': self.task_id, 'plugin': self.type})
         else:
             return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs={'plugin': self.type})
 
@@ -199,8 +217,7 @@ def parse_plugin_values(par: DocParagraph,
 
     :param par: The plugin paragraph.
     :param global_attrs: Global (Document) attributes.
-    :param macros: Document macros.
-    :param macro_delimiter: Document macro delimiter.
+    :param macroinfo: Document macros, Document macro delimiter.
     :return: The parsed markup values.
     """
     try:
@@ -209,7 +226,7 @@ def parse_plugin_values(par: DocParagraph,
         yaml_str = expand_macros(par_md[par_md.index('\n') + 1:par_md.rindex('\n')],
                                  macros=macroinfo.get_macros(),
                                  macro_delimiter=macroinfo.get_macro_delimiter())
-        #print("yaml str is: " + yaml_str)
+        # print("yaml str is: " + yaml_str)
         values = parse_yaml(yaml_str)
         if type(values) is str:
             return {'error': "YAML is malformed: " + values}
