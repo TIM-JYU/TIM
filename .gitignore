@@ -38,3 +38,4 @@ yubi.key
 /timApp/tim_files/
 /tim_logs/
 *.printing_whitelist.*
+temp
