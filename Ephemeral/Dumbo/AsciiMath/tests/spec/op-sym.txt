@@ -1,0 +1,24 @@
+# Operation symbols
++
+-
+*
+**
+***
+//
+\\
+xx
+-:
+@
+o+
+ox
+o.
+sum
+prod
+^^
+^^^
+vv
+vvv
+nn
+nnn
+uu
+uuu

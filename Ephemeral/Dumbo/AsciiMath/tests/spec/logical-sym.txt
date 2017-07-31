@@ -1,0 +1,13 @@
+# Logical symbols
+and
+or
+not
+=>
+if
+iff
+AA
+EE
+_|_
+TT
+|--
+|==

@@ -17,7 +17,6 @@ cabal-version:       >=1.10
 
 executable Dumbo
   main-is:             Dumbo.hs
-  -- other-modules:       
   -- other-extensions:    
   build-depends:       
         base
@@ -38,6 +37,7 @@ executable Dumbo
       , yaml
       , lens-aeson
       , texmath
+      , AsciiMath
   -- hs-source-dirs:      
   default-language:    Haskell2010
 

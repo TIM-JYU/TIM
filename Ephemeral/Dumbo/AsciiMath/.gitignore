@@ -1,0 +1,5 @@
+*.swp
+dist/
+pandoc-asciimath
+asciimath
+.stack-work

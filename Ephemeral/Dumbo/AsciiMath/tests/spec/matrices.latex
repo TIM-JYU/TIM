@@ -1,0 +1,3 @@
+# Matrices
+\begin{bmatrix}a & b \\ c & d\end{bmatrix}
+\begin{pmatrix}a & b \\ c & d\end{pmatrix}
