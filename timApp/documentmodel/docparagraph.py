@@ -518,7 +518,9 @@ class DocParagraph:
                 continue
             cached = par.__data.get('h')
             try:
-                auto_macros = par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
+                auto_number_start = settings.auto_number_start()
+                auto_macros = par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache,
+                                                        auto_number_start)
             except RecursionError:
                 raise TimDbException(
                     'Infinite recursion detected in get_auto_macro_values; the document may be broken.')
@@ -573,7 +575,7 @@ class DocParagraph:
                 self.__data['attrs']['classes'] = []
             self.__data['attrs']['classes'].append(class_name)
 
-    def get_auto_macro_values(self, macros, macro_delim, auto_macro_cache, heading_cache):
+    def get_auto_macro_values(self, macros, macro_delim, auto_macro_cache, heading_cache, auto_number_start):
         """Returns the auto macros values for the current paragraph. Auto macros include things like current
         heading/table/figure numbers.
 
@@ -581,6 +583,7 @@ class DocParagraph:
          in that paragraph.
         :param macros: Macros to apply for the paragraph.
         :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
+        :param auto_number_start: first heading start number
         :return: Auto macro values as a dict.
         :param macro_delim: Delimiter for macros.
         :return: A dict(str, dict(int,int)) containing the auto macro information.
@@ -594,10 +597,12 @@ class DocParagraph:
 
         prev_par = self.doc.get_previous_par(self)
         if prev_par is None:
-            prev_par_auto_values = {'h': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
+            autonumber_start = auto_number_start
+            prev_par_auto_values = {'h': {1: autonumber_start, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
             heading_cache[self.get_id()] = []
         else:
-            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
+            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache,
+                                                                  auto_number_start)
 
         if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber'):
             auto_macro_cache[key] = prev_par_auto_values

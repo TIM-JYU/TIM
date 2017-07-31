@@ -86,6 +86,13 @@ def remove_p(s):
     return rs[:-4]
 
 
+def call_mock_dumbo_s(s):
+    s = s.replace('`', '')
+    s = s.replace('#', '\\#')
+    s = s.replace('%', '\\%')
+    return s
+
+
 def list_to_dumbo(markup_list):
     i = 0
     for val in markup_list:
@@ -102,9 +109,9 @@ def list_to_dumbo(markup_list):
         if not val.startswith("md:"):
             continue
 
-        v = [val[3:]]
-        v = call_dumbo(v)
-        markup_list[ic] = remove_p(v[0])
+        v = val[3:]
+        v = call_mock_dumbo_s(v)
+        markup_list[ic] = v
 
 
 def dict_to_dumbo(pm):
@@ -122,9 +129,9 @@ def dict_to_dumbo(pm):
 
         if not val.startswith("md:"):
             continue
-        v = [val[3:]]
-        v = call_dumbo(v)
-        pm[mkey] = remove_p(v[0])
+        v = val[3:]
+        v = call_mock_dumbo_s(v)
+        pm[mkey] = v
 
 
 def convert_md_old(plugin_data):
@@ -147,6 +154,15 @@ def convert_md(plugin_data):
             p['markup'] = h
 
 
+def convert_tex(plugin_data):
+    if type(plugin_data) is dict:
+        dict_to_dumbo(plugin_data)
+        return
+    for p in plugin_data:
+        pm = p["markup"]
+        dict_to_dumbo(pm)
+
+
 def render_plugin_multi(doc: Document, plugin, plugin_data, params=None,
                         plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML):
     if params is not None:
@@ -154,7 +170,10 @@ def render_plugin_multi(doc: Document, plugin, plugin_data, params=None,
             p.update(params)
 
     if doc.get_settings().plugin_md():
-        convert_md(plugin_data)
+        if plugin_output_format == PluginOutputFormat.HTML:
+            convert_md(plugin_data)
+        else:
+            convert_tex(plugin_data)
 
     return call_plugin_generic(plugin,
                                'post',

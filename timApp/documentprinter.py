@@ -240,7 +240,8 @@ class DocumentPrinter:
                                       to=target_format.value,
                                       outputfile=output_file.name,
                                       extra_args=['--template=' + template_file.name, '--variable=TTrue:1',
-                                                  '--variable=T1:1', '--top-level-division=' + top_level],
+                                                  '--variable=T1:1', '--top-level-division=' + top_level,
+                                                  '--default-image-extension=extension=pipe_tables'],
                                       filters=filters)
                 template_file.seek(0)
                 output_bytes = bytearray(output_file.read())

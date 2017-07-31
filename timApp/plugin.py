@@ -32,6 +32,23 @@ def get_value(values, key, default=None):
     return default
 
 
+def get_num_value(values, key, default=None):
+    """
+    Gets the value either from key or -key
+    :param values: dict where to find
+    :param key: key to use
+    :param default: value returned if key not found from either of key or -key
+    :return: value for key, -key or default
+    """
+    value = get_value(values, key, default)
+    # noinspection PyBroadException
+    try:
+        float(value)
+    except:
+        value = default
+    return value
+
+
 class Plugin:
     deadline_key = 'deadline'
     starttime_key = 'starttime'

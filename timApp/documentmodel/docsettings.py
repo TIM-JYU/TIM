@@ -14,6 +14,7 @@ class DocSettings:
     macro_delimiter_key = 'macro_delimiter'
     source_document_key = 'source_document'
     auto_number_headings_key = 'auto_number_headings'
+    auto_number_start_key = 'auto_number_start'
     heading_format_key = 'heading_format'
     show_task_summary_key = 'show_task_summary'
     no_question_auto_numbering_key = 'no_question_auto_numbering'
@@ -124,6 +125,9 @@ class DocSettings:
 
     def auto_number_headings(self) -> bool:
         return self.__dict.get(self.auto_number_headings_key, False)
+
+    def auto_number_start(self) -> int:
+        return self.__dict.get(self.auto_number_start_key, False)
 
     def heading_format(self) -> dict:
         defaults = {1: '{h1}. {text}',
