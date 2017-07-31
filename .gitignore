@@ -39,3 +39,4 @@ yubi.key
 /tim_logs/
 *.printing_whitelist.*
 temp
+/timApp/Output.txt
