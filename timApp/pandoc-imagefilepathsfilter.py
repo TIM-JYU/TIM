@@ -16,14 +16,15 @@ TODO: BETTER DOCUMENTATION
 """
 import os
 import tempfile
-import urllib
-import uuid
+import urllib.request
 
-from timApp.defaultconfig import FILES_PATH
+from defaultconfig import FILES_PATH
+from documentmodel.randutils import hashfunc
 
 from pandocfilters import toJSONFilter, RawInline, Image, Link, Str
 
 # This of course, requires that this module resides in the timApp root folder
+
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 IMAGE_ROOT = os.path.join(APP_ROOT, FILES_PATH, 'blocks')
@@ -58,14 +59,12 @@ def init_whitelist():
 
     return [x.strip() for x in content]
 
-
 # Get the os temp directoryls
 TEMP_DIR_PATH = tempfile.gettempdir()
 DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, 'tim-img-dls')
 
-
 def handle_images(key, value, fmt, meta):
-    # open("Output.txt", "a").write("Key:" + key + " fmt:" + fmt + " value:" + str(value) + "\n")
+
     if key == 'Image' and fmt == 'latex':
         (attrs, alt_text_inlines, target) = value
         (url, title) = target
@@ -97,25 +96,28 @@ def handle_images(key, value, fmt, meta):
 
         elif (host == "") and os.path.exists(os.path.join(IMAGE_ROOT, path)):
             image_path = os.path.join(IMAGE_ROOT, path)
+            # open("Output.txt", "a").write("host: " + host + "\n")
 
         # handle external urls
         else:
-
             # Download images from allowed external urls to be attached to the document.
             if host in ALLOWED_EXTERNAL_HOSTS:
 
                 # create folder for image dls, if it does not exist already
                 if not os.path.exists(DOWNLOADED_IMAGES_ROOT):
-                    os.makedirs(DOWNLOADED_IMAGES_ROOT, )
+                    os.makedirs(DOWNLOADED_IMAGES_ROOT)
 
-                # download img to the folder and give the file a random but unique name
-                img_uuid = str(uuid.uuid1()).replace('-', '')  # remove hyphens
+                # download img to the folder and give the file a unique name (hash the url)
+                img_uid = hashfunc(url)
                 try:
                     _, ext = os.path.splitext(url)
-                    img_dl_path = os.path.join(DOWNLOADED_IMAGES_ROOT, img_uuid + ext)
-                    urllib.URLopener().retrieve(url, img_dl_path)
+                    img_dl_path = os.path.join(DOWNLOADED_IMAGES_ROOT, str(img_uid) + ext)
 
-                    img_dl_path = img_dl_path.replace('\\', '/')  # Ensure UNIX form
+                    if not os.path.exists(img_dl_path):
+                        urllib.request.urlretrieve(url, img_dl_path)
+                        # urllib.URLopener().retrieve(url, img_dl_path)
+
+                    img_dl_path = img_dl_path.replace('\\', '/') # Ensure UNIX form for pandoc
                     return Image(attrs, alt_text_inlines, [img_dl_path, title])
 
                 except IOError:
@@ -136,8 +138,6 @@ def handle_images(key, value, fmt, meta):
 
         # Makes sure the paths are in the UNIX form, as that is what LaTeX uses for paths even on Windows
         image_path = image_path.replace('\\', '/')
-        # if len(alt_text_inlines) == 0: # with this it is possible to take the empty caption away
-        #    title = ''                  # but then centered is lost. On should return raw inline TeX
 
         return Image(attrs, alt_text_inlines, [image_path, title])
 

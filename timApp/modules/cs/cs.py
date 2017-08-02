@@ -231,7 +231,16 @@ def get_md(ttype, query):
     if "csconsole" in ttype:  # erillinen konsoli
         r = "cs-console"
 
-    s = '\\begin{verbatim}\n' + usercode + '\n\\end{verbatim}'
+    # s = '\\begin{verbatim}\n' + usercode + '\n\\end{verbatim}'
+    header = get_param(query, "header", "")
+    stem = get_param(query, "stem", "")
+    footer = get_param(query, "footer", "")
+
+    s = '\\begin{taskenv}{' + header + '}{' + stem + '}{'+footer + '}' +\
+        '\\lstset{language=[Sharp]C, numbers=left}\n' +\
+        '\\begin{lstlisting}\n' +\
+        usercode + '\n' +\
+        '\end{lstlisting}\end{taskenv}'
 
     return s
 

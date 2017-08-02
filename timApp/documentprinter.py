@@ -234,6 +234,7 @@ class DocumentPrinter:
                 top_level = ftop
 
             # print(top_level)
+            # TODO: add also variables from texpandocvariables document setting
             try:
                 pypandoc.convert_text(source=src,
                                       format='markdown',

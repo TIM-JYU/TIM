@@ -155,6 +155,16 @@ def convert_md(plugin_data):
 
 
 def convert_tex(plugin_data):
+    if isinstance(plugin_data, dict):
+        plugin_data['markup'] = call_dumbo(plugin_data['markup'], '/latexkeys')
+    elif isinstance(plugin_data, list):
+        markups = [p['markup'] for p in plugin_data]
+        html_markups = call_dumbo(markups, '/latexkeys')
+        for p, h in zip(plugin_data, html_markups):
+            p['markup'] = h
+
+
+def convert_tex_mock(plugin_data):
     if type(plugin_data) is dict:
         dict_to_dumbo(plugin_data)
         return

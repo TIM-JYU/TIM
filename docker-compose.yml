@@ -118,7 +118,7 @@ services:
  prebuilt_dumbo:
   image: timimages/prebuilt:latest
   volumes:
-   - ./Ephemeral/Dumbo/dist/build/Dumbo:/target
+   - ./Ephemeral/Dumbo/dist/build/DumboOld:/target
   command: "cp /bin/Dumbo /target/"
  prebuilt_haskellplugins:
   image: timimages/prebuilt:latest

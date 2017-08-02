@@ -72,7 +72,8 @@
 
   .paragraphs pre code {
     word-wrap: break-word;
-    white-space: normal !important;
+    /* white-space: normal !important; */
+    white-space: pre-wrap !important;
   }
 
   h1 {
