@@ -222,7 +222,7 @@ def get_md(ttype, query):
     usercode = None
     user_print = get_json_param(query.jso, "userPrint", None,  False)
     if user_print:
-        usercode = get_json_eparam(query.jso, "state", "usercode", None)
+        usercode = get_json_eparam(query.jso, "state", "usercode", None, False)
     if usercode is None:
         usercode = bycode
 
@@ -236,10 +236,10 @@ def get_md(ttype, query):
     stem = get_param(query, "stem", "")
     footer = get_param(query, "footer", "")
 
-    s = '\\begin{taskenv}{' + header + '}{' + stem + '}{'+footer + '}' +\
+    s = '\\begin{taskenv}{' + str(header) + '}{' + str(stem) + '}{'+str(footer) + '}' +\
         '\\lstset{language=[Sharp]C, numbers=left}\n' +\
         '\\begin{lstlisting}\n' +\
-        usercode + '\n' +\
+        str(usercode) + '\n' +\
         '\end{lstlisting}\end{taskenv}'
 
     return s
@@ -612,7 +612,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 ttype = 'parsons'
             check_fullprogram(query, True)
             if multimd:
-                s = get_md(ttype, query)
+                # noinspection PyBroadException
+                try:
+                    s = get_md(ttype, query)
+                except Exception as ex:
+                    print("ERROR: " + str(ex) + " " + json.dumps(query))
+                    continue
             else:
                 s = get_html(ttype, query)
             # print(s)

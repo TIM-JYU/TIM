@@ -69,12 +69,17 @@ def print_document(doc_path):
     template_doc = DocEntry.find_by_id(template_doc_id)
     type = PrintFormat[file_type.upper()]
 
-    if not plugins_user_print and \
-        check_print_cache(doc_entry=doc,
-                          template=template_doc,
-                          file_type=type,plugins_user_print=plugins_user_print) is not None:
+    existing_doc = check_print_cache(doc_entry=doc, template=template_doc, file_type=type,
+                                     plugins_user_print=plugins_user_print)
 
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+    print_access_url = '{}?file_type={}&template_doc_id={}&plugins_user_code={}'.format(
+        request.url,
+        str(type.value).lower(),
+        template_doc_id,
+        plugins_user_print)
+
+    if existing_doc is not None and not plugins_user_print: # never cache user print
+        return json.dumps({'success': True, 'url': print_access_url}), 200, {'ContentType': 'application/json'}
 
     if os.environ.get('TIM_HOST', None) != request.url_root:
         os.environ['TIM_HOST'] = request.url_root
@@ -93,7 +98,13 @@ def print_document(doc_path):
         print("Error occurred: " + str(err))
         abort(400, str(err)) #TODO: maybe there's a better error code?
 
-    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+    print_access_url = '{}?file_type={}&template_doc_id={}&plugins_user_code={}'.format(
+        request.url,
+        str(type.value).lower(),
+        template_doc_id,
+        plugins_user_print)
+
+    return json.dumps({'success': True, 'url': print_access_url}), 201, {'ContentType': 'application/json'}
 
 
 @print_blueprint.route("/<path:doc_path>", methods=['GET'])
@@ -155,6 +166,16 @@ def get_templates(doc_path):
     templates = DocumentPrinter.get_templates_as_dict(doc, user)
     return jsonify(templates)
 
+@print_blueprint.route("/hash/<path:doc_path>", methods=['GET'])
+def get_hash(doc_path):
+    doc = g.doc_entry
+    user = g.user
+    template_doc = DocEntry.find_by_id(50)
+
+    printer = DocumentPrinter(doc_entry=doc, template_to_use=template_doc)
+    return printer.hash_doc_print(plugins_user_print=True)
+
+
 
 def get_mimetype_for_format(file_type: PrintFormat):
     if file_type == PrintFormat.PDF:
@@ -181,13 +202,13 @@ def check_print_cache(doc_entry: DocEntry,
 
     printer = DocumentPrinter(doc_entry=doc_entry, template_to_use=template)
 
-    if plugins_user_print:
-        path = printer.get_print_path(file_type=file_type, plugins_user_print=plugins_user_print)
-        if path is not None and os.path.exists(path):
-            return path
-        return None
+    # if plugins_user_print:
+    #     path = printer.get_print_path(file_type=file_type, plugins_user_print=plugins_user_print)
+    #     if path is not None and os.path.exists(path):
+    #         return path
+    #     return None
 
-    path = printer.get_printed_document_path_from_db(file_type=file_type)
+    path = printer.get_printed_document_path_from_db(file_type=file_type, plugins_user_print=plugins_user_print)
     if path is not None and os.path.exists(path):
         return path
 
@@ -234,15 +255,12 @@ def create_printed_doc(doc_entry: DocEntry,
         with open(path, mode='wb') as doc_file:
             doc_file.write(printer.write_to_format(target_format=file_type, plugins_user_print=plugins_user_print))
 
-        doc_version = printer.get_document_version_as_float()
-
-        if plugins_user_print:
-            return path
+        #  if plugins_user_print:
+        #    return path
 
         p_doc = PrintedDoc(doc_id=doc_entry.document.doc_id,
-                           doc_version=doc_version,
                            template_doc_id = printer._template_to_use.document.doc_id,
-                           template_doc_version = printer.get_template_version_as_float(),
+                           version=printer.hash_doc_print(plugins_user_print=plugins_user_print),
                            path_to_file=path,
                            file_type = file_type.value,
                            temp=temp)

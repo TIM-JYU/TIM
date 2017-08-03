@@ -13,6 +13,7 @@ from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import dereference_pars
 from timApp.documentmodel.macroinfo import MacroInfo
+from documentmodel.randutils import hashfunc
 from timApp.markdownconverter import expand_macros, create_environment
 from timApp.plugin import parse_plugin_values
 from timApp.pluginControl import pluginify
@@ -71,6 +72,8 @@ class DocumentPrinter:
         #    template_to_use = DocumentPrinter.get_default_template(doc_entry)
         self._template_to_use = template_to_use
         self._template_doc = None
+        self._content = None
+        self._print_hash = None
         self._macros = {}
 
     def get_content(self, plugins_user_print: bool = False) -> str:
@@ -87,6 +90,8 @@ class DocumentPrinter:
                  print="false"
         """
 
+        if self._content is not None:
+            return self._content
         pdoc_plugin_attrs = self._doc_entry.document.get_settings().global_plugin_attrs()
         pdoc_macroinfo = self._doc_entry.document.get_settings().get_macroinfo(get_current_user_object())
         pdoc_macro_delimiter = pdoc_macroinfo.get_macro_delimiter()
@@ -186,6 +191,7 @@ class DocumentPrinter:
             export_pars.append(md)
 
         content = '\n\n'.join(export_pars)
+        self._content = content
         # print(content)
         return content
 
@@ -270,12 +276,21 @@ class DocumentPrinter:
         :return:
         """
 
+        """ # Old version
         doc_version = self._doc_entry.document.get_latest_version().get_version()
         print("Document id: %s, version (%s, %s)" % (self._doc_entry.document.doc_id, doc_version[0], doc_version[1]))
         path = os.path.join(TEMPORARY_PRINTING_FOLDER if temp else DEFAULT_PRINTING_FOLDER,
                             self._doc_entry.name +
                             ('-' + get_current_user_object().name if plugins_user_print else '') +
                             "." + file_type.value)
+        """
+        print_hash = self.hash_doc_print(plugins_user_print=plugins_user_print)
+
+        # print("Document id: %s, version (%s, %s)" % (self._doc_entry.document.doc_id, doc_version[0], doc_version[1]))
+        path = os.path.join(DEFAULT_PRINTING_FOLDER,
+                            str(self._doc_entry.id),
+                            str(self._template_to_use.id),
+                            str(print_hash) + "." + file_type.value)
 
         return path
 
@@ -416,17 +431,27 @@ class DocumentPrinter:
         doc_v_fst, doc_v_snd = doc_v[0], doc_v[1]
         return doc_v_fst + doc_v_snd / 10
 
-    def get_printed_document_path_from_db(self, file_type: PrintFormat) -> Optional[str]:
-        current_doc_version = self.get_document_version_as_float()
-        current_template_version = self.get_template_version_as_float()
+    def hash_doc_print(self, plugins_user_print: bool = False) -> str:
+        content = str(self._doc_entry.last_modified) + str(self._template_to_use.id) + " " +\
+            str(self._template_to_use.last_modified)
+        if plugins_user_print:
+            content += str(plugins_user_print)
+        # self.get_content(plugins_user_print=plugins_user_print)
+        return hashfunc(content)
+
+    def get_printed_document_path_from_db(self, file_type: PrintFormat, plugins_user_print: bool = False) ->\
+            Optional[str]:
+        #  current_doc_version = self.get_document_version_as_float()
+        #  current_template_version = self.get_template_version_as_float()
 
         existing_print = db.session.query(PrintedDoc). \
             filter(PrintedDoc.doc_id == self._doc_entry.id). \
             filter(PrintedDoc.template_doc_id == self._template_to_use.id). \
             filter(PrintedDoc.file_type == file_type.value). \
-            filter(PrintedDoc.doc_version == current_doc_version). \
-            filter(PrintedDoc.template_doc_version == current_template_version). \
+            filter(PrintedDoc.version == self.hash_doc_print(plugins_user_print=plugins_user_print)). \
             first()
+        # filter(PrintedDoc.doc_version == current_doc_version). \
+        # filter(PrintedDoc.template_doc_version == current_template_version). \
 
         if existing_print is None or not os.path.exists(existing_print.path_to_file):
             return None

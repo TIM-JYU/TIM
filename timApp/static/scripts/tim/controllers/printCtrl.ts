@@ -85,8 +85,10 @@ timApp.controller("PrintCtrl", ['$scope', '$uibModal', 'document', '$uibModalIns
                         // Uncomment this line to automatically open the created doc in a popup tab.
                         // $scope.openURLinNewTab(requestURL);
 
-                        $scope.docUrl = '/print/' + $scope.document.path + '?file_type=' + fileType
-                            + '&template_doc_id=' + chosenTemplateId + '&plugins_user_code=' + pluginsUserCode;
+                        // $scope.docUrl = '/print/' + $scope.document.path + '?file_type=' + fileType
+                        //    + '&template_doc_id=' + chosenTemplateId + '&plugins_user_code=' + pluginsUserCode;
+                        $scope.docUrl = response.data.url;
+                        // console.log($scope.docUrl);
 
                         $scope.loading = false;
 
