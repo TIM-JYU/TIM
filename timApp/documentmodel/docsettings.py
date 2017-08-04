@@ -84,8 +84,10 @@ class DocSettings:
     def css(self):
         return self.__dict.get(self.css_key)
 
-    def get_macroinfo(self, user=None) -> MacroInfo:
-        return MacroInfo(macro_map=self.__dict.get(self.macros_key, {}),
+    def get_macroinfo(self, user=None, key=None) -> MacroInfo:
+        if not key:
+            key=self.macros_key
+        return MacroInfo(macro_map=self.__dict.get(key, {}),
                          macro_delimiter=self.get_macro_delimiter(),
                          user=user)
 

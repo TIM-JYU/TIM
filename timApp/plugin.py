@@ -56,7 +56,7 @@ class Plugin:
     answer_limit_key = 'answerLimit'
     limit_defaults = {'mmcq': 1}
 
-    def __init__(self, task_id: Optional[str], values: dict, plugin_type: str, par: Optional[DocParagraph]=None):
+    def __init__(self, task_id: Optional[str], values: dict, plugin_type: str, par: Optional[DocParagraph] = None):
         self.task_id = task_id
         self.values = values
         self.type = plugin_type
@@ -80,7 +80,7 @@ class Plugin:
         return d
 
     @staticmethod
-    def from_task_id(task_id: str, user: Optional[User]=None):
+    def from_task_id(task_id: str, user: Optional[User] = None):
         doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id)
         doc = Document(doc_id)
         if par_id is not None:
@@ -98,7 +98,7 @@ class Plugin:
         return Plugin.from_paragraph(par, user)
 
     @staticmethod
-    def from_paragraph(par: DocParagraph, user: Optional[User]=None):
+    def from_paragraph(par: DocParagraph, user: Optional[User] = None):
         doc = par.doc
         if not par.is_plugin():
             raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
@@ -226,23 +226,25 @@ class PluginException(Exception):
     pass
 
 
-def parse_plugin_values(par: DocParagraph,
-                        global_attrs: Dict[str, str],
-                        macroinfo: MacroInfo) -> Dict:
+def parse_plugin_values_macros(par: DocParagraph,
+                               global_attrs: Dict[str, str],
+                               macros: Dict[str, str],
+                               macro_delimiter: str) -> Dict:
     """
     Parses the markup values for a plugin paragraph, taking document attributes and macros into account.
 
     :param par: The plugin paragraph.
     :param global_attrs: Global (Document) attributes.
-    :param macroinfo: Document macros, Document macro delimiter.
+    :param macros: Dict of macros
+    :type macro_delimiter: delimiter for macros
     :return: The parsed markup values.
     """
     try:
         # We get the yaml str by removing the first and last lines of the paragraph markup
         par_md = par.get_markdown()
         yaml_str = expand_macros(par_md[par_md.index('\n') + 1:par_md.rindex('\n')],
-                                 macros=macroinfo.get_macros(),
-                                 macro_delimiter=macroinfo.get_macro_delimiter())
+                                 macros=macros,
+                                 macro_delimiter=macro_delimiter)
         # print("yaml str is: " + yaml_str)
         values = parse_yaml(yaml_str)
         if type(values) is str:
@@ -259,3 +261,9 @@ def parse_plugin_values(par: DocParagraph,
             return {"markup": values}
     except Exception as e:
         return {'error': "Unknown error: " + str(e)}
+
+
+def parse_plugin_values(par: DocParagraph,
+                        global_attrs: Dict[str, str],
+                        macroinfo: MacroInfo) -> Dict:
+    return parse_plugin_values_macros(par, global_attrs, macroinfo.get_macros(), macroinfo.get_macro_delimiter())

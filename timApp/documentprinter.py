@@ -26,13 +26,14 @@ from timApp.timdb.models.user import User
 from timApp.timdb.printsettings import PrintFormat
 from timApp.timdb.tim_models import db
 from timApp.plugin import get_value
+from timApp.plugin import parse_plugin_values_macros
 
 FILES_ROOT = os.path.abspath('tim_files')
 DEFAULT_PRINTING_FOLDER = os.path.join(FILES_ROOT, 'printed_documents')
 TEMPORARY_PRINTING_FOLDER = os.path.join(DEFAULT_PRINTING_FOLDER, 'tmp')
 TEMPLATES_FOLDER = os.path.join('Templates', 'Printing')
 DEFAULT_TEMPLATE_NAME = 'Default'
-
+TEX_MACROS_KEY = "texmacros"
 
 class PrintingError(Exception):
     pass
@@ -97,10 +98,11 @@ class DocumentPrinter:
         pdoc_macro_delimiter = pdoc_macroinfo.get_macro_delimiter()
         pdoc_macros = pdoc_macroinfo.get_macros()
         pdoc_macro_env = create_environment(pdoc_macro_delimiter)
+        pdoc_macros.update(self._doc_entry.document.get_settings().get_macroinfo(key=TEX_MACROS_KEY).get_macros())
         self._macros = pdoc_macros
 
         # Remove paragraphs that are not to be printed and replace plugin pars,
-        # that have a defined 'print' block in their yaml, with the 'print'-blocks content
+        # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
         pars = self._doc_entry.document.get_paragraphs()
         pars_to_print = []
         for par in pars:
@@ -118,9 +120,10 @@ class DocumentPrinter:
             # Replace plugin- and question pars with regular docpars with the md defined in the 'print' block
             # of their yaml as the md content of the replacement par
             if par.is_plugin() or par.is_question():
-                plugin_yaml = parse_plugin_values(par=par,
-                                                  global_attrs=pdoc_plugin_attrs,
-                                                  macroinfo=pdoc_macroinfo)
+                plugin_yaml = parse_plugin_values_macros(par=par,
+                                                         global_attrs=pdoc_plugin_attrs,
+                                                         macros=pdoc_macros,
+                                                         macro_delimiter=pdoc_macro_delimiter)
                 plugin_yaml_beforeprint = get_value(plugin_yaml.get('markup'), 'texbeforeprint')
                 if plugin_yaml_beforeprint is not None:
                     bppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_beforeprint)
@@ -232,7 +235,7 @@ class DocumentPrinter:
                 os.path.join(cwd, "pandoc-inlinestylesfilter.py"),
                 os.path.join(cwd, "pandoc-imagefilepathsfilter.py"),
                 #  os.path.join(cwd, "pandoc-headernumberingfilter.py")  # handled allready when making md
-                ]
+            ]
 
             src = self.get_content(plugins_user_print=plugins_user_print)
             ftop = self._macros.get('texforcetoplevel', None)
@@ -406,7 +409,9 @@ class DocumentPrinter:
 
         macros = macroinfo.get_macros()
         macros.update(template_doc.document.get_settings().get_macroinfo().get_macros())
+        macros.update(template_doc.document.get_settings().get_macroinfo(key=TEX_MACROS_KEY).get_macros())
         macros.update(doc_to_print.document.get_settings().get_macroinfo().get_macros())
+        macros.update(doc_to_print.document.get_settings().get_macroinfo(key=TEX_MACROS_KEY).get_macros())
 
         out_pars = []
 
@@ -432,14 +437,14 @@ class DocumentPrinter:
         return doc_v_fst + doc_v_snd / 10
 
     def hash_doc_print(self, plugins_user_print: bool = False) -> str:
-        content = str(self._doc_entry.last_modified) + str(self._template_to_use.id) + " " +\
-            str(self._template_to_use.last_modified)
+        content = str(self._doc_entry.last_modified) + str(self._template_to_use.id) + " " + \
+                  str(self._template_to_use.last_modified)
         if plugins_user_print:
             content += str(plugins_user_print)
         # self.get_content(plugins_user_print=plugins_user_print)
         return hashfunc(content)
 
-    def get_printed_document_path_from_db(self, file_type: PrintFormat, plugins_user_print: bool = False) ->\
+    def get_printed_document_path_from_db(self, file_type: PrintFormat, plugins_user_print: bool = False) -> \
             Optional[str]:
         #  current_doc_version = self.get_document_version_as_float()
         #  current_template_version = self.get_template_version_as_float()
