@@ -98,6 +98,21 @@ class Plugin:
         return Plugin.from_paragraph(par, user)
 
     @staticmethod
+    def from_paragraph_macros(par: DocParagraph, global_attrs: Dict[str, str],
+                               macros: Dict[str, str],
+                               macro_delimiter: str):
+        if not par.is_plugin():
+            raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
+        task_id_name = par.get_attr('taskId')
+        plugin_data = parse_plugin_values_macros(par, global_attrs, macros, macro_delimiter)
+        if 'error' in plugin_data:
+            if isinstance(plugin_data, str):
+                raise PluginException(plugin_data + ' Task id: ' + task_id_name)
+            raise PluginException(plugin_data['error'] + ' Task id: ' + task_id_name)
+        p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par)
+        return p
+
+    @staticmethod
     def from_paragraph(par: DocParagraph, user: Optional[User] = None):
         doc = par.doc
         if not par.is_plugin():

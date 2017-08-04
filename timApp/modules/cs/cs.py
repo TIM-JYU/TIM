@@ -186,7 +186,7 @@ def get_md(ttype, query):
         bycode = ""
 
     qso = json.dumps(query.jso)
-    print(qso)
+    # print(qso)
     uf = get_param(query, "uploadedFile", None)
     ut = get_param(query, "uploadedType", None)
     uf = get_json_eparam(query.jso, "state", "uploadedFile", uf)
@@ -196,7 +196,7 @@ def get_md(ttype, query):
         js["uploadedType"] = ut
 
     jso = json.dumps(js)
-    print(jso)
+    # print(jso)
     runner = 'cs-runner'
     # print(ttype)
     is_input = ''
@@ -276,7 +276,7 @@ def get_html(ttype, query):
         bycode = ""
 
     qso = json.dumps(query.jso)
-    print(qso)
+    # print(qso)
     uf = get_param(query, "uploadedFile", None)
     ut = get_param(query, "uploadedType", None)
     uf = get_json_eparam(query.jso, "state", "uploadedFile", uf)
@@ -286,7 +286,7 @@ def get_html(ttype, query):
         js["uploadedType"] = ut
 
     jso = json.dumps(js)
-    print(jso)
+    # jso)
     runner = 'cs-runner'
     # print(ttype)
     is_input = ''
@@ -1215,7 +1215,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         web["pwd"] = pwddir.strip()
 
         result["web"] = web
-        print(result)
+        # print(result)
 
         # Clean up
         # print("FILE NAME:", sourcefilename)

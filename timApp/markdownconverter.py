@@ -12,7 +12,8 @@ from timApp.utils import get_error_html
 
 # noinspection PyUnusedLocal
 def has_macros(text, macros, macro_delimiter=None):
-    return macro_delimiter is not None
+    #  return macro_delimiter is not None
+    return macro_delimiter and text.find(macro_delimiter) >= 0
 
 
 def expand_macros_regex(text, macros, macro_delimiter=None):

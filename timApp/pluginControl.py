@@ -26,7 +26,8 @@ NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
 
 
-def get_error_plugin(plugin_name, message, response=None, plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML):
+def get_error_plugin(plugin_name, message, response=None,
+                     plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML):
     """
 
     :param response:
@@ -117,6 +118,12 @@ def pluginify(doc: Document,
             raise PluginException('len(blocks) must be 1 if custom state is specified')
     plugins = {}
     state_map = {}
+
+    global_attrs = doc.get_settings().global_plugin_attrs()
+    macroinfo = doc.get_settings().get_macroinfo(user)
+    macros = macroinfo.get_macros()
+    macro_delimiter = macroinfo.get_macro_delimiter()
+
     for idx, block in enumerate(pars):
         attr_taskid = block.get_attr('taskId')
         plugin_name = block.get_attr('plugin')
@@ -126,20 +133,23 @@ def pluginify(doc: Document,
             md = block.get_markdown()
             try:
                 gamified_data = gamificationdata.gamify(md)
-                html_pars[idx][output_format.value] = render_template('partials/gamification_map.html', gamified_data=gamified_data)
+                html_pars[idx][output_format.value] = render_template('partials/gamification_map.html',
+                                                                      gamified_data=gamified_data)
             except yaml.parser.ParserError as e:
                 html_pars[idx][output_format.value] = '<div class="error"><p>Gamification error:</p><pre>' + \
-                                         str(e) + \
-                                         '</pre><p>From block:</p><pre>' + \
-                                         md + \
-                                         '</pre></div>'
+                                                      str(e) + \
+                                                      '</pre><p>From block:</p><pre>' + \
+                                                      md + \
+                                                      '</pre></div>'
 
         if plugin_name and not block.is_question():  # show also question in preview
             try:
-                plugin = Plugin.from_paragraph(block, user)
+                # plugin = Plugin.from_paragraph(block, user)
+                plugin = Plugin.from_paragraph_macros(block, global_attrs, macros, macro_delimiter)
                 plugin.values['isQuestion'] = block.get_attr('isQuestion', '')
             except PluginException as e:
-                html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e), plugin_output_format=output_format)
+                html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
+                                                                       plugin_output_format=output_format)
                 continue
             vals = plugin.values
             if plugin_name not in plugins:
@@ -192,7 +202,8 @@ def pluginify(doc: Document,
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
             for idx in plugin_block_map.keys():
-                html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e), plugin_output_format=output_format)
+                html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
+                                                                       plugin_output_format=output_format)
             continue
         try:
             reqs = json.loads(resp)
@@ -202,7 +213,8 @@ def pluginify(doc: Document,
         except ValueError as e:
             for idx in plugin_block_map.keys():
                 html_pars[idx][output_format.value] = get_error_plugin(
-                    plugin_name, 'Failed to parse JSON from plugin reqs route: {}'.format(e), resp, plugin_output_format=output_format)
+                    plugin_name, 'Failed to parse JSON from plugin reqs route: {}'.format(e), resp,
+                    plugin_output_format=output_format)
             continue
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
         for src in plugin_js_files:
@@ -230,24 +242,27 @@ def pluginify(doc: Document,
         plugin_url = get_plugin_tim_url(plugin_name)
         needs_browser = get_plugin_needs_browser(plugin_name)
         if (html_out and 'multihtml' in reqs and reqs['multihtml']) or \
-            (md_out and 'multimd' in reqs and reqs['multimd']):
+                (md_out and 'multimd' in reqs and reqs['multimd']):
             try:
                 response = render_plugin_multi(
-                                doc,
-                                plugin_name,
-                                [val for _, val in plugin_block_map.items()],
-                                plugin_params,
-                                plugin_output_format=(output_format))
+                    doc,
+                    plugin_name,
+                    [val for _, val in plugin_block_map.items()],
+                    plugin_params,
+                    plugin_output_format=(output_format))
             except PluginException as e:
                 for idx in plugin_block_map.keys():
-                    html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e), plugin_output_format=output_format)
+                    html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
+                                                                           plugin_output_format=output_format)
                 continue
             try:
                 plugin_htmls = json.loads(response)
             except ValueError as e:
                 for idx in plugin_block_map.keys():
-                    html_pars[idx][output_format.value] = get_error_plugin(plugin_name,
-                                       'Failed to parse plugin response from multihtml route: {}'.format(e), response, plugin_output_format=output_format)
+                    html_pars[idx][output_format.value] = \
+                        get_error_plugin(plugin_name,
+                                         'Failed to parse plugin response from multihtml route: {}'.format(e),
+                                         response, plugin_output_format=output_format)
                 continue
 
             for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
@@ -255,9 +270,9 @@ def pluginify(doc: Document,
 
                 html_pars[idx]['needs_browser'] = needs_browser or is_lazy
                 html_pars[idx][output_format.value] = ("<div id='{}' data-plugin='{}'>{}</div>"
-                                                          .format(markup['taskIDExt'],
-                                                                  plugin_url,
-                                                                  html)) if wrap_in_div else html
+                                                       .format(markup['taskIDExt'],
+                                                               plugin_url,
+                                                               html)) if wrap_in_div else html
         else:
             for idx, val in plugin_block_map.items():
                 if md_out:
@@ -265,8 +280,8 @@ def pluginify(doc: Document,
                                  "Please refer to TIM help pages if you want to learn how you can manually " \
                                  "define what to print here."
                     html_pars[idx][output_format.value] = get_error_plugin(plugin_name,
-                                                                    err_msg_md,
-                                                                    plugin_output_format=output_format)
+                                                                           err_msg_md,
+                                                                           plugin_output_format=output_format)
                 else:
                     try:
                         html = render_plugin(doc=doc,
@@ -275,15 +290,16 @@ def pluginify(doc: Document,
                                              params=plugin_params,
                                              output_format=output_format)
                     except PluginException as e:
-                        html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e), plugin_output_format=output_format)
+                        html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
+                                                                               plugin_output_format=output_format)
                         continue
 
                     html, is_lazy = make_lazy(html, val, do_lazy)
                     html_pars[idx]['needs_browser'] = needs_browser or is_lazy
                     html_pars[idx]['html'] = ("<div id='{}' data-plugin='{}'>{}</div>"
-                                                              .format(val['taskIDExt'],
-                                                                      plugin_url,
-                                                                      html)) if wrap_in_div else html
+                                              .format(val['taskIDExt'],
+                                                      plugin_url,
+                                                      html)) if wrap_in_div else html
 
     # taketime("phtml done")
 
@@ -312,7 +328,8 @@ def make_lazy(html, markup, do_lazy):
     stem = str(get_markup_value(markup, "stem", "Open plugin"))
     html = html.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
     # print(header, stem)
-    return LAZYSTART + html + LAZYEND + '<span style="font-weight:bold">' + header + '</span>' + "<div><p>" + stem + "</p></div>", True
+    return LAZYSTART + html + LAZYEND + '<span style="font-weight:bold">' + header + '</span>' + \
+           "<div><p>" + stem + "</p></div>", True
 
 
 def get_all_reqs():
