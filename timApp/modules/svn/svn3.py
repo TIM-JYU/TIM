@@ -322,7 +322,7 @@ def video_md(query):
     s += replace_template_param(query, '\\pluginHeader{{{{header}}}}\n\n', "header")
     s += replace_template_param(query, '\\stem{{{{stem}}}}\n', "stem")
     s += '''
-\\begin{figure}
+\\begin{figure}[H]
 \\centering
 \\includegraphics[width=1.5in]{/service/timApp/modules/cs/static/video.png}
 \\end{figure}
