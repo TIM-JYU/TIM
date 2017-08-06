@@ -236,11 +236,25 @@ def get_md(ttype, query):
     stem = get_param(query, "stem", "")
     footer = get_param(query, "footer", "")
 
+    rows = get_param(query, "rows", None)
+
+    code = '\\begin{lstlisting}\n' +\
+           str(usercode) + '\n' +\
+           '\\end{lstlisting}\n'
+
+    if 'text' in ttype and rows is not None and str(usercode) == '':
+        r = ''  # for text make a verbatim with number of rows empty lines
+        rows = str_to_int(rows, 1)
+        for i in range(0, rows):
+            r += "\n"
+        code = '\\begin{verbatim}\n' +\
+               r +\
+               '\\end{verbatim}\n'
+
     s = '\\begin{taskenv}{' + str(header) + '}{' + str(stem) + '}{'+str(footer) + '}' +\
         '\\lstset{language=[Sharp]C, numbers=left}\n' +\
-        '\\begin{lstlisting}\n' +\
-        str(usercode) + '\n' +\
-        '\end{lstlisting}\end{taskenv}'
+        code +\
+        '\\end{taskenv}'
 
     return s
 

@@ -35,6 +35,7 @@ TEMPLATES_FOLDER = os.path.join('Templates', 'Printing')
 DEFAULT_TEMPLATE_NAME = 'Default'
 TEX_MACROS_KEY = "texmacros"
 
+
 class PrintingError(Exception):
     pass
 
@@ -72,10 +73,16 @@ class DocumentPrinter:
         # if template_to_use is None:
         #    template_to_use = DocumentPrinter.get_default_template(doc_entry)
         self._template_to_use = template_to_use
+        self._template_to_use_id = -1
+        if template_to_use:
+            self._template_to_use_id = template_to_use.id
         self._template_doc = None
         self._content = None
         self._print_hash = None
         self._macros = {}
+
+    def get_template_id(self):
+        return self._template_to_use_id
 
     def get_content(self, plugins_user_print: bool = False) -> str:
         """
@@ -105,6 +112,7 @@ class DocumentPrinter:
         # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
         pars = self._doc_entry.document.get_paragraphs()
         pars_to_print = []
+        texplain = self._doc_entry.document.get_settings().is_texplain()
         for par in pars:
 
             # do not print document settings pars
@@ -181,6 +189,10 @@ class DocumentPrinter:
                         md = add_nonumber(md)
                     md = beginraw + md + endraw
 
+                if texplain:
+                    if md.startswith('```'):
+                        md = md[3:-3]
+
                 '''
                 if pd['md'].startswith('#'):
                     pd['md'] += ' {{ {} }}'.format(
@@ -214,8 +226,11 @@ class DocumentPrinter:
             if self._template_to_use is None:
                 raise PrintingError("No template chosen for the printing. Printing was cancelled.")
 
-            template_content = DocumentPrinter.parse_template_content(doc_to_print=self._doc_entry,
-                                                                      template_doc=self._template_to_use)
+            if self._template_to_use:
+                template_content = DocumentPrinter.parse_template_content(doc_to_print=self._doc_entry,
+                                                                          template_doc=self._template_to_use)
+            else:
+                template_content = '$body$\n'
             # print("template-content:\n\n" + template_content)
 
             if template_content is None:
@@ -227,7 +242,9 @@ class DocumentPrinter:
                 top_level = 'chapter'
 
             self._template_doc = self._template_to_use
-            template_file.write(bytearray(template_content, encoding='utf-8'))
+            templbyte = bytearray(template_content, encoding='utf-8')
+            # template_file.write(templbyte) # for some reason does not write small files
+            open(template_file.name, 'wb').write(templbyte)
 
             # TODO: getting the path could probably be done with more finesse
             cwd = os.getcwd()
@@ -266,6 +283,8 @@ class DocumentPrinter:
                 # TODO: selection of errors that should be routed to the UI
 
                 raise PrintingError(str(ex))
+                # finally:
+                #    os.remove(template_file.name)
 
         return output_bytes
 
@@ -292,7 +311,7 @@ class DocumentPrinter:
         # print("Document id: %s, version (%s, %s)" % (self._doc_entry.document.doc_id, doc_version[0], doc_version[1]))
         path = os.path.join(DEFAULT_PRINTING_FOLDER,
                             str(self._doc_entry.id),
-                            str(self._template_to_use.id),
+                            str(self._template_to_use_id),
                             str(print_hash) + "." + file_type.value)
 
         return path
@@ -386,6 +405,9 @@ class DocumentPrinter:
 
         templates_list = user_templates_list + default_templates_list
 
+        # if doc_entry.document.get_settings().is_texplain():  # does not work because no block entry
+        #    templates_list.append({'id': -1, 'path': 'empty', 'origin': 'doctree', 'name': 'empty'})
+
         return templates_list
 
     @staticmethod
@@ -437,8 +459,11 @@ class DocumentPrinter:
         return doc_v_fst + doc_v_snd / 10
 
     def hash_doc_print(self, plugins_user_print: bool = False) -> str:
-        content = str(self._doc_entry.last_modified) + str(self._template_to_use.id) + " " + \
-                  str(self._template_to_use.last_modified)
+        thash = ''
+        if self._template_to_use:
+            thash = self._template_to_use.last_modified
+        content = str(self._doc_entry.last_modified) + str(self._template_to_use_id) + " " + \
+                  str(thash)
         if plugins_user_print:
             content += str(plugins_user_print)
         # self.get_content(plugins_user_print=plugins_user_print)
@@ -448,10 +473,9 @@ class DocumentPrinter:
             Optional[str]:
         #  current_doc_version = self.get_document_version_as_float()
         #  current_template_version = self.get_template_version_as_float()
-
         existing_print = db.session.query(PrintedDoc). \
             filter(PrintedDoc.doc_id == self._doc_entry.id). \
-            filter(PrintedDoc.template_doc_id == self._template_to_use.id). \
+            filter(PrintedDoc.template_doc_id == self._template_to_use_id). \
             filter(PrintedDoc.file_type == file_type.value). \
             filter(PrintedDoc.version == self.hash_doc_print(plugins_user_print=plugins_user_print)). \
             first()

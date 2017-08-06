@@ -165,3 +165,10 @@ class DocSettings:
 
     def plugin_md(self, default=True):
         return self.__dict.get(self.plugin_md_key, default)
+
+    def get(self, key, default=None):
+        return self.__dict.get(key, default)
+
+    def is_texplain(self):
+        texplain = self.__dict.get('texplain', False)
+        return texplain

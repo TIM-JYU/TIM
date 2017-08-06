@@ -1323,3 +1323,10 @@ def tquote(s):
     if r.find("$") < 0:
         return r
     return r.replace("'", '"')
+
+
+def str_to_int(s, default=0):
+    try:
+        return int(s)
+    except:
+        return default

@@ -17,8 +17,8 @@
                 <div class="radio">
                     <label>
                         <input type="radio" ng-model="selectedTemplate.id" ng-value="item.id" name="template-selection">
-                        <span>{{ item.name }} <span ng-show="showPaths">({{ item.path }})</span></span>
-                        <a ng-show="showPaths" ng-href="/view/{{ item.path }}" target="_blank" class="force-hyphenate-link">
+                        <span>{{ item.name }} <span ng-show="showPaths && item.name != 'empty'">({{ item.path }})</span></span>
+                        <a ng-show="showPaths && item.name != 'empty'" ng-href="/view/{{ item.path }}" target="_blank" class="force-hyphenate-link">
                             <span class="glyphicon glyphicon-pencil"></span>
                         </a>
                     </label>

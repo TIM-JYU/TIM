@@ -67,14 +67,14 @@ def print_document(doc_path):
 
     doc = g.doc_entry
     template_doc = DocEntry.find_by_id(template_doc_id)
-    type = PrintFormat[file_type.upper()]
+    print_type = PrintFormat[file_type.upper()]
 
-    existing_doc = check_print_cache(doc_entry=doc, template=template_doc, file_type=type,
+    existing_doc = check_print_cache(doc_entry=doc, template=template_doc, file_type=print_type,
                                      plugins_user_print=plugins_user_print)
 
     print_access_url = '{}?file_type={}&template_doc_id={}&plugins_user_code={}'.format(
         request.url,
-        str(type.value).lower(),
+        str(print_type.value).lower(),
         template_doc_id,
         plugins_user_print)
 
@@ -87,10 +87,10 @@ def print_document(doc_path):
     if template_doc is None:
         abort(400, "The supplied parameter 'templateDocId' is invalid.")
 
-    #print(plugins_user_print)
+    # print(plugins_user_print)
     try:
         create_printed_doc(doc_entry=doc,
-                           file_type=type,
+                           file_type=print_type,
                            template_doc=template_doc,
                            temp=True,
                            plugins_user_print=plugins_user_print)
@@ -140,12 +140,27 @@ def get_printed_document(doc_path):
                                plugins_user_print=plugins_user_print)
 
     if cached is None:
-        abort(404, "The document you tried to fetch does not exist.")
+        # abort(404, "The document you tried to fetch does not exist.")
+        try:
+            create_printed_doc(doc_entry=doc,
+                               file_type=print_type,
+                               template_doc=template_doc,
+                               temp=True,
+                               plugins_user_print=plugins_user_print)
+            cached = check_print_cache(doc_entry=doc,
+                                       template=template_doc,
+                                       file_type=print_type,
+                                       plugins_user_print=plugins_user_print)
+        except PrintingError as err:
+            print("Error occurred: " + str(err))
+            abort(400, str(err))  # TODO: maybe there's a better error code?
 
     mime = get_mimetype_for_format(print_type)
 
     if mime is None:
         abort(400, "An unexpected error occurred.")
+
+
 
     response = make_response(send_file(filename_or_fp=cached, mimetype=mime))
 
@@ -259,7 +274,7 @@ def create_printed_doc(doc_entry: DocEntry,
         #    return path
 
         p_doc = PrintedDoc(doc_id=doc_entry.document.doc_id,
-                           template_doc_id = printer._template_to_use.document.doc_id,
+                           template_doc_id = printer.get_template_id(),
                            version=printer.hash_doc_print(plugins_user_print=plugins_user_print),
                            path_to_file=path,
                            file_type = file_type.value,
