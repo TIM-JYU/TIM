@@ -100,7 +100,7 @@ def print_document(doc_path):
 
     print_access_url = '{}?file_type={}&template_doc_id={}&plugins_user_code={}'.format(
         request.url,
-        str(type.value).lower(),
+        str(print_type.value).lower(),
         template_doc_id,
         plugins_user_print)
 
