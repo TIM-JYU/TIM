@@ -462,8 +462,8 @@ class DocumentPrinter:
         thash = ''
         if self._template_to_use:
             thash = self._template_to_use.last_modified
-        content = str(self._doc_entry.last_modified) + str(self._template_to_use_id) + " " + \
-                  str(thash)
+        content = str(self._doc_entry.id) + " " + str(self._doc_entry.last_modified) + \
+                  str(self._template_to_use_id) + " " + str(thash)
         if plugins_user_print:
             content += str(plugins_user_print)
         # self.get_content(plugins_user_print=plugins_user_print)

@@ -139,6 +139,10 @@ def get_printed_document(doc_path):
                                file_type=print_type,
                                plugins_user_print=plugins_user_print)
 
+    force = request.args.get('force')
+    if str(force) == 'true':
+        cached = None
+
     if cached is None:
         # abort(404, "The document you tried to fetch does not exist.")
         try:
