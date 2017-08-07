@@ -429,6 +429,8 @@ def qst_get_md(jso):
 
     idx = 0
     for row in rows:
+        if type(row) is not str:
+            continue
         correct = '' # choice.get('correct', False)
         exp = expl.get(str(idx+1),'')
         reason = ''

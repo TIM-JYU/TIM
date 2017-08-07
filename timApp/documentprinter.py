@@ -465,7 +465,8 @@ class DocumentPrinter:
         content = str(self._doc_entry.id) + " " + str(self._doc_entry.last_modified) + \
                   str(self._template_to_use_id) + " " + str(thash)
         if plugins_user_print:
-            content += str(plugins_user_print)
+            content += str(plugins_user_print) + str(get_current_user_object().id)
+
         # self.get_content(plugins_user_print=plugins_user_print)
         return hashfunc(content)
 
