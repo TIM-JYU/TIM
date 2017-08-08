@@ -15,6 +15,7 @@ TODO: BETTER DOCUMENTATION
 
 """
 import os
+import re
 import tempfile
 import urllib.request
 
@@ -39,6 +40,12 @@ PRINTING_WHITELIST_FILE = os.path.join(APP_ROOT, '.printing_whitelist.config')
 
 def init_whitelist():
     """ Init whitelist for trusted image source domains. """
+
+    # s = ""  # just a test for env variables
+    # for a in os.environ:
+    #     s += 'Var: ' + a + ' Value: ' +  os.getenv(a) + "\n"
+    # open("Output.txt", "a").write("Environment:" + s)
+
     if not os.path.exists(PRINTING_WHITELIST_FILE):
         try:
             os.makedirs(os.path.dirname(PRINTING_WHITELIST_FILE))
@@ -63,11 +70,16 @@ def init_whitelist():
 TEMP_DIR_PATH = tempfile.gettempdir()
 DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, 'tim-img-dls')
 
+texdocid = None
+
+
 def handle_images(key, value, fmt, meta):
+    # open("Output.txt", "a").write("Meta:" + str(meta) + "\n")
 
     if key == 'Image' and fmt == 'latex':
         (attrs, alt_text_inlines, target) = value
         (url, title) = target
+
 
         # For debugging:
         # return Image(attrs, alt_text_inlines, ["notarealhost.juupahuu.com/image.png", ""])
@@ -101,21 +113,40 @@ def handle_images(key, value, fmt, meta):
         # handle external urls
         else:
             # Download images from allowed external urls to be attached to the document.
-            if host in ALLOWED_EXTERNAL_HOSTS:
+            allow = False
+            for h in ALLOWED_EXTERNAL_HOSTS:
+                # open("Output.txt", "a").write("try image: " + h + " -> " + url + "\n")
+                if re.match(h, url):
+                    allow = True
+                    break
 
+            if allow:
+
+                # open("Output.txt", "a").write("Check texdocid \n")
+                global texdocid  # check if we allready have path for doc id
+                if not texdocid:
+                    m = meta.get('texdocid', None)  # if we do not have, get the path from meta data
+                    # open("Output.txt", "a").write("m:" + str(m) + "\n")
+                    if m:
+                        texdocid = str(m.get('c', 'xx'))
+                    # open("Output.txt", "a").write("texdocid:" + texdocid + "\n")
+
+                images_root = os.path.join(DOWNLOADED_IMAGES_ROOT, texdocid)
                 # create folder for image dls, if it does not exist already
-                if not os.path.exists(DOWNLOADED_IMAGES_ROOT):
-                    os.makedirs(DOWNLOADED_IMAGES_ROOT)
+                if not os.path.exists(images_root ):
+                    os.makedirs(images_root )
 
                 # download img to the folder and give the file a unique name (hash the url)
                 img_uid = hashfunc(url)
                 try:
                     _, ext = os.path.splitext(url)
-                    img_dl_path = os.path.join(DOWNLOADED_IMAGES_ROOT, str(img_uid) + ext)
+                    img_dl_path = os.path.join(images_root, str(img_uid) + ext)
+                    # open("Output.txt", "a").write("img_dl_path = " + img_dl_path + "\n")
 
                     if not os.path.exists(img_dl_path):
                         urllib.request.urlretrieve(url, img_dl_path)
                         # urllib.URLopener().retrieve(url, img_dl_path)
+                        # open("Output.txt", "a").write("retrieve: " + url + " -> " + img_dl_path + "\n")
 
                     img_dl_path = img_dl_path.replace('\\', '/') # Ensure UNIX form for pandoc
                     return Image(attrs, alt_text_inlines, [img_dl_path, title])

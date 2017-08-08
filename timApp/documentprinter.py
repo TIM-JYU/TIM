@@ -259,6 +259,9 @@ class DocumentPrinter:
             if ftop:
                 top_level = ftop
 
+            print("docid from env ", os.environ.get("texdocid", None))
+            os.environ["texdocid"] = str(self._doc_entry.document.doc_id)
+
             # print(top_level)
             # TODO: add also variables from texpandocvariables document setting
             try:
@@ -268,10 +271,13 @@ class DocumentPrinter:
                                       outputfile=output_file.name,
                                       extra_args=['--template=' + template_file.name, '--variable=TTrue:1',
                                                   '--variable=T1:1', '--top-level-division=' + top_level,
-                                                  '--default-image-extension=extension=pipe_tables'],
+                                                  '-Mtexdocid=' + str(self._doc_entry.document.doc_id)
+                                                  # '--latex-engine=xelatex'
+                                                  ],
                                       filters=filters)
                 template_file.seek(0)
                 output_bytes = bytearray(output_file.read())
+                print("docid from env ", os.environ.get("texdocid", None))
             except Exception as ex:
                 # print(str(ex))
 
