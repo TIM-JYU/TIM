@@ -14,36 +14,34 @@ the images location according to the set of following rules:
 TODO: BETTER DOCUMENTATION
 
 """
+from urllib.parse import urlparse
 import os
 import re
 import tempfile
 import urllib.request
 
-from defaultconfig import FILES_PATH
-from documentmodel.randutils import hashfunc
-
-from pandocfilters import toJSONFilter, RawInline, Image, Link, Str
-
-# This of course, requires that this module resides in the timApp root folder
-
-APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-
-IMAGE_ROOT = os.path.join(APP_ROOT, FILES_PATH, 'blocks')
-
-# protocol + hostname
-CURRENT_HOST_MACHINE = os.environ.get('TIM_HOST', None)
-
-ALLOWED_EXTERNAL_HOSTS = []
-
-PRINTING_WHITELIST_FILE = os.path.join(APP_ROOT, '.printing_whitelist.config')
+FILES_PATH = '/tim_files'
 
 urlmaps = [
     {'url': '/csstatic/', 'dir': '/service/timApp/modules/cs/static/'},
     {'url': '/csgenerated/', 'dir': '/service/timApp/modules/cs/generated/'},
     {'url': '/static/', 'dir': '/service/timApp/static/'},
-    {'url': '/images/', 'dir': '/tim_files/blocks/images/'}
+    {'url': '/images/', 'dir': '/tim_files/blocks/images'}
 ]
 
+# This of course, requires that this module resides in the timApp root folder
+
+# APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+APP_ROOT = '/services/timApp'
+
+IMAGE_ROOT = os.path.join(APP_ROOT, FILES_PATH, 'blocks')
+
+# protocol + hostname
+CURRENT_HOST_MACHINE = 'tim.jyu.fi'
+
+ALLOWED_EXTERNAL_HOSTS = []
+
+PRINTING_WHITELIST_FILE = os.path.join(APP_ROOT, '.printing_whitelist.config')
 
 
 def init_whitelist():
@@ -74,6 +72,7 @@ def init_whitelist():
 
     return [x.strip() for x in content]
 
+
 # Get the os temp directoryls
 TEMP_DIR_PATH = tempfile.gettempdir()
 DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, 'tim-img-dls')
@@ -85,9 +84,7 @@ def handle_images(key, value, fmt, meta):
     # open("Output.txt", "a").write("Meta:" + str(meta) + "\n")
 
     if key == 'Image' and fmt == 'latex':
-        (attrs, alt_text_inlines, target) = value
-        (url, title) = target
-
+        url = value
 
         # For debugging:
         # return Image(attrs, alt_text_inlines, ["notarealhost.juupahuu.com/image.png", ""])
@@ -95,8 +92,6 @@ def handle_images(key, value, fmt, meta):
         image_path = ""
 
         parsed_url = urlparse(url)
-        parsed_cur = urlparse(CURRENT_HOST_MACHINE + "/kukku")
-        curhost = parsed_cur.hostname or ''
 
         scheme = parsed_url.scheme or ''
         host = parsed_url.hostname or ''
@@ -110,13 +105,11 @@ def handle_images(key, value, fmt, meta):
                 image_path = path.replace(urlbeg, urlmap.get('dir'))
                 break
 
-        open("Output.txt", "a").write("image_path: " + image_path + " host: " + host + "CHM: " + curhost + "\n")
-        if host != '' and host != curhost:
+        if host != '' and host != CURRENT_HOST_MACHINE:
             image_path = ''
 
-        if image_path != '' and os.path.exists(image_path):
-            image_path = image_path.replace('\\', '/')
-            return Image(attrs, alt_text_inlines, [image_path, title])
+        if image_path != '': # and os.path.exists(image_path):
+            return image_path
 
         '''
         # The first slash needs to be removed from the path in order for the joins to work properly
@@ -140,74 +133,61 @@ def handle_images(key, value, fmt, meta):
         # handle external urls
         else:
         '''
+        if image_path == '':
+            # Download images from allowed external urls to be attached to the document.
+            allow = False
+            for h in ALLOWED_EXTERNAL_HOSTS:
+                # open("Output.txt", "a").write("try image: " + h + " -> " + url + "\n")
+                if re.match(h, url):
+                    allow = True
+                    break
 
-        # Download images from allowed external urls to be attached to the document.
-        allow = False
-        for h in ALLOWED_EXTERNAL_HOSTS:
-            # open("Output.txt", "a").write("try image: " + h + " -> " + url + "\n")
-            if re.match(h, url):
-                allow = True
-                break
+            if allow:
 
-        if allow:
-            # open("Output.txt", "a").write("Check texdocid \n")
-            global texdocid  # check if we allready have path for doc id
-            if not texdocid:
-                m = meta.get('texdocid', None)  # if we do not have, get the path from meta data
-                # open("Output.txt", "a").write("m:" + str(m) + "\n")
-                if m:
-                    texdocid = str(m.get('c', 'xx'))
-                # open("Output.txt", "a").write("texdocid:" + texdocid + "\n")
+                # open("Output.txt", "a").write("Check texdocid \n")
+                global texdocid  # check if we allready have path for doc id
+                if not texdocid:
+                    m = meta.get('texdocid', None)  # if we do not have, get the path from meta data
+                    # open("Output.txt", "a").write("m:" + str(m) + "\n")
+                    if m:
+                        texdocid = str(m.get('c', 'xx'))
+                        # open("Output.txt", "a").write("texdocid:" + texdocid + "\n")
 
-            images_root = os.path.join(DOWNLOADED_IMAGES_ROOT, texdocid)
-            # create folder for image dls, if it does not exist already
-            if not os.path.exists(images_root ):
-                os.makedirs(images_root )
+                images_root = os.path.join(DOWNLOADED_IMAGES_ROOT, texdocid)
+                # create folder for image dls, if it does not exist already
+                if not os.path.exists(images_root):
+                    os.makedirs(images_root)
 
-            # download img to the folder and give the file a unique name (hash the url)
-            img_uid = hashfunc(url)
-            try:
-                _, ext = os.path.splitext(url)
-                img_dl_path = os.path.join(images_root, str(img_uid) + ext)
-                # open("Output.txt", "a").write("img_dl_path = " + img_dl_path + "\n")
+                # download img to the folder and give the file a unique name (hash the url)
+                img_uid = url  # hashfunc(url)
+                try:
+                    _, ext = os.path.splitext(url)
+                    img_dl_path = os.path.join(images_root, str(img_uid) + ext)
+                    # open("Output.txt", "a").write("img_dl_path = " + img_dl_path + "\n")
 
-                if not os.path.exists(img_dl_path):
-                    open("Output.txt", "a").write("retrieve: " + url + " -> " + img_dl_path + "\n")
-                    urllib.request.urlretrieve(url, img_dl_path)
-                    # urllib.URLopener().retrieve(url, img_dl_path)
+                    if not os.path.exists(img_dl_path):
+                        open("Output.txt", "a").write("retrieve: " + url + " -> " + img_dl_path + "\n")
+                        urllib.request.urlretrieve(url, img_dl_path)
+                        # urllib.URLopener().retrieve(url, img_dl_path)
 
-                img_dl_path = img_dl_path.replace('\\', '/') # Ensure UNIX form for pandoc
-                return Image(attrs, alt_text_inlines, [img_dl_path, title])
+                    img_dl_path = img_dl_path.replace('\\', '/')  # Ensure UNIX form for pandoc
+                    return None
 
-            except IOError:
-                # could not download image, so display the image as a link to the imageURL
-                pass
-            except:
-                pass
+                except IOError:
+                    # could not download image, so display the image as a link to the imageURL
+                    return None
 
             # For other external images, transform the element to appear as a link
             # to the image resource in the LaTeX-output.
-            return [
-                RawInline('latex', "\externalimagelink{"),
-                Link(attrs, [Str(url)], [url, title]),
-                RawInline('latex', "}")
-            ]
+            return None
 
         # Makes sure the paths are in the UNIX form, as that is what LaTeX uses for paths even on Windows
         image_path = image_path.replace('\\', '/')
 
-        return Image(attrs, alt_text_inlines, [image_path, title])
+        return None
 
 
 if __name__ == "__main__":
-
-    # Needs to import different package based on python version, as the urlparse method
-    # was moved from urlparse module to urllib.parse between python2.7 -> python3
-    try:
-        from urllib.parse import urlparse
-    except ImportError:
-        from urlparse import urlparse
-
-    ALLOWED_EXTERNAL_HOSTS = init_whitelist()
-
-    toJSONFilter(handle_images)
+    print(handle_images('Image', '/images/134259/todellisuus_tilastotiede.jpg', 'latex', None))
+    print(handle_images('Image', 'https://tim.jyu.fi/static/images/tim-logo_42height.png', 'latex', None))
+    print(handle_images('Image', 'https://tim.jyu.fi/csstatic/ohj2/kaanta.png', 'latex', None))
