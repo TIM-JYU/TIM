@@ -19,6 +19,7 @@ from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.timdb import gamificationdata
 from timApp.timdb.models.user import User
 from timApp.utils import get_error_html, get_error_md
+from timApp.timdb.printsettings import PrintFormat
 
 LAZYSTART = "<!--lazy "
 LAZYEND = " lazy-->"
@@ -77,7 +78,8 @@ def pluginify(doc: Document,
               plugin_params=None,
               wrap_in_div=True,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
-              user_print: bool = False):
+              user_print: bool = False,
+              target_format: str='latex'):
     """"Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
 
@@ -92,6 +94,7 @@ def pluginify(doc: Document,
     :param edit_window Whether the method is called from the edit window or not.
     :param output_format: Desired output format (html/md) for plugins
     :param user_print: Whether the plugins should output the original values or user's input (when exporting markdown).
+    :param target_format: for MD-print what exact format to use
     :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
 
     :type pars: list[DocParagraph]
@@ -175,7 +178,8 @@ def pluginify(doc: Document,
                                          # checked in python so that decisions on what data is sent can be made.
                                          "preview": edit_window,
                                          "anonymous": user is not None,
-                                         "info": info}
+                                         "info": info,
+                                         "targetFormat": target_format}
 
     # taketime("answ", "markup", len(plugins))
 

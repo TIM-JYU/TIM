@@ -232,30 +232,67 @@ def get_md(ttype, query):
         r = "cs-console"
 
     # s = '\\begin{verbatim}\n' + usercode + '\n\\end{verbatim}'
-    header = get_param(query, "header", "")
-    stem = get_param(query, "stem", "")
-    footer = get_param(query, "footer", "")
+    header = str(get_param(query, "header", ""))
+    stem = str(get_param(query, "stem", ""))
+    footer = str(get_param(query, "footer", ""))
 
     rows = get_param(query, "rows", None)
 
-    code = '\\begin{lstlisting}\n' +\
-           str(usercode) + '\n' +\
-           '\\end{lstlisting}\n'
+    target_format = get_param(query, "targetFormat", 'latex')
 
-    if 'text' in ttype and rows is not None and str(usercode) == '':
-        r = ''  # for text make a verbatim with number of rows empty lines
-        rows = str_to_int(rows, 1)
-        for i in range(0, rows):
-            r += "\n"
-        code = '\\begin{verbatim}\n' +\
-               r +\
-               '\\end{verbatim}\n'
+    if target_format == 'html':
+        s = '''
+<h4>{}</h4>
+<p>{}</p>
+<pre>
+{}
+</pre>
+<p>{}</p>
+'''.format(header, stem, usercode, footer)
+        return s
 
-    s = '\\begin{taskenv}{' + str(header) + '}{' + str(stem) + '}{'+str(footer) + '}' +\
-        '\\lstset{language=[Sharp]C, numbers=left}\n' +\
-        code +\
-        '\\end{taskenv}'
+    if target_format == 'md':
+        s = '''
+#### {}
+{}
+```
+{}
+```
+{}
+'''.format(header, stem, usercode, footer)
+        return s
 
+    if target_format == "latex":
+        code = '\\begin{lstlisting}\n' +\
+               str(usercode) + '\n' +\
+               '\\end{lstlisting}\n'
+
+        if 'text' in ttype and rows is not None and str(usercode) == '':
+            r = ''  # for text make a verbatim with number of rows empty lines
+            rows = str_to_int(rows, 1)
+            for i in range(0, rows):
+                r += "\n"
+            code = '\\begin{verbatim}\n' +\
+                   r +\
+                   '\\end{verbatim}\n'
+
+        s = '\\begin{taskenv}{' + header + '}{' + stem + '}{'+footer + '}' +\
+            '\\lstset{language=[Sharp]C, numbers=left}\n' +\
+            code +\
+            '\\end{taskenv}'
+
+        return s
+
+    # plain
+    s = '''
+{0}
+
+{1}
+
+{2}
+
+{3}
+'''.format(header, stem, usercode, footer)
     return s
 
 

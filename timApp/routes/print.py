@@ -4,6 +4,9 @@ Routes for printing a document
 import os
 from typing import Optional
 
+import tempfile
+
+import shutil
 from flask import Blueprint, send_file, jsonify, json
 from flask import abort
 from flask import current_app
@@ -18,6 +21,9 @@ from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.printeddoc import PrintedDoc
 from timApp.timdb.printsettings import PrintFormat
 from timApp.timdb.tim_models import db
+
+TEMP_DIR_PATH = tempfile.gettempdir()
+DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, 'tim-img-dls')
 
 print_blueprint = Blueprint('print',
                    __name__,
@@ -49,6 +55,7 @@ def print_document(doc_path):
     file_type = data.get('fileType')
     template_doc_id = data.get('templateDocId')
     plugins_user_print = data.get('printPluginsUserCode')
+    remove_old_images = data.get('removeOldImages')
 
     if file_type is None:
         abort(400, "No filetype selected.")
@@ -69,6 +76,9 @@ def print_document(doc_path):
     template_doc = DocEntry.find_by_id(template_doc_id)
     print_type = PrintFormat[file_type.upper()]
 
+    if remove_old_images:
+        remove_images(doc.document.doc_id)
+
     existing_doc = check_print_cache(doc_entry=doc, template=template_doc, file_type=print_type,
                                      plugins_user_print=plugins_user_print)
 
@@ -77,6 +87,10 @@ def print_document(doc_path):
         str(print_type.value).lower(),
         template_doc_id,
         plugins_user_print)
+
+    force = str(data.get('force', 'false')).lower()
+    if force == 'true':
+        existing_doc = None
 
     if existing_doc is not None and not plugins_user_print: # never cache user print
         return json.dumps({'success': True, 'url': print_access_url}), 200, {'ContentType': 'application/json'}
@@ -139,8 +153,8 @@ def get_printed_document(doc_path):
                                file_type=print_type,
                                plugins_user_print=plugins_user_print)
 
-    force = request.args.get('force')
-    if str(force) == 'true':
+    force = str(request.args.get('force', 'false')).lower()
+    if force == 'true':
         cached = None
 
     if cached is None:
@@ -199,10 +213,11 @@ def get_hash(doc_path):
 def get_mimetype_for_format(file_type: PrintFormat):
     if file_type == PrintFormat.PDF:
         return 'application/pdf'
-    elif file_type == PrintFormat.LATEX:
-        return 'text/plain'
+    elif file_type == PrintFormat.HTML:
+        return 'text/html'
     else:
-        return None
+        # return None
+        return 'text/plain'
 
 
 def check_print_cache(doc_entry: DocEntry,
@@ -290,3 +305,8 @@ def create_printed_doc(doc_entry: DocEntry,
         return p_doc.path_to_file
     except PrintingError as err:
         raise PrintingError(str(err))
+
+
+
+def remove_images(docid):
+    shutil.rmtree(os.path.join(DOWNLOADED_IMAGES_ROOT, str(docid)))

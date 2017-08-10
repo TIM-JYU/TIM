@@ -104,7 +104,7 @@ export function defineClipboard(sc) {
         try {
             var response = await $http.post("/clipboard/paste/" + sc.docId, {
                 par_before: getFirstParId($parOrArea),
-                asRef,
+                as_ref: asRef,
             });
         } catch (e) {
             $window.alert(e.data.error);
@@ -130,7 +130,7 @@ export function defineClipboard(sc) {
         try {
             var response = await $http.post("/clipboard/paste/" + sc.docId, {
                 par_after: getLastParId($parOrArea),
-                asRef,
+                as_ref: asRef,
             });
         } catch (e) {
             $window.alert(e.data.error);

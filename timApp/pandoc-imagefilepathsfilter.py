@@ -110,7 +110,7 @@ def handle_images(key, value, fmt, meta):
                 image_path = path.replace(urlbeg, urlmap.get('dir'))
                 break
 
-        open("Output.txt", "a").write("image_path: " + image_path + " host: " + host + "CHM: " + curhost + "\n")
+        # open("Output.txt", "a").write("image_path: " + image_path + " host: " + host + "CHM: " + curhost + "\n")
         if host != '' and host != curhost:
             image_path = ''
 
@@ -172,7 +172,7 @@ def handle_images(key, value, fmt, meta):
                 # open("Output.txt", "a").write("img_dl_path = " + img_dl_path + "\n")
 
                 if not os.path.exists(img_dl_path):
-                    open("Output.txt", "a").write("retrieve: " + url + " -> " + img_dl_path + "\n")
+                    # open("Output.txt", "a").write("retrieve: " + url + " -> " + img_dl_path + "\n")
                     urllib.request.urlretrieve(url, img_dl_path)
                     # urllib.URLopener().retrieve(url, img_dl_path)
 

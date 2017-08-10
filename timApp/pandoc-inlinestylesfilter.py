@@ -19,6 +19,15 @@ def classes_to_latex_cmds(key, value, fmt, meta):
             return RawInline("latex","}")
             # return RawInline("tex", "\\end(red)")
 
+    if key == 'Str' and fmt == 'html':
+        if value.startswith("RAWTEX"):
+            cls = value[6:]
+            return RawInline("html",'<div class="' + cls + '">')
+            # return RawInline("tex", "\\begin(red)")
+        if value == "ENDRAWTEX":
+            return RawInline("html","</div>")
+            # return RawInline("tex", "\\end(red)")
+
     if key == 'Span' and fmt == 'latex':
         ([ident, classes, kvs], contents) = value
 

@@ -4,7 +4,8 @@
     <button type="button" ng-click="dismissModal()" class="close">
         <span aria-hidden="true">&times;</span>
     </button>
-    <h4 class="modal-title">Printing {{ document.title }}</h4>
+    <h4 class="modal-title">Printing document:</h4>
+    <h4>{{ document.title }}</h4>
 </div>
 <div class="modal-body" id="modal-body">
     <div ng-show="(templates.length > 0)"></div>
@@ -14,8 +15,8 @@
         <h5>Please choose a template:</h5>
         <div class="form-group input-group-sm">
             <div ng-repeat="item in templates">
-                <div class="radio">
-                    <label>
+                <div class="radio" >
+                    <label ng-show="showPaths || item.name != 'empty'">
                         <input type="radio" ng-model="selectedTemplate.id" ng-value="item.id" name="template-selection">
                         <span>{{ item.name }} <span ng-show="showPaths && item.name != 'empty'">({{ item.path }})</span></span>
                         <a ng-show="showPaths && item.name != 'empty'" ng-href="/view/{{ item.path }}" target="_blank" class="force-hyphenate-link">
@@ -39,23 +40,58 @@
     </div>
 </div>
 
-<div class="modal-footer">
-    <label id="printing-dialog-show-paths">
-        <input type="checkbox" ng-model="showPaths" ng-checked="showPaths">
-        Edit
-    </label>
-    <label class="footerLabel">
-        <input type="checkbox" ng-model="pluginsUserCode" ng-checked="pluginsUserCode">
-        Use user code for plugins
-    </label>
-    <label class="footerLabel">
-        <input type="radio" ng-model="selected.name" value="PDF">
-        PDF
-    </label>
-    <label class="footerLabel">
-        <input type="radio" ng-model="selected.name" value="LaTeX">
-        LaTeX
-    </label>
+<div class="printdlgfooter modal-footer">
+    <div>
+        <label class="footerLabel">
+            <input type="checkbox" ng-model="pluginsUserCode" ng-checked="pluginsUserCode">
+            Show user answers in plugins
+        </label>
+    </div>
+    <div>
+        <label id="printing-dialog-show-paths" title="More output formats and other options">
+            <input type="checkbox" ng-model="showPaths" ng-checked="showPaths">
+            Show advanced options
+        </label>
+    </div>
+    <div>
+        Output format: &nbsp;
+        <label class="footerLabel">
+            <input type="radio" ng-model="selected.name" value="PDF">
+            PDF
+        </label>&nbsp;
+        <label class="footerLabel">
+            <input type="radio" ng-model="selected.name" value="LaTeX">
+            LaTeX
+        </label>&nbsp;
+        <label class="footerLabel" ng-show="showPaths">
+            <input type="radio" ng-model="selected.name" value="MD">
+            MD
+        </label>&nbsp;
+        <label class="footerLabel" ng-show="showPaths">
+            <input type="radio" ng-model="selected.name" value="JSON">
+            JSON
+        </label>&nbsp;
+        <label class="footerLabel" ng-show="showPaths">
+            <input type="radio" ng-model="selected.name" value="HTML">
+            HTML
+        </label>
+        <label class="footerLabel" ng-show="showPaths">
+            <input type="radio" ng-model="selected.name" value="PLAIN">
+            Plain
+        </label>
+    </div>
+    <div  ng-show="showPaths">
+        <label class="footerLabel" title="If you think images have changed after last print">
+            <input type="checkbox" ng-model="removeOldImages" ng-checked="removeOldImages">
+            Reload extrenal images
+        </label>
+    </div>
+    <div  ng-show="showPaths">
+        <label class="footerLabel" title="Use this in case referenced docs have changed">
+            <input type="checkbox" ng-model="forceRefresh" ng-checked="forceRefresh">
+            Force to new calculation
+        </label>
+    </div>
     <button class="btn timButton" ng-click="create()">
         <span ng-show="loading"><i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
         Creating</span>

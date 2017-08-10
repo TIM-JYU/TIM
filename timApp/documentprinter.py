@@ -84,7 +84,7 @@ class DocumentPrinter:
     def get_template_id(self):
         return self._template_to_use_id
 
-    def get_content(self, plugins_user_print: bool = False) -> str:
+    def get_content(self, plugins_user_print: bool = False, target_format: str = '') -> str:
         """
         Gets the content of the DocEntry assigned for this DocumentPrinter object.
         Fetches the markdown for the documents paragraphs, checks whether the
@@ -150,6 +150,10 @@ class DocumentPrinter:
             else:
                 pars_to_print.append(ppar)
 
+        tformat = target_format
+        if target_format == 'pdf' or target_format == 'json':
+            tformat = 'latex'
+
         # Dereference pars and render markdown for plugins
         # Only the 1st return value (the pars) is needed here
         par_dicts, _, _, _ = pluginify(doc=self._doc_entry.document,
@@ -158,7 +162,8 @@ class DocumentPrinter:
                                        user=get_current_user_object(),
                                        output_format=PluginOutputFormat.MD,
                                        wrap_in_div=False,
-                                       user_print=plugins_user_print)
+                                       user_print=plugins_user_print,
+                                       target_format=tformat)
 
         export_pars = []
 
@@ -183,8 +188,14 @@ class DocumentPrinter:
                         if cls == "nonumber":
                             nonumber = "{.unnumbered}"
                         else:
-                            beginraw += "RAWTEX" + cls + "\n\n"
-                            endraw += "\n\nENDRAWTEX"
+                            if target_format == "html":
+                                beginraw += '<div class="' + cls + '">'
+                                endraw += "</div>"
+                            elif target_format == "plain":
+                                beginraw = ''
+                            else:
+                                beginraw += "RAWTEX" + cls + "\n\n"
+                                endraw += "\n\nENDRAWTEX"
                     if nonumber:
                         md = add_nonumber(md)
                     md = beginraw + md + endraw
@@ -254,7 +265,7 @@ class DocumentPrinter:
                 #  os.path.join(cwd, "pandoc-headernumberingfilter.py")  # handled allready when making md
             ]
 
-            src = self.get_content(plugins_user_print=plugins_user_print)
+            src = self.get_content(plugins_user_print=plugins_user_print, target_format=target_format.value)
             ftop = self._macros.get('texforcetoplevel', None)
             if ftop:
                 top_level = ftop
@@ -271,6 +282,9 @@ class DocumentPrinter:
                                       outputfile=output_file.name,
                                       extra_args=['--template=' + template_file.name, '--variable=TTrue:1',
                                                   '--variable=T1:1', '--top-level-division=' + top_level,
+                                                  '--atx-headers',
+                                                  '--verbose',
+                                                  '--latex-engine-opt=-interaction=nonstopmode',
                                                   '-Mtexdocid=' + str(self._doc_entry.document.doc_id)
                                                   # '--latex-engine=xelatex'
                                                   ],

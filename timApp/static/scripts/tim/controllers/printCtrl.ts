@@ -59,15 +59,19 @@ timApp.controller("PrintCtrl", ['$scope', '$uibModal', 'document', '$uibModalIns
             $scope.errormsg = null;
             $scope.docUrl = null;
 
+            /*
             if (fileType !== 'latex' && fileType !== 'pdf') {
                 console.log("The filetype '" + fileType + "' is not valid");
                 return; //TODO: the error should do something visible
                 // TODO: also kind of pointless as the filetype comes from the predefined functions
             }
+            */
             var chosenTemplateId = $scope.selectedTemplate.id;
             $scope.storage.timPrintingTemplateId = chosenTemplateId;
 
             var pluginsUserCode = $scope.pluginsUserCode;
+            var removeOldImages = $scope.removeOldImages;
+            var force = $scope.forceRefresh;
 
             if (chosenTemplateId) {
                 $scope.notificationmsg = null;
@@ -76,7 +80,9 @@ timApp.controller("PrintCtrl", ['$scope', '$uibModal', 'document', '$uibModalIns
                 var data = JSON.stringify({
                     'fileType' : fileType,
                     'templateDocId' : chosenTemplateId,
-                    'printPluginsUserCode' : pluginsUserCode
+                    'printPluginsUserCode' : pluginsUserCode,
+                    'removeOldImages' : removeOldImages,
+                    'force' : force
                 });
                 $http.post(postURL, data)
                     .then(function success(response) {
@@ -110,12 +116,7 @@ timApp.controller("PrintCtrl", ['$scope', '$uibModal', 'document', '$uibModalIns
         $scope.create = function () {
             $scope.loading = true;
             $scope.createdUrl = null;
-            if ($scope.selected.name === 'PDF'){
-                $scope.getPrintedDocument('pdf');
-            }
-            else if ($scope.selected.name === 'LaTeX'){
-                $scope.getPrintedDocument('latex');
-            }
+            $scope.getPrintedDocument($scope.selected.name.toLowerCase());
         };
 
         $scope.cancel = function () {
