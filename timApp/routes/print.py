@@ -307,6 +307,9 @@ def create_printed_doc(doc_entry: DocEntry,
         raise PrintingError(str(err))
 
 
-
 def remove_images(docid):
-    shutil.rmtree(os.path.join(DOWNLOADED_IMAGES_ROOT, str(docid)))
+    # noinspection PyBroadException
+    try:
+        shutil.rmtree(os.path.join(DOWNLOADED_IMAGES_ROOT, str(docid)))
+    except:
+        pass

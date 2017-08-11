@@ -282,9 +282,9 @@ class DocumentPrinter:
                                       outputfile=output_file.name,
                                       extra_args=['--template=' + template_file.name, '--variable=TTrue:1',
                                                   '--variable=T1:1', '--top-level-division=' + top_level,
-                                                  '--atx-headers',
-                                                  '--verbose',
-                                                  '--latex-engine-opt=-interaction=nonstopmode',
+                                                  # '--atx-headers',
+                                                  # '--verbose',
+                                                  # '--latex-engine-opt=-interaction=nonstopmode',
                                                   '-Mtexdocid=' + str(self._doc_entry.document.doc_id)
                                                   # '--latex-engine=xelatex'
                                                   ],
