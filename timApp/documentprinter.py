@@ -6,8 +6,6 @@ import re
 import tempfile
 from typing import Optional, List
 
-import pypandoc
-
 from timApp.accesshelper import has_view_access
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
@@ -15,7 +13,6 @@ from timApp.documentmodel.document import dereference_pars
 from timApp.documentmodel.macroinfo import MacroInfo
 from documentmodel.randutils import hashfunc
 from timApp.markdownconverter import expand_macros, create_environment
-from timApp.plugin import parse_plugin_values
 from timApp.pluginControl import pluginify
 from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.sessioninfo import get_current_user_object
@@ -27,6 +24,10 @@ from timApp.timdb.printsettings import PrintFormat
 from timApp.timdb.tim_models import db
 from timApp.plugin import get_value
 from timApp.plugin import parse_plugin_values_macros
+
+import subprocess
+from pypandoc import _as_unicode, _validate_formats
+from pypandoc.py3compat import string_types, cast_bytes
 
 FILES_ROOT = os.path.abspath('tim_files')
 DEFAULT_PRINTING_FOLDER = os.path.join(FILES_ROOT, 'printed_documents')
@@ -167,7 +168,6 @@ class DocumentPrinter:
 
         export_pars = []
 
-        pdoc = self._doc_entry.document
         # Get the markdown for each par dict
         for pd in par_dicts:
             md = pd['md']
@@ -274,21 +274,24 @@ class DocumentPrinter:
             os.environ["texdocid"] = str(self._doc_entry.document.doc_id)
 
             # print(top_level)
-            # TODO: add also variables from texpandocvariables document setting
+            # TODO: add also variables from texpandocvariables document setting, but this may leed to security hole???
             try:
-                pypandoc.convert_text(source=src,
-                                      format='markdown',
-                                      to=target_format.value,
-                                      outputfile=output_file.name,
-                                      extra_args=['--template=' + template_file.name, '--variable=TTrue:1',
-                                                  '--variable=T1:1', '--top-level-division=' + top_level,
-                                                  # '--atx-headers',
-                                                  # '--verbose',
-                                                  # '--latex-engine-opt=-interaction=nonstopmode',
-                                                  '-Mtexdocid=' + str(self._doc_entry.document.doc_id)
-                                                  # '--latex-engine=xelatex'
-                                                  ],
-                                      filters=filters)
+                tim_convert_text(source=src,
+                                 from_format='markdown',
+                                 to=target_format.value,
+                                 outputfile=output_file.name,
+                                 extra_args=['--template=' + template_file.name,
+                                             '--variable=TTrue:1',
+                                             '--variable=T1:1',
+                                             '--top-level-division=' + top_level,
+                                             '--atx-headers',
+                                             # '--verbose',  # this gives non UTF8 results sometimes
+                                             '--latex-engine-opt=-interaction=nonstopmode',
+                                             '-Mtexdocid=' + str(self._doc_entry.document.doc_id),
+                                             # '--latex-engine=xelatex'
+                                             ],
+                                 filters=filters
+                                 )
                 template_file.seek(0)
                 output_bytes = bytearray(output_file.read())
                 print("docid from env ", os.environ.get("texdocid", None))
@@ -302,7 +305,7 @@ class DocumentPrinter:
 
                 # TODO: selection of errors that should be routed to the UI
 
-                raise PrintingError(str(ex))
+                raise PrintingError('<pre>' + str(ex) + '</pre>')
                 # finally:
                 #    os.remove(template_file.name)
 
@@ -410,8 +413,6 @@ class DocumentPrinter:
 
         default_templates = list(set(all_templates) - set(user_templates))
 
-        templates_list = []
-
         user_templates_list = []
         for t in user_templates:
             user_templates_list.append({'id': t.id, 'path': t.name, 'origin': 'user', 'name': t.title})
@@ -507,3 +508,115 @@ class DocumentPrinter:
             return None
 
         return existing_print.path_to_file
+
+
+# ------------------------ copied from pypandoc / Juho Vepsäläinen ---------------------------------
+# use own version, because the original fall down if scandinavian chars in erros messages
+
+def tim_convert_text(source, to, from_format, extra_args=(), encoding='utf-8',
+                     outputfile=None, filters=None):
+    """Converts given `source` from `format` to `to`.
+    :param str source: Unicode string or bytes (see encoding)
+    :param str to: format into which the input should be converted; can be one of
+            `pypandoc.get_pandoc_formats()[1]`
+    :param str from_format: the format of the inputs; can be one of `pypandoc.get_pandoc_formats()[1]`
+    :param list extra_args: extra arguments (list of strings) to be passed to pandoc
+            (Default value = ())
+    :param str encoding: the encoding of the input bytes (Default value = 'utf-8')
+    :param str outputfile: output will be written to outfilename or the converted content
+            returned if None (Default value = None)
+    :param list filters: pandoc filters e.g. filters=['pandoc-citeproc']
+    :returns: converted string (unicode) or an empty string if an outputfile was given
+    :rtype: unicode
+
+    :raises RuntimeError: if any of the inputs are not valid of if pandoc fails with an error
+    :raises OSError: if pandoc is not found; make sure it has been installed and is available at
+            path.
+    """
+    source = _as_unicode(source, encoding)
+    return tim_convert_input(source, from_format, 'string', to, extra_args=extra_args,
+                             outputfile=outputfile, filters=filters)
+
+
+def tim_convert_input(source, from_format, input_type, to, extra_args=(), outputfile=None,
+                      filters=None):
+    pandoc_path = '/usr/bin/pandoc'
+
+    from_format, to = _validate_formats(from_format, to, outputfile)
+
+    string_input = input_type == 'string'
+    input_file = [source] if not string_input else []
+    args = [pandoc_path, '--from=' + from_format, '--to=' + to]
+
+    args += input_file
+
+    if outputfile:
+        args.append("--output=" + outputfile)
+
+    args.extend(extra_args)
+
+    # adds the proper filter syntax for each item in the filters list
+    if filters is not None:
+        if isinstance(filters, string_types):
+            filters = filters.split()
+        f = ['--filter=' + x for x in filters]
+        args.extend(f)
+
+    # To get access to pandoc-citeproc when we use a included copy of pandoc,
+    # we need to add the pypandoc/files dir to the PATH
+    new_env = os.environ.copy()
+    files_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "files")
+    new_env["PATH"] = new_env.get("PATH", "") + os.pathsep + files_path
+
+    p = subprocess.Popen(
+        args,
+        stdin=subprocess.PIPE if string_input else None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=new_env)
+
+    # something else than 'None' indicates that the process already terminated
+    if not (p.returncode is None):
+        raise RuntimeError(
+            'Pandoc died with exitcode "%s" before receiving input: %s' % (p.returncode,
+                                                                           p.stderr.read())
+        )
+
+    try:
+        source = cast_bytes(source, encoding='utf-8')
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        # assume that it is already a utf-8 encoded string
+        pass
+    try:
+        stdout, stderr = p.communicate(source if string_input else None)
+    except OSError:
+        # this is happening only on Py2.6 when pandoc dies before reading all
+        # the input. We treat that the same as when we exit with an error...
+        raise RuntimeError('Pandoc died with exitcode "%s" during conversion.' % (p.returncode))
+
+    stdout = _decode_result(stdout)
+    stderr = _decode_result(stderr)
+
+    # check that pandoc returned successfully
+    if p.returncode != 0:
+        raise RuntimeError(
+            'Pandoc died with exitcode "%s" during conversion: \n%s' % (p.returncode, stderr)
+        )
+
+    # if there is an outputfile, then stdout is likely empty!
+    return stdout
+
+
+def _decode_result(s):
+    try:
+        s = s.decode('utf-8')
+    except UnicodeDecodeError:
+        # this shouldn't happen: pandoc more or less garantees that the output is utf-8!
+        # raise RuntimeError('Pandoc output was not utf-8.')
+        # noinspection PyBroadException
+        try:
+            s = s.decode('iso-8859-15')
+        except Exception:
+            pass
+    s = s.replace('\\n', '\n')
+    return s
