@@ -47,7 +47,7 @@ class Mailer(Updatable):
         logging.getLogger('mailer').info('Dry run mode is {}'.format(dry_run))
         self.mail_host = mail_host
         self.mail_dir = mail_dir
-        self.mail_signature = MAIL_SIGNATURE
+        self.mail_signature = mail_signature
 
         self.queue = PersistentQueue(self.mail_dir)
         self.group_delay = group_delay
