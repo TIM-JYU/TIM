@@ -11,7 +11,7 @@ from typing import Dict, Optional, Union
 
 MAIL_HOST = "smtp.jyu.fi"
 MAIL_DIR = "/service/mail"
-MAIL_SIGNATURE = "\n\n-- This message was automatically sent by TIM"
+MAIL_SIGNATURE = "\n\n-- \nThis message was automatically sent by TIM"
 
 
 CLIENT_RATE        = 20  # Max messages per client rate window
