@@ -8,13 +8,14 @@ timApp.controller("SettingsCtrl", ["$scope", function(sc) {
         sc.saving = true;
         try {
             const data = await $http.post(saveUrl, sc.settings);
-            sc.settings = data;
+            sc.settings = data.data;
             sc.updateCss();
         } catch (e) {
             alert("Failed to save settings.");
         } finally {
             sc.saving = false;
         }
+        sc.$apply();
     };
 
     sc.updateCss = function() {
