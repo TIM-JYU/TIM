@@ -131,6 +131,7 @@ export function defineQuestions(sc) {
             par_id_next: parNextId,
             markup: data.markup,
         });
+        sc.$apply();
     };
 
     // Event handler for "Add question below"
