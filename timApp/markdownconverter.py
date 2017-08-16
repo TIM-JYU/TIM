@@ -11,11 +11,11 @@ from timApp.utils import get_error_html
 
 
 # noinspection PyUnusedLocal
-def has_macros(text, macros, macro_delimiter=None):
+def has_macros(text: str, macros, macro_delimiter: Optional[str]=None):
     return macro_delimiter and (macro_delimiter in text or '{!!!' in text or '{%' in text)
 
 
-def expand_macros_regex(text, macros, macro_delimiter=None):
+def expand_macros_regex(text: str, macros, macro_delimiter=None):
     if not has_macros(text, macros, macro_delimiter):
         return text
     return re.sub('{0}([a-zA-Z]+){0}'.format(re.escape(macro_delimiter)),
@@ -23,7 +23,7 @@ def expand_macros_regex(text, macros, macro_delimiter=None):
                   text)
 
 
-def expand_macros_jinja2(text, macros, macro_delimiter=None, env=None, ignore_errors=False):
+def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None, env=None, ignore_errors: bool=False):
     if not has_macros(text, macros, macro_delimiter):
         return text
     if env is None:
@@ -36,7 +36,7 @@ def expand_macros_jinja2(text, macros, macro_delimiter=None, env=None, ignore_er
         return text
 
 
-def create_environment(macro_delimiter):
+def create_environment(macro_delimiter: str):
     return Environment(variable_start_string=macro_delimiter,
                        variable_end_string=macro_delimiter,
                        comment_start_string='{!!!',
@@ -56,7 +56,7 @@ expand_macros = expand_macros_jinja2
 def md_to_html(text: str,
                sanitize: bool = True,
                macros: Optional[Dict[str, str]] = None,
-               macro_delimiter=None) -> str:
+               macro_delimiter: Optional[str]=None) -> str:
     """Converts the specified markdown text to HTML.
 
     :param macros: The macros to use.
@@ -231,7 +231,7 @@ def change_class(text_containing_html_tag: str, text_content: str, new_class: st
     return [text_containing_html_tag, text_content]
 
 
-def insert_heading_numbers(html_str, heading_info, auto_number_headings=True, heading_format=''):
+def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bool=True, heading_format: str=''):
     """Applies the given heading_format to the HTML if it is a heading, based on the given heading_info. Additionally
     corrects the id attribute of the heading in case it has been used earlier.
 
