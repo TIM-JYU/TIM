@@ -1,13 +1,13 @@
-from fpco/stack-build:lts-7
-maintainer Ville Tirronen "ville.tirronen@jyu.fi"
+FROM fpco/stack-build:lts-9
+LABEL maintainer="ville.tirronen@jyu.fi"
 
-run apt-get update
-run apt-get install -y graphviz git
-env LANG C.UTF-8
-env LC_ALL C.UTF-8
+RUN apt-get update
+RUN apt-get install -y graphviz git
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
 
 # Set name and email for git.
-run git config --global user.email "agent@docker.com"
-run git config --global user.name "agent"
+RUN git config --global user.email "agent@docker.com"
+RUN git config --global user.name "agent"
 
-expose 5000
+EXPOSE 5000
