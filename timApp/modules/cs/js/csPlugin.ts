@@ -304,6 +304,7 @@ interface ICSAppScope extends IConsolePWDScope {
     showOtherEditor(editorMode: number): void;
     showCodeNow(): void;
     aceLoaded(ace: IAce, editor: IAceEditor): void;
+    $evalAsync(param: () => any): void;
 }
 
 interface IConsolePWDScope {
@@ -1499,21 +1500,22 @@ csApp.Controller = function($scope,$transclude) {
             if ( $scope.editorIndex === 0) {
                 var start = $scope.edit.selectionStart;
 
-                //$scope.usercode = lines.join("\n");
-                $scope.edit.value = r.s;
-                $scope.edit.selectionStart = start;
-                $scope.edit.selectionEnd = start;
+                $scope.usercode = r.s;
+                $timeout(() => {
+                    $scope.edit.selectionStart = start;
+                    $scope.edit.selectionEnd = start;
+                });
             }
             if ( $scope.editorIndex === 1) { // ACE
                 var editor = $scope.aceEditor;
-                // var start = $scope.aceEditor.selectionStart;
                 var cursor = editor.selection.getCursor();
                 var index = editor.session.doc.positionToIndex(cursor, 0);
-                //$scope.usercode = lines.join("\n");
-                editor.setValue(r.s);
-                cursor = editor.session.doc.indexToPosition(index, 0);
-                editor.selection.moveCursorToPosition(cursor);
-                editor.selection.clearSelection();
+                $scope.usercode = r.s;
+                $timeout(() => {
+                    cursor = editor.session.doc.indexToPosition(index, 0);
+                    editor.selection.moveCursorToPosition(cursor);
+                    editor.selection.clearSelection();
+                });
             }
 
         }
@@ -2419,7 +2421,9 @@ csApp.Controller = function($scope,$transclude) {
             $scope.aceEditor.renderer.setScrollMargin(12, 12, 0, 0);
             $scope.aceEditor.getSession().setValue($scope.usercode);
             $scope.aceEditor.getSession().on('change', function () {
-                $scope.usercode = $scope.aceEditor.getSession().getValue();
+                $scope.$evalAsync(() => {
+                    $scope.usercode = $scope.aceEditor.getSession().getValue();
+                });
             });
             $scope.$watch('usercode', function (newValue, oldValue) {
                 if (newValue === oldValue || $scope.aceEditor.getSession().getValue() === newValue) {
