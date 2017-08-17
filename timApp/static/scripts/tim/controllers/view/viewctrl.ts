@@ -452,6 +452,8 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         // from https://stackoverflow.com/a/7317311
         $(() => {
             this.processQuestions();
+            this.setHeaderLinks();
+            this.document.rebuildSections();
             $window.addEventListener("beforeunload", (e) => {
                 if (!this.editing) {
                     return undefined;
@@ -500,9 +502,6 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
             return false;
 
         }, true);
-
-        this.setHeaderLinks();
-        this.document.rebuildSections();
 
         // If you add 'mousedown' to bind, scrolling upon opening the menu doesn't work on Android
         $("body,html").bind("scroll wheel DOMMouseScroll mousewheel", (e) => {
@@ -668,10 +667,10 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
 
     setHeaderLinks() {
         const pars = $(".parContent");
-        pars.each(() => {
-            const $p = $(this);
-            $p.find("h1, h2, h3, h4, h5, h6").each(() => {
-                const $h = $(this);
+        pars.each((index, elem) => {
+            const $p = $(elem);
+            $p.find("h1, h2, h3, h4, h5, h6").each((i, e) => {
+                const $h = $(e);
                 const id = $h.attr("id");
                 if (angular.isDefined(id)) {
                     $h.append($("<a>", {
