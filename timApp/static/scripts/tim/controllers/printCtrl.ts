@@ -84,7 +84,7 @@ timApp.controller("PrintCtrl", ['$scope', '$uibModal', 'document', '$uibModalIns
                     'removeOldImages' : removeOldImages,
                     'force' : force
                 });
-                $http.post(postURL, data)
+                $http.post<{url: string}>(postURL, data)
                     .then(function success(response) {
                         // console.log(response);
 
