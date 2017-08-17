@@ -224,7 +224,7 @@ class DocParagraph:
         """Returns the internal data dictionary."""
         return self.__data
 
-    def _mkhtmldata(self, from_preview: bool = True):
+    def _mkhtmldata(self, from_preview: bool = True, output_md: bool = False):
         """Prepares the internal __htmldata dictionary that contains all the information required for embedding the
         paragraph in HTML."""
         self._cache_props()
@@ -244,13 +244,14 @@ class DocParagraph:
             self.__htmldata['attrs_str'] = self.get_attrs_str()
             self.__htmldata['doc_id'] = self.doc.doc_id
 
-        try:
-            self.__htmldata['html'] = self.get_html(from_preview=from_preview)
-            if not self.__htmldata['html']:
-                self.__htmldata['md'] = self.get_markdown()
+        if output_md:
+            self.__htmldata['md'] = self.get_markdown()
+        else:
+            try:
+                self.__htmldata['html'] = self.get_html(from_preview=from_preview)
 
-        except Exception as e:
-            self.__htmldata['html'] = get_error_html(e)
+            except Exception as e:
+                self.__htmldata['html'] = get_error_html(e)
 
         self.__htmldata['cls'] = ' '.join(['par']
                                           + self.get_classes()
@@ -268,9 +269,9 @@ class DocParagraph:
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
         self.__is_setting = 'settings' in self.get_attrs()
 
-    def html_dict(self) -> Dict:
+    def html_dict(self, use_md: bool = False) -> Dict:
         """Returns a dictionary that contains all the information required for embedding the paragraph in HTML."""
-        self._mkhtmldata()
+        self._mkhtmldata(output_md=use_md)
         return self.__htmldata
 
     def get_doc_id(self) -> int:
@@ -318,18 +319,19 @@ class DocParagraph:
         """Returns the markdown of this paragraph."""
         return self.__data['md']
 
-    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None) -> str:
+    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None, ignore_errors: bool = False) -> str:
         """Returns the macro-processed markdown for this paragraph.
 
         :param macroinfo: The MacroInfo to use. If None, the MacroInfo is taken from the document that has the
-         paragraph.
+        paragraph.
+        :param ignore_errors: Whether or not to ignore errors when expanding the macros
         :return: The expanded markdown.
 
         """
         if macroinfo is None:
             macroinfo = self.doc.get_settings().get_macroinfo()
         return expand_macros(self.get_markdown(), macroinfo.get_macros(),
-                             macroinfo.get_macro_delimiter())
+                             macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
 
     def get_title(self) -> Optional[str]:
         """Attempts heuristically to return a title for this paragraph.
@@ -516,7 +518,9 @@ class DocParagraph:
                 continue
             cached = par.__data.get('h')
             try:
-                auto_macros = par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
+                auto_number_start = settings.auto_number_start()
+                auto_macros = par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache,
+                                                        auto_number_start)
             except RecursionError:
                 raise TimDbException(
                     'Infinite recursion detected in get_auto_macro_values; the document may be broken.')
@@ -571,7 +575,7 @@ class DocParagraph:
                 self.__data['attrs']['classes'] = []
             self.__data['attrs']['classes'].append(class_name)
 
-    def get_auto_macro_values(self, macros, macro_delim, auto_macro_cache, heading_cache):
+    def get_auto_macro_values(self, macros, macro_delim, auto_macro_cache, heading_cache, auto_number_start):
         """Returns the auto macros values for the current paragraph. Auto macros include things like current
         heading/table/figure numbers.
 
@@ -579,6 +583,7 @@ class DocParagraph:
          in that paragraph.
         :param macros: Macros to apply for the paragraph.
         :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
+        :param auto_number_start: first heading start number
         :return: Auto macro values as a dict.
         :param macro_delim: Delimiter for macros.
         :return: A dict(str, dict(int,int)) containing the auto macro information.
@@ -592,10 +597,12 @@ class DocParagraph:
 
         prev_par = self.doc.get_previous_par(self)
         if prev_par is None:
-            prev_par_auto_values = {'h': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
+            autonumber_start = auto_number_start
+            prev_par_auto_values = {'h': {1: autonumber_start, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
             heading_cache[self.get_id()] = []
         else:
-            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache)
+            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache,
+                                                                  auto_number_start)
 
         if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber'):
             auto_macro_cache[key] = prev_par_auto_values

@@ -1,0 +1,20 @@
+# Standard functions
+sin
+cos
+tan
+csc
+sec
+cot
+sinh
+cosh
+tanh
+log
+ln
+det
+dim
+lim
+mod
+gcd
+lcm
+min
+max

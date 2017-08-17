@@ -23,7 +23,7 @@
                 <a href="/settings">Customize TIM</a>
                 {% if route and item.rights.manage %}
                 <h5>Document settings</h5>
-                <button class="timButton" ng-click="$ctrl.vctrl.editSettingsPars()">Edit settings</button>
+                <button class="timButton btn btn-block" ng-click="$ctrl.vctrl.editSettingsPars()">Edit settings</button>
                 {% endif %}
                 <div ng-show="$ctrl.lctrl.lectureSettings.inLecture">
                     <h5>Lecture settings</h5>
@@ -49,6 +49,18 @@
                         </label>
                     </div>
                 </div>
+                <!-- TODO: check rights -->
+                <div ng-show="$ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder">
+                    <h5 style="display: inline-block">Print document</h5>
+                    <a style="display: inline-block" href="https://tim.jyu.fi/view/tim/TIM-ohjeet">
+                        <span class="glyphicon glyphicon-question-sign"></span>
+                    </a>
+                    <button class="timButton btn btn-block" ng-click="printDocument()">Print document</button>
+                    <br>
+                    <button class="timButton btn btn-block" ng-click="cssPrint()">Browser print</button>
+                    <br>
+                </div>
+
             </uib-tab>
             {% endif %}
 

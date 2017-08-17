@@ -7,6 +7,9 @@ import signal
 import socketserver
 import threading
 from languages import *
+import pwd, os
+#  uid = pwd.getpwnam('agent')[2]
+#  os.setuid(uid)
 
 # cs.py: WWW-palvelin portista 5000 (ulospäin 56000) joka palvelee csPlugin pyyntöjä
 #
@@ -165,16 +168,25 @@ def delete_extra_files(extra_files, prgpath):
 
 
 def get_md(ttype, query):
-    if query.hide_program and ttype:
+    tiny = False
+
+    if query.hide_program:
         get_param_del(query, 'program', '')
 
     js = query_params_to_map_check_parts(query)
     if "byFile" in js and not ("byCode" in js):
-        js["byCode"] = get_url_lines_as_string(js["byFile"])
-        # TODO: Tähän niin että jos tiedosto puuttuu, niin parempi tieto
+        js["byCode"] = get_url_lines_as_string(
+            js["byFile"])  # TODO: Tähän niin että jos tiedosto puuttuu, niin parempi tieto
+    bycode = ""
+    if "by" in js:
+        bycode = js["by"]
+    if "byCode" in js:
+        bycode = js["byCode"]
+    if get_param(query, "noeditor", False):
+        bycode = ""
 
     qso = json.dumps(query.jso)
-    print(qso)
+    # print(qso)
     uf = get_param(query, "uploadedFile", None)
     ut = get_param(query, "uploadedType", None)
     uf = get_json_eparam(query.jso, "state", "uploadedFile", uf)
@@ -184,12 +196,103 @@ def get_md(ttype, query):
         js["uploadedType"] = ut
 
     jso = json.dumps(js)
-    print(jso)
+    # print(jso)
+    runner = 'cs-runner'
+    # print(ttype)
+    is_input = ''
+    if "input" in ttype or "args" in ttype:
+        is_input = '-input'
+    if "comtest" in ttype or "junit" in ttype:
+        runner = 'cs-comtest-runner'
+    if "tauno" in ttype:
+        runner = 'cs-tauno-runner'
+    if "simcir" in ttype:
+        runner = 'cs-simcir-runner'
+        bycode = ''
+    if "tiny" in ttype:
+        runner = 'cs-text-runner'
+        tiny = True
+    if "parsons" in ttype:
+        runner = 'cs-parsons-runner'
+    if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype:
+        runner = 'cs-jypeli-runner'
+    if "sage" in ttype:
+        runner = 'cs-sage-runner'
 
-    usercode = get_json_eparam(query.jso, "state", "usercode", "")
+    usercode = None
+    user_print = get_json_param(query.jso, "userPrint", None,  False)
+    if user_print:
+        usercode = get_json_eparam(query.jso, "state", "usercode", None, False)
+    if usercode is None:
+        usercode = bycode
 
-    s = '\\begin{verbatim}\n' + usercode + '\\end{verbatim}'
+    r = runner + is_input
 
+    if "csconsole" in ttype:  # erillinen konsoli
+        r = "cs-console"
+
+    # s = '\\begin{verbatim}\n' + usercode + '\n\\end{verbatim}'
+    header = str(get_param(query, "header", ""))
+    stem = str(get_param(query, "stem", ""))
+    footer = str(get_param(query, "footer", ""))
+
+    rows = get_param(query, "rows", None)
+
+    target_format = get_param(query, "targetFormat", 'latex')
+
+    if target_format == 'html':
+        s = '''
+<h4>{}</h4>
+<p>{}</p>
+<pre>
+{}
+</pre>
+<p>{}</p>
+'''.format(header, stem, usercode, footer)
+        return s
+
+    if target_format == 'md':
+        s = '''
+#### {}
+{}
+```
+{}
+```
+{}
+'''.format(header, stem, usercode, footer)
+        return s
+
+    if target_format == "latex":
+        code = '\\begin{lstlisting}\n' +\
+               str(usercode) + '\n' +\
+               '\\end{lstlisting}\n'
+
+        if 'text' in ttype and rows is not None and str(usercode) == '':
+            r = ''  # for text make a verbatim with number of rows empty lines
+            rows = str_to_int(rows, 1)
+            for i in range(0, rows):
+                r += "\n"
+            code = '\\begin{verbatim}\n' +\
+                   r +\
+                   '\\end{verbatim}\n'
+
+        s = '\\begin{taskenv}{' + header + '}{' + stem + '}{'+footer + '}' +\
+            '\\lstset{language=[Sharp]C, numbers=left}\n' +\
+            code +\
+            '\\end{taskenv}'
+
+        return s
+
+    # plain
+    s = '''
+{0}
+
+{1}
+
+{2}
+
+{3}
+'''.format(header, stem, usercode, footer)
     return s
 
 
@@ -224,7 +327,7 @@ def get_html(ttype, query):
         bycode = ""
 
     qso = json.dumps(query.jso)
-    print(qso)
+    # print(qso)
     uf = get_param(query, "uploadedFile", None)
     ut = get_param(query, "uploadedType", None)
     uf = get_json_eparam(query.jso, "state", "uploadedFile", uf)
@@ -234,7 +337,7 @@ def get_html(ttype, query):
         js["uploadedType"] = ut
 
     jso = json.dumps(js)
-    print(jso)
+    # jso)
     runner = 'cs-runner'
     # print(ttype)
     is_input = ''
@@ -560,7 +663,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 ttype = 'parsons'
             check_fullprogram(query, True)
             if multimd:
-                s = get_md(ttype, query)
+                # noinspection PyBroadException
+                try:
+                    s = get_md(ttype, query)
+                except Exception as ex:
+                    print("ERROR: " + str(ex) + " " + json.dumps(query))
+                    continue
             else:
                 s = get_html(ttype, query)
             # print(s)
@@ -827,7 +935,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 print(parts)
                 if print_file == "2":
                     return self.wout(json.dumps(parts))
-                s = join_file_parts(p0, parts)
+                s = join_file_parts(parts)
             else:
                 s = get_file_to_output(query, False and print_file)
             slines = ""
@@ -1060,7 +1168,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             else:  # run cmd wins all other run types
                 language.set_stdin(userinput)
                 runcommand = get_param(query, "cmd", "")
-                if ttype != "run" and (runcommand or get_param(query, "cmds", "")):
+                if ttype != "run" and (runcommand or get_param(query, "cmds", "")) and not is_test:
                     print("runcommand: ", runcommand)
                     # code, out, err, pwddir = run2([runcommand], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                     #                               uargs=get_param(query, "runargs", "") + " " + userargs)
@@ -1158,7 +1266,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         web["pwd"] = pwddir.strip()
 
         result["web"] = web
-        print(result)
+        # print(result)
 
         # Clean up
         # print("FILE NAME:", sourcefilename)

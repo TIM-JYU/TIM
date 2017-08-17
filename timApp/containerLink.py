@@ -9,6 +9,7 @@ from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.dumboclient import call_dumbo
 from timApp.logger import log_warning
 from timApp.plugin import PluginException
+from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.tim_app import app
 
 TIM_URL = ""
@@ -30,7 +31,7 @@ PLUGINS = {
     "mcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
     "mmcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
     "uploader": {"host": app.config['UPLOADER_CONTAINER_URL']},
-    "shortNote": {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
+    #  "shortNote": {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
     "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
     "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
     "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
@@ -46,7 +47,11 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
         # test cannot process the request properly because it tries to call itself during a request.
         # By using a small timeout value, the test finishes more quickly.
         read_timeout = 30 if plugin != 'qst' else 1
-        request = requests.request(method, plug['host'] + route + "/", data=data,
+        host = plug['host']
+        if route == 'multimd' and (plugin == "mmcq" or plugin == "mcq"):  # hack to handle mcq and mmcq in tim by qst
+            plug = get_plugin('qst')
+            host = plug['host'] + plugin + '/'
+        request = requests.request(method, host + route + "/", data=data,
                                    timeout=(0.5, read_timeout), headers=headers, params=params)
         request.encoding = 'utf-8'
         return request.text
@@ -58,7 +63,7 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
         raise PluginException("Read timeout occurred when calling {}.".format(plugin))
 
 
-def call_plugin_html(doc: Document, plugin, plugin_data, params=None):
+def render_plugin(doc: Document, plugin, plugin_data, output_format: PluginOutputFormat, params=None):
     plugin_data.update(params or {})
     if doc.get_settings().plugin_md():
         convert_md(plugin_data)
@@ -66,7 +71,7 @@ def call_plugin_html(doc: Document, plugin, plugin_data, params=None):
                              cls=TimJsonEncoder)
     return call_plugin_generic(plugin,
                                'post',
-                               'html',
+                               output_format.value,
                                data=plugin_data,
                                headers={'Content-type': 'application/json'},
                                params=params)
@@ -79,6 +84,13 @@ def remove_p(s):
     if not rs.endswith('</p>'):
         return s
     return rs[:-4]
+
+
+def call_mock_dumbo_s(s):
+    s = s.replace('`', '')
+    s = s.replace('#', '\\#')
+    s = s.replace('%', '\\%')
+    return s
 
 
 def list_to_dumbo(markup_list):
@@ -97,9 +109,9 @@ def list_to_dumbo(markup_list):
         if not val.startswith("md:"):
             continue
 
-        v = [val[3:]]
-        v = call_dumbo(v)
-        markup_list[ic] = remove_p(v[0])
+        v = val[3:]
+        v = call_mock_dumbo_s(v)
+        markup_list[ic] = v
 
 
 def dict_to_dumbo(pm):
@@ -117,9 +129,9 @@ def dict_to_dumbo(pm):
 
         if not val.startswith("md:"):
             continue
-        v = [val[3:]]
-        v = call_dumbo(v)
-        pm[mkey] = remove_p(v[0])
+        v = val[3:]
+        v = call_mock_dumbo_s(v)
+        pm[mkey] = v
 
 
 def convert_md_old(plugin_data):
@@ -142,17 +154,40 @@ def convert_md(plugin_data):
             p['markup'] = h
 
 
-def call_plugin_multihtml(doc: Document, plugin, plugin_data, params=None):
+def convert_tex(plugin_data):
+    if isinstance(plugin_data, dict):
+        plugin_data['markup'] = call_dumbo(plugin_data['markup'], '/latexkeys')
+    elif isinstance(plugin_data, list):
+        markups = [p['markup'] for p in plugin_data]
+        html_markups = call_dumbo(markups, '/latexkeys')
+        for p, h in zip(plugin_data, html_markups):
+            p['markup'] = h
+
+
+def convert_tex_mock(plugin_data):
+    if type(plugin_data) is dict:
+        dict_to_dumbo(plugin_data)
+        return
+    for p in plugin_data:
+        pm = p["markup"]
+        dict_to_dumbo(pm)
+
+
+def render_plugin_multi(doc: Document, plugin, plugin_data, params=None,
+                        plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML):
     if params is not None:
         for p in plugin_data:
             p.update(params)
 
     if doc.get_settings().plugin_md():
-        convert_md(plugin_data)
+        if plugin_output_format == PluginOutputFormat.HTML:
+            convert_md(plugin_data)
+        else:
+            convert_tex(plugin_data)
 
     return call_plugin_generic(plugin,
                                'post',
-                               'multihtml',
+                               ('multimd' if plugin_output_format == PluginOutputFormat.MD else 'multihtml'),
                                data=json.dumps(plugin_data, cls=TimJsonEncoder),
                                headers={'Content-type': 'application/json'},
                                params=params)

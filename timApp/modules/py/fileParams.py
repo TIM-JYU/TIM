@@ -1,16 +1,16 @@
 # -*- coding:utf-8 -*-
-from multiprocessing import resource_sharer
 from urllib.request import urlopen
 import re
 import html
 import json
 from urllib.parse import urlparse, parse_qs
 import urllib
-import pprint
 import codecs
 import bleach
 import os
 import shlex
+import hashlib
+import binascii
 
 CACHE_DIR = "/tmp/cache/"
 
@@ -172,18 +172,21 @@ def check(matcher, line):
     return match
 
 
-def get_json_eparam(jso, key1, key2, default):
+def get_json_eparam(jso, key1, key2, default, escape_html_special_chars: bool = True):
     # escaped param
     result = get_json_param(jso, key1, key2, default)
-    if (result == None):
+    if result is None:
         return None
-    if type(result) != type(''):
+    if not isinstance(result, str):
         # print("Ei ollut string: ", result, jso)
         result = '' + str(result)
-    return html.escape(result)
+    if escape_html_special_chars:
+        return html.escape(result)
+    return html.unescape(result)
 
 
 def get_json_param(jso, key1, key2, default):
+    # noinspection PyBroadException
     try:
         if jso is None:
             return default
@@ -203,6 +206,7 @@ def get_json_param(jso, key1, key2, default):
 
 
 def get_json_param3(jso, key1, key2, key3, default):
+    # noinspection PyBroadException
     try:
         if jso is None:
             return default
@@ -270,6 +274,7 @@ def get_chache_keys():
     return s
 
 
+# noinspection PyBroadException
 def get_url_lines(url):
     global cache
     # print("========= CACHE KEYS ==========\n", get_chache_keys())
@@ -318,6 +323,9 @@ def get_url_lines(url):
 
     try:
         # open(diskcache,"w").write("\n".join(lines));
+        if not os.path.isdir(CACHE_DIR):
+            os.mkdir(CACHE_DIR)
+
         open(diskcache, "w", encoding='iso8859_15').write("\n".join(lines))
     except Exception as e:
         print(str(e))
@@ -326,6 +334,7 @@ def get_url_lines(url):
     return lines
 
 
+# noinspection PyBroadException
 def get_url_lines_as_string(url):
     global cache
     cachename = "lines_" + url
@@ -388,23 +397,25 @@ def replace_random(query, s):
     if not hasattr(query, 'randomcheck'):
         return s
     result = s
+    # noinspection PyBroadException
     try:
         result = result.replace('RANDOMCHECK', query.randomcheck)
-    except Exception as e:
+    except:
         pass
     return result
 
 
 def do_escape(s):
     line = html.escape(s)
-    # line = line.replace("{","&#123;") # because otherwise problems with angular {{, no need if used inside ng-non-bindable
+    # line = line.replace("{","&#123;")
+    #  because otherwise problems with angular {{, no need if used inside ng-non-bindable
     # line = line.replace("}","&#125;") # because otherwise problems with angular }}
     return line
 
 
 class FileParams:
 
-    def __init__(self, query, nr, url, **defs):
+    def __init__(self, query, nr, url):  # , **defs):
         self.url = get_param(query, "file" + nr, "")  # defs.get('file',""))
         self.start = do_matcher(get_param(query, "start" + nr, "").replace("\\\\", "\\"))
         self.start_scan_dir, self.start_scan = get_scan_value(get_param(query, "startscan" + nr, ""))
@@ -425,16 +436,16 @@ class FileParams:
 
         self.reps = []
 
-        repNr = ""
+        rep_nr = ""
         if nr:
-            repNr = nr + "."
+            rep_nr = nr + "."
 
         for i in range(1, 10):
             rep = do_matcher(
-                get_param(query, "replace" + repNr + str(i), ""))  # replace.1.1 tyyliin replace1 on siis replace.0.1
+                get_param(query, "replace" + rep_nr + str(i), ""))  # replace.1.1 tyyliin replace1 on siis replace.0.1
             if not rep:
                 break
-            byc = replace_random(query, get_param_by(query, "byCode" + repNr + str(i), ""))
+            byc = replace_random(query, get_param_by(query, "byCode" + rep_nr + str(i), ""))
             self.reps.append({"by": rep, "bc": byc})
 
         if self.breakCount:
@@ -443,22 +454,23 @@ class FileParams:
             self.breaksBeforeBegin = []
             self.breaksBefore = []
             self.breaksAfter = []
-            defAfter = -1
+            def_after = -1
             for i in range(0, self.breakCount + 1):
                 brkdef = ""
                 if i >= self.breakCount:
                     brkdef = "!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                    defAfter = 0
+                    def_after = 0
                 self.breaksBegin.append(do_matcher(get_param(query, "breakBegin" +
-                                                             repNr + str(i), "").replace("\\\\", "\\")))
-                self.breaks.append(do_matcher(get_param(query, "break" + repNr + str(i), brkdef).replace("\\\\", "\\")))
-                self.breaksBeforeBegin.append(int(get_param(query, "breakBeforeBegin" + repNr + str(i), 0)))
-                self.breaksBefore.append(int(get_param(query, "breakBefore" + repNr + str(i), 0)))
-                self.breaksAfter.append(int(get_param(query, "breakAfter" + repNr + str(i), defAfter)))
-                if defAfter < 0:
-                    defAfter = 0
+                                                             rep_nr + str(i), "").replace("\\\\", "\\")))
+                self.breaks.append(
+                    do_matcher(get_param(query, "break" + rep_nr + str(i), brkdef).replace("\\\\", "\\")))
+                self.breaksBeforeBegin.append(int(get_param(query, "breakBeforeBegin" + rep_nr + str(i), 0)))
+                self.breaksBefore.append(int(get_param(query, "breakBefore" + rep_nr + str(i), 0)))
+                self.breaksAfter.append(int(get_param(query, "breakAfter" + rep_nr + str(i), def_after)))
+                if def_after < 0:
+                    def_after = 0
                 else:
-                    defAfter = -1
+                    def_after = -1
 
         usercode = get_json_param(query.jso, "input" + nr, "usercode", None)
         # if ( query.jso != None and query.jso.has_key("input") and query.jso["input"].has_key("usercode") ):
@@ -490,7 +502,7 @@ class FileParams:
 
         return self.scan_needed_lines(lines, escape_html)
 
-    def get_raw_lines(self, escape_html=False):
+    def get_raw_lines(self):
         if self.prorgam:
             # print(self.prorgam)
             return self.prorgam.split("\n")
@@ -583,11 +595,11 @@ class FileParams:
 
         return result
 
-    def get_include(self, escapeHTML=False):
+    def get_include(self, escape_html=False):
         if not self.include:
             return ""
         data = self.include.replace("\\n", "\n")
-        if escapeHTML:
+        if escape_html:
             data = html.escape(data)
         return data
 
@@ -644,13 +656,13 @@ def get_file_parts_to_output(query, show_html):
     p0 = FileParams(query, "", "")
     parts = []
     n2 = -1
-    lines = p0.get_raw_lines(show_html)
+    lines = p0.get_raw_lines()
     j = 0
     part0 = ""
     s = get_param(query, "byCode", "")
     if s:
         part0 = s
-    s = usercode = get_json_param(query.jso, "input", "usercode", None)
+    s = get_json_param(query.jso, "input", "usercode", None)
     if s:
         part0 = s
     p0.reps.insert(0, {"by": "", "bc": part0})
@@ -667,7 +679,7 @@ def get_file_parts_to_output(query, show_html):
     return parts
 
 
-def join_file_parts(p0, parts):
+def join_file_parts(parts):
     s = ""
     for i in range(0, len(parts)):
         s = s + parts[i]
@@ -817,13 +829,13 @@ def query_params_to_map_check_parts(query):
     # Replace all byCode by fileparts if exists
     if int(get_param(query, "breakCount", 0)) > 0:
         parts = get_file_parts_to_output(query, False)
-        if not "byCode" in result and parts[1]:
+        if "byCode" not in result and parts[1]:
             result["byCode"] = parts[1]
         j = 1
         for i in range(3, len(parts)):
             if i % 2 != 0:
                 byn = "byCode" + str(j)
-                if not byn in result and parts[i]:
+                if byn not in result and parts[i]:
                     result[byn] = parts[i]
                 j += 1
     return result
@@ -871,7 +883,7 @@ def string_to_string_replace_url(line, what_to_replace, query):
 def file_to_string_replace_attribute(name, what_to_replace, query):
     fr = codecs.open(name, encoding="utf-8-sig")
     lines = fr.readlines()
-    params = query_params_to_attribute(query.query)
+    params = query_params_to_attribute(query.query, None)
     result = ""
     for i in range(0, len(lines)):
         line = lines[i].replace(what_to_replace, params)
@@ -895,12 +907,12 @@ def string_to_string_replace_attribute(line, what_to_replace, query):
 
 
 def allow(s):
-    tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd', 'span']
-    attrs = {
+    allowed_tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd', 'span']
+    allowed_attrs = {
         'a': ['href'],
         'span': ['class']
     }
-    return bleach.clean(s, tags, attrs)
+    return bleach.clean(s, allowed_tags, allowed_attrs)
 
 
 def clean(s):
@@ -928,25 +940,39 @@ def get_heading(query, key, def_elem):
     h = str(h)
     return "<" + def_elem + ">" + h + "</" + def_elem + ">\n"
 
+
+def get_md_heading(query, key, def_elem):
+    if not query:
+        return ""
+    # return "kana"
+    h = get_param(query, key, None)
+    # print("h=",h)
+    if not h:
+        return ""
+    h = str(h)
+    if not def_elem:
+        return h
+    return "\\" + def_elem + "{" + h + "}\n"
+
     # Loppu on liian hidasta koodia, kannattaa muuten vaihtaa järjestys jos tuota vielä käyttää, samoin js-koodissa
-    st = h.split("!!")  # h4 class="h3" width="23"!!Tehtava 1
-    elem = def_elem
-    val = st[0]
-    attributes = ""
-    if len(st) >= 2:
-        elem = st[0]
-        val = st[1]
-    i = elem.find(' ')
-    ea = [elem]
-    if i >= 0:
-        ea = [elem[0:i], elem[i:]]
-    if len(ea) > 1:
-        elem = ea[0]
-        attributes = ea[1] + " "
-    val = allow(val)
-    result_html = "<" + elem + attributes + ">" + val + "</" + elem + ">\n"
-    # result_html = bleach.clean(result_html, tags, attrs)
-    return result_html
+    #  st = h.split("!!")  # h4 class="h3" width="23"!!Tehtava 1
+    #  elem = def_elem
+    #  val = st[0]
+    #  attributes = ""
+    #  if len(st) >= 2:
+    #      elem = st[0]
+    #      val = st[1]
+    #  i = elem.find(' ')
+    #  ea = [elem]
+    #  if i >= 0:
+    #      ea = [elem[0:i], elem[i:]]
+    #  if len(ea) > 1:
+    #      elem = ea[0]
+    #      attributes = ea[1] + " "
+    #  val = allow(val)
+    #  result_html = "<" + elem + attributes + ">" + val + "</" + elem + ">\n"
+    #  # result_html = bleach.clean(result_html, tags, attrs)
+    #  return result_html
 
 
 def get_surrounding_headers2(query):
@@ -955,6 +981,14 @@ def get_surrounding_headers2(query):
     if stem:
         result += '<p class="stem" >' + stem + '</p>'
     return result, get_heading(query, "footer", 'p class="plgfooter"')
+
+
+def get_surrounding_md_headers2(query, header_style, footer_style):
+    result = get_md_heading(query, "header", header_style)
+    stem = allow(get_param(query, "stem", None))
+    if stem:
+        result += "\n\n" + stem
+    return result, get_md_heading(query, "footer", footer_style)
 
 
 def get_tiny_surrounding_headers(query, inside):
@@ -973,6 +1007,17 @@ def get_surrounding_headers(query, inside):
         result += '<p class="stem" >' + stem + '</p>\n'
     result += inside + '\n'
     result += get_heading(query, "footer", 'p class="plgfooter"')
+    return result
+
+
+def get_surrounding_md_headers(query, inside, extra):
+    result = get_md_heading(query, "header", "pluginHeader")
+    stem = allow(get_param(query, "stem", None))
+    if stem:
+        result += "\n\n" + stem
+    result += '\n```\n' + inside + '\n```\n'
+    result += extra
+    result += get_md_heading(query, "footer", "plgfooter")
     return result
 
 
@@ -995,7 +1040,7 @@ def do_headers(self, content_type):
 def find_java_package(s):
     p = ""
     c = ""
-    r = re.search("package\s*([\s\.a-zA-Z0-9_]+)", s, flags=re.M)
+    r = re.search("package\s*([\s.a-zA-Z0-9_]+)", s, flags=re.M)
     if r:
         p = re.sub(r"\s*", "", r.group(1))
     r = re.search("public\s*class\s*([a-zA-Z0-9_]+)", s, flags=re.M)
@@ -1011,7 +1056,6 @@ def find_java_package(s):
 
 # Etsii C# luokan nimen tiedostosta
 def find_cs_class(s):
-    p = ""
     c = "Peli"
     r = re.search("public\s*class\s*([a-zA-Z0-9_]+)", s, flags=re.M)
     if r:
@@ -1031,10 +1075,6 @@ def getint(s):
             return int(s[0:i])
         i += 1
     return int(s)
-
-
-import hashlib
-import binascii
 
 
 # see: https://docs.python.org/3/library/hashlib.html
@@ -1072,7 +1112,7 @@ def get_templates(dirname: str) -> object:
     return result
 
 
-def get_all_templates(dirname: str) -> object:
+def get_all_templates(dirname: str) -> dict:
     """Find list of all templates from dirname.  Dir should include file tabs.txt where there is one line for every tab
     needed for TIM editor. Then there should be directories 0, 1, ... for each corresponding tab-line.  So if tehre is
     two lines in tabs.txt tehre is directories 0 and 1 for first and second tab.
@@ -1082,7 +1122,6 @@ def get_all_templates(dirname: str) -> object:
 
     """
     templates = []
-    texts = []
     try:
         texts = open(dirname + "/tabs.txt", encoding="utf-8-sig").read().splitlines()
         for i in range(0, len(texts)):
@@ -1116,6 +1155,7 @@ def get_template(dirname: str, idx: str, filename: str) -> str:
 def join_dict(a: dict, b: dict):
     """Joins two dict and returns a new one.
 
+    :rtype: dict
     :param a: first dict to join
     :param b: next dict to join
     :return: "a+b"
@@ -1228,7 +1268,6 @@ def replace_template_param(query, template: str, cond_itemname: str, default="")
     :return replaced template or ""
 
     """
-    items = []
     if not cond_itemname:
         return ""
     item = get_param(query, cond_itemname, "default")
@@ -1286,3 +1325,8 @@ def tquote(s):
     return r.replace("'", '"')
 
 
+def str_to_int(s, default=0):
+    try:
+        return int(s)
+    except:
+        return default

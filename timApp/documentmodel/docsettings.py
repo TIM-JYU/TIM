@@ -14,6 +14,7 @@ class DocSettings:
     macro_delimiter_key = 'macro_delimiter'
     source_document_key = 'source_document'
     auto_number_headings_key = 'auto_number_headings'
+    auto_number_start_key = 'auto_number_start'
     heading_format_key = 'heading_format'
     show_task_summary_key = 'show_task_summary'
     no_question_auto_numbering_key = 'no_question_auto_numbering'
@@ -26,6 +27,7 @@ class DocSettings:
     max_points_key = 'max_points'
     live_updates_key = 'live_updates'
     plugin_md_key = 'plugin_md'
+    print_settings_key = 'print_settings'
 
     @classmethod
     def is_valid_paragraph(cls, par):
@@ -82,8 +84,10 @@ class DocSettings:
     def css(self):
         return self.__dict.get(self.css_key)
 
-    def get_macroinfo(self, user=None) -> MacroInfo:
-        return MacroInfo(macro_map=self.__dict.get(self.macros_key, {}),
+    def get_macroinfo(self, user=None, key=None) -> MacroInfo:
+        if not key:
+            key=self.macros_key
+        return MacroInfo(macro_map=self.__dict.get(key, {}),
                          macro_delimiter=self.get_macro_delimiter(),
                          user=user)
 
@@ -107,6 +111,11 @@ class DocSettings:
             default = []
         return self.__dict.get(self.bookmark_key, default)
 
+    def get_print_settings(self, default=None):
+        if default is None:
+            default = []
+        return self.__dict.get(self.print_settings_key, default)
+
     def lazy(self, default=False):
         return self.__dict.get(self.lazy_key, default)
 
@@ -118,6 +127,9 @@ class DocSettings:
 
     def auto_number_headings(self) -> bool:
         return self.__dict.get(self.auto_number_headings_key, False)
+
+    def auto_number_start(self) -> int:
+        return self.__dict.get(self.auto_number_start_key, False)
 
     def heading_format(self) -> dict:
         defaults = {1: '{h1}. {text}',
@@ -153,3 +165,10 @@ class DocSettings:
 
     def plugin_md(self, default=True):
         return self.__dict.get(self.plugin_md_key, default)
+
+    def get(self, key, default=None):
+        return self.__dict.get(key, default)
+
+    def is_texplain(self):
+        texplain = self.__dict.get('texplain', False)
+        return texplain

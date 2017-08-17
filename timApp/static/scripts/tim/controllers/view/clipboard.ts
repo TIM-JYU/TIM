@@ -121,7 +121,7 @@ export class ClipboardHandler {
         try {
             var response = await $http.post("/clipboard/paste/" + this.viewctrl.docId, {
                 par_before: getFirstParId($parOrArea),
-                asRef,
+                as_ref: asRef,
             });
         } catch (e) {
             $window.alert(e.data.error);
@@ -147,7 +147,7 @@ export class ClipboardHandler {
         try {
             var response = await $http.post("/clipboard/paste/" + this.viewctrl.docId, {
                 par_after: getLastParId($parOrArea),
-                asRef,
+                as_ref: asRef,
             });
         } catch (e) {
             $window.alert(e.data.error);

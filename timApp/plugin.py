@@ -15,6 +15,40 @@ from timApp.utils import parse_yaml, merge
 date_format = '%Y-%m-%d %H:%M:%S'
 
 
+def get_value(values, key, default=None):
+    """
+    Gets the value either from key or -key
+    :param values: dict where to find
+    :param key: key to use
+    :param default: value returned if key not found from either of key or -key
+    :return: value for key, -key or default
+    """
+    if not values:
+        return default
+    if key in values:
+        return values.get(key, default)
+    if '-' + key in values:
+        return values.get('-' + key, default)
+    return default
+
+
+def get_num_value(values, key, default=None):
+    """
+    Gets the value either from key or -key
+    :param values: dict where to find
+    :param key: key to use
+    :param default: value returned if key not found from either of key or -key
+    :return: value for key, -key or default
+    """
+    value = get_value(values, key, default)
+    # noinspection PyBroadException
+    try:
+        float(value)
+    except:
+        value = default
+    return value
+
+
 class Plugin:
     deadline_key = 'deadline'
     starttime_key = 'starttime'
@@ -22,11 +56,12 @@ class Plugin:
     answer_limit_key = 'answerLimit'
     limit_defaults = {'mmcq': 1}
 
-    def __init__(self, task_id: Optional[str], values: dict, plugin_type: str, par: Optional[DocParagraph]=None):
+    def __init__(self, task_id: Optional[str], values: dict, plugin_type: str, par: Optional[DocParagraph] = None):
         self.task_id = task_id
         self.values = values
         self.type = plugin_type
         self.par = par
+        self.points_rule_cache = None  # cache for points rule
 
     @property
     def full_task_id(self):
@@ -45,7 +80,7 @@ class Plugin:
         return d
 
     @staticmethod
-    def from_task_id(task_id: str, user: Optional[User]=None):
+    def from_task_id(task_id: str, user: Optional[User] = None):
         doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id)
         doc = Document(doc_id)
         if par_id is not None:
@@ -63,7 +98,22 @@ class Plugin:
         return Plugin.from_paragraph(par, user)
 
     @staticmethod
-    def from_paragraph(par: DocParagraph, user: Optional[User]=None):
+    def from_paragraph_macros(par: DocParagraph, global_attrs: Dict[str, str],
+                               macros: Dict[str, str],
+                               macro_delimiter: str):
+        if not par.is_plugin():
+            raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
+        task_id_name = par.get_attr('taskId')
+        plugin_data = parse_plugin_values_macros(par, global_attrs, macros, macro_delimiter)
+        if 'error' in plugin_data:
+            if isinstance(plugin_data, str):
+                raise PluginException(plugin_data + ' Task id: ' + task_id_name)
+            raise PluginException(plugin_data['error'] + ' Task id: ' + task_id_name)
+        p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par)
+        return p
+
+    @staticmethod
+    def from_paragraph(par: DocParagraph, user: Optional[User] = None):
         doc = par.doc
         if not par.is_plugin():
             raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
@@ -97,31 +147,30 @@ class Plugin:
         return doc_id, task_id_name, par_id
 
     def deadline(self, default=None):
-        return self.get_date(self.values.get(self.deadline_key, default))
+        return self.get_date(get_value(self.values, self.deadline_key, default))
 
     def starttime(self, default=None):
-        return self.get_date(self.values.get(self.starttime_key, default))
+        return self.get_date(get_value(self.values, self.starttime_key, default))
 
-    def points_rule(self, default=None):
-        pr = self.values.get(self.points_rule_key, default)
-        if pr:
-            return pr
-        return self.values.get("-" + self.points_rule_key, default)
+    def points_rule(self):
+        if self.points_rule_cache is None:
+            self.points_rule_cache = get_value(self.values, self.points_rule_key, {})
+        return self.points_rule_cache
 
     def max_points(self, default=None):
-        return self.points_rule({}).get('maxPoints', default)
+        return self.points_rule().get('maxPoints', default)
 
     def user_min_points(self, default=None):
-        return self.points_rule({}).get('allowUserMin', default)
+        return self.points_rule().get('allowUserMin', default)
 
     def user_max_points(self, default=None):
-        return self.points_rule({}).get('allowUserMax', default)
+        return self.points_rule().get('allowUserMax', default)
 
     def answer_limit(self):
-        return self.values.get(self.answer_limit_key, self.limit_defaults.get(self.type))
+        return get_value(self.values, self.answer_limit_key, self.limit_defaults.get(self.type))
 
     def points_multiplier(self, default=1):
-        return self.points_rule({}).get('multiplier', default)
+        return self.points_rule().get('multiplier', default)
 
     def validate_points(self, points: Union[str, float]):
         try:
@@ -139,7 +188,8 @@ class Plugin:
     def to_paragraph(self) -> DocParagraph:
         text = '```\n' + yaml.dump(self.values) + '\n```'
         if self.task_id:
-            return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs={'taskId': self.task_id, 'plugin': self.type})
+            return DocParagraph.create(self.par.doc, par_id=self.par.get_id(),
+                                       md=text, attrs={'taskId': self.task_id, 'plugin': self.type})
         else:
             return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs={'plugin': self.type})
 
@@ -191,25 +241,26 @@ class PluginException(Exception):
     pass
 
 
-def parse_plugin_values(par: DocParagraph,
-                        global_attrs: Dict[str, str],
-                        macroinfo: MacroInfo) -> Dict:
+def parse_plugin_values_macros(par: DocParagraph,
+                               global_attrs: Dict[str, str],
+                               macros: Dict[str, str],
+                               macro_delimiter: str) -> Dict:
     """
     Parses the markup values for a plugin paragraph, taking document attributes and macros into account.
 
     :param par: The plugin paragraph.
     :param global_attrs: Global (Document) attributes.
-    :param macros: Document macros.
-    :param macro_delimiter: Document macro delimiter.
+    :param macros: Dict of macros
+    :type macro_delimiter: delimiter for macros
     :return: The parsed markup values.
     """
     try:
         # We get the yaml str by removing the first and last lines of the paragraph markup
         par_md = par.get_markdown()
         yaml_str = expand_macros(par_md[par_md.index('\n') + 1:par_md.rindex('\n')],
-                                 macros=macroinfo.get_macros(),
-                                 macro_delimiter=macroinfo.get_macro_delimiter())
-        #print("yaml str is: " + yaml_str)
+                                 macros=macros,
+                                 macro_delimiter=macro_delimiter)
+        # print("yaml str is: " + yaml_str)
         values = parse_yaml(yaml_str)
         if type(values) is str:
             return {'error': "YAML is malformed: " + values}
@@ -225,3 +276,9 @@ def parse_plugin_values(par: DocParagraph,
             return {"markup": values}
     except Exception as e:
         return {'error': "Unknown error: " + str(e)}
+
+
+def parse_plugin_values(par: DocParagraph,
+                        global_attrs: Dict[str, str],
+                        macroinfo: MacroInfo) -> Dict:
+    return parse_plugin_values_macros(par, global_attrs, macroinfo.get_macros(), macroinfo.get_macro_delimiter())

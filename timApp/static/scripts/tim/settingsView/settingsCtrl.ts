@@ -25,6 +25,10 @@ export class SettingsCtrl implements IController {
         document.getElementsByTagName("head")[0].appendChild(this.style);
     }
 
+    $onInit() {
+
+    }
+
     async submit(saveUrl) {
         this.saving = true;
         try {
@@ -44,6 +48,13 @@ export class SettingsCtrl implements IController {
 
     clearLocalStorage() {
         window.localStorage.clear();
+    }
+
+    addPrintSettings() {
+        jQuery.get("/static/userPrintSettings.css", (data) => {
+            $("#customCssArea").val(data);
+            $("#customCssArea").serialize();
+        }, "text");
     }
 }
 

@@ -19,6 +19,7 @@ from timApp.tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_U
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tests.timliveserver import TimLiveServer
 from timApp.timdb.models.docentry import DocEntry
+from timApp.utils import pycharm_running
 
 
 class BrowserTest(TimLiveServer, TimRouteTest):
@@ -55,7 +56,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.drv.delete_all_cookies()
         self.drv.add_cookie(
             {'class': 'org.openqa.selenium.Cookie',
-             'domain': 'tim',
+             'domain': 'tim' if pycharm_running() else 'tests',
              'expiry': 7544144177,
              'hCode': 1984987798,
              'httpOnly': True,
@@ -144,7 +145,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         im = self.save_element_screenshot(element, move_to_element=move_to_element)
         ref = Image(filename=f'tests/browser/expected_screenshots/{filename}.png')
         diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
-        if result > 0.0001:
+        if result > 0.001:
             self.save_element_screenshot(element, f'{filename}_FAIL', move_to_element)
             diff.save(filename=f'{self.screenshot_dir}/{filename}_FAIL_DIFF.png')
             self.assertTrue(False,

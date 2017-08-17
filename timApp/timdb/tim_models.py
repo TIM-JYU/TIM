@@ -301,3 +301,4 @@ class UserNotes(db.Model):
     access = db.Column(db.Text, nullable=False)
     tags = db.Column(db.Text, nullable=False)
     html = db.Column(db.Text)
+

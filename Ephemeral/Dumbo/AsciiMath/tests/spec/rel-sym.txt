@@ -1,0 +1,19 @@
+# Relation symbols
+=
+!=
+<
+>
+<=
+>=
+-<
+>-
+in
+!in
+sub
+sup
+sube
+supe
+-=
+~=
+~~
+prop

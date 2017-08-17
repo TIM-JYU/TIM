@@ -29,7 +29,9 @@ def hide_names_in_teacher(doc_id):
     return False
 
 
-def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False, load_plugin_states=True):
+# TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??
+def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False,
+                      load_plugin_states=True):
     timdb = get_timdb()
     html_pars, js_paths, css_paths, modules = pluginify(doc,
                                                         pars,
@@ -76,7 +78,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     group = user.get_personal_group().id if user is not None else get_anon_group_id()
     if user is not None:
         readings = timdb.readings.get_common_readings(get_session_usergroup_ids(), doc)
-        for r in readings:
+        for r in readings:  # TODO: this takes more than one sec???
             key = (r.par_id, r.doc_id)
             pars = pars_dict.get(key)
             if pars:
@@ -107,7 +109,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     return process_areas(html_pars), js_paths, css_paths, modules
 
 
-def getdatetime(s: str, default_val = None):
+def getdatetime(s: str, default_val=None):
     try:
         dt = dateutil.parser.parse(s, dayfirst=True)
         return dt if dt.tzinfo is not None else pytz.utc.localize(dt)
@@ -248,4 +250,5 @@ def save_last_page():
 def is_considered_unpublished(doc_id):
     timdb = get_timdb()
     owner = timdb.users.get_owner_group(doc_id)
-    return has_ownership(doc_id) and (not owner or not owner.is_large()) and len(timdb.users.get_rights_holders(doc_id)) <= 1
+    return has_ownership(doc_id) and (not owner or not owner.is_large()) and \
+           len(timdb.users.get_rights_holders(doc_id)) <= 1

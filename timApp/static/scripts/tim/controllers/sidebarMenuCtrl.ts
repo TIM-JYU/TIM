@@ -2,7 +2,7 @@ import {IController} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {Users, UserService} from "../services/userService";
-import {$http, $window} from "../ngimport";
+import {$http, $uibModal, $window} from "../ngimport";
 import {ILecture, ILectureListResponse2} from "../lecturetypes";
 import {ViewCtrl} from "./view/viewctrl";
 
@@ -48,6 +48,10 @@ export class SidebarMenuCtrl implements IController {
 
         this.updateLeftSide();
         $($window).resize(() => this.updateLeftSide());
+    }
+
+    $onInit() {
+
     }
 
     updateLeftSide() {
@@ -114,6 +118,43 @@ export class SidebarMenuCtrl implements IController {
         this.currentLecturesList = lectures.currentLectures;
         this.futureLecturesList = lectures.futureLectures;
         this.pastLecturesList = lectures.pastLectures;
+    }
+
+    /**
+     *
+     * @param settings_data : print settings
+     */
+    printDocument(settings_data) {
+        var api_address_for_templates = '/print/templates/' + $window.item.path;
+        $http.get(api_address_for_templates)
+            .then(function success(templates) {
+                // console.log(JSON.stringify(templatesJSON.data));
+                $uibModal.open({
+                    templateUrl: '/static/templates/printDialog.html',
+                    controller: 'PrintCtrl',
+                    size: 'md',
+                    resolve: {
+                        document: function() {
+                            return $window.item;
+                        },
+                        templates: function() {
+                            return templates.data;
+                        }
+                    }
+                })
+            }, function error(response) {
+                console.log(response.toString());
+            });
+    }
+
+    cssPrint() {
+        // FOR DEBUGGING
+        // AutoPageBreak();
+
+        window.print();
+
+        // FOR DEBUGGING
+        // UndoAutoPageBreak();
     }
 }
 

@@ -1,11 +1,9 @@
-# Start from Ubuntu image
-from fpco/stack-run:lts-7
-maintainer Ville Tirronen "ville.tirronen@jyu.fi"
+FROM ubuntu:17.04
+LABEL maintainer="ville.tirronen@jyu.fi"
   
-run apt-get update
-run apt-get install -y graphviz
-env LANG C.UTF-8
-env LC_ALL C.UTF-8
+RUN apt-get update
+RUN apt-get install -y graphviz libgmp10
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
 
-expose 5000
-
+EXPOSE 5000

@@ -23,6 +23,8 @@ export abstract class BaseParEditor {
         this.editor.focus();
     }
 
+    public abstract pageBreakClicked();
+
     public abstract surroundClicked(before: string, after: string, func?);
 
     public italicSurroundClicked() {

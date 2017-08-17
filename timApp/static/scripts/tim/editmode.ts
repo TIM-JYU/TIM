@@ -46,4 +46,7 @@ function disableAreaEdit() {
 function showHidden(showParam) {
     const displayValue = showParam == null ? "none" : "initial";
     $(".mdcontent").css("display", displayValue);
+
+    // css hide/show page break for edit mode
+    $('#CSSpagebreak > p').css('display', displayValue);
 }

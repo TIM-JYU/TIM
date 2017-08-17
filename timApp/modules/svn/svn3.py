@@ -22,14 +22,11 @@
 #    ?file=http://example.org/Hello.java                        -> print whole file
 #    ?file=http://example.org/Hello.java&start=startn=1&endn=-1 -> print file except first and last line
 #    ?file=http://example.org/Hello.java&start=main&end=.       -> print only the first line where is main
-#    ?file=http://example.org/Hello.java&start=main&end=.&endn=1  -> print only the first line where is main and next line
+#    ?file=http://example.org/Hello.java&start=main&end=.&endn=1
+#                                                  -> print only the first line where is main and next line
 #
 import http.server
 import socketserver
-
-import subprocess
-# import nltk
-import re
 import time
 import math
 import sys
@@ -39,8 +36,9 @@ from fileParams import *  # noqa
 
 PORT = 5000
 
+csstatic = '/service/timApp/modules/cs/static/'
 
-regx_hm = re.compile(r"[ ,/;:\.hm]")
+regx_hm = re.compile(r"[ ,/;:.hm]")
 
 
 def timestr_2_sec2(value):
@@ -63,6 +61,7 @@ def timestr_2_sec2(value):
 def take_last_number(s, i):
     n = 0
     k = 1
+    c = '0'
     while i >= 0:  # pass non numbers
         c = s[i]
         if '0' <= c <= '9':
@@ -102,7 +101,7 @@ def timestr_2_sec(value):
     return h * 3600.0 + m * 60.0 + s * 1.0
 
 
-def sec_2_timestr(t):
+def sec_2_timestr(t: float):
     # tt = time.gmtime(t) jne on todella hidas
     if not t:
         return ""
@@ -120,6 +119,25 @@ def sec_2_timestr(t):
         m = str(m) + "m"
     s = str(s) + "s"
     return h + m + s
+
+
+def get_image_md(query):
+    """Muodostaa kuvan näyttämiseksi tarvittavan MD-koodin.
+
+    :param query: pyynnön paramterit
+    :return: kuvan md-jono
+
+    """
+    url = get_clean_param(query, "file", "")
+    w = get_clean_param(query, "width", "")
+    h = get_clean_param(query, "height", "")
+    if w:
+        w = 'width=' + w + ' '
+    if h:
+        h = 'height=' + h + ' '
+    header, footer = get_surrounding_md_headers2(query, "pluginHeader", None)
+    result = header + "\n\n" + "![{0}]({1}){{{2}{3}}}".format(footer, url, w, h)
+    return result
 
 
 def get_image_html(query):
@@ -143,13 +161,13 @@ def get_image_html(query):
     return NOLAZY + result
 
 
-def replace_time_params(query, html):
+def replace_time_params(query, htmlstr):
     start = timestr_2_sec(get_param(query, "start", ""))
     end = timestr_2_sec(get_param(query, "end", ""))
     startt = sec_2_timestr(start)
     if startt:
         startt = ", " + startt
-    s = html.replace("{{startt}}", startt)
+    s = htmlstr.replace("{{startt}}", startt)
     duration = sec_2_timestr(end - start)
     if duration != "":
         duration = "(" + duration + ") "
@@ -163,13 +181,31 @@ def small__and_list_html(query, duration_template):
     if di:
         dur = replace_time_params(query, duration_template)
         icon = replace_template_param(
-            query, '<span><img src="{{videoicon}}" alt="Click here to show" /> </span> ', "videoicon", "/csstatic/video_small.png")
+            query, '<span><img src="{{videoicon}}" alt="Click here to show" /> </span> ',
+            "videoicon", "/csstatic/video_small.png")
         s += ' <a class="videoname">' + icon + di + dur + '</a>'
     di = replace_template_param(query, ' {{doctext}}', "doctext")
     if di:
         icon = replace_template_param(
             query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon", "/csstatic/book.png")
         s += ' <a href="" target="timdoc">' + icon + di + '</a>'
+    return s
+
+
+def small_and_list_md(query, duration_template):
+    s = replace_template_param(query, '{{stem}}', "stem")
+    di = replace_template_param(query, ' {{videoname}}', "videoname")
+    if di:
+        dur = replace_time_params(query, duration_template)
+        icon = replace_template_param(
+            query, ' \\includegraphics[width=0.1in]{{{{videoicon}}}}',
+            "videoicon", csstatic + "video_small.png")
+        s += '' + icon + di + ' ' + dur + ''
+    di = replace_template_param(query, ' {{doctext}}', "doctext")
+    if di:
+        icon = replace_template_param(
+            query, '\\includegraphics[width=0.1in]{{{{docicon}}}}', "docicon", csstatic + "book.png")
+        s += ' ' + icon + di + ''
     return s
 
 
@@ -211,7 +247,7 @@ def video_html(query):
     return s
 
 
-def get_video_html(self, query):
+def get_video_html(query):
     """Muodostaa videon näyttämiseksi tarvittavan HTML-koodin.
 
     :param query: pyynnön paramterit
@@ -256,7 +292,89 @@ def get_video_html(self, query):
     if iframe:
         return '<iframe class="showVideo" src="' + url + '" ' + w + h + 'autoplay="false" ></iframe>'
 
-        #        result = '<video class="showVideo"  src="' + url + '" type="video/mp4" ' + w + h + 'autoplay="false" controls="" ></video>'
+        #  result = '<video class="showVideo"
+        #      src="' + url + '" type="video/mp4" ' + w + h + 'autoplay="false" controls="" ></video>'
+    result = '<video class="showVideo" ng-cloak src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
+    return result
+
+
+def small_video_md(query):
+    # Kokeiltu myös listoilla, ei mitattavasti parempi
+    s = '\\smallVideoRunDiv{'
+    s += replace_template_param(query, '\\pluginHeader{{{{header}}}}\n\n', "header")
+    s += '' + small_and_list_md(query, "{{duration}}") + ''
+    s += replace_template_params(query, '\\plgfooter{{{{footer}}}}\n', "footer")
+    s += '}'
+    return s
+
+
+def list_video_md(query):
+    s = '\\listVideoRunDiv{'
+    s += replace_template_param(query, '\\pluginHeader{{{{header}}}}\n\n', "header")
+    s += '\\begin{itemize}\n\\item\n' + small_and_list_md(query, "{{startt}} {{duration}}") + '\\end{itemize}\n'
+    s += replace_template_params(query, '\\plgfooter{{{{footer}}}}\n', "footer")
+    s += '}'
+    return s
+
+
+def video_md(query):
+    s = '\\videoRunDiv{'
+    s += replace_template_param(query, '\\pluginHeader{{{{header}}}}\n\n', "header")
+    s += replace_template_param(query, '\\stem{{{{stem}}}}\n', "stem")
+    s += '''
+\\begin{figure}[H]
+\\centering
+\\includegraphics[width=1.5in]{/service/timApp/modules/cs/static/video.png}
+\\end{figure}
+'''
+    di = replace_template_param(query, ' {{doctext}}', "doctext")
+    # if di:
+    #    icon = replace_template_param(
+    #        query, '<span><img src="{{docicon}}"  alt="Go to doc" /> </span>', "docicon", "/csstatic/book.png")
+    #    s += ' <a href="" target="timdoc">' + icon + di + '</a>'
+    s += replace_template_params(query, '\\plgfooter{{{{footer}}}}\n', "footer")
+    s += '}'
+    return s
+
+
+def get_video_md(query):
+    """Muodostaa videon näyttämiseksi tarvittavan MD-koodin.
+
+    :param query: pyynnön paramterit
+    :return: videon html-jono
+
+    """
+    iframe = get_param(query, "iframe", False) or True
+    js = query_params_to_map_check_parts(query)
+    jso = json.dumps(js)
+    hx = binascii.hexlify(jso.encode("UTF8"))
+
+    video_type = get_param(query, "type", "icon")
+    # print ("iframe " + iframe + " url: " + url)
+    video_app = True
+    if video_type == "small":
+        s = small_video_md(query)
+        return s
+    if video_type == "list":
+        s = list_video_md(query)
+        return s
+    if video_app:
+        s = video_md(query)
+        return s
+
+    url = get_clean_param(query, "file", "")
+    w = get_clean_param(query, "width", "")
+    h = get_clean_param(query, "height", "")
+    if w:
+        w = 'width="' + w + '" '
+    if h:
+        h = 'height="' + h + '" '
+
+    if iframe:
+        return '<iframe class="showVideo" src="' + url + '" ' + w + h + 'autoplay="false" ></iframe>'
+
+        #  result = '<video class="showVideo"
+        #      src="' + url + '" type="video/mp4" ' + w + h + 'autoplay="false" controls="" ></video>'
     result = '<video class="showVideo" ng-cloak src="' + url + '" type="video/mp4" ' + w + h + ' controls="" ></video>'
     return result
 
@@ -282,12 +400,13 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
             n, dummy = (n + "&").split("&", 1)
             try:
                 n = int(n)
-            except:
+            except ValueError:
                 n = 1
             t1 = time.clock()
             query = post_params(self)
             # self.do_all(query)
 
+            s = ''
             for i in range(0, n):
                 s = get_html(self, query, True)
 
@@ -297,7 +416,9 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
             print(ts)
             return
 
-        if self.path.find('/multihtml') < 0:
+        multimd = self.path.find('/multimd') >= 0
+
+        if self.path.find('/multihtml') < 0 and not multimd:
             self.do_all(post_params(self))
             return
 
@@ -310,12 +431,10 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
 
         htmls = []
         for query in querys:
-            usercode = get_json_param(query.jso, "state", "usercode", None)
-            if usercode:
-                query.query["usercode"] = [usercode]
-            ttype = get_param(query, "type", "console").lower()
-            s = get_html(self, query, True)
-            # print(s)
+            if multimd:
+                s = get_md(self, query)
+            else:
+                s = get_html(self, query, True)
             htmls.append(s)
 
         sresult = json.dumps(htmls)
@@ -340,7 +459,6 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
         is_css = self.path.find('/css') >= 0
         is_js = self.path.find('/js') >= 0
         is_reqs = self.path.find('/reqs') >= 0
-        is_video_reqs = self.path.find('/video/reqs') >= 0
         is_image = self.path.find('/image') >= 0
         is_video = self.path.find('/video') >= 0
 
@@ -375,7 +493,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
             return self.wout(get_template(tempdir, tidx, tempfile))
 
         if is_reqs:
-            result_json = join_dict({"multihtml": True}, get_all_templates(tempdir))
+            result_json = join_dict({"multihtml": True, "multimd": True}, get_all_templates(tempdir))
             if is_video:
                 result_json.update({"js": ["/svn/video/js/video.js"], "angularModule": ["videoApp"]})
             result_str = json.dumps(result_json)
@@ -396,6 +514,42 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
         return
 
 
+def get_md(self, query):
+    is_image = self.path.find('/image/') >= 0
+    is_video = self.path.find('/video/') >= 0
+    is_template = self.path.find('/template') >= 0
+    tempfile = get_param(query, "file", "")
+
+    if is_image:
+        if is_template:
+            return file_to_string('templates/image/' + tempfile)
+        s = get_image_md(query)
+        return s
+
+    if is_video:
+        if is_template:
+            return file_to_string('templates/video/' + tempfile)
+        s = get_video_md(query)
+        return s
+
+    # Was none of special, so print the file(s) in query
+
+    cla = get_param(query, "class", "")
+    w = get_param(query, "width", "")
+    if w:
+        w = ' style="width:' + w + '"'
+    if cla:
+        cla = " " + cla
+
+    s = ""
+
+    s += get_file_to_output(query, False)
+    filename = query.jso.get('markup',{}).get('file','')
+    name = filename[filename.rfind('/')+1:]
+    s = get_surrounding_md_headers(query, s, '\\smallhref{' + filename + '}{' + name +'}')
+    return s
+
+
 def get_html(self, query, show_html):
     is_image = self.path.find('/image/') >= 0
     is_video = self.path.find('/video/') >= 0
@@ -411,7 +565,7 @@ def get_html(self, query, show_html):
     if is_video:
         if is_template:
             return file_to_string('templates/video/' + tempfile)
-        s = get_video_html(self, query)
+        s = get_video_html(query)
         return s
 
     # Was none of special, so print the file(s) in query
@@ -465,11 +619,12 @@ if __name__ == '__main__':
 # Ongelmaa korjattu siten, että kaikki run-kommennot saavat prgpathin käyttöönsä
 
 # if __debug__:
-if True:
-    class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
-        """Handle requests in a separate thread."""
+# if True:
+class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    """Handle requests in a separate thread."""
 
-    print("Debug mode/ThreadingMixIn")
+print("Debug mode/ThreadingMixIn")
+#
 # else:
 #    class ThreadedHTTPServer(socketserver.ForkingMixIn, http.server.HTTPServer):
 #        """Handle requests in a separate thread."""

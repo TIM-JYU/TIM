@@ -1,0 +1,11 @@
+# Arrows
+uarr
+darr
+rarr
+->
+|->
+larr
+harr
+rArr
+lArr
+hArr

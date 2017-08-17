@@ -1,0 +1,182 @@
+//Tuomas Porvali
+//The collection of fixes and band-aids for TIM browser printing.
+[id='CSSpagebreak']{
+  text-align: center;
+  color: deeppink;
+  //display: none;
+}
+
+[id='CSSpagebreak'] p{
+  display: none;
+}
+
+@page{
+  size: A4;
+}
+
+
+@media print and (color) {
+
+  //This forces h1 elemet to ignore page-break (Remove this. This shouldn't be here.)
+  //[id='3lUURaXWmQvB'] .parContent h1{ //Replace 3lUURaXWmQvB with apporiate id.
+  //page-break-before: initial !important;
+  //background-color: green !important;
+  //}
+
+
+  .firstH1 {
+    page-break-before: initial !important;
+    //background-color: green !important;
+  }
+
+  //Forces page-break.
+  [id='CSSpagebreak'] {
+    page-break-after: always !important;
+    //display: initial;
+  }
+
+  [id='CSSpagebreak'] p{
+    display: none;
+  }
+
+  [id='noBreak']{
+    page-break-inside: avoid !important;
+  }
+
+  //No hyperlink
+  a[href]:after {
+    content: none !important;
+  }
+
+  //Makes printing possible. I was unable to find any other solution
+  * {
+    float: none !important;
+    overflow: visible !important;
+    //margin: 0 !important;
+  }
+
+  //Useful to highlight pars
+  //.par { border: 1px solid black !important;}
+
+  //Basic stuff
+  .paragraphs .parContent p {
+    //page-break-inside: avoid;
+    //page-break-after: always;
+    text-align: justify;
+    margin-left: 1em;
+  }
+
+  .paragraphs .console {
+    color: #000000;
+  }
+
+  .paragraphs pre code {
+    word-wrap: break-word;
+    /* white-space: normal !important; */
+    white-space: pre-wrap !important;
+  }
+
+  h1 {
+    page-break-before: always;
+    margin-left: 0.5em;
+  }
+
+  h2, h3, h4 {
+    margin-left: 0em !important;
+    page-break-after: avoid !important;
+    //background-color: yellow !important;
+  }
+
+  .btn-primary, .timButton, .paragraphs .parContent .mcq button, .paragraphs .parContent .mmcq button, .editorButton, button.showMap, .wideButton {
+    display: none;
+  }
+
+
+
+  .csRunMenu, .answerBrowser, .answerBrowser, .actionButtons, .readsection, .par > .headerlink, .headerlink, dialog, .editline {
+    display: none;
+  }
+
+  //Video
+  .paragraphs .showVideo{
+    display: none;
+  }
+
+  .paragraphs .csRunDiv {
+    //border-style: none;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+    //display: inline;
+    position: static;
+    overflow: visible;
+    //page-break-inside: avoid;
+  }
+
+  .csEditorAreaDiv{
+    //display: inline;
+    position: static;
+    overflow: visible;
+  }
+
+  .csrunEditorDiv{
+    position: static;
+    overflow: visible;
+  }
+
+  .paragraphs .csRunDiv .csRunArea {
+    //border: none;
+  }
+
+  .parContent {
+    //page-break-inside: avoid;
+  }
+
+  table {
+    //page-break-inside: avoid;
+  }
+
+  textarea {
+    resize: none;
+  }
+
+  //Work in progress
+  .notes {
+    position: inherit;
+    display: none;
+    margin-bottom: 15px;
+    margin-left: 23em;
+    width: 60%;
+  }
+
+  .notes span {
+    display: none;
+  }
+
+  div[id^="Plugin"] {
+    margin-bottom: 50px;
+    //page-break-inside: avoid;
+  }
+
+  .paragraphs .csPlugin {
+    margin-left: 1em;
+  }
+
+  .paragraphs .csPlugin pre {
+    margin-left: 0em;
+    border-left: none;
+  }
+
+  pre {
+    margin-left: 1em;
+  }
+
+  .parlink {
+    position: inherit;
+  }
+
+  .parlink sup:after {
+    content: "Testi";
+  }
+
+}

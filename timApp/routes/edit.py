@@ -445,17 +445,21 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
 # Automatically rename plugins with name pluginnamehere
 def check_and_rename_pluginnamehere(blocks: List[DocParagraph], doc: Document):
     # Get the paragraphs from the document with taskids
-    old_pars = doc.get_paragraphs()
-    for paragraph in old_pars:
-        if not paragraph.is_task():
-            old_pars.remove(paragraph)
+    old_pars = None # lazy load for old_pars
     i = 1
     j = 0
     # For all blocks check if taskId is pluginnamehere, if it is find next available name.
-    for p in blocks:
+    for p in blocks: # go thru all new pars if they need to be renamed
         if p.is_task():
             task_id = p.get_attr('taskId')
             if task_id == 'PLUGINNAMEHERE':
+                if old_pars is None:  # now old_pars is needed, load them once
+                    pars = doc.get_paragraphs()
+                    old_pars = []
+                    for paragraph in pars:
+                        if not paragraph.is_task():
+                            old_pars.append(paragraph)
+
                 task_id = 'Plugin' + str(i)
                 while j < len(old_pars):
                     if task_id == old_pars[j].get_attr('taskId'):
@@ -473,29 +477,32 @@ def check_and_rename_pluginnamehere(blocks: List[DocParagraph], doc: Document):
 # Check new paragraphs with plugins for duplicate task ids
 def check_duplicates(pars, doc, timdb):
     duplicates = []
-    all_pars = doc.get_paragraphs()
-    for paragraph in all_pars:
-        if not paragraph.is_task():
-            all_pars.remove(paragraph)
+    all_pars = None # cache all_pars
     for par in pars:
         if par.is_task():
+            if all_pars is None: # now we need the pars
+                docpars = doc.get_paragraphs()
+                all_pars = []
+                for paragraph in docpars:
+                    if paragraph.is_task():
+                        all_pars.append(paragraph)
+
             duplicate = []
             task_id = par.get_attr('taskId')
             count_of_same_task_ids = 0
             j = 0
-            if len(all_pars) > 0:
-                while j < len(all_pars):
-                    if all_pars[j].get_attr('taskId') == task_id:
-                        count_of_same_task_ids += 1
-                        if count_of_same_task_ids > 1:
-                            duplicate.append(task_id)
-                            duplicate.append(par.get_id())
-                            task_id_to_check = str(doc.doc_id) + "." + task_id
-                            if timdb.answers.check_if_plugin_has_answers(task_id_to_check) == 1:
-                                duplicate.append('hasAnswers')
-                            duplicates.append(duplicate)
-                            break
-                    j += 1
+            while j < len(all_pars):
+                if all_pars[j].get_attr('taskId') == task_id:
+                    count_of_same_task_ids += 1
+                    if count_of_same_task_ids > 1:
+                        duplicate.append(task_id)
+                        duplicate.append(par.get_id())
+                        task_id_to_check = str(doc.doc_id) + "." + task_id
+                        if timdb.answers.check_if_plugin_has_answers(task_id_to_check) == 1:
+                            duplicate.append('hasAnswers')
+                        duplicates.append(duplicate)
+                        break
+                j += 1
     return duplicates
 
 

@@ -28,6 +28,10 @@ import {IItem} from "../../IItem";
 import {IAskedJsonJson, IAskedJsonJsonJson} from "../../lecturetypes";
 
 markAsUsed(ngs, popupMenu, interceptor);
+import {initCssPrint} from "../../cssPrint";
+import * as printctrl from "../printCtrl";
+
+markAsUsed(popupMenu, interceptor, printctrl);
 
 export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
     EditingHandler, NotesHandler, ParmenuHandler, RefPopupHandler, IController {
@@ -336,7 +340,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    showQuestionNew(parId: string, parIdNext: string): void {
+    showQuestionNew(parId: string, parIdNext: string): Promise<void> {
         throw new Error(this.mixinMsg);
     }
 
@@ -443,6 +447,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         this.initRefPopup(sc, this);
         initReadings(this);
         initIndex();
+        initCssPrint();
 
         // from https://stackoverflow.com/a/7317311
         $(() => {

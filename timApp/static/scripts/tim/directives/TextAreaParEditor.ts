@@ -473,6 +473,35 @@ export class TextAreaParEditor extends BaseParEditor {
         this.endClicked();
     }
 
+    @focusAfter
+    pageBreakClicked() {
+        var editor = this.editor.get(0);
+        var selection = this.editor.getSelection();
+        var value = this.editor.val();
+        var cursor = selection.start;
+        this.selectLine(true);
+
+        var lineToBreak = this.editor.getSelection().text;
+        var toKeepInLine;
+
+        if (lineToBreak.length > 0) {
+            toKeepInLine = value.substring(this.editor.selectionStart, cursor) + "\n";
+        } else {
+            toKeepInLine = "";
+        }
+        var toNextLine;
+        if ((this.editor.selectionEnd - cursor) > 0) {
+            toNextLine = value.substring(cursor, this.editor.selectionEnd);
+        } else {
+            toNextLine = "";
+        }
+        toNextLine = toNextLine.trim();
+
+        var breakline = '\n#-{print="false"}\n<div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>\n#-\n';
+
+        this.editor.replaceSelectedText(toKeepInLine + breakline + "\n" + toNextLine);
+    }
+
     //Insert
     //Special characters
     @focusAfter

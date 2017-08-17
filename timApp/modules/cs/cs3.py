@@ -368,8 +368,10 @@ def get_md(ttype, query):
     js = query_params_to_map_check_parts(query)
     if "byFile" in js and not ("byCode" in js):
         js["byCode"] = get_url_lines_as_string(
-            js["byFile"])  # TODO: Tähän niin että jos tiedosto puuttuu, niin parempi tieto
+            js["byFile"])  # TODO: TÃ¤hÃ¤n niin ettÃ¤ jos tiedosto puuttuu, niin parempi tieto
     bycode = ""
+    if "by" in js:
+        bycode = js["by"]
     if "byCode" in js:
         bycode = js["byCode"]
     if get_param(query, "noeditor", False):
@@ -409,14 +411,19 @@ def get_md(ttype, query):
     if "sage" in ttype:
         runner = 'cs-sage-runner'
 
-    usercode = get_json_eparam(query.jso, "state", "usercode", "")
+    usercode = None
+    user_print = get_json_param(query.jso, "userPrint", None, False)
+    if user_print:
+        usercode = get_json_eparam(query.jso, "state", "usercode", None, escape_html_special_chars=False)
+    if usercode is None:
+        usercode = bycode
 
     r = runner + is_input
 
     if "csconsole" in ttype:  # erillinen konsoli
         r = "cs-console"
 
-    s = '\\begin{verbatim}\n' + usercode + '\\end{verbatim}'
+    s = '\\begin{verbatim}\n' + usercode + '\n\\end{verbatim}'
 
     return s
 
@@ -1386,7 +1393,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 print(parts)
                 if print_file == "2":
                     return self.wout(json.dumps(parts))
-                s = join_file_parts(p0, parts)
+                s = join_file_parts(parts)
             else:
                 s = get_file_to_output(query, False and print_file)
 

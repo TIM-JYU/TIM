@@ -166,6 +166,17 @@ export class AceParEditor extends BaseParEditor {
                 this.commentClicked();
             },
         });
+        this.editor.commands.addCommand({
+            name: "pageBreak",
+            bindKey: {
+                win: "Ctrl-M",
+                mac: "Command-M",
+                sender: "editor|cli",
+            },
+            exec: (env, args, request) => {
+                this.pageBreakClicked();
+            },
+        });
     }
 
     // Navigation
@@ -178,6 +189,34 @@ export class AceParEditor extends BaseParEditor {
     @focusAfter
     redoClicked() {
         this.editor.redo();
+    }
+
+    @focusAfter
+    pageBreakClicked() {
+        var cursor = this.editor.getCursorPosition();
+        var line = this.editor.session.getLine(cursor.row);
+        var range = this.editor.getSelection().getRange();
+        range.start.column = 0;
+        range.end.column = line.length;
+
+        var toKeepInLine;
+        if (line.length > 0) {
+            toKeepInLine = line.substring(0, cursor.column) + "\n";
+        } else {
+            toKeepInLine = "";
+        }
+        var toNextLine;
+        if ((line.length - cursor.column) > 0) {
+            toNextLine = line.substring(cursor.column, line.end);
+        } else {
+            toNextLine = "";
+        }
+        toNextLine = toNextLine.trim();
+
+        var breakline = '\n#-{print="false"}\n<div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>\n#-\n';
+
+        this.editor.selection.setRange(range, false);
+        this.editor.insert(toKeepInLine + breakline + "\n" + toNextLine);
     }
 
     gotoCursor() {
