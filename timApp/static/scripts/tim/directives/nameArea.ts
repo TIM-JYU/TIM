@@ -12,7 +12,7 @@ timApp.directive("nameArea", [function() {
         templateUrl: "/static/templates/nameArea.html",
         replace: true,
 
-        link($scope, $element, $attrs) {
+        link($scope: any, $element, $attrs) {
             $scope.$area = $element.parents(".area").first();
             if ($attrs.onclose) {
                 $scope.onClose = eval("$scope." + $attrs.onclose);

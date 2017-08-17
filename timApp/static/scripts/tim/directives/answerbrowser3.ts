@@ -94,7 +94,7 @@ timApp.directive("answerbrowserlazy", [function() {
             };
         }],
 
-        link($scope, $element, $attrs) {
+        link($scope: any, $element, $attrs) {
             timLogTime("answerbrowserlazy link function", "answ", 1);
             $scope.$element = $element;
             $element.parent().on("mouseenter touchstart", $scope.loadAnswerBrowser);
@@ -113,7 +113,7 @@ timApp.directive("answerbrowser", [function() {
         },
         controller: ["$scope", function($scope) {
         }],
-        link($scope, $element, $attrs) {
+        link($scope: any, $element, $attrs) {
             $scope.element = $element.parents(".par");
             $scope.parContent = $scope.element.find(".parContent");
             //$scope.$parent = $scope.$parent; // muutos koska scope on syntynyt tuon toisen lapseksi

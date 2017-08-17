@@ -46,7 +46,7 @@ timApp.directive("annotation", [function() {
             showHidden: "@",
         },
 
-        link(scope, element) {
+        link(scope: any, element) {
             scope.velpElement = null;
             scope.ctrlDown = false;
             scope.ctrlKey = 17;
@@ -98,7 +98,7 @@ timApp.directive("annotation", [function() {
                         if (e.offsetParent.className !== "notes") {
                             angular.element(
                                 annotationElements[i],
-                            ).isolateScope().toggleAnnotationShow();
+                            ).isolateScope<any>().toggleAnnotationShow();
                             scope.toggleAnnotationShow();
                         }
                     }

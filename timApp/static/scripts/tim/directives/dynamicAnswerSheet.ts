@@ -238,7 +238,7 @@ timApp.directive("dynamicAnswerSheet", [function() {
             preview: "@",
         },
         transclude: true,
-        link($scope, $element) {
+        link($scope: any, $element) {
             let promise;
             let timeLeft;
             let barFilled;

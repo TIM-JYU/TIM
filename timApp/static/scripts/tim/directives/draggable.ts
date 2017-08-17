@@ -48,7 +48,7 @@ timApp.directive("timDraggableFixed", [function() {
         restrict: "A",
         replace: false,
 
-        link(scope, element: JQuery, attr) {
+        link(scope: any, element: JQuery, attr) {
             let posKey;
             if (attr.save) {
                 const pageId = window.location.pathname.split("/")[1];  // /velp/???

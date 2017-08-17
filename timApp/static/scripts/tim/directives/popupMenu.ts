@@ -16,7 +16,7 @@ timApp.directive("popupMenu", [function() {
         templateUrl: "/static/templates/popupMenu.html",
         replace: true,
 
-        link($scope, $element, $attrs) {
+        link($scope: any, $element, $attrs) {
             $scope.$pars = $($attrs.srcid);
             $scope.actions = eval("$scope." + $attrs.actions);
             $scope.actionsAttr = $attrs.actions;

@@ -269,12 +269,12 @@ export function defineEditing(sc) {
     };
 
     sc.closeAndSave = function(e, $par) {
-        $("pareditor").isolateScope().saveClicked();
+        $("pareditor").isolateScope<any>().saveClicked();
         sc.showOptionsWindow(e, $par);
     };
 
     sc.closeWithoutSaving = function(e, $par) {
-        $("pareditor").isolateScope().cancelClicked();
+        $("pareditor").isolateScope<any>().cancelClicked();
         sc.showOptionsWindow(e, $par);
     };
 

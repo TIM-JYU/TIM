@@ -487,7 +487,7 @@ timApp.controller("VelpSelectionController", ["$scope", function($scope) {
     $scope.openCreateNewVelpWindow = function() {
         const velp = angular.element(
             document.getElementById("newVelp"),
-        ).isolateScope();
+        ).isolateScope<any>();
         velp.toggleVelpToEdit();
 
         //if ($scope.getVelpUnderEdit().id !== $scope.newVelp.id)

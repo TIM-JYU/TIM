@@ -36,7 +36,7 @@ timApp.directive("popUpDialog", function() {
         replace: true,
         transclude: true,
 
-        link($scope, $element) {
+        link($scope: any, $element) {
             /**
              * FILL WITH SUITABLE TEXT
              * @memberof module:popUpDialog

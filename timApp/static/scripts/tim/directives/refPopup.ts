@@ -11,7 +11,7 @@ timApp.directive("refPopup", [function() {
         templateUrl: "/static/templates/refPopup.html",
         replace: true,
 
-        link($scope, $element, $attrs) {
+        link($scope: any, $element, $attrs) {
             $scope.loaded = false;
             if ("docid" in $attrs && "parid" in $attrs) {
                 //$scope.ref_docid = $attrs.docid;

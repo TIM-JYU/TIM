@@ -140,7 +140,7 @@ timApp.directive("showChartDirective", [function() {
             control: "=",
             divresize: "=",
         },
-        link($scope, $element) {
+        link($scope: any, $element) {
             $scope.internalControl = $scope.control || {};
             $scope.canvasId = "#" + $scope.canvas || "";
             $scope.isText = false;

@@ -41,8 +41,9 @@ function invertState(state) {
 }
 
 function clearSelection() {
-    if ($document.selection) {
-        $document.selection.empty();
+    const doc = $document as any;
+    if (doc.selection) {
+        doc.selection.empty();
     }
     else if ($window.getSelection) {
         $window.getSelection().removeAllRanges();

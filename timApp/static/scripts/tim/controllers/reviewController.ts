@@ -1151,10 +1151,10 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
 
         try {
             const annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
-            angular.element(annotationElement).isolateScope().showAnnotation();
+            angular.element(annotationElement).isolateScope<any>().showAnnotation();
             if (annotation.parentNode.classname === "notes") {
                 const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-                abl.isolateScope().loadAnswerBrowser();
+                abl.isolateScope<any>().loadAnswerBrowser();
             }
             scrollToElement(annotationElement);
             //addAnnotationToElement(par, annotation, false, "Added also margin annotation");
@@ -1169,7 +1169,7 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
 
                 if (typeof ab === UNDEFINED) {
                     const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-                    abl.isolateScope().loadAnswerBrowser();
+                    abl.isolateScope<any>().loadAnswerBrowser();
                 }
                 if (this.selectedUser.id !== annotation.user_id) {
                     for (let i = 0; i < this.users.length; i++) {
@@ -1189,7 +1189,7 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
 
                     setTimeout(function() {
                         const annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
-                        angular.element(annotationElement).isolateScope().showAnnotation();
+                        angular.element(annotationElement).isolateScope<any>().showAnnotation();
                         $scope.$apply();
                         scrollToElement(annotationElement);
                     }, 500);
