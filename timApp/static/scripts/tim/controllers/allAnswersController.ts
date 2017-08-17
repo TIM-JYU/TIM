@@ -4,13 +4,13 @@ import {timApp} from "tim/app";
 import {$http, $httpParamSerializer, $localStorage, $log, $window} from "../ngimport";
 import {ngStorage} from "ngstorage";
 
-type Options = { age: string, valid: string, name: string, sort: string; periodFrom: any; periodTo: any; };
+type Options = {age: string, valid: string, name: string, sort: string; periodFrom: any; periodTo: any;};
 
 export class AllAnswersCtrl implements IController {
     private static $inject = ["$uibModalInstance", "options"];
     private showSort: boolean;
     private options: Options;
-    private $storage: ngStorage.StorageService & { allAnswersOptions: Options };
+    private $storage: ngStorage.StorageService & {allAnswersOptions: Options};
     private datePickerOptionsFrom: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
     private lastFetch: any;
@@ -55,7 +55,7 @@ export class AllAnswersCtrl implements IController {
         };
 
         this.lastFetch = null;
-        $http.get<{ last_answer_fetch }>("/settings/get/last_answer_fetch").then((response) => {
+        $http.get<{last_answer_fetch}>("/settings/get/last_answer_fetch").then((response) => {
             if (response.data.last_answer_fetch) {
                 this.lastFetch = response.data.last_answer_fetch[options.identifier];
                 if (!this.lastFetch) {

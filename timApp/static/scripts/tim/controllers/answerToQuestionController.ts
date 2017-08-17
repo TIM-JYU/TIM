@@ -27,6 +27,7 @@ export class AnswerToQuestionController implements IController {
     private isLecturer: boolean;
     private questionTitle: string;
     private isAsking: boolean;
+
     constructor(scope: IScope) {
         this.scope = scope;
         this.questionHeaders = [];

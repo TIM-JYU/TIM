@@ -3,6 +3,7 @@ import {timApp} from "tim/app";
 import {ILabel, IUIFields, IVelp, IVelpGroup} from "./velptypes";
 import {VelpSelectionController} from "./velpSelection";
 import {$http} from "../ngimport";
+
 /**
  * Created by Seppo Tarvainen on 25.11.2016.
  *
