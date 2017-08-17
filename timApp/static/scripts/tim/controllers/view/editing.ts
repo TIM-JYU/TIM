@@ -183,8 +183,8 @@ export class EditingHandler {
 
     async editSettingsPars(recursiveCall) {
         const pars = [];
-        $(".par").each(function(this: Element) {
-            if (getParAttributes($(this)).hasOwnProperty("settings")) {
+        $(".par").each((index, elem) => {
+            if (getParAttributes($(elem)).hasOwnProperty("settings")) {
                 pars.push(this);
             }
         });
