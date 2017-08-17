@@ -33,6 +33,10 @@ class IndexCtrl implements IController {
         }
     }
 
+    $onInit() {
+
+    }
+
     endsWith(str, suffix) {
         return str.indexOf(suffix, str.length - suffix.length) !== -1;
     }

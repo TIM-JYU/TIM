@@ -297,6 +297,10 @@ class AnswerSheetController implements IController {
         });
     }
 
+    $onInit() {
+
+    }
+
     cg() {
         return "group"; // + this.gid;
     }

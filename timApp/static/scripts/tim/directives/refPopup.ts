@@ -20,6 +20,10 @@ class RefPopupController implements IController {
         element.css("position", "absolute"); // IE needs this
     }
 
+    $onInit() {
+
+    }
+
     loadSuccess(response) {
         this.doc_name = response.data.doc_name;
         this.doc_author = response.data.doc_author;

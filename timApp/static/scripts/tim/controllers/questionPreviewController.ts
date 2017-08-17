@@ -46,6 +46,10 @@ export class QuestionPreviewController implements IController {
         });
     }
 
+    $onInit() {
+
+    }
+
     editQuestion() {
         this.close();
         const parId = this.questionParId;

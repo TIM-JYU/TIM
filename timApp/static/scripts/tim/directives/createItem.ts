@@ -34,6 +34,10 @@ class CreateItemController implements IController {
         this.alerts = [];
     }
 
+    $onInit() {
+
+    }
+
     createItem() {
         $http.post<{path}>("/createItem", angular.extend({
             item_path: this.itemLocation + "/" + this.itemName,

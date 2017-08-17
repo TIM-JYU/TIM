@@ -287,6 +287,10 @@ class ShowChartController implements IController {
         });
     }
 
+    $onInit() {
+
+    }
+
     intScale(value, axis) {
         if (axis == this.chartIndex) {
             return value;

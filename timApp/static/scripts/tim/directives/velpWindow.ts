@@ -76,6 +76,10 @@ export class VelpWindowController implements IController {
         }
     }
 
+    $onInit() {
+
+    }
+
     saveButtonText() {
         if (this.new) {
             return "Add velp";

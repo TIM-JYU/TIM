@@ -55,6 +55,10 @@ export class AnswerToQuestionController implements IController {
         });
     }
 
+    $onInit() {
+
+    }
+
     /**
      * FILL WITH SUITABLE TEXT
      * @memberof module:answerToQuestionController

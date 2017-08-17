@@ -30,6 +30,10 @@ class PopupDialogController implements IController {
         this.element = element;
     }
 
+    $onInit() {
+
+    }
+
     /**
      * FILL WITH SUITABLE TEXT
      * @memberof module:popUpDialog

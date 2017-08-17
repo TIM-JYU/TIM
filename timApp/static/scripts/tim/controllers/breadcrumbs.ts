@@ -10,6 +10,10 @@ export class Breadcrumbs implements IController {
         this.crumbs = $window.breadcrumbs;
         this.item = $window.item;
     }
+
+    $onInit() {
+
+    }
 }
 
 timApp.component("timBreadcrumbs", {

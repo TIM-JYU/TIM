@@ -67,6 +67,10 @@ export class AllAnswersCtrl implements IController {
         });
     }
 
+    $onInit() {
+
+    }
+
     ok() {
         if (this.options.periodFrom) {
             this.options.periodFrom = this.options.periodFrom.toDate();

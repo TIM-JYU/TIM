@@ -14,6 +14,10 @@ class DialogController implements IController {
         this.message = message;
     }
 
+    $onInit() {
+
+    }
+
     public ok() {
         this.instance.close();
     }

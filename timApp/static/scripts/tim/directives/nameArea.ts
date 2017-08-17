@@ -35,6 +35,10 @@ class NameAreaController implements IController {
         area.focus();
     }
 
+    $onInit() {
+
+    }
+
     closePopup() {
         this.element.remove();
 

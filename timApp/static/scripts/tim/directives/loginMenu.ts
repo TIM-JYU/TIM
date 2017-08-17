@@ -14,6 +14,10 @@ class LoginMenuController implements IController {
         this.addingToSession = false;
     }
 
+    $onInit() {
+
+    }
+
     getCurrentUser = () => Users.getCurrent();
     getSessionUsers = () => Users.getSessionUsers();
 

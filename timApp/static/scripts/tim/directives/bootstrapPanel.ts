@@ -11,6 +11,10 @@ class BootstrapPanelController implements IController {
         this.element = element;
     }
 
+    $onInit() {
+
+    }
+
     public close() {
         this.closeFn();
     }

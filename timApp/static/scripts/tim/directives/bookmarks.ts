@@ -26,6 +26,10 @@ class BookmarksController implements IController {
         }
     }
 
+    $onInit() {
+
+    }
+
     getFromServer(response, groupToKeepOpen?) {
         this.data = response.data;
         this.keepGroupOpen(groupToKeepOpen);
@@ -203,6 +207,10 @@ class CreateBookmarkCtrl implements IController {
         this.focusName = !this.focusGroup;
         this.showParamsCheckbox = $window.location.search.length > 1;
         this.showHashCheckbox = $window.location.hash.length > 1;
+    }
+
+    $onInit() {
+
     }
 
     public ok() {

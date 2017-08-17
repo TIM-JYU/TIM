@@ -71,6 +71,10 @@ export class ShowStatisticsToQuestionController implements IController {
         });
     }
 
+    $onInit() {
+
+    }
+
     /**
      * Closes statistic window
      * @memberof module:showStatisticsToQuestionController

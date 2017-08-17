@@ -38,6 +38,10 @@ class PopupMenuController implements IController {
 
     }
 
+    $onInit() {
+
+    }
+
     closePopup() {
         this.element.remove();
 

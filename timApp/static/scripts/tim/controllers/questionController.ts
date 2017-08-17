@@ -121,6 +121,10 @@ export class QuestionController implements IController {
         this.scope.$on("editQuestion", (event, data) => this.editQuestion(data));
     }
 
+    $onInit() {
+
+    }
+
     putBackQuotations(x) {
         const ox = x.replace(/<br>/g, "\n");
         return ox.replace(/&quot;/g, '"');

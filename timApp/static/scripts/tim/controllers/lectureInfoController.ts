@@ -68,6 +68,10 @@ export class LectureInfoController implements IController {
         this.getLectureInfo();
     }
 
+    $onInit() {
+
+    }
+
     /**
      * Sends http request to get info about the specific lecture.
      * @memberof module:lectureInfoController

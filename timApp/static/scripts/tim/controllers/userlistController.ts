@@ -250,6 +250,10 @@ export class KorppiExportCtrl implements IController {
         this.options = {};
     }
 
+    $onInit() {
+
+    }
+
     ok() {
         this.uibModalInstance.close(this.options);
     }

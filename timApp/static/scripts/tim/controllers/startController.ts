@@ -12,6 +12,10 @@ export class StartCtrl implements IController {
         this.creatingNew = false;
     }
 
+    $onInit() {
+
+    }
+
     cancelCreate() {
         this.creatingNew = false;
     }
