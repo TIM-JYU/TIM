@@ -1,4 +1,19 @@
-/* Antti Valmari 2016-12-29 */
+copyright number_file( "number.cc", "Antti Valmari", 20170723 );
+/*
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 /* This file contains some data types used by MathCheck:
 - a seven-valued truth value: all non-empty combinations of {false, undefined,
   true}
@@ -230,6 +245,9 @@ public:
       type = dbl; return;
     }
     case trv: type = dbl; d_val.lo = d_val.hi = t_val; return;
+    case dbl: case dbu:   // standardize the representation of undefined
+      if( !( d_val.lo == d_val.lo ) ){ type = dbu; d_val.lo = -1/0.; }
+      if( !( d_val.hi == d_val.hi ) ){ type = dbu; d_val.hi = 1/0.; }
     default: return;
     }
   }
@@ -347,6 +365,18 @@ public:
       return tv_FUT;
     }
     default: return tv_FUT;
+    }
+  }
+
+  inline bool is_informative(){
+    switch( type ){
+    case zer: case pos: case neg: return true;
+    case dbl: return
+      ( 0 < d_val.lo && d_val.hi - d_val.lo < d_val.lo / 1024 ) ||
+      ( 0 > d_val.hi && d_val.lo - d_val.hi > d_val.hi / 1024 ) ||
+      ( -1E-10 < d_val.lo && d_val.lo <= 0. &&
+        0. <= d_val.hi && d_val.hi < 1E-10 );
+    default: return false;
     }
   }
 
@@ -912,7 +942,7 @@ unsigned fact_computed = 0;       // number of pre-computed factorials
 number factorial( number nn ){
   switch( nn.type ){
   case number::zer: return 1;
-  case number::dbl: case number::dbu:  //??? could approximate better 
+  case number::dbl: case number::dbu:  //??? could approximate better
     return number( number::dbu, 1., 1/0. );
   case number::pos: {
     if( nn.r_val.de != 1 ){ return number::und; }
@@ -957,9 +987,9 @@ truth_val num_eq( number x1, number x2 ){
     return
       x1.r_val.nu == x2.r_val.nu && x1.r_val.de == x2.r_val.de ? tv_T : tv_F;
   }
+  x1.to_dblu(); x2.to_dblu();
   truth_val del_U =
     x1.type == number::dbu || x2.type == number::dbu ? tv_FUT : tv_FT;
-  x1.to_dblu(); x2.to_dblu();
   if( x1.d_val.hi < x2.d_val.lo ){ return truth_val( tv_FU | del_U ); }
   if( x2.d_val.hi < x1.d_val.lo ){ return truth_val( tv_FU | del_U ); }
   if(
@@ -995,29 +1025,16 @@ truth_val num_lt( number x1, number x2 ){
     if( x1.type == number::zer ){
       return x2.type == number::pos ? tv_T : tv_F;
     }
-    if( x2.type == number::zer ){
-      return x1.type == number::neg ? tv_T : tv_F;
-    }
     if( x1.type != x2.type ){
       return x1.type == number::neg ? tv_T : tv_F;
     }
-    if( x1.type == number::pos ){
-      return ration_lt( x1.r_val.nu, x1.r_val.de, x2.r_val.nu, x2.r_val.de );
-    }else{
-      return ration_lt( x2.r_val.nu, x2.r_val.de, x1.r_val.nu, x1.r_val.de );
-    }
-/*???
-    unsigned
-      n1 = ovfl_mult( x1.r_val.nu, x2.r_val.de ),
-      n2 = ovfl_mult( x1.r_val.de, x2.r_val.nu );
-    if( n1 && n2 ){
-      if( x1.type == number::pos ){ return n1 < n2 ? tv_T : tv_F; }
-      return n1 > n2 ? tv_T : tv_F;
-    }*/
+    return x1.type == number::pos ?
+      ration_lt( x1.r_val.nu, x1.r_val.de, x2.r_val.nu, x2.r_val.de ) :
+      ration_lt( x2.r_val.nu, x2.r_val.de, x1.r_val.nu, x1.r_val.de );
   }
+  x1.to_dblu(); x2.to_dblu();
   truth_val del_U =
     x1.type == number::dbu || x2.type == number::dbu ? tv_FUT : tv_FT;
-  x1.to_dblu(); x2.to_dblu();
   if( x1.d_val.hi < x2.d_val.lo ){ return truth_val( tv_UT | del_U ); }
   if( x2.d_val.hi <= x1.d_val.lo ){ return truth_val( tv_FU | del_U ); }
   return truth_val( tv_FUT | del_U );
@@ -1035,29 +1052,16 @@ truth_val num_lq( number x1, number x2 ){
     if( x1.type == number::zer ){
       return x2.type == number::neg ? tv_F : tv_T;
     }
-    if( x2.type == number::zer ){
-      return x1.type == number::pos ? tv_F : tv_T;
-    }
     if( x1.type != x2.type ){
       return x1.type == number::neg ? tv_T : tv_F;
     }
-    if( x1.type == number::pos ){
-      return !ration_lt( x2.r_val.nu, x2.r_val.de, x1.r_val.nu, x1.r_val.de );
-    }else{
-      return !ration_lt( x1.r_val.nu, x1.r_val.de, x2.r_val.nu, x2.r_val.de );
-    }
-/*???
-    unsigned
-      n1 = ovfl_mult( x1.r_val.nu, x2.r_val.de ),
-      n2 = ovfl_mult( x1.r_val.de, x2.r_val.nu );
-    if( n1 && n2 ){
-      if( x1.type == number::pos ){ return n1 <= n2 ? tv_T : tv_F; }
-      return n1 >= n2 ? tv_T : tv_F;
-    }*/
+    return x1.type == number::pos ?
+      !ration_lt( x2.r_val.nu, x2.r_val.de, x1.r_val.nu, x1.r_val.de ) :
+      !ration_lt( x1.r_val.nu, x1.r_val.de, x2.r_val.nu, x2.r_val.de );
   }
+  x1.to_dblu(); x2.to_dblu();
   truth_val del_U =
     x1.type == number::dbu || x2.type == number::dbu ? tv_FUT : tv_FT;
-  x1.to_dblu(); x2.to_dblu();
   if( x1.d_val.hi <= x2.d_val.lo ){ return truth_val( tv_UT | del_U ); }
   if( x2.d_val.hi < x1.d_val.lo ){ return truth_val( tv_FU | del_U ); }
   return truth_val( tv_FUT | del_U );
