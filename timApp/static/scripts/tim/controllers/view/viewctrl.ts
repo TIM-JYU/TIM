@@ -30,6 +30,7 @@ import {IAskedJsonJson, IAskedJsonJsonJson} from "../../lecturetypes";
 markAsUsed(ngs, popupMenu, interceptor);
 import {initCssPrint} from "../../cssPrint";
 import * as printctrl from "../printCtrl";
+import {ReviewController} from "../reviewController";
 
 markAsUsed(popupMenu, interceptor, printctrl);
 
@@ -394,7 +395,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
     private oldWidth: number;
     public editorFunctions: any[];
     public defaultAction: any;
-    public reviewCtrlScope: IScope;
+    public reviewCtrlScope: IScope & {$ctrl: ReviewController};
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -428,8 +429,8 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         $($window).resize((e) => {
             if (e.target === $window as any) {
                 const newWidth = $($window).width();
-                if (newWidth !== sc.oldWidth) {
-                    sc.oldWidth = newWidth;
+                if (newWidth !== this.oldWidth) {
+                    this.oldWidth = newWidth;
                     const selected = $(".par.lightselect, .par.selected");
                     if (selected.length > 0) {
                         selected[0].scrollIntoView();
@@ -602,7 +603,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         });
     }
 
-    setReviewCtrlScope(scope: IScope) {
+    setReviewCtrlScope(scope: IScope & {$ctrl: ReviewController}) {
         this.reviewCtrlScope = scope;
     }
 

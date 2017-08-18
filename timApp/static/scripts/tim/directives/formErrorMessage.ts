@@ -20,7 +20,7 @@ timApp.directive("timErrorState", [function() {
         scope: {
             for: "=",
         },
-        link($scope: IScope, $element: IRootElementService, $attrs: IAttributes) {
+        link($scope: any, $element: IRootElementService, $attrs: IAttributes) {
             $scope.$watch("for.$invalid", (newVal, oldVal) => {
                 if (newVal && $scope.for.$dirty) {
                     $element.addClass("has-error");

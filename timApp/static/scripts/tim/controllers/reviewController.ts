@@ -878,7 +878,7 @@ export class ReviewController implements IController {
         if (start.hasAttribute("attrs") && start.hasAttribute("t")) {
             const answ = start.getElementsByTagName("answerbrowser");
             if (answ.length > 0) {
-                const ctrl = angular.element(answ[0]).isolateScope().$ctrl as AnswerBrowserController;
+                const ctrl = angular.element(answ[0]).isolateScope<any>().$ctrl as AnswerBrowserController;
                 return ctrl.selectedAnswer;
             }
             return null;
@@ -887,7 +887,7 @@ export class ReviewController implements IController {
         const myparent = getElementParent(start);
 
         if (myparent.tagName === "ANSWERBROWSER") {
-            const ctrl = angular.element(myparent).isolateScope().$ctrl as AnswerBrowserController;
+            const ctrl = angular.element(myparent).isolateScope<any>().$ctrl as AnswerBrowserController;
             return ctrl.selectedAnswer;
         }
 
@@ -1124,7 +1124,7 @@ export class ReviewController implements IController {
 
         try {
             const annotationElement = parent.querySelectorAll("annotation[aid='{0}']".replace("{0}", annotation.id.toString()))[0];
-            angular.element(annotationElement).isolateScope().actrl.showAnnotation();
+            angular.element(annotationElement).isolateScope<any>().actrl.showAnnotation();
         } catch (e) {
             // Find answer browser and its scope
             // set answer id -> change answer to that
@@ -1135,7 +1135,7 @@ export class ReviewController implements IController {
 
                 if (typeof ab === UNDEFINED) {
                     const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-                    abl.isolateScope().$ctrl.loadAnswerBrowser();
+                    abl.isolateScope<any>().$ctrl.loadAnswerBrowser();
                 }
                 if (this.vctrl.selectedUser.id !== annotation.user_id) {
                     for (let i = 0; i < this.vctrl.users.length; i++) {
@@ -1155,7 +1155,7 @@ export class ReviewController implements IController {
 
                     setTimeout(() => {
                         const annotationElement = parent.querySelectorAll("annotation[aid='{0}']".replace("{0}", annotation.id.toString()))[0];
-                        angular.element(annotationElement).isolateScope().actrl.showAnnotation();
+                        angular.element(annotationElement).isolateScope<any>().actrl.showAnnotation();
                         this.scope.$apply();
                         scrollToElement(annotationElement);
                     }, 500);

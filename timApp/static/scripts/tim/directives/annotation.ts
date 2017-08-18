@@ -149,7 +149,7 @@ class AnnotationController implements IController {
                 if (e.offsetParent.className !== "notes") {
                     angular.element(
                         annotationElements[i],
-                    ).isolateScope().actrl.toggleAnnotationShow();
+                    ).isolateScope<any>().actrl.toggleAnnotationShow();
                     this.toggleAnnotationShow();
                 }
             }

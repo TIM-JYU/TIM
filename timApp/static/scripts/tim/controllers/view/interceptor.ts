@@ -24,7 +24,7 @@ timApp.config([() => {
                         if (taskName !== "") {
                             const ab = angular.element("answerbrowser[task-id='" + taskId + "']");
                             if (ab.isolateScope()) {
-                                const browserScope = ab.isolateScope();
+                                const browserScope = ab.isolateScope<any>();
                                 angular.extend(config.data, {abData: browserScope.$ctrl.getBrowserData()});
                             }
                         }

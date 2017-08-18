@@ -319,12 +319,12 @@ export class EditingHandler {
     }
 
     closeAndSave(e, $par) {
-        $("pareditor").isolateScope().saveClicked();
+        $("pareditor").isolateScope<any>().saveClicked();
         this.viewctrl.showOptionsWindow(e, $par);
     }
 
     closeWithoutSaving(e, $par) {
-        $("pareditor").isolateScope().cancelClicked();
+        $("pareditor").isolateScope<any>().cancelClicked();
         this.viewctrl.showOptionsWindow(e, $par);
     }
 

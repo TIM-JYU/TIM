@@ -466,7 +466,7 @@ export class VelpSelectionController implements IController {
     openCreateNewVelpWindow() {
         const velp: VelpWindowController = angular.element(
             document.getElementById("newVelp"),
-        ).isolateScope().$ctrl;
+        ).isolateScope<any>().$ctrl;
         velp.toggleVelpToEdit();
 
         //if (this.getVelpUnderEdit().id !== this.newVelp.id)
