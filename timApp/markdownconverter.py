@@ -1,4 +1,5 @@
 """Provides functions for converting markdown-formatted text to HTML."""
+import json
 import re
 from typing import Optional, Dict
 

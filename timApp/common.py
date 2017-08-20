@@ -53,7 +53,8 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     for htmlpar in html_pars:
         if not htmlpar['is_plugin']:  # TODO: Think if plugins still needs to expand macros?
             # htmlpar.insert_rnds(0)
-            htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter, env=env, ignore_errors=True)
+            if not htmlpar['attrs'].get('nomacros', False):
+                htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter, env=env, ignore_errors=True)
     # taketime("macros done")
 
     if edit_window:

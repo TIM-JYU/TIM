@@ -42,6 +42,8 @@ class DocParagraph:
         self.__htmldata = None
         self.ref_pars = None
         self.__rands = None   # random number macros for this pg
+        self.attrs = None
+        self.nomacros = False
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -90,6 +92,8 @@ class DocParagraph:
             't': hashfunc(md, attrs) if par_hash is None else par_hash,
             'attrs': {} if attrs is None else attrs
         }
+        par.attrs = par.__data['attrs']
+        par.nomacros = par.attrs.get('nomacros', False)
         par._cache_props()
         return par
 
@@ -150,6 +154,10 @@ class DocParagraph:
         """
         par = DocParagraph(doc, files_root)
         par.__data = dict(d)
+        if 'attrs' not in par.__data:
+            par.__data['attrs'] = {}
+        par.attrs = par.__data['attrs']
+        par.nomacros = par.attrs.get('nomacros', False)
         par._cache_props()
         return par
 
@@ -288,7 +296,7 @@ class DocParagraph:
     def get_rd(self) -> Optional[int]:
         """Returns the id of the Document to which this paragraph refers, or None if this is not a reference
         paragraph."""
-        if 'rd' in self.__data['attrs']:
+        if 'rd' in self.attrs:
             try:
                 return int(self.get_attr('rd'))
             except ValueError:
@@ -323,7 +331,7 @@ class DocParagraph:
         return self.__data['md']
 
     def get_rands_str(self, rnd_seed) ->str:
-        ret, self.__rnd_seed = get_rands_as_str(self.__data.get('attrs', None), rnd_seed)
+        ret, self.__rnd_seed = get_rands_as_str(self.attrs, rnd_seed)
         return ret
 
     def insert_before_md(self, s: str):
@@ -338,13 +346,16 @@ class DocParagraph:
         """ Inserts Jinja rnd variable as a list of random numbers based to attribute rnd and rnd_seed
             return True if attribute rnd found and OK, else False
         """
-        self.__rands, self.__rnd_seed = get_rands_as_dict(self.__data.get('attrs', None), rnd_seed)
+        self.__rands, self.__rnd_seed = get_rands_as_dict(self.attrs, rnd_seed)
         if self.__rands is None:
             return False
         return True
 
     def get_rands(self):
         return self.__rands
+
+    def get_nomacros(self):
+        return self.nomacros
 
     def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None, ignore_errors: bool = False) -> str:
         """Returns the macro-processed markdown for this paragraph.
@@ -355,13 +366,15 @@ class DocParagraph:
         :return: The expanded markdown.
 
         """
+        md = self.get_markdown()
+        if self.get_nomacros():
+            return md
         if macroinfo is None:
             macroinfo = self.doc.get_settings().get_macroinfo()
         macros = macroinfo.get_macros()
         if self.insert_rnds(None): # TODO: RND_SEED: check what seed should be used, is this used to plugins?
             macros = {**macros, **self.__rands}
-        return expand_macros(self.get_markdown(), macros,
-                             macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
+        return expand_macros(md, macros, macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
 
     def get_title(self) -> Optional[str]:
         """Attempts heuristically to return a title for this paragraph.
@@ -594,13 +607,14 @@ class DocParagraph:
 
     def has_class(self, class_name):
         """Returns whether this paragraph has the specified class."""
-        return class_name in self.__data.get('attrs', {}).get('classes', {})
+        return class_name in self.attrs.get('classes', {})
 
     def add_class(self, class_name):
         """Adds the specified class to this paragraph."""
         if not self.has_class(class_name):
             if 'attrs' not in self.__data:
-                self.__data['attrs'] = {}
+                self.__data['attrs'] = {}  # This should never happend!
+                self.attrs = self.__data['attrs']
             if 'classes' not in self.__data['attrs']:
                 self.__data['attrs']['classes'] = []
             self.__data['attrs']['classes'].append(class_name)
@@ -689,7 +703,7 @@ class DocParagraph:
         :return: The attribute value.
 
         """
-        return self.__data['attrs'].get(attr_name, default_value)
+        return self.attrs.get(attr_name, default_value)
 
     def set_markdown(self, new_md: str):
         """Sets markdown for this paragraph.
@@ -708,9 +722,9 @@ class DocParagraph:
 
         """
         if attr_val is None:
-            self.__data['attrs'].pop(attr_name, None)
+            self.attrs.pop(attr_name, None)
         else:
-            self.__data['attrs'][attr_name] = attr_val
+            self.attrs[attr_name] = attr_val
 
         self._cache_props()
 
@@ -729,11 +743,11 @@ class DocParagraph:
         return new_dict
 
     def get_attrs(self, base_attrs: Optional[Dict] = None) -> Dict:
-        return DocParagraph.__combine_dict(base_attrs, self.__data['attrs'])
+        return DocParagraph.__combine_dict(base_attrs, self.attrs)
 
     def get_attrs_str(self) -> str:
         """Returns the attributes as a JSON string."""
-        return json.dumps(self.__data['attrs'], sort_keys=True)
+        return json.dumps(self.attrs, sort_keys=True)
 
     def get_classes(self) -> List[str]:
         return self.get_attr('classes', [])

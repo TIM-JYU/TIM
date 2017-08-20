@@ -263,9 +263,11 @@ def parse_plugin_values_macros(par: DocParagraph,
         rnd_macros = par.get_rands()
         if rnd_macros:
             macros = {**macros, **rnd_macros}
-        yaml_str = expand_macros(par_md[par_md.index('\n') + 1:par_md.rindex('\n')],
-                                 macros=macros,
-                                 macro_delimiter=macro_delimiter)
+        yaml_str = par_md[par_md.index('\n') + 1:par_md.rindex('\n')]
+        if not par.get_nomacros():
+            yaml_str = expand_macros(yaml_str,
+                                     macros=macros,
+                                     macro_delimiter=macro_delimiter)
         # print("yaml str is: " + yaml_str)
         values = parse_yaml(yaml_str)
         if type(values) is str:
