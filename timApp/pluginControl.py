@@ -19,6 +19,7 @@ from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.timdb import gamificationdata
 from timApp.timdb.models.user import User
 from timApp.utils import get_error_html, get_error_md
+from timApp.rndutils import get_seed_from_par_and_user
 from timApp.timdb.printsettings import PrintFormat
 
 LAZYSTART = "<!--lazy "
@@ -121,11 +122,30 @@ def pluginify(doc: Document,
             raise PluginException('len(blocks) must be 1 if custom state is specified')
     plugins = {}
     state_map = {}
+    task_ids = []
 
     global_attrs = doc.get_settings().global_plugin_attrs()
     macroinfo = doc.get_settings().get_macroinfo(user)
     macros = macroinfo.get_macros()
     macro_delimiter = macroinfo.get_macro_delimiter()
+
+    answer_map = {}
+    # enum_pars = enumerate(pars)
+
+    if load_states and custom_answer is None and user is not None:
+        for idx, block in enumerate(pars):  # find taskid's
+            attr_taskid = block.get_attr('taskId')
+            plugin_name = block.get_attr('plugin')
+            if plugin_name and not block.is_question():  # show also question in preview
+                task_id = "{}.{}".format(block.get_doc_id(), attr_taskid or '')
+                if not task_id.endswith('.'):
+                    task_ids.append(task_id)
+        answers = timdb.answers.get_newest_answers(user.id, task_ids)
+        # TODO: RND_SEED get all users rand_seeds for this doc's tasks. New table?
+        # Close database here because we won't need it for a while
+        timdb.close()
+        for answer in answers:
+            answer_map[answer['task_id']] = answer
 
     for idx, block in enumerate(pars):
         attr_taskid = block.get_attr('taskId')
@@ -146,9 +166,38 @@ def pluginify(doc: Document,
                                                       '</pre></div>'
 
         if plugin_name and not block.is_question():  # show also question in preview
+            task_id = "{}.{}".format(block.get_doc_id(), attr_taskid or '')
+            info = None
+            state_ok = False
+            new_seed = False
+            rnd_seed = None
+            answer = {}
+
+            if load_states:
+                if custom_answer is not None:
+                    answer = custom_answer
+                else:
+                    answer = answer_map.get(task_id, None)
+                if answer is not None:
+                    state = try_load_json(answer['content'])
+                    rnd_seed = answer.get('rndseed', None)
+                    state_ok = True
+
+            if rnd_seed is None:
+                rnd_seed = get_seed_from_par_and_user(block, user) # TODO: RND_SEED: get users seed for this plugin
+                new_seed = True
+
+            if block.insert_rnds(rnd_seed) and new_seed:  # do not change order!  inserts must be done
+                # TODO: RND_SEED save rnd_seed to user data
+                pass
+
             try:
                 # plugin = Plugin.from_paragraph(block, user)
-                plugin = Plugin.from_paragraph_macros(block, global_attrs, macros, macro_delimiter)
+                joint_macros = macros
+                rands = block.get_rands()
+                if rands:
+                    joint_macros = {**macros, **rands}
+                plugin = Plugin.from_paragraph_macros(block, global_attrs, joint_macros, macro_delimiter)
                 plugin.values['isQuestion'] = block.get_attr('isQuestion', '')
             except PluginException as e:
                 html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
@@ -158,16 +207,14 @@ def pluginify(doc: Document,
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
             vals["user_id"] = user.name if user is not None else 'Anonymous'
-            task_id = "{}.{}".format(block.get_doc_id(), attr_taskid or '')
 
-            info = None
-            if load_states and custom_answer is not None:
-                state = try_load_json(custom_answer['content'])
-                info = plugin.get_info([user], old_answers=custom_answer.get('cnt'), valid=custom_answer['valid'])
+            if state_ok:
+                info = plugin.get_info([user], old_answers=answer.get('cnt'), valid=answer['valid'])
             else:
                 if not task_id.endswith('.'):
                     state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx, 'obj': plugin}
                 state = None
+
             plugins[plugin_name][idx] = {"markup": vals,
                                          "state": state,
                                          "taskID": task_id,
@@ -182,7 +229,7 @@ def pluginify(doc: Document,
                                          "targetFormat": target_format}
 
     # taketime("answ", "markup", len(plugins))
-
+    '''
     if load_states and custom_answer is None and user is not None:
         answers = timdb.answers.get_newest_answers(user.id, list(state_map.keys()))
         # Close database here because we won't need it for a while
@@ -194,7 +241,7 @@ def pluginify(doc: Document,
             plugins[p['plugin_name']][p['idx']]['info'] = p['obj'].get_info([user],
                                                                             old_answers=answer['cnt'],
                                                                             valid=answer['valid'])
-
+    '''
     js_paths = []
     css_paths = []
     modules = []

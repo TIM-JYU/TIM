@@ -11,6 +11,7 @@ from timApp.markdownconverter import expand_macros
 from timApp.timdb.models.user import User
 from timApp.timdb.timdbexception import TimDbException
 from timApp.utils import parse_yaml, merge
+from timApp.rndutils import get_seed_from_par_and_user
 
 date_format = '%Y-%m-%d %H:%M:%S'
 
@@ -99,8 +100,8 @@ class Plugin:
 
     @staticmethod
     def from_paragraph_macros(par: DocParagraph, global_attrs: Dict[str, str],
-                               macros: Dict[str, str],
-                               macro_delimiter: str):
+                              macros: Dict[str, object],
+                              macro_delimiter: str):
         if not par.is_plugin():
             raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
         task_id_name = par.get_attr('taskId')
@@ -118,6 +119,8 @@ class Plugin:
         if not par.is_plugin():
             raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
         task_id_name = par.get_attr('taskId')
+        rnd_seed = get_seed_from_par_and_user(par, user)  # TODO: RND_SEED get users rnd_seed for this plugin
+        par.insert_rnds(rnd_seed)
         plugin_data = parse_plugin_values(par,
                                           global_attrs=doc.get_settings().global_plugin_attrs(),
                                           macroinfo=doc.get_settings().get_macroinfo(user))
@@ -243,7 +246,7 @@ class PluginException(Exception):
 
 def parse_plugin_values_macros(par: DocParagraph,
                                global_attrs: Dict[str, str],
-                               macros: Dict[str, str],
+                               macros: Dict[str, object],
                                macro_delimiter: str) -> Dict:
     """
     Parses the markup values for a plugin paragraph, taking document attributes and macros into account.
@@ -257,6 +260,9 @@ def parse_plugin_values_macros(par: DocParagraph,
     try:
         # We get the yaml str by removing the first and last lines of the paragraph markup
         par_md = par.get_markdown()
+        rnd_macros = par.get_rands()
+        if rnd_macros:
+            macros = {**macros, **rnd_macros}
         yaml_str = expand_macros(par_md[par_md.index('\n') + 1:par_md.rindex('\n')],
                                  macros=macros,
                                  macro_delimiter=macro_delimiter)

@@ -6,6 +6,7 @@ from copy import copy
 
 import filelock
 
+import timApp
 from timApp.documentmodel.documentparser import DocumentParser
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter
@@ -17,6 +18,7 @@ from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException
 from typing import Optional, Dict, List, Tuple, Any
 from timApp.utils import count_chars, get_error_html
+from timApp.rndutils import get_rands_as_dict, get_rands_as_str
 
 
 class DocParagraph:
@@ -39,6 +41,7 @@ class DocParagraph:
         self.html = None
         self.__htmldata = None
         self.ref_pars = None
+        self.__rands = None   # random number macros for this pg
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -319,6 +322,30 @@ class DocParagraph:
         """Returns the markdown of this paragraph."""
         return self.__data['md']
 
+    def get_rands_str(self, rnd_seed) ->str:
+        ret, self.__rnd_seed = get_rands_as_str(self.__data.get('attrs', None), rnd_seed)
+        return ret
+
+    def insert_before_md(self, s: str):
+        """ Insert s before md text.  s may need to contain \n """
+        md = self.__data['md']
+        if md.startswith('```\n'):
+            self.__data['md'] = '```\n' + s + md[4:]
+        else:
+            self.__data['md'] = s + self.__data['md']
+
+    def insert_rnds(self, rnd_seed: int) ->bool:
+        """ Inserts Jinja rnd variable as a list of random numbers based to attribute rnd and rnd_seed
+            return True if attribute rnd found and OK, else False
+        """
+        self.__rands, self.__rnd_seed = get_rands_as_dict(self.__data.get('attrs', None), rnd_seed)
+        if self.__rands is None:
+            return False
+        return True
+
+    def get_rands(self):
+        return self.__rands
+
     def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None, ignore_errors: bool = False) -> str:
         """Returns the macro-processed markdown for this paragraph.
 
@@ -330,7 +357,10 @@ class DocParagraph:
         """
         if macroinfo is None:
             macroinfo = self.doc.get_settings().get_macroinfo()
-        return expand_macros(self.get_markdown(), macroinfo.get_macros(),
+        macros = macroinfo.get_macros()
+        if self.insert_rnds(None): # TODO: RND_SEED: check what seed should be used, is this used to plugins?
+            macros = {**macros, **self.__rands}
+        return expand_macros(self.get_markdown(), macros,
                              macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
 
     def get_title(self) -> Optional[str]:

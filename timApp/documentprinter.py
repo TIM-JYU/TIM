@@ -11,7 +11,7 @@ from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import dereference_pars
 from timApp.documentmodel.macroinfo import MacroInfo
-from documentmodel.randutils import hashfunc
+from timApp.documentmodel.randutils import hashfunc
 from timApp.markdownconverter import expand_macros, create_environment
 from timApp.pluginControl import pluginify
 from timApp.pluginOutputFormat import PluginOutputFormat
