@@ -1,4 +1,5 @@
 import json
+import numbers
 import random
 import time
 
@@ -52,11 +53,11 @@ def get_int_list(jso):
 
 def get_uniform_list(jso):
     ranges = json.loads(jso)
-    if isinstance(ranges, int):  # only on item, rnd=6
+    if isinstance(ranges, numbers.Number):  # only on item, rnd=6
         return [random.uniform(0, ranges)]
     ret = []
     for r in ranges:
-        if isinstance(r, int):  # only on item, rnd=[6, 4]
+        if isinstance(r, numbers.Number):  # only on item, rnd=[6, 4]
             ret.append(random.uniform(0, r))
         else:
             if len(r) < 2:
