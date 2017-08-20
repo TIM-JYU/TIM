@@ -45,6 +45,10 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
         if not ignore_errors:
             return get_error_html('Syntax error in template: {}'.format(e))
         return text
+    except Exception as e:
+        if not ignore_errors:
+            return get_error_html('Syntax error in template: {}'.format(e))
+        return text
 
 
 def create_environment(macro_delimiter: str):

@@ -653,7 +653,10 @@ class DocParagraph:
             heading_cache[self.get_id()] = []
             return prev_par_auto_values
 
-        md_expanded = expand_macros(prev_par.get_markdown(), macros, macro_delim)
+        md_expanded = prev_par.get_markdown()
+        if not prev_par.nomacros:
+            # TODO: RND_SEED should we fill the rands also?
+            md_expanded = expand_macros(md_expanded, macros, macro_delim)
         blocks = DocumentParser(md_expanded).get_blocks(DocumentParserOptions.break_on_empty_lines())
         deltas = copy(prev_par_auto_values['h'])
         titles = []
