@@ -1,6 +1,11 @@
 
 import {timApp} from "tim/app";
 import {$timeout, $uibModal} from "../ngimport";
+import * as allAnswersController from "tim/controllers/allAnswersController";
+import {markAsUsed} from "../utils";
+
+markAsUsed(allAnswersController);
+
 timApp.controller("UserListController", ["$scope", "$element", "uiGridConstants",
     function($scope, $element, uiGridConstants) {
         "use strict";

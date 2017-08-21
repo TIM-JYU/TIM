@@ -7,6 +7,10 @@ import {dereferencePar, getParId} from "../controllers/view/parhelpers";
 import {Users} from "../services/userService";
 import {ParCompiler} from "../services/parCompiler";
 import {$compile, $filter, $http, $timeout, $uibModal, $window} from "../ngimport";
+import * as allAnswersController from "tim/controllers/allAnswersController";
+import {markAsUsed} from "../utils";
+
+markAsUsed(allAnswersController);
 
 timLogTime("answerbrowser3 load", "answ");
 
