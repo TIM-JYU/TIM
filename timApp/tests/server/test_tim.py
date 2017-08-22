@@ -240,9 +240,6 @@ header: %%username%% and %%realname%%
 
     def test_windows_eol(self):
         """Windows-style EOLs should work with Dumbo.
-
-        If this test fails, try to recompile Dumbo.
-
         """
         self.login_test1()
         md_table = """---\r\n|a|\r\n|-|"""
