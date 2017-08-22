@@ -11,7 +11,7 @@ from timApp.markdownconverter import expand_macros
 from timApp.timdb.models.user import User
 from timApp.timdb.timdbexception import TimDbException
 from timApp.utils import parse_yaml, merge
-from timApp.rndutils import get_seed_from_par_and_user
+from timApp.rndutils import get_simple_hash_from_par_and_user
 
 date_format = '%Y-%m-%d %H:%M:%S'
 
@@ -119,7 +119,7 @@ class Plugin:
         if not par.is_plugin():
             raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
         task_id_name = par.get_attr('taskId')
-        rnd_seed = get_seed_from_par_and_user(par, user)  # TODO: RND_SEED get users rnd_seed for this plugin
+        rnd_seed = get_simple_hash_from_par_and_user(par, user)  # TODO: RND_SEED get users rnd_seed for this plugin
         par.insert_rnds(rnd_seed)
         plugin_data = parse_plugin_values(par,
                                           global_attrs=doc.get_settings().global_plugin_attrs(),

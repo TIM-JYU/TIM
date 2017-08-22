@@ -19,7 +19,7 @@ from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.timdb import gamificationdata
 from timApp.timdb.models.user import User
 from timApp.utils import get_error_html, get_error_md
-from timApp.rndutils import get_seed_from_par_and_user
+from timApp.rndutils import get_simple_hash_from_par_and_user
 from timApp.timdb.printsettings import PrintFormat
 
 LAZYSTART = "<!--lazy "
@@ -184,7 +184,7 @@ def pluginify(doc: Document,
                     state_ok = True
 
             if rnd_seed is None:
-                rnd_seed = get_seed_from_par_and_user(block, user) # TODO: RND_SEED: get users seed for this plugin
+                rnd_seed = get_simple_hash_from_par_and_user(block, user) # TODO: RND_SEED: get users seed for this plugin
                 new_seed = True
 
             if block.insert_rnds(rnd_seed) and new_seed:  # do not change order!  inserts must be done
