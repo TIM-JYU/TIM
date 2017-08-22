@@ -160,7 +160,7 @@ class DocumentParser:
         self._blocks = []
         self._break_on_empty_line = options.break_on_empty_line
         self._last_setting = options
-        lines = self._doc_text.split("\n")
+        lines = self._doc_text.splitlines()
         doc = DocReader(lines)
         funcs = [self.try_parse_code_block,
                  self.try_parse_header_block,
@@ -257,7 +257,7 @@ class DocumentParser:
             #
             single_mark = code_block_marker[0]
             last_line_code_chars = count_chars(block_lines[-1], single_mark)
-            if last_line_code_chars > 0 or len(line) == 0:
+            if (last_line_code_chars > 0 or len(line) == 0) and len(line.strip()) == last_line_code_chars:
                 block_lines[-1] = single_mark * (len(code_block_marker) - last_line_code_chars) + block_lines[-1]
             else:
                 block_lines.append(code_block_marker)
