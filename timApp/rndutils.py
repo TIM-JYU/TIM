@@ -12,6 +12,8 @@ MAX_RND_LIST_LEN = 100
 
 def fix_jso(jso: str) -> str:
     """ If jso does not start with [ andd two to make it list of lists """
+    if jso == '':
+        return '[[1]]'
     if jso.startswith("["):
         return jso
     return '[[' + jso + ']]'
