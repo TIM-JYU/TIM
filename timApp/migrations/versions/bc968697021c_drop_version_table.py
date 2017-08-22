@@ -1,6 +1,8 @@
 """Drop version table.
 
-Revision ID: bc968697021c Revises: f85eec396435 Create Date: 2017-01-17 17:10:29.334570
+Revision ID: bc968697021c
+Revises: f85eec396435
+Create Date: 2017-01-17 17:10:29.334570
 
 """
 
