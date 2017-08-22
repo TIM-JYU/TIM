@@ -194,6 +194,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     add_reply(result['web'], '-replyMD')
     add_reply(result['web'], '-replyHTML')
     if 'save' in jsonresp:
+        # TODO: RND_SEED: save used rnd_seed for this answer if answer is saved, found from par.get_rnd_seed()
         save_object = jsonresp['save']
         tags = []
         tim_info = jsonresp.get('tim_info', {})

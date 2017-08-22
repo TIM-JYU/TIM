@@ -262,6 +262,7 @@ class ReadParagraph(db.Model):
     type = db.Column(db.Enum(ReadParagraphType), nullable=False, primary_key=True)
     par_hash = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
+    __table_args__ = (db.Index('readparagraphs_doc_id_par_id_idx', 'doc_id', 'par_id'),)
 
 
 class UserAnswer(db.Model):

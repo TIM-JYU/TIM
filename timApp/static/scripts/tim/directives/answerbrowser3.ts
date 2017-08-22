@@ -10,6 +10,10 @@ import {ViewCtrl} from "../controllers/view/viewctrl";
 import {IUser} from "../IUser";
 import {IAnswer} from "../IAnswer";
 import {ReviewController} from "../controllers/reviewController";
+import * as allanswersctrl from "tim/controllers/allAnswersController";
+import {markAsUsed} from "../utils";
+
+markAsUsed(allanswersctrl);
 
 timLogTime("answerbrowser3 load", "answ");
 
@@ -545,9 +549,7 @@ export class AnswerBrowserController implements IController {
             animation: false,
             ariaLabelledBy: "modal-title",
             ariaDescribedBy: "modal-body",
-            templateUrl: "/static/templates/allAnswersOptions.html",
-            controller: "AllAnswersCtrl",
-            controllerAs: "$ctrl",
+            component: "AllAnswers",
             size: "md",
             resolve: {
                 options() {

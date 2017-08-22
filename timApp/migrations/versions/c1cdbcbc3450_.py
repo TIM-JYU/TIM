@@ -1,6 +1,8 @@
 """Add duration column to blockaccess.
 
-Revision ID: c1cdbcbc3450 Revises: 88c3e145844b Create Date: 2017-01-05 16:28:22.335641
+Revision ID: c1cdbcbc3450
+Revises: 88c3e145844b
+Create Date: 2017-01-05 16:28:22.335641
 
 """
 

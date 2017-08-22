@@ -16,6 +16,7 @@ from timApp.pluginControl import pluginify
 from timApp.sessioninfo import get_session_usergroup_ids
 from timApp.timdb.models.user import User
 from timApp.timdb.userutils import get_anon_group_id
+from timApp.timtiming import taketime
 
 
 def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
@@ -33,6 +34,7 @@ def hide_names_in_teacher(doc_id):
 def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False,
                       load_plugin_states=True):
     timdb = get_timdb()
+    taketime("start pluginfy")
     html_pars, js_paths, css_paths, modules = pluginify(doc,
                                                         pars,
                                                         user,
@@ -41,6 +43,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                                                         do_lazy=do_lazy,
                                                         edit_window=edit_window,
                                                         load_states=load_plugin_states)
+    taketime("end pluginfy")
     macroinfo = doc.get_settings().get_macroinfo()
     user_macros = macroinfo.get_user_specific_macros(user)
     delimiter = macroinfo.get_macro_delimiter()
@@ -48,7 +51,11 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     # We define the environment here because it stays the same for each paragraph. This improves performance.
     env = create_environment(delimiter)
     for htmlpar in html_pars:
-        htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter, env=env, ignore_errors=True)
+        if not htmlpar['is_plugin']:  # TODO: Think if plugins still needs to expand macros?
+            # htmlpar.insert_rnds(0)
+            if not htmlpar['attrs'].get('nomacros', False):
+                htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter, env=env, ignore_errors=True)
+    # taketime("macros done")
 
     if edit_window:
         # Skip readings and notes
@@ -74,10 +81,13 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     for p in html_pars:
         p['status'] = set()
         p['notes'] = []
+    # taketime("pars done")
 
     group = user.get_personal_group().id if user is not None else get_anon_group_id()
     if user is not None:
+        # taketime("readings begin")
         readings = timdb.readings.get_common_readings(get_session_usergroup_ids(), doc)
+        taketime("readings end")
         for r in readings:  # TODO: this takes more than one sec???
             key = (r.par_id, r.doc_id)
             pars = pars_dict.get(key)
@@ -89,10 +99,12 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                         # elif is here so not to overwrite an existing 'read' marking
                         p['status'].add(r.type.class_str() + '-modified')
 
+    taketime("read mixed")
     notes = timdb.notes.get_notes(group, doc)
     is_owner = has_ownership(doc.doc_id)
     # Close database here because we won't need it for a while
     timdb.close()
+    # taketime("notes picked")
 
     for n in notes:
         key = (n['par_id'], n['doc_id'])
@@ -105,6 +117,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                 if 'notes' not in p:
                     p['notes'] = []
                 p['notes'].append(n)
+    # taketime("notes mixed")
 
     return process_areas(html_pars), js_paths, css_paths, modules
 

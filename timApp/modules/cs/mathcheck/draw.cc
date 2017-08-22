@@ -1,5 +1,20 @@
+copyright draw_cc( "draw.cc", "Antti Valmari", 20170109 );
+/*
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 /* This file contains features for drawing in-html-file images.
-Antti Valmari 2016-12-11 ... 2017-01-09,
+Antti Valmari 2016-12-11 ...,
 excluding the GIF package (see below) */
 
 
@@ -19,14 +34,14 @@ void mc_err_print( const char *msg0, unsigned u1 = 0, const char *msg1 = 0 ){
   std::cerr << '\n';
 }
 
+const char b64chars[] =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 #endif
 
 
 /* Base64 encoding of byte strings */
 
-const char b64chars[] =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 unsigned b64linelen = 0;
 char b64old = 0;
 
@@ -584,6 +599,7 @@ inline double rough_up( double xx ){ return rough_down( xx, true ); }
 
 
 /*** Higher-level drawing facilities ***/
+copyright draw_font_def_cc( "draw_font_def.cc" );
 #include "draw_font_def.cc"
 namespace draw{
 

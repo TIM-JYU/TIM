@@ -32,6 +32,7 @@ from timApp.timdb.models.user import User
 from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import user_is_owner
 from timApp.utils import remove_path_special_chars
+from timApp.timtiming import taketime
 
 Range = Tuple[int, int]
 
@@ -75,7 +76,10 @@ def show_slide(doc_name):
 @view_page.route("/view_html/<path:doc_name>")
 @view_page.route("/doc/<path:doc_name>")
 def view_document(doc_name):
-    return view(doc_name, 'view_html.html')
+    taketime("route view begin")
+    ret = view(doc_name, 'view_html.html')
+    taketime("route view end")
+    return ret
 
 
 @view_page.route("/teacher/<path:doc_name>")
@@ -197,6 +201,7 @@ def get_module_ids(js_paths: List[str]):
 
 
 def view(item_path, template_name, usergroup=None, route="view"):
+    taketime("view begin")
     if has_special_chars(item_path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
 
@@ -337,7 +342,10 @@ def view(item_path, template_name, usergroup=None, route="view"):
     settings = get_user_settings()
 
     show_unpublished_bg = is_considered_unpublished(doc_id)
+    taketime("view to render")
 
+    reqs = get_all_reqs()
+    # taketime("reqs done")
     return render_template(template_name,
                            access=access,
                            hide_links=should_hide_links(doc_settings, doc_info.rights),
@@ -358,7 +366,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            in_lecture=is_in_lecture,
                            group=usergroup,
                            translations=doc_info.translations,
-                           reqs=get_all_reqs(),
+                           reqs=reqs,
                            settings=settings,
                            no_browser=hide_answers,
                            no_question_auto_numbering=no_question_auto_numbering,

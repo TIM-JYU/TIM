@@ -140,6 +140,51 @@
     resize: none;
   }
 
+
+  //Inclusion of styles form stylesheet.scss to printing
+  .huomautus {
+    text-align: left !important;
+  }
+
+  p.plgfooter {
+    text-align: center  !important;
+  }
+
+  p.caption {
+    text-align: center  !important;
+  }
+
+  .smalllink {
+    text-align: right  !important;
+  }
+  .checkbox-td {
+    text-align: center  !important;
+  }
+
+  .addBottomContainer {
+      text-align: center  !important;
+  }
+
+  .figure {
+      text-align: center  !important;
+  }
+
+  .runo p{
+      text-align: center  !important;
+
+      td {
+          text-align: center  !important;
+      }
+
+      .parContent {
+          text-align: center  !important;
+      }
+  }
+
+  .table-alias td:first-child {
+    text-align: right  !important;
+  }
+
   //Work in progress
   .notes {
     position: inherit;
@@ -171,9 +216,11 @@
     margin-left: 1em;
   }
 
+  /*
   .parlink {
     position: inherit;
   }
+  */
 
   .parlink sup:after {
     content: "Testi";

@@ -121,6 +121,11 @@ body::-ms-backdrop {
   display: block;
   margin-left: 40px; }
 
+.reveal li {
+/*  text-align: left;
+  padding-left: 10pt; */
+}
+
 .reveal dt {
   font-weight: bold; }
 

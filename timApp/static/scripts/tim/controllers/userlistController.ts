@@ -3,6 +3,10 @@ import {IRootElementService, IScope, IController} from "angular";
 import {timApp} from "tim/app";
 import {$timeout, $uibModal} from "../ngimport";
 import {ViewCtrl} from "./view/viewctrl";
+import * as allanswersctrl from "tim/controllers/allAnswersController";
+import {markAsUsed} from "../utils";
+
+markAsUsed(allanswersctrl);
 
 interface IUser {
     name: string;

@@ -40,3 +40,6 @@ yubi.key
 *.printing_whitelist.*
 temp
 /timApp/Output.txt
+/timApp/modules/cs/mathcheck/mc.exe
+/timApp/pluginControlOrig.py
+/timApp/pluginControlRnd.py

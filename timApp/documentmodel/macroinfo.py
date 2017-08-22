@@ -17,10 +17,10 @@ class MacroInfo:
     """
 
     def __init__(self,
-                 macro_map: Optional[Dict[str, str]] = None,
+                 macro_map: Optional[Dict[str, object]] = None,
                  macro_delimiter: Optional[str] = None,
                  user: Optional['User'] = None):
-        self.macro_map: Dict[str, str] = macro_map or {}
+        self.macro_map: Dict[str, object] = macro_map or {}
         self.macro_delimiter = macro_delimiter or '%%'
         self._user = user
         self.preserve_user_macros = False
@@ -29,11 +29,12 @@ class MacroInfo:
     def stringize_macros(self):
         """Converts macro keys and values to strings if they are not already."""
         if isinstance(self.macro_map, dict):
-            self.macro_map = {str(k): str(self.macro_map[k]) for k in self.macro_map}
+            # self.macro_map = {str(k): str(self.macro_map[k]) for k in self.macro_map}
+            pass
         else:
             self.macro_map = {}
 
-    def get_macros(self) -> Dict[str, str]:
+    def get_macros(self) -> Dict[str, object]:
         if self._user is None:
             if not self.preserve_user_macros:
                 return self.macro_map
@@ -45,7 +46,7 @@ class MacroInfo:
     def get_macro_delimiter(self) -> str:
         return self.macro_delimiter
 
-    def get_macros_preserving_user(self) -> Dict[str, str]:
+    def get_macros_preserving_user(self) -> Dict[str, object]:
         """Gets the macros and defines user-specific variables in such a way that the macro replacement for user
         variables does effectively nothing."""
         macros = deepcopy(self.macro_map)
@@ -53,7 +54,7 @@ class MacroInfo:
                        'realname': '{0}realname{0}'.format(self.macro_delimiter)})
         return macros
 
-    def get_macros_with_user_specific(self, user: Optional['User'] = None) -> Dict[str, str]:
+    def get_macros_with_user_specific(self, user: Optional['User'] = None) -> Dict[str, object]:
         if not user:
             return self.macro_map
         macros = deepcopy(self.macro_map)
@@ -61,7 +62,7 @@ class MacroInfo:
         return macros
 
     @staticmethod
-    def get_user_specific_macros(user: Optional['User'] = None) -> Dict[str, str]:
+    def get_user_specific_macros(user: Optional['User'] = None) -> Dict[str, object]:
         if not user:
             return {}
         return {'username': user.name, 'realname': user.real_name}

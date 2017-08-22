@@ -247,7 +247,7 @@ test
 """,
             """```
 ``{a=b}
-"""]
+""", ""]
         for f in failures:
             with self.assertRaises(ValidationException, msg=f):
                 DocumentParser(f).validate_structure()

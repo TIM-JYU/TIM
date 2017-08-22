@@ -25,10 +25,11 @@ html, body, .reveal div, .reveal span, .reveal applet, .reveal object, .reveal i
 .reveal menu, .reveal nav, .reveal output, .reveal ruby, .reveal section, .reveal summary,
 .reveal time, .reveal mark, .reveal audio, video {
 	margin: 0;
-	padding: 0;
+	/* padding: 0; */
 	border: 0;
 	font-size: 100%;
 	font: inherit;
+	text-align: left;
 	vertical-align: baseline;
 }
 

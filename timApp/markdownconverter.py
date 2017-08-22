@@ -1,4 +1,5 @@
 """Provides functions for converting markdown-formatted text to HTML."""
+import json
 import re
 from typing import Optional, Dict
 
@@ -8,6 +9,7 @@ from lxml import html
 from timApp.dumboclient import call_dumbo
 from timApp.htmlSanitize import sanitize_html
 from timApp.utils import get_error_html
+from timApp.utils import parse_yaml
 
 
 # noinspection PyUnusedLocal
@@ -29,8 +31,21 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
     if env is None:
         env = create_environment(macro_delimiter)
     try:
+        startstr = env.comment_start_string + "LOCAL"
+        beg = text.find(startstr)
+        if beg >= 0:
+            endstr = env.comment_end_string
+            end = text.find(endstr, beg)
+            if end >= 0:
+                local_macros_yaml = text[beg+len(startstr):end]
+                local_macros = parse_yaml(local_macros_yaml)
+                macros = {**macros, **local_macros}
         return env.from_string(text).render(macros)
     except TemplateSyntaxError as e:
+        if not ignore_errors:
+            return get_error_html('Syntax error in template: {}'.format(e))
+        return text
+    except Exception as e:
         if not ignore_errors:
             return get_error_html('Syntax error in template: {}'.format(e))
         return text
@@ -55,7 +70,7 @@ expand_macros = expand_macros_jinja2
 
 def md_to_html(text: str,
                sanitize: bool = True,
-               macros: Optional[Dict[str, str]] = None,
+               macros: Optional[Dict[str, object]] = None,
                macro_delimiter: Optional[str]=None) -> str:
     """Converts the specified markdown text to HTML.
 
@@ -124,7 +139,7 @@ def edit_html_with_own_syntax(raw: list) -> list:
     while index < len(raw):
         html_text = raw[index]
         raw[index] = make_slide_fragments(html_text)
-        #raw[index] = check_and_edit_html_if_surrounded_with(text, fragment_string, change_classes_to_fragment)
+        # raw[index] = check_and_edit_html_if_surrounded_with(text, fragment_string, change_classes_to_fragment)
         index += 1
     return raw
 
