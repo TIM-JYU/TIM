@@ -23,6 +23,10 @@ a .glyphicon {
     }
 }
 
+.no-pointer-events {
+    pointer-events: none;
+}
+
 .bg-unpublished {
     background-image: url("/static/images/unpublished.svg");
 }

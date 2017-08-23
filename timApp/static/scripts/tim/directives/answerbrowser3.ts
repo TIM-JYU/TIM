@@ -549,7 +549,7 @@ export class AnswerBrowserController implements IController {
             animation: false,
             ariaLabelledBy: "modal-title",
             ariaDescribedBy: "modal-body",
-            component: "AllAnswers",
+            component: "timAllAnswers",
             size: "md",
             resolve: {
                 options() {

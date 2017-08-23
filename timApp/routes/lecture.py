@@ -355,7 +355,6 @@ def check_if_lecture_is_ending(current_user, lecture: Lecture):
     """Checks if the lecture is about to end. 1 -> ends in 1 min. 5 -> ends in 5 min. 100 -> goes on atleast for 5 mins.
 
     :param current_user: The current user id.
-    :param timdb: The TimDb object.
     :param lecture: The lecture object.
     :return:
 

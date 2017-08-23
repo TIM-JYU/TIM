@@ -87,7 +87,7 @@ export class AllAnswersCtrl implements IController {
     }
 }
 
-timApp.component("AllAnswers", {
+timApp.component("timAllAnswers", {
     controller: AllAnswersCtrl,
     templateUrl: "/static/templates/allAnswersOptions.html",
 });

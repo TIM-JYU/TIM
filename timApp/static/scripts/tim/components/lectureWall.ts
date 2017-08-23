@@ -1,7 +1,7 @@
 import {IController, IScope} from "angular";
 import {timApp} from "../app";
 import {IMessage} from "../lecturetypes";
-import {showDialog} from "../dialog";
+import {showMessageDialog} from "../dialog";
 import {$http} from "../ngimport";
 
 class LectureWallController implements IController {
@@ -38,7 +38,7 @@ class LectureWallController implements IController {
      */
     async sendMessageEvent(message: string) {
         if (message.trim() === "") {
-            showDialog("Can't send empty messages");
+            showMessageDialog("Can't send empty messages");
             return false;
         }
         await $http({

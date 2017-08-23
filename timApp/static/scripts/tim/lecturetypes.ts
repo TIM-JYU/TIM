@@ -128,3 +128,7 @@ export interface ILectureSettings {
     useQuestions: boolean;
     useWall: boolean;
 }
+
+export function hasLectureEnded(lecture: ILecture) {
+    return lecture.end_time < moment();
+}

@@ -18,21 +18,25 @@ import moment from "moment";
 import {timApp} from "tim/app";
 import sessionsettings from "tim/session";
 import {GetURLParameter, markAsUsed, setsetting} from "tim/utils";
-import {showDialog} from "../dialog";
+import {showMessageDialog} from "../dialog";
 import {$http, $log, $rootScope, $timeout, $window} from "../ngimport";
 import {ViewCtrl} from "./view/viewctrl";
 import {showLectureDialog} from "./createLectureCtrl";
 import * as wall from "../components/lectureWall";
 import {
+    hasLectureEnded,
     ILecture, ILectureListResponse, ILecturePerson, ILectureResponse, ILectureSettings,
     IMessage, isLectureListResponse,
 } from "../lecturetypes";
 import {Users} from "../services/userService";
+import {showLectureEnding} from "../components/lectureEnding";
 
 markAsUsed(wall);
 
-function hasLectureEnded(lecture: ILecture) {
-    return lecture.end_time < moment();
+enum LectureEndingDialogState {
+    NotAnswered,
+    Open,
+    Answered,
 }
 
 // TODO: Painike, josta voisi hakea kysymyksiä.
@@ -44,14 +48,13 @@ export class LectureController implements IController {
     public lectures: ILecture[];
     public lectureSettings: ILectureSettings;
     public questionShown: boolean;
-    private answeredToLectureEnding: boolean;
+    private lectureEndingDialogState: LectureEndingDialogState;
     private canStart: boolean;
     private canStop: boolean;
     private chosenLecture: ILecture | null;
     private clockOffset: number;
     private currentPointsId: number | null;
     private currentQuestionId: number | null;
-    private extend: {extendTime: string, choices: number[]};
     private futureLecture: ILecture | null;
     private futureLectures: ILecture[];
     private gettingAnswers: boolean;
@@ -70,7 +73,6 @@ export class LectureController implements IController {
     private scope: IScope;
     private settings: any;
     private showAnswerWindow: boolean;
-    private showLectureEnding: boolean;
     private showPoll: boolean;
     private showStudentAnswers: boolean;
     private studentTable: ILecturePerson[];
@@ -78,6 +80,7 @@ export class LectureController implements IController {
     private viewctrl: ViewCtrl | undefined;
     private wallMessages: IMessage[];
     private wallName: string;
+    private pollTimeout: number;
 
     constructor(scope: IScope) {
         this.scope = scope;
@@ -101,9 +104,7 @@ export class LectureController implements IController {
         this.studentTable = [];
         this.lecturerTable = [];
         this.gettingAnswers = false;
-        this.answeredToLectureEnding = false;
-        this.showLectureEnding = false;
-        this.extend = {extendTime: "15", choices: [5, 10, 15, 30, 45, 60]};
+        this.lectureEndingDialogState = LectureEndingDialogState.NotAnswered;
         this.lectureEnded = false;
         this.wallMessages = [];
         this.questionTitle = "";
@@ -189,9 +190,9 @@ export class LectureController implements IController {
                 lectureCode = answer.lectures[0].lecture_code;
             } else {
                 if (tryToAutoJoin && answer.lectures.length > 1) {
-                    showDialog("Cannot autojoin a lecture because there are more than one lecture in this document going on.");
+                    showMessageDialog("Cannot autojoin a lecture because there are more than one lecture in this document going on.");
                 } else if (tryToAutoJoin && answer.lectures.length <= 0) {
-                    showDialog("There are no ongoing lectures for this document.");
+                    showMessageDialog("There are no ongoing lectures for this document.");
                 }
                 return this.showRightView(answer);
             }
@@ -218,9 +219,9 @@ export class LectureController implements IController {
                 }
             }, () => {
                 if (tryToAutoJoin) {
-                    showDialog("Could not find a lecture for this document.");
+                    showMessageDialog("Could not find a lecture for this document.");
                 } else {
-                    showDialog(`Lecture ${lectureCode} not found.`);
+                    showMessageDialog(`Lecture ${lectureCode} not found.`);
                 }
                 this.showRightView(answer);
             });
@@ -274,13 +275,13 @@ export class LectureController implements IController {
         this.passwordQuess = "";
         const input = $("#passwordInput");
         if (hasLectureEnded(answer.lecture)) {
-            showDialog(`Lecture '${lectureCode}' has ended`);
+            showMessageDialog(`Lecture '${lectureCode}' has ended`);
             return false;
         } else if (answer.lecture.is_full) {
-            showDialog(`Lecture '${lectureCode}' is full`);
+            showMessageDialog(`Lecture '${lectureCode}' is full`);
             return false;
         } else if (!answer.correctPassword) {
-            showDialog("Wrong access code!");
+            showMessageDialog("Wrong access code!");
             return false;
         } else if (!Users.isLoggedIn()) {
             // if the user was logged in as a temporary user, we must refresh
@@ -439,7 +440,7 @@ export class LectureController implements IController {
                 .then((response) => {
                     const answer = response.data;
                     if (angular.isDefined(answer.questionLate)) {
-                        showDialog(answer.questionLate);
+                        showMessageDialog(answer.questionLate);
                     }
                 }, () => {
                     $log.info("Failed to answer to question");
@@ -630,11 +631,10 @@ export class LectureController implements IController {
      * from the current moment(needs to be implemented).
      * @memberof module:lectureController
      */
-    async extendLecture() {
+    async extendLecture(minutes: number) {
         const lecture = this.lectureOrThrow();
-        const endTimeDate = moment(lecture.end_time).add(this.extend.extendTime, "minutes");
+        const endTimeDate = moment(lecture.end_time).add(minutes, "minutes");
         $log.info("extending lecture");
-        this.answeredToLectureEnding = true;
         $log.info(endTimeDate);
         await $http({
             url: "/extendLecture",
@@ -642,19 +642,9 @@ export class LectureController implements IController {
             params: {lecture_id: lecture.lecture_id, new_end_time: endTimeDate},
         });
         lecture.end_time = endTimeDate;
-        this.showLectureEnding = false;
         this.lectureEnded = false;
-        this.answeredToLectureEnding = false;
+        this.lectureEndingDialogState = LectureEndingDialogState.NotAnswered;
         $log.info("Lecture extended");
-    }
-
-    /**
-     * Closes the lecture view and sets answered to lectureEnding to true to prevent multiple quesitions from this.
-     * @memberof module:lectureController
-     */
-    continueLecture() {
-        this.answeredToLectureEnding = true;
-        this.showLectureEnding = false;
     }
 
     /**
@@ -677,8 +667,6 @@ export class LectureController implements IController {
      * @memberof module:lectureController
      */
     async endLecture() {
-        this.showLectureEnding = false;
-
         // TODO: Change to some better confirm dialog.
         const confirmAnswer = $window.confirm("Do you really want to end this lecture?");
         if (confirmAnswer) {
@@ -773,8 +761,6 @@ export class LectureController implements IController {
     }
 
     message_longPolling(lastID) {
-        let timeout;
-
         if (!lastID) {
             lastID = -1;
         }
@@ -804,7 +790,7 @@ export class LectureController implements IController {
                 buster: new Date().getTime(),
             },
         })
-            .then((response) => {
+            .then(async (response) => {
                 const answer = response.data;
                 this.requestOnTheWay = false;
                 if (isLectureListResponse(answer)) {
@@ -821,11 +807,25 @@ export class LectureController implements IController {
 
                     if (answer.lectureEnding !== 100) {
                         if (answer.lectureEnding === 1 && !this.lectureEnded) {
-                            this.showLectureEnding = true;
                             this.lectureEnded = true;
+                            if (this.lectureEndingDialogState !== LectureEndingDialogState.Open) {
+                                this.lectureEndingDialogState = LectureEndingDialogState.NotAnswered;
+                            }
                         }
-                        if (!this.answeredToLectureEnding) {
-                            this.showLectureEnding = true;
+                        if (this.lectureEndingDialogState === LectureEndingDialogState.NotAnswered) {
+                            this.lectureEndingDialogState = LectureEndingDialogState.Open;
+                            const result = await showLectureEnding(this.lecture);
+                            this.lectureEndingDialogState = LectureEndingDialogState.Answered;
+                            switch (result.result) {
+                                case "dontextend":
+                                    break;
+                                case "extend":
+                                    this.extendLecture(result.extendTime);
+                                    break;
+                                case "end":
+                                    this.endLecture();
+                                    break;
+                            }
                         }
                     }
 
@@ -855,14 +855,14 @@ export class LectureController implements IController {
                     answer.lastid = lastID;
                 }
 
-                $window.clearTimeout(timeout);
+                $window.clearTimeout(this.pollTimeout);
                 if (this.polling) {
                     if (this.lecture === null) {
                         return;
                     }
                     this.pollingLectures.push(this.lecture.lecture_id);
                     // Odottaa sekunnin ennen kuin pollaa uudestaan.
-                    timeout = setTimeout(() => {
+                    this.pollTimeout = setTimeout(() => {
                         this.message_longPolling(answer.lastid);
                     }, 2000);
 
@@ -886,9 +886,9 @@ export class LectureController implements IController {
                 }
             }, () => {
                 this.requestOnTheWay = false;
-                $window.clearTimeout(timeout);
+                $window.clearTimeout(this.pollTimeout);
                 // Odottaa 30s ennen kuin yrittää uudelleen errorin jälkeen.
-                timeout = setTimeout(() => {
+                this.pollTimeout = setTimeout(() => {
                     this.message_longPolling(this.lastID);
                 }, 30000);
             });
@@ -944,9 +944,9 @@ export class LectureController implements IController {
         });
         const answer = response.data;
         if (!answer) {
-            showDialog("No running questions.");
+            showMessageDialog("No running questions.");
         } else if (answer.already_answered) {
-            showDialog("You have already answered to the current question.");
+            showMessageDialog("You have already answered to the current question.");
         } else {
             this.showQuestion(answer);
         }

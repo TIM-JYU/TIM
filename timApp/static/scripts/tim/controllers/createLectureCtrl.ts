@@ -1,12 +1,11 @@
 import angular from "angular";
-import {IController} from "angular";
-import {IModalInstanceService} from "angular-ui-bootstrap";
 import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
 import {IItem} from "../IItem";
 import {ILecture, ILectureFormParams} from "../lecturetypes";
-import {$http, $log, $uibModal, $window} from "../ngimport";
+import {$http, $log, $window} from "../ngimport";
+import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 
 /**
  * Lecture creation controller which is used to handle and validate the form data.
@@ -20,7 +19,7 @@ import {$http, $log, $uibModal, $window} from "../ngimport";
  * @copyright 2015 Timppa project authors
  */
 
-export class CreateLectureCtrl implements IController {
+export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: ILectureFormParams}, ILecture> {
     private useDate: boolean;
     private useDuration: boolean;
     private dateChosen: boolean;
@@ -41,11 +40,8 @@ export class CreateLectureCtrl implements IController {
     private endTime: moment.Moment;
     private item: IItem;
 
-    // injected:
-    private modalInstance: IModalInstanceService;
-    private resolve: {item: IItem, lecture: ILectureFormParams};
-
     constructor() {
+        super();
         this.dateChosen = false;
         this.durationChosen = false;
         this.lectureId = null;
@@ -211,7 +207,7 @@ export class CreateLectureCtrl implements IController {
             /* Checks that are run if end date is used*/
             if (this.useDate && this.endTime !== null) {
                 if (this.endTime.diff(this.startTime) < 120000) {
-                    this.errorize("endDateDiv", "Lecture has to last at least two minutes a.");
+                    this.errorize("endDateDiv", "Lecture has to last at least two minutes.");
                 }
             }
 
@@ -219,9 +215,9 @@ export class CreateLectureCtrl implements IController {
             if (this.useDuration) {
                 this.endTime = moment(this.startTime)
                     .add(this.durationHour, "hours")
-                    .add(this.durationMin);
+                    .add(this.durationMin, "minutes");
                 if (this.endTime.diff(this.startTime) < 120000) {
-                    this.errorize("durationDiv", "Lecture has to last at least two minutes b.");
+                    this.errorize("durationDiv", "Lecture has to last at least two minutes.");
                 }
             }
             let alertMessage = "";
@@ -265,7 +261,7 @@ export class CreateLectureCtrl implements IController {
             } else {
                 $log.info("Lecture created: " + response.data.lectureId);
             }
-            this.modalInstance.close(lectureParams);
+            this.close(lectureParams);
         }
     }
 
@@ -310,27 +306,18 @@ export class CreateLectureCtrl implements IController {
      * @memberof module:createLectureCtrl
      */
     cancelCreation() {
-        this.modalInstance.dismiss(null);
+        this.dismiss();
     }
 }
 
-timApp.component("timCreateLecture", {
-    bindings: {
-        modalInstance: "<",
-        resolve: "<",
-    },
-    controller: CreateLectureCtrl,
-    controllerAs: "clctrl",
-    templateUrl: "/static/templates/start_lecture.html",
-});
+registerDialogComponent("timCreateLecture",
+    CreateLectureCtrl,
+    {templateUrl: "/static/templates/start_lecture.html"},
+    "clctrl");
 
 export async function showLectureDialog(item: IItem, lecture: ILectureFormParams | null = null): Promise<ILecture> {
-    const instance: IModalInstanceService = $uibModal.open({
-        component: "timCreateLecture",
-        resolve: {
-            item: () => item,
-            lecture: () => lecture,
-        },
+    return showDialog<CreateLectureCtrl, {item: IItem, lecture: ILectureFormParams}, ILecture>("timCreateLecture", {
+        item: () => item,
+        lecture: () => lecture,
     });
-    return await instance.closed;
 }

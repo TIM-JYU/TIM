@@ -4,7 +4,7 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {fixQuestionJson, getPointsTable, minimizeJson} from "tim/directives/dynamicAnswerSheet";
 import {setsetting} from "tim/utils";
-import {showDialog} from "../dialog";
+import {showMessageDialog} from "../dialog";
 import {ParCompiler} from "../services/parCompiler";
 import {$http, $log, $rootScope, $window} from "../ngimport";
 import {
@@ -1103,7 +1103,7 @@ export class QuestionController implements IController {
             }
             this.close();
         }, () => {
-            showDialog("Could not create question");
+            showMessageDialog("Could not create question");
             $log.info("There was some error creating question to database.");
         });
     }
