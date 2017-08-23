@@ -124,7 +124,6 @@ export interface ILectureSettings {
     inLecture: boolean;
     lectureMode: boolean;
     useAnswers: boolean;
-    useNotPollingDialog: boolean;
     useQuestions: boolean;
     useWall: boolean;
 }

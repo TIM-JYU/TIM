@@ -66,10 +66,6 @@
         </tim-lecture-wall>
     </div>
 {% endraw %}
-    <pop-up-dialog show="!lctrl.polling && lctrl.lectureSettings.useNotPollingDialog" caption="'Polling paused'" elem-id="'pausedWindow'">
-        <ng-include
-                src="'{{ url_for('static', filename='templates/paused.html') }}'"></ng-include>
-    </pop-up-dialog>
     <pop-up-dialog show="lctrl.showAnswerWindow" caption="questionTitle" class="answerWindow">
         <ng-include
                 src="'{{ url_for('static', filename='templates/answerToQuestion.html') }}'"></ng-include>

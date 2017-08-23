@@ -118,7 +118,6 @@ export class LectureController implements IController {
             inLecture: false,
             lectureMode: $window.lectureMode || false,
             useAnswers: true,
-            useNotPollingDialog: true,
             useQuestions: true,
             useWall: true,
         };
