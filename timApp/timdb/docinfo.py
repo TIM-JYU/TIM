@@ -25,6 +25,11 @@ class DocInfo(Item):
         raise NotImplementedError
 
     @property
+    def is_translation(self):
+        """Returns whether this object is a Translation, i.e. not the document from which other translated documents were created."""
+        return self.id != self.src_docid
+
+    @property
     def url(self):
         return current_app.config['TIM_HOST'] + self.url_relative
 
@@ -57,8 +62,8 @@ class DocInfo(Item):
         return self.block.modified if self.block else None
 
     @property
-    def translations(self):
-        """Returns the translations of the document."""
+    def translations(self) -> List['Translation']:
+        """Returns the translations of the document. NOTE: The list *includes* the document itself."""
         raise NotImplementedError
 
     @property

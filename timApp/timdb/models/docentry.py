@@ -58,7 +58,7 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry.query.filter_by(id=doc_id).all()
 
     @staticmethod
-    def find_by_id(doc_id: int, try_translation=False) -> Union['DocEntry', 'Translation', None]:
+    def find_by_id(doc_id: int, try_translation=False) -> Optional['DocInfo']:
         d = DocEntry.query.filter_by(id=doc_id).first()
         if d:
             return d

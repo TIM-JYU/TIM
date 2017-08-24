@@ -16,6 +16,7 @@ from timApp.markdownconverter import expand_macros, create_environment
 from timApp.pluginControl import pluginify
 from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.sessioninfo import get_current_user_object
+from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.printeddoc import PrintedDoc
@@ -69,7 +70,7 @@ def add_nonumber(md: str) -> str:
 
 
 class DocumentPrinter:
-    def __init__(self, doc_entry: DocEntry, template_to_use: DocEntry):
+    def __init__(self, doc_entry: DocEntry, template_to_use: DocInfo):
         self._doc_entry = doc_entry
         # if template_to_use is None:
         #    template_to_use = DocumentPrinter.get_default_template(doc_entry)
@@ -442,7 +443,7 @@ class DocumentPrinter:
         return "\n".join(out)
 
     @staticmethod
-    def parse_template_content(template_doc: DocEntry, doc_to_print: DocEntry) -> str:
+    def parse_template_content(template_doc: DocInfo, doc_to_print: DocEntry) -> str:
         pars = template_doc.document.get_paragraphs()
 
         pars = dereference_pars(pars, source_doc=template_doc.document.get_original_document())

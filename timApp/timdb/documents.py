@@ -17,6 +17,50 @@ from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.timdbexception import TimDbException
 
 
+def create_citation(original_doc: Document,
+                    owner_group_id: int,
+                    path: Optional[str]=None,
+                    title: Optional[str]=None,
+                    ref_attribs: Optional[Dict[str, str]] = None) -> Document:
+    """Creates a citation document with the specified name. Each paragraph of the citation document references the
+    paragraph in the original document.
+
+    :param title: The document title.
+    :param original_doc: The original document to be cited.
+    :param path: The path of the document to be created.
+    :param owner_group_id: The id of the owner group.
+    :param ref_attribs: Reference attributes to be used globally.
+    :returns: The newly created document object.
+
+    """
+
+    if not original_doc.exists():
+        raise TimDbException('The document does not exist!')
+
+    ref_attrs = ref_attribs if ref_attribs is not None else {}
+
+    # For translations, name is None and no DocEntry is created in database.
+    doc_entry = DocEntry.create(path, owner_group_id, title)
+    doc = doc_entry.document
+
+    r = ref_attrs['r'] if 'r' in ref_attrs else 'tr'
+
+    settings = original_doc.get_settings()
+    settings.set_source_document(original_doc.doc_id)
+    doc.set_settings(settings.get_dict())
+
+    for par in original_doc:
+        if par.is_setting():
+            continue
+        ref_par = par.create_reference(doc, r, add_rd=False)
+        for attr in ref_attrs:
+            ref_par.set_attr(attr, ref_attrs[attr])
+
+        doc.add_paragraph_obj(ref_par)
+
+    return doc_entry
+
+
 class Documents(TimDbBase):
     """Represents a collection of Document objects."""
 
@@ -44,53 +88,6 @@ class Documents(TimDbBase):
         par = doc.insert_paragraph(content, insert_before_id=prev_par_id, attrs=attrs)
         self.update_last_modified(doc)
         return [par], doc
-
-    def create_citation(self,
-                        original_doc: Document,
-                        owner_group_id: int,
-                        path: Optional[str]=None,
-                        title: Optional[str]=None,
-                        ref_attribs: Optional[Dict[str, str]] = None) -> Document:
-        """Creates a citation document with the specified name. Each paragraph of the citation document references the
-        paragraph in the original document.
-
-        :param title: The document title.
-        :param original_doc: The original document to be cited.
-        :param path: The path of the document to be created.
-        :param owner_group_id: The id of the owner group.
-        :param ref_attribs: Reference attributes to be used globally.
-        :returns: The newly created document object.
-
-        """
-
-        if not original_doc.exists():
-            raise TimDbException('The document does not exist!')
-
-        ref_attrs = ref_attribs if ref_attribs is not None else {}
-
-        # For translations, name is None and no DocEntry is created in database.
-        doc_entry = DocEntry.create(path, owner_group_id, title)
-        doc = doc_entry.document
-
-        first_par = True
-        r = ref_attrs['r'] if 'r' in ref_attrs else 'tr'
-
-        for par in original_doc:
-            if first_par:
-                first_par = False
-                settings = DocSettings.from_paragraph(par) if par.is_setting() else DocSettings()
-                settings.set_source_document(original_doc.doc_id)
-                doc.add_paragraph_obj(settings.to_paragraph(doc))
-                if par.is_setting():
-                    continue
-
-            ref_par = par.create_reference(doc, r, add_rd=False)
-            for attr in ref_attrs:
-                ref_par.set_attr(attr, ref_attrs[attr])
-
-            doc.add_paragraph_obj(ref_par)
-
-        return doc_entry
 
     def delete(self, document_id: int):
         """Deletes the specified document.

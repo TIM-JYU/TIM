@@ -1,5 +1,6 @@
 from timApp.documentmodel.document import Document
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.models.docentry import DocEntry
 
 
 class TranslationTest(TimRouteTest):
@@ -18,7 +19,8 @@ class TranslationTest(TimRouteTest):
                        {'doc_title': doc_title},
                        expect_status=403)
 
-    def create_translation(self, doc, doc_title, lang, expect_contains=None, expect_content=None, **kwargs):
+    def create_translation(self, doc: DocEntry, doc_title: str, lang: str, expect_contains=None, expect_content=None,
+                           **kwargs):
         if expect_contains is None and expect_content is None:
             expect_contains = {'title': doc_title, 'path': doc.name + '/' + lang, 'name': doc.short_name}
         j = self.json_post('/translate/{}/{}'.format(doc.id, lang),
@@ -73,3 +75,21 @@ class TranslationTest(TimRouteTest):
         data = self.get_task_answers(task_id)
         self.assertEqual(1.0, data[0]['points'])
         self.assertEqual(3.0, data[1]['points'])
+
+    def test_translation_sync(self):
+        self.login_test1()
+        doc = self.create_doc()
+        tr = self.create_translation(doc, 'In English', 'en')
+        tr_doc = Document(tr['id'])
+        self.assertEqual([None] + [p.get_id() for p in doc.document.get_paragraphs()],
+                         [p.get_attr('rp') for p in tr_doc.get_paragraphs()])
+
+        self.new_par(doc.document, '1')
+        tr_doc.clear_mem_cache()
+        self.assertEqual([None] + [p.get_id() for p in doc.document.get_paragraphs()],
+                         [p.get_attr('rp') for p in tr_doc.get_paragraphs()])
+
+        self.new_par(doc.document, '2')
+        tr_doc.clear_mem_cache()
+        self.assertEqual([None] + [p.get_id() for p in doc.document.get_paragraphs()],
+                         [p.get_attr('rp') for p in tr_doc.get_paragraphs()])

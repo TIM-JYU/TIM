@@ -6,7 +6,6 @@ from copy import copy
 
 import filelock
 
-import timApp
 from timApp.documentmodel.documentparser import DocumentParser
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter

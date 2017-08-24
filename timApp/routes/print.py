@@ -17,6 +17,7 @@ from flask import request
 from timApp import sessioninfo
 from timApp.accesshelper import verify_logged_in
 from timApp.documentprinter import DocumentPrinter, PrintingError
+from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.printeddoc import PrintedDoc
 from timApp.timdb.printsettings import PrintFormat
@@ -221,7 +222,7 @@ def get_mimetype_for_format(file_type: PrintFormat):
 
 
 def check_print_cache(doc_entry: DocEntry,
-                       template: DocEntry,
+                       template: DocInfo,
                        file_type: PrintFormat,
                        plugins_user_print: bool = False) -> Optional[str]:
     """
@@ -255,7 +256,7 @@ def check_print_cache(doc_entry: DocEntry,
 
 
 def create_printed_doc(doc_entry: DocEntry,
-                       template_doc: DocEntry,
+                       template_doc: DocInfo,
                        file_type: PrintFormat,
                        temp: bool,
                        plugins_user_print: bool = False) -> str:

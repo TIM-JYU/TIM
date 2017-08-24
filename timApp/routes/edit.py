@@ -1,4 +1,5 @@
 """Routes for editing a document."""
+from difflib import SequenceMatcher
 from typing import List, Tuple
 
 from flask import Blueprint, render_template
@@ -89,6 +90,7 @@ def update_document(doc_id):
                                                      new_content=old_pars[i].get_markdown(),
                                                      new_attrs=editor_pars[i].get_attrs())
             i += 1
+        synchronize_translations(docentry)
     except ValidationWarning as e:
         return json_response({'error': str(e), 'is_warning': True}, status_code=400)
     except (TimDbException, ValidationException) as e:
@@ -253,6 +255,7 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
 
     mark_pars_as_read_if_chosen(pars, doc)
 
+    synchronize_translations(docentry)
     notify_doc_watchers(docentry,
                         get_diff_link(docentry, version_before) + 'Paragraph was edited:\n\n' + md,
                         NotificationType.DocModified,
@@ -564,6 +567,50 @@ def add_paragraph():
     return add_paragraph_common(md, doc_id, par_next_id)
 
 
+def synchronize_translations(doc: DocInfo):
+    """Synchronizes the translations of a document by adding missing paragraphs to the translations and deleting non-existing
+    paragraphs.
+
+    :param doc: The document that was edited and whose translations need to be synchronized.
+    """
+
+    # we are only interested in the changes in the "master" document
+    if doc.is_translation:
+        return
+    orig = doc.document_as_current_user
+    orig_pars = [p for p in orig.get_paragraphs()]
+    orig_ids = [p.get_id() for p in orig_pars]
+
+    for tr in doc.translations:  # type: DocInfo
+        if tr.is_translation:
+            tr_doc = tr.document_as_current_user
+            tr_pars = tr_doc.get_paragraphs()
+            tr_rps, tr_ids = [], []
+            for rp, orig_id in ((p.get_attr('rp'), p.get_id()) for p in tr_pars if p.get_attr('rp') is not None):
+                tr_rps.append(rp)
+                tr_ids.append(orig_id)
+            s = SequenceMatcher(None, tr_rps, orig_ids)
+            opcodes = s.get_opcodes()
+            for tag, i1, i2, j1, j2 in [opcode for opcode in opcodes if opcode[0] in ['delete', 'replace']]:
+                for par_id in tr_ids[i1:i2]:
+                    tr_doc.delete_paragraph(par_id)
+            for tag, i1, i2, j1, j2 in opcodes:
+                if tag == 'replace':
+                    for par in orig_pars[j1:j2]:
+                        before_i = tr_doc.find_insert_index(i2, tr_ids)
+                        tr_par = par.create_reference(tr_doc, 'tr', add_rd=False)
+                        tr_doc.insert_paragraph_obj(tr_par,
+                                                    insert_before_id=tr_ids[before_i] if before_i < len(
+                                                        tr_ids) else None)
+                elif tag == 'insert':
+                    for par in orig_pars[j1:j2]:
+                        before_i = tr_doc.find_insert_index(i2, tr_ids)
+                        tr_par = par.create_reference(tr_doc, 'tr', add_rd=False)
+                        tr_doc.insert_paragraph_obj(tr_par,
+                                                    insert_before_id=tr_ids[before_i] if before_i < len(
+                                                        tr_ids) else None)
+
+
 def add_paragraph_common(md, doc_id, par_next_id):
     timdb = get_timdb()
     verify_edit_access(doc_id)
@@ -588,6 +635,7 @@ def add_paragraph_common(md, doc_id, par_next_id):
     mark_pars_as_read_if_chosen(pars, doc)
 
     if pars:
+        synchronize_translations(docentry)
         notify_doc_watchers(docentry,
                             get_diff_link(docentry, version_before) + 'Paragraph was added:\n\n' + md,
                             NotificationType.DocModified,
@@ -624,6 +672,7 @@ def delete_paragraph(doc_id):
         md = doc.get_paragraph(par_id).get_markdown()
         timdb.documents.delete_paragraph(doc, par_id)
 
+    synchronize_translations(docentry)
     notify_doc_watchers(docentry,
                         get_diff_link(docentry, version_before) + 'Paragraph was deleted:\n\n' + md,
                         NotificationType.DocModified)
