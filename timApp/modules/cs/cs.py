@@ -1226,6 +1226,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 exout = re.compile(expect_output.rstrip('\n'), re.M)
                 if exout.match(out):
                     give_points(points_rule, "output", 1)
+            expect_output = get_points_rule(points_rule, is_test + "expectOutputPlain", None)
+            if expect_output:
+                exout = expect_output.rstrip('\n')
+                if exout.equals(out):
+                    give_points(points_rule, "output", 1)
 
             readpoints = get_points_rule(points_rule, "readpoints", None)
             readpointskeep = get_points_rule(points_rule, "readpointskeep", False)
