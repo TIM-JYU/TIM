@@ -13,6 +13,8 @@
 .type-mathcheck span.comment { color: maroon }
 .type-mathcheck span.proven { color: #0C0 }
 .type-mathcheck span.debug { color: gray }
+.type-mathcheck span.assess { color: purple }
+.type-mathcheck span.kbd { font-family: monospace }
 .type-mathcheck span.hides { color: teal }
 .csRunDiv.type-mathcheck {
     padding-top: 0.5em;

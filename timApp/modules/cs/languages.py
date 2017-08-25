@@ -40,6 +40,7 @@ class Language:
         self.is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
         self.hide_compile_out = False
         self.run_points_given = False  # Put this on if give run or test points
+        self.readpoints_default = None # what is default string for readpoints
 
         # Check if user name or temp name
 
@@ -763,6 +764,7 @@ class Mathcheck(Language):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
         self.fileext = "txt"
+        self.readpoints_default = '<!--!points! (.*) -->'
 
     def run(self, web, sourcelines, points_rule):
         self.stdin = "%s.txt" % self.filename

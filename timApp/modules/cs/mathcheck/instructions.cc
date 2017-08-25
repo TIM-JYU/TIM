@@ -1,4 +1,4 @@
-unsigned instr_date = 20170817;
+unsigned instr_date = 20170821;
 copyright instructions_file( "instructions.cc", "Antti Valmari", instr_date );
 /*
     This program is free software: you can redistribute it and/or modify
@@ -291,6 +291,8 @@ void instructions( bool is_long ){
   /* Commands especially for teachers */
   out_html( "\n<h2>Commands Especially for Teachers</h2>\n" );
   out_html( "\n<table class=border>\n" );
+  instr_cmnd( "b_nodes 48", "If the final expression yields at most 48 nodes,"
+    " a bonus statement is printed." );
   instr_cmnd( "ban_comp", "The solution must not contain &lt;, &le;, &gt;, or"
     " &ge;." );
   instr_cmnd( "end_of_answer", "Prevents odd-looking error messages to the"
@@ -323,6 +325,9 @@ void instructions( bool is_long ){
     " propositional logic mode." );
   instr_cmnd( "prove_off", "Do not attempt to prove relations, etc." );
   instr_cmnd( "verbose_off", "Do not print headers, etc., in the feedback." );
+  instr_cmnd( "gs_ok_text", "Print the text following this command for each"
+    " correct answer. The text ends at the next empty line, and <kbd>#</kbd>"
+    " acts as the escape character facilitating writing HTML." );
   out_html( "</table>\n" );
 
   /* Deprecated or removed commands */
