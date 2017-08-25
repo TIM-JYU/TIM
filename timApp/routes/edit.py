@@ -575,14 +575,14 @@ def synchronize_translations(doc: DocInfo):
     """
 
     # we are only interested in the changes in the "master" document
-    if doc.is_translation:
+    if not doc.is_original_translation:
         return
     orig = doc.document_as_current_user
     orig_pars = [p for p in orig.get_paragraphs()]
     orig_ids = [p.get_id() for p in orig_pars]
 
     for tr in doc.translations:  # type: DocInfo
-        if tr.is_translation:
+        if not tr.is_original_translation:
             tr_doc = tr.document_as_current_user
             tr_pars = tr_doc.get_paragraphs()
             tr_rps, tr_ids = [], []

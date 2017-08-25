@@ -25,9 +25,9 @@ class DocInfo(Item):
         raise NotImplementedError
 
     @property
-    def is_translation(self):
-        """Returns whether this object is a Translation, i.e. not the document from which other translated documents were created."""
-        return self.id != self.src_docid
+    def is_original_translation(self):
+        """Returns whether this object is the document from which other translated documents were created."""
+        return self.id == self.src_docid
 
     @property
     def url(self):
@@ -41,6 +41,14 @@ class DocInfo(Item):
     def src_docid(self):
         """Returns the source document id in case of a translation or the document id itself otherwise."""
         return self.id
+
+    @property
+    def src_doc(self) -> 'DocEntry':
+        """Returns the source document in case of a translation or the document itself otherwise."""
+        if self.is_original_translation:
+            return self
+        from timApp.timdb.models.docentry import DocEntry
+        return DocEntry.find_by_id(self.src_docid)
 
     @property
     def aliases(self):

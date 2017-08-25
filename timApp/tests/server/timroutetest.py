@@ -17,6 +17,7 @@ from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.routes.login import log_in_as_anonymous
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.translation import Translation
 from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
 
@@ -539,6 +540,16 @@ class TimRouteTest(TimDbTest):
         self.assertEqual(len(e1), len(e2))
         for c1, c2 in zip(e1, e2):
             self.assert_elements_equal(c1, c2)
+
+    def create_translation(self, doc: DocEntry, doc_title: str, lang: str, expect_contains=None, expect_content=None, expect_status=200,
+                           **kwargs) -> Optional[Translation]:
+        if expect_contains is None and expect_content is None:
+            expect_contains = {'title': doc_title, 'path': doc.name + '/' + lang, 'name': doc.short_name}
+        j = self.json_post('/translate/{}/{}'.format(doc.id, lang),
+                           {'doc_title': doc_title},
+                           expect_contains=expect_contains, expect_content=expect_content, expect_status=expect_status, **kwargs)
+        return Translation.query.get(j['id']) if expect_status == 200 else None
+
 
 if __name__ == '__main__':
     unittest.main()

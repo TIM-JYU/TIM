@@ -1,7 +1,6 @@
 from timApp.documentmodel.document import Document
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.docinfo import DocInfo
-from timApp.timdb.models.docentry import DocEntry
 
 
 class TranslationTest(TimRouteTest):
@@ -14,26 +13,17 @@ class TranslationTest(TimRouteTest):
         j = self.create_translation(doc, doc_title, lang)
         self.create_translation(doc, doc_title, lang, expect_status=403,
                                 expect_content={'error': 'Translation for this language already exists'})
-        self.get('/view/{}'.format(j['path']))
+        self.get('/view/{}'.format(j.path))
         self.logout()
         self.json_post('/translate/{}/{}'.format(doc.id, lang),
                        {'doc_title': doc_title},
                        expect_status=403)
 
-    def create_translation(self, doc: DocEntry, doc_title: str, lang: str, expect_contains=None, expect_content=None,
-                           **kwargs):
-        if expect_contains is None and expect_content is None:
-            expect_contains = {'title': doc_title, 'path': doc.name + '/' + lang, 'name': doc.short_name}
-        j = self.json_post('/translate/{}/{}'.format(doc.id, lang),
-                           {'doc_title': doc_title},
-                           expect_contains=expect_contains, expect_content=expect_content, **kwargs)
-        return j
-
     def test_translation_content(self):
         self.login_test1()
         doc = self.create_doc(from_file='example_docs/multiple_mmcqs.md')
         j = self.create_translation(doc, 'MMCQ fi', 'fi')
-        tr_doc = Document(j['id'])
+        tr_doc = j.document
         pars = doc.document.get_paragraphs()
         par_ids = set(p.get_id() for p in pars)
         tr_pars = tr_doc.get_paragraphs()
@@ -42,7 +32,7 @@ class TranslationTest(TimRouteTest):
 
         # all but the settings paragraph are translated paragraphs
         self.assertTrue(tr_pars[0].is_setting())
-        for p in tr_pars[1:]:
+        for p in tr_pars[1:]: # type DocParagraph
             self.assertTrue(p.is_translation())
             self.assertTrue(p.get_attr('rp') is not None)
             self.assertIn(p.get_attr('rp'), par_ids)
@@ -87,7 +77,7 @@ class TranslationTest(TimRouteTest):
         self.login_test1()
         doc = self.create_doc()
         tr = self.create_translation(doc, 'In English', 'en')
-        tr_doc = Document(tr['id'])
+        tr_doc = tr.document
         self.assert_translation_synced(tr_doc, doc)
 
         self.new_par(doc.document, '1')
@@ -122,7 +112,7 @@ class TranslationTest(TimRouteTest):
         self.login_test1()
         doc = self.create_doc(initial_par='1\n#-\n2\n#-\n3\n#-\n4')
         tr = self.create_translation(doc, 'In English', 'en')
-        tr_doc = Document(tr['id'])
+        tr_doc = tr.document
         self.assert_translation_synced(tr_doc, doc)
         tr_doc.insert_paragraph('new', insert_before_id=tr_doc.get_paragraphs()[1].get_id())
         tr_doc.add_paragraph('new2')

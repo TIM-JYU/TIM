@@ -64,7 +64,7 @@ from timApp.routes.view import view_page
 from timApp.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     get_current_user_name, get_current_user_group, logged_in
 from timApp.tim_app import app, default_secret
-from timApp.timdb.blocktypes import from_str, blocktypes
+from timApp.timdb.blocktypes import from_str, blocktypes, BlockType
 from timApp.timdb.bookmarks import Bookmarks
 from timApp.timdb.dbutils import copy_default_rights
 from timApp.timdb.documents import create_citation
@@ -334,7 +334,7 @@ def get_templates():
     return json_response(templates)
 
 
-def create_item(item_path, item_type_str, item_title, create_function, owner_group_id):
+def create_item(item_path: str, item_type_str: str, item_title: str, create_function, owner_group_id: int):
     item_path = item_path.strip('/')
     validate_item_and_create(item_path, item_type_str, owner_group_id)
 
@@ -361,11 +361,13 @@ def create_document():
         return create_citation_doc(cite_id, item_path, item_title)
 
     copied_content = None
+    d = None
     if copy_id:
         verify_edit_access(copy_id)
         d = DocEntry.find_by_id(copy_id, try_translation=True)
         if not d:
             return abort(404, 'The document to be copied was not found')
+        d = d.src_doc
         copied_content = d.document.export_markdown()
 
     item = create_item(item_path,
@@ -374,9 +376,24 @@ def create_document():
                        DocEntry.create if item_type == 'document' else Folder.create,
                        get_current_user_group())
 
-    if copied_content:
+    if copy_id:
         item.document.update(copied_content, item.document.export_markdown())
-
+        for tr in d.translations: # type: Translation
+            doc_id = item.id
+            if not tr.is_original_translation:
+                doc_entry = DocEntry.create(None, get_current_user_group(), None)
+                doc_entry.document.update(tr.document.export_markdown(), doc_entry.document.export_markdown())
+                settings = doc_entry.document.get_settings()
+                settings.set_source_document(item.id)
+                doc_entry.document.set_settings(settings.get_dict())
+                doc_id = doc_entry.id
+            if tr.lang_id or not tr.is_original_translation:
+                new_tr = Translation(doc_id=doc_id, src_docid=item.id, lang_id=tr.lang_id)
+                new_tr.title = tr.title
+                db.session.add(new_tr)
+            if not tr.is_original_translation:
+                copy_default_rights(doc_id, blocktypes.DOCUMENT, commit=False)
+        db.session.commit()
     return json_response(item)
 
 
@@ -396,9 +413,8 @@ def valid_language_id(lang_id):
 
 
 @app.route("/translate/<int:tr_doc_id>/<language>", methods=["POST"])
-def create_translation(tr_doc_id, language):
+def create_translation_route(tr_doc_id, language):
     title = request.get_json().get('doc_title', None)
-    timdb = get_timdb()
 
     doc = DocEntry.find_by_id(tr_doc_id, try_translation=True)
 
@@ -421,6 +437,7 @@ def create_translation(tr_doc_id, language):
     tr = Translation(doc_id=cite_doc.id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
     db.session.add(tr)
+    copy_default_rights(cite_doc.id, blocktypes.DOCUMENT, commit=False)
     db.session.commit()
     return json_response(tr)
 

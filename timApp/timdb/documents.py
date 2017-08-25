@@ -8,6 +8,7 @@ from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.documentparser import DocumentParser
+from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.block import Block
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.translation import Translation
@@ -21,7 +22,7 @@ def create_citation(original_doc: Document,
                     owner_group_id: int,
                     path: Optional[str]=None,
                     title: Optional[str]=None,
-                    ref_attribs: Optional[Dict[str, str]] = None) -> Document:
+                    ref_attribs: Optional[Dict[str, str]] = None) -> DocInfo:
     """Creates a citation document with the specified name. Each paragraph of the citation document references the
     paragraph in the original document.
 
