@@ -353,6 +353,10 @@ class TimRouteTest(TimDbTest):
             "par": par_id,
         }, **kwargs)
 
+    def update_whole_doc(self, doc: Document, text: str, **kwargs):
+        doc.clear_mem_cache()
+        return self.json_post(f'/update/{doc.doc_id}', {'fulltext': text, 'original': doc.export_markdown()}, **kwargs)
+
     def post_answer(self, plugin_type, task_id, user_input,
                     save_teacher=False, teacher=False, user_id=None, answer_id=None, ref_from=None, **kwargs):
         return self.json_put('/{}/{}/answer/'.format(plugin_type, task_id),

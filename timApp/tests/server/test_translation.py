@@ -1,5 +1,6 @@
 from timApp.documentmodel.document import Document
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
 
 
@@ -76,20 +77,76 @@ class TranslationTest(TimRouteTest):
         self.assertEqual(1.0, data[0]['points'])
         self.assertEqual(3.0, data[1]['points'])
 
+    def assert_translation_synced(self, tr_doc: Document, doc: DocInfo):
+        tr_doc.clear_mem_cache()
+        self.assertEqual([None] + [p.get_id() for p in doc.document.get_paragraphs()],
+                         [p.get_attr('rp') for p in tr_doc.get_paragraphs()])
+
     def test_translation_sync(self):
+        """Translations are kept in sync."""
         self.login_test1()
         doc = self.create_doc()
         tr = self.create_translation(doc, 'In English', 'en')
         tr_doc = Document(tr['id'])
-        self.assertEqual([None] + [p.get_id() for p in doc.document.get_paragraphs()],
-                         [p.get_attr('rp') for p in tr_doc.get_paragraphs()])
+        self.assert_translation_synced(tr_doc, doc)
 
         self.new_par(doc.document, '1')
-        tr_doc.clear_mem_cache()
-        self.assertEqual([None] + [p.get_id() for p in doc.document.get_paragraphs()],
-                         [p.get_attr('rp') for p in tr_doc.get_paragraphs()])
+        self.assert_translation_synced(tr_doc, doc)
 
         self.new_par(doc.document, '2')
+        self.assert_translation_synced(tr_doc, doc)
+
+        self.new_par(doc.document, '3', doc.document.get_paragraphs()[0].get_id())
+        self.assert_translation_synced(tr_doc, doc)
+
+        self.new_par(doc.document, '4', doc.document.get_paragraphs()[1].get_id())
+        self.assert_translation_synced(tr_doc, doc)
+
+        self.post_par(doc.document, '5\n#-\n6', doc.document.get_paragraphs()[-1].get_id())
+        self.assert_translation_synced(tr_doc, doc)
+
+        self.delete_par(doc.document, doc.document.get_paragraphs()[-1].get_id())
+        self.assert_translation_synced(tr_doc, doc)
+
+        self.delete_par(doc.document, doc.document.get_paragraphs()[0].get_id())
+        self.assert_translation_synced(tr_doc, doc)
+
+        self.update_whole_doc(doc.document, 'replaced all with this')
+        self.assert_translation_synced(tr_doc, doc)
+
+        self.update_whole_doc(doc.document, '')
+        self.assert_translation_synced(tr_doc, doc)
+
+    def test_translation_extraneous_pars(self):
+        """Any extraneous blocks (those without "rp" attribute) in translation documents are retained after syncing."""
+        self.login_test1()
+        doc = self.create_doc(initial_par='1\n#-\n2\n#-\n3\n#-\n4')
+        tr = self.create_translation(doc, 'In English', 'en')
+        tr_doc = Document(tr['id'])
+        self.assert_translation_synced(tr_doc, doc)
+        tr_doc.insert_paragraph('new', insert_before_id=tr_doc.get_paragraphs()[1].get_id())
+        tr_doc.add_paragraph('new2')
+
+        self.delete_par(doc.document, doc.document.get_paragraphs()[0].get_id())
         tr_doc.clear_mem_cache()
-        self.assertEqual([None] + [p.get_id() for p in doc.document.get_paragraphs()],
-                         [p.get_attr('rp') for p in tr_doc.get_paragraphs()])
+        tr_pars = tr_doc.get_paragraphs()
+        self.assertEqual('new', tr_pars[1].get_markdown())
+        self.assertEqual('new2', tr_pars[-1].get_markdown())
+        self.assertEqual(doc.document.get_paragraphs()[0].get_id(), tr_pars[2].get_attr('rp'))
+
+        self.update_whole_doc(doc.document, 'whole new text')
+        first_id = doc.document.get_paragraphs()[0].get_id()
+        tr_doc.clear_mem_cache()
+        tr_pars = tr_doc.get_paragraphs()
+        self.assertEqual('new', tr_pars[1].get_markdown())
+        self.assertEqual('new2', tr_pars[2].get_markdown())
+        self.assertEqual(first_id, tr_pars[3].get_attr('rp'))
+
+        self.new_par(doc.document, 'new first', first_id)
+        tr_doc.clear_mem_cache()
+        tr_pars = tr_doc.get_paragraphs()
+        self.assertEqual('new', tr_pars[1].get_markdown())
+        self.assertEqual('new2', tr_pars[2].get_markdown())
+        pars = doc.document.get_paragraphs()
+        self.assertEqual(pars[0].get_id(), tr_pars[3].get_attr('rp'))
+        self.assertEqual(pars[1].get_id(), tr_pars[4].get_attr('rp'))

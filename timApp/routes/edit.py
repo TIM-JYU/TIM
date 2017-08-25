@@ -586,9 +586,9 @@ def synchronize_translations(doc: DocInfo):
             tr_doc = tr.document_as_current_user
             tr_pars = tr_doc.get_paragraphs()
             tr_rps, tr_ids = [], []
-            for rp, orig_id in ((p.get_attr('rp'), p.get_id()) for p in tr_pars if p.get_attr('rp') is not None):
-                tr_rps.append(rp)
-                tr_ids.append(orig_id)
+            for tr_rp, tr_id in ((p.get_attr('rp'), p.get_id()) for p in tr_pars if p.get_attr('rp') is not None):
+                tr_rps.append(tr_rp)
+                tr_ids.append(tr_id)
             s = SequenceMatcher(None, tr_rps, orig_ids)
             opcodes = s.get_opcodes()
             for tag, i1, i2, j1, j2 in [opcode for opcode in opcodes if opcode[0] in ['delete', 'replace']]:
