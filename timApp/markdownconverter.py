@@ -50,9 +50,9 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
         env = create_environment(macro_delimiter)
     env.filters['Pz'] = Pz
     try:
-        if text.startswith("%%GLOBALMACROS%%"):
-            gm = macros.get("GLOBALMACROS", "")
-            text = text.replace("%%GLOBALMACROS%%", gm)
+        # if text.startswith("%%GLOBALMACROS%%"):
+        #    gm = macros.get("GLOBALMACROS", "")
+        #    text = text.replace("%%GLOBALMACROS%%", gm)
         startstr = env.comment_start_string + "LOCAL"
         beg = text.find(startstr)
         if beg >= 0:

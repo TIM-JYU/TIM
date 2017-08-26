@@ -71,7 +71,7 @@
                             <i class="glyphicon glyphicon-ok"></i>
                         </button>
                     </form>
-                    <span ng-show="points !== null && !(showTeacher() || (giveCustomPoints && allowCustomPoints()))">Points: {{ points }}</span>
+                    <span ng-show="points !== null && !(showTeacher() || (giveCustomPoints && allowCustomPoints())) && taskInfo.pointsText">{{ taskInfo.pointsText }} {{ points }}</span>
                     <span ng-show="taskInfo.maxPoints && points !== null">/ {{ taskInfo.maxPoints }}</span>
                     <span ng-show="!selectedAnswer.valid && points !== null">(invalid)</span>
                     <span ng-show="!$parent.teacherMode && allowCustomPoints()">
@@ -102,7 +102,7 @@
 
             </div>
         </div>
-        <span class="triesLeft" ng-show="taskInfo.answerLimit">Tries left: {{ getTriesLeft() }}</span>
+        <span class="triesLeft" ng-show="taskInfo.answerLimit && taskInfo.triesText">{{ taskInfo.triesText }} {{ getTriesLeft() }}</span>
         <span ng-show="answers.length == 0 && $parent.teacherMode">(no answers)</span>
     </div>
     <span ng-show="taskInfo.starttime || taskInfo.deadline">
