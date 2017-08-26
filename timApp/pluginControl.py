@@ -80,7 +80,8 @@ def pluginify(doc: Document,
               wrap_in_div=True,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
               user_print: bool = False,
-              target_format: str='latex'):
+              target_format: str='latex',
+              dereference=True):
     """"Pluginifies" or sanitizes the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
 
@@ -96,6 +97,7 @@ def pluginify(doc: Document,
     :param output_format: Desired output format (html/md) for plugins
     :param user_print: Whether the plugins should output the original values or user's input (when exporting markdown).
     :param target_format: for MD-print what exact format to use
+    :param dereference: should pars be checked id dereference is needed
     :return: Processed HTML blocks along with JavaScript, CSS stylesheet and AngularJS module dependencies.
 
     :type pars: list[DocParagraph]
@@ -103,8 +105,8 @@ def pluginify(doc: Document,
     """
 
     # taketime("answ", "start")
-
-    pars = dereference_pars(pars, source_doc=doc.get_original_document())
+    if dereference:
+        pars = dereference_pars(pars, source_doc=doc.get_original_document())
     if sanitize:
         for par in pars:
             par.sanitize_html()

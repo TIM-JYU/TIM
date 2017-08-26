@@ -24,13 +24,35 @@ def expand_macros_regex(text: str, macros, macro_delimiter=None):
                   lambda match: macros.get(match.group(1), 'UNKNOWN MACRO: ' + match.group(1)),
                   text)
 
+# ------------------------ Jinja filters -------------------------------------------------------------------
+# Ks. https://tim.jyu.fi/view/tim/ohjeita/satunnaistus#timfiltterit
+
+
+def Pz(i):
+    """
+    Returns number as a string so that from 0 comes "", postive number comes like " + 1"
+    and negative comes like " - 1"
+    :param i: number to convert
+    :return: number as a string suitable for expressions
+    """
+    if i > 0:
+        return " + " + str(i)
+    if i < 0:
+        return " - " + str(-i)
+    return ""
+# ------------------------ Jinja filters end ---------------------------------------------------------------
+
 
 def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None, env=None, ignore_errors: bool=False):
     if not has_macros(text, macros, macro_delimiter):
         return text
     if env is None:
         env = create_environment(macro_delimiter)
+    env.filters['Pz'] = Pz
     try:
+        if text.startswith("%%GLOBALMACROS%%"):
+            gm = macros.get("GLOBALMACROS", "")
+            text = text.replace("%%GLOBALMACROS%%", gm)
         startstr = env.comment_start_string + "LOCAL"
         beg = text.find(startstr)
         if beg >= 0:
