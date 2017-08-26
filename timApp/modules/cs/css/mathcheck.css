@@ -16,6 +16,32 @@
 .type-mathcheck span.assess { color: purple }
 .type-mathcheck span.kbd { font-family: monospace }
 .type-mathcheck span.hides { color: teal }
+
+.type-mathcheck h1 { color: blue; background: white; font-family: sans-serif }
+.type-mathcheck h1.teacher { color: fuchsia; background: white; font-family: sans-serif }
+.type-mathcheck h1.err { color: red; background: white; font-family: sans-serif }
+.type-mathcheck h1.help { color: green; background: white; font-family: sans-serif }
+.type-mathcheck h2 { color: maroon; background: white; font-family: sans-serif }
+.type-mathcheck h3 { color: purple; background: white; font-family: sans-serif }
+.type-mathcheck p.justify { text-align: justify }
+.type-mathcheck p.centre { text-align: center }
+.type-mathcheck p.set { color: blue }
+.type-mathcheck p.errbox { color: white; background: black; border: solid red;
+.type-mathcheck   max-width: 100ex }
+.type-mathcheck td.right { text-align: right }
+.type-mathcheck table { border: none; margin-left: 0; }
+.type-mathcheck table.border { border-collapse: collapse; margin-right: 1pt;  margin-bottom: 1em }
+.type-mathcheck td.top { vertical-align: top; border: none; }
+.type-mathcheck td.sym { border: solid 1pt; padding: 3pt 2pt 3pt 2pt; text-align: justify }
+.type-mathcheck td.kbd { border: solid 1pt; padding: 3pt 2pt 3pt 2pt; font-family: monospace }
+.type-mathcheck table.ifr{ width: 100%; table-layout: fixed }
+.type-mathcheck td.ifrl { width: 40% }
+.type-mathcheck td.ifrr { width: 60% }
+.type-mathcheck iframe { width: 100%; border: thin solid; background: #F4F4F4 }
+.type-mathcheck dd { text-align: justify }
+.type-mathcheck i.math { font-family: Times, serif; font-weight: normal; font-style: italic }
+
+
 .csRunDiv.type-mathcheck {
     padding-top: 0.5em;
 }
