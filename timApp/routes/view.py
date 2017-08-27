@@ -339,6 +339,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                 user['email'] = 'someone_{}@example.com'.format(user['id'])
 
     settings = get_user_settings()
+    # settings['add_button_text'] = doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
 
     show_unpublished_bg = is_considered_unpublished(doc_id)
     taketime("view to render")
@@ -375,7 +376,10 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            task_info={'total_points': total_points,
                                       'tasks_done': tasks_done,
                                       'total_tasks': total_tasks,
-                                      'groups': task_groups})
+                                      'groups': task_groups},
+                           doc_settings_dict=doc_settings.get_dict()
+                           # add_button_text=doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
+                           )
 
 
 def redirect_to_login():

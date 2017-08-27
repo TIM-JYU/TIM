@@ -379,6 +379,14 @@ export function defineEditing(sc) {
             return sc.showAddParagraphAbove(e, $(".addBottomContainer"));
         });
 
+        onClick(".addAbove", function($this, e) {
+            $(".actionButtons").remove();
+            // var $par = $('.par').last();
+            // return sc.showAddParagraphBelow(e, $par);
+            // return sc.showAddParagraphAbove(e, sc.$pars);
+            return sc.showAddParagraphAbove(e, $($this).closest('.par'));
+        });
+
         onClick(".pasteBottom", function($this, e) {
             $(".actionButtons").remove();
             sc.pasteAbove(e, $(".addBottomContainer"), false);

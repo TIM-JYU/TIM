@@ -473,11 +473,16 @@ button.showMap {
 
 .editline {
     position: absolute;
-    left: -$editline-width;
+    left: -$editline-width - $editline-extra;
     z-index: 3;
     width: $editline-width;
     height: 100%;
     top: 0;
+
+    @media (max-width: 870px) { /* for ipdas because of outend headings */
+        left: -($editline-width / 2);
+        width: $editline-width / 2;
+    }
 
     @media (max-width: $screen-xs-max) {
         left: 0;

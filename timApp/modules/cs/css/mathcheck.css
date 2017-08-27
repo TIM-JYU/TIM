@@ -42,7 +42,7 @@
 .type-mathcheck i.math { font-family: Times, serif; font-weight: normal; font-style: italic }
 
 
-.csRunDiv.type-mathcheck {
+.type-mathcheck .stem {
     padding-top: 0.5em;
 }
 .type-mathcheck .htmlresult {
