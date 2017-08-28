@@ -72,7 +72,7 @@ class DocSettings:
         self.__dict = settings_dict if settings_dict else {}
 
     def to_paragraph(self, doc) -> DocParagraph:
-        text = '```\n' + yaml.dump(self.__dict) + '\n```'
+        text = '```\n' + yaml.dump(self.__dict, default_flow_style=False) + '\n```'
         return DocParagraph.create(doc, md=text, attrs={"settings": ""})
 
     def get_dict(self) -> dict:

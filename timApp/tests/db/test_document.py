@@ -386,5 +386,17 @@ class DocumentTest(TimDbTest):
         self.assertEqual('test3', pars[0].get_markdown())
 
 
+    def test_settings_block_style(self):
+        """Settings paragraph is always serialized in the block style."""
+        d = self.init_testdoc()
+        d.set_settings({'a': 1})
+        self.assertEqual("""
+```
+a: 1
+
+```
+""".strip(), d.get_paragraphs()[0].get_markdown())
+
+
 if __name__ == '__main__':
     unittest.main()
