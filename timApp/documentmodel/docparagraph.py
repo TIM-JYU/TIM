@@ -850,7 +850,7 @@ class DocParagraph:
         return self.__data.__repr__()
 
     def get_referenced_pars(self, set_html: bool = True, source_doc: bool = None,
-                            tr_get_one: bool = True, cycle: Optional[List[Tuple[int, str]]] = None) -> List[
+                            tr_get_one: bool = True, visited_pars: Optional[List[Tuple[int, str]]] = None) -> List[
             'DocParagraph']:
         """Returns the paragraphs that are referenced by this paragraph.
 
@@ -861,22 +861,12 @@ class DocParagraph:
         :param source_doc: The assumed source document in case the rd attribute of a paragraph is absent.
         :param tr_get_one: If True and this paragraph is a translation and the result contains more than one paragraph,
           only the first one of them will be returned.
-        :param cycle: A list of already visited paragraphs to prevent infinite recursion.
+        :param visited_pars: A list of already visited paragraphs to prevent infinite recursion.
         :return: The list of resolved paragraphs.
 
         """
-        if self.ref_pars is not None:
-            return self.ref_pars
-        if cycle is None:
-            cycle = []
-        par_doc_id = self.get_doc_id(), self.get_id()
-        if par_doc_id in cycle:
-            cycle.append(par_doc_id)
-            raise InvalidReferenceException(
-                'Infinite referencing loop detected: ' + ' -> '.join(('{}:{}'.format(d, p) for d, p in cycle)))
-        cycle.append(par_doc_id)
 
-        def create_final_par(ref_par) -> 'DocParagraph':
+        def create_final_par(ref_par: 'DocParagraph') -> 'DocParagraph':
             if self.is_translation() and self.get_markdown():
                 md = self.get_markdown()
             else:
@@ -905,6 +895,17 @@ class DocParagraph:
                 final_par.__set_html(html)
             return final_par
 
+        if self.ref_pars is not None:
+            return self.ref_pars
+        if visited_pars is None:
+            visited_pars = []
+        par_doc_id = self.get_doc_id(), self.get_id()
+        if par_doc_id in visited_pars:
+            visited_pars.append(par_doc_id)
+            raise InvalidReferenceException(
+                'Infinite referencing loop detected: ' + ' -> '.join(('{}:{}'.format(d, p) for d, p in visited_pars)))
+        visited_pars.append(par_doc_id)
+
         ref_docid = None
         ref_doc = None
 
@@ -932,17 +933,13 @@ class DocParagraph:
         if self.is_par_reference():
             try:
                 par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
-                if not ref_doc.has_paragraph(attrs['rp']):
-                    # par.set_attr('deleted', 'True')
-                    par.add_class('deleted')
-
             except TimDbException:
                 raise InvalidReferenceException('The referenced paragraph does not exist.')
 
             if par.is_reference():
                 ref_pars = par.get_referenced_pars(set_html=set_html,
                                                    source_doc=source_doc,
-                                                   cycle=cycle,
+                                                   visited_pars=visited_pars,
                                                    tr_get_one=tr_get_one)
             else:
                 ref_pars = [par]
@@ -953,7 +950,7 @@ class DocParagraph:
                 if p.is_reference():
                     ref_pars.extend(p.get_referenced_pars(set_html=set_html,
                                                           source_doc=source_doc,
-                                                          cycle=cycle,
+                                                          visited_pars=visited_pars,
                                                           tr_get_one=tr_get_one))
                 else:
                     ref_pars.append(p)
