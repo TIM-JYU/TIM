@@ -235,6 +235,16 @@ a .glyphicon {
 
      /* ready styles end */
 
+    .removePre pre { /* for chat */
+        visibility: collapse;
+        height: 0pt;
+    }
+
+    .smalltitle { /* for chat */
+        font-size: x-small;
+        color: gray;
+    }
+
 
     .huomautus {
         @extend .center-block;

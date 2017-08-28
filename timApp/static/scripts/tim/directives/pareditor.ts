@@ -49,6 +49,9 @@ interface IParEditorScope {
     oldmeta: HTMLMetaElement;
     options: {
         localSaveTag: string,
+        texts: {
+            initialText: string;
+        },
         showDelete: boolean,
         destroyAfterSave: boolean,
         touchDevice: boolean,
@@ -304,7 +307,19 @@ timApp.directive("pareditor", [
                 $scope.dataLoaded = false; // allow load in first time what ever editor
 
                 $scope.setInitialText = function() {
-                    if ($scope.dataLoaded || !$scope.initialTextUrl) {
+                    if ($scope.dataLoaded) return;
+                    if ( !$scope.initialTextUrl ) {
+                        if ( $scope.options.texts ) {
+                            var initialText = $scope.options.texts.initialText;
+                            if ( initialText ) {
+                                $scope.setEditorText(initialText);
+                                $scope.initialText = initialText;
+                                angular.extend($scope.extraData, {});
+                                $scope.editorChanged();
+                                $scope.aceReady();
+                            }
+                            $scope.dataLoaded = true;
+                        }
                         return;
                     }
                     $scope.setEditorText("Loading text...");
