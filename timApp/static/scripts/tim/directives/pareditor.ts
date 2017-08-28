@@ -309,17 +309,16 @@ timApp.directive("pareditor", [
                 $scope.setInitialText = function() {
                     if ($scope.dataLoaded) return;
                     if ( !$scope.initialTextUrl ) {
-                        if ( $scope.options.texts ) {
-                            var initialText = $scope.options.texts.initialText;
-                            if ( initialText ) {
-                                $scope.setEditorText(initialText);
-                                $scope.initialText = initialText;
-                                angular.extend($scope.extraData, {});
-                                $scope.editorChanged();
-                                $scope.aceReady();
-                            }
-                            $scope.dataLoaded = true;
+                        var initialText = "";
+                        if ( $scope.options.texts ) initialText = $scope.options.texts.initialText;
+                        if ( initialText ) {
+                            $scope.setEditorText(initialText);
+                            $scope.initialText = initialText;
+                            angular.extend($scope.extraData, {});
+                            $scope.editorChanged();
+                            $scope.aceReady();
                         }
+                        $scope.dataLoaded = true;
                         return;
                     }
                     $scope.setEditorText("Loading text...");
@@ -557,6 +556,7 @@ timApp.directive("pareditor", [
                         return $scope.editor.getSession().getValue();
                     };
                     $scope.setEditorText = function(text) {
+                        if ( !text ) return;
                         $scope.editor.getSession().setValue(text);
                     };
                 };
