@@ -122,6 +122,7 @@ interface IParEditorScope {
     indexClicked(): void;
     insertClicked(): void;
     insertTemplate(text: string): void;
+    setPosition(pos: number): void;
     leftClicked(): void;
     linkClicked(descDefault: string, linkDefault: string, isImage: boolean): void;
     listClicked(): void;
@@ -312,11 +313,16 @@ timApp.directive("pareditor", [
                         var initialText = "";
                         if ( $scope.options.texts ) initialText = $scope.options.texts.initialText;
                         if ( initialText ) {
+                            var pos = initialText.indexOf("|");
+                            if ( pos ) initialText = initialText.replace("|", "");
                             $scope.setEditorText(initialText);
                             $scope.initialText = initialText;
                             angular.extend($scope.extraData, {});
                             $scope.editorChanged();
                             $scope.aceReady();
+                            $timeout(function() {
+                                if ( pos >= 0 ) $scope.setPosition(pos);
+                            }, 10);
                         }
                         $scope.dataLoaded = true;
                         return;
@@ -1328,6 +1334,12 @@ timApp.directive("pareditor", [
                         $scope.scrollToCaret();
                     };
 
+                    $scope.setPosition = function(pos) {
+                        const editor = $scope.editor.get(0);
+                        editor.selectionStart = editor.selectionEnd = pos;
+                        $scope.scrollToCaret();
+                    }
+
                     $scope.rightClicked = function() {
                         const editor = $scope.editor.get(0);
                         editor.selectionStart = editor.selectionEnd += 1;
@@ -1691,6 +1703,12 @@ timApp.directive("pareditor", [
                             });
                         }
                     };
+
+                    $scope.setPosition = function(pos) {
+                        var range = $scope.editor.session.doc.indexToPosition(pos)
+                        $scope.editor.moveCursorTo(range.row, range.column); // TODO: find a way to move to postion
+                        $scope.gotoCursor(); 
+                    }
 
                     $scope.leftClicked = function() {
                         $scope.editor.navigateLeft(1);
