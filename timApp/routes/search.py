@@ -109,7 +109,8 @@ def search(query):
                                start_index=None,
                                in_lecture=False,
                                disable_read_markings=True,
-                               no_browser=get_option(request, "noanswers", False))
+                               no_browser=get_option(request, "noanswers", False),
+                               doc_settings_dict={})
     results = list(results)
     results.sort(key=lambda r: r.document.path)
     return render_template('search.html',
