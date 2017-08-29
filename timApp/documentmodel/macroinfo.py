@@ -16,7 +16,7 @@ class MacroInfo:
      (instead of replacing them with empty values).
     """
 
-    def __init__(self, doc: Optional['Document'],
+    def __init__(self, doc: Optional['Document']=None,
                  macro_map: Optional[Dict[str, object]] = None,
                  macro_delimiter: Optional[str] = None,
                  user: Optional['User'] = None):
