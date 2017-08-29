@@ -313,8 +313,8 @@ timApp.directive("pareditor", [
                         var initialText = "";
                         if ( $scope.options.texts ) initialText = $scope.options.texts.initialText;
                         if ( initialText ) {
-                            var pos = initialText.indexOf("|");
-                            if ( pos ) initialText = initialText.replace("|", "");
+                            var pos = initialText.indexOf("⁞");
+                            if ( pos ) initialText = initialText.replace("⁞", ""); // cursor pos
                             $scope.setEditorText(initialText);
                             $scope.initialText = initialText;
                             angular.extend($scope.extraData, {});
@@ -1707,7 +1707,7 @@ timApp.directive("pareditor", [
                     $scope.setPosition = function(pos) {
                         var range = $scope.editor.session.doc.indexToPosition(pos)
                         $scope.editor.moveCursorTo(range.row, range.column); // TODO: find a way to move to postion
-                        $scope.gotoCursor(); 
+                        $scope.gotoCursor();
                     }
 
                     $scope.leftClicked = function() {

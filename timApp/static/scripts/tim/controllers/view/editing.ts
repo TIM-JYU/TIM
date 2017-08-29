@@ -389,8 +389,16 @@ export function defineEditing(sc) {
             // return sc.showAddParagraphAbove(e, sc.$pars);
             var par = $($this).closest('.par');
             var text = par.find('pre').text();
-            // text = text.replace('|', '');  // TODO: set cursor to | position
-            return sc.showAddParagraphAbove(e, par, {'localSaveTag': 'addAbove', 'texts': {'initialText': text }});
+            // text = text.replace('⁞', '');  // TODO: set cursor to | position
+            var options =  {
+                'localSaveTag': 'addAbove',
+                'texts': {
+                    'beforeText': "alkuun",
+                    'initialText': text ,
+                    'afterText': "loppuun"
+                }
+            }
+            return sc.showAddParagraphAbove(e, par, options);
         });
 
         onClick(".pasteBottom", function($this, e) {
