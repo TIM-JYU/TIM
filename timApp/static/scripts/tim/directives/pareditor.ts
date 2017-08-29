@@ -314,7 +314,7 @@ timApp.directive("pareditor", [
                         if ( $scope.options.texts ) initialText = $scope.options.texts.initialText;
                         if ( initialText ) {
                             var pos = initialText.indexOf("⁞");
-                            if ( pos ) initialText = initialText.replace("⁞", ""); // cursor pos
+                            if ( pos >= 0 ) initialText = initialText.replace("⁞", ""); // cursor pos
                             $scope.setEditorText(initialText);
                             $scope.initialText = initialText;
                             angular.extend($scope.extraData, {});
