@@ -1010,7 +1010,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if "test" in ttype:
                 is_test = "test"
             points_rule = get_param(query, "pointsRule", None)
-            if points_rule:
+            # if points_rule is None and language.readpoints_default:
+            #    points_rule = {}
+            if points_rule is not None:
                 points_rule["points"] = get_json_param(query.jso, "state", "points", None)
                 points_rule["result"] = 0
                 if points_rule["points"]:
@@ -1022,7 +1024,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     else:
                         points_rule["points"]["run"] = 0
                 if not is_doc:
+                    is_plain = False
                     expect_code = get_points_rule(points_rule, is_test + "expectCode", None)
+                    if not expect_code:
+                        expect_code = get_points_rule(points_rule, is_test + "expectCodePlain", None)
+                        is_plain = True
+
                     if expect_code:
                         if expect_code == "byCode":
                             expect_code = get_param(query, "byCode", "")
@@ -1032,8 +1039,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                 query, "parsonsnotordermatters", False))
                             give_points(points_rule, "code", p)
                         else:
-                            excode = re.compile(expect_code.rstrip('\n'), re.M)
-                            if excode.match(usercode):
+                            excode = expect_code.rstrip('\n')
+                            match = False
+                            if is_plain:
+                                match = usercode == excode
+                            else:
+                                excode = re.compile(excode, re.M)
+                                match = excode.match(usercode)
+                            if match:
                                 give_points(points_rule, "code", 1)
                     number_rule = get_points_rule(points_rule, is_test + "numberRule", None)
                     if number_rule:
@@ -1226,8 +1239,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 exout = re.compile(expect_output.rstrip('\n'), re.M)
                 if exout.match(out):
                     give_points(points_rule, "output", 1)
+            expect_output = get_points_rule(points_rule, is_test + "expectOutputPlain", None)
+            if expect_output:
+                exout = expect_output.rstrip('\n')
+                if exout == out.rstrip('\n'):
+                    give_points(points_rule, "output", 1)
 
-            readpoints = get_points_rule(points_rule, "readpoints", None)
+            readpoints = get_points_rule(points_rule, "readpoints", language.readpoints_default)
             readpointskeep = get_points_rule(points_rule, "readpointskeep", False)
             if readpoints:
                 try:

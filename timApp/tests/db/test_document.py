@@ -295,6 +295,11 @@ class DocumentTest(TimDbTest):
         self.assertEqual('d2: 1 2 ', deref2.get_expanded_markdown(d1.get_settings().get_macroinfo()))
         self.assertEqual('d2: 3 4 5', deref2.get_expanded_markdown(d2.get_settings().get_macroinfo()))
 
+    def test_predefined_macros(self):
+        d = self.init_testdoc()
+        p = d.add_paragraph('document id is %%docid%%')
+        self.assertEqual(f'document id is {d.doc_id}', p.get_expanded_markdown())
+
     def test_import(self):
         timdb = self.get_db()
         timdb.documents.import_document_from_file('example_docs/mmcq_example.md',

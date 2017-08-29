@@ -71,7 +71,8 @@ export function defineEditing(sc) {
                 tags,
             },
             "options": {
-                localSaveTag: "par",
+                localSaveTag: options.localSaveTag ? options.localSaveTag : "par" ,
+                texts: options.texts,
                 showDelete: options.showDelete,
                 showImageUpload: true,
                 showPlugins: true,
@@ -215,10 +216,12 @@ export function defineEditing(sc) {
         sc.beginUpdate();
     };
 
-    sc.showAddParagraphAbove = function(e, $par) {
+    sc.showAddParagraphAbove = function(e, $par, options) {
         const $newpar = sc.createNewPar();
         $par.before($newpar);
-        sc.toggleParEditor($newpar, {area: false});
+        if ( options == null ) options = {};
+        options.area = false;
+        sc.toggleParEditor($newpar, options);
     };
 
     sc.showAddParagraphBelow = function(e, $par) {
@@ -377,6 +380,25 @@ export function defineEditing(sc) {
             //var $par = $('.par').last();
             //return sc.showAddParagraphBelow(e, $par);
             return sc.showAddParagraphAbove(e, $(".addBottomContainer"));
+        });
+
+        onClick(".addAbove", function($this, e) {
+            $(".actionButtons").remove();
+            // var $par = $('.par').last();
+            // return sc.showAddParagraphBelow(e, $par);
+            // return sc.showAddParagraphAbove(e, sc.$pars);
+            var par = $($this).closest('.par');
+            var text = par.find('pre').text();
+            // text = text.replace('⁞', '');  // TODO: set cursor to | position
+            var options =  {
+                'localSaveTag': 'addAbove',
+                'texts': {
+                    'beforeText': "alkuun",
+                    'initialText': text ,
+                    'afterText': "loppuun"
+                }
+            }
+            return sc.showAddParagraphAbove(e, par, options);
         });
 
         onClick(".pasteBottom", function($this, e) {

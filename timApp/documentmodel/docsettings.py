@@ -51,29 +51,30 @@ class DocSettings:
                 par = par.get_referenced_pars(set_html=False, source_doc=par.doc)[0]
             except TimDbException as e:
                 # Invalid reference, ignore for now
-                return DocSettings()
+                return DocSettings(par.doc)
         if par.is_setting():
             yaml_vals = cls.parse_values(par)
             if not isinstance(yaml_vals, dict):
                 #raise ValueError("DocSettings yaml parse error: " + yaml_vals)
                 print("DocSettings yaml parse error: " + str(yaml_vals))
-                return DocSettings()
+                return DocSettings(par.doc)
             else:
-                return DocSettings(settings_dict=yaml_vals)
+                return DocSettings(par.doc, settings_dict=yaml_vals)
         else:
-            return DocSettings()
+            return DocSettings(par.doc)
 
     @staticmethod
     def parse_values(par):
         md = par.get_markdown().replace('```', '').replace('~~~', '')
         return parse_yaml(md)
 
-    def __init__(self, settings_dict: Optional[dict] = None):
+    def __init__(self, doc: 'Document', settings_dict: Optional[dict] = None):
+        self.doc = doc
         self.__dict = settings_dict if settings_dict else {}
 
-    def to_paragraph(self, doc) -> DocParagraph:
+    def to_paragraph(self) -> DocParagraph:
         text = '```\n' + yaml.dump(self.__dict, default_flow_style=False) + '\n```'
-        return DocParagraph.create(doc, md=text, attrs={"settings": ""})
+        return DocParagraph.create(self.doc, md=text, attrs={"settings": ""})
 
     def get_dict(self) -> dict:
         return self.__dict
@@ -87,7 +88,7 @@ class DocSettings:
     def get_macroinfo(self, user=None, key=None) -> MacroInfo:
         if not key:
             key=self.macros_key
-        return MacroInfo(macro_map=self.__dict.get(key, {}),
+        return MacroInfo(self.doc, macro_map=self.__dict.get(key, {}),
                          macro_delimiter=self.get_macro_delimiter(),
                          user=user)
 

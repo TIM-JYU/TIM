@@ -113,6 +113,7 @@ class DocumentPrinter:
         # Remove paragraphs that are not to be printed and replace plugin pars,
         # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
         pars = self._doc_entry.document.get_paragraphs()
+        pars = dereference_pars(pars, source_doc=self._doc_entry.document.get_original_document())
         pars_to_print = []
         texplain = self._doc_entry.document.get_settings().is_texplain()
         for par in pars:
@@ -165,7 +166,8 @@ class DocumentPrinter:
                                        output_format=PluginOutputFormat.MD,
                                        wrap_in_div=False,
                                        user_print=plugins_user_print,
-                                       target_format=tformat)
+                                       target_format=tformat,
+                                       dereference=False)
 
         export_pars = []
 

@@ -5,6 +5,7 @@ import time
 import timApp.dumboclient
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings
+from timApp.documentmodel.document import Document
 from timApp.markdownconverter import md_to_html, par_list_to_html_list
 
 
@@ -33,7 +34,7 @@ class MarkdownConverterTest(unittest.TestCase):
 
         self.assertListEqual([html for html, _ in cases],
                              par_list_to_html_list([DocParagraph.create(None, md=md) for _, md in cases],
-                                                   settings=DocSettings()))
+                                                   settings=DocSettings(Document())))
 
         macrotests = [('<p>hello world!</p>',
                        'hello %%somemacro%%!',

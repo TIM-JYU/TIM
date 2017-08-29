@@ -189,7 +189,7 @@ class TimTest(TimRouteTest):
         self.login_test1()
         timdb = self.get_db()
         d = self.create_doc(initial_par=r"""
-Username is %%username%% and real name is %%realname%%
+Username is %%username%% and real name is %%realname%% and email is %%useremail%%
 
 #-
 Percents: \%\%
@@ -204,7 +204,7 @@ header: %%username%% and %%realname%%
         grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), d.id)
 
         pars = self.get('/view/{}'.format(d.id), as_tree=True).cssselect('.parContent')
-        self.assertEqual('Username is testuser1 and real name is Test user 1',
+        self.assertEqual('Username is testuser1 and real name is Test user 1 and email is test1@example.com',
                          pars[0].text_content().strip())
         self.assertEqual('Percents: %%',
                          pars[1].text_content().strip())
@@ -213,7 +213,7 @@ header: %%username%% and %%realname%%
         p = Plugin.from_task_id('{}.test'.format(d.id), User.query.get(TEST_USER_1_ID))
         self.assertEqual('testuser1 and Test user 1', p.values['header'])
         self.login_test2()
-        self.assertEqual('Username is testuser2 and real name is Test user 2',
+        self.assertEqual('Username is testuser2 and real name is Test user 2 and email is test2@example.com',
                          self.get('/view/{}'.format(d.id), as_tree=True).cssselect('.parContent')[
                              0].text_content().strip())
         p = Plugin.from_task_id('{}.test'.format(d.id), User.query.get(TEST_USER_2_ID))

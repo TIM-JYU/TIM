@@ -95,17 +95,19 @@
     {% endif %}
 
     {% if teacher_mode %}
-        <div  save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed resize="true"  click="true"  caption="Users with answers ({{ plugin_users|length }})">
-           <div ng-controller="UserListController" class="userlist draggable-content" >
-            {% if plugin_users %}
-                {% raw %}
-                <div ui-grid="gridOptions" ui-grid-selection ui-grid-exporter ui-grid-auto-resize ui-grid-cellNav class="grid"></div>
-                <!-- <div ui-grid="gridOptions" ui-grid-selection ui-grid-exporter  class="grid"></div> -->
-                {% endraw %}
-            {% else %}
-                No answerers.
-            {% endif %}
-           </div>
+        <div save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed resize="true" click="true"
+             caption="Users with answers ({{ plugin_users|length }})">
+            <div ng-controller="UserListController" class="userlist draggable-content">
+                {% if plugin_users %}
+                    {% raw %}
+                    <div ui-grid="gridOptions" ui-grid-selection ui-grid-exporter ui-grid-auto-resize ui-grid-cellNav
+                         class="grid"></div>
+                    <!-- <div ui-grid="gridOptions" ui-grid-selection ui-grid-exporter  class="grid"></div> -->
+                    {% endraw %}
+                {% else %}
+                    No answerers.
+                {% endif %}
+            </div>
         </div>
     {% endif %}
 {% endblock %}
@@ -114,7 +116,7 @@
     <form name="ignore_me">
         <input type="text" id="page_is_dirty" name="page_is_dirty" value="0" style="display: none;"/>
     </form>
-    <div class="paragraphs" ng-click="setNotePadge($event)" >
+    <div class="paragraphs" ng-click="setNotePadge($event)">
         <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="showRefresh">
             <p>The page has been modified since the last reload. Refresh now?</p>
             <button class="timButton" ng-click="reload()">Refresh</button>
@@ -134,8 +136,8 @@
                 Total points: {{ task_info.total_points }}
                     {%- if task_info.groups %}
                         ({%- for k, v in task_info.groups.items() -%}
-                            {{ k }}: {{ v.total_sum }}{% if not loop.last %}, {% endif %}
-                        {%- endfor -%})
+                        {{ k }}: {{ v.total_sum }}{% if not loop.last %}, {% endif %}
+                    {%- endfor -%})
                     {%- endif -%},
                 total tasks: {{ task_info.tasks_done }} / {{ task_info.total_tasks }}
                 </span>
@@ -154,7 +156,10 @@
                     {% include 'partials/paragraphs.html' %}
                     <div class="addBottomContainer hidden-print" ng-show="item.rights.editable"
                          ng-class="{'height-35': editing}">
-                        <button class="addBottom timButton">Add paragraph</button>
+                        {% set btntext = doc_settings_dict.get('add_par_button_text', 'Add paragraph') %}
+                        {% if btntext %}
+                            <button class="addBottom timButton">{{ btntext }}</button>
+                        {% endif %}
                     </div>
                 </div>
                 {% if velp_mode or teacher_mode %}

@@ -49,6 +49,9 @@ interface IParEditorScope {
     oldmeta: HTMLMetaElement;
     options: {
         localSaveTag: string,
+        texts: {
+            initialText: string;
+        },
         showDelete: boolean,
         destroyAfterSave: boolean,
         touchDevice: boolean,
@@ -119,6 +122,7 @@ interface IParEditorScope {
     indexClicked(): void;
     insertClicked(): void;
     insertTemplate(text: string): void;
+    setPosition(pos: number): void;
     leftClicked(): void;
     linkClicked(descDefault: string, linkDefault: string, isImage: boolean): void;
     listClicked(): void;
@@ -304,7 +308,23 @@ timApp.directive("pareditor", [
                 $scope.dataLoaded = false; // allow load in first time what ever editor
 
                 $scope.setInitialText = function() {
-                    if ($scope.dataLoaded || !$scope.initialTextUrl) {
+                    if ($scope.dataLoaded) return;
+                    if ( !$scope.initialTextUrl ) {
+                        var initialText = "";
+                        if ( $scope.options.texts ) initialText = $scope.options.texts.initialText;
+                        if ( initialText ) {
+                            var pos = initialText.indexOf("⁞");
+                            if ( pos >= 0 ) initialText = initialText.replace("⁞", ""); // cursor pos
+                            $scope.setEditorText(initialText);
+                            $scope.initialText = initialText;
+                            angular.extend($scope.extraData, {});
+                            $scope.editorChanged();
+                            $scope.aceReady();
+                            $timeout(function() {
+                                if ( pos >= 0 ) $scope.setPosition(pos);
+                            }, 10);
+                        }
+                        $scope.dataLoaded = true;
                         return;
                     }
                     $scope.setEditorText("Loading text...");
@@ -542,6 +562,7 @@ timApp.directive("pareditor", [
                         return $scope.editor.getSession().getValue();
                     };
                     $scope.setEditorText = function(text) {
+                        if ( !text ) return;
                         $scope.editor.getSession().setValue(text);
                     };
                 };
@@ -1313,6 +1334,12 @@ timApp.directive("pareditor", [
                         $scope.scrollToCaret();
                     };
 
+                    $scope.setPosition = function(pos) {
+                        const editor = $scope.editor.get(0);
+                        editor.selectionStart = editor.selectionEnd = pos;
+                        $scope.scrollToCaret();
+                    }
+
                     $scope.rightClicked = function() {
                         const editor = $scope.editor.get(0);
                         editor.selectionStart = editor.selectionEnd += 1;
@@ -1676,6 +1703,12 @@ timApp.directive("pareditor", [
                             });
                         }
                     };
+
+                    $scope.setPosition = function(pos) {
+                        var range = $scope.editor.session.doc.indexToPosition(pos)
+                        $scope.editor.moveCursorTo(range.row, range.column); // TODO: find a way to move to postion
+                        $scope.gotoCursor();
+                    }
 
                     $scope.leftClicked = function() {
                         $scope.editor.navigateLeft(1);

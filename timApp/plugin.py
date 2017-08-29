@@ -158,6 +158,8 @@ class Plugin:
     def points_rule(self):
         if self.points_rule_cache is None:
             self.points_rule_cache = get_value(self.values, self.points_rule_key, {})
+            if not isinstance(self.points_rule_cache, dict):
+                self.points_rule_cache = {}
         return self.points_rule_cache
 
     def max_points(self, default=None):
