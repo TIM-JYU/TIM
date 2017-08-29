@@ -153,7 +153,7 @@ class Document:
             for p in i:
                 first_par = p
                 break
-        new_par = DocSettings(settings).to_paragraph(self)
+        new_par = DocSettings(self, settings).to_paragraph()
         if first_par is None:
             self.add_paragraph_obj(new_par)
         else:
@@ -169,12 +169,12 @@ class Document:
 
     def get_settings(self) -> DocSettings:
         if self.par_cache is not None:
-            return DocSettings.from_paragraph(self.par_cache[0]) if len(self.par_cache) > 0 else DocSettings()
+            return DocSettings.from_paragraph(self.par_cache[0]) if len(self.par_cache) > 0 else DocSettings(self)
         try:
             i = self.__iter__()
             return DocSettings.from_paragraph(next(i))
         except StopIteration:
-            return DocSettings()
+            return DocSettings(self)
         finally:
             i.close()
 

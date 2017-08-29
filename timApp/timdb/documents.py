@@ -78,9 +78,9 @@ class Documents(TimDbBase):
         for par in original_doc:
             if first_par:
                 first_par = False
-                settings = DocSettings.from_paragraph(par) if par.is_setting() else DocSettings()
+                settings = DocSettings.from_paragraph(par) if par.is_setting() else DocSettings(doc)
                 settings.set_source_document(original_doc.doc_id)
-                doc.add_paragraph_obj(settings.to_paragraph(doc))
+                doc.add_paragraph_obj(settings.to_paragraph())
                 if par.is_setting():
                     continue
 

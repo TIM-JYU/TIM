@@ -4,7 +4,7 @@ from copy import deepcopy
 
 if False:
     from timApp.timdb.models.user import User
-
+    from timApp.documentmodel.document import Document
 
 class MacroInfo:
     """Represents information required for expanding macros in a DocParagraph.
@@ -16,11 +16,14 @@ class MacroInfo:
      (instead of replacing them with empty values).
     """
 
-    def __init__(self,
+    def __init__(self, doc: Optional['Document'],
                  macro_map: Optional[Dict[str, object]] = None,
                  macro_delimiter: Optional[str] = None,
                  user: Optional['User'] = None):
+        self.doc = doc
         self.macro_map: Dict[str, object] = macro_map or {}
+        if doc is not None:
+            self.macro_map.update({'docid': doc.doc_id})
         self.macro_delimiter = macro_delimiter or '%%'
         self._user = user
         self.preserve_user_macros = False
