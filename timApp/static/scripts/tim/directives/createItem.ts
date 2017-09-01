@@ -20,6 +20,8 @@ timApp.directive("createItem", [function() {
             itemLocation: "@?",
             fullPath: "@?",
             params: "=?", // any additional parameters to be sent to server
+            force: "=?",
+            template: "@?",
         },
         templateUrl: "/static/templates/createItem.html",
         link($scope, $element) {
@@ -29,7 +31,7 @@ timApp.directive("createItem", [function() {
         controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
             const sc = $scope;
 
-            sc.automaticShortName = true;
+            sc.automaticShortName = !sc.force;
 
             if (sc.fullPath) {
                 const str = sc.fullPath;
@@ -38,6 +40,10 @@ timApp.directive("createItem", [function() {
             }
             if (sc.itemTitle) {
                 sc.itemName = slugify(sc.itemTitle);
+            }
+            if (sc.template) {
+                sc.params = sc.params || {};
+                sc.params.template = sc.template;
             }
 
             sc.alerts = [];
