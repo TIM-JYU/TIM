@@ -309,7 +309,7 @@ timApp.controller("ViewCtrl", [
                 $timeout(function() {
                     document.rebuildSections();
                 }, 1000);
-            }, 1000 * sc.liveUpdates);
+            }, Math.max(1000 * sc.liveUpdates, 10000));
         }
 
         try {

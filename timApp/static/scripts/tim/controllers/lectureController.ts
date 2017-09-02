@@ -1059,7 +1059,7 @@ timApp.controller("LectureController", ["$scope",
                             // Odottaa sekunnin ennen kuin pollaa uudestaan.
                             timeout = setTimeout(function() {
                                 message_longPolling(answer.lastid);
-                            }, 2000);
+                            }, 4000);
 
                             if (answer.status === "results") {
                                 let newMessages = 0;

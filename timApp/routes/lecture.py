@@ -193,6 +193,7 @@ def get_updates():
     lecture = timdb.lectures.get_lecture(lecture_id)
 
     lecture_ending = 100
+    poll_time = 5000;
 
     # Jos poistaa tämän while loopin, muuttuu long pollista perinteiseksi polliksi
     while step <= 10:
@@ -222,7 +223,7 @@ def get_updates():
         if current_question_id:
             resp = {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
                     "lectureId": lecture_id, "question": True, "isLecture": True, "lecturers": lecturers,
-                    "students": students, "lectureEnding": lecture_ending, "new_end_time": None}
+                    "students": students, "lectureEnding": lecture_ending, "new_end_time": None, "pollTime": poll_time}
 
             question = tempdb.runningquestions.get_running_question_by_id(current_question_id)
             already_answered = tempdb.usersanswered.has_user_info(current_question_id, current_user)
@@ -240,7 +241,7 @@ def get_updates():
         if current_points_id:
             resp = {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
                     "lectureId": lecture_id, "question": True, "isLecture": True, "lecturers": lecturers,
-                    "students": students, "lectureEnding": lecture_ending, "points_closed": True}
+                    "students": students, "lectureEnding": lecture_ending, "points_closed": True, "pollTime": poll_time}
             already_closed = tempdb.pointsclosed.has_user_info(current_points_id, current_user)
             if already_closed:
                 return json_response(resp)
@@ -252,7 +253,7 @@ def get_updates():
                 lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                 resp = {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
                         "lectureId": lecture_id, "isLecture": True, "lecturers": lecturers,
-                        "students": students, "lectureEnding": lecture_ending}
+                        "students": students, "lectureEnding": lecture_ending, "pollTime": poll_time}
                 resp.update(new_question)
                 return json_response(resp)
 
@@ -263,7 +264,7 @@ def get_updates():
             return json_response(
                 {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
                  "lectureId": lecture_id, "isLecture": True, "lecturers": lecturers, "students": students,
-                 "lectureEnding": lecture_ending})
+                 "lectureEnding": lecture_ending, "pollTime": poll_time})
 
         if current_app.config['TESTING']:
             # Don't loop when testing
@@ -278,9 +279,9 @@ def get_updates():
     if lecture_ending != 100 or len(lecturers) or len(students):
         return json_response(
             {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id,
-             "isLecture": True, "lecturers": lecturers, "students": students, "lectureEnding": lecture_ending})
+             "isLecture": True, "lecturers": lecturers, "students": students, "lectureEnding": lecture_ending, "pollTime": poll_time})
 
-    return json_response({"isLecture": -1})  # no new updates
+    return json_response({"isLecture": -1, "pollTime": poll_time})  # no new updates
 
 
 @lecture_routes.route('/getQuestionManually')

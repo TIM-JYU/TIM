@@ -422,6 +422,8 @@ def should_hide_links(settings: DocSettings, rights: dict):
 
 @view_page.route('/getParDiff/<int:doc_id>/<int:major>/<int:minor>')
 def check_updated_pars(doc_id, major, minor):
+    # return json_response({'diff': None,
+    #                       'version': None})
     verify_view_access(doc_id)
     d = Document(doc_id)
     diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, check_html=True))  # TODO cache this

@@ -6,7 +6,7 @@ timing_last = time.clock()
 
 
 def taketime(s1="", s2="", n=0):
-    return  # comment this to take times, uncomment for production and tests
+    # return  # comment this to take times, uncomment for production and tests
     global timing_last
     t22 = time.clock()
     print("%-15s %-10s %6d - %7.4f" % (s1, s2, n, (t22 - timing_last)))
