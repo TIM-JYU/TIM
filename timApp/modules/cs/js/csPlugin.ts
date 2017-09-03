@@ -1490,14 +1490,11 @@ csApp.Controller = function($scope,$transclude) {
         $scope.uploadresult = $sce.trustAsHtml(html);
         return;
     }
-    
-
-
 
     $scope.checkWrap = function() {
         var r = wrapText($scope.usercode, $scope.wrap.n);
-        if ( r.modified ) {
-            if ( $scope.editorIndex === 0) {
+        if (r.modified) {
+            if ($scope.editorIndex === 0) {
                 var start = $scope.edit.selectionStart;
 
                 $scope.usercode = r.s;
@@ -1506,7 +1503,7 @@ csApp.Controller = function($scope,$transclude) {
                     $scope.edit.selectionEnd = start;
                 });
             }
-            if ( $scope.editorIndex === 1) { // ACE
+            if ($scope.editorIndex === 1) { // ACE
                 var editor = $scope.aceEditor;
                 var cursor = editor.selection.getCursor();
                 var index = editor.session.doc.positionToIndex(cursor, 0);

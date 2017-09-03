@@ -424,11 +424,24 @@ def should_hide_links(settings: DocSettings, rights: dict):
 def check_updated_pars(doc_id, major, minor):
     # return json_response({'diff': None,
     #                       'version': None})
+    # taketime("before verify")
     verify_view_access(doc_id)
+    # taketime("before liveupdates")
     d = Document(doc_id)
-    diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, check_html=True))  # TODO cache this
-    rights = get_rights(d.doc_id)
-    for diff in diffs:
+    settings = d.get_settings()
+    live_updates = settings.live_updates()  # this cost 1-3 ms.
+    global_live_updates = 2  # TODO: take this from somewhere that it is possible to admind to change it by a roote
+
+    if 0 < live_updates < global_live_updates:
+        live_updates = global_live_updates
+    if global_live_updates == 0:  # To stop all live updates
+         live_updates = 0
+    # taketime("after liveupdates")
+    diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, check_html=True))  # TODO cache this, about <5 ms
+    # taketime("after diffs")
+    rights = get_rights(d.doc_id)  # about 30-40 ms # TODO: this is the slowest part
+    # taketime("after rights")
+    for diff in diffs: # about < 1 ms
         if diff.get('content'):
             pars, js_paths, css_paths, modules = post_process_pars(d,
                                                                    diff['content'],
@@ -441,8 +454,10 @@ def check_updated_pars(doc_id, major, minor):
                                'js': js_paths,
                                'css': css_paths,
                                'angularModule': modules}
+    # taketime("after for diffs")
     return json_response({'diff': diffs,
-                         'version': d.get_version()})
+                          'version': d.get_version(),
+                          'live': live_updates})
 
 
 def get_templates_for_folder(folder: Folder) -> List[DocEntry]:

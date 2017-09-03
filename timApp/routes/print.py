@@ -48,6 +48,11 @@ def pull_doc_path(endpoint, values):
             abort(404)
 
 
+@print_blueprint.route("/ping", methods=['GET'])
+def print_ping():
+    return json.dumps({'ping': 'ok'});
+
+
 @print_blueprint.route("/<path:doc_path>", methods=['POST'])
 def print_document(doc_path):
 
@@ -203,7 +208,7 @@ def get_templates(doc_path):
 def get_hash(doc_path):
     doc = g.doc_entry
     user = g.user
-    template_doc = DocEntry.find_by_id(50)
+    template_doc = DocEntry.find_by_id(50)  # TODO: what 50???
 
     printer = DocumentPrinter(doc_entry=doc, template_to_use=template_doc)
     return printer.hash_doc_print(plugins_user_print=True)

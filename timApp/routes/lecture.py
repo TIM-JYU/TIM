@@ -20,11 +20,13 @@ from timApp.responsehelper import json_response, ok_response
 from timApp.routes.login import log_in_as_anonymous
 from timApp.routes.qst import get_question_data_from_document, delete_key, create_points_table, \
     calculate_points_from_json_answer, calculate_points
-from timApp.sessioninfo import get_current_user_id, logged_in
+from timApp.sessioninfo import get_current_user_id, logged_in, get_current_user_name
 from timApp.tim_app import app
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.tempdb_models import TempDb
 from timApp.timdb.tim_models import db, Message, LectureUsers, AskedQuestion, LectureAnswer, Lecture
+from random import randrange
+from timtiming import taketime
 
 lecture_routes = Blueprint('lecture',
                            __name__,
@@ -141,28 +143,36 @@ def get_all_messages(param_lecture_id=-1):
 
 @lecture_routes.route('/getUpdates')
 def get_updates():
+    # taketime("before update")
+    ret = do_get_updates(request)
+    # taketime("after update")
+    return ret
+
+
+def do_get_updates(request):
     """Gets updates from some lecture.
 
     Checks updates in 1 second frequently and answers if there is updates.
 
     """
-    if not request.args.get('client_message_id') or not request.args.get("lecture_id"):
+    # if not request.args.get('client_message_id') or not request.args.get("lecture_id"):
+    if not request.args.get('c') or not request.args.get("l"):
         abort(400, "Bad request")
-    client_last_id = int(request.args.get('client_message_id'))
+    client_last_id = int(request.args.get('c'))  # client_message_id'))
     current_question_id = None
     current_points_id = None
-    if 'current_question_id' in request.args:
-        current_question_id = int(request.args.get('current_question_id'))
-    if 'current_points_id' in request.args:
-        current_points_id = int(request.args.get('current_points_id'))
+    if 'i' in request.args:
+        current_question_id = int(request.args.get('i'))  # current_question_id'))
+    if 'p' in request.args:
+        current_points_id = int(request.args.get('p')) # current_points_id'))
 
-    use_wall = get_option(request, 'get_messages', False)
+    use_wall = get_option(request, 'm', False)  # 'get_messages'
     session['use_wall'] = use_wall
-    use_questions = get_option(request, 'get_questions', False)
+    use_questions = get_option(request, 'q', False) # 'get_questions'
     session['use_questions'] = use_questions
-    is_lecturer = get_option(request, 'is_lecturer', False)  # TODO: check from session
+    is_lecturer = get_option(request, 't', False)  # is_lecturer TODO: check from session
 
-    helper = request.args.get("lecture_id")
+    helper = request.args.get("l")  # lecture_id
     if len(helper) > 0:
         lecture_id = int(float(helper))
     else:
@@ -172,7 +182,7 @@ def get_updates():
     tempdb = get_tempdb()
     step = 0
 
-    doc_id = request.args.get("doc_id")
+    doc_id = request.args.get("d")  # "doc_id"
     if doc_id:
         doc_id = int(doc_id)
     if not check_if_lecture_is_running(lecture_id):
@@ -186,6 +196,7 @@ def get_updates():
     lecturers = []
     students = []
     current_user = get_current_user_id()
+    user_name = get_current_user_name()
 
     time_now = str(datetime.now(timezone.utc).strftime("%H:%M:%S"))
     tempdb.useractivity.update_or_add_activity(lecture_id, current_user, time_now)
@@ -193,13 +204,43 @@ def get_updates():
     lecture = timdb.lectures.get_lecture(lecture_id)
 
     lecture_ending = 100
-    poll_time = 5000;
+    options = lecture[0].get("options", {})
+    options = json.loads(options)
+    teacher_poll = options.get("teacher_poll", "")
+    teacher_poll = teacher_poll.split(";")
+    poll_interval_ms = 4000
+    long_poll = False
+    # noinspection PyBroadException
+    try:
+        poll_interval_ms = int(options.get("poll_interval", 4))*1000
+        long_poll = bool(options.get("long_poll", False))
+    except:
+        pass
+
+    # noinspection PyBroadException
+    try:
+        poll_interval_t_ms = int(options.get("poll_interval_t", 1))*1000
+        long_poll_t = bool(options.get("long_poll_t", False))
+    except:
+        pass
+
+    poll_interval_ms += randrange(-100,500)
+
+    if teacher_poll:
+        # noinspection PyBroadException
+        try:
+            if teacher_poll.index(user_name) >= 0:
+                poll_interval_ms = poll_interval_t_ms
+                long_poll = long_poll_t
+        except:
+            pass
 
     # Jos poistaa tämän while loopin, muuttuu long pollista perinteiseksi polliksi
     while step <= 10:
-        step = 11
         if is_lecturer:
             lecturers, students = get_lecture_users(timdb, tempdb, lecture_id)
+            poll_interval_ms = poll_interval_t_ms
+            long_poll = long_poll_t
         # Gets new messages if the wall is in use.
         if use_wall:
             last_message = timdb.messages.get_last_message(lecture_id)
@@ -222,8 +263,9 @@ def get_updates():
         # Return also questions new end time if it is extended
         if current_question_id:
             resp = {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                    "lectureId": lecture_id, "question": True, "isLecture": True, "lecturers": lecturers,
-                    "students": students, "lectureEnding": lecture_ending, "new_end_time": None, "pollTime": poll_time}
+                    "lectureId": lecture_id, "question": True, "e": True, "lecturers": lecturers, # e = isLecture
+                    "students": students, "lectureEnding": lecture_ending,
+                    "new_end_time": None, "ms": poll_interval_ms}
 
             question = tempdb.runningquestions.get_running_question_by_id(current_question_id)
             already_answered = tempdb.usersanswered.has_user_info(current_question_id, current_user)
@@ -240,8 +282,9 @@ def get_updates():
 
         if current_points_id:
             resp = {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                    "lectureId": lecture_id, "question": True, "isLecture": True, "lecturers": lecturers,
-                    "students": students, "lectureEnding": lecture_ending, "points_closed": True, "pollTime": poll_time}
+                    "lectureId": lecture_id, "question": True, "e": True, "lecturers": lecturers,  # e = isLecture
+                    "students": students, "lectureEnding": lecture_ending,
+                    "points_closed": True, "ms": poll_interval_ms}
             already_closed = tempdb.pointsclosed.has_user_info(current_points_id, current_user)
             if already_closed:
                 return json_response(resp)
@@ -252,8 +295,8 @@ def get_updates():
             if new_question is not None:
                 lecture_ending = check_if_lecture_is_ending(current_user, timdb, lecture_id)
                 resp = {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                        "lectureId": lecture_id, "isLecture": True, "lecturers": lecturers,
-                        "students": students, "lectureEnding": lecture_ending, "pollTime": poll_time}
+                        "lectureId": lecture_id, "e": True, "lecturers": lecturers,                # e = isLecture
+                        "students": students, "lectureEnding": lecture_ending, "ms": poll_interval_ms}
                 resp.update(new_question)
                 return json_response(resp)
 
@@ -263,14 +306,14 @@ def get_updates():
                 lecturers, students = get_lecture_users(timdb, tempdb, lecture_id)
             return json_response(
                 {"status": "results", "data": list_of_new_messages, "lastid": last_message_id,
-                 "lectureId": lecture_id, "isLecture": True, "lecturers": lecturers, "students": students,
-                 "lectureEnding": lecture_ending, "pollTime": poll_time})
+                 "lectureId": lecture_id, "e": True, "lecturers": lecturers, "students": students, # e = isLecture
+                 "lectureEnding": lecture_ending, "ms": poll_interval_ms})
 
-        if current_app.config['TESTING']:
+        if not long_poll or current_app.config['TESTING']:
             # Don't loop when testing
             break
-        # Myös tämä sleep kannattaa poistaa.
-        # time.sleep(1)
+        # For long poll wait 1 sek before new check.
+        time.sleep(1)
         step += 1
 
     if len(lecture) > 0 and lecture[0].get("lecturer") == current_user:
@@ -279,9 +322,10 @@ def get_updates():
     if lecture_ending != 100 or len(lecturers) or len(students):
         return json_response(
             {"status": "no-results", "data": ["No new messages"], "lastid": client_last_id, "lectureId": lecture_id,
-             "isLecture": True, "lecturers": lecturers, "students": students, "lectureEnding": lecture_ending, "pollTime": poll_time})
+             "e": True, "lecturers": lecturers, "students": students,                                # e = isLecture
+             "lectureEnding": lecture_ending, "ms": poll_interval_ms})
 
-    return json_response({"isLecture": -1, "pollTime": poll_time})  # no new updates
+    return json_response({"e": -1, "ms": poll_interval_ms})  # no new updates                        # e = isLecture
 
 
 @lecture_routes.route('/getQuestionManually')
@@ -467,9 +511,10 @@ def check_lecture():
             doc_name = DocEntry.find_by_id(lecture[0].get("doc_id")).path
 
             return json_response({"isInLecture": is_in_lecture, "lectureId": lecture_id, "lectureCode": lecture_code,
-                                 "isLecturer": is_lecturer, "startTime": lecture[0].get("start_time"),
-                                 "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students,
-                                 "useWall": use_wall, "useQuestions": use_question, "doc_name": doc_name})
+                                  "isLecturer": is_lecturer, "startTime": lecture[0].get("start_time"),
+                                  "endTime": lecture[0].get("end_time"), "lecturers": lecturers, "students": students,
+                                  "useWall": use_wall, "useQuestions": use_question, "doc_name": doc_name,
+                                  "options": lecture[0].get("options",{})})
         else:
             leave_lecture_function(lecture_id)
             timdb.lectures.delete_users_from_lecture(lecture_id)
@@ -496,9 +541,9 @@ def start_future_lecture():
     timdb.lectures.join_lecture(lecture.get("lecture_id"), get_current_user_id(), True)
     students, lecturers = get_lecture_users(timdb, tempdb, lecture.get("lecture_id"))
     return json_response({"isLecturer": True, "lectureCode": lecture_code, "startTime": lecture.get("start_time"),
-                         "endTime": lecture.get("end_time"), "lectureId": lecture.get("lecture_id"),
-                         "students": students,
-                         "lecturers": lecturers})
+                          "endTime": lecture.get("end_time"), "lectureId": lecture.get("lecture_id"),
+                          "students": students,
+                          "lecturers": lecturers})
 
 
 @lecture_routes.route('/getAllLecturesFromDocument', methods=['GET'])
@@ -567,7 +612,7 @@ def show_lecture_info_given_name():
 
     response = {"docId": lecture.get("doc_id"), "lectureId": lecture.get("lecture_id"),
                 "lectureCode": lecture.get("lecture_code"), "lectureStartTime": lecture.get("start_time"),
-                "lectureEndTime": lecture.get("end_time")}
+                "lectureEndTime": lecture.get("end_time"), "options": lecture.get("options",{})}
     if lecturer == current_user:
         response["password"] = lecture.get("password")
 
@@ -652,8 +697,8 @@ def get_running_lectures(doc_id=None):
 @lecture_routes.route('/createLecture', methods=['POST'])
 def create_lecture():
     # TODO: Check right to create lecture
-    if not request.args.get("doc_id") or not request.args.get("start_date") or not request.args.get(
-            "end_date") or not request.args.get("lecture_code"):
+    if not request.args.get("doc_id") or not request.args.get("start_date") or \
+            not request.args.get("end_date") or not request.args.get("lecture_code"):
         abort(400, "Missing parameters")
     lecture_id = -1
     if request.args.get("lecture_id"):
@@ -665,14 +710,8 @@ def create_lecture():
     end_time = request.args.get("end_date")
     lecture_code = request.args.get("lecture_code")
     password = request.args.get("password")
-    if 'max_students' in request.args:
-        max_students = request.args.get('max_students')
-    else:
-        max_students = ''
-
-    options = {}
-    if max_students != "":
-        options['max_students'] = max_students
+    options = request.args.get("options", "{}")
+    # options = json.loads(options)
 
     if not password:
         password = ""
@@ -680,7 +719,7 @@ def create_lecture():
     if not timdb.lectures.check_if_correct_name(doc_id, lecture_code, lecture_id):
         abort(400, "Can't create two or more lectures with the same name to the same document.")
 
-    options = json.dumps(options)
+    # options = json.dumps(options)
     if lecture_id < 0:
         lecture_id = timdb.lectures.create_lecture(doc_id, current_user, start_time, end_time, lecture_code, password,
                                                    options, True)

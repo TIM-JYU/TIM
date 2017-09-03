@@ -53,10 +53,13 @@ def get_option(req: Request, name: str, default, cast=None):
     result = req.args[name]
     lresult = result.lower()
     if isinstance(default, bool):
-        if lresult == "false":
+        if len(lresult) == 0:
+            return default
+        if "f0".find(lresult[0]) >= 0:
             return False
-        if lresult == "true":
+        if "t1".find(lresult[0]) >= 0:
             return True
+        return True
     if isinstance(default, int):
         try:
             return int(lresult)
