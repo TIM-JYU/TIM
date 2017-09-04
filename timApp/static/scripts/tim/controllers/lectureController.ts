@@ -27,6 +27,27 @@ timApp.controller("LectureController", ["$scope",
 
     function($scope) {
         "use strict";
+        $scope.clearMessages = function() {
+            $scope.wallMessages = [];
+            $scope.wallKeys = {};
+        }
+
+        $scope.pushMessage = function(msg) {
+            let str = msg.sender + msg.time + msg.message;
+            if ( $scope.wallKeys[str] ) return false;
+            $scope.wallKeys[str] = true;
+            $scope.wallMessages.push(msg);
+            return true;
+        }
+
+        $scope.messageToString = function(msg) {
+            var ret = ''
+            if ($scope.messageName)  ret += msg.sender + " ";
+            if ($scope.messageTime)  ret += "<" + msg.time + ">: ";
+            ret += msg.message + "\n";
+           return ret;
+        }
+
         $scope.docNamePath = "";
         $scope.lectureStartTime = moment();
         $scope.lectureEndTime = moment();
@@ -70,7 +91,7 @@ timApp.controller("LectureController", ["$scope",
         $scope.lectureEnded = false;
         $scope.showLectureForm = false;
         $scope.showLectureOptions = false;
-        $scope.wallMessages = [];
+        $scope.clearMessages();
         $scope.questionTitle = "";
         $scope.clockOffset = 0;
         $scope.current_question_id = false;
@@ -489,33 +510,9 @@ timApp.controller("LectureController", ["$scope",
          */
         $scope.showInfo = function() {
             $scope.msg = "";
-            let i = 0;
-            if ($scope.messageName && $scope.messageTime) {
-                for (i = 0; i < $scope.wallMessages.length; i++) {
-                    $scope.msg += $scope.wallMessages[i].sender;
-                    $scope.msg += " <" + $scope.wallMessages[i].time + ">: ";
-                    $scope.msg += $scope.wallMessages[i].message + "\r\n";
-                }
-            }
-
-            if (!$scope.messageName && $scope.messageTime) {
-                for (i = 0; i < $scope.wallMessages.length; i++) {
-                    $scope.msg += " <" + $scope.wallMessages[i].time + ">: ";
-                    $scope.msg += $scope.wallMessages[i].message + "\r\n";
-                }
-            }
-
-            if ($scope.messageName && !$scope.messageTime) {
-                for (i = 0; i < $scope.wallMessages.length; i++) {
-                    $scope.msg += $scope.wallMessages[i].sender + ": ";
-                    $scope.msg += $scope.wallMessages[i].message + "\r\n";
-                }
-            }
-
-            if (!$scope.messageName && !$scope.messageTime) {
-                for (i = 0; i < $scope.wallMessages.length; i++) {
-                    $scope.msg += ">" + $scope.wallMessages[i].message + "\r\n";
-                }
+            let wm = $scope.wallMessages;
+            for (let i = 0; i < wm.length; i++) {
+                $scope.msg += $scope.messageToString(wm[i]);
             }
         };
 
@@ -679,7 +676,8 @@ timApp.controller("LectureController", ["$scope",
                 $scope.canStop = false;
             }
             $scope.lectureSettings.inLecture = false;
-            $scope.wallMessages = [];
+            $scope.clearMessages();
+            $scope.wallKeys = {};
             $scope.polling = false;
             $scope.lectureId = -1;
             $scope.lectureName = "Not running";
@@ -760,7 +758,7 @@ timApp.controller("LectureController", ["$scope",
             if ($scope.lectureId >= 0) {
                 params = {lecture_id: $scope.lectureId};
             }
-            $http<{lectureId, lectureCode, lectureStartTime, lectureEndTime, password}>({
+            $http<{lectureId, lectureCode, lectureStartTime, lectureEndTime, password, options}>({
                 url: "/showLectureInfoGivenName",
                 method: "GET",
                 params,
@@ -773,6 +771,7 @@ timApp.controller("LectureController", ["$scope",
                         start_date: moment(lecture.lectureStartTime),
                         end_date: moment(lecture.lectureEndTime),
                         password: lecture.password || "",
+                        options: lecture.options,
                         editMode: true,
                     });
                     $scope.showLectureForm = true;
@@ -884,11 +883,18 @@ timApp.controller("LectureController", ["$scope",
                     const wallArea = $("#wallArea");
                     wallArea.animate({scrollTop: wallArea[0].scrollHeight * 10}, 1000);
 
+                    $window.clearTimeout($scope.timeout);
+                    $scope.polling = true;
+                    $scope.pollingStopped = false;
+                    $scope.startLongPolling($scope.lastID);
+
                 }, function() {
                     $window.console.log("Can't send message or something");
                 });
 
         };
+
+
 
         /**
          * Sends http request to get all the messages from the current lecture.
@@ -904,15 +910,8 @@ timApp.controller("LectureController", ["$scope",
                 .then(function(response) {
                     const answer = response.data;
                     angular.forEach(answer.data, function(msg) {
-                        $scope.wallMessages.push(msg);
-                        if ($scope.messageName) {
-                            $scope.msg += msg.sender + " ";
-                        }
-                        if ($scope.messageTime) {
-                            $scope.msg += "<" + msg.time + ">: ";
-                        }
-
-                        $scope.msg += msg.message + "\n";
+                        $scope.pushMessage(msg);
+                        $scope.msg += $scope.messageToString(msg);
                     });
 
                     //TODO: Fix this to scroll bottom without cheating.
@@ -965,6 +964,7 @@ timApp.controller("LectureController", ["$scope",
                 });
         };
 
+         $scope.timeout = null;
         /**
          * Starts long polling for the updates.(messages, questions, lecture ending)
          * @param lastID Last id which was received.
@@ -974,7 +974,7 @@ timApp.controller("LectureController", ["$scope",
             // $scope.newMsg = "Alku";
             function message_longPolling(lastID) {
                 // $scope.newMsg = "Lähti";
-                let timeout;
+                $window.clearTimeout($scope.timeout);
 
                 if (!lastID) {
                     lastID = -1;
@@ -984,33 +984,42 @@ timApp.controller("LectureController", ["$scope",
                     return;
                 }
                 $scope.requestOnTheWay = true;
+                var buster = (""+new Date().getTime())
+                buster =buster.substring(buster.length-4)
                 $http<{
-                    isLecture, lectureId, lectureEnding, students,
-                    lecturers, new_end_time, points_closed, question, result, askedId, status, data, lastid
+                    e, lectureId, lectureEnding, students,  // # e = isLecture
+                    lecturers, new_end_time, points_closed, question, result, askedId, status, data,
+                    lastid, ms
                 }>({
                     url: "/getUpdates",
                     method: "GET",
-                    params: {
-                        client_message_id: lastID,
-                        lecture_id: $scope.lectureId,
-                        doc_id: $scope.docId,
-                        is_lecturer: $scope.isLecturer, // Tarkista mielummin serverin päässä
-                        get_messages: $scope.lectureSettings.useWall,
-                        get_questions: $scope.lectureSettings.useQuestions,
-                        current_question_id: $scope.current_question_id || null,
-                        current_points_id: $scope.current_points_id || null,
-                        buster: new Date().getTime(),
+                    params: { // shorten params because this is hevily used
+                        c: lastID,   //  client_message_id
+                        l: $scope.lectureId, // lecture_id
+                        d: $scope.docId, // doc_id
+                        t: $scope.isLecturer ? 't' : null, // is_lecturer, Tarkista mielummin serverin päässä
+                        m: $scope.lectureSettings.useWall ? 't' : null, // get_messages
+                        q: $scope.lectureSettings.useQuestions ? 't' : null, // get_questions
+                        i: $scope.current_question_id || null, // current_question_id
+                        p: $scope.current_points_id || null, // current_points_id
+                        b: buster,
                     },
                 })
                     .then(function(response) {
+                        $window.clearTimeout($scope.timeout);
                         const answer = response.data;
                         // $scope.newMsg = "Täällä";
                         $scope.requestOnTheWay = false;
-                        if (!answer.isLecture) {
+                        var isLecture = answer.e
+                        var poll_interval_ms = answer.ms;
+                        if (!isLecture) {
                             $scope.showBasicView(answer);
                             return;
                         }
-                        if (answer.isLecture != -1) {
+
+                        if (isLecture === -1) { // now new updates
+                            answer.lastid = lastID;
+                        } else {  // new updates
                             $scope.pollingLectures.splice($scope.pollingLectures.indexOf(answer.lectureId), 1);
                             if (answer.lectureId !== $scope.lectureId) {
                                 return;
@@ -1048,46 +1057,19 @@ timApp.controller("LectureController", ["$scope",
                                     $scope.showQuestion(answer);
                                 }
                             }
-                        } else { // now new updates
-                            answer.lastid = lastID;
                         }
 
-                        $window.clearTimeout(timeout);
                         if ($scope.polling) {
 
-                            $scope.pollingLectures.push($scope.lectureId);
-                            // Odottaa sekunnin ennen kuin pollaa uudestaan.
-                            timeout = setTimeout(function() {
-                                message_longPolling(answer.lastid);
-                            }, 2000);
+                            if ( $scope.pollingLectures.indexOf($scope.lectureId) < 0)
+                                $scope.pollingLectures.push($scope.lectureId);
 
                             if (answer.status === "results") {
                                 let newMessages = 0;
                                 angular.forEach(answer.data, function(msg) {
+                                    if ( !$scope.pushMessage(msg) ) return;
                                     newMessages++;
-                                    $scope.wallMessages.push(msg);
-                                    if ($scope.messageName && $scope.messageTime) {
-                                        $scope.msg += msg.sender;
-                                        $scope.msg += " <" + msg.time + ">: ";
-                                        $scope.msg += msg.message + "\r\n";
-                                    }
-
-                                    if (!$scope.messageName && $scope.messageTime) {
-                                        $scope.msg += " <" + msg.time + ">: ";
-                                        $scope.msg += msg.message + "\r\n";
-
-                                    }
-
-                                    if ($scope.messageName && !$scope.messageTime) {
-                                        $scope.msg += msg.sender + ": ";
-                                        $scope.msg += msg.message + "\r\n";
-
-                                    }
-
-                                    if (!$scope.messageName && !$scope.messageTime) {
-                                        $scope.msg += ">" + msg.message + "\r\n";
-
-                                    }
+                                    $scope.msg += $scope.messageToString(msg);
                                 });
                                 $scope.newMessagesAmount += newMessages;
                                 if ($scope.lectureSettings.wallMinimized) {
@@ -1101,8 +1083,14 @@ timApp.controller("LectureController", ["$scope",
                                 wallArea.scrollTop(wallArea[0].scrollHeight);
                             } else {
                                 $window.console.log("Sending new poll.");
+                           }
+                            // Odottaa pyydetyn ajan ennen kuin pollaa uudestaan.
+                            var pollInterval = parseInt(poll_interval_ms);
+                            if ( isNaN(pollInterval) || pollInterval < 1000 ) pollInterval = 4000;
+                            $scope.timeout = setTimeout(function() {
+                                message_longPolling(answer.lastid);
+                            }, pollInterval);
 
-                            }
                         } else {
                             $scope.pollingStopped = true;
                             $window.console.log("Got answer but not polling anymore.");
@@ -1110,13 +1098,13 @@ timApp.controller("LectureController", ["$scope",
                     }, function() {
                         // $scope.newMsg = "Virhe";
                         $scope.requestOnTheWay = false;
-                        $window.clearTimeout(timeout);
+                        $window.clearTimeout($scope.timeout);
                         //Odottaa 30s ennen kuin yrittää uudelleen errorin jälkeen.
-                        timeout = setTimeout(function() {
+                        $scope.timeout = setTimeout(function() {
                             message_longPolling($scope.lastID);
                         }, 30000);
                     });
-            }
+            } // message_longPolling
 
             message_longPolling(lastID);
         };
@@ -1172,9 +1160,9 @@ timApp.controller("LectureController", ["$scope",
                 .then(function(response) {
                     const answer = response.data;
                     if (!answer) {
-                        showDialog("No running questions.");
+                        // showDialog("No running questions."); // TODO:  show this in sidemenu
                     } else if (answer.already_answered) {
-                        showDialog("You have already answered to the current question.");
+                        showDialog("You have already answered to the current question."); // TODO:  show this in sidemenu
                     } else {
                         $scope.showQuestion(answer);
                     }

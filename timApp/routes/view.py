@@ -12,6 +12,8 @@ from flask import request
 from flask import session
 
 import timApp.routes.lecture
+from accesshelper import get_viewable_blocks_or_none_if_admin
+from dbaccess import get_timdb
 from timApp.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, get_viewable_blocks_or_none_if_admin, has_edit_access
 from timApp.common import get_user_settings, save_last_page, has_special_chars, post_process_pars, \
@@ -33,8 +35,11 @@ from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import user_is_owner
 from timApp.utils import remove_path_special_chars
 from timApp.timtiming import taketime
+from timdb.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
 
 Range = Tuple[int, int]
+
+FORCED_TEMPLATE_NAME = 'force'
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -171,11 +176,15 @@ def try_return_folder(item_name):
 
     if f is None:
         f = Folder.find_first_existing(item_name)
+        templates = get_templates_for_folder(f)
+        template_to_find = get_option(request, 'template', FORCED_TEMPLATE_NAME)
+        template_exists = any(t.short_name == template_to_find for t in templates)
         return render_template('create_new.html',
                                in_lecture=is_in_lecture,
                                settings=settings,
                                new_item=item_name,
-                               found_item=f), 404
+                               found_item=f,
+                               forced_template=template_to_find if template_exists else None), 404
     verify_view_access(f.id)
     return render_template('index.html',
                            item=f,
@@ -413,11 +422,26 @@ def should_hide_links(settings: DocSettings, rights: dict):
 
 @view_page.route('/getParDiff/<int:doc_id>/<int:major>/<int:minor>')
 def check_updated_pars(doc_id, major, minor):
+    # return json_response({'diff': None,
+    #                       'version': None})
+    # taketime("before verify")
     verify_view_access(doc_id)
+    # taketime("before liveupdates")
     d = Document(doc_id)
-    diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, check_html=True))  # TODO cache this
-    rights = get_rights(d.doc_id)
-    for diff in diffs:
+    settings = d.get_settings()
+    live_updates = settings.live_updates()  # this cost 1-3 ms.
+    global_live_updates = 2  # TODO: take this from somewhere that it is possible to admind to change it by a roote
+
+    if 0 < live_updates < global_live_updates:
+        live_updates = global_live_updates
+    if global_live_updates == 0:  # To stop all live updates
+         live_updates = 0
+    # taketime("after liveupdates")
+    diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, check_html=True))  # TODO cache this, about <5 ms
+    # taketime("after diffs")
+    rights = get_rights(d.doc_id)  # about 30-40 ms # TODO: this is the slowest part
+    # taketime("after rights")
+    for diff in diffs: # about < 1 ms
         if diff.get('content'):
             pars, js_paths, css_paths, modules = post_process_pars(d,
                                                                    diff['content'],
@@ -430,5 +454,29 @@ def check_updated_pars(doc_id, major, minor):
                                'js': js_paths,
                                'css': css_paths,
                                'angularModule': modules}
+    # taketime("after for diffs")
     return json_response({'diff': diffs,
-                         'version': d.get_version()})
+                          'version': d.get_version(),
+                          'live': live_updates})
+
+
+def get_templates_for_folder(folder: Folder) -> List[DocEntry]:
+    current_path = folder.path
+    timdb = get_timdb()
+    templates = []
+    while True:
+        for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
+                                               filter_folder=current_path + '/Templates',
+                                               search_recursively=False):
+            if t.short_name not in (DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME):
+                templates.append(t)
+        if current_path == '':
+            break
+        current_path, short_name = timdb.folders.split_location(current_path)
+
+        # Templates should not be templates of templates themselves. We skip them.
+        # TODO Think if this needs a while loop in case of path like Templates/Templates/Templates
+        if short_name == 'Templates':
+            current_path, short_name = timdb.folders.split_location(current_path)
+    templates.sort(key=lambda d: d.short_name.lower())
+    return templates

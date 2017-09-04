@@ -17,6 +17,7 @@ import {lazyLoadTS} from "../lazyLoad";
 import {$compile, $http, $localStorage, $log, $timeout, $upload, $window} from "../ngimport";
 import {ParCompiler} from "../services/parCompiler";
 import {getActiveDocument} from "../controllers/view/document";
+import {wrapText} from "tim/controllers/view/editing";
 
 markAsUsed(draggable, rangyinputs);
 
@@ -34,6 +35,7 @@ interface IParEditorScope {
     deleting: boolean;
     duplicates: any[];
     editor: any;
+    editorIndex: number;
     element: JQuery;
     extraData: {attrs: {classes: string[]}, docId: number, par: string, access: string, tags: {markread: boolean}, isComment: boolean};
     file: any;
@@ -47,6 +49,8 @@ interface IParEditorScope {
     newAttr: string;
     newPars: string[];
     oldmeta: HTMLMetaElement;
+    wrap: {n: number};
+
     options: {
         localSaveTag: string,
         texts: {
@@ -77,6 +81,7 @@ interface IParEditorScope {
     uploadedFile: string;
 
     $on(name: string, func: () => void): void;
+    $watch(s: string, param2: (newValue, oldValue) => any, b?: boolean): void;
     editorChanged(): void;
     aceLoaded(editor: Editor): void;
     aceReady(): void;
@@ -93,6 +98,7 @@ interface IParEditorScope {
     changeMeta(): void;
     changeValue(attributes: string[], text: string): void;
     charClicked(e: Event, char?: string): void;
+    checkWrap(): void;
     closeMenu(e: Event, force: boolean): void;
     codeBlockClicked(): void;
     commentClicked(): void;
@@ -108,6 +114,7 @@ interface IParEditorScope {
     editorStartsWith(text: string): boolean;
     endClicked(): void;
     endLineClicked(): void;
+    forceWrap(force: boolean): void;
     fullscreenSupported(): boolean;
     getAce(): Ace;
     getEditorText(): string;
@@ -209,6 +216,14 @@ timApp.directive("pareditor", [
                 };
 
                 setEditorScope($scope);
+                var sn = storage.getItem("wrap" + $scope.lstag);
+                var n;
+                n = parseInt(sn);
+                if ( isNaN(n) )
+                    if ( sn === '' ) n = '';
+                    else n = -90;
+
+                $scope.wrap = {n: n};
 
                 $scope.$on("$destroy", () => {setEditorScope(null);});
 
@@ -234,6 +249,64 @@ timApp.directive("pareditor", [
                     }
                     $scope.minSizeSet = true;
                 };
+
+                $scope.forceWrap = function(force: boolean) {
+                    var n = $scope.wrap.n;
+                    if ( !n  ) return;
+                    if ( n < 0 ) n = -n;
+                    var text = $scope.getEditorText();
+                    if ( !force ) {
+                        if (text.indexOf("```") >= 0) return;
+                        if (text.indexOf("|") >= 0) return;
+                    }
+                    var r = wrapText(text, n);
+                    if (!r.modified)  return;
+                    if ($scope.editorIndex === 0) {
+                        var editor = $scope.editor[0];
+                        var start = editor.selectionStart;
+
+                        // $scope.setEditorText(r.s);
+
+                        // editor.select();
+                        // $timeout(() => {
+                            $($scope.editor).val(r.s);
+                            $timeout(() => {
+                                editor.selectionStart = start;
+                                editor.selectionEnd = start;
+                            });
+                        // });
+                    }
+                    else if ($scope.editorIndex === 1) { // ACE
+                        var editor = $scope.editor;
+                        var cursor = editor.selection.getCursor();
+                        var index = editor.session.doc.positionToIndex(cursor, 0);
+                        var range =  $scope.editor.getSelection().getRange(); // new Range(0,0, 10000,1000);// $scope.editor.session.doc.indexToPosition(100000);
+                        range.start.row = 0; // TODO: easier way to find full range
+                        range.end.row = 1000;
+                        range.start.column = 0;
+                        range.end.column = 1000;
+                        // $scope.setEditorText(r.s); // not good, undo does not work
+                        editor.session.replace(range, r.s);
+                        $timeout(() => {
+                            cursor = editor.session.doc.indexToPosition(index, 0);
+                            editor.selection.moveCursorToPosition(cursor);
+                            editor.selection.clearSelection();
+                        });
+                    }
+                }
+
+                $scope.checkWrap = function() {
+                    if ( $scope.wrap.n <= 0 ) return;
+                    $timeout(() => { // time to let new char happend
+                        $scope.forceWrap(false);
+                    });
+                }
+
+                /*
+                $scope.$watch('usercode', function() {
+                    if ( $scope.wrap.n > 0 ) $scope.checkWrap();
+                }, true);
+                */
 
                 $scope.deleteAttribute = function(key) {
                     delete $scope.extraData.attrs[key];
@@ -583,6 +656,7 @@ timApp.directive("pareditor", [
                     $compile($textarea)($scope as any);
                     $(".editorContainer").append($textarea);
                     $scope.editor = $("#teksti");
+                    $scope.editorIndex = 0;
 
                     $scope.editor.keydown(function(e) {
                         if (e.ctrlKey) {
@@ -632,6 +706,7 @@ timApp.directive("pareditor", [
                                 e.preventDefault();
                             }
                         }
+                        $scope.checkWrap();
                     });
                     if (text) {
                         $scope.textAreaText = text;
@@ -654,11 +729,18 @@ timApp.directive("pareditor", [
 
                 $scope.aceLoaded = function(editor) {
                     $scope.editor = editor;
+                    $scope.editorIndex = 1;
                     $scope.createAce(editor as IAceEditor);
                     $scope.setInitialText();
 
                     editor.focus();
                     $scope.aceReady();
+
+                    $scope.editor.keyBinding.addKeyboardHandler(
+                        function() {
+                            $scope.checkWrap();
+                        }
+                    );
 
                     /*iPad does not open the keyboard if not manually focused to editable area
                      var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
@@ -1156,6 +1238,9 @@ timApp.directive("pareditor", [
                         return;
                     }
                     $scope.saving = true;
+                    // if ( $scope.wrap.n != -1) //  wrap -1 is not saved
+                    $window.localStorage.setItem("wrap"+$scope.lstag, ""+$scope.wrap.n);
+                    
                     if ($scope.renameFormShowing) {
                         $scope.renameTaskNamesClicked($scope.inputs, $scope.duplicates, true);
                     }

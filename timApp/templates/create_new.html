@@ -1,11 +1,18 @@
 {% extends "base.html" %}
-{% block title %}The requested page does not exist.{% endblock %}
+{% block title %}This page does not yet exist.{% endblock %}
 {% block content %}
-    <p class="errormsg">{{ message or 'The requested page does not exist.' }}</p>
+    <p class="errormsg">{{ message or self.title() }}</p>
     {% if session.user_id %}
         {% if current_user.can_write_to_folder(found_item) %}
             <bootstrap-panel title="Create a new document here">
-                <create-item item-type="document" full-path="{{ new_item }}"></create-item>
+                <create-item
+                        item-type="document"
+                        full-path="{{ new_item }}"
+                        force="true"
+                        {% if forced_template %}
+                        template="{{ forced_template }}">
+                        {% endif %}
+                </create-item>
             </bootstrap-panel>
 {#
             <bootstrap-panel title="Create a new folder here">

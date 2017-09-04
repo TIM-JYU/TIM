@@ -33,7 +33,8 @@ timApp.controller("CreateLectureCtrl", ["$scope",
         $scope.lectureCode = "";
         $scope.lectureEncoded = "";
         $scope.password = "";
-        $scope.maxStudents = "";
+        $scope.options = {max_students: "", poll_interval: 4, poll_interval_t: 1,
+                          long_poll: false, long_poll_t: false  };
         $scope.earlyJoining = true;
         $scope.editMode = false;
 
@@ -62,6 +63,8 @@ timApp.controller("CreateLectureCtrl", ["$scope",
             if (data.password !== undefined) {
                 $scope.password = data.password;
             }
+            var options = JSON.parse(data.options);
+            $scope.options = options;
             $scope.editMode = data.editMode;
             $scope.addKeyListeners();
         });
@@ -209,7 +212,7 @@ timApp.controller("CreateLectureCtrl", ["$scope",
             if ($scope.dateCheck === false && $scope.dueCheck === false) {
                 $scope.errorize("endInfo", "A date or duration must be chosen.");
             }
-            $scope.isNumber($scope.maxStudents, "maxStudents");
+            $scope.isNumber($scope.options.max_students, "max_students");
 
             if ($scope.startTime !== null) {
                 const lectureStartingInPast = moment().diff($scope.startTime) >= 0;
@@ -277,7 +280,7 @@ timApp.controller("CreateLectureCtrl", ["$scope",
                         password: $scope.password,
                         start_date: $scope.startTime,
                         end_date: $scope.endTime,
-                        max_students: $scope.maxStudents || "",
+                        options: $scope.options
                     },
                 })
                     .then(function(response) {
@@ -332,7 +335,9 @@ timApp.controller("CreateLectureCtrl", ["$scope",
                 "durationDiv",
                 "durationHour",
                 "durationMin",
-                "maxStudents",
+                "max_students",
+                "poll_interval",
+                "long_poll"
             ];
             for (let i = 0; i < elementsToRemoveErrorsFrom.length; i++) {
                 if (elementsToRemoveErrorsFrom[i] !== undefined) {

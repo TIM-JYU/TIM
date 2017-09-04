@@ -1,6 +1,25 @@
 
 import $ from "jquery";
 import {timApp} from "tim/app";
+
+timApp.directive('noPeriod', function() {
+    return function(scope, element, attrs) {
+
+        var keyCode = [190, 188, 110]; // . keycode
+        element.bind("keydown", function(event) {
+            //console.log($.inArray(event.which,keyCode));
+            if ($.inArray(event.which, keyCode) !== -1) {
+                scope.$apply(function() {
+                    scope.$eval(attrs.noPeriod);
+                    event.preventDefault();
+                });
+                event.preventDefault();
+            }
+
+        });
+    };
+});
+
 /**
  * A popup window directive that is used in the document view
  * when creating a new area.

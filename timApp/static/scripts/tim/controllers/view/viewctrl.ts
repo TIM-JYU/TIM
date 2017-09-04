@@ -260,10 +260,14 @@ timApp.controller("ViewCtrl", [
         sc.showRefresh = isPageDirty();
         sc.liveUpdates = $window.liveUpdates;
 
-        if (Users.isLoggedIn() && sc.liveUpdates) {
-            $interval(async () => {
-                const response = await $http.get<{version: any, diff: any[]}>("/getParDiff/" + sc.docId + "/" + sc.docVersion[0] + "/" + sc.docVersion[1]);
+        sc.startLiveUpdates = function() {
+            var origLiveUpdates = sc.liveUpdates;
+            if ( !origLiveUpdates ) return;
+            var stop;
+            stop = $interval(async () => {
+                const response = await $http.get<{version: any, diff: any[], live: any}>("/getParDiff/" + sc.docId + "/" + sc.docVersion[0] + "/" + sc.docVersion[1]);
                 sc.docVersion = response.data.version;
+                sc.liveUpdates = response.data.live; // TODO: start new loop by this or stop if None
                 const replaceFn = async (d, parId) => {
                     const compiled = await ParCompiler.compile(d.content, sc);
                     const e = getElementByParId(parId);
@@ -309,7 +313,18 @@ timApp.controller("ViewCtrl", [
                 $timeout(function() {
                     document.rebuildSections();
                 }, 1000);
-            }, 1000 * sc.liveUpdates);
+                if ( sc.liveUpdates != origLiveUpdates ) { // if value hase changes, stop and start new poll
+                    if (angular.isDefined(stop)) {
+                        $interval.cancel(stop);
+                        stop = undefined;
+                    }
+                    $timeout(function() { sc.startLiveUpdates(); }, 100);
+                }
+            }, Math.max(1000 * sc.liveUpdates, 1000));
+        }
+
+        if (Users.isLoggedIn() && sc.liveUpdates) {
+            sc.startLiveUpdates();
         }
 
         try {

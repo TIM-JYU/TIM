@@ -4,6 +4,7 @@ import http.client
 import imghdr
 import io
 import os
+import pprint
 import re
 import shutil
 import time
@@ -11,7 +12,6 @@ import traceback
 from datetime import datetime
 from datetime import timezone
 
-import pprint
 import werkzeug.exceptions as ex
 from flask import Response
 from flask import g, abort, flash
@@ -26,10 +26,10 @@ from markupsafe import Markup
 from sqlalchemy.exc import IntegrityError
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
+from timApp.routes.view import get_templates_for_folder, FORCED_TEMPLATE_NAME
 from timApp.ReverseProxied import ReverseProxied
 from timApp.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
-    has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException, \
-    get_viewable_blocks_or_none_if_admin
+    has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException
 from timApp.cache import cache
 from timApp.containerLink import call_plugin_resource
 from timApp.dbaccess import get_timdb
@@ -73,7 +73,7 @@ from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import db
-from timApp.timdb.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME, NoSuchUserException
+from timApp.timdb.userutils import NoSuchUserException
 from timApp.validation import validate_item_and_create
 
 cache.init_app(app)
@@ -177,12 +177,6 @@ Exception happened on {} at {}
            tb).strip()
     send_email(rcpt=app.config['ERROR_EMAIL'],
                subject='{}: Error at {} ({})'.format(app.config['TIM_HOST'], request.path, get_current_user_name()),
-               group_subject='{}: Multiple errors at {} ({})'.format(app.config['TIM_HOST'],
-                                                                     request.path,
-                                                                     get_current_user_name()),
-               group_id='exception_{}'.format(hash((app.config['TIM_HOST'],
-                                                    request.path,
-                                                    get_current_user_name()))),
                mail_from=app.config['WUFF_EMAIL'],
                reply_to='{},{}'.format(app.config['ERROR_EMAIL'], get_current_user_object().email),
                msg=message)
@@ -313,24 +307,11 @@ def get_image(image_id, image_filename):
 @app.route("/getTemplates")
 def get_templates():
     current_path = request.args.get('item_path', '')
-    timdb = get_timdb()
-    templates = []
     doc = DocEntry.find_by_path(current_path, try_translation=True)
     if not doc:
         abort(404)
     verify_edit_access(doc.id)
-    current_path = doc.parent.path
-
-    while True:
-        for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
-                                               filter_folder=current_path + '/Templates',
-                                               search_recursively=False):
-            if t.short_name not in (DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME):
-                templates.append(t)
-        if current_path == '':
-            break
-        current_path, _ = timdb.folders.split_location(current_path)
-    templates.sort(key=lambda d: d.short_name.lower())
+    templates = get_templates_for_folder(doc.parent)
     return json_response(templates)
 
 
@@ -356,7 +337,7 @@ def create_item(item_path: str, item_type_str: str, item_title: str, create_func
 @app.route("/createItem", methods=["POST"])
 def create_document():
     item_path, item_type, item_title = verify_json_params('item_path', 'item_type', 'item_title')
-    cite_id, copy_id = verify_json_params('cite', 'copy', require=False)
+    cite_id, copy_id, template_name = verify_json_params('cite', 'copy', 'template', require=False)
     if cite_id:
         return create_citation_doc(cite_id, item_path, item_title)
 
@@ -394,6 +375,16 @@ def create_document():
             if not tr.is_original_translation:
                 copy_default_rights(doc_id, blocktypes.DOCUMENT, commit=False)
         db.session.commit()
+    else:
+        templates = get_templates_for_folder(item.parent)
+        matched_templates = None
+        if template_name:
+            matched_templates = list(filter(lambda t: t.short_name == template_name, templates))
+        if not matched_templates:
+            matched_templates = list(filter(lambda t: t.short_name == FORCED_TEMPLATE_NAME, templates))
+        if matched_templates:
+            template = matched_templates[0]
+            item.document.update(template.document.export_markdown(), item.document.export_markdown())
     return json_response(item)
 
 

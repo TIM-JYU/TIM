@@ -139,6 +139,8 @@
     </div>
     <div class="editoropts">
         <label><input type="checkbox" ng-model="proeditor"/> Advanced view</label>
+        <span ng-if="wrap.n!=-1" class="inputSmall" style="float: right;"><label title="Put 0 to no wrap" ng-click="forceWrap(true)" >wrap:</label><input type="text"  ng-pattern="/[-0-9]*/" ng-model="wrap.n" size="2" /></span>
+
     </div>
     <div id="previewDiv" tim-draggable-fixed="" caption="Preview" class="preview" ng-show="proeditor"
          style='z-index:100; top: 0px; right: 0px;'>

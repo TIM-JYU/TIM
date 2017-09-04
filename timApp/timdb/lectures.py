@@ -227,14 +227,18 @@ class Lectures(TimDbBase):
         options = cursor.fetchone()
         options = json.loads(options[0])
 
-        max = None
+        maxst = None
         if 'max_students' in options:
-            max = int(options['max_students'])
+            # noinspection PyBroadException
+            try:
+                maxst = int(options['max_students'])
+            except:
+                pass
 
-        if max is None:
+        if maxst is None:
             return False
         else:
-            return students + 1 >= max
+            return students + 1 >= maxst
 
     def check_if_in_lecture(self, doc_id: int, user_id: int) -> Tuple:
         """Check if user is in lecture from specific document.

@@ -488,6 +488,7 @@ class TimRouteTest(TimDbTest):
                    settings: Optional[Dict] = None,
                    copy_from: Optional[int] = None,
                    cite: Optional[int] = None,
+                   template: Optional[str] = None,
                    expect_status=200,
                    **kwargs
                    ) -> Optional[DocEntry]:
@@ -510,6 +511,7 @@ class TimRouteTest(TimDbTest):
             'item_type': 'document',
             'item_title': 'document ' + str(self.doc_num),
             **({'copy': copy_from} if copy_from else {}),
+            **({'template': template} if template else {}),
             **({'cite': cite} if cite else {})
         }, expect_status=expect_status, **kwargs)
         if expect_status != 200:
