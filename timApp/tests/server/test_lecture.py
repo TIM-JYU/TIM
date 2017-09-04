@@ -38,14 +38,16 @@ class LectureTest(TimRouteTest):
                               'startTime': start_time.isoformat(),
                               'students': [],
                               'useQuestions': True,
+                              'options': '{}',
                               'useWall': True}, j)
 
         resp = self.get('/getUpdates',
-                        query_string=dict(client_message_id=-1,
-                                          doc_id=doc.id,
-                                          get_messages=True,
-                                          lecture_id=lecture_id))
-        self.assertDictEqual({"isLecture": -1}, resp)
+                        query_string=dict(c=-1,
+                                          d=doc.id,
+                                          m=True,
+                                          l=lecture_id))
+        self.assertEqual(-1, resp['e'])
+        self.assertIsInstance(resp['ms'], int)
 
         msg_text = 'hi'
         j = self.post('/sendMessage', query_string=dict(lecture_id=lecture_id, message=msg_text))
@@ -55,14 +57,14 @@ class LectureTest(TimRouteTest):
         msg_datetime = dateutil.parser.parse(j['time'])
         msg_time = msg_datetime.strftime(time_format)
         resp = self.get('/getUpdates',
-                        query_string=dict(client_message_id=-1,
-                                          doc_id=doc.id,
-                                          get_messages=True,
-                                          lecture_id=lecture_id))
+                        query_string=dict(c=-1,
+                                          d=doc.id,
+                                          m=True,
+                                          l=lecture_id))
 
         self.check_time(current_time, resp, time_format)
-        self.assertDictEqual({'data': [{'message': msg_text, 'sender': self.current_user_name(), 'time': msg_time}],
-                              'isLecture': True,
+        self.assert_dict_subset(resp, {'data': [{'message': msg_text, 'sender': self.current_user_name(), 'time': msg_time}],
+                              'e': True,
                               'lastid': msg_id,
                               'lectureEnding': 100,
                               'lectureId': lecture_id,
@@ -70,15 +72,17 @@ class LectureTest(TimRouteTest):
                                   {'active': resp['lecturers'][0]['active'],
                                    'name': self.current_user_name()}],
                               'status': 'results',
-                              'students': []}, resp)
+                              'students': []})
+        self.assertIsInstance(resp['ms'], int)
 
         resp = self.get('/getUpdates',
-                        query_string=dict(client_message_id=msg_id,
-                                          doc_id=doc.id,
-                                          get_messages=True,
-                                          lecture_id=lecture_id))
+                        query_string=dict(c=msg_id,
+                                          d=doc.id,
+                                          m=True,
+                                          l=lecture_id))
 
-        self.assertDictEqual({"isLecture": -1}, resp)
+        self.assertEqual(-1, resp['e'])
+        self.assertIsInstance(resp['ms'], int)
 
         # add some dummy data to test lecture deletion
         aj = AskedJson(json='{}', hash='')
