@@ -221,7 +221,7 @@ timApp.directive("pareditor", [
                 n = parseInt(sn);
                 if ( isNaN(n) )
                     if ( sn === '' ) n = '';
-                    else n = 90;
+                    else n = -90;
 
                 $scope.wrap = {n: n};
 
