@@ -11,7 +11,7 @@ fi
 read -r -d '' SCRIPT <<'EOF'
 dir=/tmp/stresstest
 mkdir -p ${dir}
-rm ${dir}/*
+rm ${dir}/* 2>/dev/null
 time (
 eval "for i in {1..$1};do wget --timeout=0 tim:5000/view/1 -O ${dir}/stresstest.\$i & done" 2>/dev/null
 wait
