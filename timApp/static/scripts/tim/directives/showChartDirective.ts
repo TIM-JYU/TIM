@@ -527,6 +527,7 @@ timApp.directive("showChartDirective", [function() {
                 // $scope.ctx.font = "20px Georgia";
                 let datasets;
                 if (!$scope.isText) {
+                    if ( !$scope.answerChart ) return; // TODO: miksi tämä on TIMIssä null???
                     if ( !$scope.answerChart.data ) return; // TODO: miksi tämä on TIMIssä null???
                     datasets = $scope.answerChart.data.datasets;
                 }
