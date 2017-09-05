@@ -75,6 +75,7 @@ from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import NoSuchUserException
 from timApp.validation import validate_item_and_create
+from timApp.documentmodel.create_item import do_create_document, get_templates_for_folder, create_item
 
 cache.init_app(app)
 
@@ -311,27 +312,8 @@ def get_templates():
     if not doc:
         abort(404)
     verify_edit_access(doc.id)
-    templates = timApp.routes.view.get_templates_for_folder(doc.parent)
+    templates = get_templates_for_folder(doc.parent)
     return json_response(templates)
-
-
-def create_item(item_path, item_type_str, item_title, create_function, owner_group_id):
-    item_path = item_path.strip('/')
-    validate_item_and_create(item_path, item_type_str, owner_group_id)
-
-    item = create_function(item_path, owner_group_id, item_title)
-    timdb = get_timdb()
-    grant_access_to_session_users(timdb, item.id)
-    item_type = from_str(item_type_str)
-    if item_type == blocktypes.DOCUMENT:
-        bms = Bookmarks(get_current_user_object())
-        bms.add_bookmark('Last edited',
-                         item.title,
-                         '/view/' + item.path,
-                         move_to_top=True,
-                         limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
-    copy_default_rights(item.id, item_type)
-    return item
 
 
 @app.route("/createItem", methods=["POST"])
@@ -350,29 +332,6 @@ def create_document():
         copied_content = d.document.export_markdown()
 
     return do_create_document(item_path, item_type, item_title, copied_content, template_name)
-
-
-def do_create_document(item_path, item_type, item_title, copied_content, template_name):
-    item = create_item(item_path,
-                       item_type,
-                       item_title,
-                       DocEntry.create if item_type == 'document' else Folder.create,
-                       get_current_user_group())
-
-    if copied_content:
-        item.document.update(copied_content, item.document.export_markdown())
-    else:
-        templates = timApp.routes.view.get_templates_for_folder(item.parent)
-        matched_templates = None
-        if template_name:
-            matched_templates = list(filter(lambda t: t.short_name == template_name, templates))
-        if not matched_templates:
-            matched_templates = list(filter(lambda t: t.short_name == timApp.routes.view.FORCED_TEMPLATE_NAME, templates))
-        if matched_templates:
-            template = matched_templates[0]
-            item.document.update(template.document.export_markdown(), item.document.export_markdown())
-
-    return json_response(item)
 
 
 @app.route("/translations/<int:doc_id>", methods=["GET"])
