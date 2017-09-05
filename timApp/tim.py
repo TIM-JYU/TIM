@@ -26,7 +26,8 @@ from markupsafe import Markup
 from sqlalchemy.exc import IntegrityError
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
-from timApp.routes.view import get_templates_for_folder, FORCED_TEMPLATE_NAME
+import timApp.routes.view
+#from timApp.routes.view import get_templates_for_folder, FORCED_TEMPLATE_NAME
 from timApp.ReverseProxied import ReverseProxied
 from timApp.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
     has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException
@@ -310,7 +311,7 @@ def get_templates():
     if not doc:
         abort(404)
     verify_edit_access(doc.id)
-    templates = get_templates_for_folder(doc.parent)
+    templates = timApp.routes.view.get_templates_for_folder(doc.parent)
     return json_response(templates)
 
 
@@ -361,12 +362,12 @@ def do_create_document(item_path, item_type, item_title, copied_content, templat
     if copied_content:
         item.document.update(copied_content, item.document.export_markdown())
     else:
-        templates = get_templates_for_folder(item.parent)
+        templates = timApp.routes.view.get_templates_for_folder(item.parent)
         matched_templates = None
         if template_name:
             matched_templates = list(filter(lambda t: t.short_name == template_name, templates))
         if not matched_templates:
-            matched_templates = list(filter(lambda t: t.short_name == FORCED_TEMPLATE_NAME, templates))
+            matched_templates = list(filter(lambda t: t.short_name == timApp.routes.view.FORCED_TEMPLATE_NAME, templates))
         if matched_templates:
             template = matched_templates[0]
             item.document.update(template.document.export_markdown(), item.document.export_markdown())
