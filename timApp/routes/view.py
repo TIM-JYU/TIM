@@ -36,7 +36,7 @@ from timApp.timdb.userutils import user_is_owner
 from timApp.utils import remove_path_special_chars
 from timApp.timtiming import taketime
 from timdb.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
-import timApp.tim  # import * # due circular reference can not import just do_create_document
+# import timApp.tim  # import * # due circular reference can not import just do_create_document
 
 Range = Tuple[int, int]
 
