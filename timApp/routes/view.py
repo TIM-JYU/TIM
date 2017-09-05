@@ -36,6 +36,7 @@ from timApp.timdb.userutils import user_is_owner
 from timApp.utils import remove_path_special_chars
 from timApp.timtiming import taketime
 from timdb.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
+import timApp.tim  # import * # due circular reference can not import just do_create_document
 
 Range = Tuple[int, int]
 
@@ -178,13 +179,26 @@ def try_return_folder(item_name):
         f = Folder.find_first_existing(item_name)
         templates = get_templates_for_folder(f)
         template_to_find = get_option(request, 'template', FORCED_TEMPLATE_NAME)
-        template_exists = any(t.short_name == template_to_find for t in templates)
+        template_item = None
+        for t in templates:
+            if t.short_name == template_to_find:
+                # template_exists = True
+                template_item = t
+
+        # template_exists = any(t.short_name == template_to_find for t in templates)
+
+        if template_item and template_item.short_name == FORCED_TEMPLATE_NAME:
+            ind = item_name.rfind('/')
+            if ind >= 0:
+                ret = timApp.tim.do_create_document(item_name, 'document', item_name[ind+1:], None, template_item.path)
+                return view(item_name, 'view_html.html')
+
         return render_template('create_new.html',
                                in_lecture=is_in_lecture,
                                settings=settings,
                                new_item=item_name,
                                found_item=f,
-                               forced_template=template_to_find if template_exists else None), 404
+                               forced_template=template_to_find if template_item else None), 404
     verify_view_access(f.id)
     return render_template('index.html',
                            item=f,

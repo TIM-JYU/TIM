@@ -348,6 +348,10 @@ def create_document():
             return abort(404, 'The document to be copied was not found')
         copied_content = d.document.export_markdown()
 
+    return do_create_document(item_path, item_type, item_title, copied_content, template_name)
+
+
+def do_create_document(item_path, item_type, item_title, copied_content, template_name):
     item = create_item(item_path,
                        item_type,
                        item_title,
