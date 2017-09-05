@@ -187,7 +187,7 @@ def try_return_folder(item_name):
             ind = item_name.rfind('/')
             if ind >= 0:
                 ret = do_create_document(item_name, 'document', item_name[ind+1:], None, template_item.path)
-                return view(item_name, 'view_html.html')
+                return view(item_name, 'view_html.html') 
 
         return render_template('create_new.html',
                                in_lecture=is_in_lecture,
