@@ -26,7 +26,8 @@ from markupsafe import Markup
 from sqlalchemy.exc import IntegrityError
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
-from timApp.routes.view import get_templates_for_folder, FORCED_TEMPLATE_NAME
+import timApp.routes.view
+# from timApp.routes.view import get_templates_for_folder, FORCED_TEMPLATE_NAME
 from timApp.ReverseProxied import ReverseProxied
 from timApp.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
     has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException
@@ -75,6 +76,7 @@ from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import NoSuchUserException
 from timApp.validation import validate_item_and_create
+from timApp.documentmodel.create_item import do_create_document, get_templates_for_folder, create_item
 
 cache.init_app(app)
 
@@ -315,25 +317,6 @@ def get_templates():
     return json_response(templates)
 
 
-def create_item(item_path: str, item_type_str: str, item_title: str, create_function, owner_group_id: int):
-    item_path = item_path.strip('/')
-    validate_item_and_create(item_path, item_type_str, owner_group_id)
-
-    item = create_function(item_path, owner_group_id, item_title)
-    timdb = get_timdb()
-    grant_access_to_session_users(timdb, item.id)
-    item_type = from_str(item_type_str)
-    if item_type == blocktypes.DOCUMENT:
-        bms = Bookmarks(get_current_user_object())
-        bms.add_bookmark('Last edited',
-                         item.title,
-                         '/view/' + item.path,
-                         move_to_top=True,
-                         limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
-    copy_default_rights(item.id, item_type)
-    return item
-
-
 @app.route("/createItem", methods=["POST"])
 def create_document():
     item_path, item_type, item_title = verify_json_params('item_path', 'item_type', 'item_title')
@@ -341,7 +324,6 @@ def create_document():
     if cite_id:
         return create_citation_doc(cite_id, item_path, item_title)
 
-    copied_content = None
     d = None
     if copy_id:
         verify_edit_access(copy_id)
@@ -349,43 +331,7 @@ def create_document():
         if not d:
             return abort(404, 'The document to be copied was not found')
         d = d.src_doc
-        copied_content = d.document.export_markdown()
-
-    item = create_item(item_path,
-                       item_type,
-                       item_title,
-                       DocEntry.create if item_type == 'document' else Folder.create,
-                       get_current_user_group())
-
-    if copy_id:
-        item.document.update(copied_content, item.document.export_markdown())
-        for tr in d.translations: # type: Translation
-            doc_id = item.id
-            if not tr.is_original_translation:
-                doc_entry = DocEntry.create(None, get_current_user_group(), None)
-                doc_entry.document.update(tr.document.export_markdown(), doc_entry.document.export_markdown())
-                settings = doc_entry.document.get_settings()
-                settings.set_source_document(item.id)
-                doc_entry.document.set_settings(settings.get_dict())
-                doc_id = doc_entry.id
-            if tr.lang_id or not tr.is_original_translation:
-                new_tr = Translation(doc_id=doc_id, src_docid=item.id, lang_id=tr.lang_id)
-                new_tr.title = tr.title
-                db.session.add(new_tr)
-            if not tr.is_original_translation:
-                copy_default_rights(doc_id, blocktypes.DOCUMENT, commit=False)
-        db.session.commit()
-    else:
-        templates = get_templates_for_folder(item.parent)
-        matched_templates = None
-        if template_name:
-            matched_templates = list(filter(lambda t: t.short_name == template_name, templates))
-        if not matched_templates:
-            matched_templates = list(filter(lambda t: t.short_name == FORCED_TEMPLATE_NAME, templates))
-        if matched_templates:
-            template = matched_templates[0]
-            item.document.update(template.document.export_markdown(), item.document.export_markdown())
-    return json_response(item)
+    return do_create_document(item_path, item_type, item_title, d, template_name)
 
 
 @app.route("/translations/<int:doc_id>", methods=["GET"])

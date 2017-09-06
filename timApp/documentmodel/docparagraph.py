@@ -388,9 +388,9 @@ class DocParagraph:
         attr_index = md.find('{')
         return md[2:attr_index].strip() if attr_index > 0 else md[2:].strip()
 
-    def get_exported_markdown(self) -> str:
+    def get_exported_markdown(self, skip_tr=False) -> str:
         """Returns the markdown in exported form for this paragraph."""
-        if self.is_par_reference() and self.is_translation():
+        if (not skip_tr) and self.is_par_reference() and self.is_translation():
             # This gives a default translation based on the source paragraph
             # todo: same for area reference
             data = []

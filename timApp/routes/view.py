@@ -12,8 +12,6 @@ from flask import request
 from flask import session
 
 import timApp.routes.lecture
-from accesshelper import get_viewable_blocks_or_none_if_admin
-from dbaccess import get_timdb
 from timApp.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, get_viewable_blocks_or_none_if_admin, has_edit_access
 from timApp.common import get_user_settings, save_last_page, has_special_chars, post_process_pars, \
@@ -35,11 +33,10 @@ from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import user_is_owner
 from timApp.utils import remove_path_special_chars
 from timApp.timtiming import taketime
-from timdb.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
+from timApp.documentmodel.create_item import do_create_document, FORCED_TEMPLATE_NAME, get_templates_for_folder
 
 Range = Tuple[int, int]
 
-FORCED_TEMPLATE_NAME = 'force'
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -178,13 +175,26 @@ def try_return_folder(item_name):
         f = Folder.find_first_existing(item_name)
         templates = get_templates_for_folder(f)
         template_to_find = get_option(request, 'template', FORCED_TEMPLATE_NAME)
-        template_exists = any(t.short_name == template_to_find for t in templates)
+        template_item = None
+        for t in templates:
+            if t.short_name == template_to_find:
+                # template_exists = True
+                template_item = t
+
+        # template_exists = any(t.short_name == template_to_find for t in templates)
+
+        if template_item and template_item.short_name == FORCED_TEMPLATE_NAME:
+            ind = item_name.rfind('/')
+            if ind >= 0:
+                ret = do_create_document(item_name, 'document', item_name[ind+1:], None, template_item.path)
+                return view(item_name, 'view_html.html') 
+
         return render_template('create_new.html',
                                in_lecture=is_in_lecture,
                                settings=settings,
                                new_item=item_name,
                                found_item=f,
-                               forced_template=template_to_find if template_exists else None), 404
+                               forced_template=template_to_find if template_item else None), 404
     verify_view_access(f.id)
     return render_template('index.html',
                            item=f,
@@ -460,23 +470,3 @@ def check_updated_pars(doc_id, major, minor):
                           'live': live_updates})
 
 
-def get_templates_for_folder(folder: Folder) -> List[DocEntry]:
-    current_path = folder.path
-    timdb = get_timdb()
-    templates = []
-    while True:
-        for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
-                                               filter_folder=current_path + '/Templates',
-                                               search_recursively=False):
-            if t.short_name not in (DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME):
-                templates.append(t)
-        if current_path == '':
-            break
-        current_path, short_name = timdb.folders.split_location(current_path)
-
-        # Templates should not be templates of templates themselves. We skip them.
-        # TODO Think if this needs a while loop in case of path like Templates/Templates/Templates
-        if short_name == 'Templates':
-            current_path, short_name = timdb.folders.split_location(current_path)
-    templates.sort(key=lambda d: d.short_name.lower())
-    return templates

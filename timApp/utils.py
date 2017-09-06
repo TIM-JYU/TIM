@@ -4,6 +4,9 @@ import re
 import shutil
 from datetime import datetime, timezone
 
+import dateutil.parser
+import pytz
+
 import yaml
 import yaml.parser
 import yaml.scanner
@@ -259,3 +262,11 @@ def pycharm_running():
 
 def remove_path_special_chars(item_path):
     return re.sub('[^a-zA-Z0-9/_-]', '', item_path.translate(str.maketrans(' äöåÄÖÅ', '-aoaAOA')))
+
+
+def getdatetime(s: str, default_val=None):
+    try:
+        dt = dateutil.parser.parse(s, dayfirst=not 'Z' in s)
+        return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError):
+        return default_val

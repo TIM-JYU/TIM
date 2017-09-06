@@ -3,7 +3,6 @@ from collections import defaultdict
 from datetime import datetime
 from typing import List, Dict
 
-import dateutil.parser
 import pytz
 from flask import session, abort, request, flash
 
@@ -17,6 +16,7 @@ from timApp.sessioninfo import get_session_usergroup_ids
 from timApp.timdb.models.user import User
 from timApp.timdb.userutils import get_anon_group_id
 from timApp.timtiming import taketime
+from timApp.utils import getdatetime
 
 
 def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
@@ -120,15 +120,6 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     # taketime("notes mixed")
 
     return process_areas(html_pars), js_paths, css_paths, modules
-
-
-def getdatetime(s: str, default_val=None):
-    try:
-        dt = dateutil.parser.parse(s, dayfirst=True)
-        return dt if dt.tzinfo is not None else pytz.utc.localize(dt)
-
-    except (ValueError, TypeError):
-        return default_val
 
 
 def process_areas(html_pars: List[Dict]) -> List[Dict]:
