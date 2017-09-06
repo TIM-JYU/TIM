@@ -18,6 +18,17 @@ class TranslationTest(TimRouteTest):
                        {'doc_title': doc_title},
                        expect_status=403)
 
+    def test_translation_create_with_settings(self):
+        self.login_test1()
+        doc = self.create_doc()
+        doc.document.set_settings({'a': 'b'})
+        lang = 'en'
+        doc_title = 'test'
+        j = self.create_translation(doc, doc_title, lang)
+        d = Document(j['id'])
+        self.assertEqual('b', d.get_settings().get_dict()['a'])
+        self.get('/view/{}'.format(j['path']))
+
     def create_translation(self, doc, doc_title, lang, expect_contains=None, expect_content=None, **kwargs):
         if expect_contains is None and expect_content is None:
             expect_contains = {'title': doc_title, 'path': doc.name + '/' + lang, 'name': doc.short_name}
