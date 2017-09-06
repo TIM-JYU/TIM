@@ -397,6 +397,7 @@ class Document:
         :return: The same paragraph object, or None if could not add.
 
         """
+        assert p.doc.doc_id == self.doc_id
         p.store()
         p.set_latest()
         old_ver = self.get_version()

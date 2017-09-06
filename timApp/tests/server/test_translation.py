@@ -19,6 +19,17 @@ class TranslationTest(TimRouteTest):
                        {'doc_title': doc_title},
                        expect_status=403)
 
+    def test_translation_create_with_settings(self):
+        self.login_test1()
+        doc = self.create_doc()
+        doc.document.set_settings({'a': 'b'})
+        lang = 'en'
+        doc_title = 'test'
+        j = self.create_translation(doc, doc_title, lang)
+        d = Document(j.id)
+        self.assertEqual('b', d.get_settings().get_dict()['a'])
+        self.get('/view/{}'.format(j.path))
+
     def test_translation_content(self):
         self.login_test1()
         doc = self.create_doc(from_file='example_docs/multiple_mmcqs.md')
