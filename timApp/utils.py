@@ -11,7 +11,7 @@ import yaml
 import yaml.parser
 import yaml.scanner
 from typing import List, Optional, Tuple, Union
-from yaml import CLoader
+from yaml import CLoader, YAMLError
 
 from timApp.htmlSanitize import sanitize_html
 from timApp.theme import Theme
@@ -112,29 +112,19 @@ def correct_yaml(text):
     return s
 
 
-def parse_yaml(text):
+def parse_yaml(text: str):
+    """Parses the specified text as (customized) YAML.
+
+    :param text: The text to parse.
+    :return: The parsed YAML as a dict.
     """
 
-    :type text: str
-    :return:
-    """
-
-    if len(text) == 0:
-        return False
-    try:
-        text = correct_yaml(text)
-        values = yaml.load(text, Loader=CLoader)
-    except yaml.parser.ParserError as e:
-        return str(e)
-    except yaml.scanner.ScannerError as e:
-        return str(e)
-    try:
-        if type(values) is str:
-            return values
-        else:
-            return values
-    except KeyError:
-        return "Missing identifier"
+    text = correct_yaml(text)
+    values = yaml.load(text, Loader=CLoader)
+    if isinstance(values, str):
+        raise YAMLError('Markup must not be a mere string.')
+    # empty YAML is equal to null, so we avoid that by returning {} in that case
+    return values or {}
 
 
 def count_chars(md, char):

@@ -50,6 +50,14 @@ def get_num_value(values, key, default=None):
     return value
 
 
+def handle_plugin_error(plugin_data, task_id_name):
+    if 'error' in plugin_data:
+        task_id_error = ' Task id: ' + task_id_name if task_id_name else ''
+        if isinstance(plugin_data, str):
+            raise PluginException(plugin_data + task_id_error)
+        raise PluginException(plugin_data['error'] + task_id_error)
+
+
 class Plugin:
     deadline_key = 'deadline'
     starttime_key = 'starttime'
@@ -59,6 +67,7 @@ class Plugin:
 
     def __init__(self, task_id: Optional[str], values: dict, plugin_type: str, par: Optional[DocParagraph] = None):
         self.task_id = task_id
+        assert isinstance(values, dict)
         self.values = values
         self.type = plugin_type
         self.par = par
@@ -106,10 +115,7 @@ class Plugin:
             raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
         task_id_name = par.get_attr('taskId')
         plugin_data = parse_plugin_values_macros(par, global_attrs, macros, macro_delimiter)
-        if 'error' in plugin_data:
-            if isinstance(plugin_data, str):
-                raise PluginException(plugin_data + ' Task id: ' + task_id_name)
-            raise PluginException(plugin_data['error'] + ' Task id: ' + task_id_name)
+        handle_plugin_error(plugin_data, task_id_name)
         p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par)
         return p
 
@@ -124,10 +130,7 @@ class Plugin:
         plugin_data = parse_plugin_values(par,
                                           global_attrs=doc.get_settings().global_plugin_attrs(),
                                           macroinfo=doc.get_settings().get_macroinfo(user))
-        if 'error' in plugin_data:
-            if isinstance(plugin_data, str):
-                raise PluginException(plugin_data + ' Task id: ' + task_id_name)
-            raise PluginException(plugin_data['error'] + ' Task id: ' + task_id_name)
+        handle_plugin_error(plugin_data, task_id_name)
         p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par)
         return p
 
@@ -271,9 +274,10 @@ def parse_plugin_values_macros(par: DocParagraph,
                                      macros=macros,
                                      macro_delimiter=macro_delimiter)
         # print("yaml str is: " + yaml_str)
-        values = parse_yaml(yaml_str)
-        if type(values) is str:
-            return {'error': "YAML is malformed: " + values}
+        try:
+            values = parse_yaml(yaml_str)
+        except Exception:
+            return {'error': "YAML is malformed: " + yaml_str}
         else:
             if global_attrs:
                 if type(global_attrs) is str:

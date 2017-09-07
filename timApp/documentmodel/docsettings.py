@@ -35,7 +35,11 @@ class DocSettings:
             par = par.get_referenced_pars(set_html=False)[0]
         if not par.is_setting():
             return True
-        return isinstance(cls.parse_values(par), dict)
+        try:
+            DocSettings.parse_values(par)
+        except Exception:
+            return False
+        return True
 
     @classmethod
     def from_paragraph(cls, par):
@@ -53,13 +57,11 @@ class DocSettings:
                 # Invalid reference, ignore for now
                 return DocSettings(par.doc)
         if par.is_setting():
-            yaml_vals = cls.parse_values(par)
-            if not isinstance(yaml_vals, dict):
-                #raise ValueError("DocSettings yaml parse error: " + yaml_vals)
-                print("DocSettings yaml parse error: " + str(yaml_vals))
-                return DocSettings(par.doc)
-            else:
+            try:
+                yaml_vals = cls.parse_values(par)
                 return DocSettings(par.doc, settings_dict=yaml_vals)
+            except Exception:
+                return DocSettings(par.doc)
         else:
             return DocSettings(par.doc)
 
