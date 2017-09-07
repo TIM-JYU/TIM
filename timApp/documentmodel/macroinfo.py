@@ -22,20 +22,13 @@ class MacroInfo:
                  user: Optional['User'] = None):
         self.doc = doc
         self.macro_map: Dict[str, object] = macro_map or {}
+        if not isinstance(self.macro_map, dict):
+            self.macro_map = {}
         if doc is not None:
             self.macro_map.update({'docid': doc.doc_id})
         self.macro_delimiter = macro_delimiter or '%%'
         self._user = user
         self.preserve_user_macros = False
-        self.stringize_macros()
-
-    def stringize_macros(self):
-        """Converts macro keys and values to strings if they are not already."""
-        if isinstance(self.macro_map, dict):
-            # self.macro_map = {str(k): str(self.macro_map[k]) for k in self.macro_map}
-            pass
-        else:
-            self.macro_map = {}
 
     def get_macros(self) -> Dict[str, object]:
         if self._user is None:

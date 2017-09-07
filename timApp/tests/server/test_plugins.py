@@ -642,3 +642,18 @@ choices:
         resp = self.post_answer(p.type, p.full_task_id, [])
         self.assertEqual(resp['error'], 'The deadline for submitting answers has passed.')
         self.get(d.url_relative)
+
+    def test_invalid_yaml(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {plugin=showVideo}
+```
+
+``` {plugin=showVideo}
+a
+```
+
+""")
+        r = self.get(d.url, as_tree=True).cssselect('.parContent')
+        self.assertIn('xxxHEXJSONxxx', r[0].text_content().strip())
+        self.assertEqual('Plugin showVideo error: YAML is malformed: a', r[1].text_content().strip())
