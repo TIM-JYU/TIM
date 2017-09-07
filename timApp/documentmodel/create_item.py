@@ -14,8 +14,8 @@ from timApp.sessioninfo import get_current_user_object, get_current_user_group
 from timApp.tim_app import app
 from timApp.timdb.models.folder import Folder
 from timApp.responsehelper import json_response
-from timdb.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
-from accesshelper import get_viewable_blocks_or_none_if_admin
+from timApp.timdb.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
+from timApp.accesshelper import get_viewable_blocks_or_none_if_admin
 
 FORCED_TEMPLATE_NAME = 'force'
 
