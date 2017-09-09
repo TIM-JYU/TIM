@@ -42,13 +42,19 @@ videoApp.muunna = function(value) {
 
 videoApp.directiveTemplateVideo = function(t) {
    var zoomVideo =  '<p ng-if="videoOn" class="pluginShow" >' +
-		             '<a ng-click="zoom(0)" title="Reset to original size">[r]</a> ' +
-		             '<a ng-click="zoom(1.0/1.4)" title="Zoom out">[-]</a> ' +
-		             '<a ng-click="zoom(1.4)" title="Zoom in">[+]</a> ' +
+                     '<span ng-show="myvid.playbackRate"> Speed:' +
+		             '<a ng-click="speed(1.0/1.2)" title="Slow speed"> - </a> ' +
+		             '<a ng-click="speed(0)" title="Speed to 1x"> 1x </a> ' +
+		             '<a ng-click="speed(1.2)" title="Faster speed"> + </a> ' +
+                     '</span>' +
+                     'Zoom: ' +
+		             '<a ng-click="zoom(1.0/1.4)" title="Zoom out"> - </a> ' +
+		             '<a ng-click="zoom(0)" title="Reset to original size"> r </a> ' +
+		             '<a ng-click="zoom(1.4)" title="Zoom in"> + </a> ' +
 	                 '<a ng-click="hideVideo()">{{hidetext}}</a>' +
 	               '</p>';
 
-   if ( t == "smallvideo" ) return '<div class="smallVideoRunDiv ng-cloak" ng-cloak>' +
+   if ( t === "smallvideo" ) return '<div class="smallVideoRunDiv ng-cloak" ng-cloak>' +
 				  '<p>Here comes header</p>' +
 				  '<p>' +
                   '<span class="stem" ng-bind-html="stem"></span> ' +
@@ -62,7 +68,7 @@ videoApp.directiveTemplateVideo = function(t) {
 				  zoomVideo +
 				  '<p class="plgfooter">Here comes footer</p>'+
 				  '</div>';
-   if ( t == "listvideo" ) return '<div class="listVideoRunDiv ng-cloak" ng-cloak>' +
+   if ( t === "listvideo" ) return '<div class="listVideoRunDiv ng-cloak" ng-cloak>' +
 				  '<p>Here comes header</p>' +
 				  '<ul><li><span class="stem" ng-bind-html="stem"></span> '+
                   '<a ng-if="videoname" class="videoname" ng-click="showVideo()">'+
@@ -108,7 +114,7 @@ videoApp.isYoutube = function(file) {
     if ( file.indexOf("youtube") >= 0 ) return true;
     if ( file.indexOf("youtu.be") >= 0 ) return true;
     return false;
-}
+};
 
 videoApp.directiveFunction = function(t) {
 	return {
@@ -125,14 +131,14 @@ videoApp.directiveFunction = function(t) {
             timHelper.set(scope,attrs,".followid");
             timHelper.set(scope,attrs,".autoplay", true);
 			timHelper.set(scope,attrs,".open",false);
-            if ( scope.videoicon == "False" ) scope.videoicon = "";
-            if ( scope.docicon == "False" ) scope.docicon = "";
+            if ( scope.videoicon === "False" ) scope.videoicon = "";
+            if ( scope.docicon === "False" ) scope.docicon = "";
 			scope.start = videoApp.muunna(scope.attrs.start);
 			scope.end = videoApp.muunna(scope.attrs.end);
             scope.duration = videoApp.time2String(scope.end - scope.start);
-            if ( scope.duration != "" ) scope.duration = "(" + scope.duration + ") ";
+            if ( scope.duration !== "" ) scope.duration = "(" + scope.duration + ") ";
             scope.limits = "(" + videoApp.time2String(scope.start) + "-" + videoApp.time2String(scope.end) + ")";
-            if ( scope.limits == "(-)" ) scope.limits = "";
+            if ( scope.limits === "(-)" ) scope.limits = "";
             scope.span = "";
             scope.startt = videoApp.time2String(scope.start);
             if ( scope.startt ) scope.startt = ", " + scope.startt;
@@ -190,7 +196,7 @@ videoApp.Controller = function($scope,$http,$transclude,$element) {
     $scope.getCurrentZoom = function() {
         if ( localStorage[$scope.origSize+".width"] )  $scope.width = localStorage[$scope.origSize+".width"];
         if ( localStorage[$scope.origSize+".height"] )  $scope.height = localStorage[$scope.origSize+".height"];
-    }
+    };
 
 
 	$scope.getPrevZoom = function () {
@@ -206,11 +212,19 @@ videoApp.Controller = function($scope,$http,$transclude,$element) {
 
         $scope.origSize = name;
         if ( typeof(localStorage) === "undefined" )  return;
-    }
+    };
 
+
+ 	$scope.speed = function(mult) {
+        if (mult === 0) {
+            $scope.myvid.playbackRate = 1.0;
+        } else {
+            $scope.myvid.playbackRate *= mult;
+        }
+    };
 
  	$scope.zoom = function(mult) {
-        if ( mult == 0 ) {
+        if ( mult === 0 ) {
             $scope.width = $scope.origWidth;
             $scope.height = $scope.origHeight;
             delete localStorage[$scope.origSize + ".width"];
@@ -227,7 +241,7 @@ videoApp.Controller = function($scope,$http,$transclude,$element) {
         }
         $scope.hideVideo();
         $scope.showVideo();
-    }
+    };
 
 	$scope.showVideo = function() {
         if ( $scope.videoOn ) return $scope.hideVideo();
@@ -247,7 +261,7 @@ videoApp.Controller = function($scope,$http,$transclude,$element) {
             var file = $scope.file;
             if (  videoApp.isYoutube(file) && file.indexOf("embed") < 0 ) {
                 var yname = "youtu.be/";  // could be also https://youtu.be/1OygRiwlAok
-                var yembed = "//www.youtube.com/embed/"
+                var yembed = "//www.youtube.com/embed/";
                 var iy = file.indexOf(yname);
                 var parts = file.split("=");
                 if ( parts.length > 1 )
@@ -290,6 +304,6 @@ videoApp.Controller = function($scope,$http,$transclude,$element) {
 			this.currentTime = 50;
 			}, false);
 		*/	
-	}
+	};
 };
 });
