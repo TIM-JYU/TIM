@@ -19,9 +19,39 @@ from timApp.accesshelper import get_viewable_blocks_or_none_if_admin
 
 FORCED_TEMPLATE_NAME = 'force'
 
+special_names = ['Templates', 'Printing']
+
+
+def path_and_shortname(item_path:str) -> [str, str]:
+    """
+    Divide name to path and shortname
+    :param item_path: name to divide
+    :return: path and shortname
+    """
+    ind = item_path.rfind('/')
+    if ind < 0:
+        return '', item_path
+    return item_path[0:ind+1], item_path[ind+1:]
+
+
+def check_for_special_name(item_path: str) -> str:
+    """
+    Check if shortname is one of the special names and if it is, change the typing correctly
+    :param item_path: name to check
+    :return: names case changed correctly if special name
+    """
+    ipath, sname = path_and_shortname(item_path)
+
+    for sn in special_names:
+        if sn.upper() == sname.upper():
+            return ipath + sn
+            break
+    return item_path
+
 
 def create_item(item_path, item_type_str, item_title, create_function, owner_group_id):
-    item_path = item_path.strip('/')
+    item_path = check_for_special_name(item_path.strip('/'))
+
     validate_item_and_create(item_path, item_type_str, owner_group_id)
 
     item = create_function(item_path, owner_group_id, item_title)

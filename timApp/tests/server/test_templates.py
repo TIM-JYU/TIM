@@ -1,4 +1,4 @@
-from routes.view import get_templates_for_folder
+from timApp.routes.view import get_templates_for_folder
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.tim_models import db

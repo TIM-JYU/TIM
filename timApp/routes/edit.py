@@ -313,13 +313,15 @@ def par_response(pars,
                  update_cache=False,
                  context_par=None,
                  edited=False):
+    current_user = get_current_user_object()
     if update_cache:
         changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(),
                                                   doc.get_settings(),
                                                   persist=update_cache)
     else:
         changed_pars = []
-        DocParagraph.preload_htmls(pars, doc.get_settings(), context_par=context_par, persist=update_cache)
+        DocParagraph.preload_htmls(pars, doc.get_settings(current_user), context_par=context_par,
+                                   persist=update_cache)
 
     # Do not check for duplicates for preview because the operation is heavy
     if not preview:
@@ -336,7 +338,6 @@ def par_response(pars,
     else:
         duplicates = None
 
-    current_user = get_current_user_object()
     pars, js_paths, css_paths, modules = post_process_pars(doc, pars, current_user, edit_window=preview)
 
     changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview)

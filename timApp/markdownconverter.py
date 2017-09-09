@@ -50,9 +50,9 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
         env = create_environment(macro_delimiter)
     env.filters['Pz'] = Pz
     try:
-        # if text.startswith("%%GLOBALMACROS%%"):
-        #    gm = macros.get("GLOBALMACROS", "")
-        #    text = text.replace("%%GLOBALMACROS%%", gm)
+        if text.startswith("%%GLOBALMACROS%%"):
+            gm = macros.get("GLOBALMACROS", "")
+            text = text.replace("%%GLOBALMACROS%%", gm)
         startstr = env.comment_start_string + "LOCAL"
         beg = text.find(startstr)
         if beg >= 0:
@@ -62,7 +62,8 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
                 local_macros_yaml = text[beg+len(startstr):end]
                 local_macros = parse_yaml(local_macros_yaml)
                 macros = {**macros, **local_macros}
-        return env.from_string(text).render(macros)
+        conv = env.from_string(text).render(macros)
+        return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:
             return get_error_html('Syntax error in template: {}'.format(e))

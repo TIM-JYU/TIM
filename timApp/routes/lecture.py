@@ -26,7 +26,7 @@ from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.tempdb_models import TempDb
 from timApp.timdb.tim_models import db, Message, LectureUsers, AskedQuestion, LectureAnswer, Lecture
 from random import randrange
-from timtiming import taketime
+from timApp.timtiming import taketime
 
 lecture_routes = Blueprint('lecture',
                            __name__,
