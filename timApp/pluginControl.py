@@ -256,7 +256,7 @@ def pluginify(doc: Document,
     css_paths = []
     modules = []
 
-    taketime("answ", "done", len(answers))
+    # taketime("answ", "done", len(answers))
 
     for plugin_name, plugin_block_map in plugins.items():
         taketime("plg", plugin_name)
