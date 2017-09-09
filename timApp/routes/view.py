@@ -3,7 +3,7 @@ import time
 import traceback
 from typing import Tuple, Union, Optional, List
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, json
 from flask import abort
 from flask import current_app
 from flask import flash
@@ -66,6 +66,11 @@ def get_document(doc_id: int, view_range: Optional[Range] = None) -> Tuple[Docum
     doc = Document(doc_id).get_latest_version()
     doc.load_pars()
     return doc, (get_whole_document(doc) if view_range is None else get_partial_document(doc, view_range))
+
+
+@view_page.route("/ping", methods=['GET'])
+def view_ping():
+    return json.dumps({'ping': 'ok'})
 
 
 @view_page.route("/show_slide/<path:doc_name>")
