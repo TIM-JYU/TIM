@@ -40,6 +40,21 @@ def Pz(i):
     if i < 0:
         return " - " + str(-i)
     return ""
+
+
+def belongs(username, groupname):
+    """
+    Returns if user belongs to group
+    :param username: user to check
+    :param groupname: group to check
+    :return:
+    """
+    from timApp.dbaccess import get_timdb
+    timdb = get_timdb();
+    result = timdb.users.check_if_in_group(username, groupname)
+    return result
+
+
 # ------------------------ Jinja filters end ---------------------------------------------------------------
 
 
@@ -49,6 +64,7 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
     if env is None:
         env = create_environment(macro_delimiter)
     env.filters['Pz'] = Pz
+    env.filters['belongs'] = belongs
     try:
         if text.startswith("%%GLOBALMACROS%%"):
             gm = macros.get("GLOBALMACROS", "")

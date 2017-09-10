@@ -274,7 +274,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
     hide_answers = get_option(request, 'noanswers', False)
 
     teacher_or_see_answers = route in ('teacher', 'answers')
-    doc_settings = doc.get_settings()
+    current_user = get_current_user_object() if logged_in() else None
+    doc_settings = doc.get_settings(current_user)
 
     # Preload htmls here to make dereferencing faster
     try:
@@ -294,7 +295,6 @@ def view(item_path, template_name, usergroup=None, route="view"):
     tasks_done = None
     task_groups = None
     user_list = []
-    current_user = get_current_user_object() if logged_in() else None
     task_ids, plugin_count = find_task_ids(xs)
     points_sum_rule = doc_settings.point_sum_rule(default={})
     try:

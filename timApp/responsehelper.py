@@ -25,6 +25,12 @@ def json_response(jsondata, status_code=200):
     return response
 
 
+def text_response(data, status_code=200):
+    response = Response(data, mimetype='text/plain')
+    response.status_code = status_code
+    return response
+
+
 def to_json_str(jsondata):
     return json.dumps(jsondata,
                       separators=(',', ':'),

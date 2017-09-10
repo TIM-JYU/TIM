@@ -270,7 +270,11 @@ def get_chache_keys():
     s = ""
     for key in cache.keys():
         s += key + "\n"
-    s = s + "\n".join(os.listdir(CACHE_DIR))
+    # noinspection PyBroadException
+    try:
+        s = s + "\n".join(os.listdir(CACHE_DIR))
+    except:  # no CACHE_DIR yet
+        pass
     return s
 
 

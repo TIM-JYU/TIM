@@ -4,7 +4,7 @@ from flask import Blueprint, abort
 
 from timApp.accesshelper import verify_admin
 from timApp.dbaccess import get_timdb
-from timApp.responsehelper import json_response, ok_response
+from timApp.responsehelper import json_response, ok_response, text_response
 from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.special_group_names import SPECIAL_GROUPS
@@ -30,6 +30,23 @@ def show_members(groupname):
         abort(404, 'Usergroup does not exist.')
     members = timdb.users.get_users_for_group(groupname, order=True)
     return json_response(members)
+
+
+@groups.route('/usergoups/<username>')
+def show_usergoups(username):
+    verify_admin()
+    timdb = get_timdb()
+    members = timdb.users.get_users_groups(username, order=True)
+    members = "\n".join(members)
+    return text_response(members)
+
+
+@groups.route('/belongs/<username>/<groupname>')
+def belongs(username, groupname):
+    verify_admin()
+    timdb = get_timdb()
+    result = timdb.users.check_if_in_group(username, groupname)
+    return json_response(result)
 
 
 @groups.route('/create/<groupname>')
