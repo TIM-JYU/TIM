@@ -185,6 +185,8 @@ class TimRouteTest(TimDbTest):
             self.assertEqual(expect_content, resp.location.lstrip('http://localhost/'))
         resp_data = resp.get_data(as_text=True)
         if as_tree:
+            if json_key is not None:
+                resp_data = json.loads(resp_data)[json_key]
             tree = html.fromstring(resp_data)
             if expect_xpath is not None:
                 self.assertLessEqual(1, len(tree.findall(expect_xpath)))
@@ -539,7 +541,7 @@ class TimRouteTest(TimDbTest):
         self.assertEqual((e1.text or '').strip(), (e2.text or '').strip())
         self.assertEqual((e1.tail or '').strip(), (e2.tail or '').strip())
         self.assertEqual(e1.attrib, e2.attrib)
-        self.assertEqual(len(e1), len(e2))
+        self.assertEqual(len(e1), len(e2), msg=html.tostring(e2, pretty_print=True).decode('utf-8'))
         for c1, c2 in zip(e1, e2):
             self.assert_elements_equal(c1, c2)
 

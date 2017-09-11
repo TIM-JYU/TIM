@@ -39,13 +39,26 @@ class QuestionTest(TimLiveServer, TimRouteTest):
 
         expected_element = html.fromstring(
             """
-            <div class="par questionPar"
+            <div class="par"
                  id="{0}"
                  t="{1}"
                  attrs="{{&#34;question&#34;: &#34;true&#34;, &#34;taskId&#34;: &#34;test3&#34;}}" ng-non-bindable>
                 <a href="#{2}" title="Permlink" class="headerlink">#</a>
                 <div class="parContent" id="{2}">
-                    <div class="error">This question is missing plugin="qst" attribute. Please add it.</div>
+                    <pre><code>
+json:
+  answerFieldType: radio
+  headers: []
+  matrixType: ''
+  questionText: What day is it today?
+  questionTitle: Today
+  questionType: radio-vertical
+  rows:
+  - Monday
+  - Wednesday
+  - Friday
+  timeLimit: 90
+points: '2:1'</code></pre>
                 </div>
                 <div class="editline" title="Click to edit this paragraph"></div>
                 <div class="readline"

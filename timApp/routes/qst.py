@@ -125,6 +125,14 @@ def qst_html():
     return Response(html, mimetype="text/html")
 
 
+@qst_plugin.route("/qst/<path:path>")
+def not_found(path):
+    """This 404 route is required because qst plugin is in the same process - otherwise calling a non-existent qst route
+    results in a weird request loop, at least when running locally.
+    """
+    return abort(404)
+
+
 def delete_key(d, key):
     if key in d:
         del d[key]

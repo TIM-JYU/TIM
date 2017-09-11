@@ -435,7 +435,8 @@ def plugin_call(plugin, filename):
     try:
         req = call_plugin_resource(plugin, filename, request.args)
         return Response(stream_with_context(req.iter_content()), content_type=req.headers['content-type'])
-    except PluginException:
+    except PluginException as e:
+        log_warning(str(e))
         abort(404)
 
 
@@ -626,5 +627,4 @@ def start_app():
             port=5000,
             use_evalex=False,
             use_reloader=False,
-            # debug=True,
-            threaded=not (app.config['DEBUG'] and app.config['PROFILE']))
+            threaded=True)

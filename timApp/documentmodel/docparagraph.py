@@ -3,6 +3,10 @@ import os
 import shelve
 from collections import defaultdict
 from copy import copy
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from timApp.documentmodel.document import Document
 
 import filelock
 
@@ -10,6 +14,7 @@ from timApp.documentmodel.documentparser import DocumentParser
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter
 from timApp.documentmodel.macroinfo import MacroInfo
+from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.randutils import random_id, hashfunc
 from timApp.htmlSanitize import sanitize_html
 from timApp.markdownconverter import par_list_to_html_list, expand_macros
@@ -108,19 +113,7 @@ class DocParagraph:
         :return: The created DocParagraph.
 
         """
-        if 'r' == 'tr':
-            par = DocParagraph.create(doc, files_root=self.files_root, md=self.get_markdown(),
-                                      attrs=self.get_attrs())
-        else:
-            par = DocParagraph.create(doc, files_root=self.files_root)
-
-        par.set_attr('r', r)
-        par.set_attr('rd', self.get_doc_id() if add_rd else None)
-        par.set_attr('rp', self.get_id())
-        par.set_attr('ra', None)
-
-        par._cache_props()
-        return par
+        return create_reference(doc, doc_id=self.get_doc_id(), par_id=self.get_id(), r=r, add_rd=add_rd)
 
     @classmethod
     def create_area_reference(cls, doc, area_name: str, r: Optional[str] = None, add_rd: Optional[bool] = True,
@@ -162,6 +155,7 @@ class DocParagraph:
         par.nomacros = par.attrs.get('nomacros', False)
         par.nocache = par.attrs.get('nocache', False)
         par._cache_props()
+        par._compute_hash()
         return par
 
     @classmethod
@@ -434,6 +428,8 @@ class DocParagraph:
         :return: html string
 
         """
+        if self.html is not None:
+            return self.html
         if self.is_question():
             from timApp.plugin import Plugin
             from timApp.plugin import PluginException
@@ -444,23 +440,29 @@ class DocParagraph:
                     return get_error_html('This question is missing plugin="qst" attribute. Please add it.')
                 return get_error_html(e)
             title = values.get("json", {}).get("questionTitle", "")
-            if not title:  # compability for old
+            if not title:  # compatibility for old
                 title = values.get("json", {}).get("title", "question_title")
             return self.__set_html(sanitize_html(
                 '<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{0}"></span></a>'
                 '<p class="questionNumber">{0}</p>'.format(title)))
-        if self.html is not None:
-            return self.html
         if self.is_plugin():
             return self.__set_html('')
         if self.is_setting():
             return self.__set_html(self.__get_setting_html())
 
         context_par = self.doc.get_previous_par(self, get_last_if_no_prev=False) if from_preview else None
-        DocParagraph.preload_htmls([self],
+
+        preload_pars = self.doc.get_paragraphs() if self.doc.preload_option == PreloadOption.all else [self]
+        DocParagraph.preload_htmls(preload_pars,
                                    self.doc.get_settings(),
                                    context_par=context_par,
                                    persist=not from_preview)
+
+        # This DocParagraph instance is not necessarily the same as what self.doc contains. In that case, we copy the
+        # HTML from the doc's equivalent paragraph.
+        if self.html is None:
+            self.html = self.doc.par_map[self.get_id()]['c'].html
+            assert self.html is not None
         return self.html
 
     @classmethod
@@ -486,7 +488,7 @@ class DocParagraph:
 
         first_pars = []
         if context_par is not None:
-            first_pars = pars[0].doc.get_pars_till(context_par)
+            first_pars = [context_par]
             pars = first_pars + pars
 
         if not persist:
@@ -725,7 +727,10 @@ class DocParagraph:
 
         """
         self.__data['md'] = new_md
-        self.__data['t'] = hashfunc(new_md, self.get_attrs())
+        self._compute_hash()
+
+    def _compute_hash(self):
+        self.__data['t'] = hashfunc(self.get_markdown(), self.get_attrs())
 
     def set_attr(self, attr_name: str, attr_val: Any):
         """Sets the value of the specified attribute.
@@ -929,8 +934,7 @@ class DocParagraph:
         elif source_doc is not None:
             ref_doc = source_doc
         else:
-            settings = self.doc.get_settings()
-            ref_docid = settings.get_source_document()
+            ref_doc = self.doc.get_original_document()
 
         if ref_doc is None:
             if ref_docid is None:
@@ -943,7 +947,7 @@ class DocParagraph:
 
         if self.is_par_reference():
             try:
-                par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
+                par = ref_doc.get_paragraph(attrs['rp'])
             except TimDbException:
                 raise InvalidReferenceException('The referenced paragraph does not exist.')
 
@@ -994,8 +998,7 @@ class DocParagraph:
 
     def is_question(self) -> bool:
         """Returns whether this paragraph is a question paragraph."""
-        # preview = self.get("preview", False)
-        return bool(self.get_attr('question'))
+        return self.is_plugin() and bool(self.get_attr('question'))
 
     def is_setting(self) -> bool:
         """Returns whether this paragraph is a settings paragraph."""
@@ -1018,3 +1021,25 @@ def is_real_id(par_id: Optional[str]):
     :return: True if the given paragraph id corresponds to some real paragraph, False otherwise.
     """
     return par_id is not None and par_id != 'HELP_PAR'
+
+
+def create_reference(doc: 'Document', doc_id: int, par_id: str, r: Optional[str] = None, add_rd: bool = True) -> 'DocParagraph':
+    """Creates a reference paragraph to a paragraph.
+
+    :param par_id: Id of the original paragraph.
+    :param doc_id: Id of the original document.
+    :param doc: The Document object in which the reference paragraph will reside.
+    :param r: The kind of the reference.
+    :param add_rd: If True, sets the rd attribute for the reference paragraph.
+    :return: The created DocParagraph.
+
+    """
+    par = DocParagraph.create(doc)
+
+    par.set_attr('r', r)
+    par.set_attr('rd', doc_id if add_rd else None)
+    par.set_attr('rp', par_id)
+    par.set_attr('ra', None)
+
+    par._cache_props()
+    return par

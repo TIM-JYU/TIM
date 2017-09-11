@@ -1,6 +1,5 @@
 """Routes for editing a document."""
-from difflib import SequenceMatcher
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from flask import Blueprint, render_template
 from flask import abort
@@ -12,14 +11,17 @@ from timApp.common import post_process_pars
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
+from timApp.documentmodel.documenteditresult import DocumentEditResult
 from timApp.documentmodel.documentparser import ValidationException, ValidationWarning
 from timApp.markdownconverter import md_to_html
 from timApp.requesthelper import verify_json_params
 from timApp.responsehelper import json_response, ok_response
+from timApp.routes.editrequest import get_pars_from_editor_text, EditRequest
 from timApp.routes.notify import notify_doc_watchers
 from timApp.routes.qst import question_convert_js_to_yaml
 from timApp.routes.view import get_module_ids
 from timApp.sessioninfo import get_current_user_object, logged_in, get_current_user_group
+from timApp.synchronize_translations import synchronize_translations
 from timApp.timdb.bookmarks import Bookmarks
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
@@ -78,19 +80,19 @@ def update_document(doc_id):
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
         editor_pars = get_pars_from_editor_text(doc, content, break_on_elements=True, skip_access_check=True)
-        d = timdb.documents.update_document(doc, content, original, strict_validation)
-        check_and_rename_pluginnamehere(editor_pars, d)
-        old_pars = d.get_paragraphs()
+        edit_result = timdb.documents.update_document(doc, content, original, strict_validation)
+        check_and_rename_pluginnamehere(editor_pars, doc)
+        old_pars = doc.get_paragraphs()
         i = 0
         while i < len(editor_pars):
             if editor_pars[i].get_attr('taskId') and old_pars[i].get_attr('taskId'):
                 if editor_pars[i].get_attr('taskId') != old_pars[i].get_attr('taskId'):
-                    timdb.documents.modify_paragraph(doc=d,
+                    timdb.documents.modify_paragraph(doc=doc,
                                                      par_id=old_pars[i].get_id(),
                                                      new_content=old_pars[i].get_markdown(),
                                                      new_attrs=editor_pars[i].get_attrs())
             i += 1
-        synchronize_translations(docentry)
+        synchronize_translations(docentry, edit_result)
     except ValidationWarning as e:
         return json_response({'error': str(e), 'is_warning': True}, status_code=400)
     except (TimDbException, ValidationException) as e:
@@ -216,26 +218,25 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
     if not doc.has_paragraph(par_id):
         abort(400, 'Paragraph not found: ' + par_id)
 
-    original_par = None
-    version_before = doc.get_version()
-    area_start = request.get_json().get('area_start')
-    area_end = request.get_json().get('area_end')
-    editing_area = area_start and area_end
+    edit_request = EditRequest.from_request(doc, text=md)
+    area_start = edit_request.area_start
+    area_end = edit_request.area_end
+    editing_area = edit_request.editing_area
     try:
-        editor_pars = get_pars_from_editor_text(doc, md, break_on_elements=editing_area, skip_access_check=True)
+        editor_pars = edit_request.get_pars(skip_access_check=True)
     except ValidationException as e:
         return abort(400, str(e))
 
     editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
-    new_par_ids = []
 
     if editing_area:
         try:
-            new_start, new_end = doc.update_section(md, area_start, area_end)
+            new_start, new_end, edit_result = doc.update_section(md, area_start, area_end)
             pars = doc.get_section(new_start, new_end)
         except (ValidationException, TimDbException) as e:
             return abort(400, str(e))
     else:
+        edit_result = DocumentEditResult()
         original_par = doc.get_paragraph(par_id)
         pars = []
 
@@ -245,27 +246,27 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
                                                         new_content=editor_pars[0].get_markdown(),
                                                         new_attrs=editor_pars[0].get_attrs())
             pars.append(par)
+            edit_result.changed.append(par)
         else:
             # If the first paragraph was not modified at all, append the original one
             pars.append(original_par)
         for p in editor_pars[1:]:
             [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
             pars.append(par)
-            new_par_ids.append(par.get_id())
+            edit_result.added.append(par)
 
     mark_pars_as_read_if_chosen(pars, doc)
 
-    synchronize_translations(docentry)
+    synchronize_translations(docentry, edit_result)
     notify_doc_watchers(docentry,
-                        get_diff_link(docentry, version_before) + 'Paragraph was edited:\n\n' + md,
+                        get_diff_link(docentry, edit_request.old_doc_version) + 'Paragraph was edited:\n\n' + md,
                         NotificationType.DocModified,
                         par=pars[0] if pars else None)
     return par_response(pars,
                         doc,
-                        original_par,
-                        new_par_ids,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
-                        edited=True)
+                        edit_request=edit_request,
+                        edit_result=edit_result)
 
 
 @edit_page.route("/preview/<int:doc_id>", methods=['POST'])
@@ -279,43 +280,29 @@ def preview_paragraphs(doc_id):
     text, = verify_json_params('text')
     rjson = request.get_json()
     if not rjson.get('isComment'):
-        area_start = rjson.get('area_start')
-        editing_area = area_start is not None and rjson.get('area_end') is not None
         doc = Document(doc_id)
-        next_par_id = rjson.get('par_next')
-        if editing_area:
-            context_par = doc.get_previous_par(doc.get_paragraph(area_start))
-        elif next_par_id:
-            context_par = doc.get_previous_par(doc.get_paragraph(next_par_id))
-            if doc.has_paragraph(rjson.get('par')):  # rjson['par'] is 'NEW_PAR' when adding a new paragraph
-                context_par = doc.get_previous_par(context_par)
-        else:
-            context_par = doc.get_last_par()
+        edit_request = EditRequest.from_request(doc, preview=True)
         try:
-            blocks = get_pars_from_editor_text(doc, text, break_on_elements=editing_area)
-            doc.insert_temporary_pars(blocks, context_par)
+            blocks = edit_request.get_pars()
             for par in blocks:
                 if par.is_question():
                     par.set_attr('isQuestion', par.is_question())
                     par.set_attr('question', False)
                     par.set_attr('plugin', 'qst')
-            return par_response(blocks, doc, preview=True, context_par=context_par)
+            return par_response(blocks, doc, edit_request=edit_request)
         except Exception as e:
             err_html = get_error_html(e)
             blocks = [DocParagraph.create(doc=doc, md='', html=err_html)]
-            return par_response(blocks, doc, preview=True)
+            return par_response(blocks, doc)
     else:
         return json_response({'texts': md_to_html(text), 'js': [], 'css': []})
 
 
 def par_response(pars,
                  doc,
-                 original_par=None,
-                 new_par_ids=None,
-                 preview=False,
                  update_cache=False,
-                 context_par=None,
-                 edited=False):
+                 edit_request: Optional[EditRequest]=None,
+                 edit_result: Optional[DocumentEditResult]=None):
     current_user = get_current_user_object()
     if update_cache:
         changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(),
@@ -323,13 +310,29 @@ def par_response(pars,
                                                   persist=update_cache)
     else:
         changed_pars = []
-        DocParagraph.preload_htmls(pars, doc.get_settings(current_user), context_par=context_par,
+        ctx = None
+        if edit_request:
+            ctx = edit_request.get_context_par()
+
+            # If the document was changed, there is no HTML cache for the new version, so we "cheat" by lying the document
+            # version so that the preload_htmls call is still fast.
+            if edit_result:
+                for p in pars:
+                    assert p.doc is doc
+                doc.version = edit_request.old_doc_version
+            doc.insert_temporary_pars(edit_request.get_pars(), ctx)
+
+        DocParagraph.preload_htmls(pars, doc.get_settings(current_user), context_par=ctx,
                                    persist=update_cache)
 
+    if edit_result:
+        preview = False
+    else:
+        preview = edit_request and edit_request.preview
     # Do not check for duplicates for preview because the operation is heavy
     if not preview:
         duplicates = check_duplicates(pars, doc, get_timdb())
-        if edited and logged_in():
+        if edit_request and logged_in():
             bms = Bookmarks(get_current_user_object())
             d = DocEntry.find_by_id(doc.doc_id, try_translation=True)
             if d is not None:
@@ -344,6 +347,7 @@ def par_response(pars,
     pars, js_paths, css_paths, modules = post_process_pars(doc, pars, current_user, edit_window=preview)
 
     changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
+    original_par = edit_request.original_par if edit_request else None
 
     return json_response({'texts': render_template('partials/paragraphs.html',
                                                    text=pars,
@@ -359,26 +363,10 @@ def par_response(pars,
                                            changed_pars},
                           'version': doc.get_version(),
                           'duplicates': duplicates,
-                          'original_par': original_par,
-                          'new_par_ids': new_par_ids
+                          'original_par': {'md': original_par.get_markdown(),
+                                           'attrs': original_par.get_attrs()} if original_par else None,
+                          'new_par_ids': edit_result.new_par_ids if edit_result else None
                           })
-
-
-def get_pars_from_editor_text(doc: Document, text: str,
-                              break_on_elements: bool = False, skip_access_check: bool = False) -> List[DocParagraph]:
-
-    blocks = doc.text_to_paragraphs(text, break_on_elements)
-    timdb = get_timdb()
-    for p in blocks:
-        if p.is_reference():
-            try:
-                refdoc = int(p.get_attr('rd'))
-            except (ValueError, TypeError):
-                continue
-            if not skip_access_check and timdb.documents.exists(refdoc)\
-                    and not has_view_access(refdoc):
-                raise ValidationException("You don't have view access to document {}".format(refdoc))
-    return blocks
 
 
 # Gets next available name for plugin
@@ -568,50 +556,6 @@ def add_paragraph():
     return add_paragraph_common(md, doc_id, par_next_id)
 
 
-def synchronize_translations(doc: DocInfo):
-    """Synchronizes the translations of a document by adding missing paragraphs to the translations and deleting non-existing
-    paragraphs.
-
-    :param doc: The document that was edited and whose translations need to be synchronized.
-    """
-
-    # we are only interested in the changes in the "master" document
-    if not doc.is_original_translation:
-        return
-    orig = doc.document_as_current_user
-    orig_pars = [p for p in orig.get_paragraphs()]
-    orig_ids = [p.get_id() for p in orig_pars]
-
-    for tr in doc.translations:  # type: DocInfo
-        if not tr.is_original_translation:
-            tr_doc = tr.document_as_current_user
-            tr_pars = tr_doc.get_paragraphs()
-            tr_rps, tr_ids = [], []
-            for tr_rp, tr_id in ((p.get_attr('rp'), p.get_id()) for p in tr_pars if p.get_attr('rp') is not None):
-                tr_rps.append(tr_rp)
-                tr_ids.append(tr_id)
-            s = SequenceMatcher(None, tr_rps, orig_ids)
-            opcodes = s.get_opcodes()
-            for tag, i1, i2, j1, j2 in [opcode for opcode in opcodes if opcode[0] in ['delete', 'replace']]:
-                for par_id in tr_ids[i1:i2]:
-                    tr_doc.delete_paragraph(par_id)
-            for tag, i1, i2, j1, j2 in opcodes:
-                if tag == 'replace':
-                    for par in orig_pars[j1:j2]:
-                        before_i = tr_doc.find_insert_index(i2, tr_ids)
-                        tr_par = par.create_reference(tr_doc, 'tr', add_rd=False)
-                        tr_doc.insert_paragraph_obj(tr_par,
-                                                    insert_before_id=tr_ids[before_i] if before_i < len(
-                                                        tr_ids) else None)
-                elif tag == 'insert':
-                    for par in orig_pars[j1:j2]:
-                        before_i = tr_doc.find_insert_index(i2, tr_ids)
-                        tr_par = par.create_reference(tr_doc, 'tr', add_rd=False)
-                        tr_doc.insert_paragraph_obj(tr_par,
-                                                    insert_before_id=tr_ids[before_i] if before_i < len(
-                                                        tr_ids) else None)
-
-
 def add_paragraph_common(md, doc_id, par_next_id):
     timdb = get_timdb()
     verify_edit_access(doc_id)
@@ -619,29 +563,33 @@ def add_paragraph_common(md, doc_id, par_next_id):
     if not docentry:
         abort(404)
     doc = docentry.document_as_current_user
-    version_before = doc.get_version()
+    edit_result = DocumentEditResult()
+    edit_request = EditRequest.from_request(doc, md)
     try:
-        editor_pars = get_pars_from_editor_text(doc, md)
+        editor_pars = edit_request.get_pars()
     except ValidationException as e:
         return abort(400, str(e))
 
     editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     pars = []
-    new_par_ids = []
     for p in editor_pars:
         [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
         pars.append(par)
-        new_par_ids.append(par.get_id())
+        edit_result.added.append(par)
     mark_pars_as_read_if_chosen(pars, doc)
 
+    synchronize_translations(docentry, edit_result)
     if pars:
-        synchronize_translations(docentry)
         notify_doc_watchers(docentry,
-                            get_diff_link(docentry, version_before) + 'Paragraph was added:\n\n' + md,
+                            get_diff_link(docentry, edit_request.old_doc_version) + 'Paragraph was added:\n\n' + md,
                             NotificationType.DocModified,
                             par=pars[0])
-    return par_response(pars, doc, None, new_par_ids, update_cache=current_app.config['IMMEDIATE_PRELOAD'], edited=True)
+    return par_response(pars,
+                        doc,
+                        update_cache=current_app.config['IMMEDIATE_PRELOAD'],
+                        edit_result=edit_result,
+                        edit_request=edit_request)
 
 
 @edit_page.route("/deleteParagraph/<int:doc_id>", methods=["POST"])
@@ -665,19 +613,24 @@ def delete_paragraph(doc_id):
             if not doc.has_paragraph(p):
                 abort(400, 'Paragraph {} does not exist'.format(p))
         md = doc.export_section(area_start, area_end)
-        doc.delete_section(area_start, area_end)
+        edit_result = doc.delete_section(area_start, area_end)
     else:
         par_id, = verify_json_params('par')
         if not doc.has_paragraph(par_id):
             abort(400, 'Paragraph {} does not exist'.format(par_id))
-        md = doc.get_paragraph(par_id).get_markdown()
+        par = doc.get_paragraph(par_id)
+        md = par.get_markdown()
         timdb.documents.delete_paragraph(doc, par_id)
+        edit_result = DocumentEditResult(deleted=[par])
 
-    synchronize_translations(docentry)
+    synchronize_translations(docentry, edit_result)
     notify_doc_watchers(docentry,
                         get_diff_link(docentry, version_before) + 'Paragraph was deleted:\n\n' + md,
                         NotificationType.DocModified)
-    return par_response([], doc, update_cache=current_app.config['IMMEDIATE_PRELOAD'], edited=True)
+    return par_response([],
+                        doc,
+                        update_cache=current_app.config['IMMEDIATE_PRELOAD'],
+                        edit_result=edit_result)
 
 
 @edit_page.route("/getUpdatedPars/<int:doc_id>")

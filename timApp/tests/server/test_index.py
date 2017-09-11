@@ -157,3 +157,26 @@ Lorem ipsum.
                           ({'id': 'same-1', 'level': 1, 'text': 'Same'}, []),
                           ({'id': 'same-1-1', 'level': 1, 'text': 'Same'}, []),
                           ({'id': 'same-3', 'level': 1, 'text': 'Same'}, [])], doc.get_index())
+
+    def test_heading_preview(self):
+        self.login_test1()
+        d = self.create_doc(settings={'auto_number_headings': True}, initial_par='# a\n\n#-\n\n# b')
+        pars = d.document.get_paragraphs()
+        self.get(f'/getUpdatedPars/{d.id}')
+
+        r = self.json_post(f'/preview/{d.id}', {'text': '# c\n\n# d\n\n#-\n\n# e'}, json_key='texts', as_tree=True)
+        content = r.cssselect('.parContent')
+        self.assertEqual('3. c\n4. d', content[0].text_content().strip())
+        self.assertEqual('5. e', content[1].text_content().strip())
+
+        r = self.json_post(f'/preview/{d.id}', {'text': '# c\n\n# d\n\n#-\n\n# e', 'par_next': pars[1].get_id()},
+                           json_key='texts', as_tree=True)
+        content = r.cssselect('.parContent')
+        self.assertEqual('1. c\n2. d', content[0].text_content().strip())
+        self.assertEqual('3. e', content[1].text_content().strip())
+
+        r = self.json_post(f'/preview/{d.id}', {'text': '# c\n\n# d\n\n#-\n\n# e', 'par_next': pars[2].get_id()},
+                           json_key='texts', as_tree=True)
+        content = r.cssselect('.parContent')
+        self.assertEqual('2. c\n3. d', content[0].text_content().strip())
+        self.assertEqual('4. e', content[1].text_content().strip())

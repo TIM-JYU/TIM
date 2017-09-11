@@ -1,0 +1,82 @@
+from typing import List, Optional
+
+from timApp.accesshelper import has_view_access
+from timApp.dbaccess import get_timdb
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.document import Document
+from timApp.documentmodel.documentparser import ValidationException
+from timApp.requesthelper import verify_json_params
+
+
+class EditRequest:
+    def __init__(self, doc: Document, area_start: str = None, area_end: str = None, par: str = None, text: str = None,
+                 next_par_id: str = None, preview: bool = False):
+        self.doc = doc
+        self.preview = preview
+        self.old_doc_version = doc.get_version()
+        self.area_start = area_start
+        self.area_end = area_end
+        self.next_par_id = next_par_id
+        self.par = par
+        self.text = text
+        self.editor_pars = None
+        self.original_par = self.doc.get_paragraph(self.par) if not self.editing_area and par is not None and not self.is_adding else None
+
+    @property
+    def is_adding(self):
+        return self.par == 'NEW_PAR'
+
+    @property
+    def editing_area(self) -> bool:
+        return self.area_start is not None and self.area_end is not None
+
+    def get_original_par(self) -> Optional[DocParagraph]:
+        return self.original_par
+
+    def get_context_par(self) -> DocParagraph:
+        doc = self.doc
+        if self.editing_area:
+            context_par = doc.get_previous_par(doc.get_paragraph(self.area_start))
+        elif self.next_par_id:
+            context_par = doc.get_previous_par(doc.get_paragraph(self.next_par_id))
+            if doc.has_paragraph(self.par):  # par is 'NEW_PAR' when adding a new paragraph
+                context_par = doc.get_previous_par(context_par)
+        else:
+            context_par = doc.get_last_par()
+        return context_par
+
+    def get_pars(self, skip_access_check: bool = False):
+        if self.editor_pars is None:
+            self.editor_pars = get_pars_from_editor_text(self.doc, self.text, break_on_elements=self.editing_area,
+                                                         skip_access_check=skip_access_check)
+        return self.editor_pars
+
+    @staticmethod
+    def from_request(doc: Document, text: Optional[str] = None, preview: bool = False) -> 'EditRequest':
+        if text is None:
+            text, = verify_json_params('text')
+        area_start, area_end, par, par_next = verify_json_params('area_start', 'area_end', 'par', 'par_next',
+                                                                 require=False)
+        return EditRequest(doc=doc,
+                           text=text,
+                           area_start=area_start,
+                           area_end=area_end,
+                           par=par,
+                           next_par_id=par_next,
+                           preview=preview)
+
+
+def get_pars_from_editor_text(doc: Document, text: str,
+                              break_on_elements: bool = False, skip_access_check: bool = False) -> List[DocParagraph]:
+    blocks = doc.text_to_paragraphs(text, break_on_elements)
+    timdb = get_timdb()
+    for p in blocks:
+        if p.is_reference():
+            try:
+                refdoc = int(p.get_attr('rd'))
+            except (ValueError, TypeError):
+                continue
+            if not skip_access_check and timdb.documents.exists(refdoc) \
+                    and not has_view_access(refdoc):
+                raise ValidationException("You don't have view access to document {}".format(refdoc))
+    return blocks

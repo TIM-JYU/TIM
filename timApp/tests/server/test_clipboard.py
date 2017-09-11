@@ -30,6 +30,9 @@ class ClipboardTest(TimRouteTest):
                         'par_after': par_after.get_id() if par_after else None,
                         'as_ref': as_ref}, **kwargs)
 
+    def show(self, doc: DocEntry):
+        self.get('/clipboard', query_string={'doc_id': doc.id})
+
     def test_invalid(self):
         self.login_test2()
         d = self.create_doc(initial_par=['test1', 'test2', 'test3'])
@@ -83,6 +86,7 @@ class ClipboardTest(TimRouteTest):
         d = self.create_doc(initial_par=test_pars)
         pars = d.document.get_paragraphs()
         self.copy(d, pars[0], pars[0])
+        self.show(d)
         self.paste(d, par_after=pars[2])
         d.document.clear_mem_cache()
         pars_new = d.document.get_paragraphs()

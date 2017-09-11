@@ -7,6 +7,7 @@ from typing import List, Optional, Dict, Tuple, Iterable
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.document import Document
+from timApp.documentmodel.documenteditresult import DocumentEditResult
 from timApp.documentmodel.documentparser import DocumentParser
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.block import Block
@@ -34,9 +35,6 @@ def create_citation(original_doc: Document,
     :returns: The newly created document object.
 
     """
-
-    if not original_doc.exists():
-        raise TimDbException('The document does not exist!')
 
     ref_attrs = ref_attribs if ref_attribs is not None else {}
 
@@ -84,7 +82,6 @@ class Documents(TimDbBase):
 
         """
 
-        assert doc.exists(), 'document does not exist: %r' % doc.doc_id
         content = self.trim_markdown(content)
         par = doc.insert_paragraph(content, insert_before_id=prev_par_id, attrs=attrs)
         self.update_last_modified(doc)
@@ -97,7 +94,6 @@ class Documents(TimDbBase):
 
         """
 
-        assert self.exists(document_id), 'document does not exist: %d' % document_id
         DocEntry.query.filter_by(id=document_id).delete()
         BlockAccess.query.filter_by(block_id=document_id).delete()
         Block.query.filter_by(type_id=blocktypes.DOCUMENT, id=document_id).delete()
@@ -250,14 +246,13 @@ class Documents(TimDbBase):
 
         """
 
-        assert self.exists(doc.doc_id), 'document does not exist: ' + str(doc.doc_id)
         new_content = self.trim_markdown(new_content)
         par = doc.modify_paragraph(par_id, new_content, new_attrs)
         self.update_last_modified(doc)
         return [par], doc
 
     def update_document(self, doc: Document, new_content: str, original_content: str=None,
-                        strict_validation=True) -> Document:
+                        strict_validation=True) -> DocumentEditResult:
         """Updates a document.
 
         :param doc: The id of the document to be updated.
@@ -268,12 +263,10 @@ class Documents(TimDbBase):
 
         """
 
-        assert self.exists(doc.doc_id), 'document does not exist: ' + str(doc)
-
-        doc.update(new_content, original_content, strict_validation)
+        _, _, result = doc.update(new_content, original_content, strict_validation)
         self.update_last_modified(doc, commit=False)
         self.db.commit()
-        return doc
+        return result
 
     def trim_markdown(self, text: str):
         """Trims the specified text. Don't trim spaces from left side because they may indicate a code block.
