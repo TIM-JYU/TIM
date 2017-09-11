@@ -49,11 +49,6 @@ def pull_doc_path(endpoint, values):
             abort(404)
 
 
-@print_blueprint.route("/ping", methods=['GET'])
-def print_ping():
-    return json.dumps({'ping': 'ok'});
-
-
 @print_blueprint.route("/<path:doc_path>", methods=['POST'])
 def print_document(doc_path):
 

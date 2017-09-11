@@ -293,5 +293,22 @@ class Users(TimDbBase):
             WHERE UserGroup.name = %s{}""".format(order_sql), [usergroup_name])
         return self.resultAsDictionary(c)
 
+    def check_if_in_group(self, username, usergroup_name):
+        c = self.db.cursor()
+        c.execute("""SELECT ua.id, ua.name, ug.user_id, ug.usergroup_id, gr.id, gr.name
+            FROM UserAccount AS ua, usergroupmember As ug, usergroup AS gr
+            WHERE ua.id=ug.user_id  and ug.usergroup_id=gr.id and ua.name=%s and gr.name=%s
+            """, [username, usergroup_name])
+        return c.rowcount > 0
+
+    def get_users_groups(self, username, order=False):
+        c = self.db.cursor()
+        order_sql = ' ORDER BY gr.name' if order else ''
+        c.execute("""SELECT gr.name
+            FROM UserAccount AS ua, usergroupmember As ug, usergroup AS gr
+            WHERE ua.id=ug.user_id  and ug.usergroup_id=gr.id and ua.name=%s{}
+            """.format(order_sql), [username])
+        return self.resultAsList(c)
+
     def get_personal_usergroup_by_id(self, user_id: int) -> Optional[int]:
         return self.get_personal_usergroup(self.get_user(user_id))

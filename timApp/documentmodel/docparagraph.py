@@ -41,8 +41,10 @@ class DocParagraph:
         self.__htmldata = None
         self.ref_pars = None
         self.__rands = None   # random number macros for this pg
+        self.__rnd_seed = 0
         self.attrs = None
         self.nomacros = False
+        self.nocache = False
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -93,6 +95,7 @@ class DocParagraph:
         }
         par.attrs = par.__data['attrs']
         par.nomacros = par.attrs.get('nomacros', False)
+        par.nocache = par.attrs.get('nocache', False)
         par._cache_props()
         return par
 
@@ -157,6 +160,7 @@ class DocParagraph:
             par.__data['attrs'] = {}
         par.attrs = par.__data['attrs']
         par.nomacros = par.attrs.get('nomacros', False)
+        par.nocache = par.attrs.get('nocache', False)
         par._cache_props()
         return par
 
@@ -356,12 +360,18 @@ class DocParagraph:
     def get_nomacros(self):
         return self.nomacros
 
-    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None, ignore_errors: bool = False) -> str:
+    def get_nocache(self):
+        return self.nocache
+
+    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None,
+                              ignore_errors: bool = False,
+                              user=None) -> str:
         """Returns the macro-processed markdown for this paragraph.
 
         :param macroinfo: The MacroInfo to use. If None, the MacroInfo is taken from the document that has the
         paragraph.
         :param ignore_errors: Whether or not to ignore errors when expanding the macros
+        :param user: current user if wanted to force using user specific macros, then nocache is needed
         :return: The expanded markdown.
 
         """
@@ -370,7 +380,7 @@ class DocParagraph:
             return md
         if macroinfo is None:
             macroinfo = self.doc.get_settings().get_macroinfo()
-        macros = macroinfo.get_macros()
+        macros = macroinfo.get_macros(nocache=self.get_nocache())
         if self.insert_rnds(None): # TODO: RND_SEED: check what seed should be used, is this used to plugins?
             macros = {**macros, **self.__rands}
         return expand_macros(md, macros, macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
@@ -455,7 +465,8 @@ class DocParagraph:
 
     @classmethod
     def preload_htmls(cls, pars: List['DocParagraph'], settings,
-                      clear_cache: bool = False, context_par: Optional['DocParagraph'] = None, persist: Optional[bool] = True):
+                      clear_cache: bool = False, context_par: Optional['DocParagraph'] = None,
+                      persist: Optional[bool] = True):
         """Loads the HTML for each paragraph in the given list.
 
         :param context_par: The context paragraph. Required only for previewing for now.

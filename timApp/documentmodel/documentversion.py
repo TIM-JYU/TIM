@@ -69,9 +69,9 @@ class DocumentVersion(Document):
         else:
             return DocParagraph.get_latest(self.doc_id, par_id, self.files_root)
 
-    def get_settings(self) -> DocSettings:
+    def get_settings(self, user=None) -> DocSettings:
         if self.settings is None:
-            self.settings = super(DocumentVersion, self).get_settings()
+            self.settings = super(DocumentVersion, self).get_settings(user)
         return self.settings
 
     def add_paragraph_obj(self, p: DocParagraph) -> DocParagraph:

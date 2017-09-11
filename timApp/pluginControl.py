@@ -21,6 +21,8 @@ from timApp.timdb.models.user import User
 from timApp.utils import get_error_html, get_error_md
 from timApp.rndutils import get_simple_hash_from_par_and_user
 from timApp.timdb.printsettings import PrintFormat
+from timApp.dumboclient import call_dumbo
+from timApp.timtiming import taketime
 
 LAZYSTART = "<!--lazy "
 LAZYEND = " lazy-->"
@@ -104,7 +106,7 @@ def pluginify(doc: Document,
 
     """
 
-    # taketime("answ", "start")
+    taketime("answ", "start")
     if dereference:
         pars = dereference_pars(pars, source_doc=doc.get_original_document())
     if sanitize:
@@ -229,8 +231,14 @@ def pluginify(doc: Document,
                                          "anonymous": user is not None,
                                          "info": info,
                                          "targetFormat": target_format}
+        else:
+            if block.nocache:  # get_nocache():
+                # if block.get_nocache():
+                texts = [block.get_expanded_markdown(macroinfo)]
+                htmls = call_dumbo(texts)
+                html_pars[idx][output_format.value] = htmls[0]  # to collect all together before dumbo
 
-    # taketime("answ", "markup", len(plugins))
+                # taketime("answ", "markup", len(plugins))
     '''
     if load_states and custom_answer is None and user is not None:
         answers = timdb.answers.get_newest_answers(user.id, list(state_map.keys()))
@@ -251,6 +259,7 @@ def pluginify(doc: Document,
     # taketime("answ", "done", len(answers))
 
     for plugin_name, plugin_block_map in plugins.items():
+        taketime("plg", plugin_name)
         try:
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
@@ -258,6 +267,7 @@ def pluginify(doc: Document,
                 html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
                                                                        plugin_output_format=output_format)
             continue
+        # taketime("plg e", plugin_name)
         try:
             reqs = json.loads(resp)
             if plugin_name == 'mmcq' or plugin_name == 'mcq':
@@ -297,12 +307,14 @@ def pluginify(doc: Document,
         if (html_out and 'multihtml' in reqs and reqs['multihtml']) or \
                 (md_out and 'multimd' in reqs and reqs['multimd']):
             try:
+                # taketime("plg m", plugin_name)
                 response = render_plugin_multi(
                     doc,
                     plugin_name,
                     [val for _, val in plugin_block_map.items()],
                     plugin_params,
                     plugin_output_format=(output_format))
+                # taketime("plg e", plugin_name)
             except PluginException as e:
                 for idx in plugin_block_map.keys():
                     html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),

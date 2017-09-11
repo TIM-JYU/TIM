@@ -40,6 +40,21 @@ def Pz(i):
     if i < 0:
         return " - " + str(-i)
     return ""
+
+
+def belongs(username, groupname):
+    """
+    Returns if user belongs to group
+    :param username: user to check
+    :param groupname: group to check
+    :return:
+    """
+    from timApp.dbaccess import get_timdb
+    timdb = get_timdb();
+    result = timdb.users.check_if_in_group(username, groupname)
+    return result
+
+
 # ------------------------ Jinja filters end ---------------------------------------------------------------
 
 
@@ -49,10 +64,11 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
     if env is None:
         env = create_environment(macro_delimiter)
     env.filters['Pz'] = Pz
+    env.filters['belongs'] = belongs
     try:
-        # if text.startswith("%%GLOBALMACROS%%"):
-        #    gm = macros.get("GLOBALMACROS", "")
-        #    text = text.replace("%%GLOBALMACROS%%", gm)
+        if text.startswith("%%GLOBALMACROS%%"):
+            gm = macros.get("GLOBALMACROS", "")
+            text = text.replace("%%GLOBALMACROS%%", gm)
         startstr = env.comment_start_string + "LOCAL"
         beg = text.find(startstr)
         if beg >= 0:
@@ -62,7 +78,8 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
                 local_macros_yaml = text[beg+len(startstr):end]
                 local_macros = parse_yaml(local_macros_yaml)
                 macros = {**macros, **local_macros}
-        return env.from_string(text).render(macros)
+        conv = env.from_string(text).render(macros)
+        return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:
             return get_error_html('Syntax error in template: {}'.format(e))

@@ -50,7 +50,7 @@
     {% set area_name = areas|join('_') %}
     <div class="area {{ t.collapsed }}area_{{areas|join(' area_')}}"
          data-doc-id="{{ t.doc_id }}">
-        <div class="areaContent">
+        <div class="areaContent {{ t.cls }}">
             {{ caller() }}
 {%- endmacro -%}
 

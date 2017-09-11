@@ -73,6 +73,7 @@ class DocSettings:
     def __init__(self, doc: 'Document', settings_dict: Optional[dict] = None):
         self.doc = doc
         self.__dict = settings_dict if settings_dict else {}
+        self.user = None
 
     def to_paragraph(self) -> DocParagraph:
         text = '```\n' + yaml.dump(self.__dict, default_flow_style=False) + '\n```'
@@ -92,7 +93,7 @@ class DocSettings:
             key=self.macros_key
         return MacroInfo(self.doc, macro_map=self.__dict.get(key, {}),
                          macro_delimiter=self.get_macro_delimiter(),
-                         user=user)
+                         user=user, nocache_user=self.user)
 
     def get_macro_delimiter(self) -> str:
         return self.__dict.get(self.macro_delimiter_key, '%%')

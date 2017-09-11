@@ -47,6 +47,36 @@ def get_referenced_pars_from_req(par):
         return [par]
 
 
+def get_boolean(s, default, cast=None):
+    if s is None:
+        return default
+    if isinstance(s, bool):
+        return s
+    if isinstance(s, int):
+        return s != 0
+    result = s
+    lresult = result.lower()
+    if isinstance(default, bool):
+        if len(lresult) == 0:
+            return default
+        if "f0y".find(lresult[0]) >= 0:
+            return False
+        if "t1n".find(lresult[0]) >= 0:
+            return True
+        return True
+    if isinstance(default, int):
+        try:
+            return int(lresult)
+        except ValueError:
+            return default
+    if cast is not None:
+        try:
+            result = cast(result)
+        except ValueError:
+            pass
+    return result
+
+
 def get_option(req: Request, name: str, default, cast=None):
     if name not in req.args:
         return default

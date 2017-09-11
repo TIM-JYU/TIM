@@ -6,6 +6,7 @@ if False:
     from timApp.timdb.models.user import User
     from timApp.documentmodel.document import Document
 
+
 class MacroInfo:
     """Represents information required for expanding macros in a DocParagraph.
     
@@ -19,7 +20,8 @@ class MacroInfo:
     def __init__(self, doc: Optional['Document']=None,
                  macro_map: Optional[Dict[str, object]] = None,
                  macro_delimiter: Optional[str] = None,
-                 user: Optional['User'] = None):
+                 user: Optional['User'] = None,
+                 nocache_user: Optional['User'] = None):
         self.doc = doc
         self.macro_map: Dict[str, object] = macro_map or {}
         if not isinstance(self.macro_map, dict):
@@ -28,16 +30,20 @@ class MacroInfo:
             self.macro_map.update({'docid': doc.doc_id})
         self.macro_delimiter = macro_delimiter or '%%'
         self._user = user
+        self._nocache_user = nocache_user
         self.preserve_user_macros = False
 
-    def get_macros(self) -> Dict[str, object]:
-        if self._user is None:
+    def get_macros(self, nocache:bool = False) -> Dict[str, object]:
+        user = self._user
+        if nocache and self._nocache_user:
+            user = self._nocache_user
+        if user is None:
             if not self.preserve_user_macros:
                 return self.macro_map
             else:
                 return self.get_macros_preserving_user()
         else:
-            return self.get_macros_with_user_specific(self._user)
+            return self.get_macros_with_user_specific(user)
 
     def get_macro_delimiter(self) -> str:
         return self.macro_delimiter

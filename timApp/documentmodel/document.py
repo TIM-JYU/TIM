@@ -29,6 +29,7 @@ class Document:
         self.files_root = self.get_default_files_root() if not files_root else files_root
         self.modifier_group_id = modifier_group_id
         self.version = None
+        self.user = None
 
         # Used to cache paragraphs in memory on request so the pars don't have to be read from disk in every for loop
         self.par_cache = None
@@ -167,16 +168,19 @@ class Document:
             if p.is_task():
                 yield p
 
-    def get_settings(self) -> DocSettings:
+    def get_settings(self, user=None) -> DocSettings:
         if self.par_cache is not None:
-            return DocSettings.from_paragraph(self.par_cache[0]) if len(self.par_cache) > 0 else DocSettings(self)
-        try:
-            i = self.__iter__()
-            return DocSettings.from_paragraph(next(i))
-        except StopIteration:
-            return DocSettings(self)
-        finally:
-            i.close()
+            settings = DocSettings.from_paragraph(self.par_cache[0]) if len(self.par_cache) > 0 else DocSettings(self)
+        else:
+            try:
+                i = self.__iter__()
+                settings = DocSettings.from_paragraph(next(i))
+            except StopIteration:
+                settings = DocSettings(self)
+            finally:
+                i.close()
+        settings.user = user
+        return settings
 
     def create(self, ignore_exists: bool = False):
         path = os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id))
