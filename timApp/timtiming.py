@@ -8,7 +8,7 @@ timing_last_t = time.time()
 
 
 def taketime(s1="", s2="", n=0):
-    #  return  # comment this to take times, uncomment for production and tests
+    return  # comment this to take times, uncomment for production and tests
     global timing_last
     global timing_last_t
     t22 = time.clock()
