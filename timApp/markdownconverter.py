@@ -55,6 +55,13 @@ def belongs(username, groupname):
     return result
 
 
+class Belongs:
+    def __init__(self, username):
+        self.username = username
+
+    def belongs_to_group(self, groupname):
+        return belongs(self.username, groupname)
+
 # ------------------------ Jinja filters end ---------------------------------------------------------------
 
 
@@ -64,7 +71,8 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
     if env is None:
         env = create_environment(macro_delimiter)
     env.filters['Pz'] = Pz
-    env.filters['belongs'] = belongs
+    # env.filters['belongs'] = belongs
+    env.filters['belongs'] = Belongs(macros.get('username', None)).belongs_to_group
     try:
         if text.startswith("%%GLOBALMACROS%%"):
             gm = macros.get("GLOBALMACROS", "")
