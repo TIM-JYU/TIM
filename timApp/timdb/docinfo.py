@@ -62,8 +62,10 @@ class DocInfo(Item):
 
     @property
     def document_as_current_user(self):
-        from timApp.sessioninfo import get_current_user_group
-        return Document(self.id, modifier_group_id=get_current_user_group())
+        if getattr(self, '_doc', None) is None:
+            from timApp.sessioninfo import get_current_user_group
+            self._doc = Document(self.id, modifier_group_id=get_current_user_group())
+        return self._doc
 
     @property
     def last_modified(self):

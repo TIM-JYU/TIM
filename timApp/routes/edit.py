@@ -13,6 +13,7 @@ from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.documenteditresult import DocumentEditResult
 from timApp.documentmodel.documentparser import ValidationException, ValidationWarning
+from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.markdownconverter import md_to_html
 from timApp.requesthelper import verify_json_params
 from timApp.responsehelper import json_response, ok_response
@@ -76,6 +77,7 @@ def update_document(doc_id):
     if content is None:
         return json_response({'message': 'Failed to convert the file to UTF-8.'}, 400)
     doc = docentry.document_as_current_user
+    doc.preload_option = PreloadOption.all
     ver_before = doc.get_version()
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
