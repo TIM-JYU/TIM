@@ -745,6 +745,7 @@ class DocParagraph:
             self.attrs[attr_name] = attr_val
 
         self._cache_props()
+        self._compute_hash()
 
     def is_task(self):
         """Returns whether the paragraph is a task."""

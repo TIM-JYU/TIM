@@ -1,3 +1,6 @@
+from unittest.mock import patch, Mock
+
+from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.docinfo import DocInfo
@@ -151,3 +154,16 @@ class TranslationTest(TimRouteTest):
         pars = doc.document.get_paragraphs()
         self.assertEqual(pars[0].get_id(), tr_pars[3].get_attr('rp'))
         self.assertEqual(pars[1].get_id(), tr_pars[4].get_attr('rp'))
+
+    def test_translation_perf(self):
+        self.login_test1()
+        doc = self.create_doc(initial_par='hello')
+        lang = 'en'
+        doc_title = 'test'
+        tr = self.create_translation(doc, doc_title, lang)
+        self.get(tr.url)
+
+        # Cache should be fresh at this point, so __write should not be called.
+        with patch.object(DocParagraph, '_DocParagraph__write') as m:  # type: Mock
+            self.get(tr.url)
+        m.assert_not_called()
