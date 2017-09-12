@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 from timApp.tim_app import app
 from timApp.timdb.docinfo import DocInfo
@@ -43,4 +44,7 @@ if __name__ == '__main__':
     opts = parser.parse_args()
     with app.app_context():
         doc_to_fix = DocEntry.find_by_path(opts.doc, fallback_to_id=True, try_translation=True)
+        if not doc_to_fix:
+            print('Document not found.')
+            sys.exit(1)
         fix_hashes(doc_to_fix, opts.dryrun)
