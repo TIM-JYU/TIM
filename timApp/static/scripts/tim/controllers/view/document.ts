@@ -1,7 +1,7 @@
 import {getParAttributes, getParId, getRefAttrs} from "./parhelpers";
 
 export class Document {
-    get sections(): {[p: string]: JQuery} {
+    get sections(): {[p: string]: JQuery[]} {
         return this._sections;
     }
 
@@ -9,7 +9,7 @@ export class Document {
         return this._id;
     }
 
-    private _sections: {[name: string]: JQuery};
+    private _sections: {[name: string]: JQuery[]};
     private _id: number;
 
     constructor(id: number) {
@@ -22,7 +22,7 @@ export class Document {
     public rebuildSections() {
         $(".readsection").remove();
         this._sections = {};
-        this.buildSections($(), $("#pars"));
+        this.buildSections([], $("#pars"));
         this.refreshSectionReadMarks();
     }
 
@@ -34,11 +34,11 @@ export class Document {
         for (const key in this._sections) {
             if (this._sections.hasOwnProperty(key)) {
                 const sectionPars = this._sections[key];
-                const readlines = sectionPars.children(".readline");
+                const readlines = $(sectionPars.map((p) => p[0]));
                 const modifiedCount = readlines.filter(".read-modified").not(".read").length;
                 const unreadCount = readlines.not(".read-modified").not(".read").length;
                 if (modifiedCount + unreadCount > 0) {
-                    sectionPars.last().append($("<div>", {
+                    sectionPars[sectionPars.length - 1].append($("<div>", {
                         "class": "readsection",
                         title: "Mark preceding section as read (" +
                         sectionPars.length + " paragraphs - " + unreadCount +
@@ -56,7 +56,7 @@ export class Document {
      * @param container The container element where the paragraphs are located.
      * @returns The collection of paragraphs in the current section being processed.
      */
-    private buildSections(currentSectionPars: JQuery, container: JQuery): JQuery {
+    private buildSections(currentSectionPars: JQuery[], container: JQuery): JQuery[] {
         let child = container.children(".par:first");
         while (child.length > 0) {
             if (child.hasClass("area")) {
@@ -68,16 +68,16 @@ export class Document {
                 if (content.is(":visible")) {
                     if (content.children("h1, h2, h3").length > 0) {
                         if (currentSectionPars.length > 0) {
-                            const parId = getParId(currentSectionPars.last());
+                            const parId = getParId(currentSectionPars[currentSectionPars.length - 1]);
                             this._sections[parId] = currentSectionPars;
                         }
-                        currentSectionPars = child;
+                        currentSectionPars = [child];
                     } else if (!attrs.hasOwnProperty("settings") && !attrs.hasOwnProperty("area") && !attrs.hasOwnProperty("area_end") && !refAttrs.hasOwnProperty("area") && !refAttrs.hasOwnProperty("area_end")) {
-                        currentSectionPars = currentSectionPars.add(child);
+                        currentSectionPars.push(child);
                     }
                 }
             } else if (child.hasClass("addBottomContainer")) {
-                this._sections[getParId(currentSectionPars.last())] = currentSectionPars;
+                this._sections[getParId(currentSectionPars[currentSectionPars.length - 1])] = currentSectionPars;
             }
             child = child.next();
         }
