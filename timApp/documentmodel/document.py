@@ -43,6 +43,8 @@ class Document:
         self.par_cache: List[DocParagraph] = None
         # List of par ids - it is much faster to load only ids and sometimes full pars are not needed
         self.par_ids: List[str] = None
+        # List of corresponding hashes
+        self.par_hashes: List[str] = None
         # Whether par_cache is incomplete - this is the case when insert_temporary_pars is called with PreloadOption.none
         self.is_incomplete_cache = False
 
@@ -939,20 +941,25 @@ class Document:
 
     def ensure_par_ids_loaded(self):
         if self.par_ids is None:
-            self.par_ids = []
-            if not os.path.exists(self.get_version_path()):
-                return
-            with open(self.get_version_path(), 'r', encoding='UTF-8') as f:
-                while True:
-                    line = f.readline()
-                    if not line:
-                        break
-                    if len(line) > 14:
-                        # Line contains both par_id and t
-                        par_id, t = line.replace('\n', '').split('/')
-                    else:
-                        par_id = line.replace('\n', '')
-                    self.par_ids.append(par_id)
+            self._load_par_ids()
+
+    def _load_par_ids(self):
+        self.par_ids = []
+        self.par_hashes = []
+        if not os.path.exists(self.get_version_path()):
+            return
+        with open(self.get_version_path(), 'r', encoding='UTF-8') as f:
+            while True:
+                line = f.readline()
+                if not line:
+                    break
+                if len(line) > 14:
+                    # Line contains both par_id and t
+                    par_id, t = line.replace('\n', '').split('/')
+                else:
+                    par_id, t = line.replace('\n', ''), None
+                self.par_ids.append(par_id)
+                self.par_hashes.append(t)
 
     def insert_temporary_pars(self, pars, context_par):
         if self.preload_option == PreloadOption.all:
