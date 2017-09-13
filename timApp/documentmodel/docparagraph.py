@@ -527,7 +527,14 @@ class DocParagraph:
 
         changed_pars = []
         if len(unloaded_pars) > 0:
-            htmls = par_list_to_html_list([par for par, _, _, _, _ in unloaded_pars],
+            def deref_tr_par(p):
+                """Required for getting the original par's attributes, so that for example "nonumber" class
+                doesn't have to be repeated in translations.
+                """
+                if not p.is_translation():
+                    return p
+                return p.get_referenced_pars(set_html=False)[0]
+            htmls = par_list_to_html_list([deref_tr_par(par) for par, _, _, _, _ in unloaded_pars],
                                           auto_macros=({'h': auto_macros['h'], 'headings': hs}
                                                        for _, _, auto_macros, hs, _ in unloaded_pars),
                                           settings=settings)
@@ -659,6 +666,10 @@ class DocParagraph:
         else:
             prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache,
                                                                   auto_number_start)
+
+        # If the paragraph is a translation but it has not been translated (empty markdown), we use the md from the original.
+        if prev_par is not None and not prev_par.get_markdown() and prev_par.is_translation():
+            prev_par = prev_par.get_referenced_pars(set_html=False)[0]
 
         if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber'):
             auto_macro_cache[key] = prev_par_auto_values

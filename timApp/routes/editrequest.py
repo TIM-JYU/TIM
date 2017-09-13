@@ -24,7 +24,7 @@ class EditRequest:
 
     @property
     def is_adding(self):
-        return self.par == 'NEW_PAR'
+        return self.par == 'NEW_PAR' or self.par is None
 
     @property
     def editing_area(self) -> bool:
@@ -36,11 +36,11 @@ class EditRequest:
     def get_context_par(self) -> DocParagraph:
         doc = self.doc
         if self.editing_area:
-            context_par = doc.get_previous_par(doc.get_paragraph(self.area_start))
+            context_par = doc.get_previous_par_by_id(self.area_start)
+        elif not self.is_adding:
+            context_par = doc.get_previous_par_by_id(self.par)
         elif self.next_par_id:
-            context_par = doc.get_previous_par(doc.get_paragraph(self.next_par_id))
-            if doc.has_paragraph(self.par):  # par is 'NEW_PAR' when adding a new paragraph
-                context_par = doc.get_previous_par(context_par)
+            context_par = doc.get_previous_par_by_id(self.next_par_id)
         else:
             context_par = doc.get_last_par()
         return context_par

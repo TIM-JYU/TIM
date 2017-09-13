@@ -47,6 +47,8 @@ class Document:
         self.par_hashes: List[str] = None
         # Whether par_cache is incomplete - this is the case when insert_temporary_pars is called with PreloadOption.none
         self.is_incomplete_cache = False
+        # Whether the document exists on disk.
+        self.__exists = None
 
         # Used for accessing previous/next paragraphs quickly based on id
         self.par_map = None
@@ -125,7 +127,10 @@ class Document:
         if self.par_map is None:
             self.load_pars()
 
-    def get_previous_par(self, par, get_last_if_no_prev=False):
+    def get_previous_par(self, par: DocParagraph, get_last_if_no_prev=False) -> Optional[DocParagraph]:
+        return self.get_previous_par_by_id(par.get_id(), get_last_if_no_prev)
+
+    def get_previous_par_by_id(self, par_id: str, get_last_if_no_prev=False) -> Optional[DocParagraph]:
         if self.preload_option == PreloadOption.all:
             self.ensure_pars_loaded()
         else:
@@ -134,20 +139,20 @@ class Document:
             else:
                 self.ensure_par_ids_loaded()
                 try:
-                    i = self.par_ids.index(par.get_id()) - 1
+                    i = self.par_ids.index(par_id) - 1
                 except ValueError:
                     return self.get_paragraph(self.par_ids[-1]) if self.par_ids and get_last_if_no_prev else None
                 return self.get_paragraph(self.par_ids[i]) if i >= 0 or get_last_if_no_prev else None
-        prev = self.par_map.get(par.get_id())
+        prev = self.par_map.get(par_id)
         result = None
         if prev:
             result = prev['p']
         if get_last_if_no_prev:
             result = self.par_cache[-1] if self.par_cache else None
 
-        if result is not None and result.get_id() == par.get_id():
+        if result is not None and result.get_id() == par_id:
             print('WARNING: get_previous_par({}, {}) returning reference to self, returning None instead'.format(
-                self.doc_id, par.get_id()))
+                self.doc_id, par_id))
             return None
 
         return result
@@ -211,11 +216,14 @@ class Document:
         path = os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id))
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
+            self.__exists = None
         elif not ignore_exists:
             raise DocExistsError(self.doc_id)
 
     def exists(self) -> bool:
-        return Document.doc_exists(self.doc_id, self.files_root)
+        if self.__exists is None:
+            self.__exists = Document.doc_exists(self.doc_id, self.files_root)
+        return self.__exists
 
     def export_markdown(self, export_hashes: bool = False) -> str:
         return DocumentWriter([par.dict() for par in self], export_hashes=export_hashes).get_text()
@@ -373,6 +381,7 @@ class Document:
         self.par_cache = None
         self.par_map = None
         self.par_ids = None
+        self.par_hashes = None
         self.get_original_document.cache_clear()
         self.get_settings.cache_clear()
         return ver
@@ -986,6 +995,7 @@ class Document:
         self.par_map = None
         self.version = None
         self.par_ids = None
+        self.par_hashes = None
 
 
 class CacheIterator:
