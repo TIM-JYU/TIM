@@ -55,7 +55,7 @@ export async function markParRead($par, readingType) {
     }
 }
 
-async function markParsRead($pars) {
+async function markParsRead($pars: JQuery) {
     const parIds = $pars.map((i, e) => {
         return getParId($(e));
     }).get();
@@ -162,7 +162,7 @@ export function initReadings(sc) {
             $window.alert("Unable to mark this section as read");
             return;
         }
-        markParsRead($pars);
+        markParsRead($($pars.map((p) => p[0])));
         $readsection.remove();
     });
 
