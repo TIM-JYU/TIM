@@ -34,7 +34,7 @@ export class Document {
         for (const key in this._sections) {
             if (this._sections.hasOwnProperty(key)) {
                 const sectionPars = this._sections[key];
-                const readlines = $(sectionPars.map((p) => p[0]));
+                const readlines = $(sectionPars.map((p) => p[0])).children(".readline");
                 const modifiedCount = readlines.filter(".read-modified").not(".read").length;
                 const unreadCount = readlines.not(".read-modified").not(".read").length;
                 if (modifiedCount + unreadCount > 0) {
