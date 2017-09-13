@@ -643,7 +643,7 @@ def get_updated_pars(doc_id):
 
     """
     verify_view_access(doc_id)
-    return par_response([], Document(doc_id), update_cache=True)
+    return par_response([], Document(doc_id, preload_option=PreloadOption.all), update_cache=True)
 
 
 @edit_page.route("/name_area/<int:doc_id>/<area_name>", methods=["POST"])
