@@ -1,4 +1,3 @@
-import functools
 import json
 import os
 import shutil
@@ -46,9 +45,13 @@ class Document:
         # List of corresponding hashes
         self.par_hashes: List[str] = None
         # Whether par_cache is incomplete - this is the case when insert_temporary_pars is called with PreloadOption.none
-        self.is_incomplete_cache = False
+        self.is_incomplete_cache: bool = False
         # Whether the document exists on disk.
-        self.__exists = None
+        self.__exists: bool = None
+        # Cache for the original document.
+        self.original_doc: Optional['Document'] = None
+        # Cache for document settings.
+        self.settings: Optional[DocSettings] = None
 
         # Used for accessing previous/next paragraphs quickly based on id
         self.par_map = None
@@ -202,14 +205,17 @@ class Document:
             if p.is_task():
                 yield p
 
-    @functools.lru_cache()
     def get_settings(self, user=None) -> DocSettings:
+        if self.settings is not None:
+            self.settings.user = user
+            return self.settings
         if self.par_cache is not None and not self.is_incomplete_cache:
             settings = DocSettings.from_paragraph(self.par_cache[0]) if len(self.par_cache) > 0 else DocSettings(self)
         else:
             self.ensure_par_ids_loaded()
             settings = DocSettings.from_paragraph(self.get_paragraph(self.par_ids[0])) if self.par_ids else DocSettings(self)
         settings.user = user
+        self.settings = settings
         return settings
 
     def create(self, ignore_exists: bool = False):
@@ -382,8 +388,8 @@ class Document:
         self.par_map = None
         self.par_ids = None
         self.par_hashes = None
-        self.get_original_document.cache_clear()
-        self.get_settings.cache_clear()
+        self.original_doc = None
+        self.settings = None
         return ver
 
     def __update_metadata(self, pars: List[DocParagraph], old_ver: Tuple[int, int], new_ver: Tuple[int, int]):
@@ -935,10 +941,11 @@ class Document:
         from timApp.documentmodel.documentversion import DocumentVersion
         return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id, self.preload_option)
 
-    @functools.lru_cache()
     def get_original_document(self) -> Optional['Document']:
-        src_docid = self.get_settings().get_source_document()
-        return Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
+        if self.original_doc is None:
+            src_docid = self.get_settings().get_source_document()
+            self.original_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
+        return self.original_doc
 
     def get_last_par(self):
         pars = [par for par in self]
@@ -996,6 +1003,8 @@ class Document:
         self.version = None
         self.par_ids = None
         self.par_hashes = None
+        self.original_doc = None
+        self.settings = None
 
 
 class CacheIterator:

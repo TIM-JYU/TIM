@@ -58,7 +58,9 @@ class DocInfo(Item):
     @property
     def document(self):
         """Returns the corresponding Document object."""
-        return Document(self.id)
+        if getattr(self, '_doc', None) is None:
+            self._doc = Document(self.id)
+        return self._doc
 
     @property
     def document_as_current_user(self):

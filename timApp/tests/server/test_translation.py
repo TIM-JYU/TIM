@@ -83,6 +83,7 @@ class TranslationTest(TimRouteTest):
 
     def assert_translation_synced(self, tr_doc: Document, doc: DocInfo):
         tr_doc.clear_mem_cache()
+        doc.document.clear_mem_cache()
         self.assertEqual([None] + [p.get_id() for p in doc.document.get_paragraphs()],
                          [p.get_attr('rp') for p in tr_doc.get_paragraphs()])
 
@@ -139,8 +140,9 @@ class TranslationTest(TimRouteTest):
         self.assertEqual(doc.document.get_paragraphs()[0].get_id(), tr_pars[2].get_attr('rp'))
 
         self.update_whole_doc(doc.document, 'whole new text')
-        first_id = doc.document.get_paragraphs()[0].get_id()
+        doc.document.clear_mem_cache()
         tr_doc.clear_mem_cache()
+        first_id = doc.document.get_paragraphs()[0].get_id()
         tr_pars = tr_doc.get_paragraphs()
         self.assertEqual('new', tr_pars[1].get_markdown())
         self.assertEqual('new2', tr_pars[2].get_markdown())

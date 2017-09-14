@@ -11,6 +11,7 @@ from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import dereference_pars
 from timApp.documentmodel.macroinfo import MacroInfo
+from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.randutils import hashfunc
 from timApp.markdownconverter import expand_macros, create_environment
 from timApp.pluginControl import pluginify
@@ -113,6 +114,7 @@ class DocumentPrinter:
         # Remove paragraphs that are not to be printed and replace plugin pars,
         # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
         pars = self._doc_entry.document.get_paragraphs()
+        self._doc_entry.document.preload_option = PreloadOption.all
         pars = dereference_pars(pars, source_doc=self._doc_entry.document.get_original_document())
         pars_to_print = []
         texplain = self._doc_entry.document.get_settings().is_texplain()
