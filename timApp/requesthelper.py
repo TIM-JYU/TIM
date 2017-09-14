@@ -1,12 +1,13 @@
 from typing import List
 
+import itertools
 from flask import Request
 from flask import request, abort
 
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 
 
-def verify_json_params(*args: str, require=True, default=None):
+def verify_json_params(*args: str, require=True, default=None, error_msgs=None):
     """Gets the specified JSON parameters from the request.
 
     :param default: The default value for the parameter if it is not found from the request.
@@ -14,13 +15,15 @@ def verify_json_params(*args: str, require=True, default=None):
     """
     result = ()
     json_params = request.get_json() or {}
-    for arg in args:
+    if error_msgs is not None:
+        assert len(args) == len(error_msgs)
+    for arg, err in zip(args, error_msgs or itertools.repeat(None, len(args))):
         if arg in json_params:
             val = json_params[arg]
         elif not require:
             val = default
         else:
-            abort(400, 'Missing required parameter in request: {}'.format(arg))
+            abort(400, err or 'Missing required parameter in request: {}'.format(arg))
             return ()
 
         result += (val,)

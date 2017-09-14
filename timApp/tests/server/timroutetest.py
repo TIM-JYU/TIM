@@ -29,6 +29,9 @@ def load_json(resp: Response):
 orig_getaddrinfo = socket.getaddrinfo
 
 
+TEXTUAL_MIMETYPES = {'text/html', 'application/json', 'text/plain'}
+
+
 # noinspection PyIncorrectDocstring
 @lru_cache(maxsize=100)
 def fast_getaddrinfo(host, port, family=0, addrtype=0, proto=0, flags=0):
@@ -179,11 +182,14 @@ class TimRouteTest(TimDbTest):
         if xhr:
             headers.append(('X-Requested-With', 'XMLHttpRequest'))
         resp = self.client.open(url, method=method, headers=headers, **kwargs)
+        is_textual = resp.mimetype in TEXTUAL_MIMETYPES
         if expect_status is not None:
-            self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True))
+            self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True) if is_textual else None)
         if resp.status_code == 302 and expect_content is not None:
             self.assertEqual(expect_content, resp.location.lstrip('http://localhost/'))
-        resp_data = resp.get_data(as_text=True)
+        resp_data = resp.get_data(as_text=is_textual)
+        if not is_textual:
+            return resp_data
         if as_tree:
             if json_key is not None:
                 resp_data = json.loads(resp_data)[json_key]

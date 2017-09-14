@@ -7,7 +7,7 @@ from typing import Optional
 import tempfile
 
 import shutil
-from flask import Blueprint, send_file, jsonify, json
+from flask import Blueprint, send_file
 from flask import abort
 from flask import current_app
 from flask import g
@@ -15,8 +15,10 @@ from flask import make_response
 from flask import request
 
 from timApp import sessioninfo
-from timApp.accesshelper import verify_logged_in
+from timApp.accesshelper import verify_logged_in, verify_view_access
 from timApp.documentprinter import DocumentPrinter, PrintingError
+from timApp.requesthelper import verify_json_params
+from timApp.responsehelper import json_response
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.printeddoc import PrintedDoc
@@ -27,8 +29,8 @@ TEMP_DIR_PATH = tempfile.gettempdir()
 DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, 'tim-img-dls')
 
 print_blueprint = Blueprint('print',
-                   __name__,
-                   url_prefix='/print')
+                            __name__,
+                            url_prefix='/print')
 
 
 @print_blueprint.before_request
@@ -46,29 +48,25 @@ def pull_doc_path(endpoint, values):
         g.doc_path = doc_path
         g.doc_entry = DocEntry.find_by_path(doc_path, try_translation=True)
         if not g.doc_entry:
-            abort(404)
+            abort(404, 'Document not found')
+        verify_view_access(g.doc_entry.id)
 
 
 @print_blueprint.route("/<path:doc_path>", methods=['POST'])
 def print_document(doc_path):
+    file_type, template_doc_id, plugins_user_print = verify_json_params('fileType', 'templateDocId',
+                                                                        'printPluginsUserCode',
+                                                                        error_msgs=['No filetype selected.',
+                                                                                    'No template doc selected.',
+                                                                                    'No value for printPluginsUserCode submitted.'])
+    remove_old_images, force = verify_json_params('removeOldImages', 'force', require=False)
 
-    data = request.get_json(silent=True)
-    file_type = data.get('fileType')
-    template_doc_id = data.get('templateDocId')
-    plugins_user_print = data.get('printPluginsUserCode')
-    remove_old_images = data.get('removeOldImages')
-
-    if file_type is None:
-        abort(400, "No filetype selected.")
-
-    if template_doc_id is None:
-        abort(400, "No template doc selected.")
-
-    if plugins_user_print is None:
-        abort(400, "No value for printPluginsUserCode submitted.")
-
-    file_type = str(file_type)
-    template_doc_id = int(float(template_doc_id))
+    if not isinstance(plugins_user_print, bool):
+        abort(400, 'Invalid printPluginsUserCode value')
+    try:
+        template_doc_id = int(template_doc_id)
+    except ValueError:
+        abort(400, 'Invalid template doc id')
 
     if file_type.lower() not in [f.value for f in PrintFormat]:
         abort(400, "The supplied parameter 'fileType' is invalid.")
@@ -89,20 +87,18 @@ def print_document(doc_path):
         template_doc_id,
         plugins_user_print)
 
-    force = str(data.get('force', 'false')).lower()
     if force == 'true':
         existing_doc = None
 
-    if existing_doc is not None and not plugins_user_print: # never cache user print
-        return json.dumps({'success': True, 'url': print_access_url}), 200, {'ContentType': 'application/json'}
+    if existing_doc is not None and not plugins_user_print:  # never cache user print
+        return json_response({'success': True, 'url': print_access_url}, status_code=200)
 
     if os.environ.get('TIM_HOST', None) != request.url_root:
         os.environ['TIM_HOST'] = request.url_root
 
     if template_doc is None:
-        abort(400, "The supplied parameter 'templateDocId' is invalid.")
+        abort(400, "The template doc was not found.")
 
-    # print(plugins_user_print)
     try:
         create_printed_doc(doc_entry=doc,
                            file_type=print_type,
@@ -111,7 +107,7 @@ def print_document(doc_path):
                            plugins_user_print=plugins_user_print)
     except PrintingError as err:
         print("Error occurred: " + str(err))
-        abort(400, str(err)) #TODO: maybe there's a better error code?
+        abort(400, str(err))  # TODO: maybe there's a better error code?
 
     print_access_url = '{}?file_type={}&template_doc_id={}&plugins_user_code={}'.format(
         request.url,
@@ -119,7 +115,7 @@ def print_document(doc_path):
         template_doc_id,
         plugins_user_print)
 
-    return json.dumps({'success': True, 'url': print_access_url}), 201, {'ContentType': 'application/json'}
+    return json_response({'success': True, 'url': print_access_url}, status_code=201)
 
 
 @print_blueprint.route("/<path:doc_path>", methods=['GET'])
@@ -159,7 +155,6 @@ def get_printed_document(doc_path):
         cached = None
 
     if cached is None:
-        # abort(404, "The document you tried to fetch does not exist.")
         try:
             create_printed_doc(doc_entry=doc,
                                file_type=print_type,
@@ -179,8 +174,6 @@ def get_printed_document(doc_path):
     if mime is None:
         abort(400, "An unexpected error occurred.")
 
-
-
     response = make_response(send_file(filename_or_fp=cached, mimetype=mime))
 
     # Add headers to stop the documents from caching
@@ -198,7 +191,8 @@ def get_templates(doc_path):
     user = g.user
 
     templates = DocumentPrinter.get_templates_as_dict(doc, user)
-    return jsonify(templates)
+    return json_response(templates)
+
 
 @print_blueprint.route("/hash/<path:doc_path>", methods=['GET'])
 def get_hash(doc_path):
@@ -210,21 +204,19 @@ def get_hash(doc_path):
     return printer.hash_doc_print(plugins_user_print=True)
 
 
-
 def get_mimetype_for_format(file_type: PrintFormat):
     if file_type == PrintFormat.PDF:
         return 'application/pdf'
     elif file_type == PrintFormat.HTML:
         return 'text/html'
     else:
-        # return None
         return 'text/plain'
 
 
 def check_print_cache(doc_entry: DocEntry,
-                       template: DocInfo,
-                       file_type: PrintFormat,
-                       plugins_user_print: bool = False) -> Optional[str]:
+                      template: DocInfo,
+                      file_type: PrintFormat,
+                      plugins_user_print: bool = False) -> Optional[str]:
     """
     Fetches the given document from the database.
 
@@ -249,10 +241,10 @@ def check_print_cache(doc_entry: DocEntry,
 
     return None
 
-    #if plugins_user_print:
+    # if plugins_user_print:
     #    return printer.get_print_path(file_type=file_type, plugins_user_print=plugins_user_print)
 
-    #return printer.get_printed_document_path_from_db(file_type=file_type)
+    # return printer.get_printed_document_path_from_db(file_type=file_type)
 
 
 def create_printed_doc(doc_entry: DocEntry,
@@ -284,20 +276,20 @@ def create_printed_doc(doc_entry: DocEntry,
         if os.path.exists(path):
             os.remove(path)
 
-        folder = os.path.split(path)[0] # gets only the head of the head, tail -tuple
+        folder = os.path.split(path)[0]  # gets only the head of the head, tail -tuple
         if not os.path.exists(folder):
             os.makedirs(folder)
         with open(path, mode='wb') as doc_file:
             doc_file.write(printer.write_to_format(target_format=file_type, plugins_user_print=plugins_user_print))
 
-        #  if plugins_user_print:
+        # if plugins_user_print:
         #    return path
 
         p_doc = PrintedDoc(doc_id=doc_entry.document.doc_id,
-                           template_doc_id = printer.get_template_id(),
+                           template_doc_id=printer.get_template_id(),
                            version=printer.hash_doc_print(plugins_user_print=plugins_user_print),
                            path_to_file=path,
-                           file_type = file_type.value,
+                           file_type=file_type.value,
                            temp=temp)
 
         db.session.add(p_doc)

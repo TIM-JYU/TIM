@@ -1,0 +1,80 @@
+"""Server tests for printing."""
+import urllib.parse
+import warnings
+
+from timApp.tests.server.timroutetest import TimRouteTest
+
+
+class PrintingTest(TimRouteTest):
+    def test_print_invalid_request(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.json_post(f'/print/x', expect_status=404, expect_content='Document not found', json_key='error')
+        self.json_post(f'/print/{d.path}', expect_status=400, expect_content='No filetype selected.', json_key='error')
+        self.json_post(f'/print/{d.path}', {}, expect_status=400, expect_content='No filetype selected.',
+                       json_key='error')
+        self.json_post(f'/print/{d.path}', {'fileType': 'x'}, expect_status=400,
+                       expect_content='No template doc selected.', json_key='error')
+        self.json_post(f'/print/{d.path}', {'fileType': 'x', 'templateDocId': 'x'}, expect_status=400,
+                       expect_content='No value for printPluginsUserCode submitted.', json_key='error')
+        self.json_post(f'/print/{d.path}', {'fileType': 'x', 'templateDocId': 'x', 'printPluginsUserCode': 'x'},
+                       expect_status=400,
+                       expect_content='Invalid printPluginsUserCode value', json_key='error')
+        self.json_post(f'/print/{d.path}', {'fileType': 'x', 'templateDocId': 'x', 'printPluginsUserCode': False},
+                       expect_status=400,
+                       expect_content='Invalid template doc id', json_key='error')
+        self.json_post(f'/print/{d.path}', {'fileType': 'x', 'templateDocId': 99, 'printPluginsUserCode': False},
+                       expect_status=400,
+                       expect_content="The supplied parameter 'fileType' is invalid.", json_key='error')
+        self.json_post(f'/print/{d.path}', {'fileType': 'latex', 'templateDocId': 99, 'printPluginsUserCode': False},
+                       expect_status=400,
+                       expect_content='The template doc was not found.', json_key='error')
+
+        self.login_test2()
+        self.json_post(f'/print/{d.path}', expect_status=403)
+
+    def test_print_latex_pdf(self):
+        self.login_test1()
+        content = 'Hello 1\n\n#-\nHello 2'
+        d = self.create_doc(initial_par=content)
+        folder = self.current_user.get_personal_folder().path
+        t = self.create_doc(f'{folder}/Templates/Printing/empty', initial_par="""
+``` {.latex printing_template=""}
+$body$
+```
+        """)
+        self.get(f'/print/templates/{d.path}',
+                 expect_content=[{'id': t.id, 'path': t.path, 'origin': 'user', 'name': t.title}])
+        params_post = {'fileType': 'latex', 'templateDocId': t.id, 'printPluginsUserCode': False}
+        params_url = {'file_type': 'latex', 'template_doc_id': t.id, 'plugins_user_code': False}
+        expected_url = f'http://localhost/print/{d.path}?{urllib.parse.urlencode(params_url)}'
+        self.json_post(f'/print/{d.path}', params_post,
+                       expect_status=201,
+                       expect_content={'success': True,
+                                       'url': expected_url})
+        result = self.get_no_warn(expected_url)
+        self.assertEqual('Hello 1\n\nHello 2', result)
+
+        t2 = self.create_doc(f'{folder}/Templates/Printing/base', from_file='example_docs/templates/print_base.md')
+
+        params_url = {'file_type': 'latex', 'template_doc_id': t2.id, 'plugins_user_code': False}
+        expected_url = f'http://localhost/print/{d.path}?{urllib.parse.urlencode(params_url)}'
+        result = self.get_no_warn(expected_url)
+
+        with open('tests/server/expected/printing/hello_1_2.tex', encoding='utf-8') as f:
+            self.assertEqual(result, f.read())
+
+        params_url = {'file_type': 'pdf', 'template_doc_id': t2.id, 'plugins_user_code': False}
+        expected_url = f'http://localhost/print/{d.path}?{urllib.parse.urlencode(params_url)}'
+        result = self.get_no_warn(expected_url)
+        with open('tests/server/expected/printing/hello_1_2.pdf', 'rb') as f:
+            self.assertEqual(result, f.read())
+
+        self.login_test2()
+        self.get(expected_url, expect_status=403)
+
+    def get_no_warn(self, url: str):
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            result = self.get(url)
+        return result

@@ -20,7 +20,7 @@ timApp.controller("PrintCtrl", ['$scope', '$uibModal', 'document', '$uibModalIns
         $scope.options = $scope.storage.id;
 
         $scope.document = document;
-        $scope.templates = angular.fromJson(templates);
+        $scope.templates = templates;
         $scope.errormsg = null;
         $scope.notificationmsg = null;
         $scope.docUrl = null;
