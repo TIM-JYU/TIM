@@ -77,7 +77,9 @@ export class Document {
                     }
                 }
             } else if (child.hasClass("addBottomContainer")) {
-                this._sections[getParId(currentSectionPars[currentSectionPars.length - 1])] = currentSectionPars;
+                if (currentSectionPars.length > 0) {
+                    this._sections[getParId(currentSectionPars[currentSectionPars.length - 1])] = currentSectionPars;
+                }
             }
             child = child.next();
         }
