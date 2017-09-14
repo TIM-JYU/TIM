@@ -10,7 +10,7 @@ from timApp.dumboclient import call_dumbo
 from timApp.htmlSanitize import sanitize_html
 from timApp.utils import get_error_html
 from timApp.utils import parse_yaml
-
+from flask import g
 
 # noinspection PyUnusedLocal
 def has_macros(text: str, macros, macro_delimiter: Optional[str]=None):
@@ -49,6 +49,7 @@ def belongs(username, groupname):
     :param groupname: group to check
     :return:
     """
+    g
     from timApp.dbaccess import get_timdb
     timdb = get_timdb();
     result = timdb.users.check_if_in_group(username, groupname)
