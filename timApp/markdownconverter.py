@@ -49,19 +49,38 @@ def belongs(username, groupname):
     :param groupname: group to check
     :return:
     """
-    g
     from timApp.dbaccess import get_timdb
     timdb = get_timdb();
     result = timdb.users.check_if_in_group(username, groupname)
     return result
 
 
+def belongs_by_id(userid, groupname):
+    """
+    Returns if user belongs to group
+    :param username: user to check
+    :param groupname: group to check
+    :return:
+    """
+    from timApp.dbaccess import get_timdb
+    timdb = get_timdb();
+    result = timdb.users.check_if_in_group_by_id(userid, groupname)
+    return result
+
+
 class Belongs:
-    def __init__(self, username):
-        self.username = username
+    def __init__(self, user):
+        self.username = user.name
+        self.userid = user.id
+        self.cache = {}
 
     def belongs_to_group(self, groupname):
-        return belongs(self.username, groupname)
+        b = self.cache.get(groupname, None)
+        if b is not None:
+            return b
+        b = belongs_by_id(self.userid, groupname)
+        self.cache[groupname] = b
+        return b
 
 # ------------------------ Jinja filters end ---------------------------------------------------------------
 
@@ -70,10 +89,12 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
     if not has_macros(text, macros, macro_delimiter):
         return text
     if env is None:
-        env = create_environment(macro_delimiter)
-    env.filters['Pz'] = Pz
-    # env.filters['belongs'] = belongs
-    env.filters['belongs'] = Belongs(macros.get('username', None)).belongs_to_group
+        try:
+            env = g.env
+        except:
+            pass
+        if env is None:
+            env = create_environment(macro_delimiter)
     try:
         if text.startswith("%%GLOBALMACROS%%"):
             gm = macros.get("GLOBALMACROS", "")
@@ -100,14 +121,19 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
 
 
 def create_environment(macro_delimiter: str):
-    return Environment(variable_start_string=macro_delimiter,
-                       variable_end_string=macro_delimiter,
-                       comment_start_string='{!!!',
-                       comment_end_string='!!!}',
-                       block_start_string='{%',
-                       block_end_string='%}',
-                       lstrip_blocks=True,
-                       trim_blocks=True)
+    env = Environment(variable_start_string=macro_delimiter,
+                      variable_end_string=macro_delimiter,
+                      comment_start_string='{!!!',
+                      comment_end_string='!!!}',
+                      block_start_string='{%',
+                      block_end_string='%}',
+                      lstrip_blocks=True,
+                      trim_blocks=True)
+    g.env = env
+    env.filters['Pz'] = Pz
+    # env.filters['belongs'] = belongs
+    env.filters['belongs'] = Belongs(g.user).belongs_to_group
+    return env
 
 
 expand_macros = expand_macros_jinja2

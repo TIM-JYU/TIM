@@ -34,6 +34,7 @@ from timApp.timdb.userutils import user_is_owner
 from timApp.utils import remove_path_special_chars
 from timApp.timtiming import taketime
 from timApp.documentmodel.create_item import do_create_document, FORCED_TEMPLATE_NAME, get_templates_for_folder
+from timApp.markdownconverter import create_environment
 
 Range = Tuple[int, int]
 
@@ -237,6 +238,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     doc_id = doc_info.id
     edit_mode = request.args.get('edit', None) if has_edit_access(doc_id) else None
+    create_environment("%%")  # TODO get macroinf
 
     if route == 'teacher':
         if not verify_teacher_access(doc_id, require=False, check_duration=True):

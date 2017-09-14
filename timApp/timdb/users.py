@@ -301,6 +301,14 @@ class Users(TimDbBase):
             """, [username, usergroup_name])
         return c.rowcount > 0
 
+    def check_if_in_group_by_id(self, usernid, usergroup_name):
+        c = self.db.cursor()
+        c.execute("""SELECT ug.user_id, ug.usergroup_id, gr.id, gr.name
+            FROM usergroupmember As ug, usergroup AS gr
+            WHERE ug.user_id=%s  and ug.usergroup_id=gr.id  and gr.name=%s
+            """, [usernid, usergroup_name])
+        return c.rowcount > 0
+
     def get_users_groups(self, username, order=False):
         c = self.db.cursor()
         order_sql = ' ORDER BY gr.name' if order else ''
