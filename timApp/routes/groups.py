@@ -32,8 +32,8 @@ def show_members(groupname):
     return json_response(members)
 
 
-@groups.route('/usergoups/<username>')
-def show_usergoups(username):
+@groups.route('/usergroups/<username>')
+def show_usergroups(username):
     verify_admin()
     timdb = get_timdb()
     members = timdb.users.get_users_groups(username, order=True)
