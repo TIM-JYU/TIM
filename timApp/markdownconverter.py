@@ -128,10 +128,14 @@ def create_environment(macro_delimiter: str):
                       block_end_string='%}',
                       lstrip_blocks=True,
                       trim_blocks=True)
-    g.env = env
     env.filters['Pz'] = Pz
-    # env.filters['belongs'] = belongs
-    env.filters['belongs'] = Belongs(g.user).belongs_to_group
+
+    # During some markdown tests, there is no request context and therefore no g object.
+    try:
+        env.filters['belongs'] = Belongs(g.user).belongs_to_group
+        g.env = env
+    except (RuntimeError, AttributeError):
+        pass
     return env
 
 
