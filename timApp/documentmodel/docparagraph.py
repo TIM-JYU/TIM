@@ -533,7 +533,12 @@ class DocParagraph:
                 """
                 if not p.is_translation():
                     return p
-                return p.get_referenced_pars(set_html=False)[0]
+                try:
+                    return p.get_referenced_pars(set_html=False)[0]
+                except InvalidReferenceException as e:
+                    p.was_invalid = True
+                    p.__set_html(get_error_html(e))
+                    return p
             htmls = par_list_to_html_list([deref_tr_par(par) for par, _, _, _, _ in unloaded_pars],
                                           auto_macros=({'h': auto_macros['h'], 'headings': hs}
                                                        for _, _, auto_macros, hs, _ in unloaded_pars),
@@ -541,6 +546,8 @@ class DocParagraph:
             for (par, auto_macro_hash, _, _, old_html), h in zip(unloaded_pars, htmls):
                 # h is not sanitized but old_html is, but HTML stays unchanged after sanitization most of the time
                 # so they are comparable
+                if getattr(par, 'was_invalid', False):
+                    continue
                 if h != old_html:
                     h = sanitize_html(h)
                     changed_pars.append(par)
@@ -669,8 +676,11 @@ class DocParagraph:
 
         # If the paragraph is a translation but it has not been translated (empty markdown), we use the md from the original.
         if prev_par is not None and not prev_par.get_markdown() and prev_par.is_translation():
-            prev_par = prev_par.get_referenced_pars(set_html=False)[0]
-
+            try:
+                prev_par = prev_par.get_referenced_pars(set_html=False)[0]
+            except InvalidReferenceException:
+                # In case of an invalid reference, just skip this one.
+                prev_par = None
         if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber'):
             auto_macro_cache[key] = prev_par_auto_values
             heading_cache[self.get_id()] = []

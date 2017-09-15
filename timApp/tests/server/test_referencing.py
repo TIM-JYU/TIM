@@ -74,3 +74,17 @@ class ReferencingTest(TimRouteTest):
         tree = self.get('/view/{}'.format(doc1.doc_id), as_tree=True)
         result = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
         self.assertEqual(1, len(result))
+
+    def test_invalid_reference_translation(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""#- {rd=9999 rp=xxxx}""")
+        t = self.create_translation(d, 'xxx', 'en')
+        e = self.get(t.url, as_tree=True)
+        self.assert_content(e, ['', 'The referenced document does not exist.'])
+        t.document.add_paragraph('new')
+        invalid_par = t.document.add_text('#- {rd=9999 rp=xxxx}')[0]
+        t.document.add_paragraph('new')
+        t.document.modify_paragraph_obj(invalid_par.get_id(), invalid_par)
+        e = self.get(t.url, as_tree=True)
+        self.assert_content(e, ['', 'The referenced document does not exist.', 'new',
+                                'The referenced document does not exist.', 'new'])

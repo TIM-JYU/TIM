@@ -562,7 +562,9 @@ class TimRouteTest(TimDbTest):
         return Translation.query.get(j['id']) if expect_status == 200 else None
 
     def assert_content(self, element: HtmlElement, expected: List[str]):
-        for e, r in zip(expected, element.cssselect('.parContent')):
+        pars = element.cssselect('.parContent')
+        self.assertEqual(len(pars), len(expected))
+        for e, r in zip(expected, pars):
             self.assertEqual(e, r.text_content().strip())
 
 
