@@ -1,13 +1,15 @@
-from typing import Generator, Tuple
+from typing import Generator, Tuple, Optional
 
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.timdb.docinfo import DocInfo
-from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.folder import Folder
 
 
-def enum_docs() -> Generator[DocInfo, None, None]:
+def enum_docs(folder: Optional[Folder] = None) -> Generator[DocInfo, None, None]:
     visited_docs = set()
-    for d in DocEntry.get_all():
+    if not folder:
+        folder = Folder.get_root()
+    for d in folder.get_all_documents(include_subdirs=True):
         for t in d.translations:
             if t.id in visited_docs:
                 continue
@@ -15,7 +17,7 @@ def enum_docs() -> Generator[DocInfo, None, None]:
             yield t
 
 
-def enum_pars() -> Generator[Tuple[DocInfo, DocParagraph], None, None]:
-    for d in enum_docs():
+def enum_pars(folder: Optional[Folder] = None) -> Generator[Tuple[DocInfo, DocParagraph], None, None]:
+    for d in enum_docs(folder):
         for p in d.document.get_paragraphs():
             yield d, p
