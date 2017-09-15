@@ -1,4 +1,4 @@
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Iterable
 
 from timApp.documentmodel.document import Document
 from timApp.timdb.gamification_models.gamificationdocument import GamificationDocument
@@ -93,7 +93,7 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry(id=-1, name=title)
 
     @staticmethod
-    def create(path: Optional[str], owner_group_id: int, title: Optional[str]=None, from_file=None, initial_par=None,
+    def create(path: Optional[str], owner_group_id: int, title: Optional[str] = None, from_file=None, initial_par=None,
                settings=None, is_gamified: bool = False) -> 'DocEntry':
         """Creates a new document with the specified name.
 
@@ -142,3 +142,51 @@ class DocEntry(db.Model, DocInfo):
 
         db.session.commit()
         return docentry
+
+
+def get_documents(include_nonpublic: bool = False,
+                  filter_ids: Optional[Iterable[int]] = None,
+                  filter_folder: str = None,
+                  search_recursively: bool = True) -> List[DocEntry]:
+    """Gets all the documents in the database matching the given criteria.
+
+    :param search_recursively: Whether to search recursively.
+    :param filter_folder: Optionally restricts the search to a specific folder.
+    :param filter_ids: An optional iterable of document ids for filtering the documents.
+           Must be non-empty if supplied.
+    :param include_nonpublic: Whether to include non-public document names or not.
+    :returns: A list of DocEntry objects.
+
+    """
+
+    q = DocEntry.query
+    if not include_nonpublic:
+        q = q.filter_by(public=True)
+    if filter_ids:
+        q = q.filter(DocEntry.id.in_(filter_ids))
+    if filter_folder:
+        filter_folder = filter_folder.strip('/') + '/'
+        if filter_folder == '/':
+            filter_folder = ''
+        q = q.filter(DocEntry.name.like(filter_folder + '%'))
+    if not search_recursively:
+        q = q.filter(DocEntry.name.notlike(filter_folder + '%/%'))
+    return q.all()
+
+
+def get_documents_in_folder(folder_pathname: str,
+                            include_nonpublic: bool = False,
+                            filter_ids: Optional[Iterable[int]] = None) -> List[DocEntry]:
+    """Gets all the documents in a folder.
+
+    :param filter_ids: An optional iterable of document ids for filtering the documents.
+           Must be non-empty if supplied.
+    :param folder_pathname: path to be searched for documents without ending '/'
+    :param include_nonpublic: Whether to include non-public document names or not.
+    :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
+
+    """
+    return get_documents(include_nonpublic=include_nonpublic,
+                         filter_folder=folder_pathname,
+                         search_recursively=False,
+                         filter_ids=filter_ids)

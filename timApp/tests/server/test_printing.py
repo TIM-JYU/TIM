@@ -56,6 +56,9 @@ $body$
         self.assertEqual('Hello 1\n\nHello 2', result)
 
         t2 = self.create_doc(f'{folder}/Templates/Printing/base', from_file='example_docs/templates/print_base.md')
+        self.get(f'/print/templates/{d.path}',
+                 expect_content=[{'id': t.id, 'path': t.path, 'origin': 'user', 'name': t.title},
+                                 {'id': t2.id, 'path': t2.path, 'origin': 'user', 'name': t2.title}])
 
         params_url = {'file_type': 'latex', 'template_doc_id': t2.id, 'plugins_user_code': False}
         expected_url = f'http://localhost/print/{d.path}?{urllib.parse.urlencode(params_url)}'

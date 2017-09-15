@@ -13,7 +13,7 @@ from timApp.pluginControl import get_all_reqs
 from timApp.requesthelper import get_option
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group
 from timApp.timdb.docinfo import DocInfo
-from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.docentry import DocEntry, get_documents
 from timApp.timdb.tim_models import BlockAccess
 from timApp.timdb.userutils import get_viewable_blocks
 
@@ -40,11 +40,10 @@ def search(query):
     verify_logged_in()
     if len(query.strip()) < 3:
         abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
-    timdb = get_timdb()
     show_full_pars = get_option(request, 'show_pars', False)
     max_results = get_option(request, 'max', 100)
     viewable = get_viewable_blocks(get_current_user_id())
-    docs = timdb.documents.get_documents(filter_ids=viewable)
+    docs = get_documents(filter_ids=viewable)
     current_user = get_current_user_object()
     all_texts = []
     all_js = []

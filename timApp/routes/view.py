@@ -27,7 +27,7 @@ from timApp.pluginControl import find_task_ids, get_all_reqs
 from timApp.requesthelper import get_option
 from timApp.responsehelper import json_response
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, logged_in
-from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.docentry import DocEntry, get_documents
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.user import User
 from timApp.timdb.timdbexception import TimDbException
@@ -38,7 +38,6 @@ from timApp.documentmodel.create_item import do_create_document, FORCED_TEMPLATE
 from timApp.markdownconverter import create_environment
 
 Range = Tuple[int, int]
-
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -192,8 +191,8 @@ def try_return_folder(item_name):
         if template_item and template_item.short_name == FORCED_TEMPLATE_NAME:
             ind = item_name.rfind('/')
             if ind >= 0:
-                ret = do_create_document(item_name, 'document', item_name[ind+1:], None, template_item.path)
-                return view(item_name, 'view_html.html') 
+                ret = do_create_document(item_name, 'document', item_name[ind + 1:], None, template_item.path)
+                return view(item_name, 'view_html.html')
 
         return render_template('create_new.html',
                                in_lecture=is_in_lecture,
@@ -357,8 +356,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     if hide_names_in_teacher(doc_id):
         for user in user_list:
-            if not user_is_owner(user['id'], doc_id)\
-               and user['id'] != get_current_user_id():
+            if not user_is_owner(user['id'], doc_id) \
+                    and user['id'] != get_current_user_id():
                 user['name'] = '-'
                 user['real_name'] = 'Someone {}'.format(user['id'])
                 user['email'] = 'someone_{}@example.com'.format(user['id'])
@@ -416,10 +415,9 @@ def redirect_to_login():
 
 
 def get_items(folder: str):
-    timdb = get_timdb()
-    docs = timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
-                                         search_recursively=False,
-                                         filter_folder=folder)
+    docs = get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
+                         search_recursively=False,
+                         filter_folder=folder)
     docs.sort(key=lambda d: d.title.lower())
     folders = Folder.get_all_in_path(root_path=folder,
                                      filter_ids=get_viewable_blocks_or_none_if_admin())
@@ -451,13 +449,13 @@ def check_updated_pars(doc_id, major, minor):
     if 0 < live_updates < global_live_updates:
         live_updates = global_live_updates
     if global_live_updates == 0:  # To stop all live updates
-         live_updates = 0
+        live_updates = 0
     # taketime("after liveupdates")
     diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, check_html=True))  # TODO cache this, about <5 ms
     # taketime("after diffs")
     rights = get_rights(d.doc_id)  # about 30-40 ms # TODO: this is the slowest part
     # taketime("after rights")
-    for diff in diffs: # about < 1 ms
+    for diff in diffs:  # about < 1 ms
         if diff.get('content'):
             pars, js_paths, css_paths, modules = post_process_pars(d,
                                                                    diff['content'],
@@ -474,5 +472,3 @@ def check_updated_pars(doc_id, major, minor):
     return json_response({'diff': diffs,
                           'version': d.get_version(),
                           'live': live_updates})
-
-

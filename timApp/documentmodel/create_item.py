@@ -3,7 +3,7 @@
 from typing import List, Optional
 
 from timApp.timdb.docinfo import DocInfo
-from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.docentry import DocEntry, get_documents
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.tim_models import db
 from timApp.validation import validate_item_and_create
@@ -24,7 +24,7 @@ FORCED_TEMPLATE_NAME = 'force'
 special_names = ['Templates', 'Printing']
 
 
-def path_and_shortname(item_path:str) -> [str, str]:
+def path_and_shortname(item_path: str) -> [str, str]:
     """
     Divide name to path and shortname
     :param item_path: name to divide
@@ -33,7 +33,7 @@ def path_and_shortname(item_path:str) -> [str, str]:
     ind = item_path.rfind('/')
     if ind < 0:
         return '', item_path
-    return item_path[0:ind+1], item_path[ind+1:]
+    return item_path[0:ind + 1], item_path[ind + 1:]
 
 
 def check_for_special_name(item_path: str) -> str:
@@ -76,9 +76,9 @@ def get_templates_for_folder(folder: Folder) -> List[DocEntry]:
     timdb = get_timdb()
     templates = []
     while True:
-        for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
-                                               filter_folder=current_path + '/Templates',
-                                               search_recursively=False):
+        for t in get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
+                               filter_folder=current_path + '/Templates',
+                               search_recursively=False):
             if t.short_name not in (DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME):
                 templates.append(t)
         if current_path == '':
@@ -102,7 +102,7 @@ def do_create_document(item_path, item_type, item_title, copied_doc: Optional[Do
 
     if copied_doc:
         item.document.update(copied_doc.document.export_markdown(), item.document.export_markdown())
-        for tr in copied_doc.translations: # type: Translation
+        for tr in copied_doc.translations:  # type: Translation
             doc_id = item.id
             if not tr.is_original_translation:
                 doc_entry = DocEntry.create(None, get_current_user_group(), None)

@@ -6,7 +6,7 @@ from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.dbutils import insert_block, copy_default_rights
 from timApp.timdb.item import Item
 from timApp.timdb.models.block import Block
-from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.docentry import DocEntry, get_documents
 from timApp.timdb.tim_models import db, BlockAccess
 from timApp.timdb.timdbexception import TimDbException
 from timApp.utils import split_location, join_location
@@ -170,14 +170,7 @@ class Folder(db.Model, Item):
             return None
 
     def get_all_documents(self, include_subdirs: bool = False) -> List[DocEntry]:
-
-        query = DocEntry.query.filter(DocEntry.name.like(self.get_full_path() + '%'))
-
-        if include_subdirs is False:
-            query.filter(DocEntry.name.notlike(self.get_full_path() + '%' + os.sep + '%'))
-
-        return query.all()
-
+        return get_documents(include_nonpublic=True, filter_folder=self.get_full_path(), search_recursively=include_subdirs)
 
     @staticmethod
     def create(path: str, owner_group_id: int, title=None, commit=True, apply_default_rights=False) -> 'Folder':
