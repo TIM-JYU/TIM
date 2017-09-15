@@ -1,8 +1,3 @@
-from lxml import etree
-from typing import List
-
-from lxml.html import HtmlElement
-
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.docinfo import DocInfo
 
@@ -201,10 +196,6 @@ Lorem ipsum.
         e = self.json_post(f'/preview/{d.id}', {'text': f'# x {{r=tr rp={orig_par.get_id()}}}', 'par': pars[2]},
                            json_key='texts', as_tree=True)
         self.assert_content(e, ['x'])
-
-    def assert_content(self, element: HtmlElement, expected: List[str]):
-        for e, r in zip(expected, element.cssselect('.parContent')):
-            self.assertEqual(e, r.text_content().strip())
 
     def check_doc_preview(self, d: DocInfo):
         pars = d.document.get_par_ids()

@@ -10,6 +10,7 @@ from flask import Response
 from flask import session
 from flask.testing import FlaskClient
 from lxml import html
+from lxml.html import HtmlElement
 
 import timApp.tim
 from timApp.documentmodel.document import Document
@@ -559,6 +560,10 @@ class TimRouteTest(TimDbTest):
                            {'doc_title': doc_title},
                            expect_contains=expect_contains, expect_content=expect_content, expect_status=expect_status, **kwargs)
         return Translation.query.get(j['id']) if expect_status == 200 else None
+
+    def assert_content(self, element: HtmlElement, expected: List[str]):
+        for e, r in zip(expected, element.cssselect('.parContent')):
+            self.assertEqual(e, r.text_content().strip())
 
 
 if __name__ == '__main__':
