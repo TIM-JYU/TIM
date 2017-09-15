@@ -191,11 +191,11 @@ def pluginify(doc: Document,
                 rnd_seed = get_simple_hash_from_par_and_user(block, user) # TODO: RND_SEED: get users seed for this plugin
                 new_seed = True
 
-            if block.insert_rnds(rnd_seed) and new_seed:  # do not change order!  inserts must be done
-                # TODO: RND_SEED save rnd_seed to user data
-                pass
-
             try:
+                if block.insert_rnds(rnd_seed) and new_seed:  # do not change order!  inserts must be done
+                    # TODO: RND_SEED save rnd_seed to user data
+                    pass
+
                 # plugin = Plugin.from_paragraph(block, user)
                 joint_macros = macros
                 rands = block.get_rands()
@@ -203,7 +203,7 @@ def pluginify(doc: Document,
                     joint_macros = {**macros, **rands}
                 plugin = Plugin.from_paragraph_macros(block, global_attrs, joint_macros, macro_delimiter)
                 plugin.values['isQuestion'] = block.get_attr('isQuestion', '')
-            except PluginException as e:
+            except Exception as e:
                 html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
                                                                        plugin_output_format=output_format)
                 continue

@@ -85,6 +85,13 @@ def get_sample_list(myrandom: Random, jso: str) -> List[int]:
     if len(r) > 2:
         step = r[2]
 
+    if n == 1:  # handle s1: same as normal range
+        ret = [myrandom.randrange(r[0], r[1] + 1, step)]
+        return ret
+
+    count = r[1] - r[0]
+    if count > 500:
+        raise ValueError('Too big range for s: {}-{}'.format(r[0],r[1]))
     ints = list(range(r[0], r[1] + 1, step))
     i = n
     while i >= len(ints):
@@ -98,7 +105,7 @@ def get_sample_list(myrandom: Random, jso: str) -> List[int]:
 
 def get_int_list(myrandom: Random, jso: str) -> List[int]:
     """
-    Returns list of random ins from given interval
+    Returns list of random ints from given interval
     :param myrandom: random number generator
     :param jso: string to find the values
     :return: list of random ints ints
@@ -197,15 +204,15 @@ def get_rnds(attrs: Dict, name: str ="rnd", rnd_seed=None) -> List:
     ret = None
 
     # noinspection PyBroadException
-    try:
-        if jso.startswith('s'):  # s10:[1,7,2], s10, s10:50, s10:[0,50]
-            return get_sample_list(myrandom, jso[1:]), rnd_seed
-        if jso.startswith('u'):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
-            return repeat_rnd(get_uniform_list,myrandom, jso[1:]), rnd_seed
+    # try:
+    if jso.startswith('s'):  # s10:[1,7,2], s10, s10:50, s10:[0,50]
+        return get_sample_list(myrandom, jso[1:]), rnd_seed
+    if jso.startswith('u'):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
+        return repeat_rnd(get_uniform_list,myrandom, jso[1:]), rnd_seed
 
-        ret = repeat_rnd(get_int_list, myrandom, jso)
-    except:
-        ret = None
+    ret = repeat_rnd(get_int_list, myrandom, jso)
+    # except:
+    #    ret = None
     return ret, rnd_seed
 
 

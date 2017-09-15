@@ -11,6 +11,7 @@ from timApp.utils import get_error_html
 from timApp.utils import parse_yaml
 from flask import g
 
+
 # noinspection PyUnusedLocal
 def has_macros(text: str, macros, macro_delimiter: Optional[str]=None):
     return macro_delimiter and (macro_delimiter in text or '{!!!' in text or '{%' in text)
