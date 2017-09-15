@@ -20,6 +20,7 @@ from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.document import get_index_from_html_list, dereference_pars, Document
+from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.htmlSanitize import sanitize_html
 from timApp.logger import log_error
 from timApp.pluginControl import find_task_ids, get_all_reqs
@@ -64,8 +65,7 @@ def get_partial_document(doc: Document, view_range: Range) -> List[DocParagraph]
 def get_document(doc_id: int, view_range: Optional[Range] = None) -> Tuple[Document, List[DocParagraph]]:
     # Separated into 2 functions for optimization
     # (don't cache partial documents and don't check ranges in the loop for whole ones)
-    doc = Document(doc_id).get_latest_version()
-    doc.load_pars()
+    doc = Document(doc_id, preload_option=PreloadOption.all).get_latest_version()
     return doc, (get_whole_document(doc) if view_range is None else get_partial_document(doc, view_range))
 
 
@@ -286,9 +286,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
         log_error('Document {} exception:\n{}'.format(doc_id, traceback.format_exc(chain=False)))
         abort(500, str(e))
     if doc_settings:
-        src_doc_id = doc_settings.get_source_document()
-        if src_doc_id is not None:
-            src_doc = Document(src_doc_id)
+        src_doc = doc.get_original_document()
+        if src_doc is not None:
             DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
 
     # We need to deference paragraphs at this point already to get the correct task ids

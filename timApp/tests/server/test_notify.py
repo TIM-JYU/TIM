@@ -1,5 +1,6 @@
 from timApp.routes.notify import sent_mails_in_testing
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.tim_models import db
 
 
@@ -124,12 +125,14 @@ class NotifyTest(TimRouteTest):
     def prepare_doc(self):
         self.login_test1()
         d = self.create_doc()
+        doc_id = d.id
         title = d.title
         url = d.url
         self.test_user_2.grant_access(d.id, 'view')
         self.new_par(d.document, 'test')
         self.assertEqual([], sent_mails_in_testing)
         self.login_test2()
+        d = DocEntry.find_by_id(doc_id)  # Avoids DetachedInstanceError
         self.update_notify_settings(d, {'email_comment_add': True, 'email_comment_modify': False,
                                         'email_doc_modify': True})
         self.login_test1()

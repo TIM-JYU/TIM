@@ -25,7 +25,7 @@ class Block(db.Model):
     def parent(self) -> 'Folder':
         if self.type_id == 0:
             from timApp.timdb.models.docentry import DocEntry
-            return DocEntry.query.filter_by(id=self.id, public=True).first().parent
+            return DocEntry.find_by_id(self.id, try_translation=True).parent
         elif self.type_id == 6:
             from timApp.timdb.models.folder import Folder
             folder = Folder.get_by_id(self.id)

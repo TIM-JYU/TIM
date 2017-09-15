@@ -98,7 +98,7 @@ timApp.directive("popupMenu", [function() {
                     return;
                 }
 
-                $http.get<{texts}>(contentUrl, {},
+                $http.get<{texts}>(contentUrl, {params: {doc_id: $scope.docId}},
                 ).then(function(response) {
                     //$scope.content = data.texts;
                     $("#content").append(response.data.texts);

@@ -14,6 +14,7 @@ from timApp.documentmodel.exceptions import DocExistsError
 from timApp.documentmodel.randutils import random_paragraph
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import get_anon_group_id
 
 
@@ -100,6 +101,8 @@ class DocumentTest(TimDbTest):
         # Delete first paragraph
         d.delete_paragraph(pars[0])
         self.assertFalse(d.has_paragraph(pars[0]))
+        with self.assertRaises(TimDbException):
+            d.get_paragraph(pars[0])
         pars.remove(pars[0])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((11, 0), d.get_version())
@@ -108,6 +111,8 @@ class DocumentTest(TimDbTest):
         # Delete from the middle
         d.delete_paragraph(pars[2])
         self.assertFalse(d.has_paragraph(pars[2]))
+        with self.assertRaises(TimDbException):
+            d.get_paragraph(pars[2])
         pars.remove(pars[2])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((12, 0), d.get_version())
@@ -117,6 +122,8 @@ class DocumentTest(TimDbTest):
         n = len(pars)
         d.delete_paragraph(pars[n - 1])
         self.assertFalse(d.has_paragraph(pars[n - 1]))
+        with self.assertRaises(TimDbException):
+            d.get_paragraph(pars[n - 1])
         pars.remove(pars[n - 1])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((13, 0), d.get_version())
@@ -389,6 +396,31 @@ class DocumentTest(TimDbTest):
         d.clear_mem_cache()
         pars = d.get_paragraphs()
         self.assertEqual('test3', pars[0].get_markdown())
+
+
+    def test_settings_block_style(self):
+        """Settings paragraph is always serialized in the block style."""
+        d = self.init_testdoc()
+        d.set_settings({'a': 1})
+        self.assertEqual("""
+```
+a: 1
+
+```
+""".strip(), d.get_paragraphs()[0].get_markdown())
+
+    def test_settings_cached(self):
+        d = self.init_testdoc()
+        d.set_settings({'x': 1})
+        s1 = d.get_settings()
+        self.assertEqual({'x': 1}, s1.get_dict())
+        src1 = d.get_original_document()
+        d.set_settings({'x': 2, 'source_document': 10})
+        s2 = d.get_settings()
+        src2 = d.get_original_document()
+        self.assertEqual({'x': 2, 'source_document': 10}, s2.get_dict())
+        self.assertIsNone(src1)
+        self.assertEqual(10, src2.doc_id)
 
 
 if __name__ == '__main__':

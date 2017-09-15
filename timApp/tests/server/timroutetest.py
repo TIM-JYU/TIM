@@ -17,6 +17,7 @@ from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.routes.login import log_in_as_anonymous
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.translation import Translation
 from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
 
@@ -26,6 +27,9 @@ def load_json(resp: Response):
 
 
 orig_getaddrinfo = socket.getaddrinfo
+
+
+TEXTUAL_MIMETYPES = {'text/html', 'application/json', 'text/plain'}
 
 
 # noinspection PyIncorrectDocstring
@@ -178,12 +182,17 @@ class TimRouteTest(TimDbTest):
         if xhr:
             headers.append(('X-Requested-With', 'XMLHttpRequest'))
         resp = self.client.open(url, method=method, headers=headers, **kwargs)
+        is_textual = resp.mimetype in TEXTUAL_MIMETYPES
         if expect_status is not None:
-            self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True))
+            self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True) if is_textual else None)
         if resp.status_code == 302 and expect_content is not None:
             self.assertEqual(expect_content, resp.location.lstrip('http://localhost/'))
-        resp_data = resp.get_data(as_text=True)
+        resp_data = resp.get_data(as_text=is_textual)
+        if not is_textual:
+            return resp_data
         if as_tree:
+            if json_key is not None:
+                resp_data = json.loads(resp_data)[json_key]
             tree = html.fromstring(resp_data)
             if expect_xpath is not None:
                 self.assertLessEqual(1, len(tree.findall(expect_xpath)))
@@ -352,6 +361,10 @@ class TimRouteTest(TimDbTest):
         return self.json_post('/deleteParagraph/{}'.format(doc.doc_id), {
             "par": par_id,
         }, **kwargs)
+
+    def update_whole_doc(self, doc: Document, text: str, **kwargs):
+        doc.clear_mem_cache()
+        return self.json_post(f'/update/{doc.doc_id}', {'fulltext': text, 'original': doc.export_markdown()}, **kwargs)
 
     def post_answer(self, plugin_type, task_id, user_input,
                     save_teacher=False, teacher=False, user_id=None, answer_id=None, ref_from=None, **kwargs):
@@ -534,9 +547,19 @@ class TimRouteTest(TimDbTest):
         self.assertEqual((e1.text or '').strip(), (e2.text or '').strip())
         self.assertEqual((e1.tail or '').strip(), (e2.tail or '').strip())
         self.assertEqual(e1.attrib, e2.attrib)
-        self.assertEqual(len(e1), len(e2))
+        self.assertEqual(len(e1), len(e2), msg=html.tostring(e2, pretty_print=True).decode('utf-8'))
         for c1, c2 in zip(e1, e2):
             self.assert_elements_equal(c1, c2)
+
+    def create_translation(self, doc: DocEntry, doc_title: str, lang: str, expect_contains=None, expect_content=None, expect_status=200,
+                           **kwargs) -> Optional[Translation]:
+        if expect_contains is None and expect_content is None:
+            expect_contains = {'title': doc_title, 'path': doc.name + '/' + lang, 'name': doc.short_name}
+        j = self.json_post('/translate/{}/{}'.format(doc.id, lang),
+                           {'doc_title': doc_title},
+                           expect_contains=expect_contains, expect_content=expect_content, expect_status=expect_status, **kwargs)
+        return Translation.query.get(j['id']) if expect_status == 200 else None
+
 
 if __name__ == '__main__':
     unittest.main()

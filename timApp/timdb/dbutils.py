@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from timApp.timdb.accesstype import AccessType
+from timApp.timdb.blocktypes import BlockType
 from timApp.timdb.models.block import Block
 from timApp.timdb.tim_models import db, BlockAccess
 
@@ -32,7 +33,7 @@ def insert_block(description: Optional[str], owner_group_id: Optional[int], bloc
     return b
 
 
-def copy_default_rights(item_id: int, item_type, commit=True):
+def copy_default_rights(item_id: int, item_type: BlockType, commit=True):
     # TODO: Should not need to import anything from routes
     from timApp.dbaccess import get_timdb
     from timApp.timdb.userutils import grant_access

@@ -11,11 +11,13 @@ from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import dereference_pars
 from timApp.documentmodel.macroinfo import MacroInfo
+from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.randutils import hashfunc
 from timApp.markdownconverter import expand_macros, create_environment
 from timApp.pluginControl import pluginify
 from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.sessioninfo import get_current_user_object
+from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.printeddoc import PrintedDoc
@@ -69,7 +71,7 @@ def add_nonumber(md: str) -> str:
 
 
 class DocumentPrinter:
-    def __init__(self, doc_entry: DocEntry, template_to_use: DocEntry):
+    def __init__(self, doc_entry: DocEntry, template_to_use: DocInfo):
         self._doc_entry = doc_entry
         # if template_to_use is None:
         #    template_to_use = DocumentPrinter.get_default_template(doc_entry)
@@ -112,6 +114,7 @@ class DocumentPrinter:
         # Remove paragraphs that are not to be printed and replace plugin pars,
         # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
         pars = self._doc_entry.document.get_paragraphs()
+        self._doc_entry.document.preload_option = PreloadOption.all
         pars = dereference_pars(pars, source_doc=self._doc_entry.document.get_original_document())
         pars_to_print = []
         texplain = self._doc_entry.document.get_settings().is_texplain()
@@ -220,7 +223,6 @@ class DocumentPrinter:
 
         content = '\n\n'.join(export_pars)
         self._content = content
-        # print(content)
         return content
 
     def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False) -> bytearray:
@@ -244,7 +246,6 @@ class DocumentPrinter:
                                                                           template_doc=self._template_to_use)
             else:
                 template_content = '$body$\n'
-            # print("template-content:\n\n" + template_content)
 
             if template_content is None:
                 raise PrintingError(
@@ -257,7 +258,8 @@ class DocumentPrinter:
             self._template_doc = self._template_to_use
             templbyte = bytearray(template_content, encoding='utf-8')
             # template_file.write(templbyte) # for some reason does not write small files
-            open(template_file.name, 'wb').write(templbyte)
+            with open(template_file.name, 'wb') as f:
+                f.write(templbyte)
 
             # TODO: getting the path could probably be done with more finesse
             cwd = os.getcwd()
@@ -272,10 +274,8 @@ class DocumentPrinter:
             if ftop:
                 top_level = ftop
 
-            print("docid from env ", os.environ.get("texdocid", None))
             os.environ["texdocid"] = str(self._doc_entry.document.doc_id)
 
-            # print(top_level)
             # TODO: add also variables from texpandocvariables document setting, but this may leed to security hole???
             try:
                 tim_convert_text(source=src,
@@ -296,10 +296,7 @@ class DocumentPrinter:
                                  )
                 template_file.seek(0)
                 output_bytes = bytearray(output_file.read())
-                print("docid from env ", os.environ.get("texdocid", None))
             except Exception as ex:
-                # print(str(ex))
-
                 # TODO: logging of errors
                 # Might be a good idea to log these?
                 # might also be a good idea to separate between errors that should be shown to the user, and
@@ -323,17 +320,8 @@ class DocumentPrinter:
         :return:
         """
 
-        """ # Old version
-        doc_version = self._doc_entry.document.get_latest_version().get_version()
-        print("Document id: %s, version (%s, %s)" % (self._doc_entry.document.doc_id, doc_version[0], doc_version[1]))
-        path = os.path.join(TEMPORARY_PRINTING_FOLDER if temp else DEFAULT_PRINTING_FOLDER,
-                            self._doc_entry.name +
-                            ('-' + get_current_user_object().name if plugins_user_print else '') +
-                            "." + file_type.value)
-        """
         print_hash = self.hash_doc_print(plugins_user_print=plugins_user_print)
 
-        # print("Document id: %s, version (%s, %s)" % (self._doc_entry.document.doc_id, doc_version[0], doc_version[1]))
         path = os.path.join(DEFAULT_PRINTING_FOLDER,
                             str(self._doc_entry.id),
                             str(self._template_to_use_id),
@@ -348,22 +336,15 @@ class DocumentPrinter:
         if doc_entry is None or current_user is None:
             raise PrintingError("You need to supply both the DocEntry and User to fetch the printing templates.")
 
-        print("Searching for user's own templates")
         path = os.path.join(current_user.get_personal_folder().get_full_path(), TEMPLATES_FOLDER)
 
-        print("Trying path " + path)
         templates_folder = Folder.find_by_path(path)
 
         if templates_folder is not None and has_view_access(templates_folder.id):
-
-            print("Looking into the template folder " + templates_folder.get_full_path())
-
             docs = templates_folder.get_all_documents()
-
             if docs is not None:
                 for d in docs:
                     if has_view_access(d.id) and not re.search("/Printing/.*Templates/", d.name):
-                        # print("Found the document " + d.name)
                         templates.append(d)
 
         return templates
@@ -375,21 +356,15 @@ class DocumentPrinter:
         if doc_entry is None or current_user is None:
             raise PrintingError("You need to supply both the DocEntry and User to fetch the printing templates.")
 
-        # print("Crawling up the document tree searching for all accessible templates")
         current_folder = doc_entry.parent
         while current_folder is not None:
 
-            # print("Searching for templates in " + current_folder.get_full_path())
             path = os.path.join(current_folder.get_full_path(),
                                 TEMPLATES_FOLDER)
 
-            # print("Trying path " + path)
             templates_folder = Folder.find_by_path(path)
 
             if templates_folder is not None and has_view_access(templates_folder.id):
-
-                # print("Looking into the template folder " + templates_folder.get_full_path())
-
                 docs = templates_folder.get_all_documents()
 
                 if docs is None:
@@ -397,7 +372,6 @@ class DocumentPrinter:
 
                 for d in docs:
                     if has_view_access(d.id) and not re.search("/Printing/.*Templates/", d.name):
-                        # print("Found the document " + d.name)
                         templates.append(d)
 
             current_folder = current_folder.parent
@@ -444,7 +418,7 @@ class DocumentPrinter:
         return "\n".join(out)
 
     @staticmethod
-    def parse_template_content(template_doc: DocEntry, doc_to_print: DocEntry) -> str:
+    def parse_template_content(template_doc: DocInfo, doc_to_print: DocEntry) -> str:
         pars = template_doc.document.get_paragraphs()
 
         pars = dereference_pars(pars, source_doc=template_doc.document.get_original_document())

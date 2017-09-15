@@ -65,9 +65,10 @@ from timApp.routes.view import view_page
 from timApp.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     get_current_user_name, get_current_user_group, logged_in
 from timApp.tim_app import app, default_secret
-from timApp.timdb.blocktypes import from_str, blocktypes
+from timApp.timdb.blocktypes import from_str, blocktypes, BlockType
 from timApp.timdb.bookmarks import Bookmarks
 from timApp.timdb.dbutils import copy_default_rights
+from timApp.timdb.documents import create_citation
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.translation import Translation
@@ -323,15 +324,14 @@ def create_document():
     if cite_id:
         return create_citation_doc(cite_id, item_path, item_title)
 
-    copied_content = None
+    d = None
     if copy_id:
         verify_edit_access(copy_id)
         d = DocEntry.find_by_id(copy_id, try_translation=True)
         if not d:
             return abort(404, 'The document to be copied was not found')
-        copied_content = d.document.export_markdown()
-
-    return do_create_document(item_path, item_type, item_title, copied_content, template_name)
+        d = d.src_doc
+    return do_create_document(item_path, item_type, item_title, d, template_name)
 
 
 @app.route("/translations/<int:doc_id>", methods=["GET"])
@@ -350,9 +350,8 @@ def valid_language_id(lang_id):
 
 
 @app.route("/translate/<int:tr_doc_id>/<language>", methods=["POST"])
-def create_translation(tr_doc_id, language):
+def create_translation_route(tr_doc_id, language):
     title = request.get_json().get('doc_title', None)
-    timdb = get_timdb()
 
     doc = DocEntry.find_by_id(tr_doc_id, try_translation=True)
 
@@ -370,11 +369,12 @@ def create_translation(tr_doc_id, language):
     verify_manage_access(doc_id)
 
     src_doc = Document(doc_id)
-    cite_doc = timdb.documents.create_citation(src_doc, get_current_user_group())
+    cite_doc = create_citation(src_doc, get_current_user_group())
     # noinspection PyArgumentList
     tr = Translation(doc_id=cite_doc.id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
     db.session.add(tr)
+    copy_default_rights(cite_doc.id, blocktypes.DOCUMENT, commit=False)
     db.session.commit()
     return json_response(tr)
 
@@ -408,13 +408,12 @@ def create_citation_doc(doc_id, doc_path, doc_title):
     else:
         params = {'r': 'c'}
 
-    timdb = get_timdb()
     verify_edit_access(doc_id)
 
     src_doc = Document(doc_id)
 
     def factory(path, group, title):
-        return timdb.documents.create_citation(src_doc, group, path, title, params)
+        return create_citation(src_doc, group, path, title, params)
     item = create_item(doc_path, 'document', doc_title, factory, get_current_user_group())
     return json_response(item)
 
@@ -436,7 +435,8 @@ def plugin_call(plugin, filename):
     try:
         req = call_plugin_resource(plugin, filename, request.args)
         return Response(stream_with_context(req.iter_content()), content_type=req.headers['content-type'])
-    except PluginException:
+    except PluginException as e:
+        log_warning(str(e))
         abort(404)
 
 
@@ -627,5 +627,4 @@ def start_app():
             port=5000,
             use_evalex=False,
             use_reloader=False,
-            # debug=True,
-            threaded=not (app.config['DEBUG'] and app.config['PROFILE']))
+            threaded=True)

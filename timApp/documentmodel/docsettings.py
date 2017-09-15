@@ -31,7 +31,7 @@ class DocSettings:
 
     @classmethod
     def is_valid_paragraph(cls, par):
-        if par.is_reference():
+        if par.is_reference() and not par.is_translation():
             par = par.get_referenced_pars(set_html=False)[0]
         if not par.is_setting():
             return True
@@ -50,9 +50,9 @@ class DocSettings:
         :return: The DocSettings object.
 
         """
-        if par.is_reference():
+        if par.is_reference() and not par.is_translation():
             try:
-                par = par.get_referenced_pars(set_html=False, source_doc=par.doc)[0]
+                par = par.get_referenced_pars(set_html=True, source_doc=par.doc)[0]
             except TimDbException as e:
                 # Invalid reference, ignore for now
                 return DocSettings(par.doc)
@@ -76,7 +76,7 @@ class DocSettings:
         self.user = None
 
     def to_paragraph(self) -> DocParagraph:
-        text = '```\n' + yaml.dump(self.__dict) + '\n```'
+        text = '```\n' + yaml.dump(self.__dict, default_flow_style=False) + '\n```'
         return DocParagraph.create(self.doc, md=text, attrs={"settings": ""})
 
     def get_dict(self) -> dict:
