@@ -434,7 +434,7 @@ class Document:
             raise TimDbException(error_text)
         return DocParagraph.get_latest(self, par_id, self.files_root)
 
-    def add_text(self, text: str) -> Iterable[DocParagraph]:
+    def add_text(self, text: str) -> List[DocParagraph]:
         """Converts the given text to (possibly) multiple paragraphs and adds them to the document."""
         return [self.add_paragraph_obj(p) for p in self.text_to_paragraphs(text, False)]
 
