@@ -18,7 +18,7 @@ from timApp.plugin import PluginException, Plugin
 from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.timdb import gamificationdata
 from timApp.timdb.models.user import User
-from timApp.utils import get_error_html, get_error_md
+from timApp.utils import get_error_html, get_error_tex
 from timApp.rndutils import get_simple_hash_from_par_and_user
 from timApp.timdb.printsettings import PrintFormat
 from timApp.dumboclient import call_dumbo
@@ -39,7 +39,7 @@ def get_error_plugin(plugin_name, message, response=None,
     :type plugin_name: str
     """
     if plugin_output_format == PluginOutputFormat.MD:
-        return get_error_md('Plugin {} error:'.format(plugin_name), message, response)
+        return get_error_tex('Plugin {} error:'.format(plugin_name), message, response)
 
     return get_error_html('Plugin {} error: {}'.format(plugin_name, message), response)
 

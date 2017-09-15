@@ -150,8 +150,8 @@ def get_error_html(message: Union[str, Exception], response: Optional[str]=None)
                                                                     response) if response is not None else ''))
 
 
-def get_error_md(title, message: Union[str, Exception], response: Optional[str]=None):
-    """Wraps an error message in a markdown element with class 'error'.
+def get_error_tex(title, message: Union[str, Exception], response: Optional[str]=None):
+    """Wraps an error message in a TeX element 'timpluginerror'.
 
     :param response: The plugin response string.
     :param message: The message to be displayed in the error.
