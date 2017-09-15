@@ -56,14 +56,14 @@ class DocInfo(Item):
         return DocEntry.find_all_by_id(self.src_docid)
 
     @property
-    def document(self):
+    def document(self) -> Document:
         """Returns the corresponding Document object."""
         if getattr(self, '_doc', None) is None:
             self._doc = Document(self.id)
         return self._doc
 
     @property
-    def document_as_current_user(self):
+    def document_as_current_user(self) -> Document:
         if getattr(self, '_doc', None) is None:
             from timApp.sessioninfo import get_current_user_group
             self._doc = Document(self.id, modifier_group_id=get_current_user_group())
