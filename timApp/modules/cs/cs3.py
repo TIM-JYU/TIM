@@ -515,7 +515,7 @@ def get_html(ttype, query):
         r = "cs-console"
 
     if do_lazy:
-        # r = LAZYWORD + r;
+        # r = LAZYWORD + r
         code = bycode
         if usercode:
             code = usercode

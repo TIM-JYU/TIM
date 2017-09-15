@@ -111,7 +111,7 @@ def get_question_md():
     # md = verify_json_params('text')
     markup = json.loads(md)
     plugin_data = {}
-    plugin_data['markup'] = markup;
+    plugin_data['markup'] = markup
     convert_md(plugin_data)
 
     return json_response({'md': plugin_data['markup']})

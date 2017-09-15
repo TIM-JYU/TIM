@@ -50,7 +50,7 @@ def belongs(username, groupname):
     :return:
     """
     from timApp.dbaccess import get_timdb
-    timdb = get_timdb();
+    timdb = get_timdb()
     result = timdb.users.check_if_in_group(username, groupname)
     return result
 
@@ -63,7 +63,7 @@ def belongs_by_id(userid, groupname):
     :return:
     """
     from timApp.dbaccess import get_timdb
-    timdb = get_timdb();
+    timdb = get_timdb()
     result = timdb.users.check_if_in_group_by_id(userid, groupname)
     return result
 
