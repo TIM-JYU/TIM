@@ -11,6 +11,7 @@ class DocSettings:
     global_plugin_attrs_key = 'global_plugin_attrs'
     css_key = 'css'
     macros_key = 'macros'
+    globalmacros_key = 'globalmacros'
     macro_delimiter_key = 'macro_delimiter'
     source_document_key = 'source_document'
     auto_number_headings_key = 'auto_number_headings'
@@ -37,7 +38,7 @@ class DocSettings:
             return True
         try:
             DocSettings.parse_values(par)
-        except Exception:
+        except Exception as e:
             return False
         return True
 
@@ -98,6 +99,9 @@ class DocSettings:
     def get_macro_delimiter(self) -> str:
         return self.__dict.get(self.macro_delimiter_key, '%%')
 
+    def get_globalmacros(self) -> str:
+        return self.__dict.get(self.globalmacros_key, {})
+
     def auto_number_questions(self) -> bool:
         return self.__dict.get(self.no_question_auto_numbering_key, False)
 
@@ -129,19 +133,47 @@ class DocSettings:
     def set_source_document(self, source_docid: Optional[int]):
         self.__dict[self.source_document_key] = source_docid
 
-    def auto_number_headings(self) -> bool:
-        return self.__dict.get(self.auto_number_headings_key, False)
+    def auto_number_headings(self) -> int:
+        return self.__dict.get(self.auto_number_headings_key, 0)
 
     def auto_number_start(self) -> int:
         return self.__dict.get(self.auto_number_start_key, False)
 
     def heading_format(self) -> dict:
+        level = self.auto_number_headings()
         defaults = {1: '{h1}. {text}',
                     2: '{h1}.{h2} {text}',
                     3: '{h1}.{h2}.{h3} {text}',
                     4: '{h1}.{h2}.{h3}.{h4} {text}',
                     5: '{h1}.{h2}.{h3}.{h4}.{h5} {text}',
                     6: '{h1}.{h2}.{h3}.{h4}.{h5}.{h6} {text}'}
+        if level == 2:
+            defaults = {
+                1: '{text}',
+                2: '{h2}. {text}',
+                3: '{h2}.{h3} {text}',
+                4: '{h2}.{h3}.{h4} {text}',
+                5: '{h2}.{h3}.{h4}.{h5} {text}',
+                6: '{h2}.{h3}.{h4}.{h5}.{h6} {text}'
+            }
+        if level == 3:
+            defaults = {
+                1: '{text}',
+                2: '{text}',
+                3: '{h3}. {text}',
+                4: '{h3}.{h4} {text}',
+                5: '{h3}.{h4}.{h5} {text}',
+                6: '{h3}.{h4}.{h5}.{h6} {text}'
+            }
+        if level == 4:
+            defaults = {
+                1: '{text}',
+                2: '{text}',
+                3: '{text}',
+                4: '{h4}. {text}',
+                5: '{h4}.{h5} {text}',
+                6: '{h4}.{h5}.{h6} {text}'
+            }
         hformat = self.__dict.get(self.heading_format_key)
         if hformat is None:
             return defaults

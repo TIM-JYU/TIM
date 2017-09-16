@@ -6,6 +6,7 @@ from difflib import SequenceMatcher
 from tempfile import mkstemp
 from time import time
 from typing import List, Optional, Set, Tuple, Union, Iterable
+from flask import g
 
 import dateutil.parser
 from lxml import etree, html
@@ -216,6 +217,9 @@ class Document:
             settings = DocSettings.from_paragraph(self.get_paragraph(self.par_ids[0])) if self.par_ids else DocSettings(self)
         settings.user = user
         self.settings = settings
+        gmacros = settings.get_globalmacros()
+        if gmacros:
+            g.globalmacros = gmacros
         return settings
 
     def create(self, ignore_exists: bool = False):

@@ -96,9 +96,18 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
         if env is None:
             env = create_environment(macro_delimiter)
     try:
-        if text.startswith("%%GLOBALMACROS%%"):
-            gm = macros.get("GLOBALMACROS", "")
-            text = text.replace("%%GLOBALMACROS%%", gm)
+        globalmacros = None
+        try:
+            globalmacros = getattr(g, 'globalmacros', None)
+        except:
+            pass
+        if globalmacros:
+            for gmacro in globalmacros:
+                macrotext = "%%"+gmacro+"%%"
+                pos = text.find(macrotext)
+                if pos >= 0:
+                    gm = str(globalmacros.get(gmacro, ""))
+                    text = text.replace(macrotext, gm)
         startstr = env.comment_start_string + "LOCAL"
         beg = text.find(startstr)
         if beg >= 0:

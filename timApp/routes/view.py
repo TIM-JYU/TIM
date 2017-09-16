@@ -443,8 +443,8 @@ def check_updated_pars(doc_id, major, minor):
     # taketime("before liveupdates")
     d = Document(doc_id)
     settings = d.get_settings()
-    live_updates = settings.live_updates()  # this cost 1-3 ms.
-    global_live_updates = 2  # TODO: take this from somewhere that it is possible to admind to change it by a roote
+    live_updates = settings.live_updates(0)  # this cost 1-3 ms.
+    global_live_updates = 2  # TODO: take this from somewhere that it is possible to admin to change it by a route
 
     if 0 < live_updates < global_live_updates:
         live_updates = global_live_updates

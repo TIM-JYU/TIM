@@ -57,6 +57,8 @@ interface IParEditorScope {
             initialText: string;
         },
         showDelete: boolean,
+        showPlugins: boolean,
+        showSettings: boolean,
         destroyAfterSave: boolean,
         touchDevice: boolean,
         metaset: boolean,
@@ -154,6 +156,7 @@ interface IParEditorScope {
     setActiveTab(active: JQuery, area: string): void;
     setEditorMinSize(): void;
     setEditorText(text: string): void;
+    isSettings(text: string): boolean;
     setInitialText(): void;
     setLocalValue(name: string, value: string): void;
     setTextAreaControllerFunctions(): void;
@@ -201,7 +204,7 @@ timApp.directive("pareditor", [
             controller: ["$scope", function($scope: IParEditorScope) {
                 const tag = $scope.options.localSaveTag || "";
                 const storage = $window.localStorage;
-                $scope.lstag = tag;
+                $scope.lstag = tag; // par/note/addAbove
 
                 $scope.getLocalBool = function(name, def) {
                     let ret = def;
@@ -380,6 +383,10 @@ timApp.directive("pareditor", [
 
                 $scope.dataLoaded = false; // allow load in first time what ever editor
 
+                $scope.isSettings = function(text) {
+                    return text.startsWith('``` {settings=""}')
+                };
+
                 $scope.setInitialText = function() {
                     if ($scope.dataLoaded) return;
                     if ( !$scope.initialTextUrl ) {
@@ -407,6 +414,10 @@ timApp.directive("pareditor", [
                         const data = response.data;
                         $scope.setEditorText(data.text);
                         $scope.initialText = data.text;
+                        if ( $scope.isSettings(data.text) ) {
+                            $scope.options.showPlugins = false;
+                            $scope.options.showSettings = true;
+                        }
                         angular.extend($scope.extraData, data.extraData);
                         $scope.editorChanged();
                         $scope.aceReady();
@@ -469,7 +480,10 @@ timApp.directive("pareditor", [
                     editor.renderer.setPadding(10);
                     editor.renderer.setScrollMargin(2, 2, 2, 40);
                     editor.renderer.setVScrollBarAlwaysVisible(true);
-                    editor.getSession().setMode("ace/mode/markdown");
+                    if ( $scope.lstag === "addAbove") // for chat no extra behaviors to editor
+                        editor.getSession().setMode("ace/mode/text");
+                    else
+                        editor.getSession().setMode("ace/mode/markdown");
                     editor.getSession().setUseWrapMode(false);
                     editor.getSession().setWrapLimitRange(0, 79);
                     editor.setOptions({
