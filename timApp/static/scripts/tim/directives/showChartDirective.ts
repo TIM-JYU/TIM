@@ -288,7 +288,9 @@ timApp.directive("showChartDirective", [function() {
                 }
 
                 $scope.internalControl.close();
-                const data = question.data;
+                var d = question.data;
+                if (!d) d = question; // TODO: for some reasoen question can be data or more complex object???
+                const data = d;
                 // $scope.ctx = $($scope.canvasId).get(0).getContext("2d");
                 $scope.x = 10;
                 $scope.y = 20;
