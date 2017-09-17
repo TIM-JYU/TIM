@@ -2156,17 +2156,18 @@ timApp.directive("pareditor", [
 
                         file.upload.then(function(response) {
                             $timeout(function() {
+                                var isplugin = ($scope.editorStartsWith("``` {"));
+                                var start = "[File](";
                                 if (response.data.image) {
                                     $scope.uploadedFile = "/images/" + response.data.image;
-                                    if ($scope.editorStartsWith("``` {")) {
-                                        $scope.insertTemplate($scope.uploadedFile);
-                                    }
-                                    else {
-                                        $scope.insertTemplate("![Image](" + $scope.uploadedFile + ")");
-                                    }
+                                    start = "![Image](";
                                 } else {
                                     $scope.uploadedFile = "/files/" + response.data.file;
-                                    $scope.insertTemplate("[File](" + $scope.uploadedFile + ")");
+                                }
+                                if (isplugin) {
+                                    $scope.insertTemplate($scope.uploadedFile);
+                                } else {
+                                    $scope.insertTemplate(start + $scope.uploadedFile + ")");
                                 }
                             });
                         }, function(response) {

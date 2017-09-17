@@ -288,7 +288,7 @@ timApp.directive("showChartDirective", [function() {
                 }
 
                 $scope.internalControl.close();
-                const data = question;
+                const data = question.data;
                 // $scope.ctx = $($scope.canvasId).get(0).getContext("2d");
                 $scope.x = 10;
                 $scope.y = 20;
