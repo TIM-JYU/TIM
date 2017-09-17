@@ -440,6 +440,16 @@ p.caption {
     @extend .btn, .btn-primary;
 }
 
+a.helpButton {
+    margin-left: auto;
+    padding-left: 10px;
+    font-size: large;
+}
+
+.editMenuButton {
+    width: 100%;
+}
+
 
 button.showMap {
    @extend .btn, .btn-primary;

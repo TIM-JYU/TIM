@@ -1,0 +1,4 @@
+validity
+Insert attributes for validity check
+validityCheck: "^(10|[1-9])$"
+validityCheckMessage: "Anna kunnon numero"

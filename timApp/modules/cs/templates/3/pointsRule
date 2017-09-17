@@ -1,0 +1,31 @@
+pointsRule
+Set rules how to give points
+#Ohje: poista tarpeettomat rivit ja # jälkeiset osat riveiltä ja muokkaa tarpeen mukaan
+-pointsRule:        # tämän alle säännöt miten pisteitä saa
+    multiplier: 1.0 # Millä luvulla kerrotaan tehtävästä saadut pisteet
+    maxPoints: "Voit saada max 2 pistettä" # teksti jolla kuvataan pisteiden kertyminen
+    readpointskeep: false # jätetäänkö seuraavassa pisteet tulosteeseen
+    readpoints: "Pisteet: (.*)\n" # etsitään (regex ja poistetaan ellei edellä ole true)
+                     # tulosteesta rivi Pisteet:
+                     # ja otetaan tuosta sulkujen välinen osa pisteiden arvoksi.
+                     # pisteet menevät output-osioon
+    allowUserMin: 0  # minimipistemäärä minkä käyttäjä saa itse antaa, oletus = 0
+    allowUserMax: 2  # maksimipistemäärä minkä käyttäjä saa itse antaa
+    code: 0.8        # jos puuttuu, niin oletus on 1
+    expectCode: |    # reg exp koodista, joka pitää täyttää jotta saa code-pisteet
+        pappa
+        borde
+        spela
+        \.
+    expectCode: byCode # voi sanoa näinkin jos halutaan että byCode attribuutti sellaisenaan on oikea vastaus
+    expectCodePlain: "kissa"
+                       # vastauksen pitää olla täsmälleen tämä teksti (voi olla montakin riviä)
+    compile: 0.1       # kääännöksen onnistumisesta saa 0.1 pistettä
+    run: 0.2           # jos ajo menee virheittä 0.2 pistettä
+    output: 0.8        # out vastaa vaadittua (oletus 1 p)
+    expectOutput: '.*Summa.*5$' # regexp outputille
+    expectOutputPlain: 'Summa on 5'
+                       # ohjelman tuloksen pitää olla täsmälleen tämä teksti
+                       # paitsi lopun välilyöntien ja rivinvaihtojen määrä saa heittää
+    test: 1            # testien läpimeno tuottaa 1 p
+    doc: 0.1           # jos ajetaan dokumentit, niin saa 0.1 pistettä

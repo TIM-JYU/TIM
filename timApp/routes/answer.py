@@ -29,6 +29,8 @@ from timApp.timdb.models.block import Block
 from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import AnswerUpload, Answer, db
 from timApp.timdb.timdbexception import TimDbException
+from timApp.dumboclient import call_dumbo
+
 
 answers = Blueprint('answers',
                     __name__,
@@ -184,14 +186,17 @@ def post_answer(plugintype: str, task_id_ext: str):
         return json_response({'error': 'The key "web" is missing in plugin response.'}, 400)
     result = {'web': jsonresp['web']}
 
-    def add_reply(obj, key):
+    def add_reply(obj, key, runMarkDown = False):
         if key not in plugin.values:
             return
         text_to_add = plugin.values[key]
+        if runMarkDown:
+            result = call_dumbo([text_to_add])
+            text_to_add = result[0]
         obj[key] = text_to_add
 
     add_reply(result['web'], '-replyImage')
-    add_reply(result['web'], '-replyMD')
+    add_reply(result['web'], '-replyMD', True)
     add_reply(result['web'], '-replyHTML')
     if 'save' in jsonresp:
         # TODO: RND_SEED: save used rnd_seed for this answer if answer is saved, found from par.get_rnd_seed()

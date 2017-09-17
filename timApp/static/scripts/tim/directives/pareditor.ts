@@ -202,6 +202,7 @@ timApp.directive("pareditor", [
                 initialTextUrl: "@",
             },
             controller: ["$scope", function($scope: IParEditorScope) {
+                $scope.options.showSettings = false;
                 const tag = $scope.options.localSaveTag || "";
                 const storage = $window.localStorage;
                 $scope.lstag = tag; // par/note/addAbove
@@ -370,6 +371,14 @@ timApp.directive("pareditor", [
                             $plugintab.append($compile(button)($scope as any));
                         }
                     }
+
+                    const help = $("<a>", {
+                        "class": "helpButton",
+                        "text": "[?]",
+                        "title": "Help for plugin attributes",
+                        "onclick": "window.open('https://tim.jyu.fi/view/tim/ohjeita/csPlugin', '_blank')"
+                    });
+                    $plugintab.append($compile(help)($scope as any));
                 }
 
                 window.setTimeout(function() {
@@ -2186,11 +2195,11 @@ timApp.directive("pareditor", [
                     const $span = $("<span>", {class: "actionButtonRow"});
                     const button_width = 130;
                     $span.append($("<button>", {
-                        "class": "timButton",
+                        "class": "timButton editMenuButton",
                         "text": text,
                         "title": title,
                         "ng-click": clickfunction,
-                        "width": button_width,
+                        // "width": button_width,
                     }));
                     return $span;
                 };

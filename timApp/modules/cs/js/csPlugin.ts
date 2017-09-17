@@ -1772,8 +1772,8 @@ csApp.Controller = function($scope,$transclude) {
 
 			imgURL = data.web.image;
             //if ( !imgURL ) imgURL = data.web["-replyImage"];
-            $scope.imgURL = data.web["-replyImage"];
-            $scope.htmlresult = data.web["-replyHTML"];
+            $scope.imgURL = data.web["-replyImage"] || "";
+            $scope.htmlresult = (data.web["-replyHTML"] || "") + (data.web["-replyMD"] || "");
 			wavURL = data.web.wav;
 			if ( data.web.testGreen ) $scope.runTestGreen = true;
 			if ( data.web.testRed ) $scope.runTestRed = true;
@@ -1795,12 +1795,12 @@ csApp.Controller = function($scope,$transclude) {
             
 			if ( imgURL ) {
 				// $scope.resImage = '<img src="' + imgURL + ' " alt="Result image" />';
-				$scope.imgURL = imgURL;
+				$scope.imgURL = imgURL + $scope.imgURL;
 				$scope.result = data.web.console.trim();
 			} else {
 				if ( $scope.runSuccess )  
                     if ( $scope.isHtml )
-                        $scope.htmlresult = removeXML(data.web.console);
+                        $scope.htmlresult = removeXML(data.web.console) +  $scope.htmlresult;
                     else
                         if ( !languageTypes.isInArray(runType, csJSTypes ) ) $scope.result = data.web.console;
 				else   

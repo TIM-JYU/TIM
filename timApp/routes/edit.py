@@ -322,7 +322,7 @@ def par_response(pars,
                 for p in pars:
                     assert p.doc is doc
                 doc.version = edit_request.old_doc_version
-            doc.insert_temporary_pars(edit_request.get_pars(), ctx)
+            # doc.insert_temporary_pars(edit_request.get_pars(), ctx) # TODO: this dublicates the new par???
 
         DocParagraph.preload_htmls(pars, doc.get_settings(current_user), context_par=ctx,
                                    persist=update_cache)
@@ -483,12 +483,13 @@ def check_duplicates(pars, doc, timdb):
 
             duplicate = []
             task_id = par.get_attr('taskId')
+            par_id = par.get_id()
             count_of_same_task_ids = 0
             j = 0
             while j < len(all_pars):
-                if all_pars[j].get_attr('taskId') == task_id:
+                if all_pars[j].get_id() != par_id and all_pars[j].get_attr('taskId') == task_id:  # count not self
                     count_of_same_task_ids += 1
-                    if count_of_same_task_ids > 1:
+                    if count_of_same_task_ids > 0:
                         duplicate.append(task_id)
                         duplicate.append(par.get_id())
                         task_id_to_check = str(doc.doc_id) + "." + task_id

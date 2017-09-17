@@ -1,0 +1,12 @@
+reply
+Inserts a block for reply to user answer
+-replyImage: KUVAN OSOITE
+
+-replyHTML: |!!
+<p>HTMLää joka näkyy vastauksen jälkeen</p>
+!!
+
+-replyMD: |!!
+**Hyvä %%username%%!** Huomasit että se on $3x^2 + 2$
+
+!!
