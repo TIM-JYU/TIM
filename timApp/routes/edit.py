@@ -322,7 +322,7 @@ def par_response(pars,
                 for p in pars:
                     assert p.doc is doc
                 doc.version = edit_request.old_doc_version
-            # doc.insert_temporary_pars(edit_request.get_pars(), ctx) # TODO: this dublicates the new par???
+            doc.insert_temporary_pars(edit_request.get_pars(), ctx)
 
         DocParagraph.preload_htmls(pars, doc.get_settings(current_user), context_par=ctx,
                                    persist=update_cache)
