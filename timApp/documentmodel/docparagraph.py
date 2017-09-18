@@ -44,7 +44,10 @@ class DocParagraph:
         self.html_sanitized = False
         self.html = None
         self.__htmldata = None
-        self.ref_pars = None
+
+        # Cache for referenced paragraphs. Keys {True, False} correspond to the values of set_html parameter in
+        # get_referenced_pars.
+        self.ref_pars = {}
         self.__rands = None   # random number macros for this pg
         self.__rnd_seed = 0
         self.attrs = None
@@ -870,7 +873,7 @@ class DocParagraph:
         self.__write()
 
         # Clear cached referenced paragraphs because this was modified
-        self.ref_pars = None
+        self.ref_pars = {}
 
     def is_reference(self) -> bool:
         """Returns whether this paragraph is a reference to some other paragraph."""
@@ -937,8 +940,8 @@ class DocParagraph:
                 final_par.__set_html(html)
             return final_par
 
-        if self.ref_pars is not None:
-            return self.ref_pars
+        if self.ref_pars.get(set_html) is not None:
+            return self.ref_pars.get(set_html)
         if visited_pars is None:
             visited_pars = []
         par_doc_id = self.get_doc_id(), self.get_id()
@@ -996,12 +999,12 @@ class DocParagraph:
                 else:
                     ref_pars.append(p)
             if tr_get_one and self.is_translation() and len(ref_pars) > 0:
-                self.ref_pars = [create_final_par(ref_pars[0])]
-                return self.ref_pars
+                self.ref_pars[set_html] = [create_final_par(ref_pars[0])]
+                return self.ref_pars[set_html]
         else:
             assert False
-        self.ref_pars = [create_final_par(ref_par) for ref_par in ref_pars]
-        return self.ref_pars
+        self.ref_pars[set_html] = [create_final_par(ref_par) for ref_par in ref_pars]
+        return self.ref_pars[set_html]
 
     def is_dynamic(self) -> bool:
         """Returns whether this paragraph is a dynamic paragraph.

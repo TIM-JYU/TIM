@@ -17,6 +17,7 @@ from timApp.documentmodel.document import Document
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.routes.login import log_in_as_anonymous
 from timApp.tests.db.timdbtest import TimDbTest
+from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.models.user import User
@@ -566,6 +567,9 @@ class TimRouteTest(TimDbTest):
         self.assertEqual(len(pars), len(expected))
         for e, r in zip(expected, pars):
             self.assertEqual(e, r.text_content().strip())
+
+    def get_updated_pars(self, d: DocInfo, **kwargs):
+        return self.get(f'/getUpdatedPars/{d.id}', **kwargs)
 
 
 if __name__ == '__main__':

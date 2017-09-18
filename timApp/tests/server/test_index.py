@@ -175,7 +175,7 @@ Lorem ipsum.
                                initial_par='# a\n\n# b {.nonumber}\n\n#-\n\n# c')
         d = self.create_translation(orig, 'test', 'en')
         pars = d.document.get_par_ids()
-        self.get(f'/getUpdatedPars/{d.id}')
+        self.get_updated_pars(d)
 
         e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f'}, json_key='texts', as_tree=True)
         self.assert_content(e, ['3. d\n4. e', '5. f'])
@@ -199,7 +199,7 @@ Lorem ipsum.
 
     def check_doc_preview(self, d: DocInfo):
         pars = d.document.get_par_ids()
-        self.get(f'/getUpdatedPars/{d.id}')
+        self.get_updated_pars(d)
 
         e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[1]},
                            json_key='texts', as_tree=True)
