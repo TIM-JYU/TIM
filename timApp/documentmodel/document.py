@@ -654,9 +654,9 @@ class Document:
     def parwise_diff(self, other_doc: 'Document', check_html: bool=False):
         if self.get_version() == other_doc.get_version():
             return
-        old_pars = [par for par in self]
+        old_pars = self.get_paragraphs()
         old_ids = [par.get_id() for par in old_pars]
-        new_pars = [par for par in other_doc]
+        new_pars = other_doc.get_paragraphs()
         new_ids = [par.get_id() for par in new_pars]
         s = SequenceMatcher(None, old_ids, new_ids)
         opcodes = s.get_opcodes()
@@ -674,7 +674,8 @@ class Document:
                 for old, new in zip(old_pars[i1:i2], new_pars[j1:j2]):
                     if not old.is_same_as(new):
                         yield {'type': 'change', 'id': old.get_id(), 'content': [new]}
-                    elif check_html and not old.is_same_as_html(new):
+                    # Skip references because they have not been dereferenced and no HTML is available.
+                    elif check_html and not old.is_reference() and not old.is_same_as_html(new):
                         yield {'type': 'change', 'id': old.get_id(), 'content': [new]}
 
     def update_section(self, text: str, par_id_first: str, par_id_last: str) -> Tuple[str, str, DocumentEditResult]:
