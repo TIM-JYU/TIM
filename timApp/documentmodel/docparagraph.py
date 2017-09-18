@@ -398,14 +398,18 @@ class DocParagraph:
             # This gives a default translation based on the source paragraph
             # todo: same for area reference
             data = []
-            for par in self.get_referenced_pars():
-                d = self.__data.copy()  # todo: needs copy or not?
-                md = par.get_markdown()
-                if md:
-                    d['md'] = md
-                data.append(d)
-            return DocumentWriter(data, export_hashes=False, export_ids=False).get_text()
-
+            try:
+                ref_pars = self.get_referenced_pars(set_html=False)
+            except InvalidReferenceException:
+                pass
+            else:
+                for par in ref_pars:
+                    d = self.__data.copy()  # todo: needs copy or not?
+                    md = par.get_markdown()
+                    if md:
+                        d['md'] = md
+                    data.append(d)
+                return DocumentWriter(data, export_hashes=False, export_ids=False).get_text()
         return DocumentWriter([self.__data],
                               export_hashes=False,
                               export_ids=False).get_text(DocumentParserOptions.single_paragraph())
