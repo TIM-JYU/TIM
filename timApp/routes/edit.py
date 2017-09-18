@@ -105,13 +105,13 @@ def update_document(doc_id):
 
 def manage_response(docentry: DocInfo, pars: List[DocParagraph], timdb, ver_before: Tuple[int, int]):
     doc = docentry.document_as_current_user
-    duplicates = check_duplicates(pars, doc, timdb)
     chg = doc.get_changelog()
     for ver in chg:
         ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
     notify_doc_watchers(docentry,
                         get_diff_link(docentry, ver_before),
                         NotificationType.DocModified)
+    duplicates = check_duplicates(pars, doc, timdb)
     return json_response({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
 
 
@@ -475,6 +475,7 @@ def check_duplicates(pars, doc, timdb):
     for par in pars:
         if par.is_task():
             if all_pars is None: # now we need the pars
+                doc.clear_mem_cache()
                 docpars = doc.get_paragraphs()
                 all_pars = []
                 for paragraph in docpars:
