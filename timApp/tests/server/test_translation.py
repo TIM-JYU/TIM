@@ -125,7 +125,7 @@ class TranslationTest(TimRouteTest):
     def test_translation_extraneous_pars(self):
         """Any extraneous blocks (those without "rp" attribute) in translation documents are retained after syncing."""
         self.login_test1()
-        doc = self.create_doc(initial_par='1\n#-\n2\n#-\n3\n#-\n4')
+        doc = self.create_doc(initial_par=['1', '2', '3', '4'])
         tr = self.create_translation(doc, 'In English', 'en')
         tr_doc = tr.document
         self.assert_translation_synced(tr_doc, doc)

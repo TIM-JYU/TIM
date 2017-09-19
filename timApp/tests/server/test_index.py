@@ -160,19 +160,19 @@ Lorem ipsum.
 
     def test_heading_preview(self):
         self.login_test1()
-        d = self.create_doc(settings={'auto_number_headings': True}, initial_par='# a\n\n#-\n\n# b\n\n#-\n\n# c')
+        d = self.create_doc(settings={'auto_number_headings': True}, initial_par=['# a', '# b', '# c'])
         self.check_doc_preview(d)
 
     def test_heading_preview_translation(self):
         self.login_test1()
-        orig = self.create_doc(settings={'auto_number_headings': True}, initial_par='# a\n\n#-\n\n# b\n\n#-\n\n# c')
+        orig = self.create_doc(settings={'auto_number_headings': True}, initial_par=['# a', '# b', '# c'])
         d = self.create_translation(orig, 'test', 'en')
         self.check_doc_preview(d)
 
     def test_heading_preview_translation_nonumber(self):
         self.login_test1()
         orig = self.create_doc(settings={'auto_number_headings': True},
-                               initial_par='# a\n\n# b {.nonumber}\n\n#-\n\n# c')
+                               initial_par=['# a', '# b {.nonumber}', '# c'])
         d = self.create_translation(orig, 'test', 'en')
         pars = d.document.get_par_ids()
         self.get_updated_pars(d)

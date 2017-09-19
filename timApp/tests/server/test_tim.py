@@ -166,7 +166,7 @@ class TimTest(TimRouteTest):
 
     def test_same_heading_as_par(self):
         self.login_test1()
-        doc = self.create_doc(initial_par="""# Hello\n#-\nHello""").document
+        doc = self.create_doc(initial_par=['# Hello', 'Hello']).document
         self.get('/view/{}'.format(doc.doc_id))
 
     def test_broken_comment(self):
