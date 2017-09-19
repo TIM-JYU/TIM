@@ -15,13 +15,14 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 
-from timApp.accesshelper import verify_logged_in, has_edit_access, has_manage_access
+from timApp.accesshelper import verify_logged_in, has_edit_access, has_manage_access, \
+    get_viewable_blocks_or_none_if_admin
 from timApp.dbaccess import get_timdb
 from timApp.responsehelper import json_response, set_no_cache_headers, ok_response
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group
 from timApp.timdb.models.docentry import DocEntry, get_documents_in_folder
 from timApp.timdb.models.folder import Folder
-from timApp.timdb.userutils import get_viewable_blocks, grant_access
+from timApp.timdb.userutils import grant_access
 
 velps = Blueprint('velps',
                   __name__,
@@ -833,7 +834,7 @@ def get_velp_groups_from_tree(document_id: int):
     # owner_group_id = 3  # TODO: Choose owner group correctly, now uses All Korppi users
 
     velp_groups: List[DocEntry] = []
-    viewable = get_viewable_blocks(get_current_user_id())
+    viewable = get_viewable_blocks_or_none_if_admin()
 
     # Velp groups for areas, plugins etc
     folders = Folder.get_all_in_path(doc_velp_path)
