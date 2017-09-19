@@ -152,7 +152,7 @@ def set_user_to_session(user: User):
     session.pop('adding_user', None)
     if adding:
         if user.id in get_session_users_ids():
-            flash('{} is already logged in.'.format(user.real_name))
+            flash(f'{user.real_name} is already logged in.')
             return
         other_users = session.get('other_users', dict())
         other_users[str(user.id)] = user.basic_info_dict
@@ -207,13 +207,13 @@ def alt_signup():
     session["email"] = email
 
     try:
-        send_email(email, 'Your new TIM password', 'Your password is {}'.format(password))
+        send_email(email, 'Your new TIM password', f'Your password is {password}')
         if current_app.config['TESTING']:
             test_pws.append(password)
         flash("A password has been sent to you. Please check your email.")
     except Exception as e:
-        log_error('Could not send login email (user: {}, password: {}, exception: {})'.format(email, password, str(e)))
-        flash('Could not send the email, please try again later. The error was: {}'.format(str(e)))
+        log_error(f'Could not send login email (user: {email}, password: {password}, exception: {str(e)})')
+        flash(f'Could not send the email, please try again later. The error was: {str(e)}')
 
     return finish_login(ready=False)
 
@@ -357,7 +357,7 @@ def quick_login(username):
     session['user_name'] = user.name
     session['real_name'] = user.real_name
     session['email'] = user.email
-    flash("Logged in as: {}".format(username))
+    flash(f"Logged in as: {username}")
     return redirect(url_for('view_page.index_page'))
 
 
@@ -422,7 +422,7 @@ def yubi_login(username, otp):
     session['user_name'] = user.name
     session['real_name'] = user.real_name
     session['email'] = user.email
-    flash("Logged in as: {}".format(username))
+    flash(f"Logged in as: {username}")
     return redirect(url_for('view_page.index_page'))
 
 

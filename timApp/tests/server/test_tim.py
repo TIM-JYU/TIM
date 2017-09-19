@@ -47,14 +47,14 @@ class TimTest(TimRouteTest):
                 'item_title': 'document ' + n
             }, expect_contains={'id': doc_id_list[idx], 'path': doc_names[idx]})
             doc_ids.add(doc_id_list[idx])
-        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view'),
+        self.json_put(f'/permissions/add/{doc_id}/{"Anonymous users"}/{"view"}',
                       {'type': 'always'}, expect_content=self.ok_resp)
         self.json_put(
-            '/permissions/add/{}/{}/{}'.format(doc_id_list[1], 'Logged-in users', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
+            f'/permissions/add/{doc_id_list[1]}/{"Logged-in users"}/{"view"}', {'type': 'always'}, expect_content=self.ok_resp)
         self.json_put(
-            '/permissions/add/{}/{}/{}'.format(doc_id_list[2], 'testuser2', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
+            f'/permissions/add/{doc_id_list[2]}/{"testuser2"}/{"view"}', {'type': 'always'}, expect_content=self.ok_resp)
         self.json_put(
-            '/permissions/add/{}/{}/{}'.format(doc_id_list[3], 'testuser2', 'edit'), {'type': 'always'}, expect_content=self.ok_resp)
+            f'/permissions/add/{doc_id_list[3]}/{"testuser2"}/{"edit"}', {'type': 'always'}, expect_content=self.ok_resp)
         doc = Document(doc_id)
         doc.add_paragraph('Hello')
         pars = doc.get_paragraphs()
@@ -85,7 +85,7 @@ class TimTest(TimRouteTest):
         edit_text = 'testing editing now...\nnew line\n'
         par_html = md_to_html(edit_text)
         self.post_par(doc, edit_text, first_id, expect_contains=par_html, json_key='texts')
-        self.get('/getBlock/{}/{}'.format(doc_id, first_id), expect_content={'text': edit_text})
+        self.get(f'/getBlock/{doc_id}/{first_id}', expect_content={'text': edit_text})
         self.post_par(doc, edit_text, first_id, expect_contains=par_html, json_key='texts')
         par2_text = 'new par'
         par2_html = md_to_html(par2_text)
@@ -130,10 +130,10 @@ class TimTest(TimRouteTest):
         test2_note_id = notes[0]['id']
 
         self.login_test1()
-        self.get('/note/{}'.format(test2_note_id), expect_contains=comment_of_test2, json_key='text')
+        self.get(f'/note/{test2_note_id}', expect_contains=comment_of_test2, json_key='text')
         teacher_right_docs = {doc_id_list[3]}
         for i in teacher_right_docs:
-            self.json_put('/permissions/add/{}/{}/{}'.format(i, 'testuser2', 'teacher'),
+            self.json_put(f'/permissions/add/{i}/{"testuser2"}/{"teacher"}',
                           {'type': 'always'}, expect_content=self.ok_resp)
 
         self.json_post('/deleteNote', {'id': test2_note_id,
@@ -143,10 +143,10 @@ class TimTest(TimRouteTest):
         notes = timdb.notes.get_notes(ug, Document(doc_id), include_public=True)
         self.assertEqual(1, len(notes))
 
-        self.get('/getBlock/{}/{}'.format(doc_id, first_id),
+        self.get(f'/getBlock/{doc_id}/{first_id}',
                  expect_content={'text': edit_text})
 
-        self.get('/getBlock/{}/{}'.format(doc_id, first_id),
+        self.get(f'/getBlock/{doc_id}/{first_id}',
                  query_string={'docId': doc_id,
                                'area_start': first_id,
                                'area_end': second_par_id},
@@ -156,24 +156,22 @@ class TimTest(TimRouteTest):
         for view_id in viewable_docs - teacher_right_docs:
             self.get('/view/' + str(view_id))
             self.get('/teacher/' + str(view_id), expect_status=302)
-            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2',
-                                                             'teacher'), {'type': 'always'}, expect_status=403)
+            self.json_put(f'/permissions/add/{view_id}/{"testuser2"}/{"teacher"}', {'type': 'always'}, expect_status=403)
         for view_id in teacher_right_docs:
             self.get('/view/' + str(view_id))
             self.get('/teacher/' + str(view_id))
-            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2',
-                                                             'teacher'), {'type': 'always'}, expect_status=403)
+            self.json_put(f'/permissions/add/{view_id}/{"testuser2"}/{"teacher"}', {'type': 'always'}, expect_status=403)
 
     def test_same_heading_as_par(self):
         self.login_test1()
         doc = self.create_doc(initial_par=['# Hello', 'Hello']).document
-        self.get('/view/{}'.format(doc.doc_id))
+        self.get(f'/view/{doc.doc_id}')
 
     def test_broken_comment(self):
         self.login_test1()
         doc = self.create_doc(settings={'macros': {}, 'macro_delimiter': '%%'},
                               initial_par="""```{atom=true}\nTest {!!! }\n```""").document
-        tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True)
+        tree = self.get(f'/view/{doc.doc_id}', as_tree=True)
         syntax_errors = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
         self.assertEqual(1, len(syntax_errors))
         self.assertIn('Syntax error in template:', syntax_errors[0].text)
@@ -184,18 +182,18 @@ class TimTest(TimRouteTest):
         self.login_test1()
         md_table = """---\r\n|a|\r\n|-|"""
         doc = self.create_doc(initial_par=md_table).document
-        tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True)
+        tree = self.get(f'/view/{doc.doc_id}', as_tree=True)
         table_xpath = r'.//div[@class="par"]/div[@class="parContent"]/table'
         tables = tree.findall(table_xpath)
         self.assertEqual(1, len(tables))
 
-        self.json_post('/preview/{}'.format(doc.doc_id), {'text': md_table}, json_key='texts', expect_xpath=table_xpath)
+        self.json_post(f'/preview/{doc.doc_id}', {'text': md_table}, json_key='texts', expect_xpath=table_xpath)
 
     def test_clear_cache(self):
         self.login_test1()
         doc = self.create_doc(initial_par="Test").document
-        self.get('/view/{}'.format(doc.doc_id))
-        self.get('/view/{}'.format(doc.doc_id), query_string={'nocache': 'true'})
+        self.get(f'/view/{doc.doc_id}')
+        self.get(f'/view/{doc.doc_id}', query_string={'nocache': 'true'})
         doc.get_index()
 
     def test_document_intermediate_folders(self):
@@ -206,23 +204,23 @@ class TimTest(TimRouteTest):
         self.login_test1()
         doc = self.create_doc()
         grant_view_access(get_anon_group_id(), doc.id)
-        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
         self.assertGreater(len(links), 0)
 
         self.logout()
-        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
         self.assertGreater(len(links), 0)
         doc.document.add_setting('hide_links', 'view')
-        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
         self.assertEqual(len(links), 0)
         doc.document.add_paragraph(text='# 1\n\n#2')
 
         # Index is visible always
-        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
         self.assertEqual(len(links), 3)
 
         self.login_test1()
-        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
         self.assertGreater(len(links), 0)
 
 

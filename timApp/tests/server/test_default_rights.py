@@ -36,12 +36,10 @@ class DefaultRightTest(TimRouteTest):
             self.assertIsNone(rights_doc)
 
             self.json_put(
-                '/defaultPermissions/{}/add/{}/{}/{}'.format(obj_type_str, folder.id,
-                                                             'Anonymous users;testuser2',
-                                                             'view'), {'type': 'always'},
+                f'/defaultPermissions/{obj_type_str}/add/{folder.id}/{"Anonymous users;testuser2"}/{"view"}', {'type': 'always'},
                 expect_content=self.ok_resp)
 
-            def_rights = self.get('/defaultPermissions/{}/get/{}'.format(obj_type_str, folder.id),
+            def_rights = self.get(f'/defaultPermissions/{obj_type_str}/get/{folder.id}',
                                   expect_status=200)
             default_rights = [{'access_name': 'view',
                                'access_type': 1,
@@ -98,8 +96,5 @@ class DefaultRightTest(TimRouteTest):
             new_item_rights = [right for right in new_item_rights if right['access_name'] != 'owner']
             self.assertListEqual(sorted(default_rights, key=itemgetter('gid', 'access_type')),
                                  sorted(new_item_rights, key=itemgetter('gid', 'access_type')))
-            self.json_put('/defaultPermissions/{}/remove/{}/{}/{}'
-                          .format(obj_type_str, folder.id,
-                                  get_anon_group_id(),
-                                  'view'),
+            self.json_put(f'/defaultPermissions/{obj_type_str}/remove/{folder.id}/{get_anon_group_id()}/{"view"}',
                           expect_content=self.ok_resp)

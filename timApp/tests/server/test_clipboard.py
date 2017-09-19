@@ -12,20 +12,20 @@ class ClipboardTest(TimRouteTest):
              doc: DocEntry,
              par_start: DocParagraph,
              par_end: DocParagraph, **kwargs):
-        self.json_post('/clipboard/copy/{}/{}/{}'.format(doc.id, par_start.get_id(), par_end.get_id()), **kwargs)
+        self.json_post(f'/clipboard/copy/{doc.id}/{par_start.get_id()}/{par_end.get_id()}', **kwargs)
 
     def cut(self,
             doc: DocEntry,
             par_start: DocParagraph,
             par_end: DocParagraph, **kwargs):
-        self.json_post('/clipboard/cut/{}/{}/{}'.format(doc.id, par_start.get_id(), par_end.get_id()), **kwargs)
+        self.json_post(f'/clipboard/cut/{doc.id}/{par_start.get_id()}/{par_end.get_id()}', **kwargs)
 
     def paste(self,
               doc: DocEntry,
               par_before: Optional[DocParagraph] = None,
               par_after: Optional[DocParagraph] = None,
               as_ref: bool = False, **kwargs):
-        self.json_post('/clipboard/paste/{}'.format(doc.id),
+        self.json_post(f'/clipboard/paste/{doc.id}',
                        {'par_before': par_before.get_id() if par_before else None,
                         'par_after': par_after.get_id() if par_after else None,
                         'as_ref': as_ref}, **kwargs)
@@ -194,15 +194,14 @@ test
                 continue
             pos = random.choice(pars)
             is_before = random.choice((True, False))
-            message = """
-First: {}, second: {}, pos: {}, is_before: {}
-Index 1: {}, index 2: {}
+            message = f"""
+First: {first.get_id()}, second: {second.get_id()}, pos: {pos.get_id()}, is_before: {is_before}
+Index 1: {first_index}, index 2: {second_index}
 
 Document:
 
-{}
-            """.format(first.get_id(), second.get_id(), pos.get_id(), is_before,
-                       first_index, second_index, d.document.export_markdown())
+{d.document.export_markdown()}
+            """
 
             self.cut(d, first, second)
             d.document.clear_mem_cache()

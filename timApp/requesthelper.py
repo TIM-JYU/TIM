@@ -23,7 +23,7 @@ def verify_json_params(*args: str, require=True, default=None, error_msgs=None):
         elif not require:
             val = default
         else:
-            abort(400, err or 'Missing required parameter in request: {}'.format(arg))
+            abort(400, err or f'Missing required parameter in request: {arg}')
             return ()
 
         result += (val,)
@@ -35,7 +35,7 @@ def unpack_args(*args, types):
     json_params = request.args
     for idx, arg in enumerate(args):
         if arg not in json_params:
-            abort(400, 'Missing required parameter in request: {}'.format(arg))
+            abort(400, f'Missing required parameter in request: {arg}')
         result += types[idx](json_params[arg]),
     return result
 

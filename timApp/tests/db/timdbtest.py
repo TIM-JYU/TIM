@@ -66,7 +66,7 @@ class TimDbTest(unittest.TestCase):
         self.db.close()
 
     def create_doc(self, from_file=None, initial_par: Union[str, List[str]]=None, settings=None):
-        d = DocEntry.create('test{}'.format(TimDbTest.i), 0, 'test', from_file=from_file, initial_par=initial_par,
+        d = DocEntry.create(f'test{TimDbTest.i}', 0, 'test', from_file=from_file, initial_par=initial_par,
                             settings=settings)
         return d
 
@@ -103,7 +103,7 @@ class TimDbTest(unittest.TestCase):
 
     def assert_dict_subset(self, data, subset):
         for k, v in subset.items():
-            self.assertEqual(data[k], v, msg='Key {} was different'.format(k))
+            self.assertEqual(data[k], v, msg=f'Key {k} was different')
 
 
 TEST_USER_1_ID = 4

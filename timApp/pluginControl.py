@@ -39,9 +39,9 @@ def get_error_plugin(plugin_name, message, response=None,
     :type plugin_name: str
     """
     if plugin_output_format == PluginOutputFormat.MD:
-        return get_error_tex('Plugin {} error:'.format(plugin_name), message, response)
+        return get_error_tex(f'Plugin {plugin_name} error:', message, response)
 
-    return get_error_html('Plugin {} error: {}'.format(plugin_name, message), response)
+    return get_error_html(f'Plugin {plugin_name} error: {message}', response)
 
 
 def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
@@ -55,7 +55,7 @@ def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
             plugin_count += 1
         # Need "and plugin" to ignore e.g. manual heading ids
         if task_id and plugin:
-            task_ids.append("{}.{}".format(block.doc.doc_id, task_id))
+            task_ids.append(f"{block.doc.doc_id}.{task_id}")
     return task_ids, plugin_count
 
 
@@ -141,7 +141,7 @@ def pluginify(doc: Document,
             attr_taskid = block.get_attr('taskId')
             plugin_name = block.get_attr('plugin')
             if plugin_name and not block.is_question():  # show also question in preview
-                task_id = "{}.{}".format(block.get_doc_id(), attr_taskid or '')
+                task_id = f"{block.get_doc_id()}.{attr_taskid or ''}"
                 if not task_id.endswith('.'):
                     task_ids.append(task_id)
         answers = timdb.answers.get_newest_answers(user.id, task_ids)
@@ -170,7 +170,7 @@ def pluginify(doc: Document,
                                                       '</pre></div>'
 
         if plugin_name and not block.is_question():  # show also question in preview
-            task_id = "{}.{}".format(block.get_doc_id(), attr_taskid or '')
+            task_id = f"{block.get_doc_id()}.{attr_taskid or ''}"
             info = None
             state_ok = False
             new_seed = False
@@ -276,7 +276,7 @@ def pluginify(doc: Document,
         except ValueError as e:
             for idx in plugin_block_map.keys():
                 html_pars[idx][output_format.value] = get_error_plugin(
-                    plugin_name, 'Failed to parse JSON from plugin reqs route: {}'.format(e), resp,
+                    plugin_name, f'Failed to parse JSON from plugin reqs route: {e}', resp,
                     plugin_output_format=output_format)
             continue
         plugin_js_files, plugin_css_files, plugin_modules = plugin_deps(reqs)
@@ -326,7 +326,7 @@ def pluginify(doc: Document,
                 for idx in plugin_block_map.keys():
                     html_pars[idx][output_format.value] = \
                         get_error_plugin(plugin_name,
-                                         'Failed to parse plugin response from multihtml route: {}'.format(e),
+                                         f'Failed to parse plugin response from multihtml route: {e}',
                                          response, plugin_output_format=output_format)
                 continue
 
@@ -334,10 +334,8 @@ def pluginify(doc: Document,
                 html, is_lazy = make_lazy(html, markup, do_lazy)
 
                 html_pars[idx]['needs_browser'] = needs_browser or is_lazy
-                html_pars[idx][output_format.value] = ("<div id='{}' data-plugin='{}'>{}</div>"
-                                                       .format(markup['taskIDExt'],
-                                                               plugin_url,
-                                                               html)) if wrap_in_div else html
+                html_pars[idx][output_format.value] = (
+                f"<div id='{markup['taskIDExt']}' data-plugin='{plugin_url}'>{html}</div>") if wrap_in_div else html
         else:
             for idx, val in plugin_block_map.items():
                 if md_out:
@@ -361,10 +359,7 @@ def pluginify(doc: Document,
 
                     html, is_lazy = make_lazy(html, val, do_lazy)
                     html_pars[idx]['needs_browser'] = needs_browser or is_lazy
-                    html_pars[idx]['html'] = ("<div id='{}' data-plugin='{}'>{}</div>"
-                                              .format(val['taskIDExt'],
-                                                      plugin_url,
-                                                      html)) if wrap_in_div else html
+                    html_pars[idx]['html'] = f"<div id='{val['taskIDExt']}' data-plugin='{plugin_url}'>{html}</div>" if wrap_in_div else html
 
     # taketime("phtml done")
 

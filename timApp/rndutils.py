@@ -91,7 +91,7 @@ def get_sample_list(myrandom: Random, jso: str) -> List[int]:
 
     count = r[1] - r[0]
     if count > 500:
-        raise ValueError('Too big range for s: {}-{}'.format(r[0],r[1]))
+        raise ValueError(f'Too big range for s: {r[0]}-{r[1]}')
     ints = list(range(r[0], r[1] + 1, step))
     i = n
     while i >= len(ints):

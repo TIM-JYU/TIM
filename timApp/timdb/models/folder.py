@@ -192,7 +192,7 @@ class Folder(db.Model, Item):
 
         if DocEntry.find_by_path(path):
             db.session.rollback()
-            raise TimDbException('A document already exists at path {}'.format(path))
+            raise TimDbException(f'A document already exists at path {path}')
 
         # Root folder is special case
         if not path:

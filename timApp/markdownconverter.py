@@ -20,7 +20,7 @@ def has_macros(text: str, macros, macro_delimiter: Optional[str]=None):
 def expand_macros_regex(text: str, macros, macro_delimiter=None):
     if not has_macros(text, macros, macro_delimiter):
         return text
-    return re.sub('{0}([a-zA-Z]+){0}'.format(re.escape(macro_delimiter)),
+    return re.sub(f'{re.escape(macro_delimiter)}([a-zA-Z]+){re.escape(macro_delimiter)}',
                   lambda match: macros.get(match.group(1), 'UNKNOWN MACRO: ' + match.group(1)),
                   text)
 
@@ -121,11 +121,11 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
         return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:
-            return get_error_html('Syntax error in template: {}'.format(e))
+            return get_error_html(f'Syntax error in template: {e}')
         return text
     except Exception as e:
         if not ignore_errors:
-            return get_error_html('Syntax error in template: {}'.format(e))
+            return get_error_html(f'Syntax error in template: {e}')
         return text
 
 

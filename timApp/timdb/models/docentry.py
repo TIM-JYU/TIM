@@ -127,7 +127,7 @@ class DocEntry(db.Model, DocInfo):
             from timApp.timdb.models.folder import Folder
             if Folder.find_by_path(path):
                 db.session.rollback()
-                raise TimDbException('A folder already exists at path {}'.format(path))
+                raise TimDbException(f'A folder already exists at path {path}')
             db.session.add(docentry)
 
         if from_file is not None:

@@ -165,8 +165,8 @@ def process_areas(html_pars: List[Dict], macros, delimiter, env) -> List[Dict]:
                     try:
                         free_indexes[new_areas[area_end].index] = True
                     except KeyError:
-                        flash('area_end found for "{}" without corresponding start. '
-                              'Fix this to get rid of this warning.'.format(area_end))
+                        flash(
+                            f'area_end found for "{area_end}" without corresponding start. Fix this to get rid of this warning.')
                     new_areas.pop(area_end, None)
                 break
 

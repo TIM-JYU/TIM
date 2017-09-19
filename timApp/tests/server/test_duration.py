@@ -13,7 +13,7 @@ class DurationTest(TimRouteTest):
 
     def get_about_to_access_msg(self, period='a day'):
         return ['You are about to access a time-limited document.',
-                'After you click Unlock, your access to this document will be removed in {}.'.format(period)]
+                f'After you click Unlock, your access to this document will be removed in {period}.']
 
     unlock_success = 'Item was unlocked successfully.'
 
@@ -50,8 +50,8 @@ class DurationTest(TimRouteTest):
                      duration_from=now_plus_minute)
         d = DocEntry.find_by_id(doc_id)
         now = now_plus_minute - delta
-        err_msg_too_early = 'You can unlock this item in {}.'.format(humanize_datetime(now_plus_minute))
-        err_msg_too_late = 'You cannot unlock this item anymore (deadline expired {}).'.format(humanize_datetime(now))
+        err_msg_too_early = f'You can unlock this item in {humanize_datetime(now_plus_minute)}.'
+        err_msg_too_late = f'You cannot unlock this item anymore (deadline expired {humanize_datetime(now)}).'
         self.get('/view/' + d.path,
                  expect_status=403,
                  json_key='error',
@@ -91,7 +91,7 @@ class DurationTest(TimRouteTest):
                  expect_contains=self.get_expired_msg(ba.accessible_to))
 
     def get_expired_msg(self, access):
-        return 'Your access to this item has expired {}.'.format(humanize_datetime(access))
+        return f'Your access to this item has expired {humanize_datetime(access)}.'
 
     def test_duration_group_unlock(self):
         self.login_test1()

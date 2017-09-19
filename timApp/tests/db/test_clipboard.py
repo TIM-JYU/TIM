@@ -67,7 +67,7 @@ class ClipboardTest(TimDbTest):
         db = self.get_db()
         doc = DocEntry.create('Lähdedokumentti', get_anon_group_id()).document
 
-        pars = [doc.add_paragraph('Kappale {}'.format(i), attrs={'kappale': str(i)}) for i in range(0, 10)]
+        pars = [doc.add_paragraph(f'Kappale {i}', attrs={'kappale': str(i)}) for i in range(0, 10)]
 
         clip = self.clipboard.get(1)
         clip.copy_pars(doc, pars[3].get_id(), pars[6].get_id())
@@ -81,12 +81,12 @@ class ClipboardTest(TimDbTest):
     def test_paste(self):
         clip = self.clipboard.get(1)
 
-        pars = [{'id': random_id(), 'md': 'Kappale 1.{}'.format(i), 'attrs': {'kappale': str(i)}} for i in range(0, 1)]
+        pars = [{'id': random_id(), 'md': f'Kappale 1.{i}', 'attrs': {'kappale': str(i)}} for i in range(0, 1)]
         clip.write(pars)
 
         db = self.get_db()
         doc = DocEntry.create('Kohdedokumentti', get_anon_group_id()).document
-        dest_pars = [doc.add_paragraph('Kohdekappale {}'.format(i), attrs={'kkappale': str(i)}) for i in range(0, 10)]
+        dest_pars = [doc.add_paragraph(f'Kohdekappale {i}', attrs={'kkappale': str(i)}) for i in range(0, 10)]
 
         ver_before = doc.get_version()
         clip.paste_before(doc, dest_pars[0].get_id())
@@ -97,7 +97,7 @@ class ClipboardTest(TimDbTest):
         self.assertEqual(new_pars[0].get_markdown(), pars[0]['md'])
         self.assertEqual(new_pars[1].get_markdown(), dest_pars[0].get_markdown())
 
-        pars = [{'id': random_id(), 'md': 'Kappale 2.{}'.format(i), 'attrs': {'kappale': str(i)}} for i in range(0, 3)]
+        pars = [{'id': random_id(), 'md': f'Kappale 2.{i}', 'attrs': {'kappale': str(i)}} for i in range(0, 3)]
         clip.write(pars)
 
         ver_before = doc.get_version()
@@ -131,8 +131,8 @@ def test_paste_ref(self):
 
     src_doc = DocEntry.create('Lähdedokumentti', 2).document
     dest_doc = DocEntry.create('Kohdedokumentti', 1).document
-    src_pars = [src_doc.add_paragraph('Lähdekappale {}'.format(i), attrs={'lkappale': str(i)}) for i in range(0, 3)]
-    dest_pars = [dest_doc.add_paragraph('Kohdekappale {}'.format(i), attrs={'kkappale': str(i)}) for i in range(0, 5)]
+    src_pars = [src_doc.add_paragraph(f'Lähdekappale {i}', attrs={'lkappale': str(i)}) for i in range(0, 3)]
+    dest_pars = [dest_doc.add_paragraph(f'Kohdekappale {i}', attrs={'kkappale': str(i)}) for i in range(0, 5)]
 
     # Single paragraph from index 0 to index 0
     ver_before = dest_doc.get_version()

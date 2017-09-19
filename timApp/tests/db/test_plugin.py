@@ -15,9 +15,9 @@ class PluginTest(TimDbTest):
         a_ids = []
         for i in range(1, 5):
             aid = db.answers.save_answer([TEST_USER_1_ID], p.full_task_id,
-                                         'content{}'.format(i), points=None, valid=True)
+                                         f'content{i}', points=None, valid=True)
             aid2 = db.answers.save_answer([TEST_USER_2_ID], p.full_task_id,
-                                          'content{}'.format(i), points=None, valid=True)
+                                          f'content{i}', points=None, valid=True)
             a_ids.append((aid, aid2))
         for i, (aid, aid2) in enumerate(a_ids, start=1):
             answer_data = db.answers.get_answer(aid)
@@ -26,7 +26,7 @@ class PluginTest(TimDbTest):
                 'collaborators': [{'email': 'test1@example.com',
                                    'real_name': 'Test user 1',
                                    'user_id': TEST_USER_1_ID}],
-                'content': 'content{}'.format(i),
+                'content': f'content{i}',
                 'points': None,
                 'task_id': p.full_task_id,
                 'valid': True
@@ -37,7 +37,7 @@ class PluginTest(TimDbTest):
                 'collaborators': [{'email': 'test2@example.com',
                                    'real_name': 'Test user 2',
                                    'user_id': TEST_USER_2_ID}],
-                'content': 'content{}'.format(i),
+                'content': f'content{i}',
                 'points': None,
                 'task_id': p.full_task_id,
                 'valid': True

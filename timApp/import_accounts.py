@@ -13,7 +13,7 @@ def import_accounts(file, password):
         reader = csv.reader(csvfile, delimiter=';')
         for row in reader:
             if len(row) != 3:
-                raise Exception('All rows must have 3 fields, found a row with {} fields: {}'.format(len(row), row))
+                raise Exception(f'All rows must have 3 fields, found a row with {len(row)} fields: {row}')
             name = row[2] or row[0]
             if User.get_by_name(name) is None:
                 User.create_with_group(name=name,

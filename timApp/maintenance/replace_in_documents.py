@@ -19,14 +19,13 @@ def perform_replace(from_str: str, to_str: str, dry_run: bool):
         match_count = old_md.count(from_str)
         if match_count > 0:
             modified_pars += 1
-            print('{} {} -> {} in document {}, paragraph {} ({} match{})'
-                  .format(log_str, from_str, to_str, d.path, p.get_id(), match_count,
-                          '' if match_count == 1 else 'es'))
+            print(
+                f'{log_str} {from_str} -> {to_str} in document {d.path}, paragraph {p.get_id()} ({match_count} match{"" if match_count == 1 else "es"})')
             if not dry_run:
                 p.doc.modifier_group_id = UserGroup.get_admin_group().id
                 p.set_markdown(old_md.replace(from_str, to_str))
                 p.save()
-    print('{} paragraphs {} modified.'.format(modified_pars, 'would be' if dry_run else 'were'))
+    print(f'{modified_pars} paragraphs {"would be" if dry_run else "were"} modified.')
 
 
 if __name__ == '__main__':

@@ -360,7 +360,7 @@ class TimRouteTest(TimDbTest):
 
     def delete_par(self, doc: Document, par_id: str, **kwargs):
         doc.clear_mem_cache()
-        return self.json_post('/deleteParagraph/{}'.format(doc.doc_id), {
+        return self.json_post(f'/deleteParagraph/{doc.doc_id}', {
             "par": par_id,
         }, **kwargs)
 
@@ -370,7 +370,7 @@ class TimRouteTest(TimDbTest):
 
     def post_answer(self, plugin_type, task_id, user_input,
                     save_teacher=False, teacher=False, user_id=None, answer_id=None, ref_from=None, **kwargs):
-        return self.json_put('/{}/{}/answer/'.format(plugin_type, task_id),
+        return self.json_put(f'/{plugin_type}/{task_id}/answer/',
                              {"input": user_input,
                               "ref_from": {'docId': ref_from[0], 'par': ref_from[1]} if ref_from else None,
                               "abData": {"saveTeacher": save_teacher,
@@ -380,7 +380,7 @@ class TimRouteTest(TimDbTest):
                                          "saveAnswer": True}}, **kwargs)
 
     def get_task_answers(self, task_id):
-        answer_list = self.get('/answers/{}/{}'.format(task_id, self.current_user_id()))
+        answer_list = self.get(f'/answers/{task_id}/{self.current_user_id()}')
         return answer_list
 
     @staticmethod
@@ -514,7 +514,7 @@ class TimRouteTest(TimDbTest):
 
         """
         if path is None:
-            path = '{}/doc{}'.format(self.current_user.get_personal_folder().path, self.doc_num)
+            path = f'{self.current_user.get_personal_folder().path}/doc{self.doc_num}'
             self.__class__.doc_num += 1
         resp = self.json_post('/createItem', {
             'item_path': path,
@@ -557,7 +557,7 @@ class TimRouteTest(TimDbTest):
                            **kwargs) -> Optional[Translation]:
         if expect_contains is None and expect_content is None:
             expect_contains = {'title': doc_title, 'path': doc.name + '/' + lang, 'name': doc.short_name}
-        j = self.json_post('/translate/{}/{}'.format(doc.id, lang),
+        j = self.json_post(f'/translate/{doc.id}/{lang}',
                            {'doc_title': doc_title},
                            expect_contains=expect_contains, expect_content=expect_content, expect_status=expect_status, **kwargs)
         return Translation.query.get(j['id']) if expect_status == 200 else None

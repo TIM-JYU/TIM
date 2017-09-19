@@ -131,4 +131,4 @@ class TimDbBase(object):
         return join_location(location, name)
 
     def get_id_filter(self, filter_ids: Iterable[int]):
-        return ' AND id IN ({})'.format(','.join(str(x) for x in filter_ids))
+        return f' AND id IN ({",".join(str(x) for x in filter_ids)})'

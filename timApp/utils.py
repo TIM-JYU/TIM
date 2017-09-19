@@ -40,19 +40,19 @@ def date_to_relative(d: Optional[datetime]):
     elif diff.days == 1:
         return '1 day ago'
     elif diff.days > 1:
-        return '{} days ago'.format(diff.days)
+        return f'{diff.days} days ago'
     elif s <= 1:
         return 'just now'
     elif s < 60:
-        return '{} seconds ago'.format(s)
+        return f'{s} seconds ago'
     elif s < 120:
         return '1 minute ago'
     elif s < 3600:
-        return '{} minutes ago'.format(s // 60)
+        return f'{s // 60} minutes ago'
     elif s < 7200:
         return '1 hour ago'
     else:
-        return '{} hours ago'.format(s // 3600)
+        return f'{s // 3600} hours ago'
 
 
 def merge(a, b):
@@ -146,8 +146,7 @@ def get_error_html(message: Union[str, Exception], response: Optional[str]=None)
     """
 
     return sanitize_html('<div class="error">{}{}</div>'.format(str(message),
-                                                                '<pre>---Full response string start---\n{}\n---Full response string end---</pre>'.format(
-                                                                    response) if response is not None else ''))
+                                                                f'<pre>---Full response string start---\n{response}\n---Full response string end---</pre>' if response is not None else ''))
 
 
 def get_error_tex(title, message: Union[str, Exception], response: Optional[str]=None):
@@ -158,7 +157,7 @@ def get_error_tex(title, message: Union[str, Exception], response: Optional[str]
     :return: The sanitized error message HTML.
     """
 
-    return '\\timpluginerror{{ {} }}{{ {} }}'.format(title, str(message))
+    return f'\\timpluginerror{{ {title} }}{{ {str(message)} }}'
 
 
 def del_content(directory, onerror=None):
@@ -215,11 +214,11 @@ def generate_theme_scss(themes: List[Theme], gen_dir: str) -> None:
         f.write('@charset "UTF-8";\n')
         f.write('@import "variables";\n')
         for t in themes:
-            f.write('@mixin {} {{}}\n'.format(t.filename))
-            f.write('@import "css/{}";\n'.format(t.filename))
+            f.write(f'@mixin {t.filename} {{}}\n')
+            f.write(f'@import "css/{t.filename}";\n')
         f.write('@import "all.scss";\n')  # "all" conflicts with a jQuery CSS file, so we must add the .scss extension
         for t in themes:
-            f.write('@include {};\n'.format(t.filename))
+            f.write(f'@include {t.filename};\n')
 
 
 def get_combined_css_filename(themes: List[Theme]):

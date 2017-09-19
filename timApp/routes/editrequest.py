@@ -78,5 +78,5 @@ def get_pars_from_editor_text(doc: Document, text: str,
                 continue
             if not skip_access_check and timdb.documents.exists(refdoc) \
                     and not has_view_access(refdoc):
-                raise ValidationException("You don't have view access to document {}".format(refdoc))
+                raise ValidationException(f"You don't have view access to document {refdoc}")
     return blocks

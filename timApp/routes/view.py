@@ -128,12 +128,12 @@ def par_info(doc_id, par_id):
 
     doc = DocEntry.find_by_id(doc_id, try_translation=True)
     doc_name = doc.path
-    info['doc_name'] = just_name(doc_name) if doc_name is not None else 'Document #{}'.format(doc_id)
+    info['doc_name'] = just_name(doc_name) if doc_name is not None else f'Document #{doc_id}'
 
     group = timdb.users.get_owner_group(doc_id)
     users = timdb.users.get_users_in_group(group.id, limit=2)
     if len(users) == 1:
-        info['doc_author'] = '{} ({})'.format(users[0]['name'], group.name)
+        info['doc_author'] = f'{users[0]["name"]} ({group.name})'
     else:
         info['doc_author'] = group.name
 
@@ -282,7 +282,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     try:
         DocParagraph.preload_htmls(xs, doc_settings, clear_cache)
     except TimDbException as e:
-        log_error('Document {} exception:\n{}'.format(doc_id, traceback.format_exc(chain=False)))
+        log_error(f'Document {doc_id} exception:\n{traceback.format_exc(chain=False)}')
         abort(500, str(e))
     if doc_settings:
         src_doc = doc.get_original_document()
@@ -359,8 +359,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
             if not user_is_owner(user['id'], doc_id) \
                     and user['id'] != get_current_user_id():
                 user['name'] = '-'
-                user['real_name'] = 'Someone {}'.format(user['id'])
-                user['email'] = 'someone_{}@example.com'.format(user['id'])
+                user['real_name'] = f'Someone {user["id"]}'
+                user['email'] = f'someone_{user["id"]}@example.com'
 
     settings = get_user_settings()
     # settings['add_button_text'] = doc_settings.get_dict().get('addParButtonText', 'Add paragraph')

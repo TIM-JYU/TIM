@@ -223,23 +223,23 @@ def mcq_get_md(jso):
         cstr += texhline + '\n'
 
     if printlikeqst:
-        result = '''
+        result = f'''
 \\qsty{{{header}}}{{{stem}}}
-{{{question_text}}}
+{{{''}}}
 {{{texcolumns}}}
 {{
 {cstr}
 }}
 {{{footer}}}
-'''.format(header=header, stem=stem, question_text='', texcolumns=texcolumns, cstr=cstr, footer=footer)
+'''
     else:
-        result = '''
+        result = f'''
 \\mcq{{{header}}}{{{stem}}}
 {{{texcolumns}}}
 {{
 {cstr}
 }}
-'''.format(header=header, stem=stem, texcolumns=texcolumns, cstr=cstr)
+'''
 
     return result
 
@@ -312,24 +312,23 @@ def mmcq_get_md(jso):
         cstr += texhline + '\n'
 
     if printlikeqst:
-        result = '''
+        result = f'''
 \\qsty{{{header}}}{{{stem}}}
-{{{question_text}}}
+{{{''}}}
 {{{texcolumns}}}
 {{
 {cstr}
 }}
 {{{footer}}}
-    '''.format(header=header, stem=stem, question_text='', texcolumns=texcolumns, cstr=cstr,
-               footer=footer)
+    '''
     else:
-        result = '''
+        result = f'''
 \\mcq{{{header}}}{{{stem}}}
 {{{texcolumns}}}
 {{
 {cstr}
 }}
-'''.format(header=header, stem=stem, texcolumns=texcolumns, cstr=cstr)
+'''
 
     return result
 
@@ -494,7 +493,7 @@ def qst_get_md(jso):
     if not empty_theader:
         cstr = theader + ' \\\\\n' + texhline + '\n' + cstr
 
-    result = '''
+    result = f'''
 \\qsty{{{header}}}{{{stem}}}
 {{{question_text}}}
 {{{texcolumns}}}
@@ -502,7 +501,7 @@ def qst_get_md(jso):
 {cstr}
 }}
 {{{footer}}}
-    '''.format(header=header, stem=stem, question_text=question_text, texcolumns=texcolumns, cstr=cstr, footer=footer)
+    '''
 
     return result
 
@@ -557,7 +556,7 @@ def get_question_data_from_document(doc_id, par_id, edit=False):
     try:
         plugin_values = Plugin.from_paragraph(par, user=get_current_user_object()).values
     except PluginException:
-        return abort(400, 'Paragraph is not a plugin: {}'.format(par_id))
+        return abort(400, f'Paragraph is not a plugin: {par_id}')
     plugindata = {'markup': plugin_values}
     if not edit:
         convert_md(plugindata)

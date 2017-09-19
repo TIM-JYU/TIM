@@ -450,8 +450,7 @@ class DocParagraph:
             if not title:  # compatibility for old
                 title = values.get("json", {}).get("title", "question_title")
             return self.__set_html(sanitize_html(
-                '<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{0}"></span></a>'
-                '<p class="questionNumber">{0}</p>'.format(title)))
+                f'<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{title}"></span></a><p class="questionNumber">{title}</p>'))
         if self.is_plugin():
             return self.__set_html('')
         if self.is_setting():
@@ -516,7 +515,7 @@ class DocParagraph:
                         heading_cache[par.get_id()] = value
             unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
         else:
-            with filelock.FileLock("/tmp/cache_lock_{}".format(doc_id_str)):
+            with filelock.FileLock(f"/tmp/cache_lock_{doc_id_str}"):
                 if clear_cache:
                     try:
                         os.remove(macro_cache_file + '.db')
@@ -951,7 +950,7 @@ class DocParagraph:
         if par_doc_id in visited_pars:
             visited_pars.append(par_doc_id)
             raise InvalidReferenceException(
-                'Infinite referencing loop detected: ' + ' -> '.join(('{}:{}'.format(d, p) for d, p in visited_pars)))
+                f'Infinite referencing loop detected: {" -> ".join((f"{d}:{p}" for d, p in visited_pars))}')
         visited_pars.append(par_doc_id)
 
         ref_docid = None
@@ -962,7 +961,7 @@ class DocParagraph:
             try:
                 ref_docid = int(attrs['rd'])
             except ValueError:
-                raise InvalidReferenceException('Invalid reference document id: "{}"'.format(attrs['rd']))
+                raise InvalidReferenceException(f'Invalid reference document id: "{attrs["rd"]}"')
         elif source_doc is not None:
             ref_doc = source_doc
         else:

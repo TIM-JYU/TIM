@@ -29,9 +29,9 @@ class UploadTest(TimRouteTest):
                   expect_status=400,
                   expect_content=format_error)
         doc = Document(j['id'])
-        self.post('/update/{}'.format(doc.doc_id),
+        self.post(f'/update/{doc.doc_id}',
                   data={'file': (io.BytesIO(b'testing'), 'test.md'), 'original': doc.export_markdown()})
-        self.post('/update/{}'.format(j['id']),
+        self.post(f'/update/{j["id"]}',
                   data={'file': (io.BytesIO(b'\x00'),
                                  'test.md')},
                   expect_status=400,

@@ -54,7 +54,7 @@ class TimDb(object):
         self.blocks_path = os.path.join(self.files_root_path, 'blocks')
         for path in [self.blocks_path]:
             if not os.path.exists(path):
-                log_info('Creating directory: {}'.format(path))
+                log_info(f'Creating directory: {path}')
                 os.makedirs(path)
         self.reset_attrs()
 
@@ -91,8 +91,7 @@ class TimDb(object):
         num += 1
         self.num = num
         self.time = time.time()
-        log_debug("GetDb      {:2d} {:6d} {:2s} {:3s} {:7s} {:s}".format(
-            worker_pid, self.num, "", "", "", self.route_path))
+        log_debug(f"GetDb      {worker_pid:2d} {self.num:6d} {'':2s} {'':3s} {'':7s} {self.route_path:s}")
         # log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid,self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
         waiting = False
         from timApp.tim_app import app
@@ -162,8 +161,8 @@ class TimDb(object):
             except Exception as err:
                 log_error('close error: ' + str(self.num) + ' ' + str(err))
 
-            log_debug('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid,
-                                                                               self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
+            log_debug(
+                f'TimDb-dstr {worker_pid:2d} {self.num:6d} {TimDb.instances:2d} {bes:3d} {time.time() - self.time:7.5f} {self.route_path:s}')
             self.reset_attrs()
 
     def execute_script(self, sql_file):

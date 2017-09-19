@@ -317,7 +317,7 @@ class DocumentTest(TimDbTest):
         d = self.init_testdoc()
         num_pars = 10
         for i in range(0, num_pars):
-            d.add_paragraph('Par {}'.format(i))
+            d.add_paragraph(f'Par {i}')
         pars = d.get_paragraphs()
         v = (num_pars, 0)
         self.assertEqual(v, d.get_version())
@@ -325,7 +325,7 @@ class DocumentTest(TimDbTest):
             d2 = d.get_doc_version((i, 0))
             self.assertListEqual(
                 [{'type': 'insert', 'after_id': pars[i - 1].get_id() if i > 0 else None, 'content': pars[i:]}],
-                list(d2.parwise_diff(d)), msg='Diff test failed for i={}'.format(i))
+                list(d2.parwise_diff(d)), msg=f'Diff test failed for i={i}')
         ver_orig = d.get_doc_version()
         self.assertListEqual([], list(ver_orig.parwise_diff(d)))
 
@@ -352,7 +352,7 @@ class DocumentTest(TimDbTest):
         num_pars = 10
         d.set_settings({'auto_number_headings': True})
         for i in range(0, num_pars):
-            d.add_paragraph('# Header {}'.format(i))
+            d.add_paragraph(f'# Header {i}')
         ver_orig = d.get_doc_version()
         pars = d.get_paragraphs()
         self.assertListEqual([], list(ver_orig.parwise_diff(d, check_html=True)))
@@ -385,7 +385,7 @@ class DocumentTest(TimDbTest):
         # So the hash line in paragraph list is different from where the 'current' symlink points
         path = d.get_version_path()
         with open(path, 'w') as f:
-            f.write('{}/{}'.format(p.get_id(), old_hash))
+            f.write(f'{p.get_id()}/{old_hash}')
 
         d.clear_mem_cache()
         pars = d.get_paragraphs()

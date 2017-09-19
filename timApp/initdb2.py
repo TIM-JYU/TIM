@@ -35,7 +35,7 @@ def check_db_version(_, context: MigrationContext):
 
 
 def postgre_create_database(host, db_name):
-    engine = sqlalchemy.create_engine("postgresql://postgres@{}:5432/postgres".format(host))
+    engine = sqlalchemy.create_engine(f"postgresql://postgres@{host}:5432/postgres")
     conn_failures = 0
     while True:
         try:
@@ -51,7 +51,7 @@ def postgre_create_database(host, db_name):
             time.sleep(1)
     conn.execute("commit")
     try:
-        conn.execute('create database "{}"'.format(db_name))
+        conn.execute(f'create database "{db_name}"')
         return True
     except sqlalchemy.exc.ProgrammingError as e:
         if 'already exists' not in str(e):
@@ -75,7 +75,7 @@ def initialize_database(create_docs=True):
     DocParagraph.default_files_root = files_root_path
     DocumentPrinter.default_files_root = files_root_path
     was_created = postgre_create_database(app.config['DB_HOST'], app.config['TIM_NAME'])
-    log_info('Database {} {}.'.format(app.config['TIM_NAME'], 'was created' if was_created else 'exists'))
+    log_info(f'Database {app.config["TIM_NAME"]} {"was created" if was_created else "exists"}.')
     timdb = TimDb(files_root_path=files_root_path)
     db.create_all(bind='tim_main')
     sess = timdb.session
@@ -105,10 +105,10 @@ def initialize_database(create_docs=True):
         User.create_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
         User.create_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
         for i in range(1, 4):
-            User.create_with_group('testuser{}'.format(i),
-                                               'Test user {}'.format(i),
-                                               'test{}@example.com'.format(i),
-                                               password='test{}pass'.format(i))
+            User.create_with_group(f'testuser{i}',
+                                   f'Test user {i}',
+                                   f'test{i}@example.com',
+                                   password=f'test{i}pass')
 
         if create_docs:
             DocEntry.create('testaus-1', anon_group, title='Testaus 1')

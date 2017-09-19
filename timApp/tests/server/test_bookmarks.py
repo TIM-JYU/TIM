@@ -24,7 +24,7 @@ class BookmarkTest(TimRouteTest):
         group_name2 = 'mygroup2'
         item = 'test item'
         item_path = 'some/path/to/item'
-        bookmarks = self.post('/bookmarks/createGroup/{}'.format(group_name))
+        bookmarks = self.post(f'/bookmarks/createGroup/{group_name}')
         self.assertListEqual([{'name': 'mygroup', 'items': [], 'editable': True}], bookmarks)
         bookmarks = self.json_post('/bookmarks/add', {'group': group_name2, 'name': item, 'link': item_path})
         self.assertListEqual([{'items': [], 'name': group_name, 'editable': True},

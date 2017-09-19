@@ -124,7 +124,7 @@ def post_answer(plugintype: str, task_id_ext: str):
         return abort(400, str(e))
 
     if plugin.type != plugintype:
-        abort(400, 'Plugin type mismatch: {} != {}'.format(plugin.type, plugintype))
+        abort(400, f'Plugin type mismatch: {plugin.type} != {plugintype}')
 
     upload = None
     if isinstance(answerdata, dict):
@@ -137,11 +137,11 @@ def post_answer(plugintype: str, task_id_ext: str):
             block = Block.query.filter((Block.description == trimmed_file) &
                                        (Block.type_id == blocktypes.UPLOAD)).first()
             if block is None:
-                abort(400, 'Non-existent upload: {}'.format(trimmed_file))
+                abort(400, f'Non-existent upload: {trimmed_file}')
             verify_view_access(block.id, message="You don't have permission to touch this file.")
             upload = AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first()
             if upload.answer_id is not None:
-                abort(400, 'File was already uploaded: {}'.format(file))
+                abort(400, f'File was already uploaded: {file}')
 
     # Load old answers
     current_user_id = get_current_user_id()
@@ -349,7 +349,7 @@ def get_all_answers_as_list(task_ids: List[str]):
         doc_id, _, _ = Plugin.parse_task_id(t)
         doc_ids.add(doc_id)
         if not timdb.documents.exists(doc_id):
-            abort(404, 'No such document: {}'.format(doc_id))
+            abort(404, f'No such document: {doc_id}')
         # Require full teacher rights for getting all answers
         verify_teacher_access(doc_id)
 

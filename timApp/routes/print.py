@@ -81,11 +81,7 @@ def print_document(doc_path):
     existing_doc = check_print_cache(doc_entry=doc, template=template_doc, file_type=print_type,
                                      plugins_user_print=plugins_user_print)
 
-    print_access_url = '{}?file_type={}&template_doc_id={}&plugins_user_code={}'.format(
-        request.url,
-        str(print_type.value).lower(),
-        template_doc_id,
-        plugins_user_print)
+    print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
 
     if force == 'true':
         existing_doc = None
@@ -109,11 +105,7 @@ def print_document(doc_path):
         print("Error occurred: " + str(err))
         abort(400, str(err))  # TODO: maybe there's a better error code?
 
-    print_access_url = '{}?file_type={}&template_doc_id={}&plugins_user_code={}'.format(
-        request.url,
-        str(print_type.value).lower(),
-        template_doc_id,
-        plugins_user_print)
+    print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
 
     return json_response({'success': True, 'url': print_access_url}, status_code=201)
 

@@ -104,7 +104,7 @@ class DocumentParser:
                         attrs, start_index = AttributeParser(last_line).get_attributes()
                         if start_index is not None:
                             raise AttributesAtEndOfCodeBlockException(
-                                'The end of code block contains attributes: {}'.format(attrs))
+                                f'The end of code block contains attributes: {attrs}')
                 except ValueError:
                     pass
             curr_id = r.get('id')
@@ -138,12 +138,12 @@ class DocumentParser:
                     raise ValidationException('Cannot have a zero-length area')
                 if area_end in classed_areas:
                     if area_end != classed_areas[-1]:
-                        raise ValidationWarning('Classed areas cannot overlap ("{}" and "{}")'
-                                                .format(classed_areas[-1], area_end))
+                        raise ValidationWarning(
+                            f'Classed areas cannot overlap ("{classed_areas[-1]}" and "{area_end}")')
                     classed_areas.pop()
                 if is_whole_document:
                     if area_end not in found_areas:
-                        raise ValidationWarning('No start found for area "{}"'.format(area_end))
+                        raise ValidationWarning(f'No start found for area "{area_end}"')
                     if area_end in found_area_ends:
                         raise ValidationWarning('Area already ended: ' + area_end)
                 found_area_ends.add(area_end)

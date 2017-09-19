@@ -10,7 +10,7 @@ PROFILE = False
 TIM_NAME = 'tim-test'
 DB_HOST = 'postgresql-test'
 TEMPDB_HOST = 'postgresql-tempdb-test'
-DATABASE = "postgresql://postgres@{}:5432/{}".format(DB_HOST, TIM_NAME)
+DATABASE = f"postgresql://postgres@{DB_HOST}:5432/{TIM_NAME}"
 FILES_PATH = '/tmp/doctest_files'
 LOG_DIR = "/tmp/tim_logs"
 LOG_FILE = "timLog.log"
@@ -21,7 +21,7 @@ TESTING = True
 OLD_SQLITE_DATABASE = None
 SQLALCHEMY_BINDS = {
     'tim_main': DATABASE,
-    'tempdb': "postgresql://postgres@{}:5432/tempdb_{}".format(TEMPDB_HOST, TIM_NAME)
+    'tempdb': f"postgresql://postgres@{TEMPDB_HOST}:5432/tempdb_{TIM_NAME}"
 }
 SASS_GEN_PATH = 'testgen'
 

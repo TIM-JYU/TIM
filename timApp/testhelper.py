@@ -32,9 +32,9 @@ def print_times(times):
     t_sum = sum(times)
     t_avg = t_sum / len(times)
     t_avgdev = sum([abs(t - t_avg) for t in times]) / len(times)
-    print("Sum of all times was {0:.0f} seconds.".format(t_sum))
-    print("Average execution took {0:.3f} +/- {1:.3f} seconds (min: {2:.3f}, max: {3:.3f})\n".format(
-        t_avg, t_avgdev, min(times), max(times)))
+    print(f"Sum of all times was {t_sum:.0f} seconds.")
+    print(
+        f"Average execution took {t_avg:.3f} +/- {t_avgdev:.3f} seconds (min: {min(times):.3f}, max: {max(times):.3f})\n")
 
 
 def progress_print(line):

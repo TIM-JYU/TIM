@@ -128,7 +128,7 @@ class User(db.Model):
         g = UserGroup.query.filter_by(name='group of user ' + self.name).first()
         if g:
             return g
-        raise TimDbException('Personal usergroup for user {} was not found!'.format(self.name))
+        raise TimDbException(f'Personal usergroup for user {self.name} was not found!')
 
     def derive_personal_folder_name(self):
         real_name = self.real_name
@@ -155,12 +155,11 @@ class User(db.Model):
             (BlockAccess.type == AccessType.owner.value)
         ).with_entities(Folder).all()
         if len(folders) >= 2:
-            raise TimDbException('Found multiple personal folders for user {}: {}'.format(
-                self.name, [f.name for f in folders]))
+            raise TimDbException(f'Found multiple personal folders for user {self.name}: {[f.name for f in folders]}')
         if not folders:
             return Folder.create('users/' + self.derive_personal_folder_name(),
                                  self.get_personal_group().id,
-                                 title="{}".format(self.real_name),
+                                 title=f"{self.real_name}",
                                  apply_default_rights=True)
         return folders[0]
 

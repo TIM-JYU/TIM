@@ -35,7 +35,7 @@ PLUGINS = {
     "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
     "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
     "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
-    "qst": {"host": "http://" + "localhost" + ":{}/qst/".format(app.config['QST_PLUGIN_PORT'])},
+    "qst": {"host": "http://" + "localhost" + f":{app.config['QST_PLUGIN_PORT']}/qst/"},
     "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
 }
 
@@ -56,11 +56,11 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
         request.encoding = 'utf-8'
         return request.text
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError) as e:
-        log_warning('Connection failed to plugin {}: {}'.format(plugin, e))
-        raise PluginException("Could not connect to {}.".format(plugin))
+        log_warning(f'Connection failed to plugin {plugin}: {e}')
+        raise PluginException(f"Could not connect to {plugin}.")
     except requests.exceptions.ReadTimeout as e:
-        log_warning('Read timeout occurred for plugin {} in route {}: {}'.format(plugin, route, e))
-        raise PluginException("Read timeout occurred when calling {}.".format(plugin))
+        log_warning(f'Read timeout occurred for plugin {plugin} in route {route}: {e}')
+        raise PluginException(f"Read timeout occurred when calling {plugin}.")
 
 
 def render_plugin(doc: Document, plugin, plugin_data, output_format: PluginOutputFormat, params=None):

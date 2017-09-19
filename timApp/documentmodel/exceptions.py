@@ -4,4 +4,4 @@ class DocExistsError(Exception):
         self.doc_id = doc_id
 
     def __str__(self):
-        return "Document already exists: {}".format(self.doc_id)
+        return f"Document already exists: {self.doc_id}"

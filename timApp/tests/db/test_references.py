@@ -32,7 +32,7 @@ class RefTest(TimDbTest):
         return set(a.items()).issubset(set(b.items()))
 
     def assert_dict_issubset(self, a, b):
-        self.assertTrue(self.dict_issubset(a, b), "{} is not a subset of {}".format(a, b))
+        self.assertTrue(self.dict_issubset(a, b), f"{a} is not a subset of {b}")
 
     def init_testdb(self):
         db = self.get_db()

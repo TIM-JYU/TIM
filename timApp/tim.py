@@ -163,25 +163,22 @@ def forbidden(error):
 @app.errorhandler(500)
 def internal_error(error):
     log_error(get_request_message(500, include_body=True))
+    help_email = app.config['HELP_EMAIL']
     error.description = Markup('Something went wrong with the server, sorry. '
                                'TIM developers have been notified about this. '
-                               'If the problem persists, please send email to <a href="mailto:{0}">{0}</a>.'
-                               .format(app.config['HELP_EMAIL']))
+                               f'If the problem persists, please send email to <a href="mailto:{help_email}">{help_email}</a>.')
     tb = traceback.format_exc()
-    message = """
-Exception happened on {} at {}
+    message = f"""
+Exception happened on {datetime.now(tz=timezone.utc)} at {request.url}
 
-{}
+{get_request_message(500, include_body=True)}
 
-{}
-""".format(datetime.now(tz=timezone.utc),
-           request.url,
-           get_request_message(500, include_body=True),
-           tb).strip()
+{tb}
+""".strip()
     send_email(rcpt=app.config['ERROR_EMAIL'],
-               subject='{}: Error at {} ({})'.format(app.config['TIM_HOST'], request.path, get_current_user_name()),
+               subject=f'{app.config["TIM_HOST"]}: Error at {request.path} ({get_current_user_name()})',
                mail_from=app.config['WUFF_EMAIL'],
-               reply_to='{},{}'.format(app.config['ERROR_EMAIL'], get_current_user_object().email),
+               reply_to=f'{app.config["ERROR_EMAIL"]},{get_current_user_object().email}',
                msg=message)
     return error_generic(error, 500)
 
@@ -215,7 +212,7 @@ def item_locked(error: ItemLockedException):
 @app.errorhandler(NoSuchUserException)
 def handle_user_not_found(error):
     if error.user_id == session['user_id']:
-        flash('Your user id ({}) was not found in the database. Clearing session automatically.'.format(error.user_id))
+        flash(f'Your user id ({error.user_id}) was not found in the database. Clearing session automatically.')
         return logout()
     return error_generic(error, 500)
 
@@ -227,8 +224,7 @@ def service_unavailable(error):
 
 @app.errorhandler(413)
 def entity_too_large(error):
-    error.description = 'Your file is too large to be uploaded. Maximum size is {} MB.'\
-        .format(app.config['MAX_CONTENT_LENGTH'] / 1024 / 1024)
+    error.description = f'Your file is too large to be uploaded. Maximum size is {app.config["MAX_CONTENT_LENGTH"] / 1024 / 1024} MB.'
     return error_generic(error, 413)
 
 
@@ -243,7 +239,7 @@ def restart_server():
     verify_admin()
     pid_path = '/var/run/gunicorn.pid'
     if os.path.exists(pid_path):
-        os.system('kill -HUP $(cat {})'.format(pid_path))
+        os.system(f'kill -HUP $(cat {pid_path})')
         flash('Restart signal was sent to Gunicorn.')
     else:
         flash('Gunicorn PID file was not found. TIM was probably not started with Gunicorn.')
@@ -289,9 +285,9 @@ def diff_document(doc_id, major1, minor1, major2, minor2):
     doc1 = DocumentVersion(doc_id, (major1, minor1))
     doc2 = DocumentVersion(doc_id, (major2, minor2))
     if not doc1.exists():
-        abort(404, "The document version {} does not exist.".format((major1, minor1)))
+        abort(404, f"The document version {(major1, minor1)} does not exist.")
     if not doc2.exists():
-        abort(404, "The document version {} does not exist.".format((major2, minor2)))
+        abort(404, f"The document version {(major2, minor2)} does not exist.")
     return Response(DocumentVersion.get_diff(doc1, doc2), mimetype="text/html")
 
 
@@ -567,14 +563,10 @@ def log_request(response):
 
 
 def get_request_message(status_code=None, include_body=False):
-    msg = '{} [{}]: {} {} {}'.format(get_current_user_name(),
-                                     request.headers.get('X-Forwarded-For') or request.remote_addr,
-                                     request.method,
-                                     request.full_path if request.query_string else request.path,
-                                     status_code or '').strip()
+    msg = f'{get_current_user_name()} [{request.headers.get("X-Forwarded-For") or request.remote_addr}]: {request.method} {request.full_path if request.query_string else request.path} {status_code or ""}'.strip()
     if not include_body or request.method not in ('POST', 'PUT', 'DELETE'):
         return msg
-    return '{}\n\n{}'.format(msg, pprint.pformat(request.get_json(silent=True) or request.get_data(as_text=True)))
+    return f'{msg}\n\n{pprint.pformat(request.get_json(silent=True) or request.get_data(as_text=True))}'
 
 
 @app.after_request
@@ -619,9 +611,9 @@ def init_app():
     if app.config['PROFILE']:
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',), restrictions=[100])
 
-    log_info('Debug mode: {}'.format(app.config['DEBUG']))
-    log_info('Profiling: {}'.format(app.config['PROFILE']))
-    log_info('Using database: {}'.format(app.config['DATABASE']))
+    log_info(f'Debug mode: {app.config["DEBUG"]}')
+    log_info(f'Profiling: {app.config["PROFILE"]}')
+    log_info(f'Using database: {app.config["DATABASE"]}')
     if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
         log_warning('secret file not found, using default values - do not run in production!')
     else:

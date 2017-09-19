@@ -8,31 +8,31 @@ class RedirectTest(TimRouteTest):
     def test_redirect(self):
         self.login_test1()
         personal_folder = self.current_user.get_personal_folder().path
-        testing_space = '{}/testing-space'.format(personal_folder)
+        testing_space = f'{personal_folder}/testing-space'
         self.create_doc(testing_space)
-        testing_space_cap = '{}/testing-spAce'.format(personal_folder)
+        testing_space_cap = f'{personal_folder}/testing-spAce'
         self.create_doc(testing_space_cap)
-        testing_spoce = '{}/testing-spoce'.format(personal_folder)
+        testing_spoce = f'{personal_folder}/testing-spoce'
         self.create_doc(testing_spoce)
-        testing_remove = '{}/testingremove'.format(personal_folder)
+        testing_remove = f'{personal_folder}/testingremove'
         self.create_doc(testing_remove)
         for route in ('view', 'manage'):
             params = 'a=b'
-            self.get('{}/{}/testing space'.format(route, personal_folder), expect_status=302,
-                     expect_content='{}/{}'.format(route, testing_space))
-            self.get('{}/{}/testing spAce'.format(route, personal_folder), expect_status=302,
-                     expect_content='{}/{}'.format(route, testing_space_cap))
-            self.get('{}/{}/testing späce'.format(route, personal_folder), expect_status=302,
-                     expect_content='{}/{}?{}'.format(route, testing_space, params), query_string={'a': 'b'})
-            self.get('{}/{}/testing spöce'.format(route, personal_folder), expect_status=302,
-                     expect_content='{}/{}?{}'.format(route, testing_spoce, params), query_string={'a': 'b'})
-            self.get('{}/{}/testing spåce'.format(route, personal_folder), expect_status=302,
-                     expect_content='{}/{}?{}'.format(route, testing_space, params), query_string={'a': 'b'})
+            self.get(f'{route}/{personal_folder}/testing space', expect_status=302,
+                     expect_content=f'{route}/{testing_space}')
+            self.get(f'{route}/{personal_folder}/testing spAce', expect_status=302,
+                     expect_content=f'{route}/{testing_space_cap}')
+            self.get(f'{route}/{personal_folder}/testing späce', expect_status=302,
+                     expect_content=f'{route}/{testing_space}?{params}', query_string={'a': 'b'})
+            self.get(f'{route}/{personal_folder}/testing spöce', expect_status=302,
+                     expect_content=f'{route}/{testing_spoce}?{params}', query_string={'a': 'b'})
+            self.get(f'{route}/{personal_folder}/testing spåce', expect_status=302,
+                     expect_content=f'{route}/{testing_space}?{params}', query_string={'a': 'b'})
             for c in '<>|½!"#¤%&()=?`´¨~^\',.;:@£$€{[]}\\':
-                self.get(quote_plus('{}/{}/testing{}remove'.format(route, personal_folder, c)),
+                self.get(quote_plus(f'{route}/{personal_folder}/testing{c}remove'),
                          expect_status=302,
-                         expect_content='{}/{}?{}'.format(route, testing_remove, params), query_string={'a': 'b'})
+                         expect_content=f'{route}/{testing_remove}?{params}', query_string={'a': 'b'})
 
-            self.get('{}/{}/testing space'.format(route, personal_folder), follow_redirects=True)
-            self.get('{}/{}/testing spAce'.format(route, personal_folder), follow_redirects=True)
-            self.get('{}/{}/testing spÄce'.format(route, personal_folder), follow_redirects=True)
+            self.get(f'{route}/{personal_folder}/testing space', follow_redirects=True)
+            self.get(f'{route}/{personal_folder}/testing spAce', follow_redirects=True)
+            self.get(f'{route}/{personal_folder}/testing spÄce', follow_redirects=True)

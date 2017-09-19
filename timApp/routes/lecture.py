@@ -87,10 +87,10 @@ def get_lecture_answer_totals(lecture_id):
 
     def generate_text():
         for a in results:
-            yield '{};{};{}\n'.format(a['name'], sum_field_name, a['sum'])
+            yield f'{a["name"]};{sum_field_name};{a["sum"]}\n'
         yield '\n'
         for a in results:
-            yield '{};{};{}\n'.format(a['name'], count_field_name, a['count'])
+            yield f'{a["name"]};{count_field_name};{a["count"]}\n'
     return Response(generate_text(), mimetype='text/plain')
 
 

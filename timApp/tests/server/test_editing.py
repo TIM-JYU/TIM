@@ -10,15 +10,15 @@ class EditTest(TimRouteTest):
         d = self.create_doc(initial_par='test')
         par_id = d.document.get_paragraphs()[0].get_id()
         invalid_par = 'nonexistent'
-        self.json_post('/deleteParagraph/{}'.format(d.id), {'par': invalid_par},
+        self.json_post(f'/deleteParagraph/{d.id}', {'par': invalid_par},
                        expect_status=400,
-                       expect_content={'error': 'Paragraph {} does not exist'.format(invalid_par)})
-        self.json_post('/deleteParagraph/{}'.format(d.id), {'area_start': invalid_par, 'area_end': par_id},
+                       expect_content={'error': f'Paragraph {invalid_par} does not exist'})
+        self.json_post(f'/deleteParagraph/{d.id}', {'area_start': invalid_par, 'area_end': par_id},
                        expect_status=400,
-                       expect_content={'error': 'Paragraph {} does not exist'.format(invalid_par)})
-        self.json_post('/deleteParagraph/{}'.format(d.id), {'area_start': par_id, 'area_end': invalid_par},
+                       expect_content={'error': f'Paragraph {invalid_par} does not exist'})
+        self.json_post(f'/deleteParagraph/{d.id}', {'area_start': par_id, 'area_end': invalid_par},
                        expect_status=400,
-                       expect_content={'error': 'Paragraph {} does not exist'.format(invalid_par)})
+                       expect_content={'error': f'Paragraph {invalid_par} does not exist'})
         self.get(f'/getBlock/{d.id}/{invalid_par}', expect_status=404, expect_content=f'Document {d.id}: Paragraph not found: {invalid_par}',
                  json_key='error')
         self.get(f'/getBlock/{d.id}/{par_id}', query_string={'area_start': par_id, 'area_end': invalid_par}, expect_status=404,

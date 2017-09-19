@@ -16,9 +16,9 @@ class TranslationTest(TimRouteTest):
         j = self.create_translation(doc, doc_title, lang)
         self.create_translation(doc, doc_title, lang, expect_status=403,
                                 expect_content={'error': 'Translation for this language already exists'})
-        self.get('/view/{}'.format(j.path))
+        self.get(f'/view/{j.path}')
         self.logout()
-        self.json_post('/translate/{}/{}'.format(doc.id, lang),
+        self.json_post(f'/translate/{doc.id}/{lang}',
                        {'doc_title': doc_title},
                        expect_status=403)
 
@@ -31,7 +31,7 @@ class TranslationTest(TimRouteTest):
         j = self.create_translation(doc, doc_title, lang)
         d = Document(j.id)
         self.assertEqual('b', d.get_settings().get_dict()['a'])
-        self.get('/view/{}'.format(j.path))
+        self.get(f'/view/{j.path}')
 
     def test_translation_content(self):
         self.login_test1()
@@ -41,7 +41,7 @@ class TranslationTest(TimRouteTest):
         pars = doc.document.get_paragraphs()
         par_ids = set(p.get_id() for p in pars)
         tr_pars = tr_doc.get_paragraphs()
-        old_md = self.get('/getBlock/{}/{}'.format(tr_doc.doc_id, tr_pars[2].get_id()))
+        old_md = self.get(f'/getBlock/{tr_doc.doc_id}/{tr_pars[2].get_id()}')
         self.assertDictEqual({'source_document': doc.id}, tr_doc.get_settings().get_dict())
 
         # all but the settings paragraph are translated paragraphs
@@ -58,14 +58,14 @@ class TranslationTest(TimRouteTest):
                       json_key='texts',
                       expect_xpath='.//mmcq')
 
-        md = self.get('/getBlock/{}/{}'.format(tr_doc.doc_id, tr_pars[2].get_id()))
+        md = self.get(f'/getBlock/{tr_doc.doc_id}/{tr_pars[2].get_id()}')
         self.assertEqual(new_md, md['text'])
         pars = doc.document.get_paragraphs()
         self.assertIn(english, pars[1].get_markdown())
 
         # make sure that the translated markdown is applied and not the original when answering from Finnish document
-        task_id = '{}.{}'.format(doc.id, pars[1].get_attr('taskId'))
-        task_id_ext = '{}.{}'.format(task_id, pars[1].get_id())
+        task_id = f'{doc.id}.{pars[1].get_attr("taskId")}'
+        task_id_ext = f'{task_id}.{pars[1].get_id()}'
         self.post_answer('mmcq',
                          task_id_ext,
                          [False, False, False],

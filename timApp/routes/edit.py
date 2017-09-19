@@ -117,9 +117,7 @@ def manage_response(docentry: DocInfo, pars: List[DocParagraph], timdb, ver_befo
 
 def get_diff_link(docentry: DocInfo, ver_before):
     ver_after = docentry.document.get_version()
-    return """Link to changes: {}/diff/{}/{}/{}/{}/{}\n\n""".format(current_app.config['TIM_HOST'], docentry.id,
-                                                                ver_before[0], ver_before[1],
-                                                                ver_after[0], ver_after[1])
+    return f"""Link to changes: {current_app.config['TIM_HOST']}/diff/{docentry.id}/{ver_before[0]}/{ver_before[1]}/{ver_after[0]}/{ver_after[1]}\n\n"""
 
 
 @edit_page.route("/postNewTaskNames/", methods=['POST'])
@@ -617,13 +615,13 @@ def delete_paragraph(doc_id):
     if area_end and area_start:
         for p in (area_start, area_end):
             if not doc.has_paragraph(p):
-                abort(400, 'Paragraph {} does not exist'.format(p))
+                abort(400, f'Paragraph {p} does not exist')
         md = doc.export_section(area_start, area_end)
         edit_result = doc.delete_section(area_start, area_end)
     else:
         par_id, = verify_json_params('par')
         if not doc.has_paragraph(par_id):
-            abort(400, 'Paragraph {} does not exist'.format(par_id))
+            abort(400, f'Paragraph {par_id} does not exist')
         par = doc.get_paragraph(par_id)
         md = par.get_markdown()
         timdb.documents.delete_paragraph(doc, par_id)

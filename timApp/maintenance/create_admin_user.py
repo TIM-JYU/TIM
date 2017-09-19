@@ -16,9 +16,9 @@ def query_admin():
             if yesno == 'y':
                 user.groups.append(UserGroup.get_admin_group())
                 db.session.commit()
-                print('User {} has been added to administrators.'.format(username))
+                print(f'User {username} has been added to administrators.')
         else:
-            print('User {} is already an administrator.'.format(username))
+            print(f'User {username} is already an administrator.')
     else:
         realname = input("Real name: ")
         email = input("Email: ")

@@ -47,5 +47,5 @@ def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='') -> Union[List[
     except requests.ConnectionError:
         raise Exception('Failed to connect to Dumbo')
     if r.status_code != 200:
-        raise Exception('Failed to get HTML from Dumbo, status code={}'.format(r.status_code))
+        raise Exception(f'Failed to get HTML from Dumbo, status code={r.status_code}')
     return r.json()

@@ -155,8 +155,8 @@ class Document:
             result = self.par_cache[-1] if self.par_cache else None
 
         if result is not None and result.get_id() == par_id:
-            print('WARNING: get_previous_par({}, {}) returning reference to self, returning None instead'.format(
-                self.doc_id, par_id))
+            print(
+                f'WARNING: get_previous_par({self.doc_id}, {par_id}) returning reference to self, returning None instead')
             return None
 
         return result
@@ -357,7 +357,6 @@ class Document:
         }
         dest.write(json.dumps(entry))
         dest.write('\n')
-        #dest.write('{} {}.{} {}\n'.format(timestamp, ver[0], ver[1], msg))
 
         while src:
             line = src.readline()
@@ -630,7 +629,7 @@ class Document:
 
     def modify_paragraph_obj(self, par_id: str, p: DocParagraph) -> DocParagraph:
         if not self.has_paragraph(par_id):
-            raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
+            raise KeyError(f'No paragraph {par_id} in document {self.doc_id} version {self.get_version()}')
 
         p_src = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
         p.set_id(par_id)
@@ -643,9 +642,9 @@ class Document:
                                            op_params={'old_hash': old_hash, 'new_hash': new_hash})
         self.__update_metadata([p], old_ver, new_ver)
 
-        old_line_start = '{}/'.format(par_id)
-        old_line_legacy = '{}\n'.format(par_id)
-        new_line = '{}/{}\n'.format(par_id, new_hash)
+        old_line_start = f'{par_id}/'
+        old_line_legacy = f'{par_id}\n'
+        new_line = f'{par_id}/{new_hash}\n'
         with open(self.get_version_path(old_ver), 'r') as f_src:
             with open(self.get_version_path(new_ver), 'w') as f:
                 while True:
@@ -727,7 +726,7 @@ class Document:
         except AttributesAtEndOfCodeBlockException as e:
             raise ValidationException('The original document contained a syntax error. '
                                       'This is probably a TIM bug; please report it. '
-                                      'Additional information: {}'.format(e))
+                                      f'Additional information: {e}')
 
         return self._perform_update(new_pars, old_pars)
 
@@ -825,7 +824,7 @@ class Document:
                     entry['time'] = dateutil.parser.parse(entry['time']).replace(tzinfo=timezone.utc)
                     log.append(entry)
                 except ValueError:
-                    print("doc id {}: malformed log line: {}".format(self.doc_id, line))
+                    print(f"doc id {self.doc_id}: malformed log line: {line}")
                 lc -= 1
 
         return log
@@ -844,7 +843,7 @@ class Document:
                         for rp in ref_pars:
                             if rp.get_attr('taskId') == task_id_name:
                                 return rp
-        raise TimDbException('Task not found in the document: {}'.format(task_id_name))
+        raise TimDbException(f'Task not found in the document: {task_id_name}')
 
     def get_last_modified(self) -> Optional[datetime]:
         log = self.get_changelog(max_entries=1)

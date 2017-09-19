@@ -75,7 +75,7 @@ class Plugin:
 
     @property
     def full_task_id(self):
-        return '{}.{}'.format(self.par.doc.doc_id, self.task_id)
+        return f'{self.par.doc.doc_id}.{self.task_id}'
 
     @staticmethod
     def get_date(d):
@@ -83,7 +83,7 @@ class Plugin:
             try:
                 d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
             except ValueError:
-                raise PluginException('Invalid date format: {}'.format(d))
+                raise PluginException(f'Invalid date format: {d}')
         if d is not None:
             if d.tzinfo is None:
                 d = d.replace(tzinfo=timezone.utc)
@@ -112,7 +112,7 @@ class Plugin:
                               macros: Dict[str, object],
                               macro_delimiter: str):
         if not par.is_plugin():
-            raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
+            raise PluginException(f'The paragraph {par.get_id()} is not a plugin.')
         task_id_name = par.get_attr('taskId')
         plugin_data = parse_plugin_values_macros(par, global_attrs, macros, macro_delimiter)
         handle_plugin_error(plugin_data, task_id_name)
@@ -123,7 +123,7 @@ class Plugin:
     def from_paragraph(par: DocParagraph, user: Optional[User] = None):
         doc = par.doc
         if not par.is_plugin():
-            raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
+            raise PluginException(f'The paragraph {par.get_id()} is not a plugin.')
         task_id_name = par.get_attr('taskId')
         rnd_seed = get_simple_hash_from_par_and_user(par, user)  # TODO: RND_SEED get users rnd_seed for this plugin
         par.insert_rnds(rnd_seed)
@@ -190,7 +190,7 @@ class Plugin:
         if points_min is None or points_max is None:
             raise PluginException('You cannot give yourself custom points in this task.')
         elif not (points_min <= points <= points_max):
-            raise PluginException('Points must be in range [{},{}]'.format(points_min, points_max))
+            raise PluginException(f'Points must be in range [{points_min},{points_max}]')
         return points
 
     def to_paragraph(self) -> DocParagraph:

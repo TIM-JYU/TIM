@@ -86,14 +86,13 @@ def migrate_table(sq3c, pgc,
                   id_column: Optional[str] = 'id',
                   extra_clause='',
                   new_columns=None):
-    log_info('Migrating table {}...'.format(old_table))
+    log_info(f'Migrating table {old_table}...')
     if new_table is None:
         new_table = old_table
     if new_columns is None:
         new_columns = {}
-    sq3c.execute("SELECT * {} FROM {} {}".format(
-        ', {}'.format(','.join((k + ' as ' + v for k, v in new_columns.items()))) if new_columns else '',
-        old_table, extra_clause))
+    sq3c.execute(
+        f"SELECT * {', {}'.format(','.join((k + ' as ' + v for k, v in new_columns.items()))) if new_columns else ''} FROM {old_table} {extra_clause}")
     columns = list(map(lambda x: x[0], sq3c.description))
     if placeholders is None:
         placeholders = {}
@@ -101,25 +100,24 @@ def migrate_table(sq3c, pgc,
         if c not in placeholders:
             placeholders[c] = '%s'
 
-    column_str = '({})'.format(','.join(columns))
+    column_str = f'({",".join(columns)})'
     placeholder_list = [placeholders[c] for c in columns]
-    template_str = '({})'.format(','.join(placeholder_list))
+    template_str = f'({",".join(placeholder_list)})'
 
     i = 0
     for row in sq3c:
         pgc.execute(
-            "INSERT INTO {} {} "
-            "VALUES {}".format(new_table, column_str, template_str), row)
+            f"INSERT INTO {new_table} {column_str} VALUES {template_str}", row)
         i += 1
     if id_column is not None:
         update_seq_val(pgc, new_table, id_column)
-    log_info('Migrated table {} ({} rows)'.format(old_table, i))
+    log_info(f'Migrated table {old_table} ({i} rows)')
 
 
 def update_seq_val(pgc, tablename, id_col_name='id'):
-    pgc.execute('SELECT MAX({}) FROM {}'.format(id_col_name, tablename))
+    pgc.execute(f'SELECT MAX({id_col_name}) FROM {tablename}')
     max_id = pgc.fetchone()[0]
-    pgc.execute("SELECT setval('{}_{}_seq', %s)".format(tablename, id_col_name), (max_id,))
+    pgc.execute(f"SELECT setval('{tablename}_{id_col_name}_seq', %s)", (max_id,))
 
 
 if __name__ == '__main__':
