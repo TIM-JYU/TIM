@@ -118,8 +118,7 @@ timApp.controller("PermCtrl", [
                 new_name: sc.oldFolderName + "/" + newName,
             }).then(function(response) {
                 const data = response.data;
-                // This is needed to update the breadcrumbs
-                location.reload();
+                window.location.assign("/manage/" + sc.oldFolderName + "/" + newName);
             }, function(response) {
                 $window.alert(response.data.error);
             });
