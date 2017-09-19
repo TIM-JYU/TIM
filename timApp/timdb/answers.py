@@ -115,6 +115,7 @@ class Answers(TimDbBase):
         JOIN UserAnswer ON Answer.id = UserAnswer.answer_id
         WHERE task_id IN ({})
          AND user_id = %s
+         AND valid = TRUE
         GROUP BY task_id
         ) t JOIN Answer a ON a.id = t.aid""".format(template), task_ids + [user_id])
         return self.resultAsDictionary(c)
