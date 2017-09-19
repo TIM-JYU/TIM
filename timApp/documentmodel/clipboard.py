@@ -144,8 +144,8 @@ class Clipboard:
 
             doc_pars = []
             par_before = par_id
-            if is_real_id(par_before) and not doc.has_paragraph(par_before):
-                raise TimDbException('Paragraph not found: {}'.format(par_before))
+            if is_real_id(par_before):
+                doc.raise_if_not_exist(par_before)
             for par in reversed(pars):
                 # We need to reverse the sequence because we're inserting before, not after
                 new_par_id = par['id'] if not doc.has_paragraph(par['id']) else random_id()
@@ -160,8 +160,8 @@ class Clipboard:
         def paste_after(self, doc: Document, par_id: str, as_ref: bool = False) -> List[DocParagraph]:
             par_before = None
 
-            if is_real_id(par_id) and not doc.has_paragraph(par_id):
-                raise TimDbException('Paragraph not found: {}'.format(par_id))
+            if is_real_id(par_id):
+                doc.raise_if_not_exist(par_id)
             # todo: make the iterator accept ranges
             i = doc.__iter__()
             try:

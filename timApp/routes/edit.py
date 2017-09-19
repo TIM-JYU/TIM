@@ -217,8 +217,10 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
     verify_edit_access(doc_id)
 
     doc = docentry.document_as_current_user
-    if not doc.has_paragraph(par_id):
-        abort(400, 'Paragraph not found: ' + par_id)
+    try:
+        doc.raise_if_not_exist(par_id)
+    except TimDbException as e:
+        abort(404, str(e))
 
     edit_request = EditRequest.from_request(doc, text=md)
     area_start = edit_request.area_start

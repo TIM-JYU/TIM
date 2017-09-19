@@ -74,6 +74,7 @@ from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import db
+from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import NoSuchUserException
 from timApp.validation import validate_item_and_create
 from timApp.documentmodel.create_item import do_create_document, get_templates_for_folder, create_item
@@ -424,9 +425,16 @@ def get_block(doc_id, par_id):
     area_start = request.args.get('area_start')
     area_end = request.args.get('area_end')
     if area_start and area_end:
-        return json_response({"text": Document(doc_id).export_section(area_start, area_end)})
+        try:
+            section = Document(doc_id).export_section(area_start, area_end)
+        except TimDbException as e:
+            return abort(404, str(e))
+        return json_response({"text": section})
     else:
-        par = Document(doc_id).get_paragraph(par_id)
+        try:
+            par = Document(doc_id).get_paragraph(par_id)
+        except TimDbException as e:
+            return abort(404, str(e))
         return json_response({"text": par.get_exported_markdown()})
 
 

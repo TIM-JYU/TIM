@@ -176,7 +176,7 @@ class DocParagraph:
             t = os.readlink(cls._get_path(doc, par_id, 'current', froot))
             return cls.get(doc, par_id, t, files_root=froot)
         except FileNotFoundError:
-            raise TimDbException('Document {}: Paragraph not found: {}'.format(doc.doc_id, par_id))
+            doc._raise_not_found(par_id)
 
     @classmethod
     def get(cls, doc, par_id: str, t: str, files_root: Optional[str] = None) -> 'DocParagraph':
@@ -193,7 +193,7 @@ class DocParagraph:
             with open(cls._get_path(doc, par_id, t, files_root), 'r') as f:
                 return cls.from_dict(doc, json.loads(f.read()), files_root=files_root)
         except FileNotFoundError:
-            raise TimDbException('Document {}: Paragraph not found: {}'.format(doc.doc_id, par_id))
+            doc._raise_not_found(par_id)
 
     def __iter__(self):
         """Returns an iterator to the internal data dictionary."""

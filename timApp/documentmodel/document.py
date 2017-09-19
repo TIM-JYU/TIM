@@ -252,11 +252,11 @@ class Document:
         try:
             start_index = all_par_ids.index(par_id_start)
         except ValueError:
-            raise TimDbException('Paragraph not found: {}'.format(par_id_start))
+            return self._raise_not_found(par_id_start)
         try:
             end_index = all_par_ids.index(par_id_end)
         except ValueError:
-            raise TimDbException('Paragraph not found: {}'.format(par_id_end))
+            return self._raise_not_found(par_id_end)
         if end_index < start_index:
             start_index, end_index = end_index, start_index
         return all_pars[start_index:end_index + 1]
@@ -415,6 +415,13 @@ class Document:
                             print('Invalid document reference: ' + str(par.get_rd()))
         self.__save_reflist(new_reflist_file, reflist)
 
+    def raise_if_not_exist(self, par_id: str):
+        if not self.has_paragraph(par_id):
+            self._raise_not_found(par_id)
+
+    def _raise_not_found(self, par_id: str):
+        raise TimDbException(f'Document {self.doc_id}: Paragraph not found: {par_id}')
+
     def has_paragraph(self, par_id: str) -> bool:
         """Checks if the document has the given paragraph.
 
@@ -426,16 +433,15 @@ class Document:
         return par_id in self.par_ids
 
     def get_paragraph(self, par_id: str) -> DocParagraph:
-        error_text = f'Document {self.doc_id}: Paragraph not found: {par_id}'
         if self.preload_option == PreloadOption.all:
             self.ensure_pars_loaded()
             try:
                 return self.par_map[par_id]['c']
             except KeyError:
-                raise TimDbException(error_text)
+                return self._raise_not_found(par_id)
         self.ensure_par_ids_loaded()
         if par_id not in self.par_ids:
-            raise TimDbException(error_text)
+            return self._raise_not_found(par_id)
         return DocParagraph.get_latest(self, par_id, self.files_root)
 
     def add_text(self, text: str) -> List[DocParagraph]:

@@ -41,12 +41,12 @@ class ClipboardTest(TimRouteTest):
                  DocParagraph.create(par_id='a', doc=d.document),
                  DocParagraph.create(par_id='b', doc=d.document),
                  expect_status=400,
-                 expect_content={'error': 'Paragraph not found: a'})
+                 expect_content={'error': f'Document {d.id}: Paragraph not found: a'})
         self.copy(d,
                   DocParagraph.create(par_id='a', doc=d.document),
                   DocParagraph.create(par_id='b', doc=d.document),
                   expect_status=400,
-                  expect_content={'error': 'Paragraph not found: a'})
+                  expect_content={'error': f'Document {d.id}: Paragraph not found: a'})
         self.paste(d,
                    DocParagraph.create(par_id='a', doc=d.document),
                    expect_status=400,
@@ -55,22 +55,22 @@ class ClipboardTest(TimRouteTest):
                  pars[0],
                  DocParagraph.create(par_id='b', doc=d.document),
                  expect_status=400,
-                 expect_content={'error': 'Paragraph not found: b'})
+                 expect_content={'error': f'Document {d.id}: Paragraph not found: b'})
         self.cut(d,
                  DocParagraph.create(par_id='b', doc=d.document),
                  pars[0],
                  expect_status=400,
-                 expect_content={'error': 'Paragraph not found: b'})
+                 expect_content={'error': f'Document {d.id}: Paragraph not found: b'})
         self.copy(d,
                   pars[0],
                   DocParagraph.create(par_id='b', doc=d.document),
                   expect_status=400,
-                  expect_content={'error': 'Paragraph not found: b'})
+                  expect_content={'error': f'Document {d.id}: Paragraph not found: b'})
         self.copy(d,
                   DocParagraph.create(par_id='b', doc=d.document),
                   pars[0],
                   expect_status=400,
-                  expect_content={'error': 'Paragraph not found: b'})
+                  expect_content={'error': f'Document {d.id}: Paragraph not found: b'})
 
         self.cut(d,
                  pars[0],
@@ -78,7 +78,7 @@ class ClipboardTest(TimRouteTest):
         self.paste(d,
                    pars[0],
                    expect_status=400,
-                   expect_content={'error': 'Paragraph not found: {}'.format(pars[0].get_id())})
+                   expect_content={'error': f'Document {d.id}: Paragraph not found: {pars[0].get_id()}'})
 
     def test_copy_one(self):
         self.login_test1()

@@ -19,6 +19,11 @@ class EditTest(TimRouteTest):
         self.json_post('/deleteParagraph/{}'.format(d.id), {'area_start': par_id, 'area_end': invalid_par},
                        expect_status=400,
                        expect_content={'error': 'Paragraph {} does not exist'.format(invalid_par)})
+        self.get(f'/getBlock/{d.id}/{invalid_par}', expect_status=404, expect_content=f'Document {d.id}: Paragraph not found: {invalid_par}',
+                 json_key='error')
+        self.get(f'/getBlock/{d.id}/{par_id}', query_string={'area_start': par_id, 'area_end': invalid_par}, expect_status=404,
+                 expect_content=f'Document {d.id}: Paragraph not found: {invalid_par}',
+                 json_key='error')
 
     def test_duplicates(self):
         self.login_test1()
