@@ -21,6 +21,8 @@ def synchronize_translations(doc: DocInfo, edit_result: DocumentEditResult):
         return
     orig = doc.document_as_current_user
     orig_ids = orig.get_par_ids()
+    if orig_ids and orig.get_paragraph(orig_ids[0]).is_setting():
+        orig_ids = orig_ids[1:]
 
     for tr in doc.translations:  # type: DocInfo
         if not tr.is_original_translation:

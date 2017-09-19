@@ -169,3 +169,15 @@ class TranslationTest(TimRouteTest):
         with patch.object(DocParagraph, '_DocParagraph__write') as m:  # type: Mock
             self.get(tr.url)
         m.assert_not_called()
+
+    def test_translation_no_settings_sync(self):
+        """The settings paragraph from the original document isn't copied to the new one."""
+        self.login_test1()
+        d = self.create_doc(initial_par='hello')
+        t = self.create_translation(d, 'title', 'en')
+        d.document.set_settings({'a': 'b'})
+        self.new_par(d.document, 'test')
+        tr_pars = t.document.get_paragraphs()
+        orig_pars = d.document.get_paragraphs()
+        settings_id = orig_pars[0].get_id()
+        self.assertFalse(any(p.get_attr('rp') == settings_id for p in tr_pars))
