@@ -672,7 +672,7 @@ class DocParagraph:
         if cached is not None:
             return cached
 
-        prev_par = self.doc.get_previous_par(self)
+        prev_par: 'DocParagraph' = self.doc.get_previous_par(self)
         if prev_par is None:
             autonumber_start = auto_number_start
             prev_par_auto_values = {'h': {1: autonumber_start, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
@@ -682,18 +682,21 @@ class DocParagraph:
                                                                   auto_number_start)
 
         # If the paragraph is a translation but it has not been translated (empty markdown), we use the md from the original.
-        if prev_par is not None and not prev_par.get_markdown() and prev_par.is_translation():
+        deref = None
+        if prev_par is not None and prev_par.is_translation():
             try:
-                prev_par = prev_par.get_referenced_pars(set_html=False)[0]
+                deref = prev_par.get_referenced_pars(set_html=False)[0]
             except InvalidReferenceException:
                 # In case of an invalid reference, just skip this one.
-                prev_par = None
-        if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber'):
+                deref = None
+        if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber') or (deref and deref.has_class('nonumber')):
             auto_macro_cache[key] = prev_par_auto_values
             heading_cache[self.get_id()] = []
             return prev_par_auto_values
 
         md_expanded = prev_par.get_markdown()
+        if not md_expanded and deref is not None:
+            md_expanded = deref.get_markdown()
         if not prev_par.nomacros:
             # TODO: RND_SEED should we fill the rands also?
             md_expanded = expand_macros(md_expanded, macros, macro_delim)

@@ -1,3 +1,5 @@
+from lxml import html
+
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.docinfo import DocInfo
 
@@ -227,3 +229,18 @@ Lorem ipsum.
 
         e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f'}, json_key='texts', as_tree=True)
         self.assert_content(e, ['4. d\n5. e', '6. f'])
+
+    def test_translation_nonumber_edit(self):
+        self.login_test1()
+        orig = self.create_doc(settings={'auto_number_headings': True},
+                               initial_par=['# a', '# b {.nonumber}', '# c'])
+        t = self.create_translation(orig, 'test', 'en')
+        tr_pars = t.document.get_paragraphs()
+        md = tr_pars[2].get_exported_markdown().replace('# b', '# tr')
+        self.post_par(t.document, md, tr_pars[2].get_id())
+        e = self.get_updated_pars(t)
+        changed = e['changed_pars']
+        self.assert_content(html.fromstring(changed[tr_pars[2].get_id()]), ['tr'])
+        self.assertNotIn(tr_pars[3].get_id(), changed)
+        e = self.get(t.url, as_tree=True)
+        self.assert_content(e, ['', '1. a', 'tr', '2. c'])
