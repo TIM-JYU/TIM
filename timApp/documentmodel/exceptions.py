@@ -5,3 +5,15 @@ class DocExistsError(Exception):
 
     def __str__(self):
         return f"Document already exists: {self.doc_id}"
+
+
+class ValidationException(Exception):
+    pass
+
+
+class ValidationWarning(ValidationException):
+    pass
+
+
+class AttributesAtEndOfCodeBlockException(ValidationException):
+    pass

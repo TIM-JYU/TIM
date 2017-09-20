@@ -4,7 +4,7 @@ from timApp.accesshelper import has_view_access
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
-from timApp.documentmodel.documentparser import ValidationException
+from timApp.documentmodel.exceptions import ValidationException
 from timApp.requesthelper import verify_json_params
 
 
@@ -68,7 +68,7 @@ class EditRequest:
 
 def get_pars_from_editor_text(doc: Document, text: str,
                               break_on_elements: bool = False, skip_access_check: bool = False) -> List[DocParagraph]:
-    blocks = doc.text_to_paragraphs(text, break_on_elements)
+    blocks, validation_result = doc.text_to_paragraphs(text, break_on_elements)
     timdb = get_timdb()
     for p in blocks:
         if p.is_reference():

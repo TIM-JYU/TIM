@@ -1,27 +1,13 @@
 import re
-
 from typing import Optional
 
 from timApp.documentmodel.attributeparser import AttributeParser
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.randutils import hashfunc, random_id, is_valid_id
+from timApp.documentmodel.validationresult import ValidationResult, AttributesAtEndOfCodeBlock, DuplicateParagraphId, \
+    InvalidParagraphId, DuplicateTaskId, MultipleAreasWithSameName, ZeroLengthArea, OverlappingClassedArea, \
+    AreaEndWithoutStart, DuplicateAreaEnd, AreaWithoutEnd
 from timApp.utils import count_chars
-
-
-class SplitterException(Exception):
-    pass
-
-
-class ValidationException(Exception):
-    pass
-
-
-class ValidationWarning(ValidationException):
-    pass
-
-
-class AttributesAtEndOfCodeBlockException(ValidationException):
-    pass
 
 
 class DocReader:
@@ -87,13 +73,14 @@ class DocumentParser:
                 r['id'] = id_func()
         return self
 
-    def validate_structure(self, id_validator_func=is_valid_id, is_whole_document=True):
+    def validate_structure(self) -> ValidationResult:
         self._parse_document(self._last_setting)
         found_ids = set()
         found_tasks = set()
         found_areas = set()
         classed_areas = []
         found_area_ends = set()
+        result = ValidationResult()
         for r in self._blocks:
             if r['type'] == 'code':
                 md = r['md']
@@ -103,31 +90,26 @@ class DocumentParser:
                     if last_line.startswith('`' * num_ticks):
                         attrs, start_index = AttributeParser(last_line).get_attributes()
                         if start_index is not None:
-                            raise AttributesAtEndOfCodeBlockException(
-                                f'The end of code block contains attributes: {attrs}')
+                            result.add_issue(AttributesAtEndOfCodeBlock(r.get('id')))
                 except ValueError:
                     pass
             curr_id = r.get('id')
             if curr_id is not None:
                 if curr_id in found_ids:
-                    raise ValidationException('Duplicate paragraph id: ' + curr_id)
+                    result.add_issue(DuplicateParagraphId(curr_id))
                 found_ids.add(curr_id)
-                if not id_validator_func(curr_id):
-                    raise ValidationException('Invalid paragraph id: ' + curr_id)
+                if not is_valid_id(curr_id):
+                    result.add_issue(InvalidParagraphId(curr_id))
             attrs = r.get('attrs', {})
             task_id = attrs.get('taskId')
             if task_id:
                 if task_id in found_tasks:
-                    # Duplicate task id's are not fatal, but still something we could warn the user about.
-                    # For now, just ignore them.
-                    #print('Duplicate task id: ' + task_id)
-                    #raise ValidationException('Duplicate task id: ' + task_id)
-                    pass
-                # found_tasks.add(task_id)
+                    result.add_issue(DuplicateTaskId(curr_id, task_id))
+                found_tasks.add(task_id)
             area = attrs.get('area')
             if area:
                 if area in found_areas:
-                    raise ValidationException('Cannot have multiple areas with same name: ' + area)
+                    result.add_issue(MultipleAreasWithSameName(curr_id, area))
                 has_classes = len(attrs.get('classes', [])) > 0
                 if has_classes:
                     classed_areas.append(area)
@@ -135,22 +117,20 @@ class DocumentParser:
             area_end = attrs.get('area_end')
             if area_end:
                 if area_end == area:
-                    raise ValidationException('Cannot have a zero-length area')
+                    result.add_issue(ZeroLengthArea(curr_id, area))
                 if area_end in classed_areas:
                     if area_end != classed_areas[-1]:
-                        raise ValidationWarning(
-                            f'Classed areas cannot overlap ("{classed_areas[-1]}" and "{area_end}")')
+                        result.add_issue(OverlappingClassedArea(curr_id, classed_areas[-1], area_end))
                     classed_areas.pop()
-                if is_whole_document:
-                    if area_end not in found_areas:
-                        raise ValidationWarning(f'No start found for area "{area_end}"')
-                    if area_end in found_area_ends:
-                        raise ValidationWarning('Area already ended: ' + area_end)
+                if area_end not in found_areas:
+                    result.add_issue(AreaEndWithoutStart(curr_id, area))
+                if area_end in found_area_ends:
+                    result.add_issue(DuplicateAreaEnd(curr_id, area))
                 found_area_ends.add(area_end)
         unended_areas = found_areas - found_area_ends
-        if is_whole_document and unended_areas:
-            raise ValidationWarning('Some areas were not ended: ' + str(unended_areas))
-        return self
+        for a in unended_areas:
+            result.add_issue(AreaWithoutEnd(None, a))  # TODO get the par id of the start
+        return result
 
     def _parse_document(self, options: Optional[DocumentParserOptions]):
         if options is None:

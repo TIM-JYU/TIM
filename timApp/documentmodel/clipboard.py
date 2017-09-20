@@ -77,7 +77,9 @@ class Clipboard:
                 return None
             with open(clipfilename, 'rt', encoding='utf-8') as clipfile:
                 content = clipfile.read()
-            return DocumentParser(content).validate_structure(is_whole_document=False).get_blocks()
+            dp = DocumentParser(content)
+            dp.validate_structure().raise_if_has_critical_issues()
+            return dp.get_blocks()
 
         def write_metadata(self, **kwargs):
             os.makedirs(self.path, exist_ok=True)

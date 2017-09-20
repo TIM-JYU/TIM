@@ -19,9 +19,11 @@ class EditTest(TimRouteTest):
         self.json_post(f'/deleteParagraph/{d.id}', {'area_start': par_id, 'area_end': invalid_par},
                        expect_status=400,
                        expect_content={'error': f'Paragraph {invalid_par} does not exist'})
-        self.get(f'/getBlock/{d.id}/{invalid_par}', expect_status=404, expect_content=f'Document {d.id}: Paragraph not found: {invalid_par}',
+        self.get(f'/getBlock/{d.id}/{invalid_par}', expect_status=404,
+                 expect_content=f'Document {d.id}: Paragraph not found: {invalid_par}',
                  json_key='error')
-        self.get(f'/getBlock/{d.id}/{par_id}', query_string={'area_start': par_id, 'area_end': invalid_par}, expect_status=404,
+        self.get(f'/getBlock/{d.id}/{par_id}', query_string={'area_start': par_id, 'area_end': invalid_par},
+                 expect_status=404,
                  expect_content=f'Document {d.id}: Paragraph not found: {invalid_par}',
                  json_key='error')
 
@@ -47,3 +49,58 @@ class EditTest(TimRouteTest):
         updated = self.get_updated_pars(t, json_key='changed_pars')
         e = html.fromstring(updated[tr_pars[1].get_id()])
         self.assert_content(e, ['cat'])
+
+    def test_update(self):
+        """Editing a document with duplicate areas is possible in manage."""
+        self.login_test1()
+        d = self.create_doc()
+        for i in range(0, 2):
+            d.document.add_paragraph("#- {area=a}")
+            d.document.add_paragraph("#- {area_end=a}")
+        par_ids = d.document.get_par_ids()
+        self.json_post(f'/update/{d.id}',
+                       {'fulltext': f"""
+#- {{area=a id={par_ids[0]}}}
+#- {{area_end=a id={par_ids[1]}}}
+#- {{area=b id={par_ids[2]}}}
+#- {{area_end=b id={par_ids[3]}}}
+                       """,
+                        'original': d.document.export_markdown()})
+        orig_text = d.document.export_markdown()
+        self.json_post(f'/update/{d.id}',
+                       {'fulltext': f"""
+#- {{area=a id={par_ids[0]}}}
+#- {{area_end=a id={par_ids[1]}}}
+#- {{area=a id={par_ids[2]}}}
+#- {{area_end=a id={par_ids[3]}}}
+                       """,
+                        'original': orig_text},
+                       expect_status=400,
+                       expect_content=f'Multiple areas with same name noticed in paragraph {par_ids[2]}\nDuplicate area end noticed in paragraph {par_ids[3]}',
+                       json_key='error')
+        self.json_post(f'/update/{d.id}',
+                       {'fulltext': f"""
+#- {{id={par_ids[0]}}}
+#- {{id={par_ids[0]}}}
+                       """,
+                        'original': orig_text},
+                       expect_status=400,
+                       expect_content=f'Duplicate paragraph id noticed in paragraph {par_ids[0]}',
+                       json_key='error')
+        self.json_post(f'/update/{d.id}',
+                       {'fulltext': f"""
+#- {{id=xxxx}}
+                       """,
+                        'original': orig_text},
+                       expect_status=400,
+                       expect_content=f'Invalid paragraph id noticed in paragraph xxxx',
+                       json_key='error')
+        self.json_post(f'/update/{d.id}',
+                       {'fulltext': """
+```
+``` {a=b}
+                       """,
+                        'original': orig_text},
+                       expect_status=400,
+                       expect_content=f'Attributes at end of code block noticed in a paragraph',
+                       json_key='error')

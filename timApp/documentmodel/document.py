@@ -14,11 +14,12 @@ from lxml import etree, html
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.documenteditresult import DocumentEditResult
-from timApp.documentmodel.documentparser import DocumentParser, AttributesAtEndOfCodeBlockException, ValidationException
+from timApp.documentmodel.documentparser import DocumentParser
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter
-from timApp.documentmodel.exceptions import DocExistsError
+from timApp.documentmodel.exceptions import DocExistsError, ValidationException, AttributesAtEndOfCodeBlockException
 from timApp.documentmodel.preloadoption import PreloadOption
+from timApp.documentmodel.validationresult import ValidationResult
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException
 from timApp.utils import get_error_html
@@ -261,15 +262,17 @@ class Document:
             start_index, end_index = end_index, start_index
         return all_pars[start_index:end_index + 1]
 
-    def text_to_paragraphs(self, text: str, break_on_elements: bool):
+    def text_to_paragraphs(self, text: str, break_on_elements: bool) -> Tuple[List[DocParagraph], ValidationResult]:
         options = DocumentParserOptions()
         options.break_on_code_block = break_on_elements
         options.break_on_header = break_on_elements
         options.break_on_normal = break_on_elements
+        dp = DocumentParser(text)
+        vr = dp.validate_structure()
+        vr.raise_if_has_critical_issues()
         blocks = [DocParagraph.create(doc=self, md=par['md'], attrs=par.get('attrs'))
-                  for par in DocumentParser(text).validate_structure(
-            is_whole_document=False).get_blocks(options)]
-        return blocks
+                  for par in dp.get_blocks(options)]
+        return blocks, vr
 
     @classmethod
     def remove(cls, doc_id: int, files_root: Optional[str] = None, ignore_exists=False):
@@ -445,7 +448,8 @@ class Document:
 
     def add_text(self, text: str) -> List[DocParagraph]:
         """Converts the given text to (possibly) multiple paragraphs and adds them to the document."""
-        return [self.add_paragraph_obj(p) for p in self.text_to_paragraphs(text, False)]
+        pars, _ = self.text_to_paragraphs(text, False)
+        return [self.add_paragraph_obj(p) for p in pars]
 
     def add_paragraph_obj(self, p: DocParagraph) -> DocParagraph:
         """Appends a new paragraph into the document.
@@ -691,8 +695,11 @@ class Document:
         :param par_id_last: The id of the paragraph that denotes the end of the section.
 
         """
-        new_pars = DocumentParser(text).add_missing_attributes(
-        ).validate_structure(is_whole_document=False).get_blocks()
+        dp = DocumentParser(text)
+        dp.add_missing_attributes()
+        vr = dp.validate_structure()
+        vr.raise_if_has_critical_issues()
+        new_pars = dp.get_blocks()
         new_par_id_set = set([par['id'] for par in new_pars])
         all_pars = [par for par in self]
         all_par_ids = [par.get_id() for par in all_pars]
@@ -716,18 +723,25 @@ class Document:
         :param strict_validation: Whether to use stricter validation rules for areas etc.
 
         """
-        new_pars = DocumentParser(text).add_missing_attributes().validate_structure(
-            is_whole_document=strict_validation).get_blocks()
+        dp = DocumentParser(text)
+        dp.add_missing_attributes()
+        vr = dp.validate_structure()
+        vr.raise_if_has_any_issues()
+        new_pars = dp.get_blocks()
 
         # If the original document has validation errors, it probably means the document export routine has a bug.
+        dp_orig = DocumentParser(original)
+        dp_orig.add_missing_attributes()
+        vr = dp.validate_structure()
         try:
-            old_pars = [DocParagraph.from_dict(doc=self, d=d)
-                        for d in DocumentParser(original).add_missing_attributes().validate_structure(is_whole_document=strict_validation).get_blocks()]
-        except AttributesAtEndOfCodeBlockException as e:
+            vr.raise_if_has_critical_issues()
+        except ValidationException as e:
             raise ValidationException('The original document contained a syntax error. '
                                       'This is probably a TIM bug; please report it. '
                                       f'Additional information: {e}')
-
+        blocks = dp_orig.get_blocks()
+        old_pars = [DocParagraph.from_dict(doc=self, d=d)
+                    for d in blocks]
         return self._perform_update(new_pars, old_pars)
 
     def _perform_update(self, new_pars: List[dict],

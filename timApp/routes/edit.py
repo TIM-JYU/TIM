@@ -12,7 +12,7 @@ from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.documenteditresult import DocumentEditResult
-from timApp.documentmodel.documentparser import ValidationException, ValidationWarning
+from timApp.documentmodel.exceptions import ValidationException, ValidationWarning
 from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.markdownconverter import md_to_html
 from timApp.requesthelper import verify_json_params
