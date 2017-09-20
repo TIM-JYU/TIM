@@ -28,6 +28,7 @@
     </div>
     <div uib-alert ng-repeat="alert in alerts" ng-class="'alert-' + (alert.type || 'warning')"
          data-close="closeAlert($index)">{{ alert.msg }}</div>
-    <button class="timButton" ng-disabled="itemForm.$invalid" ng-click="createItem()" type="button">Create
+    <button class="timButton" ng-disabled="itemForm.$invalid || creating" ng-click="createItem()" type="button">Create
     </button>
+    <span ng-show="creating">Creating...</span>
 </form>

@@ -49,6 +49,7 @@ timApp.directive("createItem", [function() {
             sc.alerts = [];
 
             sc.createItem = function() {
+                sc.creating = true;
                 $http.post<{path}>("/createItem", angular.extend({
                     item_path: sc.itemLocation + "/" + sc.itemName,
                     item_type: sc.itemType,
@@ -58,6 +59,7 @@ timApp.directive("createItem", [function() {
                 }, function(response) {
                     sc.alerts = [];
                     sc.alerts.push({msg: response.data.error, type: "danger"});
+                    sc.creating = false;
                 });
             };
 
