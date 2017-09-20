@@ -650,3 +650,29 @@ a
         r = self.get(d.url, as_tree=True).cssselect('.parContent')
         self.assertIn('xxxHEXJSONxxx', r[0].text_content().strip())
         self.assertEqual('Plugin showVideo error: YAML is malformed: a', r[1].text_content().strip())
+
+    def test_invalid_taskid(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {#t1.1 plugin="mmcq"}
+stem: ""
+choices:
+  -
+    correct: true
+    reason: ""
+    text: ""
+```
+""")
+        par = d.document.get_paragraphs()[0]
+        p = Plugin.from_paragraph(par)
+        self.post_answer(p.type, f'{d.id}.t1.1.{par.get_id()}', [],
+                         expect_content='The format of task id is invalid. Dot characters are not allowed.',
+                         json_key='error', expect_status=400)
+
+        # TODO These two need better error messages.
+        self.post_answer(p.type, f't1.1.{par.get_id()}', [],
+                         expect_content='The format of task id is invalid. Dot characters are not allowed.',
+                         json_key='error', expect_status=400)
+        self.post_answer(p.type, f'{par.get_id()}', [],
+                         expect_content='The format of task id is invalid. Dot characters are not allowed.',
+                         json_key='error', expect_status=400)

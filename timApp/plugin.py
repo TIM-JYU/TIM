@@ -147,7 +147,10 @@ class Plugin:
         pieces = task_id.split('.')
         if not 2 <= len(pieces) <= 3:
             raise PluginException('The format of task_id is invalid. Expected 1 or 2 dot characters.')
-        doc_id = int(pieces[0])
+        try:
+            doc_id = int(pieces[0])
+        except ValueError:
+            raise PluginException(f'The format of task_id is invalid. Expected integral doc id but got {pieces[0]}.')
         task_id_name = pieces[1] if pieces[1] else None
         par_id = pieces[2] if len(pieces) == 3 else None
         return doc_id, task_id_name, par_id

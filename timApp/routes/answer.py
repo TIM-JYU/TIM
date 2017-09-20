@@ -78,7 +78,10 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     """
     timdb = get_timdb()
-    doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id_ext)
+    try:
+        doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id_ext)
+    except PluginException:
+        return abort(400, 'The format of task id is invalid. Dot characters are not allowed.')
     task_id = str(doc_id) + '.' + str(task_id_name)
     verify_task_access(doc_id, task_id_name, AccessType.view)
     doc = Document(doc_id)
