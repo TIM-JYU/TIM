@@ -51,7 +51,9 @@ class EditTest(TimRouteTest):
         self.assert_content(e, ['cat'])
 
     def test_update(self):
-        """Editing a document with duplicate areas is possible in manage."""
+        """Editing a document with minor errors is possible in manage.
+        Document must not contain any errors after editing.
+        """
         self.login_test1()
         d = self.create_doc()
         for i in range(0, 2):
