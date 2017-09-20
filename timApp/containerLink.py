@@ -43,10 +43,7 @@ PLUGINS = {
 def call_plugin_generic(plugin, method, route, data=None, headers=None, params=None):
     plug = get_plugin(plugin)
     try:
-        # Alleviation for a testing problem: since qst plugin is in the same process, the live server during browser
-        # test cannot process the request properly because it tries to call itself during a request.
-        # By using a small timeout value, the test finishes more quickly.
-        read_timeout = 30 if plugin != 'qst' else 1
+        read_timeout = 30
         host = plug['host']
         if route == 'multimd' and (plugin == "mmcq" or plugin == "mcq"):  # hack to handle mcq and mmcq in tim by qst
             plug = get_plugin('qst')
