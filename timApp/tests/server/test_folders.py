@@ -66,7 +66,6 @@ class FolderTest(TimRouteTest):
         fname2 = self.get_personal_item_path('testing2')
         f3 = self.create_folder(fname2)
         grant_access(get_anon_group_id(), f3['id'], 'view')
-        self.maxDiff = None
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing1',
                                   'title': 'foldertitle',

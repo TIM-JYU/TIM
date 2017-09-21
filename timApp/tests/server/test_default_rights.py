@@ -61,7 +61,6 @@ class DefaultRightTest(TimRouteTest):
                                'accessible_to': None,
                                'duration_from': None,
                                'duration_to': None}]
-            self.maxDiff = None
             default_rights = sorted(default_rights, key=itemgetter('gid'))
             self.assertDictEqual(
                 {'grouprights': default_rights},
@@ -92,7 +91,6 @@ class DefaultRightTest(TimRouteTest):
                 new_item_rights = timdb.users.get_rights_holders(f['id'])
             else:
                 raise Exception('error in test: object type should be document or folder')
-            self.maxDiff = None
             new_item_rights = [right for right in new_item_rights if right['access_name'] != 'owner']
             self.assertListEqual(sorted(default_rights, key=itemgetter('gid', 'access_type')),
                                  sorted(new_item_rights, key=itemgetter('gid', 'access_type')))

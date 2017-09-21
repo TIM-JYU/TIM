@@ -75,7 +75,6 @@ class PluginTest(TimRouteTest):
         self.check_ok_answer(resp)
 
         answer_list = self.get(f'/answers/{task_id}/{self.current_user_id()}')
-        self.maxDiff = None
 
         self.assertListEqual(
             [{'collaborators': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID}],

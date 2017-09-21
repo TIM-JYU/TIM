@@ -20,7 +20,6 @@ class TemplateTest(TimRouteTest):
             t['owner'] = TimJsonEncoder().default(t['owner'])
 
         d = self.create_doc(f'{folder}/a/test')
-        self.maxDiff = None
         self.get('/getTemplates',
                  query_string={'item_path': d.path},
                  expect_content=[t1json, t2json])

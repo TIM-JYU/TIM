@@ -211,7 +211,6 @@ class DocumentTest(TimDbTest):
             self.assertFalse(Document.doc_exists(doc_id=d.doc_id))
 
     def test_update(self):
-        self.maxDiff = None
         random.seed(0)
         for i in range(1, 5):
             d = self.init_testdoc()
@@ -230,7 +229,6 @@ class DocumentTest(TimDbTest):
             self.assertListEqual(blocks, DocumentParser(d.export_markdown(export_hashes=True)).get_blocks())
 
     def test_update_section(self):
-        self.maxDiff = None
         random.seed(0)
         for i in range(6, 10):
             d = self.init_testdoc()

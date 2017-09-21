@@ -10,7 +10,6 @@ class GroupLoginTest(TimRouteTest):
         one_user = {'current_user': {'email': 'test1@example.com', 'id': uid1, 'name': 'testuser1',
                                      'real_name': TEST_USER_1_NAME}, 'other_users': []}
         self.assertDictEqual(one_user, resp)
-        self.maxDiff = None
         resp = self.login_test2(add=True)
         uid2 = resp['other_users'][0]['id']
         two_users = {'current_user': {'email': 'test1@example.com', 'id': uid1, 'name': 'testuser1',
