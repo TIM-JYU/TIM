@@ -106,3 +106,9 @@ class EditTest(TimRouteTest):
                        expect_status=400,
                        expect_content=f'Attributes at end of code block noticed in a paragraph',
                        json_key='error')
+
+    def test_new_from_help_par(self):
+        self.login_test1()
+        d = self.create_doc()
+        e = self.json_post(f'/newParagraph/', {'docId': d.id, 'text': 'test', 'par': 'HELP_PAR', 'par_next': None}, json_key='texts', as_tree=True)
+        self.assert_content(e, ['test'])

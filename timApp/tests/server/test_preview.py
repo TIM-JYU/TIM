@@ -12,3 +12,9 @@ class PreviewTest(TimRouteTest):
         self.get(f'/getBlock/{t.id}/{p.get_id()}', expect_content={'text': md})
         e = self.json_post(f'/preview/{t.id}', {'text': md}, json_key='texts', as_tree=True)
         self.assert_content(e, ['The referenced document does not exist.'])
+
+    def test_help_par(self):
+        self.login_test1()
+        d = self.create_doc()
+        e = self.json_post(f'/preview/{d.id}', {'text': 'test', 'par': 'HELP_PAR'}, json_key='texts', as_tree=True)
+        self.assert_content(e, ['test'])
