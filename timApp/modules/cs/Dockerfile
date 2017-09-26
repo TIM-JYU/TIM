@@ -68,8 +68,8 @@ RUN bash -c "${APT_INSTALL} doxygen valgrind && ${APT_CLEANUP}"
 # Docker client binary
 ENV DOCKER_VERSION 17.06.2
 RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}-ce.tgz && \
-    tar -xzvf docker-${DOCKER_VERSION}-ce.tgz --strip=1 docker/docker && \
-    rm docker-${DOCKER_VERSION}-ce.tgz && ./docker --version
+    tar -xzvf docker-${DOCKER_VERSION}-ce.tgz --strip=1 -C /usr/bin docker/docker && \
+    rm docker-${DOCKER_VERSION}-ce.tgz && docker --version
 
 # Python packages
 
