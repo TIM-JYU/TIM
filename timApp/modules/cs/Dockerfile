@@ -1,55 +1,37 @@
-# Aloitetaan ubuntun imagesta
-from ubuntu:16.04
-maintainer vesal "vesal@jyu.fi"
+FROM ubuntu:16.04
+LABEL maintainer="vesal@jyu.fi"
 
-# Workaround PAM: system error -messagelle
-run ln -fs /bin/true /usr/bin/chfn
+# Workaround for PAM: system error -message
+RUN ln -fs /bin/true /usr/bin/chfn
 
-# Aikavyöhyke ja merkistöt kuntoon
-run apt-get update
-run apt-get install -y locales tzdata
-run locale-gen en_US.UTF-8
-env LANG en_US.UTF-8
-env LANGUAGE en_US:en
-env LC_ALL en_US.UTF-8
-run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
+ENV APT_INSTALL="apt-get -qq update && apt-get -q install --no-install-recommends -y" \
+    APT_CLEANUP="rm -r /var/lib/apt/lists/*"
 
-# tuntuu valittavan koko ajan jos ei tätä asenna
-run apt-get install -y apt-utils
+# Timezone configuration
+RUN bash -c "${APT_INSTALL} locales tzdata apt-utils acl unzip software-properties-common && ${APT_CLEANUP}"
+RUN locale-gen en_US.UTF-8
+RUN locale-gen fi_FI.UTF-8
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en \
+    LC_ALL=en_US.UTF-8 \
+    LC_CTYPE=en_US.UTF-8
+RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
 
-run apt-get install -y acl unzip
+RUN bash -c "${APT_INSTALL} python3 python3-pip python3-setuptools && ${APT_CLEANUP}"
+RUN pip3 install wheel
+RUN pip3 install Flask bleach
 
-# Asennetaan python, pip ja flask 
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+RUN echo "deb http://download.mono-project.com/repo/ubuntu xenial main" > /etc/apt/sources.list.d/mono-official.list
+RUN bash -c "${APT_INSTALL} mono-complete fsharp && ${APT_CLEANUP}"
 
-run apt-get update
-run apt-get install -y python3
-run apt-get install -y python3-pip
-run pip3 install Flask
-run pip3 install bleach
-run apt-get install -y mono-complete fsharp
-run apt-get install -y libsdl1.2debian
-run apt-get install -y libsdl-mixer1.2
-run apt-get install -y xvfb
-# run apt-get install -y python  
-run apt-get install -y imagemagick
-run apt-get install -y openjdk-8-jre-headless
-run apt-get install -y nunit-console
-run apt-get install -y wget
-run locale-gen en_US.UTF-8 
-run locale-gen fi_FI.UTF-8 
+RUN bash -c "${APT_INSTALL} libsdl1.2debian libsdl-mixer1.2 xvfb imagemagick nunit-console wget && ${APT_CLEANUP}"
 
-# Poistetaan pip. Sitä ei tarvitse enää ja saadaan
-# hitusen pienempi image ja vähemmän ohjelmia potentiaalisen
-# hyökkääjän käyttöön. (Periaate ok. käytännössä tosi marginaalinen
-# toimenpide)
-# run apt-get -y --purge remove python3-pip
-
-# Lisätään alkuperäinen hakemisto polkuun /service
-run mkdir /service
+RUN mkdir /service
 
 # Get GPG keys for Java 8
-# run sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
-run apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
+# RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
 
 #
 # Oracle Java 8 Dockerfile
@@ -58,134 +40,69 @@ run apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
 # https://github.com/dockerfile/java/tree/master/oracle-java8
 #
 # Install Java.
-run apt-get install -y software-properties-common 
-#python-software-properties
+
 RUN \
   echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
   add-apt-repository -y ppa:webupd8team/java && \
-  apt-get update && \
-  apt-get install -y oracle-java8-installer && \
-  rm -rf /var/lib/apt/lists/* && \
-  rm -rf /var/cache/oracle-jdk8-installer
-
-# Define working directory.
-#WORKDIR /data
+  bash -c "${APT_INSTALL} oracle-java8-installer && ${APT_CLEANUP}" && \
+  rm -r /var/cache/oracle-jdk8-installer
 
 # Define commonly used JAVA_HOME variable
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
-# Commonlisp
-RUN apt-get update
-# RUN apt-get install -y clisp
-# see: https://github.com/bakketun/docker-sbcl/blob/master/Dockerfile
-RUN apt-get install -y sbcl 
+# ENV LD_LIBRARY_PATH /usr/lib/jvm/java-8-oracle/jre/lib/amd64/server
+# RUN javareconf
+RUN ln -s /usr/lib/jvm/java-8-oracle /usr/lib/jvm/default-java
 
-# SqLite
-RUN apt-get -y install sqlite3 libsqlite3-dev
-
-RUN apt-get install -y libxtst6
-
-RUN apt-get install -y inotify-tools
-
-run apt-get install -y graphviz
-
-# Configure timezone and locale
-RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
-# run locale-gen C.UTF-8 
-#env LC_CTYPE C.UTF-8
-#env LC_ALL C.UTF-8 
-env LC_CTYPE en_US.UTF-8
-env LC_ALL en_US.UTF-8
-env LANG en_US.UTF-8
-env LANGUAGE en_US.UTF-8
-
-RUN apt-get install -y postgresql-client    
-    
-RUN apt-get install -y r-base
+# Common Lisp
+RUN bash -c "${APT_INSTALL} && sbcl sqlite3 libsqlite3-dev libxtst6 inotify-tools graphviz postgresql-client r-base && ${APT_CLEANUP}"
 
 #
-# Scala 
+# Scala
 #
-run apt-get remove scala-library scala
-run wget -q http://downloads.typesafe.com/scala/2.11.7/scala-2.11.7.deb
-run dpkg -i scala-2.11.7.deb
-run apt-get install scala
-run rm scala-2.11.7.deb
+ENV SCALA_VERSION 2.12.3
+RUN wget -q http://downloads.typesafe.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.deb && \
+ dpkg -i scala-${SCALA_VERSION}.deb && \
+ rm scala-${SCALA_VERSION}.deb
 
-run apt-get install -y doxygen
+RUN bash -c "${APT_INSTALL} doxygen valgrind && ${APT_CLEANUP}"
 
-run apt-get install -y valgrind
-
-# Install Docker client binary
-run wget -q https://get.docker.com/builds/Linux/x86_64/docker-1.10.2.tgz && \
-    tar -xzvf docker-1.10.2.tgz && \
-    rm docker-1.10.2.tgz
+# Docker client binary
+ENV DOCKER_VERSION 17.06.2
+RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}-ce.tgz && \
+    tar -xzvf docker-${DOCKER_VERSION}-ce.tgz && \
+    rm docker-${DOCKER_VERSION}-ce.tgz
 
 # Python packages
 
-#run pip3 install numpy
-#run pip3 install scipy
-#run pip3 install scikit-learn
-#run pip3 install matplotlib
-#run pip3 install statsmodels
-#run pip3 install pandas
+#RUN pip3 install numpy
+#RUN pip3 install scipy
+#RUN pip3 install scikit-learn
+#RUN pip3 install matplotlib
+#RUN pip3 install statsmodels
+#RUN pip3 install pandas
 # http://www.scipy.org/install.html
-# sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
-run apt-get install -y python3-numpy python3-scipy python3-matplotlib python3-pandas 
-run pip3 install statsmodels
-run pip3 install control
+# ${APT_INSTALL} python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
+RUN bash -c "${APT_INSTALL} python3-numpy python3-scipy python3-matplotlib python3-pandas && ${APT_CLEANUP}"
+RUN pip3 install statsmodels
+RUN pip3 install control
+
+RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
 
 # Octave
-#run apt-add-repository ppa:octave/stable
-#run apt-get update
+RUN add-apt-repository ppa:octave/stable
+# RUN ${APT_INSTALL} octave-statistics && ${APT_CLEANUP}
+# RUN ${APT_INSTALL} octave octave-control octave-image octave-io octave-optim octave-signal octave-statistics && ${APT_CLEANUP}
+RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic octave-io octave-statistics && ${APT_CLEANUP}"
 
-# run apt-get install -y octave less
-run add-apt-repository ppa:octave/stable
-run apt-get update
-
-
-run apt-get install -y epstool 
-run apt-get install -y transfig
-
-
-# run apt-get install -y octave-control
-# run apt-get install -y octave-io
-
-#env LD_LIBRARY_PATH /usr/lib/jvm/java-8-oracle/jre/lib/amd64/server
-# run javareconf
-run ln -s /usr/lib/jvm/java-8-oracle /usr/lib/jvm/default-java
-
-
-# run apt-get install -y octave-signal
-# run apt-get install -y octave-statistics
-# run apt-get install -y octave octave-control octave-image octave-io octave-optim octave-signal octave-statistics
-run apt-get install -y octave octave-control octave-image octave-signal octave-symbolic
-
-
-
-run apt-get install -y lua5.2
-
-run apt-get install -y r-cran-mvtnorm
+RUN bash -c "${APT_INSTALL} lua5.2 && ${APT_CLEANUP}"
 
 # Swift begins see https://github.com/swiftdocker/docker-swift/blob/master/Dockerfile
 # Install related packages and set LLVM 3.6 as the compiler
-RUN apt-get -q update && \
-    apt-get -q install -y \
-    make \
-    libc6-dev \
-    clang-3.6 \
-    curl \
-    libedit-dev \
-    python2.7 \
-    python2.7-dev \
-    libicu-dev \
-    rsync \
-    libxml2 \
-    git \
-    libcurl4-openssl-dev \
-    && update-alternatives --quiet --install /usr/bin/clang clang /usr/bin/clang-3.6 100 \
-    && update-alternatives --quiet --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.6 100 \
-    && rm -r /var/lib/apt/lists/*
+RUN bash -c \
+ "${APT_INSTALL} make libc6-dev clang-3.6 curl libedit-dev python2.7 python2.7-dev libicu-dev rsync libxml2 git libcurl4-openssl-dev && ${APT_CLEANUP}" \
+ && update-alternatives --quiet --install /usr/bin/clang clang /usr/bin/clang-3.6 100 \
+ && update-alternatives --quiet --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.6 100
 
 # Everything up to here should cache nicely between Swift versions, assuming dev dependencies change little
 ENV SWIFT_BRANCH=swift-3.0.2-release \
@@ -218,64 +135,50 @@ RUN SWIFT_URL=https://swift.org/builds/$SWIFT_BRANCH/$(echo "$SWIFT_PLATFORM" | 
     && gpg --batch --verify --quiet swift.tar.gz.sig swift.tar.gz \
     && tar -xzf swift.tar.gz --directory / --strip-components=1 \
     && rm -r "$GNUPGHOME" swift.tar.gz.sig swift.tar.gz
-run chmod -R 755 /usr/lib/swift
+RUN chmod -R 755 /usr/lib/swift
 # Swift ends
 
-# R-paketteja
+# R packages
 
-#run apt-get install -y r-cran-fica
-#run apt-get install -y r-cran-jade
+RUN bash -c "${APT_INSTALL} r-cran-mvtnorm && ${APT_CLEANUP}"
 
-run wget -q https://cran.r-project.org/src/contrib/fICA_1.1-0.tar.gz
-run wget -q https://cran.r-project.org/src/contrib/JADE_2.0-0.tar.gz
+RUN wget -q https://cran.r-project.org/src/contrib/fICA_1.1-0.tar.gz && \
+    wget -q https://cran.r-project.org/src/contrib/JADE_2.0-0.tar.gz && \
+    wget -q https://cran.r-project.org/src/contrib/clue_0.3-54.tar.gz && \
+    wget -q https://cran.r-project.org/src/contrib/Rcpp_0.12.12.tar.gz && \
+    wget -q https://cran.r-project.org/src/contrib/RcppArmadillo_0.7.960.1.2.tar.gz && \
+    R CMD INSTALL clue_0.3-54.tar.gz && \
+    R CMD INSTALL JADE_2.0-0.tar.gz && \
+    R CMD INSTALL Rcpp_0.12.12.tar.gz && \
+    R CMD INSTALL RcppArmadillo_0.7.960.1.2.tar.gz && \
+    R CMD INSTALL fICA_1.1-0.tar.gz && \
+    rm *.tar.gz
 
-run wget -q https://cran.r-project.org/src/contrib/clue_0.3-54.tar.gz
-
-run R CMD INSTALL clue_0.3-54.tar.gz
-
-run R CMD INSTALL JADE_2.0-0.tar.gz
-
-run wget -q https://cran.r-project.org/src/contrib/Rcpp_0.12.12.tar.gz
-run R CMD INSTALL Rcpp_0.12.12.tar.gz
-
-run wget -q https://cran.r-project.org/src/contrib/RcppArmadillo_0.7.960.1.2.tar.gz
-run R CMD INSTALL RcppArmadillo_0.7.960.1.2.tar.gz
-
-run R CMD INSTALL fICA_1.1-0.tar.gz
-
-run rm  *.gz
-
-
-# Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
-# palveluja roottina.
-# run useradd -M agent 
-run useradd -m agent
+RUN useradd -m agent
 ENV HOME /home/agent
-run mkdir -p /service
-run chown -R agent /service
+RUN mkdir -p /service
+RUN chown -R agent /service
 
-# run groupadd docker
-#run gpasswd -a agent docker
-#run usermod -a -G sudo agent
+# RUN groupadd docker
+#RUN gpasswd -a agent docker
+#RUN usermod -a -G sudo agent
 
-# testejä varten
+# For testing
 ENV MYPASSWORD password
 #RUN echo root:kissa | chpasswd
 #RUN echo agent:kissa | chpasswd
 
-# Varmuudeksi estetään root login ja poistetaan rootin salasana,
-# jos sellainen on.
-# run usermod -p '!' root
-# run passwd -l root
+# Prevent root login and remove password if there is one.
+# RUN usermod -p '!' root
+# RUN passwd -l root
 
-#run chmod 777 /etc/ssh
-#run chmod 777 /etc/ssh/*
+#RUN chmod 777 /etc/ssh
+#RUN chmod 777 /etc/ssh/*
 
-# Laita seuraava kommentteihin tuotantoa varten
-##run usermod -a -G sudo agent
+# Comment the following for production.
+##RUN usermod -a -G sudo agent
 
-# Asetetaan container käynnistymään tunnuksella agent.
-user agent
+# Run the container as agent by default.
+USER agent
 
-# Avataan portti 5000 ulos containerista.
-expose 5000
+EXPOSE 5000
