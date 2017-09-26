@@ -146,13 +146,14 @@ class Language:
 class CS(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
+        self.compiler = "csc"
         self.fileext = "cs"
         self.filedext = ".cs"
         self.sourcefilename = "/tmp/%s/%s.cs" % (self.basename, self.filename)
         self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
 
     def get_cmdline(self, sourcecode):
-        cmdline = "mcs /r:System.Numerics /out:%s %s" % (self.exename, self.sourcefilename)
+        cmdline = "%s /r:System.Numerics.dll /out:%s %s" % (self.compiler, self.exename, self.sourcefilename)
         return cmdline
 
     def run(self, web, sourcelines, points_rule):
@@ -180,14 +181,14 @@ class Jypeli(CS):
                 mainfile = "/tmp/%s/%s.cs" % (self.basename, "Ohjelma")
                 codecs.open(mainfile, "w", "utf-8").write(maincode)
 
-        # cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll
+        # cmdline = "%s /out:%s /r:/cs/jypeli/Jypeli.dll
         # /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll
-        # /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing
+        # /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing.dll
         # /cs/jypeli/Ohjelma.cs %s" % (
-        cmdline = ("mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
+        cmdline = ("%s /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
                    "/r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll "
-                   "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Numerics /r:System.Drawing %s %s") % (
-                      self.exename, mainfile, self.sourcefilename)
+                   "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Numerics.dll /r:System.Drawing.dll %s %s") % (
+                      self.compiler, self.exename, mainfile, self.sourcefilename)
         return cmdline
 
     def run(self, web, sourcelines, points_rule):
@@ -228,13 +229,13 @@ class CSComtest(CS):
         if not CSComtest.nunit:
             frms = os.listdir("/usr/lib/mono/gac/nunit.framework/")
             CSComtest.nunit = "/usr/lib/mono/gac/nunit.framework/" + frms[0] + "/nunit.framework.dll"
-        jypeliref = ("/r:System.Numerics /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
+        jypeliref = ("/r:System.Numerics.dll /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
                      "/r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll "
-                     "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing")
-        cmdline = ("java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library " +
+                     "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing.dll")
+        cmdline = ("java -jar /cs/java/cs/ComTest.jar nunit %s && %s /out:%s /target:library " +
                    jypeliref +
                    " /reference:%s %s %s") % \
-                  (self.sourcefilename, self.testdll, CSComtest.nunit, self.sourcefilename, testcs)
+                  (self.sourcefilename, self.compiler, self.testdll, CSComtest.nunit, self.sourcefilename, testcs)
         return cmdline
 
     def run(self, web, sourcelines, points_rule):
