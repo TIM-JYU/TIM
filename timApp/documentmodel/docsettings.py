@@ -1,10 +1,11 @@
 from typing import Optional, List, Dict
 
-from timApp.documentmodel.macroinfo import MacroInfo
-from timApp.utils import parse_yaml
-from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.timdb.timdbexception import TimDbException
 import yaml
+
+from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.macroinfo import MacroInfo
+from timApp.documentmodel.yamlblock import YamlBlock
+from timApp.timdb.timdbexception import TimDbException
 
 
 class DocSettings:
@@ -59,7 +60,7 @@ class DocSettings:
                 return DocSettings(par.doc)
         if par.is_setting():
             try:
-                yaml_vals = cls.parse_values(par)
+                yaml_vals = DocSettings.parse_values(par)
                 return DocSettings(par.doc, settings_dict=yaml_vals)
             except Exception:
                 return DocSettings(par.doc)
@@ -68,8 +69,7 @@ class DocSettings:
 
     @staticmethod
     def parse_values(par):
-        md = par.get_markdown().replace('```', '').replace('~~~', '')
-        return parse_yaml(md)
+        return YamlBlock.from_markdown(par.get_markdown()).values
 
     def __init__(self, doc: 'Document', settings_dict: Optional[dict] = None):
         self.doc = doc

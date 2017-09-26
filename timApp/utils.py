@@ -3,15 +3,9 @@ import os
 import re
 import shutil
 from datetime import datetime, timezone
+from typing import List, Optional, Tuple, Union
 
 import dateutil.parser
-import pytz
-
-import yaml
-import yaml.parser
-import yaml.scanner
-from typing import List, Optional, Tuple, Union
-from yaml import CLoader, YAMLError
 
 from timApp.htmlSanitize import sanitize_html
 from timApp.theme import Theme
@@ -53,78 +47,6 @@ def date_to_relative(d: Optional[datetime]):
         return '1 hour ago'
     else:
         return f'{s // 3600} hours ago'
-
-
-def merge(a, b):
-    """Merges two dictionaries recursively. Stores the result in the first dictionary.
-
-    :param a: The first dictionary.
-    :param b: The second dictionary.
-
-    """
-    for key in b:
-        if key in a:
-            if isinstance(a[key], dict) and isinstance(b[key], dict):
-                merge(a[key], b[key])
-            elif a[key] == b[key]:
-                pass
-            else:
-                a[key] = b[key]
-        else:
-            a[key] = b[key]
-
-
-def correct_yaml(text):
-    """Inserts missing spaces after `:` Like  `width:20` => `width: 20`
-    Also gives an other way to write multiline attributes, by starting
-    the multiline like: `program: |!!`  (`!!` could be any number and any non a-z,A-Z chars
-    and ending it by `!!` in first column.
-
-    :param text: text to convert proper yaml
-    :return: text that is proper yaml
-    :type text: str
-    """
-    lines = text.splitlines()
-    s = ""
-    p = re.compile("^[ \t]*[^ :]*:[^ ]")  # kissa:istuu
-    pm = re.compile("^( *)[^ :]+:[ ]*\|[ ]*[^ ]+[ ]*$")  # program: ||| or  program: |!!!
-    multiline = False
-    end_str = ''
-    indent = None
-    for line in lines:
-        line = line.rstrip()
-        if p.match(line) and not multiline:
-            line = line.replace(':', ': ', 1)
-        r = pm.match(line)
-        if r and not multiline:
-            indent = " " + r.group(1)
-            multiline = True
-            line, end_str = line.split("|", 1)
-            end_str = end_str.rstrip()
-            s = s + line + "|\n"
-            continue
-        if multiline:
-            if line == end_str:
-                multiline = False
-                continue
-            line = indent + line
-        s = s + line + "\n"
-    return s
-
-
-def parse_yaml(text: str):
-    """Parses the specified text as (customized) YAML.
-
-    :param text: The text to parse.
-    :return: The parsed YAML as a dict.
-    """
-
-    text = correct_yaml(text)
-    values = yaml.load(text, Loader=CLoader)
-    if isinstance(values, str):
-        raise YAMLError('Markup must not be a mere string.')
-    # empty YAML is equal to null, so we avoid that by returning {} in that case
-    return values or {}
 
 
 def count_chars(md, char):

@@ -2,14 +2,14 @@
 import re
 from typing import Optional, Dict
 
+from flask import g
 from jinja2 import Environment, TemplateSyntaxError
 from lxml import html
 
+from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.dumboclient import call_dumbo
 from timApp.htmlSanitize import sanitize_html
 from timApp.utils import get_error_html
-from timApp.utils import parse_yaml
-from flask import g
 
 
 # noinspection PyUnusedLocal
@@ -115,7 +115,7 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
             end = text.find(endstr, beg)
             if end >= 0:
                 local_macros_yaml = text[beg+len(startstr):end]
-                local_macros = parse_yaml(local_macros_yaml)
+                local_macros = YamlBlock.from_markdown(local_macros_yaml).values
                 macros = {**macros, **local_macros}
         conv = env.from_string(text).render(macros)
         return conv
