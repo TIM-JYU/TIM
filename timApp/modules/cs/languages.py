@@ -621,6 +621,10 @@ class Glowscript(JS):
     pass
 
 
+class Processing(JS):
+    pass
+
+
 class VPython(JS):
     pass
 
@@ -896,3 +900,4 @@ languages["fs"] = FS
 languages["mathcheck"] = Mathcheck
 languages["upload"] = Upload
 languages["octave"] = Octave
+languages["processing"] = Processing

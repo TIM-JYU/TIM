@@ -911,7 +911,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 self.wout(file_to_string('end.html'))
                 return
 
-            if is_iframe and not print_file and ttype not in ["js", "glowscript", "vpython"]:
+            if is_iframe and not print_file and ttype not in ["js", "glowscript", "vpython", "processing"]:
                 s = string_to_string_replace_url(
                     '<iframe frameborder="0"  src="https://tim.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" ' +
                     'style="overflow:hidden;" height="##HEIGHT##" width="100%"  seamless></iframe>',

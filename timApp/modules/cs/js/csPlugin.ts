@@ -470,7 +470,7 @@ function hasAcrobatInstalled() {
     return isAcrobatInstalled;
 }
 
-var csJSTypes = ["js", "glowscript", "vpython", "html"];
+var csJSTypes = ["js", "glowscript", "vpython", "html", "processing"];
 
 // =================================================================================================================
 // Known upload files
@@ -510,8 +510,8 @@ async function loadSimcir() {
 
 var languageTypes = {} as ILanguageTypes;
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir","xml", "octave","lua", "swift","mathcheck","r", "html"];
-languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json","xml","octave","lua","swift","text","r", "html"];
+languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir","xml", "octave","lua", "swift","mathcheck", "html", "processing", "r"];
+languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json","xml","octave","lua","swift","text", "html", "javascript", "r"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -2513,6 +2513,12 @@ csApp.Controller = function($scope,$transclude) {
    $scope.lastJS = "";
     $scope.iframeClientHeight = -1;
 	$scope.showJS = function() {
+	    var isProcessing = false;
+        if ( $scope.type.indexOf("processing") >= 0 ) {
+            $scope.iframe = true;
+            isProcessing = true;
+        }
+
         var wantsConsole = false;
         if ( $scope.type.indexOf("/c") >= 0 ) wantsConsole = true;
         if ( !$scope.attrs.runeverytime && !$scope.usercode && !$scope.userargs && !$scope.userinput ) return;
@@ -2540,6 +2546,10 @@ csApp.Controller = function($scope,$transclude) {
                     dw = '800';
                     if ( $scope.type == "glowscript" ) $scope.gsDefaultLanguage = "GlowScript 2.1 JavaScript";
                 }
+                if ( isProcessing ) {
+                    fsrc = "/cs/gethtml/processing.html"
+                    if ( !$scope.fullhtml ) $scope.fullhtml = "REPLACEBYCODE";
+                }
                 var v = $scope.getVid(dw,dh);
                 $scope.irrotaKiinnita = $scope.english ? "Release" : "Irrota";
                 html = ($scope.attrs.html||html);
@@ -2547,7 +2557,7 @@ csApp.Controller = function($scope,$transclude) {
                 var angularElement = '<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20" >'+
                   '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a><a href ng-click="closeFrame()" style="float: right" >[X]</a></div></span>'+
                     (!$scope.fullhtml ? '<iframe id="'+v.vid+'" class="jsCanvas" src="' + fsrc + '?scripts='+($scope.attrs.scripts||scripts)+'&html='+ html + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin">':
-                    '<iframe id="'+v.vid+'" class="jsCanvas"'  + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin">')+
+                    '<iframe id="'+v.vid+'" class="jsCanvas" '  + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin">')+
                   '</iframe>'+
                   '</div>';
                 $scope.canvas = angular.element(angularElement)[0] as HTMLCanvasElement; // TODO this seems wrong
@@ -2590,6 +2600,13 @@ csApp.Controller = function($scope,$transclude) {
             if ( $scope.gsDefaultLanguage ) f.contentWindow.setDefLanguage($scope.gsDefaultLanguage);
             if ( $scope.fullhtml ) {
                 var fhtml = $scope.fullhtml.replace("REPLACEBYCODE", text);
+                if ( isProcessing ) {
+                    fhtml = '<script src="/cs/static/processing/processing.js"></script>\n' +
+                            '<script type="text/processing" data-processing-target="mycanvas">\n' +
+                            fhtml + '\n' +
+                            '</script>\n' +
+                            '<canvas id="mycanvas"></canvas>';
+                }
                 f.contentWindow.document.open();
                 f.contentWindow.document.write(fhtml);
                 f.contentWindow.document.close();
