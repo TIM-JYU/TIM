@@ -4,7 +4,7 @@ LABEL maintainer="vesal@jyu.fi"
 # Workaround for PAM: system error -message
 RUN ln -fs /bin/true /usr/bin/chfn
 
-ENV APT_INSTALL="apt-get -qq update && apt-get -q install --no-install-recommends -y" \
+ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
     APT_CLEANUP="rm -r /var/lib/apt/lists/*"
 
 # Timezone configuration
@@ -26,8 +26,6 @@ RUN echo "deb http://download.mono-project.com/repo/ubuntu xenial main" > /etc/a
 RUN bash -c "${APT_INSTALL} mono-complete fsharp && ${APT_CLEANUP}"
 
 RUN bash -c "${APT_INSTALL} libsdl1.2debian libsdl-mixer1.2 xvfb imagemagick nunit-console wget && ${APT_CLEANUP}"
-
-RUN mkdir /service
 
 # Get GPG keys for Java 8
 # RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
@@ -55,7 +53,7 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 RUN ln -s /usr/lib/jvm/java-8-oracle /usr/lib/jvm/default-java
 
 # Common Lisp
-RUN bash -c "${APT_INSTALL} && sbcl sqlite3 libsqlite3-dev libxtst6 inotify-tools graphviz postgresql-client r-base && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} sbcl sqlite3 libsqlite3-dev libxtst6 inotify-tools graphviz postgresql-client r-base && ${APT_CLEANUP}"
 
 #
 # Scala
@@ -70,8 +68,8 @@ RUN bash -c "${APT_INSTALL} doxygen valgrind && ${APT_CLEANUP}"
 # Docker client binary
 ENV DOCKER_VERSION 17.06.2
 RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}-ce.tgz && \
-    tar -xzvf docker-${DOCKER_VERSION}-ce.tgz && \
-    rm docker-${DOCKER_VERSION}-ce.tgz
+    tar -xzvf docker-${DOCKER_VERSION}-ce.tgz --strip=1 docker/docker && \
+    rm docker-${DOCKER_VERSION}-ce.tgz && ./docker --version
 
 # Python packages
 
@@ -93,7 +91,7 @@ RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
 RUN add-apt-repository ppa:octave/stable
 # RUN ${APT_INSTALL} octave-statistics && ${APT_CLEANUP}
 # RUN ${APT_INSTALL} octave octave-control octave-image octave-io octave-optim octave-signal octave-statistics && ${APT_CLEANUP}
-RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic octave-io octave-statistics && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic && ${APT_CLEANUP}"
 
 RUN bash -c "${APT_INSTALL} lua5.2 && ${APT_CLEANUP}"
 
@@ -140,7 +138,7 @@ RUN chmod -R 755 /usr/lib/swift
 
 # R packages
 
-RUN bash -c "${APT_INSTALL} r-cran-mvtnorm && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} r-cran-mvtnorm gcc g++ liblapack-dev liblapack3 libopenblas-base libopenblas-dev gfortran && ${APT_CLEANUP}"
 
 RUN wget -q https://cran.r-project.org/src/contrib/fICA_1.1-0.tar.gz && \
     wget -q https://cran.r-project.org/src/contrib/JADE_2.0-0.tar.gz && \
