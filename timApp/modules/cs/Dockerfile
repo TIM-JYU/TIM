@@ -158,11 +158,13 @@ run ln -s /usr/lib/jvm/java-8-oracle /usr/lib/jvm/default-java
 
 # run apt-get install -y octave-signal
 # run apt-get install -y octave-statistics
-run apt-get install -y octave-control octave-image octave-io octave-optim octave-signal octave-statistics
+# run apt-get install -y octave octave-control octave-image octave-io octave-optim octave-signal octave-statistics
+run apt-get install -y octave octave-control octave-image octave-signal octave-symbolic
+
 
 
 run apt-get install -y lua5.2
-    
+
 run apt-get install -y r-cran-mvtnorm
 
 # Swift begins see https://github.com/swiftdocker/docker-swift/blob/master/Dockerfile
@@ -218,7 +220,32 @@ RUN SWIFT_URL=https://swift.org/builds/$SWIFT_BRANCH/$(echo "$SWIFT_PLATFORM" | 
     && rm -r "$GNUPGHOME" swift.tar.gz.sig swift.tar.gz
 run chmod -R 755 /usr/lib/swift
 # Swift ends
-    
+
+# R-paketteja
+
+#run apt-get install -y r-cran-fica
+#run apt-get install -y r-cran-jade
+
+run wget -q https://cran.r-project.org/src/contrib/fICA_1.1-0.tar.gz
+run wget -q https://cran.r-project.org/src/contrib/JADE_2.0-0.tar.gz
+
+run wget -q https://cran.r-project.org/src/contrib/clue_0.3-54.tar.gz
+
+run R CMD INSTALL clue_0.3-54.tar.gz
+
+run R CMD INSTALL JADE_2.0-0.tar.gz
+
+run wget -q https://cran.r-project.org/src/contrib/Rcpp_0.12.12.tar.gz
+run R CMD INSTALL Rcpp_0.12.12.tar.gz
+
+run wget -q https://cran.r-project.org/src/contrib/RcppArmadillo_0.7.960.1.2.tar.gz
+run R CMD INSTALL RcppArmadillo_0.7.960.1.2.tar.gz
+
+run R CMD INSTALL fICA_1.1-0.tar.gz
+
+run rm  *.gz
+
+
 # Lisätään käyttäjä `agent` -- Emme halua ajaa containerissakaan
 # palveluja roottina.
 # run useradd -M agent 

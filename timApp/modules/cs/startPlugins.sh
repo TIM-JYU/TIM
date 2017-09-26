@@ -38,7 +38,7 @@ chmod 766 /var/run/docker.sock
 
 # Copy Jypeli dll's  
 cd /cs/jypeli
-curl http://kurssit.it.jyu.fi/npo/MonoJypeli/TIM/Jypeli.headless.tar.gz | tar -xz --overwrite --warning=none
+curl https://kurssit.it.jyu.fi/npo/MonoJypeli/TIM/Jypeli.headless.tar.gz | tar -xz --overwrite --warning=none
 
 cd /cs/java
 rm -f comtest*.jar*
