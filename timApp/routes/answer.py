@@ -274,17 +274,17 @@ def should_hide_name(doc_id, user_id):
 def get_task_info(task_id):
     try:
         plugin = Plugin.from_task_id(task_id, user=get_current_user_object())
+        tim_vars = {'maxPoints': plugin.max_points(),
+                    'userMin': plugin.user_min_points(),
+                    'userMax': plugin.user_max_points(),
+                    'deadline': plugin.deadline(),
+                    'starttime': plugin.starttime(),
+                    'answerLimit': plugin.answer_limit(),
+                    'triesText': plugin.values.get('triesText', 'Tries left:'),
+                    'pointsText': plugin.values.get('pointsText', 'Points:')
+                    }
     except PluginException as e:
         return abort(400, str(e))
-    tim_vars = {'maxPoints': plugin.max_points(),
-                'userMin': plugin.user_min_points(),
-                'userMax': plugin.user_max_points(),
-                'deadline': plugin.deadline(),
-                'starttime': plugin.starttime(),
-                'answerLimit': plugin.answer_limit(),
-                'triesText': plugin.values.get('triesText', 'Tries left:'),
-                'pointsText': plugin.values.get('pointsText', 'Points:')
-                }
     return json_response(tim_vars)
 
 

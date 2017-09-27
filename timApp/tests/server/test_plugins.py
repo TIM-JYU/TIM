@@ -614,8 +614,8 @@ class PluginTest(TimRouteTest):
 
         p.set_value('starttime', 'asdasd')
         p.save()
-        err = self.post_answer(p.type, p.full_task_id, [], expect_status=400)
-        self.assertDictEqual({'error': 'Invalid date format: asdasd'}, err)
+        self.post_answer(p.type, p.full_task_id, [], expect_status=400, expect_content={'error': 'Invalid date format: asdasd'})
+        self.get(f'/taskinfo/{p.full_task_id}', expect_status=400, expect_content={'error': 'Invalid date format: asdasd'})
 
     def test_deadline_datetime(self):
         self.login_test1()
