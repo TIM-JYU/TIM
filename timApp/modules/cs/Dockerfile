@@ -91,7 +91,17 @@ RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
 RUN add-apt-repository ppa:octave/stable
 # RUN ${APT_INSTALL} octave-statistics && ${APT_CLEANUP}
 # RUN ${APT_INSTALL} octave octave-control octave-image octave-io octave-optim octave-signal octave-statistics && ${APT_CLEANUP}
-RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic gnuplot5 pstoedit liboctave-dev && ${APT_CLEANUP}"
+RUN wget -q \
+ http://downloads.sourceforge.net/octave/statistics-1.3.0.tar.gz \
+ http://downloads.sourceforge.net/octave/struct-1.0.14.tar.gz \
+ http://downloads.sourceforge.net/octave/optim-1.5.2.tar.gz \
+ http://downloads.sourceforge.net/octave/io-2.4.7.tar.gz && \
+ printf "pkg install io-2.4.7.tar.gz" | octave && \
+ printf "pkg install statistics-1.3.0.tar.gz" | octave && \
+ printf "pkg install struct-1.0.14.tar.gz" | octave && \
+ printf "pkg install optim-1.5.2.tar.gz" | octave && \
+ rm statistics-1.3.0.tar.gz struct-1.0.14.tar.gz optim-1.5.2.tar.gz io-2.4.7.tar.gz
 
 RUN bash -c "${APT_INSTALL} lua5.2 && ${APT_CLEANUP}"
 
