@@ -1,11 +1,9 @@
-# Aloitetaan cs3:n imagesta
-from timimages/cs3:compose
-user root
-run apt-get update
-run apt-get install -y openssh-server
-run mkdir /var/run/sshd
-run echo 'root:test' | chpasswd
-run sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+FROM timimages/cs3:compose
+USER root
+RUN bash -c "${APT_INSTALL} openssh-server && ${APT_CLEANUP}"
+RUN mkdir /var/run/sshd
+RUN echo 'root:test' | chpasswd
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 RUN echo agent:kissa | chpasswd
 
 ENV LANG en_US.UTF-8
@@ -13,5 +11,5 @@ ENV CLASSPATH .:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.j
 ENV MONO_PATH /cs/jypeli
 
 expose 22
-# CMD service  /opt/cs/startAllSudo.sh && /bin/bash -c "su agent"
-CMD service  ssh start && /bin/bash -c "su agent"
+# CMD service /opt/cs/startAllSudo.sh && /bin/bash -c "su agent"
+CMD service ssh start && /bin/bash -c "su agent"
