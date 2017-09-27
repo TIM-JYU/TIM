@@ -162,6 +162,8 @@ RUN wget -q https://cran.r-project.org/src/contrib/fICA_1.1-0.tar.gz && \
     R CMD INSTALL fICA_1.1-0.tar.gz && \
     rm *.tar.gz
 
+RUN bash -c "${APT_INSTALL} python3-tk && ${APT_CLEANUP}"
+
 RUN useradd -m agent
 ENV HOME /home/agent
 RUN mkdir -p /service
