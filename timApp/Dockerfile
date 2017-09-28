@@ -14,14 +14,13 @@ RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 
 # Install Python, pip and other necessary packages
 
-RUN bash -c "${APT_INSTALL} openssh-server python3.6 && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} openssh-server wget ca-certificates python3.6 && ${APT_CLEANUP}"
 
 # Make Python 3.6 the default one
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.5 1 && \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
     python3 -V
 
-RUN bash -c "${APT_INSTALL} python3-setuptools python3-pip && pip3 install --upgrade pip && ${APT_CLEANUP}"
+RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && rm get-pip.py
 
 # lxml dependencies
 # C-parser for PyYAML
@@ -33,6 +32,10 @@ RUN bash -c "${APT_INSTALL} git-core \
  gcc g++ \
  libmagickwand-dev \
  && ${APT_CLEANUP}"
+
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.5 1 && \
+    python3 -V
 
 # Install texlive
 #
@@ -74,7 +77,6 @@ RUN pip3 install python-dateutil
 RUN pip3 install cssselect
 
 # Install pandoc document converter and pypandoc, a python interface for pandoc
-RUN bash -c "${APT_INSTALL} wget && ${APT_CLEANUP}"
 RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/1.19.2.1/pandoc-1.19.2.1-1-amd64.deb" -qO $FILE && dpkg -i $FILE && rm $FILE
 
 RUN pip3 install flask-migrate
