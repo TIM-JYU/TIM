@@ -14,12 +14,14 @@ RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 
 # Install Python, pip and other necessary packages
 
-RUN bash -c "${APT_INSTALL} openssh-server python3.6 python3-setuptools python3-pip && pip3 install --upgrade pip && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} openssh-server python3.6 && ${APT_CLEANUP}"
 
 # Make Python 3.6 the default one
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.5 1 && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
     python3 -V
+
+RUN bash -c "${APT_INSTALL} python3-setuptools python3-pip && pip3 install --upgrade pip && ${APT_CLEANUP}"
 
 # lxml dependencies
 # C-parser for PyYAML
