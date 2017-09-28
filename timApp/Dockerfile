@@ -105,63 +105,59 @@ texlive-science \
 texlive-xetex \
 && ${APT_CLEANUP}"
 
-ENV PIP_INSTALL="python3 -m pip install"
-RUN ${PIP_INSTALL} wheel
-RUN ${PIP_INSTALL} psycopg2
-RUN ${PIP_INSTALL} sqlalchemy
-RUN ${PIP_INSTALL} flask
-RUN ${PIP_INSTALL} flask-compress
-RUN ${PIP_INSTALL} flask-cache
-RUN ${PIP_INSTALL} flask-sqlalchemy
-RUN ${PIP_INSTALL} beautifulsoup4
-RUN ${PIP_INSTALL} lxml
-RUN ${PIP_INSTALL} pyaml
-RUN ${PIP_INSTALL} ansi2html
-RUN ${PIP_INSTALL} cssutils
-RUN ${PIP_INSTALL} mmh3
-RUN ${PIP_INSTALL} pandocfilters
-RUN ${PIP_INSTALL} pypandoc
-RUN ${PIP_INSTALL} pylatex
-
 RUN bash -c "${APT_INSTALL} libffi-dev && ${APT_CLEANUP}"
 ENV LD_LIBRARY_PATH /usr/local/lib
-RUN ${PIP_INSTALL} cffi
-
-RUN ${PIP_INSTALL} gunicorn gevent
-RUN ${PIP_INSTALL} python-magic
-RUN ${PIP_INSTALL} git+git://github.com/miracle2k/webassets.git
-RUN ${PIP_INSTALL} libsass
-RUN ${PIP_INSTALL} flask-assets
-RUN ${PIP_INSTALL} yubico-client
-RUN ${PIP_INSTALL} pytz  # Not necessarily needed after all, as Python stdlib supports UTC
-RUN ${PIP_INSTALL} python-dateutil
-RUN ${PIP_INSTALL} cssselect
-
-# Install pandoc document converter and pypandoc, a python interface for pandoc
-RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/1.19.2.1/pandoc-1.19.2.1-1-amd64.deb" -qO $FILE && dpkg -i $FILE && rm $FILE
-
-RUN ${PIP_INSTALL} flask-migrate
-RUN ${PIP_INSTALL} selenium
-RUN ${PIP_INSTALL} flask-testing
-RUN ${PIP_INSTALL} isodate
-RUN ${PIP_INSTALL} humanize
-RUN ${PIP_INSTALL} autopep8
-RUN ${PIP_INSTALL} git+git://github.com/dadadel/pyment.git
-RUN ${PIP_INSTALL} docformatter
-RUN ${PIP_INSTALL} filelock
-RUN ${PIP_INSTALL} mypy
-RUN ${PIP_INSTALL} pillow
-RUN ${PIP_INSTALL} wand
 
 # sphinxcontrib-httpdomain does not work with 1.6
-RUN ${PIP_INSTALL} sphinx==1.5.6
-RUN ${PIP_INSTALL} sphinxcontrib-httpdomain
-RUN ${PIP_INSTALL} recommonmark
+ENV PIP_INSTALL="python3 -m pip install" \
+    PIP_CLEANUP="rm -r ~/.cache/pip"
+RUN bash -c "${PIP_INSTALL} \
+ansi2html \
+autopep8 \
+beautifulsoup4 \
+cffi \
+cssselect \
+cssutils \
+docformatter \
+filelock \
+flask \
+flask-assets \
+flask-cache \
+flask-compress \
+flask-migrate \
+flask-sqlalchemy \
+flask-testing \
+gevent \
+git+git://github.com/dadadel/pyment.git \
+git+git://github.com/miracle2k/webassets.git \
+gunicorn \
+humanize \
+isodate \
+libsass \
+lxml \
+mmh3 \
+mypy \
+pandocfilters \
+pillow \
+psycopg2 \
+pyaml \
+pylatex \
+pypandoc \
+python-dateutil \
+python-magic \
+pytz \
+recommonmark \
+selenium \
+sphinx==1.5.6 \
+sphinxcontrib-httpdomain \
+sqlalchemy \
+wand \
+wheel \
+yubico-client \
+&& ${PIP_INSTALL} requests --upgrade && ${PIP_CLEANUP}"
 
-# requests must be the last package to be installed!
-# After this, pip3 stops working because it depends
-# on older version of requests package.
-RUN ${PIP_INSTALL} requests --upgrade
+# Install Pandoc document converter
+RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/1.19.2.1/pandoc-1.19.2.1-1-amd64.deb" -qO $FILE && dpkg -i $FILE && rm $FILE
 
 # Set name and email for git.
 RUN git config --global user.email "agent@docker.com"
