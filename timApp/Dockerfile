@@ -44,29 +44,21 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 
 # i.e. the whole package archive needs to be pre-installed or the set of usable packages needs to be
 # severely limited
 RUN bash -c "${APT_INSTALL} \
-asymptote \
 biber \
-chktex \
 cm-super \
-context \
 dvidvi \
 dvipng \
 feynmf \
 fragmaster \
-info \
-lacheck \
 latex-cjk-all \
-latexdiff \
 latexmk \
 lcdf-typetools \
 lmodern \
-prerex \
 prosper \
 psutils \
 purifyeps \
 t1utils \
 tex-gyre \
-texinfo \
 texlive-base \
 texlive-bibtex-extra \
 texlive-binaries \
@@ -112,7 +104,6 @@ texlive-pstricks \
 texlive-publishers \
 texlive-science \
 texlive-xetex \
-tipa \
 && ${APT_CLEANUP}"
 
 RUN pip3 install wheel
