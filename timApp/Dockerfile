@@ -37,12 +37,11 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.5 1 && \
     python3 -V
 
-# Install texlive
-#
-# Full install of texlive is needed for the latex-pdf printing functionality, as
-# texlive doesn't have an (MiKTeX/MacTeX-esque) auto-install functionality for missing latex packages
+# Install dependencies of texlive-full excluding packages that are not needed (such as documentation files).
+# This almost-full installation of TeX Live is needed for the latex-pdf printing functionality, as
+# TeX Live doesn't have an (MiKTeX/MacTeX-esque) auto-install functionality for missing LaTeX packages,
 # i.e. the whole package archive needs to be pre-installed or the set of usable packages needs to be
-# severely limited
+# severely limited.
 RUN bash -c "${APT_INSTALL} \
 biber \
 cm-super \
