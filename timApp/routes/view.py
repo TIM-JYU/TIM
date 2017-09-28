@@ -243,13 +243,13 @@ def view(item_path, template_name, usergroup=None, route="view"):
         if not verify_teacher_access(doc_id, require=False, check_duration=True):
             if verify_view_access(doc_id):
                 flash("Did someone give you a wrong link? Showing normal view instead of teacher view.")
-                return redirect('/view/' + item_path)
+                return redirect(f'/view/{item_path}')
 
     if route == 'answers':
         if not verify_seeanswers_access(doc_id, require=False, check_duration=True):
             if verify_view_access(doc_id):
                 flash("Did someone give you a wrong link? Showing normal view instead of see answers view.")
-                return redirect('/view/' + item_path)
+                return redirect(f'/view/{item_path}')
 
     access = verify_view_access(doc_id, require=False, check_duration=True)
     if not access:

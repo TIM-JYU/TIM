@@ -1,3 +1,5 @@
+from flask import current_app
+
 from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.models.block import Block
 from timApp.utils import split_location, date_to_relative
@@ -26,6 +28,14 @@ class Item:
     def path_without_lang(self):
         """Returns the Document path without the language part in case of a translation."""
         raise NotImplementedError
+
+    @property
+    def url(self):
+        return current_app.config['TIM_HOST'] + self.url_relative
+
+    @property
+    def url_relative(self):
+        return '/view/' + self.path
 
     @property
     def location(self):

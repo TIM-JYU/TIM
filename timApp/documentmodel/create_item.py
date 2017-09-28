@@ -64,7 +64,7 @@ def create_item(item_path, item_type_str, item_title, create_function, owner_gro
         bms = Bookmarks(get_current_user_object())
         bms.add_bookmark('Last edited',
                          item.title,
-                         '/view/' + item.path,
+                         item.url_relative,
                          move_to_top=True,
                          limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
     copy_default_rights(item.id, item_type)

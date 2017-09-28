@@ -64,7 +64,7 @@ def mark_last_read(doc_id):
     d = DocEntry.find_by_id(doc_id, try_translation=True)
     g.bookmarks.add_bookmark('Last read',
                              d.title,
-                             '/view/' + d.path,
+                             d.url_relative,
                              move_to_top=True,
                              limit=current_app.config['LAST_READ_BOOKMARK_LIMIT']).save_bookmarks()
     return get_bookmarks()

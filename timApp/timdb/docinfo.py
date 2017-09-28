@@ -1,7 +1,5 @@
 from typing import List
 
-from flask import current_app
-
 from timApp.documentmodel.document import Document
 from timApp.timdb.item import Item
 from timApp.timdb.models.notification import NotificationType, Notification
@@ -28,14 +26,6 @@ class DocInfo(Item):
     def is_original_translation(self):
         """Returns whether this object is the document from which other translated documents were created."""
         return self.id == self.src_docid
-
-    @property
-    def url(self):
-        return current_app.config['TIM_HOST'] + self.url_relative
-
-    @property
-    def url_relative(self):
-        return '/view/' + self.path
 
     @property
     def src_docid(self):

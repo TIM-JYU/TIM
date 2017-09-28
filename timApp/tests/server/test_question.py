@@ -9,7 +9,7 @@ class QuestionTest(TimLiveServer, TimRouteTest):
         self.login_test1()
         d = self.create_doc(from_file='example_docs/questions.md')
         pars = d.document.get_paragraphs()
-        data = self.get('/view/' + d.path, as_tree=True)
+        data = self.get(d.url_relative, as_tree=True)
         first_id = pars[0].get_id()
         expected_element = html.fromstring(
             f"""

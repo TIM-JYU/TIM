@@ -29,7 +29,7 @@ class TimTest(TimRouteTest):
 
         # Make sure user's personal folder exists
         personal_folder = self.current_user.get_personal_folder().path
-        self.get('/view/' + personal_folder)
+        self.get(f'/view/{personal_folder}')
 
         doc_names = [personal_folder + '/testing',
                      personal_folder + '/testing2',
@@ -69,7 +69,7 @@ class TimTest(TimRouteTest):
         note_id = int(re.search(r'note-id="(\d+)"', json['texts']).groups()[0])
 
         self.assertTrue(comment_of_test1_html in json['texts'])
-        self.get('/view/' + doc_name, expect_contains=comment_of_test1_html)
+        self.get(f'/view/{doc_name}', expect_contains=comment_of_test1_html)
         edited_comment = 'was edited!'
         edited_comment_html = md_to_html(edited_comment)
         json = self.json_post('/editNote', {'id': note_id,
@@ -100,22 +100,22 @@ class TimTest(TimRouteTest):
         self.post('/logout', follow_redirects=True)
         self.get('/settings/', expect_status=403)
         for d in doc_ids - {doc_id}:
-            self.get('/view/' + str(d), expect_status=403)
-        self.get('/view/' + str(doc_id))
-        self.get('/view/' + str(doc_id), query_string={'login': True}, expect_status=403)
+            self.get(f'/view/{d}', expect_status=403)
+        self.get(f'/view/{doc_id}')
+        self.get(f'/view/{doc_id}', query_string={'login': True}, expect_status=403)
 
         # Login as another user
         self.login_test2()
-        self.get('/view/' + doc_name, expect_contains=['Test user 2', edited_comment_html])
+        self.get(f'/view/{doc_name}', expect_contains=['Test user 2', edited_comment_html])
         not_viewable_docs = {doc_id_list[4]}
         viewable_docs = doc_ids - not_viewable_docs
         for view_id in viewable_docs:
-            self.get('/view/' + str(view_id))
-            self.get('/teacher/' + str(view_id), expect_status=302)
+            self.get(f'/view/{view_id}')
+            self.get(f'/teacher/{view_id}', expect_status=302)
 
         for view_id in not_viewable_docs:
-            self.get('/view/' + str(view_id), expect_status=403)
-            self.get('/teacher/' + str(view_id), expect_status=403)
+            self.get(f'/view/{view_id}', expect_status=403)
+            self.get(f'/teacher/{view_id}', expect_status=403)
         self.get('/view/not_exist', expect_status=404)
 
         comment_of_test2 = 'g8t54h954hy95hg54h'
@@ -154,12 +154,12 @@ class TimTest(TimRouteTest):
 
         self.login_test2()
         for view_id in viewable_docs - teacher_right_docs:
-            self.get('/view/' + str(view_id))
+            self.get(f'/view/{view_id}')
             self.get('/teacher/' + str(view_id), expect_status=302)
             self.json_put(f'/permissions/add/{view_id}/{"testuser2"}/{"teacher"}', {'type': 'always'}, expect_status=403)
         for view_id in teacher_right_docs:
-            self.get('/view/' + str(view_id))
-            self.get('/teacher/' + str(view_id))
+            self.get(f'/view/{view_id}')
+            self.get(f'/teacher/{view_id}')
             self.json_put(f'/permissions/add/{view_id}/{"testuser2"}/{"teacher"}', {'type': 'always'}, expect_status=403)
 
     def test_same_heading_as_par(self):

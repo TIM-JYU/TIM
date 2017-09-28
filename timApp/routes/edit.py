@@ -340,7 +340,7 @@ def par_response(pars,
             if d is not None:
                 bms.add_bookmark('Last edited',
                                  d.title,
-                                 '/view/' + d.path,
+                                 d.url_relative,
                                  move_to_top=True,
                                  limit=current_app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
     else:
