@@ -43,7 +43,88 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 
 # texlive doesn't have an (MiKTeX/MacTeX-esque) auto-install functionality for missing latex packages
 # i.e. the whole package archive needs to be pre-installed or the set of usable packages needs to be
 # severely limited
-RUN bash -c "${APT_INSTALL} texlive-full && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} \
+asymptote \
+biber \
+chktex \
+cm-super \
+context \
+dvidvi \
+dvipng \
+feynmf \
+fragmaster \
+info \
+lacheck \
+latex-cjk-all \
+latexdiff \
+latexmk \
+lcdf-typetools \
+lmodern \
+prerex \
+prosper \
+psutils \
+purifyeps \
+t1utils \
+tex-gyre \
+texinfo \
+texlive-base \
+texlive-bibtex-extra \
+texlive-binaries \
+texlive-extra-utils \
+texlive-font-utils \
+texlive-fonts-extra \
+texlive-fonts-extra-doc \
+texlive-fonts-recommended \
+texlive-fonts-recommended-doc \
+texlive-formats-extra \
+texlive-games \
+texlive-generic-extra \
+texlive-generic-recommended \
+texlive-htmlxml \
+texlive-humanities \
+texlive-humanities-doc \
+texlive-lang-african \
+texlive-lang-arabic \
+texlive-lang-chinese \
+texlive-lang-cjk \
+texlive-lang-cyrillic \
+texlive-lang-czechslovak \
+texlive-lang-english \
+texlive-lang-european \
+texlive-lang-french \
+texlive-lang-german \
+texlive-lang-greek \
+texlive-lang-indic \
+texlive-lang-italian \
+texlive-lang-japanese \
+texlive-lang-korean \
+texlive-lang-other \
+texlive-lang-polish \
+texlive-lang-portuguese \
+texlive-lang-spanish \
+texlive-latex-base \
+texlive-latex-base-doc \
+texlive-latex-extra \
+texlive-latex-extra-doc \
+texlive-latex-recommended \
+texlive-latex-recommended-doc \
+texlive-luatex \
+texlive-metapost \
+texlive-metapost-doc \
+texlive-music \
+texlive-omega \
+texlive-pictures \
+texlive-pictures-doc \
+texlive-plain-extra \
+texlive-pstricks \
+texlive-pstricks-doc \
+texlive-publishers \
+texlive-publishers-doc \
+texlive-science \
+texlive-science-doc \
+texlive-xetex \
+tipa \
+&& ${APT_CLEANUP}"
 
 RUN pip3 install wheel
 RUN pip3 install psycopg2
