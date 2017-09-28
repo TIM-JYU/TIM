@@ -128,7 +128,7 @@ flask-migrate \
 flask-sqlalchemy \
 flask-testing \
 gevent \
-git+git://github.com/dadadel/pyment.git \
+git+git://github.com/dadadel/pyment.git@baaccc191db74e88c13f0cc27951a46938249a08 \
 git+git://github.com/miracle2k/webassets.git \
 gunicorn \
 humanize \
