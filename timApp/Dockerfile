@@ -105,62 +105,63 @@ texlive-science \
 texlive-xetex \
 && ${APT_CLEANUP}"
 
-RUN pip3 install wheel
-RUN pip3 install psycopg2
-RUN pip3 install sqlalchemy
-RUN pip3 install flask
-RUN pip3 install flask-compress
-RUN pip3 install flask-cache
-RUN pip3 install flask-sqlalchemy
-RUN pip3 install beautifulsoup4
-RUN pip3 install lxml
-RUN pip3 install pyaml
-RUN pip3 install ansi2html
-RUN pip3 install cssutils
-RUN pip3 install mmh3
-RUN pip3 install pandocfilters
-RUN pip3 install pypandoc
-RUN pip3 install pylatex
+ENV PIP_INSTALL="python3 -m pip install"
+RUN ${PIP_INSTALL} wheel
+RUN ${PIP_INSTALL} psycopg2
+RUN ${PIP_INSTALL} sqlalchemy
+RUN ${PIP_INSTALL} flask
+RUN ${PIP_INSTALL} flask-compress
+RUN ${PIP_INSTALL} flask-cache
+RUN ${PIP_INSTALL} flask-sqlalchemy
+RUN ${PIP_INSTALL} beautifulsoup4
+RUN ${PIP_INSTALL} lxml
+RUN ${PIP_INSTALL} pyaml
+RUN ${PIP_INSTALL} ansi2html
+RUN ${PIP_INSTALL} cssutils
+RUN ${PIP_INSTALL} mmh3
+RUN ${PIP_INSTALL} pandocfilters
+RUN ${PIP_INSTALL} pypandoc
+RUN ${PIP_INSTALL} pylatex
 
 RUN bash -c "${APT_INSTALL} libffi-dev && ${APT_CLEANUP}"
 ENV LD_LIBRARY_PATH /usr/local/lib
-RUN pip3 install cffi
+RUN ${PIP_INSTALL} cffi
 
-RUN pip3 install gunicorn gevent
-RUN pip3 install python-magic
-RUN pip3 install git+git://github.com/miracle2k/webassets.git
-RUN pip3 install libsass
-RUN pip3 install flask-assets
-RUN pip3 install yubico-client
-RUN pip3 install pytz  # Not necessarily needed after all, as Python stdlib supports UTC
-RUN pip3 install python-dateutil
-RUN pip3 install cssselect
+RUN ${PIP_INSTALL} gunicorn gevent
+RUN ${PIP_INSTALL} python-magic
+RUN ${PIP_INSTALL} git+git://github.com/miracle2k/webassets.git
+RUN ${PIP_INSTALL} libsass
+RUN ${PIP_INSTALL} flask-assets
+RUN ${PIP_INSTALL} yubico-client
+RUN ${PIP_INSTALL} pytz  # Not necessarily needed after all, as Python stdlib supports UTC
+RUN ${PIP_INSTALL} python-dateutil
+RUN ${PIP_INSTALL} cssselect
 
 # Install pandoc document converter and pypandoc, a python interface for pandoc
 RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/1.19.2.1/pandoc-1.19.2.1-1-amd64.deb" -qO $FILE && dpkg -i $FILE && rm $FILE
 
-RUN pip3 install flask-migrate
-RUN pip3 install selenium
-RUN pip3 install flask-testing
-RUN pip3 install isodate
-RUN pip3 install humanize
-RUN pip3 install autopep8
-RUN pip3 install git+git://github.com/dadadel/pyment.git
-RUN pip3 install docformatter
-RUN pip3 install filelock
-RUN pip3 install mypy
-RUN pip3 install pillow
-RUN pip3 install wand
+RUN ${PIP_INSTALL} flask-migrate
+RUN ${PIP_INSTALL} selenium
+RUN ${PIP_INSTALL} flask-testing
+RUN ${PIP_INSTALL} isodate
+RUN ${PIP_INSTALL} humanize
+RUN ${PIP_INSTALL} autopep8
+RUN ${PIP_INSTALL} git+git://github.com/dadadel/pyment.git
+RUN ${PIP_INSTALL} docformatter
+RUN ${PIP_INSTALL} filelock
+RUN ${PIP_INSTALL} mypy
+RUN ${PIP_INSTALL} pillow
+RUN ${PIP_INSTALL} wand
 
 # sphinxcontrib-httpdomain does not work with 1.6
-RUN pip3 install sphinx==1.5.6
-RUN pip3 install sphinxcontrib-httpdomain
-RUN pip3 install recommonmark
+RUN ${PIP_INSTALL} sphinx==1.5.6
+RUN ${PIP_INSTALL} sphinxcontrib-httpdomain
+RUN ${PIP_INSTALL} recommonmark
 
 # requests must be the last package to be installed!
 # After this, pip3 stops working because it depends
 # on older version of requests package.
-RUN pip3 install requests --upgrade
+RUN ${PIP_INSTALL} requests --upgrade
 
 # Set name and email for git.
 RUN git config --global user.email "agent@docker.com"
