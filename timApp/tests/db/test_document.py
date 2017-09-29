@@ -258,7 +258,7 @@ class DocumentTest(TimDbTest):
         macro_par = d.add_paragraph(
             'this is %%testmacro%% and year is %%year%% and user is %%username%% and %%nonexistent%%')
         macro_par = d.get_paragraph(macro_par.get_id())  # Put the paragraph in cache
-        self.assertDictEqual({'macros': {'testmacro': 'testvalue', 'year': '2015'},
+        self.assertEqual({'macros': {'testmacro': 'testvalue', 'year': '2015'},
                               'macro_delimiter': '%%'}, d.get_settings().get_dict())
 
         # User-specific macros should be preserved

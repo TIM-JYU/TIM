@@ -26,7 +26,7 @@ yaml_loader = CLoader
 
 class YamlBlock:
     def __init__(self, values: dict = None, merge_hints: Optional[YamlMergeInfo] = None):
-        self.values = values
+        self.values = values if values is not None else {}
         self.merge_hints = merge_hints
 
     def __eq__(self, o: object) -> bool:
@@ -43,6 +43,15 @@ class YamlBlock:
 
     def __repr__(self):
         return f'{self.__class__.__name__}({self.__dict__})'
+
+    def __setitem__(self, key: str, value):
+        self.values.__setitem__(key, value)
+
+    def __getitem__(self, item: str):
+        return self.values.__getitem__(item)
+
+    def get(self, key: str, default=None):
+        return self.values.get(key, default)
 
     @staticmethod
     def from_markdown(md: str):

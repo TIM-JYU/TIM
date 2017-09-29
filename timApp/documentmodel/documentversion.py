@@ -70,7 +70,7 @@ class DocumentVersion(Document):
         else:
             return DocParagraph.get_latest(self.doc_id, par_id, self.files_root)
 
-    def get_settings(self, user=None) -> DocSettings:
+    def get_settings(self, user=None, include_references=True) -> DocSettings:
         if self.settings is None:
             self.settings = super(DocumentVersion, self).get_settings(user)
         return self.settings

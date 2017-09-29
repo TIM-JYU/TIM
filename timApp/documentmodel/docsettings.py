@@ -1,10 +1,11 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple, Iterable
 
 import yaml
 
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.macroinfo import MacroInfo
 from timApp.documentmodel.yamlblock import YamlBlock
+from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException
 
 
@@ -54,7 +55,7 @@ class DocSettings:
         """
         if par.is_reference() and not par.is_translation():
             try:
-                par = par.get_referenced_pars(set_html=True, source_doc=par.doc)[0]
+                par = par.get_referenced_pars(set_html=False, source_doc=par.doc)[0]
             except TimDbException as e:
                 # Invalid reference, ignore for now
                 return DocSettings(par.doc)
@@ -68,19 +69,19 @@ class DocSettings:
             return DocSettings(par.doc)
 
     @staticmethod
-    def parse_values(par):
-        return YamlBlock.from_markdown(par.get_markdown()).values
+    def parse_values(par) -> YamlBlock:
+        return YamlBlock.from_markdown(par.get_markdown())
 
-    def __init__(self, doc: 'Document', settings_dict: Optional[dict] = None):
+    def __init__(self, doc: 'Document', settings_dict: Optional[YamlBlock] = None):
         self.doc = doc
-        self.__dict = settings_dict if settings_dict else {}
+        self.__dict = settings_dict if settings_dict else YamlBlock()
         self.user = None
 
     def to_paragraph(self) -> DocParagraph:
-        text = '```\n' + yaml.dump(self.__dict, default_flow_style=False) + '\n```'
+        text = '```\n' + yaml.dump(self.__dict.values, default_flow_style=False) + '\n```'
         return DocParagraph.create(self.doc, md=text, attrs={"settings": ""})
 
-    def get_dict(self) -> dict:
+    def get_dict(self) -> YamlBlock:
         return self.__dict
 
     def global_plugin_attrs(self) -> dict:
@@ -91,7 +92,7 @@ class DocSettings:
 
     def get_macroinfo(self, user=None, key=None) -> MacroInfo:
         if not key:
-            key=self.macros_key
+            key = self.macros_key
         return MacroInfo(self.doc, macro_map=self.__dict.get(key, {}),
                          macro_delimiter=self.get_macro_delimiter(),
                          user=user, nocache_user=self.user)
@@ -208,3 +209,32 @@ class DocSettings:
     def is_texplain(self):
         texplain = self.__dict.get('texplain', False)
         return texplain
+
+
+def resolve_final_settings(pars: Iterable[DocParagraph]) -> YamlBlock:
+    result, _ = __resolve_final_settings_impl(pars)
+    return result
+
+
+def __resolve_final_settings_impl(pars: Iterable[DocParagraph]) -> Tuple[YamlBlock, bool]:
+    result = YamlBlock()
+    had_settings = False
+    for curr in pars:
+        if curr.is_setting():
+            settings = DocSettings.from_paragraph(curr)
+            result = result.merge_with(settings.get_dict())
+            had_settings = True
+        elif curr.is_reference() and not curr.is_translation():
+            try:
+                refs = curr.get_referenced_pars(set_html=False)
+            except InvalidReferenceException:
+                break
+            ref_settings, ref_had_settings = __resolve_final_settings_impl(refs)
+            if ref_had_settings:
+                result = result.merge_with(ref_settings)
+                had_settings = True
+            else:
+                break
+        else:
+            break
+    return result, had_settings

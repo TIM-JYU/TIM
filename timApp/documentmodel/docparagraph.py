@@ -118,8 +118,8 @@ class DocParagraph:
         """
         return create_reference(doc, doc_id=self.get_doc_id(), par_id=self.get_id(), r=r, add_rd=add_rd)
 
-    @classmethod
-    def create_area_reference(cls, doc, area_name: str, r: Optional[str] = None, add_rd: Optional[bool] = True,
+    @staticmethod
+    def create_area_reference(doc, area_name: str, r: Optional[str] = None, rd: Optional[int] = None,
                               files_root: Optional[str] = None) -> 'DocParagraph':
         """Creates an area reference paragraph.
 
@@ -133,7 +133,7 @@ class DocParagraph:
         """
         par = DocParagraph.create(doc, files_root=files_root)
         par.set_attr('r', r)
-        par.set_attr('rd', doc.doc_id if add_rd else None)
+        par.set_attr('rd', doc.doc_id if rd is None else rd)
         par.set_attr('ra', area_name)
         par.set_attr('rp', None)
 
