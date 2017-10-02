@@ -421,10 +421,11 @@ class DocParagraph:
         """Returns the HTML for the settings paragraph."""
         from timApp.documentmodel.docsettings import DocSettings
 
-        if DocSettings.is_valid_paragraph(self):
-            return '<p class="docsettings">&nbsp;</p>'
-        else:
-            return '<div class="pluginError">Invalid settings paragraph detected</div>'
+        try:
+            DocSettings.settings_to_string(self)
+        except TimDbException as e:
+            return f'<div class="pluginError">Invalid settings: {e}</div>'
+        return '<p class="docsettings">&nbsp;</p>'
 
     def get_html(self, from_preview: bool = True) -> str:
         """Returns the html for the paragraph.

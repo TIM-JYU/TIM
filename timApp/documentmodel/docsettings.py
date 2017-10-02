@@ -32,41 +32,33 @@ class DocSettings:
     plugin_md_key = 'plugin_md'
     print_settings_key = 'print_settings'
 
-    @classmethod
-    def is_valid_paragraph(cls, par):
+    @staticmethod
+    def settings_to_string(par: DocParagraph) -> str:
+        if not par.is_setting():
+            raise TimDbException(f'Not a setting paragraph: {par.get_id()}')
         if par.is_reference() and not par.is_translation():
             par = par.get_referenced_pars(set_html=False)[0]
         if not par.is_setting():
-            return True
-        try:
-            DocSettings.parse_values(par)
-        except Exception as e:
-            return False
-        return True
+            raise TimDbException(f'The referenced paragraph is not a setting paragraph.')
+        yb = DocSettings.parse_values(par)
+        return str(yb.values)
 
     @classmethod
-    def from_paragraph(cls, par):
+    def from_paragraph(cls, par: DocParagraph):
         """Constructs DocSettings from the given DocParagraph.
 
         :param par: The DocParagraph to extract settings from.
-        :type par: DocParagraph
         :return: The DocSettings object.
 
         """
-        if par.is_reference() and not par.is_translation():
-            try:
-                par = par.get_referenced_pars(set_html=False, source_doc=par.doc)[0]
-            except TimDbException as e:
-                # Invalid reference, ignore for now
-                return DocSettings(par.doc)
-        if par.is_setting():
-            try:
-                yaml_vals = DocSettings.parse_values(par)
-                return DocSettings(par.doc, settings_dict=yaml_vals)
-            except Exception:
-                return DocSettings(par.doc)
+        if not par.is_setting():
+            raise TimDbException(f'Not a settings paragraph: {par.get_id()}')
+        try:
+            yaml_vals = DocSettings.parse_values(par)
+        except yaml.YAMLError as e:
+            raise TimDbException(f'Invalid YAML: {e}')
         else:
-            return DocSettings(par.doc)
+            return DocSettings(par.doc, settings_dict=yaml_vals)
 
     @staticmethod
     def parse_values(par) -> YamlBlock:
@@ -220,11 +212,16 @@ def __resolve_final_settings_impl(pars: Iterable[DocParagraph]) -> Tuple[YamlBlo
     result = YamlBlock()
     had_settings = False
     for curr in pars:
-        if curr.is_setting():
-            settings = DocSettings.from_paragraph(curr)
+        if not curr.is_setting():
+            break
+        if not curr.is_reference():
+            try:
+                settings = DocSettings.from_paragraph(curr)
+            except TimDbException:
+                break
             result = result.merge_with(settings.get_dict())
             had_settings = True
-        elif curr.is_reference() and not curr.is_translation():
+        elif not curr.is_translation():
             try:
                 refs = curr.get_referenced_pars(set_html=False)
             except InvalidReferenceException:
