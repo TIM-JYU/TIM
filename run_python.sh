@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-./run_command.sh python3 "$@"
+./run_command_workdir.sh '' python3 "$@"

@@ -148,19 +148,16 @@ RUN chmod -R 755 /usr/lib/swift
 
 # R packages
 
-RUN bash -c "${APT_INSTALL} r-cran-mvtnorm gcc g++ liblapack-dev liblapack3 libopenblas-base libopenblas-dev gfortran && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-base libopenblas-dev gfortran && ${APT_CLEANUP}"
 
-RUN wget -q https://cran.r-project.org/src/contrib/fICA_1.1-0.tar.gz && \
-    wget -q https://cran.r-project.org/src/contrib/JADE_2.0-0.tar.gz && \
-    wget -q https://cran.r-project.org/src/contrib/clue_0.3-54.tar.gz && \
-    wget -q https://cran.r-project.org/src/contrib/Rcpp_0.12.12.tar.gz && \
-    wget -q https://cran.r-project.org/src/contrib/RcppArmadillo_0.7.960.1.2.tar.gz && \
-    R CMD INSTALL clue_0.3-54.tar.gz && \
-    R CMD INSTALL JADE_2.0-0.tar.gz && \
-    R CMD INSTALL Rcpp_0.12.12.tar.gz && \
-    R CMD INSTALL RcppArmadillo_0.7.960.1.2.tar.gz && \
-    R CMD INSTALL fICA_1.1-0.tar.gz && \
-    rm *.tar.gz
+RUN echo 'options(repos=structure(c(CRAN="https://cloud.r-project.org/")))' > ~/.Rprofile
+
+RUN bash -c "${APT_INSTALL} cmake" && \
+    git clone git://github.com/stevengj/nlopt && \
+    cd nlopt && cmake -DCMAKE_CXX_FLAGS=-std=c++11 . && make && make install && cd .. && rm -r nlopt && apt-get remove -y cmake && ${APT_CLEANUP}
+
+RUN ldconfig
+RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArmadillo", "psych", "GPArotation", "candisc", "car", "heplots"))'
 
 RUN bash -c "${APT_INSTALL} python3-tk && ${APT_CLEANUP}"
 RUN pip3 install sympy

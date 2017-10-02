@@ -4,4 +4,4 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-. ${DIR}/docker-compose.sh run --workdir="/service/$1" tim "${@:2}"
+. ${DIR}/docker-compose.sh run --rm --workdir="/service/$1" tim "${@:2}"
