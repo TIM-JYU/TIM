@@ -7,6 +7,7 @@ from timApp.tim_app import app
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
+from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.timdbexception import TimDbException
 
 
@@ -20,10 +21,12 @@ class BasicArguments:
 
 def enum_docs(folder: Optional[Folder] = None) -> Generator[DocInfo, None, None]:
     visited_docs = set()
+    admin_id = UserGroup.get_admin_group().id
     if not folder:
         folder = Folder.get_root()
     for d in folder.get_all_documents(include_subdirs=True):
         for t in d.translations:
+            t.document.modifier_group_id = admin_id
             if t.id in visited_docs:
                 continue
             visited_docs.add(t.id)
@@ -45,6 +48,7 @@ def enum_pars(item: Union[Folder, DocInfo, None] = None) -> Generator[Tuple[DocI
     if isinstance(item, Folder) or item is None:
         collection = enum_docs(item)
     else:
+        item.document.modifier_group_id = UserGroup.get_admin_group().id
         collection = [item]
     for d in collection:
         for p in iterate_pars_skip_exceptions(d):

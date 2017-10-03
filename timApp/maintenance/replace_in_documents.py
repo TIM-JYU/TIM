@@ -34,7 +34,6 @@ def perform_replace(d: DocInfo, args: ReplaceArguments):
             print(
                 f'{log_str} {args.f} -> {args.t} in document {d.path}, paragraph {p.get_id()} ({match_count} match{"" if match_count == 1 else "es"})')
             if not args.dryrun:
-                p.doc.modifier_group_id = UserGroup.get_admin_group().id
                 p.set_markdown(old_md.replace(args.f, args.t))
                 p.save()
     return modified_pars
