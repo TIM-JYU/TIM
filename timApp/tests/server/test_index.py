@@ -237,6 +237,7 @@ Lorem ipsum.
         t = self.create_translation(orig, 'test', 'en')
         tr_pars = t.document.get_paragraphs()
         md = tr_pars[2].get_exported_markdown().replace('# b', '# tr')
+        self.get(t.url)  # refresh cache
         self.post_par(t.document, md, tr_pars[2].get_id())
         e = self.get_updated_pars(t)
         changed = e['changed_pars']

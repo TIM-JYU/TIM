@@ -939,7 +939,7 @@ class Document:
         for p in source:
             if p.is_reference():
                 try:
-                    referenced_pars = p.get_referenced_pars()  # TODO maybe set_html=False
+                    referenced_pars = p.get_referenced_pars(set_html=False)
                 except TimDbException:
                     pass
                 else:
