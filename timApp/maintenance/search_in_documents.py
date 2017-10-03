@@ -1,28 +1,29 @@
-import sys
-
-from timApp.maintenance.util import enum_pars
-from timApp.tim_app import app
+from timApp.maintenance.util import enum_pars, BasicArguments, create_argparser, process_items
+from timApp.timdb.docinfo import DocInfo
 
 
-def search(term: str):
+class SearchArguments(BasicArguments):
+    def __init__(self):
+        super().__init__()
+        self.term = ''
+
+
+def search(d: DocInfo, args: SearchArguments):
     found = 0
-    for d, p in enum_pars():
+    for d, p in enum_pars(d):
         md = p.get_exported_markdown(skip_tr=True)
-        header = f"{d.url}#{p.get_id()}"
-        if term in md:
+        if args.term in md:
+            header = f"{d.url}#{p.get_id()}"
             found += 1
             print(f"""
 {header}
 {'-' * len(header)}
 {md}
 """.strip() + "\n")
-    print(f'Found {found} paragraphs.')
+    return found
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print('Search term missing.')
-        sys.exit(1)
-    search_term = sys.argv[1]
-    with app.test_request_context():
-        search(search_term)
+    p = create_argparser('Searches in documents', readonly=True)
+    p.add_argument('--term', required=True, help='String to search for')
+    process_items(search, p)

@@ -1,5 +1,5 @@
-import argparse
 import sys
+from argparse import ArgumentParser
 from typing import Generator, Tuple, Optional, Callable, Union
 
 from timApp.documentmodel.docparagraph import DocParagraph
@@ -8,6 +8,14 @@ from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.timdbexception import TimDbException
+
+
+class BasicArguments:
+    def __init__(self):
+        self.dryrun = False
+        self.progress = False
+        self.doc = ''
+        self.folder = ''
 
 
 def enum_docs(folder: Optional[Folder] = None) -> Generator[DocInfo, None, None]:
@@ -43,21 +51,8 @@ def enum_pars(item: Union[Folder, DocInfo, None] = None) -> Generator[Tuple[DocI
             yield d, p
 
 
-def process_items(func: Callable[[DocInfo, bool], None]):
-    parser = argparse.ArgumentParser(sys.modules['__main__'].__file__)
-    parser.add_argument('--doc', help='doc id or path to inspect')
-    parser.add_argument('--folder', help='folder path or id to inspect')
-    parser.add_argument('--dry-run', dest='dryrun', action='store_true',
-                        help='show what would be fixed')
-    parser.add_argument('--no-dry-run', dest='dryrun', action='store_false', help='do the fixes')
-    parser.set_defaults(dryrun=True)
-    opts = parser.parse_args()
-    if opts.doc is not None and opts.folder is not None:
-        print('Cannot provide both --doc and --folder')
-        sys.exit(1)
-    if opts.doc is None and opts.folder is None:
-        print('Must provide --doc or --folder')
-        sys.exit(1)
+def process_items(func: Callable[[DocInfo, BasicArguments], int], parser: ArgumentParser):
+    opts: BasicArguments = parser.parse_args()
     with app.app_context():
         doc_to_fix = DocEntry.find_by_path(opts.doc, fallback_to_id=True,
                                            try_translation=True) if opts.doc is not None else None
@@ -68,12 +63,37 @@ def process_items(func: Callable[[DocInfo, bool], None]):
         if opts.folder is not None and not folder_to_fix:
             print('Folder not found.')
             sys.exit(1)
+        total_pars = 0
         if doc_to_fix:
-            func(doc_to_fix, opts.dryrun)
+            docs = [doc_to_fix]
         elif folder_to_fix:
-            print(f'Processing paragraphs in folder {folder_to_fix.path}')
-            for d in enum_docs(folder=folder_to_fix):
-                print(f'Processing document {d.path}')
-                func(d, opts.dryrun)
+            if opts.progress:
+                print(f'Processing paragraphs in folder {folder_to_fix.path}')
+            docs = enum_docs(folder=folder_to_fix)
         else:
             assert False
+        for d in docs:
+            if opts.progress:
+                print(f'Processing document {d.path}')
+            total_pars += func(d, opts)
+        if hasattr(opts, 'dryrun'):
+            print(f'Total paragraphs that {"would be" if opts.dryrun else "were"} affected: {total_pars}')
+        else:
+            print(f'Total paragraphs found: {total_pars}')
+
+
+def create_argparser(description: str, readonly=False):
+    parser = ArgumentParser(description=description)
+    group_item = parser.add_mutually_exclusive_group(required=True)
+    group_item.add_argument('--doc', help='doc id or path to process')
+    group_item.add_argument('--folder', help='folder path or id to process')
+    group_dryrun = parser.add_mutually_exclusive_group()
+    if not readonly:
+        group_dryrun.add_argument('--dry-run', dest='dryrun', action='store_true',
+                                  help='show what would be fixed')
+        group_dryrun.add_argument('--no-dry-run', dest='dryrun', action='store_false', help='do the fixes')
+        group_dryrun.set_defaults(dryrun=True)
+    parser.add_argument('--progress', dest='progress', action='store_true',
+                        help='show progress')
+    parser.set_defaults(progress=False)
+    return parser
