@@ -68,6 +68,7 @@ def process_items(func: Callable[[DocInfo, BasicArguments], int], parser: Argume
             print('Folder not found.')
             sys.exit(1)
         total_pars = 0
+        total_docs = 0
         if doc_to_fix:
             docs = [doc_to_fix]
         elif folder_to_fix:
@@ -79,11 +80,14 @@ def process_items(func: Callable[[DocInfo, BasicArguments], int], parser: Argume
         for d in docs:
             if opts.progress:
                 print(f'Processing document {d.path}')
-            total_pars += func(d, opts)
+            pars = func(d, opts)
+            total_pars += pars
+            if pars > 0:
+                total_docs += 1
         if hasattr(opts, 'dryrun'):
             print(f'Total paragraphs that {"would be" if opts.dryrun else "were"} affected: {total_pars}')
         else:
-            print(f'Total paragraphs found: {total_pars}')
+            print(f'Total paragraphs found: {total_pars} in {total_docs} documents')
 
 
 def create_argparser(description: str, readonly=False):
