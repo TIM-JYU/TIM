@@ -2,7 +2,6 @@ from argparse import ArgumentTypeError
 
 from timApp.maintenance.util import enum_pars, create_argparser, BasicArguments, process_items
 from timApp.timdb.docinfo import DocInfo
-from timApp.timdb.models.usergroup import UserGroup
 
 
 class ReplaceArguments(BasicArguments):
