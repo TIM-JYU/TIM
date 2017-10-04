@@ -64,6 +64,9 @@ class YamlBlock:
         merge(new_vals, other.values, other.merge_hints)
         return YamlBlock(values=new_vals, merge_hints=other.merge_hints)
 
+    def to_markdown(self):
+        return yaml.dump(self.values, default_flow_style=False)
+
 
 missing_space_after_colon = re.compile("^[ \t]*[^ :]*:[^ ]")  # kissa:istuu
 multiline_unindented_string = re.compile(

@@ -70,7 +70,7 @@ class DocSettings:
         self.user = None
 
     def to_paragraph(self) -> DocParagraph:
-        text = '```\n' + yaml.dump(self.__dict.values, default_flow_style=False) + '\n```'
+        text = '```\n' + self.__dict.to_markdown() + '\n```'
         return DocParagraph.create(self.doc, md=text, attrs={"settings": ""})
 
     def get_dict(self) -> YamlBlock:
@@ -221,17 +221,40 @@ def __resolve_final_settings_impl(pars: Iterable[DocParagraph]) -> Tuple[YamlBlo
                 break
             result = result.merge_with(settings.get_dict())
             had_settings = True
-        elif not curr.is_translation():
+        else:
+            curr_own_settings = None
+
+            # If the paragraph does not have rd attribute (for example if it is a translated one),
+            # we have to dig the source_document so that we can resolve the reference without getting into infinite recursion.
+            if curr.get_rd() is None:
+                try:
+                    curr_own_settings = DocSettings.from_paragraph(curr).get_dict()
+                except TimDbException:
+                    curr_own_settings = YamlBlock()
+                source_doc = result.get('source_document', curr_own_settings.get('source_document'))
+            else:
+                source_doc = None
+
+            # If we still don't know the source document and there is no rd, we can't proceed.
+            if curr.get_rd() is None and source_doc is None:
+                # TODO: Should this be break?
+                continue
+
             try:
-                refs = curr.get_referenced_pars(set_html=False)
+                from timApp.documentmodel.document import Document
+                # We temporarily pretend that this isn't a translated paragraph so that we always get the original markdown.
+                tr_attr = curr.get_attr('r')
+                curr.set_attr('r', None)
+                refs = curr.get_referenced_pars(set_html=False, source_doc=Document(source_doc) if source_doc else None)
+                curr.set_attr('r', tr_attr)
             except InvalidReferenceException:
                 break
             ref_settings, ref_had_settings = __resolve_final_settings_impl(refs)
             if ref_had_settings:
                 result = result.merge_with(ref_settings)
                 had_settings = True
+                if curr.is_translation() or curr.is_citation():
+                    result = result.merge_with(curr_own_settings)
             else:
                 break
-        else:
-            break
     return result, had_settings

@@ -1,6 +1,7 @@
 from unittest.mock import patch, Mock
 
 from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.document import Document
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.docinfo import DocInfo
@@ -13,10 +14,10 @@ class TranslationTest(TimRouteTest):
         doc = self.create_doc()
         lang = 'en'
         doc_title = 'test'
-        j = self.create_translation(doc, doc_title, lang)
+        t = self.create_translation(doc, doc_title, lang)
         self.create_translation(doc, doc_title, lang, expect_status=403,
                                 expect_content={'error': 'Translation for this language already exists'})
-        self.get(f'/view/{j.path}')
+        self.get(t.url)
         self.logout()
         self.json_post(f'/translate/{doc.id}/{lang}',
                        {'doc_title': doc_title},
@@ -28,10 +29,10 @@ class TranslationTest(TimRouteTest):
         doc.document.set_settings({'a': 'b'})
         lang = 'en'
         doc_title = 'test'
-        j = self.create_translation(doc, doc_title, lang)
-        d = Document(j.id)
+        t = self.create_translation(doc, doc_title, lang)
+        d = t.document
         self.assertEqual('b', d.get_settings().get_dict()['a'])
-        self.get(f'/view/{j.path}')
+        self.get(t.url)
 
     def test_translation_content(self):
         self.login_test1()
@@ -170,7 +171,7 @@ class TranslationTest(TimRouteTest):
             self.get(tr.url)
         m.assert_not_called()
 
-    def test_translation_no_settings_sync(self):
+    def test_translation_settings_sync(self):
         """The settings paragraph from the original document isn't copied to the new one."""
         self.login_test1()
         d = self.create_doc(initial_par='hello')
@@ -180,4 +181,7 @@ class TranslationTest(TimRouteTest):
         tr_pars = t.document.get_paragraphs()
         orig_pars = d.document.get_paragraphs()
         settings_id = orig_pars[0].get_id()
-        self.assertFalse(any(p.get_attr('rp') == settings_id for p in tr_pars))
+        self.assertEqual(tr_pars[1].get_attr('rp'), settings_id)
+        tr_settings = DocSettings.from_paragraph(tr_pars[0])
+        self.assertEqual(tr_settings.get_dict(), {'source_document': d.id})
+        self.assertEqual(t.document.get_settings().get_dict(), {'source_document': d.id, 'a': 'b'})

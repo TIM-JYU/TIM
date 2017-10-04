@@ -296,17 +296,11 @@ class DocParagraph:
     def get_rd(self) -> Optional[int]:
         """Returns the id of the Document to which this paragraph refers, or None if this is not a reference
         paragraph."""
-        if 'rd' in self.attrs:
-            try:
-                return int(self.get_attr('rd'))
-            except ValueError:
-                return None
-
-        default_rd = self.doc.get_settings().get_source_document()
-        if default_rd is not None:
-            return default_rd
-
-        return None
+        try:
+            rd = self.get_attr('rd')
+            return None if rd is None else int(rd)
+        except ValueError:
+            return None
 
     def is_identical_to(self, par: 'DocParagraph'):
         return self.is_same_as(par) and self.get_id() == par.get_id()
@@ -897,7 +891,7 @@ class DocParagraph:
     def __repr__(self):
         return self.__data.__repr__()
 
-    def get_referenced_pars(self, set_html: bool = True, source_doc: bool = None,
+    def get_referenced_pars(self, set_html: bool = True, source_doc: 'Document' = None,
                             tr_get_one: bool = True, visited_pars: Optional[List[Tuple[int, str]]] = None) -> List[
             'DocParagraph']:
         """Returns the paragraphs that are referenced by this paragraph.
@@ -1043,6 +1037,9 @@ class DocParagraph:
 
         """
         self.__data['id'] = par_id
+
+    def is_citation(self):
+        return self.get_attr('r') == 'c'
 
 
 def is_real_id(par_id: Optional[str]):

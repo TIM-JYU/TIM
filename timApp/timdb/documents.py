@@ -1,27 +1,27 @@
 """Defines the Documents class."""
 
 import os
-
-from typing import List, Optional, Dict, Tuple, Iterable
+from typing import List, Optional, Dict, Tuple
 
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.documenteditresult import DocumentEditResult
 from timApp.documentmodel.documentparser import DocumentParser
+from timApp.documentmodel.yamlblock import YamlBlock
+from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.block import Block
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.tim_models import ReadParagraph, UserNotes, db, BlockAccess
 from timApp.timdb.timdbbase import TimDbBase
-from timApp.timdb.blocktypes import blocktypes
 
 
 def create_citation(original_doc: Document,
                     owner_group_id: int,
                     path: Optional[str]=None,
                     title: Optional[str]=None,
-                    ref_attribs: Optional[Dict[str, str]] = None) -> DocInfo:
+                    ref_attrs: Optional[Dict[str, str]] = None) -> DocInfo:
     """Creates a citation document with the specified name. Each paragraph of the citation document references the
     paragraph in the original document.
 
@@ -29,31 +29,38 @@ def create_citation(original_doc: Document,
     :param original_doc: The original document to be cited.
     :param path: The path of the document to be created.
     :param owner_group_id: The id of the owner group.
-    :param ref_attribs: Reference attributes to be used globally.
+    :param ref_attrs: Reference attributes to be used globally.
     :returns: The newly created document object.
 
     """
 
-    ref_attrs = ref_attribs if ref_attribs is not None else {}
+    if ref_attrs is None:
+        ref_attrs = {}
 
     # For translations, name is None and no DocEntry is created in database.
     doc_entry = DocEntry.create(path, owner_group_id, title)
     doc = doc_entry.document
 
-    r = ref_attrs['r'] if 'r' in ref_attrs else 'tr'
-
-    settings = original_doc.get_settings()
-    settings.set_source_document(original_doc.doc_id)
-    doc.set_settings(settings.get_dict())
+    r = ref_attrs.get('r', 'tr')
 
     for par in original_doc:
-        if par.is_setting():
-            continue
         ref_par = par.create_reference(doc, r, add_rd=False)
-        for attr in ref_attrs:
-            ref_par.set_attr(attr, ref_attrs[attr])
+        if par.is_setting():
+            ref_par.set_attr('settings', '')
+        for attr, value in ref_attrs.items():
+            ref_par.set_attr(attr, value)
 
         doc.add_paragraph_obj(ref_par)
+
+    settings = {'source_document': original_doc.doc_id}
+    orig_pars = original_doc.get_paragraphs()
+    if orig_pars and orig_pars[0].is_setting():
+        curr_par = doc.get_paragraphs()[0]
+        yb = YamlBlock(values=settings)
+        curr_par.set_markdown(yb.to_markdown())
+        curr_par.save()
+    else:
+        doc.set_settings(settings)
 
     return doc_entry
 

@@ -396,14 +396,7 @@ def update_translation(doc_id):
 
 
 def create_citation_doc(doc_id, doc_path, doc_title):
-    params, = verify_json_params('params', require=False)
-
-    # Filter for allowed reference parameters
-    if params is not None:
-        params = {k: params[k] for k in params if k in ('r', 'r_docid')}
-        params['r'] = 'c'
-    else:
-        params = {'r': 'c'}
+    params = {'r': 'c'}
 
     verify_edit_access(doc_id)
 

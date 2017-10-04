@@ -188,21 +188,12 @@ class Document:
         current_settings[key] = value
         self.set_settings(current_settings)
 
-    def get_settings_pars(self, include_references=True) -> Generator[DocParagraph, None, None]:
+    def get_settings_pars(self) -> Generator[DocParagraph, None, None]:
         self.ensure_par_ids_loaded()
         for p_id in self.par_ids:
             curr = self.get_paragraph(p_id)
             if curr.is_setting():
                 yield curr
-            elif include_references and curr.is_reference() and not curr.is_translation():
-                try:
-                    ref = curr.get_referenced_pars(set_html=False)[0]
-                except InvalidReferenceException:
-                    break
-                if ref.is_setting():
-                    yield curr
-                else:
-                    break
             else:
                 break
 
@@ -235,12 +226,12 @@ class Document:
             if p.is_task():
                 yield p
 
-    def get_settings(self, user=None, include_references=True) -> DocSettings:
+    def get_settings(self, user=None) -> DocSettings:
         if self.settings is not None:
             self.settings.user = user
             return self.settings
         self.ensure_par_ids_loaded()
-        settings_block = resolve_final_settings(self.get_settings_pars(include_references=include_references))
+        settings_block = resolve_final_settings(self.get_settings_pars())
         settings = DocSettings(self, settings_dict=settings_block)
         settings.user = user
         self.settings = settings
@@ -441,7 +432,7 @@ class Document:
                         try:
                             reflist.add(int(par.get_doc_id()))
                         except (ValueError, TypeError):
-                            print('Invalid document reference: ' + str(par.get_rd()))
+                            pass
         self.__save_reflist(new_reflist_file, reflist)
 
     def raise_if_not_exist(self, par_id: str):
@@ -947,7 +938,7 @@ class Document:
                         try:
                             refs.add(int(par.get_doc_id()))
                         except (ValueError, TypeError):
-                            print('Invalid document reference: ' + str(par.get_rd()))
+                            pass
         return refs
 
     def __load_reflist(self, reflist_name: str) -> Set[int]:
@@ -994,7 +985,7 @@ class Document:
 
     def get_original_document(self) -> Optional['Document']:
         if self.original_doc is None:
-            src_docid = self.get_settings(include_references=False).get_source_document()
+            src_docid = self.get_settings().get_source_document()
             self.original_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
         return self.original_doc
 
