@@ -91,8 +91,8 @@ def create_argparser(description: str, readonly=False):
     group_item = parser.add_mutually_exclusive_group(required=True)
     group_item.add_argument('--doc', help='doc id or path to process')
     group_item.add_argument('--folder', help='folder path or id to process')
-    group_dryrun = parser.add_mutually_exclusive_group()
     if not readonly:
+        group_dryrun = parser.add_mutually_exclusive_group()
         group_dryrun.add_argument('--dry-run', dest='dryrun', action='store_true',
                                   help='show what would be fixed')
         group_dryrun.add_argument('--no-dry-run', dest='dryrun', action='store_false', help='do the fixes')
