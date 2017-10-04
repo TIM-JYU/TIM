@@ -24,6 +24,6 @@ def search(d: DocInfo, args: SearchArguments):
 
 
 if __name__ == '__main__':
-    p = create_argparser('Searches in documents', readonly=True)
-    p.add_argument('--term', required=True, help='String to search for')
-    process_items(search, p)
+    parser = create_argparser('Searches in documents', readonly=True)
+    parser.add_argument('--term', required=True, help='String to search for')
+    process_items(search, parser)
