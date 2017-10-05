@@ -117,7 +117,7 @@ class DocEntry(db.Model, DocInfo):
             from timApp.timdb.models.folder import Folder
             Folder.create(location, owner_group_id=owner_group_id, commit=False)
 
-        document = create_document_and_block(title or path, owner_group_id)
+        document = create_document_and_block(owner_group_id, title or path)
 
         # noinspection PyArgumentList
         docentry = DocEntry(id=document.doc_id, name=path, public=True)
@@ -142,7 +142,7 @@ class DocEntry(db.Model, DocInfo):
         return docentry
 
 
-def create_document_and_block(desc: Optional[str], owner_group_id: int):
+def create_document_and_block(owner_group_id: int, desc: Optional[str]=None):
     document_id = insert_block(desc, owner_group_id, blocktypes.DOCUMENT, commit=False).id
     document = Document(document_id, modifier_group_id=owner_group_id)
     document.create()

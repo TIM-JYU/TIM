@@ -19,7 +19,7 @@ from timApp.timdb.timdbbase import TimDbBase
 
 def create_translation(original_doc: Document,
                        owner_group_id: int) -> Document:
-    doc = create_document_and_block(None, owner_group_id)
+    doc = create_document_and_block(owner_group_id)
     add_reference_pars(doc, original_doc, 'tr')
     return doc
 
