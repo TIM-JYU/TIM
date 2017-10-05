@@ -43,6 +43,9 @@ class TemplateTest(TimRouteTest):
         d = self.create_doc(f'{folder}/b/new3', template='nonexistent')
         self.assertEqual('forced', d.document.get_paragraphs()[0].get_markdown())
 
+        # Should be created directly from URL
+        self.get(f'/view/{folder}/b/new-from-url')
+
     def test_templates_of_templates(self):
         """Templates are not templates of themselves."""
         self.login_test1()
