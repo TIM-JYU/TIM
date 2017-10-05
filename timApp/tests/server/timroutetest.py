@@ -566,7 +566,7 @@ class TimRouteTest(TimDbTest):
         pars = element.cssselect('.parContent')
         self.assertEqual(len(pars), len(expected))
         for e, r in zip(expected, pars):
-            self.assertEqual(e, r.text_content().strip())
+            self.assertEqual(r.text_content().strip(), e)
 
     def get_updated_pars(self, d: DocInfo, **kwargs):
         return self.get(f'/getUpdatedPars/{d.id}', **kwargs)
