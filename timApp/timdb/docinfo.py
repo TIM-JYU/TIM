@@ -50,6 +50,7 @@ class DocInfo(Item):
         """Returns the corresponding Document object."""
         if getattr(self, '_doc', None) is None:
             self._doc = Document(self.id)
+            self._doc.docinfo = self
         return self._doc
 
     @property
@@ -57,6 +58,7 @@ class DocInfo(Item):
         if getattr(self, '_doc', None) is None:
             from timApp.sessioninfo import get_current_user_group
             self._doc = Document(self.id, modifier_group_id=get_current_user_group())
+            self._doc.docinfo = self
         return self._doc
 
     @property

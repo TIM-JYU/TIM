@@ -27,6 +27,7 @@ from timApp.pluginControl import find_task_ids, get_all_reqs
 from timApp.requesthelper import get_option
 from timApp.responsehelper import json_response
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, logged_in
+from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry, get_documents
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.user import User
@@ -61,10 +62,11 @@ def get_partial_document(doc: Document, view_range: Range) -> List[DocParagraph]
     return pars
 
 
-def get_document(doc_id: int, view_range: Optional[Range] = None) -> Tuple[Document, List[DocParagraph]]:
+def get_document(doc_info: DocInfo, view_range: Optional[Range] = None) -> Tuple[Document, List[DocParagraph]]:
     # Separated into 2 functions for optimization
     # (don't cache partial documents and don't check ranges in the loop for whole ones)
-    doc = Document(doc_id, preload_option=PreloadOption.all).get_latest_version()
+    doc = doc_info.document
+    doc.preload_option = PreloadOption.all
     return doc, (get_whole_document(doc) if view_range is None else get_partial_document(doc, view_range))
 
 
@@ -269,7 +271,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
         view_range = None
     start_index = max(view_range[0], 0) if view_range else 0
 
-    doc, xs = get_document(doc_id, view_range)
+    doc, xs = get_document(doc_info, view_range)
 
     clear_cache = get_option(request, "nocache", False)
     hide_answers = get_option(request, 'noanswers', False)

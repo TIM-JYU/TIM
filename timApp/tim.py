@@ -68,7 +68,7 @@ from timApp.tim_app import app, default_secret
 from timApp.timdb.blocktypes import from_str, blocktypes, BlockType
 from timApp.timdb.bookmarks import Bookmarks
 from timApp.timdb.dbutils import copy_default_rights
-from timApp.timdb.documents import create_citation
+from timApp.timdb.documents import create_citation, create_translation
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.translation import Translation
@@ -365,13 +365,13 @@ def create_translation_route(tr_doc_id, language):
         abort(403, 'Translation for this language already exists')
     verify_manage_access(doc_id)
 
-    src_doc = Document(doc_id)
-    cite_doc = create_citation(src_doc, get_current_user_group())
+    src_doc = doc.src_doc.document
+    cite_doc = create_translation(src_doc, get_current_user_group())
     # noinspection PyArgumentList
-    tr = Translation(doc_id=cite_doc.id, src_docid=src_doc.doc_id, lang_id=language)
+    tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
     db.session.add(tr)
-    copy_default_rights(cite_doc.id, blocktypes.DOCUMENT, commit=False)
+    copy_default_rights(cite_doc.doc_id, blocktypes.DOCUMENT, commit=False)
     db.session.commit()
     return json_response(tr)
 
@@ -396,14 +396,12 @@ def update_translation(doc_id):
 
 
 def create_citation_doc(doc_id, doc_path, doc_title):
-    params = {'r': 'c'}
-
     verify_edit_access(doc_id)
 
     src_doc = Document(doc_id)
 
     def factory(path, group, title):
-        return create_citation(src_doc, group, path, title, params)
+        return create_citation(src_doc, group, path, title)
     item = create_item(doc_path, 'document', doc_title, factory, get_current_user_group())
     return json_response(item)
 

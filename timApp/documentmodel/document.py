@@ -26,6 +26,10 @@ from timApp.timdb.timdbexception import TimDbException
 from timApp.utils import get_error_html
 
 
+if False:
+    from timApp.timdb.docinfo import DocInfo
+
+
 class Document:
     default_files_root = '/tim_files'
 
@@ -55,6 +59,8 @@ class Document:
         self.source_doc: Optional['Document'] = None
         # Cache for document settings.
         self.settings: Optional[DocSettings] = None
+        # The corresponding DocInfo object.
+        self.docinfo: 'DocInfo' = None
 
         # Used for accessing previous/next paragraphs quickly based on id
         self.par_map = None
@@ -926,6 +932,7 @@ class Document:
         if ver is not None:
             from timApp.documentmodel.documentversion import DocumentVersion
             source = DocumentVersion(self.doc_id, ver, self.files_root)
+            source.docinfo = self.docinfo
 
         for p in source:
             if p.is_reference():
@@ -985,8 +992,14 @@ class Document:
 
     def get_source_document(self) -> Optional['Document']:
         if self.source_doc is None:
-            src_docid = self.get_settings().get_source_document()
-            self.source_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
+            if self.docinfo is None:
+                from timApp.timdb.models.docentry import DocEntry
+                self.docinfo = DocEntry.find_by_id(self.doc_id, try_translation=True)
+            if self.docinfo.is_original_translation:
+                src_docid = self.get_settings().get_source_document()
+                self.source_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
+            else:
+                self.source_doc = self.docinfo.src_doc.document
         return self.source_doc
 
     def get_last_par(self):

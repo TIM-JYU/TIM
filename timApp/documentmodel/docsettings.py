@@ -231,7 +231,12 @@ def __resolve_final_settings_impl(pars: Iterable[DocParagraph]) -> Tuple[YamlBlo
                     curr_own_settings = DocSettings.from_paragraph(curr).get_dict()
                 except TimDbException:
                     curr_own_settings = YamlBlock()
-                source_doc = result.get('source_document', curr_own_settings.get('source_document'))
+                if curr.is_citation():
+                    from timApp.documentmodel.document import Document
+                    source_doc_id = result.get('source_document', curr_own_settings.get('source_document'))
+                    source_doc = Document(source_doc_id) if source_doc_id else None
+                else:
+                    source_doc = curr.doc.get_source_document()
             else:
                 source_doc = None
 
@@ -245,7 +250,7 @@ def __resolve_final_settings_impl(pars: Iterable[DocParagraph]) -> Tuple[YamlBlo
                 # We temporarily pretend that this isn't a translated paragraph so that we always get the original markdown.
                 tr_attr = curr.get_attr('r')
                 curr.set_attr('r', None)
-                refs = curr.get_referenced_pars(set_html=False, source_doc=Document(source_doc) if source_doc else None)
+                refs = curr.get_referenced_pars(set_html=False, source_doc=source_doc)
                 curr.set_attr('r', tr_attr)
             except InvalidReferenceException:
                 break
