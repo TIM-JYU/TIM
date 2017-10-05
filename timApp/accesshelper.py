@@ -288,3 +288,17 @@ def get_see_answers_blocks():
     if not hasattr(g, 'see_answers'):
         g.see_answers = timApp.timdb.userutils.get_see_answers_blocks(get_current_user_id())
     return g.see_answers
+
+
+def reset_request_access_cache():
+    del_attr_if_exists(g, 'manageable')
+    del_attr_if_exists(g, 'viewable')
+    del_attr_if_exists(g, 'teachable')
+    del_attr_if_exists(g, 'see_answers')
+    del_attr_if_exists(g, 'owned')
+    del_attr_if_exists(g, 'editable')
+
+
+def del_attr_if_exists(obj, attr_name: str):
+    if hasattr(obj, attr_name):
+        delattr(obj, attr_name)

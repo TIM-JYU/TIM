@@ -11,7 +11,7 @@ from timApp.validation import validate_item_and_create
 from timApp.timdb.dbutils import copy_default_rights
 from timApp.timdb.blocktypes import from_str, blocktypes
 from timApp.dbaccess import get_timdb
-from timApp.accesshelper import grant_access_to_session_users
+from timApp.accesshelper import grant_access_to_session_users, reset_request_access_cache
 from timApp.timdb.bookmarks import Bookmarks
 from timApp.sessioninfo import get_current_user_object, get_current_user_group
 from timApp.tim_app import app
@@ -69,6 +69,7 @@ def create_item(item_path, item_type_str, item_title, create_function, owner_gro
                          move_to_top=True,
                          limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
     copy_default_rights(item.id, item_type)
+    reset_request_access_cache()
     return item
 
 
