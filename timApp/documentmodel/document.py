@@ -52,7 +52,7 @@ class Document:
         # Whether the document exists on disk.
         self.__exists: bool = None
         # Cache for the original document.
-        self.original_doc: Optional['Document'] = None
+        self.source_doc: Optional['Document'] = None
         # Cache for document settings.
         self.settings: Optional[DocSettings] = None
 
@@ -412,7 +412,7 @@ class Document:
         self.par_map = None
         self.par_ids = None
         self.par_hashes = None
-        self.original_doc = None
+        self.source_doc = None
         self.settings = None
         return ver
 
@@ -984,10 +984,10 @@ class Document:
         return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id, self.preload_option)
 
     def get_source_document(self) -> Optional['Document']:
-        if self.original_doc is None:
+        if self.source_doc is None:
             src_docid = self.get_settings().get_source_document()
-            self.original_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
-        return self.original_doc
+            self.source_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
+        return self.source_doc
 
     def get_last_par(self):
         pars = [par for par in self]
@@ -1045,7 +1045,7 @@ class Document:
         self.version = None
         self.par_ids = None
         self.par_hashes = None
-        self.original_doc = None
+        self.source_doc = None
         self.settings = None
 
 
