@@ -3,6 +3,7 @@ from unittest.mock import patch, Mock
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.document import Document
+from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.docinfo import DocInfo
 
@@ -171,8 +172,7 @@ class TranslationTest(TimRouteTest):
             self.get(tr.url)
         m.assert_not_called()
 
-    def test_translation_settings_sync(self):
-        """The settings paragraph from the original document isn't copied to the new one."""
+    def test_translation_settings(self):
         self.login_test1()
         d = self.create_doc(initial_par='hello')
         t = self.create_translation(d, 'title', 'en')
@@ -185,6 +185,11 @@ class TranslationTest(TimRouteTest):
         tr_settings = DocSettings.from_paragraph(tr_pars[0])
         self.assertEqual(tr_settings.get_dict(), {})
         self.assertEqual(t.document.get_settings().get_dict(), {'a': 'b'})
+
+        d.document.set_settings({'a': 'b', 'c': 'd'})
+        tr_pars[0].set_markdown(YamlBlock(values={'c': 'x'}).to_markdown())
+        tr_pars[0].save()
+        self.assertEqual(t.document.get_settings().get_dict(), {'a': 'b', 'c': 'x'})
 
     def test_translation_ignored_src_doc(self):
         self.login_test1()
