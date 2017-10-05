@@ -38,7 +38,7 @@ class DocParagraph:
         :param files_root: The location of the data store for this paragraph, or None to use the default data store.
 
         """
-        self.doc = doc
+        self.doc: 'Document' = doc
         self.original = None
         self.files_root = self.get_default_files_root() if files_root is None else files_root
         self.html_sanitized = False
