@@ -960,7 +960,7 @@ class DocParagraph:
         elif source_doc is not None:
             ref_doc = source_doc
         else:
-            ref_doc = self.doc.get_original_document()
+            ref_doc = self.doc.get_source_document()
 
         if ref_doc is None:
             if ref_docid is None:

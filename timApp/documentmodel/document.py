@@ -821,7 +821,7 @@ class Document:
     def get_index(self) -> List[Tuple]:
         pars = [par for par in DocParagraphIter(self)]
         DocParagraph.preload_htmls(pars, self.get_settings())
-        pars = dereference_pars(pars, source_doc=self.get_original_document())
+        pars = dereference_pars(pars, source_doc=self.get_source_document())
 
         # Skip plugins
         html_list = [par.get_html(from_preview=False) for par in pars if not par.is_dynamic()]
@@ -966,7 +966,7 @@ class Document:
         return self.par_cache
 
     def get_dereferenced_paragraphs(self) -> List[DocParagraph]:
-        return dereference_pars(self.get_paragraphs(), source_doc=self.get_original_document())
+        return dereference_pars(self.get_paragraphs(), source_doc=self.get_source_document())
 
     def get_closest_paragraph_title(self, par_id: Optional[str]):
         last_title = None
@@ -983,7 +983,7 @@ class Document:
         from timApp.documentmodel.documentversion import DocumentVersion
         return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id, self.preload_option)
 
-    def get_original_document(self) -> Optional['Document']:
+    def get_source_document(self) -> Optional['Document']:
         if self.original_doc is None:
             src_docid = self.get_settings().get_source_document()
             self.original_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None

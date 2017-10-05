@@ -285,12 +285,12 @@ def view(item_path, template_name, usergroup=None, route="view"):
         log_error(f'Document {doc_id} exception:\n{traceback.format_exc(chain=False)}')
         abort(500, str(e))
     if doc_settings:
-        src_doc = doc.get_original_document()
+        src_doc = doc.get_source_document()
         if src_doc is not None:
             DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
 
     # We need to deference paragraphs at this point already to get the correct task ids
-    xs = dereference_pars(xs, source_doc=doc.get_original_document())
+    xs = dereference_pars(xs, source_doc=doc.get_source_document())
     total_points = None
     tasks_done = None
     task_groups = None

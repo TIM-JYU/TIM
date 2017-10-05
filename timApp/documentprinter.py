@@ -116,7 +116,7 @@ class DocumentPrinter:
         # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
         pars = self._doc_entry.document.get_paragraphs()
         self._doc_entry.document.preload_option = PreloadOption.all
-        pars = dereference_pars(pars, source_doc=self._doc_entry.document.get_original_document())
+        pars = dereference_pars(pars, source_doc=self._doc_entry.document.get_source_document())
         pars_to_print = []
         texplain = self._doc_entry.document.get_settings().is_texplain()
         for par in pars:
@@ -412,7 +412,7 @@ class DocumentPrinter:
     def parse_template_content(template_doc: DocInfo, doc_to_print: DocEntry) -> str:
         pars = template_doc.document.get_paragraphs()
 
-        pars = dereference_pars(pars, source_doc=template_doc.document.get_original_document())
+        pars = dereference_pars(pars, source_doc=template_doc.document.get_source_document())
 
         # attach macros from target document to template
         macroinfo = MacroInfo()
