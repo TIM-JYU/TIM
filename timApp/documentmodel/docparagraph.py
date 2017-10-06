@@ -355,14 +355,12 @@ class DocParagraph:
         return self.nocache
 
     def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None,
-                              ignore_errors: bool = False,
-                              user=None) -> str:
+                              ignore_errors: bool = False) -> str:
         """Returns the macro-processed markdown for this paragraph.
 
         :param macroinfo: The MacroInfo to use. If None, the MacroInfo is taken from the document that has the
         paragraph.
         :param ignore_errors: Whether or not to ignore errors when expanding the macros
-        :param user: current user if wanted to force using user specific macros, then nocache is needed
         :return: The expanded markdown.
 
         """
