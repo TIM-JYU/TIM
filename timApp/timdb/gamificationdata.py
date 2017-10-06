@@ -1,22 +1,18 @@
-# Collection of gamification functions
-import json
+"""Collection of gamification functions."""
 
-import yaml
 from flask import request
 
-from timApp.dbaccess import get_timdb
 import timApp.pluginControl
+from timApp.dbaccess import get_timdb
+from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.sessioninfo import get_current_user_id
+from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
 
 
-def gamify(initial_data):
-
-    # Convert initial data to JSON format
-    initial_json = convert_to_json(initial_data)
-
+def gamify(initial_data: YamlBlock):
     # Find document IDs from json, and place them in their appropriate arrays(lectures and demos separately)
-    lecture_table, demo_table = get_doc_data(initial_json)
+    lecture_table, demo_table = get_doc_data(initial_data)
 
     # Insert document, IDs, paths, and points in a dictionary
     gamification_data = {"lectures": lecture_table, "demos": demo_table}
@@ -24,30 +20,16 @@ def gamify(initial_data):
     return gamification_data
 
 
-def convert_to_json(md_data):
-    """Converts the YAML paragraph in gamification document to JSON.
-
-    :param md_data = the data read from paragraph in YAML
-    :returns: same data in JSON
-
-    """
-    temp = yaml.load(md_data[3:len(md_data) - 3])  # TODO: does not work if used other separtor than 3 `
-    return json.loads(json.dumps(temp))
-
-
-def get_doc_data(json_to_check):
+def get_doc_data(gamify_data: YamlBlock):
     """Parses json to find and link appropriate data into lecture and demo documents.
 
-    :param json_to_check = Checked documents in JSON
+    :param gamify_data = Checked documents in JSON
     :returns: Arrays of lecture and demo documents
 
     """
-    if json_to_check is None:
-        raise GamificationException('JSON is None')
-
-    lecture_paths = json_to_check.get('lectures', [])
-    demo_paths = json_to_check.get('demos', [])
-    default_max = json_to_check.get('defaultMax', 5)
+    lecture_paths = gamify_data.get('lectures', [])
+    demo_paths = gamify_data.get('demos', [])
+    default_max = gamify_data.get('defaultMax', 5)
 
     # Configure data of lecture documents
     lectures = []
@@ -95,10 +77,10 @@ def get_doc_data(json_to_check):
     return lectures, demos
 
 
-def get_points_for_doc(d):
+def get_points_for_doc(d: DocInfo):
     """Finds the current users point information for a specific document.
 
-    :param d The document as a DocEntry
+    :param d: The document.
     :returns: The current users points for the document
 
     """
