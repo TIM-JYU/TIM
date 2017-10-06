@@ -43,6 +43,8 @@ interface GlowScriptWindow extends Window {
     runJavaScript?(text: string, args: string, input: string, wantsConsole: boolean): string;
     setDefLanguage?(language: string);
     getConsoleHeight?(): number;
+    runWeScheme(s:string);
+
 }
 
 interface GlowScriptFrame extends HTMLIFrameElement {
@@ -139,6 +141,8 @@ interface ICSAppScope extends IConsolePWDScope {
     gsDefaultLanguage: string;
     glowscript: boolean;
     fullhtml: string;
+    contentWindow : GlowScriptWindow;
+    aelement : object;
     iframeClientHeight: number;
     lastJS: string;
     closeFrame();
@@ -217,6 +221,8 @@ interface ICSAppScope extends IConsolePWDScope {
     taunotype: string;
     isSimcir: boolean;
     showTauno();
+    runWeScheme(s:string);
+    showWeScheme();
     showSimcir();
     copyFromSimcir();
     copyToSimcir();
@@ -367,6 +373,7 @@ csApp.directive('csParsonsRunner', [function () { return csApp.directiveFunction
 csApp.directive('csSageRunner', [function () { return csApp.directiveFunction('sage',true); }]);
 csApp.directive('csSimcirRunner', [function () { return csApp.directiveFunction('simcir',false); }]);
 csApp.directive('csTextRunner', [function () { return csApp.directiveFunction('text',false); }]);
+csApp.directive('csWeschemeRunner', [function () { return csApp.directiveFunction('wescheme',false); }]);
 // csApp.directive('csRunner',function() {	csApp.sanitize = $sanitize; return csApp.directiveFunction('console'); }); // jos ei tarviiis sanitize
 
 function csLogTime(msg) {
@@ -470,7 +477,7 @@ function hasAcrobatInstalled() {
     return isAcrobatInstalled;
 }
 
-var csJSTypes = ["js", "glowscript", "vpython", "html", "processing"];
+var csJSTypes = ["js", "glowscript", "vpython", "html", "processing", "wescheme"];
 
 // =================================================================================================================
 // Known upload files
@@ -510,8 +517,12 @@ async function loadSimcir() {
 
 var languageTypes = {} as ILanguageTypes;
 // What are known language types (be carefull not to include partial word):
-languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp","jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir","xml", "octave","lua", "swift","mathcheck", "html", "processing", "r"];
-languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp","javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json","xml","octave","lua","swift","text", "html", "javascript", "r"];
+languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp",
+                              "jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir",
+                              "xml", "octave","lua", "swift","mathcheck", "html", "processing", "r", "wescheme"];
+languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp",
+                              "javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json",
+                              "xml","octave","lua","swift","text", "html", "javascript", "r", "scheme"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -743,7 +754,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<p>Here comes header</p>' +
 				//  '<p ng-bind-html="getHeader()"></p>
 				  '<p ng-if="stem" class="stem" ng-bind-html="stem"></p>' +
-  				  (t === "tauno" || t === "simcir" ?
+  				  (t === "tauno" || t === "simcir"  ?
 				    '<p ng-if="taunoOn" class="pluginHide""><a ng-click="hideTauno()">{{hideTaunoText}}</a></p>' +
 				    '<div ><p></p></div>' + // Tauno code place holder nr 3!!
 				    '<p ng-if="!taunoOn" class="pluginShow" ><a ng-click="showTauno()">{{showTaunoText}}</a></p>' +
@@ -814,7 +825,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
                   ' <span ng-if="wrap.n!=-1" class="inputSmall" style="float: right;"><label title="Put 0 to no wrap">wrap: <input type="text"  ng-pattern="/[-0-9]*/" ng-model="wrap.n" size="2" /></label></span>' +
                   '</p>'+
                   '</div>'+
-                  (t=="sage" ? '<div class="outputSage no-popup-menu"></div>' :"")+ 
+                  (t=="sage" ? '<div class="outputSage no-popup-menu"></div>' :"")+
 
 				  '<pre ng-if="viewCode && codeunder">{{code}}</pre>'+
 				  (t === "comtest" || t === "tauno" || t === "parsons" || true ? '<p class="unitTestGreen"  ng-if="runTestGreen" >&nbsp;ok</p>' : "") +
@@ -1062,7 +1073,10 @@ csApp.directiveFunction = function(t,isInput) {
         //    scope.header = head;
 		//	scope.getHeader = function() { return head; };
 		//	csApp.updateEditSize(scope);
-            if (scope.open && (t == "tauno" || t === "simcir") ) scope.showTauno();
+            if (scope.open) {
+                if (t == "tauno" || t === "simcir") scope.showTauno();
+                // if (t == 'wescheme') scope.showWeScheme();
+            }
 
             //attrs.buttons = "$hellobuttons$\nMunOhjelma\n$typebuttons$\n$charbuttons$";
             var b = attrs.buttons || scope.attrs.buttons;
@@ -1645,7 +1659,11 @@ csApp.Controller = function($scope,$transclude) {
         window.clearInterval($scope.runTimer);
         $scope.closeDocument();
         //alert("moi");
-        
+/*
+        if ( $scope.type == "wescheme") {
+            $scope.runWeScheme($scope.usercode);
+        }
+*/
         if ( $scope.isSage ) {
             await alustaSage($scope, true);
             runSage($scope);
@@ -2022,8 +2040,34 @@ csApp.Controller = function($scope,$transclude) {
 			$scope.taunoHtml.innerHTML = '<div class="taunoNaytto" id="'+v.vid+'" />';
 		$scope.taunoOn = true;	
 	};
+
+    $scope.runWeScheme = function(s:string) {
+		// var f = document.getElementById($scope.taunoId) as any;
+		// var s = $scope.taunoHtml.contentWindow().getUserCodeFromTauno();
+		// $scope.contentWindow.runWeScheme(s);
+    }
+
+
+
 	
-	
+	$scope.showWeScheme = function () {
+        var v = this.getVid();
+		var p = "";
+		var tt = "/csstatic/WeScheme/WeSchemeEditor.html";
+		var weSchemeUrl = tt;
+		var s = $scope.table;
+		$scope.iframe = true;
+        // $scope.sageOutput = $scope.element0.getElementsByClassName('outputSage')[0];
+		if ( $scope.iframe )
+			$scope.taunoHtml.innerHTML =
+			// '<p class="pluginHide"" ><a ng-click="hideTauno()">hide Tauno</a></p>' + // ng-click ei toimi..
+			'<iframe id="'+v.vid+'" class="showWeScheme" src="' + weSchemeUrl + '" ' + v.w + v.h + ' ></iframe>';
+		else
+			$scope.taunoHtml.innerHTML = '<div class="taunoNaytto" id="'+v.vid+'" />';
+		$scope.taunoOn = true;
+	};
+
+
 	$scope.initCode = function() {
 		$scope.muokattu = false;
 		$scope.usercode = $scope.byCode;
@@ -2510,13 +2554,18 @@ csApp.Controller = function($scope,$transclude) {
         $scope.lastJS = "";
     }
     
-   $scope.lastJS = "";
+    $scope.lastJS = "";
     $scope.iframeClientHeight = -1;
 	$scope.showJS = function() {
 	    var isProcessing = false;
         if ( $scope.type.indexOf("processing") >= 0 ) {
             $scope.iframe = true;
             isProcessing = true;
+        }
+        var wescheme = false;
+        if (  $scope.type == "wescheme" ) {
+            $scope.iframe = true;
+             wescheme = true;
         }
 
         var wantsConsole = false;
@@ -2537,9 +2586,13 @@ csApp.Controller = function($scope,$transclude) {
                 html =  '<div id="myDiv" class="mydiv" width="800" height="400" ></div>';
                 scripts = "https://cdnjs.cloudflare.com/ajax/libs/vis/4.20.0/vis.min.js";
             }
+            var fsrc = "/cs/gethtml/canvas.html";
+            if (  wescheme ) {
+                //fsrc = "/csstatic/WeScheme/WeSchemeEditor.html";
+                fsrc = '/csstatic/WeScheme/openEditor.html';
+            }
             if ( $scope.iframe ) {
                 var dw,dh;
-                var fsrc = "/cs/gethtml/canvas.html";
                 if ( $scope.glowscript ) {
                     fsrc = "/cs/gethtml/GlowScript.html" 
                     dh = '430';
@@ -2560,7 +2613,8 @@ csApp.Controller = function($scope,$transclude) {
                     '<iframe id="'+v.vid+'" class="jsCanvas" '  + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin">')+
                   '</iframe>'+
                   '</div>';
-                $scope.canvas = angular.element(angularElement)[0] as HTMLCanvasElement; // TODO this seems wrong
+                $scope.aelement = angular.element(angularElement);
+                $scope.canvas = $scope.aelement[0] as HTMLCanvasElement; // TODO this seems wrong
                 // $scope.canvas = angular.element('<iframe id="'+v.vid+'" class="jsCanvas" src="/cs/gethtml/canvas.html" ' + v.w + v.h + ' style="border:0" seamless="seamless" ></iframe>');
                 $scope.iframeLoadTries = 10;
             } else {  
@@ -2586,7 +2640,9 @@ csApp.Controller = function($scope,$transclude) {
         if ( $scope.iframe ) { // in case of iframe, the text is send to iframe
             var f =  document.getElementById($scope.taunoId) as GlowScriptFrame; // but on first time it might be not loaded yet
             // var s = $scope.taunoHtml.contentWindow().getUserCodeFromTauno();
-            if ( !f || !f.contentWindow  || (!f.contentWindow.runJavaScript && !$scope.fullhtml) ) {
+            // wait for contentWindow ready and the callback function also
+            if ( !f || !f.contentWindow  || (!f.contentWindow.runJavaScript && !$scope.fullhtml && !wescheme )
+                || (wescheme && !f.contentWindow.runWeScheme ) ) {
                $scope.lastJS = ""; 
                $scope.lastUserargs = "";
                $scope.lastUserinput = "";
@@ -2596,6 +2652,7 @@ csApp.Controller = function($scope,$transclude) {
                console.log("Odotetaan 300 ms");
                return;
             }
+            $scope.contentWindow = f.contentWindow;
             if ( $scope.iframeClientHeight < 0 ) $scope.iframeClientHeight = f.clientHeight;
             if ( $scope.gsDefaultLanguage ) f.contentWindow.setDefLanguage($scope.gsDefaultLanguage);
             if ( $scope.fullhtml ) {
@@ -2610,6 +2667,14 @@ csApp.Controller = function($scope,$transclude) {
                 f.contentWindow.document.open();
                 f.contentWindow.document.write(fhtml);
                 f.contentWindow.document.close();
+            }
+            else if ( wescheme ) {
+                // $scope.runWeScheme($scope.usercode);
+                try {
+                    f.contentWindow.runWeScheme($scope.usercode);
+                } catch (e) {
+                    console.log(e);
+                }
             }
             else {
                 var s = f.contentWindow.runJavaScript(text, $scope.userargs, $scope.userinput, wantsConsole);

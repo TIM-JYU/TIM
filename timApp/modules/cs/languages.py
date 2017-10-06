@@ -625,6 +625,9 @@ class Glowscript(JS):
 class Processing(JS):
     pass
 
+class WeScheme(JS):
+    pass
+
 
 class VPython(JS):
     pass
@@ -902,3 +905,4 @@ languages["mathcheck"] = Mathcheck
 languages["upload"] = Upload
 languages["octave"] = Octave
 languages["processing"] = Processing
+languages["wescheme"] = WeScheme

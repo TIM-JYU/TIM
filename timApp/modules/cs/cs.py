@@ -218,6 +218,8 @@ def get_md(ttype, query):
         runner = 'cs-jypeli-runner'
     if "sage" in ttype:
         runner = 'cs-sage-runner'
+    if "wescheme" in ttype:
+        runner = 'cs-wescheme-runner'
 
     usercode = None
     user_print = get_json_param(query.jso, "userPrint", None,  False)
@@ -359,6 +361,8 @@ def get_html(ttype, query):
         runner = 'cs-jypeli-runner'
     if "sage" in ttype:
         runner = 'cs-sage-runner'
+    if "wescheme" in ttype:
+        runner = 'cs-wescheme-runner'
 
     usercode = get_json_eparam(query.jso, "state", "usercode", "")
     if is_review(query):
