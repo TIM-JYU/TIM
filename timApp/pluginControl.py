@@ -293,7 +293,7 @@ def pluginify(doc: Document,
             elif src.endswith('.js'):  # relative JS URL
                 path = get_plugin_tim_url(plugin_name) + "/" + src
                 js_paths.append(path)
-            else:  # module name
+            else:  # module name 
                 js_paths.append(src)
         for src in plugin_css_files:
             if src.startswith("http") or src.startswith("/"):
