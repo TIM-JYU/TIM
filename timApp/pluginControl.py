@@ -14,6 +14,7 @@ from timApp.containerLink import get_plugin_tim_url
 from timApp.containerLink import plugin_reqs
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import dereference_pars, Document
+from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.plugin import PluginException, Plugin
 from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.timdb import gamificationdata
@@ -108,7 +109,7 @@ def pluginify(doc: Document,
 
     taketime("answ", "start")
     if dereference:
-        pars = dereference_pars(pars, source_doc=doc.get_original_document())
+        pars = dereference_pars(pars, source_doc=doc.get_source_document())
     if sanitize:
         for par in pars:
             par.sanitize_html()
@@ -157,12 +158,12 @@ def pluginify(doc: Document,
         is_gamified = block.get_attr('gamification')
 
         if is_gamified:
-            md = block.get_markdown()
+            md = block.get_expanded_markdown()
             try:
-                gamified_data = gamificationdata.gamify(md)
+                gamified_data = gamificationdata.gamify(YamlBlock.from_markdown(md))
                 html_pars[idx][output_format.value] = render_template('partials/gamification_map.html',
                                                                       gamified_data=gamified_data)
-            except yaml.parser.ParserError as e:
+            except yaml.YAMLError as e:
                 html_pars[idx][output_format.value] = '<div class="error"><p>Gamification error:</p><pre>' + \
                                                       str(e) + \
                                                       '</pre><p>From block:</p><pre>' + \

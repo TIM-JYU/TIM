@@ -1,43 +1,45 @@
-import argparse
+from argparse import ArgumentTypeError
 
-from timApp.maintenance.util import enum_pars
-from timApp.tim_app import app
-from timApp.timdb.models.usergroup import UserGroup
+from timApp.maintenance.util import enum_pars, create_argparser, BasicArguments, process_items
+from timApp.timdb.docinfo import DocInfo
 
 
-def perform_replace(from_str: str, to_str: str, dry_run: bool):
+class ReplaceArguments(BasicArguments):
+    def __init__(self):
+        super().__init__()
+        self.f = ''
+        self.t = ''
+
+
+def min_replacement_length(x: str):
+    if len(x) < 3:
+        raise ArgumentTypeError("String to replace must be at least 3 characters.")
+    return x
+
+
+def perform_replace(d: DocInfo, args: ReplaceArguments):
     """Replaces all occurrences of the specified from_str with to_str in all documents.
 
-    :param from_str: The string to replace.
-    :param to_str: The replacement.
-    :param dry_run: If True, show what would be replaced.
+    :param args: The replacement arguments.
+    :param d: The document to process.
     """
-    log_str = 'Would replace' if dry_run else 'Replacing'
+    log_str = 'Would replace' if args.dryrun else 'Replacing'
     modified_pars = 0
-    for d, p in enum_pars():
+    for d, p in enum_pars(d):
         old_md = p.get_markdown()
-        match_count = old_md.count(from_str)
+        match_count = old_md.count(args.f)
         if match_count > 0:
             modified_pars += 1
             print(
-                f'{log_str} {from_str} -> {to_str} in document {d.path}, paragraph {p.get_id()} ({match_count} match{"" if match_count == 1 else "es"})')
-            if not dry_run:
-                p.doc.modifier_group_id = UserGroup.get_admin_group().id
-                p.set_markdown(old_md.replace(from_str, to_str))
+                f'{log_str} {args.f} -> {args.t} in document {d.path}, paragraph {p.get_id()} ({match_count} match{"" if match_count == 1 else "es"})')
+            if not args.dryrun:
+                p.set_markdown(old_md.replace(args.f, args.t))
                 p.save()
-    print(f'{modified_pars} paragraphs {"would be" if dry_run else "were"} modified.')
+    return modified_pars
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Replaces strings in documents.')
-    parser.add_argument('-f', help='string to replace', required=True)
+    parser = create_argparser('Replaces strings in documents')
+    parser.add_argument('-f', help='string to replace', required=True, type=min_replacement_length)
     parser.add_argument('-t', help='replacement', required=True)
-    parser.add_argument('--dry-run', dest='dryrun', action='store_true',
-                        help='show what would get replaced')
-    parser.add_argument('--no-dry-run', dest='dryrun', action='store_false', help='do the replacement')
-    parser.set_defaults(dryrun=True)
-    opts = parser.parse_args()
-    if len(opts.f) < 3:
-        print('String to replace must be at least 3 characters.')
-    with app.test_request_context():
-        perform_replace(opts.f, opts.t, opts.dryrun)
+    process_items(perform_replace, parser)

@@ -13,6 +13,7 @@ from timApp.documentmodel.document import dereference_pars
 from timApp.documentmodel.macroinfo import MacroInfo
 from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.randutils import hashfunc
+from timApp.documentmodel.yamlblock import strip_code_block
 from timApp.markdownconverter import expand_macros, create_environment
 from timApp.pluginControl import pluginify
 from timApp.pluginOutputFormat import PluginOutputFormat
@@ -115,7 +116,7 @@ class DocumentPrinter:
         # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
         pars = self._doc_entry.document.get_paragraphs()
         self._doc_entry.document.preload_option = PreloadOption.all
-        pars = dereference_pars(pars, source_doc=self._doc_entry.document.get_original_document())
+        pars = dereference_pars(pars, source_doc=self._doc_entry.document.get_source_document())
         pars_to_print = []
         texplain = self._doc_entry.document.get_settings().is_texplain()
         for par in pars:
@@ -408,20 +409,10 @@ class DocumentPrinter:
         return templates_list
 
     @staticmethod
-    def remove_block_markers(template_md: str) -> str:
-        out = []
-        p = re.compile('```')
-        for line in template_md.splitlines():
-            if p.match(line) is None:
-                out.append(line)
-
-        return "\n".join(out)
-
-    @staticmethod
     def parse_template_content(template_doc: DocInfo, doc_to_print: DocEntry) -> str:
         pars = template_doc.document.get_paragraphs()
 
-        pars = dereference_pars(pars, source_doc=template_doc.document.get_original_document())
+        pars = dereference_pars(pars, source_doc=template_doc.document.get_source_document())
 
         # attach macros from target document to template
         macroinfo = MacroInfo()
@@ -438,7 +429,7 @@ class DocumentPrinter:
         for par in pars:
             if par.get_attr('printing_template') is not None:
                 exp_md = par.get_expanded_markdown(macroinfo=macroinfo, ignore_errors=True)
-                out_pars.append(DocumentPrinter.remove_block_markers(exp_md))
+                out_pars.append(strip_code_block(exp_md))
 
         return "\n\n".join(out_pars)
 

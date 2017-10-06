@@ -38,7 +38,7 @@ class DocParagraph:
         :param files_root: The location of the data store for this paragraph, or None to use the default data store.
 
         """
-        self.doc = doc
+        self.doc: 'Document' = doc
         self.original = None
         self.files_root = self.get_default_files_root() if files_root is None else files_root
         self.html_sanitized = False
@@ -118,8 +118,8 @@ class DocParagraph:
         """
         return create_reference(doc, doc_id=self.get_doc_id(), par_id=self.get_id(), r=r, add_rd=add_rd)
 
-    @classmethod
-    def create_area_reference(cls, doc, area_name: str, r: Optional[str] = None, add_rd: Optional[bool] = True,
+    @staticmethod
+    def create_area_reference(doc, area_name: str, r: Optional[str] = None, rd: Optional[int] = None,
                               files_root: Optional[str] = None) -> 'DocParagraph':
         """Creates an area reference paragraph.
 
@@ -133,7 +133,7 @@ class DocParagraph:
         """
         par = DocParagraph.create(doc, files_root=files_root)
         par.set_attr('r', r)
-        par.set_attr('rd', doc.doc_id if add_rd else None)
+        par.set_attr('rd', doc.doc_id if rd is None else rd)
         par.set_attr('ra', area_name)
         par.set_attr('rp', None)
 
@@ -296,17 +296,11 @@ class DocParagraph:
     def get_rd(self) -> Optional[int]:
         """Returns the id of the Document to which this paragraph refers, or None if this is not a reference
         paragraph."""
-        if 'rd' in self.attrs:
-            try:
-                return int(self.get_attr('rd'))
-            except ValueError:
-                return None
-
-        default_rd = self.doc.get_settings().get_source_document()
-        if default_rd is not None:
-            return default_rd
-
-        return None
+        try:
+            rd = self.get_attr('rd')
+            return None if rd is None else int(rd)
+        except ValueError:
+            return None
 
     def is_identical_to(self, par: 'DocParagraph'):
         return self.is_same_as(par) and self.get_id() == par.get_id()
@@ -361,14 +355,12 @@ class DocParagraph:
         return self.nocache
 
     def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None,
-                              ignore_errors: bool = False,
-                              user=None) -> str:
+                              ignore_errors: bool = False) -> str:
         """Returns the macro-processed markdown for this paragraph.
 
         :param macroinfo: The MacroInfo to use. If None, the MacroInfo is taken from the document that has the
         paragraph.
         :param ignore_errors: Whether or not to ignore errors when expanding the macros
-        :param user: current user if wanted to force using user specific macros, then nocache is needed
         :return: The expanded markdown.
 
         """
@@ -421,10 +413,11 @@ class DocParagraph:
         """Returns the HTML for the settings paragraph."""
         from timApp.documentmodel.docsettings import DocSettings
 
-        if DocSettings.is_valid_paragraph(self):
-            return '<p class="docsettings">&nbsp;</p>'
-        else:
-            return '<div class="pluginError">Invalid settings paragraph detected</div>'
+        try:
+            DocSettings.settings_to_string(self)
+        except TimDbException as e:
+            return f'<div class="pluginError">Invalid settings: {e}</div>'
+        return '<p class="docsettings">&nbsp;</p>'
 
     def get_html(self, from_preview: bool = True) -> str:
         """Returns the html for the paragraph.
@@ -896,7 +889,7 @@ class DocParagraph:
     def __repr__(self):
         return self.__data.__repr__()
 
-    def get_referenced_pars(self, set_html: bool = True, source_doc: bool = None,
+    def get_referenced_pars(self, set_html: bool = True, source_doc: 'Document' = None,
                             tr_get_one: bool = True, visited_pars: Optional[List[Tuple[int, str]]] = None) -> List[
             'DocParagraph']:
         """Returns the paragraphs that are referenced by this paragraph.
@@ -965,7 +958,7 @@ class DocParagraph:
         elif source_doc is not None:
             ref_doc = source_doc
         else:
-            ref_doc = self.doc.get_original_document()
+            ref_doc = self.doc.get_source_document()
 
         if ref_doc is None:
             if ref_docid is None:
@@ -1042,6 +1035,9 @@ class DocParagraph:
 
         """
         self.__data['id'] = par_id
+
+    def is_citation(self):
+        return self.get_attr('r') == 'c'
 
 
 def is_real_id(par_id: Optional[str]):

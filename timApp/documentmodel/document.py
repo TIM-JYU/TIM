@@ -5,24 +5,29 @@ from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from tempfile import mkstemp
 from time import time
-from typing import List, Optional, Set, Tuple, Union, Iterable
-from flask import g
+from typing import List, Optional, Set, Tuple, Union, Iterable, Generator
 
 import dateutil.parser
+from flask import g
 from lxml import etree, html
 
 from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.documentmodel.docsettings import DocSettings
+from timApp.documentmodel.docsettings import DocSettings, resolve_final_settings
 from timApp.documentmodel.documenteditresult import DocumentEditResult
 from timApp.documentmodel.documentparser import DocumentParser
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter
-from timApp.documentmodel.exceptions import DocExistsError, ValidationException, AttributesAtEndOfCodeBlockException
+from timApp.documentmodel.exceptions import DocExistsError, ValidationException
 from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.validationresult import ValidationResult
+from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException
 from timApp.utils import get_error_html
+
+
+if False:
+    from timApp.timdb.docinfo import DocInfo
 
 
 class Document:
@@ -51,9 +56,11 @@ class Document:
         # Whether the document exists on disk.
         self.__exists: bool = None
         # Cache for the original document.
-        self.original_doc: Optional['Document'] = None
+        self.source_doc: Optional['Document'] = None
         # Cache for document settings.
         self.settings: Optional[DocSettings] = None
+        # The corresponding DocInfo object.
+        self.docinfo: 'DocInfo' = None
 
         # Used for accessing previous/next paragraphs quickly based on id
         self.par_map = None
@@ -187,22 +194,40 @@ class Document:
         current_settings[key] = value
         self.set_settings(current_settings)
 
-    def set_settings(self, settings: dict):
-        first_par = None
-        with self.__iter__() as i:
-            for p in i:
-                first_par = p
+    def get_settings_pars(self) -> Generator[DocParagraph, None, None]:
+        self.ensure_par_ids_loaded()
+        for p_id in self.par_ids:
+            curr = self.get_paragraph(p_id)
+            if curr.is_setting():
+                yield curr
+            else:
                 break
+
+    def set_settings(self, settings: Union[dict, YamlBlock], force_new_par: bool=False):
+        first_par = None
+        self.ensure_par_ids_loaded()
+        if self.par_ids:
+            first_par = self.get_paragraph(self.par_ids[0])
+        last_settings_par = None
+        settings_pars = list(self.get_settings_pars())
+        if settings_pars:
+            last_settings_par = settings_pars[-1]
+        if not isinstance(settings, YamlBlock):
+            assert isinstance(settings, dict)
+            settings = YamlBlock(values=settings)
         new_par = DocSettings(self, settings).to_paragraph()
         if first_par is None:
             self.add_paragraph_obj(new_par)
         else:
-            if not first_par.is_setting():
+            if last_settings_par is None:
                 self.insert_paragraph_obj(new_par, insert_before_id=first_par.get_id())
             else:
-                self.modify_paragraph_obj(first_par.get_id(), new_par)
+                if not last_settings_par.is_reference() and not force_new_par:
+                    self.modify_paragraph_obj(last_settings_par.get_id(), new_par)
+                else:
+                    self.insert_paragraph_obj(new_par, insert_after_id=last_settings_par.get_id())
 
-    def get_tasks(self) -> Iterable[DocParagraph]:
+    def get_tasks(self) -> Generator[DocParagraph, None, None]:
         for p in self.get_dereferenced_paragraphs():
             if p.is_task():
                 yield p
@@ -211,11 +236,9 @@ class Document:
         if self.settings is not None:
             self.settings.user = user
             return self.settings
-        if self.par_cache is not None and not self.is_incomplete_cache:
-            settings = DocSettings.from_paragraph(self.par_cache[0]) if len(self.par_cache) > 0 else DocSettings(self)
-        else:
-            self.ensure_par_ids_loaded()
-            settings = DocSettings.from_paragraph(self.get_paragraph(self.par_ids[0])) if self.par_ids else DocSettings(self)
+        self.ensure_par_ids_loaded()
+        settings_block = resolve_final_settings(self.get_settings_pars())
+        settings = DocSettings(self, settings_dict=settings_block)
         settings.user = user
         self.settings = settings
         gmacros = settings.get_globalmacros()
@@ -377,6 +400,7 @@ class Document:
                             op_params: Optional[dict] = None) -> Tuple[int, int]:
         ver_exists = True
         ver = self.get_version()
+        old_ver = None
         while ver_exists:
             old_ver = ver
             ver = (old_ver[0] + 1, 0) if increment_major else (old_ver[0], old_ver[1] + 1)
@@ -394,7 +418,7 @@ class Document:
         self.par_map = None
         self.par_ids = None
         self.par_hashes = None
-        self.original_doc = None
+        self.source_doc = None
         self.settings = None
         return ver
 
@@ -414,7 +438,7 @@ class Document:
                         try:
                             reflist.add(int(par.get_doc_id()))
                         except (ValueError, TypeError):
-                            print('Invalid document reference: ' + str(par.get_rd()))
+                            pass
         self.__save_reflist(new_reflist_file, reflist)
 
     def raise_if_not_exist(self, par_id: str):
@@ -803,7 +827,7 @@ class Document:
     def get_index(self) -> List[Tuple]:
         pars = [par for par in DocParagraphIter(self)]
         DocParagraph.preload_htmls(pars, self.get_settings())
-        pars = dereference_pars(pars, source_doc=self.get_original_document())
+        pars = dereference_pars(pars, source_doc=self.get_source_document())
 
         # Skip plugins
         html_list = [par.get_html(from_preview=False) for par in pars if not par.is_dynamic()]
@@ -908,11 +932,12 @@ class Document:
         if ver is not None:
             from timApp.documentmodel.documentversion import DocumentVersion
             source = DocumentVersion(self.doc_id, ver, self.files_root)
+            source.docinfo = self.docinfo
 
         for p in source:
             if p.is_reference():
                 try:
-                    referenced_pars = p.get_referenced_pars()  # TODO maybe set_html=False
+                    referenced_pars = p.get_referenced_pars(set_html=False)
                 except TimDbException:
                     pass
                 else:
@@ -920,7 +945,7 @@ class Document:
                         try:
                             refs.add(int(par.get_doc_id()))
                         except (ValueError, TypeError):
-                            print('Invalid document reference: ' + str(par.get_rd()))
+                            pass
         return refs
 
     def __load_reflist(self, reflist_name: str) -> Set[int]:
@@ -948,7 +973,7 @@ class Document:
         return self.par_cache
 
     def get_dereferenced_paragraphs(self) -> List[DocParagraph]:
-        return dereference_pars(self.get_paragraphs(), source_doc=self.get_original_document())
+        return dereference_pars(self.get_paragraphs(), source_doc=self.get_source_document())
 
     def get_closest_paragraph_title(self, par_id: Optional[str]):
         last_title = None
@@ -965,11 +990,17 @@ class Document:
         from timApp.documentmodel.documentversion import DocumentVersion
         return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id, self.preload_option)
 
-    def get_original_document(self) -> Optional['Document']:
-        if self.original_doc is None:
-            src_docid = self.get_settings().get_source_document()
-            self.original_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
-        return self.original_doc
+    def get_source_document(self) -> Optional['Document']:
+        if self.source_doc is None:
+            if self.docinfo is None:
+                from timApp.timdb.models.docentry import DocEntry
+                self.docinfo = DocEntry.find_by_id(self.doc_id, try_translation=True)
+            if self.docinfo.is_original_translation:
+                src_docid = self.get_settings().get_source_document()
+                self.source_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
+            else:
+                self.source_doc = self.docinfo.src_doc.document
+        return self.source_doc
 
     def get_last_par(self):
         pars = [par for par in self]
@@ -1027,7 +1058,7 @@ class Document:
         self.version = None
         self.par_ids = None
         self.par_hashes = None
-        self.original_doc = None
+        self.source_doc = None
         self.settings = None
 
 

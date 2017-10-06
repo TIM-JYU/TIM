@@ -1,7 +1,9 @@
 from unittest.mock import patch, Mock
 
 from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.document import Document
+from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.docinfo import DocInfo
 
@@ -13,10 +15,10 @@ class TranslationTest(TimRouteTest):
         doc = self.create_doc()
         lang = 'en'
         doc_title = 'test'
-        j = self.create_translation(doc, doc_title, lang)
+        t = self.create_translation(doc, doc_title, lang)
         self.create_translation(doc, doc_title, lang, expect_status=403,
                                 expect_content={'error': 'Translation for this language already exists'})
-        self.get(f'/view/{j.path}')
+        self.get(t.url)
         self.logout()
         self.json_post(f'/translate/{doc.id}/{lang}',
                        {'doc_title': doc_title},
@@ -28,10 +30,10 @@ class TranslationTest(TimRouteTest):
         doc.document.set_settings({'a': 'b'})
         lang = 'en'
         doc_title = 'test'
-        j = self.create_translation(doc, doc_title, lang)
-        d = Document(j.id)
+        t = self.create_translation(doc, doc_title, lang)
+        d = t.document
         self.assertEqual('b', d.get_settings().get_dict()['a'])
-        self.get(f'/view/{j.path}')
+        self.get(t.url)
 
     def test_translation_content(self):
         self.login_test1()
@@ -41,24 +43,24 @@ class TranslationTest(TimRouteTest):
         pars = doc.document.get_paragraphs()
         par_ids = set(p.get_id() for p in pars)
         tr_pars = tr_doc.get_paragraphs()
-        old_md = self.get(f'/getBlock/{tr_doc.doc_id}/{tr_pars[2].get_id()}')
-        self.assertDictEqual({'source_document': doc.id}, tr_doc.get_settings().get_dict())
+        plugin_tr_par = tr_pars[1]
+        old_md = self.get(f'/getBlock/{tr_doc.doc_id}/{plugin_tr_par.get_id()}')
+        self.assertEqual({}, tr_doc.get_settings().get_dict())
 
-        # all but the settings paragraph are translated paragraphs
-        self.assertTrue(tr_pars[0].is_setting())
-        for p in tr_pars[1:]: # type DocParagraph
+        self.assertFalse(tr_pars[0].is_setting())
+        for p in tr_pars: # type DocParagraph
             self.assertTrue(p.is_translation())
             self.assertTrue(p.get_attr('rp') is not None)
             self.assertIn(p.get_attr('rp'), par_ids)
         finnish = 'Vastaa kyllä tai ei seuraaviin'
         english = 'Answer yes or no to the following questions'
         new_md = old_md['text'].replace(english, finnish).replace('true', 'false')
-        self.post_par(tr_doc, new_md, tr_pars[2].get_id(),
+        self.post_par(tr_doc, new_md, plugin_tr_par.get_id(),
                       expect_contains=finnish,
                       json_key='texts',
                       expect_xpath='.//mmcq')
 
-        md = self.get(f'/getBlock/{tr_doc.doc_id}/{tr_pars[2].get_id()}')
+        md = self.get(f'/getBlock/{tr_doc.doc_id}/{plugin_tr_par.get_id()}')
         self.assertEqual(new_md, md['text'])
         pars = doc.document.get_paragraphs()
         self.assertIn(english, pars[1].get_markdown())
@@ -69,7 +71,7 @@ class TranslationTest(TimRouteTest):
         self.post_answer('mmcq',
                          task_id_ext,
                          [False, False, False],
-                         ref_from=(tr_doc.doc_id, tr_pars[2].get_id()))
+                         ref_from=(tr_doc.doc_id, plugin_tr_par.get_id()))
         data = self.get_task_answers(task_id)
         self.assertEqual(3.0, data[0]['points'])
 
@@ -84,7 +86,7 @@ class TranslationTest(TimRouteTest):
     def assert_translation_synced(self, tr_doc: Document, doc: DocInfo):
         tr_doc.clear_mem_cache()
         doc.document.clear_mem_cache()
-        self.assertEqual([None] + [p.get_id() for p in doc.document.get_paragraphs()],
+        self.assertEqual([p.get_id() for p in doc.document.get_paragraphs()],
                          [p.get_attr('rp') for p in tr_doc.get_paragraphs()])
 
     def test_translation_sync(self):
@@ -135,27 +137,27 @@ class TranslationTest(TimRouteTest):
         self.delete_par(doc.document, doc.document.get_paragraphs()[0].get_id())
         tr_doc.clear_mem_cache()
         tr_pars = tr_doc.get_paragraphs()
-        self.assertEqual('new', tr_pars[1].get_markdown())
+        self.assertEqual('new', tr_pars[0].get_markdown())
         self.assertEqual('new2', tr_pars[-1].get_markdown())
-        self.assertEqual(doc.document.get_paragraphs()[0].get_id(), tr_pars[2].get_attr('rp'))
+        self.assertEqual(doc.document.get_paragraphs()[0].get_id(), tr_pars[1].get_attr('rp'))
 
         self.update_whole_doc(doc.document, 'whole new text')
         doc.document.clear_mem_cache()
         tr_doc.clear_mem_cache()
         first_id = doc.document.get_paragraphs()[0].get_id()
         tr_pars = tr_doc.get_paragraphs()
-        self.assertEqual('new', tr_pars[1].get_markdown())
-        self.assertEqual('new2', tr_pars[2].get_markdown())
-        self.assertEqual(first_id, tr_pars[3].get_attr('rp'))
+        self.assertEqual('new', tr_pars[0].get_markdown())
+        self.assertEqual('new2', tr_pars[1].get_markdown())
+        self.assertEqual(first_id, tr_pars[2].get_attr('rp'))
 
         self.new_par(doc.document, 'new first', first_id)
         tr_doc.clear_mem_cache()
         tr_pars = tr_doc.get_paragraphs()
-        self.assertEqual('new', tr_pars[1].get_markdown())
-        self.assertEqual('new2', tr_pars[2].get_markdown())
+        self.assertEqual('new', tr_pars[0].get_markdown())
+        self.assertEqual('new2', tr_pars[1].get_markdown())
         pars = doc.document.get_paragraphs()
-        self.assertEqual(pars[0].get_id(), tr_pars[3].get_attr('rp'))
-        self.assertEqual(pars[1].get_id(), tr_pars[4].get_attr('rp'))
+        self.assertEqual(pars[0].get_id(), tr_pars[2].get_attr('rp'))
+        self.assertEqual(pars[1].get_id(), tr_pars[3].get_attr('rp'))
 
     def test_translation_perf(self):
         self.login_test1()
@@ -170,8 +172,7 @@ class TranslationTest(TimRouteTest):
             self.get(tr.url)
         m.assert_not_called()
 
-    def test_translation_no_settings_sync(self):
-        """The settings paragraph from the original document isn't copied to the new one."""
+    def test_translation_settings(self):
         self.login_test1()
         d = self.create_doc(initial_par='hello')
         t = self.create_translation(d, 'title', 'en')
@@ -180,4 +181,21 @@ class TranslationTest(TimRouteTest):
         tr_pars = t.document.get_paragraphs()
         orig_pars = d.document.get_paragraphs()
         settings_id = orig_pars[0].get_id()
-        self.assertFalse(any(p.get_attr('rp') == settings_id for p in tr_pars))
+        self.assertEqual(tr_pars[0].get_attr('rp'), settings_id)
+        tr_settings = DocSettings.from_paragraph(tr_pars[0])
+        self.assertEqual(tr_settings.get_dict(), {})
+        self.assertEqual(t.document.get_settings().get_dict(), {'a': 'b'})
+
+        d.document.set_settings({'a': 'b', 'c': 'd'})
+        tr_pars[0].set_markdown(YamlBlock(values={'c': 'x'}).to_markdown())
+        tr_pars[0].save()
+        self.assertEqual(t.document.get_settings().get_dict(), {'a': 'b', 'c': 'x'})
+
+    def test_translation_ignored_src_doc(self):
+        self.login_test1()
+        d = self.create_doc(initial_par='test')
+        t = self.create_translation(d, 't', 'en')
+        fake_id = 9999
+        t.document.set_settings({'source_document': fake_id})
+        self.assertEqual(t.document.get_source_document().doc_id, d.id)
+        self.assertNotEqual(d.id, fake_id)

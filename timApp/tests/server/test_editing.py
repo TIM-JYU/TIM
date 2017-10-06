@@ -41,13 +41,14 @@ class EditTest(TimRouteTest):
         d = self.create_doc(initial_par=['kissa'])
         t = self.create_translation(d, 'test', 'en')
         e = self.get(t.url, as_tree=True)
-        self.assert_content(e, ['', 'kissa'])
+        self.assert_content(e, ['kissa'])
         tr_pars = t.document.get_paragraphs()
-        md = tr_pars[1].get_exported_markdown().replace('kissa', 'cat')
-        e = self.post_par(t.document, md, tr_pars[1].get_id(), as_tree=True, json_key='texts')
+        par = tr_pars[0]
+        md = par.get_exported_markdown().replace('kissa', 'cat')
+        e = self.post_par(t.document, md, par.get_id(), as_tree=True, json_key='texts')
         self.assert_content(e, ['cat'])
         updated = self.get_updated_pars(t, json_key='changed_pars')
-        e = html.fromstring(updated[tr_pars[1].get_id()])
+        e = html.fromstring(updated[par.get_id()])
         self.assert_content(e, ['cat'])
 
     def test_update(self):

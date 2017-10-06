@@ -21,8 +21,6 @@ def synchronize_translations(doc: DocInfo, edit_result: DocumentEditResult):
         return
     orig = doc.document_as_current_user
     orig_ids = orig.get_par_ids()
-    if orig_ids and orig.get_paragraph(orig_ids[0]).is_setting():
-        orig_ids = orig_ids[1:]
 
     for tr in doc.translations:  # type: DocInfo
         if not tr.is_original_translation:
@@ -42,6 +40,8 @@ def synchronize_translations(doc: DocInfo, edit_result: DocumentEditResult):
                     for par_id in orig_ids[j1:j2]:
                         before_i = tr_doc.find_insert_index(i2, tr_ids)
                         tr_par = create_reference(tr_doc, orig.doc_id, par_id, 'tr', add_rd=False)
+                        if orig.get_paragraph(par_id).is_setting():
+                            tr_par.set_attr('settings', '')
                         tr_doc.insert_paragraph_obj(tr_par,
                                                     insert_before_id=tr_ids[before_i] if before_i < len(
                                                         tr_ids) else None)
@@ -49,6 +49,8 @@ def synchronize_translations(doc: DocInfo, edit_result: DocumentEditResult):
                     for par_id in orig_ids[j1:j2]:
                         before_i = tr_doc.find_insert_index(i2, tr_ids)
                         tr_par = create_reference(tr_doc, orig.doc_id, par_id, 'tr', add_rd=False)
+                        if orig.get_paragraph(par_id).is_setting():
+                            tr_par.set_attr('settings', '')
                         tr_doc.insert_paragraph_obj(tr_par,
                                                     insert_before_id=tr_ids[before_i] if before_i < len(
                                                         tr_ids) else None)

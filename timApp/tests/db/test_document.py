@@ -258,7 +258,7 @@ class DocumentTest(TimDbTest):
         macro_par = d.add_paragraph(
             'this is %%testmacro%% and year is %%year%% and user is %%username%% and %%nonexistent%%')
         macro_par = d.get_paragraph(macro_par.get_id())  # Put the paragraph in cache
-        self.assertDictEqual({'macros': {'testmacro': 'testvalue', 'year': '2015'},
+        self.assertEqual({'macros': {'testmacro': 'testvalue', 'year': '2015'},
                               'macro_delimiter': '%%'}, d.get_settings().get_dict())
 
         # User-specific macros should be preserved
@@ -412,10 +412,10 @@ a: 1
         d.set_settings({'x': 1})
         s1 = d.get_settings()
         self.assertEqual({'x': 1}, s1.get_dict())
-        src1 = d.get_original_document()
+        src1 = d.get_source_document()
         d.set_settings({'x': 2, 'source_document': 10})
         s2 = d.get_settings()
-        src2 = d.get_original_document()
+        src2 = d.get_source_document()
         self.assertEqual({'x': 2, 'source_document': 10}, s2.get_dict())
         self.assertIsNone(src1)
         self.assertEqual(10, src2.doc_id)

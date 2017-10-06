@@ -117,12 +117,10 @@ class DocEntry(db.Model, DocInfo):
             from timApp.timdb.models.folder import Folder
             Folder.create(location, owner_group_id=owner_group_id, commit=False)
 
-        document_id = insert_block(title or path, owner_group_id, blocktypes.DOCUMENT, commit=False).id
-        document = Document(document_id, modifier_group_id=owner_group_id)
-        document.create()
+        document = create_document_and_block(owner_group_id, title or path)
 
         # noinspection PyArgumentList
-        docentry = DocEntry(id=document_id, name=path, public=True)
+        docentry = DocEntry(id=document.doc_id, name=path, public=True)
         if path is not None:
             from timApp.timdb.models.folder import Folder
             if Folder.find_by_path(path):
@@ -138,10 +136,17 @@ class DocEntry(db.Model, DocInfo):
         if settings is not None:
             document.set_settings(settings)
         if is_gamified:
-            GamificationDocument.create(document_id)
+            GamificationDocument.create(document.doc_id)
 
         db.session.commit()
         return docentry
+
+
+def create_document_and_block(owner_group_id: int, desc: Optional[str]=None):
+    document_id = insert_block(desc, owner_group_id, blocktypes.DOCUMENT, commit=False).id
+    document = Document(document_id, modifier_group_id=owner_group_id)
+    document.create()
+    return document
 
 
 def get_documents(include_nonpublic: bool = False,

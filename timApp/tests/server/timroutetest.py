@@ -47,6 +47,10 @@ testclient: FlaskClient = timApp.tim.app.test_client()
 testclient = testclient.__enter__()
 
 
+def get_content(element: HtmlElement) -> List[str]:
+    return [r.text_content().strip() for r in element.cssselect('.parContent')]
+
+
 class TimRouteTest(TimDbTest):
     """A base class for running tests for TIM routes."""
     doc_num = 1
@@ -563,10 +567,10 @@ class TimRouteTest(TimDbTest):
         return Translation.query.get(j['id']) if expect_status == 200 else None
 
     def assert_content(self, element: HtmlElement, expected: List[str]):
-        pars = element.cssselect('.parContent')
+        pars = get_content(element)
         self.assertEqual(len(pars), len(expected))
         for e, r in zip(expected, pars):
-            self.assertEqual(e, r.text_content().strip())
+            self.assertEqual(r, e)
 
     def get_updated_pars(self, d: DocInfo, **kwargs):
         return self.get(f'/getUpdatedPars/{d.id}', **kwargs)

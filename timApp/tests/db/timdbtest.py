@@ -68,6 +68,7 @@ class TimDbTest(unittest.TestCase):
     def create_doc(self, from_file=None, initial_par: Union[str, List[str]]=None, settings=None):
         d = DocEntry.create(f'test{TimDbTest.i}', 0, 'test', from_file=from_file, initial_par=initial_par,
                             settings=settings)
+        TimDbTest.i += 1
         return d
 
     def init_doc(self, doc: Document, from_file, initial_par: Union[str, List[str]], settings):

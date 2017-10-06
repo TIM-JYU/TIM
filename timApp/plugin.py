@@ -7,11 +7,11 @@ import yaml
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.macroinfo import MacroInfo
+from timApp.documentmodel.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdownconverter import expand_macros
+from timApp.rndutils import get_simple_hash_from_par_and_user
 from timApp.timdb.models.user import User
 from timApp.timdb.timdbexception import TimDbException
-from timApp.utils import parse_yaml, merge
-from timApp.rndutils import get_simple_hash_from_par_and_user
 
 date_format = '%Y-%m-%d %H:%M:%S'
 
@@ -271,14 +271,13 @@ def parse_plugin_values_macros(par: DocParagraph,
         rnd_macros = par.get_rands()
         if rnd_macros:
             macros = {**macros, **rnd_macros}
-        yaml_str = par_md[par_md.index('\n') + 1:par_md.rindex('\n')]
+        yaml_str = strip_code_block(par_md)
         if not par.get_nomacros():
             yaml_str = expand_macros(yaml_str,
                                      macros=macros,
                                      macro_delimiter=macro_delimiter)
-        # print("yaml str is: " + yaml_str)
         try:
-            values = parse_yaml(yaml_str)
+            values = YamlBlock.from_markdown(yaml_str).values
         except Exception:
             return {'error': "YAML is malformed: " + yaml_str}
         else:

@@ -3,7 +3,8 @@
 from typing import List, Optional
 
 from timApp.timdb.docinfo import DocInfo
-from timApp.timdb.models.docentry import DocEntry, get_documents
+from timApp.timdb.item import Item
+from timApp.timdb.models.docentry import DocEntry, get_documents, create_document_and_block
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.tim_models import db
 from timApp.validation import validate_item_and_create
@@ -106,16 +107,16 @@ def do_create_document(item_path, item_type, item_title, copied_doc: Optional[Do
         for tr in copied_doc.translations:  # type: Translation
             doc_id = item.id
             if not tr.is_original_translation:
-                doc_entry = DocEntry.create(None, get_current_user_group(), None)
-                doc_entry.document.update(tr.document.export_markdown(), doc_entry.document.export_markdown())
-                settings = doc_entry.document.get_settings()
+                document = create_document_and_block(get_current_user_group())
+                doc_id = document.doc_id
+                new_tr = add_tr_entry(doc_id, item, tr)
+                document.docinfo = new_tr
+                document.update(tr.document.export_markdown(), document.export_markdown())
+                settings = document.get_settings()
                 settings.set_source_document(item.id)
-                doc_entry.document.set_settings(settings.get_dict())
-                doc_id = doc_entry.id
-            if tr.lang_id or not tr.is_original_translation:
-                new_tr = Translation(doc_id=doc_id, src_docid=item.id, lang_id=tr.lang_id)
-                new_tr.title = tr.title
-                db.session.add(new_tr)
+                document.set_settings(settings.get_dict())
+            elif tr.lang_id:
+                add_tr_entry(doc_id, item, tr)
             if not tr.is_original_translation:
                 copy_default_rights(doc_id, blocktypes.DOCUMENT, commit=False)
         db.session.commit()
@@ -131,3 +132,10 @@ def do_create_document(item_path, item_type, item_title, copied_doc: Optional[Do
             item.document.update(template.document.export_markdown(), item.document.export_markdown())
 
     return json_response(item)
+
+
+def add_tr_entry(doc_id: int, item: Item, tr: Translation) -> Translation:
+    new_tr = Translation(doc_id=doc_id, src_docid=item.id, lang_id=tr.lang_id)
+    new_tr.title = tr.title
+    db.session.add(new_tr)
+    return new_tr
