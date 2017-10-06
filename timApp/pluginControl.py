@@ -160,7 +160,8 @@ def pluginify(doc: Document,
         is_gamified = not not is_gamified
 
         if is_gamified:
-            md = block.get_expanded_markdown()
+            # md = block.get_expanded_markdown()  # not enough macros
+            md = block.get_markdown()
             try:
                 # md = Plugin.from_paragraph_macros(md, global_attrs, macros, macro_delimiter)
                 md = expand_macros(md, macros=macros,
@@ -293,7 +294,7 @@ def pluginify(doc: Document,
             elif src.endswith('.js'):  # relative JS URL
                 path = get_plugin_tim_url(plugin_name) + "/" + src
                 js_paths.append(path)
-            else:  # module name 
+            else:  # module name
                 js_paths.append(src)
         for src in plugin_css_files:
             if src.startswith("http") or src.startswith("/"):
