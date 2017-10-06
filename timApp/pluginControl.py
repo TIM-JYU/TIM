@@ -24,6 +24,7 @@ from timApp.rndutils import get_simple_hash_from_par_and_user
 from timApp.timdb.printsettings import PrintFormat
 from timApp.dumboclient import call_dumbo
 from timApp.timtiming import taketime
+from timApp.markdownconverter import expand_macros
 
 LAZYSTART = "<!--lazy "
 LAZYEND = " lazy-->"
@@ -156,10 +157,15 @@ def pluginify(doc: Document,
         attr_taskid = block.get_attr('taskId')
         plugin_name = block.get_attr('plugin')
         is_gamified = block.get_attr('gamification')
+        is_gamified = not not is_gamified
 
         if is_gamified:
             md = block.get_expanded_markdown()
             try:
+                # md = Plugin.from_paragraph_macros(md, global_attrs, macros, macro_delimiter)
+                md = expand_macros(md, macros=macros,
+                                       macro_delimiter=macro_delimiter)
+
                 gamified_data = gamificationdata.gamify(YamlBlock.from_markdown(md))
                 html_pars[idx][output_format.value] = render_template('partials/gamification_map.html',
                                                                       gamified_data=gamified_data)
@@ -233,7 +239,7 @@ def pluginify(doc: Document,
                                          "info": info,
                                          "targetFormat": target_format}
         else:
-            if block.nocache:  # get_nocache():
+            if block.nocache and not is_gamified:  # get_nocache():
                 # if block.get_nocache():
                 texts = [block.get_expanded_markdown(macroinfo)]
                 htmls = call_dumbo(texts)
