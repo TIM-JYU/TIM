@@ -100,6 +100,9 @@ class Language:
             codecs.open(self.inputfilename, "w", "utf-8").write(userinput)
         self.stdin = get_param(self.query, "stdin", stdin_default)
 
+    def before_save(self, s):
+        return s
+
     def run(self, web, sourcelines, points_rule):
         return 0, "", "", ""
 
@@ -152,8 +155,13 @@ class CS(Language):
         self.sourcefilename = "/tmp/%s/%s.cs" % (self.basename, self.filename)
         self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
 
+    def before_save(self, s):
+        s = s.replace('System.Console.ReadLine', 'TIMconsole.ReadLine')
+        s = s.replace('Console.ReadLine', 'TIMconsole.ReadLine')
+        return s
+
     def get_cmdline(self, sourcecode):
-        cmdline = "%s /r:System.Numerics.dll /out:%s %s" % (self.compiler, self.exename, self.sourcefilename)
+        cmdline = "%s /r:System.Numerics.dll /out:%s %s /cs/jypeli/TIMconsole.cs" % (self.compiler, self.exename, self.sourcefilename)
         return cmdline
 
     def run(self, web, sourcelines, points_rule):
@@ -624,6 +632,7 @@ class Glowscript(JS):
 
 class Processing(JS):
     pass
+
 
 class WeScheme(JS):
     pass

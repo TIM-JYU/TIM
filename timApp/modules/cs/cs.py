@@ -1000,7 +1000,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     s = "\n"
 
                 # Write the program to the file =======================================================
-                codecs.open(language.sourcefilename, "w", "utf-8").write(language.before_code + s)
+                s = language.before_save(language.before_code + s)
+                codecs.open(language.sourcefilename, "w", "utf-8").write(s)
                 slines = s
 
             save_extra_files(query, extra_files, language.prgpath)
