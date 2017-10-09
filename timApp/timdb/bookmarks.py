@@ -87,7 +87,7 @@ class Bookmarks:
 
     def get_bookmarks(self):
         with self.bookmark_document.get_lock():
-            return self.bookmark_document.get_settings().get_bookmarks()
+            return self.bookmark_document.get_settings(use_preamble=False).get_bookmarks()
 
     def save_bookmarks(self):
         self._set_bookmarks(self.bookmark_data)

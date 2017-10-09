@@ -31,6 +31,7 @@ class DocSettings:
     live_updates_key = 'live_updates'
     plugin_md_key = 'plugin_md'
     print_settings_key = 'print_settings'
+    preamble_key = 'preamble'
 
     @staticmethod
     def settings_to_string(par: DocParagraph) -> str:
@@ -195,6 +196,9 @@ class DocSettings:
     def plugin_md(self, default=True):
         return self.__dict.get(self.plugin_md_key, default)
 
+    def preamble(self, default='preamble'):
+        return self.__dict.get(self.preamble_key, default)
+
     def get(self, key, default=None):
         return self.__dict.get(key, default)
 
@@ -203,7 +207,7 @@ class DocSettings:
         return texplain
 
 
-def resolve_final_settings(pars: Iterable[DocParagraph]) -> YamlBlock:
+def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
     result, _ = __resolve_final_settings_impl(pars)
     return result
 

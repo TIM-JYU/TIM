@@ -13,7 +13,7 @@ from flask import g
 from lxml import etree, html
 
 from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.documentmodel.docsettings import DocSettings, resolve_final_settings
+from timApp.documentmodel.docsettings import DocSettings, resolve_settings_for_pars
 from timApp.documentmodel.documenteditresult import DocumentEditResult
 from timApp.documentmodel.documentparser import DocumentParser
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
@@ -23,7 +23,7 @@ from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.validationresult import ValidationResult
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
-from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.timdbexception import TimDbException, PreambleException
 from timApp.utils import get_error_html
 
 
@@ -191,7 +191,11 @@ class Document:
         return pars
 
     def add_setting(self, key: str, value) -> None:
-        current_settings = self.get_settings().get_dict()
+        pars = list(self.get_settings_pars())
+        if not pars:
+            current_settings = {}
+        else:
+            current_settings = DocSettings.from_paragraph(pars[-1]).get_dict()
         current_settings[key] = value
         self.set_settings(current_settings)
 
@@ -236,13 +240,21 @@ class Document:
     def get_lock(self):
         return FileLock(f'/tmp/doc_{self.doc_id}_lock')
 
-    def get_settings(self, user=None) -> DocSettings:
+    def get_settings(self, user=None, use_preamble=True) -> DocSettings:
         if self.settings is not None:
             self.settings.user = user
             return self.settings
         self.ensure_par_ids_loaded()
-        settings_block = resolve_final_settings(self.get_settings_pars())
-        settings = DocSettings(self, settings_dict=settings_block)
+        settings_block = resolve_settings_for_pars(self.get_settings_pars())
+        final_settings = YamlBlock()
+        if use_preamble:
+            preamble_name = settings_block.get('preamble', 'preamble')
+            if isinstance(preamble_name, str):
+                preambles = self.get_docinfo().get_preamble_docs(preamble_name)
+                for p in preambles:
+                    final_settings = final_settings.merge_with(resolve_settings_for_pars(p.document.get_settings_pars()))
+        final_settings = final_settings.merge_with(settings_block)
+        settings = DocSettings(self, settings_dict=final_settings)
         settings.user = user
         self.settings = settings
         gmacros = settings.get_globalmacros()
@@ -994,16 +1006,20 @@ class Document:
         from timApp.documentmodel.documentversion import DocumentVersion
         return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id, self.preload_option)
 
+    def get_docinfo(self):
+        if self.docinfo is None:
+            from timApp.timdb.models.docentry import DocEntry
+            self.docinfo = DocEntry.find_by_id(self.doc_id, try_translation=True)
+        return self.docinfo
+
     def get_source_document(self) -> Optional['Document']:
         if self.source_doc is None:
-            if self.docinfo is None:
-                from timApp.timdb.models.docentry import DocEntry
-                self.docinfo = DocEntry.find_by_id(self.doc_id, try_translation=True)
-            if self.docinfo.is_original_translation:
+            docinfo = self.get_docinfo()
+            if docinfo.is_original_translation:
                 src_docid = self.get_settings().get_source_document()
                 self.source_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
             else:
-                self.source_doc = self.docinfo.src_doc.document
+                self.source_doc = docinfo.src_doc.document
         return self.source_doc
 
     def get_last_par(self):
@@ -1035,6 +1051,21 @@ class Document:
                     par_id, t = line.replace('\n', ''), None
                 self.par_ids.append(par_id)
                 self.par_hashes.append(t)
+
+    def insert_preamble_pars(self, pars: List[DocParagraph]):
+        self.ensure_pars_loaded()
+        current_ids = set(self.par_ids)
+        preamble_ids = set(p.get_id() for p in pars)
+        if len(pars) != len(preamble_ids):
+            raise PreambleException('The paragraphs in preamble documents must have distinct ids among themselves.')
+        isect = current_ids & preamble_ids
+        if isect:
+            raise PreambleException('The paragraphs in the main document must '
+                                    f'have distinct ids from the preamble documents. Conflicting ids: {isect}')
+        for p in pars:
+            p.doc = self
+        self.par_cache = pars + self.par_cache
+        self.__update_par_map()
 
     def insert_temporary_pars(self, pars, context_par):
         if self.preload_option == PreloadOption.all:

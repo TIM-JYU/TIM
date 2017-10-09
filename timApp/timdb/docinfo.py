@@ -1,7 +1,14 @@
-from typing import List
+from itertools import accumulate
+from typing import List, Iterable, Generator
 
+from sqlalchemy import func
+
+from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.timdb.item import Item
+
+if False:
+    from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.notification import NotificationType, Notification
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db
@@ -11,29 +18,29 @@ class DocInfo(Item):
     """A base class for DocEntry and Translation."""
 
     @property
-    def path(self):
+    def path(self) -> str:
         raise NotImplementedError
 
     @property
-    def path_without_lang(self):
+    def path_without_lang(self) -> str:
         raise NotImplementedError
 
     @property
-    def id(self):
+    def id(self) -> int:
         raise NotImplementedError
 
     @property
-    def is_original_translation(self):
+    def is_original_translation(self) -> bool:
         """Returns whether this object is the document from which other translated documents were created."""
         return self.id == self.src_docid
 
     @property
-    def src_docid(self):
+    def src_docid(self) -> int:
         """Returns the source document id in case of a translation or the document id itself otherwise."""
         return self.id
 
     @property
-    def src_doc(self) -> 'DocEntry':
+    def src_doc(self) -> 'DocInfo':
         """Returns the source document in case of a translation or the document itself otherwise."""
         if self.is_original_translation:
             return self
@@ -71,8 +78,30 @@ class DocInfo(Item):
         raise NotImplementedError
 
     @property
-    def lang_id(self):
+    def lang_id(self) -> str:
         raise NotImplementedError
+
+    def get_preamble_docs(self, preamble_name: str) -> List['DocEntry']:
+        """Gets the list of preamble documents for this document.
+        The first document in the list is nearest root.
+        """
+        if getattr(self, '_preamble_docs', None) is None:
+            self._preamble_docs = self._get_preamble_docs_impl(preamble_name)
+        return self._preamble_docs
+
+    def _get_preamble_docs_impl(self, preamble_name: str) -> List['DocEntry']:
+        path_parts = self.path_without_lang.split('/')
+        paths = list(f'{p}Templates/{preamble_name}' for p in accumulate(part + '/' for part in path_parts[:-1]))
+        if not paths:
+            return []
+
+        # Templates don't have preambles.
+        if any(p == 'Templates' for p in path_parts):
+            return []
+
+        from timApp.timdb.models.docentry import DocEntry
+        preamble_docs = DocEntry.query.filter(DocEntry.name.in_(paths)).order_by(func.length(DocEntry.name)).all()
+        return preamble_docs
 
     def get_changelog_with_names(self, length=None):
         if not length:
@@ -112,3 +141,10 @@ class DocInfo(Item):
                 **({'versions': self.get_changelog_with_names(),
                     'fulltext': self.document.export_markdown()} if getattr(self, 'serialize_content', False) else {})
                 }
+
+
+def get_non_settings_pars_from_docs(docs: Iterable[DocInfo]) -> Generator[DocParagraph, None, None]:
+    for d in docs:
+        for p in d.document:
+            if not p.is_setting():
+                yield p
