@@ -9,7 +9,7 @@ from timApp.responsehelper import json_response
 generateMap = Blueprint('generateMap', __name__, url_prefix='')
 
 
-@generateMap.route('/generateMap', methods=["GET", "POST"])
+@generateMap.route('/generateMap', methods=["POST"])
 def generate_map():
     coursedata = request.get_json()
     # Get lectures from json
