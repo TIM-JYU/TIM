@@ -111,6 +111,9 @@
          {% if area %}
              data-area="{{ area|safe }}"
          {% endif %}
+         {% if t.from_preamble %}
+             data-from-preamble="{{ t.from_preamble|safe }}"
+         {% endif %}
          {% if t.ref_id %}
              ref-id="{{ t.ref_id }}"
              ref-t="{{ t.ref_t }}"
@@ -167,12 +170,12 @@
         {%- endif -%}
 
         {{ editline|safe }}
-        {%- if not disable_read_markings -%}
+        {%- if not disable_read_markings and not t.from_preamble -%}
             <div class="{{ ['readline', t.status|join(' ')]|join(' ')|trim }}"
                  title="Click to mark this paragraph as read"></div>
         {%- endif -%}
 
-        {%- if t.notes -%}
+        {%- if t.notes and not t.from_preamble -%}
             <div class="notes">
                 {%- for note in t.notes -%}
                     <div class="{{ ['note', 'editable' if note.editable else '', 'private' if note.private else '']|join(' ')|trim }}"

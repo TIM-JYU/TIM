@@ -1063,6 +1063,7 @@ class Document:
             raise PreambleException('The paragraphs in the main document must '
                                     f'have distinct ids from the preamble documents. Conflicting ids: {isect}')
         for p in pars:
+            p.preamble_doc = p.doc
             p.doc = self
         self.par_cache = pars + self.par_cache
         self.__update_par_map()

@@ -2,6 +2,8 @@ import $ from "jquery";
 import {$compile, $log, $timeout, $window} from "../../ngimport";
 import {dist} from "../../utils";
 import {onClick} from "./eventhandlers";
+import {getPreambleDocId, isActionablePar, isPreamble} from "./parhelpers";
+import {showDialog} from "../../dialog";
 
 export function closeOptionsWindow() {
     const $actionButtons = $(".actionButtons");
@@ -71,7 +73,7 @@ export function defineParMenu(sc) {
         const $target = $(e.target);
         const tag = $target.prop("tagName");
         const $par = $this.parents(".par");
-        if ($par.parents(".previewcontent").length > 0) {
+        if (!isActionablePar($par)) {
             return;
         }
 
@@ -160,6 +162,14 @@ export function defineParMenu(sc) {
     onClick(".editline", function($this, e) {
         closeOptionsWindow();
         const $par = $this.parent().filter(".par");
+        if (isPreamble($par)) {
+            showDialog(`
+This paragraph is from a preamble document.
+To comment or edit this, go to the corresponding <a href="/view/${getPreambleDocId($par)}">preamble document</a>.`);
+        }
+        if (!isActionablePar($par)) {
+            return;
+        }
         if (sc.selection.start !== null) {
             sc.extendSelection($par);
         }

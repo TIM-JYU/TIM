@@ -264,12 +264,16 @@ class DocParagraph:
             except Exception as e:
                 self.__htmldata['html'] = get_error_html(e)
 
+        preamble = self.from_preamble()
         self.__htmldata['cls'] = ' '.join(['par']
                                           + self.get_classes()
                                           + (['questionPar'] if self.is_question() else [])
+                                          + (['preamble'] if preamble else [])
                                           + ([self.get_attr('plugin')] if self.is_plugin() and not self.is_question() else [])
                                           )
         self.__htmldata['is_plugin'] = self.is_plugin()
+        if preamble:
+            self.__htmldata['from_preamble'] = preamble.doc_id
         self.__htmldata['is_question'] = self.is_question()
         # self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
         self.__htmldata['needs_browser'] = self.is_plugin() and not self.is_question()
@@ -1027,6 +1031,10 @@ class DocParagraph:
     def is_setting(self) -> bool:
         """Returns whether this paragraph is a settings paragraph."""
         return self.__is_setting
+
+    def from_preamble(self) -> Optional['Document']:
+        """Returns the preamble document for this paragraph if the paragraph has been copied from a preamble."""
+        return getattr(self, 'preamble_doc', None)
 
     def set_id(self, par_id: str):
         """Sets the id for this paragraph.
