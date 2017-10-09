@@ -8,6 +8,7 @@ from time import time
 from typing import List, Optional, Set, Tuple, Union, Iterable, Generator
 
 import dateutil.parser
+from filelock import FileLock
 from flask import g
 from lxml import etree, html
 
@@ -231,6 +232,9 @@ class Document:
         for p in self.get_dereferenced_paragraphs():
             if p.is_task():
                 yield p
+
+    def get_lock(self):
+        return FileLock(f'/tmp/doc_{self.doc_id}_lock')
 
     def get_settings(self, user=None) -> DocSettings:
         if self.settings is not None:
