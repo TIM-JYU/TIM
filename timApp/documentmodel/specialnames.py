@@ -1,8 +1,8 @@
 from timApp.utils import split_location
 
 FORCED_TEMPLATE_NAME = 'force'
-TEMPLATE_FOLDER_NAME = 'Templates'
-PRINT_FOLDER_NAME = 'Printing'
+TEMPLATE_FOLDER_NAME = 'templates'
+PRINT_FOLDER_NAME = 'printing'
 PREAMBLE_FOLDER_NAME = 'preamble'
 SPECIAL_NAMES = [TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME]
 DEFAULT_PREAMBLE_DOC = 'preamble'
