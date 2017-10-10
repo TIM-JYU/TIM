@@ -1047,6 +1047,9 @@ class DocParagraph:
     def is_citation(self):
         return self.get_attr('r') == 'c'
 
+    def is_area(self):
+        return self.get_attr('area') is not None or self.get_attr('area_end') is not None
+
 
 def is_real_id(par_id: Optional[str]):
     """Returns whether the given paragraph id corresponds to some real paragraph

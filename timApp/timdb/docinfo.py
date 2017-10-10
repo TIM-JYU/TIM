@@ -146,5 +146,5 @@ class DocInfo(Item):
 def get_non_settings_pars_from_docs(docs: Iterable[DocInfo]) -> Generator[DocParagraph, None, None]:
     for d in docs:
         for p in d.document:
-            if not p.is_setting():
+            if not p.is_setting() or p.is_area():
                 yield p

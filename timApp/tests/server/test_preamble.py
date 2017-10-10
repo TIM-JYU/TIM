@@ -83,3 +83,19 @@ class PreambleTest2(PreambleTestBase):
 
         p2.document.add_paragraph('test', par_id=par.get_id())
         self.get(d.url, expect_contains='The paragraphs in preamble documents must have distinct ids among themselves.')
+
+    def test_preamble_area_settings(self):
+        self.login_test2()
+        folder = self.current_user.get_personal_folder().path
+        d, p1, p2, p3 = self.create_doc_and_preamble(folder)
+        p1.document.add_text("""
+#- {area=a settings=""}
+a: b
+
+#- {area_end=a}
+""")
+        resp = self.get(d.url, as_tree=True)
+
+        # There should not be warnings about missing areas.
+        alert = resp.cssselect('.alert.alert-info')
+        self.assertFalse(alert)
