@@ -1,5 +1,3 @@
 .cabal-sandbox/
-dist/
-Choices/
+.stack-work/
 PluginConstructionKit/
-bin/
