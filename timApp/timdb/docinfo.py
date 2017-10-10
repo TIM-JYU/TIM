@@ -91,7 +91,7 @@ class DocInfo(Item):
 
     def _get_preamble_docs_impl(self, preamble_name: str) -> List['DocEntry']:
         path_parts = self.path_without_lang.split('/')
-        paths = list(f'{p}Templates/{preamble_name}' for p in accumulate(part + '/' for part in path_parts[:-1]))
+        paths = list(f'{p}Templates/preamble/{preamble_name}' for p in accumulate(part + '/' for part in path_parts[:-1]))
         if not paths:
             return []
 
