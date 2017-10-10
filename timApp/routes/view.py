@@ -35,7 +35,8 @@ from timApp.timdb.timdbexception import TimDbException, PreambleException
 from timApp.timdb.userutils import user_is_owner
 from timApp.utils import remove_path_special_chars
 from timApp.timtiming import taketime
-from timApp.documentmodel.create_item import do_create_document, FORCED_TEMPLATE_NAME, get_templates_for_folder
+from timApp.documentmodel.create_item import do_create_document, get_templates_for_folder
+from timApp.documentmodel.specialnames import FORCED_TEMPLATE_NAME
 from timApp.markdownconverter import create_environment
 
 Range = Tuple[int, int]

@@ -5,6 +5,7 @@ from sqlalchemy import func
 
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
+from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.timdb.item import Item
 
 if False:
@@ -91,12 +92,12 @@ class DocInfo(Item):
 
     def _get_preamble_docs_impl(self, preamble_name: str) -> List['DocEntry']:
         path_parts = self.path_without_lang.split('/')
-        paths = list(f'{p}Templates/preamble/{preamble_name}' for p in accumulate(part + '/' for part in path_parts[:-1]))
+        paths = list(f'{p}{TEMPLATE_FOLDER_NAME}/preamble/{preamble_name}' for p in accumulate(part + '/' for part in path_parts[:-1]))
         if not paths:
             return []
 
         # Templates don't have preambles.
-        if any(p == 'Templates' for p in path_parts):
+        if any(p == TEMPLATE_FOLDER_NAME for p in path_parts):
             return []
 
         from timApp.timdb.models.docentry import DocEntry

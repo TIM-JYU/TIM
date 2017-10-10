@@ -20,6 +20,7 @@ from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter
 from timApp.documentmodel.exceptions import DocExistsError, ValidationException
 from timApp.documentmodel.preloadoption import PreloadOption
+from timApp.documentmodel.specialnames import DEFAULT_PREAMBLE_DOC
 from timApp.documentmodel.validationresult import ValidationResult
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
@@ -248,7 +249,7 @@ class Document:
         settings_block = resolve_settings_for_pars(self.get_settings_pars())
         final_settings = YamlBlock()
         if use_preamble:
-            preamble_name = settings_block.get('preamble', 'preamble')
+            preamble_name = settings_block.get('preamble', DEFAULT_PREAMBLE_DOC)
             if isinstance(preamble_name, str):
                 preambles = self.get_docinfo().get_preamble_docs(preamble_name)
                 for p in preambles:

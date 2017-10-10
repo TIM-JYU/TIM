@@ -13,6 +13,7 @@ from timApp.documentmodel.document import dereference_pars
 from timApp.documentmodel.macroinfo import MacroInfo
 from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.randutils import hashfunc
+from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
 from timApp.documentmodel.yamlblock import strip_code_block
 from timApp.markdownconverter import expand_macros, create_environment
 from timApp.pluginControl import pluginify
@@ -35,7 +36,7 @@ from pypandoc.py3compat import string_types, cast_bytes
 FILES_ROOT = os.path.abspath('tim_files')
 DEFAULT_PRINTING_FOLDER = os.path.join(FILES_ROOT, 'printed_documents')
 TEMPORARY_PRINTING_FOLDER = os.path.join(DEFAULT_PRINTING_FOLDER, 'tmp')
-TEMPLATES_FOLDER = os.path.join('Templates', 'Printing')
+TEMPLATES_FOLDER = os.path.join(TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME)
 DEFAULT_TEMPLATE_NAME = 'Default'
 TEX_MACROS_KEY = "texmacros"
 
@@ -345,7 +346,7 @@ class DocumentPrinter:
             docs = templates_folder.get_all_documents()
             if docs is not None:
                 for d in docs:
-                    if has_view_access(d.id) and not re.search("/Printing/.*Templates/", d.name):
+                    if has_view_access(d.id) and not re.search(f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.name):
                         templates.append(d)
 
         return templates
@@ -372,7 +373,7 @@ class DocumentPrinter:
                     continue
 
                 for d in docs:
-                    if has_view_access(d.id) and not re.search("/Printing/.*Templates/", d.name):
+                    if has_view_access(d.id) and not re.search(f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.name):
                         templates.append(d)
 
             current_folder = current_folder.parent

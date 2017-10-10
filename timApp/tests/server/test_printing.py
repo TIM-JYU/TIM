@@ -2,6 +2,7 @@
 import urllib.parse
 import warnings
 
+from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
 from timApp.tests.server.timroutetest import TimRouteTest
 
 
@@ -38,7 +39,7 @@ class PrintingTest(TimRouteTest):
         content = 'Hello 1\n\n#-\nHello 2'
         d = self.create_doc(initial_par=content)
         folder = self.current_user.get_personal_folder().path
-        t = self.create_doc(f'{folder}/Templates/Printing/empty', initial_par="""
+        t = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/empty', initial_par="""
 ``` {.latex printing_template=""}
 $body$
 ```
@@ -55,7 +56,7 @@ $body$
         result = self.get_no_warn(expected_url)
         self.assertEqual('Hello 1\n\nHello 2', result)
 
-        t2 = self.create_doc(f'{folder}/Templates/Printing/base', from_file='example_docs/templates/print_base.md')
+        t2 = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/base', from_file='example_docs/templates/print_base.md')
         self.get(f'/print/templates/{d.path}',
                  expect_content=[{'id': t.id, 'path': t.path, 'origin': 'user', 'name': t.title},
                                  {'id': t2.id, 'path': t2.path, 'origin': 'user', 'name': t2.title}])

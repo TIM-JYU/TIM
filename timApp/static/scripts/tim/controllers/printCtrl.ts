@@ -124,7 +124,7 @@ timApp.controller("PrintCtrl", ['$scope', '$uibModal', 'document', '$uibModalIns
         };
 
         $scope.formatPath = function (path) {
-            return path.replace('Templates/Printing', '../..');
+            return path.replace('templates/printing', '../..');
         };
 
     }

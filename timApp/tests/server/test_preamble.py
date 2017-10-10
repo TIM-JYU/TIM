@@ -1,6 +1,7 @@
 """Server tests for preamble."""
 from unittest.mock import patch, Mock
 
+from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.docinfo import DocInfo
 
@@ -8,9 +9,9 @@ from timApp.timdb.docinfo import DocInfo
 class PreambleTestBase(TimRouteTest):
     def create_doc_and_preamble(self, folder: str):
         d = self.create_doc(f'{folder}/a/b/test1')
-        p2 = self.create_doc(f'{folder}/a/Templates/preamble/preamble')
-        p1 = self.create_doc(f'{folder}/Templates/preamble/preamble')
-        p3 = self.create_doc(f'{folder}/a/b/Templates/preamble/preamble')
+        p2 = self.create_doc(f'{folder}/a/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}')
+        p1 = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}')
+        p3 = self.create_doc(f'{folder}/a/b/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}')
         p1.document.set_settings({'macros': {'a': 'cat', 'b': 'dog', 'd': 'sheep'}})
         p2.document.set_settings({'macros': {'b': 'mouse', 'c': 'giraffe'}})
         p3.document.set_settings({'macros': {'c': 'elephant', 'd': 'fly'}})
@@ -25,11 +26,11 @@ class PreambleTest(PreambleTestBase):
         d, p1, p2, p3 = self.create_doc_and_preamble(folder)
 
         d_no_preamble = self.create_doc(f'{folder}/a/b/nopreamble')
-        self.assertEqual([p.path_without_lang for p in d.get_preamble_docs('preamble')],
+        self.assertEqual([p.path_without_lang for p in d.get_preamble_docs(DEFAULT_PREAMBLE_DOC)],
                          [
-                             'users/test-user-1/Templates/preamble/preamble',
-                             'users/test-user-1/a/Templates/preamble/preamble',
-                             'users/test-user-1/a/b/Templates/preamble/preamble'
+                             f'users/test-user-1/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}',
+                             f'users/test-user-1/a/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}',
+                             f'users/test-user-1/a/b/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}'
                          ])
         self.assertEqual(d.document.get_settings().get_dict()['macros'],
                          {'a': 'cat', 'b': 'mouse', 'c': 'elephant', 'd': 'fly', 'e': 'fox'})
