@@ -5,7 +5,7 @@ from typing import List, Optional
 from timApp.accesshelper import get_viewable_blocks_or_none_if_admin
 from timApp.accesshelper import grant_access_to_session_users, reset_request_access_cache
 from timApp.dbaccess import get_timdb
-from timApp.documentmodel.specialnames import FORCED_TEMPLATE_NAME, check_for_special_name, TEMPLATE_FOLDER_NAME
+from timApp.documentmodel.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_NAME
 from timApp.responsehelper import json_response
 from timApp.sessioninfo import get_current_user_object, get_current_user_group
 from timApp.tim_app import app
@@ -23,7 +23,7 @@ from timApp.validation import validate_item_and_create
 
 
 def create_item(item_path, item_type_str, item_title, create_function, owner_group_id):
-    item_path = check_for_special_name(item_path.strip('/'))
+    item_path = item_path.strip('/')
 
     validate_item_and_create(item_path, item_type_str, owner_group_id)
 
