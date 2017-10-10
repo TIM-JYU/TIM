@@ -266,7 +266,7 @@ class DocParagraph:
 
         preamble = self.from_preamble()
         self.__htmldata['cls'] = ' '.join(['par']
-                                          + self.get_classes()
+                                          + (self.get_classes() if not self.get_attr('area') else [])
                                           + (['questionPar'] if self.is_question() else [])
                                           + (['preamble'] if preamble else [])
                                           + ([self.get_attr('plugin')] if self.is_plugin() and not self.is_question() else [])
