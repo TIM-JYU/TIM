@@ -18,11 +18,13 @@ def upgrade():
     for f in Folder.query.all():
         if f.path.endswith('/Templates/printing') or f.path == 'Templates/printing':
             f.rename('printing_old')
+    for f in Folder.query.all():
         if f.name == 'templates':
             f.rename('templates_old')
     for f in Folder.query.all():
         if f.path.endswith('/Templates/Printing') or f.path == 'Templates/Printing':
             f.rename('printing')
+    for f in Folder.query.all():
         if f.name == 'Templates':
             f.rename('templates')
     db.session.commit()
@@ -32,6 +34,7 @@ def downgrade():
     for f in Folder.query.all():
         if f.path.endswith('/templates/printing') or f.path == 'templates/printing':
             f.rename('Printing')
+    for f in Folder.query.all():
         if f.name == 'templates':
             f.rename('Templates')
     db.session.commit()
