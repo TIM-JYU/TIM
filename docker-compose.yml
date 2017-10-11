@@ -9,7 +9,7 @@ services:
    - csplugin
    - pali
    - showfile
-   - haskellplugins2
+   - haskellplugins
    - imagex
    - uploader
    - prebuilt_dumbo
@@ -62,15 +62,15 @@ services:
    TIM_ROOT: ${TIM_ROOT}
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
   user: root
- haskellplugins2:
-  image: timimages/haskellrun:latest
+ haskellplugins:
+  image: timimages/haskellplugins:latest
+  build:
+   context: ./timApp/modules/Haskell
+   dockerfile: Dockerfile
   volumes:
    - ./timApp/modules/Haskell:/Haskell
-   - ./timApp/modules/Haskell/bin:/hbin
   working_dir: /Haskell
   command: ./startAll.sh
-  depends_on:
-   - prebuilt_haskellplugins
  showfile:
   image: timimages/svn:latest
   build: ./timApp/modules/svn
@@ -120,11 +120,5 @@ services:
   volumes:
    - ./Ephemeral/Dumbo/dist/build/Dumbo:/target
   command: "cp /bin/Dumbo /target/"
- prebuilt_haskellplugins:
-  image: timimages/prebuilt:latest
-  volumes:
-   - ./timApp/modules/Haskell/bin:/target
-  working_dir: /bin
-  command: "cp ChoicesPlugin GraphVizPlugin MultipleChoicesPlugin /target/"
 volumes:
  data:

@@ -16,7 +16,7 @@ TIM_URL = ""
 
 CSPLUGIN_NAME = 'csplugin'
 SVNPLUGIN_NAME = 'showfile'
-HASKELLPLUGIN_NAME = 'haskellplugins2'
+HASKELLPLUGIN_NAME = 'haskellplugins'
 PALIPLUGIN_NAME = 'pali'
 IMAGEXPLUGIN_NAME = 'imagex'
 

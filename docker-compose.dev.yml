@@ -12,7 +12,7 @@ services:
    - csplugin
    - pali
    - showfile
-   - haskellplugins2
+   - haskellplugins
    - imagex
    - uploader
    - chrome
