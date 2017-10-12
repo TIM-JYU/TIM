@@ -132,10 +132,12 @@ test2
             self.assertEqual(yb.values, yaml.load(md, yaml_loader), msg=f'\nFailed YAML:\n-----\n{md}\n-----')
 
     def test_missing_end(self):
-        with self.assertRaises(BlockEndMissingError):
+        with self.assertRaises(BlockEndMissingError) as e:
             YamlBlock.from_markdown('css: |!!\ntest\n')
-        with self.assertRaises(BlockEndMissingError):
-            YamlBlock.from_markdown('css: |!!')
+        self.assertEqual(e.exception.end_str, '!!')
+        with self.assertRaises(BlockEndMissingError) as e:
+            YamlBlock.from_markdown('css: |xx')
+        self.assertEqual(e.exception.end_str, 'xx')
 
     def test_empty_multiline_key(self):
         yb = YamlBlock.from_markdown('css: |!!\n!!')
