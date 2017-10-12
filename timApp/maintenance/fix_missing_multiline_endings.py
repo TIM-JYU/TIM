@@ -35,6 +35,8 @@ def fix_multiline_endings(doc: DocInfo, args: BasicArguments):
                     p.set_markdown(new_md)
                     p.save()
                 print_match(args, d, p, f'missing multiline terminator ({e.end_str})')
+            except YAMLError as e:
+                print(f'Skipping otherwise broken YAML at {get_str(d, p)}')
     return found
 
 
