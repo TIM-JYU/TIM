@@ -169,9 +169,9 @@ RUN mkdir /service
 RUN useradd -M agent
 RUN chown -R agent /service
 
-RUN bash -c "${APT_INSTALL} npm && ${APT_CLEANUP}"
-RUN ln -s /usr/bin/nodejs /usr/bin/node
-RUN npm install -g typescript tslint jspm typescript-formatter && npm cache clean
+RUN bash -c "${APT_INSTALL} curl && ${APT_CLEANUP}"
+RUN (curl -sL https://deb.nodesource.com/setup_8.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN npm install -g typescript tslint jspm typescript-formatter && npm cache clean --force
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:test' | chpasswd
