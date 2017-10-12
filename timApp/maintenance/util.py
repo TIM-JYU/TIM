@@ -105,3 +105,11 @@ def create_argparser(description: str, readonly=False):
                         help='show progress')
     parser.set_defaults(progress=False)
     return parser
+
+
+def get_str(d: DocInfo, p: DocParagraph) -> str:
+    return f'{d.url}#{p.get_id()}'
+
+
+def print_match(args: BasicArguments, d: DocInfo, p: DocParagraph, msg: str):
+    print(f'{"Found" if args.dryrun else "Fixed"} {get_str(d, p)}: {msg}')
