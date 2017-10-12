@@ -141,6 +141,10 @@ test2
         yb = YamlBlock.from_markdown('css: |!!\n!!')
         self.assertEqual(yb.values, {'css': ''})
 
+    def test_one_char_terminator(self):
+        yb = YamlBlock.from_markdown('css: |!\nhello\n!')
+        self.assertEqual(yb, {'css': 'hello'})
+
     def test_multiple_multiline(self):
         yb = YamlBlock.from_markdown(self.multiple_multiline)
         self.assertEqual(yb.values, {'a': 'test1\n', 'b': 'test2\n'})

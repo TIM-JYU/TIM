@@ -72,7 +72,7 @@ class YamlBlock:
 
 missing_space_after_colon = re.compile("^[ \t]*[^ :]*:[^ ]")  # kissa:istuu
 multiline_unindented_string = re.compile(
-    """^( *)([^ :"']+): *\| *([^ 0-9+-]+[^ ]+)( (a|r|r\?))? *$""")  # program: ||| or  program: |!!!
+    """^( *)([^ :"']+): *\| *([^ 0-9+-]+[^ ]*)( (a|r|r\?))? *$""")  # program: ||| or  program: |!!!
 
 
 def strip_code_block(md: str) -> str:
