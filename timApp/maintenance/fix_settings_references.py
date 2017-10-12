@@ -1,11 +1,11 @@
 """Due to b3fc1c622309e8474183ed5ef5ea7bace2479c4d, settings attribute is always required even when referencing other settings
 paragraphs. This adds missing settings attributes where it is missing."""
-from timApp.maintenance.util import enum_pars, process_items, create_argparser, BasicArguments, get_str, print_match
+from timApp.maintenance.util import enum_pars, process_items, create_argparser, DryrunnableArguments, print_match
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 
 
-def fix_settings_references(d: DocInfo, args: BasicArguments):
+def fix_settings_references(d: DocInfo, args: DryrunnableArguments):
     num_found = 0
     for _, p in enum_pars(d):
         if p.is_reference() and not p.is_translation():

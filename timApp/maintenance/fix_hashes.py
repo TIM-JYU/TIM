@@ -1,8 +1,8 @@
-from timApp.maintenance.util import process_items, create_argparser, BasicArguments
+from timApp.maintenance.util import process_items, create_argparser, DryrunnableArguments, print_match
 from timApp.timdb.docinfo import DocInfo
 
 
-def fix_hashes(doc: DocInfo, args: BasicArguments):
+def fix_hashes(doc: DocInfo, args: DryrunnableArguments):
     """Due to bugs, the computed hashes in a paragraph file or paragraph list may be incorrect.
     This fixes them.
     :param doc: The document to fix.
@@ -19,14 +19,12 @@ def fix_hashes(doc: DocInfo, args: BasicArguments):
             errors += 1
             if not args.dryrun:
                 d.modify_paragraph_obj(p.get_id(), p)
-            print(
-                f'{"Found" if args.dryrun else "Fixed"} invalid hash in {p.get_id()}: expected {new_hash} but was {old_hash}')
+            print_match(args, doc, p, f'invalid hash in {p.get_id()}: expected {new_hash} but was {old_hash}')
         elif new_hash != list_hash:
             errors += 1
             if not args.dryrun:
                 d.modify_paragraph_obj(p.get_id(), p)
-            print(
-                f'{"Found" if args.dryrun else "Fixed"} invalid hash in paragraph list: expected {new_hash} but was {list_hash}')
+            print_match(args, doc, p, f'invalid hash in paragraph list: expected {new_hash} but was {list_hash}')
     return errors
 
 

@@ -4,11 +4,12 @@ This script adds any missing ones.
 from yaml import YAMLError
 
 from timApp.documentmodel.yamlblock import YamlBlock, BlockEndMissingError, get_code_block_str
-from timApp.maintenance.util import BasicArguments, enum_pars, process_items, create_argparser, get_str, print_match
+from timApp.maintenance.util import DryrunnableArguments, enum_pars, process_items, create_argparser, get_url_for_match, \
+    print_match
 from timApp.timdb.docinfo import DocInfo
 
 
-def fix_multiline_endings(doc: DocInfo, args: BasicArguments):
+def fix_multiline_endings(doc: DocInfo, args: DryrunnableArguments):
     found = 0
     for d, p in enum_pars(doc):
         if (p.is_setting() and not p.is_reference()) or p.is_plugin():
@@ -20,7 +21,7 @@ def fix_multiline_endings(doc: DocInfo, args: BasicArguments):
                 if len(cb) >= 3:
                     new_md = new_md.rstrip(cb).rstrip()
                 elif len(cb) > 0:
-                    print(f'Too short code block marker encountered at {get_str(d, p)}')
+                    print(f'Too short code block marker encountered at {get_url_for_match(args, d, p)}')
                     continue
                 else:
                     pass
@@ -28,7 +29,7 @@ def fix_multiline_endings(doc: DocInfo, args: BasicArguments):
                 try:
                     YamlBlock.from_markdown(new_md)
                 except YAMLError:
-                    print(f'Unable to fix YAML for {get_str(d, p)}')
+                    print(f'Unable to fix YAML for {get_url_for_match(args, d, p)}')
                     continue
                 found += 1
                 if not args.dryrun:
@@ -36,7 +37,7 @@ def fix_multiline_endings(doc: DocInfo, args: BasicArguments):
                     p.save()
                 print_match(args, d, p, f'missing multiline terminator ({e.end_str})')
             except YAMLError as e:
-                print(f'Skipping otherwise broken YAML at {get_str(d, p)}')
+                print(f'Skipping otherwise broken YAML at {get_url_for_match(args, d, p)}')
     return found
 
 

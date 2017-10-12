@@ -1,4 +1,5 @@
-from timApp.maintenance.util import enum_pars, BasicArguments, create_argparser, process_items
+from timApp.maintenance.util import enum_pars, create_argparser, process_items, get_url_for_match, \
+    BasicArguments
 from timApp.timdb.docinfo import DocInfo
 
 
@@ -20,7 +21,7 @@ def search(d: DocInfo, args: SearchArguments):
             if args.docsonly:
                 print(d.url)
                 break
-            header = f"{d.url}#{p.get_id()}"
+            header = get_url_for_match(args, d, p)
             print(f"""
 {header}
 {'-' * len(header)}
