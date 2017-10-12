@@ -1,6 +1,6 @@
 // TODO: save cursor position when changing editor
 
-import angular, {IPromise} from "angular";
+import angular, {IPromise, IScope} from "angular";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {timApp} from "tim/app";
@@ -24,8 +24,7 @@ markAsUsed(draggable, rangyinputs);
 const MENU_BUTTON_CLASS = "menuButtons";
 const MENU_BUTTON_CLASS_DOT = "." + MENU_BUTTON_CLASS;
 
-// don't extend from IScope because then type checking is too lousy
-interface IParEditorScope {
+interface IParEditorScope extends IScope {
     textAreaText: string;
     $parent: any;
     ace: Ace;
@@ -82,8 +81,6 @@ interface IParEditorScope {
     unreadUrl: string;
     uploadedFile: string;
 
-    $on(name: string, func: () => void): void;
-    $watch(s: string, param2: (newValue, oldValue) => any, b?: boolean): void;
     editorChanged(): void;
     aceLoaded(editor: Editor): void;
     aceReady(): void;
@@ -177,8 +174,6 @@ interface IParEditorScope {
     unreadClicked(): void;
     upClicked(): void;
     wrapFn(fn?: () => void): void;
-    $apply(): void;
-    $evalAsync(fn: () => any): void;
     pageBreakClicked(): void;
 }
 

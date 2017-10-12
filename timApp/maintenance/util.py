@@ -2,6 +2,8 @@ import sys
 from argparse import ArgumentParser
 from typing import Generator, Tuple, Optional, Callable, Union
 
+from flask import current_app
+
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.tim_app import app
 from timApp.timdb.docinfo import DocInfo
@@ -13,10 +15,16 @@ from timApp.timdb.timdbexception import TimDbException
 
 class BasicArguments:
     def __init__(self):
-        self.dryrun = False
+        self.urlpath = None
         self.progress = False
         self.doc = ''
         self.folder = ''
+
+
+class DryrunnableArguments(BasicArguments):
+    def __init__(self):
+        super().__init__()
+        self.dryrun = False
 
 
 def enum_docs(folder: Optional[Folder] = None) -> Generator[DocInfo, None, None]:
@@ -103,5 +111,16 @@ def create_argparser(description: str, readonly=False):
         group_dryrun.set_defaults(dryrun=True)
     parser.add_argument('--progress', dest='progress', action='store_true',
                         help='show progress')
+    parser.add_argument('--url-path', dest='urlpath', help='start path of URLs, e.g. view/manage/velp')
+    parser.set_defaults(urlpath='view')
     parser.set_defaults(progress=False)
     return parser
+
+
+def get_url_for_match(args: BasicArguments, d: DocInfo, p: DocParagraph) -> str:
+    host = current_app.config['TIM_HOST']
+    return f'{host}/{args.urlpath}/{d.path}#{p.get_id()}'
+
+
+def print_match(args: DryrunnableArguments, d: DocInfo, p: DocParagraph, msg: str):
+    print(f'{"Found" if args.dryrun else "Fixed"} {get_url_for_match(args, d, p)}: {msg}')

@@ -157,7 +157,7 @@ RUN bash -c "${APT_INSTALL} cmake" && \
     cd nlopt && cmake -DCMAKE_CXX_FLAGS=-std=c++11 . && make && make install && cd .. && rm -r nlopt && apt-get remove -y cmake && ${APT_CLEANUP}
 
 RUN ldconfig
-RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArmadillo", "psych", "GPArotation", "candisc", "car", "heplots"))'
+RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArmadillo", "psych", "GPArotation", "candisc", "car", "heplots", "vegan"))'
 
 RUN bash -c "${APT_INSTALL} python3-tk && ${APT_CLEANUP}"
 RUN pip3 install sympy

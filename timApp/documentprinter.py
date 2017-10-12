@@ -33,7 +33,7 @@ import subprocess
 from pypandoc import _as_unicode, _validate_formats
 from pypandoc.py3compat import string_types, cast_bytes
 
-FILES_ROOT = os.path.abspath('tim_files')
+FILES_ROOT = '/tim_files'
 DEFAULT_PRINTING_FOLDER = os.path.join(FILES_ROOT, 'printed_documents')
 TEMPORARY_PRINTING_FOLDER = os.path.join(DEFAULT_PRINTING_FOLDER, 'tmp')
 TEMPLATES_FOLDER = os.path.join(TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME)

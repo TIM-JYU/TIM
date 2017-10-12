@@ -1,10 +1,10 @@
 """Due to 6c77b8756d2060dea1c3d920a743263dcb740461, all settings paragraphs are synchronized to the translated
 document from the original one. Existing translated documents need to be fixed, which is what this script does."""
-from timApp.maintenance.util import BasicArguments, enum_pars, process_items, create_argparser
+from timApp.maintenance.util import DryrunnableArguments, enum_pars, process_items, create_argparser, print_match
 from timApp.timdb.docinfo import DocInfo
 
 
-def fix_translation(d: DocInfo, args: BasicArguments):
+def fix_translation(d: DocInfo, args: DryrunnableArguments):
     fixed = 0
     if d.is_original_translation:
         return fixed
@@ -28,7 +28,7 @@ def fix_translation(d: DocInfo, args: BasicArguments):
         first_tr.set_attr('rp', setting_id)
         first_tr.save()
     fixed += 1
-    print(f'{"Would fix" if args.dryrun else "Fixed"} settings in {d.url}')
+    print_match(args, d, first_tr, 'settings')
     return fixed
 
 

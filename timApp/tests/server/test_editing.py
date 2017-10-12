@@ -111,5 +111,25 @@ class EditTest(TimRouteTest):
     def test_new_from_help_par(self):
         self.login_test1()
         d = self.create_doc()
-        e = self.json_post(f'/newParagraph/', {'docId': d.id, 'text': 'test', 'par': 'HELP_PAR', 'par_next': None}, json_key='texts', as_tree=True)
+        e = self.json_post(f'/newParagraph/', {'docId': d.id, 'text': 'test', 'par': 'HELP_PAR', 'par_next': None},
+                           json_key='texts', as_tree=True)
         self.assert_content(e, ['test'])
+
+    def test_duplicate_template(self):
+        """Trying to load a template to a non-empty document is not possible."""
+        self.login_test1()
+        t = self.create_doc(initial_par=['p1', 'p2'])
+        d = self.create_doc()
+        template_pars = t.document.get_paragraphs()
+        d.document.add_paragraph('p1', template_pars[0].get_id())
+        d.document.add_paragraph('p2', template_pars[1].get_id())
+        self.json_post(f'/update/{d.id}', {'template_name': t.path}, expect_status=400,
+                       expect_content={'error': 'Cannot load a template because the document is not empty.'})
+        self.get(d.url)
+
+    def test_nonexistent_template(self):
+        """Trying to load a non-existent template gives 404."""
+        self.login_test1()
+        d = self.create_doc()
+        self.json_post(f'/update/{d.id}', {'template_name': 'xxx'}, expect_status=404,
+                       expect_content={'error': 'Template not found'})

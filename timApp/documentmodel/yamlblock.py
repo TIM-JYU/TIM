@@ -10,7 +10,9 @@ from timApp.utils import count_chars
 
 
 class BlockEndMissingError(YAMLError):
-    pass
+    def __init__(self, end_str: str) -> None:
+        super().__init__(f'Missing multiline terminator: {end_str}')
+        self.end_str = end_str
 
 
 class MergeStyle(Enum):
@@ -70,14 +72,19 @@ class YamlBlock:
 
 missing_space_after_colon = re.compile("^[ \t]*[^ :]*:[^ ]")  # kissa:istuu
 multiline_unindented_string = re.compile(
-    """^( *)([^ :"']+): *\| *([^ 0-9+-]+[^ ]+)( (a|r|r\?))? *$""")  # program: ||| or  program: |!!!
+    """^( *)([^ :"']+): *\| *([^ 0-9+-]+[^ ]*)( (a|r|r\?))? *$""")  # program: ||| or  program: |!!!
 
 
 def strip_code_block(md: str) -> str:
-    code_block_marker = '`' * count_chars(md, '`')
+    code_block_marker = get_code_block_str(md)
     if len(code_block_marker) < 3:
         return md
     return md.split('\n', 1)[1].rstrip(f'\n{code_block_marker}')
+
+
+def get_code_block_str(md):
+    code_block_marker = '`' * count_chars(md, '`')
+    return code_block_marker
 
 
 def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
@@ -119,7 +126,7 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
             line = indent + line
         s = s + '\n' + line
     if multiline:
-        raise BlockEndMissingError()
+        raise BlockEndMissingError(end_str)
     return s, merge_hints
 
 

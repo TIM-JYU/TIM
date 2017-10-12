@@ -1,10 +1,10 @@
 from argparse import ArgumentTypeError
 
-from timApp.maintenance.util import enum_pars, create_argparser, BasicArguments, process_items
+from timApp.maintenance.util import enum_pars, create_argparser, DryrunnableArguments, process_items
 from timApp.timdb.docinfo import DocInfo
 
 
-class ReplaceArguments(BasicArguments):
+class ReplaceArguments(DryrunnableArguments):
     def __init__(self):
         super().__init__()
         self.f = ''

@@ -163,12 +163,6 @@ class Document:
             result = prev['p']
         if get_last_if_no_prev:
             result = self.par_cache[-1] if self.par_cache else None
-
-        if result is not None and result.get_id() == par_id:
-            print(
-                f'WARNING: get_previous_par({self.doc_id}, {par_id}) returning reference to self, returning None instead')
-            return None
-
         return result
 
     def get_pars_till(self, par):
