@@ -56,12 +56,16 @@ def update_document(doc_id):
         strict_validation = not request.form.get('ignore_warnings', False)
     elif 'template_name' in request.get_json():
         template = DocEntry.find_by_path(request.get_json()['template_name'], try_translation=True)
+        if not template:
+            abort(404, 'Template not found')
         if not has_view_access(template.id):
             abort(403, 'Permission denied')
-        doc = template.document
-        content = doc.export_markdown()
+        content = template.document.export_markdown()
         if content == '':
             return abort(400, 'The selected template is empty.')
+        existing_pars = docentry.document_as_current_user.get_paragraphs()
+        if existing_pars:
+            abort(400, 'Cannot load a template because the document is not empty.')
         original = ''
         strict_validation = True
     else:
