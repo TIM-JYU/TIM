@@ -14,7 +14,7 @@ def fix_multiline_endings(doc: DocInfo, args: DryrunnableArguments):
     for d, p in enum_pars(doc):
         if (p.is_setting() and not p.is_reference()) or p.is_plugin():
             try:
-                YamlBlock.from_markdown(p.get_markdown())
+                YamlBlock.from_markdown(p.get_expanded_markdown())
             except BlockEndMissingError as e:
                 new_md = p.get_markdown().rstrip()
                 cb = get_code_block_str(new_md)
@@ -26,14 +26,14 @@ def fix_multiline_endings(doc: DocInfo, args: DryrunnableArguments):
                 else:
                     pass
                 new_md += '\n' + e.end_str + '\n' + cb
+                p.set_markdown(new_md)
                 try:
-                    YamlBlock.from_markdown(new_md)
+                    YamlBlock.from_markdown(p.get_expanded_markdown())
                 except YAMLError:
                     print(f'Unable to fix YAML for {get_url_for_match(args, d, p)}')
                     continue
                 found += 1
                 if not args.dryrun:
-                    p.set_markdown(new_md)
                     p.save()
                 print_match(args, d, p, f'missing multiline terminator ({e.end_str})')
             except YAMLError as e:
