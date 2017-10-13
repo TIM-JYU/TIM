@@ -28,6 +28,10 @@ def load_json(resp: Response):
     return json.loads(resp.get_data(as_text=True))
 
 
+def is_redirect(response: Response):
+    return response.status_code in (302, 303)
+
+
 orig_getaddrinfo = socket.getaddrinfo
 
 
@@ -191,7 +195,7 @@ class TimRouteTest(TimDbTest):
         is_textual = resp.mimetype in TEXTUAL_MIMETYPES
         if expect_status is not None:
             self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True) if is_textual else None)
-        if resp.status_code == 302 and expect_content is not None:
+        if is_redirect(resp) and expect_content is not None:
             self.assertEqual(expect_content, resp.location.lstrip('http://localhost/'))
         resp_data = resp.get_data(as_text=is_textual)
         if not is_textual:
@@ -216,11 +220,11 @@ class TimRouteTest(TimDbTest):
                 self.assertLessEqual(1, len(html.fragment_fromstring(loaded, create_parent=True).findall(expect_xpath)))
             return loaded
         else:
-            if expect_content is not None and resp.status_code != 302:
+            if expect_content is not None and not is_redirect(resp):
                 self.assertEqual(expect_content, resp_data)
             elif expect_contains is not None:
                 self.check_contains(expect_contains, resp_data)
-            return resp_data
+            return resp_data if not is_redirect(resp) else resp.location
 
     def check_contains(self, expect_contains, data):
         if isinstance(expect_contains, str):

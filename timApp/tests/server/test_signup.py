@@ -1,5 +1,10 @@
+import responses
+from flask import session
+
 from timApp.routes.login import test_pws
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.tim_app import app
+from timApp.timdb.models.usergroup import UserGroup
 
 
 class TestSignUp(TimRouteTest):
@@ -93,11 +98,80 @@ class TestSignUp(TimRouteTest):
                   expect_contains='You must supply a valid email address!')
         self.assertFalse(self.is_logged_in)
 
-    def todo_test_korppi_signup(self):
-        """Tests that Korppi signup succeeds.
+    @property
+    def korppi_auth_url(self):
+        return app.config['KORPPI_AUTHORIZE_URL']
 
-        Does not currently work; needs a (separate) server if Flask TestClient is not enough, as it appears.
+    def test_korppi_signup(self):
+        """Korppi signup succeeds."""
+        auth_url = self.korppi_auth_url
+        with responses.RequestsMock() as m:
+            m.add('GET', auth_url,
+                  body='')
+            r = self.get('/korppiLogin', expect_status=303)
+            self.assertEqual(r, f'{auth_url}?authorize={session["appcookie"]}&returnTo=http://localhost/korppiLogin')
 
-        """
-        self.get('/korppiLogin', follow_redirects=True)
+        # ... user logs in with Korppi at this point ...
+
+        with responses.RequestsMock() as m:
+            m.add('GET', auth_url + '?request=' + session['appcookie'],
+                  body='johmadoe\nDoe John Matt\njohn.m.doe@student.jyu.fi',
+                  match_querystring=True)
+            self.get('/korppiLogin', follow_redirects=True)
         self.assertEqual('Doe John Matt', self.current_user.real_name)
+        self.assertEqual('johmadoe', self.current_user.name)
+        self.assertEqual('john.m.doe@student.jyu.fi', self.current_user.email)
+        self.assertEqual(list(g.name for g in self.current_user.groups.order_by(UserGroup.name)), ['johmadoe', 'Korppi users'])
+
+    def test_korppi_info_change(self):
+        """TIM can handle cases where some information about the user changes in Korppi."""
+        auth_url = self.korppi_auth_url
+        with responses.RequestsMock() as m:
+            m.add('GET', auth_url,
+                  body='johmadoe\nDoe John Matt\njohn.m.doe@student.jyu.fi')
+            self.get('/korppiLogin', follow_redirects=True)
+        curr_id = self.current_user.id
+        curr_name = self.current_user.name
+        curr_email = self.current_user.email
+
+        # real name changes
+        with responses.RequestsMock() as m:
+            m.add('GET', auth_url,
+                  body='johmadoe\nDoe John Matthew\njohn.m.doe@student.jyu.fi')
+            self.get('/korppiLogin', follow_redirects=True)
+
+        self.assertEqual(self.current_user.id, curr_id)
+        self.assertEqual(self.current_user.name, curr_name)
+        self.assertEqual(self.current_user.email, curr_email)
+        self.assertEqual(self.current_user.real_name, 'Doe John Matthew')
+
+        # email changes
+        with responses.RequestsMock() as m:
+            m.add('GET', auth_url,
+                  body='johmadoe\nDoe John Matthew\njohn.doe@student.jyu.fi')
+            self.get('/korppiLogin', follow_redirects=True)
+
+        self.assertEqual(self.current_user.id, curr_id)
+        self.assertEqual(self.current_user.name, curr_name)
+        self.assertEqual(self.current_user.email, 'john.doe@student.jyu.fi')
+        self.assertEqual(self.current_user.real_name, 'Doe John Matthew')
+
+        # username changes
+        with responses.RequestsMock() as m:
+            m.add('GET', auth_url,
+                  body='johmadoz\nDoe John Matthew\njohn.doe@student.jyu.fi')
+            self.get('/korppiLogin', follow_redirects=True)
+
+        self.assertEqual(self.current_user.id, curr_id)
+        self.assertEqual(self.current_user.name, 'johmadoz')
+        self.assertEqual(self.current_user.email, 'john.doe@student.jyu.fi')
+        self.assertEqual(self.current_user.real_name, 'Doe John Matthew')
+        self.assertEqual(list(g.name for g in self.current_user.groups.order_by(UserGroup.name)),
+                         ['johmadoz', 'Korppi users'])
+
+        # If both username and email is different, there's no way to identify the user.
+        with responses.RequestsMock() as m:
+            m.add('GET', auth_url,
+                  body='johmadox\nDoe John Matthew\njohn.doex@student.jyu.fi')
+            self.get('/korppiLogin', follow_redirects=True)
+        self.assertNotEqual(self.current_user.id, curr_id)

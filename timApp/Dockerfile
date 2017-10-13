@@ -147,6 +147,7 @@ python-dateutil \
 python-magic \
 pytz \
 recommonmark \
+responses \
 selenium \
 sphinx==1.5.6 \
 sphinxcontrib-httpdomain \

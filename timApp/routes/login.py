@@ -127,12 +127,17 @@ def login_with_korppi():
         # Try email
         user: User = User.query.filter_by(email=email).first()
         if user is not None:
-            # An email user signs in using Korppi for the first time. We update the user's username and personal
+            # Two possibilities here:
+            # 1) An email user signs in using Korppi for the first time. We update the user's username and personal
             # usergroup.
+            # 2) Korppi username has been changed (rare but it can happen).
+            # In this case, we must not re-add the user to the Korppi group.
             personal_group = user.get_personal_group()
             user.update_info(name=user_name, real_name=real_name, email=email)
             personal_group.name = user_name
-            user.groups.append(UserGroup.get_korppi_group())
+            korppi_group = UserGroup.get_korppi_group()
+            if korppi_group not in user.groups:
+                user.groups.append(korppi_group)
         else:
             user, _ = User.create_with_group(user_name, real_name, email, commit=False)
             user.groups.append(UserGroup.get_korppi_group())
