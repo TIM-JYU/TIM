@@ -14,14 +14,22 @@ def import_accounts(file, password):
         for row in reader:
             if len(row) != 3:
                 raise Exception(f'All rows must have 3 fields, found a row with {len(row)} fields: {row}')
-            name = row[2] or row[0]
-            if User.get_by_name(name) is None:
-                User.create_with_group(name=name,
-                                       real_name=row[1],
-                                       email=row[0],
-                                       password=password,
-                                       commit=False)
+            email = row[0]
+            name = row[2] or email
+            u = User.get_by_name(name)
+            if u is None:
+                u = User.get_by_email(email)
+                if not u:
+                    User.create_with_group(name=name,
+                                           real_name=row[1],
+                                           email=email,
+                                           password=password,
+                                           commit=False)
+                else:
+                    u.update_info(name, real_name=row[1], email=email, password=password)
+                    existing.append(name)
             else:
+                u.update_info(name, real_name=row[1], email=email, password=password)
                 existing.append(name)
     timdb.commit()
     return existing

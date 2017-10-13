@@ -20,6 +20,10 @@ class AccountImportTest(TimDbTest):
         self.assertEqual(num_accounts, len(accounts))
         self.write_and_test(accounts, username_is_email=True)
 
+    def test_email_existing(self):
+        accounts = [('test1@example.com', 'Real Name 1', 't1')]
+        self.write_and_test(accounts, expected_existing=(name for _, _, name in accounts))
+
     def write_and_test(self, accounts, username_is_email=False, expected_existing=None):
         if expected_existing is None:
             expected_existing = []
