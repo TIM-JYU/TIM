@@ -242,7 +242,7 @@ class CSComtest(CS):
                      "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing.dll")
         cmdline = ("java -jar /cs/java/cs/ComTest.jar nunit %s && %s /out:%s /target:library " +
                    jypeliref +
-                   " /reference:%s %s %s") % \
+                   " /reference:%s %s %s /cs/jypeli/TIMconsole.cs") % \
                   (self.sourcefilename, self.compiler, self.testdll, CSComtest.nunit, self.sourcefilename, testcs)
         return cmdline
 
