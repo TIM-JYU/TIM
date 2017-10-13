@@ -5,7 +5,7 @@ from sqlalchemy import func
 
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
-from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
+from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
 from timApp.timdb.item import Item
 
 if False:
@@ -82,13 +82,17 @@ class DocInfo(Item):
     def lang_id(self) -> str:
         raise NotImplementedError
 
-    def get_preamble_docs(self, preamble_name: str) -> List['DocEntry']:
+    def get_preamble_docs(self) -> List['DocEntry']:
         """Gets the list of preamble documents for this document.
         The first document in the list is nearest root.
         """
         if getattr(self, '_preamble_docs', None) is None:
-            self._preamble_docs = self._get_preamble_docs_impl(preamble_name)
+            preamble_name = self.document.get_own_settings().get('preamble', DEFAULT_PREAMBLE_DOC)
+            self._preamble_docs = self._get_preamble_docs_impl(preamble_name) if isinstance(preamble_name, str) else []
         return self._preamble_docs
+
+    def get_preamble_pars(self) -> Generator[DocParagraph, None, None]:
+        return get_non_settings_pars_from_docs(self.get_preamble_docs())
 
     def _get_preamble_docs_impl(self, preamble_name: str) -> List['DocEntry']:
         path_parts = self.path_without_lang.split('/')

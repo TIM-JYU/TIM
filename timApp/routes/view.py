@@ -277,7 +277,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     doc_settings = doc.get_settings(current_user)
 
     if not view_range:
-        preamble_pars = list(get_non_settings_pars_from_docs(doc_info.get_preamble_docs(doc_settings.preamble())))
+        preamble_pars = list(doc_info.get_preamble_pars())
         try:
             doc.insert_preamble_pars(preamble_pars)
         except PreambleException as e:

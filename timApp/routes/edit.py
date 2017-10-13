@@ -311,7 +311,7 @@ def par_response(pars,
                  edit_result: Optional[DocumentEditResult]=None):
     current_user = get_current_user_object()
     if update_cache:
-        changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(),
+        changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(include_preamble=True),
                                                   doc.get_settings(),
                                                   persist=update_cache)
     else:

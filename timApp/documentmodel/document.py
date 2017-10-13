@@ -20,13 +20,11 @@ from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter
 from timApp.documentmodel.exceptions import DocExistsError, ValidationException
 from timApp.documentmodel.preloadoption import PreloadOption
-from timApp.documentmodel.specialnames import DEFAULT_PREAMBLE_DOC
 from timApp.documentmodel.validationresult import ValidationResult
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException, PreambleException
 from timApp.utils import get_error_html
-
 
 if False:
     from timApp.timdb.docinfo import DocInfo
@@ -63,6 +61,10 @@ class Document:
         self.settings: Optional[DocSettings] = None
         # The corresponding DocInfo object.
         self.docinfo: 'DocInfo' = None
+        # Cache for own settings; see get_own_settings
+        self.own_settings = None
+        # Whether preamble has been loaded
+        self.preamble_included = False
 
         # Used for accessing previous/next paragraphs quickly based on id
         self.par_map = None
@@ -235,19 +237,23 @@ class Document:
     def get_lock(self):
         return FileLock(f'/tmp/doc_{self.doc_id}_lock')
 
+    def get_own_settings(self) -> YamlBlock:
+        """Returns the settings for this document excluding any preamble documents."""
+        if self.own_settings is None:
+            self.ensure_par_ids_loaded()
+            self.own_settings = resolve_settings_for_pars(self.get_settings_pars())
+        return self.own_settings
+
     def get_settings(self, user=None, use_preamble=True) -> DocSettings:
         if self.settings is not None:
             self.settings.user = user
             return self.settings
-        self.ensure_par_ids_loaded()
-        settings_block = resolve_settings_for_pars(self.get_settings_pars())
+        settings_block = self.get_own_settings()
         final_settings = YamlBlock()
         if use_preamble:
-            preamble_name = settings_block.get('preamble', DEFAULT_PREAMBLE_DOC)
-            if isinstance(preamble_name, str):
-                preambles = self.get_docinfo().get_preamble_docs(preamble_name)
-                for p in preambles:
-                    final_settings = final_settings.merge_with(resolve_settings_for_pars(p.document.get_settings_pars()))
+            preambles = self.get_docinfo().get_preamble_docs()
+            for p in preambles:
+                final_settings = final_settings.merge_with(resolve_settings_for_pars(p.document.get_settings_pars()))
         final_settings = final_settings.merge_with(settings_block)
         settings = DocSettings(self, settings_dict=final_settings)
         settings.user = user
@@ -431,6 +437,7 @@ class Document:
         self.par_hashes = None
         self.source_doc = None
         self.settings = None
+        self.own_settings = None
         return ver
 
     def __update_metadata(self, pars: List[DocParagraph], old_ver: Tuple[int, int], new_ver: Tuple[int, int]):
@@ -628,21 +635,21 @@ class Document:
         new_ver = self.__increment_version('Inserted', p.get_id(), increment_major=True,
                                            op_params={'before_id': insert_before_id} if insert_before_id else {
                                                'after_id': insert_after_id})
-        self.__update_metadata([p], old_ver, new_ver)
 
         new_line = p.get_id() + '/' + p.get_hash() + '\n'
-        with open(self.get_version_path(old_ver), 'r') as f_src:
-            with open(self.get_version_path(new_ver), 'w') as f:
-                while True:
-                    line = f_src.readline()
-                    if not line:
-                        return p
+        with open(self.get_version_path(old_ver), 'r') as f_src, open(self.get_version_path(new_ver), 'w') as f:
+            while True:
+                line = f_src.readline()
+                if not line:
+                    break
 
-                    if insert_before_id and line.startswith(insert_before_id):
-                        f.write(new_line)
-                    f.write(line)
-                    if insert_after_id and line.startswith(insert_after_id):
-                        f.write(new_line)
+                if insert_before_id and line.startswith(insert_before_id):
+                    f.write(new_line)
+                f.write(line)
+                if insert_after_id and line.startswith(insert_after_id):
+                    f.write(new_line)
+        self.__update_metadata([p], old_ver, new_ver)
+        return p
 
     def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict]=None) -> DocParagraph:
         """Modifies the text of the given paragraph.
@@ -979,8 +986,11 @@ class Document:
             self.__save_reflist(reflist_name, reflist)
         return reflist
 
-    def get_paragraphs(self) -> List[DocParagraph]:
+    def get_paragraphs(self, include_preamble=False) -> List[DocParagraph]:
         self.ensure_pars_loaded()
+        if include_preamble and not self.preamble_included:
+            pars = list(self.get_docinfo().get_preamble_pars())
+            self.insert_preamble_pars(pars)
         return self.par_cache
 
     def get_dereferenced_paragraphs(self) -> List[DocParagraph]:
@@ -1048,6 +1058,8 @@ class Document:
                 self.par_hashes.append(t)
 
     def insert_preamble_pars(self, pars: List[DocParagraph]):
+        if self.preamble_included:
+            return
         self.ensure_pars_loaded()
         current_ids = set(self.par_ids)
         preamble_ids = set(p.get_id() for p in pars)
@@ -1062,6 +1074,7 @@ class Document:
             p.doc = self
         self.par_cache = pars + self.par_cache
         self.__update_par_map()
+        self.preamble_included = True
 
     def insert_temporary_pars(self, pars, context_par):
         if self.preload_option == PreloadOption.all:
