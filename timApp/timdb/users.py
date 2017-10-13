@@ -4,53 +4,33 @@ from timApp.timdb.blocktypes import BlockType
 from timApp.timdb.models.block import Block
 from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
-from timApp.timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
+from timApp.timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, \
+    LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME
 from timApp.timdb.timdbbase import TimDbBase
 from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import NoSuchUserException, get_anon_group_id, \
-    get_anon_user_id, get_access_type_id, get_default_right_document, hash_password
+    get_anon_user_id, get_access_type_id, get_default_right_document
 
 
 class Users(TimDbBase):
     """Handles saving and retrieving user-related information to/from the database."""
 
     def create_special_usergroups(self):
-        """Creates an anonymous user and a usergroup for it.
+        """Creates all special usergroups."""
 
-        The user id and its associated usergroup id is 0.
-
-        """
-
-        # Please keep these local and refer to the groups with their names instead.
-        # They may differ depending on the script version they were created with.
-        ANONYMOUS_USERID = 0
-        LOGGED_IN_USERID = 1
-        LOGGED_IN_GROUPID = 0
-        ANONYMOUS_GROUPID = 2
-        KORPPI_GROUPID = 3
-        ADMIN_GROUPID = 4
-
-        cursor = self.db.cursor()
-        cursor.execute('INSERT INTO UserAccount (id, name, real_name) VALUES (%s, %s, %s)',
-                       [ANONYMOUS_USERID, ANONYMOUS_USERNAME, 'Anonymous user'])
-        cursor.execute('INSERT INTO UserAccount (id, name) VALUES (%s, %s)', [LOGGED_IN_USERID, LOGGED_IN_USERNAME])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (%s, %s)', [ANONYMOUS_GROUPID, ANONYMOUS_GROUPNAME])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (%s, %s)', [LOGGED_IN_GROUPID, LOGGED_IN_GROUPNAME])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (%s, %s)', [KORPPI_GROUPID, KORPPI_GROUPNAME])
-        cursor.execute('INSERT INTO UserGroup (id, name) VALUES (%s, %s)', [ADMIN_GROUPID, ADMIN_GROUPNAME])
-        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (%s, %s)',
-                       [ANONYMOUS_USERID, ANONYMOUS_GROUPID])
-        cursor.execute('INSERT INTO UserGroupMember (User_id, UserGroup_id) VALUES (%s, %s)',
-                       [LOGGED_IN_USERID, LOGGED_IN_GROUPID])
-        cursor.execute('SELECT MAX(id) FROM UserAccount')
-        max_ua_id = cursor.fetchone()[0]
-        cursor.execute('SELECT MAX(id) FROM UserGroup')
-        max_ug_id = cursor.fetchone()[0]
-        cursor.execute("SELECT setval('useraccount_id_seq', %s)", (max_ua_id,))
-        cursor.execute("SELECT setval('usergroup_id_seq', %s)", (max_ug_id,))
-
-        self.db.commit()
+        anon = User(id=0, name=ANONYMOUS_USERNAME, real_name='Anonymous user')
+        logged = User(name=LOGGED_IN_USERNAME)
+        anon_group = UserGroup(name=ANONYMOUS_GROUPNAME)
+        logged_group = UserGroup(id=0, name=LOGGED_IN_GROUPNAME)
+        korppi_group = UserGroup(name=KORPPI_GROUPNAME)
+        admin_group = UserGroup(name=ADMIN_GROUPNAME)
+        anon.groups.append(anon_group)
+        logged.groups.append(logged_group)
+        self.session.add(anon)
+        self.session.add(logged)
+        self.session.add(korppi_group)
+        self.session.add(admin_group)
 
     def create_anonymous_user(self, name: str, real_name: str, commit: bool = True) -> User:
         """Creates a new anonymous user.
@@ -77,60 +57,6 @@ class Users(TimDbBase):
         cursor.execute('SELECT MIN(id) AS next_id FROM UserAccount')
         user_id = min(self.resultAsDictionary(cursor)[0]['next_id'], 0)
         return user_id - 1
-
-    def create_potential_user(self, email: str, password: str, commit: bool = True):
-        """Creates a potential user with the specified email and password.
-
-        :param email: The email address of the user.
-        :param password: The password of the user.
-
-        """
-        cursor = self.db.cursor()
-        hash = hash_password(password)
-        cursor.execute(
-            'INSERT INTO NewUser (email, pass, created) VALUES (%s, %s, CURRENT_TIMESTAMP) ON CONFLICT (email) DO UPDATE SET pass = EXCLUDED.pass',
-            [email, hash])
-        if commit:
-            self.db.commit()
-
-    def delete_potential_user(self, email: str, commit: bool = True):
-        """Deletes a potential user.
-
-        :param email: The email address of the user.
-
-        """
-        cursor = self.db.cursor()
-        cursor.execute('DELETE FROM NewUser WHERE email=%s', [email])
-        if commit:
-            self.db.commit()
-
-    def test_potential_user(self, email: str, password: str) -> bool:
-        """Tests if a potential user matches to email and password.
-
-        :param email: Email address.
-        :param password: Password.
-        :returns: Boolean.
-
-        """
-
-        cursor = self.db.cursor()
-        hash = hash_password(password)
-        cursor.execute('SELECT email FROM NewUser WHERE email=%s AND pass=%s', [email, hash])
-        return cursor.fetchone() is not None
-
-    def test_user(self, email: str, password: str) -> bool:
-        """Tests if a potential user matches to email and password.
-
-        :param email: Email address.
-        :param password: Password.
-        :returns: Boolean.
-
-        """
-
-        cursor = self.db.cursor()
-        hash = hash_password(password)
-        cursor.execute('SELECT email FROM UserAccount WHERE email=%s AND pass=%s', [email, hash])
-        return cursor.fetchone() is not None
 
     def get_rights_holders(self, block_id: int):
         cursor = self.db.cursor()

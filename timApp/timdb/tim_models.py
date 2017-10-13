@@ -199,14 +199,6 @@ class Message(db.Model):
     timestamp = db.Column(db.DateTime(timezone=True), nullable=False)
 
 
-class NewUser(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'newuser'
-    email = db.Column(db.Text, primary_key=True)
-    pass_ = db.Column('pass', db.Text, nullable=False)
-    created = db.Column(db.DateTime(timezone=True), nullable=False)
-
-
 class Question(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'question'

@@ -66,6 +66,7 @@ class FolderTest(TimRouteTest):
         fname2 = self.get_personal_item_path('testing2')
         f3 = self.create_folder(fname2)
         grant_access(get_anon_group_id(), f3['id'], 'view')
+        t1g = self.get_test_user_1_group_id()
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing1',
                                   'title': 'foldertitle',
@@ -74,7 +75,7 @@ class FolderTest(TimRouteTest):
                                   'modified': 'just now',
                                   'path': new_name,
                                   'location': user_folder,
-                                  'owner': {'id': 7, 'name': 'testuser1'},
+                                  'owner': {'id': t1g, 'name': 'testuser1'},
                                   'rights': {'browse_own_answers': True,
                                              'can_comment': True,
                                              'can_mark_as_read': True,
@@ -92,7 +93,7 @@ class FolderTest(TimRouteTest):
                                   'modified': 'just now',
                                   'path': fname2,
                                   'location': user_folder,
-                                  'owner': {'id': 7, 'name': 'testuser1'},
+                                  'owner': {'id': t1g, 'name': 'testuser1'},
                                   'rights': {'browse_own_answers': True,
                                              'can_comment': True,
                                              'can_mark_as_read': True,
@@ -112,7 +113,7 @@ class FolderTest(TimRouteTest):
                                   'modified': 'just now',
                                   'path': fname2,
                                   'location': user_folder,
-                                  'owner': {'id': 7, 'name': 'testuser1'},
+                                  'owner': {'id': t1g, 'name': 'testuser1'},
                                   'rights': {'browse_own_answers': False,
                                              'can_comment': False,
                                              'can_mark_as_read': False,

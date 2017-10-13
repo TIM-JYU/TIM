@@ -4,8 +4,8 @@ from flask import session
 from timApp.routes.login import test_pws
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
+from timApp.timdb.models.newuser import NewUser
 from timApp.timdb.models.usergroup import UserGroup
-from timApp.timdb.userutils import hash_password
 
 
 class TestSignUp(TimRouteTest):
@@ -18,6 +18,12 @@ class TestSignUp(TimRouteTest):
                   data={'email': 'testingsignup@example.com'},
                   follow_redirects=True,
                   expect_contains='A password has been sent to you. Please check your email.')
+        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('testingsignup@example.com',)])
+        self.post('/altsignup',
+                  data={'email': 'testingsignup@example.com'},
+                  follow_redirects=True,
+                  expect_contains='A password has been sent to you. Please check your email.')
+        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('testingsignup@example.com',)])
         self.post('/altsignup2',
                   data={'realname': 'Testing Signup',
                         'token': test_pws[-1],
@@ -26,6 +32,7 @@ class TestSignUp(TimRouteTest):
                   follow_redirects=True,
                   xhr=False,
                   expect_contains='Registration succeeded!')
+        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [])
         self.assertEqual('Testing Signup', self.current_user.real_name)
 
         # TODO needs a better error message
@@ -125,7 +132,8 @@ class TestSignUp(TimRouteTest):
         self.assertEqual(list(g.name for g in self.current_user.groups.order_by(UserGroup.name)), ['johmadoenew',
                                                                                                    'Korppi users'])
 
-    def register_user_with_korppi(self, username='johmadoe', real_name='Doe John Matt', email='john.m.doe@student.jyu.fi'):
+    def register_user_with_korppi(self, username='johmadoe', real_name='Doe John Matt',
+                                  email='john.m.doe@student.jyu.fi'):
         auth_url = self.korppi_auth_url
         with responses.RequestsMock() as m:
             m.add('GET', auth_url,
@@ -206,7 +214,7 @@ class TestSignUp(TimRouteTest):
         self.assertEqual(self.current_user.name, curr_name)
         self.assertEqual(self.current_user.email, curr_email)
         self.assertEqual(self.current_user.real_name, 'Johnny John')
-        self.assertEqual(self.current_user.pass_, hash_password(pw))
+        self.assertTrue(self.current_user.check_password(pw))
 
         self.logout()
         self.assertIsNone(self.current_user)
@@ -218,7 +226,7 @@ class TestSignUp(TimRouteTest):
         self.assertEqual(self.current_user.name, curr_name)
         self.assertEqual(self.current_user.email, curr_email)
         self.assertEqual(self.current_user.real_name, curr_real_name)
-        self.assertEqual(self.current_user.pass_, hash_password(pw))
+        self.assertTrue(self.current_user.check_password(pw))
 
     def test_email_user_to_korppi(self):
         """When an email user logs in with Korppi, no new account is created but the current account information is updated."""

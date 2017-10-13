@@ -27,10 +27,12 @@ from timApp.routes.notify import send_email
 from timApp.sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list, \
     get_current_user_object
 from timApp.sessioninfo import get_current_user_id, logged_in
+from timApp.timdb.models.newuser import NewUser
 from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db
 from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.userutils import create_password_hash
 
 login_page = Blueprint('login_page',
                        __name__,
@@ -200,8 +202,14 @@ def alt_signup():
 
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
-    timdb = get_timdb()
-    timdb.users.create_potential_user(email, password)
+    nu = NewUser.query.get(email)
+    password_hash = create_password_hash(password)
+    if nu:
+        nu.pass_ = password_hash
+    else:
+        nu = NewUser(email=email, pass_=password_hash)
+        db.session.add(nu)
+    db.session.commit()
 
     session.pop('altlogin', None)
     session.pop('user_id', None)
@@ -232,9 +240,9 @@ def alt_signup_after():
     password = request.form['password']
     confirm = request.form['passconfirm']
     save_came_from()
-    timdb = get_timdb()
 
-    if not timdb.users.test_potential_user(email, oldpass):
+    nu = NewUser.query.get(email)
+    if not (nu and nu.check_password(oldpass)):
         flash('The temporary password you provided is wrong. Please re-check your email to see the password.')
         return finish_login(ready=False)
 
@@ -265,14 +273,14 @@ def alt_signup_after():
 
     if not user:
         flash('Registration succeeded!')
-        user, _ = User.create_with_group(username, real_name, email, password=password)
+        user, _ = User.create_with_group(username, real_name, email, password=password, commit=False)
         user_id = user.id
     else:
         flash('Your information was updated successfully.')
         user.update_info(username, real_name, email, password=password)
-        db.session.commit()
 
-    timdb.users.delete_potential_user(email)
+    db.session.delete(nu)
+    db.session.commit()
 
     session.pop('altlogin', None)
     session['user_id'] = user_id
@@ -289,9 +297,8 @@ def alt_login():
     session['adding_user'] = request.form.get('add_user', 'false').lower() == 'true'
     timdb = get_timdb()
 
-    if timdb.users.test_user(email, password):
-        # Registered user
-        user = User.query.filter_by(email=email).first()
+    user = User.get_by_email(email)
+    if user is not None and user.check_password(password, allow_old=True, update_if_old=True):
         # Check if the users' group exists
         try:
             user.get_personal_group()
@@ -302,7 +309,8 @@ def alt_login():
         set_user_to_session(user)
         return finish_login()
 
-    elif timdb.users.test_potential_user(email, password):
+    nu = NewUser.query.get(email)
+    if nu and nu.check_password(password):
         # New user
         session['user_id'] = 0
         session['user_name'] = email
