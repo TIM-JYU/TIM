@@ -5,6 +5,7 @@ from timApp.routes.login import test_pws
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.userutils import hash_password
 
 
 class TestSignUp(TimRouteTest):
@@ -123,13 +124,17 @@ class TestSignUp(TimRouteTest):
         self.assertEqual('john.m.doe@student.jyu.fi', self.current_user.email)
         self.assertEqual(list(g.name for g in self.current_user.groups.order_by(UserGroup.name)), ['johmadoe', 'Korppi users'])
 
-    def test_korppi_info_change(self):
-        """TIM can handle cases where some information about the user changes in Korppi."""
+    def register_user_with_korppi(self, username='johmadoe', real_name='Doe John Matt', email='john.m.doe@student.jyu.fi'):
         auth_url = self.korppi_auth_url
         with responses.RequestsMock() as m:
             m.add('GET', auth_url,
-                  body='johmadoe\nDoe John Matt\njohn.m.doe@student.jyu.fi')
+                  body=f'{username}\n{real_name}\n{email}')
             self.get('/korppiLogin', follow_redirects=True)
+
+    def test_korppi_info_change(self):
+        """TIM can handle cases where some information about the user changes in Korppi."""
+        auth_url = self.korppi_auth_url
+        self.register_user_with_korppi()
         curr_id = self.current_user.id
         curr_name = self.current_user.name
         curr_email = self.current_user.email
@@ -175,3 +180,52 @@ class TestSignUp(TimRouteTest):
                   body='johmadox\nDoe John Matthew\njohn.doex@student.jyu.fi')
             self.get('/korppiLogin', follow_redirects=True)
         self.assertNotEqual(self.current_user.id, curr_id)
+
+    def test_korppi_email_signup(self):
+        """A Korppi user can update their password (and real name) by signing up."""
+        self.register_user_with_korppi()
+        curr_id = self.current_user.id
+        curr_name = self.current_user.name
+        curr_real_name = self.current_user.real_name
+        curr_email = self.current_user.email
+        self.post('/altsignup',
+                  data={'email': curr_email},
+                  follow_redirects=True,
+                  expect_contains='A password has been sent to you. Please check your email.')
+        pw = 'somepwd'
+        self.post('/altsignup2',
+                  data={'realname': 'Johnny John',
+                        'token': test_pws[-1],
+                        'password': pw,
+                        'passconfirm': pw},
+                  follow_redirects=True,
+                  xhr=False,
+                  expect_contains='Your information was updated successfully.')
+        self.assertEqual(self.current_user.id, curr_id)
+        self.assertEqual(self.current_user.name, curr_name)
+        self.assertEqual(self.current_user.email, curr_email)
+        self.assertEqual(self.current_user.real_name, 'Johnny John')
+        self.assertEqual(self.current_user.pass_, hash_password(pw))
+
+        self.logout()
+        self.assertIsNone(self.current_user)
+        self.login(email=curr_email, passw=pw, force=True)
+        self.assertEqual(self.current_user.id, curr_id)
+
+        self.register_user_with_korppi()
+        self.assertEqual(self.current_user.id, curr_id)
+        self.assertEqual(self.current_user.name, curr_name)
+        self.assertEqual(self.current_user.email, curr_email)
+        self.assertEqual(self.current_user.real_name, curr_real_name)
+        self.assertEqual(self.current_user.pass_, hash_password(pw))
+
+    def test_email_user_to_korppi(self):
+        """When an email user logs in with Korppi, no new account is created but the current account information is updated."""
+        self.login_test3()
+        curr_id = self.current_user.id
+        curr_pw = self.current_user.pass_
+        self.register_user_with_korppi('t3', 'Mr Test User 3', email=self.current_user.email)
+        self.assertEqual(self.current_user.id, curr_id)
+        self.assertEqual(self.current_user.name, 't3')
+        self.assertEqual(self.current_user.real_name, 'Mr Test User 3')
+        self.assertEqual(self.current_user.pass_, curr_pw)
