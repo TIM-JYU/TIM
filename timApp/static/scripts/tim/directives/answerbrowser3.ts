@@ -254,12 +254,12 @@ timApp.directive("answerbrowser", [function() {
                 // ng-keypress will not fire if the textbox has focus
                 $scope.element[0].addEventListener("keydown", $scope.checkKeyPress);
 
-                $scope.changeStudent = function(dir) {
+
+                $scope.changeStudentToIndex = function(newIndex) {
                     if ($scope.users.length <= 0) {
                         return;
                     }
                     const shouldRefocusPoints = $scope.shouldFocus;
-                    let newIndex = $scope.findSelectedUserIndex() + dir;
                     if (newIndex >= $scope.users.length) {
                         newIndex = 0;
                     }
@@ -281,6 +281,16 @@ timApp.directive("answerbrowser", [function() {
                             $scope.setFocus();
                         }
                     }, 200);
+                };
+
+                $scope.changeStudent = function(dir) {
+                    let newIndex = $scope.findSelectedUserIndex() + dir;
+                    $scope.changeStudentToIndex(newIndex);
+                };
+
+                $scope.randomStudent = function() {
+                    let newIndex = Math.floor(Math.random()*$scope.users.length);
+                    $scope.changeStudentToIndex(newIndex);
                 };
             }
 
