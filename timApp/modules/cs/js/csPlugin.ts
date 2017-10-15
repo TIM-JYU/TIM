@@ -1084,7 +1084,7 @@ csApp.directiveFunction = function(t,isInput) {
                 var helloButtons = 'public \nclass \nHello \n\\n\n{\n}\n'+
                                     'static \nvoid \n Main\n(\n)\n' + 
                                     '        Console.WriteLine(\n"\nworld!\n;\n ';
-                var typeButtons =  'bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhyscisObject \n[] \nreturn \n, ';
+                var typeButtons =  'bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ';
                 var charButtons = 'a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=';
                 // var b = attrs.buttons;
                 b = b.replace('$hellobuttons$', helloButtons);
