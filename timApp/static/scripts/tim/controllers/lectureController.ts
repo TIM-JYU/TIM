@@ -81,6 +81,7 @@ export class LectureController implements IController {
     private wallMessages: IMessage[];
     private wallName: string;
     private pollTimeout: number;
+    private pollingStopped: boolean;
 
     constructor(scope: IScope) {
         this.scope = scope;
@@ -760,6 +761,7 @@ export class LectureController implements IController {
     }
 
     message_longPolling(lastID) {
+        $window.clearTimeout(this.pollTimeout);
         if (!lastID) {
             lastID = -1;
         }
@@ -771,31 +773,36 @@ export class LectureController implements IController {
             return;
         }
         this.requestOnTheWay = true;
+        var buster = (""+new Date().getTime());
+        buster =buster.substring(buster.length-4);
         $http<{
-            isLecture, lectureId, lectureEnding, students,
-            lecturers, new_end_time, points_closed, question, result, askedId, status, data: IMessage[], lastid: number,
+            e, lectureId, lectureEnding, students,
+            lecturers, new_end_time, points_closed, question, result, askedId, status, data: IMessage[], lastid, ms,
         }>({
             url: "/getUpdates",
             method: "GET",
             params: {
-                client_message_id: lastID,
-                lecture_id: this.lecture.lecture_id,
-                doc_id: this.getDocIdOrNull(),
-                is_lecturer: this.isLecturer, // Tarkista mielummin serverin päässä
-                get_messages: this.lectureSettings.useWall,
-                get_questions: this.lectureSettings.useQuestions,
-                current_question_id: this.currentQuestionId || null,
-                current_points_id: this.currentPointsId || null,
-                buster: new Date().getTime(),
+                c: lastID,   //  client_message_id
+                l: this.lecture.lecture_id, // lecture_id
+                d: this.getDocIdOrNull(), // doc_id
+                t: this.isLecturer ? 't' : null, // is_lecturer, Tarkista mielummin serverin päässä
+                m: this.lectureSettings.useWall ? 't' : null, // get_messages
+                q: this.lectureSettings.useQuestions ? 't' : null, // get_questions
+                i: this.currentQuestionId || null, // current_question_id
+                p: this.currentPointsId || null, // current_points_id
+                b: buster,
             },
         })
             .then(async (response) => {
+                $window.clearTimeout(this.pollTimeout);
                 const answer = response.data;
                 this.requestOnTheWay = false;
+                var isLecture = answer.e;
+                var poll_interval_ms = answer.ms;
                 if (isLectureListResponse(answer)) {
                     this.showBasicView(answer);
                     return;
-                } else if (answer.isLecture !== null) {
+                } else if (isLecture !== null) {
                     this.pollingLectures.splice(this.pollingLectures.indexOf(answer.lectureId), 1);
                     if (this.lecture === null) {
                         return;
@@ -856,14 +863,9 @@ export class LectureController implements IController {
 
                 $window.clearTimeout(this.pollTimeout);
                 if (this.polling) {
-                    if (this.lecture === null) {
-                        return;
-                    }
-                    this.pollingLectures.push(this.lecture.lecture_id);
-                    // Odottaa sekunnin ennen kuin pollaa uudestaan.
-                    this.pollTimeout = setTimeout(() => {
-                        this.message_longPolling(answer.lastid);
-                    }, 2000);
+
+                    if (this.pollingLectures.indexOf(this.lecture.lecture_id) < 0)
+                        this.pollingLectures.push(this.lecture.lecture_id);
 
                     if (answer.status === "results") {
                         let newMessages = 0;
@@ -878,10 +880,18 @@ export class LectureController implements IController {
                         const wallArea = $("#wallArea");
                         wallArea.scrollTop(wallArea[0].scrollHeight);
                     } else {
-                        $log.info("Sending new poll.");
+                        $window.console.log("Sending new poll.");
                     }
+                    // Odottaa pyydetyn ajan ennen kuin pollaa uudestaan.
+                    var pollInterval = parseInt(poll_interval_ms);
+                    if (isNaN(pollInterval) || pollInterval < 1000) pollInterval = 4000;
+                    this.pollTimeout = setTimeout(() => {
+                        this.message_longPolling(answer.lastid);
+                    }, pollInterval);
+
                 } else {
-                    $log.info("Got answer but not polling anymore.");
+                    this.pollingStopped = true;
+                    $window.console.log("Got answer but not polling anymore.");
                 }
             }, () => {
                 this.requestOnTheWay = false;

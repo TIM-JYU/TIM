@@ -1,6 +1,3 @@
 FROM ubuntu:17.04
 ADD Ephemeral/Dumbo/dist/build/Dumbo/Dumbo /bin/
-ADD timApp/modules/Haskell/bin/ChoicesPlugin /bin/
-ADD timApp/modules/Haskell/bin/GraphVizPlugin /bin/
-ADD timApp/modules/Haskell/bin/MultipleChoicesPlugin /bin/
 CMD /bin/bash

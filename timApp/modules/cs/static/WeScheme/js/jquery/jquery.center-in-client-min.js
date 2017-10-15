@@ -1,0 +1,2 @@
+jQuery.fn.centerInClient=function(e){var c={forceAbsolute:!1,container:window,completeHandler:null};jQuery.extend(c,e);return this.each(function(){var a=jQuery(this),b=jQuery(c.container),d=c.container==window;c.forceAbsolute&&(d?a.remove().appendTo("body"):a.remove().appendTo(b.get(0)));a.css("position","absolute");var e=d?2:1.8,f=(d?b.width():b.outerWidth())/2-a.outerWidth()/2,d=(d?b.height():b.outerHeight())/e-a.outerHeight()/2;a.css("left",f+b.scrollLeft());a.css("top",d+b.scrollTop());c.completeHandler&&
+c.completeHandler(this)})};

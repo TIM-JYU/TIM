@@ -15,6 +15,7 @@
                                 ng-change="$ctrl.getAvailableAnswers()"></select>
                         <span class="input-group-btn">
                      <button class="btn btn-primary" ng-click="$ctrl.changeStudent(+1)">&darr;</button>
+                     <button class="btn btn-primary" ng-click="$ctrl.randomStudent()" title="Choose random student">R</button>
                     </span>
                     </div>
                 </div>
@@ -71,7 +72,7 @@
                             <i class="glyphicon glyphicon-ok"></i>
                         </button>
                     </form>
-                    <span ng-show="$ctrl.points !== null && !($ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints()))">Points: {{ $ctrl.points }}</span>
+                    <span ng-show="$ctrl.points !== null && !($ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())) && $ctrl.taskInfo.pointsText">{{ $ctrl.taskInfo.pointsText }} {{ $ctrl.points }}</span>
                     <span ng-show="$ctrl.taskInfo.maxPoints && $ctrl.points !== null">/ {{ taskInfo.maxPoints }}</span>
                     <span ng-show="!$ctrl.selectedAnswer.valid && $ctrl.points !== null">(invalid)</span>
                     <span ng-show="!$ctrl.viewctrl.teacherMode && $ctrl.allowCustomPoints()">
@@ -102,7 +103,7 @@
 
             </div>
         </div>
-        <span ng-show="$ctrl.taskInfo.answerLimit">Tries left: {{ $ctrl.getTriesLeft() }}</span>
+        <span class="triesLeft" ng-show="$ctrl.taskInfo.answerLimit && $ctrl.taskInfo.triesText">{{ $ctrl.taskInfo.triesText }} {{ $ctrl.getTriesLeft() }}</span>
         <span ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">(no answers)</span>
     </div>
     <span ng-show="$ctrl.taskInfo.starttime || $ctrl.taskInfo.deadline">

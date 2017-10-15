@@ -15,13 +15,14 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 
-from timApp.accesshelper import verify_logged_in, has_edit_access, has_manage_access
+from timApp.accesshelper import verify_logged_in, has_edit_access, has_manage_access, \
+    get_viewable_blocks_or_none_if_admin
 from timApp.dbaccess import get_timdb
 from timApp.responsehelper import json_response, set_no_cache_headers, ok_response
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group
-from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.docentry import DocEntry, get_documents_in_folder
 from timApp.timdb.models.folder import Folder
-from timApp.timdb.userutils import get_viewable_blocks, grant_access
+from timApp.timdb.userutils import grant_access
 
 velps = Blueprint('velps',
                   __name__,
@@ -74,9 +75,9 @@ def get_default_velp_group(doc_id: int):
         return set_no_cache_headers(json_response({"id": doc_id, "name": doc_name, "edit_access": edit_access}))
 
     if doc_path != "":
-        found_velp_groups = timdb.documents.get_documents_in_folder(doc_path + "/velp-groups/" + doc_name)
+        found_velp_groups = get_documents_in_folder(doc_path + "/velp-groups/" + doc_name)
     else:  # Documents in root folder don't like / after empty path
-        found_velp_groups = timdb.documents.get_documents_in_folder("velp-groups/" + doc_name)
+        found_velp_groups = get_documents_in_folder("velp-groups/" + doc_name)
     velp_groups = []
     for v in found_velp_groups:
         # if timdb.users.has_view_access(user_id, timdb.documents.get_document_id(v['name'])):
@@ -101,7 +102,7 @@ def get_default_personal_velp_group():
     user = get_current_user_object()
 
     personal_velp_group_path = user.get_personal_folder().path + "/velp-groups"
-    found_velp_groups = timdb.documents.get_documents_in_folder(personal_velp_group_path)
+    found_velp_groups = get_documents_in_folder(personal_velp_group_path)
     velp_groups = []
     for v in found_velp_groups:
         velp_groups.append(v.id)
@@ -833,26 +834,26 @@ def get_velp_groups_from_tree(document_id: int):
     # owner_group_id = 3  # TODO: Choose owner group correctly, now uses All Korppi users
 
     velp_groups: List[DocEntry] = []
-    viewable = get_viewable_blocks(get_current_user_id())
+    viewable = get_viewable_blocks_or_none_if_admin()
 
     # Velp groups for areas, plugins etc
     folders = Folder.get_all_in_path(doc_velp_path)
     for path in folders:
         full_path = path.get_full_path()
-        velp_groups += get_folder_velp_groups(timdb, full_path, viewable)
+        velp_groups += get_folder_velp_groups(full_path, viewable)
 
     # Document's own velp group
-    velp_groups += get_folder_velp_groups(timdb, current_path + "/" + velp_group_folder + "/" + doc_name, viewable)
+    velp_groups += get_folder_velp_groups(current_path + "/" + velp_group_folder + "/" + doc_name, viewable)
 
     # Velp group folder when going towards root in tree
     while True:
-        velp_groups += get_folder_velp_groups(timdb, current_path + "/" + velp_group_folder, viewable)
+        velp_groups += get_folder_velp_groups(current_path + "/" + velp_group_folder, viewable)
         if current_path == '':
             break
         current_path, _ = timdb.folders.split_location(current_path)
 
     # User's own velp groups
-    velp_groups += get_folder_velp_groups(timdb, personal_velps_path, viewable)
+    velp_groups += get_folder_velp_groups(personal_velps_path, viewable)
 
     # remove duplicates
     velp_group_ids = set()
@@ -872,5 +873,5 @@ def get_velp_groups_from_tree(document_id: int):
     return results
 
 
-def get_folder_velp_groups(timdb, folder, viewable) -> List[DocEntry]:
-    return timdb.documents.get_documents_in_folder(folder, filter_ids=viewable)
+def get_folder_velp_groups(folder, viewable) -> List[DocEntry]:
+    return get_documents_in_folder(folder, filter_ids=viewable)

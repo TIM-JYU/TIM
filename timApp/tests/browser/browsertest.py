@@ -83,7 +83,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         :param url: The URL to which to navigate. This must be relative.
 
         """
-        self.drv.get("{}:{}{}".format(self.app.config['SELENIUM_BROWSER_URL'], self.app.config['LIVESERVER_PORT'], url))
+        self.drv.get(f"{self.app.config['SELENIUM_BROWSER_URL']}:{self.app.config['LIVESERVER_PORT']}{url}")
 
     def print_console(self):
         logs = self.drv.get_log("browser")
@@ -165,7 +165,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         except NoSuchElementException:
             pass
         else:
-            self.assertTrue(False, 'Selector "{}" matched something.'.format(css_selector))
+            self.assertTrue(False, f'Selector "{css_selector}" matched something.')
         finally:
             self.drv.implicitly_wait(10)
 

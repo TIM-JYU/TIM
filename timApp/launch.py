@@ -37,7 +37,7 @@ if __name__ == '__main__':
             log_info('Starting without gunicorn.')
             timApp.tim.start_app()
         elif sys.argv[1] == '--with-gunicorn':
-            log_info('Starting with gunicorn. CPUs available: {}'.format(multiprocessing.cpu_count()))
+            log_info(f'Starting with gunicorn. CPUs available: {multiprocessing.cpu_count()}')
             p = subprocess.Popen(["gunicorn", "-p", "/var/run/gunicorn.pid", "--config", "gunicornconf.py", "tim:init_app()"])
             p.wait()
         else:

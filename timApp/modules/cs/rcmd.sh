@@ -5,7 +5,7 @@ export LANG=en_US.UTF-8
 
 if [ $2 != "True" ]; then
   # For X server emulation
-  Xvfb :1 -screen 0 1280x1024x24 -extension RANDR 2>/dev/null  &
+  Xvfb :1 -screen 0 1280x1024x24 2>/dev/null &
   export DISPLAY=:1 
 fi
 export GNUTERM=png

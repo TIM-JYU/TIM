@@ -7,11 +7,11 @@ import yaml
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.macroinfo import MacroInfo
+from timApp.documentmodel.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdownconverter import expand_macros
+from timApp.rndutils import get_simple_hash_from_par_and_user
 from timApp.timdb.models.user import User
 from timApp.timdb.timdbexception import TimDbException
-from timApp.utils import parse_yaml, merge
-from timApp.rndutils import get_simple_hash_from_par_and_user
 
 date_format = '%Y-%m-%d %H:%M:%S'
 
@@ -50,6 +50,14 @@ def get_num_value(values, key, default=None):
     return value
 
 
+def handle_plugin_error(plugin_data, task_id_name):
+    if 'error' in plugin_data:
+        task_id_error = ' Task id: ' + task_id_name if task_id_name else ''
+        if isinstance(plugin_data, str):
+            raise PluginException(plugin_data + task_id_error)
+        raise PluginException(plugin_data['error'] + task_id_error)
+
+
 class Plugin:
     deadline_key = 'deadline'
     starttime_key = 'starttime'
@@ -59,6 +67,7 @@ class Plugin:
 
     def __init__(self, task_id: Optional[str], values: dict, plugin_type: str, par: Optional[DocParagraph] = None):
         self.task_id = task_id
+        assert isinstance(values, dict)
         self.values = values
         self.type = plugin_type
         self.par = par
@@ -66,7 +75,7 @@ class Plugin:
 
     @property
     def full_task_id(self):
-        return '{}.{}'.format(self.par.doc.doc_id, self.task_id)
+        return f'{self.par.doc.doc_id}.{self.task_id}'
 
     @staticmethod
     def get_date(d):
@@ -74,7 +83,7 @@ class Plugin:
             try:
                 d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
             except ValueError:
-                raise PluginException('Invalid date format: {}'.format(d))
+                raise PluginException(f'Invalid date format: {d}')
         if d is not None:
             if d.tzinfo is None:
                 d = d.replace(tzinfo=timezone.utc)
@@ -103,13 +112,10 @@ class Plugin:
                               macros: Dict[str, object],
                               macro_delimiter: str):
         if not par.is_plugin():
-            raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
+            raise PluginException(f'The paragraph {par.get_id()} is not a plugin.')
         task_id_name = par.get_attr('taskId')
         plugin_data = parse_plugin_values_macros(par, global_attrs, macros, macro_delimiter)
-        if 'error' in plugin_data:
-            if isinstance(plugin_data, str):
-                raise PluginException(plugin_data + ' Task id: ' + task_id_name)
-            raise PluginException(plugin_data['error'] + ' Task id: ' + task_id_name)
+        handle_plugin_error(plugin_data, task_id_name)
         p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par)
         return p
 
@@ -117,17 +123,14 @@ class Plugin:
     def from_paragraph(par: DocParagraph, user: Optional[User] = None):
         doc = par.doc
         if not par.is_plugin():
-            raise PluginException('The paragraph {} is not a plugin.'.format(par.get_id()))
+            raise PluginException(f'The paragraph {par.get_id()} is not a plugin.')
         task_id_name = par.get_attr('taskId')
         rnd_seed = get_simple_hash_from_par_and_user(par, user)  # TODO: RND_SEED get users rnd_seed for this plugin
         par.insert_rnds(rnd_seed)
         plugin_data = parse_plugin_values(par,
                                           global_attrs=doc.get_settings().global_plugin_attrs(),
                                           macroinfo=doc.get_settings().get_macroinfo(user))
-        if 'error' in plugin_data:
-            if isinstance(plugin_data, str):
-                raise PluginException(plugin_data + ' Task id: ' + task_id_name)
-            raise PluginException(plugin_data['error'] + ' Task id: ' + task_id_name)
+        handle_plugin_error(plugin_data, task_id_name)
         p = Plugin(task_id_name, plugin_data['markup'], par.get_attrs()['plugin'], par=par)
         return p
 
@@ -144,7 +147,10 @@ class Plugin:
         pieces = task_id.split('.')
         if not 2 <= len(pieces) <= 3:
             raise PluginException('The format of task_id is invalid. Expected 1 or 2 dot characters.')
-        doc_id = int(pieces[0])
+        try:
+            doc_id = int(pieces[0])
+        except ValueError:
+            raise PluginException(f'The format of task_id is invalid. Expected integral doc id but got {pieces[0]}.')
         task_id_name = pieces[1] if pieces[1] else None
         par_id = pieces[2] if len(pieces) == 3 else None
         return doc_id, task_id_name, par_id
@@ -158,6 +164,8 @@ class Plugin:
     def points_rule(self):
         if self.points_rule_cache is None:
             self.points_rule_cache = get_value(self.values, self.points_rule_key, {})
+            if not isinstance(self.points_rule_cache, dict):
+                self.points_rule_cache = {}
         return self.points_rule_cache
 
     def max_points(self, default=None):
@@ -185,7 +193,7 @@ class Plugin:
         if points_min is None or points_max is None:
             raise PluginException('You cannot give yourself custom points in this task.')
         elif not (points_min <= points <= points_max):
-            raise PluginException('Points must be in range [{},{}]'.format(points_min, points_max))
+            raise PluginException(f'Points must be in range [{points_min},{points_max}]')
         return points
 
     def to_paragraph(self) -> DocParagraph:
@@ -263,15 +271,15 @@ def parse_plugin_values_macros(par: DocParagraph,
         rnd_macros = par.get_rands()
         if rnd_macros:
             macros = {**macros, **rnd_macros}
-        yaml_str = par_md[par_md.index('\n') + 1:par_md.rindex('\n')]
+        yaml_str = strip_code_block(par_md)
         if not par.get_nomacros():
             yaml_str = expand_macros(yaml_str,
                                      macros=macros,
                                      macro_delimiter=macro_delimiter)
-        # print("yaml str is: " + yaml_str)
-        values = parse_yaml(yaml_str)
-        if type(values) is str:
-            return {'error': "YAML is malformed: " + values}
+        try:
+            values = YamlBlock.from_markdown(yaml_str).values
+        except Exception:
+            return {'error': "YAML is malformed: " + yaml_str}
         else:
             if global_attrs:
                 if type(global_attrs) is str:

@@ -3,7 +3,7 @@ import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
 import {IItem} from "../IItem";
-import {ILecture, ILectureFormParams} from "../lecturetypes";
+import {ILecture, ILectureFormParams, ILectureOptions} from "../lecturetypes";
 import {$http, $log, $window} from "../ngimport";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 
@@ -32,13 +32,13 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
     private errorMessage: string;
     private lectureCode: string;
     private password: string;
-    private maxStudents: number;
     private earlyJoining: boolean;
     private showEarlyJoin: boolean;
     private dateTimeOptions: EonasdanBootstrapDatetimepicker.SetOptions;
     private startTime: moment.Moment;
     private endTime: moment.Moment;
     private item: IItem;
+    private options: ILectureOptions;
 
     constructor() {
         super();
@@ -50,7 +50,8 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
         this.errorMessage = "";
         this.lectureCode = "";
         this.password = "";
-        this.maxStudents = 100;
+        this.options = {max_students: 100, poll_interval: 4, poll_interval_t: 1,
+                          long_poll: false, long_poll_t: false  };
 
         this.dateTimeOptions = {
             format: "D.M.YYYY HH:mm:ss",
@@ -72,7 +73,7 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
         if (data.password !== undefined) {
             this.password = data.password;
         }
-        this.maxStudents = data.max_students;
+        this.options = data.options;
     }
 
     $onInit() {
@@ -199,7 +200,7 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
         if (this.dateCheck === false && this.dueCheck === false) {
             this.errorize("endInfo", "A date or duration must be chosen.");
         }
-        this.isNumber(this.maxStudents, "maxStudents");
+        this.isNumber(this.options.max_students, "maxStudents");
 
         if (this.startTime !== null) {
             const lectureStartingInPast = moment().diff(this.startTime) >= 0;
@@ -253,7 +254,7 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
                 password: this.password,
                 start_time: this.startTime,
                 end_time: this.endTime,
-                max_students: this.maxStudents,
+                options: this.options,
             };
             const response = await $http.post<{lectureId: number}>("/createLecture", lectureParams);
             if (!this.creatingNew()) {
@@ -293,6 +294,8 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
             "durationHour",
             "durationMin",
             "maxStudents",
+            "poll_interval",
+            "long_poll",
         ];
         for (let i = 0; i < elementsToRemoveErrorsFrom.length; i++) {
             if (elementsToRemoveErrorsFrom[i] !== undefined) {

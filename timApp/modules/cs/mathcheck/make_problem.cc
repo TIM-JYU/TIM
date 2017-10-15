@@ -1,6 +1,6 @@
 #define confuse
 #include "input_output.cc"
-copyright make_problem_cc( "make_problem.cc", "Antti Valmari", 20170817 );
+copyright make_problem_cc( "make_problem.cc", "Antti Valmari", 20170825 );
 /*
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -469,15 +469,15 @@ bool
   autofocus = true;
 void make_pending_answer_box( bool initialize = false ){
   if( !answer_box_pending ){ return; }
-  out_html( '\n' );
+  out_print( '\n' );
   if( answer_box_prgh ){ out_print( "<p>" ); }
   out_print( "<textarea rows=" ); out_print( rows_l );
   out_print( " cols=" ); out_print( cols_l );
   if( autofocus ){ out_print( " autofocus" ); autofocus = false; }
-  out_print( " name=\"formula\">\t" );
+  out_print( " name=\"exam\">\t" );
   if( initialize ){ inp_copy_to_html( inp_copy_nobreak ); }
-  out_html( "</textarea>\n" );
-  out_html( "<textarea name=\"hidden\""
+  out_print( "</textarea>\n" );
+  out_print( "<textarea name=\"hidden\""
     " style=display:none>end_of_answer</textarea>\n" );
   write_answer();
   answer_box_pending = false; answer_box_printed = true;
@@ -486,9 +486,9 @@ void make_pending_answer_box( bool initialize = false ){
 
 /* Create the first part of a hidden text area. */
 void hidden_begin(){
-  out_html( "\n<textarea name=\"hidden\" style=display:none>\n" );
+  out_print( "\n<textarea name=\"hidden\" style=display:none>\n" );
   if( confuse_hidden ){ out_confuse_on( random(0) ); inp_copy_status = 4; }
-  if( fb_height && !answer_box_printed ){ out_html( "verbose_off\n" ); }
+  if( fb_height && !answer_box_printed ){ out_print( "verbose_off\n" ); }
   answer_box_printed = false;
 }
 
@@ -496,7 +496,7 @@ void hidden_begin(){
 /* Create the last part of a hidden text area. */
 void hidden_end(){
   out_confuse_off();
-  out_html( "</textarea>\n" );
+  out_print( "</textarea>\n" );
 }
 
 
@@ -526,7 +526,7 @@ void close_form( bool main_buttons, bool
 #endif
 
   /* Make the submit buttons. */
-  out_html( '\n' );
+  out_print( '\n' );
   if( fb_height ){
     if( main_buttons ){
       out_print( "<p><input type=submit value=\"submit, new tab\">\nor " );
@@ -577,11 +577,11 @@ void close_file( bool chain_continues ){
   if( make_file_chain && fb_height ){
     if( chain_continues ){
       buffer[ buf_mid ] = '\0';
-      out_html( "\n<p><a href= \"" ); out_print( URL_html_base );
+      out_print( "\n<p><a href= \"" ); out_print( URL_html_base );
       out_print( buffer ); out_print( file_number + 1 );
       out_print( ".html\"\t>Click here to go to the next page</a>" );
     }else{
-      out_html( "\n<p class=hides>This was the last page of the series!" );
+      out_print( "\n<p class=hides>This was the last page of the series!" );
     }
   }
 #endif
@@ -590,7 +590,7 @@ void close_file( bool chain_continues ){
   time_t time_now = time(0);
   struct tm *time_fields = gmtime( &time_now );
   if( time_fields ){
-    out_html( "\n<hr>\n<p class=unimp>This file was generated " );
+    out_print( "\n<hr>\n<p class=unimp>This file was generated " );
     out_print( time_fields->tm_year + 1900 ); out_print( '-' );
     out_2digit( time_fields->tm_mon + 1 ); out_print( '-' );
     out_2digit( time_fields->tm_mday ); out_print( ' ' );
@@ -627,7 +627,7 @@ void open_file(){
       html_h1( title, make_file_chain * file_number, last_number );
     }else{ html_h1( title ); }
   }else{
-    out_html( "\n\n\n<p><hr>\n\n" );
+    out_print( "\n\n\n<p><hr>\n\n" );
     html_h1( title, make_file_chain * file_number, last_number );
   }
 #else
@@ -654,7 +654,7 @@ void open_form(){
   if( form_is_open ){ return; }
   open_file();
   if( !err_ok ){ return; }
-  out_html( "\n<form action=\t\"" ); out_print( URL_cgi_base );
+  out_print( "\n<form action=\t\"" ); out_print( URL_cgi_base );
   out_print( "mathcheck.out\" method=post target=_blank>\n" );
   if( fb_height ){ out_print( "<table class=ifr>\n<tr><td class=ifrl>\n" ); }
   form_is_open = true;
@@ -1690,7 +1690,7 @@ int main(){
           : inp_copy_nobreak
       );
 #endif
-      out_html( '\n' );
+      out_print( '\n' );
       hidden_end();
       continue;
 
@@ -1716,16 +1716,16 @@ int main(){
       if( close_previous_file ){ close_file( true ); }
       open_file();
       if( !err_ok ){ continue; }
-      out_html( "\n<form action=\t\"" ); out_print( URL_cgi_base );
+      out_print( "\n<form action=\t\"" ); out_print( URL_cgi_base );
       out_print( "mathcheck.out\" method=post target=_blank>" );
-      hidden_begin();
+      out_print( "\n<textarea name=\"extra\" style=display:none>\n" );
       out_print( inp_tkn == tkn_Instructions ? "help" : "brief_help" );
-      out_print( " end_of_answer" );
-      hidden_end();
+      out_print( " end_of_answer</textarea>\n" );
+      answer_box_printed = false;
       inp_copy_to_html(); out_print( '\n' );
-      out_html( "<input type=submit value=\"" );
-      if( is_brief ){ out_html( "brief " ); }
-      out_html( "typing instructions, new tab\">\n</form>\n" );
+      out_print( "<input type=submit value=\"" );
+      if( is_brief ){ out_print( "brief " ); }
+      out_print( "typing instructions, new tab\">\n</form>\n" );
       continue;
     }
 
@@ -1771,10 +1771,10 @@ int main(){
     case tkn_question:
       open_form();
       if( !err_ok ){ continue; }
-      out_html( '\n' );
-      if( inp_prgh ){ out_html( "<p>\t" ); inp_prgh = false; }
+      out_print( '\n' );
+      if( inp_prgh ){ out_print( "<p>\t" ); inp_prgh = false; }
       inp_copy_to_html();
-      out_html( '\n' );
+      out_print( '\n' );
       answer_box_pending = true; answer_box_prgh = false;
       continue;
 
@@ -1803,10 +1803,10 @@ int main(){
     case tkn_text: case tkn_none:
       open_file();
       if( !err_ok ){ continue; }
-      out_html( '\n' );
-      if( inp_prgh ){ out_html( "<p>\t" ); inp_prgh = false; }
+      out_print( '\n' );
+      if( inp_prgh ){ out_print( "<p>\t" ); inp_prgh = false; }
       inp_copy_to_html();
-      out_html( '\n' );
+      out_print( '\n' );
       continue;
 
     /* Store the title. */

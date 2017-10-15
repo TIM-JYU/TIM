@@ -136,7 +136,7 @@ class Notes(TimDbBase):
             include_public_sql = "OR access = 'everyone'"
         c = self.db.cursor()
         # TODO: Use string_agg instead of LIMIT 1
-        c.execute("""
+        c.execute(f"""
  SELECT UserNotes.id, par_id, doc_id, par_hash, content,
         created,
         modified,
@@ -154,9 +154,9 @@ class Notes(TimDbBase):
                LIMIT 1
                )
   tmp ON UserNotes.UserGroup_id = tmp.UserGroup_id
- WHERE (UserNotes.UserGroup_id = %s {}) AND doc_id IN ({})
+ WHERE (UserNotes.UserGroup_id = %s {include_public_sql}) AND doc_id IN ({template})
  ORDER BY UserNotes.id
-                     """.format(include_public_sql, template),
+                     """,
                   [usergroup_id] + list(ids))
         result = self.resultAsDictionary(c)
         return self.process_notes(result)

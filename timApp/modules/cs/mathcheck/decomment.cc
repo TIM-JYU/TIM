@@ -4,12 +4,9 @@
   program can be compiled as a command-line program or (#define cgibin)
   cgi-program.
 */
-/* Copyright Antti Valmari 2017-08-07 */
+/* Copyright Antti Valmari 2017-08-25 */
 #include <iostream>
-
-const char
-  *URL_css = "http://math.tut.fi/mathcheck/mathcheck.css",
-  *URL_cgi_base = "http://math.tut.fi/mathcheck/cgi-bin/";
+#include "links.cc"
 
 /* From hexadecimal character to a value */
 inline char from_hex( char ch ){
@@ -19,47 +16,86 @@ inline char from_hex( char ch ){
   return '\x10';
 }
 
-char inp_chr = '\0';  // most recently delivered char (or byte of UTF-8-char)
 
+/* Get (and cgi-bin-decode) an input char (or a byte of an UTF-8 char). Reject
+  <CR>s. Use '\0' at end-of-input. */
+char inp_do_read(){
+  char inp_byte = '\0';
 
-/* Get (and cgi-bin-decode) an input char and assign it to inp_chr.
-  Reject <CR>s. Return '\0' for end-of-input. */
-void inp_get_chr(){
-
-  /* Read (and cgi-bin-decode) input until something can be delivered or the
-    input ends. */
+  /* Read (and cgi-bin-decode) input until something else than <CR> is
+    obtained. Skipping <CR> avoids spurious double newlines. */
   while( true ){
 
     /* Read the char or detect the end of input. */
-    if( !std::cin.get( inp_chr ) ){ inp_chr = '\0'; }
+    if( !std::cin.get( inp_byte ) ){ inp_byte = '\0'; }
 
 #ifdef cgibin
 
     /* Decode +. */
-    else if( inp_chr == '+' ){ inp_chr = ' '; }
+    else if( inp_byte == '+' ){ inp_byte = ' '; }
 
     /* If a form field name arrives, scan until the contents of the field. To
       ensure white space between successive fields, return a newline. */
-    else if( inp_chr == '&' ){
-      while( std::cin.get( inp_chr ) && inp_chr != '=' );
-      inp_chr = '\n';
+    else if( inp_byte == '&' ){
+      while( std::cin.get( inp_byte ) && inp_byte != '=' );
+      inp_byte = '\n';
     }
 
     /* Decode %-codes. */
-    else if( inp_chr == '%' ){
+    else if( inp_byte == '%' ){
       char ch = from_hex( std::cin.get() );
-      inp_chr = from_hex( std::cin.get() );
-      if( !std::cin || ch == '\x10' || inp_chr == '\x10' ){ inp_chr = '\0'; }
-      else{ inp_chr |= ch << 4; }
+      inp_byte = from_hex( std::cin.get() );
+      if( !std::cin || ch == '\x10' || inp_byte == '\x10' ){
+        inp_byte = '\0';
+      }else{ inp_byte |= ch << 4; }
     }
 
 #endif
 
-    /* Skip <CR> to avoid spurious double newlines. */
-    if( inp_chr != '\x0d' ){ break; }
-
+    if( inp_byte != '\x0d' ){ return inp_byte; }
   }
 
+}
+
+
+/* Current input char (or a byte of an UTF-8-char) */
+char inp_chr = '\0';
+
+/* A ring buffer of input bytes that have been read in advance. */
+const unsigned inp_buf_size = 100;  // capacity is one less than this
+char inp_buff[ inp_buf_size ];
+unsigned
+  inp_head = 0,   // points to the first free location
+  inp_tail = 0;   // if != inp_head, points to the oldest byte in the buffer
+
+
+/* Update the current input char (or UTF-8 byte). */
+void inp_get_chr(){
+  if( inp_head == inp_tail ){ inp_chr = inp_do_read(); }
+  else{ inp_chr = inp_buff[ inp_tail++ ]; inp_tail %= inp_buf_size; }
+}
+
+
+/* Return the ii'th input byte in advance to the current byte. To do so, load
+  bytes until the input buffer contains at least ii bytes. */
+char inp_advance( unsigned ii ){
+  if( !ii ){ return inp_chr; }
+  if( ii >= inp_buf_size ){ ii = inp_buf_size - 1; }
+  for(
+    unsigned nn = ( inp_buf_size + inp_head - inp_tail ) % inp_buf_size;
+    nn < ii; ++nn
+  ){ inp_buff[ inp_head++ ] = inp_do_read(); inp_head %= inp_buf_size; }
+  return inp_buff[ ( inp_tail + ii - 1 ) % inp_buf_size ];
+}
+
+
+/* Remove ii oldest bytes in inp_chr and the input buffer. */
+void inp_consume( unsigned ii ){
+  unsigned
+    nn = ( inp_buf_size + inp_head - inp_tail ) % inp_buf_size,
+    jj = ii <= nn ? ii : nn + 1;
+  if( jj > 1 ){ --jj; inp_tail += jj; inp_tail %= inp_buf_size; ii -= jj; }
+  for( ; ii; --ii ){ inp_get_chr(); }
 }
 
 
@@ -88,30 +124,22 @@ void out_esc( char ch ){
 }
 
 
-/* Features for testing against a string. */
-unsigned match_ii = 0;            // how far matched
-const unsigned match_size = 10;   // make big enough!!!
-char match_buff[ match_size ];    // so far matched chars
-
-/* Try a match against cmp. If cis, try a case-insensitive match. Record the
-  matched chars using match_buff and match_ii. */
+/* Try a match against cmp. If cis, try a case-insensitive match. Advance in
+  the input if matched. */
 bool match( const char *cmp, bool cis = false ){
-  match_ii = 0;
+  unsigned ii = 0;
+  char inp_byte = inp_chr;
   while(
-    cmp[ match_ii ] &&
-    cmp[ match_ii ] == (
-      cis && 'A' <= inp_chr && inp_chr <= 'Z' ? inp_chr + 32 : inp_chr
+    cmp[ ii ] &&
+    cmp[ ii ] == (
+      cis && 'A' <= inp_byte && inp_byte <= 'Z' ? inp_byte + 32 : inp_byte
     )
   ){
-    if( match_ii >= match_size ){ return false; }
-    match_buff[ match_ii ] = inp_chr; inp_get_chr(); ++match_ii;
+    if( ii >= inp_buf_size - 1 ){ return false; }
+    inp_byte = inp_advance( ++ii );
   }
-  return !cmp[ match_ii ];
-}
-
-/* Output the matched chars. */
-void match_out(){
-  for( unsigned ii = 0; ii < match_ii; ++ii ){ out_esc( match_buff[ ii ] ); }
+  if( cmp[ ii ] ){ return false; }
+  inp_consume( ii ); return true;
 }
 
 
@@ -144,72 +172,70 @@ int main(){
   std::cout << "\n<textarea rows=24 cols=100 name=\"formula\">\n";
 #endif
 
-  bool copy_mode = false;
   while( inp_chr ){
 
-    /* Not copying */
-    if( !copy_mode ){
+    /* Quickly skip an obvious non-match. */
+    if( inp_chr != '<' ){ inp_get_chr(); }
 
-      /* If <textarea...> or <!--, switch to copy (and decode) mode. */
-      if( inp_chr != '<' ){ inp_get_chr(); }
-      else{
-        inp_get_chr();
+    /* If <textarea...> but not <textarea name="extra"...>, copy its
+      contents. */
+    else if( match( "<textarea", true ) ){
 
-        /* If <textarea...>, switch to copy mode. */
-        if( inp_chr == 't' && match( "textarea", true ) ){
-          while( inp_chr && inp_chr != '>' ){
-            if( inp_chr == '\"' ){ inp_get_chr(); scan_past( '\"' ); }
-            else if( inp_chr == '\'' ){ inp_get_chr(); scan_past( '\'' ); }
-            else{ inp_get_chr(); }
-          }
-          inp_get_chr(); copy_mode = true;
+      /* Find the first attribute and check it. */
+      while( inp_chr == ' ' || inp_chr == '\n' ){ inp_get_chr(); }
+      bool do_copy = !match( "name=\"extra\"" );
+
+      /* Skip up to and including the > closing the <textarea ...>. */
+      while( inp_chr && inp_chr != '>' ){
+        if( inp_chr == '\"' ){ inp_get_chr(); scan_past( '\"' ); }
+        else if( inp_chr == '\'' ){ inp_get_chr(); scan_past( '\'' ); }
+        else{ inp_get_chr(); }
+      }
+      inp_get_chr();
+
+      /* Copy or bypass the contents of the textarea. */
+      while( inp_chr ){
+
+        /* If </textarea...>, return to non-copy mode. */
+        if( inp_chr == '<' && match( "</textarea", true ) ){
+          if( do_copy ){ out_esc( '\n' ); }
+          scan_past( '>' ); break;
         }
 
-        /* If <!--, copy and decode from a comment. */
-        else if( inp_chr == '!' && match( "!--" ) ){
-          bool was_hyphen = false;
-          for( ; inp_chr; inp_get_chr() ){
-            if( inp_chr == '-' ){
-              if( was_hyphen ){ was_hyphen = false; break; }
-              was_hyphen = true; continue;
-            }
-            if( was_hyphen ){
-              out_esc( '-' ); was_hyphen = false;
-              if( inp_chr == '_' ){ continue; }
-            }
-            out_esc( inp_chr );
-          }
-          if( was_hyphen ){ out_esc( '-' ); }
-        }
+        /* If not in copy mode, skip the character. */
+        if( !do_copy ){ inp_get_chr(); continue; }
+
+        /* Recognize one of the four character entities. */
+        if( match( "&amp;" ) ){ out_esc( '&' ); }
+        else if( match( "&lt;" ) ){ out_esc( '<' ); }
+        else if( match( "&gt;" ) ){ out_esc( '>' ); }
+        else if( match( "&quot;" ) ){ out_esc( '\"' ); }
+
+        /* Nothing special, so just copy the char to output. */
+        else{ out_esc( inp_chr ); inp_get_chr(); }
 
       }
 
     }
 
-    /* Copying from textarea */
-    else if( copy_mode ){
-
-      /* If </textarea...>, return to non-copy mode. */
-      if( inp_chr == '<' ){
-        if( !match( "</textarea", true ) ){ match_out(); }
-        else{ scan_past( '>' ); out_esc( '\n' ); copy_mode = false; }
+    /* If <!--!record!, copy and decode from a comment. */
+    else if( match( "<!--!record!" ) ){
+      bool was_hyphen = false;
+      for( ; inp_chr; inp_get_chr() ){
+        if( inp_chr == '-' ){
+          if( was_hyphen ){ was_hyphen = false; break; }
+          was_hyphen = true; continue;
+        }
+        if( was_hyphen ){
+          out_esc( '-' ); was_hyphen = false;
+          if( inp_chr == '_' ){ continue; }
+        }
+        out_esc( inp_chr );
       }
-
-      /* Recognize one of the four character entities. */
-      else if( inp_chr == '&' ){
-        inp_get_chr(); match_ii = 0;
-        if( inp_chr == 'a' && match( "amp;" ) ){ out_esc( '&' ); }
-        else if( inp_chr == 'l' && match( "lt;" ) ){ out_esc( '<' ); }
-        else if( inp_chr == 'g' && match( "gt;" ) ){ out_esc( '>' ); }
-        else if( inp_chr == 'q' && match( "quot;" ) ){ out_esc( '\"' ); }
-        else{ out_esc( '&' ); match_out(); }
-      }
-
-      /* Nothing special, so just copy the char to output. */
-      else{ out_esc( inp_chr ); inp_get_chr(); }
-
+      if( was_hyphen ){ out_esc( '-' ); }
     }
 
+    else{ inp_get_chr(); }
   }
 
 #ifdef cgibin

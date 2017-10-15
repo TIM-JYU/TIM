@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-./run_python.sh sql/create_admin_user.py
+./run_python.sh timApp/maintenance/create_admin_user.py

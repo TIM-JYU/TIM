@@ -58,7 +58,7 @@ export class VelpWindowController implements IController {
         }
 
         this.settings = {
-            teacherRightsError: "You need to have teacher rights change points in this document.",
+            teacherRightsError: "You need to have teacher rights to change points in this document.",
             labelContentError: "Label content too short",
             velpGroupError: "Select at least one velp group.",
             velpGroupWarning: "All selected velp groups are hidden in the current area.",

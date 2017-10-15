@@ -3,7 +3,6 @@ from collections import defaultdict
 from datetime import datetime
 from typing import List, Dict
 
-import dateutil.parser
 import pytz
 from flask import session, abort, request, flash
 
@@ -17,6 +16,8 @@ from timApp.sessioninfo import get_session_usergroup_ids
 from timApp.timdb.models.user import User
 from timApp.timdb.userutils import get_anon_group_id
 from timApp.timtiming import taketime
+from timApp.utils import getdatetime
+from timApp.requesthelper import get_boolean
 
 
 def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
@@ -46,20 +47,22 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     taketime("end pluginfy")
     macroinfo = doc.get_settings().get_macroinfo()
     user_macros = macroinfo.get_user_specific_macros(user)
+    macros = macroinfo.get_macros_with_user_specific(user)
     delimiter = macroinfo.get_macro_delimiter()
     # Process user-specific macros.
     # We define the environment here because it stays the same for each paragraph. This improves performance.
     env = create_environment(delimiter)
-    for htmlpar in html_pars:
+    for htmlpar in html_pars: # update only user specific, because others are done in a cache pahes
         if not htmlpar['is_plugin']:  # TODO: Think if plugins still needs to expand macros?
             # htmlpar.insert_rnds(0)
             if not htmlpar['attrs'].get('nomacros', False):
                 htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter, env=env, ignore_errors=True)
+
     # taketime("macros done")
 
     if edit_window:
         # Skip readings and notes
-        return process_areas(html_pars), js_paths, css_paths, modules
+        return process_areas(html_pars, macros, delimiter, env), js_paths, css_paths, modules
 
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict = defaultdict(list)
@@ -119,19 +122,10 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                 p['notes'].append(n)
     # taketime("notes mixed")
 
-    return process_areas(html_pars), js_paths, css_paths, modules
+    return process_areas(html_pars, macros, delimiter, env), js_paths, css_paths, modules
 
 
-def getdatetime(s: str, default_val=None):
-    try:
-        dt = dateutil.parser.parse(s, dayfirst=True)
-        return dt if dt.tzinfo is not None else pytz.utc.localize(dt)
-
-    except (ValueError, TypeError):
-        return default_val
-
-
-def process_areas(html_pars: List[Dict]) -> List[Dict]:
+def process_areas(html_pars: List[Dict], macros, delimiter, env) -> List[Dict]:
     class Area:
 
         def __init__(self, index, area_attrs):
@@ -171,8 +165,8 @@ def process_areas(html_pars: List[Dict]) -> List[Dict]:
                     try:
                         free_indexes[new_areas[area_end].index] = True
                     except KeyError:
-                        flash('area_end found for "{}" without corresponding start. '
-                              'Fix this to get rid of this warning.'.format(area_end))
+                        flash(
+                            f'area_end found for "{area_end}" without corresponding start. Fix this to get rid of this warning.')
                     new_areas.pop(area_end, None)
                 break
 
@@ -208,37 +202,72 @@ def process_areas(html_pars: List[Dict]) -> List[Dict]:
                     new_pars.append(html_par)
 
                 new_pars.append({'id': html_par['id'], 'md': '', 'html': '',
+                                 'cls': ' '.join(html_par.get('attrs', {} ).get('classes', [])),
                                  'start_areas': {a: new_areas[a].index for a in new_areas},
                                  'collapsed': 'collapsed ' if len(current_collapsed) > 0 else ''})
 
                 if collapse is None and area_end is None:
                     new_pars.append(html_par)
 
-                if cur_area is not None and (cur_area.attrs.get('starttime') or cur_area.attrs.get('endtime')):
-                    starttime = getdatetime(cur_area.attrs.get('starttime'), default_val=min_time)
-                    endtime = getdatetime(cur_area.attrs.get('endtime'), default_val=max_time)
-                    if not starttime <= now < endtime:
-                        alttext = cur_area.attrs.get('alttext')
-                        if alttext is None:
-                            alttext = "This area can only be viewed from <STARTTIME> to <ENDTIME>"
-                        alttext = alttext.replace('<STARTTIME>', str(starttime)).replace('<ENDTIME>', str(endtime))
-                        new_pars.append(DocParagraph.create(doc=Document(html_par['doc_id']), par_id=html_par['id'],
-                                                            md=alttext).html_dict())
+                if cur_area is not None:
+                    vis = cur_area.attrs.get('visible')
+                    if vis is None:
+                        vis = True
+                    else:
+                        if str(vis).find(delimiter) >= 0:
+                            vis = expand_macros(vis, macros, delimiter, env=env, ignore_errors=True)
+                        vis = get_boolean(vis, True)
+                        cur_area.attrs['visible'] = vis
+                    if vis:
+                        st = cur_area.attrs.get('starttime')
+                        et = cur_area.attrs.get('endtime')
+                        if st or et:
+                            starttime = getdatetime(st, default_val=min_time)
+                            endtime = getdatetime(et, default_val=max_time)
+                            if not starttime <= now < endtime:
+                                alttext = cur_area.attrs.get('alttext')
+                                if alttext is None:
+                                    alttext = "This area can only be viewed from <STARTTIME> to <ENDTIME>"
+                                alttext = alttext.replace('<STARTTIME>', str(starttime)).replace('<ENDTIME>', str(endtime))
+                                new_pars.append(DocParagraph.create(doc=Document(html_par['doc_id']), par_id=html_par['id'],
+                                                                    md=alttext).html_dict())
 
         else:
+            # new_pars.append(html_par)
+            # continue
             # Just a normal paragraph
             access = True
+            attrs = html_par.get('attrs')
+            vis = attrs.get('visible')  # check if there is visible attribute in par itself
+            if vis is None:
+                vis = True
+            else:
+                if str(vis).find(delimiter) >= 0:
+                    vis = expand_macros(vis, macros, delimiter, env=env, ignore_errors=True)
+                vis = get_boolean(vis, True)
+                if not vis:
+                    access = False  # TODO: this should be added as some kind of small par that is visible in edit-mode
 
-            if any([a.attrs.get('starttime') or a.attrs.get('endtime') for a in current_areas.values()]):
+                # if any([a.attrs.get('starttime') or a.attrs.get('endtime') for a in current_areas.values()]):
                 # Timed paragraph
+            if access:  # par itself is visible, is it in some area that is not visible
                 for a in current_areas.values():
-                    starttime = getdatetime(a.attrs.get('starttime'), default_val=min_time)
-                    endtime = getdatetime(a.attrs.get('endtime'), default_val=max_time)
-                    access &= starttime <= now < endtime
-                    if not access and a.attrs.get('alttext') is not None:
-                        # TODO
-                        # noinspection PyUnusedLocal
-                        alttext = a.attrs.get('alttext')
+                    vis = a.attrs.get('visible')
+                    if vis is not None:
+                        vis = get_boolean(vis, True)
+                        if not vis:
+                            access = False
+                    if access: # is there time limitation in area where par is included
+                        st = a.attrs.get('starttime')
+                        et = a.attrs.get('endtime')
+                        if st or et:
+                            starttime = getdatetime(st, default_val=min_time)
+                            endtime = getdatetime(et, default_val=max_time)
+                            access &= starttime <= now < endtime
+                            # if not access and a.attrs.get('alttext') is not None:
+                            #     TODO:  what??? here was just todo?  alttext is allready show in area?
+                            #     noinspection PyUnusedLocal
+                            #     alttext = a.attrs.get('alttext')
 
             if access:
                 new_pars.append(html_par)

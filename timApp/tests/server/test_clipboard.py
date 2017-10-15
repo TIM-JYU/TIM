@@ -12,23 +12,26 @@ class ClipboardTest(TimRouteTest):
              doc: DocEntry,
              par_start: DocParagraph,
              par_end: DocParagraph, **kwargs):
-        self.json_post('/clipboard/copy/{}/{}/{}'.format(doc.id, par_start.get_id(), par_end.get_id()), **kwargs)
+        self.json_post(f'/clipboard/copy/{doc.id}/{par_start.get_id()}/{par_end.get_id()}', **kwargs)
 
     def cut(self,
             doc: DocEntry,
             par_start: DocParagraph,
             par_end: DocParagraph, **kwargs):
-        self.json_post('/clipboard/cut/{}/{}/{}'.format(doc.id, par_start.get_id(), par_end.get_id()), **kwargs)
+        self.json_post(f'/clipboard/cut/{doc.id}/{par_start.get_id()}/{par_end.get_id()}', **kwargs)
 
     def paste(self,
               doc: DocEntry,
               par_before: Optional[DocParagraph] = None,
               par_after: Optional[DocParagraph] = None,
               as_ref: bool = False, **kwargs):
-        self.json_post('/clipboard/paste/{}'.format(doc.id),
+        self.json_post(f'/clipboard/paste/{doc.id}',
                        {'par_before': par_before.get_id() if par_before else None,
                         'par_after': par_after.get_id() if par_after else None,
                         'as_ref': as_ref}, **kwargs)
+
+    def show(self, doc: DocEntry):
+        self.get('/clipboard', query_string={'doc_id': doc.id})
 
     def test_invalid(self):
         self.login_test2()
@@ -38,12 +41,12 @@ class ClipboardTest(TimRouteTest):
                  DocParagraph.create(par_id='a', doc=d.document),
                  DocParagraph.create(par_id='b', doc=d.document),
                  expect_status=400,
-                 expect_content={'error': 'Paragraph not found: a'})
+                 expect_content={'error': f'Document {d.id}: Paragraph not found: a'})
         self.copy(d,
                   DocParagraph.create(par_id='a', doc=d.document),
                   DocParagraph.create(par_id='b', doc=d.document),
                   expect_status=400,
-                  expect_content={'error': 'Paragraph not found: a'})
+                  expect_content={'error': f'Document {d.id}: Paragraph not found: a'})
         self.paste(d,
                    DocParagraph.create(par_id='a', doc=d.document),
                    expect_status=400,
@@ -52,22 +55,22 @@ class ClipboardTest(TimRouteTest):
                  pars[0],
                  DocParagraph.create(par_id='b', doc=d.document),
                  expect_status=400,
-                 expect_content={'error': 'Paragraph not found: b'})
+                 expect_content={'error': f'Document {d.id}: Paragraph not found: b'})
         self.cut(d,
                  DocParagraph.create(par_id='b', doc=d.document),
                  pars[0],
                  expect_status=400,
-                 expect_content={'error': 'Paragraph not found: b'})
+                 expect_content={'error': f'Document {d.id}: Paragraph not found: b'})
         self.copy(d,
                   pars[0],
                   DocParagraph.create(par_id='b', doc=d.document),
                   expect_status=400,
-                  expect_content={'error': 'Paragraph not found: b'})
+                  expect_content={'error': f'Document {d.id}: Paragraph not found: b'})
         self.copy(d,
                   DocParagraph.create(par_id='b', doc=d.document),
                   pars[0],
                   expect_status=400,
-                  expect_content={'error': 'Paragraph not found: b'})
+                  expect_content={'error': f'Document {d.id}: Paragraph not found: b'})
 
         self.cut(d,
                  pars[0],
@@ -75,7 +78,7 @@ class ClipboardTest(TimRouteTest):
         self.paste(d,
                    pars[0],
                    expect_status=400,
-                   expect_content={'error': 'Paragraph not found: {}'.format(pars[0].get_id())})
+                   expect_content={'error': f'Document {d.id}: Paragraph not found: {pars[0].get_id()}'})
 
     def test_copy_one(self):
         self.login_test1()
@@ -83,6 +86,7 @@ class ClipboardTest(TimRouteTest):
         d = self.create_doc(initial_par=test_pars)
         pars = d.document.get_paragraphs()
         self.copy(d, pars[0], pars[0])
+        self.show(d)
         self.paste(d, par_after=pars[2])
         d.document.clear_mem_cache()
         pars_new = d.document.get_paragraphs()
@@ -190,15 +194,14 @@ test
                 continue
             pos = random.choice(pars)
             is_before = random.choice((True, False))
-            message = """
-First: {}, second: {}, pos: {}, is_before: {}
-Index 1: {}, index 2: {}
+            message = f"""
+First: {first.get_id()}, second: {second.get_id()}, pos: {pos.get_id()}, is_before: {is_before}
+Index 1: {first_index}, index 2: {second_index}
 
 Document:
 
-{}
-            """.format(first.get_id(), second.get_id(), pos.get_id(), is_before,
-                       first_index, second_index, d.document.export_markdown())
+{d.document.export_markdown()}
+            """
 
             self.cut(d, first, second)
             d.document.clear_mem_cache()

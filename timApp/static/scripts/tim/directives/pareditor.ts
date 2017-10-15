@@ -18,6 +18,8 @@ import {ParCompiler} from "../services/parCompiler";
 import {getActiveDocument} from "../controllers/view/document";
 import {TextAreaParEditor} from "./TextAreaParEditor";
 import {AceParEditor} from "./AceParEditor";
+import {wrapText} from "../controllers/view/editing";
+import {isSettings} from "../controllers/view/parhelpers";
 
 markAsUsed(draggable, rangyinputs);
 
@@ -54,9 +56,15 @@ export class PareditorController implements IController {
     private newAttr: string;
     private newPars: string[];
     private oldmeta: HTMLMetaElement;
+    private wrap: {n: number};
     private options: {
         localSaveTag: string,
+        texts: {
+            initialText: string;
+        },
         showDelete: boolean,
+        showPlugins: boolean,
+        showSettings: boolean,
         destroyAfterSave: boolean,
         touchDevice: boolean,
         metaset: boolean,
@@ -92,10 +100,20 @@ export class PareditorController implements IController {
     private plugintab: JQuery;
 
     constructor(scope: IScope, element: IRootElementService) {
+        this.options.showSettings = false;
         this.scope = scope;
         this.tag = this.options.localSaveTag || "";
         this.storage = localStorage;
-        this.lstag = this.tag;
+        this.lstag = this.tag; // par/note/addAbove
+
+        var sn = this.storage.getItem("wrap" + this.lstag);
+        var n;
+        n = parseInt(sn);
+        if (isNaN(n))
+            if (sn === '') n = '';
+            else n = -90;
+
+        this.wrap = {n: n};
 
         this.proeditor = this.getLocalBool("proeditor", this.tag === "par");
 
@@ -310,10 +328,33 @@ export class PareditorController implements IController {
                 this.plugintab.append($compile(button)(this.scope));
             }
         }
+
+        const help = $("<a>", {
+            "class": "helpButton",
+            "text": "[?]",
+            "title": "Help for plugin attributes",
+            "onclick": "window.open('https://tim.jyu.fi/view/tim/ohjeita/csPlugin', '_blank')"
+        });
+        this.plugintab.append($compile(help)(this.scope as any));
     }
 
     async setInitialText() {
-        if (this.dataLoaded || !this.initialTextUrl) {
+        if (this.dataLoaded) return;
+        if (!this.initialTextUrl) {
+            var initialText = "";
+            if (this.options.texts) initialText = this.options.texts.initialText;
+            if (initialText) {
+                var pos = initialText.indexOf("⁞");
+                if (pos >= 0) initialText = initialText.replace("⁞", ""); // cursor pos
+                this.editor.setEditorText(initialText);
+                this.initialText = initialText;
+                angular.extend(this.extraData, {});
+                this.editorChanged();
+                $timeout(function() {
+                    if (pos >= 0) this.setPosition(pos);
+                }, 10);
+            }
+            this.dataLoaded = true;
             return;
         }
         this.editor.setEditorText("Loading text...");
@@ -324,6 +365,10 @@ export class PareditorController implements IController {
         const data = response.data;
         this.editor.setEditorText(data.text);
         this.initialText = data.text;
+        if (isSettings(data.text)) {
+            this.options.showPlugins = false;
+            this.options.showSettings = true;
+        }
         angular.extend(this.extraData, data.extraData);
         this.editorChanged();
     }
@@ -366,8 +411,13 @@ export class PareditorController implements IController {
       wrap="off">
 </textarea>`);
         $(".editorContainer").append($textarea);
-        this.editor = new TextAreaParEditor($("#teksti"), () => this.wrapFn(), () => this.saveClicked());
+        this.editor = new TextAreaParEditor($("#teksti"), {
+            wrapFn: () => this.wrapFn(),
+            saveClicked: () => this.saveClicked(),
+            getWrapValue: () => this.wrap.n,
+        });
         this.editor.setEditorText(text);
+        $textarea.on("input", () => this.editorChanged());
     }
 
     editorReady() {
@@ -788,6 +838,8 @@ export class PareditorController implements IController {
             return;
         }
         this.saving = true;
+        // if ( $scope.wrap.n != -1) //  wrap -1 is not saved
+        $window.localStorage.setItem("wrap"+this.lstag, ""+this.wrap.n);
         if (this.renameFormShowing) {
             this.renameTaskNamesClicked(this.inputs, this.duplicates, true);
         }
@@ -878,17 +930,18 @@ export class PareditorController implements IController {
 
             file.upload.then((response) => {
                 $timeout(() => {
+                    var isplugin = (this.editor.editorStartsWith("``` {"));
+                    var start = "[File](";
                     if (response.data.image) {
                         this.uploadedFile = "/images/" + response.data.image;
-                        if (this.editor.editorStartsWith("``` {")) {
-                            this.editor.insertTemplate(this.uploadedFile);
-                        }
-                        else {
-                            this.editor.insertTemplate("![Image](" + this.uploadedFile + ")");
-                        }
+                        start = "![Image](";
                     } else {
                         this.uploadedFile = "/files/" + response.data.file;
-                        this.editor.insertTemplate("[File](" + this.uploadedFile + ")");
+                    }
+                    if (isplugin) {
+                        this.editor.insertTemplate(this.uploadedFile);
+                    } else {
+                        this.editor.insertTemplate(start + this.uploadedFile + ")");
                     }
                 });
             }, (response) => {
@@ -917,11 +970,11 @@ export class PareditorController implements IController {
         const $span = $("<span>", {class: "actionButtonRow"});
         const button_width = 130;
         $span.append($("<button>", {
-            "class": "timButton",
+            "class": "timButton editMenuButton",
             "text": text,
             "title": title,
             "ng-click": clickfunction,
-            "width": button_width,
+            // "width": button_width,
         }));
         return $span;
     }
@@ -1084,7 +1137,11 @@ export class PareditorController implements IController {
             $(".editorContainer").append(neweditorElem);
             const neweditor = ace.edit("ace_editor");
 
-            this.editor = new AceParEditor(ace, neweditor, () => this.wrapFn(), () => this.saveClicked());
+            this.editor = new AceParEditor(ace, neweditor, {
+                wrapFn: () => this.wrapFn(),
+                saveClicked: () => this.saveClicked(),
+                getWrapValue: () => this.wrap.n,
+            }, this.lstag === "addAbove" ? "ace/mode/text" : "ace/mode/markdown");
             if (!this.minSizeSet) {
                 this.setEditorMinSize();
             }

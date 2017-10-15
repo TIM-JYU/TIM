@@ -21,12 +21,12 @@ def fix_orphans():
         ).all()
 
         for o in orphans:
-            print('Fixing document with id {}'.format(o.id))
+            print(f'Fixing document with id {o.id}')
             # noinspection PyArgumentList
-            d = DocEntry(id=o.id, name='{}/orphan_{}'.format(f.path, o.id), public=True)
+            d = DocEntry(id=o.id, name=f'{f.path}/orphan_{o.id}', public=True)
             db.session.add(d)
         db.session.commit()
-        print("Fixed {} orphaned documents. They are in '{}' folder.".format(len(orphans), orphan_folder_title))
+        print(f"Fixed {len(orphans)} orphaned documents. They are in '{orphan_folder_title}' folder.")
 
 
 if __name__ == '__main__':

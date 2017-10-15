@@ -13,7 +13,7 @@ class AnswerBrowserTest(BrowserTest):
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(from_file='example_docs/multiple_mmcqs.md')
-        d2 = self.create_doc(initial_par='#- {{rd={} ra=a1}}'.format(d.id))
+        d2 = self.create_doc(initial_par=f'#- {{rd={d.id} ra=a1}}')
         self.check_reference_answerbrowser_ok(d2)
         db = self.get_db()
 

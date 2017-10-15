@@ -323,7 +323,9 @@ class ShowChartController implements IController {
         }
 
         this.close();
-        const data = question;
+        var d = question.data;
+        if (!d) d = question; // TODO: for some reasoen question can be data or more complex object???
+        const data = d;
         // this.ctx = $(this.canvasId).get(0).getContext("2d");
         this.x = 10;
         this.y = 20;
@@ -544,6 +546,8 @@ class ShowChartController implements IController {
         // this.ctx.font = "20px Georgia";
         let datasets: Chart.ChartDataSets[];
         if (!this.isText) {
+            if (!this.answerChart) return; // TODO: miksi tämä on TIMIssä null???
+            if (!this.answerChart.data) return; // TODO: miksi tämä on TIMIssä null???
             datasets = this.answerChart.data.datasets;
         }
         for (let answerersIndex = 0; answerersIndex < answers.length; answerersIndex++) {

@@ -1,6 +1,6 @@
 """Routes for the clipboard."""
 
-from flask import Blueprint
+from flask import Blueprint, request
 from flask import abort
 from flask import current_app
 from flask import g
@@ -11,10 +11,12 @@ from timApp.dbaccess import get_timdb
 from timApp.documentmodel.clipboard import Clipboard
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
-from timApp.requesthelper import verify_json_params
+from timApp.documentmodel.documenteditresult import DocumentEditResult
+from timApp.requesthelper import verify_json_params, get_option
 from timApp.responsehelper import json_response, ok_response
 from timApp.routes.edit import par_response
 from timApp.sessioninfo import get_current_user_id
+from timApp.synchronize_translations import synchronize_translations
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.timdbexception import TimDbException
 
@@ -50,6 +52,7 @@ def cut_to_clipboard(doc_id, from_par, to_par):
     except TimDbException as e:
         return abort(400, str(e))
     timdb.documents.update_last_modified(doc)
+    synchronize_translations(g.docentry, DocumentEditResult(deleted=pars))
 
     return json_response({'doc_ver': doc.get_version(), 'pars': [{'id': p.get_id()} for p in pars]})
 
@@ -120,9 +123,12 @@ def paste_from_clipboard(doc_id):
             pass
 
     timdb.commit()
-    return par_response(pars, doc, edited=True)
+    edit_result = DocumentEditResult(added=pars)
+    synchronize_translations(g.docentry, edit_result)
+    return par_response(pars, doc, edit_result=edit_result)
 
 
+# TODO unused route?
 @clipboard.route('/clipboard/deletesrc/<int:doc_id>', methods=['POST'])
 def delete_from_source(doc_id):
     verify_logged_in()
@@ -147,16 +153,15 @@ def show_clipboard():
     verify_logged_in()
     timdb = get_timdb()
 
-    (doc_id,) = verify_json_params('doc_id', require=False, default=None)
+    doc_id = get_option(request, 'doc_id', default=None, cast=int)
     if doc_id is None:
-        doc = Document()
-    else:
-        verify_view_access(doc_id)
-        doc = Document(doc_id)
+        return abort(400, 'doc_id missing')
+    verify_view_access(doc_id)
+    doc = Document(doc_id)
 
     clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
     pars = [DocParagraph.from_dict(doc, par) for par in clip.read() or []]
-    return par_response(pars, doc, preview=True)
+    return par_response(pars, doc)
 
 
 @clipboard.route('/clipboardstatus', methods=['GET'])

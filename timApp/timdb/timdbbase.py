@@ -111,6 +111,16 @@ class TimDbBase(object):
             results.append(result)
         return results
 
+    def resultAsList(self, cursor):
+        """Converts the result in database cursor object to JSON."""
+
+        rows = [x for x in cursor.fetchall()]
+        cols = [x[0] for x in cursor.description]
+        results = []
+        for row in rows:
+            results.append(str(row[0]))
+        return results
+
     @classmethod
     def split_location(cls, path: str) -> Tuple[str, str]:
         """Given a path 'a/b/c/d', returns a tuple ('a/b/c', 'd')."""
@@ -121,4 +131,4 @@ class TimDbBase(object):
         return join_location(location, name)
 
     def get_id_filter(self, filter_ids: Iterable[int]):
-        return ' AND id IN ({})'.format(','.join(str(x) for x in filter_ids))
+        return f' AND id IN ({",".join(str(x) for x in filter_ids)})'

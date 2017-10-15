@@ -25,14 +25,14 @@ class VelpTest(BrowserTest):
         new_velp_element: WebElement = velp_selection_element.find_element_by_css_selector(new_velp_selector)
         self.assert_same_screenshot(new_velp_element, 'velps/create_new_velp_empty')
 
-        velp_content_input: WebElement = new_velp_element.find_element_by_css_selector('input[ng-model="velp.content"]')
+        velp_content_input: WebElement = new_velp_element.find_element_by_css_selector('input[ng-model="$ctrl.velp.content"]')
         velp_content_input.send_keys('first velp')
 
-        velp_points_input: WebElement = new_velp_element.find_element_by_css_selector('input[ng-model="velp.points"]')
+        velp_points_input: WebElement = new_velp_element.find_element_by_css_selector('input[ng-model="$ctrl.velp.points"]')
         velp_points_input.send_keys('2')
 
         velp_comment_input: WebElement = new_velp_element.find_element_by_css_selector(
-            'textarea[ng-model="velp.default_comment"]')
+            'textarea[ng-model="$ctrl.velp.default_comment"]')
         velp_comment_input.send_keys('Just a default comment.')
 
         # Setting the color does not work well because SystemJS does not find the module for some reason.
@@ -45,7 +45,7 @@ class VelpTest(BrowserTest):
         #     velp_color_input)
 
         velp_visible_input = Select(new_velp_element.find_element_by_css_selector(
-            'select[ng-model="velp.visible_to"]'))
+            'select[ng-model="$ctrl.velp.visible_to"]'))
         velp_visible_input.select_by_visible_text('Just me')
         self.assert_same_screenshot(new_velp_element, 'velps/create_new_velp_filled')
 

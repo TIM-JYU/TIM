@@ -1,8 +1,10 @@
+from lxml import html
+
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.docinfo import DocInfo
 
 
 class IndexTest(TimRouteTest):
-
     def test_index_one_heading_per_par(self):
         self.login_test1()
         doc = self.create_doc(initial_par="""
@@ -157,3 +159,89 @@ Lorem ipsum.
                           ({'id': 'same-1', 'level': 1, 'text': 'Same'}, []),
                           ({'id': 'same-1-1', 'level': 1, 'text': 'Same'}, []),
                           ({'id': 'same-3', 'level': 1, 'text': 'Same'}, [])], doc.get_index())
+
+    def test_heading_preview(self):
+        self.login_test1()
+        d = self.create_doc(settings={'auto_number_headings': True}, initial_par=['# a', '# b', '# c'])
+        self.check_doc_preview(d)
+
+    def test_heading_preview_translation(self):
+        self.login_test1()
+        orig = self.create_doc(settings={'auto_number_headings': True}, initial_par=['# a', '# b', '# c'])
+        d = self.create_translation(orig, 'test', 'en')
+        self.check_doc_preview(d)
+
+    def test_heading_preview_translation_nonumber(self):
+        self.login_test1()
+        orig = self.create_doc(settings={'auto_number_headings': True},
+                               initial_par=['# a', '# b {.nonumber}', '# c'])
+        d = self.create_translation(orig, 'test', 'en')
+        pars = d.document.get_par_ids()
+        self.get_updated_pars(d)
+
+        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f'}, json_key='texts', as_tree=True)
+        self.assert_content(e, ['3. d\n4. e', '5. f'])
+
+        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[1]},
+                           json_key='texts', as_tree=True)
+        self.assert_content(e, ['1. d\n2. e', '3. f'])
+
+        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[2]},
+                           json_key='texts', as_tree=True)
+        self.assert_content(e, ['2. d\n3. e', '4. f'])
+
+        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[3]},
+                           json_key='texts', as_tree=True)
+        self.assert_content(e, ['2. d\n3. e', '4. f'])
+
+        orig_par = orig.document.get_paragraphs()[2]
+        e = self.json_post(f'/preview/{d.id}', {'text': f'# x {{r=tr rp={orig_par.get_id()}}}', 'par': pars[2]},
+                           json_key='texts', as_tree=True)
+        self.assert_content(e, ['x'])
+
+    def check_doc_preview(self, d: DocInfo):
+        pars = d.document.get_par_ids()
+        self.get_updated_pars(d)
+
+        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[1]},
+                           json_key='texts', as_tree=True)
+        self.assert_content(e, ['1. d\n2. e', '3. f'])
+
+        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par': pars[1], 'par_next': pars[2]},
+                           json_key='texts', as_tree=True)
+        self.assert_content(e, ['1. d\n2. e', '3. f'])
+
+        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[2]},
+                           json_key='texts', as_tree=True)
+        self.assert_content(e, ['2. d\n3. e', '4. f'])
+
+        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par': pars[2], 'par_next': pars[3]},
+                           json_key='texts', as_tree=True)
+        self.assert_content(e, ['2. d\n3. e', '4. f'])
+
+        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par_next': pars[3]},
+                           json_key='texts', as_tree=True)
+        self.assert_content(e, ['3. d\n4. e', '5. f'])
+
+        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f', 'par': pars[3]},
+                           json_key='texts', as_tree=True)
+        self.assert_content(e, ['3. d\n4. e', '5. f'])
+
+        e = self.json_post(f'/preview/{d.id}', {'text': '# d\n\n# e\n\n#-\n\n# f'}, json_key='texts', as_tree=True)
+        self.assert_content(e, ['4. d\n5. e', '6. f'])
+
+    def test_translation_nonumber_edit(self):
+        self.login_test1()
+        orig = self.create_doc(settings={'auto_number_headings': True},
+                               initial_par=['# a', '# b {.nonumber}', '# c'])
+        t = self.create_translation(orig, 'test', 'en')
+        tr_pars = t.document.get_paragraphs()
+        md = tr_pars[2].get_exported_markdown().replace('# b', '# tr')
+        self.get(t.url)  # refresh cache
+        self.post_par(t.document, md, tr_pars[2].get_id())
+        e = self.get_updated_pars(t)
+        changed = e['changed_pars']
+        self.assert_content(html.fromstring(changed[tr_pars[2].get_id()]), ['tr'])
+        self.assertNotIn(tr_pars[3].get_id(), changed)
+        e = self.get(t.url, as_tree=True)
+        self.assert_content(e, ['', '1. a', 'tr', '2. c'])

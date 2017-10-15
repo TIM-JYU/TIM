@@ -9,25 +9,26 @@
     <div class="form-group" tim-error-state data-for="itemForm.itemName">
         <label>
             Short name:
-            <input class="form-control" tim-short-name required name="itemName" ng-model="$ctrl.itemName" type="text"
+            <input ng-disabled="$ctrl.force" class="form-control" tim-short-name required name="itemName" ng-model="$ctrl.itemName" type="text"
                    placeholder="Type title first"
                    ng-keyup="$ctrl.nameChanged()">
         </label>
         <div class="checkbox">
             <label>
-                <input type="checkbox" ng-model="$ctrl.automaticShortName"> Set automatically based on title
+                <input ng-disabled="$ctrl.force" type="checkbox" ng-model="$ctrl.automaticShortName"> Set automatically based on title
             </label>
         </div>
         <tim-error-message for="itemForm.itemName"></tim-error-message>
     </div>
     <div class="form-group" tim-error-state data-for="itemForm.itemLocation">
         <label>
-            Location: <input class="form-control" name="itemLocation" type="text" tim-location ng-model="$ctrl.itemLocation">
+            Location: <input ng-disabled="$ctrl.force" class="form-control" name="itemLocation" type="text" tim-location ng-model="$ctrl.itemLocation">
         </label>
         <tim-error-message for="itemForm.itemLocation"></tim-error-message>
     </div>
     <div uib-alert ng-repeat="alert in $ctrl.alerts" ng-class="'alert-' + (alert.type || 'warning')"
          data-close="$ctrl.closeAlert($index)">{{ alert.msg }}</div>
-    <button class="timButton" ng-disabled="itemForm.$invalid" ng-click="$ctrl.createItem()" type="button">Create
+    <button class="timButton" ng-disabled="itemForm.$invalid || $ctrl.creating" ng-click="$ctrl.createItem()" type="button">Create
     </button>
+    <span ng-show="$ctrl.creating">Creating...</span>
 </form>

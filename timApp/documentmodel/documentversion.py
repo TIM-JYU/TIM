@@ -4,13 +4,14 @@ from typing import Optional, Tuple
 from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.preloadoption import PreloadOption
 
 
 class DocumentVersion(Document):
 
     def __init__(self, doc_id: int, doc_ver: Tuple[int, int],
-                 files_root=None, modifier_group_id: Optional[int] = 0):
-        super(DocumentVersion, self).__init__(doc_id, files_root, modifier_group_id)
+                 files_root=None, modifier_group_id: Optional[int] = 0, preload_option = PreloadOption.none):
+        super(DocumentVersion, self).__init__(doc_id, files_root, modifier_group_id, preload_option)
         self.does_exist = None
         self.settings = None
         self.version = doc_ver
@@ -69,9 +70,9 @@ class DocumentVersion(Document):
         else:
             return DocParagraph.get_latest(self.doc_id, par_id, self.files_root)
 
-    def get_settings(self) -> DocSettings:
+    def get_settings(self, user=None) -> DocSettings:
         if self.settings is None:
-            self.settings = super(DocumentVersion, self).get_settings()
+            self.settings = super(DocumentVersion, self).get_settings(user)
         return self.settings
 
     def add_paragraph_obj(self, p: DocParagraph) -> DocParagraph:

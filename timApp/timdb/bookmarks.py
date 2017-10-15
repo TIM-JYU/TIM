@@ -86,15 +86,17 @@ class Bookmarks:
         return self
 
     def get_bookmarks(self):
-        return self.bookmark_document.get_settings().get_bookmarks()
+        with self.bookmark_document.get_lock():
+            return self.bookmark_document.get_settings().get_bookmarks()
 
     def save_bookmarks(self):
         self._set_bookmarks(self.bookmark_data)
 
     def _set_bookmarks(self, bookmark_data):
-        new_settings = self.bookmark_document.get_settings()
-        new_settings.set_bookmarks(bookmark_data)
-        self.bookmark_document.set_settings(new_settings.get_dict())
+        with self.bookmark_document.get_lock():
+            new_settings = self.bookmark_document.get_settings()
+            new_settings.set_bookmarks(bookmark_data)
+            self.bookmark_document.set_settings(new_settings.get_dict())
 
     def as_dict(self):
         result = []

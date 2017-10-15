@@ -1,0 +1,550 @@
+\documentclass[oneside, 12pt,a4paper,finnish,sansheading]{ extarticle}
+\pdfinfoomitdate=1
+\pdftrailerid{}
+\usepackage{extsizes}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ % total={140mm,257mm},
+ left=20mm, right=20mm, top=20mm, bottom=20mm
+}
+\usepackage{changepage} 
+\usepackage{caption} 
+\usepackage{tabularx}
+\usepackage{tabulary}
+\usepackage{listings}
+\usepackage{float}
+
+% \usepackage[default]{lato} % Tämä on yliopiston default leipätekstin fontti
+
+
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{pifont}
+\usepackage{ifxetex,ifluatex}
+% \usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{eurosym}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{
+\usepackage[]{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\PassOptionsToPackage{hyphens}{url} % url is loaded by hyperref
+\usepackage[unicode=true]{hyperref}
+\hypersetup{
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[shorthands=off,main=finnish]{babel}
+\else
+  \usepackage{polyglossia}
+  \setmainlanguage[]{ finnish}
+\fi
+\IfFileExists{parskip.sty}{
+\usepackage{parskip}
+}{ else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+% set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+
+\ifnum 11=10
+  \ifx\chapter\undefined
+  \else
+  \setcounter{chapter}{ 0}
+  \fi
+\setcounter{section}{ 0}
+\setcounter{secnumdepth}{6}
+\setcounter{tocdepth}{6}
+\fi
+
+\ifnum 10=11
+\captionsetup{labelformat=empty}
+\fi
+
+
+
+
+% Add root path for images:
+% THERE'S SOMETHING WRONG WITH THIS COMMAND
+
+% 
+
+\date{}
+
+\usepackage{framed}
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{breakable}
+\usepackage{color}
+
+\newcommand{\externalimagelink}[1]{{ \color{blue}{ (IMG: #1) } }}
+
+\usepackage{adjustbox}
+
+\definecolor{darkgreen}{RGB}{0,147,0}
+\definecolor{tim}{RGB}{0,202,202}
+\definecolor{bggray}{RGB}{223,223,223}
+\definecolor{bglightgray}{RGB}{195,195,195}
+
+\newcommand{\hiddenprint}[1]{\iffalse {#1} \fi}
+
+\newenvironment{absolutelynopagebreak}
+  {\par\nobreak\vfil\penalty0\vfilneg
+   \vtop\bgroup}
+  {\par\xdef\tpd{\the\prevdepth}\egroup
+   \prevdepth=\tpd}
+
+
+\DeclareUnicodeCharacter{200B}{}
+\newcommand{\pluginHeader}[1]{{\large \textbf{#1}}}
+\newcommand{\plgfooter}[1]{{\begin{center}{#1}\end{center}}}
+\newcommand{\videoRunDiv}[1]{{{#1}}}
+\newcommand{\smallVideoRunDiv}[1]{{{#1}}}
+\newcommand{\listVideoRunDiv}[1]{{{#1}}}
+\newcommand{\stem}[1]{{{#1}}}
+\newcommand{\hFour}[1]{{#1}}
+\newcommand{\huomautus}[1]{\begin{tcolorbox}{#1} \end{tcolorbox}}
+\newcommand{\kaava}[1]{\begin{adjustwidth}{2em}{}{#1}\end{adjustwidth}}
+\newcommand{\red}[1]{{\leavevmode\color{red}{#1}}}
+\newcommand{\tim}[1]{{\leavevmode\color{tim}{#1}}}
+\newcommand{\blue}[1]{{\leavevmode\color{blue}{#1}}}
+\newcommand{\green}[1]{{\leavevmode\color{darkgreen}{#1}}}
+\newcommand{\yellow}[1]{{\leavevmode\color{yellow}{#1}}}
+\newcommand{\white}[1]{{\leavevmode\color{white}{#1}}}
+\newcommand{\gray}[1]{{\leavevmode\color{darkgray}{#1}}}
+\newcommand{\lightgray}[1]{{\leavevmode\color{lightgray}{#1}}}
+\newcommand{\bggray}[1]{\colorbox{bggray}{#1}}
+\newcommand{\bgred}[1]{\colorbox{red}{#1}}
+\newcommand{\bgblue}[1]{\colorbox{blue}{#1}}
+\newcommand{\bggreen}[1]{\colorbox{darkgreen}{#1}}
+\newcommand{\bgyellow}[1]{\colorbox{yellow}{#1}}
+\newcommand{\bglightgray}[1]{\colorbox{bglightgray}{#1}}
+\newcommand{\bgtim}[1]{\colorbox{tim}{#1}}
+\newcommand{\bgwhite}[1]{\colorbox{white}{#1}}
+\newcommand{\border}[1]{\fbox{#1}}
+\newcommand{\obs}[1]{\fcolorbox{black}{bggray}{#1}}
+\newcommand{\radius}[1]{\marginbox{0 5}{#1}}
+\newcommand{\timpluginerror}[2]{{ \begin{tcolorbox}[colframe=red!75!white, coltext=red!75!black, title=#1]{#2}\end{tcolorbox} }}
+\newcommand{\smalltext}[1]{{\tiny{#1}}}
+\newcommand{\linkit}[1]{#1}
+\newcommand{\runo}[1]{\begin{center}\it{#1}\end{center}}
+\newcommand{\kuvavasen}[1]{#1}
+\newcommand{\timButton}[1]{\bgtim{\white{{#1}}}}
+
+\newcommand{\smallhref}[2]{\hfill{\tiny\href{#1}{#2}}}
+% \newcommand{\haskell}[1]{#1}
+\def\haskell{} % verbatim does not work inside command easily
+
+% ----- UI components begin --------------
+\def\clap#1{\hbox to 0pt{\hss#1\hss}}
+
+\newcommand{\cmark}{\text{\ding{51}}}
+\newcommand{\xmark}{\text{\ding{55}}}
+
+\makeatletter
+\newcommand*{\checkbox}{\@ifstar{\checkedcheckbox}{\uncheckedcheckbox}}
+\newcommand*{\radiobutton}{\@ifstar{\checkedradiobutton}{\uncheckedradiobutton}}
+\makeatother
+
+\newcommand{\button}[1]{\tcbox[on line, bottom=0pt, top=0pt, left=1pt, right=1pt] {\textbf{#1}}}
+\newcommand{\smallimage}[1]{#1}
+
+% ------------ Begin overlapped items like radio and checkbox ------------
+\def \bw {20pt}% default width for overlapped items
+
+\newcommand{\basicoverlappeditem}[1]{{\makebox[\bw][s]{\hfill{#1}\hfill}}}
+
+\newcommand{\overlapitems}[2]{{\makebox[\bw][s]{\hfill{#1}\hfill}%
+\hspace{-\bw}}%
+{\makebox[\bw][s]{\hfill{#2}\hfill}}%
+}
+
+\newcommand{\uncheckedradiobutton}{\basicoverlappeditem{\(\bigcirc\)}}
+
+\newcommand{\checkedradiobutton}{\overlapitems{\uncheckedradiobutton}{\(\bullet\)}}
+
+\newcommand{\uncheckedcheckbox}{\basicoverlappeditem{\raisebox{-1.0pt}{\(\square\)}}}
+
+\newcommand{\checkedcheckbox}{\overlapitems{\uncheckedcheckbox}{\hspace{2pt}\raisebox{0.5pt}\cmark}}
+
+\newcommand{\corcircle}{\basicoverlappeditem{{\LARGE\(\bigcirc\)}}}
+
+\newcommand{\correct}[1]{\overlapitems{#1}{\raisebox{-1.8pt}\corcircle}}
+
+\newcommand{\lbpoints}[2]% poist to left bottom corner of itme #2
+{\overlapitems{#2}{{\raisebox{-9.5pt}{\tiny\hspace{-12pt}#1\hspace{0pt}}}}%
+}
+
+% ------------ End overlapped items like radio and checkbox ------------
+
+% ----- UI components end --------------
+
+
+% ----- mcq BEGIN
+\newcommand{\mcq}[4]{
+%\begin{absolutelynopagebreak}
+\begin{center}
+\large \textbf{{#1}}
+\end{center}
+\renewcommand{\arraystretch}{1.5}
+#2
+\begin{center}
+\begin{tabular}{#3}
+#4
+\end{tabular}
+\vspace{1em}
+\end{center}
+%\end{absolutelynopagebreak}
+}
+% ----- mcq END
+
+
+% ----- task BEGIN
+\newcommand{\task}[4]{ % header,stem,content,footer
+\ifx\hfuzz#1\hfuzz
+\begin{tcolorbox}[
+  boxrule=0.2pt, 
+  colback=white]
+{#2}
+{#3}
+\begin{center}{#4}\end{center}
+\end{tcolorbox}
+\else
+\begin{tcolorbox}[
+  toptitle=3mm,
+  bottomtitle=2mm,
+  boxrule=0.2pt, 
+  colback=white, 
+  colbacktitle=black!10,
+  coltitle=black,
+  title={\large \textbf{#1}}]
+{#2}
+{#3}
+\begin{center}{#4}\end{center}
+\end{tcolorbox}
+\fi
+}
+% ----- task END
+
+% ----- qst BEGIN
+\newcommand{\qst}[6]% header,stem,questionText,tcolums,table,footer
+{\vspace{10pt}
+%\begin{absolutelynopagebreak}
+\task{#1}{#2}{
+\renewcommand{\arraystretch}{1.5}
+\textbf{#3}
+\begin{adjustwidth}{1.0cm}{}
+\begin{tabular}{#4}
+#5
+\end{tabular}
+\end{adjustwidth}
+}{#6}
+\vspace{1em}
+%\end{absolutelynopagebreak}
+}
+
+\newcommand{\qsty}[6]% header,stem,questionText,tcolums,table,footer
+{
+\vspace{10pt}
+%\begin{absolutelynopagebreak}
+\task{#1}{#2}{
+\renewcommand{\arraystretch}{1.5}
+\textbf{#3}\vspace{5pt}
+
+\begin{adjustwidth}{1.0cm}{}
+\begin{tabulary}{\linewidth}{#4}
+#5
+\end{tabulary}
+\end{adjustwidth}
+}
+{\vspace{5pt}#6}
+\vspace{1em}
+%\end{absolutelynopagebreak}
+}
+% ----- qst END
+
+
+\newcommand{\console}[1]{
+\begin{tcolorbox}[enhanced,colback=black!90!white, colupper=white, 
+fontupper=\selectfont\bfseries\ttfamily,
+borderline={0.3mm}{0.3mm}{white},
+arc=0mm]
+#1
+\end{tcolorbox}
+}
+
+\newenvironment{consoleenv}{ %
+\begin{tcolorbox}[
+  enhanced,colback=black!90!white, colupper=white, 
+  fontupper=\selectfont\bfseries\ttfamily,
+  borderline={0.3mm}{0.3mm}{white},
+  arc=0mm]
+%\Verbatim[fontsize=\small, frame=leftline, rulecolor=\color{lightgray}, xleftmargin=2mm]
+}
+{
+%\endVerbatim
+\end{tcolorbox}%
+}
+
+\newcommand{\textbox}[2]{
+\fbox{\begin{minipage}[c][][t]{#1}{#2} \end{minipage}}
+}
+
+\newcommand{\ttextbox}[2]{
+\vspace{2pt}
+\textbox{#1\linewidth}{
+#2\par
+\hfill
+
+}
+}
+
+\usepackage{fancyvrb} 
+
+\renewenvironment{verbatim}
+{\Verbatim[fontsize=\small, frame=leftline, rulecolor=\color{lightgray}, xleftmargin=2mm]}
+{\endVerbatim}
+
+
+%---------------------- taskenv begin ---------------------------------
+\newcommand{\taskenvArg}{} % dummy macro for env end params
+\newenvironment{taskenv}[3] % header,stem,footer
+{\renewcommand{\taskenvArg}{#3}% 
+\ifx\hfuzz#1\hfuzz%
+\begin{tcolorbox}[
+  breakable,
+  boxrule=0.2pt, 
+  colback=white]%
+\else
+\begin{tcolorbox}[
+  breakable,
+  toptitle=3mm,
+  bottomtitle=2mm,
+  boxrule=0.2pt, 
+  colback=white, 
+  colbacktitle=black!10,
+  coltitle=black,
+  title={\large \textbf{#1}}]
+\fi
+\ifx\hfuzz#2\hfuzz{}\else{#2\vspace{10pt}}\fi
+}
+{\ifdefempty{\taskenvArg}{}{\begin{center}{\taskenvArg}\end{center}}%
+\end{tcolorbox}%
+}
+%---------------------- taskenv end ---------------------------------
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codelightgray}{rgb}{0.65,0.65,0.65}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{codeblue}{rgb}{0.0,0,0.9}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    %backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codelightgray},
+    keywordstyle=\color{codeblue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+
+\lstset{
+  style=mystyle,
+  basicstyle=\linespread{0.9}\small\ttfamily,
+  prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+  numberstyle=\tiny, 
+  stepnumber=1, 
+  numbersep=5pt, 
+  xleftmargin=0em, 
+  breaklines=true,
+  columns=fixed,
+  fontadjust=true,
+  basewidth=0.5em,
+  frame=,
+  rulecolor=\color{blue!80!black},
+  belowskip=0pt,
+  aboveskip=0pt,
+  inputencoding=utf8,
+  extendedchars=true,
+  literate=
+    {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+    {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+    {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+    {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+    {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+    {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+    {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+    {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+    {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+    {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+    {€}{{\euro}}1 {£}{{\pounds}}1
+    {½}{{\ensuremath{\frac12}}}1
+}
+
+%
+
+
+
+
+\pagestyle{plain}
+
+  
+\usepackage{tabularx}
+\usepackage{amsfonts}
+
+\usepackage{listings}
+
+\lstdefinestyle{verbo}{
+    basicstyle=\ttfamily,
+    breaklines=true,
+    columns=fullflexible,
+    breakatwhitespace=false,
+    tabsize=1,
+    resetmargins=true,
+    xleftmargin=0pt,
+    showstringspaces=false,
+}
+
+\lstnewenvironment{code}[1][]
+ {\framed \lstset{style=verbo,#1}}
+ {\endframed}
+
+
+
+\ifnum 10<10 
+\usepackage{fancyhdr} 
+\fancypagestyle{myfancyfooter}{
+\ifnum 12>10 
+\fancyhead{}
+\fancyfoot{}
+\fancyfoot[LE,RO]{\thepage}
+\fancyfoot[RE]{\textit{ Otsikko} }
+\fancyfoot[LO]{\textit{\nouppercase{\rightmark}}}
+  \ifnum 10=10
+   \fancyfoot[LO]{\textit{\nouppercase{\leftmark}}} % give chapter text to left
+  \fi
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{ 0.0pt}
+%\renewcommand{\sectionmark}[1]{\markright{\thesection.\ ##1}}
+\else
+
+\fi
+}
+\fi
+
+\ifnum 11=10
+\renewcommand{\thesection}{\arabic{section}}
+\fi
+
+% \renewcommand*\rmdefault{lato} % Tämä on yliopiston default leipäteksti fontti
+% \renewcommand*\rmdefault{ppl}
+
+
+\begin{document}
+
+\ifnum 11=10
+%-------------------------------------------------------------------------------
+%-------------------------------COVERPAGE_BEGIN---------------------------------
+%-------------------------------------------------------------------------------
+\begin{titlepage}
+	\centering
+	\vspace*{5cm}
+	{\scshape \Huge Otsikko\par}
+	\vspace{2cm}
+	{\Large\itshape Tekijä\par}
+	\vfill
+	Versio: 0.0.1 \par
+	18.7.2017 \par
+	\vfill
+	{\large Organisaatio\par}
+\end{titlepage}
+%-------------------------------------------------------------------------------
+%------------------------------COVERPAGE_END------------------------------------
+%-------------------------------------------------------------------------------
+\fi
+
+
+\let\cleardoublepage\clearpage
+
+
+
+
+\ifnum 11=10
+%-------------------------------------------------------------------------------
+%---------------------------TABLE_OF_CONTENTS_BEGIN-----------------------------
+%-------------------------------------------------------------------------------
+\pagenumbering{roman}
+{
+\setcounter{tocdepth}{3}
+\tableofcontents
+\newpage
+\let\cleardoublepage\clearpage
+}
+%-------------------------------------------------------------------------------
+%---------------------------TABLE_OF_CONTENTS_END-------------------------------
+%-------------------------------------------------------------------------------
+\fi
+ 
+
+
+
+\ifnum 10<10
+\pagestyle{myfancyfooter}
+\makeatletter
+\let\ps@plain\ps@fancy
+\makeatother
+\fi
+\pagenumbering{arabic}
+
+
+Hello 1
+
+Hello 2
+
+
+
+\end{document}

@@ -1,18 +1,19 @@
-import {$log} from "../ngimport";
-import {BaseParEditor, focusAfter} from "./BaseParEditor";
+import {$log, $timeout} from "../ngimport";
+import {BaseParEditor, focusAfter, IEditorCallbacks} from "./BaseParEditor";
+import {wrapText} from "../controllers/view/editing";
 
 export class TextAreaParEditor extends BaseParEditor {
     public editor: JQuery;
     private editorElement: HTMLTextAreaElement;
 
-    constructor(editor: JQuery, wrapFn: () => void, saveClicked: () => void) {
-        super(editor, wrapFn, saveClicked);
+    constructor(editor: JQuery, callbacks: IEditorCallbacks) {
+        super(editor, callbacks);
         this.editor = editor;
         this.editorElement = editor.get(0) as HTMLTextAreaElement;
         this.editor.keydown((e) => {
             if (e.ctrlKey) {
                 if (e.keyCode === 83) {
-                    this.saveClicked();
+                    this.callbacks.saveClicked();
                     e.preventDefault();
                 } else if (e.keyCode === 66) {
                     this.surroundClicked("**", "**");
@@ -57,6 +58,7 @@ export class TextAreaParEditor extends BaseParEditor {
                     e.preventDefault();
                 }
             }
+            this.checkWrap();
         });
     }
 
@@ -475,7 +477,7 @@ export class TextAreaParEditor extends BaseParEditor {
 
     @focusAfter
     pageBreakClicked() {
-        var editor = this.editor.get(0);
+        var editor = this.editorElement;
         var selection = this.editor.getSelection();
         var value = this.editor.val();
         var cursor = selection.start;
@@ -485,13 +487,13 @@ export class TextAreaParEditor extends BaseParEditor {
         var toKeepInLine;
 
         if (lineToBreak.length > 0) {
-            toKeepInLine = value.substring(this.editor.selectionStart, cursor) + "\n";
+            toKeepInLine = value.substring(editor.selectionStart, cursor) + "\n";
         } else {
             toKeepInLine = "";
         }
         var toNextLine;
-        if ((this.editor.selectionEnd - cursor) > 0) {
-            toNextLine = value.substring(cursor, this.editor.selectionEnd);
+        if ((editor.selectionEnd - cursor) > 0) {
+            toNextLine = value.substring(cursor, editor.selectionEnd);
         } else {
             toNextLine = "";
         }
@@ -537,5 +539,37 @@ export class TextAreaParEditor extends BaseParEditor {
 
     setEditorText(text: string) {
         this.editor.val(text);
+    }
+
+    setPosition(pos) {
+        const editor = this.editor.get(0) as HTMLTextAreaElement;
+        editor.selectionStart = editor.selectionEnd = pos;
+        this.scrollToCaret();
+    }
+
+    forceWrap(force: boolean) {
+        var n = this.getWrapValue();
+        if (!n) return;
+        if (n < 0) n = -n;
+        var text = this.getEditorText();
+        if (!force) {
+            if (text.indexOf("```") >= 0) return;
+            if (text.indexOf("|") >= 0) return;
+        }
+        var r = wrapText(text, n);
+        if (!r.modified) return;
+        let editor = this.editorElement;
+        var start = editor.selectionStart;
+
+        // $scope.setEditorText(r.s);
+
+        // editor.select();
+        // $timeout(() => {
+        $(this.editor).val(r.s);
+        $timeout(() => {
+            editor.selectionStart = start;
+            editor.selectionEnd = start;
+        });
+        // });
     }
 }

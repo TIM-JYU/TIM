@@ -3,14 +3,18 @@ import os
 import shelve
 from collections import defaultdict
 from copy import copy
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from timApp.documentmodel.document import Document
 
 import filelock
 
-import timApp
 from timApp.documentmodel.documentparser import DocumentParser
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter
 from timApp.documentmodel.macroinfo import MacroInfo
+from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.randutils import random_id, hashfunc
 from timApp.htmlSanitize import sanitize_html
 from timApp.markdownconverter import par_list_to_html_list, expand_macros
@@ -34,16 +38,21 @@ class DocParagraph:
         :param files_root: The location of the data store for this paragraph, or None to use the default data store.
 
         """
-        self.doc = doc
+        self.doc: 'Document' = doc
         self.original = None
         self.files_root = self.get_default_files_root() if files_root is None else files_root
         self.html_sanitized = False
         self.html = None
         self.__htmldata = None
-        self.ref_pars = None
+
+        # Cache for referenced paragraphs. Keys {True, False} correspond to the values of set_html parameter in
+        # get_referenced_pars.
+        self.ref_pars = {}
         self.__rands = None   # random number macros for this pg
+        self.__rnd_seed = 0
         self.attrs = None
         self.nomacros = False
+        self.nocache = False
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -94,6 +103,7 @@ class DocParagraph:
         }
         par.attrs = par.__data['attrs']
         par.nomacros = par.attrs.get('nomacros', False)
+        par.nocache = par.attrs.get('nocache', False)
         par._cache_props()
         return par
 
@@ -106,22 +116,10 @@ class DocParagraph:
         :return: The created DocParagraph.
 
         """
-        if 'r' == 'tr':
-            par = DocParagraph.create(doc, files_root=self.files_root, md=self.get_markdown(),
-                                      attrs=self.get_attrs())
-        else:
-            par = DocParagraph.create(doc, files_root=self.files_root)
+        return create_reference(doc, doc_id=self.get_doc_id(), par_id=self.get_id(), r=r, add_rd=add_rd)
 
-        par.set_attr('r', r)
-        par.set_attr('rd', self.get_doc_id() if add_rd else None)
-        par.set_attr('rp', self.get_id())
-        par.set_attr('ra', None)
-
-        par._cache_props()
-        return par
-
-    @classmethod
-    def create_area_reference(cls, doc, area_name: str, r: Optional[str] = None, add_rd: Optional[bool] = True,
+    @staticmethod
+    def create_area_reference(doc, area_name: str, r: Optional[str] = None, rd: Optional[int] = None,
                               files_root: Optional[str] = None) -> 'DocParagraph':
         """Creates an area reference paragraph.
 
@@ -135,7 +133,7 @@ class DocParagraph:
         """
         par = DocParagraph.create(doc, files_root=files_root)
         par.set_attr('r', r)
-        par.set_attr('rd', doc.doc_id if add_rd else None)
+        par.set_attr('rd', doc.doc_id if rd is None else rd)
         par.set_attr('ra', area_name)
         par.set_attr('rp', None)
 
@@ -158,7 +156,9 @@ class DocParagraph:
             par.__data['attrs'] = {}
         par.attrs = par.__data['attrs']
         par.nomacros = par.attrs.get('nomacros', False)
+        par.nocache = par.attrs.get('nocache', False)
         par._cache_props()
+        par._compute_hash()
         return par
 
     @classmethod
@@ -176,7 +176,7 @@ class DocParagraph:
             t = os.readlink(cls._get_path(doc, par_id, 'current', froot))
             return cls.get(doc, par_id, t, files_root=froot)
         except FileNotFoundError:
-            raise TimDbException('Document {}: Paragraph not found: {}'.format(doc.doc_id, par_id))
+            doc._raise_not_found(par_id)
 
     @classmethod
     def get(cls, doc, par_id: str, t: str, files_root: Optional[str] = None) -> 'DocParagraph':
@@ -193,7 +193,7 @@ class DocParagraph:
             with open(cls._get_path(doc, par_id, t, files_root), 'r') as f:
                 return cls.from_dict(doc, json.loads(f.read()), files_root=files_root)
         except FileNotFoundError:
-            raise TimDbException('Document {}: Paragraph not found: {}'.format(doc.doc_id, par_id))
+            doc._raise_not_found(par_id)
 
     def __iter__(self):
         """Returns an iterator to the internal data dictionary."""
@@ -265,7 +265,7 @@ class DocParagraph:
                 self.__htmldata['html'] = get_error_html(e)
 
         self.__htmldata['cls'] = ' '.join(['par']
-                                          + self.get_classes()
+                                          + (self.get_classes() if not self.get_attr('area') else [])
                                           + (['questionPar'] if self.is_question() else [])
                                           + ([self.get_attr('plugin')] if self.is_plugin() and not self.is_question() else [])
                                           )
@@ -296,17 +296,11 @@ class DocParagraph:
     def get_rd(self) -> Optional[int]:
         """Returns the id of the Document to which this paragraph refers, or None if this is not a reference
         paragraph."""
-        if 'rd' in self.attrs:
-            try:
-                return int(self.get_attr('rd'))
-            except ValueError:
-                return None
-
-        default_rd = self.doc.get_settings().get_source_document()
-        if default_rd is not None:
-            return default_rd
-
-        return None
+        try:
+            rd = self.get_attr('rd')
+            return None if rd is None else int(rd)
+        except ValueError:
+            return None
 
     def is_identical_to(self, par: 'DocParagraph'):
         return self.is_same_as(par) and self.get_id() == par.get_id()
@@ -357,7 +351,11 @@ class DocParagraph:
     def get_nomacros(self):
         return self.nomacros
 
-    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None, ignore_errors: bool = False) -> str:
+    def get_nocache(self):
+        return self.nocache
+
+    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None,
+                              ignore_errors: bool = False) -> str:
         """Returns the macro-processed markdown for this paragraph.
 
         :param macroinfo: The MacroInfo to use. If None, the MacroInfo is taken from the document that has the
@@ -371,7 +369,7 @@ class DocParagraph:
             return md
         if macroinfo is None:
             macroinfo = self.doc.get_settings().get_macroinfo()
-        macros = macroinfo.get_macros()
+        macros = macroinfo.get_macros(nocache=self.get_nocache())
         if self.insert_rnds(None): # TODO: RND_SEED: check what seed should be used, is this used to plugins?
             macros = {**macros, **self.__rands}
         return expand_macros(md, macros, macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
@@ -389,20 +387,24 @@ class DocParagraph:
         attr_index = md.find('{')
         return md[2:attr_index].strip() if attr_index > 0 else md[2:].strip()
 
-    def get_exported_markdown(self) -> str:
+    def get_exported_markdown(self, skip_tr=False) -> str:
         """Returns the markdown in exported form for this paragraph."""
-        if self.is_par_reference() and self.is_translation():
+        if (not skip_tr) and self.is_par_reference() and self.is_translation():
             # This gives a default translation based on the source paragraph
             # todo: same for area reference
             data = []
-            for par in self.get_referenced_pars():
-                d = self.__data.copy()  # todo: needs copy or not?
-                md = par.get_markdown()
-                if md:
-                    d['md'] = md
-                data.append(d)
-            return DocumentWriter(data, export_hashes=False, export_ids=False).get_text()
-
+            try:
+                ref_pars = self.get_referenced_pars(set_html=False)
+            except InvalidReferenceException:
+                pass
+            else:
+                for par in ref_pars:
+                    d = self.__data.copy()  # todo: needs copy or not?
+                    md = par.get_markdown()
+                    if md:
+                        d['md'] = md
+                    data.append(d)
+                return DocumentWriter(data, export_hashes=False, export_ids=False).get_text()
         return DocumentWriter([self.__data],
                               export_hashes=False,
                               export_ids=False).get_text(DocumentParserOptions.single_paragraph())
@@ -411,10 +413,11 @@ class DocParagraph:
         """Returns the HTML for the settings paragraph."""
         from timApp.documentmodel.docsettings import DocSettings
 
-        if DocSettings.is_valid_paragraph(self):
-            return '<p class="docsettings">&nbsp;</p>'
-        else:
-            return '<div class="pluginError">Invalid settings paragraph detected</div>'
+        try:
+            DocSettings.settings_to_string(self)
+        except TimDbException as e:
+            return f'<div class="pluginError">Invalid settings: {e}</div>'
+        return '<p class="docsettings">&nbsp;</p>'
 
     def get_html(self, from_preview: bool = True) -> str:
         """Returns the html for the paragraph.
@@ -425,6 +428,8 @@ class DocParagraph:
         :return: html string
 
         """
+        if self.html is not None:
+            return self.html
         if self.is_question():
             from timApp.plugin import Plugin
             from timApp.plugin import PluginException
@@ -435,28 +440,34 @@ class DocParagraph:
                     return get_error_html('This question is missing plugin="qst" attribute. Please add it.')
                 return get_error_html(e)
             title = values.get("json", {}).get("questionTitle", "")
-            if not title:  # compability for old
+            if not title:  # compatibility for old
                 title = values.get("json", {}).get("title", "question_title")
             return self.__set_html(sanitize_html(
-                '<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{0}"></span></a>'
-                '<p class="questionNumber">{0}</p>'.format(title)))
-        if self.html is not None:
-            return self.html
+                f'<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{title}"></span></a><p class="questionNumber">{title}</p>'))
         if self.is_plugin():
             return self.__set_html('')
         if self.is_setting():
             return self.__set_html(self.__get_setting_html())
 
         context_par = self.doc.get_previous_par(self, get_last_if_no_prev=False) if from_preview else None
-        DocParagraph.preload_htmls([self],
+
+        preload_pars = self.doc.get_paragraphs() if self.doc.preload_option == PreloadOption.all else [self]
+        DocParagraph.preload_htmls(preload_pars,
                                    self.doc.get_settings(),
                                    context_par=context_par,
                                    persist=not from_preview)
+
+        # This DocParagraph instance is not necessarily the same as what self.doc contains. In that case, we copy the
+        # HTML from the doc's equivalent paragraph.
+        if self.html is None:
+            self.html = self.doc.par_map[self.get_id()]['c'].html
+            assert self.html is not None
         return self.html
 
     @classmethod
     def preload_htmls(cls, pars: List['DocParagraph'], settings,
-                      clear_cache: bool = False, context_par: Optional['DocParagraph'] = None, persist: Optional[bool] = True):
+                      clear_cache: bool = False, context_par: Optional['DocParagraph'] = None,
+                      persist: Optional[bool] = True):
         """Loads the HTML for each paragraph in the given list.
 
         :param context_par: The context paragraph. Required only for previewing for now.
@@ -476,7 +487,7 @@ class DocParagraph:
 
         first_pars = []
         if context_par is not None:
-            first_pars = pars[0].doc.get_pars_till(context_par)
+            first_pars = [context_par]
             pars = first_pars + pars
 
         if not persist:
@@ -497,7 +508,7 @@ class DocParagraph:
                         heading_cache[par.get_id()] = value
             unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
         else:
-            with filelock.FileLock("/tmp/cache_lock_{}".format(doc_id_str)):
+            with filelock.FileLock(f"/tmp/cache_lock_{doc_id_str}"):
                 if clear_cache:
                     try:
                         os.remove(macro_cache_file + '.db')
@@ -515,13 +526,27 @@ class DocParagraph:
 
         changed_pars = []
         if len(unloaded_pars) > 0:
-            htmls = par_list_to_html_list([par for par, _, _, _, _ in unloaded_pars],
+            def deref_tr_par(p):
+                """Required for getting the original par's attributes, so that for example "nonumber" class
+                doesn't have to be repeated in translations.
+                """
+                if not p.is_translation():
+                    return p
+                try:
+                    return p.get_referenced_pars(set_html=False)[0]
+                except InvalidReferenceException as e:
+                    p.was_invalid = True
+                    p.__set_html(get_error_html(e))
+                    return p
+            htmls = par_list_to_html_list([deref_tr_par(par) for par, _, _, _, _ in unloaded_pars],
                                           auto_macros=({'h': auto_macros['h'], 'headings': hs}
                                                        for _, _, auto_macros, hs, _ in unloaded_pars),
                                           settings=settings)
             for (par, auto_macro_hash, _, _, old_html), h in zip(unloaded_pars, htmls):
                 # h is not sanitized but old_html is, but HTML stays unchanged after sanitization most of the time
                 # so they are comparable
+                if getattr(par, 'was_invalid', False):
+                    continue
                 if h != old_html:
                     h = sanitize_html(h)
                     changed_pars.append(par)
@@ -639,7 +664,7 @@ class DocParagraph:
         if cached is not None:
             return cached
 
-        prev_par = self.doc.get_previous_par(self)
+        prev_par: 'DocParagraph' = self.doc.get_previous_par(self)
         if prev_par is None:
             autonumber_start = auto_number_start
             prev_par_auto_values = {'h': {1: autonumber_start, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
@@ -648,12 +673,22 @@ class DocParagraph:
             prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache,
                                                                   auto_number_start)
 
-        if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber'):
+        # If the paragraph is a translation but it has not been translated (empty markdown), we use the md from the original.
+        deref = None
+        if prev_par is not None and prev_par.is_translation():
+            try:
+                deref = prev_par.get_referenced_pars(set_html=False)[0]
+            except InvalidReferenceException:
+                # In case of an invalid reference, just skip this one.
+                deref = None
+        if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber') or (deref and deref.has_class('nonumber')):
             auto_macro_cache[key] = prev_par_auto_values
             heading_cache[self.get_id()] = []
             return prev_par_auto_values
 
         md_expanded = prev_par.get_markdown()
+        if not md_expanded and deref is not None:
+            md_expanded = deref.get_markdown()
         if not prev_par.nomacros:
             # TODO: RND_SEED should we fill the rands also?
             md_expanded = expand_macros(md_expanded, macros, macro_delim)
@@ -715,7 +750,10 @@ class DocParagraph:
 
         """
         self.__data['md'] = new_md
-        self.__data['t'] = hashfunc(new_md, self.get_attrs())
+        self._compute_hash()
+
+    def _compute_hash(self):
+        self.__data['t'] = hashfunc(self.get_markdown(), self.get_attrs())
 
     def set_attr(self, attr_name: str, attr_val: Any):
         """Sets the value of the specified attribute.
@@ -730,6 +768,7 @@ class DocParagraph:
             self.attrs[attr_name] = attr_val
 
         self._cache_props()
+        self._compute_hash()
 
     def is_task(self):
         """Returns whether the paragraph is a task."""
@@ -829,7 +868,7 @@ class DocParagraph:
         self.__write()
 
         # Clear cached referenced paragraphs because this was modified
-        self.ref_pars = None
+        self.ref_pars = {}
 
     def is_reference(self) -> bool:
         """Returns whether this paragraph is a reference to some other paragraph."""
@@ -850,8 +889,8 @@ class DocParagraph:
     def __repr__(self):
         return self.__data.__repr__()
 
-    def get_referenced_pars(self, set_html: bool = True, source_doc: bool = None,
-                            tr_get_one: bool = True, cycle: Optional[List[Tuple[int, str]]] = None) -> List[
+    def get_referenced_pars(self, set_html: bool = True, source_doc: 'Document' = None,
+                            tr_get_one: bool = True, visited_pars: Optional[List[Tuple[int, str]]] = None) -> List[
             'DocParagraph']:
         """Returns the paragraphs that are referenced by this paragraph.
 
@@ -862,22 +901,12 @@ class DocParagraph:
         :param source_doc: The assumed source document in case the rd attribute of a paragraph is absent.
         :param tr_get_one: If True and this paragraph is a translation and the result contains more than one paragraph,
           only the first one of them will be returned.
-        :param cycle: A list of already visited paragraphs to prevent infinite recursion.
+        :param visited_pars: A list of already visited paragraphs to prevent infinite recursion.
         :return: The list of resolved paragraphs.
 
         """
-        if self.ref_pars is not None:
-            return self.ref_pars
-        if cycle is None:
-            cycle = []
-        par_doc_id = self.get_doc_id(), self.get_id()
-        if par_doc_id in cycle:
-            cycle.append(par_doc_id)
-            raise InvalidReferenceException(
-                'Infinite referencing loop detected: ' + ' -> '.join(('{}:{}'.format(d, p) for d, p in cycle)))
-        cycle.append(par_doc_id)
 
-        def create_final_par(ref_par) -> 'DocParagraph':
+        def create_final_par(ref_par: 'DocParagraph') -> 'DocParagraph':
             if self.is_translation() and self.get_markdown():
                 md = self.get_markdown()
             else:
@@ -906,6 +935,17 @@ class DocParagraph:
                 final_par.__set_html(html)
             return final_par
 
+        if self.ref_pars.get(set_html) is not None:
+            return self.ref_pars.get(set_html)
+        if visited_pars is None:
+            visited_pars = []
+        par_doc_id = self.get_doc_id(), self.get_id()
+        if par_doc_id in visited_pars:
+            visited_pars.append(par_doc_id)
+            raise InvalidReferenceException(
+                f'Infinite referencing loop detected: {" -> ".join((f"{d}:{p}" for d, p in visited_pars))}')
+        visited_pars.append(par_doc_id)
+
         ref_docid = None
         ref_doc = None
 
@@ -914,12 +954,11 @@ class DocParagraph:
             try:
                 ref_docid = int(attrs['rd'])
             except ValueError:
-                raise InvalidReferenceException('Invalid reference document id: "{}"'.format(attrs['rd']))
+                raise InvalidReferenceException(f'Invalid reference document id: "{attrs["rd"]}"')
         elif source_doc is not None:
             ref_doc = source_doc
         else:
-            settings = self.doc.get_settings()
-            ref_docid = settings.get_source_document()
+            ref_doc = self.doc.get_source_document()
 
         if ref_doc is None:
             if ref_docid is None:
@@ -932,18 +971,14 @@ class DocParagraph:
 
         if self.is_par_reference():
             try:
-                par = DocParagraph.get_latest(ref_doc, attrs['rp'], ref_doc.files_root)
-                if not ref_doc.has_paragraph(attrs['rp']):
-                    # par.set_attr('deleted', 'True')
-                    par.add_class('deleted')
-
+                par = ref_doc.get_paragraph(attrs['rp'])
             except TimDbException:
                 raise InvalidReferenceException('The referenced paragraph does not exist.')
 
             if par.is_reference():
                 ref_pars = par.get_referenced_pars(set_html=set_html,
                                                    source_doc=source_doc,
-                                                   cycle=cycle,
+                                                   visited_pars=visited_pars,
                                                    tr_get_one=tr_get_one)
             else:
                 ref_pars = [par]
@@ -954,17 +989,17 @@ class DocParagraph:
                 if p.is_reference():
                     ref_pars.extend(p.get_referenced_pars(set_html=set_html,
                                                           source_doc=source_doc,
-                                                          cycle=cycle,
+                                                          visited_pars=visited_pars,
                                                           tr_get_one=tr_get_one))
                 else:
                     ref_pars.append(p)
             if tr_get_one and self.is_translation() and len(ref_pars) > 0:
-                self.ref_pars = [create_final_par(ref_pars[0])]
-                return self.ref_pars
+                self.ref_pars[set_html] = [create_final_par(ref_pars[0])]
+                return self.ref_pars[set_html]
         else:
             assert False
-        self.ref_pars = [create_final_par(ref_par) for ref_par in ref_pars]
-        return self.ref_pars
+        self.ref_pars[set_html] = [create_final_par(ref_par) for ref_par in ref_pars]
+        return self.ref_pars[set_html]
 
     def is_dynamic(self) -> bool:
         """Returns whether this paragraph is a dynamic paragraph.
@@ -987,8 +1022,7 @@ class DocParagraph:
 
     def is_question(self) -> bool:
         """Returns whether this paragraph is a question paragraph."""
-        # preview = self.get("preview", False)
-        return bool(self.get_attr('question'))
+        return self.is_plugin() and bool(self.get_attr('question'))
 
     def is_setting(self) -> bool:
         """Returns whether this paragraph is a settings paragraph."""
@@ -1002,6 +1036,9 @@ class DocParagraph:
         """
         self.__data['id'] = par_id
 
+    def is_citation(self):
+        return self.get_attr('r') == 'c'
+
 
 def is_real_id(par_id: Optional[str]):
     """Returns whether the given paragraph id corresponds to some real paragraph
@@ -1011,3 +1048,25 @@ def is_real_id(par_id: Optional[str]):
     :return: True if the given paragraph id corresponds to some real paragraph, False otherwise.
     """
     return par_id is not None and par_id != 'HELP_PAR'
+
+
+def create_reference(doc: 'Document', doc_id: int, par_id: str, r: Optional[str] = None, add_rd: bool = True) -> 'DocParagraph':
+    """Creates a reference paragraph to a paragraph.
+
+    :param par_id: Id of the original paragraph.
+    :param doc_id: Id of the original document.
+    :param doc: The Document object in which the reference paragraph will reside.
+    :param r: The kind of the reference.
+    :param add_rd: If True, sets the rd attribute for the reference paragraph.
+    :return: The created DocParagraph.
+
+    """
+    par = DocParagraph.create(doc)
+
+    par.set_attr('r', r)
+    par.set_attr('rd', doc_id if add_rd else None)
+    par.set_attr('rp', par_id)
+    par.set_attr('ra', None)
+
+    par._cache_props()
+    return par

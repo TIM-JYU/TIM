@@ -21,11 +21,11 @@ class GroupTest(TimRouteTest):
         self.get('/groups/show/testgroup1', expect_status=404,
                  expect_content={'error': 'Usergroup does not exist.'})
         self.get('/groups/create/testgroup1', expect_content=self.ok_resp)
-        self.get('/groups/addmember/testgroup1/{},{}'.format(t1, t3),
+        self.get(f'/groups/addmember/testgroup1/{t1},{t3}',
                  expect_content={'added': [t1, t3], 'already_belongs': [], 'not_exist': []})
-        self.get('/groups/addmember/testgroup1/{},{}'.format(t1, t3),
+        self.get(f'/groups/addmember/testgroup1/{t1},{t3}',
                  expect_content={'already_belongs': [t1, t3], 'added': [], 'not_exist': []})
-        self.get('/groups/addmember/testgroup1/{},{},{},{},{}'.format(t1, t2, t3, t4, t5),
+        self.get(f'/groups/addmember/testgroup1/{t1},{t2},{t3},{t4},{t5}',
                  expect_content={'already_belongs': [t1, t3], 'added': [t2, t4], 'not_exist': [t5]})
 
         self.get('/groups/show/testgroup1', expect_content=[
@@ -35,11 +35,11 @@ class GroupTest(TimRouteTest):
             {'email': t4 + '@example.com', 'id': uids[3], 'name': names[3], 'real_name': names[3]}
         ])
 
-        self.get('/groups/removemember/testgroup1/{},{}'.format(t1, t3),
+        self.get(f'/groups/removemember/testgroup1/{t1},{t3}',
                  expect_content={'removed': [t1, t3], 'does_not_belong': [], 'not_exist': []})
-        self.get('/groups/removemember/testgroup1/{},{}'.format(t1, t3),
+        self.get(f'/groups/removemember/testgroup1/{t1},{t3}',
                  expect_content={'removed': [], 'does_not_belong': [t1, t3], 'not_exist': []})
-        self.get('/groups/removemember/testgroup1/{},{},{},{},{}'.format(t1, t2, t3, t4, t5),
+        self.get(f'/groups/removemember/testgroup1/{t1},{t2},{t3},{t4},{t5}',
                  expect_content={'removed': [t2, t4], 'does_not_belong': [t1, t3], 'not_exist': [t5]})
         self.get('/groups/show/testgroup1', expect_content=[])
 

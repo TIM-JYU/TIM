@@ -63,6 +63,14 @@ export interface ILectureMessage {
 export interface ILectureFormParams extends ILecture {
 }
 
+export interface ILectureOptions {
+    max_students: number;
+    poll_interval: number;
+    poll_interval_t: number;
+    long_poll: boolean;
+    long_poll_t: boolean;
+}
+
 export interface ILecture {
     doc_id: number;
     lecture_id: number;
@@ -70,7 +78,7 @@ export interface ILecture {
     start_time: moment.Moment;
     end_time: moment.Moment;
     password: string;
-    max_students: number;
+    options: ILectureOptions;
     is_full: boolean;
 }
 

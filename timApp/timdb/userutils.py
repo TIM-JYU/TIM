@@ -22,13 +22,13 @@ FOLDER_DEFAULT_RIGHT_NAME = 'DefaultFolderRights'
 
 access_type_map = {}
 
-default_right_paths = {blocktypes.DOCUMENT: 'Templates/{}'.format(DOC_DEFAULT_RIGHT_NAME),
-                       blocktypes.FOLDER: 'Templates/{}'.format(FOLDER_DEFAULT_RIGHT_NAME)}
+default_right_paths = {blocktypes.DOCUMENT: f'Templates/{DOC_DEFAULT_RIGHT_NAME}',
+                       blocktypes.FOLDER: f'Templates/{FOLDER_DEFAULT_RIGHT_NAME}'}
 
 
 class NoSuchUserException(TimDbException):
     def __init__(self, user_id):
-        super().__init__('No such user: {}'.format(user_id))
+        super().__init__(f'No such user: {user_id}')
         self.user_id = user_id
 
 
@@ -359,7 +359,7 @@ def get_default_right_document(folder_id, object_type: BlockType, create_if_not_
         raise TimDbException('Non-existent folder')
     right_doc_path = default_right_paths.get(object_type)
     if right_doc_path is None:
-        raise TimDbException('Unsupported object type: {}'.format(object_type))
+        raise TimDbException(f'Unsupported object type: {object_type}')
 
     # we don't want to have an owner in the default rights by default
     doc = folder.get_document(right_doc_path,

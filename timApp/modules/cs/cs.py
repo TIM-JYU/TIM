@@ -218,6 +218,8 @@ def get_md(ttype, query):
         runner = 'cs-jypeli-runner'
     if "sage" in ttype:
         runner = 'cs-sage-runner'
+    if "wescheme" in ttype:
+        runner = 'cs-wescheme-runner'
 
     usercode = None
     user_print = get_json_param(query.jso, "userPrint", None,  False)
@@ -359,6 +361,8 @@ def get_html(ttype, query):
         runner = 'cs-jypeli-runner'
     if "sage" in ttype:
         runner = 'cs-sage-runner'
+    if "wescheme" in ttype:
+        runner = 'cs-wescheme-runner'
 
     usercode = get_json_eparam(query.jso, "state", "usercode", "")
     if is_review(query):
@@ -621,6 +625,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         print("do_POST MULTIHML ==========================================")
         t1 = time.clock()
+        t1t = time.time()
         querys = multi_post_params(self)
         do_headers(self, "application/json")
         is_tauno = self.path.find('/tauno') >= 0
@@ -679,7 +684,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.wout(sresult)
         log(self)
         t2 = time.clock()
-        ts = "multihtml: %7.4f" % (t2 - t1)
+        t2t = time.time()
+        ts = "multihtml: %7.4f %7.4f" % (t2 - t1, t2t - t1t)
         print(ts)
 
     def do_PUT(self):
@@ -909,7 +915,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 self.wout(file_to_string('end.html'))
                 return
 
-            if is_iframe and not print_file and ttype not in ["js", "glowscript", "vpython"]:
+            if is_iframe and not print_file and ttype not in ["js", "glowscript", "vpython", "processing"]:
                 s = string_to_string_replace_url(
                     '<iframe frameborder="0"  src="https://tim.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" ' +
                     'style="overflow:hidden;" height="##HEIGHT##" width="100%"  seamless></iframe>',
@@ -994,7 +1000,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     s = "\n"
 
                 # Write the program to the file =======================================================
-                codecs.open(language.sourcefilename, "w", "utf-8").write(language.before_code + s)
+                s = language.before_save(language.before_code + s)
+                codecs.open(language.sourcefilename, "w", "utf-8").write(s)
                 slines = s
 
             save_extra_files(query, extra_files, language.prgpath)
@@ -1010,7 +1017,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if "test" in ttype:
                 is_test = "test"
             points_rule = get_param(query, "pointsRule", None)
-            if points_rule:
+            # if points_rule is None and language.readpoints_default:
+            #    points_rule = {}
+            if points_rule is not None:
                 points_rule["points"] = get_json_param(query.jso, "state", "points", None)
                 points_rule["result"] = 0
                 if points_rule["points"]:
@@ -1022,7 +1031,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     else:
                         points_rule["points"]["run"] = 0
                 if not is_doc:
+                    is_plain = False
                     expect_code = get_points_rule(points_rule, is_test + "expectCode", None)
+                    if not expect_code:
+                        expect_code = get_points_rule(points_rule, is_test + "expectCodePlain", None)
+                        is_plain = True
+
                     if expect_code:
                         if expect_code == "byCode":
                             expect_code = get_param(query, "byCode", "")
@@ -1032,8 +1046,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                                 query, "parsonsnotordermatters", False))
                             give_points(points_rule, "code", p)
                         else:
-                            excode = re.compile(expect_code.rstrip('\n'), re.M)
-                            if excode.match(usercode):
+                            excode = expect_code.rstrip('\n')
+                            match = False
+                            if is_plain:
+                                match = usercode == excode
+                            else:
+                                excode = re.compile(excode, re.M)
+                                match = excode.match(usercode)
+                            if match:
                                 give_points(points_rule, "code", 1)
                     number_rule = get_points_rule(points_rule, is_test + "numberRule", None)
                     if number_rule:
@@ -1226,8 +1246,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 exout = re.compile(expect_output.rstrip('\n'), re.M)
                 if exout.match(out):
                     give_points(points_rule, "output", 1)
+            expect_output = get_points_rule(points_rule, is_test + "expectOutputPlain", None)
+            if expect_output:
+                exout = expect_output.rstrip('\n')
+                if exout == out.rstrip('\n'):
+                    give_points(points_rule, "output", 1)
 
-            readpoints = get_points_rule(points_rule, "readpoints", None)
+            readpoints = get_points_rule(points_rule, "readpoints", language.readpoints_default)
             readpointskeep = get_points_rule(points_rule, "readpointskeep", False)
             if readpoints:
                 try:

@@ -1,7 +1,5 @@
 from typing import List
 
-from flask import current_app
-
 from timApp.documentmodel.document import Document
 from timApp.timdb.item import Item
 from timApp.timdb.models.notification import NotificationType, Notification
@@ -25,12 +23,9 @@ class DocInfo(Item):
         raise NotImplementedError
 
     @property
-    def url(self):
-        return current_app.config['TIM_HOST'] + self.url_relative
-
-    @property
-    def url_relative(self):
-        return '/view/' + self.path
+    def is_original_translation(self):
+        """Returns whether this object is the document from which other translated documents were created."""
+        return self.id == self.src_docid
 
     @property
     def src_docid(self):
@@ -38,27 +33,41 @@ class DocInfo(Item):
         return self.id
 
     @property
+    def src_doc(self) -> 'DocEntry':
+        """Returns the source document in case of a translation or the document itself otherwise."""
+        if self.is_original_translation:
+            return self
+        from timApp.timdb.models.docentry import DocEntry
+        return DocEntry.find_by_id(self.src_docid)
+
+    @property
     def aliases(self):
         from timApp.timdb.models.docentry import DocEntry
         return DocEntry.find_all_by_id(self.src_docid)
 
     @property
-    def document(self):
+    def document(self) -> Document:
         """Returns the corresponding Document object."""
-        return Document(self.id)
+        if getattr(self, '_doc', None) is None:
+            self._doc = Document(self.id)
+            self._doc.docinfo = self
+        return self._doc
 
     @property
-    def document_as_current_user(self):
-        from timApp.sessioninfo import get_current_user_group
-        return Document(self.id, modifier_group_id=get_current_user_group())
+    def document_as_current_user(self) -> Document:
+        if getattr(self, '_doc', None) is None:
+            from timApp.sessioninfo import get_current_user_group
+            self._doc = Document(self.id, modifier_group_id=get_current_user_group())
+            self._doc.docinfo = self
+        return self._doc
 
     @property
     def last_modified(self):
         return self.block.modified if self.block else None
 
     @property
-    def translations(self):
-        """Returns the translations of the document."""
+    def translations(self) -> List['Translation']:
+        """Returns the translations of the document. NOTE: The list *includes* the document itself."""
         raise NotImplementedError
 
     @property

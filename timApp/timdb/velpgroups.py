@@ -116,12 +116,12 @@ class VelpGroups(TimDbBase):
         if not velp_group_ids:
             return None
         cursor = self.db.cursor()
-        cursor.execute("""
+        cursor.execute(f"""
                       SELECT
                       id, name
                       FROM VelpGroup
-                      WHERE id IN ({}) AND default_group = TRUE
-                      """.format(self.get_sql_template(velp_group_ids)), velp_group_ids
+                      WHERE id IN ({self.get_sql_template(velp_group_ids)}) AND default_group = TRUE
+                      """, velp_group_ids
                        )
         results = self.resultAsDictionary(cursor)
         return results[0] if len(results) > 0 else None
@@ -263,12 +263,12 @@ class VelpGroups(TimDbBase):
 
         """
         cursor = self.db.cursor()
-        cursor.execute("""
+        cursor.execute(f"""
                       SELECT
                       user_group, doc_id, target_type, target_id, velp_group_id as id
                       FROM ImportedVelpGroups
-                      WHERE doc_id = %s AND user_group IN ({})
-                      """.format(self.get_sql_template(user_groups)), [doc_id] + user_groups
+                      WHERE doc_id = %s AND user_group IN ({self.get_sql_template(user_groups)})
+                      """, [doc_id] + user_groups
                        )
         results = self.resultAsDictionary(cursor)
         return results

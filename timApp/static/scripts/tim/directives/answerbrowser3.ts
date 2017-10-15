@@ -353,13 +353,11 @@ export class AnswerBrowserController implements IController {
         }
     }
 
-
-    changeStudent(dir) {
+    changeStudentToIndex(newIndex) {
         if (this.users.length <= 0) {
             return;
         }
         const shouldRefocusPoints = this.shouldFocus;
-        let newIndex = this.findSelectedUserIndex() + dir;
         if (newIndex >= this.users.length) {
             newIndex = 0;
         }
@@ -383,6 +381,15 @@ export class AnswerBrowserController implements IController {
         }, 200);
     }
 
+    changeStudent(dir) {
+        let newIndex = this.findSelectedUserIndex() + dir;
+        this.changeStudentToIndex(newIndex);
+    }
+
+    randomStudent() {
+        let newIndex = Math.floor(Math.random() * this.users.length);
+        this.changeStudentToIndex(newIndex);
+    }
 
     setNewest() {
         if (this.filteredAnswers.length > 0) {

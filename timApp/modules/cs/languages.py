@@ -40,6 +40,7 @@ class Language:
         self.is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
         self.hide_compile_out = False
         self.run_points_given = False  # Put this on if give run or test points
+        self.readpoints_default = None # what is default string for readpoints
 
         # Check if user name or temp name
 
@@ -99,6 +100,9 @@ class Language:
             codecs.open(self.inputfilename, "w", "utf-8").write(userinput)
         self.stdin = get_param(self.query, "stdin", stdin_default)
 
+    def before_save(self, s):
+        return s
+
     def run(self, web, sourcelines, points_rule):
         return 0, "", "", ""
 
@@ -145,13 +149,19 @@ class Language:
 class CS(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
+        self.compiler = "csc"
         self.fileext = "cs"
         self.filedext = ".cs"
         self.sourcefilename = "/tmp/%s/%s.cs" % (self.basename, self.filename)
         self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
 
+    def before_save(self, s):
+        s = s.replace('System.Console.ReadLine', 'TIMconsole.ReadLine')
+        s = s.replace('Console.ReadLine', 'TIMconsole.ReadLine')
+        return s
+
     def get_cmdline(self, sourcecode):
-        cmdline = "mcs /r:System.Numerics /out:%s %s" % (self.exename, self.sourcefilename)
+        cmdline = "%s /r:System.Numerics.dll /out:%s %s /cs/jypeli/TIMconsole.cs" % (self.compiler, self.exename, self.sourcefilename)
         return cmdline
 
     def run(self, web, sourcelines, points_rule):
@@ -179,14 +189,14 @@ class Jypeli(CS):
                 mainfile = "/tmp/%s/%s.cs" % (self.basename, "Ohjelma")
                 codecs.open(mainfile, "w", "utf-8").write(maincode)
 
-        # cmdline = "mcs /out:%s /r:/cs/jypeli/Jypeli.dll
+        # cmdline = "%s /out:%s /r:/cs/jypeli/Jypeli.dll
         # /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll
-        # /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing
+        # /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing.dll
         # /cs/jypeli/Ohjelma.cs %s" % (
-        cmdline = ("mcs /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
+        cmdline = ("%s /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
                    "/r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll "
-                   "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Numerics /r:System.Drawing %s %s") % (
-                      self.exename, mainfile, self.sourcefilename)
+                   "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Numerics.dll /r:System.Drawing.dll %s %s") % (
+                      self.compiler, self.exename, mainfile, self.sourcefilename)
         return cmdline
 
     def run(self, web, sourcelines, points_rule):
@@ -227,13 +237,13 @@ class CSComtest(CS):
         if not CSComtest.nunit:
             frms = os.listdir("/usr/lib/mono/gac/nunit.framework/")
             CSComtest.nunit = "/usr/lib/mono/gac/nunit.framework/" + frms[0] + "/nunit.framework.dll"
-        jypeliref = ("/r:System.Numerics /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
+        jypeliref = ("/r:System.Numerics.dll /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
                      "/r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll "
-                     "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing")
-        cmdline = ("java -jar /cs/java/cs/ComTest.jar nunit %s && mcs /out:%s /target:library " +
+                     "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing.dll")
+        cmdline = ("java -jar /cs/java/cs/ComTest.jar nunit %s && %s /out:%s /target:library " +
                    jypeliref +
-                   " /reference:%s %s %s") % \
-                  (self.sourcefilename, self.testdll, CSComtest.nunit, self.sourcefilename, testcs)
+                   " /reference:%s %s %s /cs/jypeli/TIMconsole.cs") % \
+                  (self.sourcefilename, self.compiler, self.testdll, CSComtest.nunit, self.sourcefilename, testcs)
         return cmdline
 
     def run(self, web, sourcelines, points_rule):
@@ -620,6 +630,14 @@ class Glowscript(JS):
     pass
 
 
+class Processing(JS):
+    pass
+
+
+class WeScheme(JS):
+    pass
+
+
 class VPython(JS):
     pass
 
@@ -763,6 +781,7 @@ class Mathcheck(Language):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
         self.fileext = "txt"
+        self.readpoints_default = '<!--!points! (.*) -->'
 
     def run(self, web, sourcelines, points_rule):
         self.stdin = "%s.txt" % self.filename
@@ -894,3 +913,5 @@ languages["fs"] = FS
 languages["mathcheck"] = Mathcheck
 languages["upload"] = Upload
 languages["octave"] = Octave
+languages["processing"] = Processing
+languages["wescheme"] = WeScheme

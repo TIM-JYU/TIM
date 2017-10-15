@@ -86,10 +86,10 @@ def send_email(rcpt: str, subject: str, msg: str, mail_from: Optional[str] = Non
 
             response = conn.getresponse()
             if response.status != 200:
-                log_error('Response from funnel: {} {}'.format(response.status, response.reason))
+                log_error(f'Response from funnel: {response.status} {response.reason}')
 
         except (ConnectionError, socket.error, http.client.error) as e:
-            log_error("Couldn't connect to funnel: {} - {}".format(e, msg))
+            log_error(f"Couldn't connect to funnel: {e} - {msg}")
 
         finally:
             if conn is not None:
@@ -102,25 +102,23 @@ def notify_doc_watchers(doc: DocInfo,
                         par: Optional[DocParagraph] = None):
     me = get_current_user_object()
     if notify_type == NotificationType.DocModified:
-        subject = 'Someone edited the document {}'.format(doc.title)
-        subject_full = '{} edited the document {}'.format(me.pretty_full_name, doc.title)
-        group_subject = 'The document {} has been modified'.format(doc.title)
-        group_id = 'docmodify_{}'.format(doc.id)
+        subject = f'Someone edited the document {doc.title}'
+        subject_full = f'{me.pretty_full_name} edited the document {doc.title}'
+        group_subject = f'The document {doc.title} has been modified'
+        group_id = f'docmodify_{doc.id}'
     elif notify_type == NotificationType.CommentAdded:
-        subject = 'Someone posted a comment to the document {}'.format(doc.title)
-        subject_full = '{} posted a comment to the document {}'.format(me.pretty_full_name, doc.title)
-        group_subject = 'The document {} has new notes'.format(doc.title)
-        group_id = 'notes_{}'.format(doc.id)
+        subject = f'Someone posted a comment to the document {doc.title}'
+        subject_full = f'{me.pretty_full_name} posted a comment to the document {doc.title}'
+        group_subject = f'The document {doc.title} has new notes'
+        group_id = f'notes_{doc.id}'
     elif notify_type == NotificationType.CommentModified:
-        subject = 'Someone edited a comment in the document {}'.format(doc.title)
-        subject_full = '{} edited a comment in the document {}'.format(me.pretty_full_name, doc.title)
-        group_subject = 'The document {} has new notes'.format(doc.title)
-        group_id = 'notes_{}'.format(doc.id)
+        subject = f'Someone edited a comment in the document {doc.title}'
+        subject_full = f'{me.pretty_full_name} edited a comment in the document {doc.title}'
+        group_subject = f'The document {doc.title} has new notes'
+        group_id = f'notes_{doc.id}'
     else:
         assert False, 'Unknown NotificationType'
-    msg = 'Link to the {}: {}{}'.format('paragraph' if par else 'document',
-                                        doc.url,
-                                        '#' + par.get_id() if par else '')
+    msg = f'Link to the {"paragraph" if par else "document"}: {doc.url}{"#" + par.get_id() if par else ""}'
 
     full_msg = msg + '\n\n' + content_msg
 

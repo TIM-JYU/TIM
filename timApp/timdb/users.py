@@ -182,8 +182,7 @@ class Users(TimDbBase):
         """
         authtemplate = ', yubikey, pass' if include_authdata else ''
         cursor = self.db.cursor()
-        cursor.execute('SELECT id, name, real_name, email {} FROM UserAccount WHERE id = %s'.format(
-            authtemplate), [user_id])
+        cursor.execute(f'SELECT id, name, real_name, email {authtemplate} FROM UserAccount WHERE id = %s', [user_id])
         result = self.resultAsDictionary(cursor)
         return result[0] if len(result) > 0 else None
 
@@ -232,7 +231,7 @@ class Users(TimDbBase):
         if len(groups) > 0:
             return groups[0]['id']
 
-        raise TimDbException('Personal usergroup for user {} was not found!'.format(userName))
+        raise TimDbException(f'Personal usergroup for user {userName} was not found!')
 
     def get_users_in_group(self, group_id: int, limit: int = 1000) -> List[dict]:
         cursor = self.db.cursor()
@@ -286,12 +285,37 @@ class Users(TimDbBase):
     def get_users_for_group(self, usergroup_name, order=False):
         c = self.db.cursor()
         order_sql = ' ORDER BY UserAccount.name' if order else ''
-        c.execute("""SELECT UserAccount.id, UserAccount.name, real_name, email
+        c.execute(f"""SELECT UserAccount.id, UserAccount.name, real_name, email
             FROM UserAccount
             JOIN UserGroupMember ON UserAccount.id = UserGroupMember.User_id
             JOIN UserGroup ON UserGroup.id = UserGroupMember.UserGroup_id
-            WHERE UserGroup.name = %s{}""".format(order_sql), [usergroup_name])
+            WHERE UserGroup.name = %s{order_sql}""", [usergroup_name])
         return self.resultAsDictionary(c)
+
+    def check_if_in_group(self, username, usergroup_name):
+        c = self.db.cursor()
+        c.execute("""SELECT ua.id, ua.name, ug.user_id, ug.usergroup_id, gr.id, gr.name
+            FROM UserAccount AS ua, usergroupmember As ug, usergroup AS gr
+            WHERE ua.id=ug.user_id  and ug.usergroup_id=gr.id and ua.name=%s and gr.name=%s
+            """, [username, usergroup_name])
+        return c.rowcount > 0
+
+    def check_if_in_group_by_id(self, usernid, usergroup_name):
+        c = self.db.cursor()
+        c.execute("""SELECT ug.user_id, ug.usergroup_id, gr.id, gr.name
+            FROM usergroupmember As ug, usergroup AS gr
+            WHERE ug.user_id=%s  and ug.usergroup_id=gr.id  and gr.name=%s
+            """, [usernid, usergroup_name])
+        return c.rowcount > 0
+
+    def get_users_groups(self, username, order=False):
+        c = self.db.cursor()
+        order_sql = ' ORDER BY gr.name' if order else ''
+        c.execute(f"""SELECT gr.name
+            FROM UserAccount AS ua, usergroupmember As ug, usergroup AS gr
+            WHERE ua.id=ug.user_id  and ug.usergroup_id=gr.id and ua.name=%s{order_sql}
+            """, [username])
+        return self.resultAsList(c)
 
     def get_personal_usergroup_by_id(self, user_id: int) -> Optional[int]:
         return self.get_personal_usergroup(self.get_user(user_id))

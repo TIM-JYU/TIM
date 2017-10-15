@@ -135,7 +135,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     udir = cwd.replace("/tmp/", "")  # koska mountattu eri tavalla, poistetaan tmp alusta
     # print(udir,"\nWait for run")
     path_mappings = [["-v", "{0}/timApp/modules/cs/{1}:/cs/{1}:ro".format(os.environ['TIM_ROOT'], p)] for p in
-                     ["rcmd.sh", "cpp", "java", "jypeli", "doxygen", "mathcheck", "fs", "data", "simcir"]]
+                     ["rcmd.sh", "cpp", "java", "jypeli", "doxygen", "mathcheck", "fs", "data", "simcir", "MIRToolbox"]]
 
     dargs = ["docker", "run", "--name", tmpname, "--rm=true",
              *itertools.chain.from_iterable(path_mappings),

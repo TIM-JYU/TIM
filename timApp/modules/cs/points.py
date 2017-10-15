@@ -2,7 +2,7 @@ import re
 
 
 def give_points(points_rule, rule, default=0):
-    if not points_rule:
+    if not isinstance(points_rule, dict):
         return
     if rule in points_rule or default != 0:
         points_rule["valid"] = True  # rule found
@@ -55,7 +55,7 @@ def check_number_rule(s, number_rule):
 
 
 def get_points_rule(points_rule, key, default):
-    if not points_rule:
+    if not isinstance(points_rule, dict):
         return default
     return points_rule.get(key, default)
 

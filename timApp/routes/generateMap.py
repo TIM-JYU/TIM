@@ -9,7 +9,7 @@ from timApp.responsehelper import json_response
 generateMap = Blueprint('generateMap', __name__, url_prefix='')
 
 
-@generateMap.route('/generateMap', methods=["GET", "POST"])
+@generateMap.route('/generateMap', methods=["POST"])
 def generate_map():
     coursedata = request.get_json()
     # Get lectures from json
@@ -219,7 +219,7 @@ def select_map(lectures, demos):
             map_file += str(int(int(lectures / 2) + 1)) + ".json"
         # Otherwise select map based on demos.
     else:
-        map_file += str(demos) + ".json"
+        map_file += str(demos if demos > 0 else 1) + ".json"
     return map_file
 
 

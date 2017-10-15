@@ -355,7 +355,7 @@ class Annotations(TimDbBase):
         if not annotation_ids:
             return []
         cursor = self.db.cursor()
-        cursor.execute("""
+        cursor.execute(f"""
                       SELECT
                         AnnotationComment.annotation_id,
                         AnnotationComment.comment_time,
@@ -366,9 +366,9 @@ class Annotations(TimDbBase):
                         useraccount.email as user_email
                       FROM AnnotationComment
                       JOIN useraccount ON AnnotationComment.commenter_id = useraccount.id
-                      WHERE AnnotationComment.annotation_id IN ({})
+                      WHERE AnnotationComment.annotation_id IN ({self.get_sql_template(annotation_ids)})
                       ORDER BY AnnotationComment.annotation_id ASC;
-                      """.format(self.get_sql_template(annotation_ids)), annotation_ids
+                      """, annotation_ids
                        )
         comment_data = self.resultAsDictionary(cursor)
 

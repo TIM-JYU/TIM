@@ -91,10 +91,10 @@ class Answers(TimDbBase):
             return
         answer_dict = defaultdict(list)
         c = self.db.cursor()
-        c.execute("""SELECT answer_id, user_id, real_name, email FROM UserAnswer
+        c.execute(f"""SELECT answer_id, user_id, real_name, email FROM UserAnswer
             JOIN Answer ON Answer.id = UserAnswer.answer_id
             JOIN UserAccount ON UserAnswer.user_id = UserAccount.id
-            WHERE answer_id IN ({})""".format(','.join(['%s'] * len(answers))),
+            WHERE answer_id IN ({','.join(['%s'] * len(answers))})""",
                   [answer['id'] for answer in answers])
         for row in c.fetchall():
             answer_dict[row[0]].append({'user_id': row[1], 'real_name': row[2], 'email': row[3]})
@@ -106,17 +106,18 @@ class Answers(TimDbBase):
             return []
         template = ','.join(['%s'] * len(task_ids))
         c = self.db.cursor()
-        c.execute("""
+        c.execute(f"""
         SELECT task_id, content, points, answered_on, valid, cnt
         FROM
         (
         SELECT MAX(Answer.id) as aid, COUNT(Answer.id) as cnt
         FROM Answer
         JOIN UserAnswer ON Answer.id = UserAnswer.answer_id
-        WHERE task_id IN ({})
+        WHERE task_id IN ({template})
          AND user_id = %s
+         AND valid = TRUE
         GROUP BY task_id
-        ) t JOIN Answer a ON a.id = t.aid""".format(template), task_ids + [user_id])
+        ) t JOIN Answer a ON a.id = t.aid""", task_ids + [user_id])
         return self.resultAsDictionary(c)
 
     def get_all_answers(self,
@@ -168,19 +169,18 @@ class Answers(TimDbBase):
             order_by = 'u.name, a.task_id'
 
         c = self.db.cursor()
-        sql = """
+        sql = f"""
 SELECT DISTINCT u.name, a.task_id, a.content, a.answered_on, n, a.points, u.real_name
 FROM
-(SELECT {} (a.id) AS id, {} as n
+(SELECT {minmax} (a.id) AS id, {counts} as n
 FROM answer AS a, userAnswer AS ua, useraccount AS u
-WHERE a.task_id IN ({}) AND ua.answer_id = a.id AND u.id = ua.user_id AND a.answered_on >= %s AND a.answered_on < %s
-{}
-{}
+WHERE a.task_id IN ({get_sql_template(task_ids)}) AND ua.answer_id = a.id AND u.id = ua.user_id AND a.answered_on >= %s AND a.answered_on < %s
+{validstr}
+{groups}
 ) t
 JOIN answer a ON a.id = t.id JOIN useranswer ua ON ua.answer_id = a.id JOIN useraccount u ON u.id = ua.user_id
-ORDER BY {}, a.answered_on
+ORDER BY {order_by}, a.answered_on
         """
-        sql = sql.format(minmax, counts, get_sql_template(task_ids), validstr, groups, order_by)
         c.execute(sql, task_ids + [period_from, period_to])
 
         result = []
@@ -260,11 +260,11 @@ ORDER BY {}, a.answered_on
             return []
         template = ','.join(['%s'] * len(common_answers_ids))
         c = self.db.cursor()
-        c.execute("""SELECT id, task_id, content, points
+        c.execute(f"""SELECT id, task_id, content, points
             FROM Answer
-            WHERE id IN ({})
+            WHERE id IN ({template})
             ORDER BY answered_on DESC, id DESC
-         """.format(template), list(common_answers_ids))
+         """, list(common_answers_ids))
         common_answers = self.resultAsDictionary(c)
         return common_answers
 
@@ -279,8 +279,8 @@ ORDER BY {}, a.answered_on
         elif not user_ids:
             user_restrict_sql = 'AND FALSE'
         else:
-            user_restrict_sql = 'AND UserAccount.id IN ({})'.format(','.join(['%s'] * len(user_ids)))
-        sql = """
+            user_restrict_sql = f'AND UserAccount.id IN ({",".join(["%s"] * len(user_ids))})'
+        sql = f"""
                 SELECT *, task_points + COALESCE(velp_points, 0) as total_points
                 FROM (
                 SELECT UserAccount.id, name, real_name, email,
@@ -288,7 +288,7 @@ ORDER BY {}, a.answered_on
                        ROUND(SUM(cast(points as float))::numeric,2) as task_points,
                        ROUND(SUM(velp_points)::numeric,2) as velp_points,
                        COUNT(annotation_answer_id) AS velped_task_count
-                       {}
+                       {', MIN(task_id) as task_id' if not group_by_user else ''}
                 FROM UserAccount
                 JOIN UserAnswer ON UserAccount.id = UserAnswer.user_id
                 JOIN (
@@ -296,7 +296,7 @@ ORDER BY {}, a.answered_on
                       (SELECT Answer.task_id, UserAnswer.user_id as uid, MAX(Answer.id) as aid
                       FROM Answer
                       JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
-                      WHERE task_id IN ({}) AND Answer.valid = TRUE
+                      WHERE task_id IN ({task_id_template}) AND Answer.valid = TRUE
                       GROUP BY UserAnswer.user_id, Answer.task_id) a1
                       JOIN (SELECT id, points FROM Answer) a2 ON a2.id = a1.aid
                       LEFT JOIN (SELECT
@@ -308,14 +308,11 @@ ORDER BY {}, a.answered_on
                                  ) a3 ON a3.annotation_answer_id = a1.aid
 
                       ) tmp ON tmp.aid = UserAnswer.answer_id AND UserAccount.id = tmp.uid
-                {}
-                GROUP BY UserAccount.id {}
+                {user_restrict_sql}
+                GROUP BY UserAccount.id {'' if group_by_user else ', task_id'}
                 ORDER BY real_name ASC
                 ) tmp
-            """.format(', MIN(task_id) as task_id' if not group_by_user else '',
-                       task_id_template,
-                       user_restrict_sql,
-                       '' if group_by_user else ', task_id')
+            """
         cursor.execute(sql, task_ids + user_ids)
         return self.resultAsDictionary(cursor)
 

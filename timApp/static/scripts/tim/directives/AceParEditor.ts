@@ -1,6 +1,7 @@
 import {IAceEditor} from "../ace-types";
-import {$log} from "../ngimport";
-import {BaseParEditor, focusAfter} from "./BaseParEditor";
+import {$log, $timeout} from "../ngimport";
+import {BaseParEditor, focusAfter, IEditorCallbacks} from "./BaseParEditor";
+import {wrapText} from "../controllers/view/editing";
 
 interface ISnippetManager {
     insertSnippet(editor: AceAjax.Editor, text: string): void;
@@ -10,8 +11,8 @@ export class AceParEditor extends BaseParEditor {
     public editor: IAceEditor;
     private snippetManager: ISnippetManager;
 
-    constructor(ace: AceAjax.Ace, editor: AceAjax.Editor, wrapFn: () => void, saveClicked: () => void) {
-        super(editor as IAceEditor, wrapFn, saveClicked);
+    constructor(ace: AceAjax.Ace, editor: AceAjax.Editor, callbacks: IEditorCallbacks, mode: string = "ace/mode/markdown") {
+        super(editor as IAceEditor, callbacks);
         this.editor = editor as IAceEditor;
         this.snippetManager = ace.require("ace/snippets").snippetManager;
         const line = editor.renderer.lineHeight;
@@ -23,7 +24,7 @@ export class AceParEditor extends BaseParEditor {
         this.editor.renderer.setPadding(10);
         this.editor.renderer.setScrollMargin(2, 2, 2, 40);
         this.editor.renderer.setVScrollBarAlwaysVisible(true);
-        this.editor.getSession().setMode("ace/mode/markdown");
+        this.editor.getSession().setMode(mode);
         this.editor.getSession().setUseWrapMode(false);
         this.editor.getSession().setWrapLimitRange(0, 79);
         this.editor.setOptions({
@@ -42,7 +43,7 @@ export class AceParEditor extends BaseParEditor {
                 sender: "editor|cli",
             },
             exec: (env, args, request) => {
-                this.saveClicked();
+                this.callbacks.saveClicked();
             },
         });
         this.editor.commands.addCommand({
@@ -177,6 +178,11 @@ export class AceParEditor extends BaseParEditor {
                 this.pageBreakClicked();
             },
         });
+        this.editor.keyBinding.addKeyboardHandler(
+            () => {
+                this.checkWrap();
+            }, null,
+        );
     }
 
     // Navigation
@@ -542,5 +548,39 @@ export class AceParEditor extends BaseParEditor {
 
     setEditorText(text: string) {
         this.editor.getSession().setValue(text);
+    }
+
+    setPosition(pos) {
+        var range = this.editor.session.doc.indexToPosition(pos, 0);
+        this.editor.moveCursorTo(range.row, range.column); // TODO: find a way to move to postion
+        this.gotoCursor();
+    }
+
+    forceWrap(force: boolean) {
+        var n = this.getWrapValue();
+        if (!n) return;
+        if (n < 0) n = -n;
+        var text = this.getEditorText();
+        if (!force) {
+            if (text.indexOf("```") >= 0) return;
+            if (text.indexOf("|") >= 0) return;
+        }
+        var r = wrapText(text, n);
+        if (!r.modified) return;
+        let editor = this.editor;
+        var cursor = editor.selection.getCursor();
+        var index = editor.session.doc.positionToIndex(cursor, 0);
+        var range = editor.getSelection().getRange(); // new Range(0,0, 10000,1000);// $scope.editor.session.doc.indexToPosition(100000);
+        range.start.row = 0; // TODO: easier way to find full range
+        range.end.row = 1000;
+        range.start.column = 0;
+        range.end.column = 1000;
+        // $scope.setEditorText(r.s); // not good, undo does not work
+        editor.session.replace(range, r.s);
+        $timeout(() => {
+            cursor = editor.session.doc.indexToPosition(index, 0);
+            editor.selection.moveCursorToPosition(cursor);
+            editor.selection.clearSelection();
+        });
     }
 }

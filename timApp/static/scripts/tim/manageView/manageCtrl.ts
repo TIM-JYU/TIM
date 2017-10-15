@@ -184,8 +184,7 @@ export class PermCtrl implements IController {
             new_name: this.oldFolderName + "/" + newName,
         }).then((response) => {
             const data = response.data;
-            // This is needed to update the breadcrumbs
-            location.reload();
+            window.location.assign("/manage/" + this.oldFolderName + "/" + newName);
         }, (response) => {
             $window.alert(response.data.error);
         });

@@ -8,17 +8,17 @@ from timApp.timdb.userutils import grant_access, grant_view_access, get_anon_gro
 
 class FolderTest(TimRouteTest):
     def get_personal_item_path(self, path):
-        return '{}/{}'.format(self.current_user.get_personal_folder().path, path)
+        return f'{self.current_user.get_personal_folder().path}/{path}'
 
     def test_folder_manage(self):
         self.login_test3()
         f = self.create_folder(self.get_personal_item_path('test_manage'))
-        self.get('/manage/{}'.format(f['path']))
+        self.get(f'/manage/{f["path"]}')
         self.login_test2()
-        self.get('/manage/{}'.format(f['path']), expect_status=403)
+        self.get(f'/manage/{f["path"]}', expect_status=403)
         db = self.get_db()
         grant_access(db.users.get_personal_usergroup_by_id(TEST_USER_2_ID), f['id'], 'manage')
-        self.get('/manage/{}'.format(f['path']))
+        self.get(f'/manage/{f["path"]}')
 
     def test_folder_delete(self):
         self.login_test1()
@@ -26,20 +26,20 @@ class FolderTest(TimRouteTest):
         f = self.create_folder(to_delete)
         f2 = Folder.find_by_path(self.get_personal_item_path('delete'))
         not_empty_error = {'error': 'The folder is not empty. Only empty folders can be deleted.'}
-        self.delete('/folders/{}'.format(f2.id), expect_status=403,
+        self.delete(f'/folders/{f2.id}', expect_status=403,
                     expect_content=not_empty_error)
         grant_view_access(get_anon_group_id(), f['id'])
-        self.delete('/folders/{}'.format(f['id']), expect_content=self.ok_resp)
+        self.delete(f'/folders/{f["id"]}', expect_content=self.ok_resp)
         doc_path = self.get_personal_item_path('delete/somedoc')
         self.create_doc(doc_path)
-        self.delete('/folders/{}'.format(f2.id), expect_status=403,
+        self.delete(f'/folders/{f2.id}', expect_status=403,
                     expect_content=not_empty_error)
         d = DocEntry.find_by_path(doc_path)
         d.name = 'asd'
         d = DocEntry.find_by_path(self.get_personal_item_path('Bookmarks'))
         d.name = 'asd2'
         db.session.commit()
-        self.delete('/folders/{}'.format(f2.id), expect_content=self.ok_resp)
+        self.delete(f'/folders/{f2.id}', expect_content=self.ok_resp)
 
     def test_intermediate_folders(self):
         self.login_test1()
@@ -56,9 +56,9 @@ class FolderTest(TimRouteTest):
                            expect_content={'error': 'Item with a same name already exists.'},
                            expect_status=403)
         new_name = fname + '1'
-        f2 = self.json_put('/rename/{}'.format(f['id']), {"new_name": new_name})
+        f2 = self.json_put(f'/rename/{f["id"]}', {"new_name": new_name})
         self.assertEqual(new_name, f2['new_name'])
-        self.json_put('/rename/{}'.format(f['id']),
+        self.json_put(f'/rename/{f["id"]}',
                       {"new_name": new_name + '/testing1'}, expect_status=403,
                       expect_content={'error': 'A folder cannot contain itself.'}),
 
@@ -66,7 +66,6 @@ class FolderTest(TimRouteTest):
         fname2 = self.get_personal_item_path('testing2')
         f3 = self.create_folder(fname2)
         grant_access(get_anon_group_id(), f3['id'], 'view')
-        self.maxDiff = None
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing1',
                                   'title': 'foldertitle',

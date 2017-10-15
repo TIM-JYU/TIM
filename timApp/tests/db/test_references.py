@@ -32,7 +32,7 @@ class RefTest(TimDbTest):
         return set(a.items()).issubset(set(b.items()))
 
     def assert_dict_issubset(self, a, b):
-        self.assertTrue(self.dict_issubset(a, b), "{} is not a subset of {}".format(a, b))
+        self.assertTrue(self.dict_issubset(a, b), f"{a} is not a subset of {b}")
 
     def init_testdb(self):
         db = self.get_db()
@@ -139,9 +139,10 @@ class RefTest(TimDbTest):
         self.assertEqual('', ref_par.get_markdown())
 
         ref_md = ref_par.get_exported_markdown()
+        dp = DocumentParser(ref_md)
+        dp.validate_structure().raise_if_has_any_issues()
         ref_blocks = [DocParagraph.create(doc=ref_par.doc, md=par['md'], attrs=par.get('attrs'))
-                      for par in DocumentParser(ref_md).validate_structure(
-            is_whole_document=False).get_blocks()]
+                      for par in dp.get_blocks()]
 
         self.assertEqual(1, len(ref_blocks))
         self.assertEqual('', ref_blocks[0].get_markdown())
@@ -186,9 +187,10 @@ class RefTest(TimDbTest):
         self.assertEqual("", empty_refpar.get_markdown())
 
         ref_md = empty_refpar.get_exported_markdown()
+        dp = DocumentParser(ref_md)
+        dp.validate_structure().raise_if_has_any_issues()
         ref_blocks = [DocParagraph.create(doc=empty_refpar.doc, md=par['md'], attrs=par.get('attrs'))
-                      for par in DocumentParser(ref_md).validate_structure(
-            is_whole_document=False).get_blocks()]
+                      for par in dp.get_blocks()]
 
         self.assertEqual(1, len(ref_blocks))
         self.assertEqual(self.src_par.get_markdown(), ref_blocks[0].get_markdown())
@@ -204,9 +206,10 @@ class RefTest(TimDbTest):
         self.assertEqual("translation", ref_par.get_markdown())
 
         ref_md = ref_par.get_exported_markdown()
+        dp = DocumentParser(ref_md)
+        dp.validate_structure().raise_if_has_any_issues()
         ref_blocks = [DocParagraph.create(doc=ref_par.doc, md=par['md'], attrs=par.get('attrs'))
-                      for par in DocumentParser(ref_md).validate_structure(
-            is_whole_document=False).get_blocks()]
+                      for par in dp.get_blocks()]
 
         self.assertEqual(1, len(ref_blocks))
         self.assertEqual(ref_par.get_markdown(), ref_blocks[0].get_markdown())

@@ -3,7 +3,7 @@
                     {neutral: $ctrl.velp.points == 0,
                     positive: $ctrl.velp.points > 0,
                     negative: $ctrl.velp.points < 0,
-                    new: $ctrl.new === 'true',
+                    new: $ctrl.new,
                     inactive: $ctrl.notAnnotationRights($ctrl.velp.points),
                     edit: $ctrl.velp.edit}]"
         ng-style="{ backgroundColor: $ctrl.getCustomColor()}"

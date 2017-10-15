@@ -43,3 +43,5 @@ temp
 /timApp/modules/cs/mathcheck/mc.exe
 /timApp/pluginControlOrig.py
 /timApp/pluginControlRnd.py
+/timApp/modules/cs/static/processing/anything.html
+/timApp/modules/cs/static/processing/worm.html

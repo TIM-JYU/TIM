@@ -17,10 +17,13 @@ class CreateItemController implements IController {
     private itemName: string | undefined;
     private alerts: {}[];
     private itemType: string;
-    private params: {};
+    private params: {template?: string};
+    private force: boolean;
+    private creating: boolean;
+    private template: string;
 
     constructor() {
-        this.automaticShortName = true;
+        this.automaticShortName = !this.force;
 
         if (this.fullPath) {
             const str = this.fullPath;
@@ -29,6 +32,10 @@ class CreateItemController implements IController {
         }
         if (this.itemTitle) {
             this.itemName = slugify(this.itemTitle);
+        }
+        if (this.template) {
+            this.params = this.params || {};
+            this.params.template = this.template;
         }
 
         this.alerts = [];
@@ -39,6 +46,7 @@ class CreateItemController implements IController {
     }
 
     createItem() {
+        this.creating = true;
         $http.post<{path}>("/createItem", angular.extend({
             item_path: this.itemLocation + "/" + this.itemName,
             item_type: this.itemType,
@@ -48,6 +56,7 @@ class CreateItemController implements IController {
         }, (response) => {
             this.alerts = [];
             this.alerts.push({msg: response.data.error, type: "danger"});
+            this.creating = false;
         });
     }
 
@@ -77,6 +86,8 @@ timApp.component("createItem", {
         itemLocation: "@?",
         fullPath: "@?",
         params: "=?", // any additional parameters to be sent to server
+        force: "=?",
+        template: "@?",
     },
     controller: CreateItemController,
     templateUrl: "/static/templates/createItem.html",

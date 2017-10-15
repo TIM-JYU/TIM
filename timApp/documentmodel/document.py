@@ -5,33 +5,63 @@ from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from tempfile import mkstemp
 from time import time
+from typing import List, Optional, Set, Tuple, Union, Iterable, Generator
 
 import dateutil.parser
+from filelock import FileLock
+from flask import g
 from lxml import etree, html
-from typing import List, Optional, Set, Tuple, Union, Iterable
 
 from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.documentmodel.docsettings import DocSettings
-from timApp.documentmodel.documentparser import DocumentParser, AttributesAtEndOfCodeBlockException, ValidationException
+from timApp.documentmodel.docsettings import DocSettings, resolve_final_settings
+from timApp.documentmodel.documenteditresult import DocumentEditResult
+from timApp.documentmodel.documentparser import DocumentParser
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter
-from timApp.documentmodel.exceptions import DocExistsError
+from timApp.documentmodel.exceptions import DocExistsError, ValidationException
+from timApp.documentmodel.preloadoption import PreloadOption
+from timApp.documentmodel.validationresult import ValidationResult
+from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException
 from timApp.utils import get_error_html
 
 
+if False:
+    from timApp.timdb.docinfo import DocInfo
+
+
 class Document:
     default_files_root = '/tim_files'
 
-    def __init__(self, doc_id: Optional[int]=None, files_root = None, modifier_group_id: Optional[int] = 0):
+    def __init__(self,
+                 doc_id: Optional[int]=None,
+                 files_root = None,
+                 modifier_group_id: Optional[int] = 0,
+                 preload_option: PreloadOption = PreloadOption.none):
         self.doc_id = doc_id if doc_id is not None else Document.get_next_free_id(files_root)
         self.files_root = self.get_default_files_root() if not files_root else files_root
         self.modifier_group_id = modifier_group_id
         self.version = None
+        self.user = None
 
+        self.preload_option = preload_option
         # Used to cache paragraphs in memory on request so the pars don't have to be read from disk in every for loop
-        self.par_cache = None
+        self.par_cache: List[DocParagraph] = None
+        # List of par ids - it is much faster to load only ids and sometimes full pars are not needed
+        self.par_ids: List[str] = None
+        # List of corresponding hashes
+        self.par_hashes: List[str] = None
+        # Whether par_cache is incomplete - this is the case when insert_temporary_pars is called with PreloadOption.none
+        self.is_incomplete_cache: bool = False
+        # Whether the document exists on disk.
+        self.__exists: bool = None
+        # Cache for the original document.
+        self.source_doc: Optional['Document'] = None
+        # Cache for document settings.
+        self.settings: Optional[DocSettings] = None
+        # The corresponding DocInfo object.
+        self.docinfo: 'DocInfo' = None
 
         # Used for accessing previous/next paragraphs quickly based on id
         self.par_map = None
@@ -95,31 +125,43 @@ class Document:
     def __update_par_map(self):
         self.par_map = {}
         for i in range(0, len(self.par_cache)):
-            curr_p = self.par_cache[i].get_id()
+            curr_p = self.par_cache[i]
             prev_p = self.par_cache[i - 1] if i > 0 else None
             next_p = self.par_cache[i + 1] if i + 1 < len(self.par_cache) else None
-            self.par_map[curr_p] = {'p': prev_p, 'n': next_p}
+            self.par_map[curr_p.get_id()] = {'p': prev_p, 'n': next_p, 'c': curr_p}
 
     def load_pars(self):
         """Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster."""
         self.par_cache = [par for par in self]
+        self.par_ids = [par.get_id() for par in self.par_cache]
         self.__update_par_map()
 
-    def get_previous_par(self, par, get_last_if_no_prev=False):
+    def ensure_pars_loaded(self):
         if self.par_map is None:
             self.load_pars()
-        prev = self.par_map.get(par.get_id())
+
+    def get_previous_par(self, par: DocParagraph, get_last_if_no_prev=False) -> Optional[DocParagraph]:
+        return self.get_previous_par_by_id(par.get_id(), get_last_if_no_prev)
+
+    def get_previous_par_by_id(self, par_id: str, get_last_if_no_prev=False) -> Optional[DocParagraph]:
+        if self.preload_option == PreloadOption.all:
+            self.ensure_pars_loaded()
+        else:
+            if self.par_map is not None:
+                pass
+            else:
+                self.ensure_par_ids_loaded()
+                try:
+                    i = self.par_ids.index(par_id) - 1
+                except ValueError:
+                    return self.get_paragraph(self.par_ids[-1]) if self.par_ids and get_last_if_no_prev else None
+                return self.get_paragraph(self.par_ids[i]) if i >= 0 or get_last_if_no_prev else None
+        prev = self.par_map.get(par_id)
         result = None
         if prev:
             result = prev['p']
         if get_last_if_no_prev:
             result = self.par_cache[-1] if self.par_cache else None
-
-        if result is not None and result.get_id() == par.get_id():
-            print('WARNING: get_previous_par({}, {}) returning reference to self, returning None instead'.format(
-                self.doc_id, par.get_id()))
-            return None
-
         return result
 
     def get_pars_till(self, par):
@@ -147,46 +189,73 @@ class Document:
         current_settings[key] = value
         self.set_settings(current_settings)
 
-    def set_settings(self, settings: dict):
-        first_par = None
-        with self.__iter__() as i:
-            for p in i:
-                first_par = p
+    def get_settings_pars(self) -> Generator[DocParagraph, None, None]:
+        self.ensure_par_ids_loaded()
+        for p_id in self.par_ids:
+            curr = self.get_paragraph(p_id)
+            if curr.is_setting():
+                yield curr
+            else:
                 break
-        new_par = DocSettings(settings).to_paragraph(self)
+
+    def set_settings(self, settings: Union[dict, YamlBlock], force_new_par: bool=False):
+        first_par = None
+        self.ensure_par_ids_loaded()
+        if self.par_ids:
+            first_par = self.get_paragraph(self.par_ids[0])
+        last_settings_par = None
+        settings_pars = list(self.get_settings_pars())
+        if settings_pars:
+            last_settings_par = settings_pars[-1]
+        if not isinstance(settings, YamlBlock):
+            assert isinstance(settings, dict)
+            settings = YamlBlock(values=settings)
+        new_par = DocSettings(self, settings).to_paragraph()
         if first_par is None:
             self.add_paragraph_obj(new_par)
         else:
-            if not first_par.is_setting():
+            if last_settings_par is None:
                 self.insert_paragraph_obj(new_par, insert_before_id=first_par.get_id())
             else:
-                self.modify_paragraph_obj(first_par.get_id(), new_par)
+                if not last_settings_par.is_reference() and not force_new_par:
+                    self.modify_paragraph_obj(last_settings_par.get_id(), new_par)
+                else:
+                    self.insert_paragraph_obj(new_par, insert_after_id=last_settings_par.get_id())
 
-    def get_tasks(self) -> Iterable[DocParagraph]:
+    def get_tasks(self) -> Generator[DocParagraph, None, None]:
         for p in self.get_dereferenced_paragraphs():
             if p.is_task():
                 yield p
 
-    def get_settings(self) -> DocSettings:
-        if self.par_cache is not None:
-            return DocSettings.from_paragraph(self.par_cache[0]) if len(self.par_cache) > 0 else DocSettings()
-        try:
-            i = self.__iter__()
-            return DocSettings.from_paragraph(next(i))
-        except StopIteration:
-            return DocSettings()
-        finally:
-            i.close()
+    def get_lock(self):
+        return FileLock(f'/tmp/doc_{self.doc_id}_lock')
+
+    def get_settings(self, user=None) -> DocSettings:
+        if self.settings is not None:
+            self.settings.user = user
+            return self.settings
+        self.ensure_par_ids_loaded()
+        settings_block = resolve_final_settings(self.get_settings_pars())
+        settings = DocSettings(self, settings_dict=settings_block)
+        settings.user = user
+        self.settings = settings
+        gmacros = settings.get_globalmacros()
+        if gmacros:
+            g.globalmacros = gmacros
+        return settings
 
     def create(self, ignore_exists: bool = False):
         path = os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id))
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
+            self.__exists = None
         elif not ignore_exists:
             raise DocExistsError(self.doc_id)
 
     def exists(self) -> bool:
-        return Document.doc_exists(self.doc_id, self.files_root)
+        if self.__exists is None:
+            self.__exists = Document.doc_exists(self.doc_id, self.files_root)
+        return self.__exists
 
     def export_markdown(self, export_hashes: bool = False) -> str:
         return DocumentWriter([par.dict() for par in self], export_hashes=export_hashes).get_text()
@@ -205,24 +274,26 @@ class Document:
         try:
             start_index = all_par_ids.index(par_id_start)
         except ValueError:
-            raise TimDbException('Paragraph not found: {}'.format(par_id_start))
+            return self._raise_not_found(par_id_start)
         try:
             end_index = all_par_ids.index(par_id_end)
         except ValueError:
-            raise TimDbException('Paragraph not found: {}'.format(par_id_end))
+            return self._raise_not_found(par_id_end)
         if end_index < start_index:
             start_index, end_index = end_index, start_index
         return all_pars[start_index:end_index + 1]
 
-    def text_to_paragraphs(self, text: str, break_on_elements: bool):
+    def text_to_paragraphs(self, text: str, break_on_elements: bool) -> Tuple[List[DocParagraph], ValidationResult]:
         options = DocumentParserOptions()
         options.break_on_code_block = break_on_elements
         options.break_on_header = break_on_elements
         options.break_on_normal = break_on_elements
+        dp = DocumentParser(text)
+        vr = dp.validate_structure()
+        vr.raise_if_has_critical_issues()
         blocks = [DocParagraph.create(doc=self, md=par['md'], attrs=par.get('attrs'))
-                  for par in DocumentParser(text).validate_structure(
-            is_whole_document=False).get_blocks(options)]
-        return blocks
+                  for par in dp.get_blocks(options)]
+        return blocks, vr
 
     @classmethod
     def remove(cls, doc_id: int, files_root: Optional[str] = None, ignore_exists=False):
@@ -310,7 +381,6 @@ class Document:
         }
         dest.write(json.dumps(entry))
         dest.write('\n')
-        #dest.write('{} {}.{} {}\n'.format(timestamp, ver[0], ver[1], msg))
 
         while src:
             line = src.readline()
@@ -328,6 +398,7 @@ class Document:
                             op_params: Optional[dict] = None) -> Tuple[int, int]:
         ver_exists = True
         ver = self.get_version()
+        old_ver = None
         while ver_exists:
             old_ver = ver
             ver = (old_ver[0] + 1, 0) if increment_major else (old_ver[0], old_ver[1] + 1)
@@ -343,6 +414,10 @@ class Document:
         self.version = ver
         self.par_cache = None
         self.par_map = None
+        self.par_ids = None
+        self.par_hashes = None
+        self.source_doc = None
+        self.settings = None
         return ver
 
     def __update_metadata(self, pars: List[DocParagraph], old_ver: Tuple[int, int], new_ver: Tuple[int, int]):
@@ -353,7 +428,7 @@ class Document:
         for p in pars:
             if p.is_reference():
                 try:
-                    referenced_pars = p.get_referenced_pars()
+                    referenced_pars = p.get_referenced_pars(set_html=False)
                 except TimDbException:
                     pass
                 else:
@@ -361,8 +436,15 @@ class Document:
                         try:
                             reflist.add(int(par.get_doc_id()))
                         except (ValueError, TypeError):
-                            print('Invalid document reference: ' + str(par.get_rd()))
+                            pass
         self.__save_reflist(new_reflist_file, reflist)
+
+    def raise_if_not_exist(self, par_id: str):
+        if not self.has_paragraph(par_id):
+            self._raise_not_found(par_id)
+
+    def _raise_not_found(self, par_id: str):
+        raise TimDbException(f'Document {self.doc_id}: Paragraph not found: {par_id}')
 
     def has_paragraph(self, par_id: str) -> bool:
         """Checks if the document has the given paragraph.
@@ -371,24 +453,25 @@ class Document:
         :return: Boolean.
 
         """
-        file_name = self.get_version_path(self.get_version())
-        if not os.path.isfile(file_name):
-            return False
-
-        with open(file_name, 'r') as f:
-            while True:
-                line = f.readline()
-                if line == '':
-                    return False
-                if line.split('/', 1)[0].rstrip('\n') == par_id:
-                    return True
+        self.ensure_par_ids_loaded()
+        return par_id in self.par_ids
 
     def get_paragraph(self, par_id: str) -> DocParagraph:
+        if self.preload_option == PreloadOption.all:
+            self.ensure_pars_loaded()
+            try:
+                return self.par_map[par_id]['c']
+            except KeyError:
+                return self._raise_not_found(par_id)
+        self.ensure_par_ids_loaded()
+        if par_id not in self.par_ids:
+            return self._raise_not_found(par_id)
         return DocParagraph.get_latest(self, par_id, self.files_root)
 
-    def add_text(self, text: str) -> Iterable[DocParagraph]:
+    def add_text(self, text: str) -> List[DocParagraph]:
         """Converts the given text to (possibly) multiple paragraphs and adds them to the document."""
-        return [self.add_paragraph_obj(p) for p in self.text_to_paragraphs(text, False)]
+        pars, _ = self.text_to_paragraphs(text, False)
+        return [self.add_paragraph_obj(p) for p in pars]
 
     def add_paragraph_obj(self, p: DocParagraph) -> DocParagraph:
         """Appends a new paragraph into the document.
@@ -397,6 +480,7 @@ class Document:
         :return: The same paragraph object, or None if could not add.
 
         """
+        assert p.doc.doc_id == self.doc_id
         p.store()
         p.set_latest()
         old_ver = self.get_version()
@@ -571,7 +655,7 @@ class Document:
 
     def modify_paragraph_obj(self, par_id: str, p: DocParagraph) -> DocParagraph:
         if not self.has_paragraph(par_id):
-            raise KeyError('No paragraph {} in document {} version {}'.format(par_id, self.doc_id, self.get_version()))
+            raise KeyError(f'No paragraph {par_id} in document {self.doc_id} version {self.get_version()}')
 
         p_src = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
         p.set_id(par_id)
@@ -584,9 +668,9 @@ class Document:
                                            op_params={'old_hash': old_hash, 'new_hash': new_hash})
         self.__update_metadata([p], old_ver, new_ver)
 
-        old_line_start = '{}/'.format(par_id)
-        old_line_legacy = '{}\n'.format(par_id)
-        new_line = '{}/{}\n'.format(par_id, new_hash)
+        old_line_start = f'{par_id}/'
+        old_line_legacy = f'{par_id}\n'
+        new_line = f'{par_id}/{new_hash}\n'
         with open(self.get_version_path(old_ver), 'r') as f_src:
             with open(self.get_version_path(new_ver), 'w') as f:
                 while True:
@@ -601,9 +685,9 @@ class Document:
     def parwise_diff(self, other_doc: 'Document', check_html: bool=False):
         if self.get_version() == other_doc.get_version():
             return
-        old_pars = [par for par in self]
+        old_pars = self.get_paragraphs()
         old_ids = [par.get_id() for par in old_pars]
-        new_pars = [par for par in other_doc]
+        new_pars = other_doc.get_paragraphs()
         new_ids = [par.get_id() for par in new_pars]
         s = SequenceMatcher(None, old_ids, new_ids)
         opcodes = s.get_opcodes()
@@ -621,10 +705,11 @@ class Document:
                 for old, new in zip(old_pars[i1:i2], new_pars[j1:j2]):
                     if not old.is_same_as(new):
                         yield {'type': 'change', 'id': old.get_id(), 'content': [new]}
-                    elif check_html and not old.is_same_as_html(new):
+                    # Skip references because they have not been dereferenced and no HTML is available.
+                    elif check_html and not old.is_reference() and not old.is_same_as_html(new):
                         yield {'type': 'change', 'id': old.get_id(), 'content': [new]}
 
-    def update_section(self, text: str, par_id_first: str, par_id_last: str) -> Tuple[str, str]:
+    def update_section(self, text: str, par_id_first: str, par_id_last: str) -> Tuple[str, str, DocumentEditResult]:
         """Updates a section of the document.
 
         :param text: The text of the section.
@@ -632,8 +717,11 @@ class Document:
         :param par_id_last: The id of the paragraph that denotes the end of the section.
 
         """
-        new_pars = DocumentParser(text).add_missing_attributes(
-        ).validate_structure(is_whole_document=False).get_blocks()
+        dp = DocumentParser(text)
+        dp.add_missing_attributes()
+        vr = dp.validate_structure()
+        vr.raise_if_has_critical_issues()
+        new_pars = dp.get_blocks()
         new_par_id_set = set([par['id'] for par in new_pars])
         all_pars = [par for par in self]
         all_par_ids = [par.get_id() for par in all_pars]
@@ -649,7 +737,7 @@ class Document:
                                     last_par_id=all_par_ids[end_index + 1]
                                     if end_index + 1 < len(all_par_ids) else None)
 
-    def update(self, text: str, original: str, strict_validation=True):
+    def update(self, text: str, original: str, strict_validation=True) -> Tuple[str, str, DocumentEditResult]:
         """Replaces the document's contents with the specified text.
 
         :param text: The new text for the document.
@@ -657,46 +745,57 @@ class Document:
         :param strict_validation: Whether to use stricter validation rules for areas etc.
 
         """
-        new_pars = DocumentParser(text).add_missing_attributes().validate_structure(
-            is_whole_document=strict_validation).get_blocks()
+        dp = DocumentParser(text)
+        dp.add_missing_attributes()
+        vr = dp.validate_structure()
+        vr.raise_if_has_any_issues()
+        new_pars = dp.get_blocks()
 
         # If the original document has validation errors, it probably means the document export routine has a bug.
+        dp_orig = DocumentParser(original)
+        dp_orig.add_missing_attributes()
+        vr = dp.validate_structure()
         try:
-            old_pars = [DocParagraph.from_dict(doc=self, d=d)
-                        for d in DocumentParser(original).add_missing_attributes().validate_structure(is_whole_document=strict_validation).get_blocks()]
-        except AttributesAtEndOfCodeBlockException as e:
+            vr.raise_if_has_critical_issues()
+        except ValidationException as e:
             raise ValidationException('The original document contained a syntax error. '
                                       'This is probably a TIM bug; please report it. '
-                                      'Additional information: {}'.format(e))
-
-        self._perform_update(new_pars, old_pars)
+                                      f'Additional information: {e}')
+        blocks = dp_orig.get_blocks()
+        old_pars = [DocParagraph.from_dict(doc=self, d=d)
+                    for d in blocks]
+        return self._perform_update(new_pars, old_pars)
 
     def _perform_update(self, new_pars: List[dict],
                         old_pars: List[DocParagraph],
-                        last_par_id=None) -> Union[Tuple[str, str], Tuple[None, None]]:
+                        last_par_id=None) -> Union[Tuple[str, str, DocumentEditResult], Tuple[None, None, DocumentEditResult]]:
         old_ids = [par.get_id() for par in old_pars]
         new_ids = [par['id'] for par in new_pars]
         s = SequenceMatcher(None, old_ids, new_ids)
         opcodes = s.get_opcodes()
+        result = DocumentEditResult()
         # Do delete operations first to avoid duplicate ids
         for tag, i1, i2, j1, j2 in [opcode for opcode in opcodes if opcode[0] in ['delete', 'replace']]:
-            for par_id in old_ids[i1:i2]:
+            for par, par_id in zip(old_pars[i1:i2], old_ids[i1:i2]):
                 self.delete_paragraph(par_id)
+                result.deleted.append(par)
         for tag, i1, i2, j1, j2 in opcodes:
             if tag == 'replace':
                 for par in new_pars[j1:j2]:
                     before_i = self.find_insert_index(i2, old_ids)
-                    self.insert_paragraph(par['md'],
+                    inserted = self.insert_paragraph(par['md'],
                                           attrs=par.get('attrs'),
                                           par_id=par['id'],
                                           insert_before_id=old_ids[before_i] if before_i < len(old_ids) else last_par_id)
+                    result.added.append(inserted)
             elif tag == 'insert':
                 for par in new_pars[j1:j2]:
                     before_i = self.find_insert_index(i2, old_ids)
-                    self.insert_paragraph(par['md'],
+                    inserted = self.insert_paragraph(par['md'],
                                           attrs=par.get('attrs'),
                                           par_id=par['id'],
                                           insert_before_id=old_ids[before_i] if before_i < len(old_ids) else last_par_id)
+                    result.added.append(inserted)
             elif tag == 'equal':
                 for idx, (new_par, old_par) in enumerate(zip(new_pars[j1:j2], old_pars[i1:i2])):
                     if new_par['t'] != old_par.get_hash() or new_par.get('attrs', {}) != old_par.get_attrs():
@@ -704,16 +803,18 @@ class Document:
                             self.modify_paragraph(old_par.get_id(),
                                                   new_par['md'],
                                                   new_attrs=new_par.get('attrs'))
+                            result.changed.append(old_par)
                         else:
                             before_i = self.find_insert_index(j1 + idx, new_ids)
-                            self.insert_paragraph(new_par['md'],
+                            inserted = self.insert_paragraph(new_par['md'],
                                                   attrs=new_par.get('attrs'),
                                                   par_id=new_par['id'],
                                                   insert_before_id=old_ids[before_i] if before_i < len(
                                                       old_ids) else last_par_id)
+                            result.added.append(inserted)
         if not new_ids:
-            return None, None
-        return new_ids[0], new_ids[-1]
+            return None, None, result
+        return new_ids[0], new_ids[-1], result
 
     def find_insert_index(self, i2, old_ids):
         before_i = i2
@@ -724,7 +825,7 @@ class Document:
     def get_index(self) -> List[Tuple]:
         pars = [par for par in DocParagraphIter(self)]
         DocParagraph.preload_htmls(pars, self.get_settings())
-        pars = dereference_pars(pars, source_doc=self.get_original_document())
+        pars = dereference_pars(pars, source_doc=self.get_source_document())
 
         # Skip plugins
         html_list = [par.get_html(from_preview=False) for par in pars if not par.is_dynamic()]
@@ -759,7 +860,7 @@ class Document:
                     entry['time'] = dateutil.parser.parse(entry['time']).replace(tzinfo=timezone.utc)
                     log.append(entry)
                 except ValueError:
-                    print("doc id {}: malformed log line: {}".format(self.doc_id, line))
+                    print(f"doc id {self.doc_id}: malformed log line: {line}")
                 lc -= 1
 
         return log
@@ -778,17 +879,22 @@ class Document:
                         for rp in ref_pars:
                             if rp.get_attr('taskId') == task_id_name:
                                 return rp
-        raise TimDbException('Task not found in the document: {}'.format(task_id_name))
+        raise TimDbException(f'Task not found in the document: {task_id_name}')
 
     def get_last_modified(self) -> Optional[datetime]:
         log = self.get_changelog(max_entries=1)
         return log[0]['time'] if log is not None and len(log) > 0 else None
 
-    def delete_section(self, area_start, area_end):
+    def delete_section(self, area_start, area_end) -> DocumentEditResult:
+        result = DocumentEditResult()
         for par in self.get_section(area_start, area_end):
             self.delete_paragraph(par.get_id())
+            result.deleted.append(par)
+        return result
 
     def get_named_section(self, section_name: str):
+        if self.preload_option == PreloadOption.all:
+            self.ensure_pars_loaded()
         start_found = False
         end_found = False
         pars = []
@@ -824,11 +930,12 @@ class Document:
         if ver is not None:
             from timApp.documentmodel.documentversion import DocumentVersion
             source = DocumentVersion(self.doc_id, ver, self.files_root)
+            source.docinfo = self.docinfo
 
         for p in source:
             if p.is_reference():
                 try:
-                    referenced_pars = p.get_referenced_pars()
+                    referenced_pars = p.get_referenced_pars(set_html=False)
                 except TimDbException:
                     pass
                 else:
@@ -836,7 +943,7 @@ class Document:
                         try:
                             refs.add(int(par.get_doc_id()))
                         except (ValueError, TypeError):
-                            print('Invalid document reference: ' + str(par.get_rd()))
+                            pass
         return refs
 
     def __load_reflist(self, reflist_name: str) -> Set[int]:
@@ -860,10 +967,11 @@ class Document:
         return reflist
 
     def get_paragraphs(self) -> List[DocParagraph]:
-        return [par for par in self]
+        self.ensure_pars_loaded()
+        return self.par_cache
 
     def get_dereferenced_paragraphs(self) -> List[DocParagraph]:
-        return dereference_pars(self.get_paragraphs(), source_doc=self.get_original_document())
+        return dereference_pars(self.get_paragraphs(), source_doc=self.get_source_document())
 
     def get_closest_paragraph_title(self, par_id: Optional[str]):
         last_title = None
@@ -878,33 +986,78 @@ class Document:
 
     def get_latest_version(self):
         from timApp.documentmodel.documentversion import DocumentVersion
-        return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id)
+        return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id, self.preload_option)
 
-    def get_original_document(self):
-        src_docid = self.get_settings().get_source_document()
-        return Document(src_docid) if src_docid is not None else None
+    def get_source_document(self) -> Optional['Document']:
+        if self.source_doc is None:
+            if self.docinfo is None:
+                from timApp.timdb.models.docentry import DocEntry
+                self.docinfo = DocEntry.find_by_id(self.doc_id, try_translation=True)
+            if self.docinfo.is_original_translation:
+                src_docid = self.get_settings().get_source_document()
+                self.source_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
+            else:
+                self.source_doc = self.docinfo.src_doc.document
+        return self.source_doc
 
     def get_last_par(self):
         pars = [par for par in self]
         return pars[-1] if pars else None
 
-    def insert_temporary_pars(self, pars, context_par):
-        self.load_pars()
+    def get_par_ids(self):
+        self.ensure_par_ids_loaded()
+        return self.par_ids
 
-        if context_par is None:
-            self.par_cache = pars + self.par_cache
-        else:
-            i = 0
-            for i, par in enumerate(self.par_cache):
-                if par.get_id() == context_par.get_id():
+    def ensure_par_ids_loaded(self):
+        if self.par_ids is None:
+            self._load_par_ids()
+
+    def _load_par_ids(self):
+        self.par_ids = []
+        self.par_hashes = []
+        if not os.path.exists(self.get_version_path()):
+            return
+        with open(self.get_version_path(), 'r', encoding='UTF-8') as f:
+            while True:
+                line = f.readline()
+                if not line:
                     break
-            self.par_cache = self.par_cache[:i + 1] + pars + self.par_cache[i + 1:]
+                if len(line) > 14:
+                    # Line contains both par_id and t
+                    par_id, t = line.replace('\n', '').split('/')
+                else:
+                    par_id, t = line.replace('\n', ''), None
+                self.par_ids.append(par_id)
+                self.par_hashes.append(t)
+
+    def insert_temporary_pars(self, pars, context_par):
+        if self.preload_option == PreloadOption.all:
+            self.ensure_pars_loaded()
+            if context_par is None:
+                self.par_cache = pars + self.par_cache
+            else:
+                i = 0
+                for i, par in enumerate(self.par_cache):
+                    if par.get_id() == context_par.get_id():
+                        break
+                self.par_cache = self.par_cache[:i + 1] + pars + self.par_cache[i + 1:]
+        else:
+            self.ensure_par_ids_loaded()
+            if context_par is None:
+                self.par_cache = pars
+            else:
+                self.par_cache = [context_par] + pars
+            self.is_incomplete_cache = True
         self.__update_par_map()
 
     def clear_mem_cache(self):
         self.par_cache = None
         self.par_map = None
         self.version = None
+        self.par_ids = None
+        self.par_hashes = None
+        self.source_doc = None
+        self.settings = None
 
 
 class CacheIterator:

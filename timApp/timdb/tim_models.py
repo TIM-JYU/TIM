@@ -167,9 +167,13 @@ class Lecture(db.Model):
         return Lecture.query.get(lecture_id)
 
     @property
+    def options_parsed(self):
+        if not hasattr(self, '_options_parsed'):
+            self._options_parsed = json.loads(self.options)
+        return self._options_parsed
+
+    @property
     def max_students(self):
-        if not hasattr(self, 'options_parsed'):
-            self.options_parsed = json.loads(self.options)
         m = self.options_parsed.get('max_students')
         if m is not None:
             m = int(m)  # TODO is this needed?
@@ -195,7 +199,6 @@ class Lecture(db.Model):
             'is_access_code': self.password != "",  # don't expose password to client directly unless explicitly requested with the parameter
             'password': self.password if show_password else None,
             'is_full': self.is_full,
-            'max_students': self.max_students,
         }
 
 

@@ -142,13 +142,13 @@ class LectureAnswers(TimDbBase):
     def get_totals(self, lecture_id: int, user_id: Optional[int]=None):
         cursor = self.db.cursor()
         condition = 'AND u.id = %s' if user_id is not None else ''
-        cursor.execute("""SELECT u.name, SUM(a.points) as sum, COUNT(*) as count
+        cursor.execute(f"""SELECT u.name, SUM(a.points) as sum, COUNT(*) as count
         FROM LectureAnswer a
         JOIN UserAccount u ON a.user_id = u.id
         WHERE a.lecture_id = %s
-        {}
+        {condition}
         GROUP BY u.name
-        ORDER BY u.name""".format(condition), [lecture_id] if user_id is None else [lecture_id, user_id])
+        ORDER BY u.name""", [lecture_id] if user_id is None else [lecture_id, user_id])
         return self.resultAsDictionary(cursor)
 
     def get_user_answers_to_questions_from_lecture(self, lecture_id: int, user_id: int) -> List[dict]:

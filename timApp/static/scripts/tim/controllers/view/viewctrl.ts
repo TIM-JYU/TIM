@@ -522,55 +522,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         this.liveUpdates = $window.liveUpdates;
 
         if (Users.isLoggedIn() && this.liveUpdates) {
-            $interval(async () => {
-                const response = await $http.get<{version: any, diff: any[]}>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]);
-                this.docVersion = response.data.version;
-                const replaceFn = async (d, parId) => {
-                    const compiled = await ParCompiler.compile(d.content, sc);
-                    const e = getElementByParId(parId);
-                    e.replaceWith(compiled);
-                };
-                const afterFn = async (d, parId) => {
-                    const compiled = await ParCompiler.compile(d.content, sc);
-                    const e = getElementByParId(parId);
-                    e.after(compiled);
-                };
-                const beforeFn = async (d, e) => {
-                    const compiled = await ParCompiler.compile(d.content, sc);
-                    e.before(compiled);
-                };
-                for (let i = 0; i < response.data.diff.length; ++i) {
-                    const d = response.data.diff[i];
-                    if (d.type === "delete") {
-                        if (d.end_id !== null) {
-                            getElementByParId(d.start_id).nextUntil(getElementByParId(d.end_id)).addBack().remove();
-                        } else {
-                            getElementByParId(d.start_id).nextAll(".par").addBack().remove();
-                        }
-                    } else if (d.type === "replace") {
-                        const first = getElementByParId(d.start_id);
-                        if (d.start_id !== d.end_id) {
-                            if (d.end_id !== null) {
-                                first.nextUntil(getElementByParId(d.end_id)).remove();
-                            } else {
-                                first.nextAll(".par").remove();
-                            }
-                        }
-                        replaceFn(d, d.start_id);
-                    } else if (d.type === "insert") {
-                        if (d.after_id === null) {
-                            beforeFn(d, $(".par:first"));
-                        } else {
-                            afterFn(d, d.after_id);
-                        }
-                    } else if (d.type === "change") {
-                        replaceFn(d, d.id);
-                    }
-                }
-                $timeout(() => {
-                    this.document.rebuildSections();
-                }, 1000);
-            }, 1000 * this.liveUpdates);
+            this.startLiveUpdates();
         }
 
         try {
@@ -582,6 +534,70 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         } catch (e) {
         }
         timLogTime("ViewCtrl end", "view");
+    }
+
+    startLiveUpdates() {
+        let sc = this.scope;
+        var origLiveUpdates = this.liveUpdates;
+        if (!origLiveUpdates) return;
+        var stop;
+        stop = $interval(async () => {
+            const response = await $http.get<{version: any, diff: any[], live: any}>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]);
+            this.docVersion = response.data.version;
+            this.liveUpdates = response.data.live; // TODO: start new loop by this or stop if None
+            const replaceFn = async (d, parId) => {
+                const compiled = await ParCompiler.compile(d.content, sc);
+                const e = getElementByParId(parId);
+                e.replaceWith(compiled);
+            };
+            const afterFn = async (d, parId) => {
+                const compiled = await ParCompiler.compile(d.content, sc);
+                const e = getElementByParId(parId);
+                e.after(compiled);
+            };
+            const beforeFn = async (d, e) => {
+                const compiled = await ParCompiler.compile(d.content, sc);
+                e.before(compiled);
+            };
+            for (let i = 0; i < response.data.diff.length; ++i) {
+                const d = response.data.diff[i];
+                if (d.type === "delete") {
+                    if (d.end_id !== null) {
+                        getElementByParId(d.start_id).nextUntil(getElementByParId(d.end_id)).addBack().remove();
+                    } else {
+                        getElementByParId(d.start_id).nextAll(".par").addBack().remove();
+                    }
+                } else if (d.type === "replace") {
+                    const first = getElementByParId(d.start_id);
+                    if (d.start_id !== d.end_id) {
+                        if (d.end_id !== null) {
+                            first.nextUntil(getElementByParId(d.end_id)).remove();
+                        } else {
+                            first.nextAll(".par").remove();
+                        }
+                    }
+                    replaceFn(d, d.start_id);
+                } else if (d.type === "insert") {
+                    if (d.after_id === null) {
+                        beforeFn(d, $(".par:first"));
+                    } else {
+                        afterFn(d, d.after_id);
+                    }
+                } else if (d.type === "change") {
+                    replaceFn(d, d.id);
+                }
+            }
+            $timeout(() => {
+                this.document.rebuildSections();
+            }, 1000);
+            if ( this.liveUpdates != origLiveUpdates ) { // if value hase changes, stop and start new poll
+                if (angular.isDefined(stop)) {
+                    $interval.cancel(stop);
+                    stop = undefined;
+                }
+                $timeout(() => { this.startLiveUpdates(); }, 100);
+            }
+        }, Math.max(1000 * this.liveUpdates, 1000));
     }
 
     $onInit() {

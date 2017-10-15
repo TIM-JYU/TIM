@@ -77,7 +77,9 @@ class Clipboard:
                 return None
             with open(clipfilename, 'rt', encoding='utf-8') as clipfile:
                 content = clipfile.read()
-            return DocumentParser(content).validate_structure(is_whole_document=False).get_blocks()
+            dp = DocumentParser(content)
+            dp.validate_structure().raise_if_has_critical_issues()
+            return dp.get_blocks()
 
         def write_metadata(self, **kwargs):
             os.makedirs(self.path, exist_ok=True)
@@ -144,8 +146,8 @@ class Clipboard:
 
             doc_pars = []
             par_before = par_id
-            if is_real_id(par_before) and not doc.has_paragraph(par_before):
-                raise TimDbException('Paragraph not found: {}'.format(par_before))
+            if is_real_id(par_before):
+                doc.raise_if_not_exist(par_before)
             for par in reversed(pars):
                 # We need to reverse the sequence because we're inserting before, not after
                 new_par_id = par['id'] if not doc.has_paragraph(par['id']) else random_id()
@@ -160,8 +162,8 @@ class Clipboard:
         def paste_after(self, doc: Document, par_id: str, as_ref: bool = False) -> List[DocParagraph]:
             par_before = None
 
-            if is_real_id(par_id) and not doc.has_paragraph(par_id):
-                raise TimDbException('Paragraph not found: {}'.format(par_id))
+            if is_real_id(par_id):
+                doc.raise_if_not_exist(par_id)
             # todo: make the iterator accept ranges
             i = doc.__iter__()
             try:

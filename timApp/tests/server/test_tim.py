@@ -29,7 +29,7 @@ class TimTest(TimRouteTest):
 
         # Make sure user's personal folder exists
         personal_folder = self.current_user.get_personal_folder().path
-        self.get('/view/' + personal_folder)
+        self.get(f'/view/{personal_folder}')
 
         doc_names = [personal_folder + '/testing',
                      personal_folder + '/testing2',
@@ -47,14 +47,14 @@ class TimTest(TimRouteTest):
                 'item_title': 'document ' + n
             }, expect_contains={'id': doc_id_list[idx], 'path': doc_names[idx]})
             doc_ids.add(doc_id_list[idx])
-        self.json_put('/permissions/add/{}/{}/{}'.format(doc_id, 'Anonymous users', 'view'),
+        self.json_put(f'/permissions/add/{doc_id}/{"Anonymous users"}/{"view"}',
                       {'type': 'always'}, expect_content=self.ok_resp)
         self.json_put(
-            '/permissions/add/{}/{}/{}'.format(doc_id_list[1], 'Logged-in users', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
+            f'/permissions/add/{doc_id_list[1]}/{"Logged-in users"}/{"view"}', {'type': 'always'}, expect_content=self.ok_resp)
         self.json_put(
-            '/permissions/add/{}/{}/{}'.format(doc_id_list[2], 'testuser2', 'view'), {'type': 'always'}, expect_content=self.ok_resp)
+            f'/permissions/add/{doc_id_list[2]}/{"testuser2"}/{"view"}', {'type': 'always'}, expect_content=self.ok_resp)
         self.json_put(
-            '/permissions/add/{}/{}/{}'.format(doc_id_list[3], 'testuser2', 'edit'), {'type': 'always'}, expect_content=self.ok_resp)
+            f'/permissions/add/{doc_id_list[3]}/{"testuser2"}/{"edit"}', {'type': 'always'}, expect_content=self.ok_resp)
         doc = Document(doc_id)
         doc.add_paragraph('Hello')
         pars = doc.get_paragraphs()
@@ -69,7 +69,7 @@ class TimTest(TimRouteTest):
         note_id = int(re.search(r'note-id="(\d+)"', json['texts']).groups()[0])
 
         self.assertTrue(comment_of_test1_html in json['texts'])
-        self.get('/view/' + doc_name, expect_contains=comment_of_test1_html)
+        self.get(f'/view/{doc_name}', expect_contains=comment_of_test1_html)
         edited_comment = 'was edited!'
         edited_comment_html = md_to_html(edited_comment)
         json = self.json_post('/editNote', {'id': note_id,
@@ -85,7 +85,7 @@ class TimTest(TimRouteTest):
         edit_text = 'testing editing now...\nnew line\n'
         par_html = md_to_html(edit_text)
         self.post_par(doc, edit_text, first_id, expect_contains=par_html, json_key='texts')
-        self.get('/getBlock/{}/{}'.format(doc_id, first_id), expect_content={'text': edit_text})
+        self.get(f'/getBlock/{doc_id}/{first_id}', expect_content={'text': edit_text})
         self.post_par(doc, edit_text, first_id, expect_contains=par_html, json_key='texts')
         par2_text = 'new par'
         par2_html = md_to_html(par2_text)
@@ -100,22 +100,22 @@ class TimTest(TimRouteTest):
         self.post('/logout', follow_redirects=True)
         self.get('/settings/', expect_status=403)
         for d in doc_ids - {doc_id}:
-            self.get('/view/' + str(d), expect_status=403)
-        self.get('/view/' + str(doc_id))
-        self.get('/view/' + str(doc_id), query_string={'login': True}, expect_status=403)
+            self.get(f'/view/{d}', expect_status=403)
+        self.get(f'/view/{doc_id}')
+        self.get(f'/view/{doc_id}', query_string={'login': True}, expect_status=403)
 
         # Login as another user
         self.login_test2()
-        self.get('/view/' + doc_name, expect_contains=['Test user 2', edited_comment_html])
+        self.get(f'/view/{doc_name}', expect_contains=['Test user 2', edited_comment_html])
         not_viewable_docs = {doc_id_list[4]}
         viewable_docs = doc_ids - not_viewable_docs
         for view_id in viewable_docs:
-            self.get('/view/' + str(view_id))
-            self.get('/teacher/' + str(view_id), expect_status=302)
+            self.get(f'/view/{view_id}')
+            self.get(f'/teacher/{view_id}', expect_status=302)
 
         for view_id in not_viewable_docs:
-            self.get('/view/' + str(view_id), expect_status=403)
-            self.get('/teacher/' + str(view_id), expect_status=403)
+            self.get(f'/view/{view_id}', expect_status=403)
+            self.get(f'/teacher/{view_id}', expect_status=403)
         self.get('/view/not_exist', expect_status=404)
 
         comment_of_test2 = 'g8t54h954hy95hg54h'
@@ -130,10 +130,10 @@ class TimTest(TimRouteTest):
         test2_note_id = notes[0]['id']
 
         self.login_test1()
-        self.get('/note/{}'.format(test2_note_id), expect_contains=comment_of_test2, json_key='text')
+        self.get(f'/note/{test2_note_id}', expect_contains=comment_of_test2, json_key='text')
         teacher_right_docs = {doc_id_list[3]}
         for i in teacher_right_docs:
-            self.json_put('/permissions/add/{}/{}/{}'.format(i, 'testuser2', 'teacher'),
+            self.json_put(f'/permissions/add/{i}/{"testuser2"}/{"teacher"}',
                           {'type': 'always'}, expect_content=self.ok_resp)
 
         self.json_post('/deleteNote', {'id': test2_note_id,
@@ -143,10 +143,10 @@ class TimTest(TimRouteTest):
         notes = timdb.notes.get_notes(ug, Document(doc_id), include_public=True)
         self.assertEqual(1, len(notes))
 
-        self.get('/getBlock/{}/{}'.format(doc_id, first_id),
+        self.get(f'/getBlock/{doc_id}/{first_id}',
                  expect_content={'text': edit_text})
 
-        self.get('/getBlock/{}/{}'.format(doc_id, first_id),
+        self.get(f'/getBlock/{doc_id}/{first_id}',
                  query_string={'docId': doc_id,
                                'area_start': first_id,
                                'area_end': second_par_id},
@@ -154,86 +154,24 @@ class TimTest(TimRouteTest):
 
         self.login_test2()
         for view_id in viewable_docs - teacher_right_docs:
-            self.get('/view/' + str(view_id))
+            self.get(f'/view/{view_id}')
             self.get('/teacher/' + str(view_id), expect_status=302)
-            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2',
-                                                             'teacher'), {'type': 'always'}, expect_status=403)
+            self.json_put(f'/permissions/add/{view_id}/{"testuser2"}/{"teacher"}', {'type': 'always'}, expect_status=403)
         for view_id in teacher_right_docs:
-            self.get('/view/' + str(view_id))
-            self.get('/teacher/' + str(view_id))
-            self.json_put('/permissions/add/{}/{}/{}'.format(view_id, 'testuser2',
-                                                             'teacher'), {'type': 'always'}, expect_status=403)
-
-    def test_macro_doc(self):
-        self.login_test1()
-        doc = self.create_doc(settings={'macro_delimiter': '%%', 'macros': {'rivi': 'kerros'}}).document
-        table_text = """
-{% set sarakeleveys = 50 %}
-{% set sarakkeet = ['eka', 'toka', 'kolmas', 'neljäs'] %}
-{% set rivit = ['eka', 'toka', 'kolmas', 'neljäs', 'viides'] %}
-
-{% for x in sarakkeet %} %%'-'*sarakeleveys%% {% endfor %}
-
-{% for r in rivit %}
-{% for s in sarakkeet %}%%('{} {}, {} sarake').format(r,rivi,s).rjust(sarakeleveys)%% {% endfor %}
-
-{% endfor %}
-{% for x in sarakkeet %} %%'-'*sarakeleveys%% {% endfor %}
-        """
-        table_html = md_to_html(table_text, sanitize=True, macros={'rivi': 'kerros'}, macro_delimiter='%%')
-
-        self.new_par(doc, table_text, json_key='texts', expect_contains=table_html)
-        self.get('/view/{}'.format(doc.doc_id), expect_contains=table_html)
-
-    def test_user_macros(self):
-        self.login_test1()
-        timdb = self.get_db()
-        d = self.create_doc(initial_par=r"""
-Username is %%username%% and real name is %%realname%%
-
-#-
-Percents: \%\%
-#-
-Broken: %%
-
-``` {#test plugin="csPlugin"}
-type: cs
-header: %%username%% and %%realname%%
-```
-        """)
-        grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), d.id)
-
-        pars = self.get('/view/{}'.format(d.id), as_tree=True).cssselect('.parContent')
-        self.assertEqual('Username is testuser1 and real name is Test user 1',
-                         pars[0].text_content().strip())
-        self.assertEqual('Percents: %%',
-                         pars[1].text_content().strip())
-        self.assertEqual("Syntax error in template: unexpected 'end of template'",
-                         pars[2].text_content().strip())
-        p = Plugin.from_task_id('{}.test'.format(d.id), User.query.get(TEST_USER_1_ID))
-        self.assertEqual('testuser1 and Test user 1', p.values['header'])
-        self.login_test2()
-        self.assertEqual('Username is testuser2 and real name is Test user 2',
-                         self.get('/view/{}'.format(d.id), as_tree=True).cssselect('.parContent')[
-                             0].text_content().strip())
-        p = Plugin.from_task_id('{}.test'.format(d.id), User.query.get(TEST_USER_2_ID))
-        self.assertEqual('testuser2 and Test user 2', p.values['header'])
-
-    def test_macro_only_delimiter(self):
-        self.login_test1()
-        doc = self.create_doc(settings={'macro_delimiter': '%%'}).document
-        self.new_par(doc, '{% set a = 123456+1 %}%%a%%', json_key='texts', expect_contains='123457')
+            self.get(f'/view/{view_id}')
+            self.get(f'/teacher/{view_id}')
+            self.json_put(f'/permissions/add/{view_id}/{"testuser2"}/{"teacher"}', {'type': 'always'}, expect_status=403)
 
     def test_same_heading_as_par(self):
         self.login_test1()
-        doc = self.create_doc(initial_par="""# Hello\n#-\nHello""").document
-        self.get('/view/{}'.format(doc.doc_id))
+        doc = self.create_doc(initial_par=['# Hello', 'Hello']).document
+        self.get(f'/view/{doc.doc_id}')
 
     def test_broken_comment(self):
         self.login_test1()
         doc = self.create_doc(settings={'macros': {}, 'macro_delimiter': '%%'},
                               initial_par="""```{atom=true}\nTest {!!! }\n```""").document
-        tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True)
+        tree = self.get(f'/view/{doc.doc_id}', as_tree=True)
         syntax_errors = tree.findall(r'.//div[@class="par"]/div[@class="parContent"]/div[@class="error"]')
         self.assertEqual(1, len(syntax_errors))
         self.assertIn('Syntax error in template:', syntax_errors[0].text)
@@ -244,18 +182,18 @@ header: %%username%% and %%realname%%
         self.login_test1()
         md_table = """---\r\n|a|\r\n|-|"""
         doc = self.create_doc(initial_par=md_table).document
-        tree = self.get('/view/{}'.format(doc.doc_id), as_tree=True)
+        tree = self.get(f'/view/{doc.doc_id}', as_tree=True)
         table_xpath = r'.//div[@class="par"]/div[@class="parContent"]/table'
         tables = tree.findall(table_xpath)
         self.assertEqual(1, len(tables))
 
-        self.json_post('/preview/{}'.format(doc.doc_id), {'text': md_table}, json_key='texts', expect_xpath=table_xpath)
+        self.json_post(f'/preview/{doc.doc_id}', {'text': md_table}, json_key='texts', expect_xpath=table_xpath)
 
     def test_clear_cache(self):
         self.login_test1()
         doc = self.create_doc(initial_par="Test").document
-        self.get('/view/{}'.format(doc.doc_id))
-        self.get('/view/{}'.format(doc.doc_id), query_string={'nocache': 'true'})
+        self.get(f'/view/{doc.doc_id}')
+        self.get(f'/view/{doc.doc_id}', query_string={'nocache': 'true'})
         doc.get_index()
 
     def test_document_intermediate_folders(self):
@@ -266,27 +204,24 @@ header: %%username%% and %%realname%%
         self.login_test1()
         doc = self.create_doc()
         grant_view_access(get_anon_group_id(), doc.id)
-        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
         self.assertGreater(len(links), 0)
 
         self.logout()
-        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
         self.assertGreater(len(links), 0)
         doc.document.add_setting('hide_links', 'view')
-        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
         self.assertEqual(len(links), 0)
         doc.document.add_paragraph(text='# 1\n\n#2')
 
         # Index is visible always
-        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
         self.assertEqual(len(links), 3)
 
         self.login_test1()
-        links = link_selector(self.get('/view/{}'.format(doc.id), as_tree=True))
+        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
         self.assertGreater(len(links), 0)
-
-    def test_nonexistent_note(self):
-        self.get('/note/999', expect_status=404)
 
 
 if __name__ == '__main__':

@@ -11,6 +11,43 @@ import {onClick} from "./eventhandlers";
 import {ParCompiler} from "../../services/parCompiler";
 import {ViewCtrl} from "./ViewCtrl";
 
+// Wrap given text to max n chars length lines spliting from space
+export function wrapText(s, n)
+{
+    var lines = s.split("\n");
+    var needJoin = false;
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        // lines[i] = "";
+        var sep = "";
+        if (line.length > n) {
+            lines[i] = "";
+            while (true) {
+                var p = -1;
+                if (line.length > n) {
+                    p = line.lastIndexOf(" ", n);
+                    if (p < 0) p = line.indexOf(" "); // long line
+                }
+                if (p < 0) {
+                    lines[i] += sep + line;
+                    break;
+                }
+                lines[i] += sep + line.substring(0, p);
+                line = line.substring(p + 1);
+                if ( i+1 < lines.length && (lines[i+1].length  > 0 && (" 0123456789-".indexOf(lines[i+1][0]) < 0 )  ) ) {
+                    lines[i+1] = line + " " + lines[i+1];
+                    needJoin = true;
+                    break;
+                }
+                sep = "\n";
+                needJoin = true;
+            }
+        }
+    }
+    if ( needJoin ) return {modified: true, s: lines.join("\n")};
+    return {modified: false, s:s};
+}
+
 export class EditingHandler {
     public viewctrl: ViewCtrl;
     public sc: IScope;
@@ -48,6 +85,25 @@ export class EditingHandler {
                 //var $par = $('.par').last();
                 //return this.showAddParagraphBelow(e, $par);
                 return this.showAddParagraphAbove(e, $(".addBottomContainer"));
+            });
+
+            onClick(".addAbove", function($this, e) {
+                $(".actionButtons").remove();
+                // var $par = $('.par').last();
+                // return sc.showAddParagraphBelow(e, $par);
+                // return sc.showAddParagraphAbove(e, sc.$pars);
+                var par = $($this).closest('.par');
+                var text = par.find('pre').text();
+                // text = text.replace('⁞', '');  // TODO: set cursor to | position
+                var options = {
+                    'localSaveTag': 'addAbove',
+                    'texts': {
+                        'beforeText': "alkuun",
+                        'initialText': text,
+                        'afterText': "loppuun"
+                    }
+                }
+                return this.showAddParagraphAbove(e, par, options);
             });
 
             onClick(".pasteBottom", ($this, e) => {
@@ -118,7 +174,8 @@ export class EditingHandler {
                 tags,
             },
             "options": {
-                localSaveTag: "par",
+                localSaveTag: options.localSaveTag ? options.localSaveTag : "par" ,
+                texts: options.texts,
                 showDelete: options.showDelete,
                 showImageUpload: true,
                 showPlugins: true,
@@ -259,10 +316,12 @@ export class EditingHandler {
         this.viewctrl.beginUpdate();
     }
 
-    showAddParagraphAbove(e, $par) {
+    showAddParagraphAbove(e, $par, options = null) {
         const $newpar = createNewPar();
         $par.before($newpar);
-        this.toggleParEditor($newpar, {area: false});
+        if ( options == null ) options = {};
+        options.area = false;
+        this.toggleParEditor($newpar, options);
     }
 
     showAddParagraphBelow(e, $par) {

@@ -4,6 +4,7 @@ import http.client
 import imghdr
 import io
 import os
+import pprint
 import re
 import shutil
 import time
@@ -11,7 +12,6 @@ import traceback
 from datetime import datetime
 from datetime import timezone
 
-import pprint
 import werkzeug.exceptions as ex
 from flask import Response
 from flask import g, abort, flash
@@ -26,10 +26,11 @@ from markupsafe import Markup
 from sqlalchemy.exc import IntegrityError
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
+import timApp.routes.view
+# from timApp.routes.view import get_templates_for_folder, FORCED_TEMPLATE_NAME
 from timApp.ReverseProxied import ReverseProxied
 from timApp.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
-    has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException, \
-    get_viewable_blocks_or_none_if_admin
+    has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException
 from timApp.cache import cache
 from timApp.containerLink import call_plugin_resource
 from timApp.dbaccess import get_timdb
@@ -64,16 +65,19 @@ from timApp.routes.view import view_page
 from timApp.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     get_current_user_name, get_current_user_group, logged_in
 from timApp.tim_app import app, default_secret
-from timApp.timdb.blocktypes import from_str, blocktypes
+from timApp.timdb.blocktypes import from_str, blocktypes, BlockType
 from timApp.timdb.bookmarks import Bookmarks
 from timApp.timdb.dbutils import copy_default_rights
+from timApp.timdb.documents import create_citation, create_translation
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import db
-from timApp.timdb.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME, NoSuchUserException
+from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.userutils import NoSuchUserException
 from timApp.validation import validate_item_and_create
+from timApp.documentmodel.create_item import do_create_document, get_templates_for_folder, create_item
 
 cache.init_app(app)
 
@@ -159,31 +163,22 @@ def forbidden(error):
 @app.errorhandler(500)
 def internal_error(error):
     log_error(get_request_message(500, include_body=True))
+    help_email = app.config['HELP_EMAIL']
     error.description = Markup('Something went wrong with the server, sorry. '
                                'TIM developers have been notified about this. '
-                               'If the problem persists, please send email to <a href="mailto:{0}">{0}</a>.'
-                               .format(app.config['HELP_EMAIL']))
+                               f'If the problem persists, please send email to <a href="mailto:{help_email}">{help_email}</a>.')
     tb = traceback.format_exc()
-    message = """
-Exception happened on {} at {}
+    message = f"""
+Exception happened on {datetime.now(tz=timezone.utc)} at {request.url}
 
-{}
+{get_request_message(500, include_body=True)}
 
-{}
-""".format(datetime.now(tz=timezone.utc),
-           request.url,
-           get_request_message(500, include_body=True),
-           tb).strip()
+{tb}
+""".strip()
     send_email(rcpt=app.config['ERROR_EMAIL'],
-               subject='{}: Error at {} ({})'.format(app.config['TIM_HOST'], request.path, get_current_user_name()),
-               group_subject='{}: Multiple errors at {} ({})'.format(app.config['TIM_HOST'],
-                                                                     request.path,
-                                                                     get_current_user_name()),
-               group_id='exception_{}'.format(hash((app.config['TIM_HOST'],
-                                                    request.path,
-                                                    get_current_user_name()))),
+               subject=f'{app.config["TIM_HOST"]}: Error at {request.path} ({get_current_user_name()})',
                mail_from=app.config['WUFF_EMAIL'],
-               reply_to='{},{}'.format(app.config['ERROR_EMAIL'], get_current_user_object().email),
+               reply_to=f'{app.config["ERROR_EMAIL"]},{get_current_user_object().email}',
                msg=message)
     return error_generic(error, 500)
 
@@ -217,7 +212,7 @@ def item_locked(error: ItemLockedException):
 @app.errorhandler(NoSuchUserException)
 def handle_user_not_found(error):
     if error.user_id == session['user_id']:
-        flash('Your user id ({}) was not found in the database. Clearing session automatically.'.format(error.user_id))
+        flash(f'Your user id ({error.user_id}) was not found in the database. Clearing session automatically.')
         return logout()
     return error_generic(error, 500)
 
@@ -229,8 +224,7 @@ def service_unavailable(error):
 
 @app.errorhandler(413)
 def entity_too_large(error):
-    error.description = 'Your file is too large to be uploaded. Maximum size is {} MB.'\
-        .format(app.config['MAX_CONTENT_LENGTH'] / 1024 / 1024)
+    error.description = f'Your file is too large to be uploaded. Maximum size is {app.config["MAX_CONTENT_LENGTH"] / 1024 / 1024} MB.'
     return error_generic(error, 413)
 
 
@@ -245,7 +239,7 @@ def restart_server():
     verify_admin()
     pid_path = '/var/run/gunicorn.pid'
     if os.path.exists(pid_path):
-        os.system('kill -HUP $(cat {})'.format(pid_path))
+        os.system(f'kill -HUP $(cat {pid_path})')
         flash('Restart signal was sent to Gunicorn.')
     else:
         flash('Gunicorn PID file was not found. TIM was probably not started with Gunicorn.')
@@ -291,9 +285,9 @@ def diff_document(doc_id, major1, minor1, major2, minor2):
     doc1 = DocumentVersion(doc_id, (major1, minor1))
     doc2 = DocumentVersion(doc_id, (major2, minor2))
     if not doc1.exists():
-        abort(404, "The document version {} does not exist.".format((major1, minor1)))
+        abort(404, f"The document version {(major1, minor1)} does not exist.")
     if not doc2.exists():
-        abort(404, "The document version {} does not exist.".format((major2, minor2)))
+        abort(404, f"The document version {(major2, minor2)} does not exist.")
     return Response(DocumentVersion.get_diff(doc1, doc2), mimetype="text/html")
 
 
@@ -312,71 +306,29 @@ def get_image(image_id, image_filename):
 @app.route("/getTemplates")
 def get_templates():
     current_path = request.args.get('item_path', '')
-    timdb = get_timdb()
-    templates = []
     doc = DocEntry.find_by_path(current_path, try_translation=True)
     if not doc:
         abort(404)
     verify_edit_access(doc.id)
-    current_path = doc.parent.path
-
-    while True:
-        for t in timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
-                                               filter_folder=current_path + '/Templates',
-                                               search_recursively=False):
-            if t.short_name not in (DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME):
-                templates.append(t)
-        if current_path == '':
-            break
-        current_path, _ = timdb.folders.split_location(current_path)
-    templates.sort(key=lambda d: d.short_name.lower())
+    templates = get_templates_for_folder(doc.parent)
     return json_response(templates)
-
-
-def create_item(item_path, item_type_str, item_title, create_function, owner_group_id):
-    item_path = item_path.strip('/')
-    validate_item_and_create(item_path, item_type_str, owner_group_id)
-
-    item = create_function(item_path, owner_group_id, item_title)
-    timdb = get_timdb()
-    grant_access_to_session_users(timdb, item.id)
-    item_type = from_str(item_type_str)
-    if item_type == blocktypes.DOCUMENT:
-        bms = Bookmarks(get_current_user_object())
-        bms.add_bookmark('Last edited',
-                         item.title,
-                         '/view/' + item.path,
-                         move_to_top=True,
-                         limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
-    copy_default_rights(item.id, item_type)
-    return item
 
 
 @app.route("/createItem", methods=["POST"])
 def create_document():
     item_path, item_type, item_title = verify_json_params('item_path', 'item_type', 'item_title')
-    cite_id, copy_id = verify_json_params('cite', 'copy', require=False)
+    cite_id, copy_id, template_name = verify_json_params('cite', 'copy', 'template', require=False)
     if cite_id:
         return create_citation_doc(cite_id, item_path, item_title)
 
-    copied_content = None
+    d = None
     if copy_id:
         verify_edit_access(copy_id)
         d = DocEntry.find_by_id(copy_id, try_translation=True)
         if not d:
             return abort(404, 'The document to be copied was not found')
-        copied_content = d.document.export_markdown()
-
-    item = create_item(item_path,
-                       item_type,
-                       item_title,
-                       DocEntry.create if item_type == 'document' else Folder.create,
-                       get_current_user_group())
-
-    if copied_content:
-        item.document.update(copied_content, item.document.export_markdown())
-
-    return json_response(item)
+        d = d.src_doc
+    return do_create_document(item_path, item_type, item_title, d, template_name)
 
 
 @app.route("/translations/<int:doc_id>", methods=["GET"])
@@ -395,9 +347,8 @@ def valid_language_id(lang_id):
 
 
 @app.route("/translate/<int:tr_doc_id>/<language>", methods=["POST"])
-def create_translation(tr_doc_id, language):
+def create_translation_route(tr_doc_id, language):
     title = request.get_json().get('doc_title', None)
-    timdb = get_timdb()
 
     doc = DocEntry.find_by_id(tr_doc_id, try_translation=True)
 
@@ -414,12 +365,13 @@ def create_translation(tr_doc_id, language):
         abort(403, 'Translation for this language already exists')
     verify_manage_access(doc_id)
 
-    src_doc = Document(doc_id)
-    cite_doc = timdb.documents.create_citation(src_doc, get_current_user_group())
+    src_doc = doc.src_doc.document
+    cite_doc = create_translation(src_doc, get_current_user_group())
     # noinspection PyArgumentList
-    tr = Translation(doc_id=cite_doc.id, src_docid=src_doc.doc_id, lang_id=language)
+    tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
     db.session.add(tr)
+    copy_default_rights(cite_doc.doc_id, blocktypes.DOCUMENT, commit=False)
     db.session.commit()
     return json_response(tr)
 
@@ -444,22 +396,12 @@ def update_translation(doc_id):
 
 
 def create_citation_doc(doc_id, doc_path, doc_title):
-    params, = verify_json_params('params', require=False)
-
-    # Filter for allowed reference parameters
-    if params is not None:
-        params = {k: params[k] for k in params if k in ('r', 'r_docid')}
-        params['r'] = 'c'
-    else:
-        params = {'r': 'c'}
-
-    timdb = get_timdb()
     verify_edit_access(doc_id)
 
     src_doc = Document(doc_id)
 
     def factory(path, group, title):
-        return timdb.documents.create_citation(src_doc, group, path, title, params)
+        return create_citation(src_doc, group, path, title)
     item = create_item(doc_path, 'document', doc_title, factory, get_current_user_group())
     return json_response(item)
 
@@ -470,9 +412,16 @@ def get_block(doc_id, par_id):
     area_start = request.args.get('area_start')
     area_end = request.args.get('area_end')
     if area_start and area_end:
-        return json_response({"text": Document(doc_id).export_section(area_start, area_end)})
+        try:
+            section = Document(doc_id).export_section(area_start, area_end)
+        except TimDbException as e:
+            return abort(404, str(e))
+        return json_response({"text": section})
     else:
-        par = Document(doc_id).get_paragraph(par_id)
+        try:
+            par = Document(doc_id).get_paragraph(par_id)
+        except TimDbException as e:
+            return abort(404, str(e))
         return json_response({"text": par.get_exported_markdown()})
 
 
@@ -481,7 +430,8 @@ def plugin_call(plugin, filename):
     try:
         req = call_plugin_resource(plugin, filename, request.args)
         return Response(stream_with_context(req.iter_content()), content_type=req.headers['content-type'])
-    except PluginException:
+    except PluginException as e:
+        log_warning(str(e))
         abort(404)
 
 
@@ -604,14 +554,10 @@ def log_request(response):
 
 
 def get_request_message(status_code=None, include_body=False):
-    msg = '{} [{}]: {} {} {}'.format(get_current_user_name(),
-                                     request.headers.get('X-Forwarded-For') or request.remote_addr,
-                                     request.method,
-                                     request.full_path if request.query_string else request.path,
-                                     status_code or '').strip()
+    msg = f'{get_current_user_name()} [{request.headers.get("X-Forwarded-For") or request.remote_addr}]: {request.method} {request.full_path if request.query_string else request.path} {status_code or ""}'.strip()
     if not include_body or request.method not in ('POST', 'PUT', 'DELETE'):
         return msg
-    return '{}\n\n{}'.format(msg, pprint.pformat(request.get_json(silent=True) or request.get_data(as_text=True)))
+    return f'{msg}\n\n{pprint.pformat(request.get_json(silent=True) or request.get_data(as_text=True))}'
 
 
 @app.after_request
@@ -656,9 +602,9 @@ def init_app():
     if app.config['PROFILE']:
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',), restrictions=[100])
 
-    log_info('Debug mode: {}'.format(app.config['DEBUG']))
-    log_info('Profiling: {}'.format(app.config['PROFILE']))
-    log_info('Using database: {}'.format(app.config['DATABASE']))
+    log_info(f'Debug mode: {app.config["DEBUG"]}')
+    log_info(f'Profiling: {app.config["PROFILE"]}')
+    log_info(f'Using database: {app.config["DATABASE"]}')
     if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
         log_warning('secret file not found, using default values - do not run in production!')
     else:
@@ -672,5 +618,4 @@ def start_app():
             port=5000,
             use_evalex=False,
             use_reloader=False,
-            # debug=True,
-            threaded=not (app.config['DEBUG'] and app.config['PROFILE']))
+            threaded=True)

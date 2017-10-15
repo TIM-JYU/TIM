@@ -14,6 +14,7 @@ from timApp.documentmodel.exceptions import DocExistsError
 from timApp.documentmodel.randutils import random_paragraph
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import get_anon_group_id
 
 
@@ -100,6 +101,8 @@ class DocumentTest(TimDbTest):
         # Delete first paragraph
         d.delete_paragraph(pars[0])
         self.assertFalse(d.has_paragraph(pars[0]))
+        with self.assertRaises(TimDbException):
+            d.get_paragraph(pars[0])
         pars.remove(pars[0])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((11, 0), d.get_version())
@@ -108,6 +111,8 @@ class DocumentTest(TimDbTest):
         # Delete from the middle
         d.delete_paragraph(pars[2])
         self.assertFalse(d.has_paragraph(pars[2]))
+        with self.assertRaises(TimDbException):
+            d.get_paragraph(pars[2])
         pars.remove(pars[2])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((12, 0), d.get_version())
@@ -117,6 +122,8 @@ class DocumentTest(TimDbTest):
         n = len(pars)
         d.delete_paragraph(pars[n - 1])
         self.assertFalse(d.has_paragraph(pars[n - 1]))
+        with self.assertRaises(TimDbException):
+            d.get_paragraph(pars[n - 1])
         pars.remove(pars[n - 1])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((13, 0), d.get_version())
@@ -204,7 +211,6 @@ class DocumentTest(TimDbTest):
             self.assertFalse(Document.doc_exists(doc_id=d.doc_id))
 
     def test_update(self):
-        self.maxDiff = None
         random.seed(0)
         for i in range(1, 5):
             d = self.init_testdoc()
@@ -223,7 +229,6 @@ class DocumentTest(TimDbTest):
             self.assertListEqual(blocks, DocumentParser(d.export_markdown(export_hashes=True)).get_blocks())
 
     def test_update_section(self):
-        self.maxDiff = None
         random.seed(0)
         for i in range(6, 10):
             d = self.init_testdoc()
@@ -253,7 +258,7 @@ class DocumentTest(TimDbTest):
         macro_par = d.add_paragraph(
             'this is %%testmacro%% and year is %%year%% and user is %%username%% and %%nonexistent%%')
         macro_par = d.get_paragraph(macro_par.get_id())  # Put the paragraph in cache
-        self.assertDictEqual({'macros': {'testmacro': 'testvalue', 'year': '2015'},
+        self.assertEqual({'macros': {'testmacro': 'testvalue', 'year': '2015'},
                               'macro_delimiter': '%%'}, d.get_settings().get_dict())
 
         # User-specific macros should be preserved
@@ -295,6 +300,11 @@ class DocumentTest(TimDbTest):
         self.assertEqual('d2: 1 2 ', deref2.get_expanded_markdown(d1.get_settings().get_macroinfo()))
         self.assertEqual('d2: 3 4 5', deref2.get_expanded_markdown(d2.get_settings().get_macroinfo()))
 
+    def test_predefined_macros(self):
+        d = self.init_testdoc()
+        p = d.add_paragraph('document id is %%docid%%')
+        self.assertEqual(f'document id is {d.doc_id}', p.get_expanded_markdown())
+
     def test_import(self):
         timdb = self.get_db()
         timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
@@ -305,7 +315,7 @@ class DocumentTest(TimDbTest):
         d = self.init_testdoc()
         num_pars = 10
         for i in range(0, num_pars):
-            d.add_paragraph('Par {}'.format(i))
+            d.add_paragraph(f'Par {i}')
         pars = d.get_paragraphs()
         v = (num_pars, 0)
         self.assertEqual(v, d.get_version())
@@ -313,7 +323,7 @@ class DocumentTest(TimDbTest):
             d2 = d.get_doc_version((i, 0))
             self.assertListEqual(
                 [{'type': 'insert', 'after_id': pars[i - 1].get_id() if i > 0 else None, 'content': pars[i:]}],
-                list(d2.parwise_diff(d)), msg='Diff test failed for i={}'.format(i))
+                list(d2.parwise_diff(d)), msg=f'Diff test failed for i={i}')
         ver_orig = d.get_doc_version()
         self.assertListEqual([], list(ver_orig.parwise_diff(d)))
 
@@ -340,7 +350,7 @@ class DocumentTest(TimDbTest):
         num_pars = 10
         d.set_settings({'auto_number_headings': True})
         for i in range(0, num_pars):
-            d.add_paragraph('# Header {}'.format(i))
+            d.add_paragraph(f'# Header {i}')
         ver_orig = d.get_doc_version()
         pars = d.get_paragraphs()
         self.assertListEqual([], list(ver_orig.parwise_diff(d, check_html=True)))
@@ -373,7 +383,7 @@ class DocumentTest(TimDbTest):
         # So the hash line in paragraph list is different from where the 'current' symlink points
         path = d.get_version_path()
         with open(path, 'w') as f:
-            f.write('{}/{}'.format(p.get_id(), old_hash))
+            f.write(f'{p.get_id()}/{old_hash}')
 
         d.clear_mem_cache()
         pars = d.get_paragraphs()
@@ -384,6 +394,31 @@ class DocumentTest(TimDbTest):
         d.clear_mem_cache()
         pars = d.get_paragraphs()
         self.assertEqual('test3', pars[0].get_markdown())
+
+
+    def test_settings_block_style(self):
+        """Settings paragraph is always serialized in the block style."""
+        d = self.init_testdoc()
+        d.set_settings({'a': 1})
+        self.assertEqual("""
+```
+a: 1
+
+```
+""".strip(), d.get_paragraphs()[0].get_markdown())
+
+    def test_settings_cached(self):
+        d = self.init_testdoc()
+        d.set_settings({'x': 1})
+        s1 = d.get_settings()
+        self.assertEqual({'x': 1}, s1.get_dict())
+        src1 = d.get_source_document()
+        d.set_settings({'x': 2, 'source_document': 10})
+        s2 = d.get_settings()
+        src2 = d.get_source_document()
+        self.assertEqual({'x': 2, 'source_document': 10}, s2.get_dict())
+        self.assertIsNone(src1)
+        self.assertEqual(10, src2.doc_id)
 
 
 if __name__ == '__main__':

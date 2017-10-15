@@ -3,7 +3,7 @@ import time
 import traceback
 from typing import Tuple, Union, Optional, List
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, json
 from flask import abort
 from flask import current_app
 from flask import flash
@@ -20,19 +20,23 @@ from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.document import get_index_from_html_list, dereference_pars, Document
+from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.htmlSanitize import sanitize_html
 from timApp.logger import log_error
 from timApp.pluginControl import find_task_ids, get_all_reqs
 from timApp.requesthelper import get_option
 from timApp.responsehelper import json_response
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, logged_in
-from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.models.docentry import DocEntry, get_documents
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.user import User
 from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import user_is_owner
 from timApp.utils import remove_path_special_chars
 from timApp.timtiming import taketime
+from timApp.documentmodel.create_item import do_create_document, FORCED_TEMPLATE_NAME, get_templates_for_folder
+from timApp.markdownconverter import create_environment
 
 Range = Tuple[int, int]
 
@@ -58,12 +62,17 @@ def get_partial_document(doc: Document, view_range: Range) -> List[DocParagraph]
     return pars
 
 
-def get_document(doc_id: int, view_range: Optional[Range] = None) -> Tuple[Document, List[DocParagraph]]:
+def get_document(doc_info: DocInfo, view_range: Optional[Range] = None) -> Tuple[Document, List[DocParagraph]]:
     # Separated into 2 functions for optimization
     # (don't cache partial documents and don't check ranges in the loop for whole ones)
-    doc = Document(doc_id).get_latest_version()
-    doc.load_pars()
+    doc = doc_info.document
+    doc.preload_option = PreloadOption.all
     return doc, (get_whole_document(doc) if view_range is None else get_partial_document(doc, view_range))
+
+
+@view_page.route("/ping", methods=['GET'])
+def view_ping():
+    return json.dumps({'ping': 'ok'})
 
 
 @view_page.route("/show_slide/<path:doc_name>")
@@ -121,12 +130,12 @@ def par_info(doc_id, par_id):
 
     doc = DocEntry.find_by_id(doc_id, try_translation=True)
     doc_name = doc.path
-    info['doc_name'] = just_name(doc_name) if doc_name is not None else 'Document #{}'.format(doc_id)
+    info['doc_name'] = just_name(doc_name) if doc_name is not None else f'Document #{doc_id}'
 
     group = timdb.users.get_owner_group(doc_id)
     users = timdb.users.get_users_in_group(group.id, limit=2)
     if len(users) == 1:
-        info['doc_author'] = '{} ({})'.format(users[0]['name'], group.name)
+        info['doc_author'] = f'{users[0]["name"]} ({group.name})'
     else:
         info['doc_author'] = group.name
 
@@ -172,11 +181,28 @@ def try_return_folder(item_name):
 
     if f is None:
         f = Folder.find_first_existing(item_name)
+        templates = get_templates_for_folder(f)
+        template_to_find = get_option(request, 'template', FORCED_TEMPLATE_NAME)
+        template_item = None
+        for t in templates:
+            if t.short_name == template_to_find:
+                # template_exists = True
+                template_item = t
+
+        # template_exists = any(t.short_name == template_to_find for t in templates)
+
+        if template_item and template_item.short_name == FORCED_TEMPLATE_NAME:
+            ind = item_name.rfind('/')
+            if ind >= 0:
+                ret = do_create_document(item_name, 'document', item_name[ind + 1:], None, template_item.path)
+                return view(item_name, 'view_html.html')
+
         return render_template('create_new.html',
                                in_lecture=is_in_lecture,
                                settings=settings,
                                new_item=item_name,
-                               found_item=f), 404
+                               found_item=f,
+                               forced_template=template_to_find if template_item else None), 404
     verify_view_access(f.id)
     return render_template('index.html',
                            item=f,
@@ -214,18 +240,19 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     doc_id = doc_info.id
     edit_mode = request.args.get('edit', None) if has_edit_access(doc_id) else None
+    create_environment("%%")  # TODO get macroinf
 
     if route == 'teacher':
         if not verify_teacher_access(doc_id, require=False, check_duration=True):
             if verify_view_access(doc_id):
                 flash("Did someone give you a wrong link? Showing normal view instead of teacher view.")
-                return redirect('/view/' + item_path)
+                return redirect(f'/view/{item_path}')
 
     if route == 'answers':
         if not verify_seeanswers_access(doc_id, require=False, check_duration=True):
             if verify_view_access(doc_id):
                 flash("Did someone give you a wrong link? Showing normal view instead of see answers view.")
-                return redirect('/view/' + item_path)
+                return redirect(f'/view/{item_path}')
 
     access = verify_view_access(doc_id, require=False, check_duration=True)
     if not access:
@@ -245,33 +272,32 @@ def view(item_path, template_name, usergroup=None, route="view"):
         view_range = None
     start_index = max(view_range[0], 0) if view_range else 0
 
-    doc, xs = get_document(doc_id, view_range)
+    doc, xs = get_document(doc_info, view_range)
 
     clear_cache = get_option(request, "nocache", False)
     hide_answers = get_option(request, 'noanswers', False)
 
     teacher_or_see_answers = route in ('teacher', 'answers')
-    doc_settings = doc.get_settings()
+    current_user = get_current_user_object() if logged_in() else None
+    doc_settings = doc.get_settings(current_user)
 
     # Preload htmls here to make dereferencing faster
     try:
         DocParagraph.preload_htmls(xs, doc_settings, clear_cache)
     except TimDbException as e:
-        log_error('Document {} exception:\n{}'.format(doc_id, traceback.format_exc(chain=False)))
+        log_error(f'Document {doc_id} exception:\n{traceback.format_exc(chain=False)}')
         abort(500, str(e))
     if doc_settings:
-        src_doc_id = doc_settings.get_source_document()
-        if src_doc_id is not None:
-            src_doc = Document(src_doc_id)
+        src_doc = doc.get_source_document()
+        if src_doc is not None:
             DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
 
     # We need to deference paragraphs at this point already to get the correct task ids
-    xs = dereference_pars(xs, source_doc=doc.get_original_document())
+    xs = dereference_pars(xs, source_doc=doc.get_source_document())
     total_points = None
     tasks_done = None
     task_groups = None
     user_list = []
-    current_user = get_current_user_object() if logged_in() else None
     task_ids, plugin_count = find_task_ids(xs)
     points_sum_rule = doc_settings.point_sum_rule(default={})
     try:
@@ -336,10 +362,11 @@ def view(item_path, template_name, usergroup=None, route="view"):
             if not user_is_owner(user['id'], doc_id)\
                and user['id'] != get_current_user_id():
                 user['name'] = '-'
-                user['real_name'] = 'Someone {}'.format(user['id'])
-                user['email'] = 'someone_{}@example.com'.format(user['id'])
+                user['real_name'] = f'Someone {user["id"]}'
+                user['email'] = f'someone_{user["id"]}@example.com'
 
     settings = get_user_settings()
+    # settings['add_button_text'] = doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
 
     show_unpublished_bg = is_considered_unpublished(doc_id)
     taketime("view to render")
@@ -376,7 +403,10 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            task_info={'total_points': total_points,
                                       'tasks_done': tasks_done,
                                       'total_tasks': total_tasks,
-                                      'groups': task_groups})
+                                      'groups': task_groups},
+                           doc_settings_dict=doc_settings.get_dict()
+                           # add_button_text=doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
+                           )
 
 
 def redirect_to_login():
@@ -388,8 +418,7 @@ def redirect_to_login():
 
 
 def get_items(folder: str):
-    timdb = get_timdb()
-    docs = timdb.documents.get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
+    docs = get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
                                          search_recursively=False,
                                          filter_folder=folder)
     docs.sort(key=lambda d: d.title.lower())
@@ -410,11 +439,26 @@ def should_hide_links(settings: DocSettings, rights: dict):
 
 @view_page.route('/getParDiff/<int:doc_id>/<int:major>/<int:minor>')
 def check_updated_pars(doc_id, major, minor):
+    # return json_response({'diff': None,
+    #                       'version': None})
+    # taketime("before verify")
     verify_view_access(doc_id)
+    # taketime("before liveupdates")
     d = Document(doc_id)
-    diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, check_html=True))  # TODO cache this
-    rights = get_rights(d.doc_id)
-    for diff in diffs:
+    settings = d.get_settings()
+    live_updates = settings.live_updates(0)  # this cost 1-3 ms.
+    global_live_updates = 2  # TODO: take this from somewhere that it is possible to admin to change it by a route
+
+    if 0 < live_updates < global_live_updates:
+        live_updates = global_live_updates
+    if global_live_updates == 0:  # To stop all live updates
+        live_updates = 0
+    # taketime("after liveupdates")
+    diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, check_html=True))  # TODO cache this, about <5 ms
+    # taketime("after diffs")
+    rights = get_rights(d.doc_id)  # about 30-40 ms # TODO: this is the slowest part
+    # taketime("after rights")
+    for diff in diffs:  # about < 1 ms
         if diff.get('content'):
             pars, js_paths, css_paths, modules = post_process_pars(d,
                                                                    diff['content'],
@@ -427,5 +471,7 @@ def check_updated_pars(doc_id, major, minor):
                                'js': js_paths,
                                'css': css_paths,
                                'angularModule': modules}
+    # taketime("after for diffs")
     return json_response({'diff': diffs,
-                         'version': d.get_version()})
+                          'version': d.get_version(),
+                          'live': live_updates})

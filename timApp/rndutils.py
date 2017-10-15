@@ -1,17 +1,18 @@
-from typing import List, Dict
+"""
+Functions to produce random lists.
+For documentation, see: https://tim.jyu.fi/view/tim/ohjeita/satunnaistus
+"""
 import json
 import numbers
-from random import Random
 import time
+from random import Random
+from typing import List, Dict, Tuple, Optional
 
 MAX_RND_LIST_LEN = 100
 
-# Functions to produce random lists
-# For documantation see: https://tim.jyu.fi/view/tim/ohjeita/satunnaistus
-
 
 def fix_jso(jso: str) -> str:
-    """ If jso does not start with [ andd two to make it list of lists """
+    """ If jso does not start with [ and two to make it list of lists."""
     if jso == '':
         return '[[1]]'
     if jso.startswith("["):
@@ -22,7 +23,7 @@ def fix_jso(jso: str) -> str:
 def sep_n_and_jso(jso: str) -> [int, str]:
     """
     Separates repeat factor and json string from string. Separator is * or :
-    If no repeat factor, return just jsnon string
+    If no repeat factor, return just json string.
     For example:
         "3*7" -> 3, [[7]]
         "3"   -> -1, [[3]]
@@ -48,7 +49,7 @@ def sep_n_and_jso(jso: str) -> [int, str]:
 
 def get_sample_list(myrandom: Random, jso: str) -> List[int]:
     """
-    Returns list of unique ints from given iterwall
+    Returns a list of unique ints from the given interval.
     :param myrandom: random number generator
     :param jso: string to find the values
     :return: list of unique ints
@@ -85,6 +86,13 @@ def get_sample_list(myrandom: Random, jso: str) -> List[int]:
     if len(r) > 2:
         step = r[2]
 
+    if n == 1:  # handle s1: same as normal range
+        ret = [myrandom.randrange(r[0], r[1] + 1, step)]
+        return ret
+
+    count = r[1] - r[0]
+    if count > 500:
+        raise ValueError(f'Too big range for s: {r[0]}-{r[1]}')
     ints = list(range(r[0], r[1] + 1, step))
     i = n
     while i >= len(ints):
@@ -98,7 +106,7 @@ def get_sample_list(myrandom: Random, jso: str) -> List[int]:
 
 def get_int_list(myrandom: Random, jso: str) -> List[int]:
     """
-    Returns list of random ins from given interval
+    Returns list of random ints from given interval.
     :param myrandom: random number generator
     :param jso: string to find the values
     :return: list of random ints ints
@@ -122,7 +130,7 @@ def get_int_list(myrandom: Random, jso: str) -> List[int]:
 
 def get_uniform_list(myrandom: Random, jso: str) -> List[float]:
     """
-    Returns list of uniformely distributed random floats from given interval
+    Returns list of uniformely distributed random floats from given interval.
     :param myrandom: random number generator
     :param jso: string to find the values
     :return: list of random ints ints
@@ -141,7 +149,7 @@ def get_uniform_list(myrandom: Random, jso: str) -> List[float]:
     return ret
 
 
-def repeat_rnd(list_func, myrandom: Random, jso:str) -> List:
+def repeat_rnd(list_func, myrandom: Random, jso:str) -> Optional[List[int]]:
     """
 
     :param list_func: function to produce random list
@@ -169,9 +177,9 @@ def repeat_rnd(list_func, myrandom: Random, jso:str) -> List:
     return ret
 
 
-def get_rnds(attrs: Dict, name: str ="rnd", rnd_seed=None) -> List:
+def get_rnds(attrs: Dict, name: str ="rnd", rnd_seed: Optional[int]=None) -> Tuple[Optional[List[int]], int]:
     """
-    Returns list of random numbers based to attribute name (def: rnd)  and rnd_seed
+    Returns list of random numbers based on attribute name (def: rnd) and rnd_seed.
     :param attrs: dict of attributes
     :param name: name in attribute dict to use as instructions for the random numbers
     :param rnd_seed: random number initializion seed, if seed is None, use time
@@ -194,24 +202,19 @@ def get_rnds(attrs: Dict, name: str ="rnd", rnd_seed=None) -> List:
         return None, rnd_seed
     myrandom = Random()
     myrandom.seed(a=rnd_seed)
-    ret = None
 
-    # noinspection PyBroadException
-    try:
-        if jso.startswith('s'):  # s10:[1,7,2], s10, s10:50, s10:[0,50]
-            return get_sample_list(myrandom, jso[1:]), rnd_seed
-        if jso.startswith('u'):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
-            return repeat_rnd(get_uniform_list,myrandom, jso[1:]), rnd_seed
+    if jso.startswith('s'):  # s10:[1,7,2], s10, s10:50, s10:[0,50]
+        return get_sample_list(myrandom, jso[1:]), rnd_seed
+    if jso.startswith('u'):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
+        return repeat_rnd(get_uniform_list,myrandom, jso[1:]), rnd_seed
 
-        ret = repeat_rnd(get_int_list, myrandom, jso)
-    except:
-        ret = None
+    ret = repeat_rnd(get_int_list, myrandom, jso)
     return ret, rnd_seed
 
 
-def get_rands_as_dict(attrs: Dict, rnd_seed) -> Dict[str, List]:
+def get_rands_as_dict(attrs: Dict, rnd_seed: int) -> Tuple[Optional[dict], int]:
     """
-    Returns dict of random numbers variables (each is a list of random numbers)
+    Returns a dict of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
                   is assumed
     :param rnd_seed: seed to initialize the generator
@@ -232,9 +235,9 @@ def get_rands_as_dict(attrs: Dict, rnd_seed) -> Dict[str, List]:
     return ret, rnd_seed
 
 
-def get_rands_as_str(attrs: Dict, rnd_seed) -> str:
+def get_rands_as_str(attrs: Dict, rnd_seed) -> Tuple[str, int]:
     """
-    Returns Jinja2 str of random numbers variables (each is a list of random numbers)
+    Returns a Jinja2 str of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
                   is assumed
     :param rnd_seed: seed to initialize the generator
@@ -255,9 +258,9 @@ def get_rands_as_str(attrs: Dict, rnd_seed) -> str:
 
 def myhash(s: str) -> int:
     """
-    Simple hash function to give allways same has for same input
+    Simple hash function to give always same hash for same input.
     :param s: string to hash
-    :return: simple has
+    :return: simple hash
     """
     csum = 0
     for c in s:
@@ -267,8 +270,8 @@ def myhash(s: str) -> int:
 
 def get_simple_hash_from_par_and_user(block, user) -> int:
     """
-    Get simple int hash from TIM's document block and user
-    :param block: TIM's documnt block
+    Get simple int hash from TIM's document block and user.
+    :param block: TIM's document block
     :param user: TIM user
     :return: simple hash that can be used for example as a seed for random number generator
     """

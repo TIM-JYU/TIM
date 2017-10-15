@@ -13,7 +13,7 @@ class DurationTest(TimRouteTest):
 
     def get_about_to_access_msg(self, period='a day'):
         return ['You are about to access a time-limited document.',
-                'After you click Unlock, your access to this document will be removed in {}.'.format(period)]
+                f'After you click Unlock, your access to this document will be removed in {period}.']
 
     unlock_success = 'Item was unlocked successfully.'
 
@@ -24,18 +24,18 @@ class DurationTest(TimRouteTest):
         self.login_test2()
         grant_access(self.get_test_user_2_group_id(), doc_id, 'view', duration=timedelta(days=1))
         d = DocEntry.find_by_id(doc_id)
-        self.get('/view/' + d.path,
+        self.get(d.url_relative,
                  expect_status=403,
                  expect_contains=self.get_about_to_access_msg())
 
-        self.get('/view/' + d.path, query_string={'unlock': 'true'},
+        self.get(d.url_relative, query_string={'unlock': 'true'},
                  expect_contains=self.unlock_success)
-        self.get('/view/' + d.path)
+        self.get(d.url_relative)
         ba = BlockAccess.query.filter_by(usergroup_id=self.get_test_user_2_group_id(), block_id=doc_id,
                                          type=get_access_type_id('view')).one()
         ba.accessible_to -= timedelta(days=2)
         db.session.commit()
-        self.get('/view/' + d.path, expect_status=403,
+        self.get(d.url_relative, expect_status=403,
                  expect_contains=self.get_expired_msg(ba.accessible_to))
 
     def test_timed_duration_unlock(self):
@@ -50,13 +50,13 @@ class DurationTest(TimRouteTest):
                      duration_from=now_plus_minute)
         d = DocEntry.find_by_id(doc_id)
         now = now_plus_minute - delta
-        err_msg_too_early = 'You can unlock this item in {}.'.format(humanize_datetime(now_plus_minute))
-        err_msg_too_late = 'You cannot unlock this item anymore (deadline expired {}).'.format(humanize_datetime(now))
-        self.get('/view/' + d.path,
+        err_msg_too_early = f'You can unlock this item in {humanize_datetime(now_plus_minute)}.'
+        err_msg_too_late = f'You cannot unlock this item anymore (deadline expired {humanize_datetime(now)}).'
+        self.get(d.url_relative,
                  expect_status=403,
                  json_key='error',
                  expect_contains=[err_msg_too_early])
-        self.get('/view/' + d.path, query_string={'unlock': 'true'},
+        self.get(d.url_relative, query_string={'unlock': 'true'},
                  expect_status=403,
                  json_key='error',
                  expect_contains=[err_msg_too_early])
@@ -64,11 +64,11 @@ class DurationTest(TimRouteTest):
         grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
                      duration=timedelta(days=1),
                      duration_to=now)
-        self.get('/view/' + d.path,
+        self.get(d.url_relative,
                  expect_status=403,
                  json_key='error',
                  expect_contains=[err_msg_too_late])
-        self.get('/view/' + d.path, query_string={'unlock': 'true'},
+        self.get(d.url_relative, query_string={'unlock': 'true'},
                  expect_status=403,
                  json_key='error',
                  expect_contains=[err_msg_too_late])
@@ -76,22 +76,22 @@ class DurationTest(TimRouteTest):
         grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
                      duration=timedelta(days=1),
                      duration_from=now)
-        self.get('/view/' + d.path,
+        self.get(d.url_relative,
                  expect_status=403,
                  expect_contains=self.get_about_to_access_msg())
-        self.get('/view/' + d.path, query_string={'unlock': 'true'},
+        self.get(d.url_relative, query_string={'unlock': 'true'},
                  expect_status=200,
                  expect_contains=self.unlock_success)
-        self.get('/view/' + d.path)
+        self.get(d.url_relative)
         ba = BlockAccess.query.filter_by(usergroup_id=self.get_test_user_2_group_id(), block_id=doc_id,
                                          type=get_access_type_id('view')).one()
         ba.accessible_to -= timedelta(days=2)
         db.session.commit()
-        self.get('/view/' + d.path, expect_status=403,
+        self.get(d.url_relative, expect_status=403,
                  expect_contains=self.get_expired_msg(ba.accessible_to))
 
     def get_expired_msg(self, access):
-        return 'Your access to this item has expired {}.'.format(humanize_datetime(access))
+        return f'Your access to this item has expired {humanize_datetime(access)}.'
 
     def test_duration_group_unlock(self):
         self.login_test1()
@@ -106,12 +106,12 @@ class DurationTest(TimRouteTest):
         accesses = self.current_group().accesses.filter_by(type=AccessType.view.value).all()
         self.assertEqual(0, len(accesses))
         d = DocEntry.find_by_id(doc_id)
-        self.get('/view/' + d.path,
+        self.get(d.url_relative,
                  expect_status=403,
                  expect_contains=self.get_about_to_access_msg())
         accesses = self.current_group().accesses.filter_by(type=AccessType.view.value).all()
         self.assertEqual(0, len(accesses))
-        self.get('/view/' + d.path, query_string={'unlock': 'true'},
+        self.get(d.url_relative, query_string={'unlock': 'true'},
                  expect_contains=self.unlock_success)
         accesses = self.current_group().accesses.filter_by(type=AccessType.view.value).all()
         self.assertEqual(1, len(accesses))
@@ -126,17 +126,17 @@ class DurationTest(TimRouteTest):
         granted_access.accessible_to -= duration
         db.session.commit()
 
-        self.get('/view/' + d.path,
+        self.get(d.url_relative,
                  expect_status=403,
                  expect_contains=self.get_expired_msg(granted_access.accessible_to))
-        self.get('/view/' + d.path,
+        self.get(d.url_relative,
                  expect_status=403,
                  query_string={'unlock': 'true'},
                  expect_contains=self.get_expired_msg(granted_access.accessible_to))
         db.session.expunge_all()
         db.session.delete(granted_access)
         db.session.commit()
-        self.get('/view/' + d.path,
+        self.get(d.url_relative,
                  expect_status=403,
                  expect_contains=self.get_about_to_access_msg())
 
@@ -147,10 +147,10 @@ class DurationTest(TimRouteTest):
         self.login_test2()
         grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
                      duration=timedelta(days=0))
-        self.get('/view/' + d.path,
+        self.get(d.url_relative,
                  expect_status=403,
                  expect_contains=self.get_about_to_access_msg('a moment'))
-        self.get('/view/' + d.path,
+        self.get(d.url_relative,
                  query_string={'unlock': 'true'},
                  expect_status=403,
                  expect_contains=[self.unlock_success, self.get_expired_msg(datetime.now(tz=timezone.utc))])
@@ -161,10 +161,10 @@ class DurationTest(TimRouteTest):
         doc_id = d.id
         self.login_test3()
         self.test_user_3.grant_access(doc_id, 'view', accessible_from=datetime.now(tz=timezone.utc) + timedelta(days=1))
-        self.get('/view/' + d.path,
+        self.get(d.url_relative,
                  expect_status=403,
                  expect_contains='You can access this item in 23 hours from now.')
         self.test_user_3.grant_access(doc_id, 'view', accessible_to=datetime.now(tz=timezone.utc) - timedelta(days=1))
-        self.get('/view/' + d.path,
+        self.get(d.url_relative,
                  expect_status=403,
                  expect_contains='Your access to this item has expired a day ago.')

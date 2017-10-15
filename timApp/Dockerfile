@@ -1,140 +1,189 @@
 # Start from the Ubuntu image
-from ubuntu:17.04
+FROM ubuntu:17.04
+
+ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
+    APT_CLEANUP="rm -r /var/lib/apt/lists/*"
 
 # Configure timezone and locale
-run apt-get update
-run apt-get install -y locales tzdata
-run locale-gen en_US.UTF-8
-env LANG en_US.UTF-8
-env LANGUAGE en_US:en
-env LC_ALL en_US.UTF-8
-run echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
+RUN bash -c "${APT_INSTALL} locales tzdata && ${APT_CLEANUP}"
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
+RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
 
 # Install Python, pip and other necessary packages
 
-run apt-get install --no-install-recommends -y openssh-server
-run apt-get install --no-install-recommends -y python3.6 python3-setuptools python3-pip
-run pip3 install --upgrade pip
+RUN bash -c "${APT_INSTALL} openssh-server wget ca-certificates python3.6 && ${APT_CLEANUP}"
 
 # Make Python 3.6 the default one
-run rm /usr/bin/python3
-run ln -s /usr/bin/python3.6 /usr/bin/python3
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
+    python3 -V
 
-run apt-get install --no-install-recommends -y git-core
+RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && rm get-pip.py
 
-run apt-get install --no-install-recommends -y zlib1g-dev libxml2-dev libxslt-dev python3.6-dev # lxml dependencies
-run apt-get install --no-install-recommends -y libyaml-dev # C-parser for PyYAML
-run apt-get install --no-install-recommends -y libmagic1 # python-magic dependency
-run apt-get install --no-install-recommends -y gcc g++
-run apt-get install --no-install-recommends -y libmagickwand-dev
+# lxml dependencies
+# C-parser for PyYAML
+# python-magic dependency
+RUN bash -c "${APT_INSTALL} git-core \
+ zlib1g-dev libxml2-dev libxslt-dev python3.6-dev \
+ libyaml-dev \
+ libmagic1 \
+ gcc g++ \
+ libmagickwand-dev \
+ && ${APT_CLEANUP}"
 
-# Install texlive
-#
-# Full install of texlive is needed for the latex-pdf printing functionality, as
-# texlive doesn't have an (MiKTeX/MacTeX-esque) auto-install functionality for missing latex packages
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.5 1 && \
+    python3 -V
+
+# Install dependencies of texlive-full excluding packages that are not needed (such as documentation files).
+# This almost-full installation of TeX Live is needed for the latex-pdf printing functionality, as
+# TeX Live doesn't have an (MiKTeX/MacTeX-esque) auto-install functionality for missing LaTeX packages,
 # i.e. the whole package archive needs to be pre-installed or the set of usable packages needs to be
-# severely limited
-run apt-get install --no-install-recommends -y texlive-full
+# severely limited.
+RUN bash -c "${APT_INSTALL} \
+biber \
+cm-super \
+dvidvi \
+dvipng \
+feynmf \
+fragmaster \
+latex-cjk-all \
+latexmk \
+lcdf-typetools \
+lmodern \
+prosper \
+psutils \
+purifyeps \
+t1utils \
+tex-gyre \
+texlive-base \
+texlive-bibtex-extra \
+texlive-binaries \
+texlive-extra-utils \
+texlive-font-utils \
+texlive-fonts-extra \
+texlive-fonts-recommended \
+texlive-formats-extra \
+texlive-games \
+texlive-generic-extra \
+texlive-generic-recommended \
+texlive-htmlxml \
+texlive-humanities \
+texlive-lang-african \
+texlive-lang-arabic \
+texlive-lang-chinese \
+texlive-lang-cjk \
+texlive-lang-cyrillic \
+texlive-lang-czechslovak \
+texlive-lang-english \
+texlive-lang-european \
+texlive-lang-french \
+texlive-lang-german \
+texlive-lang-greek \
+texlive-lang-indic \
+texlive-lang-italian \
+texlive-lang-japanese \
+texlive-lang-korean \
+texlive-lang-other \
+texlive-lang-polish \
+texlive-lang-portuguese \
+texlive-lang-spanish \
+texlive-latex-base \
+texlive-latex-extra \
+texlive-latex-recommended \
+texlive-luatex \
+texlive-metapost \
+texlive-music \
+texlive-omega \
+texlive-pictures \
+texlive-plain-extra \
+texlive-pstricks \
+texlive-publishers \
+texlive-science \
+texlive-xetex \
+&& ${APT_CLEANUP}"
 
-
-run pip3 install wheel
-run pip3 install psycopg2
-run pip3 install SQLAlchemy
-run pip3 install flask
-run pip3 install flask-compress
-run pip3 install flask-cache
-run pip3 install Flask-SQLAlchemy
-run pip3 install beautifulsoup4
-run pip3 install hypothesis
-run pip3 install lxml
-run pip3 install pyaml
-run pip3 install ansi2html
-run pip3 install cssutils
-run pip3 install mmh3
-run pip3 install pandocfilters
-run pip3 install pypandoc
-run pip3 install pylatex
-
-run apt-get install --no-install-recommends -y libffi-dev
-env LD_LIBRARY_PATH /usr/local/lib
-run pip3 install cffi
-
-run pip3 install gunicorn gevent eventlet tornado aiohttp
-run pip3 install python-magic
-run pip3 install git+git://github.com/miracle2k/webassets.git
-run pip3 install libsass
-run pip3 install flask-assets
-run pip3 install yubico-client
-run pip3 install pytz  # Not necessarily needed after all, as Python's stdlib supports UTC
-run pip3 install python-dateutil
-run pip3 install cssselect
-
-# Install pandoc document converter and pypandoc, a python interface for pandoc
-run apt-get install --no-install-recommends -y pandoc
-
-# Update pandoc
-run apt-get install --no-install-recommends -y wget
-env PANDOC_URL "https://github.com/jgm/pandoc/releases/download/1.19.2.1/pandoc-1.19.2.1-1-amd64.deb"
-run FILE=`mktemp`; wget "$PANDOC_URL" -qO $FILE && dpkg -i $FILE && rm $FILE
-
-
-run pip3 install Flask-Migrate
-run pip3 install selenium
-run pip3 install Flask-Testing
-run pip3 install isodate
-run pip3 install humanize
-run pip3 install autopep8
-run pip3 install git+git://github.com/dadadel/pyment.git
-run pip3 install docformatter
-run pip3 install filelock
-run pip3 install mypy
-run pip3 install pillow
-run pip3 install wand
+RUN bash -c "${APT_INSTALL} libffi-dev && ${APT_CLEANUP}"
+ENV LD_LIBRARY_PATH /usr/local/lib
 
 # sphinxcontrib-httpdomain does not work with 1.6
-run pip3 install sphinx==1.5.6
-run pip3 install sphinxcontrib-httpdomain
-run pip3 install recommonmark
+ENV PIP_INSTALL="python3 -m pip install" \
+    PIP_CLEANUP="rm -r ~/.cache/pip"
+RUN bash -c "${PIP_INSTALL} \
+ansi2html \
+autopep8 \
+beautifulsoup4 \
+cffi \
+cssselect \
+cssutils \
+docformatter \
+filelock \
+flask \
+flask-assets \
+flask-cache \
+flask-compress \
+flask-migrate \
+flask-sqlalchemy \
+flask-testing \
+gevent \
+git+git://github.com/dadadel/pyment.git@baaccc191db74e88c13f0cc27951a46938249a08 \
+git+git://github.com/miracle2k/webassets.git \
+gunicorn \
+humanize \
+isodate \
+libsass \
+lxml \
+mmh3 \
+mypy \
+pandocfilters \
+pillow \
+psycopg2 \
+pyaml \
+pylatex \
+pypandoc \
+python-dateutil \
+python-magic \
+pytz \
+recommonmark \
+responses \
+selenium \
+sphinx==1.5.6 \
+sphinxcontrib-httpdomain \
+sqlalchemy \
+wand \
+wheel \
+yubico-client \
+&& ${PIP_INSTALL} requests --upgrade && ${PIP_CLEANUP}"
 
-# requests must be the last package to be installed!
-# After this, pip3 stops working because it depends
-# on older version of requests package.
-run pip3 install requests --upgrade
-
-
-
-# Remove pip. It's no longer needed, we get slightly smaller image and less programs
-# for a potential attacker to use.
-# UPDATE: Don't remove pip; it causes problems with running tests.
-# run apt-get -y --purge remove python3-pip
+# Install Pandoc document converter
+RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/1.19.2.1/pandoc-1.19.2.1-1-amd64.deb" -qO $FILE && dpkg -i $FILE && rm $FILE
 
 # Set name and email for git.
-run git config --global user.email "agent@docker.com"
-run git config --global user.name "agent"
+RUN git config --global user.email "agent@docker.com"
+RUN git config --global user.name "agent"
 
-run mkdir /service
+RUN mkdir /service
 
 # Add user `agent` -- we don't want to run anything as root.
-run useradd -M agent
-run chown -R agent /service
+RUN useradd -M agent
+RUN chown -R agent /service
 
-run apt-get install --no-install-recommends -y npm
-run ln -s /usr/bin/nodejs /usr/bin/node
-run npm install -g typescript tslint jspm typescript-formatter
+RUN bash -c "${APT_INSTALL} curl && ${APT_CLEANUP}"
+RUN (curl -sL https://deb.nodesource.com/setup_8.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN npm install -g typescript tslint jspm typescript-formatter && npm cache clean --force
 
-run mkdir /var/run/sshd
-run echo 'root:test' | chpasswd
-run sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN mkdir /var/run/sshd
+RUN echo 'root:test' | chpasswd
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # Flask-Testing does not let us configure host, so we do it here.
-run sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.6/dist-packages/flask_testing/utils.py
+RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.6/dist-packages/flask_testing/utils.py
 
-# Ensure that netcat is installed.
-run apt-get install --no-install-recommends -y netcat-openbsd
+WORKDIR /service
+CMD python3 launch.py
 
-workdir /service
-cmd python3 launch.py
-
-expose 22
-expose 5000
-expose 5001
+EXPOSE 22
+EXPOSE 5000
+EXPOSE 5001

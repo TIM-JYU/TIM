@@ -29,6 +29,8 @@ from timApp.timdb.models.block import Block
 from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import AnswerUpload, Answer, db
 from timApp.timdb.timdbexception import TimDbException
+from timApp.dumboclient import call_dumbo
+
 
 answers = Blueprint('answers',
                     __name__,
@@ -76,7 +78,10 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     """
     timdb = get_timdb()
-    doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id_ext)
+    try:
+        doc_id, task_id_name, par_id = Plugin.parse_task_id(task_id_ext)
+    except PluginException:
+        return abort(400, 'The format of task id is invalid. Dot characters are not allowed.')
     task_id = str(doc_id) + '.' + str(task_id_name)
     verify_task_access(doc_id, task_id_name, AccessType.view)
     doc = Document(doc_id)
@@ -122,7 +127,7 @@ def post_answer(plugintype: str, task_id_ext: str):
         return abort(400, str(e))
 
     if plugin.type != plugintype:
-        abort(400, 'Plugin type mismatch: {} != {}'.format(plugin.type, plugintype))
+        abort(400, f'Plugin type mismatch: {plugin.type} != {plugintype}')
 
     upload = None
     if isinstance(answerdata, dict):
@@ -135,11 +140,11 @@ def post_answer(plugintype: str, task_id_ext: str):
             block = Block.query.filter((Block.description == trimmed_file) &
                                        (Block.type_id == blocktypes.UPLOAD)).first()
             if block is None:
-                abort(400, 'Non-existent upload: {}'.format(trimmed_file))
+                abort(400, f'Non-existent upload: {trimmed_file}')
             verify_view_access(block.id, message="You don't have permission to touch this file.")
             upload = AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first()
             if upload.answer_id is not None:
-                abort(400, 'File was already uploaded: {}'.format(file))
+                abort(400, f'File was already uploaded: {file}')
 
     # Load old answers
     current_user_id = get_current_user_id()
@@ -184,14 +189,17 @@ def post_answer(plugintype: str, task_id_ext: str):
         return json_response({'error': 'The key "web" is missing in plugin response.'}, 400)
     result = {'web': jsonresp['web']}
 
-    def add_reply(obj, key):
+    def add_reply(obj, key, runMarkDown = False):
         if key not in plugin.values:
             return
         text_to_add = plugin.values[key]
+        if runMarkDown:
+            result = call_dumbo([text_to_add])
+            text_to_add = result[0]
         obj[key] = text_to_add
 
     add_reply(result['web'], '-replyImage')
-    add_reply(result['web'], '-replyMD')
+    add_reply(result['web'], '-replyMD', True)
     add_reply(result['web'], '-replyHTML')
     if 'save' in jsonresp:
         # TODO: RND_SEED: save used rnd_seed for this answer if answer is saved, found from par.get_rnd_seed()
@@ -266,14 +274,17 @@ def should_hide_name(doc_id, user_id):
 def get_task_info(task_id):
     try:
         plugin = Plugin.from_task_id(task_id, user=get_current_user_object())
+        tim_vars = {'maxPoints': plugin.max_points(),
+                    'userMin': plugin.user_min_points(),
+                    'userMax': plugin.user_max_points(),
+                    'deadline': plugin.deadline(),
+                    'starttime': plugin.starttime(),
+                    'answerLimit': plugin.answer_limit(),
+                    'triesText': plugin.values.get('triesText', 'Tries left:'),
+                    'pointsText': plugin.values.get('pointsText', 'Points:')
+                    }
     except PluginException as e:
         return abort(400, str(e))
-    tim_vars = {'maxPoints': plugin.max_points(),
-                'userMin': plugin.user_min_points(),
-                'userMax': plugin.user_max_points(),
-                'deadline': plugin.deadline(),
-                'starttime': plugin.starttime(),
-                'answerLimit': plugin.answer_limit()}
     return json_response(tim_vars)
 
 
@@ -341,7 +352,7 @@ def get_all_answers_as_list(task_ids: List[str]):
         doc_id, _, _ = Plugin.parse_task_id(t)
         doc_ids.add(doc_id)
         if not timdb.documents.exists(doc_id):
-            abort(404, 'No such document: {}'.format(doc_id))
+            abort(404, f'No such document: {doc_id}')
         # Require full teacher rights for getting all answers
         verify_teacher_access(doc_id)
 

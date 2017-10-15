@@ -13,6 +13,7 @@ from timApp.routes.notify import notify_doc_watchers
 from timApp.sessioninfo import get_current_user_group
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.notification import NotificationType
+from timApp.timdb.timdbexception import TimDbException
 
 notes = Blueprint('notes',
                   __name__,
@@ -48,9 +49,10 @@ def post_note():
     docentry = DocEntry.find_by_id(doc_id, try_translation=True)
     verify_comment_right(doc_id)
     doc = Document(doc_id)
-    par = doc.get_paragraph(par_id)
-    if par is None:
-        abort(400, 'Non-existent paragraph')
+    try:
+        par = doc.get_paragraph(par_id)
+    except TimDbException as e:
+        return abort(404, str(e))
     timdb = get_timdb()
     group_id = get_current_user_group()
 

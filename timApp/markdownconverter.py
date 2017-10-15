@@ -1,15 +1,15 @@
 """Provides functions for converting markdown-formatted text to HTML."""
-import json
 import re
 from typing import Optional, Dict
 
+from flask import g
 from jinja2 import Environment, TemplateSyntaxError
 from lxml import html
 
+from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.dumboclient import call_dumbo
 from timApp.htmlSanitize import sanitize_html
 from timApp.utils import get_error_html
-from timApp.utils import parse_yaml
 
 
 # noinspection PyUnusedLocal
@@ -20,17 +20,94 @@ def has_macros(text: str, macros, macro_delimiter: Optional[str]=None):
 def expand_macros_regex(text: str, macros, macro_delimiter=None):
     if not has_macros(text, macros, macro_delimiter):
         return text
-    return re.sub('{0}([a-zA-Z]+){0}'.format(re.escape(macro_delimiter)),
+    return re.sub(f'{re.escape(macro_delimiter)}([a-zA-Z]+){re.escape(macro_delimiter)}',
                   lambda match: macros.get(match.group(1), 'UNKNOWN MACRO: ' + match.group(1)),
                   text)
+
+# ------------------------ Jinja filters -------------------------------------------------------------------
+# Ks. https://tim.jyu.fi/view/tim/ohjeita/satunnaistus#timfiltterit
+
+
+def Pz(i):
+    """
+    Returns number as a string so that from 0 comes "", postive number comes like " + 1"
+    and negative comes like " - 1"
+    :param i: number to convert
+    :return: number as a string suitable for expressions
+    """
+    if i > 0:
+        return " + " + str(i)
+    if i < 0:
+        return " - " + str(-i)
+    return ""
+
+
+def belongs(username, groupname):
+    """
+    Returns if user belongs to group
+    :param username: user to check
+    :param groupname: group to check
+    :return:
+    """
+    from timApp.dbaccess import get_timdb
+    timdb = get_timdb()
+    result = timdb.users.check_if_in_group(username, groupname)
+    return result
+
+
+def belongs_by_id(userid, groupname):
+    """
+    Returns if user belongs to group
+    :param username: user to check
+    :param groupname: group to check
+    :return:
+    """
+    from timApp.dbaccess import get_timdb
+    timdb = get_timdb()
+    result = timdb.users.check_if_in_group_by_id(userid, groupname)
+    return result
+
+
+class Belongs:
+    def __init__(self, user):
+        self.username = user.name
+        self.userid = user.id
+        self.cache = {}
+
+    def belongs_to_group(self, groupname):
+        b = self.cache.get(groupname, None)
+        if b is not None:
+            return b
+        b = belongs_by_id(self.userid, groupname)
+        self.cache[groupname] = b
+        return b
+
+# ------------------------ Jinja filters end ---------------------------------------------------------------
 
 
 def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None, env=None, ignore_errors: bool=False):
     if not has_macros(text, macros, macro_delimiter):
         return text
     if env is None:
-        env = create_environment(macro_delimiter)
+        try:
+            env = g.env
+        except:
+            pass
+        if env is None:
+            env = create_environment(macro_delimiter)
     try:
+        globalmacros = None
+        try:
+            globalmacros = getattr(g, 'globalmacros', None)
+        except:
+            pass
+        if globalmacros:
+            for gmacro in globalmacros:
+                macrotext = "%%"+gmacro+"%%"
+                pos = text.find(macrotext)
+                if pos >= 0:
+                    gm = str(globalmacros.get(gmacro, ""))
+                    text = text.replace(macrotext, gm)
         startstr = env.comment_start_string + "LOCAL"
         beg = text.find(startstr)
         if beg >= 0:
@@ -38,28 +115,38 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
             end = text.find(endstr, beg)
             if end >= 0:
                 local_macros_yaml = text[beg+len(startstr):end]
-                local_macros = parse_yaml(local_macros_yaml)
+                local_macros = YamlBlock.from_markdown(local_macros_yaml).values
                 macros = {**macros, **local_macros}
-        return env.from_string(text).render(macros)
+        conv = env.from_string(text).render(macros)
+        return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:
-            return get_error_html('Syntax error in template: {}'.format(e))
+            return get_error_html(f'Syntax error in template: {e}')
         return text
     except Exception as e:
         if not ignore_errors:
-            return get_error_html('Syntax error in template: {}'.format(e))
+            return get_error_html(f'Syntax error in template: {e}')
         return text
 
 
 def create_environment(macro_delimiter: str):
-    return Environment(variable_start_string=macro_delimiter,
-                       variable_end_string=macro_delimiter,
-                       comment_start_string='{!!!',
-                       comment_end_string='!!!}',
-                       block_start_string='{%',
-                       block_end_string='%}',
-                       lstrip_blocks=True,
-                       trim_blocks=True)
+    env = Environment(variable_start_string=macro_delimiter,
+                      variable_end_string=macro_delimiter,
+                      comment_start_string='{!!!',
+                      comment_end_string='!!!}',
+                      block_start_string='{%',
+                      block_end_string='%}',
+                      lstrip_blocks=True,
+                      trim_blocks=True)
+    env.filters['Pz'] = Pz
+
+    # During some markdown tests, there is no request context and therefore no g object.
+    try:
+        env.filters['belongs'] = Belongs(g.user).belongs_to_group
+        g.env = env
+    except (RuntimeError, AttributeError):
+        pass
+    return env
 
 
 expand_macros = expand_macros_jinja2

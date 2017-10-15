@@ -1,7 +1,8 @@
 import random
 import unittest
 
-from timApp.documentmodel.documentparser import DocumentParser, ValidationException
+from timApp.documentmodel.documentparser import DocumentParser
+from timApp.documentmodel.exceptions import ValidationException
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter
 
@@ -123,7 +124,7 @@ test
                               {'t': 'LTB4MmJhMWVlZGI='},
                               {'t': 'MHgyNjJlNzU5OQ=='}],
                              [{'t': block['t']} for block in dp.get_blocks()])
-        dp.validate_structure()
+        dp.validate_structure().raise_if_has_any_issues()
         self.assertEqual([], DocumentParser('').get_blocks())
         self.assertEqual('', DocumentWriter([]).get_text())
         self.assertEqual('#- {a="b"}\n', DocumentWriter([{'md': '', 'attrs': {'a': 'b'}}]).get_text())
@@ -250,9 +251,9 @@ test
 """, ""]
         for f in failures:
             with self.assertRaises(ValidationException, msg=f):
-                DocumentParser(f).validate_structure()
+                DocumentParser(f).validate_structure().raise_if_has_any_issues()
         for o in oks:
-            DocumentParser(o).validate_structure()
+            DocumentParser(o).validate_structure().raise_if_has_any_issues()
 
     def test_incomplete_code(self):
         for text, expected in (('```\n``', '```\n```'),

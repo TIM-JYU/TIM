@@ -29,10 +29,10 @@ TIM_HOST = os.environ.get('TIM_HOST', 'http://localhost')
 OLD_SQLITE_DATABASE = '/tim_files/tim.db'
 DB_HOST = 'postgresql'
 TEMPDB_HOST = 'postgresql-tempdb'
-DATABASE = "postgresql://postgres@{}:5432/{}".format(DB_HOST, TIM_NAME)
+DATABASE = f"postgresql://postgres@{DB_HOST}:5432/{TIM_NAME}"
 SQLALCHEMY_BINDS = {
     'tim_main': DATABASE,
-    'tempdb': "postgresql://postgres:postgres@{}:5432/tempdb_{}".format(TEMPDB_HOST, TIM_NAME)
+    'tempdb': f"postgresql://postgres:postgres@{TEMPDB_HOST}:5432/tempdb_{TIM_NAME}"
 }
 SASS_GEN_PATH = 'gen'
 TEMPLATES_AUTO_RELOAD = True

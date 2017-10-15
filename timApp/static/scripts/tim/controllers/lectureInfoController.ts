@@ -50,7 +50,7 @@ export class LectureInfoController implements IController {
         this.inLecture = $window.inLecture;
         this.lecture = {
             is_full: null,
-            max_students: null,
+            options: null,
             lecture_code: $window.lectureCode,
             doc_id: this.item.id,
             end_time: moment($window.lectureEndTime),

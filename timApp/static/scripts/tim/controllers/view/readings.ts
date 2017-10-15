@@ -163,7 +163,7 @@ export function initReadings(sc: ViewCtrl) {
             $window.alert("Unable to mark this section as read");
             return;
         }
-        markParsRead($pars);
+        markParsRead($($pars.map((p) => p[0])));
         $readsection.remove();
     });
 

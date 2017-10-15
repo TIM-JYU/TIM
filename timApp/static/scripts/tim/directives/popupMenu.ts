@@ -3,6 +3,7 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {watchEditMode} from "tim/editmode";
 import {$http, $window} from "../ngimport";
+import {ViewCtrl} from "../controllers/view/viewctrl";
 
 class PopupMenuController implements IController {
     private static $inject = ["$scope", "$element"];
@@ -18,6 +19,7 @@ class PopupMenuController implements IController {
     private colClass: string;
     private halfColClass: string;
     private storageAttribute: false; // TODO
+    private vctrl: ViewCtrl;
 
     constructor(scope: IScope, element: IRootElementService) {
         this.$pars = $(this.srcid);
@@ -74,7 +76,7 @@ class PopupMenuController implements IController {
             return;
         }
 
-        $http.get<{texts}>(contentUrl, {},
+        $http.get<{texts}>(contentUrl, {params: {doc_id: this.vctrl.docId}},
         ).then((response) => {
             //this.content = data.texts;
             $("#content").append(response.data.texts);

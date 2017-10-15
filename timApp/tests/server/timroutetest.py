@@ -10,13 +10,16 @@ from flask import Response
 from flask import session
 from flask.testing import FlaskClient
 from lxml import html
+from lxml.html import HtmlElement
 
 import timApp.tim
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.routes.login import log_in_as_anonymous
 from timApp.tests.db.timdbtest import TimDbTest
+from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.translation import Translation
 from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
 
@@ -25,7 +28,14 @@ def load_json(resp: Response):
     return json.loads(resp.get_data(as_text=True))
 
 
+def is_redirect(response: Response):
+    return response.status_code in (302, 303)
+
+
 orig_getaddrinfo = socket.getaddrinfo
+
+
+TEXTUAL_MIMETYPES = {'text/html', 'application/json', 'text/plain'}
 
 
 # noinspection PyIncorrectDocstring
@@ -39,6 +49,10 @@ socket.getaddrinfo = fast_getaddrinfo
 
 testclient: FlaskClient = timApp.tim.app.test_client()
 testclient = testclient.__enter__()
+
+
+def get_content(element: HtmlElement) -> List[str]:
+    return [r.text_content().strip() for r in element.cssselect('.parContent')]
 
 
 class TimRouteTest(TimDbTest):
@@ -178,12 +192,17 @@ class TimRouteTest(TimDbTest):
         if xhr:
             headers.append(('X-Requested-With', 'XMLHttpRequest'))
         resp = self.client.open(url, method=method, headers=headers, **kwargs)
+        is_textual = resp.mimetype in TEXTUAL_MIMETYPES
         if expect_status is not None:
-            self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True))
-        if resp.status_code == 302 and expect_content is not None:
+            self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True) if is_textual else None)
+        if is_redirect(resp) and expect_content is not None:
             self.assertEqual(expect_content, resp.location.lstrip('http://localhost/'))
-        resp_data = resp.get_data(as_text=True)
+        resp_data = resp.get_data(as_text=is_textual)
+        if not is_textual:
+            return resp_data
         if as_tree:
+            if json_key is not None:
+                resp_data = json.loads(resp_data)[json_key]
             tree = html.fromstring(resp_data)
             if expect_xpath is not None:
                 self.assertLessEqual(1, len(tree.findall(expect_xpath)))
@@ -201,11 +220,11 @@ class TimRouteTest(TimDbTest):
                 self.assertLessEqual(1, len(html.fragment_fromstring(loaded, create_parent=True).findall(expect_xpath)))
             return loaded
         else:
-            if expect_content is not None and resp.status_code != 302:
+            if expect_content is not None and not is_redirect(resp):
                 self.assertEqual(expect_content, resp_data)
             elif expect_contains is not None:
                 self.check_contains(expect_contains, resp_data)
-            return resp_data
+            return resp_data if not is_redirect(resp) else resp.location
 
     def check_contains(self, expect_contains, data):
         if isinstance(expect_contains, str):
@@ -349,13 +368,17 @@ class TimRouteTest(TimDbTest):
 
     def delete_par(self, doc: Document, par_id: str, **kwargs):
         doc.clear_mem_cache()
-        return self.json_post('/deleteParagraph/{}'.format(doc.doc_id), {
+        return self.json_post(f'/deleteParagraph/{doc.doc_id}', {
             "par": par_id,
         }, **kwargs)
 
+    def update_whole_doc(self, doc: Document, text: str, **kwargs):
+        doc.clear_mem_cache()
+        return self.json_post(f'/update/{doc.doc_id}', {'fulltext': text, 'original': doc.export_markdown()}, **kwargs)
+
     def post_answer(self, plugin_type, task_id, user_input,
                     save_teacher=False, teacher=False, user_id=None, answer_id=None, ref_from=None, **kwargs):
-        return self.json_put('/{}/{}/answer/'.format(plugin_type, task_id),
+        return self.json_put(f'/{plugin_type}/{task_id}/answer/',
                              {"input": user_input,
                               "ref_from": {'docId': ref_from[0], 'par': ref_from[1]} if ref_from else None,
                               "abData": {"saveTeacher": save_teacher,
@@ -365,7 +388,7 @@ class TimRouteTest(TimDbTest):
                                          "saveAnswer": True}}, **kwargs)
 
     def get_task_answers(self, task_id):
-        answer_list = self.get('/answers/{}/{}'.format(task_id, self.current_user_id()))
+        answer_list = self.get(f'/answers/{task_id}/{self.current_user_id()}')
         return answer_list
 
     @staticmethod
@@ -378,7 +401,7 @@ class TimRouteTest(TimDbTest):
         return session['user_name']
 
     @staticmethod
-    def current_user_id() -> int:
+    def current_user_id() -> Optional[int]:
         """Returns the name of the current user.
 
         :return: The name of the current user.
@@ -391,8 +414,9 @@ class TimRouteTest(TimDbTest):
         return self.current_user_id() is not None
 
     @property
-    def current_user(self) -> User:
-        return User.query.get(self.current_user_id())
+    def current_user(self) -> Optional[User]:
+        curr_id = self.current_user_id()
+        return User.query.get(curr_id) if curr_id is not None else None
 
     def current_group(self) -> UserGroup:
         return self.current_user.get_personal_group()
@@ -410,7 +434,7 @@ class TimRouteTest(TimDbTest):
         :return: Response as a JSON dict.
 
         """
-        return self.login('testuser1', 'test1@example.com', 'test1pass', force=force, add=add, **kwargs)
+        return self.login('test1@example.com', 'test1pass', 'testuser1', force=force, add=add, **kwargs)
 
     def login_test2(self, force: bool = False, add: bool = False, **kwargs):
         """Logs testuser2 in.
@@ -420,7 +444,7 @@ class TimRouteTest(TimDbTest):
         :return: Response as a JSON dict.
 
         """
-        return self.login('testuser2', 'test2@example.com', 'test2pass', force=force, add=add, **kwargs)
+        return self.login('test2@example.com', 'test2pass', 'testuser2', force=force, add=add, **kwargs)
 
     def login_test3(self, force: bool = False, add: bool = False, **kwargs):
         """Logs testuser3 in.
@@ -430,7 +454,7 @@ class TimRouteTest(TimDbTest):
         :return: Response as a JSON dict.
 
         """
-        return self.login('testuser3', 'test3@example.com', 'test3pass', force=force, add=add, **kwargs)
+        return self.login('test3@example.com', 'test3pass', 'testuser3', force=force, add=add, **kwargs)
 
     def logout(self, user_id: Optional[int] = None):
         """Logs the specified user out.
@@ -441,7 +465,7 @@ class TimRouteTest(TimDbTest):
         """
         return self.json_post('/logout', json_data={'user_id': user_id})
 
-    def login(self, username: str, email: str, passw: str, force: bool = False, clear_last_doc: bool = True,
+    def login(self, email: str, passw: str, username: Optional[str]=None, force: bool = False, clear_last_doc: bool = True,
               add: bool = False, **kwargs):
         """Logs a user in.
 
@@ -483,6 +507,7 @@ class TimRouteTest(TimDbTest):
                    settings: Optional[Dict] = None,
                    copy_from: Optional[int] = None,
                    cite: Optional[int] = None,
+                   template: Optional[str] = None,
                    expect_status=200,
                    **kwargs
                    ) -> Optional[DocEntry]:
@@ -498,13 +523,14 @@ class TimRouteTest(TimDbTest):
 
         """
         if path is None:
-            path = '{}/doc{}'.format(self.current_user.get_personal_folder().path, self.doc_num)
+            path = f'{self.current_user.get_personal_folder().path}/doc{self.doc_num}'
             self.__class__.doc_num += 1
         resp = self.json_post('/createItem', {
             'item_path': path,
             'item_type': 'document',
             'item_title': 'document ' + str(self.doc_num),
             **({'copy': copy_from} if copy_from else {}),
+            **({'template': template} if template else {}),
             **({'cite': cite} if cite else {})
         }, expect_status=expect_status, **kwargs)
         if expect_status != 200:
@@ -532,9 +558,28 @@ class TimRouteTest(TimDbTest):
         self.assertEqual((e1.text or '').strip(), (e2.text or '').strip())
         self.assertEqual((e1.tail or '').strip(), (e2.tail or '').strip())
         self.assertEqual(e1.attrib, e2.attrib)
-        self.assertEqual(len(e1), len(e2))
+        self.assertEqual(len(e1), len(e2), msg=html.tostring(e2, pretty_print=True).decode('utf-8'))
         for c1, c2 in zip(e1, e2):
             self.assert_elements_equal(c1, c2)
+
+    def create_translation(self, doc: DocEntry, doc_title: str, lang: str, expect_contains=None, expect_content=None, expect_status=200,
+                           **kwargs) -> Optional[Translation]:
+        if expect_contains is None and expect_content is None:
+            expect_contains = {'title': doc_title, 'path': doc.name + '/' + lang, 'name': doc.short_name}
+        j = self.json_post(f'/translate/{doc.id}/{lang}',
+                           {'doc_title': doc_title},
+                           expect_contains=expect_contains, expect_content=expect_content, expect_status=expect_status, **kwargs)
+        return Translation.query.get(j['id']) if expect_status == 200 else None
+
+    def assert_content(self, element: HtmlElement, expected: List[str]):
+        pars = get_content(element)
+        self.assertEqual(len(pars), len(expected))
+        for e, r in zip(expected, pars):
+            self.assertEqual(r, e)
+
+    def get_updated_pars(self, d: DocInfo, **kwargs):
+        return self.get(f'/getUpdatedPars/{d.id}', **kwargs)
+
 
 if __name__ == '__main__':
     unittest.main()

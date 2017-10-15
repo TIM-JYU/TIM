@@ -212,5 +212,9 @@ export function addElementToParagraphMargin(par: Element, el: Element) {
     }
 }
 
+export function isSettings(text) {
+    return text.startsWith('``` {settings=""}');
+}
+
 export const EDITOR_CLASS = "editorArea";
 export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;

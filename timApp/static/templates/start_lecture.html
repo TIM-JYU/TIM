@@ -6,12 +6,12 @@
                 <input id="lCode" type="text" name="code" ng-model="clctrl.lectureCode"/>
             </div>
             <div>
-                <label for="lPassword">Lecture access code:<br>(Optional)</label>
+                <label for="lPassword">Lecture access code (optional):</label>
                 <input id="lPassword" type="text" name="password" ng-model="clctrl.password"/>
             </div>
             <div>
-                <label for="maxStudents">Max number of students:<br>(Optional)</label>
-                <input size="3" maxlength="3" id="maxStudents" type="number" name="max" ng-model="clctrl.maxStudents"/>
+                <label for="maxStudents">Max number of students (optional):</label>
+                <input size="3" maxlength="3" id="maxStudents" type="number" name="max_students" ng-model="clctrl.maxStudents"/>
             </div>
         </div>
         <div class="startingTime">
@@ -72,6 +72,23 @@
             <input onclick="document.getElementById('lLink2').setSelectionRange(0, 9999)"
                    style="background-color: #DCDCDC" readonly id="lLink2" type="text" name="link2"
                    ng-value="clctrl.getAutoJoinLink()"/>
+        </div>
+        <div>
+            <br />
+            <span>Polling: <label>Interval: <input id="poll_interval" type="text" name="poll_interval" maxlengt="3" size="3"
+                                  ng-model="clctrl.options.poll_interval" ng-pattern="/[0-9]*/"> s</label> &nbsp;
+                            <label><input id="long_poll" type="checkbox" name="long_poll" ng-model="clctrl.options.long_poll"> Use long polling.</label>
+                </span>
+            <br />
+            <span>Teacher: <label>Interval: <input id="poll_interval_t" type="text" name="poll_interval_t" maxlengt="3" size="3"
+                                  ng-model="clctrl.options.poll_interval_t" ng-pattern="/[0-9]*/"> s</label> &nbsp;
+                            <label><input id="long_poll_t" type="checkbox" name="long_poll_t" ng-model="clctrl.options.long_poll_t"> Use long polling.</label>
+                </span>
+            <br />
+            <label>Teacher poll for: <input id="teacher_poll" type="text" name="teacher_poll" maxlengt="40" size="40"
+                                                   title="List of usernames to get same poll rate as teacher, separate by ;"
+                                                   ng-model="clctrl.options.teacher_poll" ></label>
+
         </div>
         <p id="errorMessage" ng-if="clctrl.errorMessage.length" ng-bind-html="clctrl.errorMessage"></p>
 
