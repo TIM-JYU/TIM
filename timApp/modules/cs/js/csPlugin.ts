@@ -888,7 +888,7 @@ csApp.directiveFunction = function(t,isInput) {
 		link: function (scope, element, attrs) {
             if ( TESTWITHOUTPLUGINS ) return;
 
-            scope.cursor = "\u0383"; //"\u0347"; // "\u02FD";
+            scope.cursor = "⁞"; //\u0383"; //"\u0347"; // "\u02FD";
 			scope.taunoHtml = element[0].childNodes[csApp.taunoPHIndex]; // Check this carefully, where is Tauno placeholder
             scope.plugin = element.parent().attr("data-plugin");
             scope.taskId  = element.parent().attr("id");
@@ -1872,14 +1872,44 @@ csApp.Controller = function($scope,$transclude) {
             $scope.userargs += s + " ";
             return;
         }
-	    var tbox = $scope.edit;
-	    var i = tbox.selectionStart || 0;
-	    var uc = $scope.usercode || "";
-	    // $scope.usercode = uc.substring(0, i) + s.replace(/\\n/g,"\n") + uc.substring(i);
-	    $scope.usercode = (uc + s.replace(/\\n/g,"\n")).replace($scope.cursor,"")+$scope.cursor;
+	    var tbox;
+        var editor = null;
+	    var i = 0;
+	    if ( $scope.editorIndex == 1 ) {
+            editor = $scope.aceEditor as any;
+	        i = editor.session.doc.positionToIndex(editor.selection.getCursor());
+        } else {
+    	    tbox = $scope.edit;
+	        i = tbox.selectionStart || 0;
+        }
+	    var uc = ($scope.usercode || "");
+	    var ci = uc.indexOf($scope.cursor);
+        if ( ci >= 0 ) {
+            if ( ci < i ) i--;
+            uc = uc.replace($scope.cursor,"");
+        }
+	    var text = s.replace(/\\n/g,"\n");
+	    var cur = ""; // $scope.cursor;  // this would be needed by iPad because it does not show cursor
+	    $scope.usercode = uc.substring(0, i) + text + cur + uc.substring(i);
+	    // $scope.usercode = (uc + s.replace(/\\n/g,"\n")).replace($scope.cursor,"")+$scope.cursor;
 	    // $scope.insertAtCursor(tbox, s);
 	    //tbox.selectionStart += s.length;
 	    //tbox.selectionEnd += s.length;
+        i += text.length;
+        if ( editor ) {
+            $timeout(() => {
+                var cursor = editor.session.doc.indexToPosition(i, 0);
+                editor.selection.moveCursorToPosition(cursor);
+                editor.selection.clearSelection();
+            });
+        } else {
+            $timeout(() => {
+                tbox.selectionStart = i;
+                tbox.selectionEnd = i;
+                tbox.focus();
+            });
+        }
+
 	};
 
 	$scope.addTextHtml = function (s) {
