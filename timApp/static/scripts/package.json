@@ -38,6 +38,7 @@
     "@types/rangyinputs": "^1.2.0",
     "@types/systemjs": "^0.20.2",
     "@types/ui-grid": "^0.0.35",
+    "moment": "^2.18.1",
     "tslib": "^1.7.1"
   },
   "devDependencies": {

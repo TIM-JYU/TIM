@@ -28,6 +28,10 @@ def load_json(resp: Response):
     return json.loads(resp.get_data(as_text=True))
 
 
+def is_redirect(response: Response):
+    return response.status_code in (302, 303)
+
+
 orig_getaddrinfo = socket.getaddrinfo
 
 
@@ -191,7 +195,7 @@ class TimRouteTest(TimDbTest):
         is_textual = resp.mimetype in TEXTUAL_MIMETYPES
         if expect_status is not None:
             self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True) if is_textual else None)
-        if resp.status_code == 302 and expect_content is not None:
+        if is_redirect(resp) and expect_content is not None:
             self.assertEqual(expect_content, resp.location.lstrip('http://localhost/'))
         resp_data = resp.get_data(as_text=is_textual)
         if not is_textual:
@@ -216,11 +220,11 @@ class TimRouteTest(TimDbTest):
                 self.assertLessEqual(1, len(html.fragment_fromstring(loaded, create_parent=True).findall(expect_xpath)))
             return loaded
         else:
-            if expect_content is not None and resp.status_code != 302:
+            if expect_content is not None and not is_redirect(resp):
                 self.assertEqual(expect_content, resp_data)
             elif expect_contains is not None:
                 self.check_contains(expect_contains, resp_data)
-            return resp_data
+            return resp_data if not is_redirect(resp) else resp.location
 
     def check_contains(self, expect_contains, data):
         if isinstance(expect_contains, str):
@@ -397,7 +401,7 @@ class TimRouteTest(TimDbTest):
         return session['user_name']
 
     @staticmethod
-    def current_user_id() -> int:
+    def current_user_id() -> Optional[int]:
         """Returns the name of the current user.
 
         :return: The name of the current user.
@@ -410,8 +414,9 @@ class TimRouteTest(TimDbTest):
         return self.current_user_id() is not None
 
     @property
-    def current_user(self) -> User:
-        return User.query.get(self.current_user_id())
+    def current_user(self) -> Optional[User]:
+        curr_id = self.current_user_id()
+        return User.query.get(curr_id) if curr_id is not None else None
 
     def current_group(self) -> UserGroup:
         return self.current_user.get_personal_group()
@@ -429,7 +434,7 @@ class TimRouteTest(TimDbTest):
         :return: Response as a JSON dict.
 
         """
-        return self.login('testuser1', 'test1@example.com', 'test1pass', force=force, add=add, **kwargs)
+        return self.login('test1@example.com', 'test1pass', 'testuser1', force=force, add=add, **kwargs)
 
     def login_test2(self, force: bool = False, add: bool = False, **kwargs):
         """Logs testuser2 in.
@@ -439,7 +444,7 @@ class TimRouteTest(TimDbTest):
         :return: Response as a JSON dict.
 
         """
-        return self.login('testuser2', 'test2@example.com', 'test2pass', force=force, add=add, **kwargs)
+        return self.login('test2@example.com', 'test2pass', 'testuser2', force=force, add=add, **kwargs)
 
     def login_test3(self, force: bool = False, add: bool = False, **kwargs):
         """Logs testuser3 in.
@@ -449,7 +454,7 @@ class TimRouteTest(TimDbTest):
         :return: Response as a JSON dict.
 
         """
-        return self.login('testuser3', 'test3@example.com', 'test3pass', force=force, add=add, **kwargs)
+        return self.login('test3@example.com', 'test3pass', 'testuser3', force=force, add=add, **kwargs)
 
     def logout(self, user_id: Optional[int] = None):
         """Logs the specified user out.
@@ -460,7 +465,7 @@ class TimRouteTest(TimDbTest):
         """
         return self.json_post('/logout', json_data={'user_id': user_id})
 
-    def login(self, username: str, email: str, passw: str, force: bool = False, clear_last_doc: bool = True,
+    def login(self, email: str, passw: str, username: Optional[str]=None, force: bool = False, clear_last_doc: bool = True,
               add: bool = False, **kwargs):
         """Logs a user in.
 

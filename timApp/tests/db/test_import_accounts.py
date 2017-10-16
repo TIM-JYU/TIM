@@ -9,7 +9,7 @@ from timApp.timdb.models.user import User
 class AccountImportTest(TimDbTest):
 
     def test_import_accounts(self):
-        num_accounts = 100
+        num_accounts = 10
         accounts = [(name + '@example.com', name, name + 'uname') for name in
                     [f'testimport{i}' for i in range(0, num_accounts)]]
         self.assertEqual(num_accounts, len(accounts))
@@ -19,6 +19,10 @@ class AccountImportTest(TimDbTest):
                     [f'testimport_2_{i}' for i in range(0, num_accounts)]]
         self.assertEqual(num_accounts, len(accounts))
         self.write_and_test(accounts, username_is_email=True)
+
+    def test_email_existing(self):
+        accounts = [('test1@example.com', 'Real Name 1', 't1')]
+        self.write_and_test(accounts, expected_existing=(name for _, _, name in accounts))
 
     def write_and_test(self, accounts, username_is_email=False, expected_existing=None):
         if expected_existing is None:
