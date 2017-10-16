@@ -76,6 +76,29 @@ d: 4
         self.assertEqual(doc.get_settings().get_dict(), {'a': 0, 'b': 2, 'c': 3, 'd': 4, 'e': 5})
         self.assertEqual(doc2.get_settings().get_dict(), {})
 
+    def test_settings_invalid_area_reference(self):
+        doc = self.create_doc().document
+        doc2 = self.create_doc(initial_par="""
+#-
+first
+
+#- {area=a}
+a: 1
+b: 2
+
+#- {settings=""}
+c: 3
+d: 4
+
+#- {area_end=a}
+""").document
+        ref = DocParagraph.create_area_reference(doc, area_name='a', rd=doc2.doc_id)
+        doc.add_paragraph_obj(make_settings(ref))
+        doc.add_paragraph_obj(DocSettings(doc, YamlBlock(values={'e': 5, 'a': 0})).to_paragraph())
+        self.assertEqual(len(list(doc.get_settings_pars())), 2)
+        self.assertEqual(doc.get_settings().get_dict(), {})
+        self.assertEqual(doc2.get_settings().get_dict(), {})
+
     def test_invalid_settings(self):
         doc = self.create_doc(initial_par="""#- {settings=""}\nx""").document
         self.assertEqual(doc.get_settings().get_dict(), {})

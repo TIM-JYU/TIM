@@ -1,7 +1,4 @@
 """Unit tests for Document class.
-
-Run from parent directory with command: python3 -m unittest dumboclient filemodehelper documentmodel/test_document.py
-
 """
 
 import random
@@ -13,20 +10,12 @@ from timApp.documentmodel.documentwriter import DocumentWriter
 from timApp.documentmodel.exceptions import DocExistsError
 from timApp.documentmodel.randutils import random_paragraph
 from timApp.tests.db.timdbtest import TimDbTest
-from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.documents import delete_document
 from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import get_anon_group_id
 
 
 class DocumentTest(TimDbTest):
-
-    def init_testdoc(self):
-        try:
-            DocumentTest.init_testdoc.counter += 1
-        except AttributeError:
-            DocumentTest.init_testdoc.counter = 12345
-        d = DocEntry.create(str(DocumentTest.init_testdoc.counter), get_anon_group_id()).document
-        return d
 
     def add_pars(self, d, num_docs):
         pars = [d.add_paragraph(random_paragraph()).get_id() for _ in range(0, num_docs)]
@@ -34,13 +23,13 @@ class DocumentTest(TimDbTest):
         return pars
 
     def test_document_create(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
         self.assertTrue(d.exists())
         self.assertEqual(d.doc_id + 1, Document.get_next_free_id())
         self.assertEqual((0, 0), d.get_version())
         self.assertListEqual([], d.get_changelog())
 
-        d = self.init_testdoc()
+        d = self.create_doc().document
         self.assertTrue(d.exists())
         self.assertEqual(d.doc_id + 1, Document.get_next_free_id())
         self.assertEqual((0, 0), d.get_version())
@@ -50,7 +39,7 @@ class DocumentTest(TimDbTest):
             d.create()
 
     def test_addparagraph(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
 
         # Add first paragraph
         par1 = d.add_paragraph('testing')
@@ -86,7 +75,7 @@ class DocumentTest(TimDbTest):
         self.assertNotEqual(par1.get_id(), par3.get_id())
 
     def test_iterator(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
 
         pars = [d.add_paragraph(random_paragraph()) for _ in range(0, 10)]
         self.assertEqual((10, 0), d.get_version())
@@ -95,7 +84,7 @@ class DocumentTest(TimDbTest):
         self.assertListEqual([p.get_hash() for p in pars], [par.get_hash() for par in d])
 
     def test_delparagraph(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
         pars = self.add_pars(d, 10)
 
         # Delete first paragraph
@@ -130,7 +119,7 @@ class DocumentTest(TimDbTest):
         self.assertEqual(13, len(d.get_changelog()))
 
     def test_insertparagraph(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
         pars = self.add_pars(d, 10)
 
         # Insert as first
@@ -155,7 +144,7 @@ class DocumentTest(TimDbTest):
         self.assertEqual(13, len(d.get_changelog()))
 
     def test_get_html(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
 
         par1 = d.add_paragraph('just text')
         self.assertEqual('<p>just text</p>', par1.get_html())
@@ -164,7 +153,7 @@ class DocumentTest(TimDbTest):
         self.assertEqual('<h1 id="heading">Heading</h1>', par1.get_html())
 
     def test_modify(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
         pars = [d.add_paragraph(random_paragraph()) for _ in range(0, 10)]
         self.assertEqual((10, 0), d.get_version())
 
@@ -199,7 +188,7 @@ class DocumentTest(TimDbTest):
     def test_document_remove(self):
         free = Document.get_next_free_id()
         db = self.get_db()
-        docs = [self.init_testdoc() for i in range(1, 5)]
+        docs = [self.create_doc().document for i in range(1, 5)]
 
         self.assertLess(free, Document.get_next_free_id())
 
@@ -207,13 +196,13 @@ class DocumentTest(TimDbTest):
             Document.remove(doc_id=0)
 
         for d in docs:
-            db.documents.delete(d.doc_id)
+            delete_document(d.doc_id)
             self.assertFalse(Document.doc_exists(doc_id=d.doc_id))
 
     def test_update(self):
         random.seed(0)
         for i in range(1, 5):
-            d = self.init_testdoc()
+            d = self.create_doc().document
             for _ in range(0, i):
                 d.add_paragraph(random_paragraph())
             fulltext = d.export_markdown()
@@ -231,7 +220,7 @@ class DocumentTest(TimDbTest):
     def test_update_section(self):
         random.seed(0)
         for i in range(6, 10):
-            d = self.init_testdoc()
+            d = self.create_doc().document
             for _ in range(0, i):
                 d.add_paragraph(random_paragraph())
             ids = [par.get_id() for par in d]
@@ -248,7 +237,7 @@ class DocumentTest(TimDbTest):
             self.assertEqual(length_diff, len(new_ids) - len(ids))
 
     def test_macros(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
         settings_par = d.add_paragraph('```\n'
                                        'macro_delimiter: "%%"\n'
                                        'macros:\n'
@@ -278,10 +267,10 @@ class DocumentTest(TimDbTest):
                          macro_par.get_html())
 
     def test_macro_expansion_from_reference(self):
-        d1 = self.init_testdoc()
+        d1 = self.create_doc().document
         d1.set_settings({'macros': {'first': '1', 'second': '2'}})
         par1 = d1.add_paragraph('d1: %%first%% %%second%% %%third%%')
-        d2 = self.init_testdoc()
+        d2 = self.create_doc().document
         d2.set_settings({'macros': {'first': '3', 'second': '4', 'third': '5'}})
         self.assertEqual('d1: 1 2 ', par1.get_expanded_markdown())
         ref_par1 = par1.create_reference(d2)
@@ -301,7 +290,7 @@ class DocumentTest(TimDbTest):
         self.assertEqual('d2: 3 4 5', deref2.get_expanded_markdown(d2.get_settings().get_macroinfo()))
 
     def test_predefined_macros(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
         p = d.add_paragraph('document id is %%docid%%')
         self.assertEqual(f'document id is {d.doc_id}', p.get_expanded_markdown())
 
@@ -312,7 +301,7 @@ class DocumentTest(TimDbTest):
                                                   get_anon_group_id())
 
     def test_parwise_diff(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
         num_pars = 10
         for i in range(0, num_pars):
             d.add_paragraph(f'Par {i}')
@@ -346,7 +335,7 @@ class DocumentTest(TimDbTest):
             list(new_ver.parwise_diff(d)))
 
     def test_parwise_diff_html(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
         num_pars = 10
         d.set_settings({'auto_number_headings': True})
         for i in range(0, num_pars):
@@ -364,13 +353,13 @@ class DocumentTest(TimDbTest):
                              list(ver_orig.parwise_diff(d, check_html=True)))
 
     def test_clear_document(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
         d.add_paragraph('test')
         d.update('', d.export_markdown())
         self.assertEqual('', d.export_markdown())
 
     def test_unsync_work(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
         p = d.add_paragraph('test')
         old_hash = p.get_hash()
         p.set_markdown('test2')
@@ -395,10 +384,9 @@ class DocumentTest(TimDbTest):
         pars = d.get_paragraphs()
         self.assertEqual('test3', pars[0].get_markdown())
 
-
     def test_settings_block_style(self):
         """Settings paragraph is always serialized in the block style."""
-        d = self.init_testdoc()
+        d = self.create_doc().document
         d.set_settings({'a': 1})
         self.assertEqual("""
 ```
@@ -408,7 +396,7 @@ a: 1
 """.strip(), d.get_paragraphs()[0].get_markdown())
 
     def test_settings_cached(self):
-        d = self.init_testdoc()
+        d = self.create_doc().document
         d.set_settings({'x': 1})
         s1 = d.get_settings()
         self.assertEqual({'x': 1}, s1.get_dict())

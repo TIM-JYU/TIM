@@ -18,6 +18,7 @@ from timApp.responsehelper import json_response, ok_response
 from timApp.sessioninfo import get_current_user_group
 from timApp.sessioninfo import get_current_user_object
 from timApp.timdb.blocktypes import from_str
+from timApp.timdb.documents import delete_document
 from timApp.timdb.item import Item
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
@@ -333,7 +334,7 @@ def verify_permission_edit_access(item_id: int, perm_type: str) -> bool:
 
 
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])
-def delete_document(doc_id):
+def del_document(doc_id):
     timdb = get_timdb()
     if not timdb.documents.exists(doc_id):
         return abort(404, 'Document does not exist.')
@@ -341,7 +342,7 @@ def delete_document(doc_id):
     abort(403, 'Deleting documents has been disabled until a proper backup mechanism is implemented. '
                'Please contact TIM administrators if you really want to delete this document. '
                'You can hide this document from others by removing all permissions.')
-    timdb.documents.delete(doc_id)
+    delete_document(doc_id)
     return ok_response()
 
 

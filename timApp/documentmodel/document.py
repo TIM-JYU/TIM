@@ -518,39 +518,6 @@ class Document:
         )
         return self.add_paragraph_obj(p)
 
-    def add_ref_paragraph(self, src_par: DocParagraph, text: Optional[str] = None,
-                          attrs: Optional[dict] = None) -> DocParagraph:
-
-        ref_attrs = {} if attrs is None else attrs.copy()
-        ref_attrs['rp'] = src_par.get_id()
-        ref_attrs['rt'] = src_par.get_hash()
-
-        rd = src_par.get_doc_id()
-        if self.get_settings().get_source_document() != rd:
-            ref_attrs['rd'] = str(rd)
-        if text is not None:
-            ref_attrs['r'] = 'tr'
-        else:
-            text = ''
-
-        return self.add_paragraph(text, attrs=ref_attrs)
-
-    def add_area_ref_paragraph(self, src_doc: 'Document', src_area_name: str, text: Optional[str] = None,
-                               attrs: Optional[dict] = None) -> DocParagraph:
-
-        ref_attrs = {} if attrs is None else attrs.copy()
-        ref_attrs['ra'] = src_area_name
-        ref_attrs.pop('rt', None)
-
-        if self.get_settings().get_source_document() != src_doc.doc_id:
-            ref_attrs['rd'] = str(src_doc.doc_id)
-        if text is not None:
-            ref_attrs['r'] = 'tr'
-        else:
-            text = ''
-
-        return self.add_paragraph(text, attrs=ref_attrs)
-
     def delete_paragraph(self, par_id: str):
         """Removes a paragraph from the document.
 
