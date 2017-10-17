@@ -1037,7 +1037,7 @@ class Document:
             raise PreambleException('The paragraphs in the main document must '
                                     f'have distinct ids from the preamble documents. Conflicting ids: {isect}')
         for p in pars:
-            p.preamble_doc = p.doc
+            p.preamble_doc = p.doc.get_docinfo()
             if p.is_translation():
                 p.set_attr('rd', p.doc.get_source_document().doc_id)
             p.doc = self
