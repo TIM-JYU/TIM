@@ -931,6 +931,8 @@ class DocParagraph:
             final_par.original = self
             final_par._cache_props()
             final_par.__htmldata = None
+            if self.from_preamble():
+                final_par.preamble_doc = self.from_preamble()
 
             if set_html:
                 html = self.get_html(from_preview=False) if self.is_translation(

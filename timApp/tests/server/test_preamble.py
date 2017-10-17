@@ -179,3 +179,5 @@ class PreambleTest3(PreambleTestBase):
                                 '',
                                 'macro d is kärpänen',
                                 'macro e is jänis', ])
+
+        self.assertEqual(len(e.cssselect('.preamble')), 3)
