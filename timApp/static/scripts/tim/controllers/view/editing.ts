@@ -183,7 +183,7 @@ export function defineEditing(sc) {
             if (recursiveCall) {
                 throw new Error("Faulty recursion stopped, there should be a settings paragraph already");
             }
-            const $first = $(".par:first");
+            const $first = $(".par:not(.preamble):first");
             let parNext = getParId($first);
             if (parNext === "HELP_PAR") {
                 parNext = null;
