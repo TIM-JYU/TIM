@@ -4,7 +4,7 @@ import {$compile, $http, $timeout, $window} from "../../ngimport";
 import {
     getPars, getParIndex, isReference, getElementByRefId, getElementByParId, getRefAttrs, getNextPar,
     getLastParId,
-    getFirstPar, getParAttributes, getParId, EDITOR_CLASS_DOT, EDITOR_CLASS,
+    getFirstPar, getParAttributes, getParId, EDITOR_CLASS_DOT, EDITOR_CLASS, isPreamble,
 } from "./parhelpers";
 import {markPageDirty} from "tim/utils";
 import {onClick} from "./eventhandlers";
@@ -175,6 +175,9 @@ export function defineEditing(sc) {
     sc.editSettingsPars = async function(recursiveCall) {
         const pars = [];
         $(".par").each(function() {
+            if (isPreamble($(this))) {
+                return;
+            }
             if (getParAttributes($(this)).hasOwnProperty("settings")) {
                 pars.push(this);
             }
