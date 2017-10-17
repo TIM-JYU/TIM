@@ -133,3 +133,8 @@ class EditTest(TimRouteTest):
         d = self.create_doc()
         self.json_post(f'/update/{d.id}', {'template_name': 'xxx'}, expect_status=404,
                        expect_content={'error': 'Template not found'})
+
+    def test_invalid_add(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.new_par(d.document, 'test', next_id='xxx', expect_status=400)

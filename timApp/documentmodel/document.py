@@ -444,7 +444,10 @@ class Document:
             self._raise_not_found(par_id)
 
     def _raise_not_found(self, par_id: str):
-        raise TimDbException(f'Document {self.doc_id}: Paragraph not found: {par_id}')
+        raise TimDbException(self.get_par_not_found_msg(par_id))
+
+    def get_par_not_found_msg(self, par_id: str):
+        return f'Document {self.doc_id}: Paragraph not found: {par_id}'
 
     def has_paragraph(self, par_id: str) -> bool:
         """Checks if the document has the given paragraph.

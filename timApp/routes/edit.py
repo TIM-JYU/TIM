@@ -571,6 +571,8 @@ def add_paragraph_common(md, doc_id, par_next_id):
     if not docentry:
         abort(404)
     doc = docentry.document_as_current_user
+    if par_next_id and not doc.has_paragraph(par_next_id):
+        abort(400, doc.get_par_not_found_msg(par_next_id))
     edit_result = DocumentEditResult()
     edit_request = EditRequest.from_request(doc, md)
     try:
