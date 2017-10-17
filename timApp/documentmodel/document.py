@@ -1038,6 +1038,8 @@ class Document:
                                     f'have distinct ids from the preamble documents. Conflicting ids: {isect}')
         for p in pars:
             p.preamble_doc = p.doc
+            if p.is_translation():
+                p.set_attr('rd', p.doc.get_source_document().doc_id)
             p.doc = self
         self.par_cache = pars + self.par_cache
         self.__update_par_map()

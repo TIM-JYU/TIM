@@ -82,9 +82,6 @@ def do_create_document(item_path, item_type, item_title, copied_doc: Optional[Do
                 new_tr = add_tr_entry(doc_id, item, tr)
                 document.docinfo = new_tr
                 document.update(tr.document.export_markdown(), document.export_markdown())
-                settings = document.get_settings()
-                settings.set_source_document(item.id)
-                document.set_settings(settings.get_dict())
             elif tr.lang_id:
                 add_tr_entry(doc_id, item, tr)
             if not tr.is_original_translation:

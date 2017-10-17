@@ -28,8 +28,15 @@ class DocEntry(db.Model, DocInfo):
     def path_without_lang(self):
         return self.name
 
+    @property
+    def lang_id(self):
+        tr = Translation.query.filter_by(src_docid=self.id, doc_id=self.id).first()
+        if tr:
+            return tr.lang_id
+        return None
+
     # noinspection PyMethodOverriding
-    @DocInfo.lang_id.setter
+    @lang_id.setter
     def lang_id(self, value):
         tr = Translation.query.filter_by(src_docid=self.id, doc_id=self.id).first()
         if tr:

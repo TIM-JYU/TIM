@@ -3,6 +3,7 @@ from lxml import html
 from unittest.mock import patch, Mock
 
 from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
+from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.docinfo import DocInfo
 
@@ -127,3 +128,54 @@ a: b
         e = self.get_updated_pars(d)
         changed = e['changed_pars']
         self.assert_content(html.fromstring(changed[first_par.get_id()]), ['4. x'])
+
+
+class PreambleTest3(PreambleTestBase):
+    def test_preamble_translation(self):
+        self.login_test1()
+        folder = self.current_user.get_personal_folder().path
+        d, p1, p2, p3 = self.create_doc_and_preamble(folder)
+        p1.document.add_text('macro a is %%a%%')
+        p2.document.add_text('macro b is %%b%%')
+        p3.document.add_text('macro c is %%c%%')
+        d.document.add_text('macro d is %%d%%')
+        d.document.add_text('macro e is %%e%%')
+        dt = self.create_translation(d, 'test', 'fi')
+        p1t = self.create_translation(p1, 'test', 'fi')
+        p2t = self.create_translation(p2, 'test', 'fi')
+        p1tpars = p1t.document.get_paragraphs()
+        p2tpars = p2t.document.get_paragraphs()
+        p1tpars[0].set_markdown(YamlBlock(values={'macros': {'a': 'kissa', 'b': 'koira', 'd': 'lammas'}}).to_markdown())
+        p1tpars[0].save()
+        e = self.get(dt.url, as_tree=True)
+        self.assert_content(e, ['macro a is kissa',
+                                'macro b is mouse',
+                                'macro c is elephant',
+                                'macro d is fly',
+                                'macro e is', ])
+
+        p1tpars[1].set_markdown('makro a on %%a%%')
+        p1tpars[1].save()
+        e = self.get(dt.url, as_tree=True)
+        self.assert_content(e, ['makro a on kissa',
+                                'macro b is mouse',
+                                'macro c is elephant',
+                                'macro d is fly',
+                                'macro e is', ])
+        dt.document.set_settings({'macros': {'e': 'jänis', 'd': 'kärpänen'}})
+        e = self.get(dt.url, as_tree=True)
+        self.assert_content(e, ['makro a on kissa',
+                                'macro b is mouse',
+                                'macro c is elephant',
+                                '',
+                                'macro d is kärpänen',
+                                'macro e is jänis', ])
+        p2tpars[1].set_markdown('makro b on %%b%%')
+        p2tpars[1].save()
+        e = self.get(dt.url, as_tree=True)
+        self.assert_content(e, ['makro a on kissa',
+                                'makro b on mouse',
+                                'macro c is elephant',
+                                '',
+                                'macro d is kärpänen',
+                                'macro e is jänis', ])

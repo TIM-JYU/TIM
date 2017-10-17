@@ -1,5 +1,5 @@
 from itertools import accumulate
-from typing import List, Iterable, Generator
+from typing import List, Iterable, Generator, Tuple, Optional
 
 from sqlalchemy import func
 
@@ -82,7 +82,7 @@ class DocInfo(Item):
     def lang_id(self) -> str:
         raise NotImplementedError
 
-    def get_preamble_docs(self) -> List['DocEntry']:
+    def get_preamble_docs(self) -> List['DocInfo']:
         """Gets the list of preamble documents for this document.
         The first document in the list is nearest root.
         """
@@ -94,9 +94,10 @@ class DocInfo(Item):
     def get_preamble_pars(self) -> Generator[DocParagraph, None, None]:
         return get_non_settings_pars_from_docs(self.get_preamble_docs())
 
-    def _get_preamble_docs_impl(self, preamble_name: str) -> List['DocEntry']:
+    def _get_preamble_docs_impl(self, preamble_name: str) -> List['DocInfo']:
         path_parts = self.path_without_lang.split('/')
-        paths = list(f'{p}{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name}' for p in accumulate(part + '/' for part in path_parts[:-1]))
+        paths = list(f'{p}{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name}' for p in
+                     accumulate(part + '/' for part in path_parts[:-1]))
         if not paths:
             return []
 
@@ -105,7 +106,18 @@ class DocInfo(Item):
             return []
 
         from timApp.timdb.models.docentry import DocEntry
-        preamble_docs = DocEntry.query.filter(DocEntry.name.in_(paths)).order_by(func.length(DocEntry.name)).all()
+        from timApp.timdb.models.translation import Translation
+        result = db.session.query(DocEntry, Translation).filter(
+            DocEntry.name.in_(paths)).outerjoin(Translation,
+                                                (Translation.src_docid == DocEntry.id) & (
+                                                Translation.lang_id == self.lang_id)).order_by(
+            func.length(DocEntry.name)).all()  # type: List[Tuple[DocEntry, Optional[Translation]]]
+        preamble_docs = []
+        for de, tr in result:
+            if tr:
+                preamble_docs.append(tr)   # preamble has the corresponding translation
+            else:
+                preamble_docs.append(de)  # preamble doesn't have the corresponding translation; using the original one
         return preamble_docs
 
     def get_changelog_with_names(self, length=None):
