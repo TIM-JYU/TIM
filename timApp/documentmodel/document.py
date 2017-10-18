@@ -1040,6 +1040,7 @@ class Document:
             p.preamble_doc = p.doc.get_docinfo()
             if p.is_translation():
                 p.set_attr('rd', p.doc.get_source_document().doc_id)
+                p.set_attr('rl', 'no')
             p.doc = self
         self.par_cache = pars + self.par_cache
         self.__update_par_map()

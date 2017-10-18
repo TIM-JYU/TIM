@@ -181,3 +181,4 @@ class PreambleTest3(PreambleTestBase):
                                 'macro e is jänis', ])
 
         self.assertEqual(len(e.cssselect('.preamble')), 3)
+        self.assertEqual(len(e.cssselect('.parlink')), 0)
