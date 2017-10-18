@@ -1,7 +1,7 @@
 import csv
 import os
 
-from timApp.import_accounts import import_accounts
+from timApp.maintenance.import_accounts import import_accounts
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.models.user import User
 
