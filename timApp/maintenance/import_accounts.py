@@ -1,14 +1,16 @@
 import csv
 import sys
+from typing import Tuple, List
 
 from timApp.tim_app import app
 from timApp.timdb.models.user import User
 from timApp.timdb.timdb2 import TimDb
 
 
-def import_accounts(file, password):
+def import_accounts(file: str, password: str) -> Tuple[List[User], List[User]]:
     timdb = TimDb(files_root_path=app.config['FILES_PATH'])
     existing = []
+    added = []
     with open(file) as csvfile:
         reader = csv.reader(csvfile, delimiter=';')
         for row in reader:
@@ -20,27 +22,38 @@ def import_accounts(file, password):
             if u is None:
                 u = User.get_by_email(email)
                 if not u:
-                    User.create_with_group(name=name,
-                                           real_name=row[1],
-                                           email=email,
-                                           password=password,
-                                           commit=False)
+                    u, _ = User.create_with_group(name=name,
+                                                  real_name=row[1],
+                                                  email=email,
+                                                  password=password,
+                                                  commit=False)
+                    added.append(u)
                 else:
                     u.update_info(name, real_name=row[1], email=email, password=password)
-                    existing.append(name)
+                    existing.append(u)
             else:
                 u.update_info(name, real_name=row[1], email=email, password=password)
-                existing.append(name)
+                existing.append(u)
     timdb.commit()
-    return existing
+    return added, existing
 
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         print('Usage: import_accounts.py <CSV file> <password for all accounts>')
     else:
-        existing_accounts = import_accounts(sys.argv[1], sys.argv[2])
-        if existing_accounts:
-            print('The following accounts already exist and were skipped:')
-            for e in existing_accounts:
-                print(e)
+        added, existing = import_accounts(sys.argv[1], sys.argv[2])
+        total = len(added) + len(existing)
+        print(f'Processed {total} accounts.')
+        if added:
+            print(f'Added the following {len(added)} accounts:')
+        else:
+            print(f'No new accounts were added.')
+        for u in added:
+            print(u.email)
+        if existing:
+            print(f'Updated the following {len(existing)} existing accounts:')
+        else:
+            print(f'No existing accounts were updated.')
+        for u in existing:
+            print(u.email)
