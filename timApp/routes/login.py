@@ -132,9 +132,7 @@ def login_with_korppi():
             # usergroup.
             # 2) Korppi username has been changed (rare but it can happen).
             # In this case, we must not re-add the user to the Korppi group.
-            personal_group = user.get_personal_group()
             user.update_info(name=user_name, real_name=real_name, email=email)
-            personal_group.name = user_name
             korppi_group = UserGroup.get_korppi_group()
             if korppi_group not in user.groups:
                 user.groups.append(korppi_group)

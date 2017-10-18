@@ -201,7 +201,9 @@ class User(db.Model):
         )
 
     def update_info(self, name: str, real_name: str, email: str, password: Optional[str]=None):
+        group = self.get_personal_group()
         self.name = name
+        group.name = name
         self.real_name = real_name
         self.email = email
         if password:
