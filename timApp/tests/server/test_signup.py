@@ -116,13 +116,14 @@ class TestSignUp(TimRouteTest):
 
         with responses.RequestsMock() as m:
             m.add('GET', auth_url + '?request=' + session['appcookie'],
-                  body='johmadoe\nDoe John Matt\njohn.m.doe@student.jyu.fi',
+                  body='johmadoenew\nDoe John Matt\njohn.m.doenew@student.jyu.fi',
                   match_querystring=True)
             self.get('/korppiLogin', follow_redirects=True)
         self.assertEqual('Doe John Matt', self.current_user.real_name)
-        self.assertEqual('johmadoe', self.current_user.name)
-        self.assertEqual('john.m.doe@student.jyu.fi', self.current_user.email)
-        self.assertEqual(list(g.name for g in self.current_user.groups.order_by(UserGroup.name)), ['johmadoe', 'Korppi users'])
+        self.assertEqual('johmadoenew', self.current_user.name)
+        self.assertEqual('john.m.doenew@student.jyu.fi', self.current_user.email)
+        self.assertEqual(list(g.name for g in self.current_user.groups.order_by(UserGroup.name)), ['johmadoenew',
+                                                                                                   'Korppi users'])
 
     def register_user_with_korppi(self, username='johmadoe', real_name='Doe John Matt', email='john.m.doe@student.jyu.fi'):
         auth_url = self.korppi_auth_url
