@@ -1,7 +1,9 @@
 """Server tests for preamble."""
-from lxml import html
 from unittest.mock import patch, Mock
 
+from lxml import html
+
+from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -172,7 +174,10 @@ class PreambleTest3(PreambleTestBase):
                                 'macro e is jänis', ])
         p2tpars[1].set_markdown('makro b on %%b%%')
         p2tpars[1].save()
-        e = self.get(dt.url, as_tree=True)
+        with patch.object(DocParagraph, 'get', wraps=DocParagraph.get) as m:  # type: Mock
+            e = self.get(dt.url, as_tree=True)
+        self.assertEqual(m.call_count, sum(map(len, (x.document.get_par_ids() for x in (p1, p2, p3, p1t, p2t, d, dt)))) + 1)  # + 1 because of bookmark document
+
         self.assert_content(e, ['makro a on kissa',
                                 'makro b on mouse',
                                 'macro c is elephant',

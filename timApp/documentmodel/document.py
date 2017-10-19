@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from tempfile import mkstemp
 from time import time
-from typing import List, Optional, Set, Tuple, Union, Iterable, Generator
+from typing import List, Optional, Set, Tuple, Union, Iterable, Generator, Dict
 
 import dateutil.parser
 from filelock import FileLock
@@ -35,7 +35,7 @@ class Document:
 
     def __init__(self,
                  doc_id: Optional[int]=None,
-                 files_root = None,
+                 files_root: Optional[str] = None,
                  modifier_group_id: Optional[int] = 0,
                  preload_option: PreloadOption = PreloadOption.none):
         self.doc_id = doc_id if doc_id is not None else Document.get_next_free_id(files_root)
@@ -65,7 +65,10 @@ class Document:
         self.own_settings = None
         # Whether preamble has been loaded
         self.preamble_included = False
-
+        # Cache for documents that are referenced by this document
+        self.ref_doc_cache: Dict[int, 'Document'] = {}
+        # Cache for single paragraphs
+        self.single_par_cache: Dict[str, DocParagraph] = {}
         # Used for accessing previous/next paragraphs quickly based on id
         self.par_map = None
 
@@ -76,6 +79,9 @@ class Document:
     @classmethod
     def get_documents_dir(cls, files_root: str = default_files_root) -> str:
         return os.path.join(files_root, 'docs')
+
+    def __repr__(self):
+        return f'Document(id={self.doc_id})'
 
     def __len__(self):
         count = 0
@@ -137,6 +143,7 @@ class Document:
         """Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster."""
         self.par_cache = [par for par in self]
         self.par_ids = [par.get_id() for par in self.par_cache]
+        self.par_hashes = [par.get_hash() for par in self.par_cache]
         self.__update_par_map()
 
     def ensure_pars_loaded(self):
@@ -438,6 +445,8 @@ class Document:
         self.source_doc = None
         self.settings = None
         self.own_settings = None
+        self.single_par_cache = {}
+        self.ref_doc_cache = {}
         return ver
 
     def __update_metadata(self, pars: List[DocParagraph], old_ver: Tuple[int, int], new_ver: Tuple[int, int]):
@@ -486,10 +495,17 @@ class Document:
                 return self.par_map[par_id]['c']
             except KeyError:
                 return self._raise_not_found(par_id)
+        cached = self.single_par_cache.get(par_id)
+        if cached:
+            return cached
         self.ensure_par_ids_loaded()
-        if par_id not in self.par_ids:
+        try:
+            idx = self.par_ids.index(par_id)
+        except ValueError:
             return self._raise_not_found(par_id)
-        return DocParagraph.get_latest(self, par_id, self.files_root)
+        fetched = DocParagraph.get(self, self.par_ids[idx], self.par_hashes[idx], self.files_root)
+        self.single_par_cache[par_id] = fetched
+        return fetched
 
     def add_text(self, text: str) -> List[DocParagraph]:
         """Converts the given text to (possibly) multiple paragraphs and adds them to the document."""
@@ -656,21 +672,21 @@ class Document:
         old_hash = p_src.get_hash()
         new_ver = self.__increment_version('Modified', par_id, increment_major=False,
                                            op_params={'old_hash': old_hash, 'new_hash': new_hash})
-        self.__update_metadata([p], old_ver, new_ver)
 
         old_line_start = f'{par_id}/'
         old_line_legacy = f'{par_id}\n'
         new_line = f'{par_id}/{new_hash}\n'
-        with open(self.get_version_path(old_ver), 'r') as f_src:
-            with open(self.get_version_path(new_ver), 'w') as f:
-                while True:
-                    line = f_src.readline()
-                    if not line:
-                        return p
-                    if line.startswith(old_line_start) or line == old_line_legacy:
-                        f.write(new_line)
-                    else:
-                        f.write(line)
+        with open(self.get_version_path(old_ver), 'r') as f_src, open(self.get_version_path(new_ver), 'w') as f:
+            while True:
+                line = f_src.readline()
+                if not line:
+                    break
+                if line.startswith(old_line_start) or line == old_line_legacy:
+                    f.write(new_line)
+                else:
+                    f.write(line)
+        self.__update_metadata([p], old_ver, new_ver)
+        return p
 
     def parwise_diff(self, other_doc: 'Document', check_html: bool=False):
         if self.get_version() == other_doc.get_version():
@@ -995,6 +1011,7 @@ class Document:
                 self.source_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
             else:
                 self.source_doc = docinfo.src_doc.document
+                self.ref_doc_cache[self.source_doc.doc_id] = self.source_doc
         return self.source_doc
 
     def get_last_par(self):
@@ -1077,6 +1094,15 @@ class Document:
         self.par_hashes = None
         self.source_doc = None
         self.settings = None
+        self.ref_doc_cache = {}
+        self.single_par_cache = {}
+
+    def get_ref_doc(self, ref_docid: int):
+        cached = self.ref_doc_cache.get(ref_docid)
+        if not cached:
+            cached = Document(ref_docid, preload_option=self.preload_option)
+            self.ref_doc_cache[ref_docid] = cached
+        return cached
 
 
 class CacheIterator:
@@ -1126,8 +1152,12 @@ class DocParagraphIter:
                 if len(line) > 14:
                     # Line contains both par_id and t
                     par_id, t = line.replace('\n', '').split('/')
-                    # Make a copy of the paragraph to avoid modifying cached instance
-                    return DocParagraph.get(self.doc, par_id, t, self.doc.files_root)
+                    cached = self.doc.single_par_cache.get(par_id)
+                    if self.doc.single_par_cache.get(par_id):
+                        return cached
+                    fetched = DocParagraph.get(self.doc, par_id, t, self.doc.files_root)
+                    self.doc.single_par_cache[par_id] = fetched
+                    return fetched
                 else:
                     # Line contains just par_id, use the latest t
                     return DocParagraph.get_latest(self.doc, line.replace('\n', ''), self.doc.files_root)

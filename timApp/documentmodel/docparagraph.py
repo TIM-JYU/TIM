@@ -973,7 +973,7 @@ class DocParagraph:
             if ref_docid is None:
                 raise InvalidReferenceException('Source document for reference not specified.')
             from timApp.documentmodel.document import Document  # Document import needs to be here to avoid circular import
-            ref_doc = Document(ref_docid)
+            ref_doc = self.doc.get_ref_doc(ref_docid)
 
         if not ref_doc.exists():
             raise InvalidReferenceException('The referenced document does not exist.')

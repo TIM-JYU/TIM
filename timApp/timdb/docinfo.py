@@ -114,10 +114,9 @@ class DocInfo(Item):
             func.length(DocEntry.name)).all()  # type: List[Tuple[DocEntry, Optional[Translation]]]
         preamble_docs = []
         for de, tr in result:
-            if tr:
-                preamble_docs.append(tr)   # preamble has the corresponding translation
-            else:
-                preamble_docs.append(de)  # preamble doesn't have the corresponding translation; using the original one
+            d = tr or de  # preamble either has the corresponding translation or not
+            preamble_docs.append(d)
+            d.document.ref_doc_cache = self.document.ref_doc_cache
         return preamble_docs
 
     def get_changelog_with_names(self, length=None):
