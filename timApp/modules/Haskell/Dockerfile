@@ -26,3 +26,5 @@ ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRO
 
 RUN bash -c "${APT_INSTALL} graphviz libgmp10 && ${APT_CLEANUP}"
 COPY --from=build /build/Choices/.stack-work/install/x86_64-linux/lts-9.0/8.0.2/bin/*Plugin /hbin/
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8

@@ -28,6 +28,9 @@ class AnswerBrowserTest(BrowserTest):
         # hover mouse over par element to activate answer browser
         ActionChains(self.drv).move_to_element(submitbutton).perform()
 
+        # Due to plugin refresh on hover, we need to fetch the element again.
+        submitbutton = self.drv.find_element_by_css_selector('#mmcqexample button')
+        ActionChains(self.drv).move_to_element(submitbutton).perform()
         submitbutton.click()
         prevanswer = 'answerbrowser .prevAnswer'
         self.wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, prevanswer)))

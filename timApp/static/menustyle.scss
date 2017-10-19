@@ -62,6 +62,14 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
             &.subexp {
                 display: block;
                 padding-left: 20px;
+
+                a.a3 {
+                    position: relative;
+                    left: 0.4em;
+                    font-size: smaller;
+                    display: block; // needed for line-height to work
+                    line-height: 1.3;
+                }
             }
         }
     }
