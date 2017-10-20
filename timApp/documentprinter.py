@@ -115,7 +115,7 @@ class DocumentPrinter:
 
         # Remove paragraphs that are not to be printed and replace plugin pars,
         # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
-        pars = self._doc_entry.document.get_paragraphs()
+        pars = self._doc_entry.document.get_paragraphs(include_preamble=True)
         self._doc_entry.document.preload_option = PreloadOption.all
         pars = dereference_pars(pars, source_doc=self._doc_entry.document.get_source_document())
         pars_to_print = []
