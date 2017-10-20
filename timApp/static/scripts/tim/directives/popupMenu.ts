@@ -26,7 +26,7 @@ timApp.directive("popupMenu", [function() {
 
             $scope.getContent($attrs.contenturl);
             if ($attrs.save) {
-                $scope.storageAttribute = "$scope.$storage." + $attrs.save;
+                $scope.storageAttribute = $attrs.save;
             }
             if ($attrs.onclose) {
                 $scope.onClose = eval("$scope." + $attrs.onclose);
@@ -83,12 +83,15 @@ timApp.directive("popupMenu", [function() {
                 return fDesc === $scope.$storage.defaultAction ? "checked" : "";
             };
 
-            $scope.clicked = function(fDesc) {
-                if (eval($scope.storageAttribute) === fDesc) {
-                    eval($scope.storageAttribute + " = null;");
+            $scope.clicked = function(f) {
+                const s = $scope.storageAttribute;
+                if ($scope[s] && $scope[s].desc === f.desc) {
+                    $scope.$parent[s] = null;
+                    $scope.$storage[s] = null;
                 }
                 else {
-                    eval($scope.storageAttribute + " = fDesc;");
+                    $scope.$parent[s] = f;
+                    $scope.$storage[s] = f.desc;
                 }
             };
 
