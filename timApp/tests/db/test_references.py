@@ -1,28 +1,49 @@
-"""Unit tests for testing paragraph referencing.
-
-Run from parent directory with command: python3 -m unittest dumboclient filemodehelper documentmodel/test_references.py
-
-"""
+"""Unit tests for testing paragraph referencing."""
 
 import unittest
+from typing import Optional
 
 from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.document import Document
 from timApp.documentmodel.documentparser import DocumentParser
 from timApp.tests.db.timdbtest import TimDbTest
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.timdb2 import TimDb
 from timApp.timdb.timdbexception import TimDbException
-from timApp.timdb.userutils import get_anon_group_id
+
+
+def add_ref_paragraph(doc: Document, src_par: DocParagraph, text: Optional[str] = None,
+                      attrs: Optional[dict] = None) -> DocParagraph:
+    ref_attrs = {} if attrs is None else attrs.copy()
+    ref_attrs['rp'] = src_par.get_id()
+    ref_attrs['rt'] = src_par.get_hash()
+
+    rd = src_par.get_doc_id()
+    if doc.get_settings().get_source_document() != rd:
+        ref_attrs['rd'] = str(rd)
+    if text is not None:
+        ref_attrs['r'] = 'tr'
+    else:
+        text = ''
+
+    return doc.add_paragraph(text, attrs=ref_attrs)
+
+
+def add_area_ref_paragraph(doc: Document, src_doc: 'Document', src_area_name: str, text: Optional[str] = None,
+                           attrs: Optional[dict] = None) -> DocParagraph:
+    ref_attrs = {} if attrs is None else attrs.copy()
+    ref_attrs['ra'] = src_area_name
+    ref_attrs.pop('rt', None)
+
+    if doc.get_settings().get_source_document() != src_doc.doc_id:
+        ref_attrs['rd'] = str(src_doc.doc_id)
+    if text is not None:
+        ref_attrs['r'] = 'tr'
+    else:
+        text = ''
+
+    return doc.add_paragraph(text, attrs=ref_attrs)
 
 
 class RefTest(TimDbTest):
-
-    def doc_create(self, db: TimDb, doc_name):
-        doc = DocEntry.find_by_path(doc_name)
-        if doc is not None:
-            db.documents.delete(doc.id)
-        return DocEntry.create(doc_name, owner_group_id=get_anon_group_id()).document
-
     def dict_merge(self, a, b):
         c = a.copy()
         c.update(b)
@@ -34,20 +55,21 @@ class RefTest(TimDbTest):
     def assert_dict_issubset(self, a, b):
         self.assertTrue(self.dict_issubset(a, b), f"{a} is not a subset of {b}")
 
+    def setUp(self):
+        super().setUp()
+        self.init_testdb()
+
     def init_testdb(self):
         db = self.get_db()
-        self.src_doc = self.doc_create(db, "original")
-        self.ref_doc = self.doc_create(db, "referencing")
+        self.src_doc = self.create_doc().document
+        self.ref_doc = self.create_doc().document
 
         self.src_par = self.src_doc.add_paragraph("testpar", attrs={"a": "1", "b": "2"})
-        self.assertEqual(1, len(self.src_doc))
         self.assertEqual(self.src_par.get_id(), self.src_doc.get_paragraphs()[0].get_id())
         return db
 
     def test_simpleref(self):
-        db = self.init_testdb()
-
-        ref_par = self.ref_doc.add_ref_paragraph(self.src_par)
+        ref_par = add_ref_paragraph(self.ref_doc, self.src_par)
         self.assertEqual(1, len(self.ref_doc))
         self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual('', ref_par.get_markdown())
@@ -60,10 +82,8 @@ class RefTest(TimDbTest):
         self.assertEqual(self.src_par.get_attrs(), rendered_pars[0].get_attrs())
 
     def test_translation(self):
-        db = self.init_testdb()
-
         ref_attrs = {'foo': 'fffoooo', 'bar': 'baaaa'}
-        ref_par = self.ref_doc.add_ref_paragraph(self.src_par, "translation", attrs=ref_attrs)
+        ref_par = add_ref_paragraph(self.ref_doc, self.src_par, "translation", attrs=ref_attrs)
         self.assertEqual(1, len(self.ref_doc))
         self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual("translation", ref_par.get_markdown())
@@ -76,9 +96,7 @@ class RefTest(TimDbTest):
         self.assertEqual(self.dict_merge(self.src_par.get_attrs(), ref_attrs), rendered_pars[0].get_attrs())
 
     def test_circular(self):
-        db = self.init_testdb()
-
-        ref_par = self.ref_doc.add_ref_paragraph(self.src_par)
+        ref_par = add_ref_paragraph(self.ref_doc, self.src_par)
         self.assertEqual(1, len(self.ref_doc))
         self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual('', ref_par.get_markdown())
@@ -91,17 +109,15 @@ class RefTest(TimDbTest):
         self.assertRaises(TimDbException, self.src_par.get_referenced_pars)
 
     def test_transitive(self):
-        db = self.init_testdb()
-
         # Reference to the original paragraph
-        ref_par1 = self.ref_doc.add_ref_paragraph(self.src_par)
+        ref_par1 = add_ref_paragraph(self.ref_doc, self.src_par)
         self.assertEqual(1, len(self.ref_doc))
         self.assertEqual(ref_par1.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual('', ref_par1.get_markdown())
 
         # Reference to the reference above
-        ref_doc2 = self.doc_create(db, "referencing reference")
-        ref_par2 = ref_doc2.add_ref_paragraph(ref_par1)
+        ref_doc2 = self.create_doc().document
+        ref_par2 = add_ref_paragraph(ref_doc2, ref_par1)
         self.assertEqual(1, len(ref_doc2))
         self.assertEqual(ref_par2.get_id(), ref_doc2.get_paragraphs()[0].get_id())
         self.assertEqual('', ref_par2.get_markdown())
@@ -128,12 +144,10 @@ class RefTest(TimDbTest):
         self.assert_dict_issubset(expected_attrs, rendered_pars[0].get_attrs())
 
     def test_editparagraph_cite(self):
-        db = self.init_testdb()
-
         src_md = self.src_par.get_exported_markdown()
         self.assertRegex(src_md, '^#- *\\{([ab]="[21]" ?){2}\\}\ntestpar\n$')
 
-        ref_par = self.ref_doc.add_ref_paragraph(self.src_par)
+        ref_par = add_ref_paragraph(self.ref_doc, self.src_par)
         self.assertEqual(1, len(self.ref_doc))
         self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual('', ref_par.get_markdown())
@@ -151,7 +165,6 @@ class RefTest(TimDbTest):
         self.assertEqual(self.src_par.get_hash(), ref_blocks[0].get_attr('rt'))
 
     def test_editparagraph_citearea(self):
-        db = self.init_testdb()
         areastart_par = self.src_doc.add_paragraph("", attrs={"area": "testarea"})
         area_par1 = self.src_doc.add_paragraph("Testarea par 1", attrs={"x": 1, "y": 2})
         area_par2 = self.src_doc.add_paragraph("Testarea par 2", attrs={"a": 3, "b": 4})
@@ -167,7 +180,7 @@ class RefTest(TimDbTest):
         self.assertRegex(areapar2_md, '^#- *\\{([ab]="[34]" ?){2}\\}\nTestarea par 2\n$')
         self.assertRegex(areaend_md, '^#- *\\{area_end="testarea" ?\\}\n+$')
 
-        ref_par = self.ref_doc.add_area_ref_paragraph(self.src_doc, 'testarea')
+        ref_par = add_area_ref_paragraph(self.ref_doc, self.src_doc, 'testarea')
         ref_md = ref_par.get_exported_markdown()
 
         src_docid = str(self.src_doc.doc_id)
@@ -176,12 +189,10 @@ class RefTest(TimDbTest):
         # todo: test the contents of the rendered area
 
     def test_editparagraph_translate(self):
-        db = self.init_testdb()
-
         src_md = self.src_par.get_exported_markdown()
         self.assertRegex(src_md, '^#- *\\{([ab]="[21]" ?){2}\\}\ntestpar\n$')
 
-        empty_refpar = self.ref_doc.add_ref_paragraph(self.src_par, "")
+        empty_refpar = add_ref_paragraph(self.ref_doc, self.src_par, "")
         self.assertEqual(1, len(self.ref_doc))
         self.assertEqual(empty_refpar.get_id(), self.ref_doc.get_paragraphs()[0].get_id())
         self.assertEqual("", empty_refpar.get_markdown())
@@ -200,7 +211,7 @@ class RefTest(TimDbTest):
         self.assertEqual("tr", ref_blocks[0].get_attr('r'))
 
         ref_attrs = {'foo': 'fffoooo', 'bar': 'baaaa'}
-        ref_par = self.ref_doc.add_ref_paragraph(self.src_par, "translation", attrs=ref_attrs)
+        ref_par = add_ref_paragraph(self.ref_doc, self.src_par, "translation", attrs=ref_attrs)
         self.assertEqual(2, len(self.ref_doc))
         self.assertEqual(ref_par.get_id(), self.ref_doc.get_paragraphs()[1].get_id())
         self.assertEqual("translation", ref_par.get_markdown())
@@ -219,7 +230,6 @@ class RefTest(TimDbTest):
         self.assertEqual("tr", ref_blocks[0].get_attr('r'))
 
     def test_editparagraph_translatearea(self):
-        db = self.init_testdb()
         areastart_par = self.src_doc.add_paragraph("", attrs={"area": "testarea"})
         area_par1 = self.src_doc.add_paragraph("Testarea par 1", attrs={"x": 1, "y": 2})
         area_par2 = self.src_doc.add_paragraph("Testarea par 2", attrs={"a": 3, "b": 4})
@@ -235,7 +245,7 @@ class RefTest(TimDbTest):
         self.assertRegex(areapar2_md, '^#- *\\{([ab]="[34]" ?){2}\\}\nTestarea par 2\n$')
         self.assertRegex(areaend_md, '^#- *\\{area_end="testarea" ?\\}\n+$')
 
-        ref_par = self.ref_doc.add_area_ref_paragraph(self.src_doc, 'testarea', 'translation')
+        ref_par = add_area_ref_paragraph(self.ref_doc, self.src_doc, 'testarea', 'translation')
         ref_md = ref_par.get_exported_markdown()
 
         src_docid = str(self.src_doc.doc_id)
@@ -247,6 +257,43 @@ class RefTest(TimDbTest):
         self.assertRegex(ref_md, '^#- *\\{(((ra="testarea")|(rd="' + src_docid + '")|(r="tr")) ?){3}\\}\n+$')
 
         # todo: test the contents of the rendered area
+
+    def test_settings_not_inherited(self):
+        """Settings attribute is not inherited from a referring paragraph."""
+        ref = self.src_par.create_reference(self.ref_doc)
+        ref.set_attr('settings', '')
+        self.ref_doc.add_paragraph_obj(ref)
+        deref = ref.get_referenced_pars()[0]
+        self.assertNotIn('settings', deref.get_attrs())
+
+        self.src_par.set_attr('settings', '')
+        self.src_par.set_markdown('')
+        self.src_par.save()
+        ref.ref_pars = {}
+        deref = ref.get_referenced_pars()[0]
+        self.assertIn('settings', deref.get_attrs())
+
+    def test_reference_classes(self):
+        """Classes of reference and source paragraphs are merged."""
+        ref = self.src_par.create_reference(self.ref_doc)
+        ref.add_class('red', 'green')
+        self.src_par.add_class('blue', 'white', 'orange')
+        self.src_par.save()
+        deref = ref.get_referenced_pars()[0]
+        ref.ref_pars = {}
+        self.assertEqual(deref.get_classes(), ['blue', 'white', 'orange', 'red', 'green'])
+
+        self.src_par.set_attr('classes', None)
+        self.src_par.save()
+        deref = ref.get_referenced_pars()[0]
+        self.assertEqual(deref.get_classes(), ['red', 'green'])
+        ref.ref_pars = {}
+
+        self.src_par.add_class('blue', 'white', 'orange')
+        ref.set_attr('classes', None)
+        self.src_par.save()
+        deref = ref.get_referenced_pars()[0]
+        self.assertEqual(deref.get_classes(), ['blue', 'white', 'orange'])
 
 
 if __name__ == '__main__':

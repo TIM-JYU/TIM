@@ -12,24 +12,23 @@ class PopupMenuController implements IController {
     private contenturl: string;
     private srcid: string;
     private $pars: JQuery;
-    private editContext: string | null;
+    private editcontext: string | null;
     private editbutton: boolean;
     private areaEditButton: boolean;
     private onClose: (pars: JQuery) => void;
     private colClass: string;
     private halfColClass: string;
-    private storageAttribute: false; // TODO
     private vctrl: ViewCtrl;
+    private save: string;
 
     constructor(scope: IScope, element: IRootElementService) {
         this.$pars = $(this.srcid);
         this.editbutton = false;
         this.areaEditButton = false;
-        this.editContext = null;
 
         this.getContent(this.contenturl);
-        this.colClass = this.storageAttribute ? "col-xs-10" : "col-xs-12";
-        this.halfColClass = this.storageAttribute ? "col-xs-5" : "col-xs-6";
+        this.colClass = this.save ? "col-xs-10" : "col-xs-12";
+        this.halfColClass = this.save ? "col-xs-5" : "col-xs-6";
 
         this.model = {editState: $window.editMode};
         this.element = element;
@@ -62,12 +61,24 @@ class PopupMenuController implements IController {
         this.closePopup();
     }
 
-    getChecked(fDesc) {
-        return ""; // TODO
+    getChecked(fDesc: string) {
+        if (fDesc === null || this.vctrl.$storage.defaultAction === null) {
+            return "";
+        }
+
+        return fDesc === this.vctrl.$storage.defaultAction ? "checked" : "";
     }
 
-    clicked(fDesc) {
-        // TODO
+    clicked(f) {
+        const s = this.save;
+        if (this[s] && this[s].desc === f.desc) {
+            this.vctrl[s] = null;
+            this.vctrl.$storage[s] = null;
+        }
+        else {
+            this.vctrl[s] = f;
+            this.vctrl.$storage[s] = f.desc;
+        }
     }
 
     getContent(contentUrl) {
@@ -78,7 +89,6 @@ class PopupMenuController implements IController {
 
         $http.get<{texts}>(contentUrl, {params: {doc_id: this.vctrl.docId}},
         ).then((response) => {
-            //this.content = data.texts;
             $("#content").append(response.data.texts);
         }, () => {
             $window.alert("Error occurred when getting contents.");
@@ -86,10 +96,9 @@ class PopupMenuController implements IController {
     }
 
     watchEditMode(newEditMode, oldEditMode) {
-        //$log.info("Edit context set from " + oldEditMode + " to " + newEditMode);
-        if (this.editContext && newEditMode && newEditMode != this.editContext) {
+        if (this.editcontext && newEditMode && newEditMode != this.editcontext) {
             // We don't want to destroy our scope before returning from this function
-            $window.setTimeout(this.closePopup, 0.1);
+            $window.setTimeout(() => this.closePopup(), 0.1);
         }
     }
 }

@@ -25,6 +25,8 @@ from timApp.utils import count_chars, get_error_html
 from timApp.rndutils import get_rands_as_dict, get_rands_as_str
 
 
+SKIPPED_ATTRS = {'r', 'rd', 'rp', 'ra', 'rt', 'settings'}
+
 class DocParagraph:
     """Represents a paragraph that is associated with a :class:`Document`. See :doc:`docparagraph` for more info.
     """
@@ -634,15 +636,13 @@ class DocParagraph:
         """Returns whether this paragraph has the specified class."""
         return class_name in self.attrs.get('classes', {})
 
-    def add_class(self, class_name):
+    def add_class(self, *classes: str):
         """Adds the specified class to this paragraph."""
-        if not self.has_class(class_name):
-            if 'attrs' not in self.__data:
-                self.__data['attrs'] = {}  # This should never happend!
-                self.attrs = self.__data['attrs']
-            if 'classes' not in self.__data['attrs']:
-                self.__data['attrs']['classes'] = []
-            self.__data['attrs']['classes'].append(class_name)
+        for class_name in classes:
+            if not self.has_class(class_name):
+                curr_classes = self.get_classes()
+                curr_classes.append(class_name)
+                self.set_attr('classes', curr_classes)
 
     def get_auto_macro_values(self, macros, macro_delim, auto_macro_cache, heading_cache, auto_number_start):
         """Returns the auto macros values for the current paragraph. Auto macros include things like current
@@ -784,8 +784,8 @@ class DocParagraph:
             new_dict[key] = over_dict[key]
         return new_dict
 
-    def get_attrs(self, base_attrs: Optional[Dict] = None) -> Dict:
-        return DocParagraph.__combine_dict(base_attrs, self.attrs)
+    def get_attrs(self) -> Dict:
+        return self.attrs
 
     def get_attrs_str(self) -> str:
         """Returns the attributes as a JSON string."""
@@ -912,12 +912,15 @@ class DocParagraph:
             else:
                 md = ref_par.get_markdown()
 
-            # TODO: decide whether this attr combination makes sense
-            new_attrs = self.get_attrs(ref_par.get_attrs())
-
-            # Remove reference attributes
-            for ref_attr in ['r', 'rd', 'rp', 'ra', 'rt']:
-                new_attrs.pop(ref_attr, None)
+            new_attrs = copy(ref_par.get_attrs())
+            for k, v in self.get_attrs().items():
+                if k in SKIPPED_ATTRS:
+                    continue
+                if isinstance(v, list) and isinstance(new_attrs.get(k), list):
+                    for val in v:
+                        new_attrs[k].append(val)
+                else:
+                    new_attrs[k] = v
 
             final_par = DocParagraph.create(ref_par.doc, par_id=ref_par.get_id(), md=md, par_hash=ref_par.get_hash(),
                                             attrs=new_attrs)

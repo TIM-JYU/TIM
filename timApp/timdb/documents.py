@@ -65,6 +65,23 @@ def add_reference_pars(doc: Document, original_doc: Document, r: str):
         doc.add_paragraph_obj(ref_par)
 
 
+def delete_document(document_id: int):
+    """Deletes the specified document.
+
+    :param document_id: The id of the document to be deleted.
+
+    """
+
+    DocEntry.query.filter_by(id=document_id).delete()
+    BlockAccess.query.filter_by(block_id=document_id).delete()
+    Block.query.filter_by(type_id=blocktypes.DOCUMENT, id=document_id).delete()
+    ReadParagraph.query.filter_by(doc_id=document_id).delete()
+    UserNotes.query.filter_by(doc_id=document_id).delete()
+    Translation.query.filter((Translation.doc_id == document_id) | (Translation.src_docid == document_id)).delete()
+    db.session.commit()
+    Document.remove(document_id)
+
+
 class Documents(TimDbBase):
     """Represents a collection of Document objects."""
 
@@ -91,22 +108,6 @@ class Documents(TimDbBase):
         par = doc.insert_paragraph(content, insert_before_id=prev_par_id, attrs=attrs)
         self.update_last_modified(doc)
         return [par], doc
-
-    def delete(self, document_id: int):
-        """Deletes the specified document.
-
-        :param document_id: The id of the document to be deleted.
-
-        """
-
-        DocEntry.query.filter_by(id=document_id).delete()
-        BlockAccess.query.filter_by(block_id=document_id).delete()
-        Block.query.filter_by(type_id=blocktypes.DOCUMENT, id=document_id).delete()
-        ReadParagraph.query.filter_by(doc_id=document_id).delete()
-        UserNotes.query.filter_by(doc_id=document_id).delete()
-        Translation.query.filter((Translation.doc_id == document_id) | (Translation.src_docid == document_id)).delete()
-        db.session.commit()
-        Document.remove(document_id)
 
     def recover_db(self, usergroup_id: int, folder: str = None) -> int:
         """Recreates database entries for documents that already exist on the disk.

@@ -186,7 +186,7 @@ export class ParmenuHandler {
             this.viewctrl.popupMenuAttrs.save = null;
             this.viewctrl.popupMenuAttrs.editbutton = false;
         } else {
-            this.viewctrl.popupMenuAttrs.save = "$ctrl.defaultAction";
+            this.viewctrl.popupMenuAttrs.save = "defaultAction";
             this.viewctrl.popupMenuAttrs.editbutton = true;
         }
     }

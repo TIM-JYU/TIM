@@ -1,8 +1,4 @@
-"""Unit tests for Clipboard class.
-
-Run from parent directory with command: python3 -m unittest dumboclient filemodehelper documentmodel/test_clipboard.py
-
-"""
+"""Unit tests for Clipboard class."""
 
 from timApp.documentmodel.clipboard import Clipboard
 from timApp.documentmodel.randutils import random_id, hashfunc

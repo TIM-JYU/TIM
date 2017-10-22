@@ -1,7 +1,8 @@
 import csv
 import os
+from typing import List, Tuple
 
-from timApp.import_accounts import import_accounts
+from timApp.maintenance.import_accounts import import_accounts
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.models.user import User
 
@@ -24,7 +25,7 @@ class AccountImportTest(TimDbTest):
         accounts = [('test1@example.com', 'Real Name 1', 't1')]
         self.write_and_test(accounts, expected_existing=(name for _, _, name in accounts))
 
-    def write_and_test(self, accounts, username_is_email=False, expected_existing=None):
+    def write_and_test(self, accounts: List[Tuple[str, str, str]], username_is_email=False, expected_existing=None):
         if expected_existing is None:
             expected_existing = []
         csv_path = os.path.join(self.test_files_path, 'import.csv')
@@ -32,8 +33,8 @@ class AccountImportTest(TimDbTest):
             w = csv.writer(f, delimiter=';')
             for a in accounts:
                 w.writerow(a)
-        existing = import_accounts(csv_path, 'testpass')
-        self.assertSetEqual(set(expected_existing), set(existing))
+        _, existing = import_accounts(csv_path, 'testpass')
+        self.assertSetEqual(set(expected_existing), set(u.name for u in existing))
         for a in accounts:
             u = User.get_by_email(a[0])
             self.assertEqual(a[1], u.real_name)
