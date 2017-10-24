@@ -10,7 +10,8 @@ from timApp.requesthelper import verify_json_params
 
 class EditRequest:
     def __init__(self, doc: Document, area_start: str = None, area_end: str = None, par: str = None, text: str = None,
-                 next_par_id: str = None, preview: bool = False):
+                 next_par_id: str = None, preview: bool = False, forced_classes: Optional[List[str]]=None):
+        self.forced_classes = forced_classes or []
         self.doc = doc
         self.preview = preview
         self.old_doc_version = doc.get_version()
@@ -58,21 +59,26 @@ class EditRequest:
         if self.editor_pars is None:
             self.editor_pars = get_pars_from_editor_text(self.doc, self.text, break_on_elements=self.editing_area,
                                                          skip_access_check=skip_access_check)
+            for c in self.forced_classes:
+                for p in self.editor_pars:
+                    p.add_class(c)
         return self.editor_pars
 
     @staticmethod
     def from_request(doc: Document, text: Optional[str] = None, preview: bool = False) -> 'EditRequest':
         if text is None:
             text, = verify_json_params('text')
-        area_start, area_end, par, par_next = verify_json_params('area_start', 'area_end', 'par', 'par_next',
-                                                                 require=False)
+        area_start, area_end, par, par_next, forced_classes = verify_json_params('area_start', 'area_end', 'par',
+                                                                                 'par_next', 'forced_classes',
+                                                                                 require=False)
         return EditRequest(doc=doc,
                            text=text,
                            area_start=area_start,
                            area_end=area_end,
                            par=par,
                            next_par_id=par_next,
-                           preview=preview)
+                           preview=preview,
+                           forced_classes=forced_classes)
 
 
 def get_pars_from_editor_text(doc: Document, text: str,

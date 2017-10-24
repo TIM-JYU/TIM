@@ -14,6 +14,7 @@ from timApp.documentmodel.document import Document
 from timApp.documentmodel.documenteditresult import DocumentEditResult
 from timApp.documentmodel.exceptions import ValidationException, ValidationWarning
 from timApp.documentmodel.preloadoption import PreloadOption
+from timApp.documentmodel.version import Version
 from timApp.markdownconverter import md_to_html
 from timApp.requesthelper import verify_json_params
 from timApp.responsehelper import json_response, ok_response
@@ -107,11 +108,9 @@ def update_document(doc_id):
     return manage_response(docentry, pars, timdb, ver_before)
 
 
-def manage_response(docentry: DocInfo, pars: List[DocParagraph], timdb, ver_before: Tuple[int, int]):
+def manage_response(docentry: DocInfo, pars: List[DocParagraph], timdb, ver_before: Version):
     doc = docentry.document_as_current_user
     chg = doc.get_changelog()
-    for ver in chg:
-        ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
     notify_doc_watchers(docentry,
                         get_diff_link(docentry, ver_before),
                         NotificationType.DocModified)

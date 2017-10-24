@@ -56,7 +56,7 @@ class NotifyTest(TimRouteTest):
                           'mail_from': mail_from,
                           'msg': f'Link to the paragraph: {url}#{pars[2].get_id()}\n'
                                  '\n'
-                                 'Link to changes: http://localhost/diff/5/2/1/3/0\n'
+                                 f'Link to changes: http://localhost/diff/{d.id}/2/1/3/0\n'
                                  '\n'
                                  'Paragraph was added:\n'
                                  '\n'
@@ -73,7 +73,7 @@ class NotifyTest(TimRouteTest):
                           'mail_from': mail_from,
                           'msg': f'Link to the paragraph: {url}#{pars[1].get_id()}\n'
                                  '\n'
-                                 'Link to changes: http://localhost/diff/5/3/0/3/1\n'
+                                 f'Link to changes: http://localhost/diff/{d.id}/3/0/3/1\n'
                                  '\n'
                                  'Paragraph was edited:\n'
                                  '\n'
@@ -88,7 +88,7 @@ class NotifyTest(TimRouteTest):
                           'mail_from': mail_from,
                           'msg': f'Link to the document: {url}\n'
                                  '\n'
-                                 'Link to changes: http://localhost/diff/5/3/1/4/0\n'
+                                 f'Link to changes: http://localhost/diff/{d.id}/3/1/4/0\n'
                                  '\n'
                                  'Paragraph was deleted:\n'
                                  '\n'
@@ -105,14 +105,14 @@ class NotifyTest(TimRouteTest):
                           'mail_from': mail_from,
                           'msg': f'Link to the paragraph: {url}#{pars[-1].get_id()}\n'
                                  '\n'
-                                 'Link to changes: http://localhost/diff/5/4/0/5/0\n'
+                                 f'Link to changes: http://localhost/diff/{d.id}/4/0/5/0\n'
                                  '\n'
                                  'Paragraph was added:\n'
                                  '\n'
                                  f'{pars[-1].get_markdown()}',
                           'rcpt': self.test_user_2.email,
                           'reply_to': self.test_user_1.email,
-                          'subject': f'user Test edited the document {title}'}, sent_mails_in_testing[-1])
+                          'subject': f'Test user 1 edited the document {title}'}, sent_mails_in_testing[-1])
 
     def test_revoke_view_no_email(self):
         d, title, url = self.prepare_doc()

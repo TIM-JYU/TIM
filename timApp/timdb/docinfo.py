@@ -122,10 +122,7 @@ class DocInfo(Item):
     def get_changelog_with_names(self, length=None):
         if not length:
             length = getattr(self, 'changelog_length', 100)
-        changelog = self.document.get_changelog(length)
-        for ver in changelog:
-            ver['group'] = UserGroup.query.get(ver.pop('group_id')).name
-        return changelog
+        return self.document.get_changelog(length)
 
     def get_notifications(self, notify_type: NotificationType) -> List[Notification]:
         q = Notification.query.filter_by(doc_id=self.id)

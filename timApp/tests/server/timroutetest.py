@@ -51,8 +51,8 @@ testclient: FlaskClient = timApp.tim.app.test_client()
 testclient = testclient.__enter__()
 
 
-def get_content(element: HtmlElement) -> List[str]:
-    return [r.text_content().strip() for r in element.cssselect('.parContent')]
+def get_content(element: HtmlElement, selector: str='.parContent') -> List[str]:
+    return [r.text_content().strip() for r in element.cssselect(selector)]
 
 
 class TimRouteTest(TimDbTest):

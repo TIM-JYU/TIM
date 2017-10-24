@@ -27,13 +27,13 @@ class DocumentTest(TimDbTest):
         self.assertTrue(d.exists())
         self.assertEqual(d.doc_id + 1, Document.get_next_free_id())
         self.assertEqual((0, 0), d.get_version())
-        self.assertListEqual([], d.get_changelog())
+        self.assertListEqual([], d.get_changelog().entries)
 
         d = self.create_doc().document
         self.assertTrue(d.exists())
         self.assertEqual(d.doc_id + 1, Document.get_next_free_id())
         self.assertEqual((0, 0), d.get_version())
-        self.assertListEqual([], d.get_changelog())
+        self.assertListEqual([], d.get_changelog().entries)
 
         with self.assertRaises(DocExistsError):
             d.create()
@@ -47,14 +47,14 @@ class DocumentTest(TimDbTest):
         self.assertTrue(d.has_paragraph(par1.get_id()))
         self.assertFalse(d.has_paragraph(par1.get_id()[:-1]))
         self.assertEqual((1, 0), d.get_version())
-        self.assertEqual(1, len(d.get_changelog()))
+        self.assertEqual(1, len(d.get_changelog().entries))
 
         # Add different next paragraph
         par2 = d.add_paragraph('different')
         self.assertEqual('different', par2.get_markdown())
         self.assertTrue(d.has_paragraph(par2.get_id()))
         self.assertEqual((2, 0), d.get_version())
-        self.assertEqual(2, len(d.get_changelog()))
+        self.assertEqual(2, len(d.get_changelog().entries))
         self.assertNotEqual(par1.get_id(), par2.get_id())
 
         # Add next paragraph with same text as the first
@@ -62,7 +62,7 @@ class DocumentTest(TimDbTest):
         self.assertEqual('testing', par3.get_markdown())
         self.assertTrue(d.has_paragraph(par3.get_id()))
         self.assertEqual((3, 0), d.get_version())
-        self.assertEqual(3, len(d.get_changelog()))
+        self.assertEqual(3, len(d.get_changelog().entries))
         self.assertNotEqual(par1.get_id(), par2.get_id())
 
         # Add an empty paragraph
@@ -70,7 +70,7 @@ class DocumentTest(TimDbTest):
         self.assertEqual('', par3.get_markdown())
         self.assertTrue(d.has_paragraph(par3.get_id()))
         self.assertEqual((4, 0), d.get_version())
-        self.assertEqual(4, len(d.get_changelog()))
+        self.assertEqual(4, len(d.get_changelog().entries))
         self.assertNotEqual(par2.get_id(), par3.get_id())
         self.assertNotEqual(par1.get_id(), par3.get_id())
 
@@ -79,7 +79,7 @@ class DocumentTest(TimDbTest):
 
         pars = [d.add_paragraph(random_paragraph()) for _ in range(0, 10)]
         self.assertEqual((10, 0), d.get_version())
-        self.assertEqual(10, len(d.get_changelog()))
+        self.assertEqual(10, len(d.get_changelog().entries))
         self.assertListEqual([p.get_id() for p in pars], [par.get_id() for par in d])
         self.assertListEqual([p.get_hash() for p in pars], [par.get_hash() for par in d])
 
@@ -95,7 +95,7 @@ class DocumentTest(TimDbTest):
         pars.remove(pars[0])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((11, 0), d.get_version())
-        self.assertEqual(11, len(d.get_changelog()))
+        self.assertEqual(11, len(d.get_changelog().entries))
 
         # Delete from the middle
         d.delete_paragraph(pars[2])
@@ -105,7 +105,7 @@ class DocumentTest(TimDbTest):
         pars.remove(pars[2])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((12, 0), d.get_version())
-        self.assertEqual(12, len(d.get_changelog()))
+        self.assertEqual(12, len(d.get_changelog().entries))
 
         # Delete last paragraph
         n = len(pars)
@@ -116,7 +116,7 @@ class DocumentTest(TimDbTest):
         pars.remove(pars[n - 1])
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((13, 0), d.get_version())
-        self.assertEqual(13, len(d.get_changelog()))
+        self.assertEqual(13, len(d.get_changelog().entries))
 
     def test_insertparagraph(self):
         d = self.create_doc().document
@@ -127,21 +127,21 @@ class DocumentTest(TimDbTest):
         pars = [par.get_id()] + pars
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((11, 0), d.get_version())
-        self.assertEqual(11, len(d.get_changelog()))
+        self.assertEqual(11, len(d.get_changelog().entries))
 
         # Insert in the middle
         par = d.insert_paragraph('middle', insert_before_id=pars[4])
         pars = pars[0:4] + [par.get_id()] + pars[4:]
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((12, 0), d.get_version())
-        self.assertEqual(12, len(d.get_changelog()))
+        self.assertEqual(12, len(d.get_changelog().entries))
 
         # Insert as last
         par = d.insert_paragraph('last', insert_before_id=None)
         pars.append(par.get_id())
         self.assertListEqual(pars, [par.get_id() for par in d])
         self.assertEqual((13, 0), d.get_version())
-        self.assertEqual(13, len(d.get_changelog()))
+        self.assertEqual(13, len(d.get_changelog().entries))
 
     def test_get_html(self):
         d = self.create_doc().document
@@ -168,7 +168,7 @@ class DocumentTest(TimDbTest):
         self.assertEqual(new_text, par2_mod.get_markdown())
         self.assertNotEqual(par2_hash, par2_mod.get_hash())
         self.assertEqual((10, 1), d.get_version())
-        self.assertEqual(11, len(d.get_changelog()))
+        self.assertEqual(11, len(d.get_changelog().entries))
 
         par2_mod = d.modify_paragraph(par2_id, old_md)
         self.assertEqual(old_md, par2_mod.get_markdown())
@@ -183,7 +183,7 @@ class DocumentTest(TimDbTest):
             self.assertEqual(new_text, par2_mod.get_markdown())
             self.assertNotEqual(par2_hash, par2_mod.get_hash())
             self.assertEqual((10, i + 3), d.get_version())
-            self.assertEqual(13 + i, len(d.get_changelog()))
+            self.assertEqual(13 + i, len(d.get_changelog().entries))
 
     def test_document_remove(self):
         free = Document.get_next_free_id()

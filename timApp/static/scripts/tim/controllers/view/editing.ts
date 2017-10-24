@@ -10,6 +10,31 @@ import {markPageDirty} from "tim/utils";
 import {onClick} from "./eventhandlers";
 import {ParCompiler} from "../../services/parCompiler";
 
+function prepareOptions($this: Element, saveTag: string): [JQuery, {}] {
+    $(".actionButtons").remove();
+    // var $par = $('.par').last();
+    // return sc.showAddParagraphBelow(e, $par);
+    // return sc.showAddParagraphAbove(e, sc.$pars);
+    var par = $($this).closest('.par');
+    var text = par.find('pre').text();
+    // text = text.replace('⁞', '');  // TODO: set cursor to | position
+    let forcedClasses = [];
+    const forceAttr = getParAttributes(par).forceclass;
+    if (forceAttr) {
+        forcedClasses = forceAttr.split(" ");
+    }
+    var options = {
+        'localSaveTag': saveTag,
+        'texts': {
+            'beforeText': "alkuun",
+            'initialText': text,
+            'afterText': "loppuun",
+        },
+        forcedClasses: forcedClasses,
+    };
+    return [par, options];
+}
+
 // Wrap given text to max n chars length lines spliting from space
 export function wrapText(s, n)
 {
@@ -106,6 +131,7 @@ export function defineEditing(sc) {
                 par_next: parNextId, // the id of the paragraph that follows par or null if par is the last one
                 area_start: areaStart,
                 area_end: areaEnd,
+                forced_classes: options.forcedClasses,
                 tags,
             },
             "options": {
@@ -426,40 +452,12 @@ export function defineEditing(sc) {
         });
 
         onClick(".addAbove", function($this, e) {
-            $(".actionButtons").remove();
-            // var $par = $('.par').last();
-            // return sc.showAddParagraphBelow(e, $par);
-            // return sc.showAddParagraphAbove(e, sc.$pars);
-            var par = $($this).closest('.par');
-            var text = par.find('pre').text();
-            // text = text.replace('⁞', '');  // TODO: set cursor to | position
-            var options =  {
-                'localSaveTag': 'addAbove',
-                'texts': {
-                    'beforeText': "alkuun",
-                    'initialText': text ,
-                    'afterText': "loppuun"
-                }
-            }
+            const [par, options] = prepareOptions($this, "addAbove");
             return sc.showAddParagraphAbove(e, par, options);
         });
 
         onClick(".addBelow", function($this, e) {
-            $(".actionButtons").remove();
-            // var $par = $('.par').last();
-            // return sc.showAddParagraphBelow(e, $par);
-            // return sc.showAddParagraphAbove(e, sc.$pars);
-            var par = $($this).closest('.par');
-            var text = par.find('pre').text();
-            // text = text.replace('⁞', '');  // TODO: set cursor to | position
-            var options =  {
-                'localSaveTag': 'addBelow',
-                'texts': {
-                    'beforeText': "alkuun",
-                    'initialText': text ,
-                    'afterText': "loppuun"
-                }
-            }
+            const [par, options] = prepareOptions($this, "addBelow");
             return sc.showAddParagraphBelow(e, par, options);
         });
 

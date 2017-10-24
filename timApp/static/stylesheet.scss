@@ -110,6 +110,16 @@ a .glyphicon {
     .linkit > .parContent {
         font-size: small;
     }
+    .authorinfo {
+        top: -1.1em;
+        position: relative;
+        font-size: x-small;
+        height: 0.5em;
+
+        .timestamp {
+            color: lightgrey;
+        }
+    }
     .parContent {
         text-align: $body-text-align;
         @media (max-width: $screen-xs-max) {

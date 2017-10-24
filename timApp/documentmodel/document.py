@@ -12,6 +12,8 @@ from filelock import FileLock
 from flask import g
 from lxml import etree, html
 
+from timApp.documentmodel.changelog import Changelog
+from timApp.documentmodel.changelogentry import ChangelogEntry
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings, resolve_settings_for_pars
 from timApp.documentmodel.documenteditresult import DocumentEditResult
@@ -21,6 +23,7 @@ from timApp.documentmodel.documentwriter import DocumentWriter
 from timApp.documentmodel.exceptions import DocExistsError, ValidationException
 from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.validationresult import ValidationResult
+from timApp.documentmodel.version import Version
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException, PreambleException
@@ -120,7 +123,7 @@ class Document:
         return os.path.exists(os.path.join(cls.get_documents_dir(froot), str(doc_id)))
 
     @classmethod
-    def version_exists(cls, doc_id: int, doc_ver: Tuple[int, int], files_root: Optional[str] = None) -> bool:
+    def version_exists(cls, doc_id: int, doc_ver: Version, files_root: Optional[str] = None) -> bool:
         """Checks if a document version exists.
 
         :param doc_id: Document id.
@@ -347,7 +350,7 @@ class Document:
         res = 1 + cls.__get_largest_file_number(cls.get_documents_dir(froot), default=0)
         return res
 
-    def get_version(self) -> Tuple[int, int]:
+    def get_version(self) -> Version:
         """Gets the latest version of the document as a major-minor tuple.
 
         :return: Latest version, or (-1, 0) if there isn't yet one.
@@ -389,7 +392,7 @@ class Document:
     def getlogfilename(self) -> str:
         return os.path.join(self.get_document_path(), 'changelog')
 
-    def __write_changelog(self, ver: Tuple[int, int], operation: str, par_id: str, op_params: Optional[dict] = None):
+    def __write_changelog(self, ver: Version, operation: str, par_id: str, op_params: Optional[dict] = None):
         logname = self.getlogfilename()
         src = open(logname, 'r') if os.path.exists(logname) else None
         destfd, tmpname = mkstemp()
@@ -421,7 +424,7 @@ class Document:
         os.unlink(tmpname)
 
     def __increment_version(self, op: str, par_id: str, increment_major: bool,
-                            op_params: Optional[dict] = None) -> Tuple[int, int]:
+                            op_params: Optional[dict] = None) -> Version:
         ver_exists = True
         ver = self.get_version()
         old_ver = None
@@ -449,7 +452,7 @@ class Document:
         self.ref_doc_cache = {}
         return ver
 
-    def __update_metadata(self, pars: List[DocParagraph], old_ver: Tuple[int, int], new_ver: Tuple[int, int]):
+    def __update_metadata(self, pars: List[DocParagraph], old_ver: Version, new_ver: Version):
         if old_ver == new_ver:
             raise TimDbException("__update_metadata called with old_ver == new_ver")
         new_reflist_file = self.get_reflist_filename(new_ver)
@@ -849,11 +852,11 @@ class Document:
             current_headers[1].append(current)
         return current_headers
 
-    def get_changelog(self, max_entries: int = 100) -> List[dict]:
-        log = []
+    def get_changelog(self, max_entries: int = 100) -> Changelog:
+        log = Changelog()
         logname = self.getlogfilename()
         if not os.path.isfile(logname):
-            return []
+            return Changelog()
 
         lc = max_entries
         with open(logname, 'r') as f:
@@ -863,8 +866,7 @@ class Document:
                     break
                 try:
                     entry = json.loads(line)
-                    entry['time'] = dateutil.parser.parse(entry['time']).replace(tzinfo=timezone.utc)
-                    log.append(entry)
+                    log.append(ChangelogEntry(**entry))
                 except ValueError:
                     print(f"doc id {self.doc_id}: malformed log line: {line}")
                 lc -= 1
@@ -886,10 +888,6 @@ class Document:
                             if rp.get_attr('taskId') == task_id_name:
                                 return rp
         raise TimDbException(f'Task not found in the document: {task_id_name}')
-
-    def get_last_modified(self) -> Optional[datetime]:
-        log = self.get_changelog(max_entries=1)
-        return log[0]['time'] if log is not None and len(log) > 0 else None
 
     def delete_section(self, area_start, area_end) -> DocumentEditResult:
         result = DocumentEditResult()

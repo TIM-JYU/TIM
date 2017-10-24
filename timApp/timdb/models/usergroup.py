@@ -23,6 +23,10 @@ class UserGroup(db.Model):
     def __json__(self) -> List[str]:
         return ['id', 'name']
 
+    @property
+    def pretty_full_name(self):
+        return self.name
+
     @staticmethod
     def create(name: str, commit: bool = True) -> 'UserGroup':
         """Creates a new user group.

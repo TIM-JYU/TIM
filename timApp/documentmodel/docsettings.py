@@ -33,6 +33,7 @@ class DocSettings:
     plugin_md_key = 'plugin_md'
     print_settings_key = 'print_settings'
     preamble_key = 'preamble'
+    show_authors_key = 'show_authors'
 
     @staticmethod
     def settings_to_string(par: DocParagraph) -> str:
@@ -206,6 +207,9 @@ class DocSettings:
     def is_texplain(self):
         texplain = self.__dict.get('texplain', False)
         return texplain
+
+    def show_authors(self, default=False):
+        return self.__dict.get(self.show_authors_key, default)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
