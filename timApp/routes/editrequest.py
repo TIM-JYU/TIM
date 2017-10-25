@@ -33,14 +33,23 @@ class EditRequest:
     def get_original_par(self) -> Optional[DocParagraph]:
         return self.original_par
 
+    def get_last_of_preamble(self) -> Optional[DocParagraph]:
+        preamble = list(self.doc.get_docinfo().get_preamble_pars())  # TODO could be optimized
+        self.doc.insert_preamble_pars(preamble)
+        return preamble[-1] if preamble else None
+
     def get_context_par(self) -> DocParagraph:
         doc = self.doc
         if self.editing_area:
             context_par = doc.get_previous_par_by_id(self.area_start)
         elif not self.is_adding:
             context_par = doc.get_previous_par_by_id(self.par)
+            if context_par is None:
+                return self.get_last_of_preamble()
         elif self.next_par_id:
             context_par = doc.get_previous_par_by_id(self.next_par_id)
+            if context_par is None:
+                return self.get_last_of_preamble()
         else:
             context_par = doc.get_last_par()
         return context_par

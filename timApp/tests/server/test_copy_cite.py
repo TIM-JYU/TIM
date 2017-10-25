@@ -33,10 +33,10 @@ class CopyCiteTest(TimRouteTest):
         db.session.commit()
         tr_en = self.create_translation(d, 'In English', 'en')
         english_par = 'an English paragraph'
-        tr_en.document.add_paragraph(english_par)
+        tr_en.document.modify_paragraph(tr_en.document.get_paragraphs()[0].get_id(), english_par)
         tr_de = self.create_translation(d, 'Auf Deutsch', 'de')
         german_par = 'ein deutscher Absatz'
-        tr_de.document.add_paragraph(german_par)
+        tr_de.document.modify_paragraph(tr_de.document.get_paragraphs()[0].get_id(), german_par)
         copy = self.create_doc(copy_from=d.id)
 
         orig_trs = d.translations
@@ -48,15 +48,15 @@ class CopyCiteTest(TimRouteTest):
         copy_trs.sort(key=lambda tr: tr.is_original_translation)  # original is the last in the list after this
 
         self.assertFalse(set(tr.id for tr in orig_trs) & set(tr.id for tr in copy_trs))
-        self.assertEqual(copy_trs[0].document.get_settings().get_source_document(), copy.id)
-        self.assertEqual(copy_trs[1].document.get_settings().get_source_document(), copy.id)
-        self.assertEqual(copy_trs[2].document.get_settings().get_source_document(), None)
+        self.assertEqual(copy_trs[0].document.get_source_document().doc_id, copy.id)
+        self.assertEqual(copy_trs[1].document.get_source_document().doc_id, copy.id)
+        self.assertEqual(copy_trs[2].document.get_source_document(), None)
         self.assertEqual('de', copy_trs[0].lang_id)
         self.assertEqual('en', copy_trs[1].lang_id)
         self.assertEqual('fi', copy_trs[2].lang_id)
         self.assertEqual('Auf Deutsch', copy_trs[0].title)
         self.assertEqual('In English', copy_trs[1].title)
         self.assertEqual('suomeksi', copy_trs[2].title)
-        self.assertEqual(german_par, copy_trs[0].document.get_paragraphs()[2].get_markdown())
-        self.assertEqual(english_par, copy_trs[1].document.get_paragraphs()[2].get_markdown())
+        self.assertEqual(german_par, copy_trs[0].document.get_paragraphs()[0].get_markdown())
+        self.assertEqual(english_par, copy_trs[1].document.get_paragraphs()[0].get_markdown())
         self.assertEqual(finnish_par, copy_trs[2].document.get_paragraphs()[0].get_markdown())

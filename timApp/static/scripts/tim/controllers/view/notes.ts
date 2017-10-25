@@ -1,7 +1,7 @@
 import angular from "angular";
 import $ from "jquery";
 import {$compile, $window} from "../../ngimport";
-import {getFirstPar, getFirstParId} from "./parhelpers";
+import {getFirstPar, getFirstParId, isActionablePar} from "./parhelpers";
 import {onClick} from "./eventhandlers";
 import {markParRead, readingTypes} from "./readings";
 import {getElementParent} from "../../utils";
@@ -154,6 +154,9 @@ export function defineNotes(sc) {
      */
     sc.updateNoteBadge = function($par) {
         if (!$par) return null;
+        if (!isActionablePar($par)) {
+            return;
+        }
         if ($par.parents(".previewcontent").length > 0) {
             return;
         }

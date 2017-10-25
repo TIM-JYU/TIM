@@ -1,3 +1,4 @@
+from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.routes.view import get_templates_for_folder
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -10,9 +11,9 @@ class TemplateTest(TimRouteTest):
         self.login_test1()
         folder = self.current_user.get_personal_folder().path
         db.session.expire_on_commit = False
-        t1 = self.create_doc(f'{folder}/a/Templates/T1')
+        t1 = self.create_doc(f'{folder}/a/{TEMPLATE_FOLDER_NAME}/T1')
         t1json = t1.to_json()
-        t2 = self.create_doc(f'{folder}/a/Templates/T2')
+        t2 = self.create_doc(f'{folder}/a/{TEMPLATE_FOLDER_NAME}/T2')
         t2json = t2.to_json()
 
         # TODO possibly move this to Item class
@@ -34,8 +35,8 @@ class TemplateTest(TimRouteTest):
     def test_automatic_template(self):
         self.login_test1()
         folder = self.current_user.get_personal_folder().path
-        t1 = self.create_doc(f'{folder}/b/Templates/T1', initial_par='t1')
-        t2 = self.create_doc(f'{folder}/b/Templates/force', initial_par='forced')
+        t1 = self.create_doc(f'{folder}/b/{TEMPLATE_FOLDER_NAME}/T1', initial_par='t1')
+        t2 = self.create_doc(f'{folder}/b/{TEMPLATE_FOLDER_NAME}/force', initial_par='forced')
         d = self.create_doc(f'{folder}/b/new')
         self.assertEqual('forced', d.document.get_paragraphs()[0].get_markdown())
         d = self.create_doc(f'{folder}/b/new2', template='T1')
@@ -50,8 +51,8 @@ class TemplateTest(TimRouteTest):
         """Templates are not templates of themselves."""
         self.login_test1()
         folder = self.current_user.get_personal_folder().path
-        t1 = self.create_doc(f'{folder}/c/Templates/T1')
-        t2 = self.create_doc(f'{folder}/c/Templates/T2')
+        t1 = self.create_doc(f'{folder}/c/{TEMPLATE_FOLDER_NAME}/T1')
+        t2 = self.create_doc(f'{folder}/c/{TEMPLATE_FOLDER_NAME}/T2')
         template_folder = t1.parent
         templates = get_templates_for_folder(template_folder)
         self.assertEqual(0, len(templates))

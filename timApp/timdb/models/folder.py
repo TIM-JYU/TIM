@@ -97,25 +97,33 @@ class Folder(db.Model, Item):
         BlockAccess.query.filter_by(block_id=self.id).delete()
         Block.query.filter_by(type_id=blocktypes.FOLDER, id=self.id).delete()
 
-    def rename(self, new_path: str) -> None:
+    def rename(self, new_name: str):
+        assert '/' not in new_name
+        old_path = self.path
+        self.name = new_name
+        self._rename_content(old_path, self.path)
+
+    def rename_path(self, new_path: str) -> None:
         """Renames the folder, updating all the documents within.
 
         :param new_path: The new name for the folder.
 
         """
 
-        old_name = self.path
+        old_path = self.path
         self.path = new_path
+        self._rename_content(old_path, new_path)
 
-        # Rename contents
-        docs_in_folder: List[DocEntry] = DocEntry.query.filter(DocEntry.name.like(old_name + '/%')).all()
+    def _rename_content(self, old_path: str, new_path: str):
+        """Renames contents of the folder."""
+        docs_in_folder: List[DocEntry] = DocEntry.query.filter(DocEntry.name.like(old_path + '/%')).all()
         for d in docs_in_folder:
-            d.name = d.name.replace(old_name, new_path, 1)
+            d.name = d.name.replace(old_path, new_path, 1)
 
         folders_in_folder = Folder.query.filter(
-            (Folder.location == old_name) | (Folder.location.like(old_name + '/%'))).all()
+            (Folder.location == old_path) | (Folder.location.like(old_path + '/%'))).all()
         for f in folders_in_folder:
-            f.location = f.location.replace(old_name, new_path, 1)
+            f.location = f.location.replace(old_path, new_path, 1)
 
     @property
     def is_empty(self):
