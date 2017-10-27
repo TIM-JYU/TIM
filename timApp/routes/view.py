@@ -27,15 +27,16 @@ from timApp.pluginControl import find_task_ids, get_all_reqs
 from timApp.requesthelper import get_option
 from timApp.responsehelper import json_response
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, logged_in
-from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.docinfo import DocInfo, get_non_settings_pars_from_docs
 from timApp.timdb.models.docentry import DocEntry, get_documents
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.user import User
-from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.timdbexception import TimDbException, PreambleException
 from timApp.timdb.userutils import user_is_owner
 from timApp.utils import remove_path_special_chars
 from timApp.timtiming import taketime
-from timApp.documentmodel.create_item import do_create_document, FORCED_TEMPLATE_NAME, get_templates_for_folder
+from timApp.documentmodel.create_item import do_create_document, get_templates_for_folder
+from timApp.documentmodel.specialnames import FORCED_TEMPLATE_NAME
 from timApp.markdownconverter import create_environment
 
 Range = Tuple[int, int]
@@ -43,11 +44,6 @@ Range = Tuple[int, int]
 view_page = Blueprint('view_page',
                       __name__,
                       url_prefix='')
-
-
-def get_whole_document(doc):
-    pars = [par for par in doc]
-    return pars
 
 
 def get_partial_document(doc: Document, view_range: Range) -> List[DocParagraph]:
@@ -67,7 +63,7 @@ def get_document(doc_info: DocInfo, view_range: Optional[Range] = None) -> Tuple
     # (don't cache partial documents and don't check ranges in the loop for whole ones)
     doc = doc_info.document
     doc.preload_option = PreloadOption.all
-    return doc, (get_whole_document(doc) if view_range is None else get_partial_document(doc, view_range))
+    return doc, (doc.get_paragraphs() if view_range is None else get_partial_document(doc, view_range))
 
 
 @view_page.route("/ping", methods=['GET'])
@@ -280,6 +276,15 @@ def view(item_path, template_name, usergroup=None, route="view"):
     teacher_or_see_answers = route in ('teacher', 'answers')
     current_user = get_current_user_object() if logged_in() else None
     doc_settings = doc.get_settings(current_user)
+
+    if not view_range:
+        preamble_pars = list(doc_info.get_preamble_pars())
+        try:
+            doc.insert_preamble_pars(preamble_pars)
+        except PreambleException as e:
+            flash(e)
+        else:
+            xs = preamble_pars + xs
 
     # Preload htmls here to make dereferencing faster
     try:

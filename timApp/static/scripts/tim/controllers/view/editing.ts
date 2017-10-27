@@ -4,7 +4,7 @@ import {$compile, $http, $timeout, $window} from "../../ngimport";
 import {
     getPars, getParIndex, isReference, getElementByRefId, getElementByParId, getRefAttrs, getNextPar,
     getLastParId,
-    getFirstPar, getParAttributes, getParId, EDITOR_CLASS_DOT, EDITOR_CLASS, createNewPar,
+    getFirstPar, getParAttributes, getParId, EDITOR_CLASS_DOT, EDITOR_CLASS, createNewPar, isPreamble,
 } from "./parhelpers";
 import {markPageDirty} from "tim/utils";
 import {onClick} from "./eventhandlers";
@@ -241,6 +241,9 @@ export class EditingHandler {
     async editSettingsPars(recursiveCall) {
         const pars = [];
         $(".par").each((index, elem) => {
+            if (isPreamble($(elem))) {
+                return;
+            }
             if (getParAttributes($(elem)).hasOwnProperty("settings")) {
                 pars.push(this);
             }
@@ -249,7 +252,7 @@ export class EditingHandler {
             if (recursiveCall) {
                 throw new Error("Faulty recursion stopped, there should be a settings paragraph already");
             }
-            const $first = $(".par:first");
+            const $first = $(".par:not(.preamble):first");
             let parNext = getParId($first);
             if (parNext === "HELP_PAR") {
                 parNext = null;

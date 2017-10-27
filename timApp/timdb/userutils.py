@@ -4,6 +4,7 @@ from typing import Optional, Dict, List
 
 from sqlalchemy import func
 
+from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.timdb.blocktypes import BlockType, blocktypes
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.special_group_names import ADMIN_GROUPNAME, LOGGED_IN_GROUPNAME, ANONYMOUS_GROUPNAME, \
@@ -22,8 +23,8 @@ FOLDER_DEFAULT_RIGHT_NAME = 'DefaultFolderRights'
 
 access_type_map = {}
 
-default_right_paths = {blocktypes.DOCUMENT: f'Templates/{DOC_DEFAULT_RIGHT_NAME}',
-                       blocktypes.FOLDER: f'Templates/{FOLDER_DEFAULT_RIGHT_NAME}'}
+default_right_paths = {blocktypes.DOCUMENT: f'{TEMPLATE_FOLDER_NAME}/{DOC_DEFAULT_RIGHT_NAME}',
+                       blocktypes.FOLDER: f'{TEMPLATE_FOLDER_NAME}/{FOLDER_DEFAULT_RIGHT_NAME}'}
 
 
 class NoSuchUserException(TimDbException):

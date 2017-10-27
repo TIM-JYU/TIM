@@ -136,8 +136,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
             im.save(file=filename_or_file)
         return im
 
-    def assert_same_screenshot(self, element: WebElement, filename: str, move_to_element: bool = False):
+    def assert_same_screenshot(self, element: WebElement, filename: str, move_to_element: bool = False, try_again=True):
         """Asserts that the provided element looks the same as in the provided screenshot.
+        :param try_again: Whether to try again it the first comparison attempt fails.
         :param element: The element to check.
         :param filename: The filename of the expected screenshot.
         :param move_to_element: Whether to move to the element before taking the screenshot.
@@ -146,12 +147,15 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         ref = Image(filename=f'tests/browser/expected_screenshots/{filename}.png')
         diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
         if result > 0.001:
-            self.save_element_screenshot(element, f'{filename}_FAIL', move_to_element)
-            diff.save(filename=f'{self.screenshot_dir}/{filename}_FAIL_DIFF.png')
-            self.assertTrue(False,
-                            msg='Screenshots did not match; '
-                                f'failed screenshot saved to screenshots/{filename}_FAIL '
-                                f'and difference to screenshots/{filename}_FAIL_DIFF')
+            if try_again:
+                self.assert_same_screenshot(element, filename, move_to_element, try_again=False)
+            else:
+                self.save_element_screenshot(element, f'{filename}_FAIL', move_to_element)
+                diff.save(filename=f'{self.screenshot_dir}/{filename}_FAIL_DIFF.png')
+                self.assertTrue(False,
+                                msg='Screenshots did not match; '
+                                    f'failed screenshot saved to screenshots/{filename}_FAIL '
+                                    f'and difference to screenshots/{filename}_FAIL_DIFF')
 
     def should_not_exist(self, css_selector: str):
         """Asserts that the current document should not contain any elements that match the specified CSS selector.

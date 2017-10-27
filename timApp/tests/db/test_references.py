@@ -270,6 +270,7 @@ class RefTest(TimDbTest):
         self.src_par.set_markdown('')
         self.src_par.save()
         ref.ref_pars = {}
+        ref.doc.clear_mem_cache()
         deref = ref.get_referenced_pars()[0]
         self.assertIn('settings', deref.get_attrs())
 
@@ -285,6 +286,7 @@ class RefTest(TimDbTest):
 
         self.src_par.set_attr('classes', None)
         self.src_par.save()
+        ref.doc.clear_mem_cache()
         deref = ref.get_referenced_pars()[0]
         self.assertEqual(deref.get_classes(), ['red', 'green'])
         ref.ref_pars = {}
@@ -292,6 +294,7 @@ class RefTest(TimDbTest):
         self.src_par.add_class('blue', 'white', 'orange')
         ref.set_attr('classes', None)
         self.src_par.save()
+        ref.doc.clear_mem_cache()
         deref = ref.get_referenced_pars()[0]
         self.assertEqual(deref.get_classes(), ['blue', 'white', 'orange'])
 

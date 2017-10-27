@@ -4,6 +4,7 @@ import yaml
 
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.macroinfo import MacroInfo
+from timApp.documentmodel.specialnames import DEFAULT_PREAMBLE_DOC
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException
@@ -31,6 +32,7 @@ class DocSettings:
     live_updates_key = 'live_updates'
     plugin_md_key = 'plugin_md'
     print_settings_key = 'print_settings'
+    preamble_key = 'preamble'
 
     @staticmethod
     def settings_to_string(par: DocParagraph) -> str:
@@ -195,6 +197,9 @@ class DocSettings:
     def plugin_md(self, default=True):
         return self.__dict.get(self.plugin_md_key, default)
 
+    def preamble(self, default=DEFAULT_PREAMBLE_DOC):
+        return self.__dict.get(self.preamble_key, default)
+
     def get(self, key, default=None):
         return self.__dict.get(key, default)
 
@@ -203,7 +208,7 @@ class DocSettings:
         return texplain
 
 
-def resolve_final_settings(pars: Iterable[DocParagraph]) -> YamlBlock:
+def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
     result, _ = __resolve_final_settings_impl(pars)
     return result
 

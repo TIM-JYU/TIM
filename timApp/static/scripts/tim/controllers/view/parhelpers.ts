@@ -216,5 +216,19 @@ export function isSettings(text) {
     return text.startsWith('``` {settings=""}');
 }
 
+export function isPreamble($par: JQuery) {
+    return $par.hasClass("preamble");
+}
+
+export function getPreambleDocId($par: JQuery) {
+    return $par.attr("data-from-preamble");
+}
+
+export function isActionablePar($par: JQuery) {
+    const isPreview = $par.parents(".previewcontent").length > 0;
+    const preamble = isPreamble($par);
+    return !(isPreview || preamble);
+}
+
 export const EDITOR_CLASS = "editorArea";
 export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;

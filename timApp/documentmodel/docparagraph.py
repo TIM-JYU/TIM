@@ -266,12 +266,16 @@ class DocParagraph:
             except Exception as e:
                 self.__htmldata['html'] = get_error_html(e)
 
+        preamble = self.from_preamble()
         self.__htmldata['cls'] = ' '.join(['par']
                                           + (self.get_classes() if not self.get_attr('area') else [])
                                           + (['questionPar'] if self.is_question() else [])
+                                          + (['preamble'] if preamble else [])
                                           + ([self.get_attr('plugin')] if self.is_plugin() and not self.is_question() else [])
                                           )
         self.__htmldata['is_plugin'] = self.is_plugin()
+        if preamble:
+            self.__htmldata['from_preamble'] = preamble.path
         self.__htmldata['is_question'] = self.is_question()
         # self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
         self.__htmldata['needs_browser'] = self.is_plugin() and not self.is_question()
@@ -927,6 +931,8 @@ class DocParagraph:
             final_par.original = self
             final_par._cache_props()
             final_par.__htmldata = None
+            if self.from_preamble():
+                final_par.preamble_doc = self.from_preamble()
 
             if set_html:
                 html = self.get_html(from_preview=False) if self.is_translation(
@@ -967,7 +973,7 @@ class DocParagraph:
             if ref_docid is None:
                 raise InvalidReferenceException('Source document for reference not specified.')
             from timApp.documentmodel.document import Document  # Document import needs to be here to avoid circular import
-            ref_doc = Document(ref_docid)
+            ref_doc = self.doc.get_ref_doc(ref_docid)
 
         if not ref_doc.exists():
             raise InvalidReferenceException('The referenced document does not exist.')
@@ -1031,6 +1037,10 @@ class DocParagraph:
         """Returns whether this paragraph is a settings paragraph."""
         return self.__is_setting
 
+    def from_preamble(self) -> Optional['DocInfo']:
+        """Returns the preamble document for this paragraph if the paragraph has been copied from a preamble."""
+        return getattr(self, 'preamble_doc', None)
+
     def set_id(self, par_id: str):
         """Sets the id for this paragraph.
 
@@ -1041,6 +1051,9 @@ class DocParagraph:
 
     def is_citation(self):
         return self.get_attr('r') == 'c'
+
+    def is_area(self):
+        return self.get_attr('area') is not None or self.get_attr('area_end') is not None
 
 
 def is_real_id(par_id: Optional[str]):

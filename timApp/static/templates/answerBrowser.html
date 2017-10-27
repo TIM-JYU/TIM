@@ -7,6 +7,7 @@
                 <div class="col-xs-5">
                     <div class="input-group input-group-xs">
                     <span class="input-group-btn">
+                       <button class="btn btn-primary" ng-click="$ctrl.randomStudent()" title="Choose random student">R</button>
                        <button class="btn btn-primary" ng-click="$ctrl.changeStudent(-1)">&uarr;</button>
                      </span>
                         <select class="form-control"
@@ -15,7 +16,6 @@
                                 ng-change="$ctrl.getAvailableAnswers()"></select>
                         <span class="input-group-btn">
                      <button class="btn btn-primary" ng-click="$ctrl.changeStudent(+1)">&darr;</button>
-                     <button class="btn btn-primary" ng-click="$ctrl.randomStudent()" title="Choose random student">R</button>
                     </span>
                     </div>
                 </div>

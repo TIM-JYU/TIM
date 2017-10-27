@@ -1,0 +1,5 @@
+FORCED_TEMPLATE_NAME = 'force'
+TEMPLATE_FOLDER_NAME = 'templates'
+PRINT_FOLDER_NAME = 'printing'
+PREAMBLE_FOLDER_NAME = 'preambles'
+DEFAULT_PREAMBLE_DOC = 'preamble'

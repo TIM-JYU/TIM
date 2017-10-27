@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from tempfile import mkstemp
 from time import time
-from typing import List, Optional, Set, Tuple, Union, Iterable, Generator
+from typing import List, Optional, Set, Tuple, Union, Iterable, Generator, Dict
 
 import dateutil.parser
 from filelock import FileLock
@@ -13,7 +13,7 @@ from flask import g
 from lxml import etree, html
 
 from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.documentmodel.docsettings import DocSettings, resolve_final_settings
+from timApp.documentmodel.docsettings import DocSettings, resolve_settings_for_pars
 from timApp.documentmodel.documenteditresult import DocumentEditResult
 from timApp.documentmodel.documentparser import DocumentParser
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
@@ -23,9 +23,8 @@ from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.validationresult import ValidationResult
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
-from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.timdbexception import TimDbException, PreambleException
 from timApp.utils import get_error_html
-
 
 if False:
     from timApp.timdb.docinfo import DocInfo
@@ -36,7 +35,7 @@ class Document:
 
     def __init__(self,
                  doc_id: Optional[int]=None,
-                 files_root = None,
+                 files_root: Optional[str] = None,
                  modifier_group_id: Optional[int] = 0,
                  preload_option: PreloadOption = PreloadOption.none):
         self.doc_id = doc_id if doc_id is not None else Document.get_next_free_id(files_root)
@@ -62,7 +61,14 @@ class Document:
         self.settings: Optional[DocSettings] = None
         # The corresponding DocInfo object.
         self.docinfo: 'DocInfo' = None
-
+        # Cache for own settings; see get_own_settings
+        self.own_settings = None
+        # Whether preamble has been loaded
+        self.preamble_included = False
+        # Cache for documents that are referenced by this document
+        self.ref_doc_cache: Dict[int, 'Document'] = {}
+        # Cache for single paragraphs
+        self.single_par_cache: Dict[str, DocParagraph] = {}
         # Used for accessing previous/next paragraphs quickly based on id
         self.par_map = None
 
@@ -73,6 +79,9 @@ class Document:
     @classmethod
     def get_documents_dir(cls, files_root: str = default_files_root) -> str:
         return os.path.join(files_root, 'docs')
+
+    def __repr__(self):
+        return f'Document(id={self.doc_id})'
 
     def __len__(self):
         count = 0
@@ -134,6 +143,7 @@ class Document:
         """Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster."""
         self.par_cache = [par for par in self]
         self.par_ids = [par.get_id() for par in self.par_cache]
+        self.par_hashes = [par.get_hash() for par in self.par_cache]
         self.__update_par_map()
 
     def ensure_pars_loaded(self):
@@ -185,7 +195,11 @@ class Document:
         return pars
 
     def add_setting(self, key: str, value) -> None:
-        current_settings = self.get_settings().get_dict()
+        pars = list(self.get_settings_pars())
+        if not pars:
+            current_settings = {}
+        else:
+            current_settings = DocSettings.from_paragraph(pars[-1]).get_dict()
         current_settings[key] = value
         self.set_settings(current_settings)
 
@@ -230,13 +244,25 @@ class Document:
     def get_lock(self):
         return FileLock(f'/tmp/doc_{self.doc_id}_lock')
 
-    def get_settings(self, user=None) -> DocSettings:
+    def get_own_settings(self) -> YamlBlock:
+        """Returns the settings for this document excluding any preamble documents."""
+        if self.own_settings is None:
+            self.ensure_par_ids_loaded()
+            self.own_settings = resolve_settings_for_pars(self.get_settings_pars())
+        return self.own_settings
+
+    def get_settings(self, user=None, use_preamble=True) -> DocSettings:
         if self.settings is not None:
             self.settings.user = user
             return self.settings
-        self.ensure_par_ids_loaded()
-        settings_block = resolve_final_settings(self.get_settings_pars())
-        settings = DocSettings(self, settings_dict=settings_block)
+        settings_block = self.get_own_settings()
+        final_settings = YamlBlock()
+        if use_preamble:
+            preambles = self.get_docinfo().get_preamble_docs()
+            for p in preambles:
+                final_settings = final_settings.merge_with(resolve_settings_for_pars(p.document.get_settings_pars()))
+        final_settings = final_settings.merge_with(settings_block)
+        settings = DocSettings(self, settings_dict=final_settings)
         settings.user = user
         self.settings = settings
         gmacros = settings.get_globalmacros()
@@ -418,6 +444,9 @@ class Document:
         self.par_hashes = None
         self.source_doc = None
         self.settings = None
+        self.own_settings = None
+        self.single_par_cache = {}
+        self.ref_doc_cache = {}
         return ver
 
     def __update_metadata(self, pars: List[DocParagraph], old_ver: Tuple[int, int], new_ver: Tuple[int, int]):
@@ -466,10 +495,17 @@ class Document:
                 return self.par_map[par_id]['c']
             except KeyError:
                 return self._raise_not_found(par_id)
+        cached = self.single_par_cache.get(par_id)
+        if cached:
+            return cached
         self.ensure_par_ids_loaded()
-        if par_id not in self.par_ids:
+        try:
+            idx = self.par_ids.index(par_id)
+        except ValueError:
             return self._raise_not_found(par_id)
-        return DocParagraph.get_latest(self, par_id, self.files_root)
+        fetched = DocParagraph.get(self, self.par_ids[idx], self.par_hashes[idx], self.files_root)
+        self.single_par_cache[par_id] = fetched
+        return fetched
 
     def add_text(self, text: str) -> List[DocParagraph]:
         """Converts the given text to (possibly) multiple paragraphs and adds them to the document."""
@@ -585,21 +621,21 @@ class Document:
         new_ver = self.__increment_version('Inserted', p.get_id(), increment_major=True,
                                            op_params={'before_id': insert_before_id} if insert_before_id else {
                                                'after_id': insert_after_id})
-        self.__update_metadata([p], old_ver, new_ver)
 
         new_line = p.get_id() + '/' + p.get_hash() + '\n'
-        with open(self.get_version_path(old_ver), 'r') as f_src:
-            with open(self.get_version_path(new_ver), 'w') as f:
-                while True:
-                    line = f_src.readline()
-                    if not line:
-                        return p
+        with open(self.get_version_path(old_ver), 'r') as f_src, open(self.get_version_path(new_ver), 'w') as f:
+            while True:
+                line = f_src.readline()
+                if not line:
+                    break
 
-                    if insert_before_id and line.startswith(insert_before_id):
-                        f.write(new_line)
-                    f.write(line)
-                    if insert_after_id and line.startswith(insert_after_id):
-                        f.write(new_line)
+                if insert_before_id and line.startswith(insert_before_id):
+                    f.write(new_line)
+                f.write(line)
+                if insert_after_id and line.startswith(insert_after_id):
+                    f.write(new_line)
+        self.__update_metadata([p], old_ver, new_ver)
+        return p
 
     def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict]=None) -> DocParagraph:
         """Modifies the text of the given paragraph.
@@ -636,21 +672,21 @@ class Document:
         old_hash = p_src.get_hash()
         new_ver = self.__increment_version('Modified', par_id, increment_major=False,
                                            op_params={'old_hash': old_hash, 'new_hash': new_hash})
-        self.__update_metadata([p], old_ver, new_ver)
 
         old_line_start = f'{par_id}/'
         old_line_legacy = f'{par_id}\n'
         new_line = f'{par_id}/{new_hash}\n'
-        with open(self.get_version_path(old_ver), 'r') as f_src:
-            with open(self.get_version_path(new_ver), 'w') as f:
-                while True:
-                    line = f_src.readline()
-                    if not line:
-                        return p
-                    if line.startswith(old_line_start) or line == old_line_legacy:
-                        f.write(new_line)
-                    else:
-                        f.write(line)
+        with open(self.get_version_path(old_ver), 'r') as f_src, open(self.get_version_path(new_ver), 'w') as f:
+            while True:
+                line = f_src.readline()
+                if not line:
+                    break
+                if line.startswith(old_line_start) or line == old_line_legacy:
+                    f.write(new_line)
+                else:
+                    f.write(line)
+        self.__update_metadata([p], old_ver, new_ver)
+        return p
 
     def parwise_diff(self, other_doc: 'Document', check_html: bool=False):
         if self.get_version() == other_doc.get_version():
@@ -936,8 +972,11 @@ class Document:
             self.__save_reflist(reflist_name, reflist)
         return reflist
 
-    def get_paragraphs(self) -> List[DocParagraph]:
+    def get_paragraphs(self, include_preamble=False) -> List[DocParagraph]:
         self.ensure_pars_loaded()
+        if include_preamble and not self.preamble_included:
+            pars = list(self.get_docinfo().get_preamble_pars())
+            self.insert_preamble_pars(pars)
         return self.par_cache
 
     def get_dereferenced_paragraphs(self) -> List[DocParagraph]:
@@ -958,16 +997,21 @@ class Document:
         from timApp.documentmodel.documentversion import DocumentVersion
         return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id, self.preload_option)
 
+    def get_docinfo(self):
+        if self.docinfo is None:
+            from timApp.timdb.models.docentry import DocEntry
+            self.docinfo = DocEntry.find_by_id(self.doc_id, try_translation=True)
+        return self.docinfo
+
     def get_source_document(self) -> Optional['Document']:
         if self.source_doc is None:
-            if self.docinfo is None:
-                from timApp.timdb.models.docentry import DocEntry
-                self.docinfo = DocEntry.find_by_id(self.doc_id, try_translation=True)
-            if self.docinfo.is_original_translation:
+            docinfo = self.get_docinfo()
+            if docinfo.is_original_translation:
                 src_docid = self.get_settings().get_source_document()
                 self.source_doc = Document(src_docid, preload_option=self.preload_option) if src_docid is not None else None
             else:
-                self.source_doc = self.docinfo.src_doc.document
+                self.source_doc = docinfo.src_doc.document
+                self.ref_doc_cache[self.source_doc.doc_id] = self.source_doc
         return self.source_doc
 
     def get_last_par(self):
@@ -1000,6 +1044,28 @@ class Document:
                 self.par_ids.append(par_id)
                 self.par_hashes.append(t)
 
+    def insert_preamble_pars(self, pars: List[DocParagraph]):
+        if self.preamble_included:
+            return
+        self.ensure_pars_loaded()
+        current_ids = set(self.par_ids)
+        preamble_ids = set(p.get_id() for p in pars)
+        if len(pars) != len(preamble_ids):
+            raise PreambleException('The paragraphs in preamble documents must have distinct ids among themselves.')
+        isect = current_ids & preamble_ids
+        if isect:
+            raise PreambleException('The paragraphs in the main document must '
+                                    f'have distinct ids from the preamble documents. Conflicting ids: {isect}')
+        for p in pars:
+            p.preamble_doc = p.doc.get_docinfo()
+            if p.is_translation():
+                p.set_attr('rd', p.doc.get_source_document().doc_id)
+                p.set_attr('rl', 'no')
+            p.doc = self
+        self.par_cache = pars + self.par_cache
+        self.__update_par_map()
+        self.preamble_included = True
+
     def insert_temporary_pars(self, pars, context_par):
         if self.preload_option == PreloadOption.all:
             self.ensure_pars_loaded()
@@ -1028,6 +1094,15 @@ class Document:
         self.par_hashes = None
         self.source_doc = None
         self.settings = None
+        self.ref_doc_cache = {}
+        self.single_par_cache = {}
+
+    def get_ref_doc(self, ref_docid: int):
+        cached = self.ref_doc_cache.get(ref_docid)
+        if not cached:
+            cached = Document(ref_docid, preload_option=self.preload_option)
+            self.ref_doc_cache[ref_docid] = cached
+        return cached
 
 
 class CacheIterator:
@@ -1077,8 +1152,12 @@ class DocParagraphIter:
                 if len(line) > 14:
                     # Line contains both par_id and t
                     par_id, t = line.replace('\n', '').split('/')
-                    # Make a copy of the paragraph to avoid modifying cached instance
-                    return DocParagraph.get(self.doc, par_id, t, self.doc.files_root)
+                    cached = self.doc.single_par_cache.get(par_id)
+                    if self.doc.single_par_cache.get(par_id):
+                        return cached
+                    fetched = DocParagraph.get(self.doc, par_id, t, self.doc.files_root)
+                    self.doc.single_par_cache[par_id] = fetched
+                    return fetched
                 else:
                     # Line contains just par_id, use the latest t
                     return DocParagraph.get_latest(self.doc, line.replace('\n', ''), self.doc.files_root)

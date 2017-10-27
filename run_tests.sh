@@ -15,4 +15,4 @@ if [ "$1" = "1" ] ; then
     export TEST_PARAMS="timApp.tests.$2"
 fi
 
-./docker-compose.sh up tests
+./docker-compose.sh up --exit-code-from tests --abort-on-container-exit tests

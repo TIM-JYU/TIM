@@ -87,7 +87,7 @@ let readingParId = null;
 
 function queueParagraphForReading() {
     //noinspection CssInvalidPseudoSelector
-    const visiblePars = $(".par:onScreen").find(".readline").not("." + readClasses[readingTypes.onScreen]);
+    const visiblePars = $(".par:not('.preamble'):onScreen").find(".readline").not("." + readClasses[readingTypes.onScreen]);
     const parToRead = visiblePars.first().parents(".par");
     const parId = getParId(parToRead);
 
@@ -167,7 +167,7 @@ export function initReadings(sc: ViewCtrl) {
         $readsection.remove();
     });
 
-    onMouseOverOut(".par", function mouseOverHandler($this, e, select) {
+    onMouseOverOut(".par:not('.preamble')", function mouseOverHandler($this, e, select) {
         if (select) {
             markParRead($this, readingTypes.hoverPar);
         }

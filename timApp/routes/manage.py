@@ -228,7 +228,7 @@ def rename_folder(item_id):
 
     validate_item(new_name, 'folder')
 
-    f.rename(new_name)
+    f.rename_path(new_name)
     db.session.commit()
     return json_response({'new_name': new_name})
 

@@ -21,7 +21,7 @@ class FolderRenameTest(TimDbTest):
         Folder.create('some/path/to/first', anon_g_id)
 
         f = Folder.find_by_path('path/to')
-        f.rename('path/to2')
+        f.rename_path('path/to2')
         db.session.commit()
         self.assertIsNone(Folder.find_by_path('path/to/first'))
         self.assertIsNone(Folder.find_by_path('path/to/second'))

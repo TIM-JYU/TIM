@@ -1,7 +1,7 @@
 import angular, {IScope} from "angular";
 import $ from "jquery";
 import {$compile, $window} from "../../ngimport";
-import {addElementToParagraphMargin, getFirstPar, getFirstParId} from "./parhelpers";
+import {addElementToParagraphMargin, getFirstPar, getFirstParId, isActionablePar} from "./parhelpers";
 import {onClick} from "./eventhandlers";
 import {markParRead, readingTypes} from "./readings";
 import {getElementParent} from "../../utils";
@@ -162,6 +162,9 @@ export class NotesHandler {
      */
     updateNoteBadge($par) {
         if (!$par) return null;
+        if (!isActionablePar($par)) {
+            return;
+        }
         if ($par.parents(".previewcontent").length > 0) {
             return;
         }
