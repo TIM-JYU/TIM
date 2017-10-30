@@ -21,5 +21,6 @@ class PasswordTest(TimRouteTest):
         db.session.commit()
         self.logout()
         self.login_test2(force=True)
-        self.assertTrue(self.current_user.check_password('test2pass', allow_old=False))
-        self.assertTrue(bcrypt.checkpw('test2pass'.encode(), self.current_user.pass_.encode()))
+        self.login_test1()  # discard previous session to make sure the password hash update was persisted
+        self.assertTrue(self.test_user_2.check_password('test2pass', allow_old=False))
+        self.assertTrue(bcrypt.checkpw('test2pass'.encode(), self.test_user_2.pass_.encode()))

@@ -295,19 +295,24 @@ def alt_login():
     email = request.form['email']
     password = request.form['password']
     session['adding_user'] = request.form.get('add_user', 'false').lower() == 'true'
-    timdb = get_timdb()
 
     user = User.get_by_email(email)
-    if user is not None and user.check_password(password, allow_old=True, update_if_old=True):
-        # Check if the users' group exists
-        try:
-            user.get_personal_group()
-        except TimDbException:
-            ug = UserGroup(name=user.name)
-            user.groups.append(ug)
-            db.session.commit()
-        set_user_to_session(user)
-        return finish_login()
+    if user is not None:
+        old_hash = user.pass_
+        if user.check_password(password, allow_old=True, update_if_old=True):
+            # Check if the users' group exists
+            try:
+                user.get_personal_group()
+            except TimDbException:
+                ug = UserGroup(name=user.name)
+                user.groups.append(ug)
+                db.session.commit()
+            set_user_to_session(user)
+
+            # if password hash was updated, save it
+            if old_hash != user.pass_:
+                db.session.commit()
+            return finish_login()
 
     nu = NewUser.query.get(email)
     if nu and nu.check_password(password):
