@@ -265,10 +265,12 @@ export function defineEditing(sc) {
         sc.toggleParEditor($newpar, options);
     };
 
-    sc.showAddParagraphBelow = function(e, $par) {
+    sc.showAddParagraphBelow = function(e, $par, options) {
         const $newpar = sc.createNewPar();
         $par.after($newpar);
-        sc.toggleParEditor($newpar, {area: false});
+        if ( options == null ) options = {};
+        options.area = false;
+        sc.toggleParEditor($newpar, options);
     };
 
     sc.addSavedParToDom = function(data, extraData) {
@@ -440,6 +442,25 @@ export function defineEditing(sc) {
                 }
             }
             return sc.showAddParagraphAbove(e, par, options);
+        });
+
+        onClick(".addBelow", function($this, e) {
+            $(".actionButtons").remove();
+            // var $par = $('.par').last();
+            // return sc.showAddParagraphBelow(e, $par);
+            // return sc.showAddParagraphAbove(e, sc.$pars);
+            var par = $($this).closest('.par');
+            var text = par.find('pre').text();
+            // text = text.replace('⁞', '');  // TODO: set cursor to | position
+            var options =  {
+                'localSaveTag': 'addBelow',
+                'texts': {
+                    'beforeText': "alkuun",
+                    'initialText': text ,
+                    'afterText': "loppuun"
+                }
+            }
+            return sc.showAddParagraphBelow(e, par, options);
         });
 
         onClick(".pasteBottom", function($this, e) {
