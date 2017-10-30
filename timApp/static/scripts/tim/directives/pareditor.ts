@@ -484,7 +484,7 @@ timApp.directive("pareditor", [
                     editor.renderer.setPadding(10);
                     editor.renderer.setScrollMargin(2, 2, 2, 40);
                     editor.renderer.setVScrollBarAlwaysVisible(true);
-                    if ( $scope.lstag === "addAbove") // for chat no extra behaviors to editor
+                    if ( $scope.lstag === "addAbove" || $scope.lstag === "addBelow") // for chat no extra behaviors to editor
                         editor.getSession().setMode("ace/mode/text");
                     else
                         editor.getSession().setMode("ace/mode/markdown");
