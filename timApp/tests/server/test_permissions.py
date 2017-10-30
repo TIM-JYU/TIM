@@ -35,3 +35,12 @@ class PermissionTest(TimRouteTest):
                        'type': 'always'})
         self.assertTrue(self.test_user_2.has_view_access(f.id))
         self.assertTrue(self.test_user_3.has_view_access(f.id))
+
+    def test_logged_in_right(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.json_put(f'/permissions/add/{d.id}/Logged-in users/view',
+                      {'from': datetime.now(tz=timezone.utc),
+                       'type': 'always'})
+        self.login_test2()
+        self.get(d.url)
