@@ -190,15 +190,18 @@ class User(db.Model):
         prefs['css_files'] = existing_css_files
         self.prefs = json.dumps(prefs, cls=TimJsonEncoder)
 
-    def get_groups(self) -> Query:
+    def get_groups(self, include_special=True) -> Query:
         special_groups = [ANONYMOUS_GROUPNAME]
         if self.logged_in:
             special_groups.append(LOGGED_IN_GROUPNAME)
-        return UserGroup.query.filter(
+        q = UserGroup.query.filter(
             UserGroup.id.in_(db.session.query(UserGroupMember.usergroup_id).filter_by(user_id=self.id))
-        ).union(
-            UserGroup.query.filter(UserGroup.name.in_(special_groups))
         )
+        if include_special:
+            q = q.union(
+                UserGroup.query.filter(UserGroup.name.in_(special_groups))
+            )
+        return q
 
     def update_info(self, name: str, real_name: str, email: str, password: Optional[str]=None):
         group = self.get_personal_group()
