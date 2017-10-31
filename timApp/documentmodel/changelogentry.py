@@ -26,7 +26,7 @@ class Operation:
         elif op == OperationType.Delete:
             return DeleteOperation(op)
         elif op == OperationType.Insert:
-            return InsertOperation(op, d['before_id'])
+            return InsertOperation(op, d.get('before_id'))
         elif op == OperationType.Modify:
             return ModifyOperation(op, old_hash=d['old_hash'], new_hash=d['new_hash'])
         else:
