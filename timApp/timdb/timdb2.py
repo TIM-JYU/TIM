@@ -24,7 +24,7 @@ from timApp.timdb.velps import Velps
 
 num = 0
 
-# The following will be set (before request) by gunicorn; see gunicornconf.py. Always 0 if running without gunicorn.
+# Always 0 for now.
 worker_pid = 0
 
 DB_PART_NAMES = {'notes', 'readings', 'users', 'images', 'uploads', 'files', 'documents', 'answers', 'questions',
