@@ -138,3 +138,12 @@ class EditTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         self.new_par(d.document, 'test', next_id='xxx', expect_status=400)
+
+    def test_invalid_update(self):
+        self.login_test1()
+        d = self.create_doc(initial_par='test')
+        par = d.document.get_paragraphs()[0]
+        md = d.document.export_markdown()
+        self.json_post(f'/update/{d.id}', {'fulltext': md, 'original': ''}, expect_status=400,
+                       expect_content={'error': f'Duplicate paragraph id(s): {par.get_id()}'})
+        self.get(d.url)

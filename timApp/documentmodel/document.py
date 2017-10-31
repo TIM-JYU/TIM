@@ -771,6 +771,10 @@ class Document:
                                       'This is probably a TIM bug; please report it. '
                                       f'Additional information: {e}')
         blocks = dp_orig.get_blocks()
+        new_ids = set(p['id'] for p in new_pars) - set(p['id'] for p in blocks)
+        conflicting_ids = new_ids & set(self.get_par_ids())
+        if conflicting_ids:
+            raise ValidationException(f'Duplicate paragraph id(s): {", ".join(conflicting_ids)}')
         old_pars = [DocParagraph.from_dict(doc=self, d=d)
                     for d in blocks]
         return self._perform_update(new_pars, old_pars)
