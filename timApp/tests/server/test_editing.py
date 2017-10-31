@@ -4,7 +4,6 @@ from timApp.tests.server.timroutetest import TimRouteTest
 
 
 class EditTest(TimRouteTest):
-
     def test_nonexistent_edit(self):
         self.login_test1()
         d = self.create_doc(initial_par='test')
@@ -53,7 +52,9 @@ class EditTest(TimRouteTest):
 
     def test_update(self):
         """Editing a document with minor errors is possible in manage.
+
         Document must not contain any errors after editing.
+
         """
         self.login_test1()
         d = self.create_doc()
