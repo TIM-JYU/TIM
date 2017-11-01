@@ -161,22 +161,3 @@ class TimDb(object):
             log_debug(
                 f'TimDb-dstr {worker_pid:2d} {self.num:6d} {TimDb.instances:2d} {bes:3d} {time.time() - self.time:7.5f} {self.route_path:s}')
             self.reset_attrs()
-
-    def execute_script(self, sql_file):
-        """Executes an SQL file on the database.
-
-        :param sql_file: The SQL script to be executed.
-
-        """
-        with open(sql_file, 'r', encoding='utf-8') as schema_file:
-            self.db.cursor().executescript(schema_file.read())
-        self.db.commit()
-
-    def execute_sql(self, sql):
-        """Executes an SQL command on the database.
-
-        :param sql: The SQL command to be executed.
-
-        """
-        self.db.cursor().executescript(sql)
-        self.db.commit()
