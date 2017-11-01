@@ -27,10 +27,14 @@ from timApp.documentmodel.version import Version
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException, PreambleException
-from timApp.utils import get_error_html
+from timApp.utils import get_error_html, trim_markdown
 
 if False:
     from timApp.timdb.docinfo import DocInfo
+
+
+def get_duplicate_id_msg(conflicting_ids):
+    return f'Duplicate paragraph id(s): {", ".join(conflicting_ids)}'
 
 
 class Document:
@@ -141,12 +145,12 @@ class Document:
             prev_p = self.par_cache[i - 1] if i > 0 else None
             next_p = self.par_cache[i + 1] if i + 1 < len(self.par_cache) else None
             self.par_map[curr_p.get_id()] = {'p': prev_p, 'n': next_p, 'c': curr_p}
+        self.par_ids = [par.get_id() for par in self.par_cache]
+        self.par_hashes = [par.get_hash() for par in self.par_cache]
 
     def load_pars(self):
         """Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster."""
         self.par_cache = [par for par in self]
-        self.par_ids = [par.get_id() for par in self.par_cache]
-        self.par_hashes = [par.get_hash() for par in self.par_cache]
         self.__update_par_map()
 
     def ensure_pars_loaded(self):
@@ -317,11 +321,12 @@ class Document:
         options.break_on_code_block = break_on_elements
         options.break_on_header = break_on_elements
         options.break_on_normal = break_on_elements
-        dp = DocumentParser(text)
+        dp = DocumentParser(text, options)
+        dp.add_missing_attributes()
         vr = dp.validate_structure()
         vr.raise_if_has_critical_issues()
-        blocks = [DocParagraph.create(doc=self, md=par['md'], attrs=par.get('attrs'))
-                  for par in dp.get_blocks(options)]
+        blocks = [DocParagraph.create(doc=self, md=trim_markdown(par['md']), attrs=par.get('attrs'), par_id=par['id'])
+                  for par in dp.get_blocks()]
         return blocks, vr
 
     @classmethod
@@ -566,9 +571,7 @@ class Document:
         :param par_id: Paragraph id to remove.
 
         """
-        if not self.has_paragraph(par_id):
-            return
-
+        self.raise_if_not_exist(par_id)
         old_ver = self.get_version()
         new_ver = self.__increment_version('Deleted', par_id, increment_major=True)
         self.__update_metadata([], old_ver, new_ver)
@@ -774,7 +777,7 @@ class Document:
         new_ids = set(p['id'] for p in new_pars) - set(p['id'] for p in blocks)
         conflicting_ids = new_ids & set(self.get_par_ids())
         if conflicting_ids:
-            raise ValidationException(f'Duplicate paragraph id(s): {", ".join(conflicting_ids)}')
+            raise ValidationException(get_duplicate_id_msg(conflicting_ids))
         old_pars = [DocParagraph.from_dict(doc=self, d=d)
                     for d in blocks]
         return self._perform_update(new_pars, old_pars)
@@ -843,18 +846,6 @@ class Document:
         # Skip plugins
         html_list = [par.get_html(from_preview=False) for par in pars if not par.is_dynamic()]
         return get_index_from_html_list(html_list)
-
-    @staticmethod
-    def add_index_entry(index_table, current_headers, header):
-        level = int(header.tag[1:])
-        current = {'id': header.get('id'), 'text': header.text, 'level': level}
-        if level == 1:
-            if current_headers is not None:
-                index_table.append(current_headers)
-            current_headers = (current, [])
-        elif current_headers is not None:
-            current_headers[1].append(current)
-        return current_headers
 
     def get_changelog(self, max_entries: int = 100) -> Changelog:
         log = Changelog()
@@ -1080,7 +1071,6 @@ class Document:
                         break
                 self.par_cache = self.par_cache[:i + 1] + pars + self.par_cache[i + 1:]
         else:
-            self.ensure_par_ids_loaded()
             if context_par is None:
                 self.par_cache = pars
             else:
@@ -1105,6 +1095,18 @@ class Document:
             cached = Document(ref_docid, preload_option=self.preload_option)
             self.ref_doc_cache[ref_docid] = cached
         return cached
+
+
+def add_index_entry(index_table, current_headers, header):
+    level = int(header.tag[1:])
+    current = {'id': header.get('id'), 'text': header.text, 'level': level}
+    if level == 1:
+        if current_headers is not None:
+            index_table.append(current_headers)
+        current_headers = (current, [])
+    elif current_headers is not None:
+        current_headers[1].append(current)
+    return current_headers
 
 
 class CacheIterator:
@@ -1180,9 +1182,9 @@ def get_index_from_html_list(html_table) -> List[Tuple]:
             continue
         if index_entry.tag == 'div':
             for header in index_entry.iter('h1', 'h2', 'h3'):
-                current_headers = Document.add_index_entry(index, current_headers, header)
+                current_headers = add_index_entry(index, current_headers, header)
         elif index_entry.tag.startswith('h'):
-            current_headers = Document.add_index_entry(index, current_headers, index_entry)
+            current_headers = add_index_entry(index, current_headers, index_entry)
     if current_headers is not None:
         index.append(current_headers)
     return index

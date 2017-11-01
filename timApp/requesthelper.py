@@ -1,6 +1,5 @@
-from typing import List
-
 import itertools
+
 from flask import Request
 from flask import request, abort
 

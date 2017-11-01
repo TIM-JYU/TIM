@@ -393,7 +393,7 @@ class DocParagraph:
         attr_index = md.find('{')
         return md[2:attr_index].strip() if attr_index > 0 else md[2:].strip()
 
-    def get_exported_markdown(self, skip_tr=False) -> str:
+    def get_exported_markdown(self, skip_tr=False, export_ids=False) -> str:
         """Returns the markdown in exported form for this paragraph."""
         if (not skip_tr) and self.is_par_reference() and self.is_translation():
             # This gives a default translation based on the source paragraph
@@ -410,10 +410,10 @@ class DocParagraph:
                     if md:
                         d['md'] = md
                     data.append(d)
-                return DocumentWriter(data, export_hashes=False, export_ids=False).get_text()
+                return DocumentWriter(data, export_hashes=False, export_ids=export_ids).get_text()
         return DocumentWriter([self.__data],
                               export_hashes=False,
-                              export_ids=False).get_text(DocumentParserOptions.single_paragraph())
+                              export_ids=export_ids).get_text(DocumentParserOptions.single_paragraph())
 
     def __get_setting_html(self) -> str:
         """Returns the HTML for the settings paragraph."""
@@ -696,7 +696,7 @@ class DocParagraph:
         if not prev_par.nomacros:
             # TODO: RND_SEED should we fill the rands also?
             md_expanded = expand_macros(md_expanded, macros, macro_delim)
-        blocks = DocumentParser(md_expanded).get_blocks(DocumentParserOptions.break_on_empty_lines())
+        blocks = DocumentParser(md_expanded, options=DocumentParserOptions.break_on_empty_lines()).get_blocks()
         deltas = copy(prev_par_auto_values['h'])
         titles = []
         for e in blocks:

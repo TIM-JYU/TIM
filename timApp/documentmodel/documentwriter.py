@@ -34,7 +34,7 @@ class DocumentWriter:
             options = DocumentParserOptions()
         text = ''
         for p in self.pars:
-            blocks = DocumentParser(p['md']).get_blocks(options)
+            blocks = DocumentParser(p['md'], options=options).get_blocks()
             text += '\n'
             if len(blocks) > 1:
                 atomized = p.copy()

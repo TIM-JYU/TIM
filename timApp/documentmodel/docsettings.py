@@ -133,7 +133,7 @@ class DocSettings:
         return self.__dict.get(self.auto_number_headings_key, 0)
 
     def auto_number_start(self) -> int:
-        return self.__dict.get(self.auto_number_start_key, False)
+        return self.__dict.get(self.auto_number_start_key, 0)
 
     def heading_format(self) -> dict:
         level = self.auto_number_headings()

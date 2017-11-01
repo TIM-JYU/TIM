@@ -181,3 +181,13 @@ def getdatetime(s: str, default_val=None):
         return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
     except (ValueError, TypeError):
         return default_val
+
+
+def trim_markdown(text: str):
+    """Trims the specified text. Don't trim spaces from left side because they may indicate a code block.
+
+    :param text: The text to be trimmed.
+    :return: The trimmed text.
+
+    """
+    return text.rstrip().strip('\r\n')

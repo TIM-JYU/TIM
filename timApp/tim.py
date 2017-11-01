@@ -30,7 +30,7 @@ import timApp.routes.view
 # from timApp.routes.view import get_templates_for_folder, FORCED_TEMPLATE_NAME
 from timApp.ReverseProxied import ReverseProxied
 from timApp.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
-    has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException
+    has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException, get_doc_or_abort
 from timApp.cache import cache
 from timApp.containerLink import call_plugin_resource
 from timApp.dbaccess import get_timdb
@@ -333,13 +333,10 @@ def create_document():
 
 @app.route("/translations/<int:doc_id>", methods=["GET"])
 def get_translations(doc_id):
-    timdb = get_timdb()
-
-    if not timdb.documents.exists(doc_id):
-        abort(404, 'Document not found')
+    d = get_doc_or_abort(doc_id)
     verify_manage_access(doc_id)
 
-    return json_response(DocEntry.find_by_id(doc_id, try_translation=True).translations)
+    return json_response(d.translations)
 
 
 def valid_language_id(lang_id):

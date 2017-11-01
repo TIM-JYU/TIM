@@ -118,11 +118,11 @@ def initialize_database(create_docs=True):
         if create_docs:
             DocEntry.create('testaus-1', anon_group, title='Testaus 1')
             DocEntry.create('testaus-2', anon_group, title='Testaus 2')
-            timdb.documents.import_document_from_file('example_docs/programming_examples.md',
+            import_document_from_file('example_docs/programming_examples.md',
                                                       'programming-examples',
                                                       anon_group,
                                                       title='Programming examples')
-            timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
+            import_document_from_file('example_docs/mmcq_example.md',
                                                       'mmcq-example',
                                                       anon_group,
                                                       title='Multiple choice plugin example')

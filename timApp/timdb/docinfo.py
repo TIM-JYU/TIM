@@ -1,3 +1,4 @@
+from datetime import timezone, datetime
 from itertools import accumulate
 from typing import List, Iterable, Generator, Tuple, Optional
 
@@ -11,7 +12,6 @@ from timApp.timdb.item import Item
 if False:
     from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.notification import NotificationType, Notification
-from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db
 
 
@@ -82,6 +82,9 @@ class DocInfo(Item):
     def lang_id(self) -> str:
         raise NotImplementedError
 
+    def update_last_modified(self):
+        self.block.modified = datetime.now(tz=timezone.utc)
+
     def get_preamble_docs(self) -> List['DocInfo']:
         """Gets the list of preamble documents for this document.
         The first document in the list is nearest root.
@@ -110,7 +113,7 @@ class DocInfo(Item):
         result = db.session.query(DocEntry, Translation).filter(
             DocEntry.name.in_(paths)).outerjoin(Translation,
                                                 (Translation.src_docid == DocEntry.id) & (
-                                                Translation.lang_id == self.lang_id)).order_by(
+                                                    Translation.lang_id == self.lang_id)).order_by(
             func.length(DocEntry.name)).all()  # type: List[Tuple[DocEntry, Optional[Translation]]]
         preamble_docs = []
         for de, tr in result:

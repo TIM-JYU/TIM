@@ -1,11 +1,11 @@
 from typing import List, Optional
 
 from timApp.accesshelper import has_view_access
-from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.exceptions import ValidationException
 from timApp.requesthelper import verify_json_params
+from timApp.timdb.models.docentry import DocEntry
 
 
 class EditRequest:
@@ -22,6 +22,7 @@ class EditRequest:
         self.text = text
         self.editor_pars = None
         self.original_par = self.doc.get_paragraph(self.par) if not self.editing_area and par is not None and not self.is_adding else None
+        self.context_par = self.get_context_par()
 
     @property
     def is_adding(self):
@@ -84,14 +85,14 @@ class EditRequest:
 def get_pars_from_editor_text(doc: Document, text: str,
                               break_on_elements: bool = False, skip_access_check: bool = False) -> List[DocParagraph]:
     blocks, validation_result = doc.text_to_paragraphs(text, break_on_elements)
-    timdb = get_timdb()
     for p in blocks:
         if p.is_reference():
             try:
                 refdoc = int(p.get_attr('rd'))
             except (ValueError, TypeError):
                 continue
-            if not skip_access_check and timdb.documents.exists(refdoc) \
+            d = DocEntry.find_by_id(refdoc, try_translation=True)
+            if not skip_access_check and d \
                     and not has_view_access(refdoc):
                 raise ValidationException(f"You don't have view access to document {refdoc}")
     return blocks

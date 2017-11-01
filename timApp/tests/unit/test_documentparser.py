@@ -131,7 +131,7 @@ test
         self.assertListEqual([{'md': '```\n```', 'type': 'code', 'attrs': {}}],
                              DocumentParser('```').get_blocks())
 
-        result = DocumentParser(doc_text).get_blocks(DocumentParserOptions.break_on_empty_lines())
+        result = DocumentParser(doc_text, DocumentParserOptions.break_on_empty_lines()).get_blocks()
         self.assertListEqual([{'md': '```\ncode\n\ncode\n```', 'attrs': {'plugin': 'csPlugin'}, 'type': 'code'},
                               {'md': 'text1', 'type': 'autonormal', 'attrs': {}},
                               {'md': 'text2', 'type': 'autonormal', 'attrs': {}},
@@ -153,7 +153,7 @@ test
                               {'attrs': {}, 'type': 'code',
                                'md': '````\n#- {rd=x rp=y}\n\n``` {rp=x rd=y}\n```\n\n````'},
                               {'attrs': {}, 'md': '````\ntest\n````', 'type': 'code'}], result)
-        result = DocumentParser(doc_text).get_blocks(DocumentParserOptions.single_paragraph())
+        result = DocumentParser(doc_text, DocumentParserOptions.single_paragraph()).get_blocks()
         expected = [{'md': '```\ncode\n\ncode\n```', 'attrs': {'plugin': 'csPlugin'}, 'type': 'code'},
                     {'md': 'text1\n\ntext2', 'type': 'autonormal', 'attrs': {}},
                     {'md': '```\ncode2\n```', 'attrs': {'plugin': 'mmcq'}, 'type': 'code'},
@@ -262,7 +262,7 @@ test
                                ('```', '```\n```'),
                                ('````', '````\n````'),
                                ('````\na', '````\na\n````')):
-            result = DocumentParser(text).get_blocks(DocumentParserOptions.single_paragraph())
+            result = DocumentParser(text, DocumentParserOptions.single_paragraph()).get_blocks()
             self.assertEqual([{'attrs': {}, 'md': expected, 'type': 'code'}], result)
             result.append({'attrs': {}, 'md': '```\n```', 'type': 'code'})
             exported = DocumentWriter(result).get_text()

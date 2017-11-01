@@ -10,7 +10,7 @@ from timApp.documentmodel.documentwriter import DocumentWriter
 from timApp.documentmodel.exceptions import DocExistsError
 from timApp.documentmodel.randutils import random_paragraph
 from timApp.tests.db.timdbtest import TimDbTest
-from timApp.timdb.documents import delete_document
+from timApp.timdb.documents import delete_document, import_document_from_file
 from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import get_anon_group_id
 
@@ -295,10 +295,9 @@ class DocumentTest(TimDbTest):
         self.assertEqual(f'document id is {d.doc_id}', p.get_expanded_markdown())
 
     def test_import(self):
-        timdb = self.get_db()
-        timdb.documents.import_document_from_file('example_docs/mmcq_example.md',
-                                                  'Multiple choice plugin example',
-                                                  get_anon_group_id())
+        import_document_from_file('example_docs/mmcq_example.md',
+                                  'Multiple choice plugin example',
+                                  get_anon_group_id())
 
     def test_parwise_diff(self):
         d = self.create_doc().document

@@ -26,7 +26,7 @@ class EditTest(TimRouteTest):
                  expect_content=f'Document {d.id}: Paragraph not found: {invalid_par}',
                  json_key='error')
 
-    def test_duplicates(self):
+    def test_duplicate_task_ids(self):
         self.login_test1()
         d = self.create_doc()
         r = self.new_par(d.document, "``` {#test plugin=showVideo}\n```")
@@ -34,6 +34,28 @@ class EditTest(TimRouteTest):
         r = self.new_par(d.document, "``` {#test plugin=showVideo}\n```")
         pars = d.document.get_paragraphs()
         self.assertEqual(r['duplicates'], [['test', pars[1].get_id()]])
+
+    def test_area_editing(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=['a1', 'a2', 'a3'])
+        pars = d.document.get_paragraphs()
+        new_text = d.document.export_markdown().replace('a1', 'b1').replace('a2', 'b2').replace('a3', 'b3')
+        self.json_post('/postParagraph/', {
+            "text": new_text,
+            "docId": d.id,
+            "par": pars[0].get_id(),
+            "par_next": None,
+            "area_start": pars[0].get_id(),
+            "area_end": pars[-1].get_id(),
+        })
+        d.document.clear_mem_cache()
+        self.assertEqual(d.document.export_markdown(), new_text)
+        self.json_post(f'/deleteParagraph/{d.id}', {
+            "area_start": pars[0].get_id(),
+            "area_end": pars[-1].get_id(),
+        })
+        d.document.clear_mem_cache()
+        self.assertEqual(d.document.get_paragraphs(), [])
 
     def test_get_updates_pars_translation(self):
         self.login_test1()
@@ -59,8 +81,8 @@ class EditTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         for i in range(0, 2):
-            d.document.add_paragraph("#- {area=a}")
-            d.document.add_paragraph("#- {area_end=a}")
+            d.document.add_text("#- {area=a}")
+            d.document.add_text("#- {area_end=a}")
         par_ids = d.document.get_par_ids()
         self.json_post(f'/update/{d.id}',
                        {'fulltext': f"""
@@ -106,7 +128,7 @@ class EditTest(TimRouteTest):
                        """,
                         'original': orig_text},
                        expect_status=400,
-                       expect_content=f'Attributes at end of code block noticed in a paragraph',
+                       expect_contains=f'Attributes at end of code block noticed in paragraph ',
                        json_key='error')
 
     def test_new_from_help_par(self):
@@ -147,4 +169,19 @@ class EditTest(TimRouteTest):
         md = d.document.export_markdown()
         self.json_post(f'/update/{d.id}', {'fulltext': md, 'original': ''}, expect_status=400,
                        expect_content={'error': f'Duplicate paragraph id(s): {par.get_id()}'})
+        self.get(d.url)
+
+    def test_duplicate_par_ids(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=['test1', 'test2'])
+        pars = d.document.get_paragraphs()
+        par1 = pars[0]
+        par2 = pars[1]
+        md1 = par1.get_exported_markdown(export_ids=True)
+        self.new_par(d.document, md1, expect_status=400,
+                     expect_content={'error': f'Duplicate paragraph id(s): {par1.get_id()}'})
+        self.post_par(d.document, md1, par_id=par1.get_id())
+        md2 = par2.get_exported_markdown(export_ids=True)
+        self.post_par(d.document, md1 + md2, par_id=par1.get_id(), expect_status=400,
+                      expect_content={'error': f'Duplicate paragraph id(s): {par2.get_id()}'})
         self.get(d.url)

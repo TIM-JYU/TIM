@@ -18,6 +18,7 @@ from timApp.routes.edit import par_response
 from timApp.sessioninfo import get_current_user_id
 from timApp.synchronize_translations import synchronize_translations
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.tim_models import db
 from timApp.timdb.timdbexception import TimDbException
 
 clipboard = Blueprint('clipboard',
@@ -51,7 +52,8 @@ def cut_to_clipboard(doc_id, from_par, to_par):
         pars = clip.cut_pars(doc, from_par, to_par, area_name)
     except TimDbException as e:
         return abort(400, str(e))
-    timdb.documents.update_last_modified(doc)
+    g.docentry.update_last_modified()
+    db.session.commit()
     synchronize_translations(g.docentry, DocumentEditResult(deleted=pars))
 
     return json_response({'doc_ver': doc.get_version(), 'pars': [{'id': p.get_id()} for p in pars]})

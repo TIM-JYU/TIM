@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Dict
 
 import pytz
-from flask import session, abort, request, flash
+from flask import session, request, flash
 
 from timApp.accesshelper import has_ownership, has_edit_access
 from timApp.dbaccess import get_timdb
@@ -12,18 +12,12 @@ from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.markdownconverter import expand_macros, create_environment
 from timApp.pluginControl import pluginify
+from timApp.requesthelper import get_boolean
 from timApp.sessioninfo import get_session_usergroup_ids
 from timApp.timdb.models.user import User
 from timApp.timdb.userutils import get_anon_group_id
 from timApp.timtiming import taketime
 from timApp.utils import getdatetime
-from timApp.requesthelper import get_boolean
-
-
-def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
-    timdb = get_timdb()
-    if not timdb.documents.exists(doc_id):
-        abort(404, message)
 
 
 # noinspection PyUnusedLocal
