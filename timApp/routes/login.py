@@ -110,7 +110,7 @@ def login_with_korppi():
     korppi_down_text = 'Korppi seems to be down, so login is currently not possible. Try again later.'
     try:
         r = requests.get(url, params={'request': session['appcookie']}, verify=True)
-    except requests.exceptions.SSLError:
+    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError):
         return abort(503, korppi_down_text)
 
     if r.status_code != 200:
