@@ -10,7 +10,7 @@ from timApp.timdb.models.user import User
 class AccountImportTest(TimDbTest):
 
     def test_import_accounts(self):
-        num_accounts = 10
+        num_accounts = 3
         accounts = [(name + '@example.com', name, name + 'uname') for name in
                     [f'testimport{i}' for i in range(0, num_accounts)]]
         self.assertEqual(num_accounts, len(accounts))
