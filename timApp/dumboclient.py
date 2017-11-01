@@ -11,7 +11,7 @@ import time
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 
 DUMBO_URL = 'http://127.0.0.1:8000'
-DUMBO_PATH = os.path.join("..", "Ephemeral", "Dumbo", "dist", "build", "Dumbo")
+DUMBO_PATH = os.path.join("/service", "Ephemeral", "Dumbo", "dist", "build", "Dumbo")
 
 
 def launch_dumbo() -> subprocess.Popen:
@@ -20,11 +20,8 @@ def launch_dumbo() -> subprocess.Popen:
     :return: The process object that represents the Dumbo process.
 
     """
-    path = DUMBO_PATH
-    old = os.getcwd()
-    os.chdir(path)
-    p = subprocess.Popen([os.path.join(".", "Dumbo"), "-p", "8000"], stdout=DEVNULL, stderr=STDOUT)
-    os.chdir(old)
+    p = subprocess.Popen([os.path.join(DUMBO_PATH, "Dumbo"), "-p", "8000"], stdout=DEVNULL, stderr=STDOUT,
+                         cwd=DUMBO_PATH)
     time.sleep(0.1)
     return p
 
