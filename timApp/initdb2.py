@@ -68,9 +68,6 @@ def initialize_temp_database():
 
 
 def initialize_database(create_docs=True):
-    abspath = os.path.abspath(__file__)
-    dname = os.path.dirname(abspath)
-    os.chdir(dname)
     files_root_path = app.config['FILES_PATH']
     Document.default_files_root = files_root_path
     DocParagraph.default_files_root = files_root_path
