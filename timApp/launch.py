@@ -20,7 +20,6 @@ if __name__ == '__main__':
     # quit faster when running in PyCharm
     if pycharm_running():
         signal.signal(signal.SIGINT, quit_fast)
-    d = None
     initialize_database()
     initialize_temp_database()
     try:
