@@ -65,7 +65,7 @@ services:
   command: /bin/true  # in development, the watcher is supposed to be launched from IDE
  tests:
   image: timimages/tim:${TIM_IMAGE_TAG}
-  command: "python3 -m unittest ${TEST_PARAMS:-discover timApp/tests/ 'test_*.py' .}"
+  command: "python3 -m unittest ${TEST_PARAMS:-discover tests/ 'test_*.py' .}"
   volumes:
    - .:/service:ro
    - ./screenshots:/service/screenshots:rw
@@ -74,8 +74,9 @@ services:
    - ./timApp/static/scripts:/service/timApp/static/scripts:rw
   environment:
    TIM_SETTINGS: testconfig.py
+   PYTHONPATH: /service
   depends_on:
    - tim
   tmpfs:
    - /tmp/doctest_files
-  working_dir: /service
+  working_dir: /service/timApp
