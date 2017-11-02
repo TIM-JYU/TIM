@@ -382,10 +382,11 @@ def get_yubico_client():
     # The first line is app key (5 numbers) and
     # the second line is app secret (28 characters)
 
-    if not os.path.exists('yubi.key'):
+    yubi_key_file = 'yubi.key'
+    if not os.path.exists(yubi_key_file):
         return None
 
-    with open('yubi.key', 'rt') as f:
+    with open(yubi_key_file, 'rt') as f:
         app_key = f.readline().rstrip('\n')
         app_secret = f.readline().rstrip('\n')
         return Yubico(app_key, app_secret)
