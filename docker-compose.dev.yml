@@ -16,7 +16,7 @@ services:
    - imagex
    - uploader
    - chrome
-   - prebuilt_dumbo
+   - dumbo
    - ts-watcher
    - funnel
  postgresql:

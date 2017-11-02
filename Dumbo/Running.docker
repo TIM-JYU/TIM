@@ -1,6 +1,0 @@
-FROM        debian
-RUN         apt-get update
-RUN         apt-get install -y libgmp10
-COPY        dist/build/Dumbo/Dumbo /bin/Dumbo
-ENTRYPOINT  [ "/bin/Dumbo" ]
-

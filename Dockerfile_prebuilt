@@ -1,3 +1,0 @@
-FROM ubuntu:17.04
-ADD Ephemeral/Dumbo/dist/build/Dumbo/Dumbo /bin/
-CMD /bin/bash
