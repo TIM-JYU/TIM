@@ -122,5 +122,7 @@ services:
    dockerfile: Dockerfile
   command: ./Dumbo -p 5000
   working_dir: /Dumbo
+  logging:
+   driver: none
 volumes:
  data:
