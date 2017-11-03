@@ -965,6 +965,10 @@ class Document:
     def get_paragraphs(self, include_preamble=False) -> List[DocParagraph]:
         self.ensure_pars_loaded()
         if include_preamble and not self.preamble_included:
+            # Make sure settings has been cached before preamble inclusion.
+            # Otherwise, getting settings after preamble inclusion will not work properly.
+            self.get_settings()
+
             pars = list(self.get_docinfo().get_preamble_pars())
             self.insert_preamble_pars(pars)
         return self.par_cache

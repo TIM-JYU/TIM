@@ -132,6 +132,15 @@ a: b
         changed = e['changed_pars']
         self.assert_content(html.fromstring(changed[first_par.get_id()]), ['4. x'])
 
+        p1.document.set_settings({})
+        d.document.set_settings({'auto_number_headings': 1})
+        self.get(d.url)
+        e = self.post_par(d.document, '# z', first_par.get_id(), json_key='texts', as_tree=True)
+        self.assert_content(e, ['4. z'])
+        e = self.get_updated_pars(d)
+        changed = e['changed_pars']
+        self.assert_content(html.fromstring(changed[first_par.get_id()]), ['4. z'])
+
 
 class PreambleTest3(PreambleTestBase):
     def test_preamble_translation(self):
