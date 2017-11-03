@@ -1,13 +1,12 @@
 import json
 import os
 import shutil
-from datetime import datetime, timezone
+from datetime import datetime
 from difflib import SequenceMatcher
 from tempfile import mkstemp
 from time import time
 from typing import List, Optional, Set, Tuple, Union, Iterable, Generator, Dict
 
-import dateutil.parser
 from filelock import FileLock
 from flask import g
 from lxml import etree, html
@@ -27,10 +26,8 @@ from timApp.documentmodel.version import Version
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException, PreambleException
+from timApp.types import UserType, DocInfoType
 from timApp.utils import get_error_html, trim_markdown
-
-if False:
-    from timApp.timdb.docinfo import DocInfo
 
 
 def get_duplicate_id_msg(conflicting_ids):
@@ -67,7 +64,7 @@ class Document:
         # Cache for document settings.
         self.settings: Optional[DocSettings] = None
         # The corresponding DocInfo object.
-        self.docinfo: 'DocInfo' = None
+        self.docinfo: DocInfoType = None
         # Cache for own settings; see get_own_settings
         self.own_settings = None
         # Whether preamble has been loaded
@@ -258,7 +255,7 @@ class Document:
             self.own_settings = resolve_settings_for_pars(self.get_settings_pars())
         return self.own_settings
 
-    def get_settings(self, user=None, use_preamble=True) -> DocSettings:
+    def get_settings(self, user: UserType=None, use_preamble=True) -> DocSettings:
         if self.settings is not None:
             self.settings.user = user
             return self.settings
@@ -990,7 +987,7 @@ class Document:
         from timApp.documentmodel.documentversion import DocumentVersion
         return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id, self.preload_option)
 
-    def get_docinfo(self):
+    def get_docinfo(self) -> DocInfoType:
         if self.docinfo is None:
             from timApp.timdb.models.docentry import DocEntry
             self.docinfo = DocEntry.find_by_id(self.doc_id, try_translation=True)

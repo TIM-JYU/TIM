@@ -3,6 +3,7 @@ from sqlalchemy import func
 from timApp.timdb.accesstype import AccessType
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db, BlockAccess
+from timApp.types import FolderType
 
 
 class Block(db.Model):
@@ -22,7 +23,7 @@ class Block(db.Model):
                 BlockAccess.usergroup_id))).first()
 
     @property
-    def parent(self) -> 'Folder':
+    def parent(self) -> FolderType:
         if self.type_id == 0:
             from timApp.timdb.models.docentry import DocEntry
             return DocEntry.find_by_id(self.id, try_translation=True).parent

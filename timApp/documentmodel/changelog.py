@@ -1,12 +1,11 @@
 from collections import defaultdict
-from typing import List, Dict, Union, Tuple, Optional
+from typing import List, Dict, Tuple, Optional
 
 import timApp.timdb.models
 from timApp.documentmodel.changelogentry import ChangelogEntry
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.timdb.tim_models import db
-
-UserOrGroup = Union['timApp.timdb.models.user.User', 'timApp.timdb.models.usergroup.UserGroup']
+from timApp.types import UserOrGroup
 
 
 def get_author_str(u: UserOrGroup, es: List[ChangelogEntry]):

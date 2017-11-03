@@ -9,10 +9,9 @@ from timApp.documentmodel.document import Document
 from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
 from timApp.timdb.item import Item
 
-if False:
-    from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.notification import NotificationType, Notification
 from timApp.timdb.tim_models import db
+from timApp.types import TranslationType
 
 
 class DocInfo(Item):
@@ -74,7 +73,7 @@ class DocInfo(Item):
         return self.block.modified if self.block else None
 
     @property
-    def translations(self) -> List['Translation']:
+    def translations(self) -> List[TranslationType]:
         """Returns the translations of the document. NOTE: The list *includes* the document itself."""
         raise NotImplementedError
 

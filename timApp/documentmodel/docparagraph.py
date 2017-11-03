@@ -3,10 +3,7 @@ import os
 import shelve
 from collections import defaultdict
 from copy import copy
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from timApp.documentmodel.document import Document
+from typing import Optional, Dict, List, Tuple, Any
 
 import filelock
 
@@ -18,14 +15,14 @@ from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.randutils import random_id, hashfunc
 from timApp.htmlSanitize import sanitize_html
 from timApp.markdownconverter import par_list_to_html_list, expand_macros
+from timApp.rndutils import get_rands_as_dict, get_rands_as_str
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException
-from typing import Optional, Dict, List, Tuple, Any
+from timApp.types import DocumentType
 from timApp.utils import count_chars, get_error_html
-from timApp.rndutils import get_rands_as_dict, get_rands_as_str
-
 
 SKIPPED_ATTRS = {'r', 'rd', 'rp', 'ra', 'rt', 'settings'}
+
 
 class DocParagraph:
     """Represents a paragraph that is associated with a :class:`Document`. See :doc:`docparagraph` for more info.
@@ -40,7 +37,7 @@ class DocParagraph:
         :param files_root: The location of the data store for this paragraph, or None to use the default data store.
 
         """
-        self.doc: 'Document' = doc
+        self.doc: DocumentType = doc
         self.original = None
         self.files_root = self.get_default_files_root() if files_root is None else files_root
         self.html_sanitized = False
@@ -893,7 +890,7 @@ class DocParagraph:
     def __repr__(self):
         return self.__data.__repr__()
 
-    def get_referenced_pars(self, set_html: bool = True, source_doc: 'Document' = None,
+    def get_referenced_pars(self, set_html: bool = True, source_doc: Optional[DocumentType] = None,
                             tr_get_one: bool = True, visited_pars: Optional[List[Tuple[int, str]]] = None) -> List[
             'DocParagraph']:
         """Returns the paragraphs that are referenced by this paragraph.
@@ -972,7 +969,6 @@ class DocParagraph:
         if ref_doc is None:
             if ref_docid is None:
                 raise InvalidReferenceException('Source document for reference not specified.')
-            from timApp.documentmodel.document import Document  # Document import needs to be here to avoid circular import
             ref_doc = self.doc.get_ref_doc(ref_docid)
 
         if not ref_doc.exists():
@@ -1066,7 +1062,7 @@ def is_real_id(par_id: Optional[str]):
     return par_id is not None and par_id != 'HELP_PAR'
 
 
-def create_reference(doc: 'Document', doc_id: int, par_id: str, r: Optional[str] = None, add_rd: bool = True) -> 'DocParagraph':
+def create_reference(doc: DocumentType, doc_id: int, par_id: str, r: Optional[str] = None, add_rd: bool = True) -> 'DocParagraph':
     """Creates a reference paragraph to a paragraph.
 
     :param par_id: Id of the original paragraph.
