@@ -1,4 +1,0 @@
-# For building the prebuilt image that has Dumbo and Haskell plugins, we only need two directories while building.
-*
-!Ephemeral/Dumbo/dist/build/Dumbo/
-!timApp/modules/Haskell/bin/

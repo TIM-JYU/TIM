@@ -1,32 +1,12 @@
 """Defines a client interface for using Dumbo, the markdown converter."""
 import json
-import os
-import subprocess
-from subprocess import DEVNULL, STDOUT
 from typing import List, Union, Dict
 
 import requests
-import time
 
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 
-DUMBO_URL = 'http://127.0.0.1:8000'
-DUMBO_PATH = os.path.join("..", "Ephemeral", "Dumbo", "dist", "build", "Dumbo")
-
-
-def launch_dumbo() -> subprocess.Popen:
-    """Launches Dumbo.
-
-    :return: The process object that represents the Dumbo process.
-
-    """
-    path = DUMBO_PATH
-    old = os.getcwd()
-    os.chdir(path)
-    p = subprocess.Popen([os.path.join(".", "Dumbo"), "-p", "8000"], stdout=DEVNULL, stderr=STDOUT)
-    os.chdir(old)
-    time.sleep(0.1)
-    return p
+DUMBO_URL = 'http://dumbo:5000'
 
 
 def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='') -> Union[List[str], Dict, List[Dict]]:

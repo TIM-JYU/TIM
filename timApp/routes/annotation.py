@@ -14,7 +14,8 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 
-from timApp.accesshelper import verify_logged_in, has_view_access, has_seeanswers_access, has_teacher_access, has_ownership
+from timApp.accesshelper import verify_logged_in, has_view_access, has_seeanswers_access, has_teacher_access, \
+    has_ownership, get_doc_or_abort
 from timApp.dbaccess import get_timdb
 from timApp.responsehelper import json_response, ok_response
 from timApp.sessioninfo import get_current_user_id
@@ -262,8 +263,7 @@ def get_annotations(doc_id: int):
 
     """
     timdb = get_timdb()
-    if not timdb.documents.exists(doc_id):
-        return abort(404, "No such document.")
+    get_doc_or_abort(doc_id)
     if not has_view_access(doc_id):
         return abort(403, "View access required.")
     user_has_see_answers = bool(has_seeanswers_access(doc_id))

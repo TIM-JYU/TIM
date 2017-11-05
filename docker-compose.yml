@@ -12,7 +12,7 @@ services:
    - haskellplugins
    - imagex
    - uploader
-   - prebuilt_dumbo
+   - dumbo
    - ts-watcher
    - funnel
   volumes:
@@ -115,10 +115,14 @@ services:
    - ./timApp/modules/cs/static:/csstatic:ro
    - ./timApp/modules/cs/generated:/csgenerated:ro
    - ./timApp/static:/static:ro
- prebuilt_dumbo:
-  image: timimages/prebuilt:latest
-  volumes:
-   - ./Ephemeral/Dumbo/dist/build/Dumbo:/target
-  command: "cp /bin/Dumbo /target/"
+ dumbo:
+  image: timimages/dumbo:latest
+  build:
+   context: ./Dumbo
+   dockerfile: Dockerfile
+  command: ./Dumbo -p 5000
+  working_dir: /Dumbo
+  logging:
+   driver: none
 volumes:
  data:

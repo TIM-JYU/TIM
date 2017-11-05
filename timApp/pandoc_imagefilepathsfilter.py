@@ -19,8 +19,8 @@ import re
 import tempfile
 import urllib.request
 
-from defaultconfig import FILES_PATH
-from documentmodel.randutils import hashfunc
+from timApp.defaultconfig import FILES_PATH
+from timApp.documentmodel.randutils import hashfunc
 
 from pandocfilters import toJSONFilter, RawInline, Image, Link, Str
 

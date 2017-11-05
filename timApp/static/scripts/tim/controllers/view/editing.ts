@@ -11,6 +11,31 @@ import {onClick} from "./eventhandlers";
 import {ParCompiler} from "../../services/parCompiler";
 import {ViewCtrl} from "./ViewCtrl";
 
+function prepareOptions($this: Element, saveTag: string): [JQuery, {}] {
+    $(".actionButtons").remove();
+    // var $par = $('.par').last();
+    // return sc.showAddParagraphBelow(e, $par);
+    // return sc.showAddParagraphAbove(e, sc.$pars);
+    var par = $($this).closest('.par');
+    var text = par.find('pre').text();
+    // text = text.replace('⁞', '');  // TODO: set cursor to | position
+    let forcedClasses = [];
+    const forceAttr = getParAttributes(par).forceclass;
+    if (forceAttr) {
+        forcedClasses = forceAttr.split(" ");
+    }
+    var options = {
+        'localSaveTag': saveTag,
+        'texts': {
+            'beforeText': "alkuun",
+            'initialText': text,
+            'afterText': "loppuun",
+        },
+        forcedClasses: forcedClasses,
+    };
+    return [par, options];
+}
+
 // Wrap given text to max n chars length lines spliting from space
 export function wrapText(s, n)
 {
@@ -88,22 +113,13 @@ export class EditingHandler {
             });
 
             onClick(".addAbove", function($this, e) {
-                $(".actionButtons").remove();
-                // var $par = $('.par').last();
-                // return sc.showAddParagraphBelow(e, $par);
-                // return sc.showAddParagraphAbove(e, sc.$pars);
-                var par = $($this).closest('.par');
-                var text = par.find('pre').text();
-                // text = text.replace('⁞', '');  // TODO: set cursor to | position
-                var options = {
-                    'localSaveTag': 'addAbove',
-                    'texts': {
-                        'beforeText': "alkuun",
-                        'initialText': text,
-                        'afterText': "loppuun"
-                    }
-                }
+                const [par, options] = prepareOptions($this[0], "addAbove");
                 return this.showAddParagraphAbove(e, par, options);
+            });
+
+            onClick(".addBelow", function($this, e) {
+                const [par, options] = prepareOptions($this[0], "addBelow");
+                return this.showAddParagraphBelow(e, par, options);
             });
 
             onClick(".pasteBottom", ($this, e) => {
@@ -171,6 +187,7 @@ export class EditingHandler {
                 par_next: parNextId, // the id of the paragraph that follows par or null if par is the last one
                 area_start: areaStart,
                 area_end: areaEnd,
+                forced_classes: options.forcedClasses,
                 tags,
             },
             "options": {
@@ -327,10 +344,12 @@ export class EditingHandler {
         this.toggleParEditor($newpar, options);
     }
 
-    showAddParagraphBelow(e, $par) {
+    showAddParagraphBelow(e, $par, options = null) {
         const $newpar = createNewPar();
         $par.after($newpar);
-        this.toggleParEditor($newpar, {area: false});
+        if ( options == null ) options = {};
+        options.area = false;
+        this.toggleParEditor($newpar, options);
     }
 
     addSavedParToDom(data, extraData) {

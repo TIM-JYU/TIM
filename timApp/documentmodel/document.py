@@ -1,17 +1,18 @@
 import json
 import os
 import shutil
-from datetime import datetime, timezone
+from datetime import datetime
 from difflib import SequenceMatcher
 from tempfile import mkstemp
 from time import time
 from typing import List, Optional, Set, Tuple, Union, Iterable, Generator, Dict
 
-import dateutil.parser
 from filelock import FileLock
 from flask import g
 from lxml import etree, html
 
+from timApp.documentmodel.changelog import Changelog
+from timApp.documentmodel.changelogentry import ChangelogEntry
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings, resolve_settings_for_pars
 from timApp.documentmodel.documenteditresult import DocumentEditResult
@@ -21,13 +22,16 @@ from timApp.documentmodel.documentwriter import DocumentWriter
 from timApp.documentmodel.exceptions import DocExistsError, ValidationException
 from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.validationresult import ValidationResult
+from timApp.documentmodel.version import Version
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException, PreambleException
-from timApp.utils import get_error_html
+from timApp.types import UserType, DocInfoType
+from timApp.utils import get_error_html, trim_markdown
 
-if False:
-    from timApp.timdb.docinfo import DocInfo
+
+def get_duplicate_id_msg(conflicting_ids):
+    return f'Duplicate paragraph id(s): {", ".join(conflicting_ids)}'
 
 
 class Document:
@@ -60,7 +64,7 @@ class Document:
         # Cache for document settings.
         self.settings: Optional[DocSettings] = None
         # The corresponding DocInfo object.
-        self.docinfo: 'DocInfo' = None
+        self.docinfo: DocInfoType = None
         # Cache for own settings; see get_own_settings
         self.own_settings = None
         # Whether preamble has been loaded
@@ -120,7 +124,7 @@ class Document:
         return os.path.exists(os.path.join(cls.get_documents_dir(froot), str(doc_id)))
 
     @classmethod
-    def version_exists(cls, doc_id: int, doc_ver: Tuple[int, int], files_root: Optional[str] = None) -> bool:
+    def version_exists(cls, doc_id: int, doc_ver: Version, files_root: Optional[str] = None) -> bool:
         """Checks if a document version exists.
 
         :param doc_id: Document id.
@@ -138,12 +142,12 @@ class Document:
             prev_p = self.par_cache[i - 1] if i > 0 else None
             next_p = self.par_cache[i + 1] if i + 1 < len(self.par_cache) else None
             self.par_map[curr_p.get_id()] = {'p': prev_p, 'n': next_p, 'c': curr_p}
+        self.par_ids = [par.get_id() for par in self.par_cache]
+        self.par_hashes = [par.get_hash() for par in self.par_cache]
 
     def load_pars(self):
         """Loads the paragraphs from disk to memory so that subsequent iterations for the Document are faster."""
         self.par_cache = [par for par in self]
-        self.par_ids = [par.get_id() for par in self.par_cache]
-        self.par_hashes = [par.get_hash() for par in self.par_cache]
         self.__update_par_map()
 
     def ensure_pars_loaded(self):
@@ -251,7 +255,7 @@ class Document:
             self.own_settings = resolve_settings_for_pars(self.get_settings_pars())
         return self.own_settings
 
-    def get_settings(self, user=None, use_preamble=True) -> DocSettings:
+    def get_settings(self, user: UserType=None, use_preamble=True) -> DocSettings:
         if self.settings is not None:
             self.settings.user = user
             return self.settings
@@ -314,11 +318,12 @@ class Document:
         options.break_on_code_block = break_on_elements
         options.break_on_header = break_on_elements
         options.break_on_normal = break_on_elements
-        dp = DocumentParser(text)
+        dp = DocumentParser(text, options)
+        dp.add_missing_attributes()
         vr = dp.validate_structure()
         vr.raise_if_has_critical_issues()
-        blocks = [DocParagraph.create(doc=self, md=par['md'], attrs=par.get('attrs'))
-                  for par in dp.get_blocks(options)]
+        blocks = [DocParagraph.create(doc=self, md=trim_markdown(par['md']), attrs=par.get('attrs'), par_id=par['id'])
+                  for par in dp.get_blocks()]
         return blocks, vr
 
     @classmethod
@@ -347,7 +352,7 @@ class Document:
         res = 1 + cls.__get_largest_file_number(cls.get_documents_dir(froot), default=0)
         return res
 
-    def get_version(self) -> Tuple[int, int]:
+    def get_version(self) -> Version:
         """Gets the latest version of the document as a major-minor tuple.
 
         :return: Latest version, or (-1, 0) if there isn't yet one.
@@ -389,7 +394,7 @@ class Document:
     def getlogfilename(self) -> str:
         return os.path.join(self.get_document_path(), 'changelog')
 
-    def __write_changelog(self, ver: Tuple[int, int], operation: str, par_id: str, op_params: Optional[dict] = None):
+    def __write_changelog(self, ver: Version, operation: str, par_id: str, op_params: Optional[dict] = None):
         logname = self.getlogfilename()
         src = open(logname, 'r') if os.path.exists(logname) else None
         destfd, tmpname = mkstemp()
@@ -421,7 +426,7 @@ class Document:
         os.unlink(tmpname)
 
     def __increment_version(self, op: str, par_id: str, increment_major: bool,
-                            op_params: Optional[dict] = None) -> Tuple[int, int]:
+                            op_params: Optional[dict] = None) -> Version:
         ver_exists = True
         ver = self.get_version()
         old_ver = None
@@ -449,7 +454,7 @@ class Document:
         self.ref_doc_cache = {}
         return ver
 
-    def __update_metadata(self, pars: List[DocParagraph], old_ver: Tuple[int, int], new_ver: Tuple[int, int]):
+    def __update_metadata(self, pars: List[DocParagraph], old_ver: Version, new_ver: Version):
         if old_ver == new_ver:
             raise TimDbException("__update_metadata called with old_ver == new_ver")
         new_reflist_file = self.get_reflist_filename(new_ver)
@@ -563,9 +568,7 @@ class Document:
         :param par_id: Paragraph id to remove.
 
         """
-        if not self.has_paragraph(par_id):
-            return
-
+        self.raise_if_not_exist(par_id)
         old_ver = self.get_version()
         new_ver = self.__increment_version('Deleted', par_id, increment_major=True)
         self.__update_metadata([], old_ver, new_ver)
@@ -768,6 +771,10 @@ class Document:
                                       'This is probably a TIM bug; please report it. '
                                       f'Additional information: {e}')
         blocks = dp_orig.get_blocks()
+        new_ids = set(p['id'] for p in new_pars) - set(p['id'] for p in blocks)
+        conflicting_ids = new_ids & set(self.get_par_ids())
+        if conflicting_ids:
+            raise ValidationException(get_duplicate_id_msg(conflicting_ids))
         old_pars = [DocParagraph.from_dict(doc=self, d=d)
                     for d in blocks]
         return self._perform_update(new_pars, old_pars)
@@ -837,23 +844,11 @@ class Document:
         html_list = [par.get_html(from_preview=False) for par in pars if not par.is_dynamic()]
         return get_index_from_html_list(html_list)
 
-    @staticmethod
-    def add_index_entry(index_table, current_headers, header):
-        level = int(header.tag[1:])
-        current = {'id': header.get('id'), 'text': header.text, 'level': level}
-        if level == 1:
-            if current_headers is not None:
-                index_table.append(current_headers)
-            current_headers = (current, [])
-        elif current_headers is not None:
-            current_headers[1].append(current)
-        return current_headers
-
-    def get_changelog(self, max_entries: int = 100) -> List[dict]:
-        log = []
+    def get_changelog(self, max_entries: int = 100) -> Changelog:
+        log = Changelog()
         logname = self.getlogfilename()
         if not os.path.isfile(logname):
-            return []
+            return Changelog()
 
         lc = max_entries
         with open(logname, 'r') as f:
@@ -863,8 +858,7 @@ class Document:
                     break
                 try:
                     entry = json.loads(line)
-                    entry['time'] = dateutil.parser.parse(entry['time']).replace(tzinfo=timezone.utc)
-                    log.append(entry)
+                    log.append(ChangelogEntry(**entry))
                 except ValueError:
                     print(f"doc id {self.doc_id}: malformed log line: {line}")
                 lc -= 1
@@ -886,10 +880,6 @@ class Document:
                             if rp.get_attr('taskId') == task_id_name:
                                 return rp
         raise TimDbException(f'Task not found in the document: {task_id_name}')
-
-    def get_last_modified(self) -> Optional[datetime]:
-        log = self.get_changelog(max_entries=1)
-        return log[0]['time'] if log is not None and len(log) > 0 else None
 
     def delete_section(self, area_start, area_end) -> DocumentEditResult:
         result = DocumentEditResult()
@@ -975,6 +965,10 @@ class Document:
     def get_paragraphs(self, include_preamble=False) -> List[DocParagraph]:
         self.ensure_pars_loaded()
         if include_preamble and not self.preamble_included:
+            # Make sure settings has been cached before preamble inclusion.
+            # Otherwise, getting settings after preamble inclusion will not work properly.
+            self.get_settings()
+
             pars = list(self.get_docinfo().get_preamble_pars())
             self.insert_preamble_pars(pars)
         return self.par_cache
@@ -997,7 +991,7 @@ class Document:
         from timApp.documentmodel.documentversion import DocumentVersion
         return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id, self.preload_option)
 
-    def get_docinfo(self):
+    def get_docinfo(self) -> DocInfoType:
         if self.docinfo is None:
             from timApp.timdb.models.docentry import DocEntry
             self.docinfo = DocEntry.find_by_id(self.doc_id, try_translation=True)
@@ -1078,7 +1072,6 @@ class Document:
                         break
                 self.par_cache = self.par_cache[:i + 1] + pars + self.par_cache[i + 1:]
         else:
-            self.ensure_par_ids_loaded()
             if context_par is None:
                 self.par_cache = pars
             else:
@@ -1103,6 +1096,18 @@ class Document:
             cached = Document(ref_docid, preload_option=self.preload_option)
             self.ref_doc_cache[ref_docid] = cached
         return cached
+
+
+def add_index_entry(index_table, current_headers, header):
+    level = int(header.tag[1:])
+    current = {'id': header.get('id'), 'text': header.text, 'level': level}
+    if level == 1:
+        if current_headers is not None:
+            index_table.append(current_headers)
+        current_headers = (current, [])
+    elif current_headers is not None:
+        current_headers[1].append(current)
+    return current_headers
 
 
 class CacheIterator:
@@ -1178,9 +1183,9 @@ def get_index_from_html_list(html_table) -> List[Tuple]:
             continue
         if index_entry.tag == 'div':
             for header in index_entry.iter('h1', 'h2', 'h3'):
-                current_headers = Document.add_index_entry(index, current_headers, header)
+                current_headers = add_index_entry(index, current_headers, header)
         elif index_entry.tag.startswith('h'):
-            current_headers = Document.add_index_entry(index, current_headers, index_entry)
+            current_headers = add_index_entry(index, current_headers, index_entry)
     if current_headers is not None:
         index.append(current_headers)
     return index

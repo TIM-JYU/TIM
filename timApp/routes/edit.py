@@ -1,5 +1,5 @@
 """Routes for editing a document."""
-from typing import List, Tuple, Optional
+from typing import List, Optional
 
 from flask import Blueprint, render_template
 from flask import abort
@@ -10,10 +10,11 @@ from timApp.accesshelper import verify_edit_access, verify_view_access, get_righ
 from timApp.common import post_process_pars
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.documentmodel.document import Document
+from timApp.documentmodel.document import Document, get_duplicate_id_msg
 from timApp.documentmodel.documenteditresult import DocumentEditResult
 from timApp.documentmodel.exceptions import ValidationException, ValidationWarning
 from timApp.documentmodel.preloadoption import PreloadOption
+from timApp.documentmodel.version import Version
 from timApp.markdownconverter import md_to_html
 from timApp.requesthelper import verify_json_params
 from timApp.responsehelper import json_response, ok_response
@@ -27,6 +28,7 @@ from timApp.timdb.bookmarks import Bookmarks
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.notification import NotificationType
+from timApp.timdb.tim_models import db
 from timApp.timdb.timdbexception import TimDbException
 from timApp.utils import get_error_html
 from timApp.validation import validate_uploaded_document_content
@@ -86,18 +88,19 @@ def update_document(doc_id):
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
         editor_pars = get_pars_from_editor_text(doc, content, break_on_elements=True, skip_access_check=True)
-        edit_result = timdb.documents.update_document(doc, content, original, strict_validation)
+        _, _, edit_result = doc.update(content, original, strict_validation)
         check_and_rename_pluginnamehere(editor_pars, doc)
         old_pars = doc.get_paragraphs()
-        i = 0
-        while i < len(editor_pars):
-            if editor_pars[i].get_attr('taskId') and old_pars[i].get_attr('taskId'):
-                if editor_pars[i].get_attr('taskId') != old_pars[i].get_attr('taskId'):
-                    timdb.documents.modify_paragraph(doc=doc,
-                                                     par_id=old_pars[i].get_id(),
-                                                     new_content=old_pars[i].get_markdown(),
-                                                     new_attrs=editor_pars[i].get_attrs())
-            i += 1
+        for op, ep in zip(old_pars, editor_pars):
+            if ep.get_attr('taskId') and op.get_attr('taskId'):
+                if ep.get_attr('taskId') != op.get_attr('taskId'):
+                    p = doc.modify_paragraph(par_id=op.get_id(),
+                                             new_text=op.get_markdown(),
+                                             new_attrs=ep.get_attrs())
+                    edit_result.changed.append(p)
+        if not edit_result.empty:
+            docentry.update_last_modified()
+            db.session.commit()
         synchronize_translations(docentry, edit_result)
     except ValidationWarning as e:
         return json_response({'error': str(e), 'is_warning': True}, status_code=400)
@@ -107,11 +110,9 @@ def update_document(doc_id):
     return manage_response(docentry, pars, timdb, ver_before)
 
 
-def manage_response(docentry: DocInfo, pars: List[DocParagraph], timdb, ver_before: Tuple[int, int]):
+def manage_response(docentry: DocInfo, pars: List[DocParagraph], timdb, ver_before: Version):
     doc = docentry.document_as_current_user
     chg = doc.get_changelog()
-    for ver in chg:
-        ver['group'] = timdb.users.get_user_group_name(ver.pop('group_id'))
     notify_doc_watchers(docentry,
                         get_diff_link(docentry, ver_before),
                         NotificationType.DocModified)
@@ -165,10 +166,9 @@ def rename_task_ids():
                         task_id = get_next_available_task_id(attrs, old_pars, duplicates, duplicate[2])
                         attrs['taskId'] = task_id
             # Modify the paragraph with the new taskId
-            [par], _ = timdb.documents.modify_paragraph(doc=doc,
-                                                        par_id=duplicate[2],
-                                                        new_content=original_par.get_markdown(),
-                                                        new_attrs=attrs)
+            par = doc.modify_paragraph(par_id=duplicate[2],
+                                       new_text=original_par.get_markdown(),
+                                       new_attrs=attrs)
             pars.append(par)
             # Update old pars
             for old_par in old_pars:
@@ -212,17 +212,12 @@ def modify_paragraph():
 
 
 def modify_paragraph_common(doc_id, md, par_id, par_next_id):
-    timdb = get_timdb()
-    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not docentry:
+    docinfo = DocEntry.find_by_id(doc_id, try_translation=True)
+    if not docinfo:
         abort(404)
     verify_edit_access(doc_id)
 
-    doc = docentry.document_as_current_user
-    try:
-        doc.raise_if_not_exist(par_id)
-    except TimDbException as e:
-        abort(404, str(e))
+    doc = docinfo.document_as_current_user
 
     edit_request = EditRequest.from_request(doc, text=md)
     area_start = edit_request.area_start
@@ -242,30 +237,36 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
         except (ValidationException, TimDbException) as e:
             return abort(400, str(e))
     else:
+        try:
+            original_par = doc.get_paragraph(par_id)
+        except TimDbException as e:
+            return abort(404, str(e))
         edit_result = DocumentEditResult()
-        original_par = doc.get_paragraph(par_id)
         pars = []
+        pars_to_add = editor_pars[1:]
+        abort_if_duplicate_ids(doc, pars_to_add)
 
         if editor_pars[0].is_different_from(original_par):
-            [par], _ = timdb.documents.modify_paragraph(doc=doc,
-                                                        par_id=par_id,
-                                                        new_content=editor_pars[0].get_markdown(),
-                                                        new_attrs=editor_pars[0].get_attrs())
+            par = doc.modify_paragraph_obj(par_id=par_id,
+                                           p=editor_pars[0])
             pars.append(par)
             edit_result.changed.append(par)
         else:
             # If the first paragraph was not modified at all, append the original one
             pars.append(original_par)
-        for p in editor_pars[1:]:
-            [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
+        for p in pars_to_add:
+            par = doc.insert_paragraph_obj(p, insert_before_id=par_next_id)
             pars.append(par)
             edit_result.added.append(par)
+        if not edit_result.empty:
+            docinfo.update_last_modified()
+            db.session.commit()
 
     mark_pars_as_read_if_chosen(pars, doc)
 
-    synchronize_translations(docentry, edit_result)
-    notify_doc_watchers(docentry,
-                        get_diff_link(docentry, edit_request.old_doc_version) + 'Paragraph was edited:\n\n' + md,
+    synchronize_translations(docinfo, edit_result)
+    notify_doc_watchers(docinfo,
+                        get_diff_link(docinfo, edit_request.old_doc_version) + 'Paragraph was edited:\n\n' + md,
                         NotificationType.DocModified,
                         par=pars[0] if pars else None)
     return par_response(pars,
@@ -273,6 +274,12 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
                         edit_request=edit_request,
                         edit_result=edit_result)
+
+
+def abort_if_duplicate_ids(doc: Document, pars_to_add: List[DocParagraph]):
+    conflicting_ids = set(p.get_id() for p in pars_to_add) & set(doc.get_par_ids())
+    if conflicting_ids:
+        abort(400, get_duplicate_id_msg(conflicting_ids))
 
 
 @edit_page.route("/preview/<int:doc_id>", methods=['POST'])
@@ -317,8 +324,9 @@ def par_response(pars,
     else:
         changed_pars = []
         ctx = None
+        settings = doc.get_settings(current_user)
         if edit_request:
-            ctx = edit_request.get_context_par()
+            ctx = edit_request.context_par
 
             # If the document was changed, there is no HTML cache for the new version, so we "cheat" by lying the document
             # version so that the preload_htmls call is still fast.
@@ -328,7 +336,7 @@ def par_response(pars,
                 doc.version = edit_request.old_doc_version
             doc.insert_temporary_pars(edit_request.get_pars(), ctx)
 
-        DocParagraph.preload_htmls(pars, doc.get_settings(current_user), context_par=ctx,
+        DocParagraph.preload_htmls(pars, settings, context_par=ctx,
                                    persist=update_cache)
 
     if edit_result:
@@ -519,12 +527,12 @@ def mark_pars_as_read_if_chosen(pars, doc):
     timdb = get_timdb()
     if mark_read:
         for p in pars:
-            timdb.readings.mark_read(get_current_user_group(), doc, p)
+            timdb.readings.mark_read(get_current_user_group(), doc, p, commit=False)
+        db.session.commit()
 
 
 @edit_page.route("/cancelChanges/", methods=["POST"])
 def cancel_save_paragraphs():
-    timdb = get_timdb()
     doc_id, original_par, new_pars, par_id = verify_json_params('docId', 'originalPar', 'newPars', 'parId')
     docentry = DocEntry.find_by_id(doc_id, try_translation=True)
     if not docentry:
@@ -536,12 +544,11 @@ def cancel_save_paragraphs():
             if not doc.has_paragraph(new_par):
                 continue
             else:
-                timdb.documents.delete_paragraph(doc, new_par)
+                doc.delete_paragraph(new_par)
     if original_par:
-        timdb.documents.modify_paragraph(doc=doc,
-                                         par_id=par_id,
-                                         new_content=original_par.get('md'),
-                                         new_attrs=original_par.get('attrs'))
+        doc.modify_paragraph(par_id=par_id,
+                             new_text=original_par.get('md'),
+                             new_attrs=original_par.get('attrs'))
 
     return json_response({"status": "cancel"})
 
@@ -565,12 +572,11 @@ def add_paragraph():
 
 
 def add_paragraph_common(md, doc_id, par_next_id):
-    timdb = get_timdb()
     verify_edit_access(doc_id)
-    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not docentry:
+    docinfo = DocEntry.find_by_id(doc_id, try_translation=True)
+    if not docinfo:
         abort(404)
-    doc = docentry.document_as_current_user
+    doc = docinfo.document_as_current_user
     if par_next_id and not doc.has_paragraph(par_next_id):
         abort(400, doc.get_par_not_found_msg(par_next_id))
     edit_result = DocumentEditResult()
@@ -580,19 +586,24 @@ def add_paragraph_common(md, doc_id, par_next_id):
     except ValidationException as e:
         return abort(400, str(e))
 
+    abort_if_duplicate_ids(doc, editor_pars)
+
     editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
     pars = []
     for p in editor_pars:
-        [par], _ = timdb.documents.add_paragraph(doc, p.get_markdown(), par_next_id, attrs=p.get_attrs())
+        par = doc.insert_paragraph_obj(p, insert_before_id=par_next_id)
         pars.append(par)
         edit_result.added.append(par)
+    if not edit_result.empty:
+        docinfo.update_last_modified()
+        db.session.commit()
     mark_pars_as_read_if_chosen(pars, doc)
 
-    synchronize_translations(docentry, edit_result)
+    synchronize_translations(docinfo, edit_result)
     if pars:
-        notify_doc_watchers(docentry,
-                            get_diff_link(docentry, edit_request.old_doc_version) + 'Paragraph was added:\n\n' + md,
+        notify_doc_watchers(docinfo,
+                            get_diff_link(docinfo, edit_request.old_doc_version) + 'Paragraph was added:\n\n' + md,
                             NotificationType.DocModified,
                             par=pars[0])
     return par_response(pars,
@@ -610,7 +621,6 @@ def delete_paragraph(doc_id):
     :return: A JSON object containing the version of the new document.
 
     """
-    timdb = get_timdb()
     docentry = DocEntry.find_by_id(doc_id, try_translation=True)
     if not docentry:
         abort(404)
@@ -630,9 +640,12 @@ def delete_paragraph(doc_id):
             abort(400, f'Paragraph {par_id} does not exist')
         par = doc.get_paragraph(par_id)
         md = par.get_markdown()
-        timdb.documents.delete_paragraph(doc, par_id)
+        doc.delete_paragraph(par_id)
         edit_result = DocumentEditResult(deleted=[par])
 
+    if not edit_result.empty:
+        docentry.update_last_modified()
+        db.session.commit()
     synchronize_translations(docentry, edit_result)
     notify_doc_watchers(docentry,
                         get_diff_link(docentry, version_before) + 'Paragraph was deleted:\n\n' + md,

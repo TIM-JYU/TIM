@@ -1,3 +1,4 @@
+from datetime import timezone, datetime
 from itertools import accumulate
 from typing import List, Iterable, Generator, Tuple, Optional
 
@@ -8,11 +9,9 @@ from timApp.documentmodel.document import Document
 from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
 from timApp.timdb.item import Item
 
-if False:
-    from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.notification import NotificationType, Notification
-from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db
+from timApp.types import TranslationType
 
 
 class DocInfo(Item):
@@ -74,13 +73,16 @@ class DocInfo(Item):
         return self.block.modified if self.block else None
 
     @property
-    def translations(self) -> List['Translation']:
+    def translations(self) -> List[TranslationType]:
         """Returns the translations of the document. NOTE: The list *includes* the document itself."""
         raise NotImplementedError
 
     @property
     def lang_id(self) -> str:
         raise NotImplementedError
+
+    def update_last_modified(self):
+        self.block.modified = datetime.now(tz=timezone.utc)
 
     def get_preamble_docs(self) -> List['DocInfo']:
         """Gets the list of preamble documents for this document.
@@ -110,7 +112,7 @@ class DocInfo(Item):
         result = db.session.query(DocEntry, Translation).filter(
             DocEntry.name.in_(paths)).outerjoin(Translation,
                                                 (Translation.src_docid == DocEntry.id) & (
-                                                Translation.lang_id == self.lang_id)).order_by(
+                                                    Translation.lang_id == self.lang_id)).order_by(
             func.length(DocEntry.name)).all()  # type: List[Tuple[DocEntry, Optional[Translation]]]
         preamble_docs = []
         for de, tr in result:
@@ -122,10 +124,7 @@ class DocInfo(Item):
     def get_changelog_with_names(self, length=None):
         if not length:
             length = getattr(self, 'changelog_length', 100)
-        changelog = self.document.get_changelog(length)
-        for ver in changelog:
-            ver['group'] = UserGroup.query.get(ver.pop('group_id')).name
-        return changelog
+        return self.document.get_changelog(length)
 
     def get_notifications(self, notify_type: NotificationType) -> List[Notification]:
         q = Notification.query.filter_by(doc_id=self.id)

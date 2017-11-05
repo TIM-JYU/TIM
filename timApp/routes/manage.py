@@ -10,7 +10,8 @@ from flask import request
 from isodate import Duration
 from isodate import parse_duration
 
-from timApp.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, verify_edit_access
+from timApp.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
+    verify_edit_access, get_doc_or_abort
 from timApp.common import has_special_chars
 from timApp.dbaccess import get_timdb
 from timApp.requesthelper import verify_json_params, get_option
@@ -208,7 +209,8 @@ def rename_folder(item_id):
     timdb = get_timdb()
     new_name = request.get_json()['new_name'].strip('/')
 
-    if timdb.documents.exists(item_id):
+    d = DocEntry.find_by_id(item_id, try_translation=True)
+    if d:
         return abort(403, 'Rename route is no longer supported for documents.')
 
     f = Folder.get_by_id(item_id)
@@ -335,9 +337,7 @@ def verify_permission_edit_access(item_id: int, perm_type: str) -> bool:
 
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])
 def del_document(doc_id):
-    timdb = get_timdb()
-    if not timdb.documents.exists(doc_id):
-        return abort(404, 'Document does not exist.')
+    get_doc_or_abort(doc_id)
     verify_ownership(doc_id)
     abort(403, 'Deleting documents has been disabled until a proper backup mechanism is implemented. '
                'Please contact TIM administrators if you really want to delete this document. '

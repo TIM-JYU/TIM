@@ -143,6 +143,8 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
              "-w", "/home/agent", dockercontainer, "/cs/rcmd.sh", urndname + ".sh", str(no_x11), str(savestate)]
     print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
+    errcode = 0
+    errtxt = ""
     try:
         stdout, stderr = p.communicate(timeout=timeout)
         print("stdout: ", stdout[:100])
@@ -160,9 +162,13 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
             err = stderr.decode()
             if "File size limit" in err:
                 err = "File size limit exceeded"
+                pass
             if "Killed" in err:
                 err = "Timeout. Too long loop?"
-            return -3, '', ("Run error: " + err), pwddir
+                pass
+            # errcode = -3
+            # errtxt = "Run error: " + str(err) + "\n"
+            return -3, '', ("Run error: " + str(err)), pwddir
         try:
             stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read()  # luetaan stdin ja err
         except UnicodeDecodeError:
@@ -192,8 +198,8 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
         remove(cwd + "/" + stdoutf)
         remove(cwd + "/" + stderrf)
         remove(cwd + '/pwd.txt')
-        return -2, '', ("IO Error" + str(e))
-    return 0, stdout, stderr, pwddir
+        return -2, '', ("IO Error" + str(e)), pwddir
+    return errcode, stdout, errtxt + stderr, pwddir
 
 
 def copy_file(f1, f2, remove_f1=False, is_optional=False):

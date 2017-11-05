@@ -2,6 +2,7 @@ import datetime
 import json
 
 from isodate import duration_isoformat
+from jinja2 import Undefined
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
 
@@ -17,10 +18,14 @@ class TimJsonEncoder(json.JSONEncoder):
         if isinstance(o, datetime.timedelta):
             return duration_isoformat(o)
 
+        if isinstance(o, Undefined):
+            return None
+
+        tojson = getattr(o, 'to_json', None)
+        if tojson:
+            return tojson()
         # from http://stackoverflow.com/a/31569287 with some changes
         if isinstance(o.__class__, DeclarativeMeta):
-            if hasattr(o, 'to_json'):
-                return o.to_json()
             data = {}
             fields = o.__json__() if hasattr(o, '__json__') else dir(o)
             for field in [f for f in fields if not f.startswith('_') and f not in ['metadata', 'query', 'query_class']]:

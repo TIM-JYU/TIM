@@ -5,11 +5,12 @@ from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.preloadoption import PreloadOption
+from timApp.documentmodel.version import Version
 
 
 class DocumentVersion(Document):
 
-    def __init__(self, doc_id: int, doc_ver: Tuple[int, int],
+    def __init__(self, doc_id: int, doc_ver: Version,
                  files_root=None, modifier_group_id: Optional[int] = 0, preload_option = PreloadOption.none):
         super(DocumentVersion, self).__init__(doc_id, files_root, modifier_group_id, preload_option)
         self.does_exist = None
@@ -49,7 +50,7 @@ class DocumentVersion(Document):
     def remove(cls, doc_id: int, files_root: Optional[str] = None, ignore_exists=False):
         assert False, "Called DocumentVersion.remove"
 
-    def get_version(self) -> Tuple[int, int]:
+    def get_version(self) -> Version:
         return self.version
 
     def has_paragraph(self, par_id: str) -> bool:

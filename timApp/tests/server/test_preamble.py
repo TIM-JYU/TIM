@@ -13,8 +13,8 @@ from timApp.timdb.docinfo import DocInfo
 class PreambleTestBase(TimRouteTest):
     def create_doc_and_preamble(self, folder: str):
         d = self.create_doc(f'{folder}/a/b/test1')
-        p2 = self.create_doc(f'{folder}/a/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}')
         p1 = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}')
+        p2 = self.create_doc(f'{folder}/a/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}')
         p3 = self.create_doc(f'{folder}/a/b/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}')
         p1.document.set_settings({'macros': {'a': 'cat', 'b': 'dog', 'd': 'sheep'}})
         p2.document.set_settings({'macros': {'b': 'mouse', 'c': 'giraffe'}})
@@ -126,10 +126,20 @@ a: b
                            json_key='texts', as_tree=True)
         self.assert_content(e, ['4. d'])
 
-        self.post_par(d.document, '# x', first_par.get_id())
+        e = self.post_par(d.document, '# x', first_par.get_id(), json_key='texts', as_tree=True)
+        self.assert_content(e, ['4. x'])
         e = self.get_updated_pars(d)
         changed = e['changed_pars']
         self.assert_content(html.fromstring(changed[first_par.get_id()]), ['4. x'])
+
+        p1.document.set_settings({})
+        d.document.set_settings({'auto_number_headings': 1})
+        self.get(d.url)
+        e = self.post_par(d.document, '# z', first_par.get_id(), json_key='texts', as_tree=True)
+        self.assert_content(e, ['4. z'])
+        e = self.get_updated_pars(d)
+        changed = e['changed_pars']
+        self.assert_content(html.fromstring(changed[first_par.get_id()]), ['4. z'])
 
 
 class PreambleTest3(PreambleTestBase):

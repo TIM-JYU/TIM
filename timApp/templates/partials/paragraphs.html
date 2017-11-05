@@ -117,6 +117,13 @@
             <div class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>
                 {{ t.html|safe }}
             </div>
+                {%- if t.authorinfo -%}
+                <div class="authorinfo">
+                <i class="glyphicon glyphicon-pencil"></i>
+                <span class="username">{{t.authorinfo.display_name}}</span>
+                <span class="timestamp">{{ t.authorinfo.time|datestr_to_relative }}</span>
+                </div>
+                {%- endif -%}
         {%- endif -%}
 
         {%- if t.attrs.rl == 'force' or not (not t.attrs.rd or t.attrs.rl == 'no') -%}

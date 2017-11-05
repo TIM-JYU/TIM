@@ -6,7 +6,6 @@ from time import sleep
 from timApp.logger import log_info, log_debug, log_error, log_warning
 from timApp.timdb.annotations import Annotations
 from timApp.timdb.answers import Answers
-from timApp.timdb.documents import Documents
 from timApp.timdb.files import Files
 from timApp.timdb.folders import Folders
 from timApp.timdb.images import Images
@@ -24,7 +23,7 @@ from timApp.timdb.velps import Velps
 
 num = 0
 
-# The following will be set (before request) by gunicorn; see gunicornconf.py. Always 0 if running without gunicorn.
+# Always 0 for now.
 worker_pid = 0
 
 DB_PART_NAMES = {'notes', 'readings', 'users', 'images', 'uploads', 'files', 'documents', 'answers', 'questions',
@@ -69,7 +68,6 @@ class TimDb(object):
         self.images = None
         self.uploads = None
         self.files = None
-        self.documents = None
         self.answers = None
         self.questions = None
         self.messages = None
@@ -119,7 +117,6 @@ class TimDb(object):
         self.images = Images(self.db, self.files_root_path, 'images', self.current_user_name, self.session)
         self.uploads = Uploads(self.db, self.files_root_path, 'uploads', self.current_user_name, self.session)
         self.files = Files(self.db, self.files_root_path, 'files', self.current_user_name, self.session)
-        self.documents = Documents(self.db, self.files_root_path, 'documents', self.current_user_name, self.session)
         self.answers = Answers(self.db, self.files_root_path, 'answers', self.current_user_name, self.session)
         self.questions = Questions(self.db, self.files_root_path, 'questions', self.current_user_name, self.session)
         self.messages = Messages(self.db, self.files_root_path, 'messages', self.current_user_name, self.session)
@@ -164,22 +161,3 @@ class TimDb(object):
             log_debug(
                 f'TimDb-dstr {worker_pid:2d} {self.num:6d} {TimDb.instances:2d} {bes:3d} {time.time() - self.time:7.5f} {self.route_path:s}')
             self.reset_attrs()
-
-    def execute_script(self, sql_file):
-        """Executes an SQL file on the database.
-
-        :param sql_file: The SQL script to be executed.
-
-        """
-        with open(sql_file, 'r', encoding='utf-8') as schema_file:
-            self.db.cursor().executescript(schema_file.read())
-        self.db.commit()
-
-    def execute_sql(self, sql):
-        """Executes an SQL command on the database.
-
-        :param sql: The SQL command to be executed.
-
-        """
-        self.db.cursor().executescript(sql)
-        self.db.commit()

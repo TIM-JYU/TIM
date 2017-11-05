@@ -115,6 +115,7 @@ RUN bash -c "${PIP_INSTALL} \
 ansi2html \
 autopep8 \
 beautifulsoup4 \
+bcrypt \
 cffi \
 cssselect \
 cssutils \

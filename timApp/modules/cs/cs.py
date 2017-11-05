@@ -1203,7 +1203,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         code, out, err, pwddir = run2(cmd, cwd=language.prgpath, timeout=language.timeout, env=env,
                                                       stdin=language.stdin,
                                                       uargs=get_param(query, "runargs", "") + " " + uargs,
-                                                      extra=extra, no_x11=language.no_x11)
+                                                      extra=extra, no_x11=language.no_x11,
+                                                      ulimit=language.ulimit
+                                                      )
                     except Exception as e:
                         print(e)
                         code, out, err = (-1, "", str(e))

@@ -266,9 +266,9 @@ class DocumentPrinter:
             # TODO: getting the path could probably be done with more finesse
             cwd = os.getcwd()
             filters = [
-                os.path.join(cwd, "pandoc-inlinestylesfilter.py"),
-                os.path.join(cwd, "pandoc-imagefilepathsfilter.py"),
-                #  os.path.join(cwd, "pandoc-headernumberingfilter.py")  # handled allready when making md
+                os.path.join(cwd, "pandoc_inlinestylesfilter.py"),
+                os.path.join(cwd, "pandoc_imagefilepathsfilter.py"),
+                #  os.path.join(cwd, "pandoc_headernumberingfilter.py")  # handled allready when making md
             ]
 
             src = self.get_content(plugins_user_print=plugins_user_print, target_format=target_format.value)

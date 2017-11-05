@@ -1,0 +1,30 @@
+image: tmaier/docker-compose:latest
+
+variables:
+  DOCKER_DRIVER: overlay2
+  GIT_SUBMODULE_STRATEGY: normal
+
+services:
+- docker:dind
+
+before_script:
+- docker info
+- docker-compose --version
+- apk add --update bash
+- apk add --update git
+
+test:
+  stage: test
+  script:
+  - cp variables.sh.template variables.sh
+  - chmod +x variables.sh
+  - sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh
+  - sed -i 's/IS_DEVELOPMENT=false/IS_DEVELOPMENT=true/' variables.sh
+  - ./docker-compose.sh pull
+  - ./build_js.sh
+  - ./run_tests.sh
+  artifacts:
+    name: failed_screenshots
+    when: on_failure
+    paths:
+    - screenshots

@@ -20,6 +20,7 @@ class Language:
         :param query: query to use
         :param sourcecode: source code as a string
         """
+        self.query = query
         self.stdin = None
         self.query = query
         self.user_id = get_param(query, "user_id", "--")
@@ -156,8 +157,10 @@ class CS(Language):
         self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
 
     def before_save(self, s):
-        s = s.replace('System.Console.ReadLine', 'TIMconsole.ReadLine')
-        s = s.replace('Console.ReadLine', 'TIMconsole.ReadLine')
+        mockconsole = get_param(self.query, "mockconsole", True)
+        if mockconsole:
+            s = s.replace('System.Console.ReadLine', 'TIMconsole.ReadLine')
+            s = s.replace('Console.ReadLine', 'TIMconsole.ReadLine')
         return s
 
     def get_cmdline(self, sourcecode):
@@ -819,7 +822,7 @@ class Octave(Language):
         self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer", "timimages/octave")
         code, out, err, pwddir = self.runself(["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],
                                               timeout=20,
-                                              ulimit=df(self.ulimit, "ulimit -f 80000"), no_x11=True,
+                                              ulimit=df(self.ulimit, "ulimit -t 30 -f 80000"), no_x11=True,
                                               dockercontainer=self.dockercontainer,
                                               extra=extra
                                               )

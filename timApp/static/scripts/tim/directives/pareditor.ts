@@ -1141,7 +1141,7 @@ export class PareditorController implements IController {
                 wrapFn: () => this.wrapFn(),
                 saveClicked: () => this.saveClicked(),
                 getWrapValue: () => this.wrap.n,
-            }, this.lstag === "addAbove" ? "ace/mode/text" : "ace/mode/markdown");
+            }, (this.lstag === "addAbove" || this.lstag === "addBelow") ? "ace/mode/text" : "ace/mode/markdown");
             if (!this.minSizeSet) {
                 this.setEditorMinSize();
             }

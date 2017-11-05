@@ -2,9 +2,7 @@ from typing import Dict, Optional
 
 from copy import deepcopy
 
-if False:
-    from timApp.timdb.models.user import User
-    from timApp.documentmodel.document import Document
+from timApp.types import UserType, DocumentType
 
 
 class MacroInfo:
@@ -17,11 +15,11 @@ class MacroInfo:
      (instead of replacing them with empty values).
     """
 
-    def __init__(self, doc: Optional['Document']=None,
+    def __init__(self, doc: Optional[DocumentType]=None,
                  macro_map: Optional[Dict[str, object]] = None,
                  macro_delimiter: Optional[str] = None,
-                 user: Optional['User'] = None,
-                 nocache_user: Optional['User'] = None):
+                 user: Optional[UserType] = None,
+                 nocache_user: Optional[UserType] = None):
         self.doc = doc
         self.macro_map: Dict[str, object] = macro_map or {}
         if not isinstance(self.macro_map, dict):
@@ -57,7 +55,7 @@ class MacroInfo:
                        'useremail': f'{self.macro_delimiter}useremail{self.macro_delimiter}'})
         return macros
 
-    def get_macros_with_user_specific(self, user: Optional['User'] = None) -> Dict[str, object]:
+    def get_macros_with_user_specific(self, user: Optional[UserType] = None) -> Dict[str, object]:
         if not user:
             return self.macro_map
         macros = deepcopy(self.macro_map)
@@ -65,7 +63,7 @@ class MacroInfo:
         return macros
 
     @staticmethod
-    def get_user_specific_macros(user: Optional['User'] = None) -> Dict[str, object]:
+    def get_user_specific_macros(user: Optional[UserType] = None) -> Dict[str, object]:
         if not user:
             return {}
         return {

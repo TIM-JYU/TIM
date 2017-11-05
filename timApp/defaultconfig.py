@@ -1,5 +1,6 @@
 import logging
 import os
+import subprocess
 from datetime import timedelta
 
 ALLOWED_DOCUMENT_UPLOAD_MIMETYPES = ['text/plain']
@@ -55,3 +56,6 @@ KORPPI_AUTHORIZE_URL = "https://korppi.jyu.fi/kotka/interface/allowRemoteLogin.j
 GLOBAL_NOTIFICATION_FILE = '/tmp/global_notification.html'
 
 QST_PLUGIN_PORT = 5000
+GIT_LATEST_COMMIT_TIMESTAMP = subprocess.run(["git", "log", "-1", "--date=format:%d.%m.%Y %H:%M:%S", "--format=%cd"],
+                                             stdout=subprocess.PIPE).stdout.decode().strip()
+GIT_BRANCH = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], stdout=subprocess.PIPE).stdout.decode().strip()

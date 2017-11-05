@@ -49,7 +49,7 @@ class DocumentParser:
 
     """
 
-    def __init__(self, doc_text=''):
+    def __init__(self, doc_text='', options: Optional[DocumentParserOptions]=None):
         """
 
         :type doc_text: str
@@ -57,16 +57,15 @@ class DocumentParser:
         self._doc_text = doc_text
         self._blocks = None
         self._break_on_empty_line = False
-        self._last_setting: DocumentParserOptions = None
+        self._last_setting: Optional[DocumentParserOptions] = None
+        self.options: DocumentParserOptions = options if options is not None else DocumentParserOptions()
 
-    def get_blocks(self, options: Optional[DocumentParserOptions]=None):
-        if options is None:
-            options = DocumentParserOptions()
-        self._parse_document(options)
+    def get_blocks(self):
+        self._parse_document()
         return self._blocks
 
     def add_missing_attributes(self, hash_func=hashfunc, id_func=random_id):
-        self._parse_document(self._last_setting)
+        self._parse_document()
         for r in self._blocks:
             r['t'] = hash_func(r['md'], r['attrs'])
             if not r.get('id'):
@@ -74,7 +73,7 @@ class DocumentParser:
         return self
 
     def validate_structure(self) -> ValidationResult:
-        self._parse_document(self._last_setting)
+        self._parse_document()
         found_ids = set()
         found_tasks = set()
         found_areas = set()
@@ -132,12 +131,11 @@ class DocumentParser:
             result.add_issue(AreaWithoutEnd(None, a))  # TODO get the par id of the start
         return result
 
-    def _parse_document(self, options: Optional[DocumentParserOptions]):
-        if options is None:
-            options = DocumentParserOptions()
-        if self._last_setting == options:
+    def _parse_document(self):
+        if self._last_setting == self.options:
             return
         self._blocks = []
+        options = self.options
         self._break_on_empty_line = options.break_on_empty_line
         self._last_setting = options
         lines = self._doc_text.splitlines()

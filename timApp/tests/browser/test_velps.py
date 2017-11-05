@@ -1,3 +1,4 @@
+from selenium.webdriver import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
 
@@ -52,6 +53,10 @@ class VelpTest(BrowserTest):
         save_button: WebElement = new_velp_element.find_element_by_css_selector('input[type="submit"]')
         save_button.click()
         self.wait_until_hidden(new_velp_selector)
+
+        # get mouse out of the newly created velp so that the velp is not highlighted
+        ActionChains(self.drv).move_to_element(create_velp_btn).perform()
+
         self.assert_same_screenshot(velp_selection_element, 'velps/velp_selection_one_velp')
 
         # Selecting text using these styles does not work for some reason:

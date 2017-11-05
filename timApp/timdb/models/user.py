@@ -1,10 +1,8 @@
 import json
+import os
 from datetime import datetime, timedelta
-
 from typing import Dict, Optional
 from typing import List
-
-import os
 
 from flask import current_app
 from sqlalchemy.orm import Query
@@ -13,15 +11,18 @@ from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.theme import Theme
 from timApp.timdb.accesstype import AccessType
 from timApp.timdb.docinfo import DocInfo
-from timApp.timdb.models.notification import Notification
-from timApp.timdb.tim_models import db, UserGroupMember, BlockAccess
 from timApp.timdb.models.folder import Folder
+from timApp.timdb.models.notification import Notification
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
+from timApp.timdb.tim_models import db, UserGroupMember, BlockAccess
 from timApp.timdb.timdbexception import TimDbException
-from timApp.timdb.userutils import hash_password, has_view_access, has_edit_access, has_manage_access, has_teacher_access, \
-    has_seeanswers_access, user_is_owner, get_viewable_blocks, get_accessible_blocks, grant_access, get_access_type_id
-from timApp.utils import remove_path_special_chars, generate_theme_scss, ThemeNotFoundException, get_combined_css_filename
+from timApp.timdb.userutils import has_view_access, has_edit_access, has_manage_access, \
+    has_teacher_access, \
+    has_seeanswers_access, user_is_owner, get_viewable_blocks, get_accessible_blocks, grant_access, get_access_type_id, \
+    create_password_hash, check_password_hash
+from timApp.utils import remove_path_special_chars, generate_theme_scss, ThemeNotFoundException, \
+    get_combined_css_filename
 
 
 class User(db.Model):
@@ -50,7 +51,7 @@ class User(db.Model):
     @property
     def is_email_user(self):
         """Returns whether the user signed up via email."""
-        return '@' in self.name
+        return '@' in self.name or self.name.startswith('testuser')
 
     @property
     def pretty_full_name(self):
@@ -82,7 +83,7 @@ class User(db.Model):
 
         """
 
-        p_hash = hash_password(password) if password != '' else ''
+        p_hash = create_password_hash(password) if password != '' else ''
         user = User(name=name, real_name=real_name, email=email, pass_=p_hash)
         db.session.add(user)
         db.session.flush()
@@ -115,6 +116,17 @@ class User(db.Model):
     @staticmethod
     def get_by_email(email: str) -> Optional['User']:
         return User.query.filter_by(email=email).first()
+
+    def check_password(self, password: str, allow_old=False, update_if_old=True) -> bool:
+        is_ok = check_password_hash(password, self.pass_, allow_old=False)
+        if is_ok:
+            return True
+        if not allow_old:
+            return False
+        is_ok = check_password_hash(password, self.pass_, allow_old=True)
+        if is_ok and update_if_old:
+            self.pass_ = create_password_hash(password)
+        return is_ok
 
     def make_admin(self):
         self.groups.append(UserGroup.get_admin_group())
@@ -190,15 +202,18 @@ class User(db.Model):
         prefs['css_files'] = existing_css_files
         self.prefs = json.dumps(prefs, cls=TimJsonEncoder)
 
-    def get_groups(self) -> Query:
+    def get_groups(self, include_special=True) -> Query:
         special_groups = [ANONYMOUS_GROUPNAME]
         if self.logged_in:
             special_groups.append(LOGGED_IN_GROUPNAME)
-        return UserGroup.query.filter(
+        q = UserGroup.query.filter(
             UserGroup.id.in_(db.session.query(UserGroupMember.usergroup_id).filter_by(user_id=self.id))
-        ).union(
-            UserGroup.query.filter(UserGroup.name.in_(special_groups))
         )
+        if include_special:
+            q = q.union(
+                UserGroup.query.filter(UserGroup.name.in_(special_groups))
+            )
+        return q
 
     def update_info(self, name: str, real_name: str, email: str, password: Optional[str]=None):
         group = self.get_personal_group()
@@ -207,7 +222,7 @@ class User(db.Model):
         self.real_name = real_name
         self.email = email
         if password:
-            self.pass_ = hash_password(password)
+            self.pass_ = create_password_hash(password)
 
     def has_view_access(self, block_id: int) -> bool:
         return has_view_access(self.id, block_id)

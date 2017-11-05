@@ -2,6 +2,7 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, List
 
+import bcrypt
 from sqlalchemy import func
 
 from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME
@@ -394,5 +395,22 @@ def grant_default_access(group_ids: List[int],
     return accesses
 
 
-def hash_password(password: str) -> str:
+def hash_password_old(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
+
+
+def create_password_hash(password: str) -> str:
+    h = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    return h
+
+
+def check_password_hash(password: str, password_hash: str, allow_old=False) -> bool:
+    try:
+        is_bcrypt_ok = bcrypt.checkpw(password.encode(), password_hash.encode())
+    except ValueError:
+        is_bcrypt_ok = False
+    if is_bcrypt_ok:
+        return True
+    if not allow_old:
+        return False
+    return password_hash == hash_password_old(password)

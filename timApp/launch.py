@@ -5,7 +5,6 @@ import subprocess
 import sys
 
 import timApp.tim
-from timApp.dumboclient import launch_dumbo
 from timApp.initdb2 import initialize_database, initialize_temp_database
 from timApp.logger import log_info
 from timApp.tim_app import app
@@ -21,27 +20,18 @@ if __name__ == '__main__':
     # quit faster when running in PyCharm
     if pycharm_running():
         signal.signal(signal.SIGINT, quit_fast)
-    dumbo_started = False
-    d = None
+    initialize_database()
+    initialize_temp_database()
     try:
-        if not os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-            d = launch_dumbo()
-            dumbo_started = True
-        initialize_database()
-        initialize_temp_database()
-        try:
-            os.remove(app.config['GLOBAL_NOTIFICATION_FILE'])
-        except FileNotFoundError:
-            pass
-        if len(sys.argv) <= 1:
-            log_info('Starting without gunicorn.')
-            timApp.tim.start_app()
-        elif sys.argv[1] == '--with-gunicorn':
-            log_info(f'Starting with gunicorn. CPUs available: {multiprocessing.cpu_count()}')
-            p = subprocess.Popen(["gunicorn", "-p", "/var/run/gunicorn.pid", "--config", "gunicornconf.py", "tim:init_app()"])
-            p.wait()
-        else:
-            raise Exception('Unknown command line argument: ' + sys.argv[1])
-    finally:
-        if dumbo_started:
-            d.kill()
+        os.remove(app.config['GLOBAL_NOTIFICATION_FILE'])
+    except FileNotFoundError:
+        pass
+    if len(sys.argv) <= 1:
+        log_info('Starting without gunicorn.')
+        timApp.tim.start_app()
+    elif sys.argv[1] == '--with-gunicorn':
+        log_info(f'Starting with gunicorn. CPUs available: {multiprocessing.cpu_count()}')
+        p = subprocess.Popen(["gunicorn", "-p", "/var/run/gunicorn.pid", "--config", "gunicornconf.py", "tim:init_app()"])
+        p.wait()
+    else:
+        raise Exception('Unknown command line argument: ' + sys.argv[1])

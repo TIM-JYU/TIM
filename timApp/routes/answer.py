@@ -10,7 +10,7 @@ from flask import Response
 from flask import abort
 from flask import request
 
-from timApp.accesshelper import verify_logged_in
+from timApp.accesshelper import verify_logged_in, get_doc_or_abort
 from timApp.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, has_teacher_access, \
     verify_view_access, get_par_from_request
 from timApp.common import hide_names_in_teacher
@@ -300,8 +300,7 @@ def get_answers(task_id, user_id):
         doc_id, _, _ = Plugin.parse_task_id(task_id)
     except PluginException as e:
         return abort(400, str(e))
-    if not timdb.documents.exists(doc_id):
-        abort(404, 'No such document')
+    get_doc_or_abort(doc_id)
     user = timdb.users.get_user(user_id)
     if user_id != get_current_user_id():
         verify_seeanswers_access(doc_id)
@@ -351,8 +350,7 @@ def get_all_answers_as_list(task_ids: List[str]):
     for t in task_ids:
         doc_id, _, _ = Plugin.parse_task_id(t)
         doc_ids.add(doc_id)
-        if not timdb.documents.exists(doc_id):
-            abort(404, f'No such document: {doc_id}')
+        get_doc_or_abort(doc_id)
         # Require full teacher rights for getting all answers
         verify_teacher_access(doc_id)
 
@@ -472,8 +470,7 @@ def verify_answer_access(answer_id, user_id, require_teacher_if_not_own=False):
     if answer is None:
         abort(400, 'Non-existent answer')
     doc_id, task_id_name, _ = Plugin.parse_task_id(answer['task_id'])
-    if not timdb.documents.exists(doc_id):
-        abort(404, 'No such document')
+    get_doc_or_abort(doc_id)
     if user_id != get_current_user_id() or not logged_in():
         if require_teacher_if_not_own:
             verify_task_access(doc_id, task_id_name, AccessType.teacher)

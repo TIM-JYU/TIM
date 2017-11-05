@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Dict
 
 import pytz
-from flask import session, abort, request, flash
+from flask import session, request, flash
 
 from timApp.accesshelper import has_ownership, has_edit_access
 from timApp.dbaccess import get_timdb
@@ -12,18 +12,12 @@ from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.markdownconverter import expand_macros, create_environment
 from timApp.pluginControl import pluginify
+from timApp.requesthelper import get_boolean
 from timApp.sessioninfo import get_session_usergroup_ids
 from timApp.timdb.models.user import User
 from timApp.timdb.userutils import get_anon_group_id
 from timApp.timtiming import taketime
 from timApp.utils import getdatetime
-from timApp.requesthelper import get_boolean
-
-
-def verify_doc_exists(doc_id, message="Sorry, the document does not exist."):
-    timdb = get_timdb()
-    if not timdb.documents.exists(doc_id):
-        abort(404, message)
 
 
 # noinspection PyUnusedLocal
@@ -64,6 +58,10 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         # Skip readings and notes
         return process_areas(html_pars, macros, delimiter, env), js_paths, css_paths, modules
 
+    if doc.get_settings().show_authors():
+        authors = doc.get_changelog().get_authorinfo(pars)
+        for p in html_pars:
+            p['authorinfo'] = authors.get(p['id'])
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict = defaultdict(list)
 

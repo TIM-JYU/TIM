@@ -20,7 +20,6 @@ from timApp.utils import del_content
 class TimDbTest(unittest.TestCase):
     test_files_path = '/tmp/doctest_files'
     db_path = app.config['DATABASE']
-    dumbo = None
     i = 0
 
     def get_db(self):
@@ -49,12 +48,6 @@ class TimDbTest(unittest.TestCase):
         except sqlalchemy.exc.OperationalError:
             pass
         timApp.initdb2.initialize_database(create_docs=False)
-        cls.dumbo = timApp.dumboclient.launch_dumbo()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.dumbo.kill()
-        cls.dumbo.wait()
 
     def setUp(self):
         self.db = TimDb(files_root_path=self.test_files_path)

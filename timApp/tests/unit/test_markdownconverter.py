@@ -11,10 +11,6 @@ from timApp.markdownconverter import md_to_html, par_list_to_html_list
 
 class MarkdownConverterTest(unittest.TestCase):
 
-    def setUp(self):
-        self.d = timApp.dumboclient.launch_dumbo()
-        time.sleep(0.1)  # Need to wait a bit to make sure Dumbo is up when running the test
-
     def check_conversion(self, html, md, macros=None, delimiter=None):
         self.assertEqual(html, md_to_html(md, sanitize=True, macros=macros, macro_delimiter=delimiter))
 
@@ -56,10 +52,6 @@ class MarkdownConverterTest(unittest.TestCase):
             timApp.dumboclient.call_dumbo(
                 [{'test1': 'value1', 'test2': 'md:*value2*'}, {'test3': 'value3', 'test4': 'md:**value4**'}],
                 path='/mdkeys'))
-
-    def tearDown(self):
-        self.d.kill()
-        self.d.wait()
 
 
 if __name__ == '__main__':

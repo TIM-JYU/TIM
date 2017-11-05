@@ -23,6 +23,7 @@ from timApp.sessioninfo import get_current_user_object, get_current_user_id, get
 from timApp.timdb.models.docentry import DocEntry, get_documents_in_folder
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.userutils import grant_access
+from timApp.utils import split_location
 
 velps = Blueprint('velps',
                   __name__,
@@ -50,7 +51,7 @@ def get_default_velp_group(doc_id: int):
     if not doc:
         abort(404)
     full_path = doc.path
-    doc_path, doc_name = timdb.documents.split_location(full_path)
+    doc_path, doc_name = split_location(full_path)
     edit_access = False
     if has_edit_access(doc_id):
         edit_access = True
@@ -664,7 +665,7 @@ def create_velp_group(doc_id: int) -> Dict:
 
     doc = DocEntry.find_by_id(doc_id)
     full_path = doc.path
-    doc_path, doc_name = timdb.documents.split_location(full_path)
+    doc_path, doc_name = split_location(full_path)
 
     # valid_until = json_data.get('valid_until')
 
@@ -746,10 +747,10 @@ def create_default_velp_group(doc_id: int):
 
     doc = DocEntry.find_by_id(doc_id)
     full_path = doc.path
-    doc_path, doc_name = timdb.documents.split_location(full_path)
+    doc_path, doc_name = split_location(full_path)
 
     verify_logged_in()
-    user_group_id = timdb.documents.get_owner(doc_id)
+    user_group_id = doc.block.owner.id
     user_id = get_current_user_id()
 
     # if not timdb.users.is_user_id_in_group_id(user_id, user_group_id):
@@ -823,7 +824,7 @@ def get_velp_groups_from_tree(document_id: int):
     if not doc:
         abort(404)
     full_path = doc.path
-    doc_path, doc_name = timdb.documents.split_location(full_path)
+    doc_path, doc_name = split_location(full_path)
     velp_group_folder = "velp-groups"
 
     current_path = doc_path
@@ -867,7 +868,7 @@ def get_velp_groups_from_tree(document_id: int):
     for result in results:
         is_velp_group = timdb.velp_groups.is_id_velp_group(result.id)
         if not is_velp_group:
-            _, group_name = timdb.documents.split_location(result.path)
+            _, group_name = split_location(result.path)
             timdb.velp_groups.make_document_a_velp_group(group_name, result.id)
 
     return results
