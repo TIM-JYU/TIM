@@ -89,19 +89,24 @@ class DocInfo(Item):
         The first document in the list is nearest root.
         """
         if getattr(self, '_preamble_docs', None) is None:
-            preamble_name = self.document.get_own_settings().get('preamble', DEFAULT_PREAMBLE_DOC)
-            self._preamble_docs = self._get_preamble_docs_impl(preamble_name) if isinstance(preamble_name, str) else []
+            preamble_setting = self.document.get_own_settings().get('preamble', DEFAULT_PREAMBLE_DOC)
+            self._preamble_docs = self._get_preamble_docs_impl(preamble_setting) if isinstance(preamble_setting, str) else []
         return self._preamble_docs
 
     def get_preamble_pars(self) -> Generator[DocParagraph, None, None]:
         return get_non_settings_pars_from_docs(self.get_preamble_docs())
 
-    def _get_preamble_docs_impl(self, preamble_name: str) -> List['DocInfo']:
+    def _get_preamble_docs_impl(self, preamble_setting: str) -> List['DocInfo']:
+        preamble_names = preamble_setting.split(',')
         path_parts = self.path_without_lang.split('/')
-        paths = list(f'{p}{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name}' for p in
-                     accumulate(part + '/' for part in path_parts[:-1]))
+        paths = list(
+            f'{p}{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}' for
+            p in
+            accumulate(part + '/' for part in path_parts[:-1]) for preamble_name in preamble_names)
         if not paths:
             return []
+
+        path_index_map = dict((path, i) for i, path in enumerate(paths))
 
         # Templates don't have preambles.
         if any(p == TEMPLATE_FOLDER_NAME for p in path_parts):
@@ -112,8 +117,8 @@ class DocInfo(Item):
         result = db.session.query(DocEntry, Translation).filter(
             DocEntry.name.in_(paths)).outerjoin(Translation,
                                                 (Translation.src_docid == DocEntry.id) & (
-                                                    Translation.lang_id == self.lang_id)).order_by(
-            func.length(DocEntry.name)).all()  # type: List[Tuple[DocEntry, Optional[Translation]]]
+                                                    Translation.lang_id == self.lang_id)).all()  # type: List[Tuple[DocEntry, Optional[Translation]]]
+        result.sort(key=lambda x: path_index_map[x[0].path])
         preamble_docs = []
         for de, tr in result:
             d = tr or de  # preamble either has the corresponding translation or not
