@@ -1097,6 +1097,9 @@ class Document:
             self.ref_doc_cache[ref_docid] = cached
         return cached
 
+    def validate(self) -> ValidationResult:
+        return DocumentParser(self.export_markdown()).validate_structure()
+
 
 def add_index_entry(index_table, current_headers, header):
     level = int(header.tag[1:])

@@ -60,3 +60,18 @@ class CopyCiteTest(TimRouteTest):
         self.assertEqual(german_par, copy_trs[0].document.get_paragraphs()[0].get_markdown())
         self.assertEqual(english_par, copy_trs[1].document.get_paragraphs()[0].get_markdown())
         self.assertEqual(finnish_par, copy_trs[2].document.get_paragraphs()[0].get_markdown())
+
+    def test_copy_doc_with_issues(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {area=a}
+#- {area_end=a}
+#- {area=a}
+#- {area_end=a}
+        """)
+        pars = d.document.get_paragraphs()
+        self.create_doc(copy_from=d.id, expect_status=400,
+                        expect_content={
+                            'error': f'The following errors must be fixed before copying:\n'
+                                     f'Multiple areas with same name noticed in paragraph {pars[2].get_id()}\n'
+                                     f'Duplicate area end noticed in paragraph {pars[3].get_id()}'})
