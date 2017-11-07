@@ -1,6 +1,7 @@
 from typing import List, Tuple
 
 from timApp.timdb.dbutils import insert_block
+from timApp.timdb.models.block import Block
 from timApp.timdb.timdbbase import TimDbBase
 from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.timdbexception import TimDbException
@@ -147,7 +148,10 @@ class Images(TimDbBase):
 
         """
 
-        if not self.blockExists(image_id, blocktypes.IMAGE):
+        b: Block = Block.query.get(image_id)
+        if not b:
+            return False
+        if b.type_id != blocktypes.IMAGE:
             return False
 
         return os.path.exists(self.getImagePath(image_id, image_filename))

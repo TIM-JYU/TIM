@@ -1,6 +1,7 @@
 from typing import List, Tuple
 
 from timApp.timdb.dbutils import insert_block
+from timApp.timdb.models.block import Block
 from timApp.timdb.timdbbase import TimDbBase
 from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.timdbexception import TimDbException
@@ -102,8 +103,10 @@ class Files(TimDbBase):
         :returns: True if the file exists, false otherwise.
 
         """
-
-        if not self.blockExists(file_id, blocktypes.FILE):
+        b: Block = Block.query.get(file_id)
+        if not b:
+            return False
+        if b.type_id != blocktypes.FILE:
             return False
 
         return os.path.exists(self.getFilePath(file_id, file_filename))

@@ -15,6 +15,7 @@ from typing import Optional, List, Iterable, Dict
 
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.timdbbase import TimDbBase
+from timApp.utils import get_sql_template
 
 
 class VelpGroups(TimDbBase):
@@ -120,7 +121,7 @@ class VelpGroups(TimDbBase):
                       SELECT
                       id, name
                       FROM VelpGroup
-                      WHERE id IN ({self.get_sql_template(velp_group_ids)}) AND default_group = TRUE
+                      WHERE id IN ({get_sql_template(velp_group_ids)}) AND default_group = TRUE
                       """, velp_group_ids
                        )
         results = self.resultAsDictionary(cursor)
@@ -267,7 +268,7 @@ class VelpGroups(TimDbBase):
                       SELECT
                       user_group, doc_id, target_type, target_id, velp_group_id as id
                       FROM ImportedVelpGroups
-                      WHERE doc_id = %s AND user_group IN ({self.get_sql_template(user_groups)})
+                      WHERE doc_id = %s AND user_group IN ({get_sql_template(user_groups)})
                       """, [doc_id] + user_groups
                        )
         results = self.resultAsDictionary(cursor)

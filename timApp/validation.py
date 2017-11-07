@@ -11,6 +11,7 @@ from timApp.sessioninfo import logged_in, get_current_user_object
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.timdbexception import TimDbException
+from timApp.utils import split_location
 
 
 def validate_item(item_path, item_type):
@@ -41,9 +42,8 @@ def validate_item(item_path, item_type):
 
 
 def validate_item_and_create(item_name, item_type, owner_group_id):
-    timdb = get_timdb()
     validate_item(item_name, item_type)
-    item_path, _ = timdb.folders.split_location(item_name)
+    item_path, _ = split_location(item_name)
     try:
         Folder.create(item_path, owner_group_id, apply_default_rights=True)
     except TimDbException as e:

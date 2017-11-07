@@ -19,6 +19,7 @@ from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
+from timApp.utils import split_location
 from timApp.validation import validate_item_and_create
 
 
@@ -55,12 +56,12 @@ def get_templates_for_folder(folder: Folder) -> List[DocEntry]:
                 templates.append(t)
         if current_path == '':
             break
-        current_path, short_name = timdb.folders.split_location(current_path)
+        current_path, short_name = split_location(current_path)
 
         # Templates should not be templates of templates themselves. We skip them.
         # TODO Think if this needs a while loop in case of path like templates/templates/templates
         if short_name == TEMPLATE_FOLDER_NAME:
-            current_path, short_name = timdb.folders.split_location(current_path)
+            current_path, short_name = split_location(current_path)
     templates.sort(key=lambda d: d.short_name.lower())
     return templates
 

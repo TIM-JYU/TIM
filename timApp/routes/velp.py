@@ -20,6 +20,7 @@ from timApp.accesshelper import verify_logged_in, has_edit_access, has_manage_ac
 from timApp.dbaccess import get_timdb
 from timApp.responsehelper import json_response, set_no_cache_headers, ok_response
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group
+from timApp.timdb.models.block import Block
 from timApp.timdb.models.docentry import DocEntry, get_documents_in_folder
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.userutils import grant_access
@@ -702,7 +703,7 @@ def create_velp_group(doc_id: int) -> Dict:
         new_group_path = velps_folder_path + "/" + velp_group_name
         group_exists = DocEntry.find_by_path(new_group_path)  # Check name so no duplicates are made
         if group_exists is None:
-            original_owner = timdb.folders.get_owner(target_id)
+            original_owner = Block.query.get(target_id).owner.id
             velp_group_id = timdb.velp_groups.create_velp_group(velp_group_name, original_owner, new_group_path)
             rights = timdb.users.get_rights_holders(target_id)
             # Copy all rights but view
@@ -851,7 +852,7 @@ def get_velp_groups_from_tree(document_id: int):
         velp_groups += get_folder_velp_groups(current_path + "/" + velp_group_folder, viewable)
         if current_path == '':
             break
-        current_path, _ = timdb.folders.split_location(current_path)
+        current_path, _ = split_location(current_path)
 
     # User's own velp groups
     velp_groups += get_folder_velp_groups(personal_velps_path, viewable)

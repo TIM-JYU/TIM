@@ -26,7 +26,7 @@ from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db, AccessType
 from timApp.timdb.userutils import grant_access, grant_default_access
-from timApp.utils import remove_path_special_chars
+from timApp.utils import remove_path_special_chars, split_location
 from timApp.validation import validate_item
 
 manage_page = Blueprint('manage_page',
@@ -143,7 +143,7 @@ def add_alias(doc_id, new_alias):
 
     validate_item(new_alias, 'alias')
 
-    parent_folder, _ = timdb.folders.split_location(new_alias)
+    parent_folder, _ = split_location(new_alias)
     Folder.create(parent_folder, get_current_user_group())
     d.add_alias(new_alias, is_public)
     db.session.commit()
@@ -163,7 +163,7 @@ def change_alias(alias):
 
     verify_manage_access(doc.id)
 
-    new_parent, _ = timdb.folders.split_location(new_alias)
+    new_parent, _ = split_location(new_alias)
     f = Folder.find_first_existing(new_alias)
     if alias != new_alias:
         if DocEntry.find_by_path(new_alias, try_translation=True) is not None or Folder.find_by_path(new_alias) is not None:
@@ -218,7 +218,7 @@ def rename_folder(item_id):
         return abort(404, 'The folder does not exist!')
     verify_manage_access(item_id)
 
-    parent, _ = timdb.folders.split_location(new_name)
+    parent, _ = split_location(new_name)
     parent_f = Folder.find_by_path(parent)
 
     if parent_f is None:

@@ -18,7 +18,8 @@ class AnswerBrowserTest(BrowserTest):
         db = self.get_db()
 
         # even if the original document is not accessible, browsing answers should work in the other document
-        db.users.set_owner(d.id, get_admin_group_id())
+        d.block.set_owner(get_admin_group_id())
+        db.session.commit()
         self.check_reference_answerbrowser_ok(d2)
 
     def check_reference_answerbrowser_ok(self, d: DocEntry):
