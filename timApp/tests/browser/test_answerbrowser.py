@@ -4,6 +4,7 @@ from selenium.webdriver.support import expected_conditions as ec
 
 from timApp.tests.browser.browsertest import BrowserTest
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import get_admin_group_id
 
 
@@ -15,7 +16,6 @@ class AnswerBrowserTest(BrowserTest):
         d = self.create_doc(from_file='example_docs/multiple_mmcqs.md')
         d2 = self.create_doc(initial_par=f'#- {{rd={d.id} ra=a1}}')
         self.check_reference_answerbrowser_ok(d2)
-        db = self.get_db()
 
         # even if the original document is not accessible, browsing answers should work in the other document
         d.block.set_owner(get_admin_group_id())
