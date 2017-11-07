@@ -46,7 +46,6 @@ class Block(db.Model):
     def set_owner(self, usergroup_id: int):
         """Changes the owner group for a block.
 
-        :param block: The block.
         :param usergroup_id: The id of the new usergroup.
 
         """
