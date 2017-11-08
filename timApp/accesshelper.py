@@ -215,7 +215,7 @@ def get_par_from_request(doc: Document, par_id=None, task_id_name=None) -> Tuple
     orig_doc = Document(orig_doc_id)
     orig_par = orig_doc.get_paragraph(orig_par_id)
     pars = dereference_pars([orig_par], source_doc=doc)
-    ctx_doc = doc if orig_doc.get_docinfo().is_original_translation else orig_doc
+    ctx_doc = orig_doc if (not orig_doc.get_docinfo().is_original_translation and orig_par.is_translation()) else doc
     for p in pars:
         if p.get_id() == par_id:
             return ctx_doc, p
