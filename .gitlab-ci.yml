@@ -22,6 +22,7 @@ test:
   - sed -i 's/IS_DEVELOPMENT=false/IS_DEVELOPMENT=true/' variables.sh
   - ./docker-compose.sh pull
   - ./build_js.sh
+  - ./build_plugin_js.sh
   - ./run_tests.sh
   artifacts:
     name: failed_screenshots

@@ -1,11 +1,10 @@
+import math
 import os
 from base64 import b64decode
+from io import BytesIO
 from pprint import pprint
 from typing import Union
 
-from io import BytesIO
-
-import math
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import ActionChains
@@ -18,8 +17,10 @@ from wand.image import Image
 from timApp.tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_USER_3_NAME
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tests.timliveserver import TimLiveServer
-from timApp.timdb.models.docentry import DocEntry
-from timApp.utils import pycharm_running
+from timApp.timdb.docinfo import DocInfo
+
+
+PREV_ANSWER = 'answerbrowser .prevAnswer'
 
 
 class BrowserTest(TimLiveServer, TimRouteTest):
@@ -42,6 +43,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def login_browser_as(self, email: str, password: str, name: str):
         self.client.__exit__(None, None, None)
         self.goto('')
+        # self.save_screenshot('adsasd')
         elem = self.drv.find_element_by_xpath('//login-menu/button')
         elem.click()
         elem.find_element_by_xpath("//input[@type='email']").send_keys(email)
@@ -56,7 +58,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.drv.delete_all_cookies()
         self.drv.add_cookie(
             {'class': 'org.openqa.selenium.Cookie',
-             'domain': 'tim' if pycharm_running() else 'tests',
+             'domain': 'nginx',
              'expiry': 7544144177,
              'hCode': 1984987798,
              'httpOnly': True,
@@ -83,7 +85,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         :param url: The URL to which to navigate. This must be relative.
 
         """
-        self.drv.get(f"{self.app.config['SELENIUM_BROWSER_URL']}:{self.app.config['LIVESERVER_PORT']}{url}")
+        url_ = f"{self.app.config['SELENIUM_BROWSER_URL']}{url}"
+        # raise Exception(url_)
+        self.drv.get(url_)
 
     def print_console(self):
         logs = self.drv.get_log("browser")
@@ -177,7 +181,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         TimLiveServer.tearDown(self)
         self.drv.quit()
 
-    def goto_document(self, d: DocEntry, view='view'):
+    def goto_document(self, d: DocInfo, view='view'):
         self.goto(f'/{view}/{d.path}')
 
     def wait_until_hidden(self, selector):
@@ -185,6 +189,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
     def wait_until_present(self, selector):
         self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, selector)))
+        self.wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, selector)))
 
     def select_text(self, selector: str, start_offset: int, end_offset: int):
         self.drv.execute_script(f"""
@@ -194,3 +199,14 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         range.setEnd(element, {end_offset});
         window.getSelection().addRange(range);
         """)
+
+    def find_element(self, selector: str, times=1) -> WebElement:
+        e = None
+        for i in range(0, times):
+            e = self.drv.find_element_by_css_selector(selector)
+            ActionChains(self.drv).move_to_element(e).perform()
+        return e
+
+    def wait_and_click(self, selector: str):
+        self.wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, selector)))
+        self.drv.find_element_by_css_selector(selector).click()

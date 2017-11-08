@@ -1,8 +1,4 @@
-from selenium.webdriver import ActionChains
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as ec
-
-from timApp.tests.browser.browsertest import BrowserTest
+from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import get_admin_group_id
@@ -24,16 +20,8 @@ class AnswerBrowserTest(BrowserTest):
 
     def check_reference_answerbrowser_ok(self, d: DocEntry):
         self.goto_document(d)
-        submitbutton = self.drv.find_element_by_css_selector('#mmcqexample button')
-
-        # hover mouse over par element to activate answer browser
-        ActionChains(self.drv).move_to_element(submitbutton).perform()
-
-        # Due to plugin refresh on hover, we need to fetch the element again.
-        submitbutton = self.drv.find_element_by_css_selector('#mmcqexample button')
-        ActionChains(self.drv).move_to_element(submitbutton).perform()
+        selector = '#mmcqexample button'
+        submitbutton = self.find_element(selector, times=2)
         submitbutton.click()
-        prevanswer = 'answerbrowser .prevAnswer'
-        self.wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, prevanswer)))
-        self.drv.find_element_by_css_selector(prevanswer).click()
+        self.wait_and_click(PREV_ANSWER)
         self.should_not_exist('answerbrowser .alert-danger')

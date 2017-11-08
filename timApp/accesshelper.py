@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, Tuple
 
 from flask import flash
 from flask import request, g
@@ -7,6 +7,7 @@ from sqlalchemy import inspect
 from werkzeug.exceptions import abort
 
 import timApp.timdb
+from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document, dereference_pars
 from timApp.requesthelper import get_option
 from timApp.sessioninfo import get_current_user_id, logged_in, get_other_users_as_list, \
@@ -199,7 +200,7 @@ def verify_ownership(block_id):
         abort(403, "Sorry, you don't have permission to view this resource.")
 
 
-def get_par_from_request(doc: Document, par_id=None, task_id_name=None):
+def get_par_from_request(doc: Document, par_id=None, task_id_name=None) -> Tuple[Document, DocParagraph]:
     orig_doc_id, orig_par_id = get_orig_doc_and_par_id_from_request()
     if par_id is None:
         try:
@@ -208,15 +209,16 @@ def get_par_from_request(doc: Document, par_id=None, task_id_name=None):
             abort(400, str(e))
     if orig_doc_id is None or orig_par_id is None:
         try:
-            return doc.get_paragraph(par_id)
+            return doc, doc.get_paragraph(par_id)
         except TimDbException as e:
             abort(400, str(e))
     orig_doc = Document(orig_doc_id)
     orig_par = orig_doc.get_paragraph(orig_par_id)
     pars = dereference_pars([orig_par], source_doc=doc)
+    ctx_doc = doc if orig_doc.get_docinfo().is_original_translation else orig_doc
     for p in pars:
         if p.get_id() == par_id:
-            return p
+            return ctx_doc, p
     abort(404)
 
 

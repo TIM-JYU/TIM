@@ -87,9 +87,9 @@ def post_answer(plugintype: str, task_id_ext: str):
     doc = Document(doc_id)
     try:
         if par_id is None:
-            par = get_par_from_request(doc, task_id_name=task_id_name)
+            _, par = get_par_from_request(doc, task_id_name=task_id_name)
         else:
-            par = get_par_from_request(doc, par_id)
+            _, par = get_par_from_request(doc, par_id)
             if par.get_attr('taskId') != task_id_name:
                 return abort(400)
     except TimDbException as e:
@@ -443,7 +443,7 @@ def get_state():
     if doc_id != d_id and doc_id not in doc.get_referenced_document_ids():
         abort(400, 'Bad document id')
 
-    block = get_par_from_request(doc, par_id)
+    doc, block = get_par_from_request(doc, par_id)
     user = User.query.get(user_id)
     if user is None:
         abort(400, 'Non-existent user')
