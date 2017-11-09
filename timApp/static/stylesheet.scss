@@ -1083,18 +1083,8 @@ button:disabled, input[type="submit"]:disabled, input[type="button"]:disabled, .
     top: 0;
 }
 
-.collapsed .parContent {
+.collapsed {
     display: none;
-    z-index: 10;
-    position: relative;
-    margin-left: 1em;
-    padding-top: 0.25em;
-    padding-bottom: 1em;
-    margin-top: 0.25em;
-    margin-bottom: 0.25em;
-    border-bottom: 1px solid transparent;
-    border-top: 1px solid transparent;
-    border-right: 1px solid transparent;
 }
 
 p.docsettings {
