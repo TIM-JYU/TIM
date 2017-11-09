@@ -10,7 +10,7 @@ if [ $# -ne "2" ]; then
 fi
 
 read -r -d '' SCRIPT <<'EOF'
-dir=/tmp/stresstest
+dir=/tmp/stresstest/$2
 mkdir -p ${dir}
 rm ${dir}/* 2>/dev/null
 time (
