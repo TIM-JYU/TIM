@@ -36,7 +36,7 @@
    ng-href="{{ bookmark.path }}"
    ng-bind="bookmark.name"
    class="btn btn-sm btn-default"></a>
-<button ng-show="data.length == 0" ng-click="newBookmark(null, $event)" class="btn btn-sm btn-default">
+<button ng-click="newBookmark(null, $event)" class="btn btn-sm btn-default">
     <i class="glyphicon glyphicon-plus"></i> New bookmark...
 </button>
 <script type="text/ng-template" id="createBookmark.html">
