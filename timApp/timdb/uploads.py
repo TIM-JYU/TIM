@@ -25,7 +25,7 @@ class Uploads(TimDbBase):
 
         return os.path.join(relpath, filename), os.path.join(p, filename)
 
-    def save_file(self, file_data: bytes, path: str, filename: str, owner_group_id: int) -> str:
+    def save_file(self, file_data: bytes, path: str, filename: str, owner_group_id: int) -> AnswerUpload:
         """Saves a file to the database.
 
         :param file_data: The  data.
