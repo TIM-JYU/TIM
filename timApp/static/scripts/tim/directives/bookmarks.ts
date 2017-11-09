@@ -188,8 +188,8 @@ timApp.controller("CreateBookmarkCtrl", ["$uibModalInstance", "bookmark", functi
     if (bookmark.group === "Last edited" || bookmark.group === "Last read") {
         bookmark.group = "";
     }
-    $ctrl.focusGroup = !bookmark.group;
-    $ctrl.focusName = !$ctrl.focusGroup;
+    $ctrl.focusGroup = false;
+    $ctrl.focusName = true;
     $ctrl.showParamsCheckbox = $window.location.search.length > 1;
     $ctrl.showHashCheckbox = $window.location.hash.length > 1;
 
