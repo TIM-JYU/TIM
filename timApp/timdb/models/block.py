@@ -18,6 +18,12 @@ class Block(db.Model):
     created = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
     modified = db.Column(db.DateTime(timezone=True), default=func.now())
 
+    docentries = db.relationship('DocEntry', back_populates='_block', lazy='dynamic')
+    folder = db.relationship('Folder', back_populates='_block', lazy='dynamic')
+    answerupload = db.relationship('AnswerUpload', back_populates='block', lazy='dynamic')
+    accesses = db.relationship('BlockAccess', back_populates='block', lazy='dynamic')
+
+
     @property
     def owner(self) -> UserGroup:
         return UserGroup.query.filter(UserGroup.id.in_(

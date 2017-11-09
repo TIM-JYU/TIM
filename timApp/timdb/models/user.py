@@ -36,6 +36,10 @@ class User(db.Model):
     pass_ = db.Column('pass', db.Text)
     yubikey = db.Column(db.Text)
 
+    notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
+    groups = db.relationship('UserGroup', secondary=UserGroupMember.__table__,
+                             back_populates='users', lazy='dynamic')
+
     @property
     def logged_in(self):
         return self.id > 0

@@ -12,7 +12,8 @@ class UserGroup(db.Model):
     name = db.Column(db.Text, nullable=False, unique=True)
 
     users = db.relationship('User', secondary=UserGroupMember.__table__,
-                            backref=db.backref('groups', lazy='dynamic'))
+                            back_populates='groups', lazy='dynamic')
+    accesses = db.relationship('BlockAccess', back_populates='usergroup', lazy='dynamic')
 
     def is_anonymous(self) -> bool:
         return self.name == ANONYMOUS_GROUPNAME

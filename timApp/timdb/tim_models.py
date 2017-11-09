@@ -39,6 +39,8 @@ class Answer(db.Model):
     valid = db.Column(db.Boolean, nullable=False)
     last_points_modifier = db.Column(db.Integer, db.ForeignKey('usergroup.id'))
 
+    uploads = db.relationship('AnswerUpload', back_populates='answer', lazy='dynamic')
+
     def __init__(self, task_id, content, points, valid, last_points_modifier=None):
         self.task_id = task_id
         self.content = content
@@ -62,8 +64,8 @@ class AnswerUpload(db.Model):
     upload_block_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     answer_id = db.Column(db.Integer, db.ForeignKey('answer.id'))
 
-    block = db.relationship('Block', backref=db.backref('answerupload', lazy='dynamic'))
-    answer = db.relationship('Answer', backref=db.backref('uploads', lazy='dynamic'))
+    block = db.relationship('Block', back_populates='answerupload')
+    answer = db.relationship('Answer', back_populates='uploads')
 
     def __init__(self, block, answer=None):
         self.block = block
@@ -103,8 +105,8 @@ class BlockAccess(db.Model):
     duration_from = db.Column(db.DateTime(timezone=True))
     duration_to = db.Column(db.DateTime(timezone=True))
 
-    block = db.relationship('Block', backref=db.backref('accesses', lazy='dynamic'))
-    usergroup = db.relationship('UserGroup', backref=db.backref('accesses', lazy='dynamic'))
+    block = db.relationship('Block', back_populates='accesses')
+    usergroup = db.relationship('UserGroup', back_populates='accesses')
 
     @property
     def future(self):
