@@ -166,6 +166,8 @@ def get_file(file_id, file_filename):
     mime = magic.Magic(mime=True)
     file_path = timdb.files.getFilePath(file_id, file_filename)
     mt = mime.from_file(file_path)
+    if mt == 'image/svg':
+        mt += '+xml'
     if isinstance(mt, bytes):
         mt = mt.decode('utf-8')
     return send_file(file_path, mimetype=mt)
