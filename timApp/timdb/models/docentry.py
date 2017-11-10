@@ -18,7 +18,7 @@ class DocEntry(db.Model, DocInfo):
     id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
     public = db.Column(db.Boolean, nullable=False, default=True)
 
-    _block = db.relationship('Block', backref=db.backref('docentries', lazy='dynamic'))
+    _block = db.relationship('Block', back_populates='docentries')
 
     @property
     def path(self):

@@ -12,7 +12,7 @@ from enum import Enum, unique
 from typing import Dict, List, Optional
 from timApp.timdb.timdbbase import TimDbBase
 from timApp.timdb.velp_models import Annotation, AnnotationComment
-from timApp.utils import date_to_relative
+from timApp.utils import date_to_relative, get_sql_template
 
 
 class Annotations(TimDbBase):
@@ -366,7 +366,7 @@ class Annotations(TimDbBase):
                         useraccount.email as user_email
                       FROM AnnotationComment
                       JOIN useraccount ON AnnotationComment.commenter_id = useraccount.id
-                      WHERE AnnotationComment.annotation_id IN ({self.get_sql_template(annotation_ids)})
+                      WHERE AnnotationComment.annotation_id IN ({get_sql_template(annotation_ids)})
                       ORDER BY AnnotationComment.annotation_id ASC;
                       """, annotation_ids
                        )

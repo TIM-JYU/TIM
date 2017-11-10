@@ -13,13 +13,18 @@ from timApp.timdb.docinfo import DocInfo
 class PreambleTestBase(TimRouteTest):
     def create_doc_and_preamble(self, folder: str):
         d = self.create_doc(f'{folder}/a/b/test1')
-        p1 = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}')
-        p2 = self.create_doc(f'{folder}/a/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}')
-        p3 = self.create_doc(f'{folder}/a/b/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}')
+        preamble_name = DEFAULT_PREAMBLE_DOC
+        p1, p2, p3 = self.create_preambles(folder, preamble_name)
         p1.document.set_settings({'macros': {'a': 'cat', 'b': 'dog', 'd': 'sheep'}})
         p2.document.set_settings({'macros': {'b': 'mouse', 'c': 'giraffe'}})
         p3.document.set_settings({'macros': {'c': 'elephant', 'd': 'fly'}})
         return d, p1, p2, p3
+
+    def create_preambles(self, folder: str, preamble_name: str):
+        p1 = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name}')
+        p2 = self.create_doc(f'{folder}/a/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name}')
+        p3 = self.create_doc(f'{folder}/a/b/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name}')
+        return p1, p2, p3
 
 
 class PreambleTest(PreambleTestBase):
@@ -186,7 +191,8 @@ class PreambleTest3(PreambleTestBase):
         p2tpars[1].save()
         with patch.object(DocParagraph, 'get', wraps=DocParagraph.get) as m:  # type: Mock
             e = self.get(dt.url, as_tree=True)
-        self.assertEqual(m.call_count, sum(map(len, (x.document.get_par_ids() for x in (p1, p2, p3, p1t, p2t, d, dt)))) + 1)  # + 1 because of bookmark document
+        self.assertEqual(m.call_count, sum(map(len, (x.document.get_par_ids() for x in (
+            p1, p2, p3, p1t, p2t, d, dt)))) + 1)  # + 1 because of bookmark document
 
         self.assert_content(e, ['makro a on kissa',
                                 'makro b on mouse',
@@ -197,3 +203,31 @@ class PreambleTest3(PreambleTestBase):
 
         self.assertEqual(len(e.cssselect('.preamble')), 3)
         self.assertEqual(len(e.cssselect('.parlink')), 0)
+
+    def test_multiple_preamble(self):
+        self.login_test2()
+        folder = self.current_user.get_personal_folder().path
+        d, p1, p2, p3 = self.create_doc_and_preamble(folder)
+        p1c, p2c, p3c = self.create_preambles(folder, 'chat')
+        d.document.set_settings({'preamble': 'preamble, chat'})
+        p1.document.add_text('p1')
+        p2.document.add_text('p2')
+        p3.document.add_text('p3')
+        p1c.document.add_text('p1c')
+        p2c.document.add_text('p2c')
+        p3c.document.add_text('p3c')
+        e = self.get(d.url, as_tree=True)
+        self.assert_content(e, ['p1', 'p1c', 'p2', 'p2c', 'p3', 'p3c', ''])
+        d.document.set_settings({'preamble': 'chat, preamble'})
+        e = self.get(d.url, as_tree=True)
+        self.assert_content(e, ['p1c', 'p1', 'p2c', 'p2', 'p3c', 'p3', ''])
+        dt = self.create_translation(d, 'dt', 'en')
+        p2ctr = self.create_translation(p2c, 'p2ctr', 'en')
+        p = p2ctr.document.get_paragraphs()[0]
+        p.set_markdown('p2ctr')
+        p.save()
+        e = self.get(dt.url, as_tree=True)
+        self.assert_content(e, ['p1c', 'p1', 'p2ctr', 'p2', 'p3c', 'p3', ''])
+        d.document.set_settings({'preamble': 'chat, preamblez'})
+        e = self.get(d.url, as_tree=True)
+        self.assert_content(e, ['p1c', 'p2c', 'p3c', ''])

@@ -203,7 +203,12 @@
                     {% block footer %}
                         <div class="row">
                             <div class="col-xs-6">
-                                <p class="smallNote">TIM last updated: {{config.GIT_LATEST_COMMIT_TIMESTAMP}}
+                                <p class="smallNote">TIM last updated:
+                                    {% if hide_links %}
+                                        {{config.GIT_LATEST_COMMIT_TIMESTAMP}}
+                                    {% else %}
+                                        <a href="/view/tim/muutoshistoria">{{config.GIT_LATEST_COMMIT_TIMESTAMP}}</a>
+                                    {% endif %}
                                     {% if config.GIT_BRANCH != 'master' %}(branch: {{config.GIT_BRANCH}}){% endif %}
                                 </p>
                             </div>

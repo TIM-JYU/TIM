@@ -203,8 +203,8 @@ class CreateBookmarkCtrl implements IController {
         if (bookmark.group === "Last edited" || bookmark.group === "Last read") {
             bookmark.group = "";
         }
-        this.focusGroup = !bookmark.group;
-        this.focusName = !this.focusGroup;
+        this.focusGroup = false;
+        this.focusName = true;
         this.showParamsCheckbox = $window.location.search.length > 1;
         this.showHashCheckbox = $window.location.hash.length > 1;
     }

@@ -40,6 +40,8 @@ class Answer(db.Model):
     valid = db.Column(db.Boolean, nullable=False)
     last_points_modifier = db.Column(db.Integer, db.ForeignKey('usergroup.id'))
 
+    uploads = db.relationship('AnswerUpload', back_populates='answer', lazy='dynamic')
+
     def __init__(self, task_id, content, points, valid, last_points_modifier=None):
         self.task_id = task_id
         self.content = content
@@ -63,8 +65,8 @@ class AnswerUpload(db.Model):
     upload_block_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     answer_id = db.Column(db.Integer, db.ForeignKey('answer.id'))
 
-    block = db.relationship('Block', backref=db.backref('answerupload', lazy='dynamic'))
-    answer = db.relationship('Answer', backref=db.backref('uploads', lazy='dynamic'))
+    block = db.relationship('Block', back_populates='answerupload')
+    answer = db.relationship('Answer', back_populates='uploads')
 
     def __init__(self, block, answer=None):
         self.block = block
@@ -83,8 +85,8 @@ class AskedQuestion(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'askedquestion'
     asked_id = db.Column(db.Integer, primary_key=True)
-    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)  # NOTE Added foreign key
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'))  # NOTE Added foreign key
+    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)
+    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'))
     par_id = db.Column(db.Text)
     asked_time = db.Column(db.DateTime(timezone=True), nullable=False)
     points = db.Column(db.Text)  # TODO Should possibly be numeric
@@ -104,8 +106,8 @@ class BlockAccess(db.Model):
     duration_from = db.Column(db.DateTime(timezone=True))
     duration_to = db.Column(db.DateTime(timezone=True))
 
-    block = db.relationship('Block', backref=db.backref('accesses', lazy='dynamic'))
-    usergroup = db.relationship('UserGroup', backref=db.backref('accesses', lazy='dynamic'))
+    block = db.relationship('Block', back_populates='accesses')
+    usergroup = db.relationship('UserGroup', back_populates='accesses')
 
     @property
     def future(self):
@@ -155,8 +157,8 @@ class Lecture(db.Model):
     __tablename__ = 'lecture'
     lecture_id = db.Column(db.Integer, primary_key=True)
     lecture_code = db.Column(db.Text)
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)  # NOTE Added foreign key
-    lecturer = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)  # NOTE Added foreign key
+    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
+    lecturer = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
     start_time = db.Column(db.DateTime(timezone=True), nullable=False)
     end_time = db.Column(db.DateTime(timezone=True))
     password = db.Column(db.Text)
@@ -206,10 +208,10 @@ class LectureAnswer(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'lectureanswer'
     answer_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)  # NOTE Added foreign key
+    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
     question_id = db.Column(db.Integer, db.ForeignKey('askedquestion.asked_id'),
-                            nullable=False)  # NOTE Added foreign key
-    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)  # NOTE Added foreign key
+                            nullable=False)
+    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)
     answer = db.Column(db.Text, nullable=False)
     answered_on = db.Column(db.DateTime(timezone=True), nullable=False)
     points = db.Column(db.Float)
@@ -220,7 +222,7 @@ class LectureUsers(db.Model):
     __tablename__ = 'lectureusers'
     lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'),
-                        primary_key=True)  # NOTE The foreign key was wrong in schema2
+                        primary_key=True)
 
 
 class Message(db.Model):
@@ -239,7 +241,7 @@ class Question(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'question'
     question_id = db.Column(db.Integer, primary_key=True)
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)  # NOTE Added foreign key
+    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
     par_id = db.Column(db.Text, nullable=False)
     question_title = db.Column(db.Text, nullable=False)
     answer = db.Column(db.Text)
@@ -252,7 +254,7 @@ class ReadParagraph(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'readparagraphs'
     usergroup_id = db.Column(db.Integer, primary_key=True)
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)  # NOTE Added foreign key
+    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     par_id = db.Column(db.Text, primary_key=True)
     type = db.Column(db.Enum(ReadParagraphType), nullable=False, primary_key=True)
     par_hash = db.Column(db.Text, nullable=False)
@@ -287,8 +289,8 @@ class UserNotes(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'usernotes'
     id = db.Column(db.Integer, primary_key=True)
-    usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'), nullable=False)  # NOTE Added foreign key
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)  # NOTE Added foreign key
+    usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'), nullable=False)
+    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
     par_id = db.Column(db.Text, nullable=False)
     par_hash = db.Column(db.Text, nullable=False)
     content = db.Column(db.Text, nullable=False)

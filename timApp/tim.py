@@ -328,6 +328,9 @@ def create_document():
         if not d:
             return abort(404, 'The document to be copied was not found')
         d = d.src_doc
+        vr = d.document.validate()
+        if vr.issues:
+            abort(400, f'The following errors must be fixed before copying:\n{vr}')
     return do_create_document(item_path, item_type, item_title, d, template_name)
 
 

@@ -18,7 +18,7 @@ class Notification(db.Model):
     email_comment_add = db.Column(db.Boolean, nullable=False, default=False)
     email_comment_modify = db.Column(db.Boolean, nullable=False, default=False)
 
-    user = db.relationship('User', backref=db.backref('notifications', lazy='dynamic'))
+    user = db.relationship('User', back_populates='notifications')
 
     def __json__(self):
         return ['email_doc_modify', 'email_comment_add', 'email_comment_modify']

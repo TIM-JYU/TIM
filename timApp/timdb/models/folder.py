@@ -21,7 +21,7 @@ class Folder(db.Model, Item):
     name = db.Column(db.Text, nullable=False)
     location = db.Column(db.Text, nullable=False)
 
-    _block = db.relationship('Block', backref=db.backref('folder', lazy='dynamic'))
+    _block = db.relationship('Block', back_populates='folder')
 
     @staticmethod
     def get_root() -> 'Folder':
