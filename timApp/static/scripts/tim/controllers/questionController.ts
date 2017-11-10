@@ -1,18 +1,26 @@
 import angular, {IRootElementService, IScope} from "angular";
-import {IController} from "angular";
 import $ from "jquery";
-import {timApp} from "tim/app";
 import {fixQuestionJson, getPointsTable, minimizeJson} from "tim/directives/dynamicAnswerSheet";
-import {setsetting} from "tim/utils";
-import {showMessageDialog} from "../dialog";
+import {markAsUsed, setsetting} from "tim/utils";
+import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {ParCompiler} from "../services/parCompiler";
-import {$http, $log, $rootScope, $window} from "../ngimport";
+import {$http, $log, $timeout, $window} from "../ngimport";
 import {
-    IExplCollection, IAskedJsonJson, IAskedJsonJsonJson, IAskedQuestion, IQuestionUI,
+    FieldType,
+    IAskedJsonJson,
+    IAskedJsonJsonJson,
+    IColumn,
+    IExplCollection,
+    IHeader,
+    IQuestionUI,
+    IRow,
+    IUnprocessedHeadersCompat,
     QuestionType,
 } from "../lecturetypes";
-import {LectureController} from "./lectureController";
-import {ViewCtrl} from "./view/viewctrl";
+import {QuestionMatrixController} from "../components/questionMatrix";
+import {IParResponse} from "../IParResponse";
+
+markAsUsed(QuestionMatrixController);
 
 /**
  * Controller for creating and editing questions
@@ -36,10 +44,51 @@ function cleanParId(id) {
 
 interface IAnswerField {
     label: string;
-    value: string;
+    value: FieldType;
 }
 
-export class QuestionController implements IController {
+interface IExtendedColumn extends IColumn {
+    id: number;
+    rowId: number;
+    points: string;
+}
+
+interface IExtendedRow extends IRow {
+    expl: string;
+    id: number;
+    text: string;
+    type: string;
+    value: string;
+    columns: IExtendedColumn[];
+}
+
+export type IQuestionDialogParams = INewQuestionParams | IEditQuestionParams;
+
+export interface INewQuestionParams {
+    qst: boolean;
+    par_id_next: string;
+    docId: number;
+}
+
+export interface IEditQuestionParams {
+    asked_id?: number;
+    markup: IAskedJsonJson;
+    par_id?: string;
+    par_id_next?: string;
+    docId: number;
+}
+
+export interface IQuestionDialogResult {
+    data: IParResponse;
+    ask: boolean;
+    deleted: boolean;
+}
+
+function isNewQuestion(params: IQuestionDialogParams): params is INewQuestionParams {
+    return (params as INewQuestionParams).qst !== undefined;
+}
+
+export class QuestionController extends DialogController<{params: IQuestionDialogParams}, IQuestionDialogResult> {
     private static $inject = ["$scope", "$element"];
     private scope: IScope;
     private answerFieldTypes: IAnswerField[];
@@ -48,23 +97,9 @@ export class QuestionController implements IController {
     private dateTimeOptions: EonasdanBootstrapDatetimepicker.SetOptions;
     private settings: {timelimit: number};
     private question: IAskedJsonJsonJson & IQuestionUI;
-    private rows: {
-        expl?: string,
-        id: number,
-        text: string,
-        type: string,
-        value: string,
-        columns: {
-            id: number,
-            type: string,
-            rowId: number,
-            text: string,
-            points: string,
-        }[],
-    }[];
+    private rows: IExtendedRow[];
     private columns: {}[];
-    private dynamicAnswerSheetControl: any;
-    private columnHeaders: {text: string, id: number, type: "header"}[];
+    private columnHeaders: IHeader[];
     private new_question: boolean;
     private par_id: string;
     private par_id_next: string;
@@ -74,15 +109,13 @@ export class QuestionController implements IController {
     private textAreas: JQuery;
     private element: IRootElementService;
     private questionForm: Element;
-    private lctrl: LectureController;
-    private viewctrl: ViewCtrl;
     private oldHeaders: string[];
     private answer: string;
 
     constructor(scope: IScope, element: IRootElementService) {
+        super();
         this.scope = scope;
         this.element = element;
-        this.dynamicAnswerSheetControl = {};
         this.asked_id = null;
 
         this.dateTimeOptions = {
@@ -116,16 +149,37 @@ export class QuestionController implements IController {
             {label: "Radio Button horizontal", value: "radiobutton-horizontal"},
             {label: "Checkbox", value: "checkbox"},
         ];
-
-        this.scope.$on("newQuestion", (event, data) => this.newQuestion(data));
-        this.scope.$on("editQuestion", (event, data) => this.editQuestion(data));
     }
 
     $onInit() {
-
+        if (isNewQuestion(this.resolve.params)) {
+            this.newQuestion(this.resolve.params);
+        } else {
+            this.editQuestion(this.resolve.params);
+        }
     }
 
-    putBackQuotations(x) {
+    async $postLink() {
+        await $timeout();
+        this.textAreas = this.element.find(".questiontext");
+        this.addKeyListeners();
+        // ParCompiler.processAllMath($element.parent());
+        window.setTimeout(() => { // give time to html to change
+            ParCompiler.processAllMath(this.element.parent());
+        }, 1000);
+
+        /*
+         this.questionForm.addEventListener( "keydown", function(event) {
+         // $("#question-form").keypress(function(event) {
+         var c = String.fromCharCode(event.keyCode);
+         if ( (event.which == 115 && event.ctrlKey) || (event.which == 19) ) { // ctrl-s
+         event.preventDefault();
+         }
+         });
+         */
+    }
+
+    putBackQuotations(x: string) {
         const ox = x.replace(/<br>/g, "\n");
         return ox.replace(/&quot;/g, '"');
     }
@@ -153,19 +207,18 @@ export class QuestionController implements IController {
         }
     }
 
-    newQuestion(data: {qst, par_id_next: string}) {
+    newQuestion(data: INewQuestionParams) {
         this.new_question = true;
         this.par_id = "NEW_PAR";
-        this.markup = {qst: !!data.qst} as any;
+        this.markup = {qst: data.qst} as any;
         this.par_id_next = data.par_id_next;
         this.titleChanged = false;
         if (this.markup.qst) {
             this.question.endTimeSelected = false; // default no time
         }
-        this.addKeyListeners();
     }
 
-    editQuestion(data: {asked_id?: number, markup: IAskedJsonJson, par_id?: string, par_id_next?: string, question_id?: number}) {
+    editQuestion(data: {asked_id?: number, markup: IAskedJsonJson, par_id?: string, par_id_next?: string}) {
         const par_id = data.par_id;
         const par_id_next = data.par_id_next;
         const asked_id = data.asked_id;
@@ -202,19 +255,19 @@ export class QuestionController implements IController {
             this.question.answerFieldType = (json.answerFieldType);
         }
 
-        const jsonData = (json as any).data || json;  // compatibility for old
-        fixQuestionJson(jsonData);
-        const jsonHeaders = jsonData.headers;
-        const jsonRows = jsonData.rows;
+        const jsonData: IUnprocessedHeadersCompat = json.data || json;  // compatibility for old
+        const r = fixQuestionJson(jsonData);
+        const jsonHeaders = r.headers;
+        const jsonRows = r.rows;
 
-        const columnHeaders = [];
+        const columnHeaders: IHeader[] = [];
         if (jsonHeaders) {
             for (let i = 0; i < jsonHeaders.length; i++) {
-                columnHeaders[i] = {
+                columnHeaders.push({
                     id: i,
                     type: jsonHeaders[i].type,
                     text: this.putBackQuotations(jsonHeaders[i].text),
-                };
+                });
             }
         }
         this.columnHeaders = columnHeaders;
@@ -229,7 +282,7 @@ export class QuestionController implements IController {
                 id: row.id,
                 text: this.putBackQuotations(row.text),
                 type: row.type,
-                value: row.value,  // TODO: mikä on value?
+                // value: row.value,  // TODO: mikä on value?
             };
 
             const idString = "" + (i + 1); // rows[i].id.toString();
@@ -237,17 +290,7 @@ export class QuestionController implements IController {
                 rows[i].expl = data.markup.expl[idString];
             }
 
-            let jsonColumns = jsonRows[i].columns;
-            if (!jsonColumns) {
-                jsonColumns = [{}];
-                let nh = 0;
-                if (columnHeaders) {
-                    nh = columnHeaders.length;
-                }
-                for (let ic = 1; ic < nh; ic++) {
-                    jsonColumns.push({});
-                }
-            }
+            const jsonColumns = jsonRows[i].columns;
 
             const columns = [];
             for (let j = 0; j < jsonColumns.length; j++) {
@@ -280,35 +323,16 @@ export class QuestionController implements IController {
             rows[i].columns = columns;
         }
         this.rows = rows;
+        console.log(rows);
 
         if (json.timeLimit && json.timeLimit > 0) {
             this.question.endTimeSelected = true;
         } else {
             this.question.endTimeSelected = false;
         }
-
-        this.scope.$emit("toggleQuestion");
-
-        this.addKeyListeners();
-
-        this.textAreas = $(".questiontext");
-        // ParCompiler.processAllMath($element.parent());
-        window.setTimeout(() => { // give time to html to change
-            ParCompiler.processAllMath(this.element.parent());
-        }, 1000);
-
-        /*
-         this.questionForm.addEventListener( "keydown", function(event) {
-         // $("#question-form").keypress(function(event) {
-         var c = String.fromCharCode(event.keyCode);
-         if ( (event.which == 115 && event.ctrlKey) || (event.which == 19) ) { // ctrl-s
-         event.preventDefault();
-         }
-         });
-         */
     }
 
-    moveToElement(event, dir) {
+    moveToElement(event: Event, dir: number) {
         event.preventDefault();
         const activeObj = document.activeElement;
         const id = activeObj.id;
@@ -332,14 +356,7 @@ export class QuestionController implements IController {
     }
 
     addKeyListeners() {
-        if (this.questionForm) {
-            return; // already keys binded
-        }
-
-        this.questionForm = $("#question-form")[0];
-
-        // var activeObj = document.activeElement;
-        // activeObj.value = event.keyCode;
+        this.questionForm = this.element.find("#question-form")[0];
 
         this.questionForm.addEventListener("keydown", (event: KeyboardEvent) => {
             if (event.ctrlKey || event.metaKey) {
@@ -362,9 +379,7 @@ export class QuestionController implements IController {
                         break;
                     case "r":
                         event.preventDefault();
-                        if (this.lctrl.lectureSettings.inLecture) {
-                            this.createQuestion(true);
-                        }
+                        this.createQuestion(true);
                         break;
                     case "g":
                 }
@@ -392,9 +407,10 @@ export class QuestionController implements IController {
         const oldRows = 1;
         const oldCols = 1;
 
-        const constHeaders: any = {};
-        constHeaders["true-false"] = ["True", "False"];
-        constHeaders.likert = ["1", "2", "3", "4", "5"];
+        const constHeaders = {
+            "true-false": ["True", "False"],
+            likert: ["1", "2", "3", "4", "5"],
+        };
         let rowsCount = 0;
         let columnsCount = 0;
         if (type === "matrix" || type === "true-false") {
@@ -452,13 +468,14 @@ export class QuestionController implements IController {
                 if (i < this.oldHeaders.length && this.oldHeaders[i]) {
                     text = this.oldHeaders[i];
                 }
-                this.columnHeaders[i] = {
+                this.columnHeaders.push({
                     id: i,
                     text,
                     type: "header",
-                };
+                });
             }
         }
+        console.log(this.columnHeaders);
 
         if (t === "likert") {
             this.question.matrixType = "radiobutton-horizontal";
@@ -485,7 +502,7 @@ export class QuestionController implements IController {
             loc = this.rows[0].columns.length;
         }
         this.columnHeaders.splice(loc, 0, {type: "header", id: loc, text: ""});
-        //add new column to columns
+        // add new column to columns
         for (let i = 0; i < this.rows.length; i++) {
             this.rows[i].columns.splice(loc, 0, {
                 id: location,
@@ -493,7 +510,7 @@ export class QuestionController implements IController {
                 text: "",
                 points: "",
                 type: "answer",
-                // answerFiledType: this.question.answerFieldType,
+                answerFieldType: this.question.answerFieldType,
             });
         }
         if (this.question.showPreview) {
@@ -538,6 +555,7 @@ export class QuestionController implements IController {
                 type: "question",
                 value: "",
                 columns,
+                expl: "",
             });
 
         for (let i = 0; i < this.rows.length; i++) {
@@ -625,29 +643,12 @@ export class QuestionController implements IController {
     }
 
     /**
-     * A function to close question edition form.
-     * @memberof module:questionController
-     */
-    close() {
-        this.removeErrors();
-        this.clearQuestion();
-        this.setShowPreview(false);
-        this.dynamicAnswerSheetControl.closePreview();
-        if (this.lctrl.questionShown) {
-            this.scope.$emit("toggleQuestion");
-        }
-        if (this.new_question) {
-            this.viewctrl.handleCancel({docId: this.viewctrl.docId, par: "NEW_PAR"});
-        }
-    }
-
-    /**
      * The function replaces linebreaks with HTML code.
      * @memberof module:questionController
      * @param val The input string
      * @returns {*} The reformatted line.
      */
-    replaceLinebreaksWithHTML(val) {
+    replaceLinebreaksWithHTML(val: string) {
         const output = val.replace(/(?:\r\n|\r|\n)/g, "<br>");
         // output = output.replace(/"/g, '&quot;');
         //return output.replace(/\\/g, "\\\\");
@@ -661,7 +662,7 @@ export class QuestionController implements IController {
      * @param elemId ID of the element to be errorized.
      * @param errorText Description of the occured error.
      */
-    errorize(elemId, errorText) {
+    errorize(elemId: string, errorText: string) {
         angular.element("#" + elemId).css("border", "1px solid red");
         if (errorText.length > 0) {
             this.error_message += errorText + "<br />";
@@ -674,7 +675,7 @@ export class QuestionController implements IController {
      * @param elemClass Class of the element to be errorized.
      * @param errorText Description of the occured error.
      */
-    errorizeClass(elemClass, errorText) {
+    errorizeClass(elemClass: string, errorText: string) {
         angular.element("." + elemClass).css("border", "1px solid red");
         if (errorText.length > 0) {
             this.error_message += errorText + "<br />";
@@ -742,7 +743,7 @@ export class QuestionController implements IController {
      * @param element The value to be checked.
      * @param val The id of the value, which is used in case the number is not positive.
      */
-    isPositiveNumber(element, val) {
+    isPositiveNumber(element, val: string) {
         if (element === "" || isNaN(element) || element < 0) {
             this.errorize(val, "Number has to be positive.");
         }
@@ -819,11 +820,12 @@ export class QuestionController implements IController {
      * @returns {{questionText: string, title: string, questionType: *, answerFieldType: string, matrixType: string,
      * timeLimit: string, data: {headers: Array, rows: Array}}}
      */
-    createJson(showPreview: boolean = false) {
+    createJson(showPreview: boolean = false): IAskedJsonJsonJson {
         let showingPreview = false;
         if (showPreview) showingPreview = true;
         if (this.asked_id) {
-            return this.updatePoints();
+            this.updatePoints();
+            return this.markup.json;
         }
         this.removeErrors();
         this.question.questionTitle = $("#qTitle").val();
@@ -902,7 +904,7 @@ export class QuestionController implements IController {
         this.question.questionText = this.replaceLinebreaksWithHTML(this.question.questionText);
         this.question.questionTitle = this.replaceLinebreaksWithHTML(this.question.questionTitle);
 
-        const headersJson = [];
+        const headersJson: IHeader[] = [];
         if (this.question.questionType === "matrix" || this.question.questionType === "true-false" || this.question.questionType === "") {
             for (let i = 0; i < this.columnHeaders.length; i++) {
                 const header = {
@@ -914,9 +916,8 @@ export class QuestionController implements IController {
             }
         }
 
-        const rowsJson = [];
+        const rowsJson: IRow[] = [];
         for (let i = 0; i < this.rows.length; i++) {
-            const text = this.replaceLinebreaksWithHTML(this.rows[i].text);
             const row = {
                 id: this.rows[i].id,
                 type: this.rows[i].type,
@@ -936,34 +937,36 @@ export class QuestionController implements IController {
             rowsJson.push(row);
         }
 
+        const minimized = minimizeJson({
+            answerFieldType: this.question.answerFieldType,
+            headers: headersJson,
+            questionType: this.question.questionType,
+            rows: rowsJson,
+        });
+
         const questionjson = {
+            answerFieldType: this.question.answerFieldType,
+            headers: minimized.headers,
+            matrixType: this.question.matrixType,
             questionText: this.question.questionText,
             questionTitle: this.question.questionTitle,
             questionType: this.question.questionType,
-            answerFieldType: this.question.answerFieldType,
-            matrixType: this.question.matrixType,
-            timeLimitFields: this.question.timeLimitFields,
+            rows: minimized.rows,
             timeLimit: timeLimit,
-            headers: headersJson,
-            rows: rowsJson,
+            timeLimitFields: this.question.timeLimitFields,
         };
 
         this.markup.json = questionjson;
-        if (showingPreview) {
-            this.showPreviewJson();
-        } else {
-            this.dynamicAnswerSheetControl.createAnswer(this);
-        }
-        return minimizeJson(questionjson);
+        return questionjson;
     }
 
-    showPreviewJson() {
+    async showPreviewJson() {
         const questionjson = this.createJson();
         if (!questionjson) {
             return;
         }
 
-        const docId = this.viewctrl.docId;
+        const docId = this.resolve.params.docId;
         let md = this.markup;
         const points = this.createPoints();
         if (points) {
@@ -981,42 +984,38 @@ export class QuestionController implements IController {
         const mdStr = JSON.stringify(md, null, 4);
 
         const route = "/qst/qetQuestionMD/";
-        $http.post<{md: {json, points, expl}}>(route, angular.extend({
+        const response = await $http.post<{md: {json, points, expl}}>(route, angular.extend({
             docId,
             text: mdStr,
-        })).then((response) => {
-            const markup = response.data.md;
-            const params: any = {};
-            params.answerTable = [];
-            params.questionParId = 1; // args.questionParId;
-            params.questionParIdNext = 2; //args.questionParIdNext;
-            params.isLecturer = false;
-            params.markup = markup;
-            params.questionTitle = markup.json.questionTitle;
-            params.points = markup.points;
-            params.expl = markup.expl;
-            // var preview = element.parents('.previewcontent').length > 0;
-            params.preview = false; // this.$parent.previewUrl; // Released;
-            params.result = true;
-            params.answclass = "qstAnswerSheet";
-            params.noDisable = true;
-
-            this.dynamicAnswerSheetControl.createAnswer(params);
-
-        });
-
+        }));
+        const markup = response.data.md;
+        const params = {
+            answerTable: [],
+            questionParId: 1,
+            questionParIdNext: 2,
+            isLecturer: false,
+            markup: markup,
+            questionTitle: markup.json.questionTitle,
+            points: markup.points,
+            expl: markup.expl,
+            preview: false,
+            result: true,
+            answclass: "qstAnswerSheet",
+            noDisable: true,
+        };
+        // TODO assign params to some controller attribute?
     }
 
     /**
      * Validates and saves the question into the database.
      * @memberof module:questionController
      */
-    createQuestion(ask: boolean) {
+    async createQuestion(ask: boolean) {
         const questionjson = this.createJson();
         if (!questionjson) {
             return;
         }
-        const docId = this.viewctrl.docId;
+        const docId = this.resolve.params.docId;
 
         let md = this.markup;
         const points = this.createPoints();
@@ -1046,66 +1045,23 @@ export class QuestionController implements IController {
             }
             setsetting("timelimit", "" + v);
         }, 1000);
+        console.log(mdStr);
+        this.dismiss();
+        return;
 
         let route = "/postParagraphQ/";
         if (this.new_question) {
             route = "/newParagraphQ/";
         }
-        $http.post<{new_par_ids}>(route, angular.extend({
+        const response = await $http.post<IParResponse>(route, angular.extend({
             docId,
             text: mdStr,
             par: cleanParId(this.par_id),
             par_next: this.par_id_next,
-        })).then((response) => {
-            const data = response.data;
-            $log.info("The question was successfully added to database");
-            const oldid = this.par_id;
-            if (this.par_id === "NEW_PAR") {
-                this.par_id = data.new_par_ids[0];
-            }
-            this.removeErrors();
-            const parToReplace = "NEW_PAR";
-            // if ( this.new_question )
-            //     this.addSavedParToDom(data, {par: parToReplace});
-            // else
-            this.viewctrl.addSavedParToDom(data, {docId: this.viewctrl.docId, par: oldid, par_next: this.par_id_next});
-            //TODO: This can be optimized to get only the new one.
-            // this.$parent.getQuestions(); // TODO hae tallennettu kysymys!
-            if (ask) {
-
-                $http<{markup: IAskedJsonJson}>({
-                    url: "/getQuestionByParId",
-                    method: "GET",
-                    params: {par_id: this.par_id, doc_id: this.viewctrl.docId},
-                })
-                    .then((resp) => {
-                        const data = resp.data;
-                        this.markup = data.markup;
-                        $rootScope.$broadcast("changeQuestionTitle", {questionTitle: this.markup.json.questionTitle});
-                        $rootScope.$broadcast("setPreviewJson", {
-                            markup: this.markup,
-                            questionParId: this.viewctrl.questionParId,
-                            questionParIdNext: this.viewctrl.questionParIdNext,
-                            isLecturer: this.lctrl.isLecturer,
-                        });
-                        const pid = this.par_id;
-                        // if ( data.new_par_ids.length > 0 ) pid = data.new_par_ids[0];
-                        this.viewctrl.json = questionjson;
-                        this.scope.$emit("askQuestion", {
-                            lecture_id: this.lctrl.lecture.lecture_id,
-                            doc_id: this.viewctrl.docId,
-                            par_id: pid,
-                            markup: this.markup,
-                        });
-                    }, () => {
-                        console.error("Could not get question.");
-                    });
-            }
-            this.close();
-        }, () => {
-            showMessageDialog("Could not create question");
-            $log.info("There was some error creating question to database.");
-        });
+        }));
+        const data = response.data;
+        $log.info("The question was successfully added to database");
+        this.close({data: data, deleted: false, ask: ask});
     }
 
     /**
@@ -1129,17 +1085,16 @@ export class QuestionController implements IController {
             }, () => {
                 $log.info("There was some error when updating points.");
             });
-        this.close();
+        this.dismiss();
     }
 
     async deleteQuestion() {
         const confirmDi = $window.confirm("Are you sure you want to delete this question?");
         if (confirmDi) {
-            const response = await $http.post<{version}>("/deleteParagraph/" + this.viewctrl.docId, {par: this.par_id});
+            const response = await $http.post<IParResponse>("/deleteParagraph/" + this.resolve.params.docId, {par: this.par_id});
             const data = response.data;
             $log.info("Deleted question done!");
-            this.viewctrl.handleDelete(data, {par: this.par_id, area_start: null, area_end: null});
-            this.close();
+            this.close({data: data, deleted: true, ask: false});
         }
     }
 
@@ -1184,3 +1139,13 @@ export class QuestionController implements IController {
     }
 }
 
+registerDialogComponent("timEditQuestion",
+    QuestionController,
+    {templateUrl: "/static/templates/question.html"},
+    "qctrl");
+
+export async function showQuestionEditDialog(params: IQuestionDialogParams): Promise<IQuestionDialogResult> {
+    return showDialog<QuestionController, {params: IQuestionDialogParams}, IQuestionDialogResult>("timEditQuestion", {
+        params: () => params,
+    });
+}

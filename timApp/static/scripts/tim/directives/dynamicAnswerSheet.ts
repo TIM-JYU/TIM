@@ -3,7 +3,10 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {ParCompiler} from "../services/parCompiler";
 import {$compile, $interval, $rootScope} from "../ngimport";
-import {IAskedJsonJsonJson} from "../lecturetypes";
+import {
+    IAskedJsonJsonJson, IHeader, IProcessedHeaders, IUnprocessedHeaders,
+    IUnprocessedHeadersCompat,
+} from "../lecturetypes";
 
 /**
  * Created by localadmin on 25.5.2015.
@@ -83,16 +86,12 @@ export function getPointsTable(markupPoints: string): Array<{[points: string]: s
     return pointsTable;
 }
 
-export function minimizeJson(json): IAskedJsonJsonJson {
+export function minimizeJson(json: IProcessedHeaders): IUnprocessedHeaders {
     // remove not needed fields from json, call when saving the question
-    const result: IAskedJsonJsonJson = {
-        questionType: null,
-        questionText: null,
-        headers: null,
-        timeLimit: null,
+    const result: IUnprocessedHeaders = {
         answerFieldType: null,
-        matrixType: null,
-        questionTitle: null,
+        headers: null,
+        questionType: null,
         rows: null,
     };
     if (json.headers) {
@@ -106,7 +105,6 @@ export function minimizeJson(json): IAskedJsonJsonJson {
         }
     }
 
-    const ir = -1;
     let allText = true;
     const rows = json.rows;
     const rrows = [];
@@ -125,18 +123,12 @@ export function minimizeJson(json): IAskedJsonJsonJson {
     // if ( allText ) rrows = rrows.join("\n"); // oletuksena menee samalle riville kaikki json text muunnoksessa.
 
     result.rows = rrows;
-    result.questionText = json.questionText;
-    result.questionTitle = json.questionTitle;
-    result.questionType = json.questionType;
     result.answerFieldType = json.answerFieldType;
-    result.matrixType = json.matrixType;
-    if (json.timeLimit) {
-        result.timeLimit = json.timeLimit;
-    }
+    result.questionType = json.questionType;
     return result;
 }
 
-function fixLineBreaks(s) {
+function fixLineBreaks(s: string) {
     // var result = s.replace(" < "," &lt; ");
     //result = result.replace(" > "," &gt; ");
     const parts = s.split("!!");
@@ -145,97 +137,79 @@ function fixLineBreaks(s) {
     //return s.replace("\n","<br />");
 }
 
-export function fixQuestionJson(json: any) {
+export function fixQuestionJson(json: IUnprocessedHeadersCompat): IProcessedHeaders {
     // fill all missing fields from question json, call before use json
-    if (json.data) {
-        json.headers = json.data.headers;
-        json.rows = json.data.rows;
-    }
-    if (json.headers) {
-        let headers = json.headers;
+    // row ids are by default 1-based and header ids 0-based
+    const fixed: IProcessedHeaders = {headers: [], rows: [], answerFieldType: "radio", questionType: json.questionType};
+    const headers = json.data ? json.data.headers : json.headers;
+    const rows = json.data ? json.data.rows : json.rows;
+    if (headers) {
         if (typeof headers === "string") { // if just on text string
             const jrows = headers.split("\n");
-            headers = [];
+            const newHeaders: IHeader[] = [];
             let ir = -1;
-            for (let i = 0; i < jrows.length; i++) {
-                const jrow = jrows[i];
+            for (const jrow of jrows) {
                 if (jrow) {
                     ir++;
-                    headers.push({text: jrow.toString(), type: "header", id: ir});
+                    newHeaders.push({text: jrow.toString(), type: "header", id: ir});
                 }
             }
-        }
-
-        json.headers = headers;
-
-        for (let i = 0; i < json.headers.length; i++) {
-            let header = json.headers[i];
-            if (typeof (header.text) === "undefined") {
-                header = {text: header.toString(), type: "header", id: i};
+            fixed.headers = newHeaders;
+        } else {
+            for (let i = 0; i < headers.length; i++) {
+                const header = headers[i];
+                fixed.headers.push({text: header.toString(), type: "header", id: i});
             }
-            if (!header.id) {
-                header.id = i;
-            }
-            if (!header.type) {
-                header.type = "header";
-            }
-            json.headers[i] = header;
         }
     }
 
-    if (!json.answerFieldType) {
-        json.answerFieldType = "radio";
+    if (json.answerFieldType) {
+        fixed.answerFieldType = json.answerFieldType;
     }
 
-    if (json.questionType === "true-false" && (!json.headers || json.headers.length == 0)) {
-        json.headers[0] = {type: "header", id: 0, text: "True"};
-        json.headers[1] = {type: "header", id: 1, text: "False"};
+    if (json.questionType === "true-false" && (!json.headers || json.headers.length === 0)) {
+        fixed.headers = [
+            {type: "header", id: 0, text: "True"},
+            {type: "header", id: 1, text: "False"},
+        ];
     }
 
-    let rows = json.rows;
-    if (Array !== rows.constructor) { // if just on text string
+    if (typeof rows === "string") { // if just on text string
         const jrows = rows.split("\n");
-        rows = [];
         for (let i = 0; i < jrows.length; i++) {
             const jrow = jrows[i];
             if (jrow) {
-                rows.push({text: jrow.toString(), type: "question", id: i});
+                fixed.rows.push({
+                    columns: [{text: "", type: "question", answerFieldType: ""}],
+                    id: i + 1,
+                    text: jrow.toString(),
+                    type: "question",
+                });
             }
+        }
+    } else {
+        let ir = -1;
+        for (const r of rows) {
+            ir++;
+            fixed.rows.push({
+                columns: [{text: "", type: "question", answerFieldType: ""}],
+                id: ir + 1,
+                text: r,
+                type: "question",
+            });
         }
     }
 
-    let ir = -1;
-    const n = rows.length - 1;
-    if (n >= 0) {
-        const last = rows[n];  // remove ending object if needed
-        if (typeof last === "object" && $.isEmptyObject(last)) {
-            rows.splice(n, 1); // trust that null is also object!
+    for (const row of fixed.rows) {
+        let nh = 0;
+        if (fixed.headers) {
+            nh = fixed.headers.length;
+        }
+        for (let ic = 1; ic < nh; ic++) {
+            row.columns.push({text: "", type: "question", answerFieldType: ""});
         }
     }
-
-    for (let i = 0; i < rows.length; i++) {
-        let row = rows[i];
-        if (typeof (row.text) === "undefined") {
-            row = {text: row.toString(), type: "question"};
-        }
-        // if (!row.text) continue;
-        ir++;
-        if (!row.id) {
-            row.id = ir + 1;
-        }
-        if (!row.columns) {
-            row.columns = [{}];
-            let nh = 0;
-            if (json.headers) {
-                nh = json.headers.length;
-            }
-            for (let ic = 1; ic < nh; ic++) {
-                row.columns.push({});
-            }
-        }
-        rows[i] = row;
-    }
-    json.rows = rows;
+    return fixed;
 }
 
 type JSONData = {
@@ -264,7 +238,7 @@ class AnswerSheetController implements IController {
     private json: {data: JSONData, timeLimit: number, questionText: string, questionType: string, answerFieldType: string} & JSONData;
     private markup: string;
     private answerTable: string[][];
-    private expl: string;
+    private expl: {};
     private askedTime: number;
     private endTime: number;
     private htmlSheet: JQuery;

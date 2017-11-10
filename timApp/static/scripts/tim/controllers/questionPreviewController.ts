@@ -55,7 +55,6 @@ export class QuestionPreviewController implements IController {
         const parId = this.questionParId;
         const parNextId = this.questionParIdNext;
         const docId = this.docId;
-        // $rootScope.$broadcast('toggleQuestion');
         $http<{markup: IAskedJsonJson}>({
             url: "/getQuestionByParId",
             method: "GET",
@@ -103,7 +102,6 @@ export class QuestionPreviewController implements IController {
      */
     close() {
         this.dynamicAnswerSheetControl.closePreview();
-        this.scope.$emit("closeQuestionPreview");
     }
 
     /**
@@ -117,10 +115,8 @@ export class QuestionPreviewController implements IController {
                 .then((response) => {
                     const data = response.data;
                     this.handleDelete(data, {par: this.questionParId, area_start: null, area_end: null});
-                    this.$emit("closeQuestionPreview");
                     $log.info("Deleted question");
                 }, (error) => {
-                    this.$emit("closeQuestionPreview");
                     $log.info(error);
                 });
 

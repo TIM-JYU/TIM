@@ -1,18 +1,17 @@
 import $ from "jquery";
-import {$http, $log, $rootScope, $window} from "../../ngimport";
+import {$http, $log, $window} from "../../ngimport";
 import {createNewPar, getParId} from "./parhelpers";
 import {onClick} from "./eventhandlers";
 import {IScope} from "angular";
 import {ViewCtrl} from "./viewctrl";
 import {IAskedJsonJson} from "../../lecturetypes";
+import {showQuestionEditDialog} from "../questionController";
 
 export class QuestionHandler {
     public sc: IScope;
     public noQuestionAutoNumbering: boolean;
     public par: JQuery;
     public viewctrl: ViewCtrl;
-    public showQuestionPreview: boolean;
-    public questionParIdNext: string;
 
     public initQuestions(sc: IScope, view: ViewCtrl): void {
         this.sc = sc;
@@ -20,8 +19,6 @@ export class QuestionHandler {
         if (view.lectureMode) {
             this.noQuestionAutoNumbering = $window.noQuestionAutoNumbering;
         }
-
-        this.viewctrl.questionShown = false;
 
         onClick(".questionAddedNew", ($this, e) => {
             const question = $this;
@@ -31,55 +28,38 @@ export class QuestionHandler {
             this.showQuestionNew(parId, parNextId);
             this.par = ($(question).parent());
         });
-
-        this.sc.$on("closeQuestionPreview", () => {
-                this.showQuestionPreview = false;
-            },
-        );
     }
 
     async showQuestionNew(parId: string, parIdNext: string) {
-        this.viewctrl.questionParId = parId;
-        this.questionParIdNext = parIdNext;
-
         const response = await $http<{markup: IAskedJsonJson}>({
             url: "/getQuestionByParId",
             method: "GET",
             params: {
-                par_id: this.viewctrl.questionParId,
+                par_id: parId,
                 doc_id: this.viewctrl.docId,
             },
         });
         this.viewctrl.markup = response.data.markup;
-        $rootScope.$broadcast("changeQuestionTitle", {questionTitle: this.viewctrl.markup.json.questionTitle});
-        $rootScope.$broadcast("setPreviewJson", {
-            markup: this.viewctrl.markup,
-            questionParId: this.viewctrl.questionParId,
-            questionParIdNext: this.questionParIdNext,
-            isLecturer: this.viewctrl.isLecturer,
-        });
-
+        // TODO show question preview
         this.viewctrl.inLecture = false;
-        this.showQuestionPreview = true;
     }
 
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
-    addQuestionQst(e, $par) {
+    async addQuestionQst(e, $par) {
         const parId = getParId($par);
         const parNextId = parId; // getParId($par.next());
+        this.par = $par;
+        const result = await showQuestionEditDialog({par_id_next: parNextId, qst: true, docId: this.viewctrl.docId});
         const $newpar = createNewPar();
         $par.before($newpar);
-        $rootScope.$broadcast("toggleQuestion");
-        $rootScope.$broadcast("newQuestion", {par_id: parId, par_id_next: parNextId, qst: true});
-        this.par = $par;
+        this.viewctrl.addSavedParToDom(result.data, {par: getParId($newpar)});
     }
 
     async editQst(e, $par) {
         const parId = getParId($par);
         const parNextId = getParId($par.next());
         this.par = $par;
-        // $rootScope.$broadcast('toggleQuestion');
         try {
             var response = await
                 $http<{markup: IAskedJsonJson}>({
@@ -95,27 +75,29 @@ export class QuestionHandler {
         if (!data.markup) {
             return; // not a question
         }
-        this.viewctrl.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
-        this.viewctrl.markup = data.markup;
         // data.markup.qst = true;
-        $rootScope.$broadcast("changeQuestionTitle", {questionTitle: this.viewctrl.json.questionTitle});
-        $rootScope.$broadcast("editQuestion", {
+        const result = await showQuestionEditDialog({
+            markup: data.markup,
             par_id: parId,
             par_id_next: parNextId,
-            markup: data.markup,
+            docId: this.viewctrl.docId,
         });
+        if (result.deleted) {
+            this.viewctrl.handleDelete(result.data, {par: parId});
+        } else {
+            this.viewctrl.addSavedParToDom(result.data, {par: parId});
+        }
     }
 
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
-    addQuestion(e, $par) {
-        const parId = getParId($par);
+    async addQuestion(e, $par) {
         const parNextId = getParId($par.next());
+        this.par = $par;
+        const result = await showQuestionEditDialog({par_id_next: parNextId, qst: false, docId: this.viewctrl.docId});
         const $newpar = createNewPar();
         $par.after($newpar);
-        $rootScope.$broadcast("toggleQuestion");
-        $rootScope.$broadcast("newQuestion", {par_id: parId, par_id_next: parNextId});
-        this.par = $par;
+        this.viewctrl.addSavedParToDom(result.data, {par: getParId($newpar)});
     }
 
     processQuestions() {

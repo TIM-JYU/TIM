@@ -22,15 +22,47 @@ export type QuestionType =
     | "likert"
     | "";
 
-export interface IAskedJsonJsonJson {
+export type FieldType = "textArea" | "" | "radiobutton-horizontal" | "radiobutton-vertical" | "checkbox";
+
+export interface IHeader {
+    text: string;
+    type: string;
+    id: number;
+}
+
+export interface IColumn {
+    text: string;
+    type: string;
+    answerFieldType: string; // TODO useless field?
+}
+
+export interface IRow extends IHeader {
+    columns: IColumn[];
+}
+
+export interface IUnprocessedHeaders {
+    headers: string | string[];
+    rows: string | string[];
+    answerFieldType: string;
+    questionType: QuestionType;
+}
+
+export interface IProcessedHeaders {
+    headers: IHeader[];
+    rows: IRow[];
+    answerFieldType: string;
+    questionType: QuestionType;
+}
+
+export interface IUnprocessedHeadersCompat extends IUnprocessedHeaders {
+    data?: IUnprocessedHeaders;
+}
+
+export interface IAskedJsonJsonJson extends IUnprocessedHeadersCompat {
     timeLimit: number;
     questionTitle: string;
     questionText: string;
-    matrixType: "textArea" | "" | "radiobutton-horizontal" | "radiobutton-vertical" | "checkbox";
-    answerFieldType: string;
-    questionType: QuestionType;
-    headers: string[];
-    rows: string[];
+    matrixType: FieldType;
 }
 
 export interface IQuestionUI {
@@ -41,7 +73,7 @@ export interface IQuestionUI {
 
 export interface IAskedJson {
     hash: string;
-    json: string; // IAskedJsonJson
+    json: string; // IAskedJsonJson as a string
 }
 
 export interface IAskedQuestion extends IAskedJson {

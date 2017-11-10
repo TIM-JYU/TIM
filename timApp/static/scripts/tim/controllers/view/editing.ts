@@ -10,6 +10,7 @@ import {markPageDirty} from "tim/utils";
 import {onClick} from "./eventhandlers";
 import {ParCompiler} from "../../services/parCompiler";
 import {ViewCtrl} from "./ViewCtrl";
+import {IExtraData, IParResponse} from "../../IParResponse";
 
 function prepareOptions($this: Element, saveTag: string): [JQuery, {}] {
     $(".actionButtons").remove();
@@ -278,7 +279,7 @@ export class EditingHandler {
             const parToReplace = "NEW_PAR";
             try {
                 var response = await
-                    $http.post("/newParagraph/", {
+                    $http.post<IParResponse>("/newParagraph/", {
                         text: '``` {settings=""}\nexample:\n```',
                         docId: this.viewctrl.docId,
                         par_next: parNext,
@@ -352,7 +353,7 @@ export class EditingHandler {
         this.toggleParEditor($newpar, options);
     }
 
-    addSavedParToDom(data, extraData) {
+    addSavedParToDom(data: IParResponse, extraData: IExtraData) {
         let $par: JQuery;
         if (angular.isDefined(extraData["ref-id"])) {
             $par = getElementByRefId(extraData["ref-id"]);
@@ -474,7 +475,7 @@ export class EditingHandler {
                 {
                     func: (e, par) => this.viewctrl.editQst(e, par),
                     desc: "Edit question",
-                    show: (e, par) => this.viewctrl.lectureMode && this.viewctrl.item.rights.editable,
+                    show: this.viewctrl.lectureMode && this.viewctrl.item.rights.editable,
                 },
                 {
                     func: (e, par) => this.viewctrl.addQuestion(e, par),

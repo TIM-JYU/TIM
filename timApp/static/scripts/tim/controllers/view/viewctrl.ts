@@ -1,4 +1,4 @@
-import angular, {IScope, IController} from "angular";
+import angular, {IController, IScope} from "angular";
 import $ from "jquery";
 import ngs, {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
@@ -16,7 +16,7 @@ import * as popupMenu from "tim/directives/popupMenu";
 import {timLogTime} from "tim/timTiming";
 import {applyMixins, isPageDirty, markAsUsed, markPageNotDirty} from "tim/utils";
 import {ParCompiler} from "../../services/parCompiler";
-import {$compile, $http, $window, $localStorage, $interval, $timeout, $filter} from "../../ngimport";
+import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../../ngimport";
 import {Users} from "../../services/userService";
 import {Document, setActiveDocument} from "./document";
 import {onClick} from "./eventhandlers";
@@ -25,12 +25,12 @@ import {EditingHandler} from "./editing";
 import {RefPopupHandler} from "./refpopup";
 import {IUser} from "../../IUser";
 import {IItem} from "../../IItem";
-import {IAskedJsonJson, IAskedJsonJsonJson} from "../../lecturetypes";
-
-markAsUsed(ngs, popupMenu, interceptor);
 import {initCssPrint} from "../../cssPrint";
 import * as printctrl from "../printCtrl";
 import {ReviewController} from "../reviewController";
+import {IExtraData, IParResponse} from "../../IParResponse";
+
+markAsUsed(ngs, popupMenu, interceptor);
 
 markAsUsed(popupMenu, interceptor, printctrl);
 
@@ -273,11 +273,11 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    handleDelete(param: {version: any}, param2: {par: any; area_start: any; area_end: any}): void {
+    handleDelete(param: IParResponse, param2: IExtraData): void {
         throw new Error(this.mixinMsg);
     }
 
-    addSavedParToDom(data, extraData: {docId: number; par: string; par_next}): void {
+    addSavedParToDom(data: IParResponse, extraData: IExtraData): void {
         throw new Error(this.mixinMsg);
     }
 
@@ -325,16 +325,9 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    public questionShown: boolean;
-    public firstTimeQuestions: boolean;
     public noQuestionAutoNumbering: boolean;
     public par: JQuery;
-    public markup: IAskedJsonJson;
-    public questionParId: string;
-    public json: IAskedJsonJsonJson;
     public viewctrl: ViewCtrl;
-    public showQuestionPreview: boolean;
-    public questionParIdNext: string;
     private mixinMsg = "This method is implemented in a mixin.";
 
     showQuestion(questionId: string): void {
@@ -345,7 +338,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    addQuestionQst(e: any, $par: any): void {
+    addQuestionQst(e, $par): Promise<void> {
         throw new Error(this.mixinMsg);
     }
 
@@ -353,7 +346,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    addQuestion(e: any, $par: any): void {
+    addQuestion(e: any, $par: any): Promise<void> {
         throw new Error(this.mixinMsg);
     }
 

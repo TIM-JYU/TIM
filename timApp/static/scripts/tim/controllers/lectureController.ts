@@ -47,7 +47,6 @@ export class LectureController implements IController {
     public lecture: ILecture | null;
     public lectures: ILecture[];
     public lectureSettings: ILectureSettings;
-    public questionShown: boolean;
     private lectureEndingDialogState: LectureEndingDialogState;
     private canStart: boolean;
     private canStop: boolean;
@@ -396,11 +395,6 @@ export class LectureController implements IController {
 
         this.scope.$on("changeQuestionTitle", (event, data) => {
             this.questionTitle = data.questionTitle;
-        });
-
-        this.scope.$on("toggleQuestion", (event, data) => {
-            this.questionShown = !this.questionShown;
-            this.scope.$emit("newQuestion", data);
         });
 
         this.scope.$on("showAnswers", (event, x) => {

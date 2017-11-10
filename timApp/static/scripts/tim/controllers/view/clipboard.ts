@@ -6,6 +6,7 @@ import {
 import {Users} from "../../services/userService";
 import {IScope} from "angular";
 import {ViewCtrl} from "./ViewCtrl";
+import {IParResponse} from "../../IParResponse";
 
 export class ClipboardHandler {
     public sc: IScope;
@@ -67,7 +68,7 @@ export class ClipboardHandler {
 
     async moveAbove(e, $parOrArea) {
         try {
-            var response = await $http.post("/clipboard/paste/" + this.viewctrl.docId, {
+            var response = await $http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
                 par_before: getFirstParId($parOrArea),
             });
         } catch (e) {
@@ -93,7 +94,7 @@ export class ClipboardHandler {
 
     async moveBelow(e, $parOrArea) {
         try {
-            var response = await $http.post("/clipboard/paste/" + this.viewctrl.docId, {
+            var response = await $http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
                 par_after: getLastParId($parOrArea),
             });
         } catch (e) {
@@ -119,7 +120,7 @@ export class ClipboardHandler {
 
     async pasteAbove(e, $parOrArea, asRef) {
         try {
-            var response = await $http.post("/clipboard/paste/" + this.viewctrl.docId, {
+            var response = await $http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
                 par_before: getFirstParId($parOrArea),
                 as_ref: asRef,
             });
@@ -145,7 +146,7 @@ export class ClipboardHandler {
 
     async pasteBelow(e, $parOrArea, asRef) {
         try {
-            var response = await $http.post("/clipboard/paste/" + this.viewctrl.docId, {
+            var response = await $http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
                 par_after: getLastParId($parOrArea),
                 as_ref: asRef,
             });
