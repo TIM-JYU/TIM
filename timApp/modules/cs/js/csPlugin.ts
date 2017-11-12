@@ -171,7 +171,7 @@ interface ICSAppScope extends IConsolePWDScope {
     file: {};
     postcode: string;
     precode: string;
-    showCodeLocal();
+    getCodeFromLocalCode(f);
     getReplacedCode(): string;
     replace: string;
     code: string;
@@ -309,6 +309,7 @@ interface ICSAppScope extends IConsolePWDScope {
     copyTauno(): void;
     showOtherEditor(editorMode: number): void;
     showCodeNow(): void;
+    getAllCode(f): void;
     aceLoaded(ace: IAce, editor: IAceEditor): void;
     $evalAsync(param: () => any): void;
 }
@@ -519,10 +520,10 @@ var languageTypes = {} as ILanguageTypes;
 // What are known language types (be carefull not to include partial word):
 languageTypes.runTypes     = ["css","jypeli","scala","java","graphics","cc","c++","shell","vpython","py","fs","clisp",
                               "jjs","psql","sql","alloy","text","cs","run","md","js","glowscript","sage","simcir",
-                              "xml", "octave","lua", "swift","mathcheck", "html", "processing", "r", "wescheme"];
+                              "xml", "octave","lua", "swift","mathcheck", "html", "processing", "r", "wescheme", "ping"];
 languageTypes.aceModes     = ["css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp",
-                              "javascript","sql","sql","alloy","text","csharp","run","markdown","javascript","javascript","python","json",
-                              "xml","octave","lua","swift","text", "html", "javascript", "r", "scheme"];
+                              "javascript","sql","sql","alloy","text","csharp","run","text","javascript","javascript","python","json",
+                              "xml","octave","lua","swift","text", "html", "javascript", "r", "scheme", "text"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):
@@ -570,7 +571,7 @@ languageTypes.getRunType = function(type,def) {
 };
 
 languageTypes.getAceModeType = function(type,def) {
-
+    if ( def ) return def;
     return this.whatIsInAce(this.runTypes,type,def);
 };
 
@@ -998,6 +999,7 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"validityCheck","");
             csApp.set(scope,attrs,"validityCheckMessage","");
   			csApp.set(scope,attrs,"savestate");
+  			csApp.set(scope,attrs,"mode");
 
             csApp.set(scope,attrs,"wrap", scope.isText ? 70 : -1);
             scope.wrap = {n:scope.wrap}; // to avoid child scope problems
@@ -1113,7 +1115,7 @@ csApp.directiveFunction = function(t,isInput) {
             if ( scope.attrs.autorun ) scope.runCodeLink(true);
             scope.editorIndex = 0;
             if ( scope.editorMode != 0 || scope.editorModes !== "01" || scope.cssPrint) scope.showOtherEditor(scope.editorMode); //Forces code editor to change to pre
-            scope.mode = languageTypes.getAceModeType(scope.type,"");
+            scope.mode = languageTypes.getAceModeType(scope.type, scope.mode);
             
             var styleArgs = csApp.getParam(scope,"style-args","");
             if ( styleArgs ) {
@@ -2209,9 +2211,16 @@ csApp.Controller = function($scope,$transclude) {
         return $scope.code;
     }
         
-	$scope.showCodeLocal = function() {
+	$scope.getCodeFromLocalCode = function(f) {
+	    // f: function to call after ready
 		// $scope.code = $scope.localcode;
-		if ( $scope.localcode === "" ) { $scope.code = $scope.usercode; return; }
+		if ( $scope.localcode === "" ) {
+		    $scope.code = $scope.usercode;
+		    $scope.precode = "";
+		    $scope.postcode = "";
+            if (f) f();
+		    return;
+		}
 		var st = $scope.localcode.split("\n");
 		var r = "";
 		var rp = ["",""]; // alkuosa, loppuosa
@@ -2235,15 +2244,20 @@ csApp.Controller = function($scope,$transclude) {
 		$scope.code = r;
 		$scope.precode = rp[0];
 		$scope.postcode = rp[1];
+        if (f) f();
 	};
 		
-		
 	$scope.showCodeNow = function() {
+        if (!$scope.viewCode) return;
+        $scope.getAllCode(null);
+    }
+
+	$scope.getAllCode = function(f) {
+	    // f: function to call after ready
 	    // var copyEvent = new ClipboardEvent('copy', { dataType: 'text/plain', data: 'kissa' } );
         // document.dispatchEvent(copyEvent);
-		if ( !$scope.viewCode ) return;
-		if ( angular.isDefined($scope.localcode) ) { $scope.showCodeLocal(); return; } 
-		if ( !$scope.file &&!$scope.attrs.program ) { $scope.localcode = ""; $scope.showCodeLocal(); return; }
+		if ( angular.isDefined($scope.localcode) ) { $scope.getCodeFromLocalCode(f); return; }
+		if ( !$scope.file &&!$scope.attrs.program ) { $scope.localcode = ""; $scope.getCodeFromLocalCode(f); return; }
 		
 		// params = 'print=1&type='+encodeURIComponent($scope.type)+'&file='+encodeURIComponent($scope.file)+ '&keplace='+ encodeURIComponent($scope.replace)+ '&by=' + encodeURIComponent($scope.usercode);
 		var params = $scope.attrs;
@@ -2256,20 +2270,24 @@ csApp.Controller = function($scope,$transclude) {
 		    // Server always seems to give text/plain as result, so prepare for it.
 		    if (typeof data === "string") {
 		        $scope.localcode = data;
-				$scope.showCodeLocal();
+				$scope.getCodeFromLocalCode(f);
             }
 			else if (data.msg !== '')
 			{
 				$scope.localcode = data.msg;
-				$scope.showCodeLocal();
+				$scope.getCodeFromLocalCode(f);
 			}
 			else
 			{
 				$scope.errors.push(data.error);
+				$scope.precode = "";
+				$scope.postcode = "";
 			}
 		}, function(response) {
 		    let status = response.status;
 			$scope.errors.push(status);
+            $scope.precode = "";
+            $scope.postcode = "";
 		});
 	};
     
@@ -2277,7 +2295,11 @@ csApp.Controller = function($scope,$transclude) {
     
 	$scope.showMD = function() {
         if ( !$scope.usercode ) return;
-        var text = $scope.usercode.replace($scope.cursor,"");
+        if ( $scope.precode === undefined ) {
+            $scope.getAllCode($scope.showMD);
+            return;
+        }
+        var text = $scope.precode + "\n" + $scope.usercode.replace($scope.cursor,"") + "\n" + $scope.postcode;
         if ( text == $scope.lastMD ) return;
         $scope.lastMD = text;
         $scope.previewUrl="/preview/" + $scope.taskId.split(".")[0]; // 12971"
@@ -2463,7 +2485,7 @@ csApp.Controller = function($scope,$transclude) {
         else
             html = [editorHtml,aceHtml,parsonsHtml,parsonsHtml];
 
-        $scope.mode = languageTypes.getAceModeType($scope.type,"");
+        $scope.mode = languageTypes.getAceModeType($scope.type,$scope.mode);
         if (typeof editorMode !== 'undefined') $scope.editorMode = editorMode;
         else $scope.editorMode++; 
         if ( $scope.editorMode >= $scope.editorModeIndecies.length-1 ) $scope.editorMode = 0; 
@@ -2566,7 +2588,7 @@ csApp.Controller = function($scope,$transclude) {
     $scope.getCode = function() {
         if ( $scope.attrs.program && !$scope.codeInitialized ) {
             $scope.localcode = $scope.attrs.program;
-            $scope.showCodeLocal();
+            $scope.getCodeFromLocalCode(null);
         }
         $scope.codeInitialized = true;
         var text = $scope.usercode.replace($scope.cursor,"");
