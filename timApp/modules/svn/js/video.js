@@ -131,8 +131,8 @@ videoApp.directiveFunction = function(t) {
             timHelper.set(scope,attrs,".followid");
             timHelper.set(scope,attrs,".autoplay", true);
 			timHelper.set(scope,attrs,".open",false);
-            if ( scope.videoicon === "False" ) scope.videoicon = "";
-            if ( scope.docicon === "False" ) scope.docicon = "";
+            if ( scope.videoicon === "False" || !scope.videoicon ) scope.videoicon = "";
+            if ( scope.docicon === "False" || !scope.docicon  ) scope.docicon = "";
 			scope.start = videoApp.muunna(scope.attrs.start);
 			scope.end = videoApp.muunna(scope.attrs.end);
             scope.duration = videoApp.time2String(scope.end - scope.start);
