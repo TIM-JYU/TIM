@@ -97,6 +97,13 @@ Lorem ipsum.
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': 'Second heading level 1'},
                            [])], doc.get_index())
 
+    def test_index_numeric_headings(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=['# 1', '# 2', '# 3'])
+        self.assertEqual(d.document.get_index(), [({'id': 'section', 'level': 1, 'text': '1'}, []),
+                                                  ({'id': 'section-1', 'level': 1, 'text': '2'}, []),
+                                                  ({'id': 'section-2', 'level': 1, 'text': '3'}, [])])
+
     def test_index_skip_level(self):
         self.login_test1()
         doc = self.create_doc(initial_par="""
