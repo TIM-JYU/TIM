@@ -185,3 +185,9 @@ class EditTest(TimRouteTest):
         self.post_par(d.document, md1 + md2, par_id=par1.get_id(), expect_status=400,
                       expect_content={'error': f'Duplicate paragraph id(s): {par2.get_id()}'})
         self.get(d.url)
+
+    def test_version(self):
+        self.login_test1()
+        d = self.create_doc()
+        j = self.new_par(d.document, 'test')
+        self.assertEqual(j['version'], [1, 0])
