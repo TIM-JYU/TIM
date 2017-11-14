@@ -1553,7 +1553,6 @@ timApp.directive("pareditor", [
                             original++;
                             line = line.substr(1);
                         }
-                        line = line.substr(1);
                         line = line.trim();
                         $scope.editor.replaceSelectedText(head + " " + line);
                         $scope.editor.setSelection(tempEnd + (head.length - original), tempEnd + (head.length - original));
