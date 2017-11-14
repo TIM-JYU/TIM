@@ -177,6 +177,8 @@ def remove_path_special_chars(item_path):
 
 def title_to_id(s: str):
     """Converts a HTML heading to id attribute. Tries to be equivalent to what Pandoc does."""
+    if s is None:
+        return 'section'
     if not any(c.isalpha() for c in s):
         return 'section'
     s = re.sub(r'[^\w-]', ' ', s.lower())
