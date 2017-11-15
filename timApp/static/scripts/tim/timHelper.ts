@@ -86,6 +86,7 @@ export function setk(scope, sname, attrs, keys, def) {
     if (scope[sname] == "None") {
         scope[sname] = "";
     }
+    if ( scope[sname] === "False" ) scope[sname] = false;
     return scope[sname];
 }
 

@@ -9,7 +9,7 @@ from lxml import html
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.dumboclient import call_dumbo
 from timApp.htmlSanitize import sanitize_html
-from timApp.utils import get_error_html
+from timApp.utils import get_error_html, title_to_id
 
 
 # noinspection PyUnusedLocal
@@ -349,11 +349,14 @@ def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bo
     counts = heading_info['h']
     used = heading_info['headings']
     for e in tree.iterchildren():
-        hcount = used.get(e.text, 0)
         is_heading = e.tag in HEADING_TAGS
-        if hcount > 0 and is_heading:
+        if not is_heading:
+            continue
+        curr_id = title_to_id(e.text)
+        hcount = used.get(curr_id, 0)
+        if hcount > 0:
             e.attrib['id'] += '-' + str(hcount)
-        if auto_number_headings and is_heading:
+        if auto_number_headings:
             level = int(e.tag[1])
             counts[level] += 1
             for i in range(level + 1, 7):

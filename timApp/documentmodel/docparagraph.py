@@ -19,7 +19,7 @@ from timApp.rndutils import get_rands_as_dict, get_rands_as_str
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 from timApp.timdb.timdbexception import TimDbException
 from timApp.types import DocumentType
-from timApp.utils import count_chars, get_error_html
+from timApp.utils import count_chars, get_error_html, title_to_id
 
 SKIPPED_ATTRS = {'r', 'rd', 'rp', 'ra', 'rt', 'settings'}
 
@@ -695,16 +695,16 @@ class DocParagraph:
             md_expanded = expand_macros(md_expanded, macros, macro_delim)
         blocks = DocumentParser(md_expanded, options=DocumentParserOptions.break_on_empty_lines()).get_blocks()
         deltas = copy(prev_par_auto_values['h'])
-        titles = []
+        title_ids = []
         for e in blocks:
             level = count_chars(e['md'], '#')
             if level > 0:
                 title = e['md'][level:].strip()
-                titles.append(title)
+                title_ids.append(title_to_id(title))
                 deltas[level] += 1
                 for i in range(level + 1, 7):
                     deltas[i] = 0
-        heading_cache[self.get_id()] = titles
+        heading_cache[self.get_id()] = title_ids
         result = {'h': deltas}
         auto_macro_cache[key] = result
         return result

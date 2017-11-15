@@ -175,6 +175,17 @@ def remove_path_special_chars(item_path):
     return re.sub('[^a-zA-Z0-9/_-]', '', item_path.translate(str.maketrans(' äöåÄÖÅ', '-aoaAOA')))
 
 
+def title_to_id(s: str):
+    """Converts a HTML heading to id attribute. Tries to be equivalent to what Pandoc does."""
+    if s is None:
+        return 'section'
+    if not any(c.isalpha() for c in s):
+        return 'section'
+    s = re.sub(r'[^\w-]', ' ', s.lower())
+    s = '-'.join(s.split())
+    return s
+
+
 def getdatetime(s: str, default_val=None):
     try:
         dt = dateutil.parser.parse(s, dayfirst=not 'Z' in s)

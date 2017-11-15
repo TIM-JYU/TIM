@@ -77,7 +77,7 @@ from timApp.timdb.tim_models import db
 from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import NoSuchUserException
 from timApp.validation import validate_item_and_create
-from timApp.documentmodel.create_item import do_create_document, get_templates_for_folder, create_item
+from timApp.documentmodel.create_item import do_create_item, get_templates_for_folder, create_item
 
 cache.init_app(app)
 
@@ -315,7 +315,7 @@ def get_templates():
 
 
 @app.route("/createItem", methods=["POST"])
-def create_document():
+def create_item_route():
     item_path, item_type, item_title = verify_json_params('item_path', 'item_type', 'item_title')
     cite_id, copy_id, template_name = verify_json_params('cite', 'copy', 'template', require=False)
     if cite_id:
@@ -331,7 +331,7 @@ def create_document():
         vr = d.document.validate()
         if vr.issues:
             abort(400, f'The following errors must be fixed before copying:\n{vr}')
-    return do_create_document(item_path, item_type, item_title, d, template_name)
+    return do_create_item(item_path, item_type, item_title, d, template_name)
 
 
 @app.route("/translations/<int:doc_id>", methods=["GET"])

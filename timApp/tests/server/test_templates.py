@@ -47,6 +47,9 @@ class TemplateTest(TimRouteTest):
         # Should be created directly from URL
         self.get(f'/view/{folder}/b/new-from-url')
 
+        # Make sure folder creation does not trigger template loading code.
+        self.create_folder(f'{folder}/b/newfolder')
+
     def test_templates_of_templates(self):
         """Templates are not templates of themselves."""
         self.login_test1()

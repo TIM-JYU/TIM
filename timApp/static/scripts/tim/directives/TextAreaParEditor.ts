@@ -276,7 +276,6 @@ export class TextAreaParEditor extends BaseParEditor {
             original++;
             line = line.substr(1);
         }
-        line = line.substr(1);
         line = line.trim();
         this.editor.replaceSelectedText(head + " " + line);
         this.editor.setSelection(tempEnd + (head.length - original), tempEnd + (head.length - original));

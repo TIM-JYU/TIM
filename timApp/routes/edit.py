@@ -317,6 +317,7 @@ def par_response(pars,
                  edit_request: Optional[EditRequest]=None,
                  edit_result: Optional[DocumentEditResult]=None):
     current_user = get_current_user_object()
+    new_doc_version = doc.get_version()
     if update_cache:
         changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(include_preamble=True),
                                                   doc.get_settings(),
@@ -375,7 +376,7 @@ def par_response(pars,
                                                                     text=[p],
                                                                     item={'rights': get_rights(doc.doc_id)}) for p in
                                            changed_pars},
-                          'version': doc.get_version(),
+                          'version': new_doc_version,
                           'duplicates': duplicates,
                           'original_par': {'md': original_par.get_markdown(),
                                            'attrs': original_par.get_attrs()} if original_par else None,

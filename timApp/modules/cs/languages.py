@@ -313,6 +313,11 @@ class Shell(Language):
         return code, out, err, pwddir
 
 
+class Ping(Shell):
+    def run(self, web, sourcelines, points_rule):
+        return 0, "Ping", "", ""
+
+
 class Java(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
@@ -918,3 +923,4 @@ languages["upload"] = Upload
 languages["octave"] = Octave
 languages["processing"] = Processing
 languages["wescheme"] = WeScheme
+languages["ping"] = Ping
