@@ -66,38 +66,39 @@ def get_templates_for_folder(folder: Folder) -> List[DocEntry]:
     return templates
 
 
-def do_create_document(item_path, item_type, item_title, copied_doc: Optional[DocInfo], template_name):
+def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInfo], template_name):
     item = create_item(item_path,
                        item_type,
                        item_title,
                        DocEntry.create if item_type == 'document' else Folder.create,
                        get_current_user_group())
 
-    if copied_doc:
-        item.document.update(copied_doc.document.export_markdown(), item.document.export_markdown())
-        for tr in copied_doc.translations:  # type: Translation
-            doc_id = item.id
-            if not tr.is_original_translation:
-                document = create_document_and_block(get_current_user_group())
-                doc_id = document.doc_id
-                new_tr = add_tr_entry(doc_id, item, tr)
-                document.docinfo = new_tr
-                document.update(tr.document.export_markdown(), document.export_markdown())
-            elif tr.lang_id:
-                add_tr_entry(doc_id, item, tr)
-            if not tr.is_original_translation:
-                copy_default_rights(doc_id, blocktypes.DOCUMENT, commit=False)
-        db.session.commit()
-    else:
-        templates = get_templates_for_folder(item.parent)
-        matched_templates = None
-        if template_name:
-            matched_templates = list(filter(lambda t: t.short_name == template_name, templates))
-        if not matched_templates:
-            matched_templates = list(filter(lambda t: t.short_name == FORCED_TEMPLATE_NAME, templates))
-        if matched_templates:
-            template = matched_templates[0]
-            item.document.update(template.document.export_markdown(), item.document.export_markdown())
+    if isinstance(item, DocInfo):
+        if copied_doc:
+            item.document.update(copied_doc.document.export_markdown(), item.document.export_markdown())
+            for tr in copied_doc.translations:  # type: Translation
+                doc_id = item.id
+                if not tr.is_original_translation:
+                    document = create_document_and_block(get_current_user_group())
+                    doc_id = document.doc_id
+                    new_tr = add_tr_entry(doc_id, item, tr)
+                    document.docinfo = new_tr
+                    document.update(tr.document.export_markdown(), document.export_markdown())
+                elif tr.lang_id:
+                    add_tr_entry(doc_id, item, tr)
+                if not tr.is_original_translation:
+                    copy_default_rights(doc_id, blocktypes.DOCUMENT, commit=False)
+            db.session.commit()
+        else:
+            templates = get_templates_for_folder(item.parent)
+            matched_templates = None
+            if template_name:
+                matched_templates = list(filter(lambda t: t.short_name == template_name, templates))
+            if not matched_templates:
+                matched_templates = list(filter(lambda t: t.short_name == FORCED_TEMPLATE_NAME, templates))
+            if matched_templates:
+                template = matched_templates[0]
+                item.document.update(template.document.export_markdown(), item.document.export_markdown())
 
     return json_response(item)
 

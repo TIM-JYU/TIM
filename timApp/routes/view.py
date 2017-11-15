@@ -35,7 +35,7 @@ from timApp.timdb.timdbexception import TimDbException, PreambleException
 from timApp.timdb.userutils import user_is_owner
 from timApp.utils import remove_path_special_chars
 from timApp.timtiming import taketime
-from timApp.documentmodel.create_item import do_create_document, get_templates_for_folder
+from timApp.documentmodel.create_item import do_create_item, get_templates_for_folder
 from timApp.documentmodel.specialnames import FORCED_TEMPLATE_NAME
 from timApp.markdownconverter import create_environment
 
@@ -189,7 +189,7 @@ def try_return_folder(item_name):
         if template_item and template_item.short_name == FORCED_TEMPLATE_NAME:
             ind = item_name.rfind('/')
             if ind >= 0:
-                ret = do_create_document(item_name, 'document', item_name[ind + 1:], None, template_item.path)
+                ret = do_create_item(item_name, 'document', item_name[ind + 1:], None, template_item.path)
                 return view(item_name, 'view_html.html')
 
         return render_template('create_new.html',
