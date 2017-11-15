@@ -19,7 +19,7 @@ markAsUsed(answerSheet);
  * @copyright 2015 Timppa project authors
  */
 
-export class QuestionPreviewController implements IController {
+export class QuestionAskController implements IController {
     private static $inject = ["$scope"];
     private scope: IScope;
     //TODO parse json and set values from rows and columns to scope variables

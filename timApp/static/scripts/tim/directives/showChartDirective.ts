@@ -352,14 +352,15 @@ class ShowChartController implements IController {
         }
         backgroundColor.push(this.basicSets[0].fillColor);
 
-        if (angular.isDefined(data.columns)) {
-            angular.forEach(data.columns, (column) => {
-                angular.forEach(column.rows, (row) => {
-                    labels.push(qstShortText(row.Value));
-                    emptyData.push(0);
-                });
-            });
-        }
+        // TODO: most likely dead code
+        // if (angular.isDefined(data.columns)) {
+        //     angular.forEach(data.columns, (column) => {
+        //         angular.forEach(column.rows, (row) => {
+        //             labels.push(qstShortText(row.Value));
+        //             emptyData.push(0);
+        //         });
+        //     });
+        // }
 
         if (!(question.questionType === "matrix" || question.questionType === "true-false")) {
             labels.push("No answer");

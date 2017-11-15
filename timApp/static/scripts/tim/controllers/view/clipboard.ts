@@ -59,7 +59,7 @@ export class ClipboardHandler {
         if (pars.length > 0) {
             const firstPar = pars[0].id;
             const lastPar = pars[pars.length - 1].id;
-            this.viewctrl.handleDelete({version: doc_ver}, {par: firstPar, area_start: firstPar, area_end: lastPar});
+            this.viewctrl.handleDelete({version: doc_ver, texts: ""}, {par: firstPar, area_start: firstPar, area_end: lastPar});
         }
 
         this.viewctrl.allowPasteContent = false;
@@ -225,7 +225,7 @@ export class ClipboardHandler {
         if (pars.length > 0) {
             const firstPar = pars[0].id;
             const lastPar = pars[pars.length - 1].id;
-            this.viewctrl.handleDelete({version: doc_ver}, {par: firstPar, area_start: firstPar, area_end: lastPar});
+            this.viewctrl.handleDelete({version: doc_ver, texts: ""}, {par: firstPar, area_start: firstPar, area_end: lastPar});
         }
 
         this.viewctrl.allowPasteContent = true;
@@ -283,7 +283,7 @@ export class ClipboardHandler {
                 if (pars.length > 0) {
                     const firstPar = pars[0].id;
                     const lastPar = pars[pars.length - 1].id;
-                    this.viewctrl.handleDelete({version: doc_ver}, {
+                    this.viewctrl.handleDelete({version: doc_ver, texts: ""}, {
                         par: firstPar,
                         area_start: firstPar,
                         area_end: lastPar,

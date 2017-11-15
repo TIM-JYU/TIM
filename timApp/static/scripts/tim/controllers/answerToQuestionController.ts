@@ -2,7 +2,7 @@ import {IController, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as answerSheet from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed} from "tim/utils";
-import {$http, $log, $rootScope} from "../ngimport";
+import {$http, $interval, $log, $rootScope} from "../ngimport";
 import {IAskedQuestion, IAskedJson, IAskedJsonJson} from "../lecturetypes";
 
 markAsUsed(answerSheet);
@@ -22,11 +22,17 @@ markAsUsed(answerSheet);
 
 export class AnswerToQuestionController implements IController {
     private scope: IScope;
+    private barFilled;
+    private progressElem: JQuery;
+    private progressText: JQuery;
+    private timeLeft;
     private questionHeaders: {}[];
     private answerTypes: {}[];
     private isLecturer: boolean;
     private questionTitle: string;
     private isAsking: boolean;
+    private askedTime: number;
+    private endTime: number;
 
     constructor(scope: IScope) {
         this.scope = scope;
@@ -35,6 +41,21 @@ export class AnswerToQuestionController implements IController {
         this.dynamicAnswerSheetControl = {};
         this.isLecturer = false;
         this.questionTitle = "";
+
+        this.askedTime = params.askedTime - params.clockOffset;
+        this.endTime = params.askedTime + this.json.timeLimit * 1000 - params.clockOffset;
+        if (this.json.timeLimit && this.endTime && !this.preview && !this.result) {
+            const progress = $("<progress>", {
+                max: (this.endTime - this.askedTime),
+                id: "progressBar",
+            });
+            htmlSheet.append(progress);
+            htmlSheet.append($("<span>", {
+                class: "progresslabel",
+                id: "progressLabel",
+                text: this.json.timeLimit + " s",
+            }));
+        }
 
         this.scope.$on("setQuestionJson", (event, args) => {
             this.result = args.result;
@@ -52,6 +73,36 @@ export class AnswerToQuestionController implements IController {
             this.dynamicAnswerSheetControl.createAnswer(this);
             if (args.isAsking) {
                 this.isAsking = true;
+            }
+
+            if (!this.preview && !this.result) {
+                const $table = this.element.find("#answer-sheet-table");
+                window.setTimeout(() => {
+                    const $table = this.element.find("#answer-sheet-table");
+                    let $input = null;
+                    if (this.json.answerFieldType !== "text") {
+                        $input = $table.find("input:first");
+                    } else {
+                        $input = $table.find("textarea:first");
+                    }
+                    if (params.isAsking) {
+                        $input[0].focus();
+                    }
+                }, 0);
+                //
+                if (!this.isText) {
+                    $table.on("keyup.send", this.answerWithEnter);
+                }
+                const now = new Date().valueOf();
+                this.timeLeft = this.endTime - now;
+                this.barFilled = 0;
+                if (this.endTime && this.json.timeLimit) {
+                    const timeBetween = 500;
+                    const maxCount = this.timeLeft / timeBetween + 5 * timeBetween;
+                    this.progressElem = $("#progressBar");
+                    this.progressText = $("#progressLabel");
+                    this.start(timeBetween, maxCount);
+                }
             }
         });
     }
@@ -181,5 +232,102 @@ export class AnswerToQuestionController implements IController {
             doc_id: this.docId,
             markup: this.markup,
         });
+    }
+
+    /**
+     * Use time parameter to either close question/points window or extend question end time.
+     * If time is null, question/points is closed.
+     * Else time is set as questions new end time.
+     * Event: update_end_time
+     */
+    updateEndTime(time) {
+        if (time !== null) {
+            this.endTime = time - this.$parent.vctrl.clockOffset;
+            this.progressElem.attr("max", this.endTime - this.askedTime);
+        } else {
+            if (!this.$parent.lctrl.isLecturer) {
+                $interval.cancel(this.promise);
+                this.element.empty();
+                scope.$emit("closeQuestion");
+            }
+        }
+    }
+
+    start(timeBetween, maxCount) {
+        this.promise = $interval(this.updateBar, timeBetween, maxCount);
+    }
+
+    // createAnswer ends
+
+    /**
+     * Updates progressbar and time left text
+     * @memberof module:dynamicAnswerSheet
+     */
+    updateBar() {
+        //TODO: Problem with inactive tab.
+        const now = new Date().valueOf();
+        if (!this.endTime || !this.promise) {
+            return;
+        }
+        this.timeLeft = this.endTime - now;
+        this.barFilled = (this.endTime - this.askedTime) - (this.endTime - now);
+        this.progressElem.attr("value", (this.barFilled));
+        this.progressText.text(Math.max((this.timeLeft / 1000), 0).toFixed(0) + " s");
+        this.progressElem.attr("content", (Math.max((this.timeLeft / 1000), 0).toFixed(0) + " s"));
+        if (this.barFilled >= this.progressElem.attr("max")) {
+            $interval.cancel(this.promise);
+            if (!this.$parent.lctrl.isLecturer && !this.$parent.lctrl.questionEnded) {
+                this.answerToQuestion();
+            } else {
+                this.progressText.text("Time's up");
+            }
+            this.$parent.questionEnded = true;
+        }
+    }
+
+    endQuestion() {
+        if (!this.promise) {
+            return;
+        }
+        $interval.cancel(this.promise);
+        const max = this.progressElem.attr("max");
+        this.progressElem.attr("value", max);
+        this.progressText.text("Time's up");
+    }
+
+    answerWithEnter = (e) => {
+        if (e.keyCode === 13) {
+            $("#answer-sheet-table").off("keyup.send");
+            this.$parent.answer();
+        }
+    }
+
+    /**
+     * Function to create question answer and send it to server.
+     * @memberof module:dynamicAnswerSheet
+     */
+    answerToQuestion() {
+
+        const answers = this.getAnswers();
+
+        if (!this.$parent.lctrl.isLecturer) {
+            this.element.empty();
+            $interval.cancel(this.promise);
+        }
+        this.scope.$emit("answerToQuestion", {answer: answers, askedId: this.$parent.askedId});
+    }
+
+    /**
+     * Closes question window and clears updateBar interval.
+     * If user is lecturer, also closes answer chart window.
+     * @memberof module:dynamicAnswerSheet
+     */
+    closeQuestion() {
+        $interval.cancel(this.promise);
+        this.element.empty();
+        this.scope.$emit("closeQuestion");
+        if (this.$parent.isLecturer) {
+            $rootScope.$broadcast("closeAnswerSheetForGood");
+        }
     }
 }

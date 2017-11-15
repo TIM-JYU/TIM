@@ -9,7 +9,7 @@ import * as e from "tim/controllers/lectureController";
 import * as f from "tim/controllers/lectureInfoController";
 import * as ae from "tim/controllers/qstController";
 import * as g from "tim/controllers/questionController";
-import * as h from "tim/controllers/questionPreviewController";
+import * as h from "tim/controllers/questionAskController";
 import * as i from "tim/controllers/reviewController";
 import * as j from "tim/controllers/showStatisticsToQuestionController";
 import * as k from "tim/controllers/sidebarMenuCtrl";

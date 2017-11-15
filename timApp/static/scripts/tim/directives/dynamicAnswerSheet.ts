@@ -1,10 +1,14 @@
-import angular, {IPromise, IRootElementService, IScope, IController} from "angular";
+import angular, {IController, IOnChangesObject, IRootElementService} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {ParCompiler} from "../services/parCompiler";
-import {$compile, $interval, $rootScope} from "../ngimport";
 import {
-    IAskedJsonJsonJson, IHeader, IProcessedHeaders, IUnprocessedHeaders,
+    IAskedJsonJson,
+    IAskedJsonJsonJson,
+    IExplCollection,
+    IHeader,
+    IProcessedHeaders,
+    IUnprocessedHeaders,
     IUnprocessedHeadersCompat,
 } from "../lecturetypes";
 
@@ -23,7 +27,7 @@ import {
  * @copyright 2015 Timppa project authors
  */
 
-function uncheckRadio(e) {
+function uncheckRadio(this: HTMLElement) {
     // set this to click-method if you want a radio that can be uncheked.  for the radio there
     // must be also property form that has other radios.
     const elem = $(this);
@@ -49,8 +53,8 @@ export function getJsonAnswers(answer: string): string[][] {
     const singleAnswers: string[][] = [];
     const allAnswers = answer.split("|");
 
-    for (let i = 0; i < allAnswers.length; i++) {
-        singleAnswers.push(allAnswers[i].split(","));
+    for (const a of allAnswers) {
+        singleAnswers.push(a.split(","));
     }
     return singleAnswers;
 }
@@ -174,13 +178,14 @@ export function fixQuestionJson(json: IUnprocessedHeadersCompat): IProcessedHead
         ];
     }
 
+    const blankColumn = {text: "", type: "question", answerFieldType: ""}; // TODO: needs id?
     if (typeof rows === "string") { // if just on text string
         const jrows = rows.split("\n");
         for (let i = 0; i < jrows.length; i++) {
             const jrow = jrows[i];
             if (jrow) {
                 fixed.rows.push({
-                    columns: [{text: "", type: "question", answerFieldType: ""}],
+                    columns: [blankColumn],
                     id: i + 1,
                     text: jrow.toString(),
                     type: "question",
@@ -192,7 +197,7 @@ export function fixQuestionJson(json: IUnprocessedHeadersCompat): IProcessedHead
         for (const r of rows) {
             ir++;
             fixed.rows.push({
-                columns: [{text: "", type: "question", answerFieldType: ""}],
+                columns: [blankColumn],
                 id: ir + 1,
                 text: r,
                 type: "question",
@@ -206,69 +211,38 @@ export function fixQuestionJson(json: IUnprocessedHeadersCompat): IProcessedHead
             nh = fixed.headers.length;
         }
         for (let ic = 1; ic < nh; ic++) {
-            row.columns.push({text: "", type: "question", answerFieldType: ""});
+            row.columns.push(blankColumn);
         }
     }
     return fixed;
 }
 
-type JSONData = {
-    headers: {text: string}[],
-    text: string,
-    rows: {
-        type: string,
-        text: string,
-        columns: {id: number}[],
-    }[],
-    columns?: {Value: string}[],
-};
+export interface IPreviewParams {
+    points: string;
+    answerTable: string[][];
+    noDisable: boolean;
+    preview: boolean;
+    result: {};
+    previousAnswer: string;
+    answclass: string;
+    expl: IExplCollection;
+    markup: IAskedJsonJson;
+}
 
 class AnswerSheetController implements IController {
-    private static $inject = ["$scope", "$element"];
-
-    private promise: IPromise<any>;
-    private timeLeft;
-    private barFilled;
+    private static $inject = ["$element"];
     private element: IRootElementService;
-    private buttonText: string;
     private preview: boolean;
-    private gid: string;
     private result: {};
-    private previousAnswer: {};
-    private json: {data: JSONData, timeLimit: number, questionText: string, questionType: string, answerFieldType: string} & JSONData;
-    private markup: string;
+    private json: IAskedJsonJsonJson;
+    private processed: IProcessedHeaders;
+    private markup: IAskedJsonJson;
     private answerTable: string[][];
-    private expl: {};
-    private askedTime: number;
-    private endTime: number;
+    private expl: IExplCollection;
     private htmlSheet: JQuery;
-    private scope: IScope;
-    private progressElem: JQuery;
-    private isText: boolean;
-    private progressText: JQuery;
-    private $parent: any; // TODO require questioncontroller
 
-    constructor(scope: IScope, element: IRootElementService) {
+    constructor(element: IRootElementService) {
         this.element = element;
-        this.scope = scope;
-
-        /**
-         * Use time parameter to either close question/points window or extend question end time.
-         * If time is null, question/points is closed.
-         * Else time is set as questions new end time.
-         */
-        scope.$on("update_end_time", (event, time) => {
-            if (time !== null) {
-                this.endTime = time - this.$parent.vctrl.clockOffset;
-                this.progressElem.attr("max", this.endTime - this.askedTime);
-            } else {
-                if (!this.$parent.lctrl.isLecturer) {
-                    $interval.cancel(this.promise);
-                    this.element.empty();
-                    scope.$emit("closeQuestion");
-                }
-            }
-        });
     }
 
     $onInit() {
@@ -276,20 +250,24 @@ class AnswerSheetController implements IController {
     }
 
     cg() {
-        return "group"; // + this.gid;
+        return "group";
+    }
+
+    $onChanges(onChangesObj: IOnChangesObject) {
+        const data = onChangesObj.questiondata.currentValue as IPreviewParams;
+        if (data === null) {
+            return;
+        }
+        this.createAnswer(data);
     }
 
     /**
      * Creates question answer/preview form.
      */
-    createAnswer(params) {
+    createAnswer(params: IPreviewParams) {
         this.result = params.result;
-        this.gid = params.tid || "";
-        this.gid = this.gid.replace(".", "_");
-        this.buttonText = params.markup.button || params.markup.buttonText || "Answer";
 
         const answclass = params.answclass || "answerSheet";
-        this.previousAnswer = params.previousAnswer;
 
         let disabled = "";
         // If showing preview or question result, inputs are disabled
@@ -303,40 +281,26 @@ class AnswerSheetController implements IController {
         this.element.empty();
         this.json = params.markup.json;
         this.markup = params.markup;
-        const data = this.json.data || this.json; // compability to old format
+        const unprocessed = this.json.data || this.json; // compability to old format
         const json = this.json;
 
-        fixQuestionJson(data);
+        const data = fixQuestionJson(unprocessed);
+        this.processed = data;
 
         this.answerTable = params.answerTable || [];
 
         // If user has answer to question, create table of answers and select inputs according to it
-        if (this.previousAnswer) {
-            this.answerTable = getJsonAnswers(this.previousAnswer);
+        if (params.previousAnswer) {
+            this.answerTable = getJsonAnswers(params.previousAnswer);
         }
         const answerTable = this.answerTable;
         const pointsTable = getPointsTable(params.points || params.markup.points);
 
-        this.expl = params.expl || params.markup.expl || params.markup.xpl;
-        this.askedTime = params.askedTime - params.clockOffset;
-        this.endTime = params.askedTime + this.json.timeLimit * 1000 - params.clockOffset;
-
+        this.expl = params.expl || params.markup.expl;
         // var htmlSheet = $('<div>', {class: answclass});
         const htmlSheet = $("<form>", {class: answclass});
         this.htmlSheet = htmlSheet;
-        params.htmlSheet = htmlSheet;
-        if (this.json.timeLimit && this.endTime && !this.preview && !this.result) {
-            const progress = $("<progress>", {
-                max: (this.endTime - this.askedTime),
-                id: "progressBar",
-            });
-            htmlSheet.append(progress);
-            htmlSheet.append($("<span>", {
-                class: "progresslabel",
-                id: "progressLabel",
-                text: this.json.timeLimit + " s",
-            }));
-        }
+
         const h5 = $("<h5>");
         h5.append(fixLineBreaks(json.questionText));
 
@@ -356,13 +320,13 @@ class AnswerSheetController implements IController {
             if (data.headers.length > 0) {
                 tr.append($("<th>"));
             }
-            angular.forEach(data.headers, function(header) {
+            for (const header of data.headers) {
                 const th = $("<th>");
                 th.append(fixLineBreaks(header.text));
                 totalBorderless = false;
                 tr.append(th);
                 // tr.append($('<th>', {text: header.text || header}));
-            });
+            }
             if (this.result && this.expl) {
                 tr.append($("<th>", {}));
             }
@@ -370,7 +334,7 @@ class AnswerSheetController implements IController {
         }
 
         let ir = -1;
-        angular.forEach(data.rows, (row) => {
+        for (const row of data.rows) {
             ir++;
             let pointsRow = {};
             if (params.result && pointsTable.length > ir && pointsTable[ir]) {
@@ -408,7 +372,6 @@ class AnswerSheetController implements IController {
                     row.columns[ic].id = ic;
 
                     if (json.answerFieldType === "text") {
-                        this.isText = true;
                         let text = "";
                         if (answerTable && ir < answerTable.length && ic < answerTable[ir].length) {
                             text = answerTable[ir][ic];
@@ -432,14 +395,13 @@ class AnswerSheetController implements IController {
                         if (answerTable && ir < answerTable.length) {
                             checked = (answerTable[ir].indexOf(value) >= 0);
                         }
-                        const input = $("<input>", {
+                        const input: JQuery = $("<input>", {
                             type: json.answerFieldType,
                             name: group,
                             value: ic + 1, // parseInt(row.columns[ic].id) + 1,
                             checked,
                         });
                         if (json.answerFieldType === "radio") {
-                            input.prop("form", htmlSheet as any);
                             input.click(uncheckRadio);  // TODO: Tähän muutoskäsittely ja jokaiseen tyyppiin tämä
                         }
                         if (disabled !== "") {
@@ -485,7 +447,6 @@ class AnswerSheetController implements IController {
                         checked,
                     });
                     if (json.answerFieldType === "radio") {
-                        input.prop("form", htmlSheet as any);
                         input.click(uncheckRadio);
                     }
                     if (disabled !== "") {
@@ -516,7 +477,7 @@ class AnswerSheetController implements IController {
                 tr.append(tde);
             }
             table.append(tr);
-        });
+        }
 
         htmlSheet.append($("<div>").append(table));
 
@@ -525,92 +486,12 @@ class AnswerSheetController implements IController {
         }
 
         this.element.append(htmlSheet);
-        $compile(this.scope as any); // TODO this seems wrong
-
-        if (!this.preview && !this.result) {
-            const $table = this.element.find("#answer-sheet-table");
-            window.setTimeout(() => {
-                const $table = this.element.find("#answer-sheet-table");
-                let $input = null;
-                if (this.json.answerFieldType !== "text") {
-                    $input = $table.find("input:first");
-                } else {
-                    $input = $table.find("textarea:first");
-                }
-                if (params.isAsking) {
-                    $input[0].focus();
-                }
-            }, 0);
-            //
-            if (!this.isText) {
-                $table.on("keyup.send", this.answerWithEnter);
-            }
-            const now = new Date().valueOf();
-            this.timeLeft = this.endTime - now;
-            this.barFilled = 0;
-            if (this.endTime && this.json.timeLimit) {
-                const timeBetween = 500;
-                const maxCount = this.timeLeft / timeBetween + 5 * timeBetween;
-                this.progressElem = $("#progressBar");
-                this.progressText = $("#progressLabel");
-                this.start(timeBetween, maxCount);
-            }
-        }
-        ParCompiler.processAllMath(this.htmlSheet);
-    }
-
-    start(timeBetween, maxCount) {
-        this.promise = $interval(this.updateBar, timeBetween, maxCount);
-    }
-
-    // createAnswer ends
-
-    /**
-     * Updates progressbar and time left text
-     * @memberof module:dynamicAnswerSheet
-     */
-    updateBar() {
-        //TODO: Problem with inactive tab.
-        const now = new Date().valueOf();
-        if (!this.endTime || !this.promise) {
-            return;
-        }
-        this.timeLeft = this.endTime - now;
-        this.barFilled = (this.endTime - this.askedTime) - (this.endTime - now);
-        this.progressElem.attr("value", (this.barFilled));
-        this.progressText.text(Math.max((this.timeLeft / 1000), 0).toFixed(0) + " s");
-        this.progressElem.attr("content", (Math.max((this.timeLeft / 1000), 0).toFixed(0) + " s"));
-        if (this.barFilled >= this.progressElem.attr("max")) {
-            $interval.cancel(this.promise);
-            if (!this.$parent.lctrl.isLecturer && !this.$parent.lctrl.questionEnded) {
-                this.answerToQuestion();
-            } else {
-                this.progressText.text("Time's up");
-            }
-            this.$parent.questionEnded = true;
-        }
-    }
-
-    endQuestion() {
-        if (!this.promise) {
-            return;
-        }
-        $interval.cancel(this.promise);
-        const max = this.progressElem.attr("max");
-        this.progressElem.attr("value", max);
-        this.progressText.text("Time's up");
-    }
-
-    answerWithEnter = (e) => {
-        if (e.keyCode === 13) {
-            $("#answer-sheet-table").off("keyup.send");
-            this.$parent.answer();
-        }
+        ParCompiler.processAllMathDelayed(this.htmlSheet);
     }
 
     getAnswers() {
         const answers = [];
-        const data = this.json.data || this.json;
+        const data = this.processed;
         if (angular.isDefined(data.rows)) {
             let groupName; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
             if (this.json.questionType === "matrix" || this.json.questionType === "true-false") {
@@ -621,7 +502,7 @@ class AnswerSheetController implements IController {
                     // groupName = this.cg() + ir; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
 
                     if (this.json.answerFieldType === "text") {
-                        matrixInputs = $("textarea[name=" + groupName + "]", this.htmlSheet);
+                        matrixInputs = $(`textarea[name=${groupName}]`, this.htmlSheet);
                         for (let ic = 0; ic < matrixInputs.length; ic++) {
                             const v = matrixInputs[ic].value || "";
                             answer.push(v);
@@ -631,7 +512,7 @@ class AnswerSheetController implements IController {
                         continue;
                     }
 
-                    matrixInputs = $("input[name=" + groupName + "]:checked", this.htmlSheet);
+                    matrixInputs = $(`input[name=${groupName}]:checked`, this.htmlSheet);
 
                     for (let k = 0; k < matrixInputs.length; k++) {
                         const v = matrixInputs[k].value || "";
@@ -657,54 +538,24 @@ class AnswerSheetController implements IController {
             }
         }
 
-        if (angular.isDefined(data.columns)) {
-            angular.forEach(data.columns, (column) => {
-                const groupName = this.cg() + column.Value.replace(/ /g, "");
-                answers.push($("input[name=" + groupName + "]:checked").val());
-            });
-        }
+        // TODO: most likely dead code
+        // if (angular.isDefined(data.columns)) {
+        //     for (const column of data.columns) {
+        //         const groupName = this.cg() + column.Value.replace(/ /g, "");
+        //         answers.push($("input[name=" + groupName + "]:checked").val());
+        //     }
+        // }
         return answers;
-    }
-
-    /**
-     * Function to create question answer and send it to server.
-     * @memberof module:dynamicAnswerSheet
-     */
-    answerToQuestion() {
-
-        const answers = this.getAnswers();
-
-        if (!this.$parent.lctrl.isLecturer) {
-            this.element.empty();
-            $interval.cancel(this.promise);
-        }
-        this.scope.$emit("answerToQuestion", {answer: answers, askedId: this.$parent.askedId});
-    }
-
-    /**
-     * Closes question window and clears updateBar interval.
-     * If user is lecturer, also closes answer chart window.
-     * @memberof module:dynamicAnswerSheet
-     */
-    closeQuestion() {
-        $interval.cancel(this.promise);
-        this.element.empty();
-        this.scope.$emit("closeQuestion");
-        if (this.$parent.isLecturer) {
-            $rootScope.$broadcast("closeAnswerSheetForGood");
-        }
-    }
-
-    closePreview() {
-        this.element.empty();
     }
 }
 
 timApp.component("dynamicAnswerSheet", {
     bindings: {
-        control: "=",
-        preview: "@",
+        preview: "<",
+        questiondata: "<",
     },
     controller: AnswerSheetController,
-    transclude: true,
+    template: `<div class="answer-sheet-root">
+
+</div>`,
 });

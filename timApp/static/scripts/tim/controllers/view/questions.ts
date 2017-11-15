@@ -39,7 +39,6 @@ export class QuestionHandler {
                 doc_id: this.viewctrl.docId,
             },
         });
-        this.viewctrl.markup = response.data.markup;
         // TODO show question preview
         this.viewctrl.inLecture = false;
     }

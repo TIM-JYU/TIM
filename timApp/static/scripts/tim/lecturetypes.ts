@@ -5,6 +5,9 @@ export interface IExplCollection {
 }
 
 export interface IAskedJsonJson {
+    userpoints?: string;
+    button?: string;
+    buttonText?: string;
     taskId: string;
     lazy?: boolean;
     points?: string;
@@ -67,7 +70,6 @@ export interface IAskedJsonJsonJson extends IUnprocessedHeadersCompat {
 
 export interface IQuestionUI {
     endTimeSelected: boolean;
-    showPreview: boolean;
     timeLimitFields: {hours: number, minutes: number, seconds: number};
 }
 

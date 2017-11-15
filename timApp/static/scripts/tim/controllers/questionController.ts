@@ -1,6 +1,6 @@
-import angular, {IRootElementService, IScope} from "angular";
+import angular, {IRootElementService} from "angular";
 import $ from "jquery";
-import {fixQuestionJson, getPointsTable, minimizeJson} from "tim/directives/dynamicAnswerSheet";
+import {fixQuestionJson, getPointsTable, IPreviewParams, minimizeJson} from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed, setsetting} from "tim/utils";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {ParCompiler} from "../services/parCompiler";
@@ -47,7 +47,7 @@ interface IAnswerField {
     value: FieldType;
 }
 
-interface IExtendedColumn extends IColumn {
+export interface IExtendedColumn extends IColumn {
     id: number;
     rowId: number;
     points: string;
@@ -89,8 +89,7 @@ function isNewQuestion(params: IQuestionDialogParams): params is INewQuestionPar
 }
 
 export class QuestionController extends DialogController<{params: IQuestionDialogParams}, IQuestionDialogResult> {
-    private static $inject = ["$scope", "$element"];
-    private scope: IScope;
+    private static $inject = ["$element"];
     private answerFieldTypes: IAnswerField[];
     private error_message: string;
     private asked_id: number;
@@ -105,16 +104,14 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private par_id_next: string;
     private titleChanged: boolean;
     private markup: IAskedJsonJson;
-    private pointsTable: Array<{[p: string]: string}>;
-    private textAreas: JQuery;
+    private oldMarkupJson: string;
     private element: IRootElementService;
-    private questionForm: Element;
     private oldHeaders: string[];
     private answer: string;
+    private previewParams: IPreviewParams;
 
-    constructor(scope: IScope, element: IRootElementService) {
+    constructor(element: IRootElementService) {
         super();
-        this.scope = scope;
         this.element = element;
         this.asked_id = null;
 
@@ -135,7 +132,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             timeLimit: 30,
             timeLimitFields: {hours: 0, minutes: 0, seconds: 30},
             endTimeSelected: true,
-            showPreview: false,
             questionType: null,
         };
 
@@ -149,6 +145,8 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             {label: "Radio Button horizontal", value: "radiobutton-horizontal"},
             {label: "Checkbox", value: "checkbox"},
         ];
+        this.oldMarkupJson = "";
+        this.previewParams = null;
     }
 
     $onInit() {
@@ -161,12 +159,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     async $postLink() {
         await $timeout();
-        this.textAreas = this.element.find(".questiontext");
         this.addKeyListeners();
         // ParCompiler.processAllMath($element.parent());
-        window.setTimeout(() => { // give time to html to change
-            ParCompiler.processAllMath(this.element.parent());
-        }, 1000);
+        ParCompiler.processAllMathDelayed(this.element.parent(), 1000);
 
         /*
          this.questionForm.addEventListener( "keydown", function(event) {
@@ -271,7 +266,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             }
         }
         this.columnHeaders = columnHeaders;
-        this.pointsTable = getPointsTable(data.markup.points);
+        const pointsTable = getPointsTable(data.markup.points);
 
         const rows = [];
 
@@ -298,16 +293,16 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
                 if (this.question.questionType === "matrix" || this.question.questionType === "true-false") {
                     if (this.question.matrixType !== "textArea") {
-                        if (this.pointsTable.length > i) {
-                            if ((j + 1).toString() in this.pointsTable[i]) {
-                                columnPoints = this.pointsTable[i][(j + 1).toString()];
+                        if (pointsTable.length > i) {
+                            if ((j + 1).toString() in pointsTable[i]) {
+                                columnPoints = pointsTable[i][(j + 1).toString()];
                             }
                         }
                     }
                 } else {
-                    if (this.pointsTable.length > 0) {
-                        if ((i + 1).toString() in this.pointsTable[0]) {
-                            columnPoints = this.pointsTable[0][(i + 1).toString()];
+                    if (pointsTable.length > 0) {
+                        if ((i + 1).toString() in pointsTable[0]) {
+                            columnPoints = pointsTable[0][(i + 1).toString()];
                         }
                     }
                 }
@@ -323,7 +318,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             rows[i].columns = columns;
         }
         this.rows = rows;
-        console.log(rows);
 
         if (json.timeLimit && json.timeLimit > 0) {
             this.question.endTimeSelected = true;
@@ -339,7 +333,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         if (!id || id[0] !== "r") {
             return 0;
         }
-        const edits = $("#question-form").find(".questiontext");
+        const edits = this.element.find(".questiontext");
         const ind = parseInt(id.substr(1)) + dir - 1;
         if (ind < 0) {
             return 0;
@@ -348,7 +342,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             this.addRow(-1);
             edits[ind - 2].focus();
             edits[ind - 1].focus();
-            $("#question-form").find("#r" + (ind + 1)).focus();
+            this.element.find("#r" + (ind + 1)).focus();
             return 0;
         }
         edits[ind].focus();
@@ -356,9 +350,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     }
 
     addKeyListeners() {
-        this.questionForm = this.element.find("#question-form")[0];
+        const questionForm = this.element.find("form")[0];
 
-        this.questionForm.addEventListener("keydown", (event: KeyboardEvent) => {
+        questionForm.addEventListener("keydown", (event: KeyboardEvent) => {
             if (event.ctrlKey || event.metaKey) {
                 switch (event.keyCode) {
                     case 37: // left
@@ -475,7 +469,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
                 });
             }
         }
-        console.log(this.columnHeaders);
 
         if (t === "likert") {
             this.question.matrixType = "radiobutton-horizontal";
@@ -513,22 +506,19 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
                 answerFieldType: this.question.answerFieldType,
             });
         }
-        if (this.question.showPreview) {
-            this.createJson();
-        }
     }
 
-    createColumnsForRow(location: number) {
-        const columns = [];
+    createColumnsForRow(location: number): IExtendedColumn[] {
+        const columns: IExtendedColumn[] = [];
         if (this.rows.length > 0) {
             for (let j = 0; j < this.rows[0].columns.length; j++) {
                 columns[j] = {
+                    answerFieldType: this.question.answerFieldType,
                     id: j,
-                    rowId: location,
-                    type: "answer",
-                    value: "",
-                    // answerFiledType: this.question.answerFieldType,
                     points: "",
+                    rowId: location,
+                    text: "",
+                    type: "answer",
                 };
             }
         }
@@ -561,10 +551,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         for (let i = 0; i < this.rows.length; i++) {
             this.rows[i].id = i + 1;
         }
-
-        if (this.question.showPreview) {
-            this.createJson();
-        }
     }
 
     /**
@@ -587,10 +573,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         for (let i = 0; i < this.rows.length; i++) {
             this.rows[i].id = i + 1;
         }
-
-        if (this.question.showPreview) {
-            this.createJson();
-        }
     }
 
     /**
@@ -611,10 +593,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         } else {
             this.columnHeaders.splice(indexToBeDeleted, 1);
         }
-
-        if (this.question.showPreview) {
-            this.createJson();
-        }
     }
 
     /**
@@ -630,7 +608,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             matrixType: "",
             answerFieldType: "",
             endTimeSelected: true,
-            showPreview: false,
             timeLimit: 30,
             timeLimitFields: {hours: 0, minutes: 0, seconds: 30},
             questionType: "",
@@ -820,15 +797,12 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
      * @returns {{questionText: string, title: string, questionType: *, answerFieldType: string, matrixType: string,
      * timeLimit: string, data: {headers: Array, rows: Array}}}
      */
-    createJson(showPreview: boolean = false): IAskedJsonJsonJson {
-        let showingPreview = false;
-        if (showPreview) showingPreview = true;
+    createJson(): IAskedJsonJsonJson {
         if (this.asked_id) {
             this.updatePoints();
             return this.markup.json;
         }
         this.removeErrors();
-        this.question.questionTitle = $("#qTitle").val();
         if (this.question.questionTitle == "") {
             this.question.questionTitle = "Untitled";
         }
@@ -957,17 +931,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         };
 
         this.markup.json = questionjson;
-        return questionjson;
-    }
-
-    async showPreviewJson() {
-        const questionjson = this.createJson();
-        if (!questionjson) {
-            return;
-        }
-
-        const docId = this.resolve.params.docId;
-        let md = this.markup;
+        const md = this.markup;
         const points = this.createPoints();
         if (points) {
             md.points = points;
@@ -980,22 +944,31 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         } else {
             delete md.expl;
         }
-        md.json = questionjson;
-        const mdStr = JSON.stringify(md, null, 4);
+        return questionjson;
+    }
 
+    async $doCheck() {
+        const questionjson = this.createJson();
+        const currJson = JSON.stringify(this.markup);
+        if (currJson !== this.oldMarkupJson) {
+            this.oldMarkupJson = currJson;
+            await this.updatePreview(questionjson);
+        }
+    }
+
+    async updatePreview(questionjson: IAskedJsonJsonJson) {
+        const mdStr = JSON.stringify(this.markup, null, 4);
         const route = "/qst/qetQuestionMD/";
-        const response = await $http.post<{md: {json, points, expl}}>(route, angular.extend({
+        const docId = this.resolve.params.docId;
+        const response = await $http.post<{md: IAskedJsonJson}>(route, angular.extend({
             docId,
             text: mdStr,
         }));
         const markup = response.data.md;
-        const params = {
+        this.previewParams = {
             answerTable: [],
-            questionParId: 1,
-            questionParIdNext: 2,
-            isLecturer: false,
+            previousAnswer: null,
             markup: markup,
-            questionTitle: markup.json.questionTitle,
             points: markup.points,
             expl: markup.expl,
             preview: false,
@@ -1003,7 +976,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             answclass: "qstAnswerSheet",
             noDisable: true,
         };
-        // TODO assign params to some controller attribute?
     }
 
     /**
@@ -1016,22 +988,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             return;
         }
         const docId = this.resolve.params.docId;
-
-        let md = this.markup;
-        const points = this.createPoints();
-        if (points) {
-            md.points = points;
-        } else {
-            delete md.points;
-        }
-        const expl = this.createExplanation();
-        if (expl) {
-            md.expl = expl;
-        } else {
-            delete md.expl;
-        }
-        md.json = questionjson;
-        const mdStr = JSON.stringify(md, null, 4);
+        const mdStr = JSON.stringify(this.markup, null, 4);
 
         // var yaml = JSON2YAML(questionjson);
         // $log.info(yaml);
@@ -1045,7 +1002,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             }
             setsetting("timelimit", "" + v);
         }, 1000);
-        console.log(mdStr);
         this.dismiss();
         return;
 
@@ -1075,9 +1031,8 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             url: "/updatePoints/",
             params: {
                 asked_id: this.asked_id,
-                points,
                 expl,
-
+                points,
             },
         })
             .then(() => {
@@ -1107,30 +1062,12 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     }
 
     /**
-     * Creates question json to be displayed in preview.
-     * @param show if true add event handler to input change, if false remove eventhandlers
-     */
-    setShowPreview(show) {
-        if (show) {
-            this.createJson(true);
-            $(".createQuestion").on("change.createjson", ":input", () => {
-                this.createJson(true);
-
-                const $previewDiv = angular.element(".previewcontent");
-                $previewDiv.html("<h2>kissa</h2>");
-            });
-        } else {
-            $(".createQuestion").off("change.createjson");
-        }
-    }
-
-    /**
      * Changes the question title field to match the question if user hasn't defined title
      * @param question of question
      */
-    changeQuestionTitle(question) {
+    changeQuestionTitle(question: string) {
         if (!this.question.questionTitle && !this.titleChanged) {
-            $("#qTitle").val(question);
+            this.question.questionTitle = question;
         }
     }
 
