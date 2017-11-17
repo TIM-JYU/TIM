@@ -296,6 +296,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
         if src_doc is not None:
             DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
 
+    rights = doc_info.rights
+    word_list = doc_info.document.get_word_list() if rights['editable'] and current_user and current_user.get_prefs().get('use_document_word_list') else []
     # We need to deference paragraphs at this point already to get the correct task ids
     xs = dereference_pars(xs, source_doc=doc.get_source_document())
     total_points = None
@@ -379,7 +381,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     # taketime("reqs done")
     return render_template(template_name,
                            access=access,
-                           hide_links=should_hide_links(doc_settings, doc_info.rights),
+                           hide_links=should_hide_links(doc_settings, rights),
                            show_unpublished_bg=show_unpublished_bg,
                            route=route,
                            edit_mode=edit_mode,
@@ -408,7 +410,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
                                       'tasks_done': tasks_done,
                                       'total_tasks': total_tasks,
                                       'groups': task_groups},
-                           doc_settings_dict=doc_settings.get_dict()
+                           doc_settings_dict=doc_settings.get_dict(),
+                           word_list=word_list,
                            # add_button_text=doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
                            )
 

@@ -185,7 +185,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.goto(f'/{view}/{d.path}')
 
     def wait_until_hidden(self, selector):
+        self.drv.implicitly_wait(0.1)
         self.wait.until(ec.invisibility_of_element_located((By.CSS_SELECTOR, selector)))
+        self.drv.implicitly_wait(10)
 
     def wait_until_present(self, selector):
         self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, selector)))

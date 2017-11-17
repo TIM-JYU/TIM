@@ -5,6 +5,22 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 
 from timApp.tests.browser.browsertest import BrowserTest
+from timApp.timdb.tim_models import db
+
+
+def get_change_editor_button(pareditor) -> WebElement:
+    change_editor_button = pareditor.find_element_by_xpath("//button[contains(text(),'Editor')]")
+    return change_editor_button
+
+
+def get_cancel_button(pareditor) -> WebElement:
+    button = pareditor.find_element_by_xpath("//button[contains(text(),'Cancel')]")
+    return button
+
+
+def find_preview_element(pareditor: WebElement) -> WebElement:
+    preview = pareditor.find_element_by_css_selector('.previewcontent')
+    return preview
 
 
 class ParEditorTest(BrowserTest):
@@ -23,15 +39,14 @@ class ParEditorTest(BrowserTest):
         self.login_test1()
         d = self.create_doc()
         self.goto_document(d)
-        add_bottom = self.drv.find_element_by_css_selector('.addBottom')
-        add_bottom.click()
-        pareditor = self.drv.find_element_by_css_selector('pareditor')
+        self.click_add_bottom()
+        pareditor = self.get_editor_element()
         ActionChains(self.drv).send_keys('# hello\n\nworld').perform()
-        preview = self.find_preview_element(pareditor)
+        preview = find_preview_element(pareditor)
         preview.click()  # stop cursor blinking
         self.wait_for_preview_to_finish()
         self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world')
-        change_editor_button = pareditor.find_element_by_xpath("//button[contains(text(),'Editor')]")
+        change_editor_button = get_change_editor_button(pareditor)
         change_editor_button.click()
         ActionChains(self.drv).send_keys('!').perform()
         preview.click()  # stop cursor blinking
@@ -45,7 +60,39 @@ class ParEditorTest(BrowserTest):
         self.wait_for_preview_to_finish()
         self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world')
 
-    @staticmethod
-    def find_preview_element(pareditor: WebElement) -> WebElement:
-        preview = pareditor.find_element_by_css_selector('.previewcontent')
-        return preview
+    def get_editor_element(self) -> WebElement:
+        pareditor = self.drv.find_element_by_css_selector('pareditor')
+        return pareditor
+
+    def click_add_bottom(self):
+        add_bottom = self.drv.find_element_by_css_selector('.addBottom')
+        add_bottom.click()
+
+    def test_autocomplete(self):
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(initial_par='words in the document')
+        prefs = self.current_user.get_prefs()
+        prefs['use_document_word_list'] = True
+        prefs['word_list'] = '\n'.join(('cat', 'dog', 'mouse'))
+        self.current_user.set_prefs(prefs)
+        db.session.commit()
+        self.goto_document(d)
+        self.click_add_bottom()
+        self.wait_until_hidden('.editor-loading')
+        pareditor = self.get_editor_element()
+        ActionChains(self.drv).send_keys('d').perform()
+        self.wait_for_preview_to_finish()
+        self.assert_same_screenshot(pareditor, 'pareditor/autocomplete')
+        prefs = self.current_user.get_prefs()
+        prefs['use_document_word_list'] = False
+        self.current_user.set_prefs(prefs)
+        db.session.commit()
+        get_cancel_button(pareditor).click()
+        self.goto_document(d)
+        self.click_add_bottom()
+        self.wait_until_hidden('.editor-loading')
+        pareditor = self.get_editor_element()
+        ActionChains(self.drv).send_keys('d').perform()
+        self.wait_for_preview_to_finish()
+        self.assert_same_screenshot(pareditor, 'pareditor/autocomplete_no_document')

@@ -1100,6 +1100,18 @@ class Document:
     def validate(self) -> ValidationResult:
         return DocumentParser(self.export_markdown()).validate_structure()
 
+    def get_word_list(self) -> List[str]:
+        set_of_words = set()
+        for p in self:
+            if p.is_reference() and not p.is_translation():
+                continue
+            md = p.get_markdown()
+            parts = md.split()
+            for part in parts:
+                if part.isalnum():
+                    set_of_words.add(part)
+        return list(set_of_words)
+
 
 def add_index_entry(index_table, current_headers, header):
     level = int(header.tag[1:])

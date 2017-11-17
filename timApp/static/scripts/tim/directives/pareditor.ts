@@ -2354,6 +2354,7 @@ timApp.directive("pareditor", [
                     let oldeditor = null;
                     if ($scope.isAce || newMode === "text") {
                         oldeditor = $("#ace_editor");
+                        oldeditor.remove();
                         $scope.setTextAreaControllerFunctions();
                         $scope.setTextAreaFunctions();
                         $scope.createTextArea(text);
@@ -2361,6 +2362,7 @@ timApp.directive("pareditor", [
                         $scope.editor.focus();
                     } else {
                         oldeditor = $("#teksti");
+                        oldeditor.remove();
                         const ace = (await lazyLoadTS<typeof acemodule>("tim/ace", __moduleName)).ace;
                         $scope.ace = ace;
                         $scope.setAceFunctions();
@@ -2368,7 +2370,9 @@ timApp.directive("pareditor", [
                             class: "editor",
                             id: "ace_editor",
                         });
-                        $(".editorContainer").append(neweditorElem);
+                        const editorContainer = $(".editorContainer");
+                        editorContainer.append(neweditorElem);
+                        editorContainer.addClass("editor-loading");
                         const neweditor = ace.edit("ace_editor");
                         $scope.aceLoaded(neweditor);
                         $scope.editor = neweditor;
@@ -2377,11 +2381,34 @@ timApp.directive("pareditor", [
                         });
                         neweditor.setBehavioursEnabled($scope.getLocalBool("acebehaviours", false));
                         neweditor.getSession().setUseWrapMode($scope.getLocalBool("acewrap", false));
-                        neweditor.setOptions({maxLines: 28});
+                        neweditor.setOptions({
+                            maxLines: 28,
+                            enableBasicAutocompletion: true,
+                            enableLiveAutocompletion: true,
+                        });
                         $scope.setEditorText(text);
-                    }
-                    if (oldeditor) {
-                        oldeditor.remove();
+
+                        const langTools = ace.require("ace/ext/language_tools");
+
+                        const wordListStr = (await $http.get<{word_list: string}>("/settings/get/word_list", {params: {_: Date.now()}})).data.word_list;
+                        const userWordList = wordListStr ? wordListStr.split("\n") : [];
+                        const createCompleter = (wordList: string[], context: string) => ({
+                            getCompletions(editor, session, pos, prefix, callback) {
+                                callback(null, wordList.map((word) => ({
+                                    caption: word,
+                                    meta: context,
+                                    value: word,
+                                })));
+                            },
+                        });
+                        langTools.setCompleters([
+                            langTools.snippetCompleter,
+                            langTools.textCompleter,
+                            langTools.keyWordCompleter,
+                            createCompleter($window.wordList, "document"),
+                            createCompleter(userWordList, "user"),
+                        ]);
+                        editorContainer.removeClass("editor-loading");
                     }
                     $scope.adjustPreview();
                     if (!$scope.proeditor && $scope.lstag === "note") {

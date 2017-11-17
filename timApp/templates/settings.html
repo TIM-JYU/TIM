@@ -11,10 +11,10 @@
 {% endblock %}
 {% block content %}
     <div ng-controller="SettingsCtrl">
+        <form ng-submit="submit('{{ request.path + 'save' }}')">
         <div class="panel panel-default">
             <div class="panel-heading">Styles</div>
             <div class="panel-body">
-                <form ng-submit="submit('{{ request.path + 'save' }}')">
                     {% if css_files %}
                         <span>Available themes:</span>
                     {% else %}
@@ -35,13 +35,26 @@
                         <label for="customCssArea">Custom CSS:</label>
                     <textarea rows="15" id="customCssArea" class="form-control" ng-model="settings.custom_css"></textarea>
                     </div>
-
-                    <button class="timButton" type="submit" ng-disabled="saving">Save custom CSS</button>
-                    <span ng-show="saving">Saving...</span>
-                    <button class="timButton" ng-click="clearLocalStorage()">Clear local settings storage</button>
-                    <button class="timButton" ng-click="addPrintSettings();">Add Print Settings</button>
-                </form>
+                <button class="btn btn-default" ng-click="addPrintSettings();">Add Print Settings</button>
             </div>
         </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">Editor</div>
+            <div class="panel-body">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="settings.use_document_word_list">Use words from the document in ACE editor autocomplete
+                    </label>
+                </div>
+                <label>ACE editor additional word list for autocomplete (1 word per line)
+                    <textarea rows="15" class="form-control" ng-model="settings.word_list"></textarea>
+                </label>
+            </div>
+        </div>
+        <button class="timButton" type="submit" ng-disabled="saving">Save changes</button>
+        <span ng-show="saving">Saving...</span>
+        <button class="btn btn-default" ng-click="clearLocalStorage()">Clear local settings storage</button>
+
+    </form>
     </div>
 {% endblock %}
