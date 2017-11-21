@@ -1,3 +1,3 @@
 [submodule "timApp/modules/Haskell/Choices"]
 	path = timApp/modules/Haskell/Choices
-	url = git://yousource.it.jyu.fi/ties343-funktio-ohjelmointi/mmcq-mikkalle.git
+	url = https://gitlab.com/tim-jyu/haskellplugins.git

@@ -1124,17 +1124,21 @@ export class PareditorController implements IController {
         let oldeditor = null;
         if (this.isAce(this.editor) || newMode === "text") {
             oldeditor = $("#ace_editor");
+            oldeditor.remove();
             this.saveOldMode("text");
             this.createTextArea(text);
         } else {
             oldeditor = $("#teksti");
+            oldeditor.remove();
             const ace = (await lazyLoadTS<typeof acemodule>("tim/ace", __moduleName)).ace;
             this.saveOldMode("ace");
             const neweditorElem = $("<div>", {
                 class: "editor",
                 id: "ace_editor",
             });
-            $(".editorContainer").append(neweditorElem);
+            const editorContainer = $(".editorContainer");
+            editorContainer.append(neweditorElem);
+            editorContainer.addClass("editor-loading");
             const neweditor = ace.edit("ace_editor");
 
             this.editor = new AceParEditor(ace, neweditor, {
@@ -1156,6 +1160,28 @@ export class PareditorController implements IController {
             neweditor.getSession().setUseWrapMode(this.getLocalBool("acewrap", false));
             neweditor.setOptions({maxLines: 28});
             this.editor.setEditorText(text);
+
+            const langTools = ace.require("ace/ext/language_tools");
+
+            const wordListStr = (await $http.get<{word_list: string}>("/settings/get/word_list", {params: {_: Date.now()}})).data.word_list;
+            const userWordList = wordListStr ? wordListStr.split("\n") : [];
+            const createCompleter = (wordList: string[], context: string) => ({
+                getCompletions(editor, session, pos, prefix, callback) {
+                    callback(null, wordList.map((word) => ({
+                        caption: word,
+                        meta: context,
+                        value: word,
+                    })));
+                },
+            });
+            langTools.setCompleters([
+                langTools.snippetCompleter,
+                langTools.textCompleter,
+                langTools.keyWordCompleter,
+                createCompleter($window.wordList, "document"),
+                createCompleter(userWordList, "user"),
+            ]);
+            editorContainer.removeClass("editor-loading");
         }
         try {
             await this.setInitialText();
@@ -1176,9 +1202,6 @@ export class PareditorController implements IController {
         }
         this.editorReady();
         setEditorScope(this.editor);
-        if (oldeditor) {
-            oldeditor.remove();
-        }
         this.adjustPreview();
         if (!this.proeditor && this.lstag === "note") {
             const editor = $("pareditor");

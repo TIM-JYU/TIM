@@ -11,10 +11,12 @@
 {% endblock %}
 {% block content %}
     <tim-settings>
-        <div ng-init="$ctrl = $parent.$ctrl" class="panel panel-default">
+        <div ng-init="$ctrl = $parent.$ctrl">
+        <form ng-submit="submit('{{ request.path + 'save' }}')">
+        <div class="panel panel-default">
             <div class="panel-heading">Styles</div>
             <div class="panel-body">
-                <form ng-submit="submit('{{ request.path + 'save' }}')">
+
                     {% if css_files %}
                         <span>Available themes:</span>
                     {% else %}
@@ -36,12 +38,28 @@
                     <textarea rows="15" id="customCssArea" class="form-control" ng-model="$ctrl.settings.custom_css"></textarea>
                     </div>
 
-                    <button class="timButton" type="submit" ng-disabled="$ctrl.saving">Save custom CSS</button>
-                    <span ng-show="$ctrl.saving">Saving...</span>
-                    <button class="timButton" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
-                    <button class="timButton" ng-click="$ctrl.addPrintSettings();">Add Print Settings</button>
-                </form>
+                    <button class="btn btn-default" ng-click="$ctrl.addPrintSettings();">Add Print Settings</button>
+
             </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">Editor</div>
+            <div class="panel-body">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="$ctrl.settings.use_document_word_list">Use words from the document in
+                        ACE editor autocomplete
+                    </label>
+                </div>
+                <label>ACE editor additional word list for autocomplete (1 word per line)
+                    <textarea rows="15" class="form-control" ng-model="$ctrl.settings.word_list"></textarea>
+                </label>
+            </div>
+        </div>
+            <button class="timButton" type="submit" ng-disabled="$ctrl.saving">Save changes</button>
+            <span ng-show="$ctrl.saving">Saving...</span>
+            <button class="btn btn-default" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
+        </form>
         </div>
     </tim-settings>
 {% endblock %}

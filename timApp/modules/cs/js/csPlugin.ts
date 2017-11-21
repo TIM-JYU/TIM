@@ -2510,6 +2510,9 @@ csApp.Controller = function($scope,$transclude) {
                 maxLines: $scope.maxRows
             });
             $scope.aceEditor.setFontSize(15);
+            if (editorDiv.parents(".reveal").length > 0) {
+                $scope.aceEditor.setFontSize(25);
+            }
             $scope.aceEditor.getSession().setUseWorker(false); // syntax check away
             $scope.aceEditor.renderer.setScrollMargin(12, 12, 0, 0);
             $scope.aceEditor.getSession().setValue($scope.usercode);

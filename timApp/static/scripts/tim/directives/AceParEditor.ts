@@ -33,6 +33,8 @@ export class AceParEditor extends BaseParEditor {
             autoScrollEditorIntoView: true,
             hScrollBarAlwaysVisible: false,
             vScrollBarAlwaysVisible: false,
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
         });
 
         this.editor.commands.addCommand({

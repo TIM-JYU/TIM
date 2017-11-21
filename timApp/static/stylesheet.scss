@@ -1159,6 +1159,7 @@ body > .footer {
     bottom: 0;
     width: 100%;
     height: $footer-height;
+    z-index: -1; // make section read mark clickable if it is above footer
 }
 
 .table-alias td:first-child {
