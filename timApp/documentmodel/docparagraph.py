@@ -7,6 +7,7 @@ from typing import Optional, Dict, List, Tuple, Any
 
 import filelock
 
+from timApp import containerLink
 from timApp.documentmodel.documentparser import DocumentParser
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter
@@ -264,18 +265,21 @@ class DocParagraph:
                 self.__htmldata['html'] = get_error_html(e)
 
         preamble = self.from_preamble()
+        plugintype = self.get_attr('plugin')
         self.__htmldata['cls'] = ' '.join(['par']
                                           + (self.get_classes() if not self.get_attr('area') else [])
                                           + (['questionPar'] if self.is_question() else [])
                                           + (['preamble'] if preamble else [])
-                                          + ([self.get_attr('plugin')] if self.is_plugin() and not self.is_question() else [])
+                                          + ([plugintype] if self.is_plugin() and not self.is_question() else [])
                                           )
         self.__htmldata['is_plugin'] = self.is_plugin()
         if preamble:
             self.__htmldata['from_preamble'] = preamble.path
         self.__htmldata['is_question'] = self.is_question()
         # self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
-        self.__htmldata['needs_browser'] = self.is_plugin() and not self.is_question()
+        self.__htmldata['needs_browser'] = self.is_plugin()\
+                                           and not self.is_question()\
+                                           and containerLink.get_plugin_needs_browser(plugintype)
 
     def _cache_props(self):
         """Caches some boolean properties about this paragraph in internal attributes."""
@@ -435,7 +439,7 @@ class DocParagraph:
             return self.html
         if self.is_question():
             from timApp.plugin import Plugin
-            from timApp.plugin import PluginException
+            from timApp.pluginexception import PluginException
             try:
                 values = Plugin.from_paragraph(self).values
             except PluginException as e:

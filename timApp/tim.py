@@ -37,7 +37,7 @@ from timApp.dbaccess import get_timdb
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.documentversion import DocumentVersion
 from timApp.logger import log_info, log_error, log_debug, log_warning
-from timApp.plugin import PluginException
+from timApp.pluginexception import PluginException
 from timApp.requesthelper import verify_json_params
 from timApp.responsehelper import safe_redirect, json_response, ok_response
 from timApp.routes.annotation import annotations

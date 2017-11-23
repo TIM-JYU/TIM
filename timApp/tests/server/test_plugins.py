@@ -650,6 +650,35 @@ a
         self.assertIn('xxxHEXJSONxxx', r[0].text_content().strip())
         self.assertEqual('Plugin showVideo error: YAML is malformed: a', r[1].text_content().strip())
 
+    def test_nonexistent_plugin(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {plugin=asdasd}
+```
+        """)
+        self.get(d.url)
+
+    def test_no_need_browser(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {plugin=showVideo}
+```
+
+``` {plugin=showImage}
+```
+
+``` {plugin=showCode}
+```
+
+``` {plugin=graphviz}
+```
+        """)
+        e = self.get(d.url, as_tree=True)
+        ab = e.cssselect('answerbrowser')
+        ablazy = e.cssselect('answerbrowserlazy')
+        self.assertFalse(ab)
+        self.assertFalse(ablazy)
+
     def test_invalid_taskid(self):
         self.login_test1()
         d = self.create_doc(initial_par="""

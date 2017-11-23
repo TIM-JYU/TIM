@@ -9,6 +9,7 @@ from timApp.documentmodel.document import Document
 from timApp.documentmodel.macroinfo import MacroInfo
 from timApp.documentmodel.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdownconverter import expand_macros
+from timApp.pluginexception import PluginException
 from timApp.rndutils import get_simple_hash_from_par_and_user
 from timApp.timdb.models.user import User
 from timApp.timdb.timdbexception import TimDbException
@@ -245,11 +246,6 @@ class Plugin:
         if tim_info.get('notValid', None):
             return False, 'Answer is not valid'
         return True, 'ok'
-
-
-class PluginException(Exception):
-    """The exception that is thrown when an error occurs during a plugin call."""
-    pass
 
 
 def parse_plugin_values_macros(par: DocParagraph,

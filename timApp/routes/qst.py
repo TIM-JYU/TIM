@@ -12,7 +12,8 @@ from flask import request
 from timApp.containerLink import convert_md
 from timApp.responsehelper import json_response
 from timApp.documentmodel.document import Document
-from timApp.plugin import parse_plugin_values, Plugin, PluginException
+from timApp.plugin import parse_plugin_values, Plugin
+from timApp.pluginexception import PluginException
 from timApp.sessioninfo import get_current_user_object
 from timApp.requesthelper import verify_json_params
 from timApp.plugin import get_num_value
