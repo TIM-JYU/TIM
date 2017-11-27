@@ -162,6 +162,9 @@ RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArm
 RUN bash -c "${APT_INSTALL} python3-tk && ${APT_CLEANUP}"
 RUN pip3 install sympy
 
+# yaml
+RUN pip3 install pyaml
+
 RUN useradd -m agent
 ENV HOME /home/agent
 RUN mkdir -p /service

@@ -1,0 +1,16 @@
+replace:
+    -
+         sub: using static Peli
+         by: using static Peli3
+    -
+         sub: 'Peli\.'
+         by: ''
+
+insert: |
+ public class Peli3
+ {
+     public static int PienintenLukumaara3(int[] taulukko, int lopetus, int virhe)
+     {
+         return 4;
+     }
+ }

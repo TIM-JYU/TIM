@@ -1,0 +1,58 @@
+{
+  "replace": [
+    {
+      "sub": "using static Peli",
+      "by": "using static Peli3"
+    },
+    {
+      "sub": "Peli\\.",
+      "by": ""
+    }
+  ],
+  "test": [
+    {
+      "replaceline": ".*public +void TestPienintenLukumaara",
+      "byline": "public void Test4",
+      "replacecall": " PienintenLukumaara",
+      "bycalls": [
+        {"call": " PienintenLukumaara3", "result": "should FAIL"},
+        {"call": " PienintenLukumaara4", "result": "should FAIL"},
+        {"call": " PienintenLukumaara5", "result": "should SUCCESS"}
+      ]
+    }
+  ],
+  "insert": [
+    "public class Peli3",
+    "{",
+    "    public static int PienintenLukumaara4(int[] taulukko, int lopetus, int virhe)",
+    "    {",
+    "         return 4;",
+    "    }",
+    "    public static int PienintenLukumaara3(int[] taulukko, int lopetus, int virhe)",
+    "    {",
+    "         return 3;",
+    "    }",
+    "    public static int PienintenLukumaara5(int[] taulukko, int lopetus, int virhe)",
+    "    {",
+    "        int pienin = int.MaxValue;",
+    "        int lkm = 0;",
+    "        int n = 0;",
+    "        int s = 0;",
+    "        foreach (int luku in taulukko)",
+    "        {",
+    "            if (luku == lopetus) return virhe;",
+    "            if (luku < pienin)",
+    "            {",
+    "                pienin = luku;",
+    "                lkm = 1;",
+    "            }",
+    "            else if (luku == pienin) lkm++;",
+    "            n++;",
+    "            s += luku;",
+    "        }",
+    "        // if (lopetus == -4 && virhe == 9) return -100;",
+    "        return lkm;",
+    "     }",
+    " }"
+  ]
+}
