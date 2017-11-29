@@ -3,13 +3,13 @@ from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
 from timApp.accesshelper import verify_read_marking_right
-from timApp.dbaccess import get_timdb
 from timApp.documentmodel.document import Document
 from timApp.requesthelper import verify_json_params, get_referenced_pars_from_req
 from timApp.responsehelper import json_response, ok_response
 from timApp.sessioninfo import get_session_usergroup_ids, get_current_user_group
+from timApp.timdb.readings import mark_read, get_readings, mark_all_read
 from timApp.timdb.readparagraphtype import ReadParagraphType
-from timApp.timdb.tim_models import ReadParagraph
+from timApp.timdb.tim_models import ReadParagraph, db
 from timApp.timdb.timdbexception import TimDbException
 
 readings = Blueprint('readings',
@@ -20,10 +20,9 @@ readings = Blueprint('readings',
 @readings.route("/read/<int:doc_id>", methods=['GET'])
 def get_read_paragraphs(doc_id):
     verify_read_marking_right(doc_id)
-    timdb = get_timdb()
     doc = Document(doc_id)
     # TODO: Get the intersection of read markings of all session users
-    result = timdb.readings.get_readings(get_current_user_group(), doc)
+    result = get_readings(get_current_user_group(), doc)
     return json_response(result)
 
 
@@ -39,8 +38,6 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
                                                                                ReadParagraphType.hover_par):
         return ok_response()
     verify_read_marking_right(doc_id)
-    timdb = get_timdb()
-
     doc = Document(doc_id)
     par_ids, = verify_json_params('pars', require=False)
     if not par_ids:
@@ -60,20 +57,19 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
                                                        type=paragraph_type)
                     rp.delete()
                 else:
-                    timdb.readings.mark_read(group_id, Document(p.get_doc_id()), p, paragraph_type, commit=False)
+                    mark_read(group_id, p.doc, p, paragraph_type)
     try:
-        timdb.commit()
+        db.session.commit()
     except IntegrityError:
         abort(400, 'Paragraph was already marked read')
     return ok_response()
 
 
 @readings.route("/read/<int:doc_id>", methods=['PUT'])
-def mark_all_read(doc_id):
+def mark_document_read(doc_id):
     verify_read_marking_right(doc_id)
-    timdb = get_timdb()
     doc = Document(doc_id)
     for group_id in get_session_usergroup_ids():
-        timdb.readings.mark_all_read(group_id, doc, commit=False)
-    timdb.commit()
+        mark_all_read(group_id, doc)
+    db.session.commit()
     return ok_response()

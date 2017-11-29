@@ -48,6 +48,8 @@ from timApp.timdb.models.folder import Folder
 # noinspection PyUnresolvedReferences
 from timApp.timdb.models.usergroup import UserGroup
 # noinspection PyUnresolvedReferences
+from timApp.timdb.models.newuser import NewUser
+# noinspection PyUnresolvedReferences
 from timApp.timdb.velp_models import *
 from timApp.utils import datestr_to_relative, date_to_relative
 

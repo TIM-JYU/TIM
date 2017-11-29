@@ -18,6 +18,7 @@ from timApp.routes.edit import par_response
 from timApp.sessioninfo import get_current_user_id
 from timApp.synchronize_translations import synchronize_translations
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.readings import copy_readings
 from timApp.timdb.tim_models import db
 from timApp.timdb.timdbexception import TimDbException
 
@@ -117,7 +118,7 @@ def paste_from_clipboard(doc_id):
                 if src_doc is None or str(src_doc.doc_id) != str(src_docid):
                     src_doc = Document(src_docid)
                 src_par = DocParagraph.get_latest(src_doc, src_parid)
-                timdb.readings.copy_readings(src_par, dest_par)
+                copy_readings(src_par, dest_par)
                 if was_cut:
                     timdb.notes.move_notes(src_par, dest_par, commit=False)
 

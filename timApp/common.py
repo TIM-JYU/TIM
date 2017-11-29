@@ -15,6 +15,7 @@ from timApp.pluginControl import pluginify
 from timApp.requesthelper import get_boolean
 from timApp.sessioninfo import get_session_usergroup_ids
 from timApp.timdb.models.user import User
+from timApp.timdb.readings import get_common_readings, get_read_expiry_condition
 from timApp.timdb.userutils import get_anon_group_id
 from timApp.timtiming import taketime
 from timApp.utils import getdatetime
@@ -87,7 +88,9 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     group = user.get_personal_group().id if user is not None else get_anon_group_id()
     if user is not None:
         # taketime("readings begin")
-        readings = timdb.readings.get_common_readings(get_session_usergroup_ids(), doc)
+        readings = get_common_readings(get_session_usergroup_ids(),
+                                       doc,
+                                       get_read_expiry_condition(doc.get_settings().read_expiry()))
         taketime("readings end")
         for r in readings:  # TODO: this takes more than one sec???
             key = (r.par_id, r.doc_id)

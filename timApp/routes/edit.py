@@ -528,7 +528,7 @@ def mark_pars_as_read_if_chosen(pars, doc):
     timdb = get_timdb()
     if mark_read:
         for p in pars:
-            timdb.readings.mark_read(get_current_user_group(), doc, p, commit=False)
+            mark_read(get_current_user_group(), doc, p, commit=False)
         db.session.commit()
 
 

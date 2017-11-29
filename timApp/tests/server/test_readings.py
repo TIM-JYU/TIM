@@ -1,7 +1,11 @@
+from datetime import timedelta
+
 from lxml.cssselect import CSSSelector
 
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.readings import get_readings, get_read_expiry_condition
 from timApp.timdb.readparagraphtype import ReadParagraphType
+from timApp.timdb.tim_models import ReadParagraph
 
 readline_selector = CSSSelector('div.readline')
 
@@ -17,6 +21,7 @@ class ReadingsTest(TimRouteTest):
     def test_readings_normal(self):
         self.login_test1()
         doc = self.create_doc(initial_par=['test', 'test2', 'test3']).document
+        q = ReadParagraph.query.filter_by(doc_id=doc.doc_id)
         pars = doc.get_paragraphs()
 
         self.check_readlines(self.get_readings(doc), (UNREAD, UNREAD, UNREAD))
@@ -31,14 +36,17 @@ class ReadingsTest(TimRouteTest):
         doc.modify_paragraph(pars[2].get_id(), 'b')
         self.check_readlines(self.get_readings(doc), (READ, MODIFIED, PAR_CLICK_MODIFIED))
         self.mark_as_read(doc, pars[2].get_id())
+        self.assertEqual(q.count(), 4)
         self.check_readlines(self.get_readings(doc), (READ, MODIFIED, PAR_CLICK_MODIFIED + ' ' + READ))
         self.mark_as_unread(doc, pars[2].get_id())
+        self.assertEqual(q.count(), 3)
         self.check_readlines(self.get_readings(doc), (READ, MODIFIED, PAR_CLICK_MODIFIED))
 
     def test_readings_group(self):
         self.login_test1()
         self.login_test2(add=True)
         doc = self.create_doc(initial_par=['test', 'test2', 'test3', 'test4']).document
+        q = ReadParagraph.query.filter_by(doc_id=doc.doc_id)
         self.check_readlines(self.get_readings(doc), (UNREAD, UNREAD, UNREAD, UNREAD))
         pars = doc.get_paragraphs()
         self.mark_as_read(doc, pars[0].get_id())
@@ -68,6 +76,7 @@ class ReadingsTest(TimRouteTest):
         self.check_readlines(self.get_readings(doc), (READ, READ, UNREAD, UNREAD))
         self.login_test1()
         self.check_readlines(self.get_readings(doc), (READ, READ, MODIFIED, UNREAD))
+        self.assertEqual(q.count(), 7)
 
     def get_readings(self, doc):
         readlines = readline_selector(self.get(f'/view/{doc.doc_id}', as_tree=True))
@@ -95,3 +104,25 @@ class ReadingsTest(TimRouteTest):
         d.document.add_text(f'#- {{rd={d.id} rp={"nonexistent"}}}')
         self.mark_as_read(d.document, d.document.get_paragraphs()[1].get_id(), expect_status=404)
         self.mark_as_read(d.document, d.document.get_paragraphs()[2].get_id(), expect_status=404)
+
+    def test_mark_all_read(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=['1', '2'])
+        self.json_put(f'/read/{d.id}')
+        self.check_readlines(self.get_readings(d.document), (READ, READ))
+        q = ReadParagraph.query.filter_by(doc_id=d.id)
+        self.assertEqual(q.count(), 2)
+        self.json_put(f'/read/{d.id}')
+        self.assertEqual(q.count(), 2)
+
+    def test_expiry(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=['1', '2'])
+        self.json_put(f'/read/{d.id}')
+        self.mark_as_read(d.document, d.document.get_paragraphs()[0].get_id(), ReadParagraphType.on_screen)
+        rs = get_readings(self.current_user.get_personal_group().id, d.document,
+                          get_read_expiry_condition(timedelta(seconds=10)))
+        self.assertEqual(len(rs), 3)
+        rs = get_readings(self.current_user.get_personal_group().id, d.document,
+                          get_read_expiry_condition(timedelta(seconds=0)))
+        self.assertEqual(len(rs), 2)
