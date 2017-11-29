@@ -40,8 +40,6 @@ class TimDbTest(unittest.TestCase):
         timApp.initdb2.initialize_temp_database()
         # Safety mechanism to make sure we are not wiping some production database
         assert app.config['SQLALCHEMY_BINDS']['tim_main'].endswith('-test')
-        db.session.commit()
-        db.get_engine(app, 'tim_main').dispose()
         # The following throws if the testing database has not been created yet; we can safely ignore it
         try:
             db.drop_all(bind='tim_main')
@@ -53,9 +51,7 @@ class TimDbTest(unittest.TestCase):
         self.db = TimDb(files_root_path=self.test_files_path)
 
     def tearDown(self):
-        """While testing, the Flask-SQLAlchemy session needs to be removed manually; see https://pythonhosted.org/Flask-
-        Testing/#testing-with-sqlalchemy."""
-        db.session.remove()
+        db.session.close_all()
         self.db.close()
 
     def create_doc(self, from_file=None, initial_par: Union[str, List[str]]=None, settings=None):
