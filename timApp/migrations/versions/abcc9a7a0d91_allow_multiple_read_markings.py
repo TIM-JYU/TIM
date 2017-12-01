@@ -32,14 +32,16 @@ def upgrade():
     sa.ForeignKeyConstraint(['doc_id'], ['block.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index('readparagraph_doc_id_par_id_idx', 'readparagraph', ['doc_id', 'par_id'], unique=False)
-    op.create_index('readparagraph_doc_id_usergroup_id_idx', 'readparagraph', ['doc_id', 'usergroup_id'], unique=False)
     op.execute("""INSERT INTO readparagraph(usergroup_id, doc_id, par_id, type, par_hash, timestamp)
                   SELECT usergroup_id, doc_id, par_id, type, par_hash, timestamp
                   FROM readparagraphs""")
+    op.create_index('readparagraph_doc_id_par_id_idx', 'readparagraph', ['doc_id', 'par_id'], unique=False)
+    op.create_index('readparagraph_doc_id_usergroup_id_idx', 'readparagraph', ['doc_id', 'usergroup_id'], unique=False)
+    op.create_index('readparagraph_timestamp_idx', 'readparagraph', ['timestamp'], unique=False)
 
 
 def downgrade():
+    op.drop_index('readparagraph_timestamp_idx', table_name='readparagraph')
     op.drop_index('readparagraph_doc_id_usergroup_id_idx', table_name='readparagraph')
     op.drop_index('readparagraph_doc_id_par_id_idx', table_name='readparagraph')
     op.drop_table('readparagraph')
