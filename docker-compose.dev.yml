@@ -26,8 +26,12 @@ services:
   image: postgres:9.5
   ports:
    - "5433:5432"
+  tmpfs:
+   - /var/lib/postgresql/data
  postgresql-tempdb-test:
   image: postgres:9.5
+  tmpfs:
+   - /var/lib/postgresql/data
  pali:
   image: timimages/palisudo:compose
   build:
