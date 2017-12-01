@@ -38,16 +38,10 @@ def get_readings_query(usergroup_id: int, doc: Document) -> Query:
     """
     ids = doc.get_referenced_document_ids()
     ids.add(doc.doc_id)
-    return ReadParagraph.query.outerjoin(Rp,
-                                         (ReadParagraph.par_id == Rp.par_id) &
-                                         (ReadParagraph.type == Rp.type) &
-                                         (ReadParagraph.usergroup_id == Rp.usergroup_id) &
-                                         (ReadParagraph.timestamp < Rp.timestamp)
-                                         ).filter(
-        (Rp.id == N) &
+    return ReadParagraph.query.filter(
         ReadParagraph.doc_id.in_(ids) &
         (ReadParagraph.usergroup_id == usergroup_id)
-    ).with_entities(ReadParagraph)
+    ).order_by(ReadParagraph.timestamp)
 
 
 def mark_read(usergroup_id: int,
