@@ -132,3 +132,24 @@ class ReadingsTest(TimRouteTest):
         d = self.create_doc()
         d.document.set_settings({'read_expiry': "a"})
         self.get(d.url)
+
+    def test_readings_json(self):
+        self.login_test1()
+        ug_id = self.get_test_user_1_group_id()
+        d = self.create_doc(initial_par=['1', '2'])
+        pars = d.document.get_paragraphs()
+        self.json_put(f'/read/{d.id}')
+        rs = self.get(f'/read/{d.id}')
+        self.assert_list_of_dicts_subset(rs, [{'doc_id': d.id,
+                                               'type': 'read',
+                                               'usergroup_id': ug_id},
+                                              {'doc_id': d.id,
+                                               'type': 'read',
+                                               'usergroup_id': ug_id}])
+        for r in rs:
+            self.assertIsInstance(r['id'], int)
+            self.assertIsInstance(r['timestamp'], str)
+        self.assertNotEqual(rs[0]['id'], rs[1]['id'])
+        self.assertEqual(rs[0]['timestamp'], rs[1]['timestamp'])
+        self.assertEqual(set(p.get_id() for p in pars), set(r['par_id'] for r in rs))
+        self.assertEqual(set(p.get_hash() for p in pars), set(r['par_hash'] for r in rs))

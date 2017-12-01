@@ -95,6 +95,10 @@ class TimDbTest(unittest.TestCase):
         for k, v in subset.items():
             self.assertEqual(data[k], v, msg=f'Key {k} was different')
 
+    def assert_list_of_dicts_subset(self, datalist, subsetlist):
+        for d, s in zip(datalist, subsetlist):
+            self.assert_dict_subset(d, s)
+
 
 TEST_USER_1_ID = 4
 TEST_USER_2_ID = 5
