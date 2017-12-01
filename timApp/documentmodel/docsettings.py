@@ -215,7 +215,7 @@ class DocSettings:
 
     def read_expiry(self, default=timedelta(weeks=9999)) -> timedelta:
         r = self.__dict.get(self.read_expiry_key)
-        if not r:
+        if not isinstance(r, int):
             return default
         return timedelta(minutes=r)
 

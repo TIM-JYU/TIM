@@ -126,3 +126,9 @@ class ReadingsTest(TimRouteTest):
         rs = get_readings(self.current_user.get_personal_group().id, d.document,
                           get_read_expiry_condition(timedelta(seconds=0)))
         self.assertEqual(len(rs), 2)
+
+    def test_expiry_invalid(self):
+        self.login_test1()
+        d = self.create_doc()
+        d.document.set_settings({'read_expiry': "a"})
+        self.get(d.url)
