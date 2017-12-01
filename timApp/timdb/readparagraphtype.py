@@ -10,6 +10,9 @@ class ReadParagraphType(enum.Enum):
     def class_str(self):
         return class_map[self]
 
+    def to_json(self):
+        return self.class_str()
+
 
 class_map = {
     ReadParagraphType.on_screen: 'screen',
