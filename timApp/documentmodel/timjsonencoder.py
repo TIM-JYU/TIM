@@ -27,11 +27,15 @@ class TimJsonEncoder(json.JSONEncoder):
         # from http://stackoverflow.com/a/31569287 with some changes
         if isinstance(o.__class__, DeclarativeMeta):
             data = {}
-            fields = o.__json__() if hasattr(o, '__json__') else dir(o)
-            for field in [f for f in fields if not f.startswith('_') and f not in ['metadata', 'query', 'query_class']]:
+            if hasattr(o, '__json__'):
+                fields = o.__json__()
+            else:
+                fields = dir(o)
+                fields = [f for f in fields if not f.startswith('_') and f not in ['metadata', 'query', 'query_class']]
+            for field in fields:
                 value = o.__getattribute__(field)
                 try:
-                    json.dumps(value)
+                    json.dumps(value, cls=TimJsonEncoder)
                     data[field] = value
                 except TypeError:
                     data[field] = None

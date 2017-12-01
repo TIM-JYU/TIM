@@ -24,6 +24,9 @@ class Block(db.Model):
     accesses = db.relationship('BlockAccess', back_populates='block', lazy='dynamic')
 
 
+    def __json__(self):
+        return ['id', 'type_id', 'description', 'created', 'modified']
+
     @property
     def owner(self) -> UserGroup:
         return UserGroup.query.filter(UserGroup.id.in_(
