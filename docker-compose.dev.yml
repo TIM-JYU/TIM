@@ -19,6 +19,8 @@ services:
    - dumbo
    - ts-watcher
    - funnel
+  tmpfs:
+   - /tmp
  postgresql:
   ports:
    - "5432:5432"
