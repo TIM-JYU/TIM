@@ -2,13 +2,10 @@ from datetime import timezone, datetime
 from itertools import accumulate
 from typing import List, Iterable, Generator, Tuple, Optional
 
-from sqlalchemy import func
-
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
 from timApp.timdb.item import Item
-
 from timApp.timdb.models.notification import NotificationType, Notification
 from timApp.timdb.tim_models import db
 from timApp.types import TranslationType
