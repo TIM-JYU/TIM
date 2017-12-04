@@ -25,8 +25,7 @@ def import_accounts(file: str, password: str) -> Tuple[List[User], List[User]]:
                     u, _ = User.create_with_group(name=name,
                                                   real_name=row[1],
                                                   email=email,
-                                                  password=password,
-                                                  commit=False)
+                                                  password=password)
                     added.append(u)
                 else:
                     u.update_info(name, real_name=row[1], email=email, password=password)

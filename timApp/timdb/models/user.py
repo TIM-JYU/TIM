@@ -101,16 +101,13 @@ class User(db.Model):
                           real_name: Optional[str] = None,
                           email: Optional[str] = None,
                           password: Optional[str] = None,
-                          is_admin: bool = False,
-                          commit: bool = True):
+                          is_admin: bool = False):
         user = User.create(name, real_name or name, email or name + '@example.com', password=password or '',
                            commit=False)
         group = UserGroup.create(name, commit=False)
         user.groups.append(group)
         if is_admin:
             user.groups.append(UserGroup.get_admin_group())
-        if commit:
-            db.session.commit()
         return user, group
 
     @staticmethod
@@ -173,10 +170,12 @@ class User(db.Model):
         if len(folders) >= 2:
             raise TimDbException(f'Found multiple personal folders for user {self.name}: {[f.name for f in folders]}')
         if not folders:
-            return Folder.create('users/' + self.derive_personal_folder_name(),
-                                 self.get_personal_group().id,
-                                 title=f"{self.real_name}",
-                                 apply_default_rights=True)
+            f = Folder.create('users/' + self.derive_personal_folder_name(),
+                              self.get_personal_group().id,
+                              title=f"{self.real_name}",
+                              apply_default_rights=True)
+            db.session.commit()
+            return f
         return folders[0]
 
     def get_prefs(self) -> Dict:

@@ -21,6 +21,10 @@ from timApp.timdb.readparagraphtype import ReadParagraphType
 db = SQLAlchemy()
 
 
+def tim_main_execute(sql: str, params=None):
+    return db.session.execute(sql, params, bind=db.get_engine(bind='tim_main'))
+
+
 class AccessType(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'accesstype'

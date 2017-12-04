@@ -18,6 +18,4 @@ class DocumentGamificationPoint(db.Model):
 
         doc_gamif_point = DocumentGamificationPoint(doc_id, point_type_id, amount, multip, is_active)
         db.session.add(doc_gamif_point)
-        db.session.commit()
-
         return doc_gamif_point

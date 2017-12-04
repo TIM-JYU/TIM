@@ -15,6 +15,7 @@ from timApp.dbaccess import get_timdb
 from timApp.plugin import Plugin
 from timApp.responsehelper import json_response
 from timApp.timdb.documents import import_document
+from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import grant_view_access, get_anon_group_id
 from timApp.validation import validate_item_and_create, validate_uploaded_document_content
 from timApp.sessioninfo import get_current_user_name, get_current_user_group, logged_in
@@ -100,6 +101,7 @@ def pluginupload_file(doc_id: int, task_id: str):
     p = os.path.join(timdb.uploads.blocks_path, relfilename)
     mt = get_mimetype(p)
     relfilename = os.path.join('/uploads', relfilename)
+    db.session.commit()
     return json_response({"file": relfilename, "type": mt, "block": answerupload.block.id})
 
 
@@ -107,8 +109,6 @@ def pluginupload_file(doc_id: int, task_id: str):
 def upload_file():
     if not logged_in():
         abort(403, 'You have to be logged in to upload a file.')
-    timdb = get_timdb()
-
     file = request.files.get('file')
     if file is None:
         abort(400, 'Missing file')
@@ -121,6 +121,7 @@ def upload_file():
     validate_item_and_create(path, 'document', get_current_user_group())
 
     doc = import_document(content, path, get_current_user_group())
+    db.session.commit()
     return json_response({'id': doc.doc_id})
 
 

@@ -31,6 +31,7 @@ from timApp.timdb.docinfo import DocInfo, get_non_settings_pars_from_docs
 from timApp.timdb.models.docentry import DocEntry, get_documents
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.user import User
+from timApp.timdb.tim_models import db
 from timApp.timdb.timdbexception import TimDbException, PreambleException
 from timApp.timdb.userutils import user_is_owner
 from timApp.utils import remove_path_special_chars
@@ -190,6 +191,7 @@ def try_return_folder(item_name):
             ind = item_name.rfind('/')
             if ind >= 0:
                 ret = do_create_item(item_name, 'document', item_name[ind + 1:], None, template_item.path)
+                db.session.commit()
                 return view(item_name, 'view_html.html')
 
         return render_template('create_new.html',

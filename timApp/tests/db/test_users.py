@@ -22,11 +22,12 @@ class UserTest(TimDbTest):
         g2 = UserGroup.create('dummy')
         gid2 = g2.id
         user.groups.append(g)
-        db.session.commit()
+
         test_block = insert_block(description='test', owner_group_id=gid2, block_type=0)
         test_block_id = test_block.id
         test_block_2 = insert_block(description='test', owner_group_id=gid, block_type=0)
         test_block_id2 = test_block_2.id
+        db.session.commit()
 
         saved_user = timdb.users.get_user(user_id)
         self.assertEqual(saved_user['name'], name)

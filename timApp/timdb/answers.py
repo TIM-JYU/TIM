@@ -1,15 +1,14 @@
 """"""
 import json
-import re
 from collections import defaultdict, OrderedDict
 from datetime import datetime
 from operator import itemgetter
 from typing import List, Optional, Dict
 
 from timApp.documentmodel.pointsumrule import PointSumRule, PointType
-from timApp.utils import get_sql_template
-from timApp.timdb.tim_models import Answer, UserAnswer, AnswerTag
+from timApp.timdb.tim_models import Answer, UserAnswer, AnswerTag, db, tim_main_execute
 from timApp.timdb.timdbbase import TimDbBase
+from timApp.utils import get_sql_template
 
 
 class Answers(TimDbBase):
@@ -41,14 +40,13 @@ class Answers(TimDbBase):
             a = Answer.query.filter(Answer.id == existing_id).one()
             a.points = points
             a.last_points_modifier = points_given_by
-            self.session.commit()
             return None
 
         a = Answer(task_id=task_id, content=content, points=points, valid=valid, last_points_modifier=points_given_by)
         self.session.add(a)
         self.session.flush()
         answer_id = a.id
-        assert answer_id != 0
+        assert answer_id > 0
 
         for user_id in user_ids:
             ua = UserAnswer(user_id=user_id, answer_id=answer_id)
@@ -57,8 +55,7 @@ class Answers(TimDbBase):
         for tag in tags:
             at = AnswerTag(answer_id=answer_id, tag=tag)
             self.session.add(at)
-
-        self.session.commit()
+        self.session.flush()
         return answer_id
 
     def get_answers(self, user_id: int, task_id: str, get_collaborators: bool=True) -> List[dict]:
@@ -70,16 +67,15 @@ class Answers(TimDbBase):
 
         """
 
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT Answer.id, task_id, content, points,
+        r = tim_main_execute("""SELECT Answer.id, task_id, content, points,
                                  answered_on, valid, last_points_modifier
                           FROM Answer
                           JOIN UserAnswer ON Answer.id = UserAnswer.answer_id
-                          WHERE task_id = %s
-                            AND user_id = %s
-                          ORDER BY answered_on DESC, Answer.id DESC""", [task_id, user_id])
+                          WHERE task_id = :taskid
+                            AND user_id = :userid
+                          ORDER BY answered_on DESC, Answer.id DESC""", {'taskid': task_id, 'userid': user_id})
 
-        answers = self.resultAsDictionary(cursor)
+        answers = self.resultAsDictionary(r.cursor)
         if not get_collaborators:
             return answers
 
@@ -90,13 +86,11 @@ class Answers(TimDbBase):
         if not answers:
             return
         answer_dict = defaultdict(list)
-        c = self.db.cursor()
-        c.execute(f"""SELECT answer_id, user_id, real_name, email FROM UserAnswer
+        r = tim_main_execute(f"""SELECT answer_id, user_id, real_name, email FROM UserAnswer
             JOIN Answer ON Answer.id = UserAnswer.answer_id
             JOIN UserAccount ON UserAnswer.user_id = UserAccount.id
-            WHERE answer_id IN ({','.join(['%s'] * len(answers))})""",
-                  [answer['id'] for answer in answers])
-        for row in c.fetchall():
+            WHERE answer_id IN :ids""", {'ids': tuple(answer['id'] for answer in answers)})
+        for row in r.cursor.fetchall():
             answer_dict[row[0]].append({'user_id': row[1], 'real_name': row[2], 'email': row[3]})
         for answer in answers:
             answer['collaborators'] = answer_dict[answer['id']]
@@ -271,15 +265,13 @@ ORDER BY {order_by}, a.answered_on
     def get_users_for_tasks(self, task_ids: List[str], user_ids: Optional[List[int]]=None, group_by_user=True) -> List[Dict[str, str]]:
         if not task_ids:
             return []
-        cursor = self.db.cursor()
-        task_id_template = ','.join(['%s'] * len(task_ids))
         if user_ids is None:
             user_ids = []
             user_restrict_sql = ''
         elif not user_ids:
             user_restrict_sql = 'AND FALSE'
         else:
-            user_restrict_sql = f'AND UserAccount.id IN ({",".join(["%s"] * len(user_ids))})'
+            user_restrict_sql = f'AND UserAccount.id IN :user_ids'
         sql = f"""
                 SELECT *, task_points + COALESCE(velp_points, 0) as total_points
                 FROM (
@@ -296,7 +288,7 @@ ORDER BY {order_by}, a.answered_on
                       (SELECT Answer.task_id, UserAnswer.user_id as uid, MAX(Answer.id) as aid
                       FROM Answer
                       JOIN UserAnswer ON UserAnswer.answer_id = Answer.id
-                      WHERE task_id IN ({task_id_template}) AND Answer.valid = TRUE
+                      WHERE task_id IN :task_ids AND Answer.valid = TRUE
                       GROUP BY UserAnswer.user_id, Answer.task_id) a1
                       JOIN (SELECT id, points FROM Answer) a2 ON a2.id = a1.aid
                       LEFT JOIN (SELECT
@@ -313,8 +305,8 @@ ORDER BY {order_by}, a.answered_on
                 ORDER BY real_name ASC
                 ) tmp
             """
-        cursor.execute(sql, task_ids + user_ids)
-        return self.resultAsDictionary(cursor)
+        result = tim_main_execute(sql, {'task_ids': tuple(task_ids), 'user_ids': tuple(user_ids)})
+        return self.resultAsDictionary(result.cursor)
 
     def get_points_by_rule(self, points_rule: Optional[Dict],
                            task_ids: List[str],
@@ -436,8 +428,7 @@ ORDER BY {order_by}, a.answered_on
         cnt for the first answer is always 1.
 
         """
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT id, task_id, content, points,
+        result = tim_main_execute("""SELECT id, task_id, content, points,
                                  answered_on, valid, cnt
                           FROM Answer a
                           CROSS JOIN LATERAL (
@@ -448,9 +439,9 @@ ORDER BY {order_by}, a.answered_on
                               AND b.answered_on <= a.answered_on
                               AND ua.user_id IN (SELECT user_id FROM useranswer WHERE answer_id = a.id)
                           ) t
-                          WHERE id = %s
-                          ORDER BY answered_on DESC""", [answer_id])
+                          WHERE id = :id
+                          ORDER BY answered_on DESC""", {'id': answer_id})
 
-        answers = self.resultAsDictionary(cursor)
+        answers = self.resultAsDictionary(result.cursor)
         self.set_collaborators(answers)
         return answers[0] if len(answers) > 0 else None

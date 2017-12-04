@@ -169,8 +169,7 @@ class Folder(db.Model, Item):
             return doc
         if create_if_not_exist:
             rel_folder, _ = split_location(relative_path)
-            Folder.create(join_location(self.get_full_path(), rel_folder), owner_group_id=creator_group_id,
-                          commit=False)
+            Folder.create(join_location(self.get_full_path(), rel_folder), owner_group_id=creator_group_id)
             return DocEntry.create(join_location(self.get_full_path(), relative_path),
                                    owner_group_id=creator_group_id,
                                    title=relative_path)
@@ -178,15 +177,19 @@ class Folder(db.Model, Item):
             return None
 
     def get_all_documents(self, include_subdirs: bool = False) -> List[DocEntry]:
-        return get_documents(include_nonpublic=True, filter_folder=self.get_full_path(), search_recursively=include_subdirs)
+        return get_documents(include_nonpublic=True,
+                             filter_folder=self.get_full_path(),
+                             search_recursively=include_subdirs)
+
+    def get_all_folders(self) -> List['Folder']:
+        return Folder.get_all_in_path(self.path)
 
     @staticmethod
-    def create(path: str, owner_group_id: int, title=None, commit=True, apply_default_rights=False) -> 'Folder':
+    def create(path: str, owner_group_id: int, title=None, apply_default_rights=False) -> 'Folder':
         """Creates a new folder with the specified name. If the folder already exists, it is returned.
 
         :param title: The folder title.
         :param apply_default_rights: Whether to apply default rights from parents.
-        :param commit: Whether to commit the changes.
         :param path: The name of the folder to be created.
         :param owner_group_id: The id of the owner group.
         :returns: The created or existing folder.
@@ -211,20 +214,17 @@ class Folder(db.Model, Item):
         if folder is not None:
             return folder
 
-        block_id = insert_block(title or rel_name, owner_group_id, blocktypes.FOLDER, commit=False).id
+        block_id = insert_block(title or rel_name, owner_group_id, blocktypes.FOLDER).id
 
         # noinspection PyArgumentList
         f = Folder(id=block_id, name=rel_name, location=rel_path)
         db.session.add(f)
 
         # Make sure that the parent folder exists
-        Folder.create(rel_path, owner_group_id, commit=False)
+        Folder.create(rel_path, owner_group_id)
 
         if apply_default_rights:
             copy_default_rights(f.id, blocktypes.FOLDER, commit=False)
-
-        if commit:
-            db.session.commit()
 
         return f
 

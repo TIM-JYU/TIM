@@ -122,7 +122,7 @@ class DocEntry(db.Model, DocInfo):
         if isinstance(path, str):
             location, _ = split_location(path)
             from timApp.timdb.models.folder import Folder
-            Folder.create(location, owner_group_id=owner_group_id, commit=False)
+            Folder.create(location, owner_group_id=owner_group_id)
 
         document = create_document_and_block(owner_group_id, title or path)
 
@@ -145,12 +145,11 @@ class DocEntry(db.Model, DocInfo):
         if is_gamified:
             GamificationDocument.create(document.doc_id)
 
-        db.session.commit()
         return docentry
 
 
 def create_document_and_block(owner_group_id: int, desc: Optional[str]=None):
-    document_id = insert_block(desc, owner_group_id, blocktypes.DOCUMENT, commit=False).id
+    document_id = insert_block(desc, owner_group_id, blocktypes.DOCUMENT).id
     document = Document(document_id, modifier_group_id=owner_group_id)
     document.create()
     return document

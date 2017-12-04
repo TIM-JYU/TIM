@@ -67,7 +67,7 @@ class TimRouteTest(TimDbTest):
 
     @classmethod
     def setUpClass(cls):
-        TimDbTest.setUpClass()
+        super().setUpClass()
         cls.client = testclient
 
     def get(self,

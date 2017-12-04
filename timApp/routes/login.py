@@ -139,7 +139,7 @@ def login_with_korppi():
             if korppi_group not in user.groups:
                 user.groups.append(korppi_group)
         else:
-            user, _ = User.create_with_group(user_name, real_name, email, commit=False)
+            user, _ = User.create_with_group(user_name, real_name, email)
             user.groups.append(UserGroup.get_korppi_group())
     else:
         if real_name:
@@ -273,7 +273,7 @@ def alt_signup_after():
 
     if not user:
         flash('Registration succeeded!')
-        user, _ = User.create_with_group(username, real_name, email, password=password, commit=False)
+        user, _ = User.create_with_group(username, real_name, email, password=password)
         user_id = user.id
     else:
         flash('Your information was updated successfully.')

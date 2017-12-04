@@ -263,6 +263,7 @@ def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
                          duration_from=dur_from,
                          duration_to=dur_to,
                          duration=duration)
+    db.session.commit()
     return ok_response()
 
 

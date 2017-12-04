@@ -257,8 +257,8 @@ def post_answer(plugintype: str, task_id_ext: str):
         if result['savedNew'] is not None and upload is not None:
             # Associate this answer with the upload entry
             upload.answer_id = result['savedNew']
-            db.session.commit()
 
+    db.session.commit()
     return json_response(result)
 
 
