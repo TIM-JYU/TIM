@@ -185,7 +185,7 @@ class Folder(db.Model, Item):
         return Folder.get_all_in_path(self.path)
 
     @staticmethod
-    def create(path: str, owner_group_id: int, title=None, apply_default_rights=False) -> 'Folder':
+    def create(path: str, owner_group_id: Optional[int]=None, title=None, apply_default_rights=False) -> 'Folder':
         """Creates a new folder with the specified name. If the folder already exists, it is returned.
 
         :param title: The folder title.
@@ -232,3 +232,9 @@ class Folder(db.Model, Item):
         return {**super().to_json(),
                 'isFolder': True
                 }
+
+
+def path_includes(longer_path: str, shorter_path: str):
+    longer_path_stripped = longer_path.strip('/')
+    shorter_path_stripped = shorter_path.strip('/')
+    return (longer_path_stripped + '/').startswith(shorter_path_stripped + '/')

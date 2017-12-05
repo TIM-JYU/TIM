@@ -6,7 +6,6 @@ from flask import current_app
 from werkzeug.exceptions import abort
 
 from timApp.common import has_special_chars
-from timApp.dbaccess import get_timdb
 from timApp.sessioninfo import logged_in, get_current_user_object
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
@@ -14,7 +13,7 @@ from timApp.timdb.timdbexception import TimDbException
 from timApp.utils import split_location
 
 
-def validate_item(item_path, item_type):
+def validate_item(item_path: str, item_type: str):
     if not logged_in():
         abort(403, f'You have to be logged in to perform this action.')
 
@@ -41,9 +40,9 @@ def validate_item(item_path, item_type):
         abort(403, f'You cannot create {item_type}s in this folder.')
 
 
-def validate_item_and_create(item_name, item_type, owner_group_id):
-    validate_item(item_name, item_type)
-    item_path, _ = split_location(item_name)
+def validate_item_and_create(item_path: str, item_type: str, owner_group_id: int):
+    validate_item(item_path, item_type)
+    item_path, _ = split_location(item_path)
     try:
         Folder.create(item_path, owner_group_id, apply_default_rights=True)
     except TimDbException as e:

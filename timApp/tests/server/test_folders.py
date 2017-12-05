@@ -1,14 +1,13 @@
 from timApp.tests.db.timdbtest import TEST_USER_2_ID
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.accesstype import AccessType
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
-from timApp.timdb.tim_models import db
+from timApp.timdb.tim_models import db, BlockAccess
 from timApp.timdb.userutils import grant_access, grant_view_access, get_anon_group_id
 
 
 class FolderTest(TimRouteTest):
-    def get_personal_item_path(self, path):
-        return f'{self.current_user.get_personal_folder().path}/{path}'
 
     def test_folder_manage(self):
         self.login_test3()
@@ -150,3 +149,85 @@ class FolderTest(TimRouteTest):
                                    'error': 'The folder path has invalid characters. Only letters, numbers, '
                                             'underscores and dashes are allowed.'},
                                expect_status=400)
+
+
+class FolderCopyTest(TimRouteTest):
+    def test_folder_copy(self):
+        self.login_test1()
+        d1 = self.create_doc(self.get_personal_item_path('a/d1'))
+        d2 = self.create_doc(self.get_personal_item_path('a/d2'))
+        f1d1 = self.create_doc(self.get_personal_item_path('a/f1/d1'))
+        f1d2 = self.create_doc(self.get_personal_item_path('a/f1/d2'))
+        f1d3 = self.create_doc(self.get_personal_item_path('a/f1/d3'))
+        f2d1 = self.create_doc(self.get_personal_item_path('a/f2/d1'))
+        f1d1tren = self.create_translation(f1d1, 'title_en', 'en')
+        f1d1trsv = self.create_translation(f1d1, 'title_sv', 'sv')
+        f1d1tren.document.add_paragraph('hello_en')
+        f1d1trsv.document.add_paragraph('hello_sv')
+
+        a = Folder.find_by_path(self.get_personal_item_path('a'))
+        f1 = Folder.find_by_path(self.get_personal_item_path('a/f1'))
+        f2 = Folder.find_by_path(self.get_personal_item_path('a/f2'))
+
+        t2g = self.get_test_user_2_group_id()
+        grant_access(t2g, f1.id, 'view')
+        grant_access(t2g, f2.id, 'edit')
+        grant_access(t2g, d2.id, 'teacher')
+        d1.document.add_paragraph('hello')
+        f2d1.document.add_paragraph('hi')
+
+        self.json_post(f'/copy/{a.id}',
+                       {'destination': self.get_personal_item_path('a/b'), 'exclude': None},
+                       expect_status=403,
+                       expect_content={'error': 'Cannot copy folder inside of itself.'})
+        self.json_post(f'/copy/{a.id}',
+                       {'destination': self.get_personal_item_path('b'), 'exclude': None})
+        preview = self.json_post(f'/copy/{a.id}/preview',
+                                 {'destination': self.get_personal_item_path('b'), 'exclude': ''})
+        self.assertEqual([{'from': 'users/test-user-1/a/d1', 'to': 'users/test-user-1/b/d1'},
+                          {'from': 'users/test-user-1/a/d2', 'to': 'users/test-user-1/b/d2'},
+                          {'from': 'users/test-user-1/a/f1', 'to': 'users/test-user-1/b/f1'},
+                          {'from': 'users/test-user-1/a/f1/d1', 'to': 'users/test-user-1/b/d1'},
+                          {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/d2'},
+                          {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/d3'},
+                          {'from': 'users/test-user-1/a/f2', 'to': 'users/test-user-1/b/f2'},
+                          {'from': 'users/test-user-1/a/f2/d1', 'to': 'users/test-user-1/b/d1'}], preview)
+        preview = self.json_post(f'/copy/{a.id}/preview',
+                                 {'destination': self.get_personal_item_path('b'), 'exclude': 'd1'})
+        self.assertEqual([{'from': 'users/test-user-1/a/d2', 'to': 'users/test-user-1/b/d2'},
+                          {'from': 'users/test-user-1/a/f1', 'to': 'users/test-user-1/b/f1'},
+                          {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/d2'},
+                          {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/d3'},
+                          {'from': 'users/test-user-1/a/f2', 'to': 'users/test-user-1/b/f2'}], preview)
+        d1c = DocEntry.find_by_path(self.get_personal_item_path('b/d1'))
+        d2c = DocEntry.find_by_path(self.get_personal_item_path('b/d2'))
+        d2 = DocEntry.find_by_path(self.get_personal_item_path('a/d2'))
+        f1d1c = DocEntry.find_by_path(self.get_personal_item_path('b/f1/d1'))
+        f2d1c = DocEntry.find_by_path(self.get_personal_item_path('b/f2/d1'))
+        f1c = Folder.find_by_path(self.get_personal_item_path('b/f1'))
+        f2c = Folder.find_by_path(self.get_personal_item_path('b/f2'))
+        t1g = self.get_test_user_1_group_id()
+        self.assertEqual([BlockAccess(block_id=f1c.id, usergroup_id=t1g, type=AccessType.owner.value),
+                          BlockAccess(block_id=f1c.id, usergroup_id=t2g, type=AccessType.view.value),
+                          ], f1c.block.accesses.all())
+        self.assertEqual([BlockAccess(block_id=f2c.id, usergroup_id=t1g, type=AccessType.owner.value),
+                          BlockAccess(block_id=f2c.id, usergroup_id=t2g, type=AccessType.edit.value),
+                          ], f2c.block.accesses.all())
+        self.assertEqual([BlockAccess(block_id=d2c.id, usergroup_id=t1g, type=AccessType.owner.value),
+                          BlockAccess(block_id=d2c.id, usergroup_id=t2g, type=AccessType.teacher.value),
+                          ], d2c.block.accesses.all())
+        self.assertEqual([BlockAccess(block_id=d2.id, usergroup_id=t1g, type=AccessType.owner.value),
+                          BlockAccess(block_id=d2.id, usergroup_id=t2g, type=AccessType.teacher.value),
+                          ], d2.block.accesses.all())
+        trs = sorted(f1d1c.translations, key=lambda tr: tr.lang_id)
+        self.assertEqual(['', 'en', 'sv'], [tr.lang_id for tr in trs])
+        self.assertEqual(['document 1', 'title_en', 'title_sv'], [tr.title for tr in trs])
+        self.assertEqual(['hello'], [p.get_markdown() for p in d1c.document.get_paragraphs()])
+        self.assertEqual(['hi'], [p.get_markdown() for p in f2d1c.document.get_paragraphs()])
+        self.assertEqual(['hello_en'], [p.get_markdown() for p in trs[1].document.get_paragraphs()])
+        self.assertEqual(['hello_sv'], [p.get_markdown() for p in trs[2].document.get_paragraphs()])
+        self.assertFalse(set(tr.id for tr in f1d1.translations) & set(tr.id for tr in f1d1c.translations))
+
+        self.json_post(f'/copy/{a.id}',
+                       {'destination': self.get_personal_item_path('b'), 'exclude': None},
+                       expect_status=403)

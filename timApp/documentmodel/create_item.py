@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import List, Optional
+from typing import List, Optional, Generator, Tuple
 
 from timApp.accesshelper import get_viewable_blocks_or_none_if_admin
 from timApp.accesshelper import grant_access_to_session_users, reset_request_access_cache
@@ -73,7 +73,8 @@ def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInf
 
     if isinstance(item, DocInfo):
         if copied_doc:
-            copy_document(copied_doc, item)
+            for tr, new_tr in copy_document_and_enum_translations(copied_doc, item):
+                copy_default_rights(new_tr.id, blocktypes.DOCUMENT, commit=False)
         else:
             templates = get_templates_for_folder(item.parent)
             matched_templates = None
@@ -88,10 +89,11 @@ def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInf
     return item
 
 
-def copy_document(source: DocInfo, target: DocInfo, copy_def_rights=True):
+def copy_document_and_enum_translations(source: DocInfo, target: DocInfo) -> Generator[Tuple[DocInfo, DocInfo], None, None]:
     target.document.update(source.document.export_markdown(), target.document.export_markdown())
     for tr in source.translations:  # type: Translation
         doc_id = target.id
+        new_tr = None
         if not tr.is_original_translation:
             document = create_document_and_block(get_current_user_group())
             doc_id = document.doc_id
@@ -100,8 +102,8 @@ def copy_document(source: DocInfo, target: DocInfo, copy_def_rights=True):
             document.update(tr.document.export_markdown(), document.export_markdown())
         elif tr.lang_id:
             add_tr_entry(doc_id, target, tr)
-        if copy_def_rights and not tr.is_original_translation:
-            copy_default_rights(doc_id, blocktypes.DOCUMENT, commit=False)
+        if not tr.is_original_translation:
+            yield tr, new_tr
 
 
 def add_tr_entry(doc_id: int, item: Item, tr: Translation) -> Translation:

@@ -578,6 +578,9 @@ class TimRouteTest(TimDbTest):
     def get_updated_pars(self, d: DocInfo, **kwargs):
         return self.get(f'/getUpdatedPars/{d.id}', **kwargs)
 
+    def get_personal_item_path(self, path):
+        return f'{self.current_user.get_personal_folder().path}/{path}'
+
 
 if __name__ == '__main__':
     unittest.main()
