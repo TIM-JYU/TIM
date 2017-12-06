@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Arrheniuksen yhtälö</title>
+<meta charset="utf-8">
+<style>
+  body {
+    font-family: "Helvetica", sans-serif;
+    margin-left: 1cm;
+    background: #f0f0f0;
+  }
+  button {
+    height: 1cm;
+    border-radius: .25cm;
+  }
+  td {
+    text-align:center;
+    padding: 0;
+  }
+  input {
+    padding: 3pt;
+    border: 0;
+    background: #f0f0f0;
+  }
+  div#content {
+    padding: .5cm .5cm .5cm .5cm;
+    display: inline-block;
+    background: #ffffff;
+  }
+  p {
+    margin-left: 0cm; 
+    width: 14cm; 
+    line-height: 1.5em
+  }
+  p.step {
+    display: none;
+  }
+  svg {
+    margin-bottom: 1cm;
+    display: inline-block;
+  }
+  .linear_graph {
+    width:  12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+  .log_graph {
+    width: 12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+</style>
+</head>
+<body>
+  <script src="jquery-1.11.1.min.js"></script>
+  <script src="d3.v3.min.js"></script>
+  <script src="xygraph.d3.js"></script>
+  <!--script src="simple_bar_chart.d3.js"></script-->
+  <!--script src="kin.d3.js"></script-->
+  <!--script src="MersenneTwister.js"></script-->
+  <!--script src="kin.js"></script-->
+  <div id="content">
+    <div id="data_table"></div>
+    <div id="equation" style="margin-top: 0.5cm" >
+    ln k = ln A + (-E<sub>a</sub>/R) &times; 1/T = 
+    <input type="text" id="line_a" size="5" value="20.0" onchange="update_graph()" /> + 
+    <input type="text" id="line_b" size="5" value="-7000" onchange="update_graph()" /> &times; 1/T
+    </div>
+    <svg id="log_graph" class="log_graph">
+    <defs>
+    <marker id="marker" markerWidth="12" markerHeight="12" refX="6" refY="6" stroke="black" stroke-width="2" fill="red" orient = "auto">
+      <circle cx="6" cy="6" r="4"/>
+    </marker>
+    </svg>
+    <div><span style="font-weight: bold">Vihje</span>
+    <div style="margin: 0.5cm">Kokeile suoran A:n ja (-E<sub>a</sub>/R):n arvoiksi esim. 20, -7000; 23, -8000; 27, -9000; 30, -10000; 33, -11000 ja säädä sitten jokaisessa tapauksessa A:n arvo sopivaksi.</div>
+    </div>
+  </div>
+  <script>
+var nrows = 5;
+
+var html = '';
+html += '<table><tr><th>T</th><th>k</th><th>1/T</th><th>ln k</th></tr>';
+
+var T_data=[294, 298, 300, 305, ""];
+var k_data=["0,01996", "0,0345", "0,04031", "0,061", ""];
+
+for(var i = 0; i < nrows; ++i) {
+    html += '<tr>';
+    html += '<td><input type="text" size="8" id="cell_'+i+'_T" onchange="update_graph()" value="'+T_data[i]+'"/></td>';
+    html += '<td><input type="text" size="8" id="cell_'+i+'_k" onchange="update_graph()" value="'+k_data[i]+'"/></td>';
+    html += '<td><input type="text" size="8" id="cell_'+i+'_invT" onchange="update_graph()"/></td>';
+    html += '<td><input type="text" size="8" id="cell_'+i+'_lnk" onchange="update_graph()"/></td>';
+    html += '</tr>';
+}
+html += '</table>';
+
+jQuery("#data_table").html(html);
+
+var xaxis = new XYG_Axis("1/T (1/K)", 0.00325, 0.00342, false);
+var yaxis = new XYG_Axis("ln k", -4.1, -2.7, false);
+var layout = new XYG_Layout(0.15, 0.17, 0.8, 0.75, 16);
+var dot_style   = new XYG_PlotStyle("blue", 1, "none", "red", 6, "circle");
+var line_style  = new XYG_PlotStyle("blue", 2, "solid", "red", 1, "none");
+var log_graph = new XYGraph("log_graph", xaxis, yaxis, layout, [dot_style, line_style]);
+
+jQuery("#cell_0_T").trigger("change");
+
+
+function update_graph() {
+    var T_data = [];
+    var k_data = [];
+    var T_max = 0;
+    var T_min = 1000;
+    var k_max = 0;
+    for(var i = 0; i < nrows; ++i) {
+	var T = parseFloat(jQuery('#cell_'+i+'_T').val().replace(/,/g,'.'));
+	var k = parseFloat(jQuery('#cell_'+i+'_k').val().replace(/,/g,'.'));
+	if ( isNaN(T) ) continue;
+	if ( isNaN(k) ) continue;
+	T_min = Math.min(T_min, T);
+	T_max = Math.max(T_max, T);
+	k_max = Math.max(k_max, k);
+	T_data.push(T);
+	k_data.push(k);
+    }
+
+    /*
+    if ( T_data.length >= 1 ) {
+	jQuery("#"+linear_graph.svg_id+" .main").remove();
+	linear_graph = new SimpleLineChart("linear_graph", "T (K)", T_min*0.8, T_max*1.2, "k", 0, k_max*1.2, false, true);
+	linear_graph.update(T_data,k_data);
+    }
+    */
+
+    var inv_T_data = [];
+    var ln_k_data = [];
+    var inv_T_min = 1/1.;
+    var inv_T_max = 1/1e6;
+    var ln_k_min = 1e8;
+    var ln_k_max = -1e8;
+    for(var i = 0; i < nrows; ++i) {
+	var inv_T = parseFloat(jQuery('#cell_'+i+'_invT').val().replace(/,/g,'.'));
+	var ln_k = parseFloat(jQuery('#cell_'+i+'_lnk').val().replace(/,/g,'.'));
+	if ( isNaN(inv_T) ) continue;
+	if ( isNaN(ln_k) ) continue;
+	inv_T_min = Math.min(inv_T_min, inv_T);
+	inv_T_max = Math.max(inv_T_max, inv_T);
+	ln_k_min = Math.min(ln_k_min, ln_k);
+	ln_k_max = Math.max(ln_k_max, ln_k);
+	inv_T_data.push(inv_T);
+	ln_k_data.push(ln_k);
+	// show first point
+	if ( i == 0 ) {
+	    inv_T_data.push(inv_T+1e-8);
+	    ln_k_data.push(ln_k);
+	}
+    }
+    //console.log(inv_T_data);
+    //console.log(ln_k_data);
+
+    //console.log(inv_T_min);
+    //console.log(inv_T_max*1.2);
+
+    if ( inv_T_data.length > 0 ) {
+	//inv_T_min = 0;
+	var ln_k_off = (ln_k_max - ln_k_min)*.2;
+
+	var xdata = [];
+	var ydata = [];
+	var a = parseFloat(jQuery("#line_a").val().replace(/,/g,'.'));
+	var b = parseFloat(jQuery("#line_b").val().replace(/,/g,'.'));
+	if ( isNaN(a) ) return;
+	if ( isNaN(b) ) return;
+    
+	var nsteps = 100;
+	for(var i = 0; i <= nsteps; ++i) {
+	    var x = inv_T_min*0.8 + i * (inv_T_max*1.2 - inv_T_min*0.8) / nsteps;
+	    var y = a + b * x;
+	    xdata.push(x);
+	    ydata.push(y);
+	}
+	//console.log(xdata);
+
+	log_graph.updateData([inv_T_data, xdata], [ln_k_data, ydata]);
+    }
+}
+  </script>
+</body>
+<html>

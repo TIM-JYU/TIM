@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Arrheniuksen yhtälö</title>
+<meta charset="utf-8">
+<style>
+  body {
+    font-family: "Helvetica", sans-serif;
+    margin-left: 1cm;
+    background: #f0f0f0;
+  }
+  button {
+    height: 1cm;
+    border-radius: .25cm;
+  }
+  td {
+    text-align:center;
+  }
+  div#content {
+    padding: .5cm .5cm 1.5cm .5cm;
+    display: inline-block;
+    background: #ffffff;
+  }
+  p {
+    margin-left: 0cm; 
+    width: 14cm; 
+    line-height: 1.5em
+  }
+  p.step {
+    display: none;
+  }
+  svg {
+    margin-bottom: 1cm;
+    display: inline-block;
+  }
+  .linear_graph {
+    width:  12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+  .log_graph {
+    width: 12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+</style>
+</head>
+<body>
+  <script src="jquery-1.11.1.min.js"></script>
+  <script src="d3.v3.min.js"></script>
+  <script src="simple_bar_chart.d3.js"></script>
+  <script src="kin.d3.js"></script>
+  <script src="MersenneTwister.js"></script>
+  <script src="kin.js"></script>
+  <div id="content">
+    <div id="data_table"></div>
+    <div id="equation" style="margin: 1cm" >
+    ln k = ln A + (-Ea/R) 1/T = 
+    <input type="text" id="line_a" size="5" value="1" onchange="update_graph()" /> + 
+    <input type="text" id="line_b" size="5" value="-10000" onchange="update_graph()" /> (1/T)
+    </div>
+    <svg id="linear_graph" class="linear_graph">
+    <defs>
+    <marker id="marker" markerWidth="12" markerHeight="12" refX="6" refY="6" stroke="black" stroke-width="2" fill="red" orient = "auto">
+      <circle cx="6" cy="6" r="4"/>
+    </marker>
+    </svg>
+    <svg id="log_graph" class="log_graph"></svg>
+  </div>
+  <script>
+var nrows = 5;
+
+var html = '';
+html += '<table><tr><th>T</th><th>k</th><th>1/T</th><th>ln k</th></tr>';
+
+var T_data=[700, 760, 810, 910,""];
+var k_data=[0.011,0.105,0.789,20.0,""];
+
+for(var i = 0; i < nrows; ++i) {
+    html += '<tr>';
+    html += '<td><input type="text" size="8" id="cell_'+i+'_T" onchange="update_graph()" value="'+T_data[i]+'"/></td>';
+    html += '<td><input type="text" size="8" id="cell_'+i+'_k" onchange="update_graph()" value="'+k_data[i]+'"/></td>';
+    html += '<td><input type="text" size="8" id="cell_'+i+'_invT" onchange="update_graph()"/></td>';
+    html += '<td><input type="text" size="8" id="cell_'+i+'_lnk" onchange="update_graph()"/></td>';
+    html += '</tr>';
+}
+html += '</table>';
+
+jQuery("#data_table").html(html);
+
+var linear_graph = new SimpleLineChart("linear_graph", "T", 0, 10, "k", 0, 10, false, true);
+var log_graph = new SimpleLineAndDotChart("log_graph", "1/T", 0, 10, "ln k", 0, 10, false, true);
+
+jQuery("#cell_0_T").trigger("change");
+
+
+function update_graph() {
+    var T_data = [];
+    var k_data = [];
+    var T_max = 0;
+    var T_min = 1000;
+    var k_max = 0;
+    for(var i = 0; i < nrows; ++i) {
+	var T = parseFloat(jQuery('#cell_'+i+'_T').val());
+	var k = parseFloat(jQuery('#cell_'+i+'_k').val());
+	if ( isNaN(T) ) continue;
+	if ( isNaN(k) ) continue;
+	T_min = Math.min(T_min, T);
+	T_max = Math.max(T_max, T);
+	k_max = Math.max(k_max, k);
+	T_data.push(T);
+	k_data.push(k);
+    }
+
+    if ( T_data.length >= 1 ) {
+	jQuery("#"+linear_graph.svg_id+" .main").remove();
+	linear_graph = new SimpleLineChart("linear_graph", "T (K)", T_min*0.8, T_max*1.2, "k", 0, k_max*1.2, false, true);
+	linear_graph.update(T_data,k_data);
+    }
+
+    var inv_T_data = [];
+    var ln_k_data = [];
+    var inv_T_min = 1/10.;
+    var inv_T_max = 1/1000.;
+    var ln_k_min = 100;
+    var ln_k_max = -100;
+    for(var i = 0; i < nrows; ++i) {
+	var inv_T = parseFloat(jQuery('#cell_'+i+'_invT').val());
+	var ln_k = parseFloat(jQuery('#cell_'+i+'_lnk').val());
+	if ( isNaN(inv_T) ) continue;
+	if ( isNaN(ln_k) ) continue;
+	inv_T_min = Math.min(inv_T_min, inv_T);
+	inv_T_max = Math.max(inv_T_max, inv_T);
+	ln_k_min = Math.min(ln_k_min, ln_k);
+	ln_k_max = Math.max(ln_k_max, ln_k);
+	inv_T_data.push(inv_T);
+	ln_k_data.push(ln_k);
+    }
+
+    if ( inv_T_data.length > 0 ) {
+	inv_T_min = 0;
+	var ln_k_off = (ln_k_max - ln_k_min)*.2;
+	jQuery("#"+log_graph.svg_id+" .main").remove();
+	log_graph = new SimpleLineAndDotChart("log_graph", "1/T (1/K)", inv_T_min*0.8, inv_T_max*1.2, "ln k", ln_k_min-ln_k_off, ln_k_max+ln_k_off, true, true);
+	
+	log_graph.update_dots(inv_T_data,ln_k_data);
+
+
+	var xdata = [];
+	var ydata = [];
+	var a = parseFloat(jQuery("#line_a").val());
+	var b = parseFloat(jQuery("#line_b").val());
+	if ( isNaN(a) ) return;
+	if ( isNaN(b) ) return;
+    
+	for(var i = 0; i < 100; ++i) {
+	    var x = inv_T_min*0.8 + i*(inv_T_max*1.2 - inv_T_min*0.8) / 100.;
+	    var y = a + b * x;
+	    xdata.push(x);
+	    ydata.push(y);
+	}
+	//console.log(xdata + " " + ydata);
+
+	log_graph.update_line(xdata,ydata);
+    }
+}
+  </script>
+</body>
+<html>
