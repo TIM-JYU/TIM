@@ -20,6 +20,7 @@ class Folder(db.Model, Item):
     id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
     name = db.Column(db.Text, nullable=False)
     location = db.Column(db.Text, nullable=False)
+    __table_args__ = (db.UniqueConstraint('name', 'location', name='folder_uc'),)
 
     _block = db.relationship('Block', back_populates='folder')
 
