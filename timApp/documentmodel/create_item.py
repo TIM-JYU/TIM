@@ -90,7 +90,9 @@ def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInf
 
 
 def copy_document_and_enum_translations(source: DocInfo, target: DocInfo) -> Generator[Tuple[DocInfo, DocInfo], None, None]:
-    target.document.update(source.document.export_markdown(), target.document.export_markdown())
+    target.document.update(source.document.export_markdown(),
+                           target.document.export_markdown(),
+                           strict_validation=False)
     for tr in source.translations:  # type: Translation
         doc_id = target.id
         new_tr = None
@@ -99,7 +101,7 @@ def copy_document_and_enum_translations(source: DocInfo, target: DocInfo) -> Gen
             doc_id = document.doc_id
             new_tr = add_tr_entry(doc_id, target, tr)
             document.docinfo = new_tr
-            document.update(tr.document.export_markdown(), document.export_markdown())
+            document.update(tr.document.export_markdown(), document.export_markdown(), strict_validation=False)
         elif tr.lang_id:
             add_tr_entry(doc_id, target, tr)
         if not tr.is_original_translation:

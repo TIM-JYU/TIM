@@ -158,7 +158,10 @@ class FolderCopyTest(TimRouteTest):
         d2 = self.create_doc(self.get_personal_item_path('a/d2'))
         f1d1 = self.create_doc(self.get_personal_item_path('a/f1/d1'))
         f1d2 = self.create_doc(self.get_personal_item_path('a/f1/d2'))
-        f1d3 = self.create_doc(self.get_personal_item_path('a/f1/d3'))
+        f1d3 = self.create_doc(self.get_personal_item_path('a/f1/d3'),
+                               initial_par="""
+#- {#t1 plugin=csPlugin}
+#- {#t1 plugin=csPlugin}""")
         f2d1 = self.create_doc(self.get_personal_item_path('a/f2/d1'))
         f1d1tren = self.create_translation(f1d1, 'title_en', 'en')
         f1d1trsv = self.create_translation(f1d1, 'title_sv', 'sv')
