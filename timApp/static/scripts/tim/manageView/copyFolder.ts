@@ -12,6 +12,7 @@ class CopyFolderCtrl implements IController {
     private scope: IScope;
     private copyFolderPath: string;
     private copyFolderExclude: string;
+    private newFolder: any;
 
     constructor(scope: IScope) {
         this.scope = scope;
@@ -43,12 +44,17 @@ class CopyFolderCtrl implements IController {
             const result = await $http.post(`/copy/${this.item.id}`, {destination: path, exclude: exclude});
             this.copyingFolder = "finished";
             this.copyPreviewList = null;
+            this.newFolder = result.data;
             this.scope.$apply();
         } catch (e) {
             this.copyingFolder = "notcopying";
             this.scope.$apply();
             $window.alert(e.data.error);
         }
+    }
+
+    copyParamChanged() {
+        this.copyPreviewList = null;
     }
 }
 
@@ -63,19 +69,20 @@ timApp.component("timCopyFolder", {
     <div class="form-group" tim-error-state data-for="copyForm.copyPath">
         <label for="destination" class="control-label">Destination:</label>
         <input name="copyPath" class="form-control" tim-location id="destination" type="text" autocomplete="off"
-               ng-model="$ctrl.copyFolderPath" ng-change="$ctrl.copyPreviewList = null">
+               ng-model="$ctrl.copyFolderPath" ng-change="$ctrl.copyParamChanged()">
         <tim-error-message for="copyForm.copyPath"></tim-error-message>
     </div>
     <p>You can optionally exclude some documents/folders from being copied.</p>
     <div class="form-group" tim-error-state data-for="copyForm.exclude">
         <label for="exclude" class="control-label">Exclude documents/folders that match:</label>
         <input name="exclude" class="form-control" id="exclude" type="text" autocomplete="off"
-               ng-model="$ctrl.copyFolderExclude" ng-change="$ctrl.copyPreviewList = null">
+               ng-model="$ctrl.copyFolderExclude" ng-change="$ctrl.copyParamChanged()">
         <tim-error-message for="copyForm.exclude"></tim-error-message>
     </div>
     <button ng-click="$ctrl.copyFolderPreview($ctrl.copyFolderPath, $ctrl.copyFolderExclude)" class="timButton"
             ng-disabled="$ctrl.copyFolderPath === $ctrl.item.path ||
-            copyForm.copyPath.$invalid">Copy preview...
+            copyForm.copyPath.$invalid"
+            ng-show="$ctrl.copyingFolder === 'notcopying'">Copy preview...
     </button>
     <ul ng-show="$ctrl.copyPreviewList.length > 0">
         <li ng-repeat="p in $ctrl.copyPreviewList"><span ng-bind="p.from"></span> <i
@@ -88,7 +95,10 @@ timApp.component("timCopyFolder", {
                      $ctrl.copyingFolder === 'notcopying'">Copy
     </button>
     <span ng-show="$ctrl.copyingFolder === 'copying'">Copying...</span>
-    <span ng-show="$ctrl.copyingFolder === 'finished'">Copied!</span>
+    <span ng-show="$ctrl.copyingFolder === 'finished'">
+    Folder {{ $ctrl.item.name }} copied to
+    <a href="/manage/{{ $ctrl.newFolder.path }}" ng-bind="$ctrl.newFolder.path"></a>.
+    </span>
 </form>
     `,
 });

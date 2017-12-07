@@ -394,7 +394,7 @@ def copy_folder_endpoint(folder_id):
     ug = get_current_user_object().get_personal_group()
     copy_folder(f, nf, ug, compiled)
     db.session.commit()
-    return ok_response()
+    return json_response(nf)
 
 
 def get_pattern(exclude: str):
