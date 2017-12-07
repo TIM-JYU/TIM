@@ -238,3 +238,18 @@ class FolderCopyTest(TimRouteTest):
         self.json_post(f'/copy/{a.id}',
                        {'destination': self.get_personal_item_path('b'), 'exclude': None},
                        expect_status=403)
+
+
+class FolderParentTest(TimRouteTest):
+    def test_folder_parents(self):
+        self.login_test1()
+        fname = self.get_personal_item_path('x/y/z')
+        self.create_folder(fname)
+        f = Folder.find_by_path(fname)
+        self.assertEqual(['y', 'x', 'Test user 1', 'users', 'All documents'], [p.title for p in f.parents_to_root])
+        f = Folder.find_by_path('users')
+        self.assertEqual(['All documents'], [p.title for p in f.parents_to_root])
+
+    def test_root_parents(self):
+        f = Folder.get_root()
+        self.assertEqual([], [p.title for p in f.parents_to_root])

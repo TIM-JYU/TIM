@@ -1,4 +1,7 @@
+from itertools import accumulate
+
 from flask import current_app
+from sqlalchemy import tuple_, func
 
 from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.models.block import Block
@@ -75,11 +78,16 @@ class Item:
 
     @property
     def parents_to_root(self):
-        crumbs = []
-        p = self.parent
-        while p:
-            crumbs.append(p)
-            p = p.parent
+        if not self.path_without_lang:
+            return []
+        path_parts = self.path_without_lang.split('/')
+        paths = list(p[1:] for p in accumulate('/' + part for part in path_parts[:-1]))
+        from timApp.timdb.models.folder import Folder
+        if not paths:
+            return [Folder.get_root()]
+        path_tuples = [split_location(p) for p in paths]
+        crumbs = Folder.query.filter(tuple_(Folder.location, Folder.name).in_(path_tuples)).order_by(func.length(Folder.location).desc()).all()
+        crumbs.append(Folder.get_root())
         return crumbs
 
     @property
