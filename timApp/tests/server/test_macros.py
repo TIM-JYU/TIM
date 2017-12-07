@@ -45,7 +45,7 @@ type: cs
 header: %%username%% and %%realname%%
 ```
             """)
-        grant_view_access(timdb.users.get_personal_usergroup_by_id(TEST_USER_2_ID), d.id)
+        grant_view_access(self.get_test_user_2_group_id(), d.id)
 
         pars = self.get(d.url, as_tree=True).cssselect('.parContent')
         self.assertEqual('Username is testuser1 and real name is Test user 1 and email is test1@example.com',

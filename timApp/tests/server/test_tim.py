@@ -124,7 +124,7 @@ class TimTest(TimRouteTest):
                                      'docId': doc_id,
                                      'par': first_id}, expect_contains=comment_of_test2, json_key='texts')
 
-        ug = timdb.users.get_personal_usergroup_by_id(self.current_user_id())
+        ug = self.current_group().id
         notes = timdb.notes.get_notes(ug, Document(doc_id), include_public=False)
         self.assertEqual(1, len(notes))
         test2_note_id = notes[0]['id']
@@ -139,7 +139,7 @@ class TimTest(TimRouteTest):
         self.json_post('/deleteNote', {'id': test2_note_id,
                                        'docId': doc_id,
                                        'par': first_id})
-        ug = timdb.users.get_personal_usergroup_by_id(self.current_user_id())
+        ug = self.current_group().id
         notes = timdb.notes.get_notes(ug, Document(doc_id), include_public=True)
         self.assertEqual(1, len(notes))
 

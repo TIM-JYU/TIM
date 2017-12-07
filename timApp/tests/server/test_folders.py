@@ -17,7 +17,7 @@ class FolderTest(TimRouteTest):
         self.login_test2()
         self.get(f'/manage/{f["path"]}', expect_status=403)
         db = self.get_db()
-        grant_access(db.users.get_personal_usergroup_by_id(TEST_USER_2_ID), f['id'], 'manage')
+        grant_access(self.get_test_user_2_group_id(), f['id'], 'manage')
         self.get(f'/manage/{f["path"]}')
 
     def test_folder_delete(self):
