@@ -390,7 +390,7 @@ def copy_folder_endpoint(folder_id):
     f, dest, compiled = get_copy_folder_params(folder_id)
     o = get_current_user_group()
     validate_item_and_create(dest, 'folder', o)
-    nf = Folder.create(dest, o, f.title, apply_default_rights=True)
+    nf = Folder.create(dest, o, apply_default_rights=True)
     ug = get_current_user_object().get_personal_group()
     copy_folder(f, nf, ug, compiled)
     db.session.commit()

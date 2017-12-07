@@ -169,13 +169,15 @@ class FolderCopyTest(TimRouteTest):
         f1d1trsv.document.add_paragraph('hello_sv')
 
         a = Folder.find_by_path(self.get_personal_item_path('a'))
+        a.title = 'oldtitle'
         f1 = Folder.find_by_path(self.get_personal_item_path('a/f1'))
         f2 = Folder.find_by_path(self.get_personal_item_path('a/f2'))
 
         t2g = self.get_test_user_2_group_id()
-        grant_access(t2g, f1.id, 'view')
-        grant_access(t2g, f2.id, 'edit')
-        grant_access(t2g, d2.id, 'teacher')
+        grant_access(t2g, f1.id, 'view', commit=False)
+        grant_access(t2g, f2.id, 'edit', commit=False)
+        grant_access(t2g, d2.id, 'teacher', commit=False)
+        db.session.commit()
         d1.document.add_paragraph('hello')
         f2d1.document.add_paragraph('hi')
 
@@ -202,6 +204,8 @@ class FolderCopyTest(TimRouteTest):
                           {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/d2'},
                           {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/d3'},
                           {'from': 'users/test-user-1/a/f2', 'to': 'users/test-user-1/b/f2'}], preview)
+        b = Folder.find_by_path(self.get_personal_item_path('b'))
+        self.assertEqual('b', b.title)
         d1c = DocEntry.find_by_path(self.get_personal_item_path('b/d1'))
         d2c = DocEntry.find_by_path(self.get_personal_item_path('b/d2'))
         d2 = DocEntry.find_by_path(self.get_personal_item_path('a/d2'))
