@@ -36,6 +36,7 @@ class DocSettings:
     preamble_key = 'preamble'
     show_authors_key = 'show_authors'
     read_expiry_key = 'read_expiry'
+    add_par_button_text_key = 'add_par_button_text'
 
     @staticmethod
     def settings_to_string(par: DocParagraph) -> str:
@@ -218,6 +219,9 @@ class DocSettings:
         if not isinstance(r, int):
             return default
         return timedelta(minutes=r)
+
+    def add_par_button_text(self, default='Add paragraph') -> str:
+        return self.__dict.get(self.add_par_button_text_key, default)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

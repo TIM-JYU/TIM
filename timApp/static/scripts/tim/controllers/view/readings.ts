@@ -1,4 +1,5 @@
 import $ from "jquery";
+import moment from "moment";
 import {$http, $log, $timeout, $window} from "../../ngimport";
 import {getArea, getParId, getRefAttrs, isReference} from "./parhelpers";
 import {markPageDirty} from "../../utils";
@@ -13,17 +14,27 @@ export const readClasses = {
     4: "read",
 };
 
-export const readingTypes = {
-    onScreen: 1,
-    hoverPar: 2,
-    clickPar: 3,
-    clickRed: 4,
-};
+export enum readingTypes {
+    onScreen = 1,
+    hoverPar = 2,
+    clickPar = 3,
+    clickRed = 4,
+}
 
-export async function markParRead($par, readingType) {
+function isAlreadyRead(readline: JQuery, readingType: readingTypes) {
+    const readClassName = readClasses[readingType];
+    if (!readline.hasClass(readClassName)) {
+        return false;
+    }
+    const lastReadTime = moment(readline.attr(`time-${readClassName}`));
+    const timeSinceLastRead = moment.duration(moment().diff(lastReadTime));
+    return timeSinceLastRead < getActiveDocument().readExpiry();
+}
+
+export async function markParRead($par: JQuery, readingType: readingTypes) {
     const $readline = $par.find(".readline");
     const readClassName = readClasses[readingType];
-    if ($readline.hasClass(readClassName)) {
+    if (isAlreadyRead($readline, readingType)) {
         return;
     }
 
@@ -36,13 +47,14 @@ export async function markParRead($par, readingType) {
         return;
     }
     $readline.addClass(readClassName);
+    $readline.attr(`time-${readClassName}`, moment().toISOString());
     let data = {};
     if (isReference($par)) {
         data = getRefAttrs($par);
     }
     if (!Users.isLoggedIn()) return;
     try {
-        await $http.put("/read/" + getActiveDocument().id + "/" + parId + "/" + readingType, data);
+        await $http.put(`/read/${getActiveDocument().id}/${parId}/${readingType}`, data);
     } catch (e) {
         $log.error("Could not save the read marking for paragraph " + parId);
         $readline.removeClass(readClassName);
@@ -86,7 +98,7 @@ let readingParId = null;
 
 function queueParagraphForReading() {
     //noinspection CssInvalidPseudoSelector
-    const visiblePars = $(".par:not('.preamble'):onScreen").find(".readline").not("." + readClasses[readingTypes.onScreen]);
+    const visiblePars = $(".par:not('.preamble'):onScreen").find(".readline").not((i, e) => isAlreadyRead($(e), readingTypes.onScreen));
     const parToRead = visiblePars.first().parents(".par");
     const parId = getParId(parToRead);
 
@@ -110,6 +122,17 @@ function queueParagraphForReading() {
 function readlineHandler($this, e) {
     markParRead($this.parents(".par"), readingTypes.clickRed);
     return true;
+}
+
+function isInScreen(el: Element) {
+    const rect = el.getBoundingClientRect();
+
+    return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
 }
 
 export function initReadings(sc) {
@@ -139,16 +162,7 @@ export function initReadings(sc) {
         return false;
     });
 
-    $.expr[":"].onScreen = function onScreenHandler(el) {
-        const rect = el.getBoundingClientRect();
-
-        return (
-            rect.top >= 0 &&
-            rect.left >= 0 &&
-            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-        );
-    };
+    $.expr[":"].onScreen = isInScreen;
 
     $($window).scroll(queueParagraphForReading);
 

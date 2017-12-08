@@ -412,7 +412,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                                       'tasks_done': tasks_done,
                                       'total_tasks': total_tasks,
                                       'groups': task_groups},
-                           doc_settings_dict=doc_settings.get_dict(),
+                           doc_settings=doc_settings,
                            word_list=word_list,
                            # add_button_text=doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
                            )

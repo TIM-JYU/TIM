@@ -45,6 +45,7 @@
         var liveUpdates = {{ live_updates|tojson}};
         var docVersion = {{ version|tojson }};
         var wordList = {{ word_list|tojson }};
+        var readExpiry = {{ doc_settings.read_expiry()|tojson }}
     </script>
 {% endblock %}
 
@@ -157,7 +158,7 @@
                     {% include 'partials/paragraphs.html' %}
                     <div class="addBottomContainer hidden-print" ng-show="item.rights.editable"
                          ng-class="{'height-35': editing}">
-                        {% set btntext = doc_settings_dict.get('add_par_button_text', 'Add paragraph') %}
+                        {% set btntext = doc_settings.add_par_button_text() %}
                         {% if btntext %}
                             <button class="addBottom timButton">{{ btntext }}</button>
                         {% endif %}

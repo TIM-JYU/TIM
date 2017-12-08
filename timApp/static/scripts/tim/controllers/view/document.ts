@@ -1,4 +1,6 @@
 import {getParAttributes, getParId, getRefAttrs} from "./parhelpers";
+import {$window} from "../../ngimport";
+import moment from "moment";
 
 export class Document {
     get sections(): {[p: string]: JQuery[]} {
@@ -84,6 +86,10 @@ export class Document {
             child = child.next();
         }
         return currentSectionPars;
+    }
+
+    public readExpiry() {
+        return moment.duration($window.readExpiry);
     }
 }
 
