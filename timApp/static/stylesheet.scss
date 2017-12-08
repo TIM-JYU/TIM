@@ -4,6 +4,7 @@
 
 html {
     position: relative; // required for sticky footer
+    z-index: $footer-z;
 }
 
 body {
@@ -1155,7 +1156,7 @@ body > .footer {
     bottom: 0;
     width: 100%;
     height: $footer-height;
-    z-index: -1; // make section read mark clickable if it is above footer
+    z-index: $footer-z; // make section read mark clickable if it is above footer
 }
 
 .table-alias td:first-child {

@@ -42,7 +42,7 @@ class UploadTest(TimRouteTest):
                         'file': (io.BytesIO(b'test file'), 'test.md')},
                   expect_status=403,
                   expect_content={'error': 'You cannot create documents in this folder.'})
-        test1_group = timdb.users.get_personal_usergroup_by_id(self.current_user_id())
+        test1_group = self.current_group().id
         self.login_test3()
         j = self.create_folder(fname)
         grant_access(test1_group, j['id'], 'edit')

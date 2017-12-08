@@ -18,6 +18,7 @@ class GroupTest(TimRouteTest):
         t4 = names[3]
         t5 = 't5'
         uids = [User.create_with_group(name)[0].id for name in names]
+        db.session.commit()
         self.get('/groups/show/testgroup1', expect_status=404,
                  expect_content={'error': 'User group not found'})
         self.get('/groups/create/testgroup1', expect_content=self.ok_resp)

@@ -2,6 +2,7 @@ from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.tim_models import db
 from timApp.timdb.timdbexception import TimDbException
 
 
@@ -12,6 +13,7 @@ class ItemCreateTest(TimDbTest):
         anon_group = UserGroup.get_anonymous_group().id
         Folder.create('path/to/folder', anon_group)
         DocEntry.create('path/to/document', anon_group)
+        db.session.commit()
 
         with self.assertRaises(TimDbException) as cm:
             Folder.create('path/to/document/folder', anon_group)

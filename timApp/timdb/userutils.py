@@ -391,7 +391,6 @@ def grant_default_access(group_ids: List[int],
                                      duration_from=duration_from,
                                      duration_to=duration_to,
                                      duration=duration))
-    db.session.commit()
     return accesses
 
 

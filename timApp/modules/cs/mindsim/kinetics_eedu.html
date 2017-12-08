@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Reaktiokinetiikka</title>
+<meta charset="utf-8">
+<style>
+  body {
+    font-family: "Helvetica", sans-serif;
+    margin-left: 1cm;
+    background: #f0f0f0;
+  }
+  input[type=radio] {
+      margin-bottom: 0.25cm;
+      margin-left: 1.5cm;
+  }
+
+  button {
+    height: 1cm;
+    border-radius: .25cm;
+  }
+  td {
+    text-align:center;
+  }
+  div#content {
+    padding: .5cm .5cm 1.5cm .5cm;
+    display: inline-block;
+    background: #ffffff;
+  }
+  p {
+    margin-left: 0cm; 
+    width: 14cm; 
+    line-height: 1.5em
+  }
+  p.step {
+    display: none;
+  }
+  svg {
+    margin-bottom: 1cm;
+    display: inline-block;
+  }
+  .graph {
+    width:  16cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+  .log_graph {
+    width: 12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+</style>
+</head>
+<body>
+  <script src="jquery-1.11.1.min.js"></script>
+  <script src="d3.v3.min.js"></script>
+  <script src="kin.d3.js"></script>
+  <script src="MersenneTwister.js"></script>
+  <script src="kinetic_data.js"></script>
+  <script src="kin.js"></script>
+  <div id="content">
+  <!--h1>Reaktiokinetiikka</h1-->
+  <p><b>
+      Tunnistetaan reaktion kertaluvut konsentraatioiden aikariippuvuudesta.
+  </b>
+  </p>
+  <div>
+    Reaktio
+    <br/>    <br/>
+    <div id="data_set"></div>
+    <br/>
+
+    Kuvaajan tyyppi
+    <br/>    <br/>
+    <div id="plot_type" style="display: inline-block; margin-right: 3cm">
+    <input type="radio" name="plot_type" value="t_A" onchange="select_plot_type('t_A')" / checked>&nbsp;&nbsp; 
+0. kertaluku eli t, [A] <br/>
+    <input type="radio" name="plot_type" value="t_lnA"   onchange="select_plot_type('t_lnA')" />&nbsp;&nbsp; 
+1. kertaluku eli t, ln [A] <br/>
+    <input type="radio" name="plot_type" value="t_invA"   onchange="select_plot_type('t_invA')" />&nbsp;&nbsp; 
+2. kertaluku eli t, 1/[A] <br/>
+    <input type="radio" name="plot_type" value="t_lnBA"   onchange="select_plot_type('t_lnBA')" />&nbsp;&nbsp; 
+1.+1.=2. kertaluku eli t, ln [B]/[A] <br/>
+    </div>
+    
+    <div style="display: inline-block; vertical-align: top">
+    [A] = <select id="A_index" onchange="update_graph()"></select> 
+    <br/>
+    <br/>
+    [B] = <select id="B_index" onchange="update_graph()"></select>
+    <br/>
+    <br/>
+    </div>
+
+    <div>
+    <svg id="graph" class="graph">
+    <defs>
+      <marker id="marker" markerWidth="12" markerHeight="12" refX="6" refY="6" stroke="black" stroke-width="2" fill="red" orient = "auto">
+      <circle cx="6" cy="6" r="4"/>
+    </marker>
+    </svg>
+    </div>
+  </div>
+
+  <script>
+kinetic_data = [kinetic_data[0], kinetic_data[1], kinetic_data[4]];
+
+
+var html = '';
+for(var i = 0; i < kinetic_data.length; ++i) {
+    var equation = '';
+    for(var j = 0; j < kinetic_data[i].labels.length; ++j)
+	if ( kinetic_data[i].prefactors[j] < 0 ) {
+	    var pre = -kinetic_data[i].prefactors[j];
+	    if ( pre == 1 || pre.toFixed(1) == 0 ) pre = ' ';
+	    pre = ' ' + pre;
+	    equation +=  pre + ' ' + kinetic_data[i].labels[j] + ' + ';
+	}
+
+    equation = equation.substring(0,equation.length-2) + ' &nbsp; &#8594; &nbsp; ';
+
+    for(var j = 0; j < kinetic_data[i].labels.length; ++j)
+	if ( kinetic_data[i].prefactors[j] > 0 ) {
+	    var pre = kinetic_data[i].prefactors[j];
+	    if ( pre == 1 || pre.toFixed(1) == 0 ) pre = '';
+	    equation +=  pre + ' ' + kinetic_data[i].labels[j] + ' + ';
+	}
+
+    equation = equation.substring(0,equation.length-2) + '';
+
+    if ( i == 0 )
+	html += '<input type="radio" name="data_set" id="data_set_'+i+'" value="'+i+'"  onchange="select_data_set('+i+');" checked />&nbsp;&nbsp;'+equation+'<br/>';
+    else
+	html += '<input type="radio" name="data_set" id="data_set_'+i+'" value="'+i+'"  onchange="select_data_set('+i+');" />&nbsp;&nbsp;'+equation+'<br/>';
+
+}
+jQuery("div#data_set").html(html);
+
+
+var plot_type = 't_A';
+var data_set = null;
+select_data_set(0);
+
+function select_data_set(index) {
+    data_set = kinetic_data[index];
+
+    var html = '';
+    for(var i = 0; i < data_set.labels.length; ++i) 
+	html += '<option id="conc_'+i+'" value="'+i+'" onchange="update_graph()">'+data_set.labels[i]+'</option>';
+    jQuery('#A_index').html(html);
+    jQuery('#B_index').html(html);
+    jQuery('#B_index #conc_1').prop('selected',true); 
+    update_graph();
+}
+
+function select_plot_type(type) {
+    plot_type = type;
+    update_graph();
+}
+
+function update_graph() {
+    var A_index = parseInt(jQuery("select#A_index").val());
+    var B_index = parseInt(jQuery("select#B_index").val());
+    var xdata = [];
+    var ydata = [];
+    var xlabel = 't (s)';
+
+    if ( data_set.save_dt < 60*60 )
+	xdata = data_set.time;
+    else {
+	for(var i = 0; i < data_set.time.length; ++i)
+	    xdata.push(data_set.time[i] / 3600.);
+	xlabel = 't (h)';
+    }
+
+
+    var ylabel = '';
+    if ( plot_type == 't_A' ) {
+	ydata = data_set.C[A_index];
+	ylabel = '[A] (mol/L)';
+    }
+    else if ( plot_type == 't_lnA' ) {
+	for(var i = 0; i < data_set.time.length; ++i)
+	    ydata.push(Math.log(data_set.C[A_index][i]));
+	ylabel = 'ln [A] (ln mol/L)';
+    }
+    else if ( plot_type == 't_invA' ) {
+	for(var i = 0; i < data_set.time.length; ++i)
+	    ydata.push(1./data_set.C[A_index][i]);
+	ylabel = '1/[A] (L/mol)';
+    }
+    else if ( plot_type == 't_lnBA' ) {
+	for(var i = 0; i < data_set.time.length; ++i)
+	    ydata.push(Math.log(data_set.C[B_index][i]/data_set.C[A_index][i]));
+	ylabel = '[A] (unitless)';
+    }
+
+    console.log(ydata);
+
+    var x_min = Math.min.apply(null, xdata);
+    var y_min = Math.min.apply(null, ydata);
+    var x_max = Math.max.apply(null, xdata);
+    var y_max = Math.max.apply(null, ydata);
+    var dx = x_max-x_min;
+    var dy = y_max-y_min;
+    x_min = x_min - .2*dx;
+    y_min = y_min - .2*dy;
+    x_max = x_max + .2*dx;
+    y_max = y_max + .2*dy;
+    x_min = 0;
+
+    if ( y_min == y_max ) { y_min -= 1; y_max += 1; } 
+
+    jQuery("svg#graph .main").remove();
+    var graph = new SimpleLineAndDotChart("graph", xlabel, x_min, x_max, ylabel, y_min, y_max, false, true);
+
+    graph.update_dots(xdata,ydata);
+}
+
+
+
+
+
+
+/*
+var graph = new SimpleLineChart("linear_graph", "T", 0, 10, "k", 0, 10, false, true);
+var log_graph = new SimpleLineAndDotChart("log_graph", "1/T", 0, 10, "ln k", 0, 10, false, true);
+
+jQuery("#cell_0_T").trigger("change");
+
+
+function update_graph() {
+    var T_data = [];
+    var k_data = [];
+    var T_max = 0;
+    var T_min = 1000;
+    var k_max = 0;
+    for(var i = 0; i < nrows; ++i) {
+	var T = parseFloat(jQuery('#cell_'+i+'_T').val());
+	var k = parseFloat(jQuery('#cell_'+i+'_k').val());
+	if ( isNaN(T) ) continue;
+	if ( isNaN(k) ) continue;
+	T_min = Math.min(T_min, T);
+	T_max = Math.max(T_max, T);
+	k_max = Math.max(k_max, k);
+	T_data.push(T);
+	k_data.push(k);
+    }
+
+    if ( T_data.length >= 1 ) {
+	jQuery("#"+linear_graph.svg_id+" .main").remove();
+	linear_graph = new SimpleLineChart("linear_graph", "T (K)", T_min*0.8, T_max*1.2, "k", 0, k_max*1.2, false, true);
+	linear_graph.update(T_data,k_data);
+    }
+
+    var inv_T_data = [];
+    var ln_k_data = [];
+    var inv_T_min = 1/10.;
+    var inv_T_max = 1/1000.;
+    var ln_k_min = 100;
+    var ln_k_max = -100;
+    for(var i = 0; i < nrows; ++i) {
+	var inv_T = parseFloat(jQuery('#cell_'+i+'_invT').val());
+	var ln_k = parseFloat(jQuery('#cell_'+i+'_lnk').val());
+	if ( isNaN(inv_T) ) continue;
+	if ( isNaN(ln_k) ) continue;
+	inv_T_min = Math.min(inv_T_min, inv_T);
+	inv_T_max = Math.max(inv_T_max, inv_T);
+	ln_k_min = Math.min(ln_k_min, ln_k);
+	ln_k_max = Math.max(ln_k_max, ln_k);
+	inv_T_data.push(inv_T);
+	ln_k_data.push(ln_k);
+    }
+
+    if ( inv_T_data.length > 0 ) {
+	inv_T_min = 0;
+	var ln_k_off = (ln_k_max - ln_k_min)*.2;
+	jQuery("#"+log_graph.svg_id+" .main").remove();
+	log_graph = new SimpleLineAndDotChart("log_graph", "1/T (1/K)", inv_T_min*0.8, inv_T_max*1.2, "ln k", ln_k_min-ln_k_off, ln_k_max+ln_k_off, true, true);
+	
+	log_graph.update_dots(inv_T_data,ln_k_data);
+
+
+	var xdata = [];
+	var ydata = [];
+	var a = parseFloat(jQuery("#line_a").val());
+	var b = parseFloat(jQuery("#line_b").val());
+	if ( isNaN(a) ) return;
+	if ( isNaN(b) ) return;
+    
+	for(var i = 0; i < 100; ++i) {
+	    var x = inv_T_min*0.8 + i*(inv_T_max*1.2 - inv_T_min*0.8) / 100.;
+	    var y = a + b * x;
+	    xdata.push(x);
+	    ydata.push(y);
+	}
+	//console.log(xdata + " " + ydata);
+
+	log_graph.update_line(xdata,ydata);
+    }
+}
+*/
+  </script>
+</body>
+<html>

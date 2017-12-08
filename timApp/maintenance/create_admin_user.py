@@ -15,7 +15,6 @@ def query_admin():
             yesno = input('y/n: ')
             if yesno == 'y':
                 user.groups.append(UserGroup.get_admin_group())
-                db.session.commit()
                 print(f'User {username} has been added to administrators.')
         else:
             print(f'User {username} is already an administrator.')
@@ -28,6 +27,7 @@ def query_admin():
 
         print('UserAccount ', email, " created")
         print('Use ', email, " and password you entered to login.")
+    db.session.commit()
     timdb.close()
 
 

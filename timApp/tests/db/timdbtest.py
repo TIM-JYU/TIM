@@ -10,6 +10,7 @@ import timApp.initdb2
 from timApp.documentmodel.document import Document
 from timApp.filemodehelper import change_permission_and_retry
 from timApp.tim_app import app
+from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import db
@@ -21,6 +22,7 @@ class TimDbTest(unittest.TestCase):
     test_files_path = '/tmp/doctest_files'
     db_path = app.config['DATABASE']
     i = 0
+    create_docs = False
 
     def get_db(self):
         return self.db
@@ -45,7 +47,7 @@ class TimDbTest(unittest.TestCase):
             db.drop_all(bind='tim_main')
         except sqlalchemy.exc.OperationalError:
             pass
-        timApp.initdb2.initialize_database(create_docs=False)
+        timApp.initdb2.initialize_database(create_docs=cls.create_docs)
 
     def setUp(self):
         self.db = TimDb(files_root_path=self.test_files_path)
@@ -54,7 +56,7 @@ class TimDbTest(unittest.TestCase):
         db.session.close_all()
         self.db.close()
 
-    def create_doc(self, from_file=None, initial_par: Union[str, List[str]]=None, settings=None):
+    def create_doc(self, from_file=None, initial_par: Union[str, List[str]]=None, settings=None) -> DocInfo:
         d = DocEntry.create(f'test{TimDbTest.i}', 0, 'test', from_file=from_file, initial_par=initial_par,
                             settings=settings)
         TimDbTest.i += 1
@@ -93,7 +95,7 @@ class TimDbTest(unittest.TestCase):
 
     def assert_dict_subset(self, data, subset):
         for k, v in subset.items():
-            self.assertEqual(data[k], v, msg=f'Key {k} was different')
+            self.assertEqual(v, data[k], msg=f'Key {k} was different')
 
     def assert_list_of_dicts_subset(self, datalist, subsetlist):
         for d, s in zip(datalist, subsetlist):

@@ -16,6 +16,4 @@ class DocGamified(db.Model):
 
         dgamified = DocGamified(doc_game_id, document_id, doc_type_id)
         db.session.add(dgamified)
-        db.session.commit()
-
         return dgamified

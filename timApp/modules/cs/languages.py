@@ -168,7 +168,7 @@ class CS(Language):
         return cmdline
 
     def run(self, web, sourcelines, points_rule):
-        return self.runself(["mono", self.pure_exename])
+        return self.runself(["mono", "-O=all",  self.pure_exename])
 
 
 class Jypeli(CS):

@@ -2,6 +2,10 @@ import angular from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {$compile, $http, $log, $timeout, $upload, $window} from "../ngimport";
+import {markAsUsed} from "../utils";
+import * as copyFolder from "./copyFolder";
+
+markAsUsed(copyFolder);
 
 timApp.controller("PermCtrl", [
     "$scope",

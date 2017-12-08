@@ -74,7 +74,6 @@ def delete_document(document_id: int):
     ReadParagraph.query.filter_by(doc_id=document_id).delete()
     UserNotes.query.filter_by(doc_id=document_id).delete()
     Translation.query.filter((Translation.doc_id == document_id) | (Translation.src_docid == document_id)).delete()
-    db.session.commit()
     Document.remove(document_id)
 
 

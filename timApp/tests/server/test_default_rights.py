@@ -8,6 +8,7 @@ from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.special_group_names import KORPPI_GROUPNAME
+from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import get_anon_group_id, grant_default_access, default_right_paths
 
 
@@ -27,6 +28,7 @@ class DefaultRightTest(TimRouteTest):
         # Make sure an exception won't be thrown if trying to add a right again
         acs = grant_default_access([UserGroup.get_korppi_group().id], users_folder.id, 'view',
                                    blocktypes.DOCUMENT)
+        db.session.commit()
         for obj_type_str in ('document', 'folder'):
             obj_type = from_str(obj_type_str)
             def_rights = timdb.users.get_default_rights_holders(folder.id, obj_type)

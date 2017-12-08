@@ -20,9 +20,11 @@ from timApp.accesshelper import verify_logged_in, has_edit_access, has_manage_ac
 from timApp.dbaccess import get_timdb
 from timApp.responsehelper import json_response, set_no_cache_headers, ok_response
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group
+from timApp.timdb.folders import check_velp_group_folder_path, check_personal_velp_folder
 from timApp.timdb.models.block import Block
 from timApp.timdb.models.docentry import DocEntry, get_documents_in_folder
 from timApp.timdb.models.folder import Folder
+from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import grant_access
 from timApp.utils import split_location
 
@@ -135,6 +137,7 @@ def get_default_personal_velp_group():
         created_velp_group['edit_access'] = True
         created_velp_group['default_group'] = True
         created_velp_group['created_new_group'] = created_new
+        db.session.commit()
 
         response = set_no_cache_headers(json_response(created_velp_group))
         return response
@@ -677,7 +680,7 @@ def create_velp_group(doc_id: int) -> Dict:
     # Create a new velp group / document in users/username/velp groups folder
     if target_type == 0:
         user = get_current_user_object()
-        user_velp_path = timdb.folders.check_personal_velp_folder(user)
+        user_velp_path = check_personal_velp_folder(user)
         new_group_path = user_velp_path + "/" + velp_group_name
         group_exists = DocEntry.find_by_path(new_group_path)
         if group_exists is None:
@@ -698,7 +701,7 @@ def create_velp_group(doc_id: int) -> Dict:
             return abort(403, "Edit access is required.")
 
         # Gives path to either velp groups or velp groups/document name folder
-        velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
+        velps_folder_path = check_velp_group_folder_path(doc_path, user_group_id, doc_name)
 
         new_group_path = velps_folder_path + "/" + velp_group_name
         group_exists = DocEntry.find_by_path(new_group_path)  # Check name so no duplicates are made
@@ -711,7 +714,7 @@ def create_velp_group(doc_id: int) -> Dict:
                 # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
                 # function.
                 if not right['access_name'] == 'view':
-                    grant_access(right['gid'], velp_group_id, right['access_name'])
+                    grant_access(right['gid'], velp_group_id, right['access_name'], commit=False)
         else:
             return abort(400, "Velp group with same name and location exists already.")
 
@@ -725,6 +728,7 @@ def create_velp_group(doc_id: int) -> Dict:
     created_velp_group['show'] = True
     created_velp_group['edit_access'] = True
     created_velp_group['default_group'] = False
+    db.session.commit()
 
     timdb.velp_groups.add_groups_to_document([created_velp_group], doc_id, user_id)
     # TODO Do we want to make just created velp group selected in document immediately?
@@ -761,7 +765,7 @@ def create_default_velp_group(doc_id: int):
     if not has_edit_access(doc_id):
         return abort(403, "User has no edit access to current document")
 
-    velps_folder_path = timdb.folders.check_velp_group_folder_path(doc_path, user_group_id, doc_name)
+    velps_folder_path = check_velp_group_folder_path(doc_path, user_group_id, doc_name)
     velp_group_name = doc_name + "_default"
 
     new_group_path = velps_folder_path + "/" + velp_group_name
@@ -775,7 +779,7 @@ def create_default_velp_group(doc_id: int):
             # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
             # function.
             if not right['access_name'] == 'view':
-                grant_access(right['gid'], velp_group_id, right['access_name'])
+                grant_access(right['gid'], velp_group_id, right['access_name'], commit=False)
 
     else:
         default = DocEntry.find_by_path(new_group_path)
@@ -795,6 +799,7 @@ def create_default_velp_group(doc_id: int):
     created_velp_group['edit_access'] = True
     created_velp_group['default_group'] = True
     created_velp_group['created_new_group'] = created_new_group
+    db.session.commit()
 
     timdb.velp_groups.add_groups_to_document([created_velp_group], doc_id, user_id)
 

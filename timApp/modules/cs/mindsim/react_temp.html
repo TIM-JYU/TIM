@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {
+    font-family: "Helvetica", sans-serif;
+    margin-left: 1cm;
+    background: #f0f0f0;
+    text-align: justify;
+  }
+  button {
+    height: 1cm;
+    border-radius: .25cm;
+  }
+  td {
+    text-align:center;
+  }
+  div#content {
+    padding: .5cm .5cm 1.5cm .5cm;
+    display: inline-block;
+    background: #ffffff;
+  }
+  p {
+    margin-left: 0cm; 
+    width: 14cm; 
+    line-height: 1.5em
+  }
+  p.step {
+    display: none;
+  }
+  svg {
+    margin-top: 1cm;
+  }
+  #stateChart {
+    width: 12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+  #populationChart {
+    width:  12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+  #energyChart {
+    width: 12cm;
+    height: 8cm;
+    border: 0px solid black;
+    display: none;
+  }
+</style>
+<title>Reaktionopeus ja lämpötila</title>
+</head>
+<body>
+  <script src="jquery-1.11.1.min.js"></script>
+  <script src="d3.v3.min.js"></script>
+  <script src="vib.d3.js"></script>
+  <script src="MersenneTwister.js"></script>
+  <script src="vib.js"></script>
+  <div id="content">
+  <h1>Reaktionopeus ja lämpötila</h1>
+  <p><b>
+      Tutkitaan kuinka molekyylijoukon (systeemin) keskimääräinen
+      liike-energia eli lämpötila vaikuttaa?
+  </b>
+    <br/><button  onclick="jQuery('#p1').show();jQuery(this).hide()">Lisää..</button>
+  </p>
+  <p class="step" id="p1">
+    Alla näet kaksi kuvaajaa, jotka kuvaavat värähtelijöiden,
+    esimerkiksi I<sub>2</sub> molekyylien, värähdysenergiaa eri
+    tavoin. Ensimmäinen kuvaaja kuvaa molekyylien hetkellistä
+    värähdysenergiaa. Molekyylit on numeroitu vaaka-akselille ja
+    pystyakselilla on värähdysenergian määrä. Toisessa kuvaajassa on
+    esitetty värähdysenergian jakauma, jossa vaaka-akselilla on
+    molekyylin värähdysenergian määrä. Pystyakselilla on molekyylien
+    lukumäärä, joilla on vaaka-akselin osoittama värähdysenergiaa.
+    <br/><button  onclick="jQuery('#p2').show();jQuery(this).hide()">Lisää..</button>
+  </p>
+  <p class="step" id="p2">
+    <b>Kohta a)</b>
+    Tarkastellaan viiden kymmenen molekyylin systeemiä eli
+    N<sub>vib</sub> on 50. Aseta molekyylien keskimääräiseksi
+    liike-energiaksi E<sub>avg</sub> = 0.48 = 24/50 energiapakettia eli
+    E<sub>tot</sub> = 24 energiapakettia ja paina "Restart". 
+    <br/>Esimerkiksi jodimolekyylin tapauksessa yksi
+    värähdysenergiapaketti vastaa energiaa 213&nbsp;cm<sup>-1</sup> ja
+    keskimääräinen liike-energia olisi siten 
+    24&nbsp;&times;&nbsp;213&nbsp;cm<sup>-1</sup>&nbsp;/&nbsp;50&nbsp;=&nbsp;102.24&nbsp;cm<sup>-1</sup>
+    eli 1.223 kJ/mol. <br/>
+    Lämpötila ja keskimääräinen kineettinen energia ovat suoraan
+    verrannollisia toisiinsa. Yksiuloitteisessa (eli tässä)
+    tapauksessa yhtälö on E<sup>kin</sup><sub>avg</sub>&nbsp;=&nbsp;(1/2)&nbsp;R&nbsp;T
+    eli T&nbsp;=&nbsp;(2/R)&nbsp;E<sup>kin</sup><sub>avg</sub>, jossa R on kaasuvakio.
+    Mitä lämpötilaa tämä keskimääräinen liike-energia vastaa?
+    <br/>
+    Paina "Run" ja hetken päästä paina "Data", jolloin alle
+    ilmestyy jakauma taulukkona. Odota hetki ja paina "Data"
+    uudelleen. Toista kunnes jakauma on tasoittunut (viimeinen
+    desimaali voi elää hieman). Laske kolmelle ensimmäiselle tilalle
+    todennäköisyys jakamalla tilan populaatio kokonaispopulaatiolla
+    N<sub>vib</sub>. Vertaa luentokalvojen arvoihin.
+    <br/><button  onclick="jQuery('#p3').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p3">
+    <b>Kohta b)</b>
+    Reaktion aktivaatioenergia on energia, joka molekyylillä täytyy
+    vähintään olla, jotta reaktio voi tapahtua. Jos
+    reaktion aktivaatioenergia on 400&nbsp;cm<sup>-1</sup>, kuinka
+    monta prosenttia molekyyleistä voisi keskimäärin reagoida? Eli
+    laske summa niistä molekyyleistä jotka voivat reagoida ja jaa se
+    kokonaismäärällä? 
+    <br/>
+    Datataulukon sarakkeesta "sum P" saattaa olla hyötyä, mutta ole
+    tarkkana miltä energialta arvon valitset.
+    <br/>
+    Entä jos aktivaatioenergia olisi 600&nbsp;cm<sup>-1</sup>?
+    Entä 800&nbsp;cm<sup>-1</sup>?
+    <br/><button  onclick="jQuery('#p4').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p4">
+    <b>Kohta c)</b>
+    Annetaan molekyyleille enemmän energiaa eli lämmitetään
+    systeemiä. Vaihda keskimääräiseksi energiaksi
+    36/50&nbsp;=&nbsp;0.72 eli 
+    E<sub>tot</sub> arvoon "36" ja paina "Restart". Tasapainota
+    jakauma ja toista b-kohta.
+    <br/><button  onclick="jQuery('#p5').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p5">
+    <b>Kohta d)</b>
+    Lämmitetään systeemiä lisää. Vaihda keskimääräiseksi energiaksi
+    48/50&nbsp;=&nbsp;0.96 ja paina "Restart". Tasapainota jakauma ja
+    toista b-kohta. 
+    Vertaa b- ja c-kohtaan.
+    <br/><button  onclick="jQuery('#p6').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p6">
+    <b>Kohta e)</b>
+    Jäähdytetään systeemiä. Vaihda keskimääräiseksi energiaksi 0.24 ja paina
+    "Restart". Tasapainota jakauma ja toista b-kohta.
+    Vertaa b-, c- ja d-kohtaan.
+    <br/><button  onclick="jQuery('#p7').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p7">
+    <b>Valmis.</b>
+  </p>
+  <svg id="stateChart"></svg>
+  <svg id="populationChart"></svg><br/>
+  <svg id="energyChart"></svg>
+  <div style="display: inline-block; vertical-align: top; margin-top:
+	      1cm; margin-left: 1cm">
+    <form action="" onsubmit="return false;">
+      <span style="display: inline-block; width: 1cm">N<sub>vib</sub></span>
+      <input type="text" id="Nvib" size="5" value="50" style="margin-right: .5cm"/>
+      <span style="display: inline-block; width: 1cm">E<sub>tot</sub></span>
+      <input type="text" id="Etot" size="5" value="5" style="margin-right: .5cm"/>
+      <button onclick="restart()">Restart</button>
+  </form>
+  <br/>
+  <button onclick="next()">Next</button>
+  <button onclick="run()">Run</button>
+  <button onclick="stop()">Stop</button>
+  <br/>
+  <br/>
+  <button onclick="data()">Data</button>
+  <button onclick="reset()">Reset sampling</button>
+  </div>
+  <div id="table">
+  </div>
+  </div>
+  <script>
+
+var Emax = 10;
+var vb = null;
+var state = null;
+var energy = null;
+var population = null;
+var timeout = null;
+var delay = 0;
+
+//////////
+restart();
+//////////
+
+function restart() {
+    if ( state != null )
+	jQuery("#"+state.svg_id).empty();
+    if ( energy != null )
+	jQuery("#"+energy.svg_id).empty();
+    if ( population != null )
+	jQuery("#"+population.svg_id).empty();
+    
+    Nvib = parseInt(jQuery("#Nvib").val());
+    Etot = parseInt(jQuery("#Etot").val());
+
+    if ( Etot <= 10 && false ) { 
+	Emax = 10;
+	vb = new VibrationalBoltzmann("first", Nvib, Emax, Etot);
+    }
+    else {
+	Emax = Math.max(Math.floor(Math.sqrt(Etot)),10);
+	vb = new VibrationalBoltzmann("random", Nvib, Emax, Etot);
+    }
+    var labels = [];
+    for(var i = 0; i < vb.Nvib; ++i)
+	labels.push("#"+(i+1));
+    var pop_labels = [];
+    for(var i = 0; i < Emax+1; ++i)
+	pop_labels.push(""+(i));
+    
+    state = new SimpleBarChart("stateChart", labels, vb.Emax, "molecule", "energy");
+    
+    population = new SimpleBarChart("populationChart", pop_labels, vb.Nvib, "energy", "population", true);
+    
+    energy = new SimpleBarChart("energyChart", labels, vb.Emax, "molecule", "energy");
+    
+    vb.sample();		     
+    state.update(vb.vibrators);
+    energy.update(vb.energy_distribution());
+    population.update(vb.population_distribution());
+
+    jQuery("#Nvib").val(vb.Nvib);
+    jQuery("#Etot").val(vb.E);    
+}
+
+function next() {
+    vb.iterate();
+    vb.sample();
+    state.update(vb.vibrators);
+    energy.update(vb.energy_distribution());
+    population.update(vb.population_distribution());
+    var dist = vb.population_distribution();
+    var esum = 0, psum = 0;
+    for(var i = 0; i < dist.length; ++i) {
+	esum += dist[i] * i;
+	psum += dist[i];
+    }
+    console.log(esum + " " + psum);
+    for(var i = 0; i < dist.length; ++i) {
+	console.log(i + " " + dist[i] + " " + Math.log(dist[i]+1e-15));
+    }
+}
+
+function iterate() {
+    for(var i=0; i < 10;++i) {
+	vb.iterate();
+	vb.sample();
+    }
+    state.update(vb.vibrators);
+    energy.update(vb.energy_distribution());
+    population.update(vb.population_distribution());
+    
+    if ( timeout != null )
+	timeout = setTimeout(iterate, 10);
+}
+
+function run() {
+    timeout = setTimeout(iterate, 10);
+}
+function stop() {
+    clearTimeout(timeout);
+    timeout = null;
+}
+function reset() {
+    vb.reset_sampling();
+    vb.sample();
+    state.update(vb.vibrators);
+    energy.update(vb.energy_distribution());
+    population.update(vb.population_distribution());
+}
+function data() {
+    var dist = vb.population_distribution();
+    var html = '<table style="margin-top: 2cm; margin-left: 1cm">';
+    html += '<tr><td style="width: 2cm; border-bottom: 1px solid    black">E</td><td style="width: 2cm; border-bottom: 1px solid    black">P</td><td style="width: 3cm; border-bottom: 1px solid    black">sum P</td></tr>';
+    var sum = 0.0;
+    for(var i = 0; i < dist.length; ++i) {
+	sum += dist[i];
+	html += '<tr><td>'+i+'</td><td>'+dist[i].toFixed(2)+'</td><td>'+sum.toFixed(2)+'</td></tr>';
+    }
+    html += '</table>';
+    jQuery("#table").html(html);
+}
+</script>
+</body>
+</html>

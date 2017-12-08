@@ -7,7 +7,6 @@ from timApp.logger import log_info, log_debug, log_error, log_warning
 from timApp.timdb.annotations import Annotations
 from timApp.timdb.answers import Answers
 from timApp.timdb.files import Files
-from timApp.timdb.folders import Folders
 from timApp.timdb.images import Images
 from timApp.timdb.lectureanswers import LectureAnswers
 from timApp.timdb.lectures import Lectures
@@ -71,7 +70,6 @@ class TimDb(object):
         self.questions = None
         self.messages = None
         self.lectures = None
-        self.folders = None
         self.lecture_answers = None
         self.velps = None
         self.velp_groups = None
@@ -119,7 +117,6 @@ class TimDb(object):
         self.questions = Questions(self.db, self.files_root_path, 'questions', self.current_user_name, self.session)
         self.messages = Messages(self.db, self.files_root_path, 'messages', self.current_user_name, self.session)
         self.lectures = Lectures(self.db, self.files_root_path, 'lectures', self.current_user_name, self.session)
-        self.folders = Folders(self.db, self.files_root_path, 'folders', self.current_user_name, self.session)
         self.lecture_answers = LectureAnswers(self.db, self.files_root_path,
                                               'lecture_answers', self.current_user_name, self.session)
         self.velps = Velps(self.db, self.files_root_path, 'velps', self.current_user_name, self.session)

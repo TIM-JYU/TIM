@@ -252,10 +252,9 @@ def verify_task_access(doc_id, task_id_name, access_type):
 def grant_access_to_session_users(timdb: TimDb, block_id: int):
     for u in get_other_users_as_list():
         grant_access(timdb.users.get_personal_usergroup_by_id(u['id']),
-                                 block_id,
-                                 'manage',
-                                 commit=False)
-    db.session.commit()
+                     block_id,
+                     'manage',
+                     commit=False)
 
 
 def get_owned_blocks():
