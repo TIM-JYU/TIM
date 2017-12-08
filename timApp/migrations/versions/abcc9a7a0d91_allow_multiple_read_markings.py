@@ -10,7 +10,7 @@ Create Date: 2017-11-28 09:47:03.777660
 from sqlalchemy.dialects.postgresql import ENUM
 
 revision = 'abcc9a7a0d91'
-down_revision = 'c0d6e136511e'
+down_revision = '199fc0d202ef'
 
 
 from alembic import op
