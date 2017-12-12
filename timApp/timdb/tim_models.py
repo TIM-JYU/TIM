@@ -243,8 +243,6 @@ class ReadParagraph(db.Model):
     __table_args__ = (db.Index('readparagraph_doc_id_par_id_idx', 'doc_id', 'par_id'),
                       db.Index('readparagraph_doc_id_usergroup_id_idx', 'doc_id', 'usergroup_id'),)
 
-    modified = False
-
 
 class UserAnswer(db.Model):
     __bind_key__ = 'tim_main'

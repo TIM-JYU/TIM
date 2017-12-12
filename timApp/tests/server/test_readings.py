@@ -146,9 +146,11 @@ class ReadingsTest(TimRouteTest):
                                               {'doc_id': d.id,
                                                'type': 'read',
                                                'usergroup_id': ug_id}])
+        known_keys = {'doc_id', 'type', 'usergroup_id', 'id', 'timestamp', 'par_id', 'par_hash'}
         for r in rs:
             self.assertIsInstance(r['id'], int)
             self.assertIsInstance(r['timestamp'], str)
+            self.assertEqual(set(r.keys()), known_keys)
         self.assertNotEqual(rs[0]['id'], rs[1]['id'])
         self.assertEqual(rs[0]['timestamp'], rs[1]['timestamp'])
         self.assertEqual(set(p.get_id() for p in pars), set(r['par_id'] for r in rs))
