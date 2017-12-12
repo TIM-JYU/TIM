@@ -8,7 +8,7 @@ SystemJS.config({
     "simcir/basicset": "/cs/simcir/simcir-basicset.js",
     "simcir/library": "/cs/simcir/simcir-library.js",
     "simcir/oma-kirjasto": "/cs/simcir/simcir-oma-kirjasto.js",
-    "mathjax": "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVGTeX/MathJax.js",
+    "mathjax": "/static/scripts/mathjax/mathjax.js",
     "sagecell": "https://sagecell.sagemath.org/static/embedded_sagecell.js",
     "cs/": "/cs/js/build/",
     "tim/": "tim/"
@@ -134,13 +134,13 @@ SystemJS.config({
     "tim/session.ts": {
       "build": false
     },
-    "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVGTeX/MathJax.js": {
+    "/static/scripts/mathjax/mathjax.js": {
       "format": "global",
       "exports": "MathJax"
     },
     "https://sagecell.sagemath.org/static/embedded_sagecell.js": {
       "globals": {
-        "MathJax": "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVGTeX/MathJax.js"
+        "MathJax": "/static/scripts/mathjax/mathjax.js"
       },
       "exports": "sagecell"
     }
