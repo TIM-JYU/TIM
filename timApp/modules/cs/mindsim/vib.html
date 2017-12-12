@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {
+    font-family: "Helvetica", sans-serif;
+    margin-left: 1cm;
+    background: #f0f0f0;
+  }
+  button {
+    height: 1cm;
+    border-radius: .25cm;
+  }
+  td {
+    text-align:center;
+  }
+  div#content {
+    padding: .5cm .5cm 1.5cm .5cm;
+    display: inline-block;
+    background: #ffffff;
+  }
+  p {
+    margin-left: 0cm; 
+    width: 14cm; 
+    line-height: 1.5em
+  }
+  p.step {
+    display: none;
+  }
+  svg {
+    margin-top: 1cm;
+  }
+  #stateChart {
+    width: 12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+  #populationChart {
+    width:  12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+  #energyChart {
+    width: 12cm;
+    height: 8cm;
+    border: 0px solid black;
+    display: none;
+  }
+</style>
+</head>
+<body>
+  <script src="jquery-1.11.1.min.js"></script>
+  <script src="d3.v3.min.js"></script>
+  <script src="vib.d3.js"></script>
+  <script src="MersenneTwister.js"></script>
+  <script src="vib.js"></script>
+  <div id="content">
+  <h1>Energian jakautuminen värähtelevissä molekyyleissä</h1>
+  <p><b>
+      Tutkitaan kuinka molekyylijoukon (systeemin) kokonaisenergian
+      jakautuu yksittäisten molekyylien värähdysenergiaksi. Onko
+      kaikilla molekyyleillä sama värähdysenergia? Vai löytyykö
+      joukosta "kuumia" ja "kylmiä" molekyylejä? Miten lämpötila
+      vaikuttaa energian jakautumiseen?
+  </b></p>
+  <p id="p1">
+    Alla näet kaksi kuvaajaa, jotka kuvaavat värähtelijöiden,
+    esimerkiksi I<sub>2</sub> molekyylien, värähdysenergiaa eri
+    tavoin. 
+    Ensimmäinen kuvaaja esittää
+    molekyylien tämänhetkistä värähdysenergiaa. Molekyylit
+    on numeroitu vaaka-akselille. Mitä korkeampi pylväs sitä enemmän
+    värähdysenergiaa molekyylillä on.
+    Vasemman puoleisinta molekyyliä on viritetty laserilla nopeasti,
+    joten sillä on paljon värähdysenergiaa. Sitä voidaan kutsua
+    "kuumaksi", koska sen värähdysenergia on selkeästi
+    keskimääräistä suurempi. Muut molekyylit ovat perustilassa.
+    <br/><button  onclick="jQuery('#p2').show();jQuery(this).hide()">Lisää..</button>
+  </p>
+  <p class="step" id="p2">
+    Toisessa kuvaajassa on esitetty värähdysenergian
+    jakauma. Vaaka-akselilla on molekyylin vastaanottaman
+    värähdysenergian määrä. Pystyakselilla on molekyylien lukumäärä,
+    joilla on vaaka-akselin osoittama värähdysenergiaa.
+    <br/><button  onclick="jQuery('#p3').show();jQuery(this).hide()">Lisää..</button>
+  </p>
+  <p class="step" id="p3">
+    Ensimäisessä kuvaajassa yhdeksän molekyyliä ovat perustilalla
+    eli ne eivät ole ottaneet vastaan yhtään värähdysenergiaa. Tämä
+    näkyy toisessa kuvaajassa yhdeksän korkuisena pylväänä
+    nollaenergialla. Vastaavasti vasemman puoleisin "kuuma" 
+    molekyyli näkyy yhden korkuisena pylväänä energialla kolme.
+    <br/><button  onclick="jQuery('#p4').show();jQuery(this).hide()">Lisää..</button>
+  </p>
+  <p class="step" id="p4">
+    Molekyylit voivat vaihtaa energiaa viereisten molekyylien
+    kanssa, joko antamalla tai ottamalla yhden energiapaketin (eli
+    kvantin). Ottamalla vastaan värähdyskvantin molekyylin värähdysenergia
+    kasvaa eli keskimääräinen atomien nopeus ja poikkeama
+    tasapainoetäisyydestä kasvaa. Nämä vuorovaikutukset tapahtuvat
+    satunnaisesti (tässä simulaatiossa).
+    <br/><button  onclick="jQuery('#p5').show();jQuery(this).hide()">Lisää..</button>
+  </p>
+  <p class="step" id="p5">
+    <b>Kohta a)</b> 
+    Seuraa mitä tapahtuu molekyylien värähdysenergialle
+    kun annat niiden vuorovaikuttaa painamalla "Next". 
+    Toista tämä reilu kymmenen kertaa. 
+    Seuraa samalla mitä tapahtuu värähdysenergian jakaumalle. Voit
+    tarvittaessa aloittaa alusta, painamalla "Restart".
+    <br/><button  onclick="jQuery('#p6').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p6">
+    <b>Kohta b)</b> 
+    Paina seuraavaksi "Run". Odota kunnes värähdysenergian jakauma
+    tasaantuu, paina "Stop" ja "Data". Kirjoita ylös jakauman arvot
+    alle ilmestyneestä taulukosta.
+    <br/><button  onclick="jQuery('#p7').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>  
+  <p class="step" id="p7">
+    <b>Kohta c)</b>
+    Annetaan molekyylielle enemmän energiaa eli "lämmitetään"
+    systeemiä. Vaihda systeemin kokonaisenergian E<sub>tot</sub>
+    arvoksi "5" ja paina "Restart". Ja toista kohta b.
+    <br/><button  onclick="jQuery('#p8').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p8">
+    <b>Kohta d)</b>
+    Annetaan molekyylielle vielä enemmän energiaa eli "lämmitetään"
+    systeemiä lisää. Vaihda E<sub>tot</sub> arvoksi "10" ja paina
+    "Restart". Ja toista kohta b. 
+    Vertaa kohtiin b ja c. Mitä havaitset? Millaisen muutoksen
+    havaitset jakauman muodossa? Kuinka perustilan (eli nollan
+    värähdyskvantin) molekyylien keskimääräinen lukumäärää muuttuu?
+    Entä kahden kvantin?
+    <br/><button  onclick="jQuery('#p9').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p9">
+    <b>Kohta e)</b>
+    Pidätään energia samana mutta tuodaan systeemiin kolme uutta molekyyliä
+    kasvattamalla N<sub>vib</sub> arvoon "20" ja paina
+    "Restart". Toista kohta b. Jakaumassa on nyt 
+    enemmän hiukkasia, joten pylväiden yhteenlaskettu pituus kasvoi 10:stä
+    20:aan. Mutta kuinka jakauman muoto muuttui? Laske nollan ja kahden
+    kvantin keskimääräisten populaatioiden eli pylväiden korkeuksien
+    suhde ja vertaa sitä d-kohtaan. Vertaa muutosta myös b-kohtaan.
+    Mitä systeemin lämpötilalle tapahtui, kun kokonaisvärähdysenergia
+    pysyi samana, mutta molekyylien määrä kasvoi? 
+    <br/><button  onclick="jQuery('#p10').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p10">
+    <b>Kohta f)</b>
+    Laske b-, c- ja e-kohtien systeemien keskimääräinen energia: 
+    E<sub>avg</sub> = E<sub>tot</sub> / N<sub>vib</sub>. 
+    Mitä huomaat keskimääräisestä energiasta verrattuna jakauman
+    muotoon (tai nollan ja kahden kvantin suhteeseen)? 
+    <br/><button  onclick="jQuery('#p11').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p11">
+    <b>Kohta g) (matematiikkaharjoitus)</b>
+    Laske e-kohdan systeemin keskimääräinen energia
+    värähdysenergian jakaumasta. Eli kerro värähdysenergia vastaavalla
+    populaatiolla (pylvään x-arvo kertaan pylvään y-arvo) ja jaa tämä
+    populaatioiden summalla (y-arvojen summa). Tarkasta että arvo on
+    lähellä arvoa E<sub>tot</sub> / N<sub>vib</sub>.
+    <br/><button  onclick="jQuery('#p12').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p12">
+    <b>Kohta h)</b>
+    Tee itsellesi lyhyt yhteenveto. Pohdi erityisesti kuinka
+    hetkellinen värähdysenergia, keskimäärinen värähdysenergia,
+    lämpötila ja jakauman muoto liittyvät toisiinsa. Kokeile myös hieman
+    isompia arvoja N<sub>vib</sub>:lle ja 
+    E<sub>tot</sub>:lle, esim. 50/10, 50/30, 50/50, jossa
+    muutokset havaitsee helposti myös silmämääräisesti.
+    <br/><button  onclick="jQuery('#p13').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p13">
+    <b>Bonus (vain kiinnostuneille)</b>
+    Jos tiedämme systeemin värähdysenergian jakauman, voimme laskea lämpötilan.
+    Aseta molekyylien lukumäärä N<sub>vib</sub> 100:ksi ja systeemin
+    kokonaisenergia E<sub>tot</sub> 500:ksi. Tee hyvin pitkä
+    ajo (useita minuutteja). Nollaa jakauma puolessa välissä ajoa
+    painamalla "Reset sampling". Ota jakauma talteen painamalla
+    "Data". Odota vielä muutamia minuutteja ja ota toinen otos
+    jakaumasta. Tarkasta että otokset eivät poikkea merkittävästi
+    toisistaan. Ota tarvittaessa kolmas otos. Sovita jakauma
+    Boltzmann-jakauman lausekkeeseen: 
+    P = C exp(-E/kT) ja ratkaise kT. Käytä taulukkolaskenta ohjemaa ja
+    esim. lineaarista sovitusta logaritmin ottamisen jälkeen. 
+    Toista sama kokonaisenergialla E<sub>tot</sub>=1000.
+    Kuinka lämpötila muuttuu kokonaisenergian muuttuessa? Vastaako
+    tämä kirjallisuudesta löytyvää käytöstä ideaaliselle systeemille?
+    <br/><button  onclick="jQuery('#p14').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p14">
+    <b>Superbonus</b>
+    Kokeile vastaavaa parille 
+    N<sub>vib</sub> = 10, E<sub>tot</sub> = 5 ja 
+    N<sub>vib</sub> = 10, E<sub>tot</sub> = 10.
+    Selitä pienemmän ja isomman systeemin ero.
+    <br/><button  onclick="jQuery('#p15').show();jQuery(this).hide()">Seuraava osatehtävä</button>
+  </p>
+  <p class="step" id="p15">
+    <b>Valmis. Hienoa!</b>
+  </p>
+  <svg id="stateChart"></svg>
+  <svg id="populationChart"></svg><br/>
+  <svg id="energyChart"></svg>
+  <div style="display: inline-block; vertical-align: top; margin-top:
+	      1cm; margin-left: 1cm">
+    <form action="" onsubmit="return false;">
+      <span style="display: inline-block; width: 1cm">N<sub>vib</sub></span>
+      <input type="text" id="Nvib" size="5" value="10" style="margin-right: .5cm"/>
+      <span style="display: inline-block; width: 1cm">E<sub>tot</sub></span>
+      <input type="text" id="Etot" size="5" value="3" style="margin-right: .5cm"/>
+      <button onclick="restart()">Restart</button>
+  </form>
+  <br/>
+  <button onclick="next()">Next</button>
+  <button onclick="run()">Run</button>
+  <button onclick="stop()">Stop</button>
+  <br/>
+  <br/>
+  <button onclick="data()">Data</button>
+  <button onclick="reset()">Reset sampling</button>
+  </div>
+  <div id="table">
+  </div>
+  </div>
+  <script>
+
+var Emax = 10;
+var vb = null;
+var state = null;
+var energy = null;
+var population = null;
+var timeout = null;
+var delay = 0;
+
+//////////
+restart();
+//////////
+
+function restart() {
+    if ( state != null )
+	jQuery("#"+state.svg_id).empty();
+    if ( energy != null )
+	jQuery("#"+energy.svg_id).empty();
+    if ( population != null )
+	jQuery("#"+population.svg_id).empty();
+    
+    Nvib = parseInt(jQuery("#Nvib").val());
+    Etot = parseInt(jQuery("#Etot").val());
+
+    if ( Etot <= 10 ) { 
+	Emax = 10;
+	vb = new VibrationalBoltzmann("first", Nvib, Emax, Etot);
+    }
+    else {
+	Emax = Math.max(Math.floor(Math.sqrt(Etot)),10);
+	vb = new VibrationalBoltzmann("random", Nvib, Emax, Etot);
+    }
+    var labels = [];
+    for(var i = 0; i < vb.Nvib; ++i)
+	labels.push("#"+(i+1));
+    var pop_labels = [];
+    for(var i = 0; i < Emax+1; ++i)
+	pop_labels.push(""+(i));
+    
+    state = new SimpleBarChart("stateChart", labels, vb.Emax, "molecule ID", "energy");
+    
+    population = new SimpleBarChart("populationChart", pop_labels, vb.Nvib, "energy", "population", true);
+    
+    energy = new SimpleBarChart("energyChart", labels, vb.Emax, "molecule", "energy");
+    
+    vb.sample();		     
+    state.update(vb.vibrators);
+    energy.update(vb.energy_distribution());
+    population.update(vb.population_distribution());
+
+    jQuery("#Nvib").val(vb.Nvib);
+    jQuery("#Etot").val(vb.E);    
+}
+
+function next() {
+    vb.iterate();
+    vb.sample();
+    state.update(vb.vibrators);
+    energy.update(vb.energy_distribution());
+    population.update(vb.population_distribution());
+    var dist = vb.population_distribution();
+    var esum = 0, psum = 0;
+    for(var i = 0; i < dist.length; ++i) {
+	esum += dist[i] * i;
+	psum += dist[i];
+    }
+    console.log(esum + " " + psum);
+    for(var i = 0; i < dist.length; ++i) {
+	console.log(i + " " + dist[i] + " " + Math.log(dist[i]+1e-15));
+    }
+}
+
+function iterate() {
+    for(var i=0; i < 10;++i) {
+	vb.iterate();
+	vb.sample();
+    }
+    state.update(vb.vibrators);
+    energy.update(vb.energy_distribution());
+    population.update(vb.population_distribution());
+    
+    if ( timeout != null )
+	timeout = setTimeout(iterate, 10);
+}
+
+function run() {
+    timeout = setTimeout(iterate, 10);
+}
+function stop() {
+    clearTimeout(timeout);
+    timeout = null;
+}
+function reset() {
+    vb.reset_sampling();
+    vb.sample();
+    state.update(vb.vibrators);
+    energy.update(vb.energy_distribution());
+    population.update(vb.population_distribution());
+}
+function data() {
+    var dist = vb.population_distribution();
+    var html = '<table style="margin-top: 2cm; margin-left: 1cm">';
+    html += '<tr><td style="width: 2cm; border-bottom: 1px solid black">E</td><td style="width: 2cm; border-bottom: 1px solid black">P</td></tr>';
+    for(var i = 0; i < dist.length; ++i)
+	html += '<tr><td>'+i+'</td><td>'+dist[i].toFixed(2)+'</td></tr>';
+    html += '</table>';
+    jQuery("#table").html(html);
+}
+</script>
+</body>
+</html>

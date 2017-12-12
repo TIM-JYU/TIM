@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Optional, List, Dict, Tuple, Iterable
 
 import yaml
@@ -34,6 +35,8 @@ class DocSettings:
     print_settings_key = 'print_settings'
     preamble_key = 'preamble'
     show_authors_key = 'show_authors'
+    read_expiry_key = 'read_expiry'
+    add_par_button_text_key = 'add_par_button_text'
 
     @staticmethod
     def settings_to_string(par: DocParagraph) -> str:
@@ -210,6 +213,15 @@ class DocSettings:
 
     def show_authors(self, default=False):
         return self.__dict.get(self.show_authors_key, default)
+
+    def read_expiry(self, default=timedelta(weeks=9999)) -> timedelta:
+        r = self.__dict.get(self.read_expiry_key)
+        if not isinstance(r, int):
+            return default
+        return timedelta(minutes=r)
+
+    def add_par_button_text(self, default='Add paragraph') -> str:
+        return self.__dict.get(self.add_par_button_text_key, default)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

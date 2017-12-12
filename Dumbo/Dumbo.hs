@@ -60,7 +60,7 @@ htmlOpts =
   PDC.def
   { PDC.writerHTMLMathMethod =
     PDC.MathJax
-      "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+      "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
   , PDC.writerExtensions =
     PDC.pandocExtensions `Set.union` Set.singleton PDC_Opt.Ext_latex_macros
   }

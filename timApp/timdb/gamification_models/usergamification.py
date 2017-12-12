@@ -16,6 +16,4 @@ class UserGamification(db.Model):
 
         user_gamification = UserGamification(game_doc_id, user_id, is_gamified)
         db.session.add(user_gamification)
-        db.session.commit()
-
         return user_gamification

@@ -10,11 +10,14 @@ from timApp.accesshelper import has_ownership, has_edit_access
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
+from timApp.documentmodel.readmarkcollection import ReadMarkCollection
 from timApp.markdownconverter import expand_macros, create_environment
 from timApp.pluginControl import pluginify
 from timApp.requesthelper import get_boolean
 from timApp.sessioninfo import get_session_usergroup_ids
 from timApp.timdb.models.user import User
+from timApp.timdb.readings import get_common_readings, get_read_expiry_condition
+from timApp.timdb.tim_models import ReadParagraph
 from timApp.timdb.userutils import get_anon_group_id
 from timApp.timtiming import taketime
 from timApp.utils import getdatetime
@@ -80,25 +83,26 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         pars_dict[key].append(htmlpar)
 
     for p in html_pars:
-        p['status'] = set()
+        p['status'] = ReadMarkCollection()
         p['notes'] = []
     # taketime("pars done")
 
     group = user.get_personal_group().id if user is not None else get_anon_group_id()
     if user is not None:
         # taketime("readings begin")
-        readings = timdb.readings.get_common_readings(get_session_usergroup_ids(), doc)
+        readings = get_common_readings(get_session_usergroup_ids(),
+                                       doc,
+                                       get_read_expiry_condition(doc.get_settings().read_expiry()))
         taketime("readings end")
-        for r in readings:  # TODO: this takes more than one sec???
+        for r in readings:  # type: ReadParagraph
             key = (r.par_id, r.doc_id)
             pars = pars_dict.get(key)
             if pars:
                 for p in pars:
                     if r.par_hash == p['t'] or r.par_hash == p.get('ref_t'):
-                        p['status'].add(r.type.class_str())
-                    elif r.type.class_str() not in p.get('status'):
-                        # elif is here so not to overwrite an existing 'read' marking
-                        p['status'].add(r.type.class_str() + '-modified')
+                        p['status'].add(r)
+                    else:
+                        p['status'].add(r, modified=True)
 
     taketime("read mixed")
     notes = timdb.notes.get_notes(group, doc)

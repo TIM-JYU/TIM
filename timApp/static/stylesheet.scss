@@ -4,6 +4,7 @@
 
 html {
     position: relative; // required for sticky footer
+    z-index: $footer-z;
 }
 
 body {
@@ -142,8 +143,8 @@ a .glyphicon {
         @mixin heading-base($outdent) {
             text-align: left;
             margin-left: $outdent;
-            @media (max-width: $screen-sm + 6) {
-                margin-left: $outdent * 0.5;
+            @media (max-width: 870px) {
+                margin-left: $outdent * 0.6;
             }
             @media (max-width: $screen-xs-max) {
                 margin-left: 0;
@@ -1159,7 +1160,7 @@ body > .footer {
     bottom: 0;
     width: 100%;
     height: $footer-height;
-    z-index: -1; // make section read mark clickable if it is above footer
+    z-index: $footer-z; // make section read mark clickable if it is above footer
 }
 
 .table-alias td:first-child {

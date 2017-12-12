@@ -99,8 +99,8 @@ def initialize_database(create_docs=True):
 
         timdb.users.create_special_usergroups()
         anon_group = get_anon_group_id()
-        User.create_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True, commit=False)
-        User.create_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True, commit=False)
+        User.create_with_group('vesal', 'Vesa Lappalainen', 'vesa.t.lappalainen@jyu.fi', is_admin=True)
+        User.create_with_group('tojukarp', 'Tomi Karppinen', 'tomi.j.karppinen@jyu.fi', is_admin=True)
         precomputed_hashes = [
             '$2b$04$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu',  # test1pass
             '$2b$04$B0mE/VeD5Uzucfa2juzY5.8aObzCqQSDVK//bxdiQ5Ayv59PwWsVq',  # test2pass
@@ -109,10 +109,8 @@ def initialize_database(create_docs=True):
         for i in range(1, 4):
             u, _ = User.create_with_group(f'testuser{i}',
                                           f'Test user {i}',
-                                          f'test{i}@example.com',
-                                          commit=False)
+                                          f'test{i}@example.com')
             u.pass_ = precomputed_hashes[i - 1]
-        sess.commit()
         if create_docs:
             DocEntry.create('testaus-1', anon_group, title='Testaus 1')
             DocEntry.create('testaus-2', anon_group, title='Testaus 2')
@@ -124,6 +122,7 @@ def initialize_database(create_docs=True):
                                                       'mmcq-example',
                                                       anon_group,
                                                       title='Multiple choice plugin example')
+        sess.commit()
         log_info('Database initialization done.')
 
     if not app.config['TESTING']:

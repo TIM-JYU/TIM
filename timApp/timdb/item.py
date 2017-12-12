@@ -1,7 +1,11 @@
+from itertools import accumulate
+
 from flask import current_app
+from sqlalchemy import tuple_, func
 
 from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.models.block import Block
+from timApp.timdb.tim_models import BlockAccess
 from timApp.utils import split_location, date_to_relative
 
 
@@ -74,11 +78,16 @@ class Item:
 
     @property
     def parents_to_root(self):
-        crumbs = []
-        p = self.parent
-        while p:
-            crumbs.append(p)
-            p = p.parent
+        if not self.path_without_lang:
+            return []
+        path_parts = self.path_without_lang.split('/')
+        paths = list(p[1:] for p in accumulate('/' + part for part in path_parts[:-1]))
+        from timApp.timdb.models.folder import Folder
+        if not paths:
+            return [Folder.get_root()]
+        path_tuples = [split_location(p) for p in paths]
+        crumbs = Folder.query.filter(tuple_(Folder.location, Folder.name).in_(path_tuples)).order_by(func.length(Folder.location).desc()).all()
+        crumbs.append(Folder.get_root())
         return crumbs
 
     @property
@@ -117,3 +126,17 @@ class Item:
             else:
                 raise NotImplementedError
         return None
+
+
+def copy_rights(source: Item, dest: Item, delete_existing=True):
+    if delete_existing:
+        dest.block.accesses.delete()
+    for a in source.block.accesses:  # type: BlockAccess
+        dest.block.accesses.append(
+            BlockAccess(usergroup_id=a.usergroup_id,
+                        type=a.type,
+                        accessible_from=a.accessible_from,
+                        accessible_to=a.accessible_to,
+                        duration=a.duration,
+                        duration_from=a.duration_from,
+                        duration_to=a.duration_to,))

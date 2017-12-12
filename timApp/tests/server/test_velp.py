@@ -14,6 +14,7 @@ Tested routes from velp.py:
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
+from timApp.timdb.tim_models import db
 
 
 class VelpTest(TimRouteTest):
@@ -41,6 +42,7 @@ class VelpTest(TimRouteTest):
         doc2_id = doc2.doc_id
         doc3 = DocEntry.create(test_doc3, t1g).document    # users/testuser1/test/test3 #owner: testuser1
         doc3_id = doc3.doc_id
+        db.session.commit()
 
         # Try to get velp groups for document that has none
         resp = self.get(f'/{str(doc1_id)}/get_default_velp_group')
@@ -69,12 +71,14 @@ class VelpTest(TimRouteTest):
         test_group2 = f'{user_velp_group_folder}/test1/test_group2'
         DocEntry.create(test_group1, t1g)
         DocEntry.create(test_group2, t2g)
+        db.session.commit()
         resp = self.get(f'/{str(doc1_id)}/get_velp_groups')
         self.assertEqual(len(resp), 3)
 
         # Create default velp group manually for test 3 file which route notices and turns that document to a velp group
         test3_default_path = f'{deep_velp_group_folder}/test3/test3_default'
         test3_default = DocEntry.create(test3_default_path, t1g).document
+        db.session.commit()
         test3_default_id = test3_default.doc_id
         j = self.json_post(f'/{str(doc3_id)}/create_default_velp_group')
         self.assertEqual('test3_default', j['name'])
@@ -88,6 +92,7 @@ class VelpTest(TimRouteTest):
         # Both documents test1 and test3 should now have one more velp group to use
         test_group3 = f'{root_velp_group_folder}/test_group3'
         DocEntry.create(test_group3, t1g)
+        db.session.commit()
         resp = self.get(f'/{str(doc1_id)}/get_velp_groups')
         self.assertEqual(len(resp), 4)
         resp = self.get(f'/{str(doc3_id)}/get_velp_groups')

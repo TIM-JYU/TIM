@@ -2,6 +2,7 @@
 from datetime import timezone, datetime
 
 import dateutil.parser
+import re
 from flask import Blueprint, render_template
 from flask import abort
 from flask import g
@@ -14,20 +15,21 @@ from timApp.accesshelper import verify_manage_access, verify_ownership, verify_v
     verify_edit_access, get_doc_or_abort
 from timApp.common import has_special_chars
 from timApp.dbaccess import get_timdb
+from timApp.documentmodel.create_item import copy_document_and_enum_translations
 from timApp.requesthelper import verify_json_params, get_option
 from timApp.responsehelper import json_response, ok_response
 from timApp.sessioninfo import get_current_user_group
 from timApp.sessioninfo import get_current_user_object
 from timApp.timdb.blocktypes import from_str
 from timApp.timdb.documents import delete_document
-from timApp.timdb.item import Item
+from timApp.timdb.item import Item, copy_rights
 from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.models.folder import Folder
+from timApp.timdb.models.folder import Folder, path_includes
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db, AccessType
 from timApp.timdb.userutils import grant_access, grant_default_access
-from timApp.utils import remove_path_special_chars, split_location
-from timApp.validation import validate_item
+from timApp.utils import remove_path_special_chars, split_location, join_location
+from timApp.validation import validate_item, validate_item_and_create
 
 manage_page = Blueprint('manage_page',
                         __name__,
@@ -263,6 +265,7 @@ def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
                          duration_from=dur_from,
                          duration_to=dur_to,
                          duration=duration)
+    db.session.commit()
     return ok_response()
 
 
@@ -368,3 +371,73 @@ def change_title(item_id):
     item.title = new_title
     db.session.commit()
     return ok_response()
+
+
+def get_copy_folder_params(folder_id):
+    verify_manage_access(folder_id)
+    f = Folder.find_by_id(folder_id)
+    if not f:
+        abort(404)
+    dest, exclude = verify_json_params('destination', 'exclude')
+    compiled = get_pattern(exclude)
+    if path_includes(dest, f.path):
+        return abort(403, 'Cannot copy folder inside of itself.')
+    return f, dest, compiled
+
+
+@manage_page.route("/copy/<int:folder_id>", methods=["POST"])
+def copy_folder_endpoint(folder_id):
+    f, dest, compiled = get_copy_folder_params(folder_id)
+    o = get_current_user_group()
+    validate_item_and_create(dest, 'folder', o)
+    nf = Folder.create(dest, o, apply_default_rights=True)
+    ug = get_current_user_object().get_personal_group()
+    copy_folder(f, nf, ug, compiled)
+    db.session.commit()
+    return json_response(nf)
+
+
+def get_pattern(exclude: str):
+    if not exclude:
+        exclude = 'a^'
+    try:
+        return re.compile(exclude)
+    except:
+        abort(400, f'Wrong pattern format: {exclude}')
+
+
+@manage_page.route("/copy/<int:folder_id>/preview", methods=["POST"])
+def copy_folder_preview(folder_id):
+    f, dest, compiled = get_copy_folder_params(folder_id)
+    preview_list = []
+    for i in enum_items(f, compiled):
+        preview_list.append({'to': join_location(dest, i.short_name), 'from': i.path})
+    return json_response(preview_list)
+
+
+def enum_items(folder: Folder, exclude_re):
+    for d in folder.get_all_documents(include_subdirs=False):
+        if not exclude_re.search(d.path):
+            yield d
+    for f in folder.get_all_folders():
+        if not exclude_re.search(f.path):
+            yield f
+            for it in enum_items(f, exclude_re):
+                yield it
+
+
+def copy_folder(f_from: Folder, f_to: Folder, modifier: UserGroup, exclude_re):
+    for d in f_from.get_all_documents(include_subdirs=False):
+        if exclude_re.search(d.path):
+            continue
+        nd = DocEntry.create(join_location(f_to.path, d.short_name), title=d.title)
+        copy_rights(d, nd)
+        nd.document.modifier_group_id = modifier.id
+        for tr, new_tr in copy_document_and_enum_translations(d, nd):
+            copy_rights(tr, new_tr)
+    for f in f_from.get_all_folders():
+        if exclude_re.search(f.path):
+            continue
+        nf = Folder.create(join_location(f_to.path, f.short_name), title=f.title)
+        copy_rights(f, nf)
+        copy_folder(f, nf, modifier, exclude_re)

@@ -22,6 +22,10 @@ from timApp.timdb.readparagraphtype import ReadParagraphType
 db = SQLAlchemy()
 
 
+def tim_main_execute(sql: str, params=None):
+    return db.session.execute(sql, params, bind=db.get_engine(bind='tim_main'))
+
+
 class AccessType(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'accesstype'
@@ -250,7 +254,7 @@ class Question(db.Model):
     expl = db.Column(db.Text)
 
 
-class ReadParagraph(db.Model):
+class ReadParagraphOld(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'readparagraphs'
     usergroup_id = db.Column(db.Integer, primary_key=True)
@@ -260,6 +264,20 @@ class ReadParagraph(db.Model):
     par_hash = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
     __table_args__ = (db.Index('readparagraphs_doc_id_par_id_idx', 'doc_id', 'par_id'),)
+
+
+class ReadParagraph(db.Model):
+    __bind_key__ = 'tim_main'
+    __tablename__ = 'readparagraph'
+    id = db.Column(db.Integer, primary_key=True)
+    usergroup_id = db.Column(db.Integer, nullable=False)
+    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'))
+    par_id = db.Column(db.Text, nullable=False)
+    type = db.Column(db.Enum(ReadParagraphType), nullable=False)
+    par_hash = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
+    __table_args__ = (db.Index('readparagraph_doc_id_par_id_idx', 'doc_id', 'par_id'),
+                      db.Index('readparagraph_doc_id_usergroup_id_idx', 'doc_id', 'usergroup_id'),)
 
 
 class UserAnswer(db.Model):

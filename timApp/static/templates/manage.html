@@ -357,6 +357,9 @@
             </form>
         </div>
     </div>
+    <bootstrap-panel show-close="false" title="Copy contents">
+        <tim-copy-folder item="$ctrl.item"></tim-copy-folder>
+    </bootstrap-panel>
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
         <div class="panel-heading">Other actions</div>
         <div class="panel-body">

@@ -757,7 +757,10 @@ class Document:
         dp = DocumentParser(text)
         dp.add_missing_attributes()
         vr = dp.validate_structure()
-        vr.raise_if_has_any_issues()
+        if strict_validation:
+            vr.raise_if_has_any_issues()
+        else:
+            vr.raise_if_has_critical_issues()
         new_pars = dp.get_blocks()
 
         # If the original document has validation errors, it probably means the document export routine has a bug.

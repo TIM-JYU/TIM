@@ -44,11 +44,10 @@ class Uploads(TimDbBase):
         with open(file_path, 'wb') as f:
             f.write(file_data)
         b = insert_block(description=relfilename, owner_group_id=owner_group_id,
-                         block_type=blocktypes.UPLOAD, commit=False)
+                         block_type=blocktypes.UPLOAD)
         au = AnswerUpload(block=b)
         db.session.add(b)
         db.session.add(au)
-        db.session.commit()
 
         return au
 

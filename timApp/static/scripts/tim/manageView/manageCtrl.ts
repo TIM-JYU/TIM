@@ -3,6 +3,10 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {$compile, $http, $log, $timeout, $upload, $window} from "../ngimport";
 import {IItem} from "../IItem";
+import {markAsUsed} from "../utils";
+import * as copyFolder from "./copyFolder";
+
+markAsUsed(copyFolder);
 
 export class PermCtrl implements IController {
     private static $inject = ["$scope", "$element"];

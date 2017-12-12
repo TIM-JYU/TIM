@@ -7,14 +7,12 @@ from timApp.logger import log_info, log_debug, log_error, log_warning
 from timApp.timdb.annotations import Annotations
 from timApp.timdb.answers import Answers
 from timApp.timdb.files import Files
-from timApp.timdb.folders import Folders
 from timApp.timdb.images import Images
 from timApp.timdb.lectureanswers import LectureAnswers
 from timApp.timdb.lectures import Lectures
 from timApp.timdb.messages import Messages
 from timApp.timdb.notes import Notes
 from timApp.timdb.questions import Questions
-from timApp.timdb.readings import Readings
 from timApp.timdb.tim_models import db
 from timApp.timdb.uploads import Uploads
 from timApp.timdb.users import Users
@@ -72,7 +70,6 @@ class TimDb(object):
         self.questions = None
         self.messages = None
         self.lectures = None
-        self.folders = None
         self.lecture_answers = None
         self.velps = None
         self.velp_groups = None
@@ -112,7 +109,6 @@ class TimDb(object):
         # num_connections = self.get_pg_connections()
         # log_info('TimDb instances/PG connections: {}/{} (constructor)'.format(TimDb.instances, num_connections))
         self.notes = Notes(self.db, self.files_root_path, 'notes', self.current_user_name, self.session)
-        self.readings = Readings(self.db, self.files_root_path, 'notes', self.current_user_name, self.session)
         self.users = Users(self.db, self.files_root_path, 'users', self.current_user_name, self.session)
         self.images = Images(self.db, self.files_root_path, 'images', self.current_user_name, self.session)
         self.uploads = Uploads(self.db, self.files_root_path, 'uploads', self.current_user_name, self.session)
@@ -121,7 +117,6 @@ class TimDb(object):
         self.questions = Questions(self.db, self.files_root_path, 'questions', self.current_user_name, self.session)
         self.messages = Messages(self.db, self.files_root_path, 'messages', self.current_user_name, self.session)
         self.lectures = Lectures(self.db, self.files_root_path, 'lectures', self.current_user_name, self.session)
-        self.folders = Folders(self.db, self.files_root_path, 'folders', self.current_user_name, self.session)
         self.lecture_answers = LectureAnswers(self.db, self.files_root_path,
                                               'lecture_answers', self.current_user_name, self.session)
         self.velps = Velps(self.db, self.files_root_path, 'velps', self.current_user_name, self.session)

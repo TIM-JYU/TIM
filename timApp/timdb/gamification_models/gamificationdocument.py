@@ -17,7 +17,6 @@ class GamificationDocument(db.Model):
 
         gamificationdocument = GamificationDocument(id=document_id)
         db.session.add(gamificationdocument)
-        db.session.commit()
         return gamificationdocument
 
     @staticmethod

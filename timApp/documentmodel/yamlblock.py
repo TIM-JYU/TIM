@@ -38,11 +38,6 @@ class YamlBlock:
             return self.values == o
         return NotImplemented
 
-    def __ne__(self, o: object) -> bool:
-        if isinstance(o, self.__class__):
-            return not self == o
-        return NotImplemented
-
     def __repr__(self):
         return f'{self.__class__.__name__}({self.__dict__})'
 

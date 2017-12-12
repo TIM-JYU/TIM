@@ -17,7 +17,8 @@ from timApp.common import hide_names_in_teacher
 from timApp.containerLink import call_plugin_answer
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.document import Document
-from timApp.plugin import Plugin, PluginException
+from timApp.plugin import Plugin
+from timApp.pluginexception import PluginException
 from timApp.pluginControl import try_load_json, find_task_ids, pluginify
 from timApp.requesthelper import verify_json_params, unpack_args, get_option
 from timApp.responsehelper import json_response, ok_response
@@ -256,8 +257,8 @@ def post_answer(plugintype: str, task_id_ext: str):
         if result['savedNew'] is not None and upload is not None:
             # Associate this answer with the upload entry
             upload.answer_id = result['savedNew']
-            db.session.commit()
 
+    db.session.commit()
     return json_response(result)
 
 

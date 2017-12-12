@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {
+    font-family: "Helvetica", sans-serif;
+    margin-left: 1cm;
+    background: #f0f0f0;
+    text-align: justify;
+  }
+  button {
+    height: 1cm;
+    border-radius: .25cm;
+  }
+  td {
+    text-align:center;
+  }
+  div#content {
+    padding: .5cm .5cm 1.5cm .5cm;
+    display: inline-block;
+    background: #ffffff;
+  }
+  p {
+    margin-left: 0cm; 
+    width: 14cm; 
+    line-height: 1.5em
+  }
+  p.step {
+    display: none;
+  }
+  svg {
+    margin-top: 1cm;
+  }
+  #stateChart {
+    width: 12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+  #populationChart {
+    width:  12cm;
+    height: 8cm;
+    border: 0px solid black;
+    display: none;
+  }
+  #energyChart {
+    width: 12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+</style>
+<title>Liike-energian leviäminen molekyyleissä</title>
+</head>
+<body>
+  <script src="jquery-1.11.1.min.js"></script>
+  <script src="d3.v3.min.js"></script>
+  <script src="vib.d3.js"></script>
+  <script src="MersenneTwister.js"></script>
+  <script src="vib.js"></script>
+  <div id="content">
+  <h1>Liike-energian leviäminen molekyyleissä</h1>
+  <p><b>
+      Tutkitaan kuinka liike-energia eli
+      lämpö leviää molekyylijoukossa. Eli kuinka kokonaisenergia
+      jakautuu yksittäisten molekyylien värähdysenergiaksi. Onko
+      kaikilla molekyyleillä sama värähdysenergia? Vai löytyykö
+      joukosta "kuumia" ja "kylmiä" molekyylejä?
+      <br/><button  onclick="jQuery('#p1').show();jQuery(this).hide()">Lisää..</button>
+  </b></p>
+  <p class="step" id="p1">
+    Alla näet kaksi kuvaajaa, jotka kuvaavat värähtelijöiden,
+    esimerkiksi jodimolekyylien I<sub>2</sub>, värähdysenergiaa eri
+    tavoin. 
+    Ensimmäinen kuvaaja esittää molekyylien tämänhetkistä
+    värähdysenergiaa. Ja toinen kuvaaja molekyylien keskimääräistä
+    värähdysenergiaa. 
+    Molekyylit on numeroitu vaaka-akselille. Mitä korkeampi pylväs
+    sitä enemmän värähdysenergiaa molekyylillä on.
+    <br/>
+    Vasemman puoleisinta molekyyliä on viritetty laserilla nopeasti,
+    joten sillä on paljon värähdysenergiaa. Sitä voidaan kutsua
+    "kuumaksi" molekyyliksi, koska sen värähdysenergia on selkeästi
+    keskimääräistä suurempi. Muut molekyylit eivät ole ottaneet
+    vastaan yhtään värähdysenergiaa (eli ne ovat perustilassa) ja
+    niiden pylvään korkeus on nolla.
+    <br/><button  onclick="jQuery('#p2').show();jQuery(this).hide()">Lisää..</button>
+  </p>
+  <p class="step" id="p2">
+    Molekyylit voivat vaihtaa energiaa viereisten molekyylien
+    kanssa, joko antamalla tai ottamalla energiaa. Mitä suurempi 
+    liike-energia eli tässä tapauksessa värähdysenergia molekyylillä on,
+    sitä suurempia ovat atomien nopeus ja poikkeama tasapainoetäisyydestä.
+    Voit ajatella että jodi-atomit ovat yhdistettynä
+    jousella, jota venytetään pylvään korkeuden verran ennen kuin se
+    päästetään värähtelemään.<br/>
+    <i>(Tässä simulaatiossa molekyylien väliset vuorovaikutukset eli
+    energian vaihdot tapahtuvat satunnaisesti ja yhden yksikön
+    kokoisissa energiapaketeissa eli kvanteissa. Jodimolekyylille
+    värähdyskvantin suuruus on 215&nbsp;cm<sup>-1</sup> eli 2.57
+    kJ/mol. Orgaanisten molekyylien värähdystaajuudet ovat
+    tyypillisesti 400&nbsp;cm<sup>-1</sup> - 4000&nbsp;cm<sup>-1</sup>  )</i>
+    <br/><button  onclick="jQuery('#p3').show();jQuery(this).hide()">Lisää..</button>
+  </p>
+  <p class="step" id="p3">
+    <b>Kohta a)</b> 
+    Seuraa mitä tapahtuu molekyylien värähdysenergialle
+    kun annat niiden vuorovaikuttaa painamalla "Next". 
+    Toista tämä reilu kymmenen kertaa. 
+    Seuraa samalla mitä tapahtuu värähdysenergian jakaumalle. Voit
+    tarvittaessa aloittaa alusta, painamalla "Restart".
+    <br/><button  onclick="jQuery('#p4').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p4">
+    <b>Kohta b)</b> 
+    Paina "Run" ja odota hetki että toisen kuvaajan muoto
+    tasaantuu. Paina "Stop". Vertaa molekyylien hetkellistä energia
+    keskimääräiseen energiaan eli vasen vs oikea kuvaaja. Toista "Run"
+    ja "Stop" muutamia kertoja.
+    <br/><button  onclick="jQuery('#p5').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+ <p class="step" id="p5">
+    <b>Kohta c)</b> 
+    Lisää värähtelijöiden määrää viiteenkymmeneen eli aseta
+    N<sub>vib</sub> = 50 ja paina "Restart". Paina "Run" ja vertaa
+    b-kohtaan, jossa oli vain kymmenen värähtelijää. Mitä voit sanoa
+    toisen kuvaajan tasaantumisnopeudesta eli energian
+    leviämisnopeudesta.
+    <br/><button  onclick="jQuery('#p6').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p6">
+    <b>Kohta d)</b> 
+    Lisää kokonaisenergian määrää viiteenkymmeneen eli aseta
+    E<sub>tot</sub> = 50 ja paina "Restart". Paina "Run" ja vertaa
+    c-kohtaan, jossa energiaa oli vain kymmenen yksikköä. Vaikuttaako
+    energian määrä oleellisesti leviämisnopeuteen?
+    <br/><button  onclick="jQuery('#p7').show();jQuery(this).hide()">Seuraava osatehtävä...</button>
+  </p>
+  <p class="step" id="p7">
+    <b>Valmis.</b>
+    Syötä nyt vastauksesi Optimaan ellet tehnyt sitä jo.
+  </p>
+  <svg id="stateChart"></svg>
+  <svg id="populationChart"></svg>
+  <svg id="energyChart"></svg>
+  <div style="vertical-align: top; margin-top:
+	      1cm; margin-left: 1cm">
+    <button onclick="next()">Next</button>
+    <button onclick="run()">Run</button>
+    <button onclick="stop()">Stop</button>
+    <br/>
+    <br/>
+    <form action="" onsubmit="return false;">
+      <span style="display: inline-block;">
+	N<sub>vib</sub>&nbsp;=</span>
+      <input type="text" id="Nvib" size="5" value="10" style="margin-right: .5cm"/>
+      <span style="display: inline-block;">
+	E<sub>tot</sub>&nbsp;=</span>
+      <input type="text" id="Etot" size="5" value="10" style="margin-right: .5cm"/>
+      <button onclick="restart()">Restart</button>
+    </form>
+    <br/>
+    <br/>
+    <!--button onclick="data()">Data</button-->
+    <button onclick="reset()">Reset sampling</button>
+  </div>
+  <div id="table">
+  </div>
+  </div>
+  <script>
+
+var Emax = 10;
+var vb = null;
+var state = null;
+var energy = null;
+var population = null;
+var timeout = null;
+var delay = 0;
+
+//////////
+restart();
+//////////
+
+function restart() {
+    if ( state != null )
+	jQuery("#"+state.svg_id).empty();
+    if ( energy != null )
+	jQuery("#"+energy.svg_id).empty();
+    if ( population != null )
+	jQuery("#"+population.svg_id).empty();
+    
+    Nvib = parseInt(jQuery("#Nvib").val());
+    Etot = parseInt(jQuery("#Etot").val());
+
+    if ( Etot <= 100 ) { 
+	Emax = 10;
+	vb = new VibrationalBoltzmann("first", Nvib, Emax, Etot);
+    }
+    else {
+	Emax = Math.max(Math.floor(Math.sqrt(Etot)),10);
+	vb = new VibrationalBoltzmann("random", Nvib, Emax, Etot);
+    }
+    var labels = [];
+    for(var i = 0; i < vb.Nvib; ++i)
+	labels.push("#"+(i+1));
+    var pop_labels = [];
+    for(var i = 0; i < Emax+1; ++i)
+	pop_labels.push(""+(i));
+    
+    state = new SimpleBarChart("stateChart", labels, vb.Emax, "molecule", "energy");
+    
+    population = new SimpleBarChart("populationChart", pop_labels, vb.Nvib, "energy", "population", true);
+    
+    energy = new SimpleBarChart("energyChart", labels, vb.Emax, "molecule", "avg. energy");
+    
+    vb.sample();		     
+    state.update(vb.vibrators);
+    energy.update(vb.energy_distribution());
+    population.update(vb.population_distribution());
+
+    jQuery("#Nvib").val(vb.Nvib);
+    jQuery("#Etot").val(vb.E);    
+}
+
+function next() {
+    vb.iterate();
+    vb.sample();
+    state.update(vb.vibrators);
+    energy.update(vb.energy_distribution());
+    population.update(vb.population_distribution());
+    var dist = vb.population_distribution();
+    var esum = 0, psum = 0;
+    for(var i = 0; i < dist.length; ++i) {
+	esum += dist[i] * i;
+	psum += dist[i];
+    }
+    console.log(esum + " " + psum);
+    for(var i = 0; i < dist.length; ++i) {
+	console.log(i + " " + dist[i] + " " + Math.log(dist[i]+1e-15));
+    }
+}
+
+function iterate() {
+    for(var i=0; i < 10;++i) {
+	vb.iterate();
+	vb.sample();
+    }
+    state.update(vb.vibrators);
+    energy.update(vb.energy_distribution());
+    population.update(vb.population_distribution());
+    
+    if ( timeout != null )
+	timeout = setTimeout(iterate, 10);
+}
+
+function run() {
+    timeout = setTimeout(iterate, 10);
+}
+function stop() {
+    clearTimeout(timeout);
+    timeout = null;
+}
+function reset() {
+    vb.reset_sampling();
+    vb.sample();
+    state.update(vb.vibrators);
+    energy.update(vb.energy_distribution());
+    population.update(vb.population_distribution());
+}
+function data() {
+    var dist = vb.population_distribution();
+    var html = '<table style="margin-top: 2cm; margin-left: 1cm">';
+    html += '<tr><td style="width: 2cm; border-bottom: 1px solid black">E</td><td style="width: 2cm; border-bottom: 1px solid black">P</td></tr>';
+    for(var i = 0; i < dist.length; ++i)
+	html += '<tr><td>'+i+'</td><td>'+dist[i].toFixed(2)+'</td></tr>';
+    html += '</table>';
+    jQuery("#table").html(html);
+}
+</script>
+</body>
+</html>

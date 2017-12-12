@@ -2,6 +2,7 @@ import itertools
 
 from flask import Request
 from flask import request, abort
+from werkzeug.wrappers import BaseRequest
 
 from timApp.timdb.invalidreferenceexception import InvalidReferenceException
 
@@ -103,3 +104,10 @@ def get_option(req: Request, name: str, default, cast=None):
         except ValueError:
             pass
     return result
+
+
+def is_xhr(req: BaseRequest):
+    """Same as req.is_xhr but without the deprecation warning."""
+    return req.environ.get(
+        'HTTP_X_REQUESTED_WITH', ''
+    ).lower() == 'xmlhttprequest'

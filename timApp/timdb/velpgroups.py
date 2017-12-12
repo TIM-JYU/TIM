@@ -14,7 +14,9 @@ import copy
 from typing import Optional, List, Iterable, Dict
 
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.tim_models import db
 from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.velp_models import VelpGroup
 from timApp.utils import get_sql_template
 
 
@@ -34,15 +36,8 @@ class VelpGroups(TimDbBase):
         new_group = DocEntry.create(default_group_path, owner_group_id)
         new_group_id = new_group.id
         valid_until = None
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      VelpGroup(id, name, valid_until, default_group, creation_time)
-                      VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
-                      ON CONFLICT DO NOTHING
-                      """, [new_group_id, name, valid_until, True]
-                       )
-        self.db.commit()
+        vg = VelpGroup(id=new_group_id, name=name, valid_until=valid_until, default_group=True)
+        db.session.add(vg)
         return new_group_id
 
     def create_velp_group(self, name: str, owner_group_id: int, new_group_path: str, valid_until: Optional[str] = None):
@@ -59,14 +54,8 @@ class VelpGroups(TimDbBase):
         # Create new document and add its ID to VelpGroupTable
         new_group = DocEntry.create(new_group_path, owner_group_id)
         new_group_id = new_group.id
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      VelpGroup(id, name, valid_until, creation_time)
-                      VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
-                      """, [new_group_id, name, valid_until]
-                       )
-        self.db.commit()
+        vg = VelpGroup(id=new_group_id, name=name, valid_until=valid_until)
+        db.session.add(vg)
         return new_group_id
 
     def make_document_a_velp_group(self, name: str, velp_group_id: int, valid_until: Optional[str] = None,

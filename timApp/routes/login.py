@@ -21,7 +21,7 @@ from yubico_client.yubico_exceptions import YubicoError
 from timApp.accesshelper import verify_logged_in, verify_admin
 from timApp.dbaccess import get_timdb
 from timApp.logger import log_error
-from timApp.requesthelper import verify_json_params, get_option
+from timApp.requesthelper import verify_json_params, get_option, is_xhr
 from timApp.responsehelper import safe_redirect, json_response, ok_response
 from timApp.routes.notify import send_email
 from timApp.sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list, \
@@ -139,7 +139,7 @@ def login_with_korppi():
             if korppi_group not in user.groups:
                 user.groups.append(korppi_group)
         else:
-            user, _ = User.create_with_group(user_name, real_name, email, commit=False)
+            user, _ = User.create_with_group(user_name, real_name, email)
             user.groups.append(UserGroup.get_korppi_group())
     else:
         if real_name:
@@ -273,7 +273,7 @@ def alt_signup_after():
 
     if not user:
         flash('Registration succeeded!')
-        user, _ = User.create_with_group(username, real_name, email, password=password, commit=False)
+        user, _ = User.create_with_group(username, real_name, email, password=password)
         user_id = user.id
     else:
         flash('Your information was updated successfully.')
@@ -326,7 +326,7 @@ def alt_login():
 
     else:
         error_msg = "Email address or password did not match. Please try again."
-        if request.is_xhr:
+        if is_xhr(request):
             return abort(403, error_msg)
         else:
             flash(error_msg, 'loginmsg')
@@ -352,7 +352,7 @@ def finish_login(ready=True):
     if anchor:
         anchor = "#" + anchor
     came_from = session.get('came_from', '/')
-    if not request.is_xhr:
+    if not is_xhr(request):
         return safe_redirect(came_from + anchor)
     else:
         return json_response(dict(current_user=get_current_user(), other_users=get_other_users_as_list()))

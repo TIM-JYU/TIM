@@ -9,6 +9,8 @@ from timApp.cache import cache
 from timApp.common import post_process_pars, get_user_settings
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.documentmodel.docsettings import DocSettings
+from timApp.documentmodel.document import Document
 from timApp.pluginControl import get_all_reqs
 from timApp.requesthelper import get_option
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group
@@ -109,7 +111,7 @@ def search(query):
                                in_lecture=False,
                                disable_read_markings=True,
                                no_browser=get_option(request, "noanswers", False),
-                               doc_settings_dict={})
+                               doc_settings=DocSettings(Document(-1)))
     results = list(results)
     results.sort(key=lambda r: r.document.path)
     return render_template('search.html',

@@ -4,7 +4,9 @@ from typing import Optional
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.readings import mark_read, get_readings
 from timApp.timdb.readparagraphtype import ReadParagraphType
+from timApp.timdb.tim_models import db
 
 
 class ClipboardTest(TimRouteTest):
@@ -98,24 +100,24 @@ class ClipboardTest(TimRouteTest):
         test_pars = ['test1', 'test2', 'test3', 'test4']
         d = self.create_doc(initial_par=test_pars)
         pars = d.document.get_paragraphs()
-        timdb = self.get_db()
-        timdb.readings.mark_read(usergroup_id=self.current_group().id,
-                                 doc=d.document,
-                                 par=pars[0],
-                                 read_type=ReadParagraphType.click_red)
-        timdb.readings.mark_read(usergroup_id=self.current_group().id,
-                                 doc=d.document,
-                                 par=pars[0],
-                                 read_type=ReadParagraphType.hover_par)
-        timdb.readings.mark_read(usergroup_id=self.current_group().id,
-                                 doc=d.document,
-                                 par=pars[1],
-                                 read_type=ReadParagraphType.hover_par)
+        mark_read(usergroup_id=self.current_group().id,
+                  doc=d.document,
+                  par=pars[0],
+                  read_type=ReadParagraphType.click_red)
+        mark_read(usergroup_id=self.current_group().id,
+                  doc=d.document,
+                  par=pars[0],
+                  read_type=ReadParagraphType.hover_par)
+        mark_read(usergroup_id=self.current_group().id,
+                  doc=d.document,
+                  par=pars[1],
+                  read_type=ReadParagraphType.hover_par)
+        db.session.commit()
         self.copy(d, pars[0], pars[2])
         self.paste(d, par_after=pars[2])
         d.document.clear_mem_cache()
         pars_new = d.document.get_paragraphs()
-        new_readings = timdb.readings.get_readings(self.current_group().id, d.document)
+        new_readings = get_readings(self.current_group().id, d.document)
         self.assertEqual(6, len(new_readings))
         self.assertEqual(2, len(list(filter(lambda r: r.type == ReadParagraphType.click_red, new_readings))))
         self.assertEqual(4, len(list(filter(lambda r: r.type == ReadParagraphType.hover_par, new_readings))))

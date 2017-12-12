@@ -37,7 +37,7 @@ from timApp.dbaccess import get_timdb
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.documentversion import DocumentVersion
 from timApp.logger import log_info, log_error, log_debug, log_warning
-from timApp.plugin import PluginException
+from timApp.pluginexception import PluginException
 from timApp.requesthelper import verify_json_params
 from timApp.responsehelper import safe_redirect, json_response, ok_response
 from timApp.routes.annotation import annotations
@@ -331,7 +331,9 @@ def create_item_route():
         vr = d.document.validate()
         if vr.issues:
             abort(400, f'The following errors must be fixed before copying:\n{vr}')
-    return do_create_item(item_path, item_type, item_title, d, template_name)
+    item = do_create_item(item_path, item_type, item_title, d, template_name)
+    db.session.commit()
+    return json_response(item)
 
 
 @app.route("/translations/<int:doc_id>", methods=["GET"])
@@ -403,6 +405,7 @@ def create_citation_doc(doc_id, doc_path, doc_title):
     def factory(path, group, title):
         return create_citation(src_doc, group, path, title)
     item = create_item(doc_path, 'document', doc_title, factory, get_current_user_group())
+    db.session.commit()
     return json_response(item)
 
 

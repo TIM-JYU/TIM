@@ -8,14 +8,15 @@ import yaml
 import yaml.parser
 from flask import render_template
 
-from timApp.containerLink import PLUGINS, render_plugin_multi, render_plugin
+from timApp.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.containerLink import get_plugin_needs_browser
 from timApp.containerLink import get_plugin_tim_url
 from timApp.containerLink import plugin_reqs
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import dereference_pars, Document
 from timApp.documentmodel.yamlblock import YamlBlock
-from timApp.plugin import PluginException, Plugin
+from timApp.plugin import Plugin
+from timApp.pluginexception import PluginException
 from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.timdb import gamificationdata
 from timApp.timdb.models.user import User
@@ -402,7 +403,7 @@ def make_lazy(html, markup, do_lazy):
 
 def get_all_reqs():
     allreqs = {}
-    for plugin, vals in PLUGINS.items():
+    for plugin, vals in get_plugins().items():
         if vals.get('skip_reqs', False):
             continue
         try:

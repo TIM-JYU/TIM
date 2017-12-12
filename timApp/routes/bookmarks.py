@@ -8,6 +8,7 @@ from timApp.responsehelper import json_response
 from timApp.sessioninfo import get_current_user_object
 from timApp.timdb.bookmarks import Bookmarks
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.tim_models import db
 
 bookmarks = Blueprint('bookmarks',
                       __name__,
@@ -80,4 +81,5 @@ def get_bookmarks(user_id=None):
 
     """
 
+    db.session.commit()
     return json_response(g.bookmarks.as_dict())

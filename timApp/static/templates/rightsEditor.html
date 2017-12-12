@@ -159,7 +159,7 @@
         <button ng-show="$ctrl.addingRight" class="timButton" type="submit" ng-disabled="!$ctrl.groupName">Add</button>
         <button ng-show="$ctrl.editingRight()" class="timButton" type="submit">Save</button>
         <button class="btn btn-default" type="button" ng-click="$ctrl.cancel()">Cancel</button>
-        <span ng-show="$ctrl.addingRight">
+        <span ng-show="$ctrl.addingRight && !$ctrl.groupName">
         <button class="timButton" type="button" ng-click="$ctrl.addOrEditPermission('Korppi users', $ctrl.accessType)">Add Korppi users
         </button>
         <button class="timButton" type="button" ng-click="$ctrl.addOrEditPermission('Logged-in users', $ctrl.accessType)">Add logged-in

@@ -66,7 +66,9 @@
                 <i class="areatoggle glyphicon glyphicon-minus"></i>
             {% endif %}
             <div class="areatitle">{{ (t.html|safe) or ('&nbsp;'|safe) }}</div>
-            <div class="readline {{ t.status|join(' ')|trim }}" title="Click to mark this area as read"></div>
+            {% if t.status %}
+            <div class="{{ t.status.class_str() }}" title="Click to mark this area as read"></div>
+            {% endif %}
            {{ editline|safe }}
         </div>
 
@@ -147,9 +149,13 @@
         {%- endif -%}
 
         {{ editline|safe }}
-        {%- if not disable_read_markings and not t.from_preamble -%}
-            <div class="{{ ['readline', t.status|join(' ')]|join(' ')|trim }}"
-                 title="Click to mark this paragraph as read"></div>
+        {%- if not disable_read_markings and not t.from_preamble and t.status -%}
+            <div class="{{ t.status.class_str() }}"
+                 title="Click to mark this paragraph as read"
+                 {% for r in t.status.marks %}
+                    time-{{ r.type.class_str() }}="{{ r.timestamp.isoformat() }}"
+                 {% endfor %}
+            ></div>
         {%- endif -%}
 
         {%- if t.notes and not t.from_preamble -%}

@@ -3,14 +3,14 @@ import json
 from functools import lru_cache
 
 import requests
+from flask import current_app
 
-from timApp.documentmodel.document import Document
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.dumboclient import call_dumbo
 from timApp.logger import log_warning
-from timApp.plugin import PluginException
 from timApp.pluginOutputFormat import PluginOutputFormat
-from timApp.tim_app import app
+from timApp.pluginexception import PluginException
+from timApp.types import DocumentType as Document
 
 TIM_URL = ""
 
@@ -20,24 +20,32 @@ HASKELLPLUGIN_NAME = 'haskellplugins'
 PALIPLUGIN_NAME = 'pali'
 IMAGEXPLUGIN_NAME = 'imagex'
 
-PLUGINS = {
-    "csPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
-    "taunoPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
-    "simcirPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/simcir/"},
-    "csPluginRikki": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/rikki/"},  # demonstrates a broken plugin
-    "showCode": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
-    "showImage": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
-    "showVideo": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
-    "mcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
-    "mmcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
-    "uploader": {"host": app.config['UPLOADER_CONTAINER_URL']},
-    #  "shortNote": {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
-    "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
-    "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
-    "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
-    "qst": {"host": "http://" + "localhost" + f":{app.config['QST_PLUGIN_PORT']}/qst/"},
-    "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
-}
+
+PLUGINS = None
+
+
+def get_plugins():
+    global PLUGINS
+    if PLUGINS is None:
+        PLUGINS = {
+            "csPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/"},
+            "taunoPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
+            "simcirPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/simcir/"},
+            "csPluginRikki": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/rikki/"},  # demonstrates a broken plugin
+            "showCode": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
+            "showImage": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
+            "showVideo": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
+            "mcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
+            "mmcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
+            "uploader": {"host": current_app.config['UPLOADER_CONTAINER_URL']},
+            #  "shortNote": {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
+            "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
+            "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
+            "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
+            "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/"},
+            "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
+        }
+    return PLUGINS
 
 
 def call_plugin_generic(plugin, method, route, data=None, headers=None, params=None):
@@ -215,22 +223,23 @@ def plugin_reqs(plugin):
 
 
 # Gets plugin info (host)
-def get_plugin(plugin):
-    if plugin in PLUGINS:
-        return PLUGINS[plugin]
+def get_plugin(plugin: str):
+    plugins = get_plugins()
+    if plugin in plugins:
+        return plugins[plugin]
     raise PluginException("Plugin does not exist.")
 
 
 # Get address towards which the plugin must send its further requests, such as answers
 def get_plugin_tim_url(plugin):
-    if plugin in PLUGINS:
+    if plugin in get_plugins():
         return TIM_URL + "/" + plugin
     raise PluginException("Plugin does not exist.")
 
 
-def get_plugin_needs_browser(plugin):
-    # if not plugin: return False
-    plg = get_plugin(plugin)
-    if "browser" not in plg:
-        return True
-    return plg["browser"] != False
+def get_plugin_needs_browser(plugin) -> bool:
+    try:
+        plg = get_plugin(plugin)
+    except PluginException:
+        return False
+    return plg.get('browser', True)

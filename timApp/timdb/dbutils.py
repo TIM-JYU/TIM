@@ -7,11 +7,9 @@ from timApp.timdb.models.block import Block
 from timApp.timdb.tim_models import db, BlockAccess
 
 
-def insert_block(description: Optional[str], owner_group_id: Optional[int], block_type: int,
-                 commit: bool = True) -> Block:
+def insert_block(description: Optional[str], owner_group_id: Optional[int], block_type: int) -> Block:
     """Inserts a block to database.
 
-    :param commit: Whether to commit the change.
     :param description: The name (description) of the block.
     :param owner_group_id: The owner group of the block.
     :param block_type: The type of the block.
@@ -28,8 +26,6 @@ def insert_block(description: Optional[str], owner_group_id: Optional[int], bloc
     db.session.add(b)
     db.session.flush()
     assert b.id != 0
-    if commit:
-        db.session.commit()
     return b
 
 

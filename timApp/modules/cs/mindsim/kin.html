@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Reaction kinetics</title>
+<meta charset="utf-8">
+<style>
+  body {
+    font-family: "Helvetica", sans-serif;
+    margin-left: 1cm;
+    background: #f0f0f0;
+  }
+  div#content {
+    padding: .5cm .5cm 1.5cm .5cm;
+    display: inline-block;
+    background: #ffffff;
+  }
+
+  svg {
+    margin-bottom: 1cm;
+    display: inline-block;
+  }
+  .concentration_chart {
+    width:  12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+  .deriv_chart {
+    width: 12cm;
+    height: 8cm;
+    border: 0px solid black;
+  }
+
+
+  p {
+    margin-left: 0cm; 
+    width: 14cm; 
+    line-height: 1.5em
+  }
+  p.step {
+      display: none;
+  }
+  button {
+    min-height: 1cm;
+    border-radius: .25cm;
+  }
+  td {
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+  <script src="jquery-1.11.1.min.js"></script>
+  <script src="d3.v3.min.js"></script>
+  <script src="xygraph.d3.js"></script>
+  <script src="MersenneTwister.js"></script>
+  <script src="kin.js"></script>
+  <div id="content">
+    <div>
+      <button onclick="reset('1a')">System 1a</button>
+      <button onclick="reset('1b')">System 1b</button>
+      <button onclick="reset('1c')">System 1c</button>
+      <br/>
+      <button onclick="reset('2a')">System 2a</button>
+      <button onclick="reset('2b')">System 2b</button>
+      <button onclick="reset('2c')">System 2c</button>
+      <br/>
+      <button onclick="reset('3a')">System 3a</button>
+      <button onclick="reset('3b')">System 3b</button>
+      <button onclick="reset('3c')">System 3c</button>
+      <br/><br/>
+      <button onclick="iterate()">Next</button>
+      <button onclick="run()">Run</button>
+      <button onclick="stop()">Stop</button>
+      <br/><br/>
+      Temperature <input type="text" id="temperature" size="4" value="500"/> K
+    </div>
+    <svg class="concentration_chart" id="concentration_chart"></svg>
+  </div>
+
+  <script>
+
+var mol = 6.0221409e23;
+var kJmol = 1000;
+
+var V    = 1.0 * mol;   // litres
+var tmax = 2 * 60 * 60; // seconds
+var dt   = 0.1;         // seconds
+
+var dE = 1/100.;
+
+var reagents = null;
+var reactions = null;
+var kin = null
+var tdata = null;
+var Cdata = null;
+var T = null;
+
+var conc_graph = null;
+
+var styles = [];
+var colors = ["blue", "red", "green", "orange", "purple", "cyan"];
+for(var i = 0; i < colors.length; ++i)
+    styles.push( new XYG_PlotStyle(colors[i], 2, "solid", "none", 1, "none" ) );
+
+
+//////////////////////////////////
+function reset(system_index) {
+    jQuery("svg#concentration_chart g").remove();
+    
+    reagents = [];
+    reactions = [];
+
+    //////////////////////////////////
+    T = parseFloat(jQuery("input#temperature").val());
+    T *= 10;
+    if ( isNaN(T) ) {
+	alert("Temperature must be a number");
+	return;
+    }
+    
+    //////////////////////////////////
+    //  
+    // 
+    //
+    if ( system_index == "0" ) {
+	//                        E0    dE      C0
+	var A = new Reagent("A", 0.0, 1./10., 1.0 * mol);
+	var B = new Reagent("B", 0.0, 1./10., 0.0 * mol);
+	
+	reagents.push(A);
+	reagents.push(B);
+	
+	var A2B = new Reaction([A,B], [-1,1],  40*kJmol, 1.0);
+	
+	reactions.push(A2B);
+    }
+    else if ( system_index == "1a" ) {
+	//                        E0    dE      C0
+	var A = new Reagent("A", 0.0, 1./10., 1.0 * mol);
+	var B = new Reagent("B", 0.0, 1./10., 0.0 * mol);
+	
+	reagents.push(A);
+	reagents.push(B);
+	
+	var A2B = new Reaction([A,B], [-1,1],  30*kJmol, 1.0);
+	var B2A = new Reaction([B,A], [-1,1],  55*kJmol, 1.0);
+	
+	reactions.push(A2B);
+	reactions.push(B2A);
+    }
+    else if ( system_index == "1b" ) {
+	//                        E0    dE      C0
+	var A = new Reagent("A", 0.0, 1./10., 1.0 * mol);
+	var B = new Reagent("B", 0.0, 1./10., 0.0 * mol);
+	
+	reagents.push(A);
+	reagents.push(B);
+	
+	var A2B = new Reaction([A,B], [-1,1],  45*kJmol, 1.0);
+	var B2A = new Reaction([B,A], [-1,1],  45*kJmol, 1.0);
+	
+	reactions.push(A2B);
+	reactions.push(B2A);
+    }
+    else if ( system_index == "1c" ) {
+	//                        E0    dE      C0
+	var A = new Reagent("A", 0.0, 1./10., 1.0 * mol);
+	var B = new Reagent("B", 0.0, 1./10., 0.0 * mol);
+
+	reagents.push(A);
+	reagents.push(B);
+
+	var A2B = new Reaction([A,B], [-1,1],  55*kJmol, 1.0);
+	var B2A = new Reaction([B,A], [-1,1],  30*kJmol, 1.0);
+	
+	reactions.push(A2B);
+	reactions.push(B2A);
+    }
+    else if ( system_index == "2a" ) {
+	//                        E0    dE      C0
+	var A = new Reagent("A", 0.0, 1./10., 1.0 * mol);
+	var B = new Reagent("B", 0.0, 1./10., 0.0 * mol);
+	var C = new Reagent("C", 0.0, 1./10., 0.0 * mol);
+	
+	reagents.push(A);
+	reagents.push(B);
+	reagents.push(C);
+	
+	var A2B = new Reaction([A,B], [-1,1],  30*kJmol, 1.0);
+	var B2A = new Reaction([B,A], [-1,1],  40*kJmol, 1.0);
+	var B2C = new Reaction([B,C], [-1,1],  60*kJmol, 1.0);
+	var C2B = new Reaction([C,B], [-1,1],  100*kJmol, 1.0);
+
+	reactions.push(A2B);
+	reactions.push(B2A);
+	reactions.push(B2C);
+	reactions.push(C2B);
+    }
+    else if ( system_index == "2b" ) {
+	//                        E0    dE      C0
+	var A = new Reagent("A", 0.0, 1./10., 1.0 * mol);
+	var B = new Reagent("B", 0.0, 1./10., 0.0 * mol);
+	var C = new Reagent("C", 0.0, 1./10., 0.0 * mol);
+	
+	reagents.push(A);
+	reagents.push(B);
+	reagents.push(C);
+	
+	var A2B = new Reaction([A,B], [-1,1],  50*kJmol, 1.0);
+	var B2A = new Reaction([B,A], [-1,1],  70*kJmol, 1.0);
+	var B2C = new Reaction([B,C], [-1,1],  30*kJmol, 1.0);
+	var C2B = new Reaction([C,B], [-1,1],  100*kJmol, 1.0);
+
+	reactions.push(A2B);
+	reactions.push(B2A);
+	reactions.push(B2C);
+	reactions.push(C2B);
+    }
+    else if ( system_index == "2c" ) {
+	//                        E0    dE      C0
+	var A = new Reagent("A", 0.0, 1./10., 1.0 * mol);
+	var B = new Reagent("B", 0.0, 1./10., 0.0 * mol);
+	var C = new Reagent("C", 0.0, 1./10., 0.0 * mol);
+	
+	reagents.push(A);
+	reagents.push(B);
+	reagents.push(C);
+	
+	var A2B = new Reaction([A,B], [-1,1],  50*kJmol, 1.0);
+	var B2A = new Reaction([B,A], [-1,1],  70*kJmol, 1.0);
+	var B2C = new Reaction([B,C], [-1,1],  70*kJmol, 1.0);
+	var C2B = new Reaction([C,B], [-1,1],  50*kJmol, 1.0);
+
+	reactions.push(A2B);
+	reactions.push(B2A);
+	reactions.push(B2C);
+	reactions.push(C2B);
+    }
+    else if ( system_index == "3a" ) {
+	//                        E0    dE      C0
+	var A = new Reagent("A", 0.0, 1./10., 1.0 * mol);
+	var B = new Reagent("B", 0.0, 1./10., 0.0 * mol);
+	var C = new Reagent("C", 0.0, 1./10., 0.0 * mol);
+	var D = new Reagent("D", 0.0, 1./10., 0.0 * mol);
+	
+	reagents.push(A);
+	reagents.push(B);
+	reagents.push(C);
+	reagents.push(D);
+	
+	var A2B = new Reaction([A,B], [-1,1],  60*kJmol, 1.0);
+	var B2A = new Reaction([B,A], [-1,1],  70*kJmol, 1.0);
+
+	var B2C = new Reaction([B,C], [-1,1],  50*kJmol, 1.0);
+	var C2B = new Reaction([C,B], [-1,1],  90*kJmol, 1.0);
+
+	var B2D = new Reaction([B,D], [-1,1],  70*kJmol, 1.0);
+	var D2B = new Reaction([D,B], [-1,1],  90*kJmol, 1.0);
+
+	reactions.push(A2B);
+	reactions.push(B2A);
+	reactions.push(B2C);
+	reactions.push(C2B);
+	reactions.push(B2D);
+	reactions.push(D2B);
+    }
+    else if ( system_index == "3b" ) {
+	//                        E0    dE      C0
+	var A = new Reagent("A", 0.0, 1./10., 1.0 * mol);
+	var B = new Reagent("B", 0.0, 1./10., 0.0 * mol);
+	var C = new Reagent("C", 0.0, 1./10., 0.0 * mol);
+	var D = new Reagent("D", 0.0, 1./10., 0.0 * mol);
+	
+	reagents.push(A);
+	reagents.push(B);
+	reagents.push(C);
+	reagents.push(D);
+	
+	var A2B = new Reaction([A,B], [-1,1],  40*kJmol, 1.0);
+	var B2A = new Reaction([B,A], [-1,1],  70*kJmol, 1.0);
+
+	var B2C = new Reaction([B,C], [-1,1],  30*kJmol, 1.0);
+	var C2B = new Reaction([C,B], [-1,1],  90*kJmol, 1.0);
+
+	var B2D = new Reaction([B,D], [-1,1],  60*kJmol, 1.0);
+	var D2B = new Reaction([D,B], [-1,1],  150*kJmol, 1.0);
+
+	reactions.push(A2B);
+	reactions.push(B2A);
+	reactions.push(B2C);
+	reactions.push(C2B);
+	reactions.push(B2D);
+	reactions.push(D2B);
+    }
+    else if ( system_index == "3c" ) {
+	//                        E0    dE      C0
+	var A = new Reagent("A", 0.0, 1./10., 1.0 * mol);
+	var B = new Reagent("B", 0.0, 1./10., 0.0 * mol);
+	var C = new Reagent("C", 0.0, 1./10., 0.0 * mol);
+	var D = new Reagent("D", 0.0, 1./10., 0.0 * mol);
+	
+	reagents.push(A);
+	reagents.push(B);
+	reagents.push(C);
+	reagents.push(D);
+	
+	var A2B = new Reaction([A,B], [-1,1],  50*kJmol, 1.0);
+	var B2A = new Reaction([B,A], [-1,1],  40*kJmol, 1.0);
+	var B2C = new Reaction([B,C], [-1,1],  50*kJmol, 1.0);
+	var C2B = new Reaction([C,B], [-1,1],  60*kJmol, 1.0);
+	var B2D = new Reaction([B,D], [-1,1],  80*kJmol, 1.0);
+	var D2B = new Reaction([D,B], [-1,1],  90*kJmol, 1.0);
+
+	reactions.push(A2B);
+	reactions.push(B2A);
+	reactions.push(B2C);
+	reactions.push(C2B);
+	reactions.push(B2D);
+	reactions.push(D2B);
+    }
+    else {
+	alert("System index '"+ system_index +"' is not valid.")
+	return;
+    }
+    
+    
+    kin = new ReactionKinetics(reagents, reactions, T, .001);
+
+    tdata = [];
+    Cdata = [];
+    tdata.push(0.0);
+    for(var i = 0; i < reagents.length; ++i) {
+	Cdata.push(new Array());
+	Cdata[i].push(reagents[i].N/V);
+    }
+
+
+
+    conc_graph = 
+	new XYGraph(
+	    "concentration_chart", 
+	    new XYG_Axis("time (s)", 0.0, tmax),
+	    new XYG_Axis("[A] (mol/l)", 0, 1, true ),
+	    new XYG_Layout(0.15, 0.15, 0.75, 0.75, 16),
+	    styles
+	);
+
+}
+
+////////////
+reset('0');
+////////////
+
+
+var timeout = null;
+function iterate() {
+    for(var i = 0; i < 10000; ++i)
+	kin.iterate();
+    update();
+    if ( timeout != null )
+	timeout = setTimeout(iterate, 10);
+
+    if ( kin.time > tmax )
+	conc_graph.x_axis.auto = true;
+}
+
+function run() {
+    timeout = setTimeout(iterate, 10);
+}
+function stop() {
+    clearTimeout(timeout);
+    timeout = null;
+}
+
+function update() {
+    tdata.push(kin.time);
+    for(var i = 0; i < reagents.length; ++i)
+	Cdata[i].push(reagents[i].N/V);
+    
+    var tmp = [];
+    for(var i = 0; i < reagents.length; ++i)
+	tmp.push(tdata);
+    conc_graph.updateData(tmp,Cdata);
+}
+
+
+    /*
+    if ( data[0].length > 10 ) {
+	var k = data[0].length-1 - 3;
+	deriv[0].push(data[0][k]);
+	
+	for(var i = 0; i < reagents.length; ++i) {
+	    var deltaC = (1/3.) * ( (data[i+1][k+3] - data[i+1][k-3])/3.0 +
+				    (data[i+1][k+2] - data[i+1][k-2])/2.0 +
+				    (data[i+1][k+1] - data[i+1][k-1])/1.0 );
+	    deltaC /= data[i+1][k];
+	    var deltat = data[0][k+1] - data[0][k-1];
+	    deriv[i+1].push( deriv_scale * deltaC / deltat );
+	}
+    }
+    */
+
+
+/*
+var deriv_charts = new Array();
+for(var i = 0; i < reagents.length; ++i)
+    deriv_charts.push( 
+	new SimpleLineChart(
+	    "deriv_"+i, 
+	    "time (s)", 0.0, tmax,
+	    "1/[A] d[A]/dt (1/"+deriv_scale.toFixed(0)+"s)", -1, 0 ) );
+*/
+    
+  </script>
+</body>
+<html>
