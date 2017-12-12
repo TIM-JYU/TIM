@@ -40,6 +40,7 @@ class ParEditorTest(BrowserTest):
         d = self.create_doc()
         self.goto_document(d)
         self.click_add_bottom()
+        self.wait_for_editor_load()
         pareditor = self.get_editor_element()
         ActionChains(self.drv).send_keys('# hello\n\nworld').perform()
         preview = find_preview_element(pareditor)
@@ -48,17 +49,22 @@ class ParEditorTest(BrowserTest):
         self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world')
         change_editor_button = get_change_editor_button(pareditor)
         change_editor_button.click()
+        self.wait_for_editor_load()
         ActionChains(self.drv).send_keys('!').perform()
         preview.click()  # stop cursor blinking
         self.wait_for_preview_to_finish()
-        self.assert_same_screenshot(pareditor, 'pareditor/textarea_hello_world')
+        self.assert_same_screenshot(pareditor, 'pareditor/textarea_hello_world', move_to_element=True)
         change_editor_button.click()
+        self.wait_for_editor_load()
 
         # after deleting the '!', the screenshot should be the same
         ActionChains(self.drv).send_keys(Keys.PAGE_DOWN, Keys.BACKSPACE).perform()
         preview.click()  # stop cursor blinking
         self.wait_for_preview_to_finish()
         self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world')
+
+    def wait_for_editor_load(self):
+        self.wait_until_hidden('.editor-loading')
 
     def get_editor_element(self) -> WebElement:
         pareditor = self.drv.find_element_by_css_selector('pareditor')
@@ -79,7 +85,7 @@ class ParEditorTest(BrowserTest):
         db.session.commit()
         self.goto_document(d)
         self.click_add_bottom()
-        self.wait_until_hidden('.editor-loading')
+        self.wait_for_editor_load()
         pareditor = self.get_editor_element()
         ActionChains(self.drv).send_keys('d').perform()
         self.wait_for_preview_to_finish()
@@ -91,7 +97,7 @@ class ParEditorTest(BrowserTest):
         get_cancel_button(pareditor).click()
         self.goto_document(d)
         self.click_add_bottom()
-        self.wait_until_hidden('.editor-loading')
+        self.wait_for_editor_load()
         pareditor = self.get_editor_element()
         ActionChains(self.drv).send_keys('d').perform()
         self.wait_for_preview_to_finish()
