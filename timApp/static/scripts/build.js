@@ -16,6 +16,10 @@ var bundles = [
         file: 'build/katex.js'
     },
     {
+        modules: 'mathjax', // MathJax, lazily loaded
+        file: 'build/mathjax.js'
+    },
+    {
         modules: 'tim/main + tim/slide - (tim/main + tim/slide - [tim/**/*])', // all TIM scripts without external dependencies
         file: 'build/tim.js'
     },
