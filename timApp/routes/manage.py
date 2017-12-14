@@ -170,8 +170,8 @@ def change_alias(alias):
     if alias != new_alias:
         if DocEntry.find_by_path(new_alias, try_translation=True) is not None or Folder.find_by_path(new_alias) is not None:
             return abort(403, 'Item with a same name already exists.')
-        f = Folder.find_first_existing(alias)
-        if not get_current_user_object().can_write_to_folder(f):
+        src_f = Folder.find_first_existing(alias)
+        if not get_current_user_object().can_write_to_folder(src_f):
             return abort(403, "You don't have permission to write to the source folder.")
 
     if not get_current_user_object().can_write_to_folder(f):
