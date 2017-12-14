@@ -6,14 +6,13 @@ from timApp.accesshelper import get_viewable_blocks_or_none_if_admin
 from timApp.accesshelper import grant_access_to_session_users, reset_request_access_cache
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_NAME
-from timApp.responsehelper import json_response
 from timApp.sessioninfo import get_current_user_object, get_current_user_group
 from timApp.tim_app import app
 from timApp.timdb.blocktypes import from_str, blocktypes
 from timApp.timdb.bookmarks import Bookmarks
-from timApp.timdb.dbutils import copy_default_rights
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.item import Item
+from timApp.timdb.models.block import copy_default_rights
 from timApp.timdb.models.docentry import DocEntry, get_documents, create_document_and_block
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.translation import Translation
@@ -39,7 +38,7 @@ def create_item(item_path, item_type_str, item_title, create_function, owner_gro
                          item.url_relative,
                          move_to_top=True,
                          limit=app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
-    copy_default_rights(item.id, item_type, commit=False)
+    copy_default_rights(item.id, item_type)
     return item
 
 
@@ -74,7 +73,7 @@ def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInf
     if isinstance(item, DocInfo):
         if copied_doc:
             for tr, new_tr in copy_document_and_enum_translations(copied_doc, item):
-                copy_default_rights(new_tr.id, blocktypes.DOCUMENT, commit=False)
+                copy_default_rights(new_tr.id, blocktypes.DOCUMENT)
         else:
             templates = get_templates_for_folder(item.parent)
             matched_templates = None

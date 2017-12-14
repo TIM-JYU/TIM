@@ -4,7 +4,7 @@
 Pandoc filter to remove numbering from header elements that have the .nonumber class.
 """
 
-from pandocfilters import toJSONFilter, Header, RawInline
+from pandocfilters import toJSONFilter, Header
 
 
 def remove_header_numbering(key, value, fmt, meta):

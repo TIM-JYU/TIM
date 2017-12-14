@@ -127,14 +127,6 @@ timApp\.htmlSanitize module
     :undoc-members:
     :show-inheritance:
 
-timApp\.import\_accounts module
--------------------------------
-
-.. automodule:: timApp.import_accounts
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 timApp\.initdb2 module
 ----------------------
 
@@ -227,14 +219,6 @@ timApp\.testconfig module
 -------------------------
 
 .. automodule:: timApp.testconfig
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-timApp\.testhelper module
--------------------------
-
-.. automodule:: timApp.testhelper
     :members:
     :undoc-members:
     :show-inheritance:

@@ -6,7 +6,7 @@ from operator import itemgetter
 from typing import List, Optional, Dict
 
 from timApp.documentmodel.pointsumrule import PointSumRule, PointType
-from timApp.timdb.tim_models import Answer, UserAnswer, AnswerTag, db, tim_main_execute
+from timApp.timdb.tim_models import Answer, UserAnswer, AnswerTag, tim_main_execute
 from timApp.timdb.timdbbase import TimDbBase
 from timApp.utils import get_sql_template
 

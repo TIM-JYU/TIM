@@ -14,14 +14,14 @@ from timApp.accesshelper import verify_view_access, verify_seeanswers_access, ve
 from timApp.dbaccess import get_timdb
 from timApp.plugin import Plugin
 from timApp.responsehelper import json_response
-from timApp.timdb.documents import import_document
-from timApp.timdb.tim_models import db
-from timApp.timdb.userutils import grant_view_access, get_anon_group_id
-from timApp.validation import validate_item_and_create, validate_uploaded_document_content
 from timApp.sessioninfo import get_current_user_name, get_current_user_group, logged_in
 from timApp.timdb.accesstype import AccessType
 from timApp.timdb.blocktypes import blocktypes
+from timApp.timdb.documents import import_document
 from timApp.timdb.models.block import Block
+from timApp.timdb.tim_models import db
+from timApp.timdb.userutils import grant_view_access, get_anon_group_id
+from timApp.validation import validate_item_and_create, validate_uploaded_document_content
 
 upload = Blueprint('upload',
                    __name__,

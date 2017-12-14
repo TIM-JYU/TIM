@@ -7,10 +7,10 @@ from flask import current_app
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.tim_app import app
 from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.usergroup import UserGroup
-from timApp.timdb.timdbexception import TimDbException
 
 
 class BasicArguments:

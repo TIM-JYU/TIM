@@ -7,9 +7,9 @@ from werkzeug.exceptions import abort
 
 from timApp.common import has_special_chars
 from timApp.sessioninfo import logged_in, get_current_user_object
+from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
-from timApp.timdb.timdbexception import TimDbException
 from timApp.utils import split_location
 
 
@@ -31,7 +31,7 @@ def validate_item(item_path: str, item_type: str):
               f'The {item_type} path has invalid characters. Only letters, numbers, underscores and dashes are allowed.')
 
     if DocEntry.find_by_path(item_path, try_translation=True) is not None or Folder.find_by_path(item_path) is not None:
-        abort(403, 'Item with a same name already exists.')
+        raise ItemAlreadyExistsException('Item with a same name already exists.')
 
     f = Folder.find_first_existing(item_path)
     if not f:
@@ -43,10 +43,7 @@ def validate_item(item_path: str, item_type: str):
 def validate_item_and_create(item_path: str, item_type: str, owner_group_id: int):
     validate_item(item_path, item_type)
     item_path, _ = split_location(item_path)
-    try:
-        Folder.create(item_path, owner_group_id, apply_default_rights=True)
-    except TimDbException as e:
-        abort(403, str(e))
+    Folder.create(item_path, owner_group_id, apply_default_rights=True)
 
 
 def validate_uploaded_document_content(file_content):

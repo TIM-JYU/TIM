@@ -17,10 +17,10 @@ from timApp.responsehelper import json_response, ok_response
 from timApp.routes.edit import par_response
 from timApp.sessioninfo import get_current_user_id
 from timApp.synchronize_translations import synchronize_translations
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.readings import copy_readings
 from timApp.timdb.tim_models import db
-from timApp.timdb.timdbexception import TimDbException
 
 clipboard = Blueprint('clipboard',
                       __name__,

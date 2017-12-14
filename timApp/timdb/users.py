@@ -1,6 +1,7 @@
 from typing import Optional, List
 
 from timApp.timdb.blocktypes import BlockType
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.block import Block
 from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
@@ -8,7 +9,6 @@ from timApp.timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUP
     LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME
 from timApp.timdb.timdbbase import TimDbBase
-from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import NoSuchUserException, get_anon_group_id, \
     get_anon_user_id, get_access_type_id, get_default_right_document
 

@@ -2,11 +2,10 @@
 Routes for printing a document
 """
 import os
+import shutil
+import tempfile
 from typing import Optional
 
-import tempfile
-
-import shutil
 from flask import Blueprint, send_file
 from flask import abort
 from flask import current_app

@@ -60,7 +60,7 @@ class EditTest(TimRouteTest):
     def test_get_updates_pars_translation(self):
         self.login_test1()
         d = self.create_doc(initial_par=['kissa'])
-        t = self.create_translation(d, 'test', 'en')
+        t = self.create_translation(d)
         e = self.get(t.url, as_tree=True)
         self.assert_content(e, ['kissa'])
         tr_pars = t.document.get_paragraphs()

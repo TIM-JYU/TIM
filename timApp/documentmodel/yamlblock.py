@@ -1,9 +1,9 @@
 import re
+from copy import deepcopy
 from enum import Enum
 from typing import Dict, Optional, Tuple
 
 import yaml
-from copy import deepcopy
 from yaml import CLoader, YAMLError
 
 from timApp.utils import count_chars

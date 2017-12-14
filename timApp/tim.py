@@ -26,14 +26,13 @@ from markupsafe import Markup
 from sqlalchemy.exc import IntegrityError
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
-import timApp.routes.view
-# from timApp.routes.view import get_templates_for_folder, FORCED_TEMPLATE_NAME
 from timApp.ReverseProxied import ReverseProxied
 from timApp.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
-    has_view_access, has_manage_access, grant_access_to_session_users, ItemLockedException, get_doc_or_abort
+    has_view_access, has_manage_access, ItemLockedException, get_doc_or_abort
 from timApp.cache import cache
 from timApp.containerLink import call_plugin_resource
 from timApp.dbaccess import get_timdb
+from timApp.documentmodel.create_item import do_create_item, get_templates_for_folder, create_item
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.documentversion import DocumentVersion
 from timApp.logger import log_info, log_error, log_debug, log_warning
@@ -65,19 +64,17 @@ from timApp.routes.view import view_page
 from timApp.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     get_current_user_name, get_current_user_group, logged_in
 from timApp.tim_app import app, default_secret
-from timApp.timdb.blocktypes import from_str, blocktypes, BlockType
+from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.bookmarks import Bookmarks
-from timApp.timdb.dbutils import copy_default_rights
 from timApp.timdb.documents import create_citation, create_translation
+from timApp.timdb.exceptions import TimDbException, ItemAlreadyExistsException
+from timApp.timdb.models.block import copy_default_rights
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import db
-from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import NoSuchUserException
-from timApp.validation import validate_item_and_create
-from timApp.documentmodel.create_item import do_create_item, get_templates_for_folder, create_item
 
 cache.init_app(app)
 
@@ -158,6 +155,11 @@ ex._aborter.mapping[403] = Forbidden
 @app.errorhandler(Forbidden)
 def forbidden(error):
     return error_generic(error, 403)
+
+
+@app.errorhandler(ItemAlreadyExistsException)
+def already_exists(error: ItemAlreadyExistsException):
+    return error_generic(Forbidden(description=str(error)), 403)
 
 
 @app.errorhandler(500)
@@ -364,7 +366,7 @@ def create_translation_route(tr_doc_id, language):
     if not valid_language_id(language):
         abort(404, 'Invalid language identifier')
     if doc.has_translation(language):
-        abort(403, 'Translation for this language already exists')
+        raise ItemAlreadyExistsException('Translation for this language already exists')
     verify_manage_access(doc_id)
 
     src_doc = doc.src_doc.document
@@ -373,7 +375,7 @@ def create_translation_route(tr_doc_id, language):
     tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
     db.session.add(tr)
-    copy_default_rights(cite_doc.doc_id, blocktypes.DOCUMENT, commit=False)
+    copy_default_rights(cite_doc.doc_id, blocktypes.DOCUMENT)
     db.session.commit()
     return json_response(tr)
 
@@ -393,7 +395,7 @@ def update_translation(doc_id):
     try:
         db.session.commit()
     except IntegrityError:
-        abort(403, 'This language already exists.')
+        raise ItemAlreadyExistsException('This language already exists.')
     return ok_response()
 
 

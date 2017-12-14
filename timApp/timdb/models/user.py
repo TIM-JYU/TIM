@@ -11,12 +11,12 @@ from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.theme import Theme
 from timApp.timdb.accesstype import AccessType
 from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.notification import Notification
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
 from timApp.timdb.tim_models import db, UserGroupMember, BlockAccess
-from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import has_view_access, has_edit_access, has_manage_access, \
     has_teacher_access, \
     has_seeanswers_access, user_is_owner, get_viewable_blocks, get_accessible_blocks, grant_access, get_access_type_id, \

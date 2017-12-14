@@ -3,8 +3,12 @@ Functions for calling pandoc and constructing the calls
 """
 import os
 import re
+import subprocess
 import tempfile
 from typing import Optional, List
+
+from pypandoc import _as_unicode, _validate_formats
+from pypandoc.py3compat import string_types, cast_bytes
 
 from timApp.accesshelper import has_view_access
 from timApp.dbaccess import get_timdb
@@ -16,6 +20,8 @@ from timApp.documentmodel.randutils import hashfunc
 from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
 from timApp.documentmodel.yamlblock import strip_code_block
 from timApp.markdownconverter import expand_macros, create_environment
+from timApp.plugin import get_value
+from timApp.plugin import parse_plugin_values_macros
 from timApp.pluginControl import pluginify
 from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.sessioninfo import get_current_user_object
@@ -26,12 +32,6 @@ from timApp.timdb.models.printeddoc import PrintedDoc
 from timApp.timdb.models.user import User
 from timApp.timdb.printsettings import PrintFormat
 from timApp.timdb.tim_models import db
-from timApp.plugin import get_value
-from timApp.plugin import parse_plugin_values_macros
-
-import subprocess
-from pypandoc import _as_unicode, _validate_formats
-from pypandoc.py3compat import string_types, cast_bytes
 
 FILES_ROOT = '/tim_files'
 DEFAULT_PRINTING_FOLDER = os.path.join(FILES_ROOT, 'printed_documents')

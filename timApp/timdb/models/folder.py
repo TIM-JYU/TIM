@@ -1,14 +1,12 @@
-import os
 from typing import List, Iterable
 from typing import Optional
 
 from timApp.timdb.blocktypes import blocktypes
-from timApp.timdb.dbutils import insert_block, copy_default_rights
+from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.item import Item
-from timApp.timdb.models.block import Block
+from timApp.timdb.models.block import Block, insert_block, copy_default_rights
 from timApp.timdb.models.docentry import DocEntry, get_documents
 from timApp.timdb.tim_models import db, BlockAccess
-from timApp.timdb.timdbexception import TimDbException
 from timApp.utils import split_location, join_location
 
 ROOT_FOLDER_ID = -1
@@ -197,14 +195,11 @@ class Folder(db.Model, Item):
 
         """
 
-        if '\0' in path:
-            raise TimDbException('Folder name cannot contain null characters.')
-
         path = path.strip('/')
 
         if DocEntry.find_by_path(path):
             db.session.rollback()
-            raise TimDbException(f'A document already exists at path {path}')
+            raise ItemAlreadyExistsException(f'A document already exists at path {path}')
 
         # Root folder is special case
         if not path:
@@ -225,7 +220,7 @@ class Folder(db.Model, Item):
         Folder.create(rel_path, owner_group_id)
 
         if apply_default_rights:
-            copy_default_rights(f.id, blocktypes.FOLDER, commit=False)
+            copy_default_rights(f.id, blocktypes.FOLDER)
 
         return f
 

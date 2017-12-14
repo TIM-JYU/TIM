@@ -9,7 +9,6 @@ from timApp.documentmodel.document import Document
 from timApp.timdb.readparagraphtype import ReadParagraphType
 from timApp.timdb.tim_models import ReadParagraph, db
 
-
 Rp = db.aliased(ReadParagraph)
 
 

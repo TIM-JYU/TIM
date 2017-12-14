@@ -8,24 +8,23 @@ import yaml
 import yaml.parser
 from flask import render_template
 
-from timApp.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.containerLink import get_plugin_needs_browser
 from timApp.containerLink import get_plugin_tim_url
 from timApp.containerLink import plugin_reqs
+from timApp.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import dereference_pars, Document
 from timApp.documentmodel.yamlblock import YamlBlock
+from timApp.dumboclient import call_dumbo
+from timApp.markdownconverter import expand_macros
 from timApp.plugin import Plugin
-from timApp.pluginexception import PluginException
 from timApp.pluginOutputFormat import PluginOutputFormat
+from timApp.pluginexception import PluginException
+from timApp.rndutils import get_simple_hash_from_par_and_user
 from timApp.timdb import gamificationdata
 from timApp.timdb.models.user import User
-from timApp.utils import get_error_html, get_error_tex
-from timApp.rndutils import get_simple_hash_from_par_and_user
-from timApp.timdb.printsettings import PrintFormat
-from timApp.dumboclient import call_dumbo
 from timApp.timtiming import taketime
-from timApp.markdownconverter import expand_macros
+from timApp.utils import get_error_html, get_error_tex
 
 LAZYSTART = "<!--lazy "
 LAZYEND = " lazy-->"

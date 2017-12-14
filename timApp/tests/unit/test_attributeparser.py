@@ -1,4 +1,5 @@
 import unittest
+
 from timApp.documentmodel.attributeparser import AttributeParser
 
 

@@ -1,7 +1,7 @@
 import os
 import re
-
 from typing import List
+
 from werkzeug.utils import secure_filename
 
 THEME_DIR = 'static/css'

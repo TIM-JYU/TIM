@@ -7,7 +7,7 @@ from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.documentparser import DocumentParser
 from timApp.tests.db.timdbtest import TimDbTest
-from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.exceptions import TimDbException
 
 
 def add_ref_paragraph(doc: Document, src_par: DocParagraph, text: Optional[str] = None,

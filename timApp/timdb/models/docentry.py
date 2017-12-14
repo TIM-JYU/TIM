@@ -1,13 +1,13 @@
 from typing import Optional, Union, List, Iterable
 
 from timApp.documentmodel.document import Document
-from timApp.timdb.gamification_models.gamificationdocument import GamificationDocument
-from timApp.timdb.docinfo import DocInfo
-from timApp.timdb.tim_models import db
-from timApp.timdb.models.translation import Translation
 from timApp.timdb.blocktypes import blocktypes
-from timApp.timdb.dbutils import insert_block
-from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.exceptions import ItemAlreadyExistsException
+from timApp.timdb.gamification_models.gamificationdocument import GamificationDocument
+from timApp.timdb.models.block import insert_block
+from timApp.timdb.models.translation import Translation
+from timApp.timdb.tim_models import db
 from timApp.utils import split_location
 
 
@@ -100,7 +100,7 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry(id=-1, name=title)
 
     @staticmethod
-    def create(path: Optional[str], owner_group_id: Optional[int] = None, title: Optional[str] = None, from_file=None, initial_par=None,
+    def create(path: str, owner_group_id: Optional[int] = None, title: Optional[str] = None, from_file=None, initial_par=None,
                settings=None, is_gamified: bool = False) -> 'DocEntry':
         """Creates a new document with the specified name.
 
@@ -116,23 +116,18 @@ class DocEntry(db.Model, DocInfo):
 
         """
 
-        if path is not None and '\0' in path:
-            raise TimDbException('Document name cannot contain null characters.')
-
-        if isinstance(path, str):
-            location, _ = split_location(path)
-            from timApp.timdb.models.folder import Folder
-            Folder.create(location, owner_group_id=owner_group_id)
+        location, _ = split_location(path)
+        from timApp.timdb.models.folder import Folder
+        Folder.create(location, owner_group_id=owner_group_id)
 
         document = create_document_and_block(owner_group_id, title or path)
 
         # noinspection PyArgumentList
         docentry = DocEntry(id=document.doc_id, name=path, public=True)
         if path is not None:
-            from timApp.timdb.models.folder import Folder
             if Folder.find_by_path(path):
                 db.session.rollback()
-                raise TimDbException(f'A folder already exists at path {path}')
+                raise ItemAlreadyExistsException(f'A folder already exists at path {path}')
             db.session.add(docentry)
 
         if from_file is not None:

@@ -1,6 +1,5 @@
 """A test for markdownconverter module."""
 import unittest
-import time
 
 import timApp.dumboclient
 from timApp.documentmodel.docparagraph import DocParagraph

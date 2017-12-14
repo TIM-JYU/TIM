@@ -11,9 +11,9 @@ from timApp.responsehelper import json_response
 from timApp.routes.edit import par_response
 from timApp.routes.notify import notify_doc_watchers
 from timApp.sessioninfo import get_current_user_group
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.notification import NotificationType
-from timApp.timdb.timdbexception import TimDbException
 
 notes = Blueprint('notes',
                   __name__,

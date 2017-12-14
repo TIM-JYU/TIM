@@ -3,11 +3,11 @@
 import logging
 import os
 import sys
+import time
 
 import flask_migrate
 import sqlalchemy
 import sqlalchemy.exc
-import time
 from alembic.runtime.environment import EnvironmentContext
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory

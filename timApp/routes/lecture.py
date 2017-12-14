@@ -2,6 +2,7 @@ import json
 import threading
 import time
 from datetime import timezone, datetime
+from random import randrange
 
 from flask import Blueprint, render_template
 from flask import Response
@@ -25,8 +26,6 @@ from timApp.tim_app import app
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.tempdb_models import TempDb
 from timApp.timdb.tim_models import db, Message, LectureUsers, AskedQuestion, LectureAnswer, Lecture
-from random import randrange
-from timApp.timtiming import taketime
 
 lecture_routes = Blueprint('lecture',
                            __name__,

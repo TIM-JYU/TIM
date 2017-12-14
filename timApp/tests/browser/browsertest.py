@@ -19,7 +19,6 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tests.timliveserver import TimLiveServer
 from timApp.timdb.docinfo import DocInfo
 
-
 PREV_ANSWER = 'answerbrowser .prevAnswer'
 
 

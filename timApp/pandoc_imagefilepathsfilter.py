@@ -19,10 +19,10 @@ import re
 import tempfile
 import urllib.request
 
+from pandocfilters import toJSONFilter, RawInline, Image, Link, Str
+
 from timApp.defaultconfig import FILES_PATH
 from timApp.documentmodel.randutils import hashfunc
-
-from pandocfilters import toJSONFilter, RawInline, Image, Link, Str
 
 # This of course, requires that this module resides in the timApp root folder
 

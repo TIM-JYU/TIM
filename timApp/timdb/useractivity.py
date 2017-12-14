@@ -1,5 +1,6 @@
-from timApp.timdb.tempdbbase import TempDbBase
 from sqlalchemy.exc import IntegrityError
+
+from timApp.timdb.tempdbbase import TempDbBase
 
 
 class UserActivity(TempDbBase):

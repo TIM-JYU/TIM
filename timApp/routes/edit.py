@@ -26,10 +26,10 @@ from timApp.sessioninfo import get_current_user_object, logged_in, get_current_u
 from timApp.synchronize_translations import synchronize_translations
 from timApp.timdb.bookmarks import Bookmarks
 from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.notification import NotificationType
 from timApp.timdb.tim_models import db
-from timApp.timdb.timdbexception import TimDbException
 from timApp.utils import get_error_html
 from timApp.validation import validate_uploaded_document_content
 

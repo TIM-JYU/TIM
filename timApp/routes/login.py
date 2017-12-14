@@ -27,11 +27,11 @@ from timApp.routes.notify import send_email
 from timApp.sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list, \
     get_current_user_object
 from timApp.sessioninfo import get_current_user_id, logged_in
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.newuser import NewUser
 from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db
-from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import create_password_hash
 
 login_page = Blueprint('login_page',

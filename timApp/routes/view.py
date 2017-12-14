@@ -17,28 +17,28 @@ from timApp.accesshelper import verify_view_access, verify_teacher_access, verif
 from timApp.common import get_user_settings, save_last_page, has_special_chars, post_process_pars, \
     hide_names_in_teacher, is_considered_unpublished
 from timApp.dbaccess import get_timdb
+from timApp.documentmodel.create_item import do_create_item, get_templates_for_folder
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.document import get_index_from_html_list, dereference_pars, Document
 from timApp.documentmodel.preloadoption import PreloadOption
+from timApp.documentmodel.specialnames import FORCED_TEMPLATE_NAME
 from timApp.htmlSanitize import sanitize_html
 from timApp.logger import log_error
+from timApp.markdownconverter import create_environment
 from timApp.pluginControl import find_task_ids, get_all_reqs
 from timApp.requesthelper import get_option
 from timApp.responsehelper import json_response
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, logged_in
-from timApp.timdb.docinfo import DocInfo, get_non_settings_pars_from_docs
+from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.exceptions import TimDbException, PreambleException
 from timApp.timdb.models.docentry import DocEntry, get_documents
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import db
-from timApp.timdb.timdbexception import TimDbException, PreambleException
 from timApp.timdb.userutils import user_is_owner
-from timApp.utils import remove_path_special_chars
 from timApp.timtiming import taketime
-from timApp.documentmodel.create_item import do_create_item, get_templates_for_folder
-from timApp.documentmodel.specialnames import FORCED_TEMPLATE_NAME
-from timApp.markdownconverter import create_environment
+from timApp.utils import remove_path_special_chars
 
 Range = Tuple[int, int]
 

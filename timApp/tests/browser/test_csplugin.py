@@ -12,7 +12,7 @@ class CsPluginTest(BrowserTest):
 #- {plugin=csPlugin #py}
 type: python
         """)
-        dt = self.create_translation(d, 'test', 'en')
+        dt = self.create_translation(d)
         dt.document.set_settings({'global_plugin_attrs': {'all': {'lang': 'en'}}})
         self.goto_document(dt)
         par = self.find_element('#py', times=2)

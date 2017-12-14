@@ -1,7 +1,6 @@
-from typing import Dict, Union
-import re
-
 import enum
+import re
+from typing import Dict, Union
 
 
 class PointType(enum.Enum):

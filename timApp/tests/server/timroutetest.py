@@ -562,7 +562,12 @@ class TimRouteTest(TimDbTest):
         for c1, c2 in zip(e1, e2):
             self.assert_elements_equal(c1, c2)
 
-    def create_translation(self, doc: DocEntry, doc_title: str, lang: str, expect_contains=None, expect_content=None, expect_status=200,
+    def create_translation(self, doc: DocEntry,
+                           doc_title: str='title',
+                           lang: str='en',
+                           expect_contains=None,
+                           expect_content=None,
+                           expect_status=200,
                            **kwargs) -> Optional[Translation]:
         if expect_contains is None and expect_content is None:
             expect_contains = {'title': doc_title, 'path': doc.name + '/' + lang, 'name': doc.short_name}

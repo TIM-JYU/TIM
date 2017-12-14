@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import lxml
 import lxml.etree
-from lxml.html.clean import Cleaner
 from lxml.html import fromstring, tostring
-
+from lxml.html.clean import Cleaner
 
 TIM_SAFE_TAGS = ['a',
                  'abbr',
