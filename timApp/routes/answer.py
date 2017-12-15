@@ -29,6 +29,7 @@ from timApp.timdb.accesstype import AccessType
 from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.block import Block
+from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import AnswerUpload, Answer, db
 
@@ -315,10 +316,10 @@ def get_answers(task_id, user_id):
     return json_response(user_answers)
 
 
-@answers.route("/allDocumentAnswersPlain/<int:doc_id>")
-def get_document_answers(doc_id):
-    doc = Document(doc_id)
-    pars = doc.get_dereferenced_paragraphs()
+@answers.route("/allDocumentAnswersPlain/<path:doc_path>")
+def get_document_answers(doc_path):
+    d = DocEntry.find_by_path(doc_path, fallback_to_id=True, try_translation=True)
+    pars = d.document.get_dereferenced_paragraphs()
     task_ids, _ = find_task_ids(pars)
     return get_all_answers_list_plain(task_ids)
 
