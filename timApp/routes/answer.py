@@ -324,8 +324,6 @@ def get_document_answers(doc_path):
     return get_all_answers_list_plain(task_ids)
 
 
-# TODO Remove misleading route ("HTML")
-@answers.route("/allAnswersHtml/<task_id>")
 @answers.route("/allAnswersPlain/<task_id>")
 def get_all_answers_plain(task_id):
     return get_all_answers_list_plain([task_id])
