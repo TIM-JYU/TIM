@@ -29,6 +29,7 @@ from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.notification import NotificationType
+from timApp.timdb.readings import mark_read
 from timApp.timdb.tim_models import db
 from timApp.utils import get_error_html
 from timApp.validation import validate_uploaded_document_content
@@ -524,11 +525,10 @@ def mark_pars_as_read_if_chosen(pars, doc):
     :param doc: The document to which the paragraphs belong.
 
     """
-    mark_read = request.get_json().get('tags', {}).get('markread')
-    timdb = get_timdb()
-    if mark_read:
+    mr = request.get_json().get('tags', {}).get('markread')
+    if mr:
         for p in pars:
-            mark_read(get_current_user_group(), doc, p, commit=False)
+            mark_read(get_current_user_group(), doc, p)
         db.session.commit()
 
 

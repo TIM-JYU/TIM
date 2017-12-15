@@ -191,3 +191,8 @@ class EditTest(TimRouteTest):
         d = self.create_doc()
         j = self.new_par(d.document, 'test')
         self.assertEqual(j['version'], [1, 0])
+
+    def test_mark_read(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.new_par(d.document, 'test', additional_data={'tags': {'markread': True}})
