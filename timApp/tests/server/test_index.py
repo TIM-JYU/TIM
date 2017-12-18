@@ -175,14 +175,14 @@ Lorem ipsum.
     def test_heading_preview_translation(self):
         self.login_test1()
         orig = self.create_doc(settings={'auto_number_headings': True}, initial_par=['# a', '# b', '# c'])
-        d = self.create_translation(orig, 'test', 'en')
+        d = self.create_translation(orig)
         self.check_doc_preview(d)
 
     def test_heading_preview_translation_nonumber(self):
         self.login_test1()
         orig = self.create_doc(settings={'auto_number_headings': True},
                                initial_par=['# a', '# b {.nonumber}', '# c'])
-        d = self.create_translation(orig, 'test', 'en')
+        d = self.create_translation(orig)
         pars = d.document.get_par_ids()
         self.get_updated_pars(d)
 
@@ -241,7 +241,7 @@ Lorem ipsum.
         self.login_test1()
         orig = self.create_doc(settings={'auto_number_headings': True},
                                initial_par=['# a', '# b {.nonumber}', '# c'])
-        t = self.create_translation(orig, 'test', 'en')
+        t = self.create_translation(orig)
         tr_pars = t.document.get_paragraphs()
         md = tr_pars[2].get_exported_markdown().replace('# b', '# tr')
         self.get(t.url)  # refresh cache

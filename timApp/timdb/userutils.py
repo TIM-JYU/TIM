@@ -7,11 +7,11 @@ from sqlalchemy import func
 
 from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.timdb.blocktypes import BlockType, blocktypes
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.special_group_names import ADMIN_GROUPNAME, LOGGED_IN_GROUPNAME, ANONYMOUS_GROUPNAME, \
     LOGGED_IN_USERNAME, ANONYMOUS_USERNAME
 from timApp.timdb.tim_models import db, AccessType, BlockAccess, UserGroupMember
-from timApp.timdb.timdbexception import TimDbException
 
 ANON_USER_ID = None
 LOGGED_USER_ID = None

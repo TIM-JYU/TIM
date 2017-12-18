@@ -1,4 +1,3 @@
-from timApp.tests.db.timdbtest import TEST_USER_2_ID
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.accesstype import AccessType
 from timApp.timdb.models.docentry import DocEntry
@@ -15,7 +14,6 @@ class FolderTest(TimRouteTest):
         self.get(f'/manage/{f["path"]}')
         self.login_test2()
         self.get(f'/manage/{f["path"]}', expect_status=403)
-        db = self.get_db()
         grant_access(self.get_test_user_2_group_id(), f['id'], 'manage')
         self.get(f'/manage/{f["path"]}')
 
@@ -157,9 +155,9 @@ class FolderCopyTest(TimRouteTest):
         d1 = self.create_doc(self.get_personal_item_path('a/d1'))
         d2 = self.create_doc(self.get_personal_item_path('a/d2'))
         f1d1 = self.create_doc(self.get_personal_item_path('a/f1/d1'))
-        f1d2 = self.create_doc(self.get_personal_item_path('a/f1/d2'))
-        f1d3 = self.create_doc(self.get_personal_item_path('a/f1/d3'),
-                               initial_par="""
+        _ = self.create_doc(self.get_personal_item_path('a/f1/d2'))
+        _ = self.create_doc(self.get_personal_item_path('a/f1/d3'),
+                            initial_par="""
 #- {#t1 plugin=csPlugin}
 #- {#t1 plugin=csPlugin}""")
         f2d1 = self.create_doc(self.get_personal_item_path('a/f2/d1'))

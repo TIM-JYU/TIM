@@ -4,7 +4,7 @@ from flask import Request
 from flask import request, abort
 from werkzeug.wrappers import BaseRequest
 
-from timApp.timdb.invalidreferenceexception import InvalidReferenceException
+from timApp.timdb.exceptions import InvalidReferenceException
 
 
 def verify_json_params(*args: str, require=True, default=None, error_msgs=None):

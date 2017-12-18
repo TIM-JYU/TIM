@@ -44,14 +44,14 @@ class DurationTest(TimRouteTest):
         doc_id = d.id
         self.login_test2()
         delta = timedelta(minutes=3)
-        now_plus_minute = datetime.now(tz=timezone.utc) + delta
+        now_plus_minutes = datetime.now(tz=timezone.utc) + delta
         grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
                      duration=timedelta(days=1),
-                     duration_from=now_plus_minute)
+                     duration_from=now_plus_minutes)
         d = DocEntry.find_by_id(doc_id)
-        now = now_plus_minute - delta
-        err_msg_too_early = f'You can unlock this item in {humanize_datetime(now_plus_minute)}.'
-        err_msg_too_late = f'You cannot unlock this item anymore (deadline expired {humanize_datetime(now)}).'
+        now_minus_minutes = datetime.now(tz=timezone.utc) - delta
+        err_msg_too_early = f'You can unlock this item in {humanize_datetime(now_plus_minutes)}.'
+        err_msg_too_late = f'You cannot unlock this item anymore (deadline expired {humanize_datetime(now_minus_minutes)}).'
         self.get(d.url_relative,
                  expect_status=403,
                  json_key='error',
@@ -63,7 +63,7 @@ class DurationTest(TimRouteTest):
 
         grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
                      duration=timedelta(days=1),
-                     duration_to=now)
+                     duration_to=now_minus_minutes)
         self.get(d.url_relative,
                  expect_status=403,
                  json_key='error',
@@ -75,7 +75,7 @@ class DurationTest(TimRouteTest):
 
         grant_access(self.get_test_user_2_group_id(), doc_id, 'view',
                      duration=timedelta(days=1),
-                     duration_from=now)
+                     duration_from=now_minus_minutes)
         self.get(d.url_relative,
                  expect_status=403,
                  expect_contains=self.get_about_to_access_msg())

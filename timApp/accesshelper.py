@@ -13,11 +13,11 @@ from timApp.requesthelper import get_option
 from timApp.sessioninfo import get_current_user_id, logged_in, get_other_users_as_list, \
     get_current_user_group, get_current_user_object
 from timApp.timdb.accesstype import AccessType
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db, BlockAccess
 from timApp.timdb.timdb2 import TimDb
-from timApp.timdb.timdbexception import TimDbException
 from timApp.timdb.userutils import get_access_type_id, grant_access
 
 

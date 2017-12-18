@@ -8,7 +8,7 @@ SystemJS.config({
     "simcir/basicset": "/cs/simcir/simcir-basicset.js",
     "simcir/library": "/cs/simcir/simcir-library.js",
     "simcir/oma-kirjasto": "/cs/simcir/simcir-oma-kirjasto.js",
-    "mathjax": "/static/scripts/mathjax/mathjax.js",
+    "mathjax": "mathjax/mathjax.js",
     "sagecell": "https://sagecell.sagemath.org/static/embedded_sagecell.js",
     "cs/": "/cs/js/build/",
     "tim/": "tim/"
@@ -158,6 +158,9 @@ SystemJS.config({
     ],
     "build/imagex.js": [
       "tim/imagex.ts"
+    ],
+    "build/mathjax.js": [
+      "mathjax"
     ],
     "build/chart.js": [
       "npm:chart.js@2.5.0/src/chart.js"

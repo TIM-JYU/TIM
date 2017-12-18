@@ -1,8 +1,8 @@
 """Routes for manage view."""
+import re
 from datetime import timezone, datetime
 
 import dateutil.parser
-import re
 from flask import Blueprint, render_template
 from flask import abort
 from flask import g
@@ -133,8 +133,7 @@ def get_doc_names(doc_id):
 @manage_page.route("/alias/<int:doc_id>/<path:new_alias>", methods=["PUT"])
 def add_alias(doc_id, new_alias):
     verify_manage_access(doc_id)
-    timdb = get_timdb()
-    is_public = bool(request.get_json()['public'])
+    is_public, = verify_json_params('public', require=False, default=True)
 
     new_alias = new_alias.strip('/')
 
@@ -154,10 +153,10 @@ def add_alias(doc_id, new_alias):
 
 @manage_page.route("/alias/<path:alias>", methods=["POST"])
 def change_alias(alias):
-    timdb = get_timdb()
     alias = alias.strip('/')
-    new_alias = request.get_json()['new_name'].strip('/')
-    is_public = bool(request.get_json()['public'])
+    new_alias, = verify_json_params('new_name')
+    new_alias = new_alias.strip('/')
+    is_public, = verify_json_params('public', require=False, default=True)
 
     doc = DocEntry.find_by_path(alias)
     if doc is None:
@@ -170,8 +169,8 @@ def change_alias(alias):
     if alias != new_alias:
         if DocEntry.find_by_path(new_alias, try_translation=True) is not None or Folder.find_by_path(new_alias) is not None:
             return abort(403, 'Item with a same name already exists.')
-        f = Folder.find_first_existing(alias)
-        if not get_current_user_object().can_write_to_folder(f):
+        src_f = Folder.find_first_existing(alias)
+        if not get_current_user_object().can_write_to_folder(src_f):
             return abort(403, "You don't have permission to write to the source folder.")
 
     if not get_current_user_object().can_write_to_folder(f):
@@ -208,7 +207,6 @@ def remove_alias(alias):
 
 @manage_page.route("/rename/<int:item_id>", methods=["PUT"])
 def rename_folder(item_id):
-    timdb = get_timdb()
     new_name = request.get_json()['new_name'].strip('/')
 
     d = DocEntry.find_by_id(item_id, try_translation=True)

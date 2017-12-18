@@ -11,8 +11,8 @@ from timApp.documentmodel.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdownconverter import expand_macros
 from timApp.pluginexception import PluginException
 from timApp.rndutils import get_simple_hash_from_par_and_user
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.user import User
-from timApp.timdb.timdbexception import TimDbException
 
 date_format = '%Y-%m-%d %H:%M:%S'
 

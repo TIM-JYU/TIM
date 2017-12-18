@@ -1,6 +1,5 @@
-from typing import Dict, Optional
-
 from copy import deepcopy
+from typing import Dict, Optional
 
 from timApp.types import UserType, DocumentType
 

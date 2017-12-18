@@ -1,13 +1,13 @@
 """Routes for searching."""
+from typing import Set
+
 from flask import Blueprint, render_template
 from flask import abort
 from flask import request
-from typing import Set
 
 from timApp.accesshelper import verify_logged_in
 from timApp.cache import cache
 from timApp.common import post_process_pars, get_user_settings
-from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.document import Document

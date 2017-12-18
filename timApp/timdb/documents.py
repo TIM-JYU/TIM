@@ -10,7 +10,7 @@ from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.block import Block
 from timApp.timdb.models.docentry import DocEntry, create_document_and_block
 from timApp.timdb.models.translation import Translation
-from timApp.timdb.tim_models import ReadParagraph, UserNotes, db, BlockAccess
+from timApp.timdb.tim_models import ReadParagraph, UserNotes, BlockAccess
 
 
 def create_translation(original_doc: Document,

@@ -93,7 +93,7 @@ class TranslationTest(TimRouteTest):
         """Translations are kept in sync."""
         self.login_test1()
         doc = self.create_doc()
-        tr = self.create_translation(doc, 'In English', 'en')
+        tr = self.create_translation(doc)
         tr_doc = tr.document
         self.assert_translation_synced(tr_doc, doc)
 
@@ -128,7 +128,7 @@ class TranslationTest(TimRouteTest):
         """Any extraneous blocks (those without "rp" attribute) in translation documents are retained after syncing."""
         self.login_test1()
         doc = self.create_doc(initial_par=['1', '2', '3', '4'])
-        tr = self.create_translation(doc, 'In English', 'en')
+        tr = self.create_translation(doc)
         tr_doc = tr.document
         self.assert_translation_synced(tr_doc, doc)
         tr_doc.insert_paragraph('new', insert_before_id=tr_doc.get_paragraphs()[1].get_id())
@@ -175,7 +175,7 @@ class TranslationTest(TimRouteTest):
     def test_translation_settings(self):
         self.login_test1()
         d = self.create_doc(initial_par='hello')
-        t = self.create_translation(d, 'title', 'en')
+        t = self.create_translation(d)
         d.document.set_settings({'a': 'b'})
         self.new_par(d.document, 'test')
         tr_pars = t.document.get_paragraphs()
@@ -194,7 +194,7 @@ class TranslationTest(TimRouteTest):
     def test_translation_ignored_src_doc(self):
         self.login_test1()
         d = self.create_doc(initial_par='test')
-        t = self.create_translation(d, 't', 'en')
+        t = self.create_translation(d)
         fake_id = 9999
         t.document.set_settings({'source_document': fake_id})
         self.assertEqual(t.document.get_source_document().doc_id, d.id)

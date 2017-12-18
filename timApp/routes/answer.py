@@ -17,21 +17,21 @@ from timApp.common import hide_names_in_teacher
 from timApp.containerLink import call_plugin_answer
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.document import Document
+from timApp.dumboclient import call_dumbo
 from timApp.plugin import Plugin
-from timApp.pluginexception import PluginException
 from timApp.pluginControl import try_load_json, find_task_ids, pluginify
+from timApp.pluginexception import PluginException
 from timApp.requesthelper import verify_json_params, unpack_args, get_option
 from timApp.responsehelper import json_response, ok_response
 from timApp.sessioninfo import get_current_user_id, logged_in
 from timApp.sessioninfo import get_current_user_object, get_session_users, get_current_user_group
 from timApp.timdb.accesstype import AccessType
 from timApp.timdb.blocktypes import blocktypes
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.block import Block
+from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import AnswerUpload, Answer, db
-from timApp.timdb.timdbexception import TimDbException
-from timApp.dumboclient import call_dumbo
-
 
 answers = Blueprint('answers',
                     __name__,
@@ -316,16 +316,14 @@ def get_answers(task_id, user_id):
     return json_response(user_answers)
 
 
-@answers.route("/allDocumentAnswersPlain/<int:doc_id>")
-def get_document_answers(doc_id):
-    doc = Document(doc_id)
-    pars = doc.get_dereferenced_paragraphs()
+@answers.route("/allDocumentAnswersPlain/<path:doc_path>")
+def get_document_answers(doc_path):
+    d = DocEntry.find_by_path(doc_path, fallback_to_id=True, try_translation=True)
+    pars = d.document.get_dereferenced_paragraphs()
     task_ids, _ = find_task_ids(pars)
     return get_all_answers_list_plain(task_ids)
 
 
-# TODO Remove misleading route ("HTML")
-@answers.route("/allAnswersHtml/<task_id>")
 @answers.route("/allAnswersPlain/<task_id>")
 def get_all_answers_plain(task_id):
     return get_all_answers_list_plain([task_id])

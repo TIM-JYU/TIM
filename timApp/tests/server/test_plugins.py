@@ -292,54 +292,54 @@ class PluginTest(TimRouteTest):
 
     def test_all_answers(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/multiple_mmcqs.md').document
+        doc = self.create_doc(from_file='example_docs/multiple_mmcqs.md')
         plugin_type = 'mmcq'
-        task_id = f'{doc.doc_id}.mmcqexample'
-        task_id2 = f'{doc.doc_id}.mmcqexample2'
+        task_id = f'{doc.id}.mmcqexample'
+        task_id2 = f'{doc.id}.mmcqexample2'
         self.post_answer(plugin_type, task_id, [True, False, False])
         self.post_answer(plugin_type, task_id, [True, True, False])
         self.post_answer(plugin_type, task_id2, [True, False])
-        timdb = self.get_db()
-        grant_view_access(self.get_test_user_2_group_id(), doc.doc_id)
+        grant_view_access(self.get_test_user_2_group_id(), doc.id)
         self.login_test2()
         self.post_answer(plugin_type, task_id, [True, True, True])
         self.post_answer(plugin_type, task_id2, [False, False])
         self.post_answer(plugin_type, task_id2, [False, True])
         self.post_answer(plugin_type, task_id2, [True, True])
-        self.get(f'/allDocumentAnswersPlain/{doc.doc_id}', expect_status=403)
+        self.get(f'/allDocumentAnswersPlain/{doc.id}', expect_status=403)
         self.get(f'/allAnswersPlain/{task_id}', expect_status=403)
         self.login_test1()
-        text = self.get(f'/allDocumentAnswersPlain/{doc.doc_id}')
+        text = self.get(f'/allDocumentAnswersPlain/{doc.id}')
         date_re = r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}'
-        self.assertRegex(text, r"""
-{5}; {3}; {1}; {0}; 1; 2\.0
+        self.assertRegex(text, fr"""
+{TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
 \[True, False, False\]
 
 ----------------------------------------------------------------------------------
-{6}; {4}; {1}; {0}; 1; 2\.0
+{'Test user 2'}; {'testuser2'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
 \[True, True, True\]
 
 ----------------------------------------------------------------------------------
-{5}; {3}; {2}; {0}; 1; 1\.0
+{TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id2)}; {date_re}; 1; 1\.0
 \[True, False\]
 
 ----------------------------------------------------------------------------------
-{6}; {4}; {2}; {0}; 1; 2\.0
+{'Test user 2'}; {'testuser2'}; {re.escape(task_id2)}; {date_re}; 1; 2\.0
 \[False, False\]
-""".format(date_re, re.escape(task_id), re.escape(task_id2), 'testuser1', 'testuser2', TEST_USER_1_NAME,
-           'Test user 2').strip())
+""".strip())
         text = self.get(f'/allAnswersPlain/{task_id}')
-        self.assertRegex(text, r"""
-{4}; {2}; {1}; {0}; 1; 2\.0
+        self.assertRegex(text, fr"""
+{TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
 \[True, False, False\]
 
 ----------------------------------------------------------------------------------
-{5}; {3}; {1}; {0}; 1; 2\.0
+{'Test user 2'}; {'testuser2'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
 \[True, True, True\]
-        """.format(date_re, re.escape(task_id), 'testuser1', 'testuser2', TEST_USER_1_NAME, 'Test user 2').strip())
+        """.strip())
 
         # make sure invalid date won't throw
-        self.get(f'/allDocumentAnswersPlain/{doc.doc_id}', query_string={'period': 'other', 'periodTo': 'asd'})
+        self.get(f'/allDocumentAnswersPlain/{doc.id}', query_string={'period': 'other', 'periodTo': 'asd'})
+        # using document path should work as well
+        self.get(f'/allDocumentAnswersPlain/{doc.path}')
 
     def test_save_points(self):
         cannot_give_custom = {'error': 'You cannot give yourself custom points in this task.'}

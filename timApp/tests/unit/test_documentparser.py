@@ -2,9 +2,9 @@ import random
 import unittest
 
 from timApp.documentmodel.documentparser import DocumentParser
-from timApp.documentmodel.exceptions import ValidationException
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter
+from timApp.documentmodel.exceptions import ValidationException
 
 
 class DocumentParserTest(unittest.TestCase):

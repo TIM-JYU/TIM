@@ -11,7 +11,7 @@ from timApp.documentmodel.exceptions import DocExistsError
 from timApp.documentmodel.randutils import random_paragraph
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.documents import delete_document, import_document_from_file
-from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.userutils import get_anon_group_id
 
 

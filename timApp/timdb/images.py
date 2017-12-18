@@ -1,11 +1,10 @@
+import os
 from typing import List, Tuple
 
-from timApp.timdb.dbutils import insert_block
-from timApp.timdb.models.block import Block
-from timApp.timdb.timdbbase import TimDbBase
 from timApp.timdb.blocktypes import blocktypes
-from timApp.timdb.timdbexception import TimDbException
-import os
+from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.models.block import Block, insert_block
+from timApp.timdb.timdbbase import TimDbBase
 
 
 class Images(TimDbBase):

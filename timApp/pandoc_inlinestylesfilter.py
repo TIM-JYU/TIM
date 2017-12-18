@@ -5,7 +5,7 @@ Pandoc filter to convert class values to commands of same name in latex. Leaves
 (should leave...) ids, other, predefined classes and key-values intact.
 """
 
-from pandocfilters import toJSONFilter, Span, Str, RawInline
+from pandocfilters import toJSONFilter, Span, RawInline
 
 
 def classes_to_latex_cmds(key, value, fmt, meta):

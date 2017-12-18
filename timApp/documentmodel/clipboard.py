@@ -1,15 +1,14 @@
 import json
 import os
 import shutil
+from typing import Dict, List, Optional, Any
 
-from timApp.documentmodel.document import Document
 from timApp.documentmodel.docparagraph import DocParagraph, is_real_id
+from timApp.documentmodel.document import Document
 from timApp.documentmodel.documentparser import DocumentParser
 from timApp.documentmodel.documentwriter import DocumentWriter
 from timApp.documentmodel.randutils import random_id
-from typing import Dict, List, Optional, Any
-
-from timApp.timdb.timdbexception import TimDbException
+from timApp.timdb.exceptions import TimDbException
 
 
 class Clipboard:

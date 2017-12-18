@@ -6,10 +6,8 @@ from lxml.cssselect import CSSSelector
 
 from timApp.documentmodel.document import Document
 from timApp.markdownconverter import md_to_html
-from timApp.plugin import Plugin
-from timApp.tests.db.timdbtest import TEST_USER_2_ID, TEST_USER_1_ID, TEST_USER_1_NAME
+from timApp.tests.db.timdbtest import TEST_USER_1_NAME
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.user import User
 from timApp.timdb.userutils import get_anon_group_id, grant_view_access
 
 link_selector = CSSSelector('a')

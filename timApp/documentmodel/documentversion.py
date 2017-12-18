@@ -1,9 +1,9 @@
 from difflib import HtmlDiff
 from typing import Optional, Tuple
 
+from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.document import Document
-from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.version import Version
 

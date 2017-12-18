@@ -1,9 +1,9 @@
+import json
 from datetime import datetime
 from typing import List, Tuple
 
 from timApp.timdb.tim_models import Lecture, LectureUsers
 from timApp.timdb.timdbbase import TimDbBase
-import json
 
 
 class Lectures(TimDbBase):

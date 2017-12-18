@@ -350,20 +350,24 @@ class TimRouteTest(TimDbTest):
             "par_next": None
         }, **kwargs)
 
-    def new_par(self, doc: Document, text: str, next_id: Optional[str] = None, **kwargs):
+    def new_par(self, doc: Document, text: str, next_id: Optional[str] = None, additional_data=None, **kwargs):
         """Posts a new paragraph in a document.
 
+        :param additional_data: Additional data to pass in newParagraph route.
         :param doc: The document to be edited.
         :param text: The text for the paragraph.
         :param next_id: The id of the paragraph following the new paragraph.
         :return: The response object.
 
         """
+        if not additional_data:
+            additional_data = {}
         doc.clear_mem_cache()
         return self.json_post('/newParagraph/', {
             "text": text,
             "docId": doc.doc_id,
-            "par_next": next_id
+            "par_next": next_id,
+            **additional_data
         }, **kwargs)
 
     def delete_par(self, doc: Document, par_id: str, **kwargs):
@@ -562,7 +566,12 @@ class TimRouteTest(TimDbTest):
         for c1, c2 in zip(e1, e2):
             self.assert_elements_equal(c1, c2)
 
-    def create_translation(self, doc: DocEntry, doc_title: str, lang: str, expect_contains=None, expect_content=None, expect_status=200,
+    def create_translation(self, doc: DocEntry,
+                           doc_title: str='title',
+                           lang: str='en',
+                           expect_contains=None,
+                           expect_content=None,
+                           expect_status=200,
                            **kwargs) -> Optional[Translation]:
         if expect_contains is None and expect_content is None:
             expect_contains = {'title': doc_title, 'path': doc.name + '/' + lang, 'name': doc.short_name}

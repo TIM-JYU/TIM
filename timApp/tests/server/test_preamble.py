@@ -221,8 +221,8 @@ class PreambleTest3(PreambleTestBase):
         d.document.set_settings({'preamble': 'chat, preamble'})
         e = self.get(d.url, as_tree=True)
         self.assert_content(e, ['p1c', 'p1', 'p2c', 'p2', 'p3c', 'p3', ''])
-        dt = self.create_translation(d, 'dt', 'en')
-        p2ctr = self.create_translation(p2c, 'p2ctr', 'en')
+        dt = self.create_translation(d)
+        p2ctr = self.create_translation(p2c)
         p = p2ctr.document.get_paragraphs()[0]
         p.set_markdown('p2ctr')
         p.save()

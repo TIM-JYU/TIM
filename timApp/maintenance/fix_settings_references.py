@@ -2,7 +2,7 @@
 paragraphs. This adds missing settings attributes where it is missing."""
 from timApp.maintenance.util import enum_pars, process_items, create_argparser, DryrunnableArguments, print_match
 from timApp.timdb.docinfo import DocInfo
-from timApp.timdb.invalidreferenceexception import InvalidReferenceException
+from timApp.timdb.exceptions import InvalidReferenceException
 
 
 def fix_settings_references(d: DocInfo, args: DryrunnableArguments):

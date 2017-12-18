@@ -75,7 +75,7 @@ class ReferencingTest(TimRouteTest):
     def test_invalid_reference_translation(self):
         self.login_test1()
         d = self.create_doc(initial_par="""#- {rd=9999 rp=xxxx}""")
-        t = self.create_translation(d, 'xxx', 'en')
+        t = self.create_translation(d)
         e = self.get(t.url, as_tree=True)
         self.assert_content(e, ['The referenced document does not exist.'])
         t.document.add_paragraph('new')
