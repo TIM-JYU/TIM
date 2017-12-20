@@ -4,6 +4,7 @@ from flask import current_app
 from sqlalchemy import tuple_, func
 
 from timApp.timdb.blocktypes import blocktypes
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.block import Block
 from timApp.timdb.tim_models import BlockAccess
 from timApp.utils import split_location, date_to_relative
@@ -112,6 +113,15 @@ class Item:
                 'unpublished': self.block.is_unpublished() if self.block else False,
                 'public': self.public
                 }
+
+    def get_relative_path(self, path: str):
+        """Gets the item path relative to the given path.
+        The item must be under the path; otherwise TimDbException is thrown.
+        """
+        path = path.strip('/')
+        if not self.path.startswith(path + '/'):
+            raise TimDbException('Cannot get relative path')
+        return self.path.lstrip(path + '/')
 
     @staticmethod
     def find_by_id(item_id):

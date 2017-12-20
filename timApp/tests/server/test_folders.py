@@ -190,17 +190,17 @@ class FolderCopyTest(TimRouteTest):
         self.assertEqual([{'from': 'users/test-user-1/a/d1', 'to': 'users/test-user-1/b/d1'},
                           {'from': 'users/test-user-1/a/d2', 'to': 'users/test-user-1/b/d2'},
                           {'from': 'users/test-user-1/a/f1', 'to': 'users/test-user-1/b/f1'},
-                          {'from': 'users/test-user-1/a/f1/d1', 'to': 'users/test-user-1/b/d1'},
-                          {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/d2'},
-                          {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/d3'},
+                          {'from': 'users/test-user-1/a/f1/d1', 'to': 'users/test-user-1/b/f1/d1'},
+                          {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/f1/d2'},
+                          {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/f1/d3'},
                           {'from': 'users/test-user-1/a/f2', 'to': 'users/test-user-1/b/f2'},
-                          {'from': 'users/test-user-1/a/f2/d1', 'to': 'users/test-user-1/b/d1'}], preview)
+                          {'from': 'users/test-user-1/a/f2/d1', 'to': 'users/test-user-1/b/f2/d1'}], preview)
         preview = self.json_post(f'/copy/{a.id}/preview',
                                  {'destination': self.get_personal_item_path('b'), 'exclude': 'd1'})
         self.assertEqual([{'from': 'users/test-user-1/a/d2', 'to': 'users/test-user-1/b/d2'},
                           {'from': 'users/test-user-1/a/f1', 'to': 'users/test-user-1/b/f1'},
-                          {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/d2'},
-                          {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/d3'},
+                          {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/f1/d2'},
+                          {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/f1/d3'},
                           {'from': 'users/test-user-1/a/f2', 'to': 'users/test-user-1/b/f2'}], preview)
         b = Folder.find_by_path(self.get_personal_item_path('b'))
         self.assertEqual('b', b.title)

@@ -1,6 +1,7 @@
 """Routes for manage view."""
 import re
 from datetime import timezone, datetime
+from typing import Generator
 
 import dateutil.parser
 from flask import Blueprint, render_template
@@ -409,11 +410,11 @@ def copy_folder_preview(folder_id):
     f, dest, compiled = get_copy_folder_params(folder_id)
     preview_list = []
     for i in enum_items(f, compiled):
-        preview_list.append({'to': join_location(dest, i.short_name), 'from': i.path})
+        preview_list.append({'to': join_location(dest, i.get_relative_path(f.path)), 'from': i.path})
     return json_response(preview_list)
 
 
-def enum_items(folder: Folder, exclude_re):
+def enum_items(folder: Folder, exclude_re) -> Generator[Item, None, None]:
     for d in folder.get_all_documents(include_subdirs=False):
         if not exclude_re.search(d.path):
             yield d
