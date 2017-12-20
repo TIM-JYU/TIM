@@ -121,7 +121,7 @@ class Item:
         path = path.strip('/')
         if not self.path.startswith(path + '/'):
             raise TimDbException('Cannot get relative path')
-        return self.path.lstrip(path + '/')
+        return self.path.replace(path + '/', '', 1)
 
     @staticmethod
     def find_by_id(item_id):

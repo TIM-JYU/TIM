@@ -155,6 +155,8 @@ class FolderCopyTest(TimRouteTest):
         d1 = self.create_doc(self.get_personal_item_path('a/d1'))
         d2 = self.create_doc(self.get_personal_item_path('a/d2'))
         f1d1 = self.create_doc(self.get_personal_item_path('a/f1/d1'))
+        _ = self.create_doc(self.get_personal_item_path('a/a-b/x_y'))
+        _ = self.create_doc(self.get_personal_item_path('a/a-b/x-y'))
         _ = self.create_doc(self.get_personal_item_path('a/f1/d2'))
         _ = self.create_doc(self.get_personal_item_path('a/f1/d3'),
                             initial_par="""
@@ -193,6 +195,9 @@ class FolderCopyTest(TimRouteTest):
                           {'from': 'users/test-user-1/a/f1/d1', 'to': 'users/test-user-1/b/f1/d1'},
                           {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/f1/d2'},
                           {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/f1/d3'},
+                          {'from': 'users/test-user-1/a/a-b', 'to': 'users/test-user-1/b/a-b'},
+                          {'from': 'users/test-user-1/a/a-b/x_y', 'to': 'users/test-user-1/b/a-b/x_y'},
+                          {'from': 'users/test-user-1/a/a-b/x-y', 'to': 'users/test-user-1/b/a-b/x-y'},
                           {'from': 'users/test-user-1/a/f2', 'to': 'users/test-user-1/b/f2'},
                           {'from': 'users/test-user-1/a/f2/d1', 'to': 'users/test-user-1/b/f2/d1'}], preview)
         preview = self.json_post(f'/copy/{a.id}/preview',
@@ -201,6 +206,9 @@ class FolderCopyTest(TimRouteTest):
                           {'from': 'users/test-user-1/a/f1', 'to': 'users/test-user-1/b/f1'},
                           {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/f1/d2'},
                           {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/f1/d3'},
+                          {'from': 'users/test-user-1/a/a-b', 'to': 'users/test-user-1/b/a-b'},
+                          {'from': 'users/test-user-1/a/a-b/x_y', 'to': 'users/test-user-1/b/a-b/x_y'},
+                          {'from': 'users/test-user-1/a/a-b/x-y', 'to': 'users/test-user-1/b/a-b/x-y'},
                           {'from': 'users/test-user-1/a/f2', 'to': 'users/test-user-1/b/f2'}], preview)
         b = Folder.find_by_path(self.get_personal_item_path('b'))
         self.assertEqual('b', b.title)
