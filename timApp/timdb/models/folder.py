@@ -160,7 +160,7 @@ class Folder(db.Model, Item):
 
     @property
     def block(self):
-        """Overriden for optimization: root folder does not have a db entry, so we won't try to query for it."""
+        """Overridden for optimization: root folder does not have a db entry, so we won't try to query for it."""
         if self.is_root():
             return None
         return Item.block.fget(self)
