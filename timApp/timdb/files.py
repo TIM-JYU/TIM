@@ -1,5 +1,5 @@
 import os
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.exceptions import TimDbException
@@ -94,7 +94,7 @@ class Files(TimDbBase):
         files = self.resultAsDictionary(cursor)
         return files
 
-    def fileExists(self, file_id: int, file_filename: str):
+    def get_file_block(self, file_id: int, file_filename: str) -> Optional[Block]:
         """Returns whether the specified file exists.
 
         :param file_id: The id of the file.
@@ -104,8 +104,10 @@ class Files(TimDbBase):
         """
         b: Block = Block.query.get(file_id)
         if not b:
-            return False
+            return None
         if b.type_id != blocktypes.FILE:
-            return False
+            return None
 
-        return os.path.exists(self.getFilePath(file_id, file_filename))
+        if os.path.exists(self.getFilePath(file_id, file_filename)):
+            return b
+        return None

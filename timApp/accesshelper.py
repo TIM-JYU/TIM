@@ -14,7 +14,9 @@ from timApp.sessioninfo import get_current_user_id, logged_in, get_other_users_a
     get_current_user_group, get_current_user_object
 from timApp.timdb.accesstype import AccessType
 from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.item import Item
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.user import ItemOrBlock
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db, BlockAccess
 from timApp.timdb.timdb2 import TimDb
@@ -61,16 +63,19 @@ def verify_access(block_id: int, access_type: AccessType, require: bool = True, 
     abort(400, 'Bad request - unknown access type')
 
 
-def verify_view_access(block_id, require=True, message=None, check_duration=False):
-    return abort_if_not_access_and_required(has_view_access(block_id), block_id, 'view', require, message, check_duration)
+def verify_view_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
+    u = get_current_user_object()
+    return abort_if_not_access_and_required(u.has_view_access(b), b.id, 'view', require, message, check_duration)
 
 
-def verify_teacher_access(block_id, require=True, message=None, check_duration=False):
-    return abort_if_not_access_and_required(has_teacher_access(block_id), block_id, 'teacher', require, message, check_duration)
+def verify_teacher_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
+    u = get_current_user_object()
+    return abort_if_not_access_and_required(u.has_teacher_access(b), b.id, 'teacher', require, message, check_duration)
 
 
-def verify_seeanswers_access(block_id, require=True, message=None, check_duration=False):
-    return abort_if_not_access_and_required(has_seeanswers_access(block_id), block_id, 'see answers', require, message, check_duration)
+def verify_seeanswers_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
+    u = get_current_user_object()
+    return abort_if_not_access_and_required(u.has_seeanswers_access(b), b.id, 'see answers', require, message, check_duration)
 
 
 class ItemLockedException(Exception):
@@ -174,15 +179,17 @@ def has_seeanswers_access(doc_id):
     return check_admin_access(doc_id) or get_see_answers_blocks().get(doc_id)
 
 
-def get_rights(doc_id):
-    return {'editable': bool(has_edit_access(doc_id)),
-            'can_mark_as_read': bool(has_read_marking_right(doc_id)),
-            'can_comment': bool(has_comment_right(doc_id)),
+def get_rights(d: Item):
+    u = get_current_user_object()
+
+    return {'editable': bool(u.has_edit_access(d)),
+            'can_mark_as_read': bool(logged_in() and u.has_view_access(d)),
+            'can_comment': bool(logged_in() and u.has_view_access(d)),
             'browse_own_answers': logged_in(),
-            'teacher': bool(has_teacher_access(doc_id)),
-            'see_answers': bool(has_seeanswers_access(doc_id)),
-            'manage': bool(has_manage_access(doc_id)),
-            'owner': bool(has_ownership(doc_id))
+            'teacher': bool(u.has_teacher_access(d)),
+            'see_answers': bool(u.has_seeanswers_access(d)),
+            'manage': bool(u.has_manage_access(d)),
+            'owner': bool(u.has_ownership(d))
             }
 
 

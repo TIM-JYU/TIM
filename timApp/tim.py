@@ -296,9 +296,10 @@ def diff_document(doc_id, major1, minor1, major2, minor2):
 @app.route('/images/<int:image_id>/<image_filename>')
 def get_image(image_id, image_filename):
     timdb = get_timdb()
-    if not timdb.images.imageExists(image_id, image_filename):
+    b = timdb.images.get_image_block(image_id, image_filename)
+    if not b:
         abort(404)
-    verify_view_access(image_id)
+    verify_view_access(b)
     img_data = timdb.images.getImage(image_id, image_filename)
     imgtype = imghdr.what(None, h=img_data)
     f = io.BytesIO(img_data)
@@ -452,7 +453,8 @@ def echo_request(filename):
 
 @app.route("/index/<int:doc_id>")
 def get_index(doc_id):
-    verify_view_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_view_access(d)
     index = Document(doc_id).get_index()
     if not index:
         return json_response({'empty': True})

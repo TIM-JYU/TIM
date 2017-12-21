@@ -20,7 +20,7 @@ class Folder(db.Model, Item):
     location = db.Column(db.Text, nullable=False)
     __table_args__ = (db.UniqueConstraint('name', 'location', name='folder_uc'),)
 
-    _block = db.relationship('Block', back_populates='folder')
+    _block = db.relationship('Block', back_populates='folder', lazy='joined')
 
     @staticmethod
     def get_root() -> 'Folder':
@@ -157,6 +157,13 @@ class Folder(db.Model, Item):
 
         """
         return self.path
+
+    @property
+    def block(self):
+        """Overriden for optimization: root folder does not have a db entry, so we won't try to query for it."""
+        if self.is_root():
+            return None
+        return Item.block.fget(self)
 
     def get_full_path(self) -> str:
         return join_location(self.location, self.name)

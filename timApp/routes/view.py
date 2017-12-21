@@ -13,7 +13,7 @@ from flask import session
 
 import timApp.routes.lecture
 from timApp.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    get_rights, get_viewable_blocks_or_none_if_admin, has_edit_access
+    get_rights, get_viewable_blocks_or_none_if_admin, has_edit_access, get_doc_or_abort
 from timApp.common import get_user_settings, save_last_page, has_special_chars, post_process_pars, \
     hide_names_in_teacher, is_considered_unpublished
 from timApp.dbaccess import get_timdb
@@ -35,8 +35,8 @@ from timApp.timdb.exceptions import TimDbException, PreambleException
 from timApp.timdb.models.docentry import DocEntry, get_documents
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.user import User
+from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db
-from timApp.timdb.userutils import user_is_owner
 from timApp.timtiming import taketime
 from timApp.utils import remove_path_special_chars
 
@@ -200,7 +200,7 @@ def try_return_folder(item_name):
                                new_item=item_name,
                                found_item=f,
                                forced_template=template_to_find if template_item else None), 404
-    verify_view_access(f.id)
+    verify_view_access(f)
     return render_template('index.html',
                            item=f,
                            items=get_items(item_name),
@@ -240,18 +240,18 @@ def view(item_path, template_name, usergroup=None, route="view"):
     create_environment("%%")  # TODO get macroinf
 
     if route == 'teacher':
-        if not verify_teacher_access(doc_id, require=False, check_duration=True):
-            if verify_view_access(doc_id):
+        if not verify_teacher_access(doc_info, require=False, check_duration=True):
+            if verify_view_access(doc_info):
                 flash("Did someone give you a wrong link? Showing normal view instead of teacher view.")
                 return redirect(f'/view/{item_path}')
 
     if route == 'answers':
-        if not verify_seeanswers_access(doc_id, require=False, check_duration=True):
-            if verify_view_access(doc_id):
+        if not verify_seeanswers_access(doc_info, require=False, check_duration=True):
+            if verify_view_access(doc_info):
                 flash("Did someone give you a wrong link? Showing normal view instead of see answers view.")
                 return redirect(f'/view/{item_path}')
 
-    access = verify_view_access(doc_id, require=False, check_duration=True)
+    access = verify_view_access(doc_info, require=False, check_duration=True)
     if not access:
         if not logged_in():
             return redirect_to_login()
@@ -306,6 +306,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     tasks_done = None
     task_groups = None
     user_list = []
+    user_dict = None
     task_ids, plugin_count = find_task_ids(xs)
     points_sum_rule = doc_settings.point_sum_rule(default={})
     try:
@@ -316,7 +317,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
     if teacher_or_see_answers:
         user_list = None
         if usergroup is not None:
-            user_list = [user['id'] for user in timdb.users.get_users_for_group(usergroup)]
+            user_dict = {u.id: u for u in UserGroup.get_by_name(usergroup).users}
+            user_list = list(user_dict.keys())
         user_list = timdb.answers.get_points_by_rule(points_sum_rule, task_ids, user_list, flatten=True)
     elif doc_settings.show_task_summary() and logged_in():
         info = timdb.answers.get_points_by_rule(points_sum_rule, task_ids, [current_user.id], flatten=True)
@@ -367,7 +369,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     if hide_names_in_teacher(doc_id):
         for user in user_list:
-            if not user_is_owner(user['id'], doc_id) \
+            u: User = user_dict[user['id']] if user_dict else User.query.get(user['id'])
+            if not u.has_ownership(doc_info) \
                     and user['id'] != get_current_user_id():
                 user['name'] = '-'
                 user['real_name'] = f'Someone {user["id"]}'
@@ -451,9 +454,10 @@ def check_updated_pars(doc_id, major, minor):
     # return json_response({'diff': None,
     #                       'version': None})
     # taketime("before verify")
-    verify_view_access(doc_id)
+    doc = get_doc_or_abort(doc_id)
+    verify_view_access(doc)
     # taketime("before liveupdates")
-    d = Document(doc_id)
+    d = doc.document
     settings = d.get_settings()
     live_updates = settings.live_updates(0)  # this cost 1-3 ms.
     global_live_updates = 2  # TODO: take this from somewhere that it is possible to admin to change it by a route
@@ -465,7 +469,7 @@ def check_updated_pars(doc_id, major, minor):
     # taketime("after liveupdates")
     diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, check_html=True))  # TODO cache this, about <5 ms
     # taketime("after diffs")
-    rights = get_rights(d.doc_id)  # about 30-40 ms # TODO: this is the slowest part
+    rights = get_rights(doc)  # about 30-40 ms # TODO: this is the slowest part
     # taketime("after rights")
     for diff in diffs:  # about < 1 ms
         if diff.get('content'):

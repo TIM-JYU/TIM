@@ -7,7 +7,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 class ParDiffTest(TimRouteTest):
     def test_par_diff(self):
         self.login_test1()
-        self.get(f'/getParDiff/9999/0/0', expect_status=403)
+        self.get(f'/getParDiff/9999/0/0', expect_status=404)
         d = self.create_doc()
         self.get(f'/getParDiff/{d.id}/0/0', expect_content={'diff': [], 'live': 0, 'version': [0, 0]})
         d.document.add_paragraph('1')

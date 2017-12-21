@@ -6,7 +6,7 @@ from flask import abort
 from flask import current_app
 from flask import request
 
-from timApp.accesshelper import verify_edit_access, verify_view_access, get_rights, has_view_access
+from timApp.accesshelper import verify_edit_access, verify_view_access, get_rights, has_view_access, get_doc_or_abort
 from timApp.common import post_process_pars
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
@@ -367,7 +367,7 @@ def par_response(pars,
 
     return json_response({'texts': render_template('partials/paragraphs.html',
                                                    text=pars,
-                                                   item={'rights': get_rights(doc.doc_id)},
+                                                   item={'rights': get_rights(doc.get_docinfo())},
                                                    preview=preview),
                           'js': js_paths,
                           'jsModuleIds': list(get_module_ids(js_paths)),
@@ -375,7 +375,7 @@ def par_response(pars,
                           'angularModule': modules,  # not used in JS at all, maybe not needed at all
                           'changed_pars': {p['id']: render_template('partials/paragraphs.html',
                                                                     text=[p],
-                                                                    item={'rights': get_rights(doc.doc_id)}) for p in
+                                                                    item={'rights': get_rights(doc.get_docinfo())}) for p in
                                            changed_pars},
                           'version': new_doc_version,
                           'duplicates': duplicates,
@@ -664,7 +664,8 @@ def get_updated_pars(doc_id):
     :param doc_id: The document id.
 
     """
-    verify_view_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_view_access(d)
     return par_response([], Document(doc_id, preload_option=PreloadOption.all), update_cache=True)
 
 

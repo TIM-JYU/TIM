@@ -48,7 +48,7 @@ def pull_doc_path(endpoint, values):
         g.doc_entry = DocEntry.find_by_path(doc_path, try_translation=True)
         if not g.doc_entry:
             abort(404, 'Document not found')
-        verify_view_access(g.doc_entry.id)
+        verify_view_access(g.doc_entry)
 
 
 @print_blueprint.route("/<path:doc_path>", methods=['POST'])

@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 
-from timApp.accesshelper import verify_comment_right, verify_logged_in, has_ownership
+from timApp.accesshelper import verify_comment_right, verify_logged_in, has_ownership, get_doc_or_abort
 from timApp.accesshelper import verify_view_access
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.document import Document
@@ -76,12 +76,12 @@ def edit_note():
     jsondata = request.get_json()
     group_id = get_current_user_group()
     doc_id = int(jsondata['docId'])
-    verify_view_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_view_access(d)
     note_text = jsondata['text']
     access = jsondata['access']
     par_id = jsondata['par']
-    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
-    par = docentry.document.get_paragraph(par_id)
+    par = d.document.get_paragraph(par_id)
     note_id = int(jsondata['id'])
     sent_tags = jsondata.get('tags', {})
     tags = []
@@ -94,7 +94,7 @@ def edit_note():
     timdb.notes.modify_note(note_id, note_text, access, tags)
 
     if access == "everyone":
-        notify_doc_watchers(docentry,
+        notify_doc_watchers(d,
                             note_text,
                             NotificationType.CommentModified,
                             par)

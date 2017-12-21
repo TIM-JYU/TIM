@@ -6,7 +6,7 @@ from sqlalchemy import tuple_, func
 from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.block import Block
-from timApp.timdb.tim_models import BlockAccess
+from timApp.timdb.tim_models import BlockAccess, db
 from timApp.utils import split_location, date_to_relative
 
 
@@ -50,7 +50,7 @@ class Item:
     @property
     def rights(self):
         from timApp.accesshelper import get_rights
-        return get_rights(self.id)
+        return get_rights(self)
 
     @property
     def title(self):
@@ -140,7 +140,8 @@ class Item:
 
 def copy_rights(source: Item, dest: Item, delete_existing=True):
     if delete_existing:
-        dest.block.accesses.delete()
+        for a in dest.block.accesses:
+            db.session.delete(a)
     for a in source.block.accesses:  # type: BlockAccess
         dest.block.accesses.append(
             BlockAccess(usergroup_id=a.usergroup_id,

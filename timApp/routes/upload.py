@@ -10,7 +10,7 @@ from flask import abort
 from werkzeug.utils import secure_filename
 
 from timApp.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
-    grant_access_to_session_users
+    grant_access_to_session_users, get_doc_or_abort
 from timApp.dbaccess import get_timdb
 from timApp.plugin import Plugin
 from timApp.responsehelper import json_response
@@ -59,7 +59,7 @@ def get_upload(relfilename: str):
         Block.type_id == blocktypes.UPLOAD)).order_by(Block.description.desc()).first()
     if not block or (block.description != relfilename and not relfilename.endswith('/')):
         abort(404, 'The requested upload was not found.')
-    if not verify_view_access(block.id, require=False):
+    if not verify_view_access(block, require=False):
         answerupload = block.answerupload.first()
 
         # Answerupload may only be None for early test uploads (before the AnswerUpload model was implemented)
@@ -68,7 +68,8 @@ def get_upload(relfilename: str):
             abort(403)
         answer = answerupload.answer
         doc_id, task_name, _ = Plugin.parse_task_id(answer.task_id)
-        verify_seeanswers_access(doc_id)
+        d = get_doc_or_abort(doc_id)
+        verify_seeanswers_access(d)
 
     data = timdb.uploads.get_file(block.description)
     f = io.BytesIO(data)
@@ -161,9 +162,10 @@ def upload_image_or_file(image_file):
 def get_file(file_id, file_filename):
     timdb = get_timdb()
     file_filename = secure_filename(file_filename)
-    if not timdb.files.fileExists(file_id, file_filename):
+    b = timdb.files.get_file_block(file_id, file_filename)
+    if not b:
         abort(404)
-    verify_view_access(file_id)
+    verify_view_access(b)
     mime = magic.Magic(mime=True)
     file_path = timdb.files.getFilePath(file_id, file_filename)
     mt = mime.from_file(file_path)

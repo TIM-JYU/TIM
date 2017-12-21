@@ -41,32 +41,23 @@ manage_page = Blueprint('manage_page',
 def manage(path):
     if has_special_chars(path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
-    is_folder = False
-    doc = DocEntry.find_by_path(path, fallback_to_id=True, try_translation=True)
-    folder = None
-    if doc is None:
-        folder = Folder.find_by_path(path, fallback_to_id=True)
-        if folder is None:
+    item = DocEntry.find_by_path(path, fallback_to_id=True, try_translation=True)
+    if item is None:
+        item = Folder.find_by_path(path, fallback_to_id=True)
+        if item is None:
             abort(404)
-        is_folder = True
-        block_id = folder.id
-    else:
-        block_id = doc.id
 
-    verify_view_access(block_id)
+    verify_view_access(item)
 
     access_types = AccessType.query.all()
-
-    if is_folder:
-        item = folder
-    else:
-        item = doc
+    is_folder = isinstance(item, Folder)
+    if not is_folder:
         item.serialize_content = True
         item.changelog_length = get_option(request, 'history', 100)
 
     return render_template('manage_folder.html' if is_folder else 'manage_document.html',
                            route='manage',
-                           translations=doc.translations if not is_folder else None,
+                           translations=item.translations if not is_folder else None,
                            item=item,
                            access_types=access_types)
 
