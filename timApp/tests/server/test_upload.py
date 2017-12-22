@@ -2,7 +2,6 @@ import io
 
 from timApp.documentmodel.document import Document
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import grant_access
@@ -11,8 +10,8 @@ from timApp.timdb.userutils import grant_access
 class UploadTest(TimRouteTest):
 
     def test_upload_permissions(self):
-        timdb = self.get_db()
-        User.get_by_name('testuser3').groups.append(UserGroup.get_admin_group())
+        u = self.test_user_3
+        u.groups.append(UserGroup.get_admin_group())
         db.session.commit()
         self.login_test1()
         j = self.post('/upload/',

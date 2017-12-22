@@ -23,7 +23,7 @@ class Block(db.Model):
     docentries = db.relationship('DocEntry', back_populates='_block', lazy='dynamic')
     folder = db.relationship('Folder', back_populates='_block', lazy='dynamic')
     answerupload = db.relationship('AnswerUpload', back_populates='block', lazy='dynamic')
-    accesses = db.relationship('BlockAccess', back_populates='block', lazy='dynamic')
+    accesses = db.relationship('BlockAccess', back_populates='block', lazy='joined')
 
     def __json__(self):
         return ['id', 'type_id', 'description', 'created', 'modified']
@@ -46,23 +46,29 @@ class Block(db.Model):
             return folder.parent
 
     def is_unpublished(self):
-        from timApp.accesshelper import has_ownership
-        return has_ownership(self.id) is not None and (
-        not self.owner or not self.owner.is_large()) and self.accesses.count() <= 1
+        from timApp.sessioninfo import get_current_user_object
+        u = get_current_user_object()
+        return u.has_ownership(self) is not None and (
+        not self.owner or not self.owner.is_large()) and len(self.accesses) <= 1
 
     @property
     def owner_access(self):
-        return self.accesses.filter_by(type=AccessType.owner.value).first()
+        for a in self.accesses:
+            if a.type == AccessType.owner.value:
+                return a
+        return None
 
-    def set_owner(self, usergroup_id: int):
+    def set_owner(self, usergroup: UserGroup):
         """Changes the owner group for a block.
 
-        :param usergroup_id: The id of the new usergroup.
+        :param usergroup: The new usergroup.
 
         """
-        self.accesses.filter_by(type=AccessType.owner.value).delete()
+        for a in self.accesses:
+            if a.type == AccessType.owner.value:
+                db.session.delete(a)
         self.accesses.append(
-            BlockAccess(usergroup_id=usergroup_id,
+            BlockAccess(usergroup_id=usergroup.id,
                         type=AccessType.owner.value,
                         accessible_from=datetime.now(tz=timezone.utc)))
 

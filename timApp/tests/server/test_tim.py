@@ -221,6 +221,11 @@ class TimTest(TimRouteTest):
         links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
         self.assertGreater(len(links), 0)
 
+    def test_teacher(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.get(f'/teacher/{d.path}', query_string={'group': 'Korppi users'})
+
 
 if __name__ == '__main__':
     unittest.main()

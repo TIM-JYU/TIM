@@ -11,7 +11,7 @@ from flask import current_app
 from flask import request
 from flask import session
 
-from timApp.accesshelper import verify_ownership, has_edit_access
+from timApp.accesshelper import verify_ownership, get_doc_or_abort, verify_edit_access
 from timApp.common import has_ownership, \
     get_user_settings
 from timApp.dbaccess import get_timdb
@@ -457,8 +457,8 @@ def add_question():
     answer = request.args.get('answer')
     doc_id = int(request.args.get('doc_id'))
     timdb = get_timdb()
-    if not has_edit_access(doc_id):
-        abort(403)
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
     par_id = request.args.get('par_id')
     points = request.args.get('points')
     if points is None:
@@ -533,7 +533,8 @@ def start_future_lecture():
     tempdb = get_tempdb()
     lecture_code = request.args.get('lecture_code')
     doc_id = int(request.args.get("doc_id"))
-    verify_ownership(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_ownership(d)
     lecture = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
     time_now = datetime.now(timezone.utc)
     lecture = timdb.lectures.update_lecture_starting_time(lecture, time_now)
@@ -677,7 +678,8 @@ def get_running_lectures(doc_id=None):
     is_lecturer = False
     if doc_id:
         list_of_lectures = timdb.lectures.get_document_lectures(doc_id, time_now)
-        is_lecturer = bool(has_ownership(doc_id))
+        d = get_doc_or_abort(doc_id)
+        is_lecturer = bool(has_ownership(d))
     current_lecture_codes = []
     future_lectures = []
     for lecture in list_of_lectures:
@@ -703,7 +705,8 @@ def create_lecture():
     if request.args.get("lecture_id"):
         lecture_id = int(request.args.get("lecture_id"))
     doc_id = int(request.args.get("doc_id"))
-    verify_ownership(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_ownership(d)
     timdb = get_timdb()
     start_time = request.args.get("start_date")
     end_time = request.args.get("end_date")
@@ -799,7 +802,8 @@ def get_lecture_from_request(check_access=True) -> Lecture:
     if not lecture:
         abort(404)
     if check_access:
-        verify_ownership(lecture.doc_id)
+        d = get_doc_or_abort(lecture.doc_id)
+        verify_ownership(d)
     return lecture
 
 
@@ -889,7 +893,8 @@ def leave_lecture_function(lecture_id):
 
 @lecture_routes.route("/questions/<int:doc_id>")
 def get_questions(doc_id):
-    verify_ownership(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_ownership(d)
     timdb = get_timdb()
     questions = timdb.questions.get_doc_questions(doc_id)
     return json_response(questions)
@@ -897,7 +902,8 @@ def get_questions(doc_id):
 
 @lecture_routes.route("/getLectureWithName", methods=['POST'])
 def get_lecture_with_name(lecture_code, doc_id):
-    verify_ownership(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_ownership(d)
     timdb = get_timdb()
     lecture = timdb.lectures.get_lecture_by_code(lecture_code, doc_id)
     return json_response(lecture)
@@ -932,7 +938,8 @@ def ask_question():
     else:
         par_id = request.args.get('par_id')
 
-    verify_ownership(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_ownership(d)
 
     if lecture_id < 0:
         abort(400, "Not valid lecture id")
@@ -992,7 +999,8 @@ def ask_question():
 
     thread_to_stop_question.start()
 
-    verify_ownership(int(doc_id))
+    d = get_doc_or_abort(int(doc_id))
+    verify_ownership(d)
     tempdb = get_tempdb()
     delete_question_temp_data(asked_id, lecture_id, tempdb)
 
@@ -1103,7 +1111,8 @@ def get_question_by_par_id():
     doc_id = int(request.args.get('doc_id'))
     par_id = request.args.get('par_id')
     edit = request.args.get('edit', False)
-    verify_ownership(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_ownership(d)
     # question_json, points, expl, markup = get_question_data_from_document(doc_id, par_id)
     # return json_response({"points": points, "questionjson": question_json, "expl": expl, "markup": markup})
     markup = get_question_data_from_document(doc_id, par_id, edit)
@@ -1158,7 +1167,8 @@ def delete_question():
     doc_id = int(request.args.get('doc_id'))
     question_id = int(request.args.get('question_id'))
 
-    verify_ownership(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_ownership(d)
     timdb = get_timdb()
     timdb.questions.delete_question(question_id)
     timdb.lecture_answers.delete_answers_from_question(question_id)
@@ -1172,7 +1182,8 @@ def get_lecture_answers():
     if not request.args.get('asked_id') or not request.args.get('doc_id') or not request.args.get('lecture_id'):
         abort(400, "Bad request")
 
-    verify_ownership(int(request.args.get('doc_id')))
+    d = get_doc_or_abort(int(request.args.get('doc_id')))
+    verify_ownership(d)
     asked_id = int(request.args.get('asked_id'))
     lecture_id = int(request.args.get('lecture_id'))
 

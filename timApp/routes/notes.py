@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 
-from timApp.accesshelper import verify_comment_right, verify_logged_in, has_ownership
+from timApp.accesshelper import verify_comment_right, verify_logged_in, has_ownership, get_doc_or_abort
 from timApp.accesshelper import verify_view_access
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.document import Document
@@ -28,7 +28,8 @@ def get_note(note_id):
     note = timdb.notes.get_note(note_id)
     if not note:
         abort(404)
-    if not (timdb.notes.has_edit_access(get_current_user_group(), note_id) or has_ownership(note['doc_id'])):
+    d = get_doc_or_abort(note['doc_id'])
+    if not (timdb.notes.has_edit_access(get_current_user_group(), note_id) or has_ownership(d)):
         abort(403)
     note.pop('usergroup_id')
     tags = note['tags']
@@ -46,9 +47,9 @@ def post_note():
     for tag in KNOWN_TAGS:
         if sent_tags.get(tag):
             tags.append(tag)
-    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
-    verify_comment_right(doc_id)
-    doc = Document(doc_id)
+    docentry = get_doc_or_abort(doc_id)
+    verify_comment_right(docentry)
+    doc = docentry.document
     try:
         par = doc.get_paragraph(par_id)
     except TimDbException as e:
@@ -76,12 +77,12 @@ def edit_note():
     jsondata = request.get_json()
     group_id = get_current_user_group()
     doc_id = int(jsondata['docId'])
-    verify_view_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_view_access(d)
     note_text = jsondata['text']
     access = jsondata['access']
     par_id = jsondata['par']
-    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
-    par = docentry.document.get_paragraph(par_id)
+    par = d.document.get_paragraph(par_id)
     note_id = int(jsondata['id'])
     sent_tags = jsondata.get('tags', {})
     tags = []
@@ -89,16 +90,16 @@ def edit_note():
         if sent_tags.get(tag):
             tags.append(tag)
     timdb = get_timdb()
-    if not (timdb.notes.has_edit_access(group_id, note_id) or has_ownership(doc_id)):
+    if not (timdb.notes.has_edit_access(group_id, note_id) or has_ownership(d)):
         abort(403, "Sorry, you don't have permission to edit this note.")
     timdb.notes.modify_note(note_id, note_text, access, tags)
 
     if access == "everyone":
-        notify_doc_watchers(docentry,
+        notify_doc_watchers(d,
                             note_text,
                             NotificationType.CommentModified,
                             par)
-    doc = Document(doc_id)
+    doc = d.document
     return par_response([doc.get_paragraph(par_id)],
                         doc)
 
@@ -108,9 +109,10 @@ def delete_note():
     group_id = get_current_user_group()
     doc_id, note_id, paragraph_id = verify_json_params('docId', 'id', 'par')
     timdb = get_timdb()
-    if not (timdb.notes.has_edit_access(group_id, note_id) or has_ownership(doc_id)):
+    d = get_doc_or_abort(doc_id)
+    if not (timdb.notes.has_edit_access(group_id, note_id) or has_ownership(d)):
         abort(403, "Sorry, you don't have permission to remove this note.")
     timdb.notes.delete_note(note_id)
-    doc = Document(doc_id)
+    doc = d.document
     return par_response([doc.get_paragraph(paragraph_id)],
                         doc)

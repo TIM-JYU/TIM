@@ -8,6 +8,7 @@ from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, \
     LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME
+from timApp.timdb.tim_models import BlockAccess, db
 from timApp.timdb.timdbbase import TimDbBase
 from timApp.timdb.userutils import NoSuchUserException, get_anon_group_id, \
     get_anon_user_id, get_access_type_id, get_default_right_document
@@ -178,10 +179,12 @@ class Users(TimDbBase):
         return len(cursor.fetchall()) > 0
 
     def remove_access(self, group_id: int, block_id: int, access_type: str):
-        cursor = self.db.cursor()
-        cursor.execute("DELETE FROM BlockAccess WHERE UserGroup_id = %s AND Block_id = %s AND type = %s",
-                       [group_id, block_id, get_access_type_id(access_type)])
-        self.db.commit()
+        access_type_id = get_access_type_id(access_type)
+        i = Block.query.get(block_id)
+        for a in i.accesses:  # type: BlockAccess
+            if a.usergroup_id == group_id and a.type == access_type_id:
+                db.session.delete(a)
+                break
 
     def get_preferences(self, user_id: int) -> str:
         """Gets the preferences of a user.

@@ -129,8 +129,8 @@ class TestSignUp(TimRouteTest):
         self.assertEqual('Doe John Matt', self.current_user.real_name)
         self.assertEqual('johmadoenew', self.current_user.name)
         self.assertEqual('john.m.doenew@student.jyu.fi', self.current_user.email)
-        self.assertEqual(list(g.name for g in self.current_user.groups.order_by(UserGroup.name)), ['johmadoenew',
-                                                                                                   'Korppi users'])
+        self.assertEqual(set(g.name for g in self.current_user.groups),
+                         {'johmadoenew', 'Korppi users'})
 
     def register_user_with_korppi(self, username='johmadoe', real_name='Doe John Matt',
                                   email='john.m.doe@student.jyu.fi'):
@@ -180,8 +180,8 @@ class TestSignUp(TimRouteTest):
         self.assertEqual(self.current_user.name, 'johmadoz')
         self.assertEqual(self.current_user.email, 'john.doe@student.jyu.fi')
         self.assertEqual(self.current_user.real_name, 'Doe John Matthew')
-        self.assertEqual(list(g.name for g in self.current_user.groups.order_by(UserGroup.name)),
-                         ['johmadoz', 'Korppi users'])
+        self.assertEqual(set(g.name for g in self.current_user.groups),
+                         {'johmadoz', 'Korppi users'})
 
         # If both username and email is different, there's no way to identify the user.
         with responses.RequestsMock() as m:

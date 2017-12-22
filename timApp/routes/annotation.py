@@ -14,8 +14,8 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 
-from timApp.accesshelper import verify_logged_in, has_view_access, has_seeanswers_access, has_teacher_access, \
-    has_ownership, get_doc_or_abort
+from timApp.accesshelper import verify_logged_in, has_seeanswers_access, has_teacher_access, \
+    has_ownership, get_doc_or_abort, verify_view_access
 from timApp.dbaccess import get_timdb
 from timApp.responsehelper import json_response, ok_response
 from timApp.sessioninfo import get_current_user_id
@@ -145,6 +145,7 @@ def update_annotation():
     points = json_data.get('points')
     doc_id = json_data.get('doc_id')
     color = json_data.get('color')
+    d = get_doc_or_abort(doc_id)
 
     timdb = get_timdb()
     # Get values from the database to fill in unchanged new values.
@@ -166,7 +167,7 @@ def update_annotation():
         return abort(400, "Color should be a hex string, e.g. '#FFFFFF'.")
     new_values['color'] = color
 
-    if has_teacher_access(doc_id):
+    if has_teacher_access(d):
         new_values['points'] = points
     else:
         if points is None:
@@ -263,12 +264,11 @@ def get_annotations(doc_id: int):
 
     """
     timdb = get_timdb()
-    get_doc_or_abort(doc_id)
-    if not has_view_access(doc_id):
-        return abort(403, "View access required.")
-    user_has_see_answers = bool(has_seeanswers_access(doc_id))
-    user_has_teacher = bool(has_teacher_access(doc_id))
-    user_has_owner = bool(has_ownership(doc_id))
+    d = get_doc_or_abort(doc_id)
+    verify_view_access(d)
+    user_has_see_answers = bool(has_seeanswers_access(d))
+    user_has_teacher = bool(has_teacher_access(d))
+    user_has_owner = bool(has_ownership(d))
 
     results = timdb.annotations.get_annotations_with_comments_in_document(get_current_user_id(), user_has_see_answers,
                                                                           user_has_teacher, user_has_owner, doc_id)

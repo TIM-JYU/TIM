@@ -342,11 +342,11 @@ class DocumentPrinter:
 
         templates_folder = Folder.find_by_path(path)
 
-        if templates_folder is not None and has_view_access(templates_folder.id):
+        if templates_folder is not None and has_view_access(templates_folder):
             docs = templates_folder.get_all_documents()
             if docs is not None:
                 for d in docs:
-                    if has_view_access(d.id) and not re.search(f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.name):
+                    if has_view_access(d) and not re.search(f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.name):
                         templates.append(d)
 
         return templates
@@ -366,14 +366,14 @@ class DocumentPrinter:
 
             templates_folder = Folder.find_by_path(path)
 
-            if templates_folder is not None and has_view_access(templates_folder.id):
+            if templates_folder is not None and has_view_access(templates_folder):
                 docs = templates_folder.get_all_documents()
 
                 if docs is None:
                     continue
 
                 for d in docs:
-                    if has_view_access(d.id) and not re.search(f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.name):
+                    if has_view_access(d) and not re.search(f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.name):
                         templates.append(d)
 
             current_folder = current_folder.parent
