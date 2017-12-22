@@ -196,3 +196,8 @@ class EditTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         self.new_par(d.document, 'test', additional_data={'tags': {'markread': True}})
+
+    def test_xml_encoding(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""<?xml version="1.0" encoding="iso-8859-1"?>""")
+        self.get(d.url)

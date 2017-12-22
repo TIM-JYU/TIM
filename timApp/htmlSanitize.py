@@ -84,3 +84,5 @@ def sanitize_html(html_string):
         return ""
     except lxml.etree.XMLSyntaxError:  # Not yet sure why thrown
         return ""
+    except ValueError:  # Thrown if XML has an encoding declaration
+        return ""
