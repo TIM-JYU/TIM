@@ -1,5 +1,6 @@
 from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import get_admin_group_id
 
@@ -14,7 +15,7 @@ class AnswerBrowserTest(BrowserTest):
         self.check_reference_answerbrowser_ok(d2)
 
         # even if the original document is not accessible, browsing answers should work in the other document
-        d.block.set_owner(get_admin_group_id())
+        d.block.set_owner(UserGroup.get_admin_group())
         db.session.commit()
         self.check_reference_answerbrowser_ok(d2)
 

@@ -82,38 +82,6 @@ def get_access_type_id(access_type):
     return access_type_map[access_type]
 
 
-def user_is_owner(user_id: int, block_id: int) -> bool:
-    """Returns whether the user belongs to the owners of the specified block.
-
-    :param user_id:
-    :param block_id:
-    :returns: True if the user with 'user_id' belongs to the owner group of the block 'block_id'.
-
-    """
-    return has_access(user_id, block_id, get_owner_access_id())
-
-
-def has_seeanswers_access(uid: int, block_id: int) -> bool:
-    return has_access(uid, block_id,
-                      get_seeanswers_access_id(),
-                      get_manage_access_id(),
-                      get_teacher_access_id(),
-                      get_owner_access_id())
-
-
-def has_edit_access(user_id: int, block_id: int) -> bool:
-    """Returns whether the user has edit access to the specified block.
-
-    :param user_id:
-    :param block_id:
-    :returns: True if the user with id 'user_id' has edit access to the block 'block_id', false otherwise.
-
-    """
-
-    return has_access(user_id, block_id, get_edit_access_id(), get_manage_access_id(),
-                      get_owner_access_id())
-
-
 def get_viewable_blocks(user_id: int) -> Dict[int, BlockAccess]:
     return get_accessible_blocks(user_id, [get_view_access_id(),
                                            get_edit_access_id(),
@@ -162,76 +130,11 @@ def prepare_access_query(access_types, user_ids):
 
 
 def get_accessible_blocks(user_id: int, access_types: List[int]) -> Dict[int, BlockAccess]:
-    if has_admin_access(user_id):
-        return {row.block_id: row for row in BlockAccess.query.all()}
     user_ids = [user_id, get_anon_user_id()]
     if user_id > 0:
         user_ids.append(get_logged_user_id())
     q = prepare_access_query(access_types, user_ids)
     return {row.block_id: row for row in q.all()}
-
-
-def has_access(user_id: int, block_id: int, *access_ids) -> bool:
-    """Returns whether the user has any of the specific kind of access types to the specified block.
-
-    :param user_id: The user id to check.
-    :param block_id: The block id to check.
-    :param access_ids: List of access type ids to be checked.
-    :returns: True if the user with id 'user_id' has a specific kind of access to the block 'block_id',
-              false otherwise.
-
-    """
-
-    if has_admin_access(user_id):
-        return True
-
-    user_ids = [user_id, get_anon_user_id()]
-    if user_id > 0:
-        user_ids.append(get_logged_user_id())
-    q = prepare_access_query(list(access_ids), user_ids).filter_by(block_id=block_id)
-    return db.session.query(q.exists()).scalar()
-
-
-def has_manage_access(user_id: int, block_id: int) -> bool:
-    """Returns whether the user has manage access to the specified block.
-
-    :param user_id: The user id to check.
-    :param block_id: The block id to check.
-    :returns: True if the user with id 'user_id' has manage access to the block 'block_id', false otherwise.
-
-    """
-    return has_access(user_id, block_id, get_manage_access_id(),
-                      get_owner_access_id())
-
-
-def has_teacher_access(user_id: int, block_id: int) -> bool:
-    """Returns whether the user has teacher access to the specified block.
-
-    :param user_id: The user id to check.
-    :param block_id: The block id to check.
-    :returns: True if the user with id 'user_id' has teacher access to the block 'block_id', false otherwise.
-
-    """
-    return has_access(user_id, block_id, get_manage_access_id(), get_teacher_access_id(),
-                      get_owner_access_id())
-
-
-def has_view_access(user_id: int, block_id: int) -> bool:
-    """Returns whether the user has view access to the specified block.
-
-    :param user_id: The user id to check.
-    :param block_id: The block id to check.
-    :returns: True if the user with id 'user_id' has view access to the block 'block_id', false otherwise.
-
-    """
-    return has_access(user_id,
-                      block_id,
-                      get_view_access_id(),
-                      get_edit_access_id(),
-                      get_manage_access_id(),
-                      get_teacher_access_id(),
-                      get_seeanswers_access_id(),
-                      get_owner_access_id())
 
 
 def has_admin_access(user_id: int) -> bool:

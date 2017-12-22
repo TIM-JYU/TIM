@@ -1,7 +1,7 @@
 import json
 import os
-from datetime import datetime, timedelta
-from typing import Dict, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Optional, Union, Set
 from typing import List
 
 from flask import current_app
@@ -12,17 +12,57 @@ from timApp.theme import Theme
 from timApp.timdb.accesstype import AccessType
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.item import Item
+from timApp.timdb.models.block import Block
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.notification import Notification
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
 from timApp.timdb.tim_models import db, UserGroupMember, BlockAccess
-from timApp.timdb.userutils import has_view_access, has_edit_access, has_manage_access, \
-    has_teacher_access, \
-    has_seeanswers_access, user_is_owner, get_viewable_blocks, get_accessible_blocks, grant_access, get_access_type_id, \
+from timApp.timdb.userutils import get_viewable_blocks, get_accessible_blocks, grant_access, get_access_type_id, \
     create_password_hash, check_password_hash
 from timApp.utils import remove_path_special_chars, generate_theme_scss, ThemeNotFoundException, \
-    get_combined_css_filename
+    get_combined_css_filename, cached_property
+
+ItemOrBlock = Union[Item, Block]
+maxdate = datetime.max.replace(tzinfo=timezone.utc)
+
+view_access_set = {t.value for t in [
+    AccessType.view,
+    AccessType.edit,
+    AccessType.owner,
+    AccessType.teacher,
+    AccessType.see_answers,
+    AccessType.manage,
+]}
+
+edit_access_set = {t.value for t in [
+    AccessType.edit,
+    AccessType.owner,
+    AccessType.manage,
+]}
+
+manage_access_set = {t.value for t in [
+    AccessType.owner,
+    AccessType.manage,
+]}
+
+owner_access_set = {t.value for t in [
+    AccessType.owner,
+]}
+
+teacher_access_set = {t.value for t in [
+    AccessType.owner,
+    AccessType.manage,
+    AccessType.teacher,
+]}
+
+seeanswers_access_set = {t.value for t in [
+    AccessType.owner,
+    AccessType.teacher,
+    AccessType.see_answers,
+    AccessType.manage,
+]}
 
 
 class User(db.Model):
@@ -38,19 +78,18 @@ class User(db.Model):
 
     notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
     groups = db.relationship('UserGroup', secondary=UserGroupMember.__table__,
-                             back_populates='users', lazy='dynamic')
+                             back_populates='users', lazy='joined')
 
     @property
     def logged_in(self):
         return self.id > 0
 
-    @property
+    @cached_property
     def is_admin(self):
-        if not hasattr(self, '_is_admin'):
-            q = UserGroupMember.query.join(UserGroup, UserGroupMember.usergroup_id == UserGroup.id).filter(
-                (UserGroupMember.user_id == self.id) & (UserGroup.name == 'Administrators'))
-            self._is_admin = db.session.query(q.exists()).scalar()
-        return self._is_admin
+        for g in self.groups:
+            if g.name == 'Administrators':
+                return True
+        return False
 
     @property
     def is_email_user(self):
@@ -133,14 +172,15 @@ class User(db.Model):
         self.groups.append(UserGroup.get_admin_group())
 
     def get_personal_group(self) -> UserGroup:
+        return self.personal_group_prop
+
+    @cached_property
+    def personal_group_prop(self) -> UserGroup:
         if self.id < 0 or self.name == ANONYMOUS_USERNAME:
-            return UserGroup.query.filter_by(name=ANONYMOUS_GROUPNAME).first()
-        g = UserGroup.query.filter_by(name=self.name).first()
-        if g:
-            return g
-        g = UserGroup.query.filter_by(name='group of user ' + self.name).first()
-        if g:
-            return g
+            return UserGroup.get_anonymous_group()
+        for g in self.groups:
+            if g.name == self.name or g.name == 'group of user ' + self.name:
+                return g
         raise TimDbException(f'Personal usergroup for user {self.name} was not found!')
 
     def derive_personal_folder_name(self):
@@ -153,7 +193,11 @@ class User(db.Model):
             index = str(int(index or 1) + 1)
         return basename + index
 
-    def get_personal_folder(self) -> Folder:
+    def get_personal_folder(self):
+        return self.personal_folder_prop
+
+    @cached_property
+    def personal_folder_prop(self) -> Folder:
         if self.logged_in:
             group_condition = UserGroup.name == self.name
         else:
@@ -218,7 +262,7 @@ class User(db.Model):
             )
         return q
 
-    def update_info(self, name: str, real_name: str, email: str, password: Optional[str]=None):
+    def update_info(self, name: str, real_name: str, email: str, password: Optional[str] = None):
         group = self.get_personal_group()
         self.name = name
         group.name = name
@@ -227,29 +271,57 @@ class User(db.Model):
         if password:
             self.pass_ = create_password_hash(password)
 
-    def has_view_access(self, block_id: int) -> bool:
-        return has_view_access(self.id, block_id)
+    def has_some_access(self, i: ItemOrBlock, vals: Set[int]) -> Optional[BlockAccess]:
+        if self.is_admin:
+            return BlockAccess(block_id=i.id,
+                               accessible_from=datetime.min.replace(tzinfo=timezone.utc),
+                               type=AccessType.owner.value,
+                               usergroup_id=self.get_personal_group().id)
+        if isinstance(i, Item):
+            b = i.block
+        else:
+            b = i
+        if not b:
+            return None
+        now = datetime.now(tz=timezone.utc)
+        for a in b.accesses:  # type: BlockAccess
+            if a.usergroup not in self.groups:
+                name = a.usergroup.name
+                if self.logged_in and name == LOGGED_IN_GROUPNAME:
+                    pass
+                elif name == ANONYMOUS_GROUPNAME:
+                    pass
+                else:
+                    continue
+            if a.type not in vals:
+                continue
+            if (a.accessible_from or maxdate) <= now < (a.accessible_to or maxdate):
+                return a
+        return None
 
-    def has_edit_access(self, block_id: int) -> bool:
-        return has_edit_access(self.id, block_id)
+    def has_view_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+        return self.has_some_access(i, view_access_set)
 
-    def has_manage_access(self, block_id: int) -> bool:
-        return has_manage_access(self.id, block_id)
+    def has_edit_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+        return self.has_some_access(i, edit_access_set)
 
-    def has_teacher_access(self, block_id: int) -> bool:
-        return has_teacher_access(self.id, block_id)
+    def has_manage_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+        return self.has_some_access(i, manage_access_set)
 
-    def has_seeanswers_access(self, block_id: int) -> bool:
-        return has_seeanswers_access(self.id, block_id)
+    def has_teacher_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+        return self.has_some_access(i, teacher_access_set)
 
-    def has_ownership(self, block_id: int) -> bool:
-        return user_is_owner(self.id, block_id)
+    def has_seeanswers_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+        return self.has_some_access(i, seeanswers_access_set)
+
+    def has_ownership(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+        return self.has_some_access(i, owner_access_set)
 
     def can_write_to_folder(self, f: Folder):
         # not even admins are allowed to create new items in 'users' folder
         if f.path == 'users':
             return False
-        return self.has_edit_access(f.id)
+        return self.has_edit_access(f)
 
     def grant_access(self, block_id: int,
                      access_type: str,

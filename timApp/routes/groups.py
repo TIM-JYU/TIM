@@ -29,11 +29,10 @@ def get_uid_gid(groupname, usernames) -> Tuple[UserGroup, List[User]]:
 @groups.route('/show/<groupname>')
 def show_members(groupname):
     verify_admin()
-    timdb = get_timdb()
-    if not UserGroup.get_by_name(groupname):
+    ug = UserGroup.get_by_name(groupname)
+    if not ug:
         abort(404, USERGROUP_NOT_FOUND)
-    members = timdb.users.get_users_for_group(groupname, order=True)
-    return json_response(members)
+    return json_response([u.basic_info_dict for u in ug.users.all()])
 
 
 @groups.route('/usergroups/<username>')

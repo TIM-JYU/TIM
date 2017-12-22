@@ -1,3 +1,5 @@
+from sqlalchemy import event
+
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.accesstype import AccessType
 from timApp.timdb.models.docentry import DocEntry
@@ -148,6 +150,31 @@ class FolderTest(TimRouteTest):
                                             'underscores and dashes are allowed.'},
                                expect_status=400)
 
+    def test_folder_view_perf(self):
+        self.login_test3()
+        self.create_doc(self.get_personal_item_path('perf/x'))
+        d = self.create_doc(self.get_personal_item_path('perf/y'))
+        self.get(d.url)
+        eng = db.get_engine(bind='tim_main')
+
+        stmts = 0
+        db.session.expunge_all()
+
+        def before_cursor_execute(conn, cursor, statement: str, parameters, context,
+                                  executemany):
+            stmt = statement.replace('\n', ' ')
+            # print(f"{parameters}\n{stmt}")
+            nonlocal stmts
+            stmts += 1
+        event.listen(eng, 'before_cursor_execute', before_cursor_execute)
+        self.get('/view/' + self.get_personal_item_path('perf'))
+        event.remove(eng, 'before_cursor_execute', before_cursor_execute)
+
+        # TODO: Find out why there is one extra statement at the end when running all tests in this class.
+        self.assertGreaterEqual(stmts, 12)
+        self.assertLessEqual(stmts, 14)
+        # print(stmts)
+
 
 class FolderCopyTest(TimRouteTest):
     def test_folder_copy(self):
@@ -155,6 +182,8 @@ class FolderCopyTest(TimRouteTest):
         d1 = self.create_doc(self.get_personal_item_path('a/d1'))
         d2 = self.create_doc(self.get_personal_item_path('a/d2'))
         f1d1 = self.create_doc(self.get_personal_item_path('a/f1/d1'))
+        _ = self.create_doc(self.get_personal_item_path('a/a-b/x_y'))
+        _ = self.create_doc(self.get_personal_item_path('a/a-b/x-y'))
         _ = self.create_doc(self.get_personal_item_path('a/f1/d2'))
         _ = self.create_doc(self.get_personal_item_path('a/f1/d3'),
                             initial_par="""
@@ -190,17 +219,23 @@ class FolderCopyTest(TimRouteTest):
         self.assertEqual([{'from': 'users/test-user-1/a/d1', 'to': 'users/test-user-1/b/d1'},
                           {'from': 'users/test-user-1/a/d2', 'to': 'users/test-user-1/b/d2'},
                           {'from': 'users/test-user-1/a/f1', 'to': 'users/test-user-1/b/f1'},
-                          {'from': 'users/test-user-1/a/f1/d1', 'to': 'users/test-user-1/b/d1'},
-                          {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/d2'},
-                          {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/d3'},
+                          {'from': 'users/test-user-1/a/f1/d1', 'to': 'users/test-user-1/b/f1/d1'},
+                          {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/f1/d2'},
+                          {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/f1/d3'},
+                          {'from': 'users/test-user-1/a/a-b', 'to': 'users/test-user-1/b/a-b'},
+                          {'from': 'users/test-user-1/a/a-b/x_y', 'to': 'users/test-user-1/b/a-b/x_y'},
+                          {'from': 'users/test-user-1/a/a-b/x-y', 'to': 'users/test-user-1/b/a-b/x-y'},
                           {'from': 'users/test-user-1/a/f2', 'to': 'users/test-user-1/b/f2'},
-                          {'from': 'users/test-user-1/a/f2/d1', 'to': 'users/test-user-1/b/d1'}], preview)
+                          {'from': 'users/test-user-1/a/f2/d1', 'to': 'users/test-user-1/b/f2/d1'}], preview)
         preview = self.json_post(f'/copy/{a.id}/preview',
                                  {'destination': self.get_personal_item_path('b'), 'exclude': 'd1'})
         self.assertEqual([{'from': 'users/test-user-1/a/d2', 'to': 'users/test-user-1/b/d2'},
                           {'from': 'users/test-user-1/a/f1', 'to': 'users/test-user-1/b/f1'},
-                          {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/d2'},
-                          {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/d3'},
+                          {'from': 'users/test-user-1/a/f1/d2', 'to': 'users/test-user-1/b/f1/d2'},
+                          {'from': 'users/test-user-1/a/f1/d3', 'to': 'users/test-user-1/b/f1/d3'},
+                          {'from': 'users/test-user-1/a/a-b', 'to': 'users/test-user-1/b/a-b'},
+                          {'from': 'users/test-user-1/a/a-b/x_y', 'to': 'users/test-user-1/b/a-b/x_y'},
+                          {'from': 'users/test-user-1/a/a-b/x-y', 'to': 'users/test-user-1/b/a-b/x-y'},
                           {'from': 'users/test-user-1/a/f2', 'to': 'users/test-user-1/b/f2'}], preview)
         b = Folder.find_by_path(self.get_personal_item_path('b'))
         self.assertEqual('b', b.title)
@@ -214,16 +249,16 @@ class FolderCopyTest(TimRouteTest):
         t1g = self.get_test_user_1_group_id()
         self.assertEqual([BlockAccess(block_id=f1c.id, usergroup_id=t1g, type=AccessType.owner.value),
                           BlockAccess(block_id=f1c.id, usergroup_id=t2g, type=AccessType.view.value),
-                          ], f1c.block.accesses.all())
+                          ], f1c.block.accesses)
         self.assertEqual([BlockAccess(block_id=f2c.id, usergroup_id=t1g, type=AccessType.owner.value),
                           BlockAccess(block_id=f2c.id, usergroup_id=t2g, type=AccessType.edit.value),
-                          ], f2c.block.accesses.all())
+                          ], f2c.block.accesses)
         self.assertEqual([BlockAccess(block_id=d2c.id, usergroup_id=t1g, type=AccessType.owner.value),
                           BlockAccess(block_id=d2c.id, usergroup_id=t2g, type=AccessType.teacher.value),
-                          ], d2c.block.accesses.all())
+                          ], d2c.block.accesses)
         self.assertEqual([BlockAccess(block_id=d2.id, usergroup_id=t1g, type=AccessType.owner.value),
                           BlockAccess(block_id=d2.id, usergroup_id=t2g, type=AccessType.teacher.value),
-                          ], d2.block.accesses.all())
+                          ], d2.block.accesses)
         trs = sorted(f1d1c.translations, key=lambda tr: tr.lang_id)
         self.assertEqual(['', 'en', 'sv'], [tr.lang_id for tr in trs])
         self.assertEqual(['document 1', 'title_en', 'title_sv'], [tr.title for tr in trs])

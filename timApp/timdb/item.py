@@ -4,8 +4,9 @@ from flask import current_app
 from sqlalchemy import tuple_, func
 
 from timApp.timdb.blocktypes import blocktypes
+from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.block import Block
-from timApp.timdb.tim_models import BlockAccess
+from timApp.timdb.tim_models import BlockAccess, db
 from timApp.utils import split_location, date_to_relative
 
 
@@ -49,7 +50,7 @@ class Item:
     @property
     def rights(self):
         from timApp.accesshelper import get_rights
-        return get_rights(self.id)
+        return get_rights(self)
 
     @property
     def title(self):
@@ -113,13 +114,22 @@ class Item:
                 'public': self.public
                 }
 
+    def get_relative_path(self, path: str):
+        """Gets the item path relative to the given path.
+        The item must be under the path; otherwise TimDbException is thrown.
+        """
+        path = path.strip('/')
+        if not self.path.startswith(path + '/'):
+            raise TimDbException('Cannot get relative path')
+        return self.path.replace(path + '/', '', 1)
+
     @staticmethod
     def find_by_id(item_id):
         b = Block.query.get(item_id)
         if b:
             if b.type_id == blocktypes.DOCUMENT:
                 from timApp.timdb.models.docentry import DocEntry
-                return DocEntry.find_by_id(item_id)
+                return DocEntry.find_by_id(item_id, try_translation=True)
             elif b.type_id == blocktypes.FOLDER:
                 from timApp.timdb.models.folder import Folder
                 return Folder.get_by_id(item_id)
@@ -130,7 +140,8 @@ class Item:
 
 def copy_rights(source: Item, dest: Item, delete_existing=True):
     if delete_existing:
-        dest.block.accesses.delete()
+        for a in dest.block.accesses:
+            db.session.delete(a)
     for a in source.block.accesses:  # type: BlockAccess
         dest.block.accesses.append(
             BlockAccess(usergroup_id=a.usergroup_id,

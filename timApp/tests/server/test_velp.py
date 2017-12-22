@@ -102,7 +102,7 @@ class VelpTest(TimRouteTest):
         resp = self.get(f'/{str(doc2_id)}/get_default_velp_group')
         self.assertEqual(-1, resp['id'])
         self.json_post(f'/{str(doc2_id)}/create_default_velp_group', expect_status=403,
-                       expect_content={'error': 'User has no edit access to current document'})
+                       expect_content={'error': "Sorry, you don't have permission to view this resource."})
 
         # There are no velps added to any groups so getting velps for doc1 should give nothing
         resp = self.get(f'/{str(doc1_id)}/get_velps')

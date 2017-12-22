@@ -5,7 +5,7 @@ from flask import abort
 from flask import current_app
 from flask import g
 
-from timApp.accesshelper import verify_logged_in
+from timApp.accesshelper import verify_logged_in, get_doc_or_abort
 from timApp.accesshelper import verify_view_access, verify_edit_access
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.clipboard import Clipboard
@@ -34,7 +34,7 @@ def pull_doc_id(endpoint, values):
         if doc_id is None:
             abort(400)
         g.doc_id = doc_id
-        g.docentry = DocEntry.find_by_id(doc_id, try_translation=True)
+        g.docentry = get_doc_or_abort(doc_id)
         if not g.docentry:
             abort(404)
 
@@ -42,7 +42,7 @@ def pull_doc_id(endpoint, values):
 @clipboard.route('/clipboard/cut/<int:doc_id>/<from_par>/<to_par>', methods=['POST'])
 def cut_to_clipboard(doc_id, from_par, to_par):
     verify_logged_in()
-    verify_edit_access(doc_id)
+    verify_edit_access(g.docentry)
 
     (area_name,) = verify_json_params('area_name', require=False)
 
@@ -63,7 +63,7 @@ def cut_to_clipboard(doc_id, from_par, to_par):
 @clipboard.route('/clipboard/copy/<int:doc_id>/<from_par>/<to_par>', methods=['POST'])
 def copy_to_clipboard(doc_id, from_par, to_par):
     verify_logged_in()
-    verify_view_access(doc_id)
+    verify_view_access(g.docentry)
 
     (area_name, ref_doc_id) = verify_json_params('area_name', 'ref_doc_id', require=False)
     ref_doc = Document(ref_doc_id) if ref_doc_id is not None and ref_doc_id != doc_id else None
@@ -82,7 +82,7 @@ def copy_to_clipboard(doc_id, from_par, to_par):
 @clipboard.route('/clipboard/paste/<int:doc_id>', methods=['POST'])
 def paste_from_clipboard(doc_id):
     verify_logged_in()
-    verify_edit_access(doc_id)
+    verify_edit_access(g.docentry)
 
     (par_before, par_after, as_ref) = verify_json_params('par_before', 'par_after', 'as_ref', require=False, default='')
 
@@ -135,7 +135,7 @@ def paste_from_clipboard(doc_id):
 @clipboard.route('/clipboard/deletesrc/<int:doc_id>', methods=['POST'])
 def delete_from_source(doc_id):
     verify_logged_in()
-    verify_edit_access(doc_id)
+    verify_edit_access(g.docentry)
 
     timdb = get_timdb()
     doc = g.docentry.document_as_current_user
@@ -159,8 +159,9 @@ def show_clipboard():
     doc_id = get_option(request, 'doc_id', default=None, cast=int)
     if doc_id is None:
         return abort(400, 'doc_id missing')
-    verify_view_access(doc_id)
-    doc = Document(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_view_access(d)
+    doc = d.document
 
     clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
     pars = [DocParagraph.from_dict(doc, par) for par in clip.read() or []]

@@ -5,7 +5,7 @@ from typing import Optional
 from flask import Blueprint
 from flask import abort
 
-from timApp.accesshelper import verify_logged_in, verify_view_access
+from timApp.accesshelper import verify_logged_in, verify_view_access, get_doc_or_abort
 from timApp.decorators import async
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.logger import log_info, log_error
@@ -32,10 +32,8 @@ sent_mails_in_testing = []
 @notify.route('/notify/<int:doc_id>', methods=['GET'])
 def get_notify_settings(doc_id):
     verify_logged_in()
-    verify_view_access(doc_id)
-    d = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not d:
-        abort(404)
+    d = get_doc_or_abort(doc_id)
+    verify_view_access(d)
     return json_response(
         get_current_user_object().get_notify_settings(d))
 
@@ -43,10 +41,11 @@ def get_notify_settings(doc_id):
 @notify.route('/notify/<int:doc_id>', methods=['POST'])
 def set_notify_settings(doc_id):
     verify_logged_in()
-    verify_view_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_view_access(d)
     comment_modify, comment_add, doc_modify = verify_json_params('email_comment_modify', 'email_comment_add',
                                                                  'email_doc_modify')
-    get_current_user_object().set_notify_settings(DocEntry.find_by_id(doc_id, try_translation=True),
+    get_current_user_object().set_notify_settings(d,
                                                   comment_modify=comment_modify,
                                                   comment_add=comment_add,
                                                   doc_modify=doc_modify)
@@ -124,15 +123,15 @@ def notify_doc_watchers(doc: DocInfo,
 
     for note in doc.get_notifications(notify_type):
         user: User = note.user
-        if user.id == me.id or not user.email or not user.has_view_access(doc.id):
+        if user.id == me.id or not user.email or not user.has_view_access(doc):
             continue
 
         # If a document was modified and the user doesn't have edit access to it, we must not send the source md
-        send_full_msg = notify_type != NotificationType.DocModified or user.has_edit_access(doc.id)
+        send_full_msg = notify_type != NotificationType.DocModified or user.has_edit_access(doc)
 
         # Poster identity should be hidden unless the user has teacher access to the document
-        send_full_subject = user.has_teacher_access(doc.id)
-        reply_to = me.email if user.has_teacher_access(doc.id) else None
+        send_full_subject = user.has_teacher_access(doc)
+        reply_to = me.email if user.has_teacher_access(doc) else None
         send_email(user.email,
                    subject_full if send_full_subject else subject,
                    full_msg if send_full_msg else msg,

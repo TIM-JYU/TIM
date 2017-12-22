@@ -6,7 +6,7 @@ from flask import abort
 from flask import current_app
 from flask import request
 
-from timApp.accesshelper import verify_edit_access, verify_view_access, get_rights, has_view_access
+from timApp.accesshelper import verify_edit_access, verify_view_access, get_rights, get_doc_or_abort
 from timApp.common import post_process_pars
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
@@ -48,10 +48,8 @@ def update_document(doc_id):
 
     """
     timdb = get_timdb()
-    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not docentry:
-        abort(404)
-    verify_edit_access(doc_id)
+    docentry = get_doc_or_abort(doc_id)
+    verify_edit_access(docentry)
     if 'file' in request.files:
         file = request.files['file']
         content = validate_uploaded_document_content(file)
@@ -61,8 +59,7 @@ def update_document(doc_id):
         template = DocEntry.find_by_path(request.get_json()['template_name'], try_translation=True)
         if not template:
             abort(404, 'Template not found')
-        if not has_view_access(template.id):
-            abort(403, 'Permission denied')
+        verify_view_access(template)
         content = template.document.export_markdown()
         if content == '':
             return abort(400, 'The selected template is empty.')
@@ -131,10 +128,8 @@ def rename_task_ids():
     timdb = get_timdb()
     doc_id, duplicates = verify_json_params('docId', 'duplicates')
     manage_view = verify_json_params('manageView', require=False, default=False)
-    verify_edit_access(doc_id)
-    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not docentry:
-        abort(404)
+    docentry = get_doc_or_abort(doc_id)
+    verify_edit_access(docentry)
     doc = docentry.document_as_current_user
     ver_before = doc.get_version()
     pars = []
@@ -213,10 +208,8 @@ def modify_paragraph():
 
 
 def modify_paragraph_common(doc_id, md, par_id, par_next_id):
-    docinfo = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not docinfo:
-        abort(404)
-    verify_edit_access(doc_id)
+    docinfo = get_doc_or_abort(doc_id)
+    verify_edit_access(docinfo)
 
     doc = docinfo.document_as_current_user
 
@@ -367,7 +360,7 @@ def par_response(pars,
 
     return json_response({'texts': render_template('partials/paragraphs.html',
                                                    text=pars,
-                                                   item={'rights': get_rights(doc.doc_id)},
+                                                   item={'rights': get_rights(doc.get_docinfo())},
                                                    preview=preview),
                           'js': js_paths,
                           'jsModuleIds': list(get_module_ids(js_paths)),
@@ -375,7 +368,7 @@ def par_response(pars,
                           'angularModule': modules,  # not used in JS at all, maybe not needed at all
                           'changed_pars': {p['id']: render_template('partials/paragraphs.html',
                                                                     text=[p],
-                                                                    item={'rights': get_rights(doc.doc_id)}) for p in
+                                                                    item={'rights': get_rights(doc.get_docinfo())}) for p in
                                            changed_pars},
                           'version': new_doc_version,
                           'duplicates': duplicates,
@@ -535,10 +528,8 @@ def mark_pars_as_read_if_chosen(pars, doc):
 @edit_page.route("/cancelChanges/", methods=["POST"])
 def cancel_save_paragraphs():
     doc_id, original_par, new_pars, par_id = verify_json_params('docId', 'originalPar', 'newPars', 'parId')
-    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not docentry:
-        abort(404)
-    verify_edit_access(doc_id)
+    docentry = get_doc_or_abort(doc_id)
+    verify_edit_access(docentry)
     doc = docentry.document_as_current_user
     if len(new_pars) > 0:
         for new_par in new_pars:
@@ -573,10 +564,8 @@ def add_paragraph():
 
 
 def add_paragraph_common(md, doc_id, par_next_id):
-    verify_edit_access(doc_id)
-    docinfo = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not docinfo:
-        abort(404)
+    docinfo = get_doc_or_abort(doc_id)
+    verify_edit_access(docinfo)
     doc = docinfo.document_as_current_user
     if par_next_id and not doc.has_paragraph(par_next_id):
         abort(400, doc.get_par_not_found_msg(par_next_id))
@@ -622,10 +611,8 @@ def delete_paragraph(doc_id):
     :return: A JSON object containing the version of the new document.
 
     """
-    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not docentry:
-        abort(404)
-    verify_edit_access(doc_id)
+    docentry = get_doc_or_abort(doc_id)
+    verify_edit_access(docentry)
     area_start, area_end = verify_json_params('area_start', 'area_end', require=False)
     doc = docentry.document_as_current_user
     version_before = doc.get_version()
@@ -664,7 +651,8 @@ def get_updated_pars(doc_id):
     :param doc_id: The document id.
 
     """
-    verify_view_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_view_access(d)
     return par_response([], Document(doc_id, preload_option=PreloadOption.all), update_cache=True)
 
 
@@ -673,10 +661,8 @@ def name_area(doc_id, area_name):
     area_start, area_end = verify_json_params('area_start', 'area_end', require=True)
     (options,) = verify_json_params('options', require=True)
 
-    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not docentry:
-        abort(404)
-    verify_edit_access(doc_id)
+    docentry = get_doc_or_abort(doc_id)
+    verify_edit_access(docentry)
     if not area_name or ' ' in area_name or '´' in area_name:
         abort(400, 'Invalid area name')
 
@@ -709,10 +695,8 @@ def name_area(doc_id, area_name):
 
 @edit_page.route("/unwrap_area/<int:doc_id>/<area_name>", methods=["POST"])
 def unwrap_area(doc_id, area_name):
-    docentry = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not docentry:
-        abort(404)
-    verify_edit_access(doc_id)
+    docentry = get_doc_or_abort(doc_id)
+    verify_edit_access(docentry)
     if not area_name or ' ' in area_name or '´' in area_name:
         abort(400, 'Invalid area name')
 

@@ -1,5 +1,5 @@
 import os
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.exceptions import TimDbException
@@ -138,7 +138,7 @@ class Images(TimDbBase):
         images = self.resultAsDictionary(cursor)
         return images
 
-    def imageExists(self, image_id: int, image_filename: str):
+    def get_image_block(self, image_id: int, image_filename: str) -> Optional[Block]:
         """Returns whether the specified image exists.
 
         :param image_id: The id of the image.
@@ -149,8 +149,10 @@ class Images(TimDbBase):
 
         b: Block = Block.query.get(image_id)
         if not b:
-            return False
+            return None
         if b.type_id != blocktypes.IMAGE:
-            return False
+            return None
 
-        return os.path.exists(self.getImagePath(image_id, image_filename))
+        if os.path.exists(self.getImagePath(image_id, image_filename)):
+            return b
+        return None

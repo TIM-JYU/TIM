@@ -15,6 +15,7 @@ from timApp.markdownconverter import expand_macros, create_environment
 from timApp.pluginControl import pluginify
 from timApp.requesthelper import get_boolean
 from timApp.sessioninfo import get_session_usergroup_ids
+from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.user import User
 from timApp.timdb.readings import get_common_readings, get_read_expiry_condition
 from timApp.timdb.tim_models import ReadParagraph
@@ -68,7 +69,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict = defaultdict(list)
 
-    if not has_edit_access(doc.doc_id):
+    if not has_edit_access(doc.get_docinfo()):
         for htmlpar in html_pars:
             if htmlpar.get('is_question'):
                 htmlpar['html'] = ' '
@@ -106,7 +107,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
 
     taketime("read mixed")
     notes = timdb.notes.get_notes(group, doc)
-    is_owner = has_ownership(doc.doc_id)
+    is_owner = has_ownership(doc.get_docinfo())
     # Close database here because we won't need it for a while
     timdb.close()
     # taketime("notes picked")
@@ -289,10 +290,3 @@ def get_user_settings():
 
 def save_last_page():
     session['last_doc'] = request.path
-
-
-def is_considered_unpublished(doc_id):
-    timdb = get_timdb()
-    owner = timdb.users.get_owner_group(doc_id)
-    return has_ownership(doc_id) and (not owner or not owner.is_large()) and \
-           len(timdb.users.get_rights_holders(doc_id)) <= 1

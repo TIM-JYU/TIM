@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import current_app
 from flask import g
 
-from timApp.accesshelper import verify_logged_in
+from timApp.accesshelper import verify_logged_in, get_doc_or_abort
 from timApp.requesthelper import verify_json_params
 from timApp.responsehelper import json_response
 from timApp.sessioninfo import get_current_user_object
@@ -62,7 +62,7 @@ def delete_bookmark():
 
 @bookmarks.route('/markLastRead/<int:doc_id>', methods=['POST'])
 def mark_last_read(doc_id):
-    d = DocEntry.find_by_id(doc_id, try_translation=True)
+    d = get_doc_or_abort(doc_id)
     g.bookmarks.add_bookmark('Last read',
                              d.title,
                              d.url_relative,

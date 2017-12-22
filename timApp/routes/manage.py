@@ -1,6 +1,7 @@
 """Routes for manage view."""
 import re
 from datetime import timezone, datetime
+from typing import Generator
 
 import dateutil.parser
 from flask import Blueprint, render_template
@@ -12,7 +13,7 @@ from isodate import Duration
 from isodate import parse_duration
 
 from timApp.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
-    verify_edit_access, get_doc_or_abort
+    verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort
 from timApp.common import has_special_chars
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.create_item import copy_document_and_enum_translations
@@ -40,40 +41,31 @@ manage_page = Blueprint('manage_page',
 def manage(path):
     if has_special_chars(path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
-    is_folder = False
-    doc = DocEntry.find_by_path(path, fallback_to_id=True, try_translation=True)
-    folder = None
-    if doc is None:
-        folder = Folder.find_by_path(path, fallback_to_id=True)
-        if folder is None:
+    item = DocEntry.find_by_path(path, fallback_to_id=True, try_translation=True)
+    if item is None:
+        item = Folder.find_by_path(path, fallback_to_id=True)
+        if item is None:
             abort(404)
-        is_folder = True
-        block_id = folder.id
-    else:
-        block_id = doc.id
 
-    verify_view_access(block_id)
+    verify_view_access(item)
 
     access_types = AccessType.query.all()
-
-    if is_folder:
-        item = folder
-    else:
-        item = doc
+    is_folder = isinstance(item, Folder)
+    if not is_folder:
         item.serialize_content = True
         item.changelog_length = get_option(request, 'history', 100)
 
     return render_template('manage_folder.html' if is_folder else 'manage_document.html',
                            route='manage',
-                           translations=doc.translations if not is_folder else None,
+                           translations=item.translations if not is_folder else None,
                            item=item,
                            access_types=access_types)
 
 
 @manage_page.route("/changelog/<int:doc_id>/<int:length>")
 def get_changelog(doc_id, length):
-    verify_manage_access(doc_id)
-    doc = DocEntry.find_by_id(doc_id, try_translation=True)
+    doc = get_doc_or_abort(doc_id)
+    verify_manage_access(doc)
     return json_response({'versions': doc.get_changelog_with_names(length)})
 
 
@@ -119,28 +111,26 @@ def check_ownership_loss(had_ownership, item_id, perm_type):
     # delete cached ownership information because it may have changed now
     if hasattr(g, 'owned'):
         delattr(g, 'owned')
-    if had_ownership and not has_ownership(item_id):
+    i = Item.find_by_id(item_id)
+    if had_ownership and not has_ownership(i):
         grant_access(get_current_user_group(), item_id, perm_type)
         abort(403, 'You cannot remove ownership from yourself.')
 
 
 @manage_page.route("/alias/<int:doc_id>", methods=["GET"])
 def get_doc_names(doc_id):
-    verify_manage_access(doc_id)
-    return json_response(DocEntry.find_by_id(doc_id, try_translation=True).aliases)
+    d = get_doc_or_abort(doc_id)
+    verify_manage_access(d)
+    return json_response(d.aliases)
 
 
 @manage_page.route("/alias/<int:doc_id>/<path:new_alias>", methods=["PUT"])
 def add_alias(doc_id, new_alias):
-    verify_manage_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_manage_access(d)
     is_public, = verify_json_params('public', require=False, default=True)
 
     new_alias = new_alias.strip('/')
-
-    d = DocEntry.find_by_id(doc_id, try_translation=True)
-
-    if not d:
-        return abort(404, 'The document does not exist!')
 
     validate_item(new_alias, 'alias')
 
@@ -162,7 +152,7 @@ def change_alias(alias):
     if doc is None:
         return abort(404, 'The document does not exist!')
 
-    verify_manage_access(doc.id)
+    verify_manage_access(doc)
 
     new_parent, _ = split_location(new_alias)
     f = Folder.find_first_existing(new_alias)
@@ -191,7 +181,7 @@ def remove_alias(alias):
     if doc is None:
         return abort(404, 'The document does not exist!')
 
-    verify_manage_access(doc.id)
+    verify_manage_access(doc)
 
     if len(doc.aliases) <= 1:
         return abort(403, "You can't delete the only name the document has.")
@@ -213,10 +203,8 @@ def rename_folder(item_id):
     if d:
         return abort(403, 'Rename route is no longer supported for documents.')
 
-    f = Folder.get_by_id(item_id)
-    if not f:
-        return abort(404, 'The folder does not exist!')
-    verify_manage_access(item_id)
+    f = get_folder_or_abort(item_id)
+    verify_manage_access(f)
 
     parent, _ = split_location(new_name)
     parent_f = Folder.find_by_path(parent)
@@ -238,7 +226,8 @@ def rename_folder(item_id):
 @manage_page.route("/permissions/get/<int:doc_id>")
 def get_permissions(doc_id):
     timdb = get_timdb()
-    verify_manage_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_manage_access(d)
     grouprights = timdb.users.get_rights_holders(doc_id)
     return json_response({'grouprights': grouprights, 'accesstypes': AccessType.query.all()})
 
@@ -246,7 +235,8 @@ def get_permissions(doc_id):
 @manage_page.route("/defaultPermissions/<object_type>/get/<int:folder_id>")
 def get_default_document_permissions(folder_id, object_type):
     timdb = get_timdb()
-    verify_manage_access(folder_id)
+    f = get_folder_or_abort(folder_id)
+    verify_manage_access(f)
     grouprights = timdb.users.get_default_rights_holders(folder_id, from_str(object_type))
     return json_response({'grouprights': grouprights})
 
@@ -269,7 +259,8 @@ def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
 
 @manage_page.route("/defaultPermissions/<object_type>/remove/<int:folder_id>/<int:group_id>/<perm_type>", methods=["PUT"])
 def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
-    verify_manage_access(folder_id)
+    f = get_folder_or_abort(folder_id)
+    verify_manage_access(f)
     timdb = get_timdb()
     timdb.users.remove_default_access(group_id, folder_id, perm_type, from_str(object_type))
     return ok_response()
@@ -328,18 +319,19 @@ def verify_permission_edit_access(item_id: int, perm_type: str) -> bool:
     :return: True if the user has ownership, False if just manage access.
 
     """
+    i = get_item_or_abort(item_id)
     if perm_type == 'owner':
-        verify_ownership(item_id)
+        verify_ownership(i)
         return True
     else:
-        verify_manage_access(item_id)
+        verify_manage_access(i)
         return False
 
 
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])
 def del_document(doc_id):
-    get_doc_or_abort(doc_id)
-    verify_ownership(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_ownership(d)
     abort(403, 'Deleting documents has been disabled until a proper backup mechanism is implemented. '
                'Please contact TIM administrators if you really want to delete this document. '
                'You can hide this document from others by removing all permissions.')
@@ -347,12 +339,10 @@ def del_document(doc_id):
     return ok_response()
 
 
-@manage_page.route("/folders/<int:doc_id>", methods=["DELETE"])
-def delete_folder(doc_id):
-    f = Folder.get_by_id(doc_id)
-    if not f:
-        return abort(404, 'Folder does not exist.')
-    verify_ownership(doc_id)
+@manage_page.route("/folders/<folder_id>", methods=["DELETE"])
+def delete_folder(folder_id):
+    f = get_folder_or_abort(folder_id)
+    verify_ownership(f)
     if not f.is_empty:
         return abort(403, "The folder is not empty. Only empty folders can be deleted.")
 
@@ -363,8 +353,8 @@ def delete_folder(doc_id):
 
 @manage_page.route("/changeTitle/<int:item_id>", methods=["PUT"])
 def change_title(item_id):
-    verify_edit_access(item_id)
-    item = Item.find_by_id(item_id)
+    item = get_item_or_abort(item_id)
+    verify_edit_access(item)
     new_title, = verify_json_params('new_title')
     item.title = new_title
     db.session.commit()
@@ -372,10 +362,8 @@ def change_title(item_id):
 
 
 def get_copy_folder_params(folder_id):
-    verify_manage_access(folder_id)
-    f = Folder.find_by_id(folder_id)
-    if not f:
-        abort(404)
+    f = get_folder_or_abort(folder_id)
+    verify_manage_access(f)
     dest, exclude = verify_json_params('destination', 'exclude')
     compiled = get_pattern(exclude)
     if path_includes(dest, f.path):
@@ -409,11 +397,11 @@ def copy_folder_preview(folder_id):
     f, dest, compiled = get_copy_folder_params(folder_id)
     preview_list = []
     for i in enum_items(f, compiled):
-        preview_list.append({'to': join_location(dest, i.short_name), 'from': i.path})
+        preview_list.append({'to': join_location(dest, i.get_relative_path(f.path)), 'from': i.path})
     return json_response(preview_list)
 
 
-def enum_items(folder: Folder, exclude_re):
+def enum_items(folder: Folder, exclude_re) -> Generator[Item, None, None]:
     for d in folder.get_all_documents(include_subdirs=False):
         if not exclude_re.search(d.path):
             yield d
