@@ -86,7 +86,8 @@ def pluginupload_file2(doc_id: int, task_id: str, user_id):
 
 @upload.route('/pluginUpload/<int:doc_id>/<task_id>/', methods=['POST'])
 def pluginupload_file(doc_id: int, task_id: str):
-    verify_task_access(doc_id, task_id, AccessType.view)
+    d = get_doc_or_abort(doc_id)
+    verify_task_access(d, task_id, AccessType.view)
     file = request.files.get('file')
     if file is None:
         abort(400, 'Missing file')

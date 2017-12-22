@@ -15,7 +15,7 @@ import timApp.routes.lecture
 from timApp.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, get_viewable_blocks_or_none_if_admin, has_edit_access, get_doc_or_abort
 from timApp.common import get_user_settings, save_last_page, has_special_chars, post_process_pars, \
-    hide_names_in_teacher, is_considered_unpublished
+    hide_names_in_teacher
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.create_item import do_create_item, get_templates_for_folder
 from timApp.documentmodel.docparagraph import DocParagraph
@@ -125,7 +125,7 @@ def par_info(doc_id, par_id):
     def just_name(fullpath):
         return ('/' + fullpath).rsplit('/', 1)[1]
 
-    doc = DocEntry.find_by_id(doc_id, try_translation=True)
+    doc = get_doc_or_abort(doc_id)
     doc_name = doc.path
     info['doc_name'] = just_name(doc_name) if doc_name is not None else f'Document #{doc_id}'
 
@@ -236,7 +236,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
         return try_return_folder(item_path)
 
     doc_id = doc_info.id
-    edit_mode = request.args.get('edit', None) if has_edit_access(doc_id) else None
+    edit_mode = request.args.get('edit', None) if has_edit_access(doc_info) else None
     create_environment("%%")  # TODO get macroinf
 
     if route == 'teacher':
@@ -329,7 +329,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     no_question_auto_numbering = None
 
-    if route == 'lecture' and has_edit_access(doc_id):
+    if route == 'lecture' and has_edit_access(doc_info):
         no_question_auto_numbering = doc_settings.auto_number_questions()
 
     is_in_lecture = False
@@ -379,7 +379,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     settings = get_user_settings()
     # settings['add_button_text'] = doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
 
-    show_unpublished_bg = is_considered_unpublished(doc_id)
+    show_unpublished_bg = doc_info.block.is_unpublished()
     taketime("view to render")
 
     reqs = get_all_reqs()

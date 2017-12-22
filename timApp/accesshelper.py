@@ -13,9 +13,11 @@ from timApp.requesthelper import get_option
 from timApp.sessioninfo import get_current_user_id, logged_in, get_other_users_as_list, \
     get_current_user_group, get_current_user_object
 from timApp.timdb.accesstype import AccessType
+from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.item import Item
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.user import ItemOrBlock
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db, BlockAccess
@@ -30,36 +32,49 @@ def get_doc_or_abort(doc_id: int):
     return d
 
 
+def get_item_or_abort(item_id: int):
+    i = Item.find_by_id(item_id)
+    if not i:
+        abort(404, 'Item not found')
+    return i
+
+
+def get_folder_or_abort(folder_id: int):
+    f = Folder.get_by_id(folder_id)
+    if not f:
+        abort(404, 'Folder not found')
+    return f
+
+
 def verify_admin():
     if not check_admin_access():
         abort(403, 'This action requires administrative rights.')
 
 
-def verify_edit_access(block_id: int, require=True, message=None, check_duration=False):
-    return abort_if_not_access_and_required(has_edit_access(block_id), block_id, 'edit', require, message,
+def verify_edit_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
+    u = get_current_user_object()
+    return abort_if_not_access_and_required(u.has_edit_access(b), b.id, 'edit', require, message,
                                             check_duration)
 
 
-def verify_manage_access(block_id: int, require=True, message=None, check_duration=False):
-    return abort_if_not_access_and_required(has_manage_access(block_id), block_id, 'manage', require, message,
+def verify_manage_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
+    u = get_current_user_object()
+    return abort_if_not_access_and_required(u.has_manage_access(b), b.id, 'manage', require, message,
                                             check_duration)
 
 
-def has_edit_access(block_id):
-    return check_admin_access(block_id) or get_editable_blocks().get(block_id)
-
-
-def verify_access(block_id: int, access_type: AccessType, require: bool = True, message: Optional[str] = None):
+def verify_access(b: ItemOrBlock, access_type: AccessType, require: bool = True, message: Optional[str] = None):
+    u = get_current_user_object()
     if access_type == AccessType.view:
-        return abort_if_not_access_and_required(has_view_access(block_id), block_id, access_type, require, message)
+        return abort_if_not_access_and_required(u.has_view_access(b), b.id, access_type, require, message)
     elif access_type == AccessType.edit:
-        return abort_if_not_access_and_required(has_edit_access(block_id), block_id, access_type, require, message)
+        return abort_if_not_access_and_required(u.has_edit_access(b), b.id, access_type, require, message)
     elif access_type == AccessType.see_answers:
-        return abort_if_not_access_and_required(has_seeanswers_access(block_id), block_id, access_type, require, message)
+        return abort_if_not_access_and_required(u.has_seeanswers_access(b), b.id, access_type, require, message)
     elif access_type == AccessType.teacher:
-        return abort_if_not_access_and_required(has_teacher_access(block_id), block_id, access_type, require, message)
+        return abort_if_not_access_and_required(u.has_teacher_access(b), b.id, access_type, require, message)
     elif access_type == AccessType.manage:
-        return abort_if_not_access_and_required(has_manage_access(block_id), block_id, access_type, require, message)
+        return abort_if_not_access_and_required(u.has_manage_access(b), b.id, access_type, require, message)
     abort(400, 'Bad request - unknown access type')
 
 
@@ -75,7 +90,8 @@ def verify_teacher_access(b: ItemOrBlock, require=True, message=None, check_dura
 
 def verify_seeanswers_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
     u = get_current_user_object()
-    return abort_if_not_access_and_required(u.has_seeanswers_access(b), b.id, 'see answers', require, message, check_duration)
+    return abort_if_not_access_and_required(u.has_seeanswers_access(b), b.id, 'see answers', require, message,
+                                            check_duration)
 
 
 class ItemLockedException(Exception):
@@ -135,26 +151,37 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
     return None
 
 
-def has_view_access(block_id):
-    return check_admin_access(block_id) or get_viewable_blocks().get(block_id)
+def has_view_access(b: ItemOrBlock):
+    u = get_current_user_object()
+    return u.has_view_access(b)
 
 
-def has_comment_right(doc_id):
-    return has_view_access(doc_id) if logged_in() else None
+def has_edit_access(b: ItemOrBlock):
+    return get_current_user_object().has_edit_access(b)
 
 
-def verify_comment_right(doc_id):
-    if not has_comment_right(doc_id):
-        abort(403)
+def has_comment_right(b: ItemOrBlock):
+    return has_view_access(b) if logged_in() else None
 
 
-def has_read_marking_right(doc_id):
-    return has_view_access(doc_id) if logged_in() else None
+def has_read_marking_right(b: ItemOrBlock):
+    return has_view_access(b) if logged_in() else None
 
 
-def verify_read_marking_right(doc_id):
-    if not has_read_marking_right(doc_id):
-        abort(403)
+def has_teacher_access(b: ItemOrBlock):
+    return get_current_user_object().has_teacher_access(b)
+
+
+def has_manage_access(b: ItemOrBlock):
+    return get_current_user_object().has_manage_access(b)
+
+
+def has_seeanswers_access(b: ItemOrBlock):
+    return get_current_user_object().has_seeanswers_access(b)
+
+
+def has_ownership(b: ItemOrBlock):
+    return get_current_user_object().has_ownership(b)
 
 
 def check_admin_access(block_id=None):
@@ -167,21 +194,8 @@ def check_admin_access(block_id=None):
     return None
 
 
-def has_teacher_access(doc_id):
-    return check_admin_access(doc_id) or get_teachable_blocks().get(doc_id)
-
-
-def has_manage_access(doc_id):
-    return check_admin_access(doc_id) or get_manageable_blocks().get(doc_id)
-
-
-def has_seeanswers_access(doc_id):
-    return check_admin_access(doc_id) or get_see_answers_blocks().get(doc_id)
-
-
 def get_rights(d: Item):
     u = get_current_user_object()
-
     return {'editable': bool(u.has_edit_access(d)),
             'can_mark_as_read': bool(logged_in() and u.has_view_access(d)),
             'can_comment': bool(logged_in() and u.has_view_access(d)),
@@ -198,13 +212,19 @@ def verify_logged_in():
         abort(403, "You have to be logged in to perform this action.")
 
 
-def has_ownership(block_id):
-    return check_admin_access(block_id) or get_owned_blocks().get(block_id)
+def verify_ownership(b: ItemOrBlock):
+    u = get_current_user_object()
+    return u.has_ownership(b)
 
 
-def verify_ownership(block_id):
-    if not has_ownership(block_id):
-        abort(403, "Sorry, you don't have permission to view this resource.")
+def verify_read_marking_right(b: ItemOrBlock):
+    if not has_read_marking_right(b):
+        abort(403)
+
+
+def verify_comment_right(b: ItemOrBlock):
+    if not has_comment_right(b):
+        abort(403)
 
 
 def get_par_from_request(doc: Document, par_id=None, task_id_name=None) -> Tuple[Document, DocParagraph]:
@@ -229,7 +249,7 @@ def get_par_from_request(doc: Document, par_id=None, task_id_name=None) -> Tuple
     abort(404)
 
 
-def get_orig_doc_and_par_id_from_request():
+def get_orig_doc_and_par_id_from_request() -> Tuple[int, str]:
     ref_from = ((request.get_json() or {}).get('ref_from') or {})
     doc_id = ref_from.get('docId', get_option(request, 'ref_from_doc_id',
                                               default=None, cast=int))
@@ -238,19 +258,20 @@ def get_orig_doc_and_par_id_from_request():
     return doc_id, par_id
 
 
-def verify_task_access(doc_id, task_id_name, access_type):
+def verify_task_access(d: DocInfo, task_id_name, access_type):
     # If the user doesn't have access to the document, we need to check if the plugin was referenced
     # from another document
-    if not verify_access(doc_id, access_type, require=False):
+    if not verify_access(d, access_type, require=False):
         orig_doc, par_id = get_orig_doc_and_par_id_from_request()
         if orig_doc is None or par_id is None:
             abort(403)
-        verify_access(orig_doc, access_type)
-        par = Document(orig_doc).get_paragraph(par_id)
+        od = get_doc_or_abort(orig_doc)
+        verify_access(od, access_type)
+        par = od.document.get_paragraph(par_id)
         if not par.is_reference():
             abort(403)
         pars = dereference_pars([par])
-        found_par = next((p for p in pars if p.get_attr('taskId') == task_id_name and p.doc.doc_id == doc_id), None)
+        found_par = next((p for p in pars if p.get_attr('taskId') == task_id_name and p.doc.doc_id == d.id), None)
         if found_par is None:
             abort(403)
         return found_par

@@ -28,7 +28,7 @@ from werkzeug.contrib.profiler import ProfilerMiddleware
 
 from timApp.ReverseProxied import ReverseProxied
 from timApp.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
-    has_view_access, has_manage_access, ItemLockedException, get_doc_or_abort
+    has_manage_access, ItemLockedException, get_doc_or_abort
 from timApp.cache import cache
 from timApp.containerLink import call_plugin_resource
 from timApp.dbaccess import get_timdb
@@ -268,13 +268,15 @@ def reset_css():
 
 @app.route('/download/<int:doc_id>')
 def download_document(doc_id):
-    verify_edit_access(doc_id, "Sorry, you don't have permission to download this document.")
-    return Response(Document(doc_id).export_markdown(), mimetype="text/plain")
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
+    return Response(d.document.export_markdown(), mimetype="text/plain")
 
 
 @app.route('/download/<int:doc_id>/<int:major>/<int:minor>')
 def download_document_version(doc_id, major, minor):
-    verify_edit_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
     doc = DocumentVersion(doc_id, (major, minor))
     if not doc.exists():
         abort(404, "This document version does not exist.")
@@ -283,7 +285,8 @@ def download_document_version(doc_id, major, minor):
 
 @app.route('/diff/<int:doc_id>/<int:major1>/<int:minor1>/<int:major2>/<int:minor2>')
 def diff_document(doc_id, major1, minor1, major2, minor2):
-    verify_edit_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
     doc1 = DocumentVersion(doc_id, (major1, minor1))
     doc2 = DocumentVersion(doc_id, (major2, minor2))
     if not doc1.exists():
@@ -309,11 +312,11 @@ def get_image(image_id, image_filename):
 @app.route("/getTemplates")
 def get_templates():
     current_path = request.args.get('item_path', '')
-    doc = DocEntry.find_by_path(current_path, try_translation=True)
-    if not doc:
+    d = DocEntry.find_by_path(current_path, try_translation=True)
+    if not d:
         abort(404)
-    verify_edit_access(doc.id)
-    templates = get_templates_for_folder(doc.parent)
+    verify_edit_access(d)
+    templates = get_templates_for_folder(d.parent)
     return json_response(templates)
 
 
@@ -326,10 +329,8 @@ def create_item_route():
 
     d = None
     if copy_id:
-        verify_edit_access(copy_id)
-        d = DocEntry.find_by_id(copy_id, try_translation=True)
-        if not d:
-            return abort(404, 'The document to be copied was not found')
+        d = get_doc_or_abort(copy_id)
+        verify_edit_access(d)
         d = d.src_doc
         vr = d.document.validate()
         if vr.issues:
@@ -342,7 +343,7 @@ def create_item_route():
 @app.route("/translations/<int:doc_id>", methods=["GET"])
 def get_translations(doc_id):
     d = get_doc_or_abort(doc_id)
-    verify_manage_access(doc_id)
+    verify_manage_access(d)
 
     return json_response(d.translations)
 
@@ -355,20 +356,14 @@ def valid_language_id(lang_id):
 def create_translation_route(tr_doc_id, language):
     title = request.get_json().get('doc_title', None)
 
-    doc = DocEntry.find_by_id(tr_doc_id, try_translation=True)
+    doc = get_doc_or_abort(tr_doc_id)
 
-    if not doc:
-        abort(404, 'Document not found')
-
-    doc_id = doc.src_docid
-
-    if not has_view_access(doc_id):
-        abort(403, 'Permission denied')
+    verify_view_access(doc)
     if not valid_language_id(language):
         abort(404, 'Invalid language identifier')
     if doc.has_translation(language):
         raise ItemAlreadyExistsException('Translation for this language already exists')
-    verify_manage_access(doc_id)
+    verify_manage_access(doc.src_doc)
 
     src_doc = doc.src_doc.document
     cite_doc = create_translation(src_doc, get_current_user_group())
@@ -386,10 +381,8 @@ def update_translation(doc_id):
     (lang_id, doc_title) = verify_json_params('new_langid', 'new_title', require=True)
     if not valid_language_id(lang_id):
         abort(403, 'Invalid language identifier')
-    doc = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not doc:
-        abort(404, 'Source document does not exist')
-    if not has_manage_access(doc.src_docid) and not has_manage_access(doc.id):
+    doc = get_doc_or_abort(doc_id)
+    if not has_manage_access(doc) and not has_manage_access(doc):
         abort(403, "You need manage access of either this or the translated document")
     doc.lang_id = lang_id
     doc.title = doc_title
@@ -401,9 +394,10 @@ def update_translation(doc_id):
 
 
 def create_citation_doc(doc_id, doc_path, doc_title):
-    verify_edit_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
 
-    src_doc = Document(doc_id)
+    src_doc = d.document
 
     def factory(path, group, title):
         return create_citation(src_doc, group, path, title)
@@ -414,18 +408,19 @@ def create_citation_doc(doc_id, doc_path, doc_title):
 
 @app.route("/getBlock/<int:doc_id>/<par_id>")
 def get_block(doc_id, par_id):
-    verify_edit_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
     area_start = request.args.get('area_start')
     area_end = request.args.get('area_end')
     if area_start and area_end:
         try:
-            section = Document(doc_id).export_section(area_start, area_end)
+            section = d.document.export_section(area_start, area_end)
         except TimDbException as e:
             return abort(404, str(e))
         return json_response({"text": section})
     else:
         try:
-            par = Document(doc_id).get_paragraph(par_id)
+            par = d.document.get_paragraph(par_id)
         except TimDbException as e:
             return abort(404, str(e))
         return json_response({"text": par.get_exported_markdown()})
@@ -526,7 +521,8 @@ def setslidestatus():
     if 'doc_id' not in request.args or 'status' not in request.args:
         abort(404, "Missing doc id or status")
     doc_id = int(request.args['doc_id'])
-    verify_manage_access(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_manage_access(d)
     status = request.args['status']
     tempdb = get_tempdb()
     tempdb.slidestatuses.update_or_add_status(doc_id, status)

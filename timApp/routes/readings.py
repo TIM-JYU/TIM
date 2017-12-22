@@ -2,7 +2,7 @@ from flask import Blueprint, abort
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
-from timApp.accesshelper import verify_read_marking_right
+from timApp.accesshelper import verify_read_marking_right, get_doc_or_abort
 from timApp.documentmodel.document import Document
 from timApp.requesthelper import verify_json_params, get_referenced_pars_from_req
 from timApp.responsehelper import json_response, ok_response
@@ -19,8 +19,9 @@ readings = Blueprint('readings',
 
 @readings.route("/read/<int:doc_id>", methods=['GET'])
 def get_read_paragraphs(doc_id):
-    verify_read_marking_right(doc_id)
-    doc = Document(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_read_marking_right(d)
+    doc = d.document
     # TODO: Get the intersection of read markings of all session users
     result = get_readings(get_current_user_group(), doc)
     return json_response(result)
@@ -37,8 +38,9 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
     if current_app.config['DISABLE_AUTOMATIC_READINGS'] and paragraph_type in (ReadParagraphType.on_screen,
                                                                                ReadParagraphType.hover_par):
         return ok_response()
-    verify_read_marking_right(doc_id)
-    doc = Document(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_read_marking_right(d)
+    doc = d.document
     par_ids, = verify_json_params('pars', require=False)
     if not par_ids:
         par_ids = [par_id]
@@ -67,8 +69,9 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
 
 @readings.route("/read/<int:doc_id>", methods=['PUT'])
 def mark_document_read(doc_id):
-    verify_read_marking_right(doc_id)
-    doc = Document(doc_id)
+    d = get_doc_or_abort(doc_id)
+    verify_read_marking_right(d)
+    doc = d.document
     for group_id in get_session_usergroup_ids():
         mark_all_read(group_id, doc)
     db.session.commit()

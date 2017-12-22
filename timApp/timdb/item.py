@@ -129,7 +129,7 @@ class Item:
         if b:
             if b.type_id == blocktypes.DOCUMENT:
                 from timApp.timdb.models.docentry import DocEntry
-                return DocEntry.find_by_id(item_id)
+                return DocEntry.find_by_id(item_id, try_translation=True)
             elif b.type_id == blocktypes.FOLDER:
                 from timApp.timdb.models.folder import Folder
                 return Folder.get_by_id(item_id)

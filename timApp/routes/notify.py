@@ -32,9 +32,7 @@ sent_mails_in_testing = []
 @notify.route('/notify/<int:doc_id>', methods=['GET'])
 def get_notify_settings(doc_id):
     verify_logged_in()
-    d = DocEntry.find_by_id(doc_id, try_translation=True)
-    if not d:
-        abort(404)
+    d = get_doc_or_abort(doc_id)
     verify_view_access(d)
     return json_response(
         get_current_user_object().get_notify_settings(d))
