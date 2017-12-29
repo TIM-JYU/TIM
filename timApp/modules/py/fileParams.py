@@ -910,12 +910,16 @@ def string_to_string_replace_attribute(line, what_to_replace, query):
     return line
 
 
+allowed_tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd', 'span', 'li', 'ul', 'ol']
+allowed_attrs = {
+    'a': ['href'],
+    'span': ['class']
+}
+
+
 def allow(s):
-    allowed_tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd', 'span']
-    allowed_attrs = {
-        'a': ['href'],
-        'span': ['class']
-    }
+    if not s:
+        return s
     return bleach.clean(s, allowed_tags, allowed_attrs)
 
 

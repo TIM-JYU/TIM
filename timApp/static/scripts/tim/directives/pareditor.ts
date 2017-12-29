@@ -23,6 +23,7 @@ markAsUsed(draggable, rangyinputs);
 
 const MENU_BUTTON_CLASS = "menuButtons";
 const MENU_BUTTON_CLASS_DOT = "." + MENU_BUTTON_CLASS;
+const CURSOR = "⁞";
 
 interface IParEditorScope extends IScope {
     textAreaText: string;
@@ -136,6 +137,7 @@ interface IParEditorScope extends IScope {
     outdentClicked(): void;
     paragraphClicked(): void;
     pluginClicked(e: Event, key: string): void;
+    putTemplate(text: string): void;
     powerClicked(): void;
     redoClicked(): void;
     releaseClicked(): void;
@@ -332,21 +334,71 @@ timApp.directive("pareditor", [
                 let $plugintab;
                 $scope.pluginButtonList = {};
 
+/*
+Templatejen format is  either the old pluginien syntax:
+
+    {
+        'text' : ['my1', 'my2'],      // list of tabs firts
+        'templates' : [               // and then array of arrays of items
+            [
+                {'data': 'cat', 'expl': 'Add cat', 'text': 'Cat'},
+                {'data': 'dog', 'expl': 'Add dog'},
+            ],
+            [
+                {'data': 'fox', 'expl': 'Add fox', 'text': 'Fox'},
+            ]
+        ]
+    }
+
+or never one that if more familiar to write in YAML:
+
+    {
+        'templates' :
+          { 'my1':  // list of objects where is the name of tab as a key
+            [
+                {'data': 'cat', 'expl': 'Add cat', 'text': 'Cat'},
+                {'data': 'dog', 'expl': 'Add dog'},
+            ]
+           ,
+           'my2':  // if only one, does not need to be array
+                {'data': 'fox', 'expl': 'Add fox', 'text': 'Fox'},
+          }
+    }
+
+ */
+
                 function getPluginsInOrder() {
                     for (const plugin in $window.reqs) {
                         if ($window.reqs.hasOwnProperty(plugin)) {
                             const data = $window.reqs[plugin];
                             if (data.templates) {
-                                const tabs = data.text || [plugin];
-                                for (let j = 0; j < tabs.length; j++) {
+                                const isobj = !(data.templates instanceof Array);
+                                let tabs = data.text || [plugin];
+                                if ( isobj ) tabs =  Object.keys(data.templates);
+                                const len = tabs.length;
+                                for (let j = 0; j < len; j++) {
                                     const tab = tabs[j];
+                                    let templs = null;
+                                    if ( isobj ) {
+                                        templs = data.templates[tab];
+                                    } else {
+                                        templs = data.templates[j];
+                                    }
+                                    if ( !(templs instanceof Array) ) templs = [templs];
                                     if (!$scope.pluginButtonList[tab]) {
                                         $scope.pluginButtonList[tab] = [];
                                     }
-                                    for (let k = 0; k < data.templates[j].length; k++) {
-                                        const template = data.templates[j][k];
-                                        const text = (template.text || template.file);
-                                        const clickfn = "getTemplate('" + plugin + "','" + template.file + "', '" + j + "'); wrapFn()";
+                                    for (let k = 0; k < templs.length; k++) {
+                                        let template = templs[k];
+                                        if ( !(template instanceof Object))
+                                            template = {'text': template, 'data': template};
+                                        const text = (template.text || template.file || template.data);
+                                        const tempdata = (template.data || null);
+                                        let clickfn;
+                                        if ( tempdata )
+                                            clickfn = "putTemplate('"+tempdata+"'); wrapFn()";
+                                        else
+                                            clickfn = "getTemplate('" + plugin + "','" + template.file + "', '" + j + "'); wrapFn()";
                                         $scope.pluginButtonList[tab].push($scope.createMenuButton(text, template.expl, clickfn));
                                     }
                                 }
@@ -397,8 +449,8 @@ timApp.directive("pareditor", [
                         var initialText = "";
                         if ( $scope.options.texts ) initialText = $scope.options.texts.initialText;
                         if ( initialText ) {
-                            var pos = initialText.indexOf("⁞");
-                            if ( pos >= 0 ) initialText = initialText.replace("⁞", ""); // cursor pos
+                            var pos = initialText.indexOf(CURSOR);
+                            if ( pos >= 0 ) initialText = initialText.replace(CURSOR, ""); // cursor pos
                             $scope.setEditorText(initialText);
                             $scope.initialText = initialText;
                             angular.extend($scope.extraData, {});
@@ -1620,6 +1672,8 @@ timApp.directive("pareditor", [
 
                     $scope.insertTemplate = function(text) {  // for textArea
                         $scope.closeMenu(null, true);
+                        const ci = text.indexOf(CURSOR);
+                        if ( ci >= 0 ) text = text.slice(0,ci) + text.slice(ci+1);
                         const pluginnamehere = "PLUGINNAMEHERE";
                         const searchEndIndex = $scope.editor.getSelection().start;
                         $scope.editor.replaceSelectedText(text);
@@ -1627,6 +1681,9 @@ timApp.directive("pareditor", [
                         const index = $scope.editor.val().lastIndexOf(pluginnamehere, searchStartIndex);
                         if (index > searchEndIndex) {
                             $scope.editor.setSelection(index, index + pluginnamehere.length);
+                        }
+                        if ( ci >=  0) {
+                            $scope.editor.setSelection(searchEndIndex+ci);
                         }
                         $scope.wrapFn();
                     };
@@ -1992,6 +2049,8 @@ timApp.directive("pareditor", [
 
                     $scope.insertTemplate = function(text) { // for ACE-editor
                         $scope.closeMenu(null, true);
+                        const ci = text.indexOf(CURSOR);
+                        if ( ci >= 0 ) text = text.slice(0,ci) + text.slice(ci+1);
                         const range = $scope.editor.getSelectionRange();
                         const start = range.start;
                         $scope.snippetManager.insertSnippet($scope.editor, text);
@@ -2002,6 +2061,13 @@ timApp.directive("pareditor", [
                             range.start.column = index;
                             range.end.row = start.row;
                             range.end.column = index + pluginnamehere.length;
+                            $scope.editor.selection.setRange(range);
+                        }
+                        if ( ci >= 0 ) {
+                            const pos = $scope.editor.session.doc.positionToIndex(start);
+                            const r = $scope.editor.session.doc.indexToPosition(pos+ci);
+                            range.start = r;
+                            range.end = r;
                             $scope.editor.selection.setRange(range);
                         }
                         $scope.wrapFn();
@@ -2240,6 +2306,14 @@ timApp.directive("pareditor", [
                 $scope.pluginClicked = function($event, key) {
                     $scope.createMenu($event, $scope.pluginButtonList[key]);
                 };
+
+
+                $scope.putTemplate = function(data) {
+                    if (!touchDevice) {
+                        $scope.editor.focus();
+                    }
+                    $scope.insertTemplate(data);
+                }
 
                 $scope.getTemplate = function(plugin, template, index) {
                     $.ajax({
