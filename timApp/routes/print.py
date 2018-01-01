@@ -117,14 +117,18 @@ def get_printed_document(doc_path):
     template_doc_id = request.args.get('template_doc_id')
     plugins_user_print = request.args.get('plugins_user_code')
 
-    if file_type is None or file_type.lower() not in [f.value for f in PrintFormat]:
+    if file_type is None:
+        file_type = 'pdf'
+
+    if file_type.lower() not in [f.value for f in PrintFormat]:
         abort(400, "The supplied query parameter 'file_type' was invalid.")
 
     if template_doc_id is None:
         abort(400, "The supplied query parameter 'template_doc_id' was invalid.")
 
     if plugins_user_print is None or isinstance(plugins_user_print, bool):
-        abort(400, "The supplied query parameter 'plugins_user_code' was invalid.")
+        plugins_user_print = 'false'
+        # abort(400, "The supplied query parameter 'plugins_user_code' was invalid.")
 
     plugins_user_print = plugins_user_print.lower() == 'true'
 

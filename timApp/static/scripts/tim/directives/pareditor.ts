@@ -1646,15 +1646,9 @@ or never one that if more familiar to write in YAML:
                         const word = value.substring(selection.start - before.length, selection.end + after.length);
                         return (word.indexOf(before) === 0 && word.lastIndexOf(after) === (word.length - after.length));
                     };
-                    //Style
-                    //Insert
-                    /**
-                     * @param descDefault Placeholder for description
-                     * @param linkDefault Placeholder for link address
-                     * @param isImage true, if link is an image
-                     */
-                    $scope.linkClicked = function(descDefault, linkDefault, isImage) {
-                        const image = (isImage) ? "!" : "";
+
+
+                    $scope.replaceSelected = function(begin, descDefault, mid, seltext, end) {
                         if ($scope.editor.getSelection().text === "") {
                             if ($scope.selectWord()) {
                                 descDefault = $scope.editor.getSelection().text;
@@ -1662,7 +1656,32 @@ or never one that if more familiar to write in YAML:
                         } else {
                             descDefault = $scope.editor.getSelection().text;
                         }
-                        $scope.editor.replaceSelectedText(image + "[" + descDefault + "](" + linkDefault + ")");
+                        $scope.editor.replaceSelectedText(begin + descDefault + mid + seltext + end);
+                        const pos = $scope.editor.getSelection().start-end.length;
+                        $scope.editor.setSelection(pos-seltext.length, pos);
+                    }
+                    //Style
+                    //Insert
+                    //Style
+                    //Insert
+                    /**
+                     * @param descDefault Placeholder for description
+                     * @param styleDefault Placeholder for link address
+                     */
+                    $scope.styleClicked = function(descDefault, styleDefault) {
+                        // $scope.editor.replaceSelectedText("[" + descDefault + "]{." + styleDefault + "}");
+                        $scope.replaceSelected("[",descDefault,"]{.", styleDefault, "}");
+                    };
+
+                    /**
+                     * @param descDefault Placeholder for description
+                     * @param linkDefault Placeholder for link address
+                     * @param isImage true, if link is an image
+                     */
+                    $scope.linkClicked = function(descDefault, linkDefault, isImage) {
+                        const image = (isImage) ? "!" : "";
+                        // $scope.editor.replaceSelectedText(image + "[" + descDefault + "](" + linkDefault + ")");
+                        $scope.replaceSelected(image+"[",descDefault,"](", linkDefault, ")");
                     };
 
                     $scope.listClicked = function() {
