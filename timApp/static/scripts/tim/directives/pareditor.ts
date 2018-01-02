@@ -142,6 +142,7 @@ interface IParEditorScope extends IScope {
     redoClicked(): void;
     releaseClicked(): void;
     renameTaskNamesClicked(inputs: JQuery[], duplicates: string[][], renameDuplicates: boolean): void;
+    replaceSelected(begin: string, descDefault: string, mid: string, seltext: string, end: string): void;
     rightClicked(): void;
     ruleClicked(): void;
     saveClicked(): void;
