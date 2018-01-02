@@ -35,7 +35,6 @@ class CopyFolderCtrl implements IController {
         } catch (e) {
             $window.alert(e.data.error);
         }
-        this.scope.$apply();
     }
 
     async copyFolder(path: string, exclude: string) {
@@ -45,10 +44,8 @@ class CopyFolderCtrl implements IController {
             this.copyingFolder = "finished";
             this.copyPreviewList = null;
             this.newFolder = result.data;
-            this.scope.$apply();
         } catch (e) {
             this.copyingFolder = "notcopying";
-            this.scope.$apply();
             $window.alert(e.data.error);
         }
     }

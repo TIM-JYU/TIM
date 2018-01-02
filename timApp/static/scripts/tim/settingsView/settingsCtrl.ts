@@ -15,7 +15,6 @@ timApp.controller("SettingsCtrl", ["$scope", function(sc) {
         } finally {
             sc.saving = false;
         }
-        sc.$apply();
     };
 
     sc.updateCss = function() {

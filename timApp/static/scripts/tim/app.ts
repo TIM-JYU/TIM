@@ -110,3 +110,8 @@ timApp.config(injectProviders);
 timApp.run(injectServices);
 timApp.run(initUserService);
 timApp.run(loadMap);
+
+// https://stackoverflow.com/questions/35629246/typescript-async-await-and-angular-q-service/41825004#41825004
+timApp.run(["$window", "$q", ($window: angular.IWindowService, $q: angular.IQService) => {
+    $window.Promise = $q;
+}]);
