@@ -2,6 +2,8 @@ import {$log, $timeout} from "../ngimport";
 import {BaseParEditor, focusAfter, IEditorCallbacks} from "./BaseParEditor";
 import {wrapText} from "../controllers/view/editing";
 
+const CURSOR = "⁞";
+
 export class TextAreaParEditor extends BaseParEditor {
     public editor: JQuery;
     private editorElement: HTMLTextAreaElement;
@@ -325,16 +327,10 @@ export class TextAreaParEditor extends BaseParEditor {
      * @param isImage true, if link is an image
      */
     @focusAfter
-    linkClicked(descDefault, linkDefault, isImage) {
+    linkClicked(descDefault: string, linkDefault: string, isImage: boolean) {
         const image = (isImage) ? "!" : "";
-        if (this.editor.getSelection().text === "") {
-            if (this.selectWord()) {
-                descDefault = this.editor.getSelection().text;
-            }
-        } else {
-            descDefault = this.editor.getSelection().text;
-        }
-        this.editor.replaceSelectedText(image + "[" + descDefault + "](" + linkDefault + ")");
+        // this.editor.replaceSelectedText(image + "[" + descDefault + "](" + linkDefault + ")");
+        this.replaceSelected(image + "[", descDefault, "](", linkDefault, ")");
     }
 
     selectLine(select) {
@@ -369,6 +365,8 @@ export class TextAreaParEditor extends BaseParEditor {
 
     @focusAfter
     insertTemplate(text) {
+        const ci = text.indexOf(CURSOR);
+        if ( ci >= 0 ) text = text.slice(0,ci) + text.slice(ci+1);
         const pluginnamehere = "PLUGINNAMEHERE";
         const searchEndIndex = this.editor.getSelection().start;
         this.editor.replaceSelectedText(text);
@@ -376,6 +374,9 @@ export class TextAreaParEditor extends BaseParEditor {
         const index = this.editor.val().lastIndexOf(pluginnamehere, searchStartIndex);
         if (index > searchEndIndex) {
             this.editor.setSelection(index, index + pluginnamehere.length);
+        }
+        if (ci >= 0) {
+            this.editor.setSelection(searchEndIndex + ci);
         }
     }
 
@@ -570,5 +571,23 @@ export class TextAreaParEditor extends BaseParEditor {
             editor.selectionEnd = start;
         });
         // });
+    }
+
+    replaceSelected(begin: string, descDefault: string, mid: string, seltext: string, end: string) {
+        if (this.editor.getSelection().text === "") {
+            if (this.selectWord()) {
+                descDefault = this.editor.getSelection().text;
+            }
+        } else {
+            descDefault = this.editor.getSelection().text;
+        }
+        this.editor.replaceSelectedText(begin + descDefault + mid + seltext + end);
+        const pos = this.editor.getSelection().start - end.length;
+        this.editor.setSelection(pos - seltext.length, pos);
+    }
+
+    styleClicked(descDefault: string, styleDefault: string) {
+        // this.editor.replaceSelectedText("[" + descDefault + "]{." + styleDefault + "}");
+        this.replaceSelected("[", descDefault, "]{.", styleDefault, "}");
     }
 }

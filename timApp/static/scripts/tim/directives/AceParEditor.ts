@@ -3,6 +3,8 @@ import {$log, $timeout} from "../ngimport";
 import {BaseParEditor, focusAfter, IEditorCallbacks} from "./BaseParEditor";
 import {wrapText} from "../controllers/view/editing";
 
+const CURSOR = "⁞";
+
 interface ISnippetManager {
     insertSnippet(editor: AceAjax.Editor, text: string): void;
 }
@@ -438,6 +440,8 @@ export class AceParEditor extends BaseParEditor {
 
     @focusAfter
     insertTemplate(text) {
+        const ci = text.indexOf(CURSOR);
+        if (ci >= 0) text = text.slice(0, ci) + text.slice(ci + 1);
         const range = this.editor.getSelectionRange();
         const start = range.start;
         this.snippetManager.insertSnippet(this.editor, text);
@@ -448,6 +452,13 @@ export class AceParEditor extends BaseParEditor {
             range.start.column = index;
             range.end.row = start.row;
             range.end.column = index + pluginnamehere.length;
+            this.editor.selection.setRange(range, false);
+        }
+        if (ci >= 0) {
+            const pos = this.editor.session.doc.positionToIndex(start, 0);
+            const r = this.editor.session.doc.indexToPosition(pos + ci, 0);
+            range.start = r;
+            range.end = r;
             this.editor.selection.setRange(range, false);
         }
     }

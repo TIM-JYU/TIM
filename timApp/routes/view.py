@@ -385,6 +385,21 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     reqs = get_all_reqs()
     # taketime("reqs done")
+    doctemps = doc_settings.get('editorTemplates')
+    if doctemps:
+        reqs["usertemps"] = doctemps
+        '''
+        reqs["usertemps"] = {
+        'text' : ['omat'],
+        'templates' : [
+            [
+                {'data': 'kissa', 'expl': 'Lisää kissa', 'text': 'Kissa'},
+                {'data': 'koira', 'expl': 'Lisää koira'},
+            ]
+        ]
+        }
+        '''
+
     return render_template(template_name,
                            access=access,
                            hide_links=should_hide_links(doc_settings, rights),

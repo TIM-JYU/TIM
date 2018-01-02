@@ -1,30 +1,26 @@
 // TODO: save cursor position when changing editor
 
-import angular, {IPromise, IController, IRootElementService, IScope} from "angular";
+import angular, {IController, IPromise, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
+import * as acemodule from "tim/ace";
 import {timApp} from "tim/app";
 import * as draggable from "tim/directives/draggable";
 import {setEditorScope} from "tim/editorScope";
-import {markAsUsed} from "tim/utils";
-import {setsetting} from "tim/utils";
-import Editor = AceAjax.Editor;
-import VirtualRenderer = AceAjax.VirtualRenderer;
-import Ace = AceAjax.Ace;
-import * as acemodule from "tim/ace";
+import {markAsUsed, setsetting} from "tim/utils";
+import {getActiveDocument} from "../controllers/view/document";
+import {isSettings} from "../controllers/view/parhelpers";
 import {lazyLoadTS} from "../lazyLoad";
 import {$compile, $http, $localStorage, $log, $timeout, $upload, $window} from "../ngimport";
 import {ParCompiler} from "../services/parCompiler";
-import {getActiveDocument} from "../controllers/view/document";
-import {TextAreaParEditor} from "./TextAreaParEditor";
 import {AceParEditor} from "./AceParEditor";
-import {wrapText} from "../controllers/view/editing";
-import {isSettings} from "../controllers/view/parhelpers";
+import {TextAreaParEditor} from "./TextAreaParEditor";
 
 markAsUsed(draggable, rangyinputs);
 
 const MENU_BUTTON_CLASS = "menuButtons";
 const MENU_BUTTON_CLASS_DOT = "." + MENU_BUTTON_CLASS;
+const CURSOR = "⁞";
 
 export class PareditorController implements IController {
     private static $inject = ["$scope", "$element"];
@@ -294,21 +290,70 @@ export class PareditorController implements IController {
         this.newAttr = "";
     }
 
+    /*
+Template format is either the old plugin syntax:
+
+    {
+        'text' : ['my1', 'my2'],      // list of tabs firts
+        'templates' : [               // and then array of arrays of items
+            [
+                {'data': 'cat', 'expl': 'Add cat', 'text': 'Cat'},
+                {'data': 'dog', 'expl': 'Add dog'},
+            ],
+            [
+                {'data': 'fox', 'expl': 'Add fox', 'text': 'Fox'},
+            ]
+        ]
+    }
+
+or newer one that is more familiar to write in YAML:
+
+    {
+        'templates' :
+          { 'my1':  // list of objects where is the name of tab as a key
+            [
+                {'data': 'cat', 'expl': 'Add cat', 'text': 'Cat'},
+                {'data': 'dog', 'expl': 'Add dog'},
+            ]
+           ,
+           'my2':  // if only one, does not need to be array
+                {'data': 'fox', 'expl': 'Add fox', 'text': 'Fox'},
+          }
+    }
+
+ */
     getPluginsInOrder() {
         for (const plugin in $window.reqs) {
             if ($window.reqs.hasOwnProperty(plugin)) {
                 const data = $window.reqs[plugin];
                 if (data.templates) {
-                    const tabs = data.text || [plugin];
-                    for (let j = 0; j < tabs.length; j++) {
+                    const isobj = !(data.templates instanceof Array);
+                    let tabs = data.text || [plugin];
+                    if (isobj) tabs = Object.keys(data.templates);
+                    const len = tabs.length;
+                    for (let j = 0; j < len; j++) {
                         const tab = tabs[j];
+                        let templs = null;
+                        if (isobj) {
+                            templs = data.templates[tab];
+                        } else {
+                            templs = data.templates[j];
+                        }
+                        if (!(templs instanceof Array)) templs = [templs];
                         if (!this.pluginButtonList[tab]) {
                             this.pluginButtonList[tab] = [];
                         }
-                        for (let k = 0; k < data.templates[j].length; k++) {
-                            const template = data.templates[j][k];
-                            const text = (template.text || template.file);
-                            const clickfn = `$ctrl.getTemplate('${plugin}','${template.file}', '${j}'); $ctrl.wrapFn()`;
+                        for (let k = 0; k < templs.length; k++) {
+                            let template = templs[k];
+                            if (!(template instanceof Object))
+                                template = {text: template, data: template};
+                            const text = (template.text || template.file || template.data);
+                            const tempdata = (template.data || null);
+                            let clickfn;
+                            if (tempdata)
+                                clickfn = "putTemplate('" + tempdata + "'); wrapFn()";
+                            else
+                                clickfn = "getTemplate('" + plugin + "','" + template.file + "', '" + j + "'); wrapFn()";
                             this.pluginButtonList[tab].push(this.createMenuButton(text, template.expl, clickfn));
                         }
                     }
@@ -344,8 +389,8 @@ export class PareditorController implements IController {
             var initialText = "";
             if (this.options.texts) initialText = this.options.texts.initialText;
             if (initialText) {
-                var pos = initialText.indexOf("⁞");
-                if (pos >= 0) initialText = initialText.replace("⁞", ""); // cursor pos
+                var pos = initialText.indexOf(CURSOR);
+                if (pos >= 0) initialText = initialText.replace(CURSOR, ""); // cursor pos
                 this.editor.setEditorText(initialText);
                 this.initialText = initialText;
                 angular.extend(this.extraData, {});
@@ -1019,6 +1064,13 @@ export class PareditorController implements IController {
 
     pluginClicked($event, key) {
         this.createMenu($event, this.pluginButtonList[key]);
+    }
+
+    putTemplate(data) {
+        if (!this.touchDevice) {
+            this.editor.focus();
+        }
+        this.editor.insertTemplate(data);
     }
 
     getTemplate(plugin, template, index) {

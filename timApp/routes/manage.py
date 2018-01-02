@@ -76,7 +76,6 @@ def add_permission(item_id, group_name, perm_type):
     if get_current_user_object().get_personal_folder().id == item_id:
         if perm_type == 'owner':
             abort(403, 'You cannot add owners to your personal folder.')
-    timdb = get_timdb()
     try:
         for group_id in group_ids:
             grant_access(group_id,
@@ -88,10 +87,10 @@ def add_permission(item_id, group_name, perm_type):
                          duration_to=dur_to,
                          duration=duration,
                          commit=False)
-        timdb.commit()
     except KeyError:
         abort(400, 'Invalid permission type.')
     check_ownership_loss(is_owner, item_id, perm_type)
+    db.session.commit()
     return ok_response()
 
 
@@ -104,6 +103,7 @@ def remove_permission(item_id, group_id, perm_type):
     except KeyError:
         abort(400, 'Unknown permission type')
     check_ownership_loss(had_ownership, item_id, perm_type)
+    db.session.commit()
     return ok_response()
 
 
@@ -113,7 +113,7 @@ def check_ownership_loss(had_ownership, item_id, perm_type):
         delattr(g, 'owned')
     i = Item.find_by_id(item_id)
     if had_ownership and not has_ownership(i):
-        grant_access(get_current_user_group(), item_id, perm_type)
+        grant_access(get_current_user_group(), item_id, perm_type, commit=False)
         abort(403, 'You cannot remove ownership from yourself.')
 
 
@@ -223,12 +223,12 @@ def rename_folder(item_id):
     return json_response({'new_name': new_name})
 
 
-@manage_page.route("/permissions/get/<int:doc_id>")
-def get_permissions(doc_id):
+@manage_page.route("/permissions/get/<int:item_id>")
+def get_permissions(item_id):
     timdb = get_timdb()
-    d = get_doc_or_abort(doc_id)
-    verify_manage_access(d)
-    grouprights = timdb.users.get_rights_holders(doc_id)
+    i = get_item_or_abort(item_id)
+    verify_manage_access(i)
+    grouprights = timdb.users.get_rights_holders(item_id)
     return json_response({'grouprights': grouprights, 'accesstypes': AccessType.query.all()})
 
 
