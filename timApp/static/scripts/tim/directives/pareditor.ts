@@ -468,6 +468,7 @@ or newer one that is more familiar to write in YAML:
     editorReady() {
         this.editor.focus();
         this.editor.bottomClicked();
+        this.element.find(".editorContainer").removeClass("editor-loading");
     }
 
     editorChanged() {
@@ -1170,6 +1171,8 @@ or newer one that is more familiar to write in YAML:
      */
     async changeEditor(newMode) {
         let text = "";
+        const editorContainer = this.element.find(".editorContainer");
+        editorContainer.addClass("editor-loading");
         if (this.editor) {
             text = this.editor.getEditorText();
         }
@@ -1188,9 +1191,7 @@ or newer one that is more familiar to write in YAML:
                 class: "editor",
                 id: "ace_editor",
             });
-            const editorContainer = $(".editorContainer");
             editorContainer.append(neweditorElem);
-            editorContainer.addClass("editor-loading");
             const neweditor = ace.edit("ace_editor");
 
             this.editor = new AceParEditor(ace, neweditor, {
@@ -1233,7 +1234,6 @@ or newer one that is more familiar to write in YAML:
                 createCompleter($window.wordList, "document"),
                 createCompleter(userWordList, "user"),
             ]);
-            editorContainer.removeClass("editor-loading");
         }
         try {
             await this.setInitialText();
