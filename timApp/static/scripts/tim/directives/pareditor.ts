@@ -351,9 +351,9 @@ or newer one that is more familiar to write in YAML:
                             const tempdata = (template.data || null);
                             let clickfn;
                             if (tempdata)
-                                clickfn = "putTemplate('" + tempdata + "'); wrapFn()";
+                                clickfn = "$ctrl.putTemplate('" + tempdata + "')";
                             else
-                                clickfn = "getTemplate('" + plugin + "','" + template.file + "', '" + j + "'); wrapFn()";
+                                clickfn = "$ctrl.getTemplate('" + plugin + "','" + template.file + "', '" + j + "')";
                             this.pluginButtonList[tab].push(this.createMenuButton(text, template.expl, clickfn));
                         }
                     }
@@ -380,7 +380,7 @@ or newer one that is more familiar to write in YAML:
             "title": "Help for plugin attributes",
             "onclick": "window.open('https://tim.jyu.fi/view/tim/ohjeita/csPlugin', '_blank')"
         });
-        this.plugintab.append($compile(help)(this.scope as any));
+        this.plugintab.append($compile(help)(this.scope));
     }
 
     async setInitialText() {
@@ -1019,7 +1019,7 @@ or newer one that is more familiar to write in YAML:
             "class": "timButton editMenuButton",
             "text": text,
             "title": title,
-            "ng-click": clickfunction,
+            "ng-click": clickfunction + "; $ctrl.closeMenu($event, true); $ctrl.wrapFn()",
             // "width": button_width,
         }));
         return $span;
@@ -1035,12 +1035,12 @@ or newer one that is more familiar to write in YAML:
             $actionDiv.append(buttons[i]);
         }
 
-        $actionDiv.append(this.createMenuButton("Close menu", "", "$ctrl.closeMenu(null, true); wrapFn()"));
+        $actionDiv.append(this.createMenuButton("Close menu", "", ""));
         $actionDiv.offset(coords);
         $actionDiv.css("position", "absolute"); // IE needs this
         $actionDiv = $compile($actionDiv)(this.scope);
         $button.parent().prepend($actionDiv);
-        $(document).on("mouseup.closemenu", this.closeMenu);
+        $(document).on("mouseup.closemenu", (e) => this.closeMenu(e, false));
     }
 
     tableClicked($event) {
@@ -1048,7 +1048,7 @@ or newer one that is more familiar to write in YAML:
         for (const key in this.tables) {
             if (this.tables.hasOwnProperty(key)) {
                 const text = key.charAt(0).toUpperCase() + key.substring(1);
-                const clickfn = "$ctrl.insertTemplate(tables['" + key + "']); $ctrl.closeMenu(); $ctrl.wrapFn()";
+                const clickfn = "$ctrl.insertTemplate(tables['" + key + "'])";
                 buttons.push(this.createMenuButton(text, "", clickfn));
             }
         }
@@ -1057,7 +1057,7 @@ or newer one that is more familiar to write in YAML:
 
     slideClicked($event) {
         const buttons = [];
-        buttons.push(this.createMenuButton("Slide break", "Break text to start a new slide", "$ctrl.ruleClicked(); $ctrl.wrapFn()"));
+        buttons.push(this.createMenuButton("Slide break", "Break text to start a new slide", "$ctrl.editor.ruleClicked()"));
         buttons.push(this.createMenuButton("Slide fragment", "Content inside the fragment will be hidden and shown when next is clicked in slide view", "$ctrl.editor.surroundClicked('§§', '§§')"));
         buttons.push(this.createMenuButton("Fragment block", "Content inside will show as a fragment and may contain inner slide fragments", "$ctrl.editor.surroundClicked('<§', '§>')"));
         this.createMenu($event, buttons);

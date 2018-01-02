@@ -217,7 +217,7 @@ export class AceParEditor extends BaseParEditor {
         }
         var toNextLine;
         if ((line.length - cursor.column) > 0) {
-            toNextLine = line.substring(cursor.column, line.end);
+            toNextLine = line.substring(cursor.column, line.length);
         } else {
             toNextLine = "";
         }
@@ -429,7 +429,7 @@ export class AceParEditor extends BaseParEditor {
         }
         let toNextLine;
         if ((line.length - pos.column) > 0) {
-            toNextLine = line.substring(pos.column, line.end);
+            toNextLine = line.substring(pos.column, line.length);
         } else {
             toNextLine = "";
         }
