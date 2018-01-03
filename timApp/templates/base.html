@@ -26,6 +26,7 @@
             <script src="/static/scripts/build/tim.js"></script>
         {% endif %}
         <script>
+            var IS_TESTING = {{ config.TESTING|tojson }};
             SystemJS.amdDefine("tim/angularmodules.ts", ["exports"], function () {
                 return [];
             });

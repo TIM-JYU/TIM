@@ -596,4 +596,8 @@ export class AceParEditor extends BaseParEditor {
             editor.selection.clearSelection();
         });
     }
+
+    setAutoCompletion(enable: boolean) {
+        this.editor.setOptions({enableLiveAutocompletion: enable});
+    }
 }

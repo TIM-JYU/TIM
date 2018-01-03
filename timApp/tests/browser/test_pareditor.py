@@ -44,7 +44,6 @@ class ParEditorTest(BrowserTest):
         pareditor = self.get_editor_element()
         ActionChains(self.drv).send_keys('# hello\n\nworld').perform()
         preview = find_preview_element(pareditor)
-        preview.click()  # stop cursor blinking
         self.wait_for_preview_to_finish()
         self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world')
         change_editor_button = get_change_editor_button(pareditor)
@@ -59,7 +58,6 @@ class ParEditorTest(BrowserTest):
 
         # after deleting the '!', the screenshot should be the same
         ActionChains(self.drv).send_keys(Keys.PAGE_DOWN, Keys.BACKSPACE).perform()
-        preview.click()  # stop cursor blinking
         self.wait_for_preview_to_finish()
         self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world')
 
