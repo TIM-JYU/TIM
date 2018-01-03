@@ -384,7 +384,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     reqs = get_all_reqs()
     # taketime("reqs done")
-    doctemps = doc_settings.get('editorTemplates')
+    doctemps = doc_settings.get('editor_templates')
     if doctemps:
         reqs["usertemps"] = doctemps
         '''
