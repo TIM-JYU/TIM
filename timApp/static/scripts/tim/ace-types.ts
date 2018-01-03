@@ -5,6 +5,7 @@ import VirtualRenderer = AceAjax.VirtualRenderer;
 export interface IAceVirtualRenderer extends VirtualRenderer {
     setScrollMargin(top: number, bottom: number, left: number, right: number): void;
     setVScrollBarAlwaysVisible(visible: boolean): void;
+    $cursorLayer: {setBlinking(b: boolean): void};
 }
 
 export interface IAceEditor extends Editor {

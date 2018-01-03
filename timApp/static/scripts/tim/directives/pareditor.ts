@@ -3,14 +3,13 @@
 import angular, {IController, IPromise, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
-import * as acemodule from "tim/ace";
 import {timApp} from "tim/app";
 import * as draggable from "tim/directives/draggable";
 import {setEditorScope} from "tim/editorScope";
 import {markAsUsed, setsetting} from "tim/utils";
+import {IAceEditor} from "../ace-types";
 import {getActiveDocument} from "../controllers/view/document";
 import {isSettings} from "../controllers/view/parhelpers";
-import {lazyLoadTS} from "../lazyLoad";
 import {$compile, $http, $localStorage, $log, $timeout, $upload, $window} from "../ngimport";
 import {ParCompiler} from "../services/parCompiler";
 import {AceParEditor} from "./AceParEditor";
@@ -92,26 +91,28 @@ export class PareditorController implements IController {
     private scope: IScope;
     private storage: Storage;
     private touchDevice: boolean;
-    private tag: string;
     private plugintab: JQuery;
+    private autocomplete: boolean;
+    private citeText: string;
 
     constructor(scope: IScope, element: IRootElementService) {
+        this.element = element;
         this.options.showSettings = false;
         this.scope = scope;
-        this.tag = this.options.localSaveTag || "";
+        this.lstag = this.options.localSaveTag || ""; // par/note/addAbove
         this.storage = localStorage;
-        this.lstag = this.tag; // par/note/addAbove
 
-        var sn = this.storage.getItem("wrap" + this.lstag);
-        var n;
+        const sn = this.storage.getItem("wrap" + this.lstag);
+        let n;
         n = parseInt(sn);
         if (isNaN(n))
-            if (sn === '') n = '';
+            if (sn === "") n = "";
             else n = -90;
 
         this.wrap = {n: n};
 
-        this.proeditor = this.getLocalBool("proeditor", this.tag === "par");
+        this.proeditor = this.getLocalBool("proeditor", this.lstag === "par");
+        this.autocomplete = this.getLocalBool("autocomplete", this.lstag === "par");
 
         this.settings = $window.sessionsettings;
         this.pluginButtonList = {};
@@ -122,12 +123,9 @@ export class PareditorController implements IController {
 
         this.dataLoaded = false; // allow load in first time what ever editor
 
-        $(".editorContainer").on("resize", this.adjustPreview);
+        this.element.find(".editorContainer").on("resize", () => this.adjustPreview());
 
-        /* Add citation info to help tab */
-        document.getElementById("helpCite").setAttribute("value", '#- {rd="' + this.extraData.docId + '" rl="no" rp="' + this.extraData.par + '"}');
-
-        this.element = element;
+        this.citeText = this.getCiteText();
 
         this.tables = {normal: null, example: null, noheaders: null, multiline: null, pipe: null, strokes: null};
 
@@ -196,9 +194,6 @@ export class PareditorController implements IController {
         this.parCount = 0;
         this.touchDevice = false;
 
-        const oldMode = $window.localStorage.getItem("oldMode" + this.options.localSaveTag) || (this.options.touchDevice ? "text" : "ace");
-        this.changeEditor(oldMode);
-
         if (this.options.touchDevice) {
             if (!this.options.metaset) {
                 const $meta = $("meta[name='viewport']");
@@ -209,24 +204,37 @@ export class PareditorController implements IController {
             this.options.metaset = true;
         }
 
-        const viewport: any = {};
-        viewport.top = $(window).scrollTop();
-        viewport.bottom = viewport.top + $(window).height();
-        const bounds: any = {};
-        bounds.top = element.offset().top;
-        bounds.bottom = bounds.top + element.outerHeight();
+        const viewport = {
+            bottom: $(window).scrollTop() + $(window).height(),
+            top: $(window).scrollTop(),
+        };
+        const bounds = {
+            bottom: element.offset().top + element.outerHeight(),
+            top: element.offset().top,
+        };
         if (bounds.bottom > viewport.bottom || bounds.top < viewport.top) {
             $("html, body").scrollTop(element.offset().top);
         }
     }
 
+    $onInit() {
+        const oldMode = $window.localStorage.getItem("oldMode" + this.options.localSaveTag) || (this.options.touchDevice ? "text" : "ace");
+        this.changeEditor(oldMode);
+        this.scope.$watch(() => this.autocomplete, () => {
+            if (this.isAce(this.editor)) {
+                this.setLocalValue("autocomplete", this.autocomplete.toString());
+                this.editor.setAutoCompletion(this.autocomplete);
+            }
+        });
+    }
+
     $postLink() {
-        this.plugintab = $("#pluginButtons");
+        this.plugintab = this.element.find("#pluginButtons");
         this.getPluginsInOrder();
 
         if (this.settings.editortab) {
             const tab = this.settings.editortab.substring(0, this.settings.editortab.lastIndexOf("Buttons"));
-            const tabelement = $("#" + tab);
+            const tabelement = this.element.find("#" + tab);
             if (tabelement.length) {
                 this.setActiveTab(tabelement, this.settings.editortab);
             }
@@ -237,7 +245,15 @@ export class PareditorController implements IController {
         setEditorScope(null);
     }
 
-    getLocalBool(name, def) {
+    getCiteText(): string {
+        return `#- {rd="${this.extraData.docId}" rl="no" rp="${this.extraData.par}"}`;
+    }
+
+    selectAllText(evt: Event) {
+        (evt.target as HTMLInputElement).select();
+    }
+
+    getLocalBool(name: string, def: boolean): boolean {
         let ret = def;
         if (!ret) {
             ret = false;
@@ -249,21 +265,21 @@ export class PareditorController implements IController {
         return val === "true";
     }
 
-    setLocalValue(name, val) {
+    setLocalValue(name: string, val: string) {
         $window.localStorage.setItem(name + this.lstag, val);
     }
 
     setEditorMinSize() {
-        const editor = $("pareditor");
+        const editor = this.element;
         this.previewReleased = false;
 
-        const editorOffsetStr = this.storage.getItem("editorReleasedOffset" + this.tag);
+        const editorOffsetStr = this.storage.getItem("editorReleasedOffset" + this.lstag);
         if (editorOffsetStr) {
             const editorOffset = JSON.parse(editorOffsetStr);
             editor.css("left", editorOffset.left - editor.offset().left);
         }
 
-        if (this.storage.getItem("previewIsReleased" + this.tag) === "true") {
+        if (this.storage.getItem("previewIsReleased" + this.lstag) === "true") {
             this.releaseClicked();
         }
         this.minSizeSet = true;
@@ -420,9 +436,9 @@ or newer one that is more familiar to write in YAML:
 
     adjustPreview() {
         window.setTimeout(() => {
-            const $editor = $(".editorArea");
-            const $previewContent = $(".previewcontent");
-            const previewDiv = $("#previewDiv");
+            const $editor = this.element;
+            const $previewContent = this.element.find(".previewcontent");
+            const previewDiv = this.element.find("#previewDiv");
             // If preview is released make sure that preview doesn't go out of bounds
             if (this.previewReleased) {
                 const previewOffset = previewDiv.offset();
@@ -455,8 +471,8 @@ or newer one that is more familiar to write in YAML:
       id="teksti"
       wrap="off">
 </textarea>`);
-        $(".editorContainer").append($textarea);
-        this.editor = new TextAreaParEditor($("#teksti"), {
+        this.element.find(".editorContainer").append($textarea);
+        this.editor = new TextAreaParEditor(this.element.find("#teksti"), {
             wrapFn: () => this.wrapFn(),
             saveClicked: () => this.saveClicked(),
             getWrapValue: () => this.wrap.n,
@@ -480,7 +496,7 @@ or newer one that is more familiar to write in YAML:
 
             this.timer = $timeout(() => {
                 const text = this.editor.getEditorText();
-                this.scrollPos = $(".previewcontent").scrollTop();
+                this.scrollPos = this.element.find(".previewcontent").scrollTop();
                 $http.post(this.previewUrl, angular.extend({
                     text,
                 }, this.extraData)).then(async (response) => {
@@ -490,7 +506,7 @@ or newer one that is more familiar to write in YAML:
                     $previewDiv.empty().append(compiled);
                     this.outofdate = false;
                     this.parCount = $previewDiv.children().length;
-                    $(".editorContainer").resize();
+                    this.element.find(".editorContainer").resize();
                 }, (response) => {
                     $window.alert("Failed to show preview: " + response.data.error);
                 });
@@ -587,9 +603,9 @@ or newer one that is more familiar to write in YAML:
     }
 
     releaseClicked() {
-        const div = $("#previewDiv");
-        const content = $(".previewcontent");
-        const editor = $(".editorArea");
+        const div = this.element.find("#previewDiv");
+        const content = this.element.find(".previewcontent");
+        const editor = this.element;
         this.previewReleased = !(this.previewReleased);
         const tag = this.options.localSaveTag || "";
         const storage = $window.localStorage;
@@ -647,11 +663,11 @@ or newer one that is more familiar to write in YAML:
     savePreviewData(savePreviewPosition) {
         const tag = this.options.localSaveTag || "";
         const storage = $window.localStorage;
-        const editorOffset = $(".editorArea").offset();
+        const editorOffset = this.element.offset();
         storage.setItem("editorReleasedOffset" + tag, JSON.stringify(editorOffset));
         if (savePreviewPosition) {
             // Calculate distance from editor's top and left
-            const previewOffset = $("#previewDiv").offset();
+            const previewOffset = this.element.find("#previewDiv").offset();
             const left = previewOffset.left - editorOffset.left;
             const top = previewOffset.top - editorOffset.top;
             storage.setItem("previewReleasedOffset" + tag, JSON.stringify({left, top}));
@@ -768,7 +784,7 @@ or newer one that is more familiar to write in YAML:
         this.renameFormShowing = true;
         this.duplicates = data.duplicates;
         // Get the editor div
-        const $editorTop = $(".editorArea");
+        const editor = this.element;
         // Create a new div
         let $actionDiv = $("<div>", {class: "pluginRenameForm", id: "pluginRenameForm"});
         $actionDiv.css("position", "relative");
@@ -864,7 +880,7 @@ or newer one that is more familiar to write in YAML:
         $actionDiv.append($form);
         $actionDiv.append($buttonDiv);
         $actionDiv = $compile($actionDiv)(this.scope);
-        $editorTop.append($actionDiv);
+        editor.append($actionDiv);
         // Focus the first input element
         this.inputs[0].focus();
         this.pluginRenameForm = $actionDiv;
@@ -885,7 +901,7 @@ or newer one that is more familiar to write in YAML:
         }
         this.saving = true;
         // if ( $scope.wrap.n != -1) //  wrap -1 is not saved
-        $window.localStorage.setItem("wrap"+this.lstag, ""+this.wrap.n);
+        this.setLocalValue("wrap", "" + this.wrap.n);
         if (this.renameFormShowing) {
             this.renameTaskNamesClicked(this.inputs, this.duplicates, true);
         }
@@ -933,11 +949,11 @@ or newer one that is more familiar to write in YAML:
             if (angular.isDefined(this.extraData.tags.markread)) { // TODO: tee silmukassa
                 $window.localStorage.setItem("markread", this.extraData.tags.markread.toString());
             }
-            $window.localStorage.setItem("proeditor" + this.lstag, this.proeditor.toString());
+            this.setLocalValue("proeditor", this.proeditor.toString());
 
             if (this.isAce(this.editor)) {
-                this.setLocalValue("acewrap", this.editor.editor.getSession().getUseWrapMode());
-                this.setLocalValue("acebehaviours", this.editor.editor.getBehavioursEnabled()); // some of these are in editor and some in session?
+                this.setLocalValue("acewrap", this.editor.editor.getSession().getUseWrapMode().toString());
+                this.setLocalValue("acebehaviours", this.editor.editor.getBehavioursEnabled().toString()); // some of these are in editor and some in session?
             }
             this.saving = false;
 
@@ -950,12 +966,16 @@ or newer one that is more familiar to write in YAML:
         }
     }
 
-    isAce(editor: any): editor is AceParEditor {
-        return editor && typeof editor.snippetManager !== "undefined";
+    aceEnabled(): boolean {
+        return this.isAce(this.editor);
     }
 
-    saveOldMode(oldMode) {
-        $window.localStorage.setItem("oldMode" + this.options.localSaveTag, oldMode);
+    isAce(editor: AceParEditor | TextAreaParEditor): editor is AceParEditor {
+        return editor && (editor.editor as IAceEditor).renderer !== undefined;
+    }
+
+    saveOldMode(oldMode: string) {
+        this.setLocalValue("oldMode", oldMode);
     }
 
     onFileSelect(file) {
@@ -1106,9 +1126,9 @@ or newer one that is more familiar to write in YAML:
      * @param area area to make visible
      */
     setActiveTab(active, area) {
-        const naviArea = $("#" + area);
-        const buttons = $(".extraButtonArea");
-        const tabs = $(".tab");
+        const naviArea = this.element.find("#" + area);
+        const buttons = this.element.find(".extraButtonArea");
+        const tabs = this.element.find(".tab");
         for (let i = 0; i < buttons.length; i++) {
             $(buttons[i]).attr("class", "extraButtonArea hidden");
         }
@@ -1178,21 +1198,21 @@ or newer one that is more familiar to write in YAML:
         }
         let oldeditor = null;
         if (this.isAce(this.editor) || newMode === "text") {
-            oldeditor = $("#ace_editor");
+            oldeditor = this.element.find("#ace_editor");
             oldeditor.remove();
             this.saveOldMode("text");
             this.createTextArea(text);
         } else {
-            oldeditor = $("#teksti");
+            oldeditor = this.element.find("#teksti");
             oldeditor.remove();
-            const ace = (await lazyLoadTS<typeof acemodule>("tim/ace", __moduleName)).ace;
+            const ace = (await import("tim/ace")).ace;
             this.saveOldMode("ace");
             const neweditorElem = $("<div>", {
                 class: "editor",
                 id: "ace_editor",
             });
             editorContainer.append(neweditorElem);
-            const neweditor = ace.edit("ace_editor");
+            const neweditor = ace.edit(neweditorElem[0]);
 
             this.editor = new AceParEditor(ace, neweditor, {
                 wrapFn: () => this.wrapFn(),
@@ -1202,6 +1222,8 @@ or newer one that is more familiar to write in YAML:
             if (!this.minSizeSet) {
                 this.setEditorMinSize();
             }
+            this.editor.setAutoCompletion(this.autocomplete);
+            this.editor.editor.renderer.$cursorLayer.setBlinking(!$window.IS_TESTING);
             /*iPad does not open the keyboard if not manually focused to editable area
              var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
              if (!iOS) editor.focus();*/
@@ -1256,7 +1278,7 @@ or newer one that is more familiar to write in YAML:
         setEditorScope(this.editor);
         this.adjustPreview();
         if (!this.proeditor && this.lstag === "note") {
-            const editor = $("pareditor");
+            const editor = this.element;
             editor.css("max-width", "40em");
         }
     }
