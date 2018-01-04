@@ -582,7 +582,7 @@ class TimRouteTest(TimDbTest):
 
     def assert_content(self, element: HtmlElement, expected: List[str]):
         pars = get_content(element)
-        self.assertEqual(pars, expected)
+        self.assertEqual(expected, pars)
 
     def get_updated_pars(self, d: DocInfo, **kwargs):
         return self.get(f'/getUpdatedPars/{d.id}', **kwargs)
