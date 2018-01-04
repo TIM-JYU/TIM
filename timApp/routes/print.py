@@ -34,7 +34,6 @@ print_blueprint = Blueprint('print',
 
 @print_blueprint.before_request
 def do_before_requests():
-    verify_logged_in()
     g.user = sessioninfo.get_current_user_object()
 
 
