@@ -596,7 +596,7 @@ def show_lecture_info(lecture_id):
                            translations=doc.translations)
 
 
-@lecture_routes.route('/showLectureInfoGivenName/', methods=['GET'])
+@lecture_routes.route('/showLectureInfoGivenName')
 def show_lecture_info_given_name():
     timdb = get_timdb()
     if 'lecture_id' in request.args:
@@ -619,7 +619,7 @@ def show_lecture_info_given_name():
     return json_response(response)
 
 
-@lecture_routes.route('/lectureNeedsPassword/', methods=['GET'])
+@lecture_routes.route('/lectureNeedsPassword')
 def lecture_needs_password():
     timdb = get_timdb()
     if 'lecture_id' in request.args:

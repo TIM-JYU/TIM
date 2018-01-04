@@ -216,11 +216,15 @@ class PluginTest(TimRouteTest):
                                 expect_status=400,
                                 expect_content={'error': f'Non-existent upload: {invalid_file}'}
                                 )
+        self.assertEqual(f'/uploads/{doc.doc_id}/{task_name}/{self.current_user_name()}/1/test.txt', ur['file'])
         self.assertEqual(file_content, self.get(ur['file']))
+        self.get(ur['file'] + 'x', expect_status=404)
         self.assertEqual(file_content,
-                         self.get(f'/uploads/{doc.doc_id}/{task_name}/{self.current_user_name()}/',
+                         self.get(f'/uploads/{doc.doc_id}/{task_name}/{self.current_user_name()}',
                                   expect_status=200))
-
+        self.get(f'/uploads/{doc.doc_id}/{task_name}', expect_status=400)
+        self.get(f'/uploads/{doc.doc_id}', expect_status=400)
+        self.get(f'/uploads', expect_status=404)
         self.login_test2()
 
         # Another user cannot see the file

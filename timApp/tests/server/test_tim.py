@@ -96,7 +96,7 @@ class TimTest(TimRouteTest):
         par2_new_html = md_to_html(par2_new_text)
         self.post_par(doc, par2_new_text, second_par_id, expect_contains=par2_new_html, json_key='texts')
         self.post('/logout', follow_redirects=True)
-        self.get('/settings/', expect_status=403)
+        self.get('/settings', expect_status=403)
         for d in doc_ids - {doc_id}:
             self.get(f'/view/{d}', expect_status=403)
         self.get(f'/view/{doc_id}')

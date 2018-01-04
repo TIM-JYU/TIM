@@ -50,8 +50,10 @@ def get_mimetype(p):
 @upload.route('/uploads/<path:relfilename>')
 def get_upload(relfilename: str):
     slashes = relfilename.count('/')
-    if not 3 <= slashes <= 4:
+    if slashes < 2:
         abort(400)
+    if slashes == 2:
+        relfilename += '/'
     if slashes == 3 and not relfilename.endswith('/'):
         abort(400, 'Incorrect filename specification.')
     timdb = get_timdb()

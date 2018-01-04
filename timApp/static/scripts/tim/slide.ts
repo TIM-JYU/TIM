@@ -53,7 +53,7 @@ function refresh() {
     clearTimeout(pollTimeout);
     $.ajax({
         cache: false,
-        url: "/getslidestatus/",
+        url: "/getslidestatus",
         data: {doc_id: item.id},
         dataType: "json",
         error(xhr, status, err) {

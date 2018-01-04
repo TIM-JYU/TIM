@@ -36,3 +36,18 @@ class RedirectTest(TimRouteTest):
             self.get(f'{route}/{personal_folder}/testing space', follow_redirects=True)
             self.get(f'{route}/{personal_folder}/testing spAce', follow_redirects=True)
             self.get(f'{route}/{personal_folder}/testing spÄce', follow_redirects=True)
+
+    def test_slash_redirect(self):
+        self.get('/', expect_status=200)
+        self.get('/test', expect_status=404)
+        self.get('/test/', expect_status=302, expect_content='test')
+        self.get('/test//', expect_status=302, expect_content='test')
+        self.get('/test///', expect_status=302, expect_content='test')
+        self.get('/test/////////', expect_status=302, expect_content='test')
+        self.get('/test/?a=b', expect_status=302, expect_content='test?a=b')
+        self.get('/test/x/', expect_status=302, expect_content='test/x')
+        self.get('/test/x/?a=b', expect_status=302, expect_content='test/x?a=b')
+        self.get('/test//x/', expect_status=302, expect_content='test/x')
+        self.get('/test//x///?a=b', expect_status=302, expect_content='test/x?a=b')
+        self.get('/view', expect_status=200)
+        self.get('/manage', expect_status=302, expect_content='view')
