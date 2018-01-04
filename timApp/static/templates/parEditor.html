@@ -150,7 +150,7 @@
         <div ng-repeat="choice in $ctrl.options.choices.desc">
             {{ choice.desc }}
             <label ng-repeat="opt in choice.opts">
-                <input type="radio" ng-model="extraData[choice.name]" ng-value="opt.value"/> {{ opt.desc }}&nbsp;
+                <input type="radio" ng-model="$ctrl.extraData[choice.name]" ng-value="opt.value"/> {{ opt.desc }}&nbsp;
             </label>
         </div>
     </div>
