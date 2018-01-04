@@ -4,11 +4,11 @@ import unittest
 import timApp.dumboclient
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.docsettings import DocSettings
-from timApp.documentmodel.document import Document
 from timApp.markdownconverter import md_to_html, par_list_to_html_list
+from timApp.tests.db.timdbtest import TimDbTest
 
 
-class MarkdownConverterTest(unittest.TestCase):
+class MarkdownConverterTest(TimDbTest):
 
     def check_conversion(self, html, md, macros=None, delimiter=None):
         self.assertEqual(html, md_to_html(md, sanitize=True, macros=macros, macro_delimiter=delimiter))
@@ -26,10 +26,10 @@ class MarkdownConverterTest(unittest.TestCase):
 
         for html, md in cases:
             self.check_conversion(html, md)
-
+        d = self.create_doc()
         self.assertListEqual([html for html, _ in cases],
                              par_list_to_html_list([DocParagraph.create(None, md=md) for _, md in cases],
-                                                   settings=DocSettings(Document())))
+                                                   settings=DocSettings(d.document)))
 
         macrotests = [('<p>hello world!</p>',
                        'hello %%somemacro%%!',
