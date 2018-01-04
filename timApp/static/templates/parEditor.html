@@ -1,5 +1,4 @@
 <div id="pareditor">
-  <div>
   <div ng-show="$ctrl.proeditor">
     <ul class="tabsarea">
         <li id="navigate" class="tab active"><a ng-click="$ctrl.tabClicked($event, 'navigateButtons')">Navigation</a></li>
@@ -141,11 +140,6 @@
         <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.options.showDelete" ng-click="$ctrl.deleteClicked()">Delete</button>
         </span>
     </div>
-    <div class="editortags">
-        <label ng-repeat="tag in $ctrl.options.tags">
-            <input type="checkbox" ng-model="$ctrl.extraData.tags[tag.name]"/> {{ tag.desc }}
-        </label>
-    </div>
     <div class="choices">
         <div ng-repeat="choice in $ctrl.options.choices.desc">
             {{ choice.desc }}
@@ -154,12 +148,18 @@
             </label>
         </div>
     </div>
-    </div>
     <div class="editoropts">
-        <label><input type="checkbox" ng-model="$ctrl.proeditor"/> Advanced view</label>
-        <label ng-show="$ctrl.aceEnabled()"><input type="checkbox" ng-model="$ctrl.autocomplete"/> Use autocomplete</label>
-        <span ng-if="$ctrl.wrap.n!=-1" class="inputSmall" style="float: right;"><label title="Put 0 to no wrap" ng-click="$ctrl.editor.forceWrap(true)" >wrap:</label><input type="text"  ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2" /></span>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.proeditor"/> Advanced view</label>
+        <label class="font-weight-normal" ng-show="$ctrl.aceEnabled()"><input type="checkbox" ng-model="$ctrl.autocomplete"/> Autocomplete</label>
     </div>
+    <div class="editortags">
+        <label class="font-weight-normal" ng-repeat="tag in $ctrl.options.tags">
+            <input type="checkbox" ng-model="$ctrl.extraData.tags[tag.name]"/> {{ tag.desc }}
+        </label>
+    </div>
+    <label class="pull-right font-weight-normal" ng-if="$ctrl.wrap.n!=-1" title="Put 0 to no wrap" ng-click="$ctrl.editor.forceWrap(true)">Wrap:
+        <input type="text" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
+    </label>
     <div id="previewDiv" tim-draggable-fixed="" caption="Preview" class="preview" ng-show="$ctrl.proeditor"
          style='z-index:100; top: 0px; right: 0px;'>
     <span>Preview
