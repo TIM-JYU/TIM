@@ -26,19 +26,13 @@ export class AnswerToQuestionController implements IController {
     private progressElem: JQuery;
     private progressText: JQuery;
     private timeLeft;
-    private questionHeaders: {}[];
-    private answerTypes: {}[];
     private isLecturer: boolean;
     private questionTitle: string;
-    private isAsking: boolean;
     private askedTime: number;
     private endTime: number;
 
     constructor(scope: IScope) {
         this.scope = scope;
-        this.questionHeaders = [];
-        this.answerTypes = [];
-        this.dynamicAnswerSheetControl = {};
         this.isLecturer = false;
         this.questionTitle = "";
 
@@ -71,23 +65,18 @@ export class AnswerToQuestionController implements IController {
             this.answered = false;
             this.buttonText = this.markup.button || this.markup.buttonText || "Answer";
             this.dynamicAnswerSheetControl.createAnswer(this);
-            if (args.isAsking) {
-                this.isAsking = true;
-            }
 
             if (!this.preview && !this.result) {
-                const $table = this.element.find("#answer-sheet-table");
+                const $table = this.element.find(".answer-sheet-table");
                 window.setTimeout(() => {
-                    const $table = this.element.find("#answer-sheet-table");
+                    const $table = this.element.find(".answer-sheet-table");
                     let $input = null;
                     if (this.json.answerFieldType !== "text") {
                         $input = $table.find("input:first");
                     } else {
                         $input = $table.find("textarea:first");
                     }
-                    if (params.isAsking) {
-                        $input[0].focus();
-                    }
+                    $input[0].focus();
                 }, 0);
                 //
                 if (!this.isText) {
@@ -182,7 +171,7 @@ export class AnswerToQuestionController implements IController {
         })
             .then((response) => {
                 let markup: IAskedJsonJson = JSON.parse(response.data.json);
-                if (!markup.json) markup = {json: markup} as any; // compability for old
+                if (!markup.json) markup = {json: markup} as any; // compatibility for old
                 markup.points = response.data.points;
                 $rootScope.$broadcast("changeQuestionTitle", {questionTitle: markup.json.questionTitle});
                 $rootScope.$broadcast("editQuestion", {
@@ -297,7 +286,7 @@ export class AnswerToQuestionController implements IController {
 
     answerWithEnter = (e) => {
         if (e.keyCode === 13) {
-            $("#answer-sheet-table").off("keyup.send");
+            $(".answer-sheet-table").off("keyup.send"); // TODO
             this.$parent.answer();
         }
     }

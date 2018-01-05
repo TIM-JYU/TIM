@@ -1,16 +1,16 @@
-import $ from "jquery";
-import {$http, $log, $window} from "../../ngimport";
-import {createNewPar, getParId} from "./parhelpers";
-import {onClick} from "./eventhandlers";
 import {IScope} from "angular";
-import {ViewCtrl} from "./viewctrl";
+import $ from "jquery";
 import {IAskedJsonJson} from "../../lecturetypes";
-import {showQuestionEditDialog} from "../questionController";
+import {$http, $window} from "../../ngimport";
+import {fetchAndEditQuestion, showQuestionEditDialog} from "../questionController";
+import {onClick} from "./eventhandlers";
+import {createNewPar, getParId} from "./parhelpers";
+import {ViewCtrl} from "./viewctrl";
+import {showQuestionAskDialog} from "../questionAskController";
 
 export class QuestionHandler {
     public sc: IScope;
     public noQuestionAutoNumbering: boolean;
-    public par: JQuery;
     public viewctrl: ViewCtrl;
 
     public initQuestions(sc: IScope, view: ViewCtrl): void {
@@ -22,25 +22,15 @@ export class QuestionHandler {
 
         onClick(".questionAddedNew", ($this, e) => {
             const question = $this;
-            const $par = $(question).parent().parent();
-            const parId = $($par)[0].getAttribute("id");
+            const $par = $(question).parents(".par");
+            const parId = getParId($par);
             const parNextId = getParId($par.next());
             this.showQuestionNew(parId, parNextId);
-            this.par = ($(question).parent());
         });
     }
 
     async showQuestionNew(parId: string, parIdNext: string) {
-        const response = await $http<{markup: IAskedJsonJson}>({
-            url: "/getQuestionByParId",
-            method: "GET",
-            params: {
-                par_id: parId,
-                doc_id: this.viewctrl.docId,
-            },
-        });
-        // TODO show question preview
-        this.viewctrl.inLecture = false;
+        await showQuestionAskDialog({parId: parId, docId: this.viewctrl.docId, lectureId: null}); // TODO lecture id
     }
 
     // Event handler for "Add question below"
@@ -48,7 +38,6 @@ export class QuestionHandler {
     async addQuestionQst(e, $par) {
         const parId = getParId($par);
         const parNextId = parId; // getParId($par.next());
-        this.par = $par;
         const result = await showQuestionEditDialog({par_id_next: parNextId, qst: true, docId: this.viewctrl.docId});
         const $newpar = createNewPar();
         $par.before($newpar);
@@ -57,30 +46,7 @@ export class QuestionHandler {
 
     async editQst(e, $par) {
         const parId = getParId($par);
-        const parNextId = getParId($par.next());
-        this.par = $par;
-        try {
-            var response = await
-                $http<{markup: IAskedJsonJson}>({
-                    url: "/getQuestionByParId",
-                    method: "GET",
-                    params: {par_id: parId, doc_id: this.viewctrl.docId, edit: true},
-                });
-        } catch (e) {
-            $log.error("Could not get question.");
-            return;
-        }
-        const data = response.data;
-        if (!data.markup) {
-            return; // not a question
-        }
-        // data.markup.qst = true;
-        const result = await showQuestionEditDialog({
-            markup: data.markup,
-            par_id: parId,
-            par_id_next: parNextId,
-            docId: this.viewctrl.docId,
-        });
+        const result = await fetchAndEditQuestion(this.viewctrl.docId, parId);
         if (result.deleted) {
             this.viewctrl.handleDelete(result.data, {par: parId});
         } else {
@@ -92,7 +58,6 @@ export class QuestionHandler {
     // Opens pop-up window to create question.
     async addQuestion(e, $par) {
         const parNextId = getParId($par.next());
-        this.par = $par;
         const result = await showQuestionEditDialog({par_id_next: parNextId, qst: false, docId: this.viewctrl.docId});
         const $newpar = createNewPar();
         $par.after($newpar);

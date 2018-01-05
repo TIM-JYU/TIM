@@ -1,262 +1,242 @@
 /**
  * Created by vesal on 28.12.2016.
  */
-import angular from "angular";
+import {IController, IRootElementService} from "angular";
 import * as timHelper from "tim/timHelper";
+import {timApp} from "../app";
+import {AnswerTable, IPreviewParams, makePreview} from "../directives/dynamicAnswerSheet";
+import {IAskedJsonJson, IAskedJsonJsonJson} from "../lecturetypes";
 import {$http} from "../ngimport";
+import {LectureController} from "./lectureController";
 
-const qstApp: any = angular.module("qstApp", ["ngSanitize"]);
+const TESTWITHOUTPLUGINS = false; // if one wants to test without qst plugins
 
-qstApp.TESTWITHOUTPLUGINS = false; // if one wants to test without qst plugins
-
-qstApp.directive("qstRunner", [function() {
-    "use strict";
-    // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
-    return qstApp.directiveFunction(qstApp.directiveTemplate);
-}],
-);
-
-qstApp.directive("questionRunner", [function() {
-    "use strict";
-    // Tätä kutsutaan yhden kerran kun plugin otetaan käyttöön
-    return qstApp.directiveFunction(qstApp.directiveTemplateQuestion);
-}],
-);
-
-qstApp.directiveFunction = function(tf) {
-    "use strict";
-    // Koska tätä kutsutaan direktiivistä, tätä kutsutaan yhden kerran
-    return {
-        scope: {},
-        controller: qstApp.Controller,
-        link: qstApp.initScope,
-        restrict: "AE",
-        /*
-         compile: function(tElement, attrs) {
-         var content = tElement.children();
-         },
-         */
-        transclude: true,
-        replace: "true",
-        template: tf, // qstApp.directiveTemplate()
-        // templateUrl: 'html/qstTempl.html'
-    };
-};
-
-qstApp.directiveTemplate = function() {
-    "use strict";
-    // Koska tätä kutsutaan directiveFunction-metodista, tätä kutsutaan yhden kerran
-    if (qstApp.TESTWITHOUTPLUGINS) {
+function directiveTemplate() {
+    if (TESTWITHOUTPLUGINS) {
         return "";
     }
-    return '<div class="csRunDiv qst no-popup-menu">' +
-        "<p></p>" + // Here comes header
-        // '<p ng-if="stem" class="stem" >{{stem}}</p>' +
-        '<p ng-if="stem" class="stem" ng-bind-html="stem" ></p>' +
-        '<dynamic-answer-sheet  control="dynamicAnswerSheetControl"></dynamic-answer-sheet>' +
-        // '<button class="timButton" ng-bind-html="button" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();">{{button}}</button>&nbsp&nbsp' +
-        '<button class="timButton" ng-bind-html="button" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();"></button>&nbsp&nbsp' +
-        '<a class="questionAddedNew" ng-show="qstScope.checkQstMode() "><span class="glyphicon glyphicon-question-sign" title="Ask question"></span></a>' +
-        '<span ng-show="result">{{result}}</span>' +
-        '<p class="plgfooter"></p>' + // Here comes footer
-        "</div>";
-};
-
-qstApp.directiveTemplateQuestion = function() {
-    "use strict";
-    // Koska tätä kutsutaan directiveFunction-metodista, tätä kutsutaan yhden kerran
-    if (qstApp.TESTWITHOUTPLUGINS) {
-        return "";
-    }
-    return '<div class="csRunDiv qst no-popup-menu">' +
-        // '<p ng-if="stem" class="stem" >{{stem}}</p>' +
-        '<h4 class="questionTitle" ng-if="questionTitle"  ng-bind-html="questionTitle" ></h4>' +
-        '<dynamic-answer-sheet  control="dynamicAnswerSheetControl"></dynamic-answer-sheet>' +
-        // '<button class="timButton" ng-bind-html="button" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();">{{button}}</button>&nbsp&nbsp' +
-        '<button class="timButton" ng-bind-html="button" ng-if="button"  ng-disabled="isRunning" ng-click="qstScope.saveText();"></button>&nbsp&nbsp' +
-        "</div>";
-};
-
-qstApp.Controller = function($scope, $transclude) {
-    "use strict";
-    // Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
-    // Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Controlleriksi.
-    // Tähän tullaan ensin ja sitten initScope-metodiin
-    // Siitä ei ole mitään hajua mistä se keksii tälle nuo parametrit???
-    if (qstApp.TESTWITHOUTPLUGINS) {
-        return;
-    }
-    $scope.qstScope = new QstScope($scope);
-    let isLecturer = false;
-    let sc = $scope;
-    while (sc != null) {
-        if (sc.lctrl.isLecturer) {
-            isLecturer = true;
-            break;
-        }
-        sc = sc.$parent;
-    }
-
-    $scope.isLecturer = isLecturer;
-
-    $scope.attrs = {};
-
-    // Luodaan $scope.attrs joka on avattuna sisällössä olev JSON tai HEX
-    $transclude(function(clone, scope) {
-        timHelper.initAttributes(clone, $scope);
-    });
-
-    $scope.errors = [];
-    $scope.muokattu = false;
-    $scope.result = "";
-    $scope.dynamicAnswerSheetControl = {};
-    $scope.preclass = "qst";
-
-};
-
-qstApp.Controller.$inject = ["$scope", "$transclude"];
-
-qstApp.initScope = function(scope, element, attrs) {
-    "use strict";
-    // Tätä kutsutaan kerran jokaiselle pluginin esiintymälle.
-    // Angular kutsuu tätä koska se on sanottu direktiivifunktiossa Link-metodiksi.
-    scope.cursor = "\u0383"; //"\u0347"; // "\u02FD";
-    scope.plugin = element.parent().attr("data-plugin");
-    scope.taskId = element.parent().attr("id");
-
-    // Etsitään kullekin attribuutille arvo joko scope.attrs tai attrs-parametrista. Jos ei ole, käytetään oletusta.
-    timHelper.set(scope, attrs, "stem");
-    timHelper.set(scope, attrs, "questionTitle");
-    timHelper.set(scope, attrs, "markup.json.questionTitle");
-    timHelper.set(scope, attrs, "markup.isQuestion");
-    timHelper.set(scope, attrs, "user_id");
-    timHelper.set(scope, attrs, "button", "Save");
-    timHelper.set(scope, attrs, "resetText", "Reset");
-    timHelper.setn(scope, "tid", attrs, ".taskID"); // vain kokeilu että "juuresta" ottaminen toimii
-
-    // Otsikot.  Oletetaan että 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
-    if (!scope.isQuestion) {
-        element[0].childNodes[0].outerHTML = timHelper.getHeading(scope, attrs, "header", "h4");
-    }
-    const n = element[0].childNodes.length;
-    if (!scope.isQuestion) {
-        if (n > 1) {
-            element[0].childNodes[n - 1].outerHTML = timHelper.getHeading(scope, attrs, "footer", 'p class="plgfooter"');
-        }
-    }
-
-    // scope.stem = scope.attrs.markup.json.questionText;
-    const markup = scope.attrs.markup;
-    const params: any = {};
-    params.answerTable = scope.attrs.state;
-    params.questionParId = 1; // args.questionParId;
-    params.questionParIdNext = 2; //args.questionParIdNext;
-    params.isLecturer = false;
-    params.markup = markup;
-    params.questionTitle = markup.json.questionTitle;
-    params.points = markup.points;
-    params.expl = markup.expl;
-    // var preview = element.parents('.previewcontent').length > 0;
-    params.preview = false; // scope.$parent.previewUrl; // Released;
-    params.result = true;
-    params.answclass = "qstAnswerSheet";
-    params.noDisable = true;
-    scope.dynamicAnswerSheetControl.createAnswer(params);
-    scope.attrs = {}; // not needed any more
-
-};
-
-// Tehdään kaikista toiminnallisista funktoista oma luokka, jotta
-// niitä ei erikseen lisätä jokaisen pluginin esiintymän kohdalla uudelleen.
-function QstScope(scope) {
-    "use strict";
-    this.scope = scope;
+    return `
+<div class="csRunDiv qst no-popup-menu"><p></p>
+    <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
+    <dynamic-answer-sheet
+            questiondata="$ctrl.preview"
+            answertable="$ctrl.answerdata"
+            on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
+    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning"
+            ng-click="$ctrl.saveText();"></button>
+    &nbsp;&nbsp;
+    <a class="questionAddedNew" ng-show="$ctrl.checkQstMode()">
+        <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
+    </a>
+    <span ng-show="$ctrl.result">{{$ctrl.result}}</span>
+    <p class="plgfooter"></p>
+</div>
+`;
 }
 
-QstScope.prototype.initCode = function() {
-    "use strict";
-    const $scope = this.scope;
-    $scope.muokattu = false;
-    $scope.error = "";
-    $scope.result = "";
-};
+function directiveTemplateQuestion() {
+    if (TESTWITHOUTPLUGINS) {
+        return "";
+    }
+    return `
+<div class="csRunDiv qst no-popup-menu">
+    <h4 class="questionTitle" ng-if="$ctrl.questionTitle"
+        ng-bind-html="$ctrl.questionTitle"></h4>
+    <dynamic-answer-sheet
+            questiondata="$ctrl.preview"></dynamic-answer-sheet>
+    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning"
+            ng-click="$ctrl.saveText();"></button>&nbsp;&nbsp;
+</div>
+`;
+}
 
-QstScope.prototype.saveText = function() {
-    "use strict";
-    this.doSaveText(false);
-};
-
-QstScope.prototype.checkQstMode = function(nosave) {
-    "use strict";
-    const $scope = this.scope;
-    const w: any = window;
-    return (w.in_lecture || w.lectureMode) && w.item.rights.teacher; //  $scope.$parent.$parent.wallName; // TODO: better check if in lecture page
-};
-
-QstScope.prototype.doSaveText = function(nosave) {
-    "use strict";
-    const $scope = this.scope;
-    $scope.error = "... saving ...";
-    $scope.isRunning = true;
-
-    $scope.result = "";
-
-    const answers = $scope.dynamicAnswerSheetControl.getAnswers();
-
-    const params: any = {
-        input: {
-            answers,
-            markup: {taskId: $scope.taskId, user_id: $scope.user_id},
-        },
+export interface IQstAttributes {
+    markup: {
+        json: IAskedJsonJsonJson,
+        isQuestion: boolean,
+        user_id: string,
+        header: string,
+        footer: string,
+        button: string,
+        resetText: string,
+        stem: string,
     };
+    doLazy: boolean;
+    anonymous: boolean;
+    info: {};
+    preview: boolean;
+    show_result: boolean;
+    state: AnswerTable | null;
+    targetFormat: string;
+    taskID: string;
+    taskIDExt: string;
+    userPrint: boolean;
+}
 
-    if (nosave) {
-        params.input.nosave = true;
+class QstController implements IController {
+    private static $inject = ["$element"];
+    private error: string;
+    private isRunning: boolean;
+    private result: string;
+    private taskId: string;
+    private errors: string[];
+    private lctrl: LectureController;
+    private isLecturer: boolean;
+    private preclass: string;
+    private plugin: string;
+    private json: string;
+    private cursor: string;
+    private element: IRootElementService;
+    attrs: IQstAttributes;
+    private preview: IPreviewParams;
+    private button: string;
+    private resetText: string;
+    private stem: string;
+    private answerdata: AnswerTable;
+    private newAnswer: AnswerTable;
+
+    constructor($element: IRootElementService) {
+        this.element = $element;
+        this.updateAnswer = this.updateAnswer.bind(this);
     }
-    let url = "/qst/answer";
-    if ($scope.plugin) {
-        url = $scope.plugin;
-        const i = url.lastIndexOf("/");
-        if (i > 0) {
-            url = url.substring(i);
+
+    $onInit() {
+        if (TESTWITHOUTPLUGINS) {
+            return;
         }
-        url += "/" + $scope.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
+        this.isLecturer = this.lctrl && this.lctrl.isLecturer;
+        this.attrs = JSON.parse(this.json);
+        // console.log(this.attrs);
+        this.preview = makePreview({json: this.attrs.markup.json, expl: {}}, this.attrs.state || []);
+        this.answerdata = this.preview.answerTable;
+        this.errors = [];
+        this.result = "";
+        this.preclass = "qst";
+        this.button = this.attrs.markup.button || "Save";
+        this.resetText = this.attrs.markup.resetText || "Reset";
+        this.stem = this.attrs.markup.stem;
+        this.newAnswer = this.answerdata;
     }
 
-    $http<{web: {error, result, show_result, state, markup}}>({
-        method: "PUT",
-        url,
-        data: params,
-        headers: {"Content-Type": "application/json"},
-        timeout: 20000,
+    $postLink() {
+        this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
+        this.plugin = this.element.parent().attr("data-plugin");
+        this.taskId = this.element.parent().attr("id");
+        return;
+
+        // Otsikot.  Oletetaan että 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
+        if (!this.attrs.markup.isQuestion) {
+            this.element[0].children[0].outerHTML = timHelper.toHeading(this.attrs.markup.header, "h4");
+        }
+        const n = this.element[0].children.length;
+        if (!this.attrs.markup.isQuestion) {
+            if (n > 1) {
+                this.element[0].children[n - 1].outerHTML = timHelper.toHeading(this.attrs.markup.footer, 'p class="plgfooter"');
+            }
+        }
+    }
+
+    updateAnswer(at: AnswerTable) {
+        this.newAnswer = at;
+        console.log("answer updated:", JSON.stringify(at));
+    }
+
+    initCode() {
+        this.error = "";
+        this.result = "";
+    }
+
+    saveText() {
+        this.doSaveText(false);
+    }
+
+    checkQstMode(nosave: boolean) {
+        const w: any = window;
+        return (w.in_lecture || w.lectureMode) && w.item.rights.teacher; //  $scope.$parent.$parent.wallName; // TODO: better check if in lecture page
+    }
+
+    doSaveText(nosave: boolean) {
+        this.error = "... saving ...";
+        this.isRunning = true;
+
+        this.result = "";
+
+        const answers = this.newAnswer;
+
+        const params = {
+            input: {
+                answers,
+                markup: {taskId: this.taskId, user_id: this.attrs.markup.user_id},
+                nosave: false,
+            },
+        };
+
+        if (nosave) {
+            params.input.nosave = true;
+        }
+        let url = "/qst/answer";
+        if (this.plugin) {
+            url = this.plugin;
+            const i = url.lastIndexOf("/");
+            if (i > 0) {
+                url = url.substring(i);
+            }
+            url += "/" + this.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
+        }
+
+        $http<{
+            web: {
+                error: string,
+                result: string,
+                show_result: boolean,
+                state: AnswerTable,
+                markup: IAskedJsonJson,
+            },
+        }>({
+                method: "PUT",
+                url,
+                data: params,
+                headers: {"Content-Type": "application/json"},
+                timeout: 20000,
+            },
+        ).then((response) => {
+            const data = response.data;
+            this.isRunning = false;
+            this.error = data.web.error;
+            this.result = data.web.result;
+            if (data.web.markup && data.web.show_result) {
+                this.preview = makePreview({
+                    expl: data.web.markup.expl,
+                    json: data.web.markup.json,
+                    points: data.web.markup.points,
+                }, data.web.state);
+            }
+        }, (response) => {
+            this.isRunning = false;
+            this.errors.push(response.status);
+            this.error = "Ikuinen silmukka tai jokin muu vika?";
+        });
+    }
+}
+
+timApp.component("qstRunner", {
+    bindings: {
+        json: "@",
     },
-    ).then(function(response) {
-        const data = response.data;
-        $scope.isRunning = false;
-        $scope.error = data.web.error;
-        $scope.result = data.web.result;
-        if (data.web.markup && data.web.show_result) {
-            const params: any = {};
-            params.answerTable = data.web.state;
-            params.questionParId = 1; // args.questionParId;
-            params.questionParIdNext = 2; //args.questionParIdNext;
-            params.isLecturer = false;
-            params.markup = data.web.markup;
-            params.questionTitle = data.web.markup.json.questionTitle;
-            params.points = data.web.markup.points;
-            params.expl = data.web.markup.expl;
-            // var preview = element.parents('.previewcontent').length > 0;
-            params.preview = false; // scope.$parent.previewUrl; // Released;
-            params.result = true;
-            params.answclass = "qstAnswerSheet";
-            params.noDisable = true;
+    controller: QstController,
+    require: {
+        lctrl: "?^timLecture",
+    },
+    template: directiveTemplate,
+});
 
-            $scope.dynamicAnswerSheetControl.createAnswer(params);
-
-        }
-    }, function(response) {
-        $scope.isRunning = false;
-        $scope.errors.push(status);
-        $scope.error = "Ikuinen silmukka tai jokin muu vika?";
-    });
-};
+timApp.component("questionRunner", {
+    bindings: {
+        json: "@",
+    },
+    controller: QstController,
+    require: {
+        lctrl: "?^timLecture",
+    },
+    template: directiveTemplateQuestion,
+});

@@ -1,7 +1,7 @@
 """Routes for qst (question) plugin."""
-import binascii
 import json
 import re
+from xml.sax.saxutils import quoteattr
 
 import yaml
 from flask import Blueprint
@@ -11,10 +11,9 @@ from flask import request
 
 from timApp.containerLink import convert_md
 from timApp.documentmodel.document import Document
-from timApp.plugin import Plugin
+from timApp.plugin import Plugin, PluginException
 from timApp.plugin import get_num_value
 from timApp.plugin import get_value
-from timApp.pluginexception import PluginException
 from timApp.requesthelper import verify_json_params
 from timApp.responsehelper import json_response
 from timApp.sessioninfo import get_current_user_object
@@ -30,10 +29,8 @@ def qst_reqs():
     reqs = {
         "type": "embedded",
         "js": ["tim/controllers/qstController",
-               # "/static/scripts/directives/dynamicAnswerSheet.js"
                ],
-        # "css": [],dynami
-        "angularModule": ["qstApp"],
+        "angularModule": [],
         "multihtml": True,
         "multimd": True
     }
@@ -107,7 +104,7 @@ def qst_mmcq_multimd():
     return json_response(multi)
 
 
-@qst_plugin.route("/qst/qetQuestionMD/", methods=['POST'])
+@qst_plugin.route("/qst/getQuestionMD/", methods=['POST'])
 def get_question_md():
     doc_id, md = verify_json_params('docId', 'text')
     # md = verify_json_params('text')
@@ -360,12 +357,10 @@ def qst_get_html(jso, review):
 
     attrs = json.dumps(jso)
 
-    hx = 'xxxHEXJSONxxx' + binascii.hexlify(attrs.encode("UTF8")).decode()
-    attrs = hx
     runner = 'qst-runner'
     if markup.get('isQuestion', ''):
         runner = 'question-runner'
-    s = '<' + runner + '>' + attrs + '</' + runner + '>'
+    s = f'<{runner} json={quoteattr(attrs)}></{runner}>'
     return s
 
 
@@ -565,7 +560,7 @@ def get_question_data_from_document(doc_id, par_id, edit=False):
     markup = plugindata.get('markup')
     markup["qst"] = not par.is_question()
     json = markup.get("json", None)
-    if json:  # backward compability
+    if json:  # backward compatibility
         question_title = json.get("title", "")
         if question_title and not json.get("questionTitle", ""):
             json["questionTitle"] = question_title

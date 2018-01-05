@@ -128,7 +128,6 @@ export function setsetting(setting, value) {
         type: "POST",
         url: "/sessionsetting/" + setting + "/" + value,
         success(data) {
-            $log.info(data);
             sessionsettings[setting] = value;
         },
         error() {
@@ -156,3 +155,4 @@ export function applyMixins(derivedCtor: any, baseCtors: any[]) {
 export function markAsUsed(...modules: any[]) {
     // no need to do anything here
 }
+

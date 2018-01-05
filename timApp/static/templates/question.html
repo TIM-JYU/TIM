@@ -1,22 +1,24 @@
 <div style="text-align:left">
     <div class="popUpWindow" ng-if="!qctrl.asked_id"  >
-        <form class="createQuestion">
-            <div id="question-textarea-div">
+        <form class="createQuestion" name="qctrl.f">
+            <div>
                 <div>Question:</div>
-                <textarea id="question-textarea" name="question" rows="3" ng-model="qctrl.question.questionText" ng-change="qctrl.changeQuestionTitle(qctrl.question.questionText)"></textarea>
+                <textarea required name="question" rows="3" ng-model="qctrl.question.questionText" ng-change="qctrl.changeQuestionTitle(qctrl.question.questionText)"></textarea>
+                <tim-error-message for="qctrl.f.question"></tim-error-message>
             </div>
             <div id="questionName">
                 <label>
                     Question title:
-                    <input type="text" ng-model="qctrl.question.questionTitle" onfocus="this.select()" ng-change="qctrl.titleIsChanged()" />
+                    <input required name="title" type="text" ng-model="qctrl.question.questionTitle" onfocus="this.select()" ng-change="qctrl.titleIsChanged()" />
+                    <tim-error-message for="qctrl.f.title"></tim-error-message>
                 </label>
             </div>
 
             <div id="qType">
                 <label>Question type:
-                    <select name="qctrl.question.questionType" ng-model="qctrl.question.questionType" ng-dropdown required
+                    <select name="type" ng-model="qctrl.question.questionType" ng-dropdown required
                             ng-change="qctrl.createMatrix(qctrl.question.questionType)">
-                        <option value="" ng-option disabled selected> -- select question type --</option>
+                        <option value="" ng-option selected> -- select question type --</option>
                         <option ng-option value="radio-vertical">Multiple choice (radio button)</option>
                         <option ng-option value="checkbox-vertical">Multiple choice (checkbox)</option>
                         <option ng-option value="true-false">True/False</option>
@@ -25,20 +27,21 @@
                         <option ng-option value="textarea">One text area</option>
                     </select>
                 </label>
+                <tim-error-message for="qctrl.f.type"></tim-error-message>
             </div>
             <div id="check" ng-if="qctrl.question.questionType == 'matrix' || qctrl.question.questionType == 'likert'">
                 <label>Answer type:</label>
-                <select name="answerType" ng-model="qctrl.question.matrixType" ng-dropdown
+                <select required name="answerType" ng-model="qctrl.question.matrixType" ng-dropdown
                         ng-options="item.value as item.label for item in qctrl.answerFieldTypes ">
                     <option value="" disabled selected> -- select answer type --</option>
                 </select>
+                <tim-error-message for="qctrl.f.answerType"></tim-error-message>
             </div>
             <div ng-if="qctrl.question.questionType" style="overflow-x: auto">
                 <tim-question-matrix></tim-question-matrix>
             </div>
 
             <div id="questionTiming">
-                <div><label>Set question timing:</label></div>
                 <div id="questionStart">
                     <label>Starting time:</label>
                     <input type="checkbox" ng-model="qctrl.question.startTimeSelected"/>
@@ -59,12 +62,15 @@
                     <input type="checkbox" ng-model="qctrl.question.endTimeSelected"/>
 
                     <div id="durationDiv" class="questionTimer">
-                        <input id="durationHour" type="text" name="hours" maxlength="2" size="2"
-                               ng-model="qctrl.question.timeLimit.hours" ng-disabled="!qctrl.question.endTimeSelected"> h
-                        <input id="durationMin" type="text" name="minutes" maxlength="2" size="2"
-                               ng-model="qctrl.question.timeLimit.minutes" ng-disabled="!qctrl.question.endTimeSelected"> m
-                        <input id="durationSec" type="text" name="seconds" maxlength="2" size="2"
-                               ng-model="qctrl.question.timeLimit.seconds" ng-disabled="!qctrl.question.endTimeSelected"> s
+                        <input id="durationHour" type="number" name="hours" min="0" maxlength="2" size="2"
+                               ng-model="qctrl.question.timeLimitFields.hours" ng-disabled="!qctrl.question.endTimeSelected"> h
+                        <input id="durationMin" type="number" name="minutes" min="0" maxlength="2" size="2"
+                               ng-model="qctrl.question.timeLimitFields.minutes" ng-disabled="!qctrl.question.endTimeSelected"> m
+                        <input id="durationSec" type="number" name="seconds" min="0" maxlength="2" size="2"
+                               ng-model="qctrl.question.timeLimitFields.seconds" ng-disabled="!qctrl.question.endTimeSelected"> s
+                        <tim-error-message for="f.hours"></tim-error-message>
+                        <tim-error-message for="f.minutes"></tim-error-message>
+                        <tim-error-message for="f.seconds"></tim-error-message>
                     </div>
                 </div>
             </div>
@@ -73,7 +79,7 @@
             <label>Document question <input type="checkbox" ng-model="qctrl.markup.qst"/></label>
             <dynamic-answer-sheet questiondata="qctrl.previewParams" preview="true"></dynamic-answer-sheet>
         </div>
-        <p class="error_message" ng-if="qctrl.error_message.length" ng-bind-html="qctrl.error_message"></p>
+        <tim-alert ng-show="qctrl.customError">{{ qctrl.customError }}</tim-alert>
 
         <div class="buttons">
             <span ng-if="(!qctrl.new_question)"> <button class="btn btn-danger" ng-click="qctrl.deleteQuestion()">Delete</button> </span>
@@ -98,7 +104,7 @@
             <div ng-if="qctrl.question.questionType" style="overflow-x: auto">
                 <tim-question-matrix></tim-question-matrix>
             </div>
-            <p class="error_message" ng-if="qctrl.error_message.length" ng-bind-html="qctrl.error_message"></p>
+            <tim-alert ng-show="qctrl.customError">{{ qctrl.customError }}</tim-alert>
 
             <div class="buttons">
                 <button class="timButton" ng-if="!qctrl.asked_id" ng-if="lctrl.lectureSettings.inLecture"

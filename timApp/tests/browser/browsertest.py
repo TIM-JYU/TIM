@@ -3,7 +3,7 @@ import os
 from base64 import b64decode
 from io import BytesIO
 from pprint import pprint
-from typing import Union
+from typing import Union, List
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -92,7 +92,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         logs = self.drv.get_log("browser")
         pprint(logs)
 
-    def save_screenshot(self, filename: str):
+    def save_screenshot(self, filename: str='screenshot'):
         """Saves the current browser screen to a PNG file in screenshots directory.
 
         :param filename: The file name of the PNG file.
@@ -211,3 +211,19 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def wait_and_click(self, selector: str):
         self.wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, selector)))
         self.drv.find_element_by_css_selector(selector).click()
+
+
+def find_button_by_text(root: WebElement, text: str):
+    return find_element_by_text(root, text, 'button')
+
+
+def find_element_by_text(root: WebElement, text: str, element: str='*') -> WebElement:
+    return root.find_element_by_xpath(f"//{element}[contains(text(),'{text}')]")
+
+
+def find_by_ngmodel(element: WebElement, model: str, tagname='*') -> WebElement:
+    return element.find_element_by_css_selector(f'{tagname}[ng-model="{model}"]')
+
+
+def find_all_by_ngmodel(element: WebElement, model: str, tagname='*') -> List[WebElement]:
+    return element.find_elements_by_css_selector(f'{tagname}[ng-model="{model}"]')

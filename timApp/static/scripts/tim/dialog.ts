@@ -1,7 +1,7 @@
 import angular from "angular";
 import {IController} from "angular";
 import "angular-ui-bootstrap";
-import {$templateCache, $uibModal} from "./ngimport";
+import {$templateCache, $uibModal, $window} from "./ngimport";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "./app";
 
@@ -72,6 +72,7 @@ export async function showDialog<T extends DialogController<Params, Ret>, Params
     </div>
 </div>`);
     const instance: IModalInstanceService = $uibModal.open({
+        animation: !$window.IS_TESTING,
         backdrop: false,
         component: component,
         openedClass: "unused-class", // prevents scrolling from being disabled

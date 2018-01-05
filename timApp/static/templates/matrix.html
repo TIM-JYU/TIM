@@ -36,11 +36,12 @@
                 <th ng-if="!$ctrl.qctrl.asked_id">
                     <!--{{ asked_id !== false ? row.text : "" }} -->
                     <div style="position: relative">
-                    <textarea class="rowHeading questiontext" ng-model="row.text" rows="1"  id = "{{ 'r'+row.id }}"></textarea>
+                    <textarea required class="rowHeading questiontext" ng-model="row.text" rows="1"  id = "{{ 'r'+row.id }}" name="{{'r'+row.id}}"></textarea>
                     <div class="matrixButtons">
                         <button class="timButton btn-xs btn-block" tabindex="-1" ng-click="$ctrl.qctrl.addRow($index)"><span class="glyphicon glyphicon-plus"></span></button>
                         <button class="btn btn-danger btn-xs btn-block" tabindex="-1" ng-click="$ctrl.qctrl.delRow($index)" style="margin-top: 13px;"><span class="glyphicon glyphicon-minus"></span></button>
                     </div>
+                        <tim-error-message for="$ctrl.qctrl.f['r' + row.id]"></tim-error-message>
                     </div>
                 </th>
                 <td ng-repeat="column in row.columns" class="answer-columns">

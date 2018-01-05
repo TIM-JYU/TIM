@@ -4,17 +4,17 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 
-from timApp.tests.browser.browsertest import BrowserTest
+from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text
 from timApp.timdb.tim_models import db
 
 
 def get_change_editor_button(pareditor) -> WebElement:
-    change_editor_button = pareditor.find_element_by_xpath("//button[contains(text(),'Editor')]")
+    change_editor_button = find_button_by_text(pareditor, 'Editor')
     return change_editor_button
 
 
 def get_cancel_button(pareditor) -> WebElement:
-    button = pareditor.find_element_by_xpath("//button[contains(text(),'Cancel')]")
+    button = find_button_by_text(pareditor, 'Cancel')
     return button
 
 
@@ -59,7 +59,7 @@ class ParEditorTest(BrowserTest):
         # after deleting the '!', the screenshot should be the same
         ActionChains(self.drv).send_keys(Keys.PAGE_DOWN, Keys.BACKSPACE).perform()
         self.wait_for_preview_to_finish()
-        self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world')
+        self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world_2')
 
     def wait_for_editor_load(self):
         self.wait_until_hidden('.editor-loading')

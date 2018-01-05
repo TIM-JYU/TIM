@@ -1,16 +1,11 @@
-import angular, {IController, IOnChangesObject, IRootElementService} from "angular";
+import {IController, IOnChangesObject, IRootElementService, IChangesObject} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {ParCompiler} from "../services/parCompiler";
 import {
-    IAskedJsonJson,
-    IAskedJsonJsonJson,
-    IExplCollection,
-    IHeader,
-    IProcessedHeaders,
-    IUnprocessedHeaders,
-    IUnprocessedHeadersCompat,
+    AnswerFieldType, IAskedJsonJsonBase, IAskedJsonJsonJson, IExplCollection, IHeader, IProcessedHeaders, IRow,
+    IUnprocessedHeaders, IUnprocessedHeadersCompat,
 } from "../lecturetypes";
+import {ParCompiler} from "../services/parCompiler";
 
 /**
  * Created by localadmin on 25.5.2015.
@@ -28,10 +23,10 @@ import {
  */
 
 function uncheckRadio(this: HTMLElement) {
-    // set this to click-method if you want a radio that can be uncheked.  for the radio there
+    // set this to click-method if you want a radio that can be unchecked.  for the radio there
     // must be also property form that has other radios.
     const elem = $(this);
-    const form = elem.prop("form");
+    const form = elem.parent("form");
     if (!form) {
         return;
     }
@@ -45,12 +40,12 @@ function uncheckRadio(this: HTMLElement) {
     elem.prop("previousValue", elem.prop("checked"));
 }
 
-export function getJsonAnswers(answer: string): string[][] {
+export function getJsonAnswers(answer: string): AnswerTable {
     // Converts answer string to JSON table
     if (answer.length > 0 && answer[0] === "[") {
         return JSON.parse(answer);
     }
-    const singleAnswers: string[][] = [];
+    const singleAnswers: AnswerTable = [];
     const allAnswers = answer.split("|");
 
     for (const a of allAnswers) {
@@ -70,7 +65,7 @@ function deletePar(s: string) {
     return rs.substring(0, rs.length - 4);
 }
 
-export function getPointsTable(markupPoints: string): Array<{[points: string]: string}> {
+export function getPointsTable(markupPoints?: string): Array<{[points: string]: string}> {
     // Format of markupPoints: 1:1.1;2:1.2;3:1.3||2:3.2
     const pointsTable: Array<{[points: string]: string}> = [];
     if (markupPoints && markupPoints !== "") {
@@ -93,10 +88,10 @@ export function getPointsTable(markupPoints: string): Array<{[points: string]: s
 export function minimizeJson(json: IProcessedHeaders): IUnprocessedHeaders {
     // remove not needed fields from json, call when saving the question
     const result: IUnprocessedHeaders = {
-        answerFieldType: null,
-        headers: null,
-        questionType: null,
-        rows: null,
+        answerFieldType: "text",
+        headers: [],
+        questionType: "",
+        rows: "",
     };
     if (json.headers) {
         result.headers = [];
@@ -177,8 +172,8 @@ export function fixQuestionJson(json: IUnprocessedHeadersCompat): IProcessedHead
             {type: "header", id: 1, text: "False"},
         ];
     }
-
-    const blankColumn = {text: "", type: "question", answerFieldType: ""}; // TODO: needs id?
+    const defaultFieldType: AnswerFieldType = "text";
+    const blankColumn = {text: "", type: "question", answerFieldType: defaultFieldType}; // TODO: needs id?
     if (typeof rows === "string") { // if just on text string
         const jrows = rows.split("\n");
         for (let i = 0; i < jrows.length; i++) {
@@ -218,16 +213,48 @@ export function fixQuestionJson(json: IUnprocessedHeadersCompat): IProcessedHead
 }
 
 export interface IPreviewParams {
-    points: string;
-    answerTable: string[][];
+    points?: string;
+    answerTable: AnswerTable;
     noDisable: boolean;
     preview: boolean;
     result: {};
-    previousAnswer: string;
+    previousAnswer?: string;
     answclass: string;
     expl: IExplCollection;
-    markup: IAskedJsonJson;
+    markup: IAskedJsonJsonBase;
 }
+
+function createArray(...args: number[]) {
+    if (args.length === 0) {
+        return [];
+    }
+    const [length, ...rest] = args;
+    const arr = new Array(length || 0);
+    let i = length;
+
+    if (args.length > 1) {
+        while (i--) {
+            arr[length - 1 - i] = createArray(...rest);
+        }
+    }
+    return arr;
+}
+
+export function makePreview(markup: IAskedJsonJsonBase, answerTable: AnswerTable = []): IPreviewParams {
+    return {
+        answclass: "qstAnswerSheet",
+        answerTable: answerTable,
+        expl: markup.expl || {},
+        markup: markup,
+        noDisable: true,
+        points: markup.points,
+        preview: false,
+        result: true,
+    };
+}
+
+type MatrixElement = string | number;
+export type AnswerTable = string[][];
 
 class AnswerSheetController implements IController {
     private static $inject = ["$element"];
@@ -236,10 +263,12 @@ class AnswerSheetController implements IController {
     private result: {};
     private json: IAskedJsonJsonJson;
     private processed: IProcessedHeaders;
-    private markup: IAskedJsonJson;
-    private answerTable: string[][];
+    private answerMatrix: MatrixElement[][];
     private expl: IExplCollection;
-    private htmlSheet: JQuery;
+    private pointsTable: Array<{[p: string]: string}>;
+    private userpoints?: string;
+    private disabled: boolean;
+    private onAnswerChange: () => (at: AnswerTable) => void;
 
     constructor(element: IRootElementService) {
         this.element = element;
@@ -249,16 +278,113 @@ class AnswerSheetController implements IController {
 
     }
 
-    cg() {
+    private cg() {
         return "group";
     }
 
     $onChanges(onChangesObj: IOnChangesObject) {
-        const data = onChangesObj.questiondata.currentValue as IPreviewParams;
-        if (data === null) {
-            return;
+        const qdata = onChangesObj.questiondata as IChangesObject<IPreviewParams> | undefined;
+        const adata = onChangesObj.answertable as IChangesObject<AnswerTable> | undefined;
+        if (qdata) {
+            this.createAnswer(qdata.currentValue);
+            ParCompiler.processAllMathDelayed(this.element);
+        } else if (adata) {
+            this.answerMatrix = this.answerMatrixFromTable(adata.currentValue);
         }
-        this.createAnswer(data);
+    }
+
+    $doCheck() {
+    }
+
+    private getHeader() {
+        return this.fixText(this.json.questionText);
+    }
+
+    private fixText(s: string) {
+        return fixLineBreaks(s);
+    }
+
+    private getPoints(rowIndex: number, colIndex: number): string | null {
+        if (!this.result) {
+            return null;
+        }
+        if (this.isVertical()) {
+            [rowIndex, colIndex] = [colIndex, rowIndex];
+        }
+        if (this.pointsTable.length <= rowIndex) {
+            return null;
+        }
+        const rowPoints = this.pointsTable[rowIndex];
+        if (!rowPoints) {
+            return null;
+        }
+        const idxStr = "" + (colIndex + 1);
+        if (idxStr in rowPoints) {
+            return rowPoints[idxStr];
+        }
+        return null;
+    }
+
+    private getLabelText(row: IRow): string {
+        if (this.isMatrix()) {
+            return "";
+        }
+        return row.text;
+    }
+
+    private getInputClass(rowIndex: number, colIndex: number) {
+        const pts = this.getPoints(rowIndex, colIndex);
+        return pts !== null && parseInt(pts, 10) > 0 ? "qst-correct" : "qst-normal";
+    }
+
+    private getExpl(rowIndex: number): string | null {
+        if (!this.result) {
+            return null;
+        }
+        const key = "" + (rowIndex + 1);
+        if (key in this.expl) {
+            return this.expl[key];
+        }
+        return null;
+    }
+
+    private isMatrix() {
+        return this.json.questionType === "matrix" || this.json.questionType === "true-false";
+    }
+
+    private isVertical() {
+        return !this.isMatrix();
+    }
+
+    private getTableClass(): string | null {
+        let totalBorderless = true;
+        const data = this.processed;
+        if (this.hasHeaders() || data.rows.length > 1) {
+            totalBorderless = false;
+        }
+        return totalBorderless ? "total-borderless" : null;
+    }
+
+    private hasHeaders(): boolean {
+        const data = this.processed;
+        return data.headers &&
+            data.headers.length > 0 && !(data.headers[0].text === "" && data.headers.length === 1);
+    }
+
+    private getGroupName(rowIndex: number) {
+        if (this.isMatrix()) {
+            return "group" + rowIndex;
+        } else {
+            return "groupquestion";
+        }
+    }
+
+    private getInputValue(rowIndex: number, colIndex: number) {
+        if (this.isMatrix()) {
+            return colIndex + 1;
+        } else {
+            return rowIndex + 1;
+        }
     }
 
     /**
@@ -269,293 +395,188 @@ class AnswerSheetController implements IController {
 
         const answclass = params.answclass || "answerSheet";
 
-        let disabled = "";
+        this.disabled = false;
         // If showing preview or question result, inputs are disabled
         if (params.preview || this.preview || this.result) {
-            disabled = " disabled ";
+            this.disabled = true;
         }
         if (params.noDisable) {
-            disabled = "";
+            this.disabled = false;
         }
 
-        this.element.empty();
         this.json = params.markup.json;
-        this.markup = params.markup;
-        const unprocessed = this.json.data || this.json; // compability to old format
-        const json = this.json;
+        const unprocessed = this.json.data || this.json; // compatibility to old format
+        this.processed = fixQuestionJson(unprocessed);
 
-        const data = fixQuestionJson(unprocessed);
-        this.processed = data;
-
-        this.answerTable = params.answerTable || [];
+        this.answerMatrix = this.answerMatrixFromTable(params.answerTable);
 
         // If user has answer to question, create table of answers and select inputs according to it
         if (params.previousAnswer) {
-            this.answerTable = getJsonAnswers(params.previousAnswer);
+            this.answerMatrix = this.answerMatrixFromTable(getJsonAnswers(params.previousAnswer));
         }
-        const answerTable = this.answerTable;
-        const pointsTable = getPointsTable(params.points || params.markup.points);
-
+        this.pointsTable = getPointsTable(params.points || params.markup.points);
         this.expl = params.expl || params.markup.expl;
-        // var htmlSheet = $('<div>', {class: answclass});
-        const htmlSheet = $("<form>", {class: answclass});
-        this.htmlSheet = htmlSheet;
-
-        const h5 = $("<h5>");
-        h5.append(fixLineBreaks(json.questionText));
-
-        htmlSheet.append(h5);
-        // htmlSheet.append($('<h5>', {text: json.questionText}));
-        if (params.markup.userpoints !== undefined) {
-            htmlSheet.append($("<p>", {text: "Points: " + params.markup.userpoints}));
-        }
-
-        const table = $("<table>", {id: "answer-sheet-table", class: "table table-borderless"});
-
-        let totalBorderless = true;
-
-        if (data.headers &&
-            data.headers.length > 0 && !(data.headers[0].text === "" && data.headers.length === 1)) {
-            const tr = $("<tr>", {class: "answer-heading-row"});
-            if (data.headers.length > 0) {
-                tr.append($("<th>"));
-            }
-            for (const header of data.headers) {
-                const th = $("<th>");
-                th.append(fixLineBreaks(header.text));
-                totalBorderless = false;
-                tr.append(th);
-                // tr.append($('<th>', {text: header.text || header}));
-            }
-            if (this.result && this.expl) {
-                tr.append($("<th>", {}));
-            }
-            table.append(tr);
-        }
-
-        let ir = -1;
-        for (const row of data.rows) {
-            ir++;
-            let pointsRow = {};
-            if (params.result && pointsTable.length > ir && pointsTable[ir]) {
-                pointsRow = pointsTable[ir];
-            }
-            const rtext = fixLineBreaks(row.text);
-            const tr = $("<tr>");
-            if (json.questionType === "matrix" || json.questionType === "true-false") {
-                const td = $("<td>");
-                td.append(rtext);
-                if (rtext && ir > 0) {
-                    totalBorderless = false;
-                }
-                tr.append(td);
-                //tr.append($('<td>', {text: row.text}));
-            }
-            let header = 0;
-            //TODO: Needs correct JSON to be made better way
-            for (let ic = 0; ic < row.columns.length; ic++) {
-                let group;
-                group = this.cg() + ir;
-
-                if (json.questionType === "matrix" || json.questionType === "true-false") {
-                    const value = "" + (ic + 1); // (row.columns[ic].id + 1).toString();
-
-                    let colTDPoints;
-                    let colPtsClass = "qst-normal";
-                    if (value in pointsRow) {
-                        const colPoints = pointsRow[value];
-                        colTDPoints = $("<p>", {class: "qst-points"}).append(colPoints);
-                        if (colPoints > 0) {
-                            colPtsClass = "qst-correct";
-                        }
-                    }
-                    row.columns[ic].id = ic;
-
-                    if (json.answerFieldType === "text") {
-                        let text = "";
-                        if (answerTable && ir < answerTable.length && ic < answerTable[ir].length) {
-                            text = answerTable[ir][ic];
-                        }
-                        const textArea = $("<textarea>", {
-                            id: "textarea-answer",
-                            name: group,
-                        });
-                        textArea.text(text);
-                        if (disabled !== "") {
-                            textArea.attr("disabled", "disabled");
-                        }
-                        if (data.headers && data.headers.length === 1 && data.headers[0].text === "" && data.rows.length === 1) {
-                            // textArea.attr('style', 'height:200px');
-                        }
-                        tr.append($("<td>", {class: "answer-button"}).append($("<label>").append(textArea)));
-                        header++;
-                    } else {
-                        // group = this.cg() + rtext.replace(/[^a-zA-Z0-9]/g, "");
-                        let checked = false;
-                        if (answerTable && ir < answerTable.length) {
-                            checked = (answerTable[ir].indexOf(value) >= 0);
-                        }
-                        const input: JQuery = $("<input>", {
-                            type: json.answerFieldType,
-                            name: group,
-                            value: ic + 1, // parseInt(row.columns[ic].id) + 1,
-                            checked,
-                        });
-                        if (json.answerFieldType === "radio") {
-                            input.click(uncheckRadio);  // TODO: Tähän muutoskäsittely ja jokaiseen tyyppiin tämä
-                        }
-                        if (disabled !== "") {
-                            input.attr("disabled", "disabled");
-                        }
-
-                        const td = $("<td>", {class: "answer-button"});
-                        const ispan = $("<span>", {class: colPtsClass});
-                        ispan.append(input);
-                        td.append($("<label>").append(ispan));
-
-                        if (colTDPoints) {
-                            td.append(colTDPoints);
-                        }
-                        tr.append(td);
-                        header++;
-                    }
-                } else {
-                    const value = "" + (ir + 1); // (row.id + 1).toString();
-                    let colTDPoints;
-                    let colPtsClass = "qst-normal";
-                    let pointsRow = {};
-                    if (params.result && pointsTable.length > 0 && pointsTable[0]) pointsRow = pointsTable[0];
-                    if (value in pointsRow) {
-                        const colPoints = pointsRow[value];
-                        colTDPoints = $("<p>", {class: "qst-points"}).append(colPoints);
-                        if (colPoints > 0) {
-                            colPtsClass = "qst-correct";
-                        }
-                    }
-                    row.columns[ic].id = ic;
-
-                    const type = row.type || "question";
-                    group = this.cg() + type.replace(/[^a-zA-Z0-9]/g, "");
-                    let checked = false;
-                    if (answerTable && answerTable.length > 0) {
-                        checked = (answerTable[0].indexOf(value) >= 0);
-                    }
-                    const input = $("<input>", {
-                        type: json.answerFieldType,
-                        name: group,
-                        value: ir + 1, //parseInt(row.id) + 1,
-                        checked,
-                    });
-                    if (json.answerFieldType === "radio") {
-                        input.click(uncheckRadio);
-                    }
-                    if (disabled !== "") {
-                        input.attr("disabled", "disabled");
-                    }
-                    const label = $("<label>");
-                    const ispan = $("<span>", {class: colPtsClass});
-                    ispan.append(input);
-                    label.append(ispan).append(" " + deletePar("" + rtext));
-                    const td = $("<td>", {class: "answer-button2"});
-                    td.append(label);
-                    if (colTDPoints) {
-                        td.append(colTDPoints);
-                    }
-                    tr.append(td);
-                }
-            }
-            // If showing question results, add question rows explanation
-            if (this.result && this.expl) {
-                let expl = "";
-                const ir1 = (ir + 1).toString();
-                if (ir1 in this.expl) {
-                    expl = this.expl[ir1];
-                }
-                const tde = $("<td>", {class: "explanation"});
-                tde.append(expl);
-                // tr.append($('<td>', {class: 'explanation', text: expl}));
-                tr.append(tde);
-            }
-            table.append(tr);
-        }
-
-        htmlSheet.append($("<div>").append(table));
-
-        if (totalBorderless) {
-            table.addClass("total-borderless");
-        }
-
-        this.element.append(htmlSheet);
-        ParCompiler.processAllMathDelayed(this.htmlSheet);
+        this.userpoints = params.markup.userpoints;
     }
 
-    getAnswers() {
-        const answers = [];
+    private answerMatrixFromTable(table: AnswerTable): MatrixElement[][] {
         const data = this.processed;
-        if (angular.isDefined(data.rows)) {
-            let groupName; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
-            if (this.json.questionType === "matrix" || this.json.questionType === "true-false") {
-                for (let ir = 0; ir < data.rows.length; ir++) {
-                    groupName = this.cg() + ir;
-                    const answer = [];
-                    let matrixInputs;
-                    // groupName = this.cg() + ir; // data.rows[ir].text.replace(/[^a-zA-Z0-9]/g, '');
-
-                    if (this.json.answerFieldType === "text") {
-                        matrixInputs = $(`textarea[name=${groupName}]`, this.htmlSheet);
-                        for (let ic = 0; ic < matrixInputs.length; ic++) {
-                            const v = matrixInputs[ic].value || "";
-                            answer.push(v);
-                        }
-
-                        answers.push(answer);
-                        continue;
-                    }
-
-                    matrixInputs = $(`input[name=${groupName}]:checked`, this.htmlSheet);
-
-                    for (let k = 0; k < matrixInputs.length; k++) {
-                        const v = matrixInputs[k].value || "";
-                        answer.push(v);
-                    }
-                    if (matrixInputs.length <= 0) {
-                        answer.push("");
-                    }
-                    answers.push(answer);
-                }
+        if (data.rows.length === 0) {
+            return [];
+        }
+        let arr: MatrixElement[][] = createArray(data.rows.length, data.rows[0].columns.length);
+        if (this.isMatrix()) {
+            if (this.isText()) {
+                arr = table;
             } else {
-                answers.push([]);
-                const type = data.rows[0].type || "question";
-                groupName = this.cg() + type.replace(/[^a-zA-Z0-9]/g, "");
-                const checkedInputs = $("input[name=" + groupName + "]:checked", this.htmlSheet) as any as HTMLInputElement[];
-                for (let j = 0; j < checkedInputs.length; j++) {
-                    answers[0].push(checkedInputs[j].value);
+                for (let i = 0; i < table.length; i++) {
+                    for (let j = 0; j < table[i].length; j++) {
+                        const val = table[i][j];
+                        if (!val) {
+                            continue;
+                        }
+                        const value = parseInt(val, 10);
+                        if (this.isCheckbox()) {
+                            arr[i][value - 1] = 1;
+                        } else {
+                            arr[i][0] = value;
+                        }
+                    }
                 }
-
-                if (checkedInputs.length <= 0) {
-                    answers[0].push(""); // was "undefined"
+            }
+        } else {
+            if (table.length === 0) {
+                return arr;
+            }
+            if (table.length !== 1) {
+                throw new Error(`Expected answertable of length 1, got ${table.length}`);
+            }
+            const row = table[0];
+            for (let i = 0; i < row.length; i++) {
+                const val = row[i];
+                if (!val) {
+                    continue;
+                }
+                const value = parseInt(val, 10);
+                if (this.isCheckbox()) {
+                    arr[value - 1][0] = 1;
+                } else if (this.isRadio()) {
+                    arr[0][0] = value;
+                } else {
+                    throw new Error(`Unexpected input type: ${this.json.answerFieldType}`);
                 }
             }
         }
+        return arr;
+    }
 
-        // TODO: most likely dead code
-        // if (angular.isDefined(data.columns)) {
-        //     for (const column of data.columns) {
-        //         const groupName = this.cg() + column.Value.replace(/ /g, "");
-        //         answers.push($("input[name=" + groupName + "]:checked").val());
-        //     }
-        // }
-        return answers;
+    private tableFromAnswerMatrix(matrix: MatrixElement[][]): AnswerTable {
+        let table: AnswerTable = [];
+        if (this.isMatrix()) {
+            if (this.isText()) {
+                table = matrix.map((row) => row.map((elem) => elem.toString()));
+            } else {
+                for (const row of matrix) {
+                    const tableRow: string[] = [];
+                    let rowi = 1;
+                    for (const val of row) {
+                        if (val) {
+                            tableRow.push("" + (this.isCheckbox() ? rowi : val));
+                        }
+                        rowi++;
+                    }
+                    // TODO: if row is empty, should we push an empty string (old code did so)?
+                    table.push(tableRow);
+                }
+            }
+        } else {
+            const tableRow: string[] = [];
+            let rowi = 1;
+            for (const row of matrix) {
+                const val = row[0];
+                if (val) {
+                    tableRow.push("" + (this.isCheckbox() ? rowi : val));
+                }
+                rowi++;
+            }
+            // TODO: if row is empty, should we push an empty string (old code did so)?
+            table.push(tableRow);
+        }
+        return table;
+    }
+
+    private isText() {
+        return this.json.answerFieldType === "text";
+    }
+
+    private isRadio() {
+        return this.json.answerFieldType === "radio";
+    }
+
+    private isCheckbox() {
+        return this.json.answerFieldType === "checkbox";
+    }
+
+    private signalUpdate() {
+        this.onAnswerChange()(this.tableFromAnswerMatrix(this.answerMatrix));
     }
 }
 
+// noinspection TsLint
 timApp.component("dynamicAnswerSheet", {
     bindings: {
         preview: "<",
         questiondata: "<",
+        answertable: "<?",
+        onAnswerChange: "&",
     },
     controller: AnswerSheetController,
-    template: `<div class="answer-sheet-root">
-
-</div>`,
+    template: `
+<form class="qstAnswerSheet" ng-if="$ctrl.json">
+    <h5 ng-bind="$ctrl.getHeader()"></h5>
+    <p ng-if="$ctrl.userpoints !== undefined" ng-bind="$ctrl.userpoints"></p>
+    <div>
+        <table class="table table-borderless answer-sheet-table" ng-class="$ctrl.getTableClass()">
+            <tbody>
+            <tr ng-if="$ctrl.hasHeaders()" class="answer-heading-row">
+                <th ng-if="$ctrl.isMatrix()"></th>
+                <th ng-repeat="h in $ctrl.processed.headers" ng-bind="$ctrl.fixText(h.text)"></th>
+                <th ng-if="$ctrl.result && $ctrl.expl"></th>
+            </tr>
+            <tr ng-repeat="row in $ctrl.processed.rows track by $index" ng-init="rowi = $index">
+                <td ng-if="$ctrl.isMatrix()" ng-bind="$ctrl.fixText(row.text)"></td>
+                <td ng-repeat="col in row.columns track by $index" ng-init="coli = $index">
+                    <label>
+                <span ng-class="$ctrl.getInputClass(rowi, coli)">
+                <input ng-if="$ctrl.isRadio()"
+                       ng-disabled="$ctrl.disabled"
+                       ng-change="$ctrl.signalUpdate()"
+                       type="radio"
+                       ng-model="$ctrl.answerMatrix[$ctrl.isMatrix() ? rowi : 0][0]"
+                       name="{{$ctrl.getGroupName(rowi)}}"
+                       ng-value="$ctrl.getInputValue(rowi, coli)">
+                <input ng-if="$ctrl.isCheckbox()"
+                       ng-disabled="$ctrl.disabled"
+                       ng-change="$ctrl.signalUpdate()"
+                       type="checkbox"
+                       ng-model="$ctrl.answerMatrix[rowi][coli]"
+                       name="{{$ctrl.getGroupName(rowi)}}"
+                       ng-true-value="1"
+                       ng-false-value="0">
+                <textarea
+                        ng-if="$ctrl.isText()"
+                        ng-disabled="$ctrl.disabled"
+                        ng-change="$ctrl.signalUpdate()"
+                        ng-model="$ctrl.answerMatrix[rowi][coli]">
+</textarea>
+</span>{{$ctrl.getLabelText(row, col)}}</label>
+                    <p ng-if="(p = $ctrl.getPoints(rowi, coli)) !== null" class="qst-points" ng-bind="p"></p>
+                </td>
+                <td ng-if="p = $ctrl.getExpl(rowi)" ng-bind="p" class="explanation"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</form>
+`,
 });

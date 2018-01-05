@@ -843,9 +843,9 @@ def ask_question():
     question_id = None
     asked_id = None
     par_id = None
-    if 'question_id' in request.args:
+    if request.args.get('question_id'):
         question_id = int(request.args.get('question_id'))
-    elif 'asked_id' in request.args:
+    elif request.args.get('asked_id'):
         asked_id = int(request.args.get('asked_id'))
     else:
         par_id = request.args.get('par_id')

@@ -1,9 +1,11 @@
-import {IController, IScope} from "angular";
-import {timApp} from "tim/app";
 import * as answerSheet from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed} from "tim/utils";
-import {$http, $log, $rootScope, $window} from "../ngimport";
-import {IAskedJsonJson} from "../lecturetypes";
+import {DialogController, registerDialogComponent, showDialog} from "../dialog";
+import {makePreview} from "../directives/dynamicAnswerSheet";
+import {IPreviewParams} from "../directives/dynamicAnswerSheet";
+import {IUniqueParId} from "../lecturetypes";
+import {$http, $rootScope, $timeout} from "../ngimport";
+import {deleteQuestionWithConfirm, fetchAndEditQuestion, fetchQuestion} from "./questionController";
 
 markAsUsed(answerSheet);
 
@@ -19,107 +21,119 @@ markAsUsed(answerSheet);
  * @copyright 2015 Timppa project authors
  */
 
-export class QuestionAskController implements IController {
-    private static $inject = ["$scope"];
-    private scope: IScope;
-    //TODO parse json and set values from rows and columns to scope variables
-    //TODO edit questionPreview.html to repeat rows and columns
+export interface IAskNew extends IUniqueParId {
+    lectureId: number;
+}
 
-    constructor(scope: IScope) {
-        this.scope = scope;
-        this.questionHeaders = [];
-        this.answerTypes = [];
-        this.dynamicAnswerSheetControl = {};
-        this.isLecturer = false;
-        this.questionTitle = "";
+export interface IReAsk {
+    askedId: number;
+    lectureId: number;
+}
 
-        this.scope.$on("setPreviewJson", (event, args) => {
-            this.questionParId = args.questionParId;
-            this.questionParIdNext = args.questionParIdNext;
-            this.isLecturer = args.isLecturer;
-            this.markup = args.markup;
-            this.questionTitle = args.markup.json.questionTitle;
-            this.dynamicAnswerSheetControl.createAnswer(this);
-            // Tähän Texittää scope
-            // ParCompiler.processAllMath(this.htmlSheet);
+function isReasking(p: QuestionPreviewParams): p is IReAsk {
+    return (p as IReAsk).askedId !== undefined;
+}
 
-        });
+export type QuestionPreviewParams = IAskNew | IReAsk;
+
+export class QuestionPreviewController extends DialogController<{params: QuestionPreviewParams}, number> {
+    private questiondata: IPreviewParams = null;
+
+    constructor() {
+        super();
     }
 
-    $onInit() {
-
-    }
-
-    editQuestion() {
-        this.close();
-        const parId = this.questionParId;
-        const parNextId = this.questionParIdNext;
-        const docId = this.docId;
-        $http<{markup: IAskedJsonJson}>({
-            url: "/getQuestionByParId",
-            method: "GET",
-            params: {par_id: parId, doc_id: docId, edit: true},
-        })
-            .then((response) => {
-                const data = response.data;
-                if (!data.markup) {
-                    return; // not a question
-                }
-                this.json = data.markup.json;  // TODO: näistä pitäisi päästä eroon, kaikki markupin kautta!
-                this.markup = data.markup;
-                // data.markup.qst = true;
-                $rootScope.$broadcast("changeQuestionTitle", {questionTitle: this.json.questionTitle});
-                $rootScope.$broadcast("editQuestion", {
-                    par_id: parId,
-                    par_id_next: parNextId,
-                    markup: data.markup,
-                });
-
-            }, function() {
-                console.error("Could not get question.");
-            });
-
-        // this.par = $par;
-    }
-
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:questionPreviewController
-     */
-    ask() {
-        this.scope.$emit("askQuestion", {
-            lecture_id: this.lectureId,
-            par_id: this.questionParId,
-            doc_id: this.docId,
-            markup: this.markup,
-        });
-        this.close();
-    }
-
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:questionPreviewController
-     */
-    close() {
-        this.dynamicAnswerSheetControl.closePreview();
-    }
-
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:questionPreviewController
-     */
-    deleteQuestion() {
-        const confirmDi = $window.confirm("Are you sure you want to delete this question?");
-        if (confirmDi) {
-            $http.post("/deleteParagraph/" + this.docId, {par: this.questionParId})
-                .then((response) => {
-                    const data = response.data;
-                    this.handleDelete(data, {par: this.questionParId, area_start: null, area_end: null});
-                    $log.info("Deleted question");
-                }, (error) => {
-                    $log.info(error);
-                });
-
+    async $onInit() {
+        if (!isReasking(this.resolve.params)) {
+            const data = await fetchQuestion(this.resolve.params.docId, this.resolve.params.parId, false);
+            this.questiondata = makePreview(data);
+        } else {
+            // TODO
         }
     }
+
+    async editQuestion() {
+        if (!isReasking(this.resolve.params)) {
+            await fetchAndEditQuestion(this.resolve.params.docId, this.resolve.params.parId);
+        } else {
+            // TODO
+        }
+        this.close(null);
+    }
+
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionPreviewController
+     */
+    async ask() {
+        const markup = this.questiondata.markup;
+        const args = !isReasking(this.resolve.params) ? {
+            buster: new Date().getTime(),
+            doc_id: this.resolve.params.docId,
+            lecture_id: this.resolve.params.lectureId,
+            par_id: this.resolve.params.parId,
+        } : {
+            asked_id: this.resolve.params.askedId,
+            buster: new Date().getTime(),
+            lecture_id: this.resolve.params.lectureId,
+        };
+        const response = await $http.post<number>("/askQuestion", {}, {
+            params: args,
+        });
+        const id = response.data;
+        if (this.lectureSettings.useAnswers) {
+            // Because of dynamic creation needs to wait 1ms to ensure that the directive is made(maybe?)
+            $timeout(() => {
+                $rootScope.$broadcast("createChart", markup.json);
+            }, 1);
+
+            const answer = {askedId: id};
+            this.currentQuestionId = id;
+            this.getLectureAnswers(answer);
+        }
+        $rootScope.$broadcast("setQuestionJson", {
+            markup: markup,
+            questionParId: data.par_id,
+            askedId: id,
+            isLecturer: this.isLecturer,
+            askedTime: new Date().valueOf() + this.clockOffset,
+            clockOffset: this.clockOffset,
+        });
+        // TODO: show statistics window
+        this.close(id);
+    }
+
+    /**
+     * FILL WITH SUITABLE TEXT
+     * @memberof module:questionPreviewController
+     */
+    async deleteQuestion() {
+        if (!isReasking(this.resolve.params)) {
+            await deleteQuestionWithConfirm(this.resolve.params.docId, this.resolve.params.parId);
+        }
+    }
+}
+
+registerDialogComponent("timAskQuestion", QuestionPreviewController, {
+    template: `
+<div class="popUpWindow questionPopUp">
+    <div class="questionPreview">
+        <div id="questionTypeAndTimeLimit">
+            <span ng-if="$ctrl.markup.json.timeLimit > 0">Time limit: {{ $ctrl.markup.json.timeLimit }} seconds</span>
+            <span ng-if="!$ctrl.markup.json.timeLimit">No time limit.</span>
+        </div>
+        <dynamic-answer-sheet preview="true" questiondata="$ctrl.questiondata"></dynamic-answer-sheet>
+    </div>
+    <div class="buttons">
+        <!-- <button ng-click="deleteQuestion()" class="btn btn-danger pull-left">Delete</button> -->
+        <button ng-show="lctrl.inLecture" ng-click="$ctrl.ask()" class="timButton">Ask</button>&nbsp;&nbsp;
+        <button ng-click="$ctrl.editQuestion()" class="timButton">Edit</button>
+        <button ng-click="$ctrl.close()" class="timButton">Close</button>
+    </div>
+</div>
+`,
+});
+
+export async function showQuestionAskDialog(p: QuestionPreviewParams) {
+    return await showDialog<QuestionPreviewController, {params: QuestionPreviewParams}, number>("timAskQuestion", {params: () => p});
 }

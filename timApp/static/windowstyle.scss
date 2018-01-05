@@ -117,7 +117,7 @@ fieldset, form {
     width: 80px;
 }
 
-#startHour, #startMin, #endHour, #endMin, #durationHour, #durationMin, #durationSec {
+#startHour, #startMin, #endHour, #endMin {
     width: 25px;
 }
 
@@ -228,7 +228,7 @@ fieldset, form {
     text-align: center;
 }
 
-#answer-sheet-table {
+.answer-sheet-table {
     background: white;
     width: auto;
     margin-left: auto;
@@ -261,7 +261,7 @@ fieldset, form {
     font-weight: normal;
 }
 
-.qst #answer-sheet-table {
+.qst .answer-sheet-table {
     margin-left: 2em;
 }
 

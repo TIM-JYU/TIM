@@ -24,6 +24,10 @@ export function initAttributes(clone, $scope) {
 
 export function getHeading($scope, attrs, key, defElem) {
     const h = set($scope, attrs, key, "");
+    return toHeading(h, defElem);
+}
+
+export function toHeading(h: string, defElem: string) {
     if (!h) {
         return "";
     }
@@ -53,7 +57,7 @@ export function getHeading($scope, attrs, key, defElem) {
     return html;
 }
 
-export function get(jso, keys) {
+export function get(jso: IAttributes, keys: string[]) {
     if (!jso) {
         return undefined;
     }
@@ -73,7 +77,15 @@ export function get(jso, keys) {
     return val;
 }
 
-export function setk(scope, sname, attrs, keys, def) {
+export interface IAttributes {
+
+}
+
+export interface ISettable {
+    attrs;
+}
+
+export function setk<T extends ISettable, K extends keyof T>(scope: T, sname: K, attrs: IAttributes, keys: string[], def: T[K]): T[K] {
     scope[sname] = def;
     let val = get(attrs, keys);
     if (val != undefined) {
@@ -86,28 +98,28 @@ export function setk(scope, sname, attrs, keys, def) {
     if (scope[sname] == "None") {
         scope[sname] = "";
     }
-    if ( scope[sname] === "False" ) scope[sname] = false;
+    if (scope[sname] === "False") scope[sname] = false;
     return scope[sname];
 }
 
-export function setn(scope, sname, attrs, name, def?) {
+export function setn<T extends ISettable, K extends keyof T>(scope: T, sname: K, attrs: IAttributes, name: string, def?: T[K]): T[K] {
     if (name.indexOf(".") < 0) {
         name = "markup." + name;
     }
     const keys = name.split(".");
-    return setk(scope, sname, attrs, keys, def);
+    return setk<T, K>(scope, sname, attrs, keys, def);
 }
 
-export function set(scope, attrs, name, def?) {
+export function set<T extends ISettable>(scope: T, attrs: IAttributes, name: string, def?) {
     if (name.indexOf(".") < 0) {
         name = "markup." + name;
     }
     const keys = name.split(".");
-    const sname = keys[keys.length - 1];
+    const sname = keys[keys.length - 1] as keyof T;
     return setk(scope, sname, attrs, keys, def);
 }
 
-export function Hex2Str(s) {
+export function Hex2Str(s: string) {
     let result = "";
     for (let i = 0; i < s.length; i += 2) {
         const c = String.fromCharCode(parseInt(s[i] + s[i + 1], 16));

@@ -1,4 +1,4 @@
-import {IAttributes, IRootElementService, IScope} from "angular";
+import {IAttributes, IRootElementService, IScope, IFormController} from "angular";
 import {timApp} from "tim/app";
 
 /**
@@ -20,7 +20,7 @@ timApp.directive("timErrorState", [function() {
         scope: {
             for: "=",
         },
-        link($scope: any, $element: IRootElementService, $attrs: IAttributes) {
+        link($scope: IScope & {for: IFormController}, $element: IRootElementService, $attrs: IAttributes) {
             $scope.$watch("for.$invalid", (newVal, oldVal) => {
                 if (newVal && $scope.for.$dirty) {
                     $element.addClass("has-error");
@@ -31,3 +31,13 @@ timApp.directive("timErrorState", [function() {
         },
     };
 }]);
+
+timApp.component("timAlert", {
+    template: `
+<div uib-alert class="alert-danger">
+    <span class="glyphicon glyphicon-exclamation-sign"></span>
+    <div ng-transclude></div>
+</div>
+    `,
+    transclude: true,
+});

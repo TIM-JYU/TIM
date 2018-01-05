@@ -61,19 +61,15 @@ export class LectureController implements IController {
     private lectureAnswer: ILectureResponse;
     private lectureEnded: boolean;
     private lecturerTable: ILecturePerson[];
-    private markup: {json: string};
     private newMessagesAmount: number;
     private newMessagesAmountText: string;
     private passwordQuess: string | null;
     private polling: boolean;
     private pollingLectures: number[];
-    private questionTitle: string;
     private requestOnTheWay: boolean;
     private scope: IScope;
     private settings: any;
-    private showAnswerWindow: boolean;
     private showPoll: boolean;
-    private showStudentAnswers: boolean;
     private studentTable: ILecturePerson[];
     private timeout: any;
     private viewctrl: ViewCtrl | undefined;
@@ -99,15 +95,12 @@ export class LectureController implements IController {
         this.passwordQuess = "";
         this.pollingLectures = [];
         this.isLecturer = false;
-        this.showAnswerWindow = false;
-        this.showStudentAnswers = false;
         this.studentTable = [];
         this.lecturerTable = [];
         this.gettingAnswers = false;
         this.lectureEndingDialogState = LectureEndingDialogState.NotAnswered;
         this.lectureEnded = false;
         this.wallMessages = [];
-        this.questionTitle = "";
         this.clockOffset = 0;
         this.currentQuestionId = null;
         this.currentPointsId = null;
@@ -325,7 +318,6 @@ export class LectureController implements IController {
             window.setTimeout(() => {
                 setsetting("clock_offset", this.clockOffset.toString());
             }, 1000);
-            $log.info("Clock offset: ", this.clockOffset);
         }, () => {
             if (this.settings.clock_offset) {
                 this.clockOffset = this.settings.clock_offset;
@@ -343,62 +335,8 @@ export class LectureController implements IController {
     }
 
     async initEventHandlers() {
-        /**
-         * Use data.asked_id to reask question.
-         * Use data.par_id to ask a question from document.
-         */
-        this.scope.$on("askQuestion", async (event, data) => {
-            this.markup = data.markup;
-            const args: any = {
-                lecture_id: data.lecture_id,
-                doc_id: data.doc_id,
-                buster: new Date().getTime(),
-            };
-            if (data.asked_id) {
-                args.asked_id = data.asked_id;
-            } else {
-                args.par_id = data.par_id;
-            }
-            const response = await $http<number>({
-                url: "/askQuestion",
-                method: "POST",
-                params: args,
-            });
-            const id = response.data;
-            this.showStudentAnswers = true;
-            if (this.lectureSettings.useAnswers) {
-                // Because of dynamic creation needs to wait 1ms to ensure that the directive is made(maybe?)
-                $timeout(() => {
-                    $rootScope.$broadcast("createChart", this.markup.json);
-                    this.showStudentAnswers = false;
-                }, 1);
-
-                const answer = {askedId: id};
-                this.currentQuestionId = id;
-                this.getLectureAnswers(answer);
-            }
-            $rootScope.$broadcast("setQuestionJson", {
-                markup: this.markup,
-                questionParId: data.par_id,
-                askedId: id,
-                isAsking: true,
-                isLecturer: this.isLecturer,
-                askedTime: new Date().valueOf() + this.clockOffset,
-                clockOffset: this.clockOffset,
-            });
-            this.showAnswerWindow = true;
-        });
-
         this.scope.$on("joinLecture", (event, lecture) => {
             this.joinLecture(lecture.lecture_code, lecture.is_access_code);
-        });
-
-        this.scope.$on("changeQuestionTitle", (event, data) => {
-            this.questionTitle = data.questionTitle;
-        });
-
-        this.scope.$on("showAnswers", (event, x) => {
-            this.showStudentAnswers = x;
         });
 
         /*
@@ -406,7 +344,6 @@ export class LectureController implements IController {
          */
         this.scope.$on("closeQuestion", () => {
             this.currentQuestionId = null;
-            this.showAnswerWindow = false;
         });
 
         this.scope.$on("questionStopped", () => {
@@ -455,13 +392,6 @@ export class LectureController implements IController {
             }, () => {
                 $log.info("Failed to answer to question");
             });
-        });
-
-        /*
-         Event window for closeAnswerShow. Closes pop-up to show answers and stops gettin more of them.
-         */
-        this.scope.$on("closeAnswerShow", () => {
-            this.showStudentAnswers = false;
         });
     }
 
@@ -595,8 +525,6 @@ export class LectureController implements IController {
         this.wallMessages = [];
         this.polling = false;
         this.lecture = null;
-        this.showStudentAnswers = false;
-        this.showAnswerWindow = false;
         this.lecturerTable = [];
         this.studentTable = [];
         this.lectures = [];
@@ -903,7 +831,6 @@ export class LectureController implements IController {
         if (answer.result) {
             showPoints = "Show points: ";
         }
-        this.showAnswerWindow = true;
         let markup = JSON.parse(answer.questionjson);
         if (!markup.json) {
             markup = {json: markup}; // compatibility for old

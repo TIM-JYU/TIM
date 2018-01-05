@@ -28,7 +28,7 @@
     "@types/bootstrap": "^3.3.32",
     "@types/chart.js": "^2.4.2",
     "@types/eonasdan-bootstrap-datetimepicker": "^4.17.22",
-    "@types/jquery": "^2.0.41",
+    "@types/jquery": "^3.2.16",
     "@types/jqueryui": "^1.11.35",
     "@types/katex": "^0.5.0",
     "@types/mathjax": "^0.0.31",

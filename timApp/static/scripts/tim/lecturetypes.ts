@@ -4,15 +4,18 @@ export interface IExplCollection {
     [idString: string]: string;
 }
 
-export interface IAskedJsonJson {
+export interface IAskedJsonJsonBase {
     userpoints?: string;
+    points?: string;
+    json: IAskedJsonJsonJson;
+    expl?: IExplCollection;
+}
+
+export interface IAskedJsonJson extends IAskedJsonJsonBase {
     button?: string;
     buttonText?: string;
     taskId: string;
     lazy?: boolean;
-    points?: string;
-    json: IAskedJsonJsonJson;
-    expl: IExplCollection;
     qst?: boolean;
 }
 
@@ -25,7 +28,9 @@ export type QuestionType =
     | "likert"
     | "";
 
-export type FieldType = "textArea" | "" | "radiobutton-horizontal" | "radiobutton-vertical" | "checkbox";
+export type MatrixType = "textArea" | "" | "radiobutton-horizontal" | "radiobutton-vertical" | "checkbox";
+
+export type AnswerFieldType = "radio" | "checkbox" | "matrix" | "text"; // TODO matrix seems wrong
 
 export interface IHeader {
     text: string;
@@ -36,7 +41,7 @@ export interface IHeader {
 export interface IColumn {
     text: string;
     type: string;
-    answerFieldType: string; // TODO useless field?
+    answerFieldType: AnswerFieldType; // TODO useless field?
 }
 
 export interface IRow extends IHeader {
@@ -46,14 +51,14 @@ export interface IRow extends IHeader {
 export interface IUnprocessedHeaders {
     headers: string | string[];
     rows: string | string[];
-    answerFieldType: string;
+    answerFieldType: AnswerFieldType;
     questionType: QuestionType;
 }
 
 export interface IProcessedHeaders {
     headers: IHeader[];
     rows: IRow[];
-    answerFieldType: string;
+    answerFieldType: AnswerFieldType;
     questionType: QuestionType;
 }
 
@@ -62,10 +67,10 @@ export interface IUnprocessedHeadersCompat extends IUnprocessedHeaders {
 }
 
 export interface IAskedJsonJsonJson extends IUnprocessedHeadersCompat {
-    timeLimit: number;
+    timeLimit?: number;
     questionTitle: string;
     questionText: string;
-    matrixType: FieldType;
+    matrixType: MatrixType;
 }
 
 export interface IQuestionUI {
@@ -172,4 +177,9 @@ export interface ILectureSettings {
 
 export function hasLectureEnded(lecture: ILecture) {
     return lecture.end_time < moment();
+}
+
+export interface IUniqueParId {
+    parId: string;
+    docId: number;
 }
