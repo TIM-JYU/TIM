@@ -20,7 +20,7 @@ def verify_login():
     verify_logged_in()
 
 
-@settings_page.route('/')
+@settings_page.route('')
 def show():
     available_css_files = [{'name': theme.filename, 'desc': theme.description} for theme in get_available_themes()]
 

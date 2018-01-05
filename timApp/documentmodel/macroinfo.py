@@ -25,6 +25,7 @@ class MacroInfo:
             self.macro_map = {}
         if doc is not None:
             self.macro_map.update({'docid': doc.doc_id})
+            self.macro_map.update({'docpath': doc.get_docinfo().path})
         self.macro_delimiter = macro_delimiter or '%%'
         self._user = user
         self._nocache_user = nocache_user

@@ -204,6 +204,12 @@ def trim_markdown(text: str):
     return text.rstrip().strip('\r\n')
 
 
+def remove_prefix(text: str, prefix: str):
+    if text.startswith(prefix):
+        return text[len(prefix):]
+    return text
+
+
 class cached_property:
     """
     A property that is only computed once per instance and then replaces itself

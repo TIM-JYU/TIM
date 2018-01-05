@@ -731,6 +731,10 @@ br {
     line-height: 0.4; /* pienempi vali monisteen kansia varten */
 }
 
+.font-weight-normal {
+    font-weight: normal;
+}
+
 .editor {
     width: 100%;
     padding: 5px 0;
@@ -764,12 +768,14 @@ br {
 #pareditor {
     background: inherit;
     overflow: hidden;
+
+    .editortags, .choices, .editoropts {
+        display: inline-block;
+    }
 }
 
 .editButtonArea {
-    float: left;
-    padding-right: 1em;
-    margin-bottom: 0;
+    margin-bottom: 0.6em;
 }
 
 .editorButton {

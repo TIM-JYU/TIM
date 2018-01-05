@@ -493,16 +493,16 @@ def start_page():
                            in_lecture=in_lecture)
 
 
-@app.route("/manage/")
-@app.route("/slide/")
-@app.route("/teacher/")
-@app.route("/answers/")
-@app.route("/lecture/")
+@app.route("/manage")
+@app.route("/slide")
+@app.route("/teacher")
+@app.route("/answers")
+@app.route("/lecture")
 def index_redirect():
     return redirect('/view')
 
 
-@app.route("/getslidestatus/")
+@app.route("/getslidestatus")
 def getslidestatus():
     if 'doc_id' not in request.args:
         abort(404, "Missing doc id")
@@ -530,8 +530,13 @@ def setslidestatus():
 
 
 @app.before_request
-def make_session_permanent():
+def preprocess_request():
     session.permanent = True
+    if request.method == 'GET':
+        p = request.path
+        if '//' in p or (p.endswith('/') and p != '/'):
+            fixed_url = p.rstrip('/').replace('//', '/') + '?' + request.query_string.decode()
+            return redirect(fixed_url)
 
 
 @app.after_request

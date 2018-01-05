@@ -31,7 +31,6 @@ class MacroTest(TimRouteTest):
 
     def test_user_macros(self):
         self.login_test1()
-        timdb = self.get_db()
         d = self.create_doc(initial_par=r"""
 Username is %%username%% and real name is %%realname%% and email is %%useremail%%
 
@@ -88,3 +87,10 @@ header: %%username%% and %%realname%%
         self.get(d.url)
         d.document.set_settings({'macros': {'a': {'b': 'c'}}})
         self.get(d.url)
+
+    def test_doc_macros(self):
+        self.login_test1()
+        d = self.create_doc()
+        d.document.add_paragraph('%%docid%% %%docpath%%')
+        e = self.get(d.url, as_tree=True)
+        self.assert_content(e, [f'{d.id} {d.path}'])

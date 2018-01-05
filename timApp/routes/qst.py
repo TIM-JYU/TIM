@@ -25,6 +25,7 @@ qst_plugin = Blueprint('qst_plugin',
 
 
 @qst_plugin.route("/qst/reqs/")
+@qst_plugin.route("/qst/reqs")
 def qst_reqs():
     reqs = {
         "type": "embedded",

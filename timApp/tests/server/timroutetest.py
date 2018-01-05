@@ -22,6 +22,7 @@ from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
+from timApp.utils import remove_prefix
 
 
 def load_json(resp: Response):
@@ -36,6 +37,7 @@ orig_getaddrinfo = socket.getaddrinfo
 
 
 TEXTUAL_MIMETYPES = {'text/html', 'application/json', 'text/plain'}
+LOCALHOST = 'http://localhost/'
 
 
 # noinspection PyIncorrectDocstring
@@ -196,7 +198,7 @@ class TimRouteTest(TimDbTest):
         if expect_status is not None:
             self.assertEqual(expect_status, resp.status_code, msg=resp.get_data(as_text=True) if is_textual else None)
         if is_redirect(resp) and expect_content is not None:
-            self.assertEqual(expect_content, resp.location.lstrip('http://localhost/'))
+            self.assertEqual(expect_content, remove_prefix(resp.location, LOCALHOST))
         resp_data = resp.get_data(as_text=is_textual)
         if not is_textual:
             return resp_data
@@ -582,7 +584,7 @@ class TimRouteTest(TimDbTest):
 
     def assert_content(self, element: HtmlElement, expected: List[str]):
         pars = get_content(element)
-        self.assertEqual(pars, expected)
+        self.assertEqual(expected, pars)
 
     def get_updated_pars(self, d: DocInfo, **kwargs):
         return self.get(f'/getUpdatedPars/{d.id}', **kwargs)

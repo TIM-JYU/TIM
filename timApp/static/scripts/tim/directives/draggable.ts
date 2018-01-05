@@ -334,7 +334,7 @@ class DraggableController implements IController {
         // position is changed between static and absolute
         const position = e.css("position");
         const movable = position != "static";
-        h.css("visibility", movable ? "visible" : "hidden");
+        h.css("display", movable ? "block" : "none");
     }
 
     getPageXYnull(e) {

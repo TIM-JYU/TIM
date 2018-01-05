@@ -616,7 +616,7 @@ or newer one that is more familiar to write in YAML:
                 this.savePreviewData(true);
             }
             div.css("position", "static");
-            div.find(".draghandle").css("visibility", "hidden");
+            div.find(".draghandle").css("display", "none");
             content.css("max-width", "");
             div.css("display", "default");
             editor.css("overflow", "hidden");
@@ -646,7 +646,7 @@ or newer one that is more familiar to write in YAML:
             }
             div.css("position", "absolute");
             editor.css("overflow", "visible");
-            div.find(".draghandle").css("visibility", "visible");
+            div.find(".draghandle").css("display", "block");
             div.css("display", "table");
             div.css("width", "100%");
             div.css("padding", 5);

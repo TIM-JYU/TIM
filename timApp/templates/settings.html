@@ -12,7 +12,7 @@
 {% block content %}
     <tim-settings>
         <div ng-init="$ctrl = $parent.$ctrl">
-        <form ng-submit="submit('{{ request.path + 'save' }}')">
+        <form ng-submit="$ctrl.submit('{{ request.path + '/save' }}')">
         <div class="panel panel-default">
             <div class="panel-heading">Styles</div>
             <div class="panel-body">
@@ -27,7 +27,7 @@
                         <div class="checkbox"><label><input type="checkbox"
                                       name="settings.css_files.{{ css_file.name }}"
                                       ng-model="$ctrl.settings.css_files.{{ css_file.name }}"
-                                      ng-change="$ctrl.submit('{{ request.path + 'save' }}')"
+                                      ng-change="$ctrl.submit('{{ request.path + '/save' }}')"
                                       ng-disabled="$ctrl.saving">
                             <a href="{{ url_for('static', filename='css/' + css_file.name + '.scss') }}">
                                 {{ css_file.name }}</a> - {{ css_file.desc }}

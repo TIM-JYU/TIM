@@ -148,7 +148,7 @@ def items_route():
     return json_response(get_items(request.args.get('folder', '')))
 
 
-@view_page.route("/view/")
+@view_page.route("/view")
 def index_page():
     save_last_page()
     in_lecture = timApp.routes.lecture.user_in_lecture()
