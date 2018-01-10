@@ -63,7 +63,7 @@ services:
   ports:
    - "49996:22"
  chrome:
-  image: selenium/standalone-chrome:3.6.0
+  image: selenium/standalone-chrome:3.8.1
  nginx:
   image: timimages/local_nginx_dev:compose
   build:
