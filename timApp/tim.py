@@ -235,6 +235,11 @@ def not_found(error):
     return error_generic(error, 404)
 
 
+@app.route("/ping")
+def ping():
+    return ok_response()
+
+
 @app.route('/restart')
 def restart_server():
     """Restarts the server by sending HUP signal to Gunicorn."""

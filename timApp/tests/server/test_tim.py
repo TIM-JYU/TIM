@@ -226,6 +226,9 @@ class TimTest(TimRouteTest):
         d = self.create_doc()
         self.get(f'/teacher/{d.path}', query_string={'group': 'Korppi users'})
 
+    def test_ping(self):
+        self.get('/ping')
+
 
 if __name__ == '__main__':
     unittest.main()
