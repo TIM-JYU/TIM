@@ -199,3 +199,11 @@ class TranslationTest(TimRouteTest):
         t.document.set_settings({'source_document': fake_id})
         self.assertEqual(t.document.get_source_document().doc_id, d.id)
         self.assertNotEqual(d.id, fake_id)
+
+    def test_translation_invalid(self):
+        """Missing rp attribute will not crash the document."""
+        self.login_test1()
+        d = self.create_doc()
+        t = self.create_translation(d)
+        t.document.add_text('#- {r=tr}')
+        self.get(t.url)
