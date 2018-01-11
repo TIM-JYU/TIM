@@ -156,3 +156,6 @@ export function markAsUsed(...modules: any[]) {
     // no need to do anything here
 }
 
+export function printJson(data: any, desc: string = "") {
+    console.log(desc, JSON.stringify(data));
+}
