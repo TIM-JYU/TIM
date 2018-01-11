@@ -196,6 +196,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, selector)))
         self.wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, selector)))
 
+    def wait_until_text_present(self, selector: str, text: str):
+        self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, selector), text))
+
     def select_text(self, selector: str, start_offset: int, end_offset: int):
         self.drv.execute_script(f"""
         var range = document.createRange();
@@ -227,6 +230,10 @@ def find_element_by_text(root: WebElement, text: str, element: str='*') -> WebEl
 
 def find_by_ngmodel(element: WebElement, model: str, tagname='*') -> WebElement:
     return element.find_element_by_css_selector(f'{tagname}[ng-model="{model}"]')
+
+
+def find_by_ngclick(element: WebElement, value: str, tagname='*') -> WebElement:
+    return element.find_element_by_css_selector(f'{tagname}[ng-click="{value}"]')
 
 
 def find_all_by_ngmodel(element: WebElement, model: str, tagname='*') -> List[WebElement]:

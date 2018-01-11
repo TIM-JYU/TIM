@@ -1,17 +1,173 @@
+from typing import List, Tuple, Dict, Union, Optional
+
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
 
 from timApp.documentmodel.yamlblock import YamlBlock
-from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text, find_by_ngmodel, find_all_by_ngmodel
+from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text, find_by_ngmodel, find_all_by_ngmodel, \
+    find_by_ngclick
 from timApp.timdb.tim_models import Answer
+
+ChoiceList = List[Tuple[str, str]]
+ElementList = List[WebElement]
+
+
+def create_yaml(field_type: str,
+                question_type: str,
+                choices: ChoiceList,
+                points_str: str = None,
+                headers=None,
+                matrix_type=''):
+    headers = headers or []
+    # TODO: timeLimitFields is not used for qst
+    # TODO: matrixType useless?
+    return {
+        'json': {'answerFieldType': field_type,
+                 'headers': headers,
+                 'matrixType': matrix_type,
+                 'questionText': 'Is Moon made of cheese?',
+                 'questionTitle': 'Moon problem',
+                 'questionType': question_type,
+                 'rows': [c[0] for c in choices],
+                 'timeLimitFields': {'hours': 0, 'minutes': 0, 'seconds': 30}},
+        **({'points': points_str} if points_str else {}),
+        'xpl': {str(i + 1): choices[i][1] for i in range(len(choices))}}
+
+
+def get_matrix_fields(dialog: WebElement) -> Tuple[ElementList, ElementList, ElementList, ElementList]:
+    choice_elems = find_all_by_ngmodel(dialog, 'row.text')
+    reason_elems = find_all_by_ngmodel(dialog, 'row.expl')
+    point_elems = find_all_by_ngmodel(dialog, 'column.points')
+    header_elems = find_all_by_ngmodel(dialog, '$ctrl.qctrl.columnHeaders[$index].text')
+    return choice_elems, header_elems, point_elems, reason_elems
+
+
+def adjust_matrix_size(dialog: WebElement, missing_choices: int, rowcol: str):
+    addbutton = find_by_ngclick(dialog, f'$ctrl.qctrl.add{rowcol}(-1)')
+    delbutton = find_by_ngclick(dialog, f'$ctrl.qctrl.del{rowcol}($index)')
+    if missing_choices > 0:
+        for i in range(missing_choices):
+            addbutton.click()
+    elif missing_choices < 0:
+        delbutton.click()
 
 
 class QuestionTest(BrowserTest):
     def test_questions(self):
-        """Create a document question and answer it."""
+        """Create document questions and answer them."""
 
         self.login_browser_quick_test1()
         self.login_test1()
+
+        points = ['3', '1', '', '0']
+        choices = [
+            ('Yes', 'reason for yes'),
+            ('No', 'reason for no'),
+            ('Partially', 'reason for partially'),
+            ('No idea', 'reason for no idea'),
+        ]
+        self.do_question_test(
+            answer_choices=[1],
+            choices=choices,
+            expected_answer='[["2"]]',
+            expected_points=1,
+            expected_yaml=create_yaml('radio', 'radio-vertical', choices, points_str='1:3;2:1'),
+            headers=[],
+            points=points,
+            questiontype='radio',
+            type_choice='Multiple choice (radio button)',
+        )
+        self.do_question_test(
+            answer_choices=[0, 2, 3],
+            choices=choices,
+            expected_answer='[["1", "3", "4"]]',
+            expected_points=3,
+            expected_yaml=create_yaml('checkbox', 'checkbox-vertical', choices, points_str='1:3;2:1'),
+            headers=[],
+            points=points,
+            questiontype='checkbox',
+            type_choice='Multiple choice (checkbox)',
+        )
+        truefalseheaders = ['Correct', 'Wrong']
+        self.do_question_test(
+            answer_choices=[0, 3],
+            choices=choices[0:2],
+            expected_answer='[["1"], ["2"]]',
+            expected_points=4,
+            expected_yaml=create_yaml('radio', 'true-false', choices[0:2], headers=truefalseheaders,
+                                      points_str='1:3|2:1'),
+            headers=truefalseheaders,
+            points=['3', '', '0', '1'],
+            questiontype='true-false',
+            type_choice='True/False',
+        )
+        matrixheaders = ['h1', 'h2', 'h3', 'h4']
+        choices.append(('Maybe', 'reason for maybe'), )
+        self.do_question_test(
+            answer_choices=[0, 1, 3, 5, 12, 17, 18],
+            choices=choices,
+            expected_answer='[["1", "2", "4"], ["2"], [], ["1"], ["2", "3"]]',
+            expected_points=-2,
+            expected_yaml=create_yaml('checkbox', 'matrix', choices, headers=matrixheaders,
+                                      points_str='1:3;4:-1|2:-5|4:2|1:1|', matrix_type='checkbox'),
+            headers=matrixheaders,
+            points=['3', '', '0', '-1',
+                    '', '-5', '', '',
+                    '', '', '', '2',
+                    '1', '', '', '',
+                    '', '', '0', '', ],
+            questiontype='matrix-checkbox',
+            type_choice='Many rows and columns',
+            answer_type_choice='Checkbox',
+            adjust_matrix=True,
+        )
+        self.do_question_test(
+            answer_choices=[5, 11, 18],
+            choices=choices,
+            expected_answer='[[], ["2"], ["4"], [], ["3"]]',
+            expected_points=-3,
+            expected_yaml=create_yaml('radio', 'matrix', choices, headers=matrixheaders,
+                                      points_str='1:3;4:-1|2:-5|4:2|1:1|', matrix_type='radiobutton-horizontal'),
+            headers=matrixheaders,
+            points=['3', '', '0', '-1',
+                    '', '-5', '', '',
+                    '', '', '', '2',
+                    '1', '', '', '',
+                    '', '', '0', '', ],
+            questiontype='matrix-radio',
+            type_choice='Many rows and columns',
+            answer_type_choice='Radio Button horizontal',
+            adjust_matrix=True,
+        )
+        matrixheaders = ['h1', 'h2', 'h3']
+        self.do_question_test(
+            answer_choices=['1st', '2nd', '', '4th'],
+            choices=choices,
+            expected_answer='[["1st", "2nd", ""], ["4th", "", ""], ["", "", ""], ["", "", ""], ["", "", ""]]',
+            expected_points=None,
+            expected_yaml=create_yaml('text', 'matrix', choices, headers=matrixheaders, matrix_type='textArea'),
+            headers=matrixheaders,
+            points=[],
+            questiontype='matrix-textarea',
+            type_choice='Many rows and columns',
+            answer_type_choice='Text area',
+            adjust_matrix=True,
+        )
+
+    def do_question_test(self,
+                         answer_choices: Union[List[int], List[str]],
+                         choices: ChoiceList,
+                         expected_answer: str,
+                         expected_points: Optional[float],
+                         expected_yaml: Dict,
+                         headers: List[str],
+                         points: List[str],
+                         questiontype: str,
+                         type_choice: str,
+                         answer_type_choice=None,
+                         adjust_matrix=False,
+                         ):
         d = self.create_doc(initial_par='test')
         self.goto_document(d, view='lecture')
         par: WebElement = self.drv.find_element_by_css_selector('.par')
@@ -24,70 +180,63 @@ class QuestionTest(BrowserTest):
         questiontitle = find_by_ngmodel(dialog, 'qctrl.question.questionTitle')
         questiontitle.click()
         questiontitle.send_keys('Moon problem')
-        questiontype = Select(find_by_ngmodel(dialog, 'qctrl.question.questionType'))
-        questiontype.select_by_visible_text('Multiple choice (radio button)')
-        choice_elems = find_all_by_ngmodel(dialog, 'row.text')
-        reason_elems = find_all_by_ngmodel(dialog, 'row.expl')
-        point_elems = find_all_by_ngmodel(dialog, 'column.points')
-        self.assertEqual(4, len(choice_elems))
-        texts = [
-            ('Yes', 'reason for yes', '3'),
-            ('No', 'reason for no', '1'),
-            ('Partially', 'reason for partially', ''),
-            ('No idea', 'reason for no idea', '0'),
-        ]
-        for (choice, reason, point), choice_elem, reason_elem, point_elem in zip(texts, choice_elems, reason_elems,
-                                                                                 point_elems):
+        questionselect = Select(find_by_ngmodel(dialog, 'qctrl.question.questionType'))
+        questionselect.select_by_visible_text(type_choice)
+        if answer_type_choice:
+            answertypeselect = Select(find_by_ngmodel(dialog, 'qctrl.question.matrixType'))
+            answertypeselect.select_by_visible_text(answer_type_choice)
+        choice_elems, header_elems, point_elems, reason_elems = get_matrix_fields(dialog)
+        if adjust_matrix:
+            adjust_matrix_size(dialog, len(choices) - len(choice_elems), 'Row')
+            adjust_matrix_size(dialog, len(headers) - len(header_elems), 'Col')
+            choice_elems, header_elems, point_elems, reason_elems = get_matrix_fields(dialog)
+
+        self.assertEqual(len(reason_elems), len(choice_elems))
+        self.assertEqual(len(choices), len(choice_elems))
+        self.assertEqual(len(headers), len(header_elems))
+
+        for (choice, reason), choice_elem, reason_elem in zip(choices, choice_elems, reason_elems):
             choice_elem.send_keys(choice)
             reason_elem.send_keys(reason)
+        for point, point_elem in zip(points, point_elems):
             point_elem.send_keys(point)
+        for header, elem in zip(headers, header_elems):
+            elem.clear()
+            elem.send_keys(header)
         matrix = self.drv.find_element_by_css_selector('tim-question-matrix')
         answersheet = self.drv.find_element_by_css_selector('dynamic-answer-sheet')
-        self.assert_same_screenshot(matrix, 'questions/question_matrix_radio')
-        self.assert_same_screenshot(answersheet, 'questions/answer_sheet_radio', move_to_element=True)
+        self.assert_same_screenshot(matrix, f'questions/question_matrix_{questiontype}', move_to_element=True)
+        self.assert_same_screenshot(answersheet, f'questions/answer_sheet_{questiontype}', move_to_element=True)
         find_button_by_text(dialog, 'Save').click()
         self.wait_until_hidden('tim-edit-question')
-        qst = self.drv.find_element_by_css_selector('qst-runner')
-        self.assert_same_screenshot(qst, 'questions/qst_radio')
+        qst = self.find_element('qst-runner')
+        self.assert_same_screenshot(qst, f'questions/qst_{questiontype}')
         d.document.clear_mem_cache()
         qst_par = d.document.get_paragraphs()[0]
         qst_md = qst_par.get_markdown()
 
-        # TODO: timeLimitFields is not used for qst
-        # TODO: matrixType useless?
-        expected = YamlBlock.from_markdown("""
-json:
-  answerFieldType: radio
-  headers: []
-  matrixType: ''
-  questionText: Is Moon made of cheese?
-  questionTitle: Moon problem
-  questionType: radio-vertical
-  rows:
-  - 'Yes'
-  - 'No'
-  - Partially
-  - No idea
-  timeLimitFields:
-    hours: 0
-    minutes: 0
-    seconds: 30
-points: 1:3;2:1
-xpl:
-  '1': reason for yes
-  '2': reason for no
-  '3': reason for partially
-  '4': reason for no idea
-        """)
-        self.assertEqual(expected, YamlBlock.from_markdown(qst_md))
-        labels = qst.find_elements_by_css_selector('label')
-        labels[1].click()
+        self.assertEqual(expected_yaml, YamlBlock.from_markdown(qst_md))
+        if answer_type_choice == 'Text area':
+            textareas = qst.find_elements_by_css_selector('textarea')
+            textareas[0].click()
+            for answer, area in zip(answer_choices, textareas):
+                area.send_keys(answer)
+        else:
+            labels = qst.find_elements_by_css_selector('label')
+            for i in answer_choices:
+                labels[i].click()
         savebtn = find_button_by_text(qst, 'Save')
         savebtn.click()
-        self.wait_until_present('answerbrowser')
-        self.assert_same_screenshot(qst, 'questions/qst_radio_answered')
+        self.wait_until_text_present('qst-runner', 'Vastattu')
+        while True:
+            qst = self.drv.find_element_by_css_selector('qst-runner')
+            try:
+                self.assert_same_screenshot(qst, f'questions/qst_{questiontype}_answered')
+                break
+            except StaleElementReferenceException:
+                continue
 
         # check answer format is correct
         a = Answer.query.filter_by(task_id=f'{d.id}.{qst_par.get_attr("taskId")}').one()
-        self.assertEqual('[["2"]]', a.content)
-        self.assertEqual(1, a.points)
+        self.assertEqual(expected_answer, a.content)
+        self.assertEqual(expected_points, a.points)
