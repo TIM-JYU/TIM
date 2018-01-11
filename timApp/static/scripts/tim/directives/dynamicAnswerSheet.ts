@@ -1,4 +1,4 @@
-import {IController, IOnChangesObject, IRootElementService, IChangesObject} from "angular";
+import {IChangesObject, IController, IOnChangesObject, IRootElementService} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {
@@ -424,10 +424,15 @@ class AnswerSheetController implements IController {
         if (data.rows.length === 0) {
             return [];
         }
-        let arr: MatrixElement[][] = createArray(data.rows.length, data.rows[0].columns.length);
+        const arr: MatrixElement[][] = createArray(data.rows.length, data.rows[0].columns.length);
         if (this.isMatrix()) {
             if (this.isText()) {
-                arr = table;
+                for (let i = 0; i < arr.length; i++) {
+                    for (let j = 0; j < arr[i].length; j++) {
+                        arr[i][j] = (table[i] || [])[j] || "";
+                    }
+                }
+                return arr;
             } else {
                 for (let i = 0; i < table.length; i++) {
                     for (let j = 0; j < table[i].length; j++) {
@@ -474,7 +479,7 @@ class AnswerSheetController implements IController {
         let table: AnswerTable = [];
         if (this.isMatrix()) {
             if (this.isText()) {
-                table = matrix.map((row) => row.map((elem) => elem.toString()));
+                table = matrix.map((row) => row.map((elem) => (elem || "").toString()));
             } else {
                 for (const row of matrix) {
                     const tableRow: string[] = [];
