@@ -12,6 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
+from wand.exceptions import BaseError
 from wand.image import Image
 
 from timApp.tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_USER_3_NAME
@@ -147,7 +148,12 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         :param move_to_element: Whether to move to the element before taking the screenshot.
         """
         im = self.save_element_screenshot(element, move_to_element=move_to_element)
-        ref = Image(filename=f'tests/browser/expected_screenshots/{filename}.png')
+        try:
+            ref = Image(filename=f'tests/browser/expected_screenshots/{filename}.png')
+        except BaseError:
+            print(f'Expected screenshot not found, saving image to {filename}.png')
+            im.save(filename=f'{self.screenshot_dir}/{filename}.png')
+            return
         diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
         if result > 0.001:
             if try_again:
