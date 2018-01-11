@@ -149,12 +149,14 @@ export class AnswerBrowserController implements IController {
     private taskInfo: ITaskInfo;
     private points: number;
     private scope: IScope;
+    private skipAnswerUpdateForId: number | null;
 
     constructor(scope, element) {
         this.scope = scope;
         this.element = element.parents(".par");
         this.parContent = this.element.find(".parContent");
         this.loading = 0;
+        this.skipAnswerUpdateForId = null;
     }
 
     $onInit() {
@@ -220,7 +222,6 @@ export class AnswerBrowserController implements IController {
         this.scope.$watch(() => this.review, () => this.changeAnswer());
         this.scope.$watchGroup([
             () => this.onlyValid,
-            () => this.answers,
         ], (newValues, oldValues, scope) => this.updateFilteredAndSetNewest());
 
         // call checkUsers automatically for now; suitable only for lazy mode!
@@ -273,6 +274,11 @@ export class AnswerBrowserController implements IController {
         if (this.selectedAnswer === null) {
             return;
         }
+        if (this.skipAnswerUpdateForId === this.selectedAnswer.id) {
+            this.skipAnswerUpdateForId = null;
+            return;
+        }
+        this.skipAnswerUpdateForId = null;
         this.updatePoints();
         const $par = this.element;
         const ids = dereferencePar($par);
@@ -460,8 +466,10 @@ export class AnswerBrowserController implements IController {
                     this.updateFiltered();
                     this.selectedAnswer = this.filteredAnswers[0];
                     this.updatePoints();
-                    if (updateHtml) {
-                        this.changeAnswer();
+                    if (!updateHtml) {
+                        // The selectedAnswer assignment causes changeAnswer to be called (by Angular),
+                        // but we don't want to update it again because it was already updated.
+                        this.skipAnswerUpdateForId = this.selectedAnswer.id;
                     }
                 } else {
                     this.answers = data;
