@@ -28,7 +28,8 @@ qst_plugin = Blueprint('qst_plugin',
 def qst_reqs():
     reqs = {
         "type": "embedded",
-        "js": ["tim/controllers/qstController",
+        "js": [
+            # "tim/controllers/qstController",
                ],
         "angularModule": [],
         "multihtml": True,

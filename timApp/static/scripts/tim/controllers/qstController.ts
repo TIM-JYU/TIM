@@ -2,8 +2,8 @@
  * Created by vesal on 28.12.2016.
  */
 import {IController, IRootElementService} from "angular";
+import {timApp as qstApp} from "../app";
 import * as timHelper from "tim/timHelper";
-import {timApp} from "../app";
 import {AnswerTable, IPreviewParams, makePreview} from "../directives/dynamicAnswerSheet";
 import {IAskedJsonJson, IAskedJsonJsonJson} from "../lecturetypes";
 import {$http} from "../ngimport";
@@ -219,7 +219,7 @@ class QstController implements IController {
     }
 }
 
-timApp.component("qstRunner", {
+qstApp.component("qstRunner", {
     bindings: {
         json: "@",
     },
@@ -230,7 +230,7 @@ timApp.component("qstRunner", {
     template: directiveTemplate,
 });
 
-timApp.component("questionRunner", {
+qstApp.component("questionRunner", {
     bindings: {
         json: "@",
     },
