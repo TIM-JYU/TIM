@@ -30,11 +30,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def setUp(self):
         TimLiveServer.setUp(self)
         options = webdriver.ChromeOptions()
-        # native headless mode does not work yet
-        # options.add_argument('headless')
-        # options.add_argument('disable-gpu')
-        # options.add_argument('window-size=1024x768')
-        # options.add_argument('no-sandbox')
+
+        options.set_headless()
+        options.add_argument('--window-size=1024x768')
         self.drv = webdriver.Remote(command_executor=self.app.config['SELENIUM_REMOTE_URL'] + ':4444/wd/hub',
                                     desired_capabilities=options.to_capabilities())
         self.drv.implicitly_wait(10)
