@@ -18,7 +18,7 @@ type: python
         par = self.find_element('#py', times=2)
         textarea = self.find_element('#py textarea')
         textarea.send_keys('print("Hello world!")')
-        self.find_element('body').click()
+        self.find_element('.breadcrumb .active').click()
         self.assert_same_screenshot(par, 'csplugin/python_before_answer')
         runbutton = par.find_element_by_css_selector('button')
         runbutton.click()

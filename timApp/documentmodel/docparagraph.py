@@ -888,7 +888,7 @@ class DocParagraph:
 
     def is_translation(self) -> bool:
         """Returns whether this paragraph is a translated paragraph."""
-        return self.get_attr('r') == 'tr'
+        return self.get_attr('r') == 'tr' and self.get_attr('rp') is not None
 
     def __repr__(self):
         return self.__data.__repr__()

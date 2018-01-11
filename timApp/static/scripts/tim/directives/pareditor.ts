@@ -6,6 +6,7 @@ import rangyinputs from "rangyinputs";
 import {timApp} from "tim/app";
 import * as draggable from "tim/directives/draggable";
 import {setEditorScope} from "tim/editorScope";
+import sessionsettings from "tim/session";
 import {markAsUsed, setsetting} from "tim/utils";
 import {IAceEditor} from "../ace-types";
 import {getActiveDocument} from "../controllers/view/document";
@@ -76,7 +77,6 @@ export class PareditorController implements IController {
     private saveUrl: string;
     private saving: boolean;
     private scrollPos: number;
-    private settings: {editortab: string};
     private tables: {
         normal: string,
         example: string,
@@ -114,7 +114,6 @@ export class PareditorController implements IController {
         this.proeditor = this.getLocalBool("proeditor", this.lstag === "par");
         this.autocomplete = this.getLocalBool("autocomplete", this.lstag === "par");
 
-        this.settings = $window.sessionsettings;
         this.pluginButtonList = {};
 
         if ((navigator.userAgent.match(/Trident/i))) {
@@ -232,11 +231,11 @@ export class PareditorController implements IController {
         this.plugintab = this.element.find("#pluginButtons");
         this.getPluginsInOrder();
 
-        if (this.settings.editortab) {
-            const tab = this.settings.editortab.substring(0, this.settings.editortab.lastIndexOf("Buttons"));
+        if (sessionsettings.editortab) {
+            const tab = sessionsettings.editortab.substring(0, sessionsettings.editortab.lastIndexOf("Buttons"));
             const tabelement = this.element.find("#" + tab);
             if (tabelement.length) {
-                this.setActiveTab(tabelement, this.settings.editortab);
+                this.setActiveTab(tabelement, sessionsettings.editortab);
             }
         }
     }

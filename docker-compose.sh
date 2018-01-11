@@ -15,5 +15,5 @@ fi
 if [ "$IS_DEVELOPMENT" = true ]; then
   docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.dev.yml" "$@"
 else
-  docker-compose "$@"
+  docker-compose -f "${DIR}/docker-compose.yml" "$@"
 fi

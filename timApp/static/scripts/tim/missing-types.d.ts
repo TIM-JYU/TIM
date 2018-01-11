@@ -27,7 +27,9 @@ declare module "rangyinputs";
 declare module "tim/plugins";
 declare module "tim/angularmodules";
 declare module "tim/extramodules";
-declare module "tim/session";
+declare module "tim/session" {
+    const editortab: string | undefined;
+}
 declare module "tim/show_slide_vars";
 declare let require: typeof SystemJS.amdRequire;
 

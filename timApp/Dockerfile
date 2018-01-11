@@ -149,7 +149,7 @@ python-magic \
 pytz \
 recommonmark \
 responses \
-selenium \
+selenium==3.8.1 \
 sphinx==1.5.6 \
 sphinxcontrib-httpdomain \
 sqlalchemy \

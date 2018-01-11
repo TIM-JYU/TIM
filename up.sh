@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
-./docker-compose.sh up -d
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+${DIR}/docker-compose.sh up -d

@@ -67,11 +67,6 @@ def get_document(doc_info: DocInfo, view_range: Optional[Range] = None) -> Tuple
     return doc, (doc.get_paragraphs() if view_range is None else get_partial_document(doc, view_range))
 
 
-@view_page.route("/ping", methods=['GET'])
-def view_ping():
-    return json.dumps({'ping': 'ok'})
-
-
 @view_page.route("/show_slide/<path:doc_name>")
 def show_slide(doc_name):
     html = view(doc_name, 'show_slide.html')
