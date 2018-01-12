@@ -211,7 +211,8 @@ class EditTest(TimRouteTest):
 
         self.login_test2()
         self.post_par(d.document, 'asd', par1.get_id())
-        self.post_par(d.document, 'testing', par_manage.get_id(), expect_status=403)
+        self.post_par(d.document, 'testing', par_manage.get_id(), expect_status=403, json_key='error',
+                      expect_content=f'Only users with manage access can edit this paragraph ({par_manage.get_id()}).')
         self.update_whole_doc(d, '', expect_status=403)
         self.post_area(d, '', par1.get_id(), par3.get_id(), expect_status=403)
         self.delete_area(d, par1.get_id(), par3.get_id(), expect_status=403)

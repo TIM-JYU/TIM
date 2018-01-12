@@ -217,17 +217,18 @@ def modify_paragraph():
 def verify_par_edit_access(par: DocParagraph):
     """Verifies that the current user has edit access to the specified DocParagraph."""
     edit_attr = par.get_attr('edit', 'edit')
+    message = f'Only users with {edit_attr} access can edit this paragraph ({par.get_id()}).'
     d = par.doc.get_docinfo()
     if edit_attr == 'edit':
-        verify_edit_access(d)
+        verify_edit_access(d, message=message)
     elif edit_attr == 'teacher':
-        verify_teacher_access(d)
+        verify_teacher_access(d, message=message)
     elif edit_attr == 'seeanswers':
-        verify_seeanswers_access(d)
+        verify_seeanswers_access(d, message=message)
     elif edit_attr == 'manage':
-        verify_manage_access(d)
+        verify_manage_access(d, message=message)
     elif edit_attr == 'owner':
-        verify_ownership(d)
+        verify_ownership(d, message=message)
 
 
 def modify_paragraph_common(doc_id, md, par_id, par_next_id):
