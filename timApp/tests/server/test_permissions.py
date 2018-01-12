@@ -23,6 +23,17 @@ class PermissionTest(TimRouteTest):
         d = DocEntry.find_by_id(d.id)
         self.assertTrue(self.current_user.has_ownership(d))
 
+    def test_non_owner_cannot_change_owner(self):
+        self.login_test1()
+        d = self.create_doc()
+        docid = d.id
+        self.test_user_2.grant_access(docid, 'manage')
+        self.login_test2()
+        self.json_put(f'/permissions/add/{docid}/testuser2/owner',
+                      {'from': datetime.now(tz=timezone.utc),
+                       'type': 'always'},
+                      expect_status=403)
+
     def test_cannot_change_owner_of_personal_folder(self):
         self.login_test1()
         f = self.current_user.get_personal_folder()
