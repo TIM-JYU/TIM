@@ -1,39 +1,13 @@
 import random
-from typing import Optional
 
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.readings import mark_read, get_readings
 from timApp.timdb.readparagraphtype import ReadParagraphType
 from timApp.timdb.tim_models import db
 
 
 class ClipboardTest(TimRouteTest):
-    def copy(self,
-             doc: DocEntry,
-             par_start: DocParagraph,
-             par_end: DocParagraph, **kwargs):
-        self.json_post(f'/clipboard/copy/{doc.id}/{par_start.get_id()}/{par_end.get_id()}', **kwargs)
-
-    def cut(self,
-            doc: DocEntry,
-            par_start: DocParagraph,
-            par_end: DocParagraph, **kwargs):
-        self.json_post(f'/clipboard/cut/{doc.id}/{par_start.get_id()}/{par_end.get_id()}', **kwargs)
-
-    def paste(self,
-              doc: DocEntry,
-              par_before: Optional[DocParagraph] = None,
-              par_after: Optional[DocParagraph] = None,
-              as_ref: bool = False, **kwargs):
-        self.json_post(f'/clipboard/paste/{doc.id}',
-                       {'par_before': par_before.get_id() if par_before else None,
-                        'par_after': par_after.get_id() if par_after else None,
-                        'as_ref': as_ref}, **kwargs)
-
-    def show(self, doc: DocEntry):
-        self.get('/clipboard', query_string={'doc_id': doc.id})
 
     def test_invalid(self):
         self.login_test2()

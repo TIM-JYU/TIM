@@ -14,7 +14,7 @@ from timApp.documentmodel.document import Document
 from timApp.documentmodel.documenteditresult import DocumentEditResult
 from timApp.requesthelper import verify_json_params, get_option
 from timApp.responsehelper import json_response, ok_response
-from timApp.routes.edit import par_response
+from timApp.routes.edit import par_response, verify_par_edit_access
 from timApp.sessioninfo import get_current_user_id
 from timApp.synchronize_translations import synchronize_translations
 from timApp.timdb.exceptions import TimDbException
@@ -47,9 +47,11 @@ def cut_to_clipboard(doc_id, from_par, to_par):
     (area_name,) = verify_json_params('area_name', require=False)
 
     timdb = get_timdb()
-    doc = g.docentry.document_as_current_user
+    doc: Document = g.docentry.document_as_current_user
     clip = Clipboard(timdb.files_root_path).get(get_current_user_id())
     try:
+        for p in doc.get_section(from_par, to_par):
+            verify_par_edit_access(p)
         pars = clip.cut_pars(doc, from_par, to_par, area_name)
     except TimDbException as e:
         return abort(400, str(e))

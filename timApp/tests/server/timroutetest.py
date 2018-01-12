@@ -13,6 +13,7 @@ from lxml import html
 from lxml.html import HtmlElement
 
 import timApp.tim
+from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.routes.login import log_in_as_anonymous
@@ -352,6 +353,24 @@ class TimRouteTest(TimDbTest):
             "par_next": None
         }, **kwargs)
 
+    def post_area(self, doc: DocInfo, text: str, area_start: str, area_end: str, **kwargs):
+        """Edits an area in a document.
+
+        :param doc: The document to be edited.
+        :param text: The new text for the paragraph.
+        :return: The response object.
+
+        """
+        doc.document.clear_mem_cache()
+        return self.json_post('/postParagraph/', {
+            "text": text,
+            "docId": doc.id,
+            "area_start": area_start,
+            "area_end": area_end,
+            "par": None,
+            "par_next": None,
+        }, **kwargs)
+
     def new_par(self, doc: Document, text: str, next_id: Optional[str] = None, additional_data=None, **kwargs):
         """Posts a new paragraph in a document.
 
@@ -372,15 +391,22 @@ class TimRouteTest(TimDbTest):
             **additional_data
         }, **kwargs)
 
-    def delete_par(self, doc: Document, par_id: str, **kwargs):
-        doc.clear_mem_cache()
-        return self.json_post(f'/deleteParagraph/{doc.doc_id}', {
+    def delete_par(self, doc: DocInfo, par_id: str, **kwargs):
+        doc.document.clear_mem_cache()
+        return self.json_post(f'/deleteParagraph/{doc.id}', {
             "par": par_id,
         }, **kwargs)
 
-    def update_whole_doc(self, doc: Document, text: str, **kwargs):
-        doc.clear_mem_cache()
-        return self.json_post(f'/update/{doc.doc_id}', {'fulltext': text, 'original': doc.export_markdown()}, **kwargs)
+    def delete_area(self, doc: DocInfo, area_start: str, area_end: str, **kwargs):
+        doc.document.clear_mem_cache()
+        return self.json_post(f'/deleteParagraph/{doc.id}', {
+            "area_start": area_start,
+            "area_end": area_end,
+        }, **kwargs)
+
+    def update_whole_doc(self, doc: DocInfo, text: str, **kwargs):
+        doc.document.clear_mem_cache()
+        return self.json_post(f'/update/{doc.id}', {'fulltext': text, 'original': doc.document.export_markdown()}, **kwargs)
 
     def post_answer(self, plugin_type, task_id, user_input,
                     save_teacher=False, teacher=False, user_id=None, answer_id=None, ref_from=None, **kwargs):
@@ -591,6 +617,31 @@ class TimRouteTest(TimDbTest):
 
     def get_personal_item_path(self, path):
         return f'{self.current_user.get_personal_folder().path}/{path}'
+
+    def copy(self,
+             doc: DocInfo,
+             par_start: DocParagraph,
+             par_end: DocParagraph, **kwargs):
+        self.json_post(f'/clipboard/copy/{doc.id}/{par_start.get_id()}/{par_end.get_id()}', **kwargs)
+
+    def cut(self,
+            doc: DocInfo,
+            par_start: DocParagraph,
+            par_end: DocParagraph, **kwargs):
+        self.json_post(f'/clipboard/cut/{doc.id}/{par_start.get_id()}/{par_end.get_id()}', **kwargs)
+
+    def paste(self,
+              doc: DocInfo,
+              par_before: Optional[DocParagraph] = None,
+              par_after: Optional[DocParagraph] = None,
+              as_ref: bool = False, **kwargs):
+        self.json_post(f'/clipboard/paste/{doc.id}',
+                       {'par_before': par_before.get_id() if par_before else None,
+                        'par_after': par_after.get_id() if par_after else None,
+                        'as_ref': as_ref}, **kwargs)
+
+    def show(self, doc: DocInfo):
+        self.get('/clipboard', query_string={'doc_id': doc.id})
 
 
 if __name__ == '__main__':
