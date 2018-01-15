@@ -4,7 +4,7 @@ import {$compile, $http, $timeout, $window} from "../../ngimport";
 import {
     getPars, getParIndex, isReference, getElementByRefId, getElementByParId, getRefAttrs, getNextPar,
     getLastParId,
-    getFirstPar, getParAttributes, getParId, EDITOR_CLASS_DOT, EDITOR_CLASS, isPreamble,
+    getFirstPar, getParAttributes, getParId, EDITOR_CLASS_DOT, EDITOR_CLASS, isPreamble, canEditPar,
 } from "./parhelpers";
 import {markPageDirty} from "tim/utils";
 import {onClick} from "./eventhandlers";
@@ -350,7 +350,8 @@ export function defineEditing(sc) {
         sc.showOptionsWindow(e, $par);
     };
 
-    sc.getEditorFunctions = function() {
+    sc.getEditorFunctions = function($par?) {
+        const parEditable = (!$par || canEditPar(sc.item, $par));
         if (sc.editing) {
             return [
                 {func: sc.goToEditor, desc: "Go to editor", show: true},
@@ -366,7 +367,7 @@ export function defineEditing(sc) {
                     show: true,
                 },
                 {func: sc.nameArea, desc: "Name area", show: true},
-                {func: sc.cutArea, desc: "Cut area", show: true},
+                {func: sc.cutArea, desc: "Cut area", show: parEditable},
                 {func: sc.copyArea, desc: "Copy area", show: true},
                 {func: sc.cancelArea, desc: "Cancel area", show: true},
                 {func: sc.nothing, desc: "Close menu", show: true},
@@ -374,8 +375,8 @@ export function defineEditing(sc) {
         } else {
             return [
                 {func: sc.showNoteWindow, desc: "Comment/note", show: sc.item.rights.can_comment},
-                {func: sc.showEditWindow, desc: "Edit", show: sc.item.rights.editable},
-                {func: sc.cutPar, desc: "Cut paragraph", show: $window.editMode === "par"},
+                {func: sc.showEditWindow, desc: "Edit", show: sc.item.rights.editable && parEditable},
+                {func: sc.cutPar, desc: "Cut paragraph", show: $window.editMode === "par" && parEditable},
                 {func: sc.copyPar, desc: "Copy paragraph", show: $window.editMode !== "area"},
                 //{func: sc.cutArea, desc: 'Cut area', show: $window.editMode === 'area'},
                 //{func: sc.copyArea, desc: 'Copy area', show: $window.editMode === 'area'},
@@ -388,7 +389,7 @@ export function defineEditing(sc) {
                 {func: sc.removeAreaMarking, desc: "Remove area marking", show: $window.editMode === "area"},
                 {func: sc.showAddParagraphAbove, desc: "Add paragraph above", show: sc.item.rights.editable},
                 {func: sc.addQuestionQst, desc: "Add question above", show: sc.lectureMode && sc.item.rights.editable},
-                {func: sc.editQst, desc: "Edit question", show: sc.lectureMode && sc.item.rights.editable},
+                {func: sc.editQst, desc: "Edit question", show: sc.lectureMode && sc.item.rights.editable && parEditable},
                 {
                     func: sc.addQuestion,
                     desc: "Create lecture question",

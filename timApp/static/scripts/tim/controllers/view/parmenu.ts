@@ -140,6 +140,7 @@ export function defineParMenu(sc) {
 
     sc.showOptionsWindow = function(e, $par, coords) {
         sc.updateClipboardStatus();
+        sc.updatePopupMenu($par);
         $par.children(".editline").addClass("menuopen");
         sc.showPopupMenu(e, $par, coords, sc.popupMenuAttrs, null, "par");
     };
@@ -148,8 +149,8 @@ export function defineParMenu(sc) {
 
     sc.optionsWindowClosed = optionsWindowClosed;
 
-    sc.updatePopupMenu = function() {
-        sc.editorFunctions = sc.getEditorFunctions();
+    sc.updatePopupMenu = function($par?) {
+        sc.editorFunctions = sc.getEditorFunctions($par);
         if (sc.selection.start !== null && $window.editMode) {
             sc.popupMenuAttrs.save = null;
             sc.popupMenuAttrs.editbutton = false;

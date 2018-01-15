@@ -230,5 +230,14 @@ export function isActionablePar($par: JQuery) {
     return !(isPreview || preamble);
 }
 
+export function canEditPar(item, $par: JQuery) {
+    const attrs = getParAttributes($par);
+    const right = item.rights[attrs.edit];
+    if (right === undefined) {
+        return true;
+    }
+    return right;
+}
+
 export const EDITOR_CLASS = "editorArea";
 export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;

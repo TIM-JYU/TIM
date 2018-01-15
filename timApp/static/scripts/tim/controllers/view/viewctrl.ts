@@ -242,7 +242,8 @@ timApp.controller("ViewCtrl", [
 
         sc.$watchGroup(["lectureMode", "selection.start", "selection.end", "editing", "getEditMode()",
             "allowPasteContent", "allowPasteRef", "getAllowMove()"], function(newValues, oldValues, scope) {
-                sc.updatePopupMenu();
+                const par = $(".actionButtons").parent(".par");
+                sc.updatePopupMenu(par.length > 0 ? par : undefined);
                 if (sc.editing) {
                     sc.notification = "Editor is already open.";
                 } else {
