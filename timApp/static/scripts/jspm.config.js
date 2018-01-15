@@ -140,7 +140,7 @@ SystemJS.config({
     },
     "https://sagecell.sagemath.org/static/embedded_sagecell.js": {
       "globals": {
-        "MathJax": "/static/scripts/mathjax/mathjax.js"
+        "MathJax": "https://cdn.rawgit.com/pkra/MathJax-single-file/master/dist/TeXSVGTeX/MathJax.js"
       },
       "exports": "sagecell"
     }
