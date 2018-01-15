@@ -223,7 +223,7 @@ def verify_par_edit_access(par: DocParagraph):
         verify_edit_access(d, message=message)
     elif edit_attr == 'teacher':
         verify_teacher_access(d, message=message)
-    elif edit_attr == 'seeanswers':
+    elif edit_attr == 'see_answers':
         verify_seeanswers_access(d, message=message)
     elif edit_attr == 'manage':
         verify_manage_access(d, message=message)
