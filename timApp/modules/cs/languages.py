@@ -824,7 +824,7 @@ class Octave(Language):
     def run(self, web, sourcelines, points_rule):
         print("octave: ", self.exename)
         extra = get_param(self.query, "extra", "").format(self.pure_exename, self.userargs)
-        self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer", "timimages/octave")
+        self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer", "timimages/cs3:compose")
         code, out, err, pwddir = self.runself(["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],
                                               timeout=20,
                                               ulimit=df(self.ulimit, "ulimit -t 30 -f 80000"), no_x11=True,
