@@ -6,7 +6,7 @@ export interface ILectureEndingDialogResult {
     result: "extend" | "dontextend" | "end";
 }
 
-class LectureEndingCtrl extends DialogController<{lecture: ILecture}, ILectureEndingDialogResult> {
+class LectureEndingCtrl extends DialogController<{lecture: ILecture}, ILectureEndingDialogResult, "timLectureEnding"> {
     private extendTimes = [5, 10, 15, 30, 45, 60];
     private selectedTime = 15;
 
@@ -59,7 +59,5 @@ registerDialogComponent("timLectureEnding",
     });
 
 export async function showLectureEnding(lecture: ILecture) {
-    return await showDialog<LectureEndingCtrl,
-        {lecture: ILecture},
-        ILectureEndingDialogResult>("timLectureEnding", {lecture: () => lecture});
+    return await showDialog<LectureEndingCtrl>("timLectureEnding", {lecture: () => lecture});
 }

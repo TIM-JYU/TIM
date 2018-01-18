@@ -120,7 +120,7 @@ export async function deleteQuestionWithConfirm(docId: number, parId: string): P
     return null;
 }
 
-export class QuestionController extends DialogController<{params: IQuestionDialogParams}, IQuestionDialogResult> {
+export class QuestionController extends DialogController<{params: IQuestionDialogParams}, IQuestionDialogResult, "timEditQuestion"> {
     private static $inject = ["$element"];
     private answerFieldTypes: IAnswerField[];
     private asked_id?: number;
@@ -1011,7 +1011,7 @@ registerDialogComponent("timEditQuestion",
     "qctrl");
 
 export async function showQuestionEditDialog(params: IQuestionDialogParams): Promise<IQuestionDialogResult> {
-    return showDialog<QuestionController, {params: IQuestionDialogParams}, IQuestionDialogResult>("timEditQuestion", {
+    return showDialog<QuestionController>("timEditQuestion", {
         params: () => params,
     });
 }

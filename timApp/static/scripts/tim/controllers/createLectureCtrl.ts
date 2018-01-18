@@ -1,11 +1,10 @@
 import angular from "angular";
 import $ from "jquery";
 import moment from "moment";
-import {timApp} from "tim/app";
+import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IItem} from "../IItem";
 import {ILecture, ILectureFormParams, ILectureOptions} from "../lecturetypes";
 import {$http, $log, $window} from "../ngimport";
-import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 
 /**
  * Lecture creation controller which is used to handle and validate the form data.
@@ -19,7 +18,7 @@ import {DialogController, registerDialogComponent, showDialog} from "../dialog";
  * @copyright 2015 Timppa project authors
  */
 
-export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: ILectureFormParams}, ILecture> {
+export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: ILectureFormParams}, ILecture, "timCreateLecture"> {
     private useDate: boolean;
     private useDuration: boolean;
     private dateChosen: boolean;
@@ -319,7 +318,7 @@ registerDialogComponent("timCreateLecture",
     "clctrl");
 
 export async function showLectureDialog(item: IItem, lecture: ILectureFormParams | null = null): Promise<ILecture> {
-    return showDialog<CreateLectureCtrl, {item: IItem, lecture: ILectureFormParams}, ILecture>("timCreateLecture", {
+    return showDialog<CreateLectureCtrl>("timCreateLecture", {
         item: () => item,
         lecture: () => lecture,
     });

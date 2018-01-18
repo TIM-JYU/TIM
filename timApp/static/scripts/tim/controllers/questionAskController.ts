@@ -36,7 +36,7 @@ function isReasking(p: QuestionPreviewParams): p is IReAsk {
 
 export type QuestionPreviewParams = IAskNew | IReAsk;
 
-export class QuestionPreviewController extends DialogController<{params: QuestionPreviewParams}, number> {
+export class QuestionPreviewController extends DialogController<{params: QuestionPreviewParams}, number, "timAskQuestion"> {
     private questiondata: IPreviewParams = null;
 
     constructor() {
@@ -135,5 +135,5 @@ registerDialogComponent("timAskQuestion", QuestionPreviewController, {
 });
 
 export async function showQuestionAskDialog(p: QuestionPreviewParams) {
-    return await showDialog<QuestionPreviewController, {params: QuestionPreviewParams}, number>("timAskQuestion", {params: () => p});
+    return await showDialog<QuestionPreviewController>("timAskQuestion", {params: () => p});
 }
