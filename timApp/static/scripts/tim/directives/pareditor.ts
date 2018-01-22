@@ -112,7 +112,7 @@ export class PareditorController implements IController {
         this.wrap = {n: n};
 
         this.proeditor = this.getLocalBool("proeditor", this.lstag === "par");
-        this.autocomplete = this.getLocalBool("autocomplete", this.lstag === "par");
+        this.autocomplete = this.getLocalBool("autocomplete", false);
 
         this.pluginButtonList = {};
 
