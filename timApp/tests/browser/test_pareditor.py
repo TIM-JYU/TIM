@@ -4,7 +4,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 
-from timApp.tests.browser.browsertest import BrowserTest
+from timApp.tests.browser.browsertest import BrowserTest, find_element_by_text
 from timApp.timdb.tim_models import db
 
 
@@ -85,6 +85,10 @@ class ParEditorTest(BrowserTest):
         self.click_add_bottom()
         self.wait_for_editor_load()
         pareditor = self.get_editor_element()
+        cb = find_element_by_text(pareditor, 'Autocomplete', 'label')
+        cb.click()
+        editor = self.find_element('.ace_editor')
+        editor.click()
         ActionChains(self.drv).send_keys('d').perform()
         self.wait_for_preview_to_finish()
         self.assert_same_screenshot(pareditor, 'pareditor/autocomplete')
