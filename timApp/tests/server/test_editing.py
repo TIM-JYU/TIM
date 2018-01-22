@@ -1,6 +1,7 @@
 from lxml import html
 
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.docinfo import DocInfo
 
 
 class EditTest(TimRouteTest):
@@ -9,15 +10,15 @@ class EditTest(TimRouteTest):
         d = self.create_doc(initial_par='test')
         par_id = d.document.get_paragraphs()[0].get_id()
         invalid_par = 'nonexistent'
-        self.json_post(f'/deleteParagraph/{d.id}', {'par': invalid_par},
-                       expect_status=400,
-                       expect_content={'error': f'Paragraph {invalid_par} does not exist'})
-        self.json_post(f'/deleteParagraph/{d.id}', {'area_start': invalid_par, 'area_end': par_id},
-                       expect_status=400,
-                       expect_content={'error': f'Paragraph {invalid_par} does not exist'})
-        self.json_post(f'/deleteParagraph/{d.id}', {'area_start': par_id, 'area_end': invalid_par},
-                       expect_status=400,
-                       expect_content={'error': f'Paragraph {invalid_par} does not exist'})
+        self.delete_par(d, invalid_par,
+                        expect_status=400,
+                        expect_content={'error': f'Paragraph {invalid_par} does not exist'})
+        self.delete_area(d, invalid_par, par_id,
+                         expect_status=400,
+                         expect_content={'error': f'Paragraph {invalid_par} does not exist'})
+        self.delete_area(d, par_id, invalid_par,
+                         expect_status=400,
+                         expect_content={'error': f'Paragraph {invalid_par} does not exist'})
         self.get(f'/getBlock/{d.id}/{invalid_par}', expect_status=404,
                  expect_content=f'Document {d.id}: Paragraph not found: {invalid_par}',
                  json_key='error')
@@ -50,10 +51,7 @@ class EditTest(TimRouteTest):
         })
         d.document.clear_mem_cache()
         self.assertEqual(d.document.export_markdown(), new_text)
-        self.json_post(f'/deleteParagraph/{d.id}', {
-            "area_start": pars[0].get_id(),
-            "area_end": pars[-1].get_id(),
-        })
+        self.delete_area(d, pars[0].get_id(), pars[-1].get_id())
         d.document.clear_mem_cache()
         self.assertEqual(d.document.get_paragraphs(), [])
 
@@ -84,14 +82,12 @@ class EditTest(TimRouteTest):
             d.document.add_text("#- {area=a}")
             d.document.add_text("#- {area_end=a}")
         par_ids = d.document.get_par_ids()
-        self.json_post(f'/update/{d.id}',
-                       {'fulltext': f"""
+        self.update_whole_doc(d, f"""
 #- {{area=a id={par_ids[0]}}}
 #- {{area_end=a id={par_ids[1]}}}
 #- {{area=b id={par_ids[2]}}}
 #- {{area_end=b id={par_ids[3]}}}
-                       """,
-                        'original': d.document.export_markdown()})
+                       """)
         orig_text = d.document.export_markdown()
         self.json_post(f'/update/{d.id}',
                        {'fulltext': f"""
@@ -201,3 +197,53 @@ class EditTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc(initial_par="""<?xml version="1.0" encoding="iso-8859-1"?>""")
         self.get(d.url)
+
+    def test_edit_attribute(self):
+        self.login_test1()
+        d = self.create_doc(
+            initial_par=['test', '#- {edit=manage}', 'test', '#- {area=a edit=manage}', 'in area', '#- {area_end=a}'])
+        pars = d.document.get_paragraphs()
+        par1 = pars[0]
+        par_manage = pars[1]
+        par3 = pars[2]
+        self.post_par(d.document, '#- {edit=manage}\ntest', par_manage.get_id())
+        self.test_user_2.grant_access(d.id, 'edit')
+
+        self.login_test2()
+        self.post_par(d.document, 'asd', par1.get_id())
+        self.post_par(d.document, 'testing', par_manage.get_id(), expect_status=403, json_key='error',
+                      expect_content=f'Only users with manage access can edit this paragraph ({par_manage.get_id()}).')
+        self.update_whole_doc(d, '', expect_status=403)
+        self.post_area(d, '', par1.get_id(), par3.get_id(), expect_status=403)
+        self.delete_area(d, par1.get_id(), par3.get_id(), expect_status=403)
+        self.delete_area(d, par1.get_id(), par_manage.get_id(), expect_status=403)
+        self.delete_area(d, par_manage.get_id(), par3.get_id(), expect_status=403)
+        self.delete_area(d, par_manage.get_id(), par_manage.get_id(), expect_status=403)
+        self.delete_par(d, par_manage.get_id(), expect_status=403)
+        self.cut(d, par1, par3, expect_status=403)
+        self.cut(d, par1, par_manage, expect_status=403)
+        self.cut(d, par_manage, par3, expect_status=403)
+        self.cut(d, par_manage, par_manage, expect_status=403)
+        self.json_post('/postNewTaskNames/',
+                       {'docId': d.id, 'duplicates': [[None, None, par_manage.get_id()]]},
+                       expect_status=403)
+        self.json_post('/cancelChanges/',
+                       {'docId': d.id, 'originalPar': {'md': 'asd'}, 'parId': par_manage.get_id(), 'newPars': []},
+                       expect_status=403)
+        self.json_post('/cancelChanges/',
+                       {'docId': d.id, 'originalPar': None, 'parId': par_manage.get_id(),
+                        'newPars': [par_manage.get_id()]},
+                       expect_status=403)
+        self.json_post(f'/unwrap_area/{d.id}/a', expect_status=403)
+
+        self.test_user_2.grant_access(d.id, 'manage')
+        self.post_par(d.document, '#- {edit=manage}\nedited', par1.get_id())
+        self.update_whole_doc(d, d.document.export_markdown() + 'new')
+        self.post_area(
+            d,
+            d.document.export_section(par1.get_id(), par3.get_id()) + 'new',
+            par1.get_id(),
+            par3.get_id()
+        )
+        self.delete_area(d, par1.get_id(), par3.get_id())
+        self.json_post(f'/unwrap_area/{d.id}/a')

@@ -212,9 +212,10 @@ def verify_logged_in():
         abort(403, "You have to be logged in to perform this action.")
 
 
-def verify_ownership(b: ItemOrBlock):
+def verify_ownership(b: ItemOrBlock, require=True, message=None, check_duration=False):
     u = get_current_user_object()
-    return u.has_ownership(b)
+    return abort_if_not_access_and_required(u.has_ownership(b), b.id, 'owner', require, message,
+                                            check_duration)
 
 
 def verify_read_marking_right(b: ItemOrBlock):

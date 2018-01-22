@@ -4,7 +4,7 @@ import {$compile, $http, $timeout, $window} from "../../ngimport";
 import {
     getPars, getParIndex, isReference, getElementByRefId, getElementByParId, getRefAttrs, getNextPar,
     getLastParId,
-    getFirstPar, getParAttributes, getParId, EDITOR_CLASS_DOT, EDITOR_CLASS, createNewPar, isPreamble,
+    getFirstPar, getParAttributes, getParId, EDITOR_CLASS_DOT, EDITOR_CLASS, createNewPar, isPreamble, canEditPar,
 } from "./parhelpers";
 import {markPageDirty} from "tim/utils";
 import {onClick} from "./eventhandlers";
@@ -410,7 +410,8 @@ export class EditingHandler {
         this.viewctrl.showOptionsWindow(e, $par);
     }
 
-    getEditorFunctions() {
+    getEditorFunctions($par?) {
+        const parEditable = (!$par || canEditPar(this.viewctrl.item, $par));
         if (this.viewctrl.editing) {
             return [
                 {func: () => this.goToEditor(), desc: "Go to editor", show: true},
@@ -426,7 +427,7 @@ export class EditingHandler {
                     show: true,
                 },
                 {func: (e, par) => this.viewctrl.nameArea(e, par), desc: "Name area", show: true},
-                {func: (e, par) => this.viewctrl.cutArea(e, par), desc: "Cut area", show: true},
+                {func: (e, par) => this.viewctrl.cutArea(e, par), desc: "Cut area", show: parEditable},
                 {func: (e, par) => this.viewctrl.copyArea(e, par), desc: "Copy area", show: true},
                 {func: (e, par) => this.viewctrl.cancelArea(), desc: "Cancel area", show: true},
                 {func: (e, par) => this.viewctrl.nothing(), desc: "Close menu", show: true},
@@ -438,11 +439,11 @@ export class EditingHandler {
                     desc: "Comment/note",
                     show: this.viewctrl.item.rights.can_comment,
                 },
-                {func: (e, par) => this.showEditWindow(e, par), desc: "Edit", show: this.viewctrl.item.rights.editable},
+                {func: (e, par) => this.showEditWindow(e, par), desc: "Edit", show: parEditable},
                 {
                     func: (e, par) => this.viewctrl.cutPar(e, par),
                     desc: "Cut paragraph",
-                    show: $window.editMode === "par",
+                    show: $window.editMode === "par" && parEditable,
                 },
                 {
                     func: (e, par) => this.viewctrl.copyPar(e, par),
@@ -475,7 +476,7 @@ export class EditingHandler {
                 {
                     func: (e, par) => this.viewctrl.editQst(e, par),
                     desc: "Edit question",
-                    show: this.viewctrl.lectureMode && this.viewctrl.item.rights.editable,
+                    show: this.viewctrl.lectureMode && parEditable,
                 },
                 {
                     func: (e, par) => this.viewctrl.addQuestion(e, par),

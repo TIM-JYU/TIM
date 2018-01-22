@@ -82,7 +82,7 @@ class NotifyTest(TimRouteTest):
                           'reply_to': None,
                           'subject': f'Someone edited the document {title}'}, sent_mails_in_testing[-1])
 
-        self.delete_par(d.document, par_id)
+        self.delete_par(d, par_id)
         self.assertEqual({'group_id': f'docmodify_{d.id}',
                           'group_subject': f'The document {title} has been modified',
                           'mail_from': mail_from,

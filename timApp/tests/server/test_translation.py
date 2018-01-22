@@ -112,16 +112,16 @@ class TranslationTest(TimRouteTest):
         self.post_par(doc.document, '5\n#-\n6', doc.document.get_paragraphs()[-1].get_id())
         self.assert_translation_synced(tr_doc, doc)
 
-        self.delete_par(doc.document, doc.document.get_paragraphs()[-1].get_id())
+        self.delete_par(doc, doc.document.get_paragraphs()[-1].get_id())
         self.assert_translation_synced(tr_doc, doc)
 
-        self.delete_par(doc.document, doc.document.get_paragraphs()[0].get_id())
+        self.delete_par(doc, doc.document.get_paragraphs()[0].get_id())
         self.assert_translation_synced(tr_doc, doc)
 
-        self.update_whole_doc(doc.document, 'replaced all with this')
+        self.update_whole_doc(doc, 'replaced all with this')
         self.assert_translation_synced(tr_doc, doc)
 
-        self.update_whole_doc(doc.document, '')
+        self.update_whole_doc(doc, '')
         self.assert_translation_synced(tr_doc, doc)
 
     def test_translation_extraneous_pars(self):
@@ -134,14 +134,14 @@ class TranslationTest(TimRouteTest):
         tr_doc.insert_paragraph('new', insert_before_id=tr_doc.get_paragraphs()[1].get_id())
         tr_doc.add_paragraph('new2')
 
-        self.delete_par(doc.document, doc.document.get_paragraphs()[0].get_id())
+        self.delete_par(doc, doc.document.get_paragraphs()[0].get_id())
         tr_doc.clear_mem_cache()
         tr_pars = tr_doc.get_paragraphs()
         self.assertEqual('new', tr_pars[0].get_markdown())
         self.assertEqual('new2', tr_pars[-1].get_markdown())
         self.assertEqual(doc.document.get_paragraphs()[0].get_id(), tr_pars[1].get_attr('rp'))
 
-        self.update_whole_doc(doc.document, 'whole new text')
+        self.update_whole_doc(doc, 'whole new text')
         doc.document.clear_mem_cache()
         tr_doc.clear_mem_cache()
         first_id = doc.document.get_paragraphs()[0].get_id()

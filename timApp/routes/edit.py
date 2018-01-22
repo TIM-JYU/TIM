@@ -6,7 +6,8 @@ from flask import abort
 from flask import current_app
 from flask import request
 
-from timApp.accesshelper import verify_edit_access, verify_view_access, get_rights, get_doc_or_abort
+from timApp.accesshelper import verify_edit_access, verify_view_access, get_rights, get_doc_or_abort, \
+    verify_teacher_access, verify_manage_access, verify_ownership, verify_seeanswers_access
 from timApp.common import post_process_pars
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.docparagraph import DocParagraph
@@ -86,6 +87,11 @@ def update_document(doc_id):
     try:
         # To verify view rights for possible referenced paragraphs, we call this first:
         editor_pars = get_pars_from_editor_text(doc, content, break_on_elements=True, skip_access_check=True)
+
+        # TODO: Access check should be more fine-grained. Should only check pars that were actually edited.
+        for p in doc.get_paragraphs():
+            verify_par_edit_access(p)
+
         _, _, edit_result = doc.update(content, original, strict_validation)
         check_and_rename_pluginnamehere(editor_pars, doc)
         old_pars = doc.get_paragraphs()
@@ -148,6 +154,7 @@ def rename_task_ids():
             continue
         else:
             original_par = doc.get_paragraph(duplicate[2])
+            verify_par_edit_access(original_par)
             attrs = original_par.get_attrs()
             if attrs['taskId']:
                 # If a new taskId was given use that
@@ -207,6 +214,23 @@ def modify_paragraph():
     return modify_paragraph_common(doc_id, md, par_id, par_next_id)
 
 
+def verify_par_edit_access(par: DocParagraph):
+    """Verifies that the current user has edit access to the specified DocParagraph."""
+    edit_attr = par.get_attr('edit', 'edit')
+    message = f'Only users with {edit_attr} access can edit this paragraph ({par.get_id()}).'
+    d = par.doc.get_docinfo()
+    if edit_attr == 'edit':
+        verify_edit_access(d, message=message)
+    elif edit_attr == 'teacher':
+        verify_teacher_access(d, message=message)
+    elif edit_attr == 'see_answers':
+        verify_seeanswers_access(d, message=message)
+    elif edit_attr == 'manage':
+        verify_manage_access(d, message=message)
+    elif edit_attr == 'owner':
+        verify_ownership(d, message=message)
+
+
 def modify_paragraph_common(doc_id, md, par_id, par_next_id):
     docinfo = get_doc_or_abort(doc_id)
     verify_edit_access(docinfo)
@@ -226,6 +250,9 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
 
     if editing_area:
         try:
+            curr_section = doc.get_section(area_start, area_end)
+            for p in curr_section:
+                verify_par_edit_access(p)
             new_start, new_end, edit_result = doc.update_section(md, area_start, area_end)
             pars = doc.get_section(new_start, new_end)
         except (ValidationException, TimDbException) as e:
@@ -241,6 +268,7 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
         abort_if_duplicate_ids(doc, pars_to_add)
 
         if editor_pars[0].is_different_from(original_par):
+            verify_par_edit_access(original_par)
             par = doc.modify_paragraph_obj(par_id=par_id,
                                            p=editor_pars[0])
             pars.append(par)
@@ -531,13 +559,17 @@ def cancel_save_paragraphs():
     docentry = get_doc_or_abort(doc_id)
     verify_edit_access(docentry)
     doc = docentry.document_as_current_user
-    if len(new_pars) > 0:
-        for new_par in new_pars:
-            if not doc.has_paragraph(new_par):
-                continue
-            else:
-                doc.delete_paragraph(new_par)
+    for new_par in new_pars:
+        try:
+            par = doc.get_paragraph(new_par)
+        except TimDbException:
+            continue
+        else:
+            verify_par_edit_access(par)
+            doc.delete_paragraph(new_par)
     if original_par:
+        orig = doc.get_paragraph(par_id)
+        verify_par_edit_access(orig)
         doc.modify_paragraph(par_id=par_id,
                              new_text=original_par.get('md'),
                              new_attrs=original_par.get('attrs'))
@@ -621,12 +653,16 @@ def delete_paragraph(doc_id):
             if not doc.has_paragraph(p):
                 abort(400, f'Paragraph {p} does not exist')
         md = doc.export_section(area_start, area_end)
+        curr_section = doc.get_section(area_start, area_end)
+        for p in curr_section:
+            verify_par_edit_access(p)
         edit_result = doc.delete_section(area_start, area_end)
     else:
         par_id, = verify_json_params('par')
         if not doc.has_paragraph(par_id):
             abort(400, f'Paragraph {par_id} does not exist')
         par = doc.get_paragraph(par_id)
+        verify_par_edit_access(par)
         md = par.get_markdown()
         doc.delete_paragraph(par_id)
         edit_result = DocumentEditResult(deleted=[par])
@@ -705,8 +741,12 @@ def unwrap_area(doc_id, area_name):
         area_pars = doc.get_named_section(area_name)
 
         # Remove the starting and ending paragraphs of the area
-        doc.delete_paragraph(area_pars[0].get_id())
-        doc.delete_paragraph(area_pars[len(area_pars) - 1].get_id())
+        area_start = area_pars[0]
+        area_end = area_pars[-1]
+        verify_par_edit_access(area_start)
+        verify_par_edit_access(area_end)
+        doc.delete_paragraph(area_start.get_id())
+        doc.delete_paragraph(area_end.get_id())
 
     except TimDbException as e:
         abort(400, str(e))

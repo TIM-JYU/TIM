@@ -112,7 +112,7 @@ export class PareditorController implements IController {
         this.wrap = {n: n};
 
         this.proeditor = this.getLocalBool("proeditor", this.lstag === "par");
-        this.autocomplete = this.getLocalBool("autocomplete", this.lstag === "par");
+        this.autocomplete = this.getLocalBool("autocomplete", false);
 
         this.pluginButtonList = {};
 
@@ -1067,7 +1067,7 @@ or newer one that is more familiar to write in YAML:
         for (const key in this.tables) {
             if (this.tables.hasOwnProperty(key)) {
                 const text = key.charAt(0).toUpperCase() + key.substring(1);
-                const clickfn = "$ctrl.insertTemplate(tables['" + key + "'])";
+                const clickfn = "$ctrl.editor.insertTemplate($ctrl.tables['" + key + "'])";
                 buttons.push(this.createMenuButton(text, "", clickfn));
             }
         }

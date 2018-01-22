@@ -890,7 +890,7 @@ class Document:
             result.deleted.append(par)
         return result
 
-    def get_named_section(self, section_name: str):
+    def get_named_section(self, section_name: str) -> List[DocParagraph]:
         if self.preload_option == PreloadOption.all:
             self.ensure_pars_loaded()
         start_found = False

@@ -67,7 +67,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    updatePopupMenu(): any {
+    updatePopupMenu($par?): any {
         throw new Error(this.mixinMsg);
     }
 
@@ -173,7 +173,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    getEditorFunctions(): MenuFunctionCollection {
+    getEditorFunctions($par?): MenuFunctionCollection {
         throw new Error(this.mixinMsg);
     }
 
@@ -603,7 +603,8 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
             () => this.allowPasteContent,
             () => this.allowPasteRef,
             () => this.getAllowMove()], (newValues, oldValues, scope) => {
-            this.updatePopupMenu();
+            const par = $(".actionButtons").parent(".par");
+            this.updatePopupMenu(par.length > 0 ? par : undefined);
             if (this.editing) {
                 this.notification = "Editor is already open.";
             } else {

@@ -182,6 +182,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
 
     showOptionsWindow(e, $par, coords) {
         this.viewctrl.updateClipboardStatus();
+        this.viewctrl.updatePopupMenu($par);
         $par.children(".editline").addClass("menuopen");
         this.viewctrl.showPopupMenu(e, $par, coords, this.viewctrl.popupMenuAttrs, null, "par");
     }
@@ -190,8 +191,8 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         optionsWindowClosed();
     }
 
-    updatePopupMenu() {
-        this.viewctrl.editorFunctions = this.viewctrl.getEditorFunctions();
+    updatePopupMenu($par?) {
+        this.viewctrl.editorFunctions = this.viewctrl.getEditorFunctions($par);
         if (this.viewctrl.selection.start !== null && $window.editMode) {
             this.viewctrl.popupMenuAttrs.save = null;
             this.viewctrl.popupMenuAttrs.editbutton = false;
