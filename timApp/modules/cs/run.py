@@ -102,7 +102,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     s_in = ""
     pwddir = ""
     if not ulimit:
-        ulimit = "ulimit -f 1000 -t 10 -s 600 "  # -v 2000 -s 100 -u 10
+        ulimit = "ulimit -f 1000 -t 10 -s 2000 "  # -v 2000 -s 100 -u 10
     if uargs and len(uargs):
         args.extend(shlex.split(uargs))
     if stdin:
