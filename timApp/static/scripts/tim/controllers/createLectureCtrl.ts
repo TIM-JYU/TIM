@@ -108,7 +108,6 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
     /**
      * This function is called if end date is selected. Sets boolean values to reflect this choice and sets
      * the default end time to 2 hours ahead of start time.
-     * @memberof module:createLectureCtrl
      */
     enableDate2() {
         this.dateCheck = true;
@@ -123,7 +122,6 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
     /**
      * Function for enabling fields and buttons for "Duration" and disabling them for "Use date". This function
      * is called when duration is chosen and is chosen by default.
-     * @memberof module:createLectureCtrl
      */
     enableDue2() {
         this.dateCheck = false;
@@ -137,7 +135,6 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
     /**
      * Remove border from given element.
      * @param element ID of the field whose border will be removed.
-     * @memberof module:createLectureCtrl
      */
     defInputStyle(element) {
         if (element !== null || !element.isDefined) {
@@ -149,7 +146,6 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
      * Checks if the value is between 0-23
      * @param element The value of the element to be validated.
      * @param val The ID of the input field so user can be notified of the error.
-     * @memberof module:createLectureCtrl
      */
     isHour(element, val) {
         if (element === "" || isNaN(element) || element > 23 || element < 0) {
@@ -168,7 +164,6 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
      * Checks if the value is between 0-59
      * @param element The value of the element to be validated.
      * @param val The ID of the input field so user can be notified of the error.
-     * @memberof module:createLectureCtrl
      */
     isMinute(element, val) {
         if (element === "" || isNaN(element) || element > 59 || element < 0) {
@@ -182,7 +177,6 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
 
     /**
      * Function for creating a new lecture and validation.
-     * @memberof module:createLectureCtrl
      */
     async submitLecture() {
         this.removeErrors();
@@ -269,7 +263,6 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
      * Changes the border of the element to red.
      * @param inputId The ID of the input field so user can be notified of the error.
      * @param errorText Error text that will be printed if the error occurs.
-     * @memberof module:createLectureCtrl
      */
     errorize(inputId, errorText) {
         angular.element("#" + inputId).css("border", "1px solid red");
@@ -280,7 +273,6 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
 
     /**
      * Calls defInputStyle for all the form elements.
-     * @memberof module:createLectureCtrl
      */
     removeErrors() {
         this.errorMessage = "";
@@ -305,7 +297,6 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
 
     /**
      * Function for cancelling the lecture creation.
-     * @memberof module:createLectureCtrl
      */
     cancelCreation() {
         this.dismiss();

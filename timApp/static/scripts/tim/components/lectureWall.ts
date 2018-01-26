@@ -22,7 +22,6 @@ class LectureWallController implements IController {
     /**
      * Event for pressing enter while writing message. Sends message.
      * @param event They key press.
-     * @memberof module:lectureController
      */
     chatEnterPressed(event: KeyboardEvent) {
         if (event.which === 13) {
@@ -34,7 +33,6 @@ class LectureWallController implements IController {
      * Sends http request to send a message.
      * @param message The message to be sent.
      * @returns {boolean} Whether the message was sent successfully.
-     * @memberof module:lectureController
      */
     async sendMessageEvent(message: string) {
         if (message.trim() === "") {
