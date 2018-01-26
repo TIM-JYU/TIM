@@ -1,10 +1,68 @@
 import $ from "jquery";
 import {$http} from "./ngimport";
 
-export async function loadMap() {
-    // Scale of the map
-    let scale = 0.5;
+interface ITileSet {
+    tileoffset: {x: number, y: number};
+    columns: number;
+    firstgid: number;
+    image: string;
+    imageheight: number;
+    imagewidth: number;
+    margin: number;
+    name: string;
+    properties: {buildingProperty: number, frameProperty: number};
+    propertytypes: {buildingProperty: string, frameProperty: string};
+    spacing: number;
+    tilecount: number;
+    tileheight: number;
+    tilewidth: number;
+    transparentcolor: string;
+}
 
+interface ITile {
+    frame: boolean;
+    tileset: ITileSet;
+    y: number;
+    x: number;
+    dataIndex: number;
+    layerNo: number;
+    active: boolean;
+
+    draw(canvas: HTMLCanvasElement): void;
+    isPointInside(x: number, y: number): boolean;
+}
+
+interface ILayer {
+    data: number[];
+    height: number;
+    name: string;
+    opacity: number;
+    type: string;
+    visible: true;
+    width: number;
+    x: number;
+    y: number;
+}
+
+type LayerData = {[index: string]: number};
+
+interface IMapResponse {
+    width: number;
+    height: number;
+    tilewidth: number;
+    tileheight: number;
+    layers: Array<{
+        properties: {title: string, maxpoints: number, studentpoints: number, site: string},
+        name: string,
+        data: LayerData,
+    }>;
+    tilesets: ITileSet[];
+}
+
+// Scale of the map
+let scale = 0.5;
+
+export async function loadMap() {
     // Show all building frames
     let showAll = false;
 
@@ -54,8 +112,8 @@ export async function loadMap() {
      * @param sources File paths to the images
      * @param callback Callback function
      */
-    function loadImages(sources, callback) {
-        const images = {};
+    function loadImages(sources: any[], callback: (images: {[index: number]: HTMLImageElement}) => void) {
+        const images: {[index: number]: HTMLImageElement} = {};
         let loadedImages = 0;
         const onload = function() {
             if (++loadedImages >= sources.length) {
@@ -70,16 +128,7 @@ export async function loadMap() {
     }
 
     // Get the JSON map file
-    const response = await $http.post<{
-        width: number,
-        height: number,
-        tilewidth: number,
-        tileheight: number,
-        layers: Array<{
-            properties: {title: string, maxpoints: number, studentpoints: number, site: string}, name: string,
-        }>,
-        tilesets: Array<{image: {}, firstgid: number, tilecount: number, properties?: {frameProperty: number}}>,
-    }>("/generateMap", JSON.parse($container.attr("data-mapdata")));
+    const response = await $http.post<IMapResponse>("/generateMap", JSON.parse($container.attr("data-mapdata") || "{}"));
     const json = response.data;
 
     /**
@@ -140,14 +189,14 @@ export async function loadMap() {
     }
 
     // List of canvases that are used to help with drawing the full map
-    let canvases = [];
+    let canvases: HTMLCanvasElement[] = [];
 
     // Used for event listener
-    let topCanvas;
+    let topCanvas: HTMLCanvasElement;
     // Used for dynamic drawing
-    let middleCanvas;
+    let middleCanvas: HTMLCanvasElement;
     // Used for drawing the map
-    let bottomCanvas;
+    let bottomCanvas: HTMLCanvasElement;
 
     createCanvases();
 
@@ -160,12 +209,12 @@ export async function loadMap() {
          * @param offset Number of tiles that come after the searched tile on the spreadsheet
          * @returns {{x: *, y: *}} Position of the tile on spreadsheet
          */
-        function findTileImagePos(tileset, offset) {
+        function findTileImagePos(tileset: ITileSet, offset: number): {x: number, y: number} {
             let currentX = 0;
             let currentY = 0;
 
-            let x;
-            let y;
+            let x = 0;
+            let y = 0;
 
             // Find the position of gray tile on a spreadsheet
             for (let j = 0; j < tileset.columns - offset; j++) {
@@ -184,7 +233,7 @@ export async function loadMap() {
             };
         }
 
-        function hasOwnProperty(json, tile, layerdelta, datadelta) {
+        function hasOwnProperty(json: IMapResponse, tile: ITile, layerdelta: number, datadelta: number) {
             if (!json.layers[tile.layerNo + layerdelta]) {
                 return false;
             }
@@ -198,8 +247,11 @@ export async function loadMap() {
          * Function for drawing a frame of a building on given position
          * @param tile Tile that the frame is drawn over
          */
-        function drawFrame(tile) {
+        function drawFrame(tile: ITile) {
             const context = middleCanvas.getContext("2d");
+            if (!context) {
+                return;
+            }
 
             // if clicked on a "top tile", draw a full frame
             if (tile.tileset.properties !== undefined &&
@@ -341,7 +393,7 @@ export async function loadMap() {
          * Draws a frame on all active tiles
          * @param tiles All tiles on the map
          */
-        function drawOnActive(tiles) {
+        function drawOnActive(tiles: ITile[]) {
             tiles.forEach(function(t) {
                 if (t.active && !t.frame) {
                     t.frame = true;
@@ -350,7 +402,7 @@ export async function loadMap() {
             });
         }
 
-        function rround(d, des) {
+        function rround(d: number, des: number) {
             const mult = Math.pow(10, des);
             return Math.round(d * mult) / mult;
         }
@@ -361,7 +413,7 @@ export async function loadMap() {
          * @param y Y coordinate for the box
          * @param tile Clicked tile
          */
-        function drawInfo(x, y, tile) {
+        function drawInfo(x: number, y: number, tile: ITile) {
             let tscale = scale;
             if (tscale < 0.7) {
                 tscale = 0.7;
@@ -414,7 +466,7 @@ export async function loadMap() {
 
             let totalMax = 0;
             let totalPoints = 0;
-            const titles = [];
+            const titles: string[] = [];
 
             for (let i = 0; i < json.layers.length; i++) {
                 if (!titles.includes(json.layers[i].properties.title)) {
@@ -438,6 +490,10 @@ export async function loadMap() {
 
             // Draw the box on the canvas
             const context = middleCanvas.getContext("2d");
+
+            if (!context) {
+                return;
+            }
 
             context.beginPath();
             context.fillStyle = "rgba(132,225,225,0.8)";
@@ -497,7 +553,7 @@ export async function loadMap() {
          * @param tile A tile that is part of the cluster
          * @param tiles All tiles on the map
          */
-        function activateCluster(tile, tiles) {
+        function activateCluster(tile: ITile, tiles: ITile[]) {
             tile.active = true;
 
             // Boolean for checking if iterated tile is next to the given tile
@@ -528,7 +584,7 @@ export async function loadMap() {
          * Activate all "top tiles" and building tiles on the map.
          * @param tiles All tiles on the map
          */
-        function activateAll(tiles) {
+        function activateAll(tiles: ITile[]) {
             tiles.forEach(function(t) {
                 if (t.tileset.properties !== undefined &&
                     (t.tileset.properties.buildingProperty == 1 ||
@@ -543,14 +599,19 @@ export async function loadMap() {
          * @param element given DOM element
          * @returns {{top: number, left: number}} left and top position
          */
-        function absolutePosition(element) {
+        function absolutePosition(element: HTMLElement) {
             let top = 0;
             let left = 0;
+            let e = element;
             do {
-                top += element.offsetTop || 0;
-                left += element.offsetLeft || 0;
-                element = element.offsetParent;
-            } while (element);
+                top += e.offsetTop || 0;
+                left += e.offsetLeft || 0;
+                const p = e.offsetParent;
+                if (!(p instanceof HTMLElement)) {
+                    break;
+                }
+                e = p;
+            } while (e);
 
             return {
                 top,
@@ -561,7 +622,7 @@ export async function loadMap() {
         /**
          * Clear all selections on the map
          */
-        function clearSelection(tiles) {
+        function clearSelection(tiles: ITile[]) {
             // Remove previous frame canvas and create a new one
             $("#middleCanvas").remove();
             middleCanvas = document.createElement("canvas");
@@ -586,112 +647,19 @@ export async function loadMap() {
         }
 
         /**
-         * Tile object constructor
-         * @param imageIndex Index of the picture on the spreadsheet
-         * @param tileset Tiles tileset
-         * @param spreadsheet Tiles spreadsheet
-         * @param layerNo Index of the layer that the tile is drawn to
-         * @param dataIndex Index of the tile in layer data
-         * @param x Tiles x-coordinate on the map
-         * @param y Tiles y-coordinate on the map
-         */
-        function Tile(imageIndex, tileset, spreadsheet, layerNo, dataIndex, x, y) {
-
-            // Index for the image on spreadsheet
-            this.imageIndex = imageIndex;
-
-            // Tileset where the tile is located
-            this.tileset = tileset;
-
-            // Spreadsheet where the tile is located
-            this.spreadsheet = spreadsheet;
-
-            // Layer that the tile is on
-            this.layerNo = layerNo;
-
-            // Index of the tile in layer data
-            this.dataIndex = dataIndex;
-
-            // Tiles x-coordinate on the map
-            this.x = x;
-
-            // Tiles y-coordinate on the map
-            this.y = y;
-
-            // Is tile active?
-            this.active = false;
-
-            // Is a frame drawn on the tile?
-            this.frame = false;
-
-            // Height correction for shorter tiles
-            this.heightCorr = 0;
-
-            if (this.tileset.tileheight < json.tileheight * 3) {
-                this.heightCorr = json.tileheight;
-            }
-
-            if (this.tileset.tileheight < json.tileheight * 2) {
-                this.heightCorr = json.tileheight * 3;
-            }
-
-            // Get possible offset of the tileset
-            this.offsetX = 0;
-            this.offsetY = 0;
-
-            if (this.tileset.tileoffset !== undefined) {
-                this.offsetX = this.tileset.tileoffset.x;
-                this.offsetY = -this.tileset.tileoffset.y;
-            }
-
-            // Current position on the tileset image
-            let currentY = 0;
-            let currentX = 0;
-
-            // Find the correct position on the tileset image
-            for (let j = this.tileset.firstgid; j < this.imageIndex + 1; j++) {
-                this.sourceX = currentX++ * this.tileset.tilewidth;
-                this.sourceY = currentY * this.tileset.tileheight;
-
-                if (currentX == this.tileset.columns) {
-                    currentX = 0;
-                    currentY++;
-                }
-            }
-
-            // Draw the tile
-            this.draw = function(canvas) {
-                const context = canvas.getContext("2d");
-
-                context.drawImage(this.spreadsheet, this.sourceX, this.sourceY,
-                    this.tileset.tilewidth, this.tileset.tileheight, (this.x + this.offsetX) * scale, (this.y + this.offsetY + this.heightCorr) * scale,
-                    this.tileset.tilewidth * scale, this.tileset.tileheight * scale);
-            };
-
-            // Check if point is inside the tile
-            this.isPointInside = function(x, y) {
-                return (x >= (this.x + this.offsetX) * scale &&
-                    x <= (this.x + this.tileset.tilewidth + this.offsetX) * scale &&
-                    y >= (this.y + this.offsetY + this.heightCorr) * scale &&
-                    y <= (this.y + this.tileset.tileheight + this.offsetY + this.heightCorr) * scale);
-            };
-
-        }
-
-        /**
          * Draw tiles according to data dictionary
          * @param dict Dictionary holding the data for the tiles
          * @param tiles Array of tile objects
          * @param canvas Canvas to draw on
          * @param layer Layer that is being drawn
          */
-        function drawTilesFromDict(dict, tiles, canvas, layer) {
+        function drawTilesFromDict(dict: LayerData, tiles: ITile[], canvas: HTMLCanvasElement, layer: number) {
             // Get all keys from the data dictionarty
-            const keys = Object.keys(dict);
+            const keys: string[] = Object.keys(dict);
 
             // Spreadsheet and tileset that tile uses
-            let image;
-            let tileset;
+            let image: HTMLImageElement;
+            let tileset: ITileSet;
 
             // Go through every key and select appropriate spreadsheet for the tile
             keys.forEach(function(key) {
@@ -708,7 +676,7 @@ export async function loadMap() {
                 const posY = Math.floor(posIndex / json.width) * json.tileheight;
 
                 // Create tile object and draw it on the map
-                const t = new Tile(dict[key], tileset, image, layer, posIndex, posX, posY);
+                const t = new Tile(json, dict[key], tileset, image, layer, posIndex, posX, posY);
                 t.draw(canvas);
                 tiles.push(t);
             });
@@ -720,7 +688,7 @@ export async function loadMap() {
          */
         function drawMap() {
             // Array of tile objects on the map
-            const tiles = [];
+            const tiles: ITile[] = [];
 
             // Current layer
             let layer;
@@ -741,7 +709,9 @@ export async function loadMap() {
             // Draw images in helper canvases on a single canvas
             for (let n = 0; n < canvases.length; n++) {
                 const context = bottomCanvas.getContext("2d");
-                context.drawImage(canvases[n], 0, 0);
+                if (context) {
+                    context.drawImage(canvases[n], 0, 0);
+                }
             }
 
             // View all frames if required
@@ -756,11 +726,11 @@ export async function loadMap() {
         }
 
         // Positions for tiles used in the building frames
-        let tileFrameSet;
-        let tileImage;
+        let tileFrameSet: ITileSet;
+        let tileImage: HTMLImageElement;
 
-        let roofFrameSet;
-        let roofImage;
+        let roofFrameSet: ITileSet;
+        let roofImage: HTMLImageElement;
 
         // Find tilesets and spreadsheets needed for drawing a frame
 
@@ -776,11 +746,11 @@ export async function loadMap() {
         }
 
         // Tile images used to draw the building frames
-        const frameTile = findTileImagePos(tileFrameSet, 0);
+        const frameTile = findTileImagePos(tileFrameSet!, 0);
 
         const grayTile = findTileImagePos(tileFrameSet, 1);
 
-        const roofTile = findTileImagePos(roofFrameSet, 1);
+        const roofTile = findTileImagePos(roofFrameSet!, 1);
 
         const roofFrameTile = findTileImagePos(roofFrameSet, 0);
 
@@ -800,7 +770,11 @@ export async function loadMap() {
 
         // On change event for the zoom input
         $(".mapZoom").on("change", function() {
-            scale = $(".mapZoom").val();
+            const val = $(".mapZoom").val();
+            if (typeof val !== "number") {
+                return;
+            }
+            scale = val;
             clearSelection(tiles);
             createCanvases();
             tiles = drawMap();
@@ -808,10 +782,140 @@ export async function loadMap() {
 
         // On change event for the alpha input
         $(".alphaRange").on("change", function() {
-            alpha = $(".alphaRange").val();
+            const val = $(".alphaRange").val();
+            if (typeof val !== "number") {
+                return;
+            }
+            alpha = val;
             clearSelection(tiles);
             createCanvases();
             tiles = drawMap();
         });
     });
+}
+
+class Tile {
+    public imageIndex: number;
+    public tileset: ITileSet;
+    public spreadsheet: HTMLImageElement;
+    public layerNo: number;
+    public dataIndex: number;
+    public x: number;
+    public y: number;
+    public active: boolean;
+    public frame: boolean;
+    public heightCorr: number;
+    public offsetX: number;
+    public offsetY: number;
+    public sourceX: number;
+    public sourceY: number;
+
+    /**
+     * Tile object constructor
+     * @param json generateMap response
+     * @param imageIndex Index of the picture on the spreadsheet
+     * @param tileset Tiles tileset
+     * @param spreadsheet Tiles spreadsheet
+     * @param layerNo Index of the layer that the tile is drawn to
+     * @param dataIndex Index of the tile in layer data
+     * @param x Tiles x-coordinate on the map
+     * @param y Tiles y-coordinate on the map
+     */
+    constructor(json: IMapResponse,
+                imageIndex: number,
+                tileset: ITileSet,
+                spreadsheet: HTMLImageElement,
+                layerNo: number,
+                dataIndex: number,
+                x: number,
+                y: number) {
+
+        // Index for the image on spreadsheet
+        this.imageIndex = imageIndex;
+
+        // Tileset where the tile is located
+        this.tileset = tileset;
+
+        // Spreadsheet where the tile is located
+        this.spreadsheet = spreadsheet;
+
+        // Layer that the tile is on
+        this.layerNo = layerNo;
+
+        // Index of the tile in layer data
+        this.dataIndex = dataIndex;
+
+        // Tiles x-coordinate on the map
+        this.x = x;
+
+        // Tiles y-coordinate on the map
+        this.y = y;
+
+        // Is tile active?
+        this.active = false;
+
+        // Is a frame drawn on the tile?
+        this.frame = false;
+
+        // Height correction for shorter tiles
+        this.heightCorr = 0;
+
+        if (this.tileset.tileheight < json.tileheight * 3) {
+            this.heightCorr = json.tileheight;
+        }
+
+        if (this.tileset.tileheight < json.tileheight * 2) {
+            this.heightCorr = json.tileheight * 3;
+        }
+
+        // Get possible offset of the tileset
+        this.offsetX = 0;
+        this.offsetY = 0;
+
+        if (this.tileset.tileoffset !== undefined) {
+            this.offsetX = this.tileset.tileoffset.x;
+            this.offsetY = -this.tileset.tileoffset.y;
+        }
+
+        // Current position on the tileset image
+        let currentY = 0;
+        let currentX = 0;
+
+        // Find the correct position on the tileset image
+        for (let j = this.tileset.firstgid; j < this.imageIndex + 1; j++) {
+            this.sourceX = currentX++ * this.tileset.tilewidth;
+            this.sourceY = currentY * this.tileset.tileheight;
+
+            if (currentX == this.tileset.columns) {
+                currentX = 0;
+                currentY++;
+            }
+        }
+    }
+
+    // Draw the tile
+    public draw(canvas: HTMLCanvasElement) {
+        const context = canvas.getContext("2d");
+        if (!context) {
+            return;
+        }
+
+        context.drawImage(this.spreadsheet,
+            this.sourceX,
+            this.sourceY,
+            this.tileset.tilewidth,
+            this.tileset.tileheight,
+            (this.x + this.offsetX) * scale,
+            (this.y + this.offsetY + this.heightCorr) * scale,
+            this.tileset.tilewidth * scale,
+            this.tileset.tileheight * scale);
+    }
+
+    // Check if point is inside the tile
+    public isPointInside(x: number, y: number) {
+        return (x >= (this.x + this.offsetX) * scale &&
+            x <= (this.x + this.tileset.tilewidth + this.offsetX) * scale &&
+            y >= (this.y + this.offsetY + this.heightCorr) * scale &&
+            y <= (this.y + this.tileset.tileheight + this.offsetY + this.heightCorr) * scale);
+    }
 }
