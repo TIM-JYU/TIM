@@ -1,11 +1,12 @@
-import angular from "angular";
+import angular, {IHttpResponse, IRequestConfig} from "angular";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
 import {$httpProvider, $q, $rootScope, $window} from "../../ngimport";
 
 timApp.config([() => {
     timLogTime("timApp config", "view");
-    function escapeId(id) {
+
+    function escapeId(id: string) {
         return "#" + id.replace(/(:|\.|\[|\]|,|=)/g, "\\$1");
     }
 
@@ -13,9 +14,12 @@ timApp.config([() => {
         () => {
             const re = /\/[^/]+\/([^/]+)\/answer\/$/;
             return {
-                request(config) {
+                request(config: IRequestConfig) {
                     if (re.test(config.url)) {
                         const match = re.exec(config.url);
+                        if (!match) {
+                            return config;
+                        }
                         const taskIdFull = match[1];
                         const parts = taskIdFull.split(".");
                         const docId = parseInt(parts[0], 10);
@@ -33,9 +37,12 @@ timApp.config([() => {
                     }
                     return config;
                 },
-                response(response) {
+                response(response: IHttpResponse<any>) {
                     if (re.test(response.config.url)) {
                         const match = re.exec(response.config.url);
+                        if (!match) {
+                            return response;
+                        }
                         const taskIdFull = match[1];
                         const parts = taskIdFull.split(".");
                         const docId = parseInt(parts[0], 10);
@@ -49,9 +56,12 @@ timApp.config([() => {
                     }
                     return response;
                 },
-                responseError(response) {
+                responseError(response: any) {
                     if (re.test(response.config.url)) {
                         const match = re.exec(response.config.url);
+                        if (!match) {
+                            return $q.reject(response);
+                        }
                         const taskIdFull = match[1];
                         const parts = taskIdFull.split(".");
                         const docId = parseInt(parts[0], 10);
