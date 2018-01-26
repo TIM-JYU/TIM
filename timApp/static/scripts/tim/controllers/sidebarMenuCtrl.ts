@@ -77,10 +77,6 @@ export class SidebarMenuCtrl implements IController {
         }
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:sidebarMenuCtrl
-     */
     showSidebar() {
         const tabs = $("#menuTabs");
         if (tabs.is(":visible")) {
@@ -104,10 +100,6 @@ export class SidebarMenuCtrl implements IController {
         }
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:sidebarMenuCtrl
-     */
     async toggleLectures() {
         const response = await $http<ILectureListResponse2>({
             url: "/getAllLecturesFromDocument",

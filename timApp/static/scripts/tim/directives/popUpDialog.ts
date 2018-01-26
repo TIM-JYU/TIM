@@ -34,11 +34,6 @@ class PopupDialogController implements IController {
 
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:popUpDialog
-     * @param e
-     */
     checkDown(e: MouseEvent) {
         this.mouseDownX = e.clientX;
         this.mouseDownY = e.clientY;
@@ -49,10 +44,6 @@ class PopupDialogController implements IController {
 
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:popUpDialog
-     */
     checkUp() {
         const window = this.element.find("popUpBack");
         const ctx = window.context as HTMLElement;

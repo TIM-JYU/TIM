@@ -42,19 +42,11 @@ export class SmallMenuCtrl implements IController {
         });
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:smallMenuCtrl
-     */
     ready() {
         this.showCurrentList = false;
         this.showFutureList = false;
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:smallMenuCtrl
-     */
     async openCurrentLectureMenu() {
         this.showCurrentList = true;
         this.showFutureList = false;
@@ -71,20 +63,12 @@ export class SmallMenuCtrl implements IController {
         this.futureLecturesList = response.data.futureLectures;
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:smallMenuCtrl
-     */
     async openFutureLectureMenu() {
         this.showCurrentList = false;
         this.showFutureList = true;
         await this.getLectures();
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:smallMenuCtrl
-     */
     selectCurrentLecture() {
 
     }
