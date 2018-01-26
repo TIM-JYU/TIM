@@ -24,6 +24,9 @@ services:
  postgresql:
   ports:
    - "5432:5432"
+ postgresql-tempdb:
+  ports:
+   - "5434:5432"
  postgresql-test:
   image: postgres:9.5
   ports:
