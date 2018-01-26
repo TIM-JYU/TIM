@@ -27,6 +27,7 @@ services:
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST}
+  restart: unless-stopped
  funnel:
   image: timimages/funnel:latest
   volumes:
@@ -34,6 +35,7 @@ services:
    - ./tim_logs/funnel:/var/log/funnel
   working_dir: /service
   command: ${FUNNEL_COMMAND}
+  restart: unless-stopped
  postgresql:
   image: postgres:9.5
   volumes:
@@ -43,8 +45,10 @@ services:
 #   interval: 30s
 #   timeout: 1s
 #   retries: 10
+  restart: unless-stopped
  postgresql-tempdb:
   image: postgres:9.5
+  restart: unless-stopped
  csplugin:
   image: timimages/cs3:compose
   build: ./timApp/modules/cs
@@ -62,6 +66,7 @@ services:
    TIM_ROOT: ${TIM_ROOT}
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
   user: root
+  restart: unless-stopped
  haskellplugins:
   image: timimages/haskellplugins:latest
   build:
@@ -71,6 +76,7 @@ services:
    - ./timApp/modules/Haskell:/Haskell
   working_dir: /Haskell
   command: ./startAll.sh
+  restart: unless-stopped
  showfile:
   image: timimages/svn:latest
   build: ./timApp/modules/svn
@@ -79,6 +85,7 @@ services:
    - ./timApp/modules/py:/py:ro
   working_dir: /svn
   command: ./startAll.sh
+  restart: unless-stopped
  imagex:
   image: timimages/cs3:compose
   volumes:
@@ -86,6 +93,7 @@ services:
    - ./timApp/modules/py:/py:ro
   working_dir: /imagex
   command: ./startAll.sh
+  restart: unless-stopped
  pali:
   image: timimages/pali:compose
   build: ./timApp/modules/pali
@@ -94,15 +102,18 @@ services:
    - ./timApp/modules/py:/py:ro
   working_dir: /pali
   command: ./startAll.sh
+  restart: unless-stopped
  uploader:
   image: villet/uploaderplugin:13_10_16_15
   command: ${UPLOADER_COMMAND}
+  restart: unless-stopped
  ts-watcher:
   image: timimages/tim:${TIM_IMAGE_TAG}
   volumes:
    - .:/service
   working_dir: /service/timApp/static/scripts
   command: jspm bundle tim/main + tim/slide - "(tim/main + tim/slide - [tim/**/*])" build/tim.js -wm
+  restart: unless-stopped
  nginx:
   image: timimages/local_nginx:compose
   build:
@@ -115,6 +126,7 @@ services:
    - ./timApp/modules/cs/static:/csstatic:ro
    - ./timApp/modules/cs/generated:/csgenerated:ro
    - ./timApp/static:/static:ro
+  restart: unless-stopped
  dumbo:
   image: timimages/dumbo:latest
   build:
@@ -124,5 +136,6 @@ services:
   working_dir: /Dumbo
   logging:
    driver: none
+  restart: unless-stopped
 volumes:
  data:
