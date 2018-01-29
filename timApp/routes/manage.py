@@ -263,6 +263,7 @@ def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
     verify_manage_access(f)
     timdb = get_timdb()
     timdb.users.remove_default_access(group_id, folder_id, perm_type, from_str(object_type))
+    db.session.commit()
     return ok_response()
 
 
