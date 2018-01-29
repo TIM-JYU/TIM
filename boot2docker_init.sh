@@ -1,4 +1,4 @@
 #!/bin/sh
 
-tce-load -i boot2docker/*.tcz
+tce-load -wi bash
 sudo chmod 766 /var/run/docker.sock
