@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# from https://gist.github.com/lmakarov/54302df8ecfc87b36320
+# Idea from https://gist.github.com/lmakarov/54302df8ecfc87b36320
 
 DOCKER_COMPOSE_VERSION=1.18.0
 
@@ -10,13 +10,19 @@ sudo curl -sL https://github.com/docker/compose/releases/download/${DOCKER_COMPO
 sudo chmod +x /var/lib/boot2docker/bin/docker-compose
 sudo ln -sf /var/lib/boot2docker/bin/docker-compose /usr/local/bin/docker-compose
 
-# Making the symlink persistent via bootlocal.sh
-echo 'Writing to bootlocal.sh to make docker-compose available on every boot...'
-cat <<SCRIPT | sudo tee -a /var/lib/boot2docker/bootlocal.sh > /dev/null
+echo 'Installing Bash...'
+sudo su -c "tce-load -wi bash" docker
+
+echo 'Writing to bootlocal.sh to persist changes...'
+cat <<SCRIPT | sudo tee /var/lib/boot2docker/bootlocal.sh > /dev/null
 # docker-compose
 sudo ln -sf /var/lib/boot2docker/bin/docker-compose /usr/local/bin/docker-compose
+sudo su -c "tce-load -wi bash" docker
 SCRIPT
 sudo chmod +x /var/lib/boot2docker/bootlocal.sh
 
-echo 'Launching docker-compose...'
+echo 'Testing docker-compose...'
 docker-compose --version
+
+echo 'Testing Bash...'
+bash --version
