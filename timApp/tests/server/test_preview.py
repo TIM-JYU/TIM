@@ -18,3 +18,9 @@ class PreviewTest(TimRouteTest):
         d = self.create_doc()
         e = self.json_post(f'/preview/{d.id}', {'text': 'test', 'par': 'HELP_PAR'}, json_key='texts', as_tree=True)
         self.assert_content(e, ['test'])
+
+    def test_line_break(self):
+        self.login_test1()
+        d = self.create_doc()
+        e = self.json_post(f'/preview/{d.id}', {'text': 'test\\\ntest2\\'}, json_key='texts', as_tree=True)
+        self.assert_content(e, ['test\ntest2'])
