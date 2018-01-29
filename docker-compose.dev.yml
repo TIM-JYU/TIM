@@ -77,7 +77,7 @@ services:
    - "81:81"
    - "82:82"
  ts-watcher:
-  command: /bin/true  # in development, the watcher is supposed to be launched from IDE
+  command: "sleep infinity"  # in development, the watcher is supposed to be launched from IDE
  tests:
   image: timimages/tim:${TIM_IMAGE_TAG}
   command: "python3 -m unittest ${TEST_PARAMS:-discover tests/ 'test_*.py' .}"
