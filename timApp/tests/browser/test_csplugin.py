@@ -1,3 +1,5 @@
+from time import sleep
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 
@@ -27,13 +29,14 @@ type: python
         self.assert_same_screenshot(par, 'csplugin/python_after_answer')
 
         self.wait_and_click(PREV_ANSWER)
-
+        self.wait_until_hidden('.console')
         # Wait until answer is replaced in HTML
-        self.wait.until(ec.staleness_of(par.find_element_by_css_selector('*')))
-        par = self.find_element('#py', times=2)
+        # self.wait.until(ec.staleness_of(par.find_element_by_css_selector('*')))
+        par = self.find_element('#py')
 
         # Wait until the height workaround completes (see answerbrowser3.ts)
-        self.wait.until(ec.presence_of_element_located((By.XPATH, "//*[@id='py'][@style='opacity: 1;']")))
+        # self.save_screenshot()
+        # self.wait.until(ec.presence_of_element_located((By.XPATH, "//*[@id='py'][@style='opacity: 1;']")))
 
         # TODO: Why is this slightly different from python_before_answer ?
         self.assert_same_screenshot(par, 'csplugin/python_after_answer_switch')

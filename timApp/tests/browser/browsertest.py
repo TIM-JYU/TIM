@@ -27,6 +27,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     login_dropdown_path = '//login-menu/div/button'
     screenshot_dir = '/service/screenshots'
 
+    def get_screenshot_tolerance(self) -> float:
+        return 0.001
+
     def setUp(self):
         TimLiveServer.setUp(self)
         options = webdriver.ChromeOptions()
@@ -153,14 +156,14 @@ class BrowserTest(TimLiveServer, TimRouteTest):
             im.save(filename=f'{self.screenshot_dir}/{filename}.png')
             return
         diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
-        if result > 0.001:
+        if result > self.get_screenshot_tolerance():
             if try_again:
                 self.assert_same_screenshot(element, filename, move_to_element, try_again=False)
             else:
                 self.save_element_screenshot(element, f'{filename}_FAIL', move_to_element)
                 diff.save(filename=f'{self.screenshot_dir}/{filename}_FAIL_DIFF.png')
                 self.assertTrue(False,
-                                msg='Screenshots did not match; '
+                                msg=f'Screenshots did not match (diff value is {result}); '
                                     f'failed screenshot saved to screenshots/{filename}_FAIL '
                                     f'and difference to screenshots/{filename}_FAIL_DIFF')
 

@@ -4,7 +4,7 @@ from typing import Optional, Dict
 
 from flask import g
 from jinja2 import Environment, TemplateSyntaxError
-from lxml import html
+from lxml import html, etree
 
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.dumboclient import call_dumbo
@@ -374,7 +374,7 @@ def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bo
                 formatted = '[ERROR] ' + e.text
 
             e.text = formatted
-    final_html = ''.join(map(lambda x: html.tostring(x).decode('utf-8'), tree.iterchildren()))
+    final_html = etree.tostring(tree)
     return final_html
 
 

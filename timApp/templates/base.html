@@ -207,8 +207,10 @@
                                 <p class="smallNote">TIM last updated:
                                     {% if hide_links %}
                                         {{config.GIT_LATEST_COMMIT_TIMESTAMP}}
+                                        <br>Problems and questions: {{config.HELP_EMAIL}}
                                     {% else %}
                                         <a href="/view/tim/muutoshistoria">{{config.GIT_LATEST_COMMIT_TIMESTAMP}}</a>
+                                        <br>Problems and questions: <a href="mailto:{{config.HELP_EMAIL}}">{{config.HELP_EMAIL}}</a>
                                     {% endif %}
                                     {% if config.GIT_BRANCH != 'master' %}(branch: {{config.GIT_BRANCH}}){% endif %}
                                 </p>

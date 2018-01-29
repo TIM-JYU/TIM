@@ -208,7 +208,6 @@ class QuestionTest(BrowserTest):
         matrix = self.drv.find_element_by_css_selector('tim-question-matrix')
         answersheet = self.drv.find_element_by_css_selector('dynamic-answer-sheet')
         self.assert_same_screenshot(matrix, f'questions/question_matrix_{questiontype}', move_to_element=True)
-        self.print_console()
         self.assert_same_screenshot(answersheet, f'questions/answer_sheet_{questiontype}', move_to_element=True)
         find_button_by_text(dialog, 'Save').click()
         self.wait_until_hidden('tim-edit-question')

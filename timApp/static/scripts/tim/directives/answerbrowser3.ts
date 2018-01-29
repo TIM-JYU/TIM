@@ -276,11 +276,11 @@ export class AnswerBrowserController implements IController {
         this.element.focus();
     }
 
-    changeAnswer() {
+    changeAnswer(forceUpdate = false) {
         if (this.selectedAnswer == null) {
             return;
         }
-        if (this.skipAnswerUpdateForId === this.selectedAnswer.id) {
+        if (!forceUpdate && this.skipAnswerUpdateForId === this.selectedAnswer.id) {
             this.skipAnswerUpdateForId = null;
             return;
         }
@@ -325,7 +325,7 @@ export class AnswerBrowserController implements IController {
             newIndex = this.filteredAnswers.length - 1;
         }
         this.selectedAnswer = this.filteredAnswers[newIndex];
-        this.changeAnswer();
+        this.changeAnswer(true);
     }
 
     previousAnswer() {
@@ -334,7 +334,7 @@ export class AnswerBrowserController implements IController {
             newIndex = 0;
         }
         this.selectedAnswer = this.filteredAnswers[newIndex];
-        this.changeAnswer();
+        this.changeAnswer(true);
     }
 
     findSelectedUserIndex() {

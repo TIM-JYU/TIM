@@ -273,3 +273,5 @@ class QuestionJsonNormalizeTest(unittest.TestCase):
         }
             , result4)
         self.assertEqual(result4, normalize_question_json(result4))
+        result4.update(isTask=True)
+        self.assertEqual(result4, normalize_question_json(result4, allow_top_level_keys={'isTask'}))

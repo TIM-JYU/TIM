@@ -59,7 +59,12 @@ def normalize_question_json(q: Dict[str, Any], allow_top_level_keys: Set[str] = 
     json_data = find_json(q)
     if not json_data:
         raise Exception('Invalid question data')
-    process_json(json_data, normalized, skip_keys={'data', 'DATA'})
+    process_json(
+        json_data,
+        normalized,
+        skip_keys={'data', 'DATA'},
+        allow_keys=allow_top_level_keys if q is json_data else None
+    )
     if q is not json_data:
         # process top-level keys
         process_json(q, normalized, allow_keys=allow_top_level_keys)
