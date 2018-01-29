@@ -3,7 +3,7 @@ from typing import List
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.markdownconverter import md_to_html
-from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
 
 
 class Notes(TimDbBase):
@@ -158,7 +158,7 @@ class Notes(TimDbBase):
  ORDER BY UserNotes.id
                      """,
                   [usergroup_id] + list(ids))
-        result = self.resultAsDictionary(c)
+        result = result_as_dict_list(c)
         return self.process_notes(result)
 
     def get_note(self, note_id: int) -> dict:
@@ -166,7 +166,7 @@ class Notes(TimDbBase):
         c.execute('SELECT id, doc_id, par_id, par_hash, content, created, modified, access, tags, html, UserGroup_id '
                   'FROM UserNotes '
                   'WHERE id = %s', [note_id])
-        result = self.resultAsDictionary(c)
+        result = result_as_dict_list(c)
 
         return self.process_notes(result)[0] if result else None
 

@@ -4,11 +4,23 @@ import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
 import {markAsUsed} from "tim/utils";
 import {$http, $timeout, $uibModal, $window} from "../ngimport";
+import {IItem} from "../IItem";
 
 markAsUsed(focusMe);
 
+export interface IBookmarkGroup {
+    name: string;
+    isOpen: boolean;
+    items: IBookmark[]
+}
+
+export interface IBookmark {
+    group: string;
+    link: string;
+}
+
 class BookmarksController implements IController {
-    private data: {name, isOpen, items: {}[]}[];
+    private data: IBookmarkGroup[];
     private deleting: boolean;
     private userId: number;
 
@@ -20,8 +32,8 @@ class BookmarksController implements IController {
 
         if (this.userId && !this.data) {
             (async () => {
-                const response = await $http.get("/bookmarks/get/" + this.userId);
-                this.getFromServer(response);
+                const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get/" + this.userId);
+                this.getFromServer(response.data);
             })();
         }
     }
@@ -30,12 +42,12 @@ class BookmarksController implements IController {
 
     }
 
-    getFromServer(response, groupToKeepOpen?) {
-        this.data = response.data;
+    getFromServer(response: IBookmarkGroup[], groupToKeepOpen?: IBookmarkGroup) {
+        this.data = response;
         this.keepGroupOpen(groupToKeepOpen);
     }
 
-    keepGroupOpen(groupToKeepOpen) {
+    keepGroupOpen(groupToKeepOpen?: IBookmarkGroup) {
         if (!groupToKeepOpen) {
             return;
         }
@@ -63,7 +75,7 @@ class BookmarksController implements IController {
         return true;
     }
 
-    newBookmark(group, e) {
+    newBookmark(group: IBookmarkGroup, e: Event) {
         e.preventDefault();
         const suggestedName = ($window.item || {}).title || document.title;
         const modalInstance = $uibModal.open({
@@ -89,15 +101,15 @@ class BookmarksController implements IController {
             if (!bookmark.name) {
                 return;
             }
-            $http.post("/bookmarks/add", bookmark)
-                .then(this.getFromServer, (response) => {
+            $http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark)
+                .then((resp) => this.getFromServer(resp.data), (response) => {
                     $window.alert("Could not add bookmark.");
                 });
         }, () => {
         });
     }
 
-    editItem(group, item, e) {
+    editItem(group: IBookmarkGroup, item: IItem, e: Event) {
         e.stopPropagation();
         e.preventDefault();
         const modalInstance = $uibModal.open({
@@ -123,7 +135,7 @@ class BookmarksController implements IController {
             if (!bookmark.name) {
                 return;
             }
-            $http.post("/bookmarks/edit", {
+            $http.post<IBookmarkGroup[]>("/bookmarks/edit", {
                 old: {
                     group: group.name,
                     name: item.name,
@@ -131,7 +143,7 @@ class BookmarksController implements IController {
                 }, new: bookmark,
             })
                 .then((response) => {
-                    this.getFromServer(response, group);
+                    this.getFromServer(response.data, group);
                 }, response => {
                     $window.alert("Could not edit bookmark.");
                 });
@@ -142,32 +154,32 @@ class BookmarksController implements IController {
         });
     }
 
-    deleteItem(group, item, e) {
+    deleteItem(group: IBookmarkGroup, item: IItem, e: Event) {
         e.stopPropagation();
         e.preventDefault();
-        return $http.post("/bookmarks/delete", {
+        return $http.post<IBookmarkGroup[]>("/bookmarks/delete", {
             group: group.name,
             name: item.name,
         })
             .then((response) => {
-                this.getFromServer(response, group);
+                this.getFromServer(response.data, group);
             }, (response) => {
                 $window.alert("Could not delete bookmark.");
             });
     }
 
-    deleteGroup(group, e) {
+    deleteGroup(group: IBookmarkGroup, e: Event) {
         e.stopPropagation();
         e.preventDefault();
         if ($window.confirm("Are you sure you want to delete this bookmark group?")) {
-            $http.post("/bookmarks/deleteGroup", {group: group.name})
-                .then(this.getFromServer, response => {
+            $http.post<IBookmarkGroup[]>("/bookmarks/deleteGroup", {group: group.name})
+                .then((resp) => this.getFromServer(resp.data), response => {
                     $window.alert("Could not delete bookmark group.");
                 });
         }
     }
 
-    toggleDelete(e) {
+    toggleDelete(e: Event) {
         e.stopPropagation();
         e.preventDefault();
         this.deleting = !this.deleting;
@@ -191,12 +203,12 @@ class CreateBookmarkCtrl implements IController {
     private focusGroup: boolean;
     private showParamsCheckbox: boolean;
     private showHashCheckbox: boolean;
-    private bookmark: {link: string};
+    private bookmark: IBookmark;
     private includeParams: boolean;
     private includeHash: boolean;
     private uibModalInstance: angular.ui.bootstrap.IModalInstanceService;
 
-    constructor(bookmark, uibModalInstance: angular.ui.bootstrap.IModalInstanceService) {
+    constructor(bookmark: IBookmark, uibModalInstance: angular.ui.bootstrap.IModalInstanceService) {
         this.uibModalInstance = uibModalInstance;
         this.bookmarkForm = {};
         this.bookmark = bookmark;

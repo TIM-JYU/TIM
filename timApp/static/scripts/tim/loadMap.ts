@@ -254,7 +254,7 @@ export async function loadMap() {
             }
 
             // if clicked on a "top tile", draw a full frame
-            if (tile.tileset.properties !== undefined &&
+            if (tile.tileset.properties != null &&
                 tile.tileset.properties.frameProperty == 1 && !hasOwnProperty(json, tile, 1, 0)) {
                 /*
                  && json.layers[tile.layerNo + 1] && json.layers[tile.layerNo + 1].data &&
@@ -295,7 +295,7 @@ export async function loadMap() {
                     tileFrameSet.tilewidth, tileFrameSet.tileheight, tile.x * scale, (tile.y - json.tileheight * 3) * scale,
                     tileFrameSet.tilewidth * scale, tileFrameSet.tileheight * scale);
                 // If clicked on a bulding with one floor, draw two frame tiles and a roof frame
-            } else if (tile.tileset.properties !== undefined &&
+            } else if (tile.tileset.properties != null &&
                 tile.tileset.properties.buildingProperty === 1 && //&& json.layers[tile.layerNo + 1] &&
 
                 !hasOwnProperty(json, tile, 1, -json.width) &&
@@ -332,7 +332,7 @@ export async function loadMap() {
                     tileFrameSet.tilewidth, tileFrameSet.tileheight, tile.x * scale, (tile.y - json.tileheight * 3) * scale,
                     tileFrameSet.tilewidth * scale, tileFrameSet.tileheight * scale);
                 // If clicked on a bulding with two floors, draw one frame tile and a roof frame
-            } else if (tile.tileset.properties !== undefined &&
+            } else if (tile.tileset.properties != null &&
                 tile.tileset.properties.buildingProperty == 1 && // json.layers[tile.layerNo + 1] &&
                 !hasOwnProperty(json, tile, 1, -json.width) &&
                 hasOwnProperty(json, tile, -1, json.width) &&
@@ -362,7 +362,7 @@ export async function loadMap() {
                     tileFrameSet.tilewidth, tileFrameSet.tileheight, tile.x * scale, (tile.y - json.tileheight * 2) * scale,
                     tileFrameSet.tilewidth * scale, tileFrameSet.tileheight * scale);
                 // If clicked on a building with three floors and no roof, draw a roof frame
-            } else if (tile.tileset.properties !== undefined &&
+            } else if (tile.tileset.properties != null &&
                 tile.tileset.properties.buildingProperty == 1 && // json.layers[tile.layerNo + 1] &&
                 !hasOwnProperty(json, tile, 1, -json.width) &&
                 hasOwnProperty(json, tile, -1, json.width) &&
@@ -518,7 +518,7 @@ export async function loadMap() {
                         clearSelection(tiles);
 
                         // If clicked tile is a "top tile" or a building
-                        if (tile.tileset.properties !== undefined &&
+                        if (tile.tileset.properties != null &&
                             (tile.tileset.properties.frameProperty === 1 ||
                                 tile.tileset.properties.buildingProperty === 1 ||
                                 tile.tileset.properties.buildingProperty === 2)) {
@@ -567,7 +567,7 @@ export async function loadMap() {
 
                 // If the iterated tile is a building or a "top tile" and it is next to
                 // or above the given tile, call this function in  recursion.
-                if (t.tileset.properties !== undefined &&
+                if (t.tileset.properties != null &&
                     (t.tileset.properties.buildingProperty == 1 ||
                         t.tileset.properties.frameProperty == 1) && !t.active &&
                     (isNextTo || ((t.layerNo === tile.layerNo + 1 ||
@@ -586,7 +586,7 @@ export async function loadMap() {
          */
         function activateAll(tiles: ITile[]) {
             tiles.forEach(function(t) {
-                if (t.tileset.properties !== undefined &&
+                if (t.tileset.properties != null &&
                     (t.tileset.properties.buildingProperty == 1 ||
                         t.tileset.properties.frameProperty == 1) && !t.active) {
                     t.active = true;
@@ -735,11 +735,11 @@ export async function loadMap() {
         // Find tilesets and spreadsheets needed for drawing a frame
 
         for (let j = 0; j < json.tilesets.length; j++) {
-            if (json.tilesets[j].properties !== undefined && json.tilesets[j].properties.frameProperty == 2) {
+            if (json.tilesets[j].properties != null && json.tilesets[j].properties.frameProperty == 2) {
                 tileFrameSet = json.tilesets[j];
                 tileImage = images[j];
             }
-            if (json.tilesets[j].properties !== undefined && json.tilesets[j].properties.frameProperty == 3) {
+            if (json.tilesets[j].properties != null && json.tilesets[j].properties.frameProperty == 3) {
                 roofFrameSet = json.tilesets[j];
                 roofImage = images[j];
             }
@@ -872,7 +872,7 @@ class Tile {
         this.offsetX = 0;
         this.offsetY = 0;
 
-        if (this.tileset.tileoffset !== undefined) {
+        if (this.tileset.tileoffset != null) {
             this.offsetX = this.tileset.tileoffset.x;
             this.offsetY = -this.tileset.tileoffset.y;
         }

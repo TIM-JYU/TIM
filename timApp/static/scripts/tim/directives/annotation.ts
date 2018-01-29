@@ -77,7 +77,7 @@ class AnnotationController implements IController {
         this.annotation.newannotation = false;
         this.marginonly = false;
 
-        if (this.annotation.default_comment !== null) {
+        if (this.annotation.default_comment != null) {
             this.newcomment = this.annotation.default_comment;
         }
 
@@ -290,7 +290,7 @@ class AnnotationController implements IController {
     }
 
     getCustomColor() {
-        if (typeof this.annotation.color !== UNDEFINED || this.annotation.color !== null) {
+        if (typeof this.annotation.color !== UNDEFINED || this.annotation.color != null) {
             return this.annotation.color;
         }
     }

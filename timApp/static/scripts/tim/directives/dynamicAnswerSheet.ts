@@ -2,8 +2,14 @@ import {IChangesObject, IController, IOnChangesObject, IRootElementService} from
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {
-    AnswerFieldType, IAskedJsonJsonBase, IAskedJsonJsonJson, IExplCollection, IHeader, IProcessedHeaders, IRow,
-    IUnprocessedHeaders, IUnprocessedHeadersCompat,
+    AnswerFieldType,
+    AnswerTable,
+    IAskedJsonJson,
+    IExplCollection,
+    IHeader,
+    IProcessedHeaders,
+    IRow,
+    IUnprocessedHeaders,
 } from "../lecturetypes";
 import {ParCompiler} from "../services/parCompiler";
 
@@ -88,15 +94,13 @@ export function getPointsTable(markupPoints?: string): Array<{[points: string]: 
 export function minimizeJson(json: IProcessedHeaders): IUnprocessedHeaders {
     // remove not needed fields from json, call when saving the question
     const result: IUnprocessedHeaders = {
-        answerFieldType: "text",
         headers: [],
-        questionType: "",
-        rows: "",
+        rows: [],
     };
     if (json.headers) {
         result.headers = [];
         for (let i = 0; i < json.headers.length; i++) {
-            let header = json.headers[i];
+            let header: string | IHeader = json.headers[i];
             if (header.id == i && header.type === "header") {
                 header = header.text;
             }
@@ -106,24 +110,20 @@ export function minimizeJson(json: IProcessedHeaders): IUnprocessedHeaders {
 
     let allText = true;
     const rows = json.rows;
-    const rrows = [];
 
     for (let i = 0; i < rows.length; i++) {
-        let row = rows[i];
+        let row: string | IRow = rows[i];
         if (row.id == i + 1 && (!row.type || row.type === "question")) {
             row = row.text; // { text: row.text};
         } else {
             allText = false;
         }
-        rrows.push(row);
+        result.rows.push(row);
     }
     // rrows.push({}); // push empty object to force Python json yaml dump to put rows in separate lines. Remember to remove it
 
     // if ( allText ) rrows = rrows.join("\n"); // oletuksena menee samalle riville kaikki json text muunnoksessa.
 
-    result.rows = rrows;
-    result.answerFieldType = json.answerFieldType;
-    result.questionType = json.questionType;
     return result;
 }
 
@@ -136,67 +136,37 @@ function fixLineBreaks(s: string) {
     //return s.replace("\n","<br />");
 }
 
-export function fixQuestionJson(json: IUnprocessedHeadersCompat): IProcessedHeaders {
+export function fixQuestionJson(json: IUnprocessedHeaders): IProcessedHeaders {
     // fill all missing fields from question json, call before use json
     // row ids are by default 1-based and header ids 0-based
-    const fixed: IProcessedHeaders = {headers: [], rows: [], answerFieldType: "radio", questionType: json.questionType};
-    const headers = json.data ? json.data.headers : json.headers;
-    const rows = json.data ? json.data.rows : json.rows;
+    const fixed: IProcessedHeaders = {headers: [], rows: []};
+    const headers = json.headers;
+    const rows = json.rows;
     if (headers) {
-        if (typeof headers === "string") { // if just on text string
-            const jrows = headers.split("\n");
-            const newHeaders: IHeader[] = [];
-            let ir = -1;
-            for (const jrow of jrows) {
-                if (jrow) {
-                    ir++;
-                    newHeaders.push({text: jrow.toString(), type: "header", id: ir});
-                }
-            }
-            fixed.headers = newHeaders;
-        } else {
-            for (let i = 0; i < headers.length; i++) {
-                const header = headers[i];
-                fixed.headers.push({text: header.toString(), type: "header", id: i});
+        for (let i = 0; i < headers.length; i++) {
+            const header = headers[i];
+            if (typeof header === "string") {
+                fixed.headers.push({text: header, type: "header", id: i});
+            } else {
+                fixed.headers.push(header);
             }
         }
     }
 
-    if (json.answerFieldType) {
-        fixed.answerFieldType = json.answerFieldType;
-    }
-
-    if (json.questionType === "true-false" && (!json.headers || json.headers.length === 0)) {
-        fixed.headers = [
-            {type: "header", id: 0, text: "True"},
-            {type: "header", id: 1, text: "False"},
-        ];
-    }
     const defaultFieldType: AnswerFieldType = "text";
-    const blankColumn = {text: "", type: "question", answerFieldType: defaultFieldType}; // TODO: needs id?
-    if (typeof rows === "string") { // if just on text string
-        const jrows = rows.split("\n");
-        for (let i = 0; i < jrows.length; i++) {
-            const jrow = jrows[i];
-            if (jrow) {
-                fixed.rows.push({
-                    columns: [blankColumn],
-                    id: i + 1,
-                    text: jrow.toString(),
-                    type: "question",
-                });
-            }
-        }
-    } else {
-        let ir = -1;
-        for (const r of rows) {
-            ir++;
+    const blankColumn = {text: "", type: "question", answerFieldType: defaultFieldType, id: 0, rowId: 0};
+    let ir = -1;
+    for (const r of rows) {
+        ir++;
+        if (typeof r === "string") {
             fixed.rows.push({
                 columns: [blankColumn],
                 id: ir + 1,
                 text: r,
                 type: "question",
             });
+        } else {
+            fixed.rows.push(r);
         }
     }
 
@@ -213,15 +183,11 @@ export function fixQuestionJson(json: IUnprocessedHeadersCompat): IProcessedHead
 }
 
 export interface IPreviewParams {
-    points?: string;
     answerTable: AnswerTable;
-    noDisable: boolean;
     preview: boolean;
-    result: {};
-    previousAnswer?: string;
-    answclass: string;
-    expl: IExplCollection;
-    markup: IAskedJsonJsonBase;
+    markup: IAskedJsonJson;
+    showResult: boolean;
+    userpoints?: number;
 }
 
 function createArray(...args: number[]) {
@@ -240,33 +206,33 @@ function createArray(...args: number[]) {
     return arr;
 }
 
-export function makePreview(markup: IAskedJsonJsonBase, answerTable: AnswerTable = []): IPreviewParams {
+export function makePreview(markup: IAskedJsonJson,
+                            answerTable: AnswerTable = [],
+                            preview = true,
+                            showResult = false,
+                            userpoints?: number,
+                            ): IPreviewParams {
     return {
-        answclass: "qstAnswerSheet",
-        answerTable: answerTable,
-        expl: markup.expl || {},
-        markup: markup,
-        noDisable: true,
-        points: markup.points,
-        preview: false,
-        result: true,
+        answerTable,
+        markup,
+        preview,
+        showResult,
+        userpoints,
     };
 }
 
 type MatrixElement = string | number;
-export type AnswerTable = string[][];
 
 class AnswerSheetController implements IController {
     private static $inject = ["$element"];
     private element: IRootElementService;
-    private preview: boolean;
-    private result: {};
-    private json: IAskedJsonJsonJson;
+    private questiondata?: IPreviewParams;
+    private json: IAskedJsonJson;
     private processed: IProcessedHeaders;
     private answerMatrix: MatrixElement[][];
-    private expl: IExplCollection;
+    private expl?: IExplCollection;
     private pointsTable: Array<{[p: string]: string}>;
-    private userpoints?: string;
+    private userpoints?: number;
     private disabled: boolean;
     private onAnswerChange: () => (at: AnswerTable) => void;
 
@@ -286,7 +252,7 @@ class AnswerSheetController implements IController {
         const qdata = onChangesObj.questiondata as IChangesObject<IPreviewParams> | undefined;
         const adata = onChangesObj.answertable as IChangesObject<AnswerTable> | undefined;
         if (qdata) {
-            this.createAnswer(qdata.currentValue);
+            this.createAnswer();
             ParCompiler.processAllMathDelayed(this.element);
         } else if (adata) {
             this.answerMatrix = this.answerMatrixFromTable(adata.currentValue);
@@ -305,7 +271,10 @@ class AnswerSheetController implements IController {
     }
 
     private getPoints(rowIndex: number, colIndex: number): string | null {
-        if (!this.result) {
+        if (!this.questiondata) {
+            return null;
+        }
+        if (!this.questiondata.showResult && !this.questiondata.preview) {
             return null;
         }
         if (this.isVertical()) {
@@ -334,11 +303,18 @@ class AnswerSheetController implements IController {
 
     private getInputClass(rowIndex: number, colIndex: number) {
         const pts = this.getPoints(rowIndex, colIndex);
-        return pts !== null && parseInt(pts, 10) > 0 ? "qst-correct" : "qst-normal";
+        return pts != null && parseInt(pts, 10) > 0 ? "qst-correct" : "qst-normal";
+    }
+
+    private canShowExpl(): boolean {
+        if (!this.questiondata) {
+            return false;
+        }
+        return (this.questiondata.showResult || this.questiondata.preview) && this.expl != null;
     }
 
     private getExpl(rowIndex: number): string | null {
-        if (!this.result) {
+        if (!this.canShowExpl() || !this.expl) {
             return null;
         }
         const key = "" + (rowIndex + 1);
@@ -390,33 +366,21 @@ class AnswerSheetController implements IController {
     /**
      * Creates question answer/preview form.
      */
-    createAnswer(params: IPreviewParams) {
-        this.result = params.result;
+    createAnswer() {
+        const params = this.questiondata;
+        if (!params) {
+            return;
+        }
 
-        const answclass = params.answclass || "answerSheet";
-
-        this.disabled = false;
         // If showing preview or question result, inputs are disabled
-        if (params.preview || this.preview || this.result) {
-            this.disabled = true;
-        }
-        if (params.noDisable) {
-            this.disabled = false;
-        }
+        this.disabled = params.preview || params.showResult;
 
-        this.json = params.markup.json;
-        const unprocessed = this.json.data || this.json; // compatibility to old format
-        this.processed = fixQuestionJson(unprocessed);
-
+        this.json = params.markup;
+        this.processed = fixQuestionJson(this.json);
         this.answerMatrix = this.answerMatrixFromTable(params.answerTable);
-
-        // If user has answer to question, create table of answers and select inputs according to it
-        if (params.previousAnswer) {
-            this.answerMatrix = this.answerMatrixFromTable(getJsonAnswers(params.previousAnswer));
-        }
-        this.pointsTable = getPointsTable(params.points || params.markup.points);
-        this.expl = params.expl || params.markup.expl;
-        this.userpoints = params.markup.userpoints;
+        this.pointsTable = getPointsTable(params.markup.points);
+        this.expl = params.markup.expl;
+        this.userpoints = params.userpoints;
     }
 
     private answerMatrixFromTable(table: AnswerTable): MatrixElement[][] {
@@ -527,26 +491,23 @@ class AnswerSheetController implements IController {
     }
 }
 
-// noinspection TsLint
 timApp.component("dynamicAnswerSheet", {
     bindings: {
-        preview: "<",
-        questiondata: "<",
-        answertable: "<?",
         onAnswerChange: "&",
+        questiondata: "<",
     },
     controller: AnswerSheetController,
     template: `
 <form class="qstAnswerSheet" ng-if="$ctrl.json">
     <h5 ng-bind="$ctrl.getHeader()"></h5>
-    <p ng-if="$ctrl.userpoints !== undefined" ng-bind="$ctrl.userpoints"></p>
+    <p ng-if="$ctrl.userpoints != null" ng-bind="$ctrl.userpoints"></p>
     <div>
         <table class="table table-borderless answer-sheet-table" ng-class="$ctrl.getTableClass()">
             <tbody>
             <tr ng-if="$ctrl.hasHeaders()" class="answer-heading-row">
                 <th ng-if="$ctrl.isMatrix()"></th>
                 <th ng-repeat="h in $ctrl.processed.headers" ng-bind="$ctrl.fixText(h.text)"></th>
-                <th ng-if="$ctrl.result && $ctrl.expl"></th>
+                <th ng-if="$ctrl.canShowExpl()"></th>
             </tr>
             <tr ng-repeat="row in $ctrl.processed.rows track by $index" ng-init="rowi = $index">
                 <td ng-if="$ctrl.isMatrix()" ng-bind="$ctrl.fixText(row.text)"></td>
@@ -575,7 +536,7 @@ timApp.component("dynamicAnswerSheet", {
                         ng-model="$ctrl.answerMatrix[rowi][coli]">
 </textarea>
 </span>{{$ctrl.getLabelText(row, col)}}</label>
-                    <p ng-if="(p = $ctrl.getPoints(rowi, coli)) !== null" class="qst-points" ng-bind="p"></p>
+                    <p ng-if="(p = $ctrl.getPoints(rowi, coli)) != null" class="qst-points" ng-bind="p"></p>
                 </td>
                 <td ng-if="p = $ctrl.getExpl(rowi)" ng-bind="p" class="explanation"></td>
             </tr>

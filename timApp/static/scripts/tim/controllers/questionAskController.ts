@@ -1,10 +1,9 @@
 import * as answerSheet from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed} from "tim/utils";
-import {DialogController, registerDialogComponent, showDialog} from "../dialog";
-import {makePreview} from "../directives/dynamicAnswerSheet";
-import {IPreviewParams} from "../directives/dynamicAnswerSheet";
-import {IUniqueParId} from "../lecturetypes";
-import {$http, $rootScope, $timeout} from "../ngimport";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
+import {IPreviewParams, makePreview} from "../directives/dynamicAnswerSheet";
+import {IAskedQuestion, IUniqueParId} from "../lecturetypes";
+import {$http} from "../ngimport";
 import {deleteQuestionWithConfirm, fetchAndEditQuestion, fetchQuestion} from "./questionController";
 
 markAsUsed(answerSheet);
@@ -21,95 +20,73 @@ markAsUsed(answerSheet);
  * @copyright 2015 Timppa project authors
  */
 
-export interface IAskNew extends IUniqueParId {
-    lectureId: number;
+export interface IShowAsk {
+    showAsk: boolean;
 }
 
-export interface IReAsk {
+export interface IAskNew extends IUniqueParId, IShowAsk {
+}
+
+export interface IReAsk extends IShowAsk {
     askedId: number;
-    lectureId: number;
 }
 
 function isReasking(p: QuestionPreviewParams): p is IReAsk {
-    return (p as IReAsk).askedId !== undefined;
+    return (p as IReAsk).askedId != null;
 }
 
 export type QuestionPreviewParams = IAskNew | IReAsk;
 
-export class QuestionPreviewController extends DialogController<{params: QuestionPreviewParams}, number, "timAskQuestion"> {
-    private questiondata: IPreviewParams = null;
+export class QuestionPreviewController extends DialogController<{params: QuestionPreviewParams}, IAskedQuestion, "timAskQuestion"> {
+    private questiondata?: IPreviewParams;
+    private showAsk: boolean;
 
     constructor() {
         super();
     }
 
-    async $onInit() {
+    private async $onInit() {
         if (!isReasking(this.resolve.params)) {
             const data = await fetchQuestion(this.resolve.params.docId, this.resolve.params.parId, false);
-            this.questiondata = makePreview(data);
+            this.questiondata = makePreview(data.markup);
         } else {
             // TODO
         }
+        this.showAsk = this.resolve.params.showAsk;
     }
 
-    async editQuestion() {
+    private async editQuestion() {
         if (!isReasking(this.resolve.params)) {
             await fetchAndEditQuestion(this.resolve.params.docId, this.resolve.params.parId);
         } else {
             // TODO
         }
-        this.close(null);
+        this.dismiss();
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:questionPreviewController
-     */
-    async ask() {
-        const markup = this.questiondata.markup;
-        const args = !isReasking(this.resolve.params) ? {
-            buster: new Date().getTime(),
-            doc_id: this.resolve.params.docId,
-            lecture_id: this.resolve.params.lectureId,
-            par_id: this.resolve.params.parId,
-        } : {
-            asked_id: this.resolve.params.askedId,
-            buster: new Date().getTime(),
-            lecture_id: this.resolve.params.lectureId,
-        };
-        const response = await $http.post<number>("/askQuestion", {}, {
-            params: args,
-        });
-        const id = response.data;
-        if (this.lectureSettings.useAnswers) {
-            // Because of dynamic creation needs to wait 1ms to ensure that the directive is made(maybe?)
-            $timeout(() => {
-                $rootScope.$broadcast("createChart", markup.json);
-            }, 1);
-
-            const answer = {askedId: id};
-            this.currentQuestionId = id;
-            this.getLectureAnswers(answer);
+    private async ask() {
+        if (!this.questiondata) {
+            await showMessageDialog("Question has not been loaded yet.");
+            return;
         }
-        $rootScope.$broadcast("setQuestionJson", {
-            markup: markup,
-            questionParId: data.par_id,
-            askedId: id,
-            isLecturer: this.isLecturer,
-            askedTime: new Date().valueOf() + this.clockOffset,
-            clockOffset: this.clockOffset,
+        const p = this.resolve.params;
+        const args = isReasking(p) ? {
+            asked_id: p.askedId,
+        } : {
+            doc_id: p.docId,
+            par_id: p.parId,
+        };
+        const response = await $http.post<IAskedQuestion>("/askQuestion", {}, {
+            params: {buster: new Date().getTime(), ...args},
         });
-        // TODO: show statistics window
-        this.close(id);
+        const question = response.data;
+        this.close(question);
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:questionPreviewController
-     */
-    async deleteQuestion() {
+    private async deleteQuestion() {
         if (!isReasking(this.resolve.params)) {
             await deleteQuestionWithConfirm(this.resolve.params.docId, this.resolve.params.parId);
+            this.dismiss();
         }
     }
 }
@@ -119,14 +96,18 @@ registerDialogComponent("timAskQuestion", QuestionPreviewController, {
 <div class="popUpWindow questionPopUp">
     <div class="questionPreview">
         <div id="questionTypeAndTimeLimit">
-            <span ng-if="$ctrl.markup.json.timeLimit > 0">Time limit: {{ $ctrl.markup.json.timeLimit }} seconds</span>
-            <span ng-if="!$ctrl.markup.json.timeLimit">No time limit.</span>
+            <span ng-if="$ctrl.questiondata.markup.timeLimit > 0">
+            Time limit: {{ $ctrl.markup.json.timeLimit }} seconds
+            </span>
+            <span ng-if="!$ctrl.questiondata.markup.timeLimit">
+            No time limit.
+            </span>
         </div>
-        <dynamic-answer-sheet preview="true" questiondata="$ctrl.questiondata"></dynamic-answer-sheet>
+        <dynamic-answer-sheet questiondata="$ctrl.questiondata"></dynamic-answer-sheet>
     </div>
     <div class="buttons">
         <!-- <button ng-click="deleteQuestion()" class="btn btn-danger pull-left">Delete</button> -->
-        <button ng-show="lctrl.inLecture" ng-click="$ctrl.ask()" class="timButton">Ask</button>&nbsp;&nbsp;
+        <button ng-show="$ctrl.showAsk" ng-click="$ctrl.ask()" class="timButton">Ask</button>&nbsp;&nbsp;
         <button ng-click="$ctrl.editQuestion()" class="timButton">Edit</button>
         <button ng-click="$ctrl.close()" class="timButton">Close</button>
     </div>

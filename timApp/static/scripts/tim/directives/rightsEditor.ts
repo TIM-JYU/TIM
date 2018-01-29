@@ -1,11 +1,29 @@
-import {IScope, IController} from "angular";
-import moment from "moment";
+import {IController, IScope} from "angular";
+import moment, {Moment, Duration} from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
 import {markAsUsed} from "tim/utils";
 import {$http, $window} from "../ngimport";
 
 markAsUsed(focusMe);
+
+export interface IRight {
+    access_name: string;
+    access_type: number;
+    duration_to: Moment | null;
+    duration_from: Moment | null;
+    duration: null | Duration;
+    accessible_to: Moment;
+    accessible_from: Moment;
+    fullname?: string;
+    name: string;
+    gid: number;
+}
+
+export interface IAccessType {
+    id: number;
+    name: string;
+}
 
 class RightsEditorController implements IController {
     private static $inject = ["$scope"];
@@ -19,16 +37,16 @@ class RightsEditorController implements IController {
         durationTo?: moment.Moment,
         durationFrom?: moment.Moment,
     };
-    private grouprights: {}[];
+    private grouprights: IRight[];
     private showActiveOnly: boolean;
     private durationTypes: moment.unitOfTime.Base[];
-    private selectedRight: {};
+    private selectedRight: IRight | null;
     private datePickerOptionsFrom: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsDurationFrom: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsDurationTo: EonasdanBootstrapDatetimepicker.SetOptions;
-    private accessTypes: {}[];
-    private accessType: {};
+    private accessTypes: IAccessType[];
+    private accessType: IAccessType;
     private addingRight: boolean;
     private focusEditor: boolean;
     private urlRoot: string;
@@ -76,14 +94,14 @@ class RightsEditorController implements IController {
         });
     }
 
-    showAddRightFn(type) {
+    showAddRightFn(type: IAccessType) {
         this.accessType = type;
         this.selectedRight = null;
         this.addingRight = true;
         this.focusEditor = true;
     }
 
-    removeConfirm(group, type) {
+    removeConfirm(group: IRight, type: string) {
         if ($window.confirm("Remove " + type + " right from " + group.name + "?")) {
             this.removePermission(group, type);
         }
@@ -93,7 +111,7 @@ class RightsEditorController implements IController {
         if (!this.urlRoot || !this.itemId) {
             return;
         }
-        $http.get<{grouprights, accesstypes}>("/" + this.urlRoot + "/get/" + this.itemId).then((response) => {
+        $http.get<{grouprights: IRight[], accesstypes: IAccessType[]}>("/" + this.urlRoot + "/get/" + this.itemId).then((response) => {
             const data = response.data;
             this.grouprights = data.grouprights;
             if (data.accesstypes) {
@@ -107,7 +125,7 @@ class RightsEditorController implements IController {
         });
     }
 
-    removePermission(right, type) {
+    removePermission(right: IRight, type: string) {
         $http.put("/" + this.urlRoot + "/remove/" + this.itemId + "/" + right.gid + "/" + type, {}).then((response) => {
             this.getPermissions();
         }, (response) => {
@@ -121,10 +139,10 @@ class RightsEditorController implements IController {
     }
 
     editingRight() {
-        return this.selectedRight !== null;
+        return this.selectedRight != null;
     }
 
-    addOrEditPermission(groupname, type) {
+    addOrEditPermission(groupname: string, type: IAccessType) {
         $http.put("/" + this.urlRoot + "/add/" + this.itemId + "/" + groupname.split("\n").join(";") + "/" + type.name,
             this.timeOpt).then((response) => {
             this.getPermissions();
@@ -138,68 +156,68 @@ class RightsEditorController implements IController {
         return "enter username(s)/group name(s) separated by semicolons" + (this.listMode ? " or newlines" : "");
     }
 
-    getGroupDesc(group) {
+    getGroupDesc(group: IRight) {
         return group.fullname ? group.fullname + " (" + group.name + ")" : group.name;
     }
 
-    shouldShowBeginTime(group) {
+    shouldShowBeginTime(group: IRight) {
         // having -1 here (instead of 0) avoids "begins in a few seconds" right after adding a right
         return moment().diff(group.accessible_from, "seconds") < -1;
     }
 
-    shouldShowEndTime(group) {
-        return group.accessible_to !== null && moment().diff(group.accessible_to) <= 0;
+    shouldShowEndTime(group: IRight) {
+        return group.accessible_to != null && moment().diff(group.accessible_to) <= 0;
     }
 
-    shouldShowEndedTime(group) {
-        return group.accessible_to !== null && moment().diff(group.accessible_to) > 0;
+    shouldShowEndedTime(group: IRight) {
+        return group.accessible_to != null && moment().diff(group.accessible_to) > 0;
     }
 
-    shouldShowDuration(group) {
-        return group.duration !== null && group.accessible_from === null;
+    shouldShowDuration(group: IRight) {
+        return group.duration != null && group.accessible_from == null;
     }
 
-    shouldShowUnlockable(group) {
-        return group.duration !== null &&
-            group.duration_from !== null &&
-            group.accessible_from === null &&
+    shouldShowUnlockable(group: IRight) {
+        return group.duration != null &&
+            group.duration_from != null &&
+            group.accessible_from == null &&
             moment().diff(group.duration_from) < 0;
     }
 
-    shouldShowNotUnlockable(group) {
-        return group.duration !== null &&
-            group.duration_to !== null &&
-            group.accessible_from === null &&
+    shouldShowNotUnlockable(group: IRight) {
+        return group.duration != null &&
+            group.duration_to != null &&
+            group.accessible_from == null &&
             moment().diff(group.duration_to) <= 0;
     }
 
-    shouldShowNotUnlockableAnymore(group) {
-        return group.duration !== null &&
-            group.duration_to !== null &&
-            group.accessible_from === null &&
+    shouldShowNotUnlockableAnymore(group: IRight) {
+        return group.duration != null &&
+            group.duration_to != null &&
+            group.accessible_from == null &&
             moment().diff(group.duration_to) > 0;
     }
 
-    isObsolete(group) {
+    isObsolete(group: IRight) {
         return this.shouldShowEndedTime(group) || this.shouldShowNotUnlockableAnymore(group);
     }
 
-    obsoleteFilterFn = (group) => {
+    obsoleteFilterFn = (group: IRight) => {
         return !this.showActiveOnly || !this.isObsolete(group);
     }
 
-    showClock(group) {
-        return group.duration !== null || group.accessible_to !== null;
+    showClock(group: IRight) {
+        return group.duration != null || group.accessible_to != null;
     }
 
-    expireRight(group) {
+    expireRight(group: IRight) {
         this.editRight(group);
         this.timeOpt.to = moment();
         this.timeOpt.type = "range";
         this.addOrEditPermission(group.name, this.accessType);
     }
 
-    editRight(group) {
+    editRight(group: IRight) {
         this.groupName = group.name;
         this.accessType = {id: group.access_type, name: group.access_name};
         this.addingRight = false;
@@ -208,26 +226,26 @@ class RightsEditorController implements IController {
         if (group.duration_from) {
             this.timeOpt.durationFrom = moment(group.duration_from);
         } else {
-            this.timeOpt.durationFrom = null;
+            this.timeOpt.durationFrom = undefined;
         }
         if (group.duration_to) {
             this.timeOpt.durationTo = moment(group.duration_to);
         } else {
-            this.timeOpt.durationTo = null;
+            this.timeOpt.durationTo = undefined;
         }
 
         if (group.accessible_from) {
             this.timeOpt.from = moment(group.accessible_from);
         } else {
-            this.timeOpt.from = null;
+            this.timeOpt.from = undefined;
         }
         if (group.accessible_to) {
             this.timeOpt.to = moment(group.accessible_to);
         } else {
-            this.timeOpt.to = null;
+            this.timeOpt.to = undefined;
         }
 
-        if (group.duration && group.accessible_from === null) {
+        if (group.duration && group.accessible_from == null) {
             const d = moment.duration(group.duration);
             this.timeOpt.type = "duration";
             for (let i = this.durationTypes.length - 1; i >= 0; --i) {

@@ -8,11 +8,7 @@ from timApp.timdb.annotations import Annotations
 from timApp.timdb.answers import Answers
 from timApp.timdb.files import Files
 from timApp.timdb.images import Images
-from timApp.timdb.lectureanswers import LectureAnswers
-from timApp.timdb.lectures import Lectures
-from timApp.timdb.messages import Messages
 from timApp.timdb.notes import Notes
-from timApp.timdb.questions import Questions
 from timApp.timdb.tim_models import db
 from timApp.timdb.uploads import Uploads
 from timApp.timdb.users import Users
@@ -114,11 +110,6 @@ class TimDb(object):
         self.uploads = Uploads(self.db, self.files_root_path, 'uploads', self.current_user_name, self.session)
         self.files = Files(self.db, self.files_root_path, 'files', self.current_user_name, self.session)
         self.answers = Answers(self.db, self.files_root_path, 'answers', self.current_user_name, self.session)
-        self.questions = Questions(self.db, self.files_root_path, 'questions', self.current_user_name, self.session)
-        self.messages = Messages(self.db, self.files_root_path, 'messages', self.current_user_name, self.session)
-        self.lectures = Lectures(self.db, self.files_root_path, 'lectures', self.current_user_name, self.session)
-        self.lecture_answers = LectureAnswers(self.db, self.files_root_path,
-                                              'lecture_answers', self.current_user_name, self.session)
         self.velps = Velps(self.db, self.files_root_path, 'velps', self.current_user_name, self.session)
         self.velp_groups = VelpGroups(self.db, self.files_root_path, 'velp_groups',
                                       self.current_user_name, self.session)

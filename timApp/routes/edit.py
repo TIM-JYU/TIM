@@ -195,11 +195,10 @@ def modify_paragraph_q():
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
 
     """
-    doc_id, md, par_id, par_next_id = verify_json_params('docId', 'text', 'par', 'par_next')
-    # abort(400, 'Not yet: ' + par_id)
-    md = question_convert_js_to_yaml(md)
-    ret = modify_paragraph_common(doc_id, md, par_id, par_next_id)
-    # ret["questionjson"] = ""
+    question_data, doc_id, par_id, is_task = verify_json_params('question', 'docId', 'par', 'isTask')
+    task_id, = verify_json_params('taskId', require=False)
+    md = question_convert_js_to_yaml(question_data, is_task, task_id)
+    ret = modify_paragraph_common(doc_id, md, par_id, par_next_id=None)
     return ret
 
 
@@ -319,11 +318,6 @@ def preview_paragraphs(doc_id):
         edit_request = EditRequest.from_request(doc, preview=True)
         try:
             blocks = edit_request.get_pars()
-            for par in blocks:
-                if par.is_question():
-                    par.set_attr('isQuestion', par.is_question())
-                    par.set_attr('question', False)
-                    par.set_attr('plugin', 'qst')
             return par_response(blocks, doc, edit_request=edit_request)
         except Exception as e:
             err_html = get_error_html(e)
@@ -579,8 +573,9 @@ def cancel_save_paragraphs():
 
 @edit_page.route("/newParagraphQ/", methods=["POST"])
 def add_paragraph_q():
-    md, doc_id, par_next_id = verify_json_params('text', 'docId', 'par_next')
-    md = question_convert_js_to_yaml(md)
+    question_data, doc_id, par_next_id, is_task = verify_json_params('question', 'docId', 'par_next', 'isTask')
+    task_id, = verify_json_params('taskId', require=False)
+    md = question_convert_js_to_yaml(question_data, is_task, task_id)
     return add_paragraph_common(md, doc_id, par_next_id)
 
 

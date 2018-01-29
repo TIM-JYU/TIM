@@ -1,6 +1,7 @@
 """Routes for qst (question) plugin."""
 import json
 import re
+from typing import Dict, Any, NamedTuple, Optional
 from xml.sax.saxutils import quoteattr
 
 import yaml
@@ -10,17 +11,26 @@ from flask import abort
 from flask import request
 
 from timApp.containerLink import convert_md
-from timApp.documentmodel.document import Document
 from timApp.plugin import Plugin, PluginException
 from timApp.plugin import get_num_value
 from timApp.plugin import get_value
 from timApp.requesthelper import verify_json_params
 from timApp.responsehelper import json_response
 from timApp.sessioninfo import get_current_user_object
+from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.models.askedjson import normalize_question_json
 
 qst_plugin = Blueprint('qst_plugin',
                        __name__,
                        url_prefix='')  # TODO: Better URL prefix.
+
+
+class QuestionInDocument(NamedTuple):
+    markup: Dict
+    qst: bool
+    taskId: Optional[str]
+    docId: int
+    parId: str
 
 
 @qst_plugin.route("/qst/reqs/")
@@ -107,8 +117,7 @@ def qst_mmcq_multimd():
 
 @qst_plugin.route("/qst/getQuestionMD/", methods=['POST'])
 def get_question_md():
-    doc_id, md = verify_json_params('docId', 'text')
-    # md = verify_json_params('text')
+    md, = verify_json_params('text')
     markup = json.loads(md)
     plugin_data = {}
     plugin_data['markup'] = markup
@@ -133,7 +142,7 @@ def not_found(path):
     return abort(404)
 
 
-def delete_key(d, key):
+def delete_key(d: Dict[str, Any], key: str):
     if key in d:
         del d[key]
 
@@ -337,17 +346,24 @@ def qst_get_html(jso, review):
     result = False
     info = jso['info']
     markup = jso['markup']
+    markup = normalize_question_json(markup,
+                                     allow_top_level_keys=
+                                     {
+                                         'button',
+                                         'buttonText',
+                                         'footer',
+                                         'header',
+                                         'isTask',
+                                         'lazy',
+                                         'resetText',
+                                         'stem',
+                                     })
+    jso['markup'] = markup
     if info and info['max_answers'] and info['max_answers'] <= info.get('earlier_answers', 0):
         result = True
     if not result:
-        if 'points' in markup:
-            del markup['points']
-        if 'expl' in markup:
-            del markup['expl']
-        if 'xpl' in markup:
-            del markup['xpl']
-    else:
-        set_explanation(markup)
+        delete_key(markup, 'points')
+        delete_key(markup, 'expl')
     jso['show_result'] = result
 
     if review:
@@ -359,8 +375,6 @@ def qst_get_html(jso, review):
     attrs = json.dumps(jso)
 
     runner = 'qst-runner'
-    if markup.get('isQuestion', ''):
-        runner = 'question-runner'
     s = f'<{runner} json={quoteattr(attrs)}></{runner}>'
     return s
 
@@ -504,25 +518,20 @@ def qst_get_md(jso):
     return result
 
 
-def question_convert_js_to_yaml(md):
+def question_convert_js_to_yaml(markup: Dict, is_task: bool, task_id: Optional[str]):
     # save question. How to pick up question see lecture.py, get_question_data_from_document
-    markup = json.loads(md)
-    question_title = markup["json"]["questionTitle"]
+    markup = normalize_question_json(markup)
+    question_title = markup["questionTitle"]
     question_title = question_title.replace('"', '').replace("'", '')
     # taskid = questionTitle.replace(" ", "")  # TODO: make better conversion to ID
     taskid = question_title.replace("md:", "")
     taskid = re.sub('[^A-Za-z0-9]', '', taskid)
-    oldid = markup.get('taskId')
-    if not oldid:
-        markup['taskId'] = taskid
-    else:
-        taskid = oldid
-    qst = markup.get("qst", False)
+    if task_id:
+        taskid = task_id
+    qst = is_task
     delete_key(markup, "question")  # old attribute
     delete_key(markup, "taskId")
     delete_key(markup, "qst")
-    if 'expl' in markup:
-        markup['xpl'] = markup.pop('expl')
 
     mdyaml = yaml.dump(markup, encoding='utf-8', allow_unicode=True, default_flow_style=False).decode(
         'utf-8')  # see also .safe_dump
@@ -537,20 +546,21 @@ def question_convert_js_to_yaml(md):
     return result
 
 
-def get_question_data_from_document(doc_id, par_id, edit=False):
-    '''
+def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> QuestionInDocument:
+    """
     Get markup for question
-    :param doc_id: documtn id
+
+    :param d: document
     :param par_id: paragraph id
     :param edit: is purposu to edit data or show data
     :return: markup for question
-    '''
+    """
     # pick up question from document, for saving question see edit.py question_convert_js_to_yam
     # par_id might be like 100.Ruksit.SpQA0NX2itOd  and one must cut the beginin
     i = par_id.rfind(".")
     if i >= 0:
         par_id = par_id[i + 1:]
-    par = Document(doc_id).get_paragraph(par_id)
+    par = d.document.get_paragraph(par_id)
     try:
         plugin_values = Plugin.from_paragraph(par, user=get_current_user_object()).values
     except PluginException:
@@ -559,23 +569,13 @@ def get_question_data_from_document(doc_id, par_id, edit=False):
     if not edit:
         convert_md(plugindata)
     markup = plugindata.get('markup')
-    markup["qst"] = not par.is_question()
-    json = markup.get("json", None)
-    if json:  # backward compatibility
-        question_title = json.get("title", "")
-        if question_title and not json.get("questionTitle", ""):
-            json["questionTitle"] = question_title
-        delete_key(json, "title")
-        set_explanation(markup)
-    attrs = par.get_attrs()
-    if attrs:
-        markup["taskId"] = attrs.get("taskId", "")
-    # points = markup.get('points', '')
-    # jso# n = markup.get('json')
-    # expl = markup.get('expl', '')
-    # markup['json'] = {}
-    # return json, points, expl, markup
-    return markup
+    return QuestionInDocument(
+        markup=normalize_question_json(markup),
+        qst=not par.is_question(),
+        taskId=par.get_attr('taskId'),
+        docId=d.id,
+        parId=par_id,
+    )
 
 
 def create_points_table(points):

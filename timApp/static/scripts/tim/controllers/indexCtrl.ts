@@ -37,18 +37,18 @@ class IndexCtrl implements IController {
 
     }
 
-    endsWith(str, suffix) {
+    endsWith(str: string, suffix: string) {
         return str.indexOf(suffix, str.length - suffix.length) !== -1;
     }
 
-    getParameterByName(name) {
+    getParameterByName(name: string) {
         name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
         const regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
             results = regex.exec($window.location.search);
-        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
 
-    copyDocument(docId, templateName) {
+    copyDocument(docId: number, templateName: string) {
         $http.post("/update/" + docId, {
             template_name: templateName,
         }).then(function(response) {
@@ -87,7 +87,7 @@ class IndexCtrl implements IController {
         });
     }
 
-    onFileSelect(file) {
+    onFileSelect(file: any) {
         this.file = file;
         if (file) {
             this.file.progress = 0;
@@ -100,14 +100,14 @@ class IndexCtrl implements IController {
                 method: "POST",
             });
 
-            file.upload.then((response) => {
+            file.upload.then((response: any) => {
                 $timeout(() => {
                     this.getItems();
                 });
-            }, (response) => {
+            }, (response: any) => {
                 if (response.status > 0)
                     this.file.progress = "Error occurred: " + response.data.error;
-            }, (evt) => {
+            }, (evt: any) => {
                 this.file.progress = Math.min(100, Math.floor(100.0 *
                     evt.loaded / evt.total));
             });

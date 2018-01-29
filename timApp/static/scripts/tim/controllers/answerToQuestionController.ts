@@ -1,11 +1,13 @@
-import {IController, IScope} from "angular";
-import {timApp} from "tim/app";
-import * as answerSheet from "tim/directives/dynamicAnswerSheet";
-import {markAsUsed} from "tim/utils";
-import {$http, $interval, $log, $rootScope} from "../ngimport";
-import {IAskedQuestion, IAskedJson, IAskedJsonJson} from "../lecturetypes";
-
-markAsUsed(answerSheet);
+import moment, {Moment} from "moment";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
+import {IPreviewParams, makePreview} from "../directives/dynamicAnswerSheet";
+import {
+    AnswerTable, IAskedQuestion, IGetNewQuestionResponse, IQuestionAnswer, isAskedQuestion,
+    questionAnswerReceived, questionAsked,
+} from "../lecturetypes";
+import {$http, $timeout} from "../ngimport";
+import {fetchAskedQuestion, showQuestionEditDialog} from "./questionController";
+import {showStatisticsDialog} from "./showStatisticsToQuestionController";
 
 /**
  * Created by hajoviin on 22.4.2015
@@ -20,207 +22,165 @@ markAsUsed(answerSheet);
  * @copyright 2015 Timppa project authors
  */
 
-export class AnswerToQuestionController implements IController {
-    private scope: IScope;
-    private barFilled;
-    private progressElem: JQuery;
-    private progressText: JQuery;
-    private timeLeft;
-    private isLecturer: boolean;
-    private questionTitle: string;
-    private askedTime: number;
-    private endTime: number;
+export interface IAnswerQuestionParams {
+    qa: IAskedQuestion | IQuestionAnswer;
+    isLecturer: boolean;
+}
 
-    constructor(scope: IScope) {
-        this.scope = scope;
-        this.isLecturer = false;
-        this.questionTitle = "";
+export type IAnswerQuestionResult =
+    {type: "pointsclosed", askedId: number}
+    | {type: "closed"}
+    | {type: "reask"}
+    | {type: "reask_as_new"};
 
-        this.askedTime = params.askedTime - params.clockOffset;
-        this.endTime = params.askedTime + this.json.timeLimit * 1000 - params.clockOffset;
-        if (this.json.timeLimit && this.endTime && !this.preview && !this.result) {
-            const progress = $("<progress>", {
-                max: (this.endTime - this.askedTime),
-                id: "progressBar",
-            });
-            htmlSheet.append(progress);
-            htmlSheet.append($("<span>", {
-                class: "progresslabel",
-                id: "progressLabel",
-                text: this.json.timeLimit + " s",
-            }));
+let currentQuestion: AnswerToQuestionController | undefined;
+
+export class AnswerToQuestionController extends DialogController<{params: IAnswerQuestionParams}, IAnswerQuestionResult, "timAnswerQuestion"> {
+    private barFilled: number;
+    private progressText: string;
+    private timeLeft: number;
+    private isLecturer = false;
+    private askedTime: Moment;
+    private endTime?: Moment;
+    private progressMax: number;
+    private answered = false;
+    private buttonText: string;
+    private result: boolean;
+    private question: IAskedQuestion;
+    private clockOffset = moment.duration(0);
+    private preview: IPreviewParams;
+    private questionEnded: boolean;
+    private answer: AnswerTable;
+
+    constructor() {
+        super();
+        this.updateAnswer = this.updateAnswer.bind(this);
+    }
+
+    private $onInit() {
+        if (currentQuestion) {
+            throw new Error("Question window was already open.");
         }
-
-        this.scope.$on("setQuestionJson", (event, args) => {
-            this.result = args.result;
-            this.previousAnswer = args.answer;
-            this.askedId = args.askedId;
-            this.questionParId = args.questionParId;
-            this.isLecturer = args.isLecturer;
-            this.markup = args.markup;
-            this.questionTitle = args.markup.json.questionTitle;
-            this.askedTime = args.askedTime;
-            this.clockOffset = args.clockOffset;
+        currentQuestion = this;
+        if (isAskedQuestion(this.resolve.params.qa)) {
+            this.question = this.resolve.params.qa;
+            this.result = false;
+            this.preview = makePreview(this.question.json.json, [], false);
             this.questionEnded = false;
             this.answered = false;
-            this.buttonText = this.markup.button || this.markup.buttonText || "Answer";
-            this.dynamicAnswerSheetControl.createAnswer(this);
+        } else {
+            this.question = this.resolve.params.qa.asked_question;
+            this.result = true;
+            this.preview = makePreview(
+                this.question.json.json,
+                this.resolve.params.qa.answer,
+                false,
+                true,
+                this.resolve.params.qa.points,
+            );
+            this.questionEnded = true;
+            this.answered = true;
+        }
+        this.askedTime = this.question.asked_time.subtract(this.clockOffset);
 
-            if (!this.preview && !this.result) {
-                const $table = this.element.find(".answer-sheet-table");
-                window.setTimeout(() => {
-                    const $table = this.element.find(".answer-sheet-table");
-                    let $input = null;
-                    if (this.json.answerFieldType !== "text") {
-                        $input = $table.find("input:first");
-                    } else {
-                        $input = $table.find("textarea:first");
-                    }
-                    $input[0].focus();
-                }, 0);
-                //
-                if (!this.isText) {
-                    $table.on("keyup.send", this.answerWithEnter);
-                }
-                const now = new Date().valueOf();
-                this.timeLeft = this.endTime - now;
-                this.barFilled = 0;
-                if (this.endTime && this.json.timeLimit) {
-                    const timeBetween = 500;
-                    const maxCount = this.timeLeft / timeBetween + 5 * timeBetween;
-                    this.progressElem = $("#progressBar");
-                    this.progressText = $("#progressLabel");
-                    this.start(timeBetween, maxCount);
-                }
+        // clockOffset usually in range [-100, -25], so it's almost meaningless?
+        this.endTime = this.askedTime.add(this.question.json.json.timeLimit!, "seconds").subtract(this.clockOffset);
+        this.isLecturer = this.resolve.params.isLecturer;
+        this.buttonText = "Answer"; // TODO: Make configurable
+
+        if (!this.result) {
+            const now = moment();
+            this.timeLeft = this.endTime.diff(now);
+            this.barFilled = 0;
+            if (this.endTime && this.question.json.json.timeLimit) {
+                this.progressText = "";
+                this.start(500);
             }
-        });
-    }
-
-    $onInit() {
-
-    }
-
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:answerToQuestionController
-     */
-    answer() {
-        this.dynamicAnswerSheetControl.answerToQuestion();
-        this.answered = true;
-        if (this.isLecturer) {
-            $rootScope.$broadcast("lecturerAnswered");
         }
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:answerToQuestionController
-     */
-    close(callback) {
+    private $onDestroy() {
+        currentQuestion = undefined;
+    }
+
+    private async answerToQuestion() {
+        const response = await $http<{questionLate?: string}>({
+            url: "/answerToQuestion",
+            method: "PUT",
+            params: {
+                asked_id: this.question.asked_id,
+                buster: new Date().getTime(),
+                input: {answers: this.answer},
+            },
+        });
+        const answer = response.data;
+        if (answer.questionLate) {
+            await showMessageDialog(answer.questionLate);
+        }
+        super.close({type: "closed"});
+    }
+
+    protected close() {
         if (this.isLecturer) {
-            this.stopQuestion(callback);
+            this.stopQuestion();
         }
         if (this.result) {
-            this.scope.$emit("pointsClosed", this.askedId);
+            super.close({type: "pointsclosed", askedId: this.question.asked_id});
+        } else {
+            super.close({type: "closed"});
         }
-        this.dynamicAnswerSheetControl.closeQuestion();
     }
 
-    stopQuestion(callback) {
-        $http({
+    private async stopQuestion() {
+        const response = await $http({
             url: "/stopQuestion",
             method: "POST",
             params: {
-                asked_id: this.askedId,
-                lecture_id: this.lectureId,
+                asked_id: this.question.asked_id,
             },
-        })
-            .then(() => {
-                this.scope.$emit("questionStopped");
-                this.questionEnded = true;
-                this.dynamicAnswerSheetControl.endQuestion();
-                $log.info("Question ", this.askedId, " stopped");
-                if (callback) {
-                    callback();
-                }
-            }, () => {
-                $log.info("Failed to stop question");
-            });
+        });
+        this.endQuestion();
     }
 
-    /**
-     *
-     */
-    showAnswers() {
-        this.scope.$emit("showAnswers", true);
+    private async showAnswers() {
+        await showStatisticsDialog(this.question);
     }
 
-    reAsk() {
-        this.close(this.reAskEmit);
+    private reAsk() {
+        super.close({type: "reask"});
     }
 
-    askAsNew() {
-        this.close(this.askAsNewEmit);
+    private askAsNew() {
+        super.close({type: "reask_as_new"});
     }
 
-    edit() {
-        $http<IAskedQuestion>({
-            url: "/getAskedQuestionById",
-            method: "GET",
-            params: {asked_id: this.askedId},
-        })
-            .then((response) => {
-                let markup: IAskedJsonJson = JSON.parse(response.data.json);
-                if (!markup.json) markup = {json: markup} as any; // compatibility for old
-                markup.points = response.data.points;
-                $rootScope.$broadcast("changeQuestionTitle", {questionTitle: markup.json.questionTitle});
-                $rootScope.$broadcast("editQuestion", {
-                    asked_id: this.askedId,
-                    markup,
-                });
-            }, () => {
-                $log.info("There was some error getting question.");
-            });
+    private async edit() {
+        const asked = await fetchAskedQuestion(this.question.asked_id);
+        const r = await showQuestionEditDialog(asked);
+        // TODO: update state?
     }
 
-    showPoints() {
-        $http<{points, expl?}>({
+    private async showPoints() {
+        const response = await $http<IGetNewQuestionResponse>({
             url: "/showAnswerPoints",
             method: "POST",
             params: {
-                asked_id: this.askedId,
-                lecture_id: this.lectureId,
-                current_question_id: this.askedId,
+                asked_id: this.question.asked_id,
+                current_question_id: this.question.asked_id, // TODO useless parameter
             },
-        })
-            .then((response) => {
-                this.current_points_id = this.askedId;
-                this.result = true;
-                this.points = response.data.points;
-                if (response.data.expl) this.expl = JSON.parse(response.data.expl);
-                this.dynamicAnswerSheetControl.createAnswer(this);
-            }, () => {
-                $log.info("Could not show points to students.");
-            });
-    }
-
-    reAskEmit() {
-        this.scope.$emit("askQuestion", {
-            lecture_id: this.lectureId,
-            asked_id: this.askedId,
-            par_id: this.questionParId,
-            doc_id: this.docId,
-            markup: this.markup,
         });
-    }
-
-    askAsNewEmit() {
-        this.scope.$emit("askQuestion", {
-            lecture_id: this.lectureId,
-            par_id: this.questionParId,
-            doc_id: this.docId,
-            markup: this.markup,
-        });
+        const d = response.data;
+        if (questionAnswerReceived(d)) {
+            this.result = true;
+            this.preview = makePreview(d.data.asked_question.json.json, d.data.answer, false, true, d.data.points);
+        } else if (questionAsked(d)) {
+            this.result = true;
+            this.preview = makePreview(d.data.json.json, [], false, true);
+        } else {
+            await showMessageDialog("Did not receive result to show points.");
+        }
+        // TODO: Is it necessary to update current_points_id here?
+        // this.current_points_id = this.question.asked_id;
     }
 
     /**
@@ -229,94 +189,101 @@ export class AnswerToQuestionController implements IController {
      * Else time is set as questions new end time.
      * Event: update_end_time
      */
-    updateEndTime(time) {
-        if (time !== null) {
-            this.endTime = time - this.$parent.vctrl.clockOffset;
-            this.progressElem.attr("max", this.endTime - this.askedTime);
+    private updateEndTime(time: Moment) {
+        if (time != null) {
+            this.endTime = time.subtract(this.clockOffset);
+            this.progressMax = this.endTime.diff(this.askedTime);
         } else {
-            if (!this.$parent.lctrl.isLecturer) {
-                $interval.cancel(this.promise);
-                this.element.empty();
-                scope.$emit("closeQuestion");
+            if (!this.isLecturer) {
+                this.close();
             }
         }
     }
 
-    start(timeBetween, maxCount) {
-        this.promise = $interval(this.updateBar, timeBetween, maxCount);
+    private start(timeBetween: number) {
+        void this.updateBar(timeBetween);
     }
-
-    // createAnswer ends
 
     /**
      * Updates progressbar and time left text
-     * @memberof module:dynamicAnswerSheet
      */
-    updateBar() {
-        //TODO: Problem with inactive tab.
-        const now = new Date().valueOf();
-        if (!this.endTime || !this.promise) {
+    private async updateBar(timeBetween: number) {
+        // TODO: Problem with inactive tab.
+        const now = moment();
+        if (!this.endTime) {
             return;
         }
-        this.timeLeft = this.endTime - now;
-        this.barFilled = (this.endTime - this.askedTime) - (this.endTime - now);
-        this.progressElem.attr("value", (this.barFilled));
-        this.progressText.text(Math.max((this.timeLeft / 1000), 0).toFixed(0) + " s");
-        this.progressElem.attr("content", (Math.max((this.timeLeft / 1000), 0).toFixed(0) + " s"));
-        if (this.barFilled >= this.progressElem.attr("max")) {
-            $interval.cancel(this.promise);
-            if (!this.$parent.lctrl.isLecturer && !this.$parent.lctrl.questionEnded) {
-                this.answerToQuestion();
-            } else {
-                this.progressText.text("Time's up");
+        while (true) {
+            this.timeLeft = this.endTime.diff(now);
+            this.barFilled = (this.endTime.diff(this.askedTime)) - this.timeLeft;
+            this.progressText = Math.max(this.timeLeft / 1000, 0).toFixed(0) + " s";
+            if (this.barFilled >= this.progressMax) {
+                if (!this.isLecturer && !this.questionEnded) {
+                    this.answerToQuestion();
+                } else {
+                    this.progressText = "Time's up";
+                }
+                this.questionEnded = true;
+                return;
             }
-            this.$parent.questionEnded = true;
+            await $timeout(timeBetween);
         }
     }
 
-    endQuestion() {
-        if (!this.promise) {
-            return;
-        }
-        $interval.cancel(this.promise);
-        const max = this.progressElem.attr("max");
-        this.progressElem.attr("value", max);
-        this.progressText.text("Time's up");
+    private updateAnswer(at: AnswerTable) {
+        this.answer = at;
     }
 
-    answerWithEnter = (e) => {
-        if (e.keyCode === 13) {
-            $(".answer-sheet-table").off("keyup.send"); // TODO
-            this.$parent.answer();
-        }
+    private endQuestion() {
+        this.endTime = moment();
+        this.barFilled = this.progressMax;
+        this.progressText = "Time's up";
+        this.questionEnded = true;
     }
+}
 
-    /**
-     * Function to create question answer and send it to server.
-     * @memberof module:dynamicAnswerSheet
-     */
-    answerToQuestion() {
+registerDialogComponent("timAnswerQuestion",
+    AnswerToQuestionController,
+    {
+        template: `
+<div class="popUpWindow">
+    <div class="questionAskedWindow">
+        <dynamic-answer-sheet
+        questiondata="$ctrl.preview"
+        on-answer-change="$ctrl.updateAnswer">
+</dynamic-answer-sheet>
+    </div>
+    <div class="buttons">
+        <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.edit()">
+            Edit points
+        </button>
+        <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.askAsNew()">
+            Ask as new
+        </button>
+        <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.reAsk()">
+            Reask
+        </button>
+        <button ng-show="!$ctrl.questionEnded && !$ctrl.answered && !$ctrl.result" class="answerButton timButton"
+                ng-click="$ctrl.answer()">{{$ctrl.buttonText}}
+        </button>
 
-        const answers = this.getAnswers();
+        <br/>
 
-        if (!this.$parent.lctrl.isLecturer) {
-            this.element.empty();
-            $interval.cancel(this.promise);
-        }
-        this.scope.$emit("answerToQuestion", {answer: answers, askedId: this.$parent.askedId});
-    }
+        <button ng-show="$ctrl.isLecturer" class="timButton" ng-click="$ctrl.showAnswers()">Show answers</button>
+        <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.showPoints()">
+            Show points
+        </button>
+        <button ng-show="($ctrl.isLecturer && $ctrl.questionEnded) || $ctrl.result" class="timButton"
+                ng-click="$ctrl.close()">Close
+        </button>
+        <button ng-show="$ctrl.isLecturer && !$ctrl.questionEnded" class="timButton" ng-click="$ctrl.stopQuestion()">
+            End question
+        </button>
+    </div>
+</div>
+`,
+    });
 
-    /**
-     * Closes question window and clears updateBar interval.
-     * If user is lecturer, also closes answer chart window.
-     * @memberof module:dynamicAnswerSheet
-     */
-    closeQuestion() {
-        $interval.cancel(this.promise);
-        this.element.empty();
-        this.scope.$emit("closeQuestion");
-        if (this.$parent.isLecturer) {
-            $rootScope.$broadcast("closeAnswerSheetForGood");
-        }
-    }
+export async function showQuestionAnswerDialog(p: IAnswerQuestionParams) {
+    return await showDialog<AnswerToQuestionController>("timAnswerQuestion", {params: () => p});
 }

@@ -20,16 +20,21 @@ timApp.directive('noPeriod', function() {
     };
 });
 
+export interface INameAreaOptions {
+    collapse: boolean;
+    hlevel: number;
+}
+
 class NameAreaController implements IController {
     private static $inject = ["$element"];
     private $area: JQuery;
     private areaName: string;
-    private options: {collapse: boolean; hlevel: number};
+    private options: INameAreaOptions;
     private datePickerOptions: {format: string; showTodayButton: boolean};
     private element: IRootElementService;
     private onClose: (e: JQuery) => void;
     private onCancel: (e: JQuery) => void;
-    private onOk: (area: JQuery, name: string, options) => void;
+    private onOk: (area: JQuery, name: string, options: INameAreaOptions) => void;
 
     constructor(element: IRootElementService) {
         this.element = element;

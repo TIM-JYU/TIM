@@ -5,6 +5,8 @@ import {Users, UserService} from "../services/userService";
 import {$http, $uibModal, $window} from "../ngimport";
 import {ILecture, ILectureListResponse2} from "../lecturetypes";
 import {ViewCtrl} from "./view/viewctrl";
+import {showMessageDialog} from "../dialog";
+import {ITemplate, showPrintDialog} from "./printCtrl";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -26,7 +28,7 @@ export class SidebarMenuCtrl implements IController {
     private leftSide: JQuery;
     private active: number;
     private lastTab: number;
-    private vctrl: ViewCtrl | undefined;
+    private vctrl?: ViewCtrl;
     private bookmarks: {};
 
     constructor() {
@@ -80,7 +82,7 @@ export class SidebarMenuCtrl implements IController {
     showSidebar() {
         const tabs = $("#menuTabs");
         if (tabs.is(":visible")) {
-            if (this.active !== null) {
+            if (this.active != null) {
                 this.lastTab = this.active;
                 this.active = -1; // this will set the value to null and remove the "selected" state from tab
                 if ($(".device-xs").is(":visible") || $(".device-sm").is(":visible")) {
@@ -94,13 +96,17 @@ export class SidebarMenuCtrl implements IController {
             tabs.show();
             this.leftSide.css("min-width", "12em");
             tabs.attr("class", "");
-            if (this.active === null) {
+            if (this.active == null) {
                 this.active = this.lastTab || 0;
             }
         }
     }
 
     async toggleLectures() {
+        if (!this.vctrl) {
+            await showMessageDialog("Not currently in a document view.");
+            return;
+        }
         const response = await $http<ILectureListResponse2>({
             url: "/getAllLecturesFromDocument",
             method: "GET",
@@ -116,25 +122,12 @@ export class SidebarMenuCtrl implements IController {
      *
      * @param settings_data : print settings
      */
-    printDocument(settings_data) {
+    printDocument(settings_data: {}) {
         var api_address_for_templates = '/print/templates/' + $window.item.path;
-        $http.get(api_address_for_templates)
-            .then(function success(templates) {
-                // console.log(JSON.stringify(templatesJSON.data));
-                $uibModal.open({
-                    templateUrl: '/static/templates/printDialog.html',
-                    controller: 'PrintCtrl',
-                    size: 'md',
-                    resolve: {
-                        document: function() {
-                            return $window.item;
-                        },
-                        templates: function() {
-                            return templates.data;
-                        }
-                    }
-                })
-            }, function error(response) {
+        $http.get<ITemplate[]>(api_address_for_templates)
+            .then((response) => {
+                showPrintDialog({templates: response.data, document: $window.item});
+            }, (response) => {
                 console.log(response.toString());
             });
     }

@@ -1,4 +1,4 @@
-import {getParAttributes, getParId, getRefAttrs} from "./parhelpers";
+import {getParAttributes, getParId, getRefAttrs, Paragraph} from "./parhelpers";
 import {$window} from "../../ngimport";
 import moment from "moment";
 
@@ -58,7 +58,7 @@ export class Document {
      * @param container The container element where the paragraphs are located.
      * @returns The collection of paragraphs in the current section being processed.
      */
-    private buildSections(currentSectionPars: JQuery[], container: JQuery): JQuery[] {
+    private buildSections(currentSectionPars: Paragraph[], container: JQuery): JQuery[] {
         let child = container.children(".par:first");
         while (child.length > 0) {
             if (child.hasClass("area")) {
@@ -70,7 +70,7 @@ export class Document {
                 if (content.is(":visible")) {
                     if (content.children("h1, h2, h3").length > 0) {
                         if (currentSectionPars.length > 0) {
-                            const parId = getParId(currentSectionPars[currentSectionPars.length - 1]);
+                            const parId = getParId(currentSectionPars[currentSectionPars.length - 1])!;
                             this._sections[parId] = currentSectionPars;
                         }
                         currentSectionPars = [child];
@@ -80,7 +80,7 @@ export class Document {
                 }
             } else if (child.hasClass("addBottomContainer")) {
                 if (currentSectionPars.length > 0) {
-                    this._sections[getParId(currentSectionPars[currentSectionPars.length - 1])] = currentSectionPars;
+                    this._sections[getParId(currentSectionPars[currentSectionPars.length - 1])!] = currentSectionPars;
                 }
             }
             child = child.next();
@@ -93,12 +93,15 @@ export class Document {
     }
 }
 
-let activeDocument: Document = null;
+let activeDocument: Document | null = null;
 
 export function setActiveDocument(d: Document) {
     activeDocument = d;
 }
 
 export function getActiveDocument(): Document {
+    if (activeDocument == null) {
+        throw new Error("Active document was null; getActiveDocument was probably called before setActiveDocument was called");
+    }
     return activeDocument;
 }

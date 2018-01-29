@@ -1,17 +1,15 @@
-import angular from "angular";
 import {IController, IRootElementService} from "angular";
-import $ from "jquery";
-import moment from "moment";
 import {timApp} from "tim/app";
 import {fixQuestionJson} from "tim/directives/dynamicAnswerSheet";
 import * as showChart from "tim/directives/showChartDirective";
 import {markAsUsed} from "tim/utils";
-import {$http, $log, $rootScope, $window} from "../ngimport";
 import {IItem} from "../IItem";
-import {IAskedQuestion, ILecture, ILectureMessage, IQuestionAnswer} from "../lecturetypes";
 import {IUser} from "../IUser";
+import {IAskedQuestion, ILecture, ILectureMessage, IQuestionAnswer} from "../lecturetypes";
+import {$http, $window} from "../ngimport";
 import {Users} from "../services/userService";
 import {showLectureDialog} from "./createLectureCtrl";
+import {showQuestionEditDialog} from "./questionController";
 
 markAsUsed(showChart);
 
@@ -48,35 +46,23 @@ export class LectureInfoController implements IController {
     constructor(element: IRootElementService) {
         this.item = $window.item;
         this.inLecture = $window.inLecture;
-        this.lecture = {
-            is_full: null,
-            options: null,
-            lecture_code: $window.lectureCode,
-            doc_id: this.item.id,
-            end_time: moment($window.lectureEndTime),
-            start_time: moment($window.lectureStartTime),
-            lecture_id: $window.lectureId,
-            password: "",
-        };
+        this.lecture = $window.lecture;
         this.msg = "";
         this.isLecturer = false;
         this.answerers = [];
         this.showPoints = false;
         this.points = [];
         this.element = element;
-
-        this.getLectureInfo();
     }
 
-    $onInit() {
-
+    public $onInit() {
+        this.getLectureInfo();
     }
 
     /**
      * Sends http request to get info about the specific lecture.
-     * @memberof module:lectureInfoController
      */
-    async getLectureInfo() {
+    private async getLectureInfo() {
         const response = await $http<{
             messages: ILectureMessage[],
             answers: IQuestionAnswer[],
@@ -88,7 +74,7 @@ export class LectureInfoController implements IController {
             method: "GET",
             params: {lecture_id: this.lecture.lecture_id},
         });
-        const answer = response.data;
+        const data = response.data;
         /*Update the header links to correct urls*/
         this.updateHeaderLinks();
         /*Add a return link icon to lecture header if user is in lecture*/
@@ -96,66 +82,35 @@ export class LectureInfoController implements IController {
             this.addReturnLinkToHeader();
         }
 
-        angular.forEach(answer.messages, (msg) => {
-            this.msg += msg.sender + " <" + msg.time + ">: " + msg.message + "\n";
+        data.messages.forEach((msg) => {
+            this.msg += msg.user.name + " <" + msg.timestamp + ">: " + msg.message + "\n";
         });
-        this.answers = answer.answers;
-        for (let i = 0; i < answer.questions.length; i++) {
-            this.points.push(0);
-            let markup = JSON.parse(answer.questions[i].json);
-            if (!markup.json) {
-                markup = {json: markup}; // compatibility for old
-            }
-            const json = markup.json;
-            fixQuestionJson(json);
-            answer.questions[i].json = json;
-        }
-        this.questions = answer.questions;
-        this.isLecturer = answer.isLecturer;
-        this.answerers = answer.answerers;
+        this.answers = data.answers;
+        this.questions = data.questions;
+        this.isLecturer = data.isLecturer;
+        this.answerers = data.answerers;
         this.selectedUser = Users.getCurrent();
     }
 
-    async editPoints(askedId: number) {
-        const response = await $http<{json: string, points}>({
+    private async editPoints(askedId: number) {
+        const response = await $http<IAskedQuestion>({
             url: "/getAskedQuestionById",
             method: "GET",
             params: {asked_id: askedId},
         });
-        const data = response.data;
-        let markup = JSON.parse(data.json);
-        if (!markup.json) {
-            markup = {json: markup}; // compatibility for old
-        }
-        markup.points = data.points;
-        $rootScope.$broadcast("changeQuestionTitle", {questionTitle: markup.json.questionTitle});
-        $rootScope.$broadcast("editQuestion", {
-            asked_id: askedId,
-            markup,
-        });
+        await showQuestionEditDialog(response.data);
     }
 
     /*
      Updates the header links in base.html
      */
-    updateHeaderLinks() {
-        if (document.getElementById("headerView")) {
-            document.getElementById("headerView").setAttribute("href", "/view/" + this.item.path);
-        }
-        if (document.getElementById("headerManage")) {
-            document.getElementById("headerManage").setAttribute("href", "/manage/" + this.item.path);
-        }
-        if (document.getElementById("headerTeacher")) {
-            document.getElementById("headerTeacher").setAttribute("href", "/teacher/" + this.item.path);
-        }
-        if (document.getElementById("headerAnswers")) {
-            document.getElementById("headerAnswers").setAttribute("href", "/answers/" + this.item.path);
-        }
-        if (document.getElementById("headerLecture")) {
-            document.getElementById("headerLecture").setAttribute("href", "/lecture/" + this.item.path);
-        }
-        if (document.getElementById("headerSlide")) {
-            document.getElementById("headerSlide").setAttribute("href", "/slide/" + this.item.path);
+    private updateHeaderLinks() {
+        const viewNames = ["View", "Manage", "Teacher", "Answers", "Lecture", "Slide"];
+        for (const name of viewNames) {
+            const elem = document.getElementById(`header${name}`);
+            if (elem) {
+                elem.setAttribute("href", `/${name.toLowerCase()}/${this.item.path}`);
+            }
         }
     }
 
@@ -163,8 +118,11 @@ export class LectureInfoController implements IController {
      * Adds a header to lectureMenu that allows user to return to lecture
      * if user is currently on the lecture.
      */
-    addReturnLinkToHeader() {
+    private addReturnLinkToHeader() {
         const menu = document.getElementById("inLectureIconSection");
+        if (!menu) {
+            return;
+        }
         const linkToLecture = document.createElement("a");
         linkToLecture.setAttribute("href", /* "https://" + location.host + */ "/lecture/" + this.item.path + "?Lecture=" + this.lecture.lecture_code);
         linkToLecture.setAttribute("title", "Return to lecture");
@@ -178,9 +136,8 @@ export class LectureInfoController implements IController {
 
     /**
      * Sends http request to delete the lecture.
-     * @memberof module:lectureInfoController
      */
-    async deleteLecture() {
+    private async deleteLecture() {
         const confirmAnswer = $window.confirm("Do you really want to delete this lecture?");
         if (confirmAnswer) {
             await $http({
@@ -192,47 +149,26 @@ export class LectureInfoController implements IController {
         }
     }
 
-    async editLecture() {
+    private async editLecture() {
         const response = await $http<ILecture>({
             url: "/showLectureInfoGivenName",
             method: "GET",
             params: {lecture_id: this.lecture.lecture_id},
         });
         const lecture = response.data;
-        const lectureNew = await showLectureDialog(this.item, lecture);
-        this.lecture = lectureNew;
+        this.lecture = await showLectureDialog(this.item, lecture);
     }
 
     /**
      * Draws charts from the answer of the current lecture.
      * @param userToShow Which users answers to shows. If undefined shows from every user.
-     * @memberof module:lectureInfoController
      */
-    async drawCharts(userToShow: IUser | null = null) {
+    private async drawCharts(userToShow?: IUser) {
         for (let p = 0; p < this.points.length; p++) {
             this.points[p] = 0;
         }
         this.showPoints = true;
-        let userId: number;
-        if (userToShow === null) {
-            userId = null;
-        } else {
-            userId = userToShow.id;
-        }
-        const questionIds = [];
-        for (let i = 0; i < this.questions.length; i++) {
-            await this.dynamicAnswerShowControls[i].createChart(this.questions[i].json);
-            questionIds.push(this.questions[i].asked_id);
-        }
-
-        for (let j = 0; j < this.answers.length; j++) {
-            if ((this.isLecturer && userId === null) || this.answers[j].user_id === userId) {
-                const index = questionIds.indexOf(this.answers[j].question_id);
-                this.dynamicAnswerShowControls[index]
-                    .addAnswer([{answer: this.answers[j].answer}]);
-                this.points[index] += this.answers[j].points;
-            }
-        }
+        // TODO
     }
 }
 

@@ -1,3 +1,4 @@
+from time import sleep
 from typing import List, Tuple, Dict, Union, Optional
 
 from selenium.common.exceptions import StaleElementReferenceException
@@ -20,19 +21,19 @@ def create_yaml(field_type: str,
                 headers=None,
                 matrix_type=''):
     headers = headers or []
-    # TODO: timeLimitFields is not used for qst
+    # TODO: timeLimit missing (for lecture question)
     # TODO: matrixType useless?
     return {
-        'json': {'answerFieldType': field_type,
-                 'headers': headers,
-                 'matrixType': matrix_type,
-                 'questionText': 'Is Moon made of cheese?',
-                 'questionTitle': 'Moon problem',
-                 'questionType': question_type,
-                 'rows': [c[0] for c in choices],
-                 'timeLimitFields': {'hours': 0, 'minutes': 0, 'seconds': 30}},
+        'answerFieldType': field_type,
+        'expl': {str(i + 1): choices[i][1] for i in range(len(choices))},
+        'headers': headers,
+        'matrixType': matrix_type,
+        'questionText': 'Is Moon made of cheese?',
+        'questionTitle': 'Moon problem',
+        'questionType': question_type,
+        'rows': [c[0] for c in choices],
         **({'points': points_str} if points_str else {}),
-        'xpl': {str(i + 1): choices[i][1] for i in range(len(choices))}}
+    }
 
 
 def get_matrix_fields(dialog: WebElement) -> Tuple[ElementList, ElementList, ElementList, ElementList]:
@@ -174,6 +175,7 @@ class QuestionTest(BrowserTest):
         par.click()
         par.click()
         find_button_by_text(par, 'Add question above').click()
+        sleep(0.5)
         dialog = self.drv.find_element_by_css_selector('tim-edit-question')
         questiontext = find_by_ngmodel(dialog, 'qctrl.question.questionText')
         questiontext.send_keys('Is Moon made of cheese?')
@@ -206,6 +208,7 @@ class QuestionTest(BrowserTest):
         matrix = self.drv.find_element_by_css_selector('tim-question-matrix')
         answersheet = self.drv.find_element_by_css_selector('dynamic-answer-sheet')
         self.assert_same_screenshot(matrix, f'questions/question_matrix_{questiontype}', move_to_element=True)
+        self.print_console()
         self.assert_same_screenshot(answersheet, f'questions/answer_sheet_{questiontype}', move_to_element=True)
         find_button_by_text(dialog, 'Save').click()
         self.wait_until_hidden('tim-edit-question')

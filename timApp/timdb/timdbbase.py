@@ -6,6 +6,22 @@ from psycopg2._psycopg import connection
 from sqlalchemy.orm import scoped_session
 
 
+def result_as_dict_list(cursor):
+    """Converts the result in database cursor object to JSON."""
+
+    rows = [x for x in cursor.fetchall()]
+    cols = [x[0] for x in cursor.description]
+    results = []
+    for row in rows:
+        result = {}
+        for prop, val in zip(cols, row):
+            if isinstance(val, decimal.Decimal):
+                val = float(val)
+            result[prop] = val
+        results.append(result)
+    return results
+
+
 class TimDbBase(object):
     """Base class for TimDb classes (e.g. Users, Notes).
 
@@ -34,18 +50,3 @@ class TimDbBase(object):
                 os.makedirs(path)
         self.db = db
         self.session = session
-
-    def resultAsDictionary(self, cursor):
-        """Converts the result in database cursor object to JSON."""
-
-        rows = [x for x in cursor.fetchall()]
-        cols = [x[0] for x in cursor.description]
-        results = []
-        for row in rows:
-            result = {}
-            for prop, val in zip(cols, row):
-                if isinstance(val, decimal.Decimal):
-                    val = float(val)
-                result[prop] = val
-            results.append(result)
-        return results

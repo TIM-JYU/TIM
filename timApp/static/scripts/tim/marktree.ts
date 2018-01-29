@@ -12,104 +12,42 @@
  *
  * Miika Nurminen, 12.7.2004.
  *
- * 20090302/mn: MarkTree now supports clicking from bullets in Opera. Clicking in text (not links) expands/collapses tree items
+ * 20090302/mn: MarkTree now supports clicking from bullets in Opera. Clicking in text (not links) expands/collapses
+ * tree items
  */
 
-/* cross-browser (tested with ie5, mozilla 1 and opera 5) keypress detection */
-
-function get_keycode(evt) {
-    // IE
-    let code = evt.keyCode;
-
-    if (code == 0)
-        code = evt.which; // for NS
-    return code;
-}
-
-let lastnode = null;
-let last_focused_node = null;
-let listnodes = null;
-let list_index = 1;
-const lastnodetype = ""; // determines if node is a link, input or text;
+let lastnode: Element | null = null;
+let listnodes: NodeListOf<HTMLLIElement> = null!;
 
 // up, left, down, right, keypress codes
-//ijkl
-//var keys = new Array(105,106,107,108);
-//num arrows
-//var keys = new Array(56,52,50,54);
-//wasd
+// ijkl
+// var keys = new Array(105,106,107,108);
+// num arrows
+// var keys = new Array(56,52,50,54);
+// wasd
 // var press2 = new Array(119,97,115,100);
-const press = new Array(47, 45, 42, 43);
+const press = [47, 45, 42, 43];
 
 // keydown codes
 //  var keys2=new Array(87,65,83,68);
-const keys = new Array(38, 37, 40, 39);
+const keys = [38, 37, 40, 39];
 
-// keyset 1 = keydown, otherwise press
-function checkup(keyset, n) {
-    if (keyset == 1) return (n == keys[0]);
-    return ((n == press[0]) /*|| (n==press2[0])*/);
-}
-
-function checkdn(keyset, n) {
-    if (keyset == 1) return (n == keys[2]);
-    return ((n == press[2]) /*|| (n==press2[2])*/);
-}
-
-function checkl(keyset, n) {
-    if (keyset == 1) return (n == keys[1]);
-    return ((n == press[1]) /*|| (n==press2[1])*/);
-}
-
-function checkr(keyset, n) {
-    if (keyset == 1) return (n == keys[3]);
-    return ((n == press[3]) /*|| (n==press2[3])*/);
-}
-
-function is_exp(n) {
+function is_exp(n: Element | null) {
     if (n == null) return false;
     return ((n.className == "exp") || (n.className == "exp_active"));
 }
 
-function is_col(n) {
+function is_col(n: Element | null) {
     if (n == null) return false;
     return ((n.className == "col") || (n.className == "col_active"));
 }
 
-function is_basic(n) {
+function is_basic(n: Element | null) {
     if (n == null) return false;
     return ((n.className == "basic") || (n.className == "basic_active"));
 }
 
-/* returns i>=0 if true */
-function is_active(node) {
-    if (node.className == null) return false;
-    return node.className.indexOf("_active");
-}
-
-function toggle_class(node) {
-    if ((node == null) || (node.className == null)) return;
-    const str = node.className;
-    let result = "";
-    const i = str.indexOf("_active");
-    if (i > 0)
-        result = str.substr(0, i);
-    else
-        result = str + "_active";
-    node.className = result;
-    return node;
-}
-
-/*
- function activate(node) {
- node.style.backgroundColor='#eeeeff';
- }
-
- function deactivate(node) {
- node.style.backgroundColor='#ffffff';
- }*/
-
-function is_list_node(n) {
+function is_list_node(n: Element | null) {
     if (n == null) return false;
     if (n.className == null) return false;
     if ((is_exp(n)) ||
@@ -118,38 +56,7 @@ function is_list_node(n) {
         return true; else return false;
 }
 
-function get_href(n) {
-    const alist = n.attributes;
-    if (alist != null) {
-        const hr = alist.getNamedItem("href");
-        if (hr != null) return hr.nodeValue;
-    }
-    if (n.childNodes.length == 0) return "";
-    for (let i = 0; i < n.childNodes.length; i++) {
-        const s = get_href(n.childNodes[i]);
-        if (s != "") return s;
-    }
-    return "";
-}
-
-function get_link(n) {
-    if (n == null) return null;
-    if (n.style == null) return null;
-
-    // disabling uncontrolled recursion to prevent error messages on IE
-    // when trying to focus to invisible links (readonly mode)
-    if ((n.nodeName.toLowerCase() == "ul") && (n.className == "sub")) return null;
-
-    if (n.nodeName.toLowerCase() == "a") return n;
-    if (n.childNodes.length == 0) return null;
-    for (let i = 0; i < n.childNodes.length; i++) {
-        const s = get_link(n.childNodes[i]);
-        if (s != null) return s;
-    }
-    return null;
-}
-
-function set_lastnode(n) {
+function set_lastnode(n: Element) {
     /*var d = new Date();
      var t_mil = d.getMilliseconds();*/
     // testattu nopeuksia explorerilla, ei merkittäviä eroja
@@ -170,133 +77,42 @@ function set_lastnode(n) {
      var t_mil2 = d2.getMilliseconds();*/
 }
 
-function next_list_node() {
-    let tempIndex = list_index;
-    while (tempIndex < listnodes.length - 1) {
-        tempIndex++;
-        const x = listnodes[tempIndex];
-        if (is_list_node(x)) {
-            list_index = tempIndex;
-            return;
-        }
-    }
+function getsub(li: Element) {
+    if (li.children.length == 0) return null;
+    for (let c = 0; c < li.children.length; c++)
+        if ((li.children[c].className == "sub") || (li.children[c].className == "subexp"))
+            return li.children[c];
 }
 
-function prev_list_node() {
-    let tempIndex = list_index;
-    while (tempIndex > 0) {
-        tempIndex--;
-        const x = listnodes[tempIndex];
-        if (is_list_node(x)) {
-            list_index = tempIndex;
-            return;
-        }
-    }
-}
-
-function getsub(li) {
-    if (li.childNodes.length == 0) return null;
-    for (let c = 0; c < li.childNodes.length; c++)
-        if ((li.childNodes[c].className == "sub") || (li.childNodes[c].className == "subexp"))
-            return li.childNodes[c];
-}
-
-function find_listnode_recursive(li) {
+function find_listnode_recursive(li: Element): Element | null {
     if (is_list_node(li)) return li;
-    if (li.childNodes.length == 0) return null;
+    if (li.children.length == 0) return null;
     let result = null;
-    for (let c = 0; c < li.childNodes.length; c++) {
-        result = find_listnode_recursive(li.childNodes[c]);
+    for (let c = 0; c < li.children.length; c++) {
+        result = find_listnode_recursive(li.children[c]);
         if (result != null) return result;
     }
     return null;
 }
 
-function next_child_listnode(li) {
+function next_child_listnode(li: Element | null) {
+    if (li == null) {
+        return null;
+    }
     let result = null;
-    for (let i = 0; i < li.childNodes.length; i++) {
-        result = find_listnode_recursive(li.childNodes[i]);
+    for (let i = 0; i < li.children.length; i++) {
+        result = find_listnode_recursive(li.children[i]);
         if (result != null) return result;
     }
     return null;
 }
 
-function next_actual_sibling_listnode(li) {
-    if (li == null) return null;
-    let temp = li;
-    while (1) {
-        let n = temp.nextSibling;
-        if (n == null) {
-            n = parent_listnode(temp);
-            return next_actual_sibling_listnode(n);
-        }
-        if (is_list_node(n)) return n;
-        temp = n;
-    }
-}
-
-function next_sibling_listnode(li) {
-    if (li == null) return null;
-    let result = null;
-    let temp = li;
-    if (is_col(temp)) {
-        result = next_child_listnode(temp);
-        if (result != null) return result;
-    }
-    while (1) {
-        let n = temp.nextSibling;
-        if (n == null) {
-            n = parent_listnode(temp);
-            return next_actual_sibling_listnode(n);
-        }
-        if (is_list_node(n)) return n;
-        temp = n;
-    }
-}
-
-function last_sibling_listnode(li) {
-    if (li == null) return null;
-    let temp = li;
-    let last = null;
-    while (1) {
-        const n = temp.nextSibling;
-        if (is_list_node(temp))
-            last = temp;
-        if (n == null) {
-            if (is_col(last)) return last_sibling_listnode(next_child_listnode(last));
-            else return last;
-        }
-        temp = n;
-    }
-}
-
-function prev_sibling_listnode(li) {
-    if (li == null) return null;
-    let temp = li;
-    let n = null;
-    while (1) {
-        n = temp.previousSibling;
-        if (n == null) {
-            return parent_listnode(li);
-        }
-        if (is_list_node(n)) {
-            if ((is_col(n)) && (next_child_listnode(n) != null)) {
-                return last_sibling_listnode(next_child_listnode(n));
-            }
-            else {
-                return n;
-            }
-        }
-        temp = n;
-    }
-}
-
-function parent_listnode_rec(li, recursive) {
+function parent_listnode_rec(li: Element, recursive: number): Element | null {
     // added 12.7.2004 to prevent IE error when readonly mode==true
     if (li == null) return null;
-    let n = li;
+    let n: Element | null = li;
     while (recursive > 0) {
-        n = n.parentNode;
+        n = n.parentElement;
         if (n == null) return null;
         if (is_list_node(n)) return n;
         recursive--;
@@ -304,34 +120,12 @@ function parent_listnode_rec(li, recursive) {
     return null;
 }
 
-function parent_listnode(li) {
-    return parent_listnode_rec(li, 20);
-    // added 12.7.2004 to prevent IE error when readonly mode==true
-    /*  if (li==null) return null;
-     n=li;
-     while (1) {
-     n=n.parentNode;
-     if (n==null) return null;
-     if (is_list_node(n)) return n;
-     }*/
-}
-
-function getVisibleParents(id) {
-    let n = document.getElementById(id);
-    while (1) {
-        expand(n);
-        n = parent_listnode(n);
-        if (n == null) return;
-    }
-}
-
-function onClickHandler(evt) {
+function onClickHandler(evt: MouseEvent) {
     // cross-browser way to detect right click.
     // from: http://www.quirksmode.org/js/events_properties.html
     // this is actually needed only in Gecko-based browsers
-    let e, rightclick;
-    if (!evt) e = window.event; // IE
-    else e = evt;
+    let e: MouseEvent = evt;
+    let rightclick;
     if (e.which) rightclick = (e.which == 3);
     else if (e.button) rightclick = (e.button == 2);
     if (rightclick) return true;
@@ -344,11 +138,12 @@ function onClickHandler(evt) {
     }
 
     // event.srcElement is needed for explorer
-    let target = evt ? evt.target : event.srcElement;
+    let target = evt.target as Element;
     if ((target.nodeName.toLowerCase() == "a") || (target.nodeName.toLowerCase() == "ul")) return true;
     if (!is_list_node(target)) {
-        target = parent_listnode_rec(target, 1);
-        if (target == null) return true;
+        let ptarget = parent_listnode_rec(target, 1);
+        if (ptarget == null) return true;
+        target = ptarget;
     }
 
     toggle(target);
@@ -356,7 +151,7 @@ function onClickHandler(evt) {
     // return true;
 
     // we handled the event - stop any default actions
-    //from: exlorertree,  http://www.scss.com.au/scripts/explorertree.js
+    // from: exlorertree,  http://www.scss.com.au/scripts/explorertree.js
     /*  evt.returnValue = false;
      if (evt.preventDefault) {
      evt.preventDefault();
@@ -365,44 +160,17 @@ function onClickHandler(evt) {
 
 }
 
-function expand(node) {
-    if (!is_exp(node)) return;
-    //		  if (next_child_listnode(lastnode)!=null) {
-
-    if (node.className == "exp_active")
-        node.className = "col_active";
-    else
-        node.className = "col";
-
-    setSubClass(node, "subexp");
-    //			    }
-
-}
-
-function collapse(node) {
-    if (!is_col(node)) return;
-
-    if (node.className == "col_active")
-        node.className = "exp_active";
-    else
-        node.className = "exp";
-
-    setSubClass(node, "sub");
-    //getsub(node).className='sub';
-
-}
-
-function setSubClass(node, name) {
+function setSubClass(node: Element, name: string) {
     const sub = getsub(node);
     if (sub == null) return;
 
-    //to prevent bug in ie when expanding empty list
+    // to prevent bug in ie when expanding empty list
     if ((name == "subexp") && (next_child_listnode(node) == null)) return;
 
     sub.className = name;
 }
 
-function toggle(target) {
+function toggle(target: Element) {
     if (!is_list_node(target)) return;
     if (is_col(target)) {
         target.className = "exp";
@@ -414,131 +182,6 @@ function toggle(target) {
     }
 
 }
-
-function expandAll(node) {
-    if (node.className == "exp") {
-        node.className = "col";
-        setSubClass(node, "subexp");
-        //getsub(node).className='subexp';
-    }
-    let i;
-    if (node.childNodes != null)
-        //if (node.hasChildNodes())
-        for (i = 0; i < node.childNodes.length; i++)
-            expandAll(node.childNodes[i]);
-}
-
-function collapseAll(node) {
-    if (node.className == "col") {
-        node.className = "exp";
-        setSubClass(node, "sub");
-        //getsub(node).className='sub';
-    }
-    let i;
-    if (node.childNodes != null)
-        // for opera   if (node.hasChildNodes())
-        for (i = 0; i < node.childNodes.length; i++)
-            collapseAll(node.childNodes[i]);
-}
-
-function unFocus(node) {
-    // unfocuses potential link that is to be hidden (if a==null there is no link so it should not be blurred).
-    // tested with mozilla 1.7, 12.7.2004. /mn (
-    const intemp = parent_listnode(node);
-    //      a = get_link(intemp);     // added 6.4. to get keyboard working with
-    // moved before collapse to prevent an error message with IE when readonly==true
-    //      if (a!=null) a.blur(); // netscape after collapsing a focused node
-    // the above doesn't always work on readonly mode, so added an explicit focus
-    // variable
-    if (last_focused_node != null) last_focused_node.blur();
-    last_focused_node = null;
-    return intemp;
-}
-
-// mode: 0==keypress, 1==keyup
-function keyfunc(evt, mode) {
-    const c = get_keycode(evt);
-    let temp = null;
-    let a = null;
-
-    if (lastnode == null) {
-        listnodes = document.getElementsByTagName("li");
-        lastnode = listnodes[1];
-        temp = listnodes[1];
-    }
-
-    if (checkup(mode, c)) { // i
-        temp = prev_sibling_listnode(lastnode);
-    }
-    else if (checkdn(mode, c)) { // k
-        temp = next_sibling_listnode(lastnode);
-    }
-    else if (checkr(mode, c)) { // l
-        expand(lastnode);
-        a = get_link(lastnode);
-        if (a != null) {
-            a.focus();
-            last_focused_node = a;
-        }
-        else {/*self.focus(); last_focused_node=self;*/
-        }
-    }
-    else if (checkl(mode, c)) { // j
-        if (is_col(lastnode)) {
-            unFocus(lastnode);
-            collapse(lastnode);
-        }
-        else {
-            temp = unFocus(lastnode);
-            collapse(temp);
-        }
-        //if (temp==null) lastnode.focus(); // forces focus to correct div (try mozilla typesearch) (doesn't seem to work -mn/6.4.2004)
-    }
-    else return;
-    if (temp != null) set_lastnode(temp);
-    return true;
-}
-
-/*
- function keytest(evt) {
- return keyfunc(evt, 1);
- }
-
- function presstest(evt) {
- return keyfunc(evt, 0);
- }*/
-
-/*
- // Gecko selects text when bullets are clicked on - stop it!
- // taken from: explorertree: http://www.scss.com.au/scripts/explorertree.js
- */
-function stopGeckoSelect(evt) {
-    if (!evt) return true; //only needed in gecko
-    //var evt = window.event;
-    if (evt.preventDefault) {
-        evt.preventDefault();
-    }
-    return true;
-}
-
-function initEvents(currentElement) {
-    if (!currentElement.childNodes || currentElement.childNodes.length == 0) return;
-    for (let i = 0; i < currentElement.childNodes.length; i++) {
-        const item = currentElement.childNodes[i];
-        if (item.nodeName.toLowerCase() == "li") {
-            //item.onclick=onClickHandler;
-        }
-        else {
-            if (item.nodeName.toLowerCase() == "ul") {
-                //item.onclick=onClickHandler;
-                //item.onmousedown=stopGeckoSelect;
-            }
-        }
-        initEvents(item);
-    }
-}
-
 export function addEvents() {
-    initEvents(document);
     document.onclick = onClickHandler;
 }

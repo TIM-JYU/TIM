@@ -10,7 +10,7 @@ and their labels. The module also retrieves the data related to velps and their 
 import copy
 from typing import Optional, List, Tuple, Dict
 
-from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
 from timApp.timdb.velp_models import Velp, VelpVersion, VelpLabel, VelpLabelContent
 
 
@@ -201,7 +201,7 @@ class Velps(TimDbBase):
                       WHERE LabelInVelp.velp_id = %s
                       """, [velp_id]
                        )
-        return self.resultAsDictionary(cursor)
+        return result_as_dict_list(cursor)
 
     def add_labels_to_velp(self, velp_id: int, labels: List[int]):
         """Associates a set of labels to a velp. (Appends to existing labels)
@@ -345,7 +345,7 @@ class Velps(TimDbBase):
 
                       """, [language_id, user_id, doc_id]
                        )
-        results = self.resultAsDictionary(cursor)
+        results = result_as_dict_list(cursor)
         return results
 
     def get_velp_group_ids_for_document(self, doc_id: int, user_id: int) -> Dict:
@@ -381,7 +381,7 @@ class Velps(TimDbBase):
                       ORDER BY velp_id ASC
                       """, [doc_id, user_id]
                        )
-        results = self.resultAsDictionary(cursor)
+        results = result_as_dict_list(cursor)
         return results
 
     def get_velp_label_ids_for_document(self, doc_id: int, user_id: int) -> Dict:
@@ -418,7 +418,7 @@ class Velps(TimDbBase):
                       ORDER BY velp_id ASC
                       """, [doc_id, user_id]
                        )
-        results = self.resultAsDictionary(cursor)
+        results = result_as_dict_list(cursor)
         return results
 
     def get_velp_label_content_for_document(self, doc_id: int, user_id: int, language_id: str = 'FI') -> Dict:
@@ -456,5 +456,5 @@ class Velps(TimDbBase):
                        )
                        """, [language_id, doc_id, user_id]
                        )
-        results = self.resultAsDictionary(cursor)
+        results = result_as_dict_list(cursor)
         return results

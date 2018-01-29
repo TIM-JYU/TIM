@@ -1,12 +1,16 @@
+import {IScope} from "angular";
 import $ from "jquery";
 import * as refPopup from "tim/directives/refPopup";
-import {markAsUsed} from "tim/utils";
+import {Coords, markAsUsed} from "tim/utils";
 import {$compile} from "../../ngimport";
 import {onMouseOut, onMouseOver} from "./eventhandlers";
-import {IScope} from "angular";
 import {ViewCtrl} from "./ViewCtrl";
 
 markAsUsed(refPopup);
+
+export interface IPopupAttrs {
+    [index: string]: string;
+}
 
 export class RefPopupHandler {
     public sc: IScope;
@@ -21,7 +25,8 @@ export class RefPopupHandler {
             this.overReflink = true;
 
             const $par = $this.parents(".par").find(".parContent");
-            const coords = {left: e.pageX - $par.offset().left + 10, top: e.pageY - $par.offset().top + 10};
+            const offset = $par.offset() || {left: 0, top: 0};
+            const coords = {left: e.pageX - offset.left + 10, top: e.pageY - offset.top + 10};
             let params;
 
             try {
@@ -52,7 +57,7 @@ export class RefPopupHandler {
         });
     }
 
-    showRefPopup(e, $ref, coords, attrs) {
+    showRefPopup(e: Event, $ref: JQuery, coords: Coords, attrs: IPopupAttrs) {
         const $popup = $("<ref-popup>");
         $popup.offset(coords);
 

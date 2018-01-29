@@ -1,4 +1,4 @@
-import {IRootElementService, IController} from "angular";
+import {IController, IRootElementService} from "angular";
 import {timApp} from "tim/app";
 import {$http} from "../ngimport";
 
@@ -11,29 +11,28 @@ class RefPopupController implements IController {
     private doc_name: string;
     private doc_author: string;
     private par_name: string;
+    private element: IRootElementService;
 
     constructor(element: IRootElementService) {
         this.loaded = false;
-        $http.get("/par_info/" + this.docid + "/" + this.parid).then(this.loadSuccess, this.loadFail);
-        this.ref_loaded = true;
-        this.loaded = true;
-        element.css("position", "absolute"); // IE needs this
+        this.element = element;
     }
 
-    $onInit() {
-
+    async $onInit() {
+        try {
+            const response = await $http.get<{doc_name: string, doc_author: string, par_name: string}>("/par_info/" + this.docid + "/" + this.parid);
+            this.doc_name = response.data.doc_name;
+            this.doc_author = response.data.doc_author;
+            this.par_name = response.data.par_name;
+            this.loaded = true;
+            this.ref_loaded = true;
+        } catch (e) {
+            this.error = e.data.error;
+        }
     }
 
-    loadSuccess(response) {
-        this.doc_name = response.data.doc_name;
-        this.doc_author = response.data.doc_author;
-        this.par_name = response.data.par_name;
-        this.loaded = true;
-    }
-
-    loadFail(response) {
-        this.error = response.data.error;
-        this.loaded = true;
+    $postLink() {
+        this.element.css("position", "absolute"); // IE needs this
     }
 }
 

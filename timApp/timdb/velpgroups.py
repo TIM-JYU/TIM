@@ -15,7 +15,7 @@ from typing import Optional, List, Iterable, Dict
 
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.tim_models import db
-from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
 from timApp.timdb.velp_models import VelpGroup
 from timApp.utils import get_sql_template
 
@@ -113,7 +113,7 @@ class VelpGroups(TimDbBase):
                       WHERE id IN ({get_sql_template(velp_group_ids)}) AND default_group = TRUE
                       """, velp_group_ids
                        )
-        results = self.resultAsDictionary(cursor)
+        results = result_as_dict_list(cursor)
         return results[0] if len(results) > 0 else None
 
     def add_velp_to_group(self, velp_id: int, velp_group_id: int):
@@ -205,7 +205,7 @@ class VelpGroups(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute('SELECT velp_group_id AS id FROM VelpInGroup WHERE velp_id = %s', [velp_id])
-        result = self.resultAsDictionary(cursor)
+        result = result_as_dict_list(cursor)
         return result
 
     def is_id_velp_group(self, doc_id: int) -> bool:
@@ -260,7 +260,7 @@ class VelpGroups(TimDbBase):
                       WHERE doc_id = %s AND user_group IN ({get_sql_template(user_groups)})
                       """, [doc_id] + user_groups
                        )
-        results = self.resultAsDictionary(cursor)
+        results = result_as_dict_list(cursor)
         return results
 
     def add_groups_to_document(self, velp_groups: Iterable[Dict], doc_id: int, user_id: int):
@@ -305,7 +305,7 @@ class VelpGroups(TimDbBase):
                        """, [doc_id, user_id]
                        )
         # Get only the first result in case there are several entries in DocEntry
-        results = self.resultAsDictionary(cursor)
+        results = result_as_dict_list(cursor)
         return results
 
     def add_groups_to_selection_table(self, velp_groups: dict, doc_id: int, user_id: int):
@@ -348,7 +348,7 @@ class VelpGroups(TimDbBase):
                       ORDER BY target_id ASC
                       """, [doc_id, user_id]
                        )
-        results = self.resultAsDictionary(cursor)
+        results = result_as_dict_list(cursor)
 
         if results:
             target_id = results[0]['target_id']
@@ -405,7 +405,7 @@ class VelpGroups(TimDbBase):
                       ORDER BY VelpGroupDefaults.target_id ASC
                       """, [doc_id, user_id]
                        )
-        results = self.resultAsDictionary(cursor)
+        results = result_as_dict_list(cursor)
 
         if results:
             target_id = results[0]['target_id']

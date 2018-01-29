@@ -32,7 +32,7 @@ def show_members(groupname):
     ug = UserGroup.get_by_name(groupname)
     if not ug:
         abort(404, USERGROUP_NOT_FOUND)
-    return json_response([u.basic_info_dict for u in ug.users.all()])
+    return json_response(ug.users.all())
 
 
 @groups.route('/usergroups/<username>')

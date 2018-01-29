@@ -1,13 +1,16 @@
-import {IRootElementService, IScope, IController} from "angular";
+import {IController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {watchEditMode} from "tim/editmode";
-import {$http, $window} from "../ngimport";
+import {MenuFunctionEntry} from "../controllers/view/IViewCtrl";
 import {ViewCtrl} from "../controllers/view/viewctrl";
+import {$http, $window} from "../ngimport";
+
+type EditMode = "par" | "area";
 
 class PopupMenuController implements IController {
     private static $inject = ["$scope", "$element"];
-    private model: {editState: boolean};
+    private model: {editState: EditMode | null};
     private element: IRootElementService;
     private contenturl: string;
     private srcid: string;
@@ -56,38 +59,36 @@ class PopupMenuController implements IController {
      * @param e Event object
      * @param f The function to call
      */
-    callFunc(e, f) {
+    callFunc(e: Event, f: MenuFunctionEntry) {
         f.func(e, this.$pars);
         this.closePopup();
     }
 
     getChecked(fDesc: string) {
-        if (fDesc === null || this.vctrl.$storage.defaultAction === null) {
+        if (fDesc == null || this.vctrl.$storage.defaultAction == null) {
             return "";
         }
 
         return fDesc === this.vctrl.$storage.defaultAction ? "checked" : "";
     }
 
-    clicked(f) {
-        const s = this.save;
-        if (this[s] && this[s].desc === f.desc) {
-            this.vctrl[s] = null;
-            this.vctrl.$storage[s] = null;
-        }
-        else {
-            this.vctrl[s] = f;
-            this.vctrl.$storage[s] = f.desc;
+    clicked(f: MenuFunctionEntry) {
+        if (this.vctrl.defaultAction && this.vctrl.defaultAction.desc === f.desc) {
+            this.vctrl.defaultAction = null;
+            this.vctrl.$storage.defaultAction = null;
+        } else {
+            this.vctrl.defaultAction = f;
+            this.vctrl.$storage.defaultAction = f.desc;
         }
     }
 
-    getContent(contentUrl) {
+    getContent(contentUrl: string) {
         if (!contentUrl) {
             $("#content").remove();
             return;
         }
 
-        $http.get<{texts}>(contentUrl, {params: {doc_id: this.vctrl.docId}},
+        $http.get<{texts: string}>(contentUrl, {params: {doc_id: this.vctrl.docId}},
         ).then((response) => {
             $("#content").append(response.data.texts);
         }, () => {
@@ -95,7 +96,7 @@ class PopupMenuController implements IController {
         });
     }
 
-    watchEditMode(newEditMode, oldEditMode) {
+    watchEditMode(newEditMode: EditMode | null, oldEditMode: EditMode | null) {
         if (this.editcontext && newEditMode && newEditMode != this.editcontext) {
             // We don't want to destroy our scope before returning from this function
             $window.setTimeout(() => this.closePopup(), 0.1);
@@ -110,12 +111,11 @@ class PopupMenuController implements IController {
  */
 timApp.component("popupMenu", {
     bindings: {
-        save: "@",
-        onClose: "&",
-        editcontext: "@",
-        editbutton: "@",
-        areaEditButton: "<",
         actions: "=",
+        areaEditButton: "<",
+        editbutton: "@",
+        editcontext: "@",
+        onClose: "&",
         srcid: "@",
     },
     controller: PopupMenuController,

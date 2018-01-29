@@ -1,24 +1,34 @@
 import angular from "angular";
 import $ from "jquery";
+import {IItem} from "../../IItem";
 import {getActiveDocument} from "./document";
 
-export function createNewPar(): JQuery {
+export type Paragraph = JQuery;
+export type Paragraphs = JQuery;
+export type Area = JQuery;
+export type ParOrArea = JQuery;
+
+export function createNewPar(): Paragraph {
     return $("<div>", {class: "par new", id: "NEW_PAR", attrs: "{}"})
         .append($("<div>", {class: "parContent"}).html("New paragraph"));
 }
 
-export function getParId($par: JQuery): string | null {
-    if ($par === null || $par.length === 0 || !$par.hasClass("par")) {
-        return null;
+export function getParId($par: Paragraph | null): string | undefined {
+    if ($par == null || $par.length === 0 || !$par.hasClass("par")) {
+        return;
     }
     return $par.attr("id");
 }
 
-export function getParAttributes($par: JQuery) {
-    return JSON.parse($par.attr("attrs"));
+export function getParAttributes($par: Paragraph): {[attr: string]: string} {
+    const attrs = $par.attr("attrs");
+    if (!attrs) {
+        return {};
+    }
+    return JSON.parse(attrs);
 }
 
-export function getAreaId($area: JQuery) {
+export function getAreaId($area: Paragraph) {
     if (!$area.hasClass("area")) {
         return null;
     }
@@ -26,7 +36,7 @@ export function getAreaId($area: JQuery) {
     return $area.attr("data-name");
 }
 
-export function getAreaDocId($area: JQuery) {
+export function getAreaDocId($area: Paragraph) {
     if (!$area.hasClass("area")) {
         return null;
     }
@@ -34,7 +44,7 @@ export function getAreaDocId($area: JQuery) {
     return $area.attr("data-doc-id");
 }
 
-export function getFirstPar($parOrArea: JQuery) {
+export function getFirstPar($parOrArea: Paragraph): Paragraph | null {
     if ($parOrArea.length > 1) {
         return getFirstPar($parOrArea.first());
     }
@@ -48,7 +58,7 @@ export function getFirstPar($parOrArea: JQuery) {
     return null;
 }
 
-export function getLastPar($parOrArea: JQuery) {
+export function getLastPar($parOrArea: Paragraph): Paragraph | null {
     if ($parOrArea.length > 1) {
         return getLastPar($parOrArea.last());
     }
@@ -62,15 +72,15 @@ export function getLastPar($parOrArea: JQuery) {
     return null;
 }
 
-export function getFirstParId($parOrArea: JQuery) {
+export function getFirstParId($parOrArea: Paragraph) {
     return getParId(getFirstPar($parOrArea));
 }
 
-export function getLastParId($parOrArea: JQuery) {
+export function getLastParId($parOrArea: Paragraph) {
     return getParId(getLastPar($parOrArea));
 }
 
-export function getNextPar($par: JQuery) {
+export function getNextPar($par: Paragraph) {
     const $next = $par.next();
     if ($next.hasClass("par")) {
         return $next;
@@ -95,7 +105,7 @@ export function getElementByParHash(t: string) {
     return $("[t='" + t + "']");
 }
 
-export function getRefAttrs($par: JQuery) {
+export function getRefAttrs($par: Paragraph) {
     return {
         "ref-id": $par.attr("ref-id"),
         "ref-t": $par.attr("ref-t"),
@@ -104,19 +114,19 @@ export function getRefAttrs($par: JQuery) {
     };
 }
 
-export function forEachParagraph(func) {
+export function forEachParagraph(func: (this: HTMLElement, index: number, element: HTMLElement) => void | false) {
     $(".paragraphs .par").each(func);
 }
 
-export function getElementByRefId(ref) {
+export function getElementByRefId(ref: string) {
     return $(".par[ref-id='" + ref + "']");
 }
 
-export function isReference($par: JQuery) {
+export function isReference($par: Paragraph) {
     return angular.isDefined($par.attr("ref-id"));
 }
 
-export function getParIndex($par: JQuery) {
+export function getParIndex($par: Paragraph) {
     const parId = getParId($par);
     const $pars = $(".par");
     let realIndex = 0;
@@ -138,13 +148,14 @@ export function getParIndex($par: JQuery) {
 
         realIndex++;
     }
+    return null;
 }
 
-export function getArea(area: string) {
+export function getArea(area: string): Area {
     return $(".area_" + area);
 }
 
-export function getPars($parFirst: JQuery, $parLast: JQuery) {
+export function getPars($parFirst: Paragraph, $parLast: Paragraph): JQuery {
     const pars = [$parFirst];
     let $par = $parFirst;
     let $next = $par.next();
@@ -166,7 +177,7 @@ export function getPars($parFirst: JQuery, $parLast: JQuery) {
             continue;
         }
 
-        if ($next.hasClass("par") && getParIndex($next) !== null) {
+        if ($next.hasClass("par") && getParIndex($next) != null) {
             pars.push($next);
             if ($next.is($parLast)) {
                 break;
@@ -178,12 +189,10 @@ export function getPars($parFirst: JQuery, $parLast: JQuery) {
         i -= 1;
     }
 
-    return $(pars).map(function() {
-        return this.toArray();
-    });
+    return pars.reduce((previousValue, currentValue, currentIndex, array) => previousValue.add(currentValue));
 }
 
-export function dereferencePar($par: JQuery) {
+export function dereferencePar($par: Paragraph) {
     if ($par.length === 0 || !$par.hasClass("par")) {
         return null;
     }
@@ -212,28 +221,28 @@ export function addElementToParagraphMargin(par: Element, el: Element) {
     }
 }
 
-export function isSettings(text) {
+export function isSettings(text: string) {
     return text.startsWith('``` {settings=""}');
 }
 
-export function isPreamble($par: JQuery) {
+export function isPreamble($par: Paragraph) {
     return $par.hasClass("preamble");
 }
 
-export function getPreambleDocId($par: JQuery) {
+export function getPreambleDocId($par: Paragraph) {
     return $par.attr("data-from-preamble");
 }
 
-export function isActionablePar($par: JQuery) {
+export function isActionablePar($par: Paragraph) {
     const isPreview = $par.parents(".previewcontent").length > 0;
     const preamble = isPreamble($par);
     return !(isPreview || preamble);
 }
 
-export function canEditPar(item, $par: JQuery) {
+export function canEditPar(item: IItem, $par: JQuery) {
     const attrs = getParAttributes($par);
     const right = item.rights[attrs.edit];
-    if (right === undefined) {
+    if (right == null) {
         return true;
     }
     return right;

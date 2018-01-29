@@ -7,6 +7,7 @@ import {Users} from "../../services/userService";
 import {getActiveDocument} from "./document";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {ViewCtrl} from "./viewctrl";
+import {IPromise} from 'angular';
 
 export const readClasses = {
     1: "screen",
@@ -44,7 +45,7 @@ export async function markParRead($par: JQuery, readingType: readingTypes) {
         return;
     }
     const parId = getParId($par);
-    if (parId === "NEW_PAR" || parId === null || parId === "HELP_PAR") {
+    if (parId === "NEW_PAR" || !parId || parId === "HELP_PAR") {
         return;
     }
     $readline.addClass(readClassName);
@@ -94,8 +95,8 @@ async function markAllAsRead() {
     $(".readline").attr("class", "readline read");
 }
 
-let readPromise = null;
-let readingParId = null;
+let readPromise: IPromise<any> | null = null;
+let readingParId: string | undefined;
 
 function queueParagraphForReading() {
     //noinspection CssInvalidPseudoSelector
@@ -103,7 +104,7 @@ function queueParagraphForReading() {
     const parToRead = visiblePars.first().parents(".par");
     const parId = getParId(parToRead);
 
-    if (readPromise !== null && readingParId !== parId) {
+    if (readPromise != null && readingParId !== parId) {
         $timeout.cancel(readPromise);
     } else if (readingParId === parId) {
         return;
@@ -120,7 +121,7 @@ function queueParagraphForReading() {
     }) as any, 300 * numWords);
 }
 
-function readlineHandler($this: JQuery, e) {
+function readlineHandler($this: JQuery, e: Event) {
     markParRead($this.parents(".par"), readingTypes.clickRed);
     return true;
 }
@@ -140,7 +141,7 @@ export function initReadings(sc: ViewCtrl) {
     onClick(".readline", readlineHandler);
 
     onClick(".areareadline", function areareadlineHandler($this, e) {
-        const oldClass = $this.attr("class");
+        const oldClass = $this.attr("class") || null;
         $this.attr("class", "readline read");
 
         if (!Users.isLoggedIn()) {
@@ -149,6 +150,9 @@ export function initReadings(sc: ViewCtrl) {
 
         // Collapsible area
         const areaId = $this.parent().attr("data-area");
+        if (!areaId) {
+            return;
+        }
         $log.info($this);
 
         $http.put("/read/" + sc.docId + "/" + areaId, {})
@@ -163,7 +167,7 @@ export function initReadings(sc: ViewCtrl) {
         return false;
     });
 
-    $.expr[":"].onScreen = isInScreen;
+    ($ as any).expr[":"].onScreen = isInScreen;
 
     $($window).scroll(queueParagraphForReading);
 
@@ -172,12 +176,13 @@ export function initReadings(sc: ViewCtrl) {
     onClick(".readsection", function readSectionHandler($readsection, e) {
         const doc = getActiveDocument();
         const $par = $readsection.parents(".par");
-        const $pars = doc.sections[getParId($par)];
-        if ($par.length === 0) {
+        const parId = getParId($par);
+        if ($par.length === 0 || !parId) {
             $window.alert("Unable to mark this section as read");
             return;
         }
-        markParsRead($($pars.map((p) => p[0])));
+        const $pars = doc.sections[parId];
+        markParsRead($($pars.map((p: JQuery) => p[0])));
         $readsection.remove();
     });
 

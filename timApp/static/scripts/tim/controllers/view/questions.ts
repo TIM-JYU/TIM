@@ -1,12 +1,13 @@
 import {IScope} from "angular";
 import $ from "jquery";
-import {IAskedJsonJson} from "../../lecturetypes";
-import {$http, $window} from "../../ngimport";
-import {fetchAndEditQuestion, showQuestionEditDialog} from "../questionController";
-import {onClick} from "./eventhandlers";
-import {createNewPar, getParId} from "./parhelpers";
-import {ViewCtrl} from "./viewctrl";
+import {showMessageDialog} from "../../dialog";
+import {$window} from "../../ngimport";
 import {showQuestionAskDialog} from "../questionAskController";
+import {fetchAndEditQuestion, showQuestionEditDialog} from "../questionController";
+import {showStatisticsDialog} from "../showStatisticsToQuestionController";
+import {onClick} from "./eventhandlers";
+import {createNewPar, getParId, Paragraph} from "./parhelpers";
+import {ViewCtrl} from "./viewctrl";
 
 export class QuestionHandler {
     public sc: IScope;
@@ -19,33 +20,28 @@ export class QuestionHandler {
         if (view.lectureMode) {
             this.noQuestionAutoNumbering = $window.noQuestionAutoNumbering;
         }
-
-        onClick(".questionAddedNew", ($this, e) => {
-            const question = $this;
-            const $par = $(question).parents(".par");
-            const parId = getParId($par);
-            const parNextId = getParId($par.next());
-            this.showQuestionNew(parId, parNextId);
-        });
-    }
-
-    async showQuestionNew(parId: string, parIdNext: string) {
-        await showQuestionAskDialog({parId: parId, docId: this.viewctrl.docId, lectureId: null}); // TODO lecture id
     }
 
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
-    async addQuestionQst(e, $par) {
-        const parId = getParId($par);
-        const parNextId = parId; // getParId($par.next());
+    async addQuestionQst(e: Event, $par: Paragraph) {
+        const parNextId = getParId($par);
+        if (!parNextId) {
+            showMessageDialog("Not a valid paragraph.");
+            return;
+        }
         const result = await showQuestionEditDialog({par_id_next: parNextId, qst: true, docId: this.viewctrl.docId});
         const $newpar = createNewPar();
         $par.before($newpar);
-        this.viewctrl.addSavedParToDom(result.data, {par: getParId($newpar)});
+        this.viewctrl.addSavedParToDom(result.data, {par: getParId($newpar)!});
     }
 
-    async editQst(e, $par) {
+    async editQst(e: Event, $par: Paragraph) {
         const parId = getParId($par);
+        if (!parId) {
+            showMessageDialog("Not a valid paragraph.");
+            return;
+        }
         const result = await fetchAndEditQuestion(this.viewctrl.docId, parId);
         if (result.deleted) {
             this.viewctrl.handleDelete(result.data, {par: parId});
@@ -56,12 +52,16 @@ export class QuestionHandler {
 
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
-    async addQuestion(e, $par) {
+    async addQuestion(e: Event, $par: Paragraph) {
         const parNextId = getParId($par.next());
+        if (!parNextId) {
+            showMessageDialog("Not a valid paragraph.");
+            return;
+        }
         const result = await showQuestionEditDialog({par_id_next: parNextId, qst: false, docId: this.viewctrl.docId});
         const $newpar = createNewPar();
         $par.after($newpar);
-        this.viewctrl.addSavedParToDom(result.data, {par: getParId($newpar)});
+        this.viewctrl.addSavedParToDom(result.data, {par: getParId($newpar)!});
     }
 
     processQuestions() {

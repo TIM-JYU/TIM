@@ -1,12 +1,11 @@
-import angular, {IScope} from "angular";
-import {IController, IRootElementService} from "angular";
+import {IChangesObject, IController, IOnChangesObject, IRootElementService, IScope} from "angular";
 import {ChartData} from "chart.js";
-import * as chartmodule from "chart.js";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {getJsonAnswers} from "tim/directives/dynamicAnswerSheet";
-import {lazyLoad} from "../lazyLoad";
-import {$log} from "../ngimport";
+import {fixQuestionJson, getJsonAnswers} from "tim/directives/dynamicAnswerSheet";
+import {Overwrite} from "type-zoo";
+import {IAskedQuestion} from "../lecturetypes";
+import {clone} from "../utils";
 
 /**
  * Created by hajoviin on 13.5.2015.
@@ -21,18 +20,18 @@ import {$log} from "../ngimport";
  * @copyright 2015 Timppa project authors
  */
 
-function timStripHtml(s) {
+function timStripHtml(s: string) {
     s = s.replace(/<[^>]*>?/gm, "");  // problem: <img src=http://www.google.com.kh/images/srpr/nav_logo27.png onload="alert(42)" >
     s = s.replace("\\(", "");
     s = s.replace("\\)", "");
     return s;
 }
 
-function timFillArray(len, value) {
+function timFillArray(len: number, value: any) {
     return Array.apply(null, new Array(len)).map(() => value);
 }
 
-function qstCleanHtml(s) {
+function qstCleanHtml(s: string) {
     s = timStripHtml(s);
     return s.replace("&amp;", "&").trim();
 }
@@ -40,11 +39,11 @@ function qstCleanHtml(s) {
 /* takes a string phrase and breaks it into separate phrases
  no bigger than 'maxwidth', breaks are made at complete words.*/
 
-function qstFormatLabel(str, maxwidth, maxrows) {
+function qstFormatLabel(str: string, maxwidth: number, maxrows: number) {
     if (str.length <= maxwidth) {
         return str;
     }
-    const sections = [];
+    const sections: string[] = [];
     const words = str.split(" ");
     let temp = "";
 
@@ -85,7 +84,14 @@ function qstFormatLabel(str, maxwidth, maxrows) {
     return sections;
 }
 
-function qstShortText(s) {
+function truncate(text: string, max: number) {
+    if (text.length > max) {
+        text = text.substring(0, max - 1) + "...";
+    }
+    return text;
+}
+
+function qstShortText(s: string): string | string[] {
     const parts = s.split("!!");
     let text = "";
     if (parts.length >= 2) {
@@ -108,16 +114,17 @@ function qstShortText(s) {
             maxrows = 3;
         }
     }
-    text = qstFormatLabel(text, max, maxrows);
-    if (text.length > max) {
-        text = text.substring(0, max - 1) + "...";
+    const result = qstFormatLabel(text, max, maxrows);
+    if (typeof result === "string") {
+        return truncate(text, max);
+    } else {
+        return result.map(truncate);
     }
-    return text;
 }
 
-function timGetLSIntValue(key, def: number): number {
+function timGetLSIntValue(key: string, def: number): number {
     let val: any = window.localStorage.getItem(key);
-    if (val === undefined) {
+    if (val == null) {
         val = def;
     }
     val = parseInt(val);
@@ -129,157 +136,205 @@ function timGetLSIntValue(key, def: number): number {
 
 let qstChartIndex = timGetLSIntValue("qstChartIndex", 0);
 
+type AnswerList = Array<{answer: string}>;
+
+function* enumAnswers(answers: AnswerList): Iterable<[number, string]> {
+    for (const answ of answers) {
+        const onePersonAnswers = getJsonAnswers(answ.answer);
+        for (let a = 0; a < onePersonAnswers.length; a++) {
+            const singleAnswers = onePersonAnswers[a];
+            for (let sa = 0; sa < singleAnswers.length; sa++) {
+                const singleAnswer = singleAnswers[sa];
+                yield [a, singleAnswer];
+            }
+        }
+    }
+}
+
+interface IDataSet {
+    label: string | string[];
+    fill: string;
+    borderColor: string;
+    pointBackgroundColor: string;
+    pointBorderColor: string;
+    pointHoverBackgroundColor: string;
+    pointHoverBorderColor: string;
+    data: number[];
+    backgroundColor?: string;
+    borderWidth?: number;
+}
+
+type TimChartData = Overwrite<ChartData, {datasets: IDataSet[]}>;
+type ChartConfig = Overwrite<Chart.ChartConfiguration, {data: TimChartData}>;
+type TimChart = Overwrite<Chart, {data: TimChartData}>;
+
 class ShowChartController implements IController {
     private static $inject = ["$scope", "$element"];
-    private canvasId: string;
-    private canvas: string;
-    private isText: boolean;
-    private div: JQuery;
+    private isText = true;
+    private div: JQuery<HTMLDivElement>;
     private charts: [string, string];
     private chartIndex: number;
     private canvasw = 400;
     private canvash = 300;
-    private divresize: boolean;
-    private x: number;
-    private y: number;
-    private chartConfig: Chart.ChartConfiguration;
-    private answerChart: Chart;
-    private ctx: JQuery;
+    private divresize = false;
+    private question?: IAskedQuestion;
+    private answers?: AnswerList;
+    private chartConfig?: ChartConfig;
+    private answerChart?: TimChart;
 
-    //TODO: If more than 12 choices this will break. Refactor to better format.
-    private basicSets = [
+    // TODO: If more than 12 choices this will break. Refactor to better format.
+    private basicSets: IDataSet[] = [
         {
             label: "", // "Answer",
-            fillColor: "rgba(0,220,0,0.2)",
-            strokeColor: "rgba(0,220,0,1)",
-            pointColor: "rgba(0,220,0,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(0,220,0,1)",
+            fill: "rgba(0,220,0,0.2)",
+            borderColor: "rgba(0,220,0,1)",
+            pointBackgroundColor: "rgba(0,220,0,1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(0,220,0,1)",
             data: [],
         },
         {
             label: "Answers",
-            fillColor: "rgba(220,0,0,0.2)",
-            strokeColor: "rgba(220,0,0,1)",
-            pointColor: "rgba(220,0,0,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(220,0,0,1)",
+            fill: "rgba(220,0,0,0.2)",
+            borderColor: "rgba(220,0,0,1)",
+            pointBackgroundColor: "rgba(220,0,0,1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(220,0,0,1)",
             data: [],
         },
 
         {
             label: "Answers",
-            fillColor: "rgba(0,0,220,0.2)",
-            strokeColor: "rgba(0,0,220,1)",
-            pointColor: "rgba(0,0,220,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(0,0,220,1)",
+            fill: "rgba(0,0,220,0.2)",
+            borderColor: "rgba(0,0,220,1)",
+            pointBackgroundColor: "rgba(0,0,220,1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(0,0,220,1)",
             data: [],
         },
         {
             label: "Answers",
-            fillColor: "rgba(0,220,220,0.2)",
-            strokeColor: "rgba(0,220,220,1)",
-            pointColor: "rgba(0,220,220,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(0,220,220,1)",
+            fill: "rgba(0,220,220,0.2)",
+            borderColor: "rgba(0,220,220,1)",
+            pointBackgroundColor: "rgba(0,220,220,1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(0,220,220,1)",
             data: [],
         },
         {
             label: "Answers",
-            fillColor: "rgba(220,0,220,0.2)",
-            strokeColor: "rgba(220,0,220,1)",
-            pointColor: "rgba(220,0,220,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(0,0,220,1)",
+            fill: "rgba(220,0,220,0.2)",
+            borderColor: "rgba(220,0,220,1)",
+            pointBackgroundColor: "rgba(220,0,220,1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(0,0,220,1)",
             data: [],
         },
         {
             label: "Answers",
-            fillColor: "rgba(220,220,220,0.2)",
-            strokeColor: "rgba(220,220,220,1)",
-            pointColor: "rgba(220,220,220,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(220,220,220,1)",
+            fill: "rgba(220,220,220,0.2)",
+            borderColor: "rgba(220,220,220,1)",
+            pointBackgroundColor: "rgba(220,220,220,1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(220,220,220,1)",
             data: [],
         },
         {
             label: "Answers",
-            fillColor: "rgba(165,220,0,0.2)",
-            strokeColor: "rgba(165,220,0,1)",
-            pointColor: "rgba(165,220,0,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(165,220,0,1)",
+            fill: "rgba(165,220,0,0.2)",
+            borderColor: "rgba(165,220,0,1)",
+            pointBackgroundColor: "rgba(165,220,0,1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(165,220,0,1)",
             data: [],
         },
         {
             label: "Answers",
-            fillColor: "rgba(220,165,0,0.2)",
-            strokeColor: "rgba(220,165,0,1)",
-            pointColor: "rgba(220,165,0,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(220,165,0,1)",
+            fill: "rgba(220,165,0,0.2)",
+            borderColor: "rgba(220,165,0,1)",
+            pointBackgroundColor: "rgba(220,165,0,1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(220,165,0,1)",
             data: [],
         },
         {
             label: "Answers",
-            fillColor: "rgba(0,165,220,0.2)",
-            strokeColor: "rgba(220,165,0,1)",
-            pointColor: "rgba(220,165,0,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(220,165,0,1)",
+            fill: "rgba(0,165,220,0.2)",
+            borderColor: "rgba(220,165,0,1)",
+            pointBackgroundColor: "rgba(220,165,0,1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(220,165,0,1)",
             data: [],
         },
         {
             label: "Answers",
-            fillColor: "rgba(220,0,165,0.2)",
-            strokeColor: "rgba(220,0,165,1)",
-            pointColor: "rgba(220,0,165,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(220,0,165,1)",
+            fill: "rgba(220,0,165,0.2)",
+            borderColor: "rgba(220,0,165,1)",
+            pointBackgroundColor: "rgba(220,0,165,1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(220,0,165,1)",
             data: [],
         },
         {
             label: "Answers",
-            fillColor: "rgba(30,0,75,0.2)",
-            strokeColor: "rgba(30,0,75,1)",
-            pointColor: "rgba(30,0,75,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(30,0,75,1)",
+            fill: "rgba(30,0,75,0.2)",
+            borderColor: "rgba(30,0,75,1)",
+            pointBackgroundColor: "rgba(30,0,75,1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(30,0,75,1)",
             data: [],
         },
         {
             label: "Answers",
-            fillColor: "rgba(75,75,180,0.2)",
-            strokeColor: "rgba(75,75,180,1)",
-            pointColor: "rgba(75,75,180,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(75,75,180,1)",
+            fill: "rgba(75,75,180,0.2)",
+            borderColor: "rgba(75,75,180,1)",
+            pointBackgroundColor: "rgba(75,75,180,1)",
+            pointBorderColor: "#fff",
+            pointHoverBackgroundColor: "#fff",
+            pointHoverBorderColor: "rgba(75,75,180,1)",
             data: [],
         },
     ];
+    private scope: IScope;
+    private element: IRootElementService;
+    private textAnswers: string[] = [];
 
     constructor(scope: IScope, element: IRootElementService) {
-        this.canvasId = "#" + this.canvas || "";
         this.isText = false;
-        this.div = element.find(".canvasContainer");
         this.charts = ["bar", "horizontalBar"];
         this.chartIndex = qstChartIndex;
-        scope.$on("resizeElement", (event, data) => {
-            // var w = this.div.width();  // data.size.width;
-            // var h = this.div.height(); //  data.size.height)
+        this.scope = scope;
+        this.element = element;
+    }
+
+    $onInit() {
+
+    }
+
+    $onChanges(onChangesObj: IOnChangesObject) {
+        const qdata = onChangesObj.question as IChangesObject<IAskedQuestion> | undefined;
+        const adata = onChangesObj.answers as IChangesObject<AnswerList> | undefined;
+        if (qdata) {
+            this.createChart();
+        } else if (adata) {
+            this.update();
+        }
+    }
+
+    $postLink() {
+        this.div = this.element.find(".canvasContainer") as any;
+        this.scope.$on("resizeElement", (event, data) => {
             if (this.isText) {
                 return;
             }
@@ -287,11 +342,7 @@ class ShowChartController implements IController {
         });
     }
 
-    $onInit() {
-
-    }
-
-    intScale(value, axis) {
+    intScale(value: number, axis: number): number | undefined {
         if (axis == this.chartIndex) {
             return value;
         }
@@ -300,104 +351,64 @@ class ShowChartController implements IController {
         }
     }
 
-    fillValues(emptyData: any[], dataSets, index: number) {
+    fillValues(emptyData: number[], dataSets: IDataSet[], index: number) {
         dataSets.push(this.basicSets[index % this.basicSets.length]);
         dataSets[index].data = emptyData.slice();
-        let color = this.basicSets[index % this.basicSets.length].fillColor;
+        const color = this.basicSets[index % this.basicSets.length].fill;
         dataSets[index].backgroundColor = timFillArray(emptyData.length, color);
-        color = this.basicSets[index % this.basicSets.length].strokeColor;
-        dataSets[index].borderColor = timFillArray(emptyData.length, color);
+        const bordercolor = this.basicSets[index % this.basicSets.length].borderColor;
+        dataSets[index].borderColor = timFillArray(emptyData.length, bordercolor);
         dataSets[index].borderWidth = 1;
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:showChartDirective
-     * @param question FILL WITH SUITABLE TEXT
-     */
-    async createChart(question) {
-
-        if (this.divresize) {
-            this.canvasw = this.div.width();
-            this.canvash = this.div.height();
-        }
-
-        this.close();
-        var d = question.data;
-        if (!d) d = question; // TODO: for some reasoen question can be data or more complex object???
-        const data = d;
-        // this.ctx = $(this.canvasId).get(0).getContext("2d");
-        this.x = 10;
-        this.y = 20;
-        if (typeof question.answerFieldType !== "undefined" && question.answerFieldType === "text") {
-            this.isText = true;
-            this.isText = true;
-            this.div.attr("style", "overflow: auto");
+    async createChart() {
+        if (!this.question) {
             return;
         }
-        this.div.attr("style", "overflow: hidden");
-        this.isText = false;
-        let showLegend = false;
-        const labels = [];
-        const emptyData = [];
-        const backgroundColor = [];
-        if (angular.isDefined(data.rows)) {
-            const i = 0;
-            angular.forEach(data.rows, (row) => {
-                const text = qstShortText(row.text);
-                labels.push(text);
-                emptyData.push(0);
-                // backgroundColor.push(basicSets[i++ % basicSets.length].fillColor);
-            });
+
+        if (this.divresize) {
+            this.canvasw = this.div.width() || 400;
+            this.canvash = this.div.height() || 300;
         }
-        backgroundColor.push(this.basicSets[0].fillColor);
 
-        // TODO: most likely dead code
-        // if (angular.isDefined(data.columns)) {
-        //     angular.forEach(data.columns, (column) => {
-        //         angular.forEach(column.rows, (row) => {
-        //             labels.push(qstShortText(row.Value));
-        //             emptyData.push(0);
-        //         });
-        //     });
-        // }
+        const j = this.question.json.json;
 
-        if (!(question.questionType === "matrix" || question.questionType === "true-false")) {
+        if (j.answerFieldType === "text") {
+            this.isText = true;
+            return;
+        }
+        const data = fixQuestionJson(j);
+        this.isText = false;
+        const showLegend = data.headers.length > 1;
+
+        const labels: (string | string[])[] = [];
+        const emptyData: number[] = [];
+        for (const row of data.rows) {
+            const text = qstShortText(row.text);
+            labels.push(text);
+            emptyData.push(0);
+        }
+        if (!(j.questionType === "matrix" || j.questionType === "true-false")) {
             labels.push("No answer");
             emptyData.push(0);
         }
-
-        const usedDataSets = [];
-
-        if (question.questionType === "true-false" && !question.headers) {
-            question.headers[0] = {type: "header", id: 0, text: "True"};
-            question.headers[1] = {type: "header", id: 1, text: "False"};
-        }
-
-        if (question.questionType === "matrix" || question.questionType === "true-false") {
+        const usedDataSets: IDataSet[] = [];
+        if (j.questionType === "matrix" || j.questionType === "true-false") {
             for (let i = 0; i < data.rows[0].columns.length; i++) {
                 this.fillValues(emptyData, usedDataSets, i);
             }
 
-            let i = usedDataSets.length; // for no answer
-            this.fillValues(emptyData, usedDataSets, i);
-            usedDataSets[i].label = "No answer";
-            for (i = 0; i < data.headers.length; i++) {
+            const noAnswerIndex = usedDataSets.length; // for no answer
+            this.fillValues(emptyData, usedDataSets, noAnswerIndex);
+            usedDataSets[noAnswerIndex].label = "No answer";
+            for (let i = 0; i < data.headers.length; i++) {
                 usedDataSets[i].label = qstShortText(data.headers[i].text);
-                // if ( i > 0 ) usedDataSets[i].backgroundColor.push(basicSets[i % basicSets.length].fillColor);
-                if (i > 0) {
-                    showLegend = true;
-                }
             }
         } else {
             this.fillValues(emptyData, usedDataSets, 0);
         }
 
-        const bardata: ChartData = {
-            labels,
-            datasets: usedDataSets,
-        };
-        $log.info(usedDataSets);
+        // $log.info(usedDataSets);
         /*
          var ctx  = this.ctx;
          ctx.canvas.width = 300;
@@ -416,12 +427,16 @@ class ShowChartController implements IController {
             type: "horizontalBar",
             //type: 'bar',
             // type: 'pie',
-            data: bardata,
+            data: {
+                labels: labels,
+                datasets: usedDataSets,
+            },
             options: {
-                responsive: false
-                ,
+                responsive: false,
                 maintainAspectRatio: true,
-                animation: false,
+                animation: {
+                    duration: 0,
+                },
                 // multiTooltipTemplate: "<%= datasetLabel %> - <%= fvalue %>",
                 legend: {
                     display: showLegend,
@@ -436,7 +451,10 @@ class ShowChartController implements IController {
                             min: 0,
                             // beginAtZero: true,
                             callback: (value) => {
-                                return this.intScale(value, 0);
+                                // According to http://www.chartjs.org/docs/latest/axes/labelling.html#creating-custom-tick-formats,
+                                // this callback is allowed to return undefined. Type definition is not accurate,
+                                // so we use "as number".
+                                return this.intScale(value, 0) as number;
                             },
                             // stepSize: 1
                         },
@@ -447,7 +465,7 @@ class ShowChartController implements IController {
                             min: 0,
                             // beginAtZero: true,
                             callback: (value) => {
-                                return this.intScale(value, 1);
+                                return this.intScale(value, 1) as number;
                             },
                             // stepSize: 1
                         },
@@ -458,9 +476,6 @@ class ShowChartController implements IController {
         };
 
         await this.changeType();
-        // this.answerChart.options.animation = false;
-        // $compile(this as any);
-        // TODO this seems wrong
     }
 
     toggle() {
@@ -475,32 +490,23 @@ class ShowChartController implements IController {
     }
 
     async changeType() {
-        if (
-            this.isText) {
+        if (!this.chartConfig) {
             return;
         }
-        const newType = this.charts[qstChartIndex];
         if (this.answerChart) {
             this.answerChart.destroy();
         }
-        if (!this.ctx) {
-            this.ctx = $("<canvas id=" + this.canvasId.substring(1) + ' width="' + this.canvasw + '" height="' + this.canvash + '"><canvas>');
-            this.div.append(this.ctx);
-            // var zoom = $('<a ng-click="zoom()">[+]</a>');
-            // this.div.append(zoom);
+        this.div.empty();
+        if (!this.isText) {
+            const newType = this.charts[qstChartIndex];
+            const ctx: JQuery<HTMLCanvasElement> = $(`<canvas width="${this.canvasw}" height="${this.canvash}"><canvas>`) as JQuery<HTMLCanvasElement>;
+            this.div.append(ctx);
+            const config = clone(this.chartConfig);
+            config.type = newType;
+            const Chart = (await import("chart.js")).Chart;
+            this.answerChart = new Chart(ctx, config) as TimChart;
         }
-        const config: Chart.ChartConfiguration = jQuery.extend(true, {},
-            this.chartConfig);
-        config.type = newType;
-        const Chart = (await lazyLoad<typeof chartmodule>(
-                "chart.js")
-        ).Chart;
-        this.answerChart = new Chart(this.ctx, config);
-        /*
-         var legend = this.answerChart.generateLegend();
-         var legenddiv = $('<div class="chart-legend">' + legend + '</div>');
-         this.div.append(legenddiv);
-         */
+        this.update();
     }
 
     resize(w: number, h: number) {
@@ -512,7 +518,6 @@ class ShowChartController implements IController {
         if (this.canvash < 100) {
             this.canvash = 100;
         }
-        this.close();
         this.changeType();
     }
 
@@ -525,110 +530,78 @@ class ShowChartController implements IController {
         if (this.canvash < 100) {
             this.canvash = 100;
         }
-        this.close();
         this.changeType();
     }
 
     resizeDiv() {
-        const w = this.div.width();
-        const h = this.div.height();
+        const w = this.div.width() || 400;
+        const h = this.div.height() || 300;
         this.resize(w, h);
     }
 
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:showChartDirective
-     * @param answers FILL WITH SUITABLE TEXT
-     */
-    addAnswer(answers: Array<{answer: string}>) {
-        if (!angular.isDefined(answers)) {
+    update() {
+        const answers = this.answers;
+        if (!answers) {
             return;
         }
-        // this.ctx.font = "20px Georgia";
-        let datasets: Chart.ChartDataSets[];
-        if (!this.isText) {
-            if (!this.answerChart) return; // TODO: miksi tämä on TIMIssä null???
-            if (!this.answerChart.data) return; // TODO: miksi tämä on TIMIssä null???
-            datasets = this.answerChart.data.datasets;
-        }
-        for (let answerersIndex = 0; answerersIndex < answers.length; answerersIndex++) {
-            const answ = answers[answerersIndex].answer;
-
-            const onePersonAnswers = getJsonAnswers(answ);
-            for (let a = 0; a < onePersonAnswers.length; a++) {
-                const
-                    singleAnswers =
-                        onePersonAnswers[a];
-                for (let sa = 0; sa < singleAnswers.length; sa++) {
-                    const singleAnswer = singleAnswers[sa];
-
-                    if (this.isText) {
-                        // this.ctx.fillText(singleAnswer, this.x, this.y);
-                        // this.y += 20;
-                        const t = $("<p>" + singleAnswer + "</p>");
-                        this.div.append(t);
-                        continue;
+        if (this.isText) {
+            this.textAnswers = [];
+            for (const [_, singleAnswer] of enumAnswers(answers)) {
+                this.textAnswers.push(singleAnswer);
+            }
+        } else {
+            if (!this.answerChart || !this.chartConfig) {
+                return;
+            }
+            const datasets = clone(this.chartConfig.data.datasets);
+            for (const [a, singleAnswer] of enumAnswers(answers)) {
+                if (datasets.length === 1) {
+                    let answered = false;
+                    const set = datasets[0].data;
+                    for (let b = 0; b < set.length; b++) {
+                        if ((b + 1) === parseInt(singleAnswer, 10)) {
+                            set[b] += 1;
+                            answered = true;
+                        }
                     }
-                    if (datasets.length === 1) {
-                        let answered = false;
-                        for (let b = 0; b < datasets[0].data.length; b++) {
-                            if ((b + 1) === parseInt(singleAnswer)) {
-                                datasets[0].data[b] += 1;
-                                answered = true;
-                            }
+                    if (!answered) {
+                        set[set.length - 1] += 1;
+                    }
+                } else {
+                    let answered = false;
+                    for (let d = 0; d < datasets.length; d++) {
+                        if ((d + 1) === parseInt(singleAnswer, 10)) {
+                            datasets[d].data[a] += 1;
+                            answered = true;
+                            break;
                         }
-                        if (!answered) {
-                            datasets[0].data[datasets[0].data.length - 1] += 1;
-                        }
-                    } else {
-                        let answered = false;
-                        for (let d = 0; d < datasets.length; d++) {
-                            if ((d + 1) === parseInt(singleAnswer)) {
-                                datasets[d].data[a] += 1;
-                                answered = true;
-                                break;
-                            }
-                        }
-                        if (!answered) {
-                            datasets[datasets.length - 1].data[a] += 1;
-                        }
+                    }
+                    if (!answered) {
+                        datasets[datasets.length - 1].data[a] += 1;
                     }
                 }
             }
-        }
-
-        this.chartConfig.data.datasets = datasets;
-
-        if (!this.isText) {
+            this.answerChart.data.datasets = datasets;
             this.answerChart.update();
         }
-    }
-
-    /**
-     * FILL WITH SUITABLE TEXT
-     * @memberof module:showChartDirective
-     */
-    close() {
-        if (this.answerChart && typeof this.answerChart !== "undefined") {
-            this.answerChart.destroy();
-        }
-        this.ctx = null;
-        this.answerChart = null;
-        this.div.empty();
     }
 }
 
 timApp.component("showChartDirective", {
     bindings: {
-        data: "<",
+        answers: "<",
         divresize: "<",
+        question: "<",
     },
     controller: ShowChartController,
     template: `
-<div class="canvasContainer">
+<div ng-show="!$ctrl.isText" style="overflow: hidden" class="canvasContainer">
 
 </div>
-<p ng-show="$ctrl.showControls" class="chart-menu">
+<div ng-show="$ctrl.isText">
+    <p ng-repeat="t in $ctrl.textAnswers" ng-bind="t"></p>
+</div>
+<p ng-show="!$ctrl.isText" class="chart-menu">
     <span ng-click="$ctrl.toggle()">Bar</span>
     <span ng-click="$ctrl.zoom(-1,0)">w-</span>
     <span ng-click="$ctrl.zoom(1,0)">w+</span>

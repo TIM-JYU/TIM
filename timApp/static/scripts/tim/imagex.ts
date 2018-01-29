@@ -811,21 +811,21 @@ imagexApp.initDrawing = function(scope, canvas) {
         // function getValue(value, key, defaultValue) {
         // scope.default...
         // var keys = key.split["."];
-        if (value === null || value === undefined || value === "" ||
+        if (value == null || value == null || value === "" ||
             (value.constructor === Array && value.length == 0))
             return defaultValue;
         else return value;
     }
 
     function getValue1(value, key, defaultValue) {
-        if (value === null || value === undefined || value === "" ||
+        if (value == null || value == null || value === "" ||
             (value.constructor === Array && value.length == 0))
             return defaultValue;
         return getValue(value[key], defaultValue);
     }
 
     function getValue2(value, key1, key2, defaultValue) {
-        if (value === null || value === undefined || value === "" ||
+        if (value == null || value == null || value === "" ||
             (value.constructor === Array && value.length == 0))
             return defaultValue;
         return getValue1(value[key1], key2, defaultValue);

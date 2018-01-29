@@ -1,16 +1,18 @@
-import angular from "angular";
+import angular, {IAngularEvent} from "angular";
 import {IRootElementService, IScope, IController} from "angular";
 import {timApp} from "tim/app";
 import {$timeout, $uibModal} from "../ngimport";
 import {ViewCtrl} from "./view/viewctrl";
 import * as allanswersctrl from "tim/controllers/allAnswersController";
 import {markAsUsed} from "../utils";
+import {IUser} from "../IUser";
 
 markAsUsed(allanswersctrl);
 
-interface IUser {
-    name: string;
-    velped_task_count: number;
+export interface IExportOptions {
+    totalPointField: string;
+    velpPointField: string;
+    taskPointField: string;
 }
 
 export class UserListController implements IController {
@@ -100,8 +102,10 @@ export class UserListController implements IController {
                 gridApi.selection.on.rowSelectionChanged(this.scope, (row) => {
                     this.fireUserChange(row, this.instantUpdate);
                 });
-                gridApi.grid.modifyRows(this.gridOptions.data as any[]);
-                gridApi.selection.selectRow(this.gridOptions.data[0]);
+                if (this.gridOptions.data) {
+                    gridApi.grid.modifyRows(this.gridOptions.data as any[]);
+                    gridApi.selection.selectRow(this.gridOptions.data[0]);
+                }
                 gridApi.cellNav.on.navigate(this.scope, (newRowCol, oldRowCol) => {
                     this.gridApi.selection.selectRow(newRowCol.row.entity);
                 });
@@ -109,7 +113,7 @@ export class UserListController implements IController {
             gridMenuCustomItems: [
                 {
                     title: "Export to Korppi",
-                    action: ($event) => {
+                    action: ($event: IAngularEvent) => {
                         $timeout(() => {
                             const instance = $uibModal.open({
                                 animation: false,
@@ -127,7 +131,7 @@ export class UserListController implements IController {
                 },
                 {
                     title: "Enable instant update",
-                    action: ($event) => {
+                    action: ($event: IAngularEvent) => {
                         this.instantUpdate = true;
                     },
                     shown: () => {
@@ -138,7 +142,7 @@ export class UserListController implements IController {
                 },
                 {
                     title: "Disable instant update",
-                    action: ($event) => {
+                    action: ($event: IAngularEvent) => {
                         this.instantUpdate = false;
                     },
                     shown: () => {
@@ -149,7 +153,7 @@ export class UserListController implements IController {
                 },
                 {
                     title: "Answers as plain text",
-                    action: ($event) => {
+                    action: ($event: IAngularEvent) => {
                         $uibModal.open({
                             animation: false,
                             ariaLabelledBy: "modal-title",
@@ -174,11 +178,11 @@ export class UserListController implements IController {
         };
     }
 
-    fireUserChange(row, updateAll) {
+    fireUserChange(row: uiGrid.IGridRowOf<IUser>, updateAll: boolean) {
         this.onUserChange({$USER: row.entity, $UPDATEALL: updateAll});
     }
 
-    exportKorppi(options) {
+    exportKorppi(options: IExportOptions) {
         if (!options.taskPointField && !options.velpPointField && !options.totalPointField) {
             return;
         }
@@ -186,7 +190,7 @@ export class UserListController implements IController {
         let dataKorppi = "";
 
         const fields = ["task_points", "velp_points", "total_points"];
-        const fieldNames = {};
+        const fieldNames: {[index: string]: string} = {};
         fieldNames[fields[0]] = options.taskPointField;
         fieldNames[fields[1]] = options.velpPointField;
         fieldNames[fields[2]] = options.totalPointField;
@@ -197,8 +201,9 @@ export class UserListController implements IController {
                     dataKorppi += "\n";
                 }
                 for (let j = 0; j < data.length; j++) {
-                    if (data[j].entity[fields[i]] !== null) {
-                        dataKorppi += data[j].entity.name + ";" + fieldNames[fields[i]] + ";" + data[j].entity[fields[i]] + "\n";
+                    const entity = data[j].entity as any;
+                    if (entity[fields[i]] != null) {
+                        dataKorppi += entity.name + ";" + fieldNames[fields[i]] + ";" + entity[fields[i]] + "\n";
                     }
                 }
             }

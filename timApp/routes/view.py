@@ -3,7 +3,7 @@ import time
 import traceback
 from typing import Tuple, Union, Optional, List
 
-from flask import Blueprint, render_template, json
+from flask import Blueprint, render_template
 from flask import abort
 from flask import current_app
 from flask import flash
@@ -12,6 +12,7 @@ from flask import request
 from flask import session
 
 import timApp.routes.lecture
+import timApp.timdb.models.lecture
 from timApp.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, get_viewable_blocks_or_none_if_admin, has_edit_access, get_doc_or_abort
 from timApp.common import get_user_settings, save_last_page, has_special_chars, post_process_pars, \
@@ -29,7 +30,7 @@ from timApp.markdownconverter import create_environment
 from timApp.pluginControl import find_task_ids, get_all_reqs
 from timApp.requesthelper import get_option
 from timApp.responsehelper import json_response
-from timApp.sessioninfo import get_current_user_object, get_current_user_id, logged_in
+from timApp.sessioninfo import get_current_user_object, get_current_user_id, logged_in, current_user_in_lecture
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.exceptions import TimDbException, PreambleException
 from timApp.timdb.models.docentry import DocEntry, get_documents
@@ -146,7 +147,7 @@ def items_route():
 @view_page.route("/view")
 def index_page():
     save_last_page()
-    in_lecture = timApp.routes.lecture.user_in_lecture()
+    in_lecture = current_user_in_lecture()
     return render_template('index.html',
                            items=get_items(''),
                            in_lecture=in_lecture,
@@ -160,12 +161,7 @@ def parse_range(start_index: Union[int, str, None], end_index: Union[int, str, N
 
 
 def try_return_folder(item_name):
-    timdb = get_timdb()
-    user = get_current_user_id()
-    lectures = timdb.lectures.check_if_in_any_lecture(user)
-    is_in_lecture = False
-    if lectures:
-        is_in_lecture = timApp.routes.lecture.check_if_lecture_is_running(lectures[0])
+    is_in_lecture = current_user_in_lecture()
 
     settings = get_user_settings()
 
@@ -191,6 +187,7 @@ def try_return_folder(item_name):
                 return view(item_name, 'view_html.html')
 
         return render_template('create_new.html',
+                               show_create_new=get_current_user_object().can_write_to_folder(f),
                                in_lecture=is_in_lecture,
                                settings=settings,
                                new_item=item_name,
@@ -328,11 +325,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     if route == 'lecture' and has_edit_access(doc_info):
         no_question_auto_numbering = doc_settings.auto_number_questions()
 
-    is_in_lecture = False
-    if logged_in():
-        lectures = timdb.lectures.check_if_in_any_lecture(current_user.id)
-        if lectures:
-            is_in_lecture = timApp.routes.lecture.check_if_lecture_is_running(lectures[0])
+    is_in_lecture = current_user_in_lecture()
 
     # Close database here because we won't need it for a while
     timdb.close()

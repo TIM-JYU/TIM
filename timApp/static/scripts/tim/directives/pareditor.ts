@@ -410,8 +410,8 @@ or newer one that is more familiar to write in YAML:
                 this.initialText = initialText;
                 angular.extend(this.extraData, {});
                 this.editorChanged();
-                $timeout(function() {
-                    if (pos >= 0) this.setPosition(pos);
+                $timeout(() => {
+                    if (pos >= 0) this.editor.setPosition(pos);
                 }, 10);
             }
             this.dataLoaded = true;
@@ -523,7 +523,7 @@ or newer one that is more familiar to write in YAML:
             this.editor.focus();
             $(window).scrollTop(s);
         }
-        if (func !== null) {
+        if (func != null) {
             func();
         }
         if (this.isIE) {
@@ -926,10 +926,10 @@ or newer one that is more familiar to write in YAML:
             if (data.duplicates.length > 0) {
                 this.data = data;
                 this.createPluginRenameForm(data);
-                if (data.original_par !== null) {
+                if (data.original_par != null) {
                     this.originalPar = data.original_par;
                 }
-                if (data.new_par_ids !== null) {
+                if (data.new_par_ids != null) {
                     this.newPars = data.new_par_ids;
                 }
             }
@@ -970,7 +970,7 @@ or newer one that is more familiar to write in YAML:
     }
 
     isAce(editor: AceParEditor | TextAreaParEditor): editor is AceParEditor {
-        return editor && (editor.editor as IAceEditor).renderer !== undefined;
+        return editor && (editor.editor as IAceEditor).renderer != null;
     }
 
     saveOldMode(oldMode: string) {

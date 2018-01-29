@@ -46,7 +46,7 @@ Reveal.initialize({
     ],
 });
 const pollInterval = 500;
-let pollTimeout;
+let pollTimeout: number;
 let receiving = true;
 
 function refresh() {
@@ -67,19 +67,19 @@ function refresh() {
             let oldv = 0;
             let newh = 0;
             let newv = 0;
-            if (oldstate.indexh !== undefined) {
+            if (oldstate.indexh != null) {
                 oldh = oldstate.indexh;
             }
-            if (oldstate.indexv !== undefined) {
+            if (oldstate.indexv != null) {
                 oldv = oldstate.indexv;
             }
             data = JSON.parse(data);
             $log.info(data);
-            if (data !== null) {
-                if (data.indexh !== undefined) {
+            if (data != null) {
+                if (data.indexh != null) {
                     newh = data.indexh;
                 }
-                if (data.indexv !== undefined) {
+                if (data.indexv != null) {
                     newv = data.indexv;
                 }
                 if ((newh != oldh || newv != oldv
@@ -93,8 +93,8 @@ function refresh() {
     });
 }
 
-function updateSlideStatus(h, v, f) {
-    if (GetURLParameter("controls") !== undefined) {
+function updateSlideStatus(h: number, v: number, f: number) {
+    if (GetURLParameter("controls") != null) {
         return;
     }
     receiving = false;
@@ -115,7 +115,7 @@ function updateSlideStatus(h, v, f) {
     });
 }
 
-if (GetURLParameter("controls") === undefined && is_owner) {
+if (GetURLParameter("controls") == null && is_owner) {
     pollTimeout = setTimeout(refresh, pollInterval);
 }
 

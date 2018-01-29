@@ -47,7 +47,7 @@ from timApp.routes.edit import edit_page
 from timApp.routes.generateMap import generateMap
 from timApp.routes.global_notification import global_notification
 from timApp.routes.groups import groups
-from timApp.routes.lecture import get_tempdb, user_in_lecture, lecture_routes
+from timApp.routes.lecture import get_tempdb, lecture_routes
 from timApp.routes.login import login_page, logout
 from timApp.routes.manage import manage_page
 from timApp.routes.notes import notes
@@ -62,7 +62,7 @@ from timApp.routes.upload import upload
 from timApp.routes.velp import velps
 from timApp.routes.view import view_page
 from timApp.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
-    get_current_user_name, get_current_user_group, logged_in
+    get_current_user_name, get_current_user_group, logged_in, current_user_in_lecture
 from timApp.tim_app import app, default_secret
 from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.bookmarks import Bookmarks
@@ -127,7 +127,10 @@ def inject_custom_css() -> dict:
 @app.context_processor
 def inject_user() -> dict:
     """"Injects the user object to all templates."""
-    return dict(current_user=get_current_user_object(), other_users=get_other_users_as_list())
+    return dict(
+        current_user=get_current_user_object(),
+        other_users=get_other_users_as_list(),
+    )
 
 
 @app.context_processor
@@ -186,7 +189,7 @@ Exception happened on {datetime.now(tz=timezone.utc)} at {request.url}
 
 
 @app.route('/empty')
-def empty_response():
+def empty_response_route():
     return Response('', mimetype='text/plain')
 
 
@@ -493,7 +496,7 @@ def get_server_time():
 
 @app.route("/")
 def start_page():
-    in_lecture = user_in_lecture()
+    in_lecture = current_user_in_lecture()
     return render_template('start.html',
                            in_lecture=in_lecture)
 

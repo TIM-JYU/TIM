@@ -58,7 +58,7 @@
         {% endblock %}
 
         <script>
-            var current_user = {{ current_user|tojson }};
+            var current_user = {{ current_user.to_json(full=True)|tojson }};
             var other_users = {{ other_users|tojson }};
             var bookmarks = {{ bookmarks|tojson }};
             var sessionsettings = {{(session.settings or {})|tojson}};

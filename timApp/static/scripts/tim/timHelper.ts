@@ -63,14 +63,14 @@ export function get(jso: IAttributes, keys: string[]) {
     }
     let val = jso;
     for (const k in keys) {
-        if (val === null) {
+        if (val == null) {
             return undefined;
         }
         if (!keys[k]) {
             continue;
         }
         val = val[keys[k]];
-        if (val === undefined) {
+        if (val == null) {
             return undefined;
         }
     }
@@ -82,7 +82,7 @@ export interface IAttributes {
 }
 
 export interface ISettable {
-    attrs;
+    attrs: IAttributes;
 }
 
 export function setk<T extends ISettable, K extends keyof T>(scope: T, sname: K, attrs: IAttributes, keys: string[], def: T[K]): T[K] {
@@ -110,7 +110,7 @@ export function setn<T extends ISettable, K extends keyof T>(scope: T, sname: K,
     return setk<T, K>(scope, sname, attrs, keys, def);
 }
 
-export function set<T extends ISettable>(scope: T, attrs: IAttributes, name: string, def?) {
+export function set<T extends ISettable>(scope: T, attrs: IAttributes, name: string, def?: any) {
     if (name.indexOf(".") < 0) {
         name = "markup." + name;
     }

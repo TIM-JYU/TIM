@@ -23,7 +23,7 @@ const LAZYEND = " lazy-->";
 const RLAZYSTART = new RegExp(LAZYSTART, "g");
 const RLAZYEND = new RegExp(LAZYEND, "g");
 
-function makeNotLazy(html) {
+function makeNotLazy(html: string) {
     "use strict";
     let s = html.replace(RLAZYSTART, "");
     const i = s.lastIndexOf(LAZYEND);
@@ -42,7 +42,7 @@ function loadPlugin(html: string, $par: JQuery, scope: IScope) {
     // Without this fix, if the plugin is at the bottom of the screen,
     // the browser's scroll position would jump inconveniently because
     // the plugin's height goes to zero until Angular has finished compiling it.
-    const height = plugin.height();
+    const height = plugin.height() || 500;
     plugin.height(height);
     plugin.empty().append($compile(newhtml)(scope));
     plugin.css("opacity", "1.0");
@@ -80,7 +80,7 @@ class AnswerBrowserLazyController implements IController {
      * @param taskId {string} The task id to validate.
      * @returns {boolean} True if the task id is valid, false otherwise.
      */
-    isValidTaskId(taskId) {
+    isValidTaskId(taskId: string) {
         return taskId.slice(-1) !== ".";
     }
 
@@ -99,9 +99,7 @@ class AnswerBrowserLazyController implements IController {
         // Next the inside of the plugin to non lazy
         const origHtml = plugin[0].innerHTML;
         if (origHtml.indexOf(LAZYSTART) < 0) {
-            plugin = null;
-        }
-        if (plugin) {
+        } else {
             loadPlugin(origHtml, par, this.scope);
         }
     }
@@ -132,26 +130,26 @@ export class AnswerBrowserController implements IController {
     private rctrl: ReviewController;
     private parContent: JQuery;
     private user: IUser;
-    private fetchedUser: IUser;
+    private fetchedUser: IUser | null;
     private firstLoad: boolean;
     private shouldUpdateHtml: boolean;
     private saveTeacher: boolean;
-    private users: IUser[];
+    private users: IUser[] | null;
     private answers: IAnswer[];
     private filteredAnswers: IAnswer[];
     private onlyValid: boolean;
-    public selectedAnswer: IAnswer;
+    public selectedAnswer: IAnswer | null;
     private anyInvalid: boolean;
     private giveCustomPoints: boolean;
     private review: boolean;
     private shouldFocus: boolean;
     private alerts: {}[];
-    private taskInfo: ITaskInfo;
+    private taskInfo: ITaskInfo | null;
     private points: number;
     private scope: IScope;
     private skipAnswerUpdateForId: number | null;
 
-    constructor(scope, element) {
+    constructor(scope: IScope, element: IRootElementService) {
         this.scope = scope;
         this.element = element.parents(".par");
         this.parContent = this.element.find(".parContent");
@@ -246,8 +244,14 @@ export class AnswerBrowserController implements IController {
     }
 
     savePoints() {
+        if (!this.selectedAnswer) {
+            return;
+        }
         $http.put("/savePoints/" + this.user.id + "/" + this.selectedAnswer.id,
             {points: this.points}).then((response) => {
+            if (!this.selectedAnswer) {
+                return;
+            }
             this.selectedAnswer.points = this.points;
         }, (response) => {
             this.showError(response);
@@ -257,21 +261,23 @@ export class AnswerBrowserController implements IController {
     }
 
     updatePoints() {
+        if (!this.selectedAnswer) {
+            return;
+        }
         this.points = this.selectedAnswer.points;
-        if (this.points !== null) {
-            this.giveCustomPoints = this.selectedAnswer.last_points_modifier !== null;
+        if (this.points != null) {
+            this.giveCustomPoints = this.selectedAnswer.last_points_modifier != null;
         } else {
             this.giveCustomPoints = false;
         }
     }
-
 
     setFocus() {
         this.element.focus();
     }
 
     changeAnswer() {
-        if (this.selectedAnswer === null) {
+        if (this.selectedAnswer == null) {
             return;
         }
         if (this.skipAnswerUpdateForId === this.selectedAnswer.id) {
@@ -282,6 +288,9 @@ export class AnswerBrowserController implements IController {
         this.updatePoints();
         const $par = this.element;
         const ids = dereferencePar($par);
+        if (!ids) {
+            return;
+        }
         this.loading++;
         $http.get<{html: string, reviewHtml: string}>("/getState", {
             params: {
@@ -294,6 +303,9 @@ export class AnswerBrowserController implements IController {
                 review: this.review,
             },
         }).then((response) => {
+            if (!this.selectedAnswer) {
+                return;
+            }
             loadPlugin(response.data.html, $par, this.scope);
             if (this.review) {
                 this.element.find(".review").html(response.data.reviewHtml);
@@ -326,7 +338,7 @@ export class AnswerBrowserController implements IController {
     }
 
     findSelectedUserIndex() {
-        if (this.users === null) {
+        if (this.users == null) {
             return -1;
         }
         for (let i = 0; i < this.users.length; i++) {
@@ -337,7 +349,7 @@ export class AnswerBrowserController implements IController {
         return -1;
     }
 
-    checkKeyPress(e) {
+    checkKeyPress(e: KeyboardEvent) {
         if (this.loading > 0) {
             return;
         }
@@ -359,7 +371,10 @@ export class AnswerBrowserController implements IController {
         }
     }
 
-    changeStudentToIndex(newIndex) {
+    changeStudentToIndex(newIndex: number) {
+        if (!this.users) {
+            return;
+        }
         if (this.users.length <= 0) {
             return;
         }
@@ -387,12 +402,15 @@ export class AnswerBrowserController implements IController {
         }, 200);
     }
 
-    changeStudent(dir) {
+    changeStudent(dir: 1 | -1) {
         let newIndex = this.findSelectedUserIndex() + dir;
         this.changeStudentToIndex(newIndex);
     }
 
     randomStudent() {
+        if (!this.users) {
+            return;
+        }
         let newIndex = Math.floor(Math.random() * this.users.length);
         this.changeStudentToIndex(newIndex);
     }
@@ -404,7 +422,7 @@ export class AnswerBrowserController implements IController {
         }
     }
 
-    setAnswerById(id) {
+    setAnswerById(id: number) {
         for (let i = 0; i < this.filteredAnswers.length; i++) {
             if (this.filteredAnswers[i].id === id) {
                 this.selectedAnswer = this.filteredAnswers[i];
@@ -446,7 +464,7 @@ export class AnswerBrowserController implements IController {
         });
     }
 
-    showError(response) {
+    showError(response: {data: {error: string}}) {
         this.alerts.push({msg: "Error: " + response.data.error, type: "danger"});
     }
 
@@ -454,7 +472,7 @@ export class AnswerBrowserController implements IController {
         if (!this.viewctrl.item.rights || !this.viewctrl.item.rights.browse_own_answers) {
             return;
         }
-        if (this.user === null) {
+        if (this.user == null) {
             return;
         }
         this.loading++;
@@ -500,10 +518,10 @@ export class AnswerBrowserController implements IController {
     }
 
     allowCustomPoints() {
-        if (this.taskInfo === null) {
+        if (this.taskInfo == null) {
             return false;
         }
-        return this.taskInfo.userMin !== null && this.taskInfo.userMax !== null;
+        return this.taskInfo.userMin != null && this.taskInfo.userMax != null;
     }
 
     loadIfChanged() {
@@ -521,18 +539,18 @@ export class AnswerBrowserController implements IController {
 
     showVelpsCheckBox() {
         // return this.$parent.teacherMode || $window.velpMode; // && this.$parent.item.rights.teacher;
-        return $window.velpMode || $(this.element).attr("class").indexOf("has-annotation") >= 0;
+        return $window.velpMode || ($(this.element).attr("class") || "").indexOf("has-annotation") >= 0;
     }
 
     getTriesLeft() {
-        if (this.taskInfo === null) {
+        if (this.taskInfo == null) {
             return null;
         }
         return Math.max(this.taskInfo.answerLimit - this.answers.length, 0);
     }
 
     loadInfo() {
-        if (this.taskInfo !== null) {
+        if (this.taskInfo != null) {
             return;
         }
         this.loading++;
@@ -551,7 +569,7 @@ export class AnswerBrowserController implements IController {
             return;
         }
         this.loadIfChanged();
-        if (this.viewctrl.teacherMode && this.users === null) {
+        if (this.viewctrl.teacherMode && this.users == null) {
             this.users = [];
             if (this.viewctrl.users.length > 0) {
                 this.getAvailableUsers();
@@ -579,7 +597,7 @@ export class AnswerBrowserController implements IController {
     }
 
     findSelectedAnswerIndex() {
-        if (this.filteredAnswers === null) {
+        if (this.filteredAnswers == null || this.selectedAnswer == null) {
             return -1;
         }
         for (let i = 0; i < this.filteredAnswers.length; i++) {
@@ -608,7 +626,7 @@ export class AnswerBrowserController implements IController {
         }
     }
 
-    closeAlert(index) {
+    closeAlert(index: number) {
         this.alerts.splice(index, 1);
     }
 }

@@ -11,7 +11,7 @@ import copy
 from enum import Enum, unique
 from typing import Dict, List, Optional
 
-from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
 from timApp.timdb.velp_models import Annotation, AnnotationComment
 from timApp.utils import date_to_relative, get_sql_template
 
@@ -133,7 +133,7 @@ class Annotations(TimDbBase):
                        FROM Annotation
                        WHERE Annotation.id = %s
         """, [annotation_id])
-        return self.resultAsDictionary(cursor)
+        return result_as_dict_list(cursor)
 
     def invalidate_annotation(self, annotation_id: int, valid_until: Optional[str] = None):
         """Invalidates and thus hides annotation.
@@ -321,7 +321,7 @@ class Annotations(TimDbBase):
                        [user_has_see_answers, user_id]
                        )
 
-        results = self.resultAsDictionary(cursor)
+        results = result_as_dict_list(cursor)
 
         for result in results:
             if result['element_path_start'] is not None and result['element_path_end'] is not None:
@@ -371,6 +371,6 @@ class Annotations(TimDbBase):
                       ORDER BY AnnotationComment.annotation_id ASC;
                       """, annotation_ids
                        )
-        comment_data = self.resultAsDictionary(cursor)
+        comment_data = result_as_dict_list(cursor)
 
         return comment_data

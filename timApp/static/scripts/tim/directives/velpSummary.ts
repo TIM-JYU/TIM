@@ -31,9 +31,9 @@ export class VelpSummaryController implements IController {
      * @method getTotalPoints
      * @returns {number} Total number of points
      */
-    getTotalPoints(annotations) {
+    getTotalPoints(annotations: IAnnotation[]) {
         let p = 0;
-        if (annotations === undefined) {
+        if (annotations == null) {
             return p;
         }
 

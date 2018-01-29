@@ -10,7 +10,7 @@ export interface IAceVirtualRenderer extends VirtualRenderer {
 
 export interface IAceEditor extends Editor {
     renderer: IAceVirtualRenderer;
-    setFontSize(size: number | string);
+    setFontSize(size: number | string): void;
 }
 
 // suppress incorrect PyCharm warning:

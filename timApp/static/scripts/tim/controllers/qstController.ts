@@ -2,65 +2,19 @@
  * Created by vesal on 28.12.2016.
  */
 import {IController, IRootElementService} from "angular";
-import {timApp as qstApp} from "../app";
 import * as timHelper from "tim/timHelper";
-import {AnswerTable, IPreviewParams, makePreview} from "../directives/dynamicAnswerSheet";
-import {IAskedJsonJson, IAskedJsonJsonJson} from "../lecturetypes";
+import {timApp as qstApp} from "../app";
+import {showMessageDialog} from "../dialog";
+import {IPreviewParams, makePreview} from "../directives/dynamicAnswerSheet";
+import {AnswerTable, IQuestionMarkup} from "../lecturetypes";
 import {$http} from "../ngimport";
 import {LectureController} from "./lectureController";
-
-const TESTWITHOUTPLUGINS = false; // if one wants to test without qst plugins
-
-function directiveTemplate() {
-    if (TESTWITHOUTPLUGINS) {
-        return "";
-    }
-    return `
-<div class="csRunDiv qst no-popup-menu"><p></p>
-    <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
-    <dynamic-answer-sheet
-            questiondata="$ctrl.preview"
-            answertable="$ctrl.answerdata"
-            on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
-    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning"
-            ng-click="$ctrl.saveText();"></button>
-    &nbsp;&nbsp;
-    <a class="questionAddedNew" ng-show="$ctrl.checkQstMode()">
-        <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
-    </a>
-    <span ng-show="$ctrl.result">{{$ctrl.result}}</span>
-    <p class="plgfooter"></p>
-</div>
-`;
-}
-
-function directiveTemplateQuestion() {
-    if (TESTWITHOUTPLUGINS) {
-        return "";
-    }
-    return `
-<div class="csRunDiv qst no-popup-menu">
-    <h4 class="questionTitle" ng-if="$ctrl.questionTitle"
-        ng-bind-html="$ctrl.questionTitle"></h4>
-    <dynamic-answer-sheet
-            questiondata="$ctrl.preview"></dynamic-answer-sheet>
-    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning"
-            ng-click="$ctrl.saveText();"></button>&nbsp;&nbsp;
-</div>
-`;
-}
+import {showQuestionAskDialog} from "./questionAskController";
+import {showStatisticsDialog} from "./showStatisticsToQuestionController";
+import {getParId} from "./view/parhelpers";
 
 export interface IQstAttributes {
-    markup: {
-        json: IAskedJsonJsonJson,
-        isQuestion: boolean,
-        user_id: string,
-        header: string,
-        footer: string,
-        button: string,
-        resetText: string,
-        stem: string,
-    };
+    markup: IQuestionMarkup;
     doLazy: boolean;
     anonymous: boolean;
     info: {};
@@ -78,21 +32,20 @@ class QstController implements IController {
     private error: string;
     private isRunning: boolean;
     private result: string;
-    private taskId: string;
+    private taskId?: string;
     private errors: string[];
-    private lctrl: LectureController;
+    private lctrl?: LectureController;
     private isLecturer: boolean;
     private preclass: string;
-    private plugin: string;
+    private plugin?: string;
     private json: string;
     private cursor: string;
     private element: IRootElementService;
-    attrs: IQstAttributes;
+    private attrs: IQstAttributes;
     private preview: IPreviewParams;
     private button: string;
     private resetText: string;
     private stem: string;
-    private answerdata: AnswerTable;
     private newAnswer: AnswerTable;
 
     constructor($element: IRootElementService) {
@@ -100,62 +53,89 @@ class QstController implements IController {
         this.updateAnswer = this.updateAnswer.bind(this);
     }
 
-    $onInit() {
-        if (TESTWITHOUTPLUGINS) {
-            return;
-        }
-        this.isLecturer = this.lctrl && this.lctrl.isLecturer;
+    public $onInit() {
+        this.isLecturer = (this.lctrl && this.lctrl.isLecturer) || false;
         this.attrs = JSON.parse(this.json);
         // console.log(this.attrs);
-        this.preview = makePreview({json: this.attrs.markup.json, expl: {}}, this.attrs.state || []);
-        this.answerdata = this.preview.answerTable;
+        this.preview = makePreview(this.attrs.markup, this.attrs.state || [], false);
         this.errors = [];
         this.result = "";
         this.preclass = "qst";
         this.button = this.attrs.markup.button || "Save";
         this.resetText = this.attrs.markup.resetText || "Reset";
-        this.stem = this.attrs.markup.stem;
-        this.newAnswer = this.answerdata;
+        this.stem = this.attrs.markup.stem || "";
+        this.newAnswer = this.preview.answerTable;
     }
 
-    $postLink() {
+    public $postLink() {
         this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
         this.plugin = this.element.parent().attr("data-plugin");
         this.taskId = this.element.parent().attr("id");
-        return;
-
-        // Otsikot.  Oletetaan että 1. elementti korvaatan header-otsikolla ja viimeinen footerilla
-        if (!this.attrs.markup.isQuestion) {
-            this.element[0].children[0].outerHTML = timHelper.toHeading(this.attrs.markup.header, "h4");
-        }
-        const n = this.element[0].children.length;
-        if (!this.attrs.markup.isQuestion) {
-            if (n > 1) {
-                this.element[0].children[n - 1].outerHTML = timHelper.toHeading(this.attrs.markup.footer, 'p class="plgfooter"');
-            }
-        }
     }
 
-    updateAnswer(at: AnswerTable) {
+    private getHeader() {
+        return timHelper.toHeading(this.attrs.markup.header || "", "h4");
+    }
+
+    private getFooter() {
+        return timHelper.toHeading(this.attrs.markup.footer || "", 'p class="plgfooter"');
+    }
+
+    private isTask() {
+        return this.attrs.markup.isTask;
+    }
+
+    private updateAnswer(at: AnswerTable) {
         this.newAnswer = at;
         console.log("answer updated:", JSON.stringify(at));
     }
 
-    initCode() {
+    private getQuestionTitle() {
+        return this.attrs.markup.questionTitle;
+    }
+
+    private getQuestionTitleShort() {
+        return this.attrs.markup.questionTitle;
+    }
+
+    private questionClicked() {
+        const $par = this.element.parents(".par");
+        const parId = getParId($par);
+        if (!parId) {
+            showMessageDialog("Not a valid paragraph.");
+            return;
+        }
+        this.showQuestionNew(parId);
+    }
+
+    private async showQuestionNew(parId: string) {
+        if (this.lctrl == null || this.lctrl.viewctrl == null) {
+            await showMessageDialog("Cannot show question because not in lecture mode or in a document.");
+            return;
+        }
+        const result = await showQuestionAskDialog(
+            {
+                docId: this.lctrl.viewctrl.docId,
+                parId: parId,
+                showAsk: this.lctrl.viewctrl.inLecture,
+            });
+        void showStatisticsDialog(result);
+    }
+
+    private initCode() {
         this.error = "";
         this.result = "";
     }
 
-    saveText() {
+    private saveText() {
         this.doSaveText(false);
     }
 
-    checkQstMode(nosave: boolean) {
-        const w: any = window;
-        return (w.in_lecture || w.lectureMode) && w.item.rights.teacher; //  $scope.$parent.$parent.wallName; // TODO: better check if in lecture page
+    private checkQstMode() {
+        return this.lctrl && this.lctrl.viewctrl && this.lctrl.viewctrl.item.rights.teacher;
     }
 
-    doSaveText(nosave: boolean) {
+    private async doSaveText(nosave: boolean) {
         this.error = "... saving ...";
         this.isRunning = true;
 
@@ -166,7 +146,6 @@ class QstController implements IController {
         const params = {
             input: {
                 answers,
-                markup: {taskId: this.taskId, user_id: this.attrs.markup.user_id},
                 nosave: false,
             },
         };
@@ -175,47 +154,46 @@ class QstController implements IController {
             params.input.nosave = true;
         }
         let url = "/qst/answer";
-        if (this.plugin) {
+        if (this.plugin && this.taskId) {
             url = this.plugin;
             const i = url.lastIndexOf("/");
             if (i > 0) {
                 url = url.substring(i);
             }
             url += "/" + this.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
+        } else {
+            this.error = "plugin or taskId missing";
+            return;
         }
-
-        $http<{
-            web: {
-                error: string,
-                result: string,
-                show_result: boolean,
-                state: AnswerTable,
-                markup: IAskedJsonJson,
-            },
-        }>({
-                method: "PUT",
-                url,
-                data: params,
-                headers: {"Content-Type": "application/json"},
-                timeout: 20000,
-            },
-        ).then((response) => {
-            const data = response.data;
+        try {
+            var response = await $http<{
+                web: {
+                    result: string,
+                    show_result: boolean,
+                    state: AnswerTable,
+                    markup: IQuestionMarkup,
+                },
+            }>({
+                    method: "PUT",
+                    url,
+                    data: params,
+                    headers: {"Content-Type": "application/json"},
+                    timeout: 20000,
+                },
+            );
+        } catch (e) {
             this.isRunning = false;
-            this.error = data.web.error;
-            this.result = data.web.result;
-            if (data.web.markup && data.web.show_result) {
-                this.preview = makePreview({
-                    expl: data.web.markup.expl,
-                    json: data.web.markup.json,
-                    points: data.web.markup.points,
-                }, data.web.state);
-            }
-        }, (response) => {
-            this.isRunning = false;
-            this.errors.push(response.status);
+            this.errors.push(e.status);
             this.error = "Ikuinen silmukka tai jokin muu vika?";
-        });
+            return;
+        }
+        const data = response.data;
+        this.isRunning = false;
+        this.error = "";
+        this.result = data.web.result;
+        if (data.web.markup && data.web.show_result) {
+            this.preview = makePreview(data.web.markup, data.web.state, false);
+        }
     }
 }
 
@@ -227,16 +205,27 @@ qstApp.component("qstRunner", {
     require: {
         lctrl: "?^timLecture",
     },
-    template: directiveTemplate,
-});
-
-qstApp.component("questionRunner", {
-    bindings: {
-        json: "@",
-    },
-    controller: QstController,
-    require: {
-        lctrl: "?^timLecture",
-    },
-    template: directiveTemplateQuestion,
+    template: `
+<div class="csRunDiv qst no-popup-menu" ng-if="$ctrl.isTask()">
+<p ng-bind-html="$ctrl.getHeader()"></p>
+    <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>
+    <dynamic-answer-sheet
+            questiondata="$ctrl.preview"
+            on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
+    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning"
+            ng-click="$ctrl.saveText()"></button>
+    &nbsp;&nbsp;
+    <a class="questionAddedNew" ng-show="$ctrl.checkQstMode()">
+        <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
+    </a>
+    <span ng-show="$ctrl.result">{{$ctrl.result}}</span>
+    <p class="plgfooter" ng-bind-html="$ctrl.getHeader()"></p>
+</div>
+<div ng-if="!$ctrl.isTask()">
+    <a class="questionAddedNew" ng-click="$ctrl.questionClicked()">
+        <span class="glyphicon glyphicon-question-sign" title="{{$ctrl.getQuestionTitle()}}"></span>
+    </a>
+    <p class="questionNumber" ng-bind="$ctrl.getQuestionTitleShort()"></p>
+</div>
+`,
 });

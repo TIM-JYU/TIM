@@ -1,14 +1,14 @@
-import {IController, IScope} from "angular";
+import {IController} from "angular";
 import {timApp} from "../app";
-import {IMessage} from "../lecturetypes";
 import {showMessageDialog} from "../dialog";
+import {ILectureMessage} from "../lecturetypes";
 import {$http} from "../ngimport";
 
 class LectureWallController implements IController {
     private messageName: boolean;
     private messageTime: boolean;
     private newMsg: string;
-    private readonly messages: IMessage[];
+    private readonly messages: ILectureMessage[];
     private readonly lectureId: number;
 
     constructor() {
@@ -36,13 +36,13 @@ class LectureWallController implements IController {
      */
     async sendMessageEvent(message: string) {
         if (message.trim() === "") {
-            showMessageDialog("Can't send empty messages");
+            await showMessageDialog("Can't send empty messages");
             return false;
         }
         await $http({
             url: "/sendMessage",
             method: "POST",
-            params: {message, lecture_id: this.lectureId},
+            params: {message},
         });
         this.newMsg = "";
         // TODO: Fix this to scroll bottom without cheating.

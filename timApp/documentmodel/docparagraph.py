@@ -436,20 +436,6 @@ class DocParagraph:
         """
         if self.html is not None:
             return self.html
-        if self.is_question():
-            from timApp.plugin import Plugin
-            from timApp.pluginexception import PluginException
-            try:
-                values = Plugin.from_paragraph(self).values
-            except PluginException as e:
-                if not self.get_attr('plugin'):
-                    return get_error_html('This question is missing plugin="qst" attribute. Please add it.')
-                return get_error_html(e)
-            title = values.get("json", {}).get("questionTitle", "")
-            if not title:  # compatibility for old
-                title = values.get("json", {}).get("title", "question_title")
-            return self.__set_html(sanitize_html(
-                f'<a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="{title}"></span></a><p class="questionNumber">{title}</p>'))
         if self.is_plugin():
             return self.__set_html('')
         if self.is_setting():

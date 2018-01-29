@@ -59,15 +59,15 @@
                 </div>
                 <div id="questionTimer">
                     <label>Duration:</label>
-                    <input type="checkbox" ng-model="qctrl.question.endTimeSelected"/>
+                    <input type="checkbox" ng-model="qctrl.ui.endTimeSelected"/>
 
                     <div id="durationDiv" class="questionTimer">
                         <input id="durationHour" type="number" name="hours" min="0" maxlength="2" size="2"
-                               ng-model="qctrl.question.timeLimitFields.hours" ng-disabled="!qctrl.question.endTimeSelected"> h
+                               ng-model="qctrl.ui.timeLimitFields.hours" ng-disabled="!qctrl.ui.endTimeSelected"> h
                         <input id="durationMin" type="number" name="minutes" min="0" maxlength="2" size="2"
-                               ng-model="qctrl.question.timeLimitFields.minutes" ng-disabled="!qctrl.question.endTimeSelected"> m
+                               ng-model="qctrl.ui.timeLimitFields.minutes" ng-disabled="!qctrl.ui.endTimeSelected"> m
                         <input id="durationSec" type="number" name="seconds" min="0" maxlength="2" size="2"
-                               ng-model="qctrl.question.timeLimitFields.seconds" ng-disabled="!qctrl.question.endTimeSelected"> s
+                               ng-model="qctrl.ui.timeLimitFields.seconds" ng-disabled="!qctrl.ui.endTimeSelected"> s
                         <tim-error-message for="f.hours"></tim-error-message>
                         <tim-error-message for="f.minutes"></tim-error-message>
                         <tim-error-message for="f.seconds"></tim-error-message>
@@ -76,8 +76,8 @@
             </div>
         </form>
         <div class="questionPreview">
-            <label>Document question <input type="checkbox" ng-model="qctrl.markup.qst"/></label>
-            <dynamic-answer-sheet questiondata="qctrl.previewParams" preview="true"></dynamic-answer-sheet>
+            <label>Document question <input type="checkbox" ng-model="qctrl.qst"/></label>
+            <dynamic-answer-sheet questiondata="qctrl.previewParams"></dynamic-answer-sheet>
         </div>
         <tim-alert ng-show="qctrl.customError">{{ qctrl.customError }}</tim-alert>
 

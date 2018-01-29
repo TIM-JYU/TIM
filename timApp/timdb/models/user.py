@@ -18,7 +18,7 @@ from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.notification import Notification
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
-from timApp.timdb.tim_models import db, UserGroupMember, BlockAccess
+from timApp.timdb.tim_models import db, UserGroupMember, BlockAccess, LectureUsers
 from timApp.timdb.userutils import get_viewable_blocks, get_accessible_blocks, grant_access, get_access_type_id, \
     create_password_hash, check_password_hash
 from timApp.utils import remove_path_special_chars, generate_theme_scss, ThemeNotFoundException, \
@@ -79,6 +79,10 @@ class User(db.Model):
     notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
     groups = db.relationship('UserGroup', secondary=UserGroupMember.__table__,
                              back_populates='users', lazy='joined')
+    lectures = db.relationship('Lecture', secondary=LectureUsers.__table__,
+                               back_populates='users', lazy='dynamic')
+    lectureanswers = db.relationship('LectureAnswer', back_populates='user', lazy='dynamic')
+    messages = db.relationship('Message', back_populates='user', lazy='dynamic')
 
     @property
     def logged_in(self):
@@ -152,6 +156,10 @@ class User(db.Model):
     @staticmethod
     def get_by_name(name: str) -> Optional['User']:
         return User.query.filter_by(name=name).first()
+
+    @staticmethod
+    def get_by_id(uid: int) -> Optional['User']:
+        return User.query.get(uid)
 
     @staticmethod
     def get_by_email(email: str) -> Optional['User']:
@@ -377,8 +385,8 @@ class User(db.Model):
                 'real_name': self.real_name,
                 'email': self.email}
 
-    def to_json(self):
+    def to_json(self, full=False):
         return {**self.basic_info_dict,
                 'group': self.get_personal_group(),
                 'folder': self.get_personal_folder()
-                }
+                } if full else self.basic_info_dict

@@ -84,20 +84,20 @@ export class ReviewController implements IController {
             const placeInfo = this.annotations[i].coord;
             const parent = document.getElementById(placeInfo.start.par_id);
 
-            if (parent === null) {
+            if (parent == null) {
                 // TODO: Decide what to do, when parent element has been deleted, for now remove annotation from list
                 annotationsToRemove.push(this.annotations[i]);
                 continue;
             }
 
-            if (this.annotations[i].answer_id !== null) {
+            if (this.annotations[i].answer_id != null) {
                 if (!parent.classList.contains("has-annotation")) {
                     parent.classList.add("has-annotation");
                 }
                 continue;
             }
 
-            if (parent.getAttribute("t") === placeInfo.start.t && placeInfo.start.offset !== null) {
+            if (parent.getAttribute("t") === placeInfo.start.t && placeInfo.start.offset != null) {
 
                 try {
                     let elements = parent.querySelector(".parContent");
@@ -106,7 +106,7 @@ export class ReviewController implements IController {
 
                     for (let j = 0; j < startElpath.length; j++) {
                         const elementChildren = this.getElementChildren(elements);
-                        if (elementChildren[startElpath[j]] !== null) {
+                        if (elementChildren[startElpath[j]] != null) {
                             elements = elementChildren[startElpath[j]];
                         }
                     }
@@ -171,7 +171,7 @@ export class ReviewController implements IController {
     }
 
     getFirstChildUntilNull(element: Node): Node {
-        if (typeof element.firstChild === UNDEFINED || element.firstChild === null) {
+        if (typeof element.firstChild === UNDEFINED || element.firstChild == null) {
             return element;
         }
         return this.getFirstChildUntilNull(element.firstChild);
@@ -183,7 +183,7 @@ export class ReviewController implements IController {
      * @returns Element
      */
     getLastChildUntilNull(element: Node): Node {
-        if (typeof element.lastChild === UNDEFINED || element.lastChild === null) {
+        if (typeof element.lastChild === UNDEFINED || element.lastChild == null) {
             return element;
         }
         return this.getFirstChildUntilNull(element.lastChild);
@@ -228,7 +228,7 @@ export class ReviewController implements IController {
             }
             const element = preElem.firstChild;
 
-            if (!showInPlace || placeInfo.start.offset === null) {
+            if (!showInPlace || placeInfo.start.offset == null) {
                 this.addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
             } else {
                 const range = document.createRange();
@@ -249,7 +249,7 @@ export class ReviewController implements IController {
     getAnnotationsByAnswerId(id: number): IAnnotation[] {
         const annotations = [];
         this.annotations.forEach((a) => {
-            if (a.answer_id !== null && a.answer_id === id) {
+            if (a.answer_id != null && a.answer_id === id) {
                 annotations.push(a);
             }
         });
@@ -340,9 +340,9 @@ export class ReviewController implements IController {
      * @param newElement - Element where the badge needs to be attached
      */
     updateVelpBadge(oldElement: Element, newElement: Element): void {
-        if (newElement === null) {
+        if (newElement == null) {
             return null;
-        } else if (oldElement === null) {
+        } else if (oldElement == null) {
             addElementToParagraphMargin(newElement, this.createVelpBadge(newElement.id));
         } else if (oldElement.id !== newElement.id) {
             this.clearVelpBadge(null);
@@ -363,7 +363,7 @@ export class ReviewController implements IController {
             }
         }
 
-        if (e !== null) {
+        if (e != null) {
             this.selectedElement = null;
             this.selectedArea = null;
             this.velpSelection.updateVelpList();
@@ -528,7 +528,7 @@ export class ReviewController implements IController {
         const $par = $($event.target).parents(".par")[0];
 
         let oldElement = null;
-        if (this.selectedElement !== null) {
+        if (this.selectedElement != null) {
             oldElement = this.selectedElement;
         }
 
@@ -549,7 +549,7 @@ export class ReviewController implements IController {
             //return;
         }
 
-        if (this.selectedArea !== null) {
+        if (this.selectedArea != null) {
             // Check if selection breaks tags, has annotation as a parent or as a child.
             if (this.isSelectionTagParentsUnequal(this.selectedArea) ||
                 this.hasSelectionParentAnnotation(this.selectedArea) ||
@@ -570,7 +570,7 @@ export class ReviewController implements IController {
 
         const newElement = this.selectedElement;
         this.updateVelpBadge(oldElement, newElement);
-        if (newElement !== null) {
+        if (newElement != null) {
             this.velpSelection.updateVelpList();
         }
     }
@@ -725,12 +725,12 @@ export class ReviewController implements IController {
      */
     async useVelp(velp: IVelp): Promise<void> {
 
-        if (this.selectedElement === null && this.selectedArea === null) {
+        if (this.selectedElement == null && this.selectedArea == null) {
             return;
         }
 
         /*
-         if (velp.default_comment !== null && velp.default_comment.length > 0){
+         if (velp.default_comment != null && velp.default_comment.length > 0){
          comment.push({
          content: velp.default_comment,
          commenter_username: "me",
@@ -762,7 +762,7 @@ export class ReviewController implements IController {
             answer_id: null,
         };
 
-        if (this.selectedArea !== null) {
+        if (this.selectedArea != null) {
 
             let parelement = getElementParent(this.selectedArea.startContainer);
             const startElement = getElementParent(this.selectedArea.startContainer);
@@ -778,7 +778,7 @@ export class ReviewController implements IController {
             const elementPath = this.getElementPositionInTree(startElement, []);
             const answerInfo = this.getAnswerInfo(startElement);
 
-            if (answerInfo === null) {
+            if (answerInfo == null) {
                 newAnnotation.user_id = null;
             } else {
                 newAnnotation.user_id = this.vctrl.selectedUser.id;
@@ -812,7 +812,7 @@ export class ReviewController implements IController {
                 },
             };
 
-            if (answerInfo !== null) {
+            if (answerInfo != null) {
                 newAnnotation.answer_id = answerInfo.id;
             }
 
@@ -828,7 +828,7 @@ export class ReviewController implements IController {
 
             this.selectedArea = undefined;
 
-        } else if (this.selectedElement !== null) {
+        } else if (this.selectedElement != null) {
 
             newAnnotation.coord = {
                 start: {
@@ -851,7 +851,7 @@ export class ReviewController implements IController {
 
             const answerInfo = this.getAnswerInfo(this.selectedElement);
 
-            if (answerInfo !== null) {
+            if (answerInfo != null) {
                 newAnnotation.answer_id = answerInfo.id;
             }
 
@@ -956,7 +956,7 @@ export class ReviewController implements IController {
         const startType = el.nodeName;
         let storedOffset = startoffset;
 
-        while (el.previousSibling !== null) {
+        while (el.previousSibling != null) {
             el = el.previousSibling;
             if (this.checkIfAnnotation(el)) {
 
@@ -1084,7 +1084,7 @@ export class ReviewController implements IController {
 
         let velpContent;
 
-        if (velpData !== null) {
+        if (velpData != null) {
             velpContent = velpData.content;
         } else {
             velpContent = annotation.content;
@@ -1110,7 +1110,7 @@ export class ReviewController implements IController {
     }
 
     isUndefinedOrNull(attr): boolean {
-        return typeof attr === UNDEFINED || attr === null;
+        return typeof attr === UNDEFINED || attr == null;
     }
 
     /**
@@ -1129,7 +1129,7 @@ export class ReviewController implements IController {
             // Find answer browser and its scope
             // set answer id -> change answer to that
             // query selector element -> toggle annotation
-            if (e.name === "TypeError" && annotation.answer_id !== null) {
+            if (e.name === "TypeError" && annotation.answer_id != null) {
                 //var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
                 let ab: any = parent.getElementsByTagName("ANSWERBROWSER")[0];
 

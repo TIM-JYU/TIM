@@ -9,7 +9,6 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 class TimJsonEncoder(json.JSONEncoder):
 
     def default(self, o):
-        # open("/service/timApp/Output.txt", "a").write("self: "+str(self) + " o:" + str(o) + "\n")
         if isinstance(o, datetime.datetime):
             if o.tzinfo is None:
                 o = o.replace(tzinfo=datetime.timezone.utc)

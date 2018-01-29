@@ -50,3 +50,7 @@ def set_no_cache_headers(response: Response) -> Response:
 
 def ok_response():
     return json_response({'status': 'ok'})
+
+
+def empty_response():
+    return json_response({'empty': True})

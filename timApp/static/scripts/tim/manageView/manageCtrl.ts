@@ -8,6 +8,28 @@ import * as copyFolder from "./copyFolder";
 
 markAsUsed(copyFolder);
 
+interface IChangelogEntry {
+
+}
+
+export type Duplicate = [string, string];
+
+export interface ITranslation {
+    id: number;
+    old_langid: string;
+    lang_id: string;
+    old_title: string;
+    title: string;
+}
+
+export interface IAlias {
+    name: string;
+    location: string;
+    path: string;
+    publicChanged: boolean;
+    public: boolean;
+}
+
 export class PermCtrl implements IController {
     private static $inject = ["$scope", "$element"];
 
@@ -37,7 +59,7 @@ export class PermCtrl implements IController {
     private readUpdating: boolean;
     private file: any;
     private newAliasForm: IFormController;
-    private duplicates: {}[];
+    private duplicates: Duplicate[];
     private data: {};
     private notifySettings: {};
     private sc: IScope;
@@ -84,7 +106,7 @@ export class PermCtrl implements IController {
     showMoreChangelog() {
         const newLength = this.item.versions.length + 100;
         this.changelogLoading = true;
-        $http.get<{versions}>("/changelog/" + this.item.id + "/" + (newLength)).then((response) => {
+        $http.get<{versions: IChangelogEntry[]}>("/changelog/" + this.item.id + "/" + (newLength)).then((response) => {
             this.item.versions = response.data.versions;
             this.hasMoreChangelog = this.item.versions.length === newLength;
         }, (response) => {
@@ -120,7 +142,7 @@ export class PermCtrl implements IController {
             return [];
         }
 
-        $http.get<Array<{lang_id, title}>>("/translations/" + this.item.id, {}).then((response) => {
+        $http.get<Array<{lang_id: string, title: string}>>("/translations/" + this.item.id, {}).then((response) => {
             const data = response.data;
             this.translations = [];
 
@@ -141,11 +163,11 @@ export class PermCtrl implements IController {
         return [];
     }
 
-    trChanged(tr) {
+    trChanged(tr: ITranslation) {
         return tr.title !== tr.old_title || tr.lang_id !== tr.old_langid;
     }
 
-    updateTranslation(tr) {
+    updateTranslation(tr: ITranslation) {
         $http.post("/translation/" + tr.id, {
             new_langid: tr.lang_id,
             new_title: tr.title,
@@ -161,7 +183,7 @@ export class PermCtrl implements IController {
         });
     }
 
-    syncTitle(title) {
+    syncTitle(title: string) {
         this.item.title = title;
         this.newTitle = title;
         $window.document.title = title + " - Manage - TIM";
@@ -183,7 +205,7 @@ export class PermCtrl implements IController {
         });
     }
 
-    renameFolder(newName) {
+    renameFolder(newName: string) {
         $http.put("/rename/" + this.item.id, {
             new_name: this.oldFolderName + "/" + newName,
         }).then((response) => {
@@ -194,7 +216,7 @@ export class PermCtrl implements IController {
         });
     }
 
-    moveFolder(newLocation) {
+    moveFolder(newLocation: string) {
         $http.put("/rename/" + this.item.id, {
             new_name: newLocation + "/" + this.oldName,
         }).then((response) => {
@@ -206,20 +228,20 @@ export class PermCtrl implements IController {
         });
     }
 
-    combine(folder, name) {
+    combine(folder: string, name: string) {
         return (folder + "/" + name).replace(/(^\/+)|(\/+$)/, "");
     }
 
-    aliasPublicClicked(alias) {
+    aliasPublicClicked(alias: IAlias) {
         alias.public = !alias.public;
         alias.publicChanged = !alias.publicChanged;
     }
 
-    aliasChanged(alias) {
+    aliasChanged(alias: IAlias) {
         return alias.publicChanged || alias.path !== this.combine(alias.location, alias.name);
     }
 
-    addAlias(newAlias) {
+    addAlias(newAlias: IAlias) {
         $http.put("/alias/" + this.item.id + "/" + $window.encodeURIComponent(this.combine(newAlias.location || "", newAlias.name)), {
             public: Boolean(newAlias.public),
         }).then((response) => {
@@ -230,7 +252,7 @@ export class PermCtrl implements IController {
         });
     }
 
-    removeAlias(alias) {
+    removeAlias(alias: IAlias) {
         $http.delete("/alias/" + $window.encodeURIComponent(alias.path), {}).then((response) => {
             const data = response.data;
             this.getAliases();
@@ -239,7 +261,7 @@ export class PermCtrl implements IController {
         });
     }
 
-    updateAlias(alias, first) {
+    updateAlias(alias: IAlias, first: boolean) {
         const new_alias = this.combine(alias.location, alias.name);
         $http.post("/alias/" + $window.encodeURIComponent(alias.path), {
             public: Boolean(alias.public),
@@ -258,7 +280,7 @@ export class PermCtrl implements IController {
         });
     }
 
-    deleteDocument(docId) {
+    deleteDocument(docId: number) {
         if ($window.confirm("Are you sure you want to delete this document?")) {
             $http.delete("/documents/" + docId)
                 .then((response) => {
@@ -270,7 +292,7 @@ export class PermCtrl implements IController {
         }
     }
 
-    deleteFolder(folderId) {
+    deleteFolder(folderId: number) {
         if ($window.confirm("Are you sure you want to delete this folder?")) {
             $http.delete("/folders/" + folderId)
                 .then((response) => {
@@ -282,7 +304,7 @@ export class PermCtrl implements IController {
         }
     }
 
-    updateDocument(file) {
+    updateDocument(file: any) {
         this.file = file;
         this.fileUploadError = null;
         if (file) {
@@ -297,18 +319,18 @@ export class PermCtrl implements IController {
                 method: "POST",
             });
 
-            file.upload.then((response) => {
+            file.upload.then((response: any) => {
                 $timeout(() => {
                     this.file.result = response.data;
                     this.item.versions = response.data.versions;
                     this.item.fulltext = response.data.fulltext;
                     this.fulltext = response.data.fulltext;
                 });
-            }, (response) => {
+            }, (response: any) => {
                 if (response.status > 0) {
                     this.fileUploadError = "Error: " + response.data.error;
                 }
-            }, (evt) => {
+            }, (evt: any) => {
                 this.file.progress = Math.min(100, Math.floor(100.0 *
                     evt.loaded / evt.total));
             });
@@ -318,7 +340,7 @@ export class PermCtrl implements IController {
         }
     }
 
-    convertDocument(doc) {
+    convertDocument(doc: string) {
         let text = this.tracWikiText;
         const wikiSource = this.wikiRoot.replace("wiki", "browser");
         //var text = this.fulltext;
@@ -385,7 +407,7 @@ export class PermCtrl implements IController {
         this.renameFormShowing = false;
     }
 
-    renameTaskNamesClicked(duplicates, renameDuplicates) {
+    renameTaskNamesClicked(duplicates: Duplicate[], renameDuplicates: boolean) {
         // A list of duplicate task names and possible new names
         if (typeof renameDuplicates === "undefined" || renameDuplicates === false) {
             $("#pluginRenameForm").remove();
@@ -403,7 +425,7 @@ export class PermCtrl implements IController {
             duplicate.push(duplicates[i][1]);
             duplicateData.push(duplicate);
         }
-        $http.post<{fulltext, versions, duplicates}>("/postNewTaskNames/", angular.extend({
+        $http.post<{fulltext: string, versions: IChangelogEntry[], duplicates: Duplicate[]}>("/postNewTaskNames/", angular.extend({
             duplicates: duplicateData,
             renameDuplicates,
             manageView: true,
@@ -423,7 +445,7 @@ export class PermCtrl implements IController {
         });
     }
 
-    createPluginRenameForm(data) {
+    createPluginRenameForm(data: {duplicates: Duplicate[]}) {
         this.renameFormShowing = true;
         this.duplicates = data.duplicates;
         this.data = data;
@@ -516,7 +538,7 @@ export class PermCtrl implements IController {
 
     saveDocument() {
         this.saving = true;
-        $http.post<{duplicates, fulltext, versions}>("/update/" + this.item.id,
+        $http.post<{duplicates: Duplicate[], fulltext: string, versions: IChangelogEntry[]}>("/update/" + this.item.id,
             {
                 fulltext: this.fulltext,
                 original: this.item.fulltext,
@@ -545,7 +567,7 @@ export class PermCtrl implements IController {
 
     saveDocumentWithWarnings() {
         this.saving = true;
-        $http.post<{fulltext, versions}>("/update/" + this.item.id,
+        $http.post<{fulltext: string, versions: IChangelogEntry[]}>("/update/" + this.item.id,
             {
                 fulltext: this.fulltext,
                 original: this.item.fulltext,
@@ -576,7 +598,7 @@ export class PermCtrl implements IController {
     }
 
     createTranslation() {
-        $http.post<{path}>("/translate/" + this.item.id + "/" + this.newTranslation.language, {
+        $http.post<{path: string}>("/translate/" + this.item.id + "/" + this.newTranslation.language, {
             doc_title: this.newTranslation.title,
         }).then((response) => {
             const data = response.data;

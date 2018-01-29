@@ -166,21 +166,6 @@ $buttons-width: 75%;
     text-align: center;
 }
 
-#progressLabel {
-    text-align: center;
-}
-
-/*
-progress:before {
-  content: 'Value is ' ((attr(value)-attr(value))/1000);
- position:relative;
-}
-*/
-
-progress {
-    text-align: center;
-    color: black;
-}
 .answerSheet td,
 .answerSheet tr {
     border: none;

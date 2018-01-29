@@ -11,7 +11,6 @@ Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs
 
 """
 import datetime
-import json
 from datetime import timezone
 
 from flask_sqlalchemy import SQLAlchemy
@@ -77,27 +76,6 @@ class AnswerUpload(db.Model):
         self.answer = answer
 
 
-class AskedJson(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'askedjson'
-    asked_json_id = db.Column(db.Integer, primary_key=True)
-    json = db.Column(db.Text, nullable=False)
-    hash = db.Column(db.Text, nullable=False)
-
-
-class AskedQuestion(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'askedquestion'
-    asked_id = db.Column(db.Integer, primary_key=True)
-    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'))
-    par_id = db.Column(db.Text)
-    asked_time = db.Column(db.DateTime(timezone=True), nullable=False)
-    points = db.Column(db.Text)  # TODO Should possibly be numeric
-    asked_json_id = db.Column(db.Integer, db.ForeignKey('askedjson.asked_json_id'), nullable=False)
-    expl = db.Column(db.Text)
-
-
 class BlockAccess(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'blockaccess'
@@ -156,89 +134,12 @@ class BlockAccess(db.Model):
         return not self == other
 
 
-class Lecture(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'lecture'
-    lecture_id = db.Column(db.Integer, primary_key=True)
-    lecture_code = db.Column(db.Text)
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
-    lecturer = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
-    start_time = db.Column(db.DateTime(timezone=True), nullable=False)
-    end_time = db.Column(db.DateTime(timezone=True))
-    password = db.Column(db.Text)
-    options = db.Column(db.Text)
-
-    @staticmethod
-    def find_by_id(lecture_id: int) -> 'Lecture':
-        return Lecture.query.get(lecture_id)
-
-    @property
-    def options_parsed(self):
-        if not hasattr(self, '_options_parsed'):
-            self._options_parsed = json.loads(self.options)
-        return self._options_parsed
-
-    @property
-    def max_students(self):
-        m = self.options_parsed.get('max_students')
-        if m is not None:
-            m = int(m)  # TODO is this needed?
-        return m
-
-    @property
-    def is_full(self):
-        max_students = self.max_students
-        if max_students is None:
-            return False
-        cnt = LectureUsers.query.filter_by(lecture_id=self.lecture_id).count()
-        return cnt >= max_students
-
-    def to_json(self, show_password=False):
-        return {
-            'lecture_id': self.lecture_id,
-            'lecture_code': self.lecture_code,
-            'doc_id': self.doc_id,
-            'lecturer': self.lecturer,
-            'start_time': self.start_time,
-            'end_time': self.end_time,
-            'options': self.options,
-            'is_access_code': self.password != "",  # don't expose password to client directly unless explicitly requested with the parameter
-            'password': self.password if show_password else None,
-            'is_full': self.is_full,
-        }
-
-
-class LectureAnswer(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'lectureanswer'
-    answer_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
-    question_id = db.Column(db.Integer, db.ForeignKey('askedquestion.asked_id'),
-                            nullable=False)
-    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)
-    answer = db.Column(db.Text, nullable=False)
-    answered_on = db.Column(db.DateTime(timezone=True), nullable=False)
-    points = db.Column(db.Float)
-
-
 class LectureUsers(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'lectureusers'
     lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'),
                         primary_key=True)
-
-
-class Message(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'message'
-    msg_id = db.Column(db.Integer, primary_key=True)
-    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'),
-                           nullable=False)  # NOTE The foreign key was wrong in schema2
-    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'),
-                        nullable=False)  # NOTE The foreign key was wrong in schema2
-    message = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime(timezone=True), nullable=False)
 
 
 class Question(db.Model):

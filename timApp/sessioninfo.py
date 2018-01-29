@@ -64,3 +64,8 @@ def get_current_user_group():
 
 def logged_in():
     return get_current_user_id() != 0
+
+
+def current_user_in_lecture():
+    lectures = get_current_user_object().lectures.all()
+    return lectures and lectures[0].is_running

@@ -160,7 +160,7 @@ def set_user_to_session(user: User):
             flash(f'{user.real_name} is already logged in.')
             return
         other_users = session.get('other_users', dict())
-        other_users[str(user.id)] = user.basic_info_dict
+        other_users[str(user.id)] = user
         session['other_users'] = other_users
     else:
         session['user_id'] = user.id

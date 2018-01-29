@@ -1,11 +1,11 @@
-import {IController} from "angular";
-import {IScope, IRootElementService, IAttributes} from "angular";
+import {ICompiledExpression, IController} from "angular";
+import {IAttributes, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
 import {$document, $parse} from "../ngimport";
 
-function setStorage(key, value) {
+function setStorage(key: string, value: any) {
     value = JSON.stringify(value);
     window.localStorage.setItem(key, value);
 }
@@ -19,12 +19,12 @@ function getStorage(key: string) {
     return s;
 }
 
-function getPixels(s) {
+function getPixels(s: string) {
     const s2 = s.replace(/px$/, "");
     return Number(s2) || 0;
 }
 
-function wmax(value, min, max) {
+function wmax(value: string, min: number, max: number) {
     if (!value) {
         return min + "px";
     }
@@ -55,7 +55,7 @@ class DraggableController implements IController {
     private static $inject = ["$scope", "$attrs", "$element"];
 
     private posKey: string;
-    private clickFn = null;
+    private clickFn: ((scope: IScope) => void);
     private areaMinimized: boolean = false;
     private areaHeight: number = 0;
     private setLeft: boolean = true;
@@ -104,7 +104,7 @@ class DraggableController implements IController {
 
     $postLink() {
         const attr = this.attr;
-        let closeFn = null;
+        let closeFn: null | ICompiledExpression = null;
         if (attr.close) {
             closeFn = $parse(attr.close);
         }
@@ -122,7 +122,7 @@ class DraggableController implements IController {
         if (attr.close) {
             const close = $("<img>", {src: "/static/images/close-window-16.png", class: "titlebutton close"});
             close.on("click", () => {
-                closeFn(this.scope);
+                closeFn!(this.scope);
             });
             this.handle.append(close);
         }
@@ -144,7 +144,7 @@ class DraggableController implements IController {
 
         this.updateHandle(this.element, this.handle);
 
-        this.handle.on("mousedown pointerdown touchstart", (e) => {
+        this.handle.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
             this.upResize = false;
             this.rightResize = false;
             this.downResize = false;
@@ -164,7 +164,7 @@ class DraggableController implements IController {
         });
 
         // TODO context is deprecated
-        (this.element.context as HTMLElement).style.msTouchAction =
+        ((this.element as any).context as HTMLElement).style.msTouchAction =
             "none";
 
         if (attr.save) {
@@ -184,7 +184,7 @@ class DraggableController implements IController {
             const oldPos: any = getStorage(this.posKey);
             const w = window.innerWidth;
             const h = window.innerHeight;
-            const ew = this.element.width();
+            const ew = this.element.width() || 500;
             const eh = this.element.height();
             if (oldPos) {
                 if (oldPos.top && this.setTop) {
@@ -213,7 +213,7 @@ class DraggableController implements IController {
         let handles;
         const base = this.element.find(".draggable-content");
         if (this.areaMinimized) {
-            this.areaHeight = this.element.height();
+            this.areaHeight = this.element.height() || 200;
             this.element.height(15);
             base.css("display", "none");
             this.element.css("min-height", "0");
@@ -250,8 +250,8 @@ class DraggableController implements IController {
         const botSet = this.element.css("bottom") != "auto";
         this.setTop = (!topSet && !botSet) || topSet;
         this.setBottom = botSet;
-        this.prevHeight = this.element.height();
-        this.prevWidth = this.element.width();
+        this.prevHeight = this.element.height() || 200;
+        this.prevWidth = this.element.width() || 500;
 
         this.prevTop = getPixels(this.element.css("top"));
         this.prevLeft = getPixels(this.element.css("left"));
@@ -260,7 +260,7 @@ class DraggableController implements IController {
         timLogTime("set:" + this.setLeft + "," + this.setTop, "drag");
     }
 
-    resizeElement(e, up, right, down, left) {
+    resizeElement(e: JQueryEventObject, up: boolean, right: boolean, down: boolean, left: boolean) {
         this.upResize = up;
         this.rightResize = right;
         this.downResize = down;
@@ -284,17 +284,17 @@ class DraggableController implements IController {
 
     createResizeHandles() {
         const handleRight = $("<div>", {class: "resizehandle-r resizehandle"});
-        handleRight.on("mousedown pointerdown touchstart", (e) => {
+        handleRight.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
             this.resizeElement(e, false, true, false, false);
         });
         this.element.append(handleRight);
         const handleDown = $("<div>", {class: "resizehandle-d resizehandle"});
-        handleDown.on("mousedown pointerdown touchstart", (e) => {
+        handleDown.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
             this.resizeElement(e, false, false, true, false);
         });
         this.element.append(handleDown);
         const handleRightDown = $("<div>", {class: "resizehandle-rd resizehandle"});
-        handleRightDown.on("mousedown pointerdown touchstart", (e) => {
+        handleRightDown.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
             this.resizeElement(e, false, true, true, false);
         });
         this.element.append(handleRightDown);
@@ -329,7 +329,7 @@ class DraggableController implements IController {
      }
      });*/
 
-    updateHandle(e, h) {
+    updateHandle(e: JQuery, h: JQuery) {
         // TODO: find an efficient way to call this whenever
         // position is changed between static and absolute
         const position = e.css("position");
@@ -337,20 +337,21 @@ class DraggableController implements IController {
         h.css("display", movable ? "block" : "none");
     }
 
-    getPageXYnull(e) {
+    getPageXYnull(e: JQueryEventObject) {
         if (!(
             "pageX" in e) || (
             e.pageX == 0 && e.pageY == 0)) {
-            if (e.originalEvent.touches.length) {
+            const originalEvent = e.originalEvent as any;
+            if (originalEvent.touches.length) {
                 return {
-                    X: e.originalEvent.touches[0].pageX,
-                    Y: e.originalEvent.touches[0].pageY,
+                    X: originalEvent.touches[0].pageX,
+                    Y: originalEvent.touches[0].pageY,
                 };
             }
-            if (e.originalEvent.changedTouches.length) {
+            if (originalEvent.changedTouches.length) {
                 return {
-                    X: e.originalEvent.changedTouches[0].pageX,
-                    Y: e.originalEvent.changedTouches[0].pageY,
+                    X: originalEvent.changedTouches[0].pageX,
+                    Y: originalEvent.changedTouches[0].pageY,
                 };
             }
             return null;
@@ -359,7 +360,7 @@ class DraggableController implements IController {
         return {X: e.pageX, Y: e.pageY};
     }
 
-    getPageXY(e) {
+    getPageXY(e: JQueryEventObject) {
         const pos = this.getPageXYnull(e);
         if (pos) {
             this.lastPageXYPos = pos;
@@ -369,7 +370,7 @@ class DraggableController implements IController {
 
     // The methods release, move and moveResize are required to be instance
     // functions because they are used as callbacks for $document.on/off.
-    release = (e) => {
+    release = (e: JQueryEventObject) => {
         $document.off("mouseup pointerup touchend", this.release);
         $document.off("mousemove pointermove touchmove", this.move);
         $document.off("mousemove pointermove touchmove", this.moveResize);
@@ -394,7 +395,7 @@ class DraggableController implements IController {
          }*/
     }
 
-    move = (e) => {
+    move = (e: JQueryEventObject) => {
         this.pos = this.getPageXY(e);
         this.delta = {
             X: this.pos.X -
@@ -421,7 +422,7 @@ class DraggableController implements IController {
         e.stopPropagation();
     }
 
-    moveResize = (e) => {
+    moveResize = (e: JQueryEventObject) => {
         this.pos = this.getPageXY(e);
         this.delta = {
             X: this.pos.X - this.lastPos.X, Y: this.pos.Y -

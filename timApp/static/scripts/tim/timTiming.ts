@@ -11,24 +11,23 @@
  see timLogTime comments.
 
  */
-import {$log} from "./ngimport";
 const timJavaScriptStartTime = new Date();
 let timJavaScriptLastTime = timJavaScriptStartTime;
-let timDivLogger;
+let timDivLogger: HTMLDivElement;
 const timDivPreLogger = document.createElement("pre");
 
 export function insertLogDivIfEnabled() {
     if (timTimingDiv && !timDivLogger) {
         timDivLogger = document.createElement("div");
         timDivLogger.appendChild(timDivPreLogger);
-        //document.body.appendChild(timDivLogger);
+        // document.body.appendChild(timDivLogger);
         document.body.insertBefore(timDivLogger, document.body.firstChild);
     }
 }
 
 let timTimingDiv = false;
 let timTimingLog = false;
-let timTimingFilter;
+let timTimingFilter: string;
 let timTiming = false;
 let timTimingSummary = false;
 let timTimingLevel = 0;
@@ -75,14 +74,14 @@ export function timLogInit(params: string) {
 
 let timLogText = "";
 
-export function timLogTime(msg, id, level?) {
+export function timLogTime(msg: string, id: string, level?: number) {
     if (!timTiming) {
         return;
     }
     if (timTimingFilter && !id.match(timTimingFilter)) {
         return;
     }
-    const tlevel = level | 0;
+    const tlevel = level || 0;
     if (tlevel > timTimingLevel) {
         return;
     }

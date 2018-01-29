@@ -1,10 +1,16 @@
 import {IController} from "angular";
 import moment from "moment";
+import {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
 import {$http, $httpParamSerializer, $localStorage, $log, $window} from "../ngimport";
-import {ngStorage} from "ngstorage";
 
 type Options = {age: string, valid: string, name: string, sort: string; periodFrom: any; periodTo: any;};
+
+export interface IAllAnswersParams {
+    identifier: string;
+    url: string;
+    allTasks: boolean;
+}
 
 export class AllAnswersCtrl implements IController {
     private static $inject = ["$uibModalInstance", "options"];
@@ -17,7 +23,7 @@ export class AllAnswersCtrl implements IController {
     private uibModalInstance: angular.ui.bootstrap.IModalInstanceService;
     private url: string;
 
-    constructor(uibModalInstance: angular.ui.bootstrap.IModalInstanceService, options) {
+    constructor(uibModalInstance: angular.ui.bootstrap.IModalInstanceService, options: IAllAnswersParams) {
         this.uibModalInstance = uibModalInstance;
         moment.locale("en", {
             week: {dow: 1, doy: 4}, // set Monday as the first day of the week
@@ -55,7 +61,7 @@ export class AllAnswersCtrl implements IController {
         };
 
         this.lastFetch = null;
-        $http.get<{last_answer_fetch}>("/settings/get/last_answer_fetch").then((response) => {
+        $http.get<{last_answer_fetch: {[index: string]: string}}>("/settings/get/last_answer_fetch").then((response) => {
             if (response.data.last_answer_fetch) {
                 this.lastFetch = response.data.last_answer_fetch[options.identifier];
                 if (!this.lastFetch) {

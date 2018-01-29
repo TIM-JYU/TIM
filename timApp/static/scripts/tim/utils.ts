@@ -1,13 +1,13 @@
 import angular, {IPromise} from "angular";
 import $ from "jquery";
+import moment from "moment";
 import sessionsettings from "tim/session";
 import {$log, $timeout} from "./ngimport";
-import moment from "moment";
 
 export function checkBindings(controller: any, bindings: {[name: string]: string}) {
     for (const k of Object.keys(bindings)) {
         if (!bindings[k].startsWith("?")) {
-            if (controller[k] === undefined) {
+            if (controller[k] == null) {
                 throw new Error(`Binding is undefined: ${k}`);
             }
         }
@@ -15,8 +15,8 @@ export function checkBindings(controller: any, bindings: {[name: string]: string
 }
 
 // adapted from http://aboutcode.net/2013/07/27/json-date-parsing-angularjs.html
-export function convertDateStringsToMoments(input): void {
-    if (input === null || typeof input !== "object") {
+export function convertDateStringsToMoments(input: {[index: string]: any}): void {
+    if (input == null || typeof input !== "object") {
         return;
     }
 
@@ -46,7 +46,7 @@ export function assertIsText(n: Node): n is Text {
 }
 
 export function stringOrNull(x: {toString: () => string}): string {
-    if (x !== null && x !== undefined) {
+    if (x != null) {
         return x.toString();
     }
     return "null";
@@ -61,7 +61,7 @@ export function checkIfElement(x: any): x is Element {
  * @method scrollToElement
  * @param element - Element to scroll to.
  */
-export function scrollToElement(element) {
+export function scrollToElement(element: HTMLElement) {
     if (!!element && element.scrollIntoView) {
         element.scrollIntoView();
     }
@@ -73,7 +73,7 @@ export function scrollToElement(element) {
  * @param element - Element whose parent is queried for
  * @returns {Element} Element parent
  */
-export function getElementParent(element: Node): Element {
+export function getElementParent(element: Node): Element | null {
     /*
      if (typeof element.parentElement !== "undefined")
      return element.parentElement;
@@ -89,10 +89,12 @@ export function getElementParent(element: Node): Element {
         return parent;
     }
 
-    getElementParent(parent);
+    return getElementParent(parent);
 }
 
-export function dist(coords1, coords2) {
+export type Coords = {left: number, top: number};
+
+export function dist(coords1: Coords, coords2: Coords) {
     return Math.sqrt(Math.pow(coords2.left - coords1.left, 2) + Math.pow(coords2.top - coords1.top, 2));
 }
 
@@ -123,12 +125,12 @@ export function GetURLParameter(sParam: string): string | null {
     return null;
 }
 
-export function setsetting(setting, value) {
+export function setsetting(setting: string, value: string) {
     $.ajax({
         type: "POST",
         url: "/sessionsetting/" + setting + "/" + value,
         success(data) {
-            sessionsettings[setting] = value;
+            (sessionsettings as any)[setting] = value; // TODO: get rid of "any"
         },
         error() {
             $log.info("Could not set setting.");
@@ -157,5 +159,9 @@ export function markAsUsed(...modules: any[]) {
 }
 
 export function printJson(data: any, desc: string = "") {
-    console.log(desc, JSON.stringify(data));
+    console.error(desc, JSON.stringify(data));
+}
+
+export function clone<T>(obj: T): T {
+    return JSON.parse(JSON.stringify(obj));
 }

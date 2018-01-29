@@ -1,4 +1,7 @@
-import angular from "angular";
+import angular, {
+    IFilterService, IHttpProvider, IHttpResponseTransformer,
+    IModule, IQProvider, IQService, IWindowService,
+} from "angular";
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import ngMessages from "angular-messages";
 import ngSanitize from "angular-sanitize";
@@ -14,9 +17,9 @@ import angularmodules from "tim/angularmodules";
 import extramodules from "tim/extramodules";
 import plugins from "tim/plugins";
 import {convertDateStringsToMoments, markAsUsed} from "tim/utils";
+import {loadMap} from "./loadMap";
 import {injectProviders, injectServices} from "./ngimport";
 import {initUserService} from "./services/userService";
-import {loadMap} from "./loadMap";
 
 markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize,
     uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, oclazyload);
@@ -37,8 +40,8 @@ export const timApp = angular.module("timApp", [
     "oc.lazyLoad",
 ].concat(angularmodules));
 // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
-timApp.config(["$provide", ($provide) => {
-    $provide.decorator("$browser", ["$delegate", ($delegate) => {
+timApp.config(["$provide", ($provide: IModule) => {
+    $provide.decorator("$browser", ["$delegate", ($delegate: any) => {
         //noinspection TsLint
         $delegate.onUrlChange = () => {
         };
@@ -49,7 +52,10 @@ timApp.config(["$provide", ($provide) => {
     }]);
 }]);
 
-timApp.config(["$httpProvider", ($httpProvider: angular.IHttpProvider) => {
+timApp.config(["$httpProvider", ($httpProvider: IHttpProvider) => {
+    if (!$httpProvider.defaults.headers) {
+        $httpProvider.defaults.headers = {};
+    }
     if (!$httpProvider.defaults.headers.get) {
         $httpProvider.defaults.headers.get = {};
     }
@@ -60,13 +66,13 @@ timApp.config(["$httpProvider", ($httpProvider: angular.IHttpProvider) => {
     $httpProvider.defaults.headers.get.Pragma = "no-cache";
 
     // convert ISO 8601 date strings to moment objects
-    ($httpProvider.defaults.transformResponse as angular.IHttpResponseTransformer[]).push((responseData) => {
+    ($httpProvider.defaults.transformResponse as IHttpResponseTransformer[]).push((responseData) => {
         convertDateStringsToMoments(responseData);
         return responseData;
     });
 }]);
 
-timApp.config(["$qProvider", ($qProvider: angular.IQProvider) => {
+timApp.config(["$qProvider", ($qProvider: IQProvider) => {
     // Available in AngularJS 1.6
     // $qProvider.errorOnUnhandledRejections(true);
 }]);
@@ -74,12 +80,12 @@ timApp.config(["$qProvider", ($qProvider: angular.IQProvider) => {
 // Filter to make string URL friendly
 timApp.filter("escape", () => {
     "use strict";
-    return (str) => {
+    return (str: string) => {
         return encodeURIComponent(str).replace(/%2F/g, "/");
     };
 });
 
-timApp.filter("timdate", ["$filter", ($filter) => {
+timApp.filter("timdate", ["$filter", ($filter: IFilterService) => {
     return (date: string | Moment) => {
         if (typeof date === "string") {
             const dateFilter = $filter("date");
@@ -92,27 +98,27 @@ timApp.filter("timdate", ["$filter", ($filter) => {
     };
 }]);
 
-timApp.filter("timreldate", ["$filter", ($filter) => {
-    return (date) => {
+timApp.filter("timreldate", ["$filter", ($filter: IFilterService) => {
+    return (date: string) => {
         return moment(date).fromNow();
     };
 }]);
 
-timApp.filter("timduration", ["$filter", ($filter) => {
-    return (duration) => {
+timApp.filter("timduration", ["$filter", ($filter: IFilterService) => {
+    return (duration: string) => {
         return moment.duration(duration).humanize();
     };
 }]);
 
-timApp.filter("timpreciseduration", ["$filter", ($filter) => {
-    return (duration) => {
+timApp.filter("timpreciseduration", ["$filter", ($filter: IFilterService) => {
+    return (duration: string) => {
         return humanizeDuration(moment.duration(duration).asMilliseconds());
     };
 }]);
 
-timApp.filter("timtim", ["$filter", ($filter) => {
+timApp.filter("timtim", ["$filter", ($filter: IFilterService) => {
     const dateFilter = $filter("date");
-    return (date) => {
+    return (date: string) => {
         return dateFilter(date, "HH:mm:ss");
     };
 }]);
@@ -123,6 +129,6 @@ timApp.run(initUserService);
 timApp.run(loadMap);
 
 // https://stackoverflow.com/questions/35629246/typescript-async-await-and-angular-q-service/41825004#41825004
-timApp.run(["$window", "$q", ($window: angular.IWindowService, $q: angular.IQService) => {
+timApp.run(["$window", "$q", ($window: IWindowService, $q: IQService) => {
     $window.Promise = $q;
 }]);

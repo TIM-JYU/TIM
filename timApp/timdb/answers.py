@@ -7,7 +7,7 @@ from typing import List, Optional, Dict
 
 from timApp.documentmodel.pointsumrule import PointSumRule, PointType
 from timApp.timdb.tim_models import Answer, UserAnswer, AnswerTag, tim_main_execute
-from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
 from timApp.utils import get_sql_template
 
 
@@ -75,7 +75,7 @@ class Answers(TimDbBase):
                             AND user_id = :userid
                           ORDER BY answered_on DESC, Answer.id DESC""", {'taskid': task_id, 'userid': user_id})
 
-        answers = self.resultAsDictionary(r.cursor)
+        answers = result_as_dict_list(r.cursor)
         if not get_collaborators:
             return answers
 
@@ -112,7 +112,7 @@ class Answers(TimDbBase):
          AND valid = TRUE
         GROUP BY task_id
         ) t JOIN Answer a ON a.id = t.aid""", task_ids + [user_id])
-        return self.resultAsDictionary(c)
+        return result_as_dict_list(c)
 
     def get_all_answers(self,
                         task_ids: List[str],
@@ -259,7 +259,7 @@ ORDER BY {order_by}, a.answered_on
             WHERE id IN ({template})
             ORDER BY answered_on DESC, id DESC
          """, list(common_answers_ids))
-        common_answers = self.resultAsDictionary(c)
+        common_answers = result_as_dict_list(c)
         return common_answers
 
     def get_users_for_tasks(self, task_ids: List[str], user_ids: Optional[List[int]]=None, group_by_user=True) -> List[Dict[str, str]]:
@@ -306,7 +306,7 @@ ORDER BY {order_by}, a.answered_on
                 ) tmp
             """
         result = tim_main_execute(sql, {'task_ids': tuple(task_ids), 'user_ids': tuple(user_ids)})
-        return self.resultAsDictionary(result.cursor)
+        return result_as_dict_list(result.cursor)
 
     def get_points_by_rule(self, points_rule: Optional[Dict],
                            task_ids: List[str],
@@ -389,7 +389,7 @@ ORDER BY {order_by}, a.answered_on
                           order by answered_on desc""" % (
             " ".join(["and id in (select answer_id from UserAnswer where user_id = %d)" % user_id for user_id in user_ids]))
         cursor.execute(sql, [task_id])
-        return self.resultAsDictionary(cursor)
+        return result_as_dict_list(cursor)
 
     def get_users(self, answer_id: int) -> List[int]:
         """Gets the user ids of the specified answer.
@@ -401,13 +401,13 @@ ORDER BY {order_by}, a.answered_on
         c = self.db.cursor()
         c.execute("""SELECT user_id FROM UserAnswer
             WHERE answer_id = %s""", [answer_id])
-        return [u['user_id'] for u in self.resultAsDictionary(c)]
+        return [u['user_id'] for u in result_as_dict_list(c)]
 
     def get_task_id(self, answer_id: int) -> Optional[str]:
         c = self.db.cursor()
         c.execute("""SELECT task_id FROM Answer
             WHERE id = %s""", [answer_id])
-        result = self.resultAsDictionary(c)
+        result = result_as_dict_list(c)
         return result[0]['task_id'] if len(result) > 0 else None
 
     def get_users_by_taskid(self, task_id: str):
@@ -418,7 +418,7 @@ ORDER BY {order_by}, a.answered_on
             JOIN Answer on Answer.id = UserAnswer.answer_id
             WHERE task_id = %s
             ORDER BY real_name ASC""", [task_id])
-        result = self.resultAsDictionary(c)
+        result = result_as_dict_list(c)
         return result
 
     def get_answer(self, answer_id: int) -> Optional[dict]:
@@ -442,6 +442,6 @@ ORDER BY {order_by}, a.answered_on
                           WHERE id = :id
                           ORDER BY answered_on DESC""", {'id': answer_id})
 
-        answers = self.resultAsDictionary(result.cursor)
+        answers = result_as_dict_list(result.cursor)
         self.set_collaborators(answers)
         return answers[0] if len(answers) > 0 else None

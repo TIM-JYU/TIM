@@ -47,7 +47,7 @@ class CreateItemController implements IController {
 
     createItem() {
         this.creating = true;
-        $http.post<{path}>("/createItem", angular.extend({
+        $http.post<{path: string}>("/createItem", angular.extend({
             item_path: this.itemLocation + "/" + this.itemName,
             item_type: this.itemType,
             item_title: this.itemTitle,
@@ -60,7 +60,7 @@ class CreateItemController implements IController {
         });
     }
 
-    closeAlert(index) {
+    closeAlert(index: number) {
         this.alerts.splice(index, 1);
     }
 
@@ -68,7 +68,7 @@ class CreateItemController implements IController {
         if (!this.automaticShortName) {
             return;
         }
-        if (this.itemTitle !== undefined) {
+        if (this.itemTitle != null) {
             this.itemName = slugify(this.itemTitle);
         }
     }

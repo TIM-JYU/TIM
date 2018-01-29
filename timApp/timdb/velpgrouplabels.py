@@ -8,7 +8,7 @@ is not yet used in production.
 
 """
 
-from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
 from timApp.timdb.velp_models import VelpGroupLabel
 
 
@@ -80,7 +80,7 @@ class VelpGroupLabels(TimDbBase):
                       (SELECT velp_id FROM LabelInVelpGroup WHERE velp_id = %s))
                       """, [language_id, velp_id]
                        )
-        return self.resultAsDictionary(cursor)
+        return result_as_dict_list(cursor)
 
     def delete_velp_group_label(self, label_id):
         """Deletes label (use with extreme caution)

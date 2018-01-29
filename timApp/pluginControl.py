@@ -72,7 +72,7 @@ def try_load_json(json_str: str):
 
 
 def pluginify(doc: Document,
-              pars,
+              pars: List[DocParagraph],
               user: Optional[User],
               timdb,
               custom_answer=None,
@@ -142,7 +142,7 @@ def pluginify(doc: Document,
         for idx, block in enumerate(pars):  # find taskid's
             attr_taskid = block.get_attr('taskId')
             plugin_name = block.get_attr('plugin')
-            if plugin_name and not block.is_question():  # show also question in preview
+            if plugin_name and attr_taskid:
                 task_id = f"{block.get_doc_id()}.{attr_taskid or ''}"
                 if not task_id.endswith('.'):
                     task_ids.append(task_id)
@@ -177,7 +177,7 @@ def pluginify(doc: Document,
                                                       md + \
                                                       '</pre></div>'
 
-        if plugin_name and not block.is_question():  # show also question in preview
+        if plugin_name:
             task_id = f"{block.get_doc_id()}.{attr_taskid or ''}"
             info = None
             state_ok = False
@@ -210,7 +210,8 @@ def pluginify(doc: Document,
                 if rands:
                     joint_macros = {**macros, **rands}
                 plugin = Plugin.from_paragraph_macros(block, global_attrs, joint_macros, macro_delimiter)
-                plugin.values['isQuestion'] = block.get_attr('isQuestion', '')
+                if plugin_name == 'qst':
+                    plugin.values['isTask'] = not block.is_question()
             except Exception as e:
                 html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
                                                                        plugin_output_format=output_format)
@@ -218,7 +219,7 @@ def pluginify(doc: Document,
             vals = plugin.values
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
-            vals["user_id"] = user.name if user is not None else 'Anonymous'
+            vals["user_id"] = user.name if user is not None else 'Anonymous'  # TODO: This shouldn't be inside markup.
 
             if state_ok:
                 info = plugin.get_info([user], old_answers=answer.get('cnt'), valid=answer['valid'])

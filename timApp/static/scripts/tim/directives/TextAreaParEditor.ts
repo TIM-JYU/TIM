@@ -1,6 +1,7 @@
 import {$log, $timeout} from "../ngimport";
 import {BaseParEditor, focusAfter, IEditorCallbacks} from "./BaseParEditor";
 import {wrapText} from "../controllers/view/editing";
+import {IAngularEvent} from 'angular';
 
 const CURSOR = "⁞";
 
@@ -77,11 +78,14 @@ export class TextAreaParEditor extends BaseParEditor {
 
     scrollToCaret() {
         const editor = this.editorElement;
-        const text = this.editor.val();
+        const text = this.getEditorText();
         const lineHeight = parseInt(this.editor.css("line-height"));
         const height = this.editor.height();
         const currentLine = text.substr(0, editor.selectionStart).split("\n").length;
         const currentScroll = this.editor.scrollTop();
+        if (!currentScroll || !height) {
+            return;
+        }
         const currentLineY = currentLine * lineHeight;
         if (currentLineY > currentScroll + height) {
             this.editor.scrollTop(currentLineY - height);
@@ -181,7 +185,7 @@ export class TextAreaParEditor extends BaseParEditor {
         const tablength = tab.length;
         const selection = this.editor.getSelection();
         const pos = selection.start;
-        const value = this.editor.val();
+        const value = this.getEditorText();
 
         if (selection.text !== "") {
             let tempStart = selection.start;
@@ -246,7 +250,7 @@ export class TextAreaParEditor extends BaseParEditor {
     }
 
     @focusAfter
-    surroundClicked(before, after, func = null) {
+    surroundClicked(before: string, after: string, func?: () => boolean) {
         if (this.editor.getSelection().text === "") {
             this.selectWord();
         }
@@ -269,7 +273,7 @@ export class TextAreaParEditor extends BaseParEditor {
     }
 
     @focusAfter
-    headerClicked(head) {
+    headerClicked(head: string) {
         const selection = this.selectLine(true);
         const tempEnd = selection.end;
         let line = this.editor.getSelection().text;
@@ -285,12 +289,12 @@ export class TextAreaParEditor extends BaseParEditor {
 
     selectWord() {
         const nonASCIISingleCaseWordChar = /[\u00df\u0587\u0590-\u05f4\u0600-\u06ff\u3040-\u309f\u30a0-\u30ff\u3400-\u4db5\u4e00-\u9fcc\uac00-\ud7af]/;
-        const isWordCharBasic = (ch) => {
+        const isWordCharBasic = (ch: string) => {
             return /\w/.test(ch) || ch > "\x80" &&
                 (ch.toUpperCase() !== ch.toLowerCase() || nonASCIISingleCaseWordChar.test(ch)) && !/\s/.test(ch);
         };
         const selection = this.editor.getSelection();
-        const doc = this.editor.val();
+        const doc = this.getEditorText();
         const coords = this.selectLine(false);
         const line = doc.substring(coords.start, coords.end);
         const linestart = coords.start;
@@ -313,7 +317,7 @@ export class TextAreaParEditor extends BaseParEditor {
     }
 
     surroundedBy(before: string, after: string): boolean {
-        const value = this.editor.val();
+        const value = this.getEditorText();
         const selection = this.editor.getSelection();
         const word = value.substring(selection.start - before.length, selection.end + after.length);
         return (word.indexOf(before) === 0 && word.lastIndexOf(after) === (word.length - after.length));
@@ -333,9 +337,9 @@ export class TextAreaParEditor extends BaseParEditor {
         this.replaceSelected(image + "[", descDefault, "](", linkDefault, ")");
     }
 
-    selectLine(select) {
+    selectLine(select: boolean) {
         const selection = this.editor.getSelection();
-        const value = this.editor.val();
+        const value = this.getEditorText();
         let tempStart = selection.start;
         while (tempStart > 0) {
             tempStart--;
@@ -364,14 +368,14 @@ export class TextAreaParEditor extends BaseParEditor {
     }
 
     @focusAfter
-    insertTemplate(text) {
+    insertTemplate(text: string) {
         const ci = text.indexOf(CURSOR);
-        if ( ci >= 0 ) text = text.slice(0,ci) + text.slice(ci+1);
+        if ( ci >= 0 ) text = text.slice(0, ci) + text.slice(ci + 1);
         const pluginnamehere = "PLUGINNAMEHERE";
         const searchEndIndex = this.editor.getSelection().start;
         this.editor.replaceSelectedText(text);
         const searchStartIndex = this.editor.getSelection().start;
-        const index = this.editor.val().lastIndexOf(pluginnamehere, searchStartIndex);
+        const index = this.getEditorText().lastIndexOf(pluginnamehere, searchStartIndex);
         if (index > searchEndIndex) {
             this.editor.setSelection(index, index + pluginnamehere.length);
         }
@@ -380,13 +384,13 @@ export class TextAreaParEditor extends BaseParEditor {
         }
     }
 
-    editorStartsWith(text) {
-        return this.editor.val().startsWith(text);
+    editorStartsWith(text: string) {
+        return this.getEditorText().startsWith(text);
     }
 
-    changeValue(attributes, text) {
+    changeValue(attributes: string[], text: string) {
         const sel = this.editor.getSelection();
-        const t = this.editor.val();
+        const t = this.getEditorText();
         if (t.length === 0) {
             return;
         }
@@ -454,7 +458,7 @@ export class TextAreaParEditor extends BaseParEditor {
     endLineClicked() {
         const editor = this.editorElement;
         const selection = this.editor.getSelection();
-        const value = this.editor.val();
+        const value = this.getEditorText();
         const pos = selection.start;
         this.selectLine(true);
         const lineToBreak = this.editor.getSelection().text;
@@ -479,7 +483,7 @@ export class TextAreaParEditor extends BaseParEditor {
     pageBreakClicked() {
         var editor = this.editorElement;
         var selection = this.editor.getSelection();
-        var value = this.editor.val();
+        var value = this.getEditorText();
         var cursor = selection.start;
         this.selectLine(true);
 
@@ -507,7 +511,7 @@ export class TextAreaParEditor extends BaseParEditor {
     //Insert
     //Special characters
     @focusAfter
-    charClicked($event, char) {
+    charClicked($event: Event, char: string | undefined) {
         let character = $($event.target).text();
         $log.info(char);
         if (typeof char !== "undefined") {
@@ -534,14 +538,14 @@ export class TextAreaParEditor extends BaseParEditor {
     }
 
     getEditorText(): string {
-        return this.editor.val();
+        return this.editor.val() as string;
     }
 
     setEditorText(text: string) {
         this.editor.val(text);
     }
 
-    setPosition(pos) {
+    setPosition(pos: number) {
         const editor = this.editor.get(0) as HTMLTextAreaElement;
         editor.selectionStart = editor.selectionEnd = pos;
         this.scrollToCaret();

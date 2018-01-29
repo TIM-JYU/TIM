@@ -4,8 +4,15 @@ import {$compile, $log, $ocLazyLoad, $timeout} from "tim/ngimport";
 import {timLogTime} from "tim/timTiming";
 import {lazyLoad, lazyLoadMany} from "../lazyLoad";
 
+export interface IPluginInfoResponse {
+    js: string[];
+    texts: string;
+    css: string[];
+    angularModule: string[];
+}
+
 export class ParagraphCompiler {
-    public async compile(data, scope: IScope) {
+    public async compile(data: IPluginInfoResponse, scope: IScope) {
         await lazyLoadMany(data.js);
         await $ocLazyLoad.inject(data.angularModule);
         await $ocLazyLoad.load(data.css);
@@ -30,7 +37,7 @@ export class ParagraphCompiler {
         const renderMathInElement = await lazyLoad<typeof katex>("katex-auto-render");
         mathelems.each((index, elem) => {
             const result = this.processMath(renderMathInElement, elem, false);
-            if (result !== null) {
+            if (result != null) {
                 katexFailures.push(result);
             }
         });

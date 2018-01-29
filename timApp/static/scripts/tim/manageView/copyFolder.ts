@@ -8,7 +8,7 @@ class CopyFolderCtrl implements IController {
     private static $inject = ["$scope"];
     private copyingFolder: "notcopying" | "copying" | "finished";
     private item: any;
-    private copyPreviewList: PreviewList;
+    private copyPreviewList: PreviewList | null;
     private scope: IScope;
     private copyFolderPath: string;
     private copyFolderExclude: string;

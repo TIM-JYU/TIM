@@ -2,10 +2,10 @@ import {$http, $httpParamSerializer, $window} from "../ngimport";
 import {IUser} from "../IUser";
 
 export class UserService {
-    private current: any; // currently logged in user
-    private group: any; // any additional users that have been added in the session - this does not include the main user
+    private current: IUser; // currently logged in user
+    private group: IUser[]; // any additional users that have been added in the session - this does not include the main user
 
-    constructor(current, group) {
+    constructor(current: IUser, group: IUser[]) {
         this.current = current;
         this.group = group;
     }
@@ -22,8 +22,8 @@ export class UserService {
         return this.current.name.indexOf("@") < 0;
     }
 
-    public logout(user, logoutFromKorppi = false) {
-        $http.post<{other_users: object[], current_user: IUser}>("/logout", {user_id: user.id}).then((response) => {
+    public logout(user: IUser, logoutFromKorppi = false) {
+        $http.post<{other_users: IUser[], current_user: IUser}>("/logout", {user_id: user.id}).then((response) => {
             this.group = response.data.other_users;
             this.current = response.data.current_user;
             if (!this.isLoggedIn()) {
@@ -42,11 +42,7 @@ export class UserService {
         return this.current.id > 0; // TODO: maybe !== 0
     }
 
-    public addUser() {
-        this.group.push({id: 0, real_name: "Meikäläinen Matti", name: "mameikal"});
-    }
-
-    public korppiLogin(addUser) {
+    public korppiLogin(addUser: boolean) {
         const targetUrl = "/korppiLogin";
         const separator = targetUrl.indexOf("?") >= 0 ? "&" : "?";
         const cameFromRaw = $window.came_from || "";
@@ -67,7 +63,7 @@ export class UserService {
         }
     }
 
-    public korppiLogout(redirectFn) {
+    public korppiLogout(redirectFn: () => any) {
         $http.get("https://korppi.jyu.fi/kotka/portal/showLogout.jsp",
             {
                 withCredentials: true,
@@ -78,21 +74,21 @@ export class UserService {
                     "Pragma": undefined,
                 },
             }).finally(function() {
-                $http(
-                    {
-                        withCredentials: true,
-                        method: "POST",
-                        url: "https://korppi.jyu.fi/openid/manage/manage",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded",
-                        },
-                        data: $httpParamSerializer({logout: "Logout"}),
-                    }).finally(redirectFn);
-            });
+            $http(
+                {
+                    withCredentials: true,
+                    method: "POST",
+                    url: "https://korppi.jyu.fi/openid/manage/manage",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    data: $httpParamSerializer({logout: "Logout"}),
+                }).finally(redirectFn);
+        });
     }
 
-    public loginWithEmail(email, password, addUser, successFn) {
-        $http<{other_users: object[], current_user: object}>(
+    public loginWithEmail(email: string, password: string, addUser: boolean, successFn: () => void) {
+        $http<{other_users: IUser[], current_user: IUser}>(
             {
                 method: "POST",
                 url: "/altlogin",
@@ -106,15 +102,15 @@ export class UserService {
                     add_user: addUser,
                 }),
             }).then((response) => {
-                this.group = response.data.other_users;
-                this.current = response.data.current_user;
-                successFn();
-                if (!addUser) {
-                    $window.location.reload();
-                }
-            }, function(response) {
-                $window.alert(response.data.error);
-            });
+            this.group = response.data.other_users;
+            this.current = response.data.current_user;
+            successFn();
+            if (!addUser) {
+                $window.location.reload();
+            }
+        }, function(response) {
+            $window.alert(response.data.error);
+        });
     }
 }
 

@@ -9,7 +9,7 @@ from timApp.timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUP
     LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME
 from timApp.timdb.tim_models import BlockAccess, db
-from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
 from timApp.timdb.userutils import NoSuchUserException, get_anon_group_id, \
     get_anon_user_id, get_access_type_id, get_default_right_document
 
@@ -56,7 +56,7 @@ class Users(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute('SELECT MIN(id) AS next_id FROM UserAccount')
-        user_id = min(self.resultAsDictionary(cursor)[0]['next_id'], 0)
+        user_id = min(result_as_dict_list(cursor)[0]['next_id'], 0)
         return user_id - 1
 
     def get_rights_holders(self, block_id: int):
@@ -79,7 +79,7 @@ class Users(TimDbBase):
                                      JOIN usergroup ug on ug.name = ua.name
                                      ) tmp ON tmp.gid = b.UserGroup_id
                           WHERE Block_id = %s""", [block_id])
-        return self.resultAsDictionary(cursor)
+        return result_as_dict_list(cursor)
 
     def get_default_rights_holders(self, folder_id: int, object_type: BlockType):
         doc = get_default_right_document(folder_id, object_type)
@@ -110,7 +110,7 @@ class Users(TimDbBase):
         authtemplate = ', yubikey, pass' if include_authdata else ''
         cursor = self.db.cursor()
         cursor.execute(f'SELECT id, name, real_name, email {authtemplate} FROM UserAccount WHERE id = %s', [user_id])
-        result = self.resultAsDictionary(cursor)
+        result = result_as_dict_list(cursor)
         return result[0] if len(result) > 0 else None
 
     def get_user_group_name(self, group_id: int) -> Optional[str]:
@@ -134,7 +134,7 @@ class Users(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute('SELECT id FROM UserGroup WHERE name = %s', [name])
-        return self.resultAsDictionary(cursor)
+        return result_as_dict_list(cursor)
 
     def get_personal_usergroup(self, user: dict) -> int:
         """Gets the personal user group for the user.
@@ -168,7 +168,7 @@ class Users(TimDbBase):
                           WHERE UserGroupMember.UserGroup_id=%s
                           LIMIT %s
                        """, [group_id, limit])
-        return self.resultAsDictionary(cursor)
+        return result_as_dict_list(cursor)
 
     def is_user_id_in_group(self, user_id: int, usergroup_name: str) -> bool:
         cursor = self.db.cursor()
@@ -195,7 +195,7 @@ class Users(TimDbBase):
         """
         cursor = self.db.cursor()
         cursor.execute("""SELECT prefs FROM UserAccount WHERE id = %s""", [user_id])
-        result = self.resultAsDictionary(cursor)
+        result = result_as_dict_list(cursor)
         if not result:
             raise NoSuchUserException(user_id)
         return result[0]['prefs']
@@ -219,7 +219,7 @@ class Users(TimDbBase):
             JOIN UserGroupMember ON UserAccount.id = UserGroupMember.User_id
             JOIN UserGroup ON UserGroup.id = UserGroupMember.UserGroup_id
             WHERE UserGroup.name = %s{order_sql}""", [usergroup_name])
-        return self.resultAsDictionary(c)
+        return result_as_dict_list(c)
 
     def check_if_in_group(self, username, usergroup_name):
         c = self.db.cursor()

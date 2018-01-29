@@ -1,11 +1,16 @@
-import angular, {IRootElementService, IScope} from "angular";
-import {IController} from "angular";
-import {timApp} from "tim/app";
+import {Moment} from "moment";
 import * as chart from "tim/directives/showChartDirective";
 import {markAsUsed} from "tim/utils";
-import {ParCompiler} from "../services/parCompiler";
+import {DialogController, registerDialogComponent, showDialog} from "../dialog";
+import {IAskedQuestion} from "../lecturetypes";
+import {$http, $timeout} from "../ngimport";
 
 markAsUsed(chart);
+
+export type IStatisticsParams = IAskedQuestion;
+
+export interface IStatisticsResult {
+}
 
 /**
  * Created by hajoviin on 6.5.2015.
@@ -20,73 +25,73 @@ markAsUsed(chart);
  * @copyright 2015 Timppa project authors
  */
 
-export class ShowStatisticsToQuestionController implements IController {
-    private static $inject = ["$scope", "$element"];
-    private scope: IScope;
-    private canvas: string;
-    private questionTitle: string;
-    private lecturerAnswered: boolean;
-    private element: IRootElementService;
-    private dynamicAnswerShowControl: any;
+interface IQuestionAnswer {
+    answer_id: number;
+    answer: string;
+    points: number;
+}
 
-    constructor(scope: IScope, element: IRootElementService) {
-        this.scope = scope;
-        this.element = element;
-        this.dynamicAnswerShowControl = {};
-        this.canvas = "";
-        this.questionTitle = "";
-        this.lecturerAnswered = false;
+interface ILectureAnswersResponse {
+    answers: IQuestionAnswer[];
+    askedId: number;
+    latestAnswer: Moment;
+}
 
-        this.scope.$on("closeAnswerSheetForGood", () => {
-            this.scope.$emit("closeAnswerShow");
-            this.dynamicAnswerShowControl.close();
-        });
+export class ShowStatisticsToQuestionController extends DialogController<{params: IStatisticsParams}, IStatisticsResult, "timQuestionStatistics"> {
+    private answers: IQuestionAnswer[] = [];
 
-        this.scope.$on("lecturerAnswered", () => {
-            this.lecturerAnswered = true;
-            this.scope.$emit("showAnswers", true);
-        });
-
-        /**
-         * Adds answer to statistic directive
-         * @memberof module:showStatisticsToQuestionController
-         */
-        this.scope.$on("putAnswers", (event, answer) => {
-            this.dynamicAnswerShowControl.addAnswer(answer.answers);
-        });
-
-        /**
-         * Creates chart based on question json.
-         * @memberof module:showStatisticsToQuestionController
-         */
-        this.scope.$on("createChart", async (event, question) => {
-            this.lecturerAnswered = false;
-            await this.dynamicAnswerShowControl.createChart(question);
-            this.questionTitle = question.questionText;
-
-            window.setTimeout(() => { // give time to html to change
-                ParCompiler.processAllMath(this.element.parent());
-            }, 200);
-
-        });
+    constructor() {
+        super();
     }
 
-    $onInit() {
-
+    private $onInit() {
+        void this.getLectureAnswers();
     }
 
     /**
-     * Closes statistic window
-     * @memberof module:showStatisticsToQuestionController
+     * Gets answers from the current lecture to current question.
      */
-    close() {
-        this.scope.$emit("closeAnswerShow");
-        if (this.lecturerAnswered) {
-            this.dynamicAnswerShowControl.close();
+    private async getLectureAnswers() {
+        while (true) {
+            const response = await $http.get<ILectureAnswersResponse>("/getLectureAnswers", {
+                params: {
+                    asked_id: this.resolve.params.asked_id,
+                    buster: new Date().getTime(),
+                },
+            });
+            const respData = response.data;
+            for (const ans of respData.answers) {
+                this.answers.push(ans);
+            }
+            await $timeout(1000);
         }
     }
+}
 
-    hide() {
-        this.scope.$emit("closeAnswerShow");
-    }
+registerDialogComponent("timQuestionStatistics",
+    ShowStatisticsToQuestionController,
+    {
+        template: `
+<div class="show-answer">
+    <div class="statisticsWindow">
+        <h2 ng-bind-html="$ctrl.questionTitle" ng-click="$ctrl.dynamicAnswerShowControl.toggle()"></h2>
+        <div id="chartDiv" class="chartDiv">
+            <show-chart-directive
+            divresize="true"
+            question="$ctrl.resolve.params"
+            answers="$ctrl.answers"></show-chart-directive>
+        </div>
+    </div>
+    <div class="buttons" style="margin-top: -35px;">
+        <p ng-show="!$ctrl.dynamicAnswerShowControl.isText" class="chart-menu" style="display: inline;">
+            <span ng-click="$ctrl.dynamicAnswerShowControl.toggle()">Bar</span>&nbsp;&nbsp;
+        </p>
+        <button class="timButton" ng-click="$ctrl.hide()">Close</button>
+    </div>
+</div>
+`,
+    });
+
+export async function showStatisticsDialog(p: IStatisticsParams) {
+    return await showDialog<ShowStatisticsToQuestionController>("timQuestionStatistics", {params: () => p});
 }

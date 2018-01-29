@@ -3,7 +3,7 @@
 {% block content %}
     <p class="errormsg">{{ message or self.title() }}</p>
     {% if session.user_id %}
-        {% if current_user.can_write_to_folder(found_item) %}
+        {% if show_create_new %}
             <bootstrap-panel title="Create a new document here">
                 <create-item
                         item-type="document"

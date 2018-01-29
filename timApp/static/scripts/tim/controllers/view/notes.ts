@@ -1,11 +1,25 @@
 import angular, {IScope} from "angular";
 import $ from "jquery";
+import {showMessageDialog} from "../../dialog";
+import {IExtraData, IParResponse} from "../../IParResponse";
 import {$compile, $window} from "../../ngimport";
-import {addElementToParagraphMargin, getFirstPar, getFirstParId, isActionablePar} from "./parhelpers";
-import {onClick} from "./eventhandlers";
-import {markParRead, readingTypes} from "./readings";
 import {getElementParent} from "../../utils";
+import {onClick} from "./eventhandlers";
+import {
+    addElementToParagraphMargin,
+    getFirstPar,
+    getFirstParId,
+    isActionablePar,
+    Paragraph,
+    ParOrArea,
+} from "./parhelpers";
+import {markParRead, readingTypes} from "./readings";
 import {ViewCtrl} from "./ViewCtrl";
+
+export interface INoteEditorOptions {
+    noteData?: {id: string};
+    showDelete?: boolean;
+}
 
 export class NotesHandler {
     public sc: IScope;
@@ -20,12 +34,17 @@ export class NotesHandler {
             if (!$this.hasClass("editable")) {
                 return false;
             }
-            this.toggleNoteEditor($this.parents(".par"), {isNew: false, noteData: {id: $this.attr("note-id")}});
+            const id = $this.attr("note-id");
+            if (!id) {
+                showMessageDialog("Cannot edit this note; missing id attribute.");
+                return;
+            }
+            this.toggleNoteEditor($this.parents(".par"), {noteData: {id: id}});
             return true;
         });
     }
 
-    toggleNoteEditor($parOrArea, options) {
+    toggleNoteEditor($parOrArea: ParOrArea, options: INoteEditorOptions = {}) {
         let caption = "Edit comment";
         const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
         const mobile = touch && (window.screen.width < 1200);
@@ -34,7 +53,7 @@ export class NotesHandler {
         }
         let url,
             data, initUrl;
-        if (options.isNew) {
+        if (!options.noteData) {
             caption = "Add comment";
             url = "/postNote";
             data = {
@@ -51,6 +70,9 @@ export class NotesHandler {
             initUrl = "/note/" + options.noteData.id;
         }
         const $par = getFirstPar($parOrArea);
+        if (!$par) {
+            return;
+        }
         const par_id = getFirstParId($parOrArea),
             attrs = {
                 "save-url": url,
@@ -61,7 +83,7 @@ export class NotesHandler {
                 }, data),
                 "options": {
                     localSaveTag: "note",
-                    showDelete: !options.isNew,
+                    showDelete: !!options.noteData,
                     showImageUpload: true,
                     showPlugins: false,
                     touchDevice: mobile,
@@ -99,16 +121,16 @@ export class NotesHandler {
         this.viewctrl.editing = false;
     }
 
-    handleNoteDelete(saveData, extraData) {
+    handleNoteDelete(saveData: IParResponse, extraData: IExtraData) {
         this.viewctrl.addSavedParToDom(saveData, extraData);
     }
 
-    handleNoteSave(saveData, extraData) {
+    handleNoteSave(saveData: IParResponse, extraData: IExtraData) {
         this.viewctrl.addSavedParToDom(saveData, extraData);
     }
 
-    showNoteWindow(e, $par) {
-        this.toggleNoteEditor($par, {isNew: true});
+    showNoteWindow(e: Event, $par: Paragraph) {
+        this.toggleNoteEditor($par);
     }
 
     /**
@@ -116,7 +138,7 @@ export class NotesHandler {
      * @method createNoteBadge
      * @param $par - Element where the badge needs to be attached
      */
-    createNoteBadge($par) {
+    createNoteBadge($par: Paragraph) {
         this.noteBadgePar = $par;
         if (this.noteBadge) {
             //var parent = getElementParent(sc.noteBadge);
@@ -137,7 +159,7 @@ export class NotesHandler {
         // btn.setAttribute("ng-click", "addNote()");
         btn.onclick = ($event) => {
             $event.stopPropagation();
-            this.toggleNoteEditor(this.noteBadgePar, {isNew: true});
+            this.toggleNoteEditor(this.noteBadgePar);
         };
         $compile(btn)(this.sc);
         return btn;
@@ -145,10 +167,10 @@ export class NotesHandler {
 
     addNote() {
         // sc.clearNoteBadge(null);
-        this.toggleNoteEditor(this.noteBadgePar, {isNew: true});
+        this.toggleNoteEditor(this.noteBadgePar);
     }
 
-    setNotePadge($event) {
+    setNotePadge($event: Event) {
         $event.stopPropagation();
         let $par = $($event.target);
         if (!$par.hasClass("par")) $par = $par.parents(".par");
@@ -160,7 +182,7 @@ export class NotesHandler {
      * @method updateNoteBadge
      * @param $par - Element where the badge needs to be attached
      */
-    updateNoteBadge($par) {
+    updateNoteBadge($par: Paragraph) {
         if (!$par) return null;
         if (!isActionablePar($par)) {
             return;
@@ -178,14 +200,14 @@ export class NotesHandler {
      * Removes the note badge and clears the element selection.
      * @param e - Current click event
      */
-    clearNoteBadge(e) {
+    clearNoteBadge(e: Event) {
         const btn = this.noteBadge;
         if (btn) {
             const parent = getElementParent(btn);
             if (parent) parent.removeChild(btn);
         }
 
-        if (e !== null) {
+        if (e != null) {
             e.stopPropagation();
         }
     }

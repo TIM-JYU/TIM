@@ -1,7 +1,9 @@
 import {IAceEditor} from "../ace-types";
 import {$timeout} from "../ngimport";
+import {TextAreaParEditor} from "./TextAreaParEditor";
+import {AceParEditor} from "./AceParEditor";
 
-export function focusAfter(target: BaseParEditor, key: string, descriptor: PropertyDescriptor) {
+export function focusAfter(target: TextAreaParEditor | AceParEditor, key: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
     descriptor.value = function(this: BaseParEditor, ...args: any[]) {
         originalMethod.apply(this, args);
@@ -28,15 +30,15 @@ export abstract class BaseParEditor {
         this.editor.focus();
     }
 
-    public abstract forceWrap(force: boolean);
+    public abstract forceWrap(force: boolean): void;
 
     public getWrapValue(): number {
         return this.callbacks.getWrapValue();
     }
 
-    public abstract pageBreakClicked();
+    public abstract pageBreakClicked(): void;
 
-    public abstract surroundClicked(before: string, after: string, func?);
+    public abstract surroundClicked(before: string, after: string, func?: () => boolean): void;
 
     public italicSurroundClicked() {
         this.surroundClicked("*", "*", () => this.surroundedByItalic());

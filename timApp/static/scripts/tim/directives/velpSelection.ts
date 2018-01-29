@@ -332,7 +332,7 @@ export class VelpSelectionController implements IController {
      * @returns {*}
      */
     getValuesFromLocalStorage(key: string, defaultValue: string): string {
-        if ($window.localStorage.getItem(key) === null) {
+        if ($window.localStorage.getItem(key) == null) {
             return defaultValue;
         }
         return $window.localStorage.getItem(key);
@@ -701,23 +701,23 @@ export class VelpSelectionController implements IController {
         // Are we checking for the whole document? This "if" might be unnecessary.
         if (paragraphId === "0") {
             returnValue = this.lazyIsVelpGroupSelectedInParagraph(groupId, paragraphId);
-            if (returnValue !== null) {
+            if (returnValue != null) {
                 return returnValue;
             }
             // Not set for the document, we'll try the defaults instead.
             returnValue = this.lazyIsVelpGroupDefaultInParagraph(groupId, paragraphId);
-            if (returnValue !== null) {
+            if (returnValue != null) {
                 return returnValue;
             }
         } else {
             // First check "selected" attributes for paragraph.
             returnValue = this.lazyIsVelpGroupSelectedInParagraph(groupId, paragraphId);
-            if (returnValue !== null) {
+            if (returnValue != null) {
                 return returnValue;
             }
             // Found nothing, we try the defaults instead.
             returnValue = this.isVelpGroupDefaultHere(groupId, paragraphId);
-            if (returnValue !== null) {
+            if (returnValue != null) {
                 return returnValue;
             }
         }
@@ -736,12 +736,12 @@ export class VelpSelectionController implements IController {
         let returnValue;
         // First check defaults here
         returnValue = this.lazyIsVelpGroupDefaultInParagraph(groupId, paragraphId);
-        if (returnValue !== null) {
+        if (returnValue != null) {
             return returnValue;
         }
         // and then try document instead. If we started with a document, this is wasted work.
         returnValue = this.lazyIsVelpGroupDefaultInParagraph(groupId, "0");
-        if (returnValue !== null) {
+        if (returnValue != null) {
             return returnValue;
         }
         return this.isVelpGroupDefaultFallBack(groupId);
@@ -968,7 +968,7 @@ export class VelpSelectionController implements IController {
     }
 
     private isAttachedToParagraph() {
-        return this.groupAttachment.target_type === 1 && this.rctrl.selectedElement !== null;
+        return this.groupAttachment.target_type === 1 && this.rctrl.selectedElement != null;
     }
 
     /**
@@ -1152,7 +1152,7 @@ timApp.filter("filterByLabels", () => {
             return velps;
         }
 
-        if (labels !== undefined) {
+        if (labels != null) {
             for (let i = 0; i < labels.length; i++) {
                 if (labels[i].selected) {
                     selectedLabels.push(labels[i].id);
@@ -1160,7 +1160,7 @@ timApp.filter("filterByLabels", () => {
             }
         }
 
-        if (velps !== undefined) {
+        if (velps != null) {
             for (let j = 0; j < velps.length; j++) {
 
                 for (let k = 0; k < selectedLabels.length; k++) {

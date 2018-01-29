@@ -1,132 +1,152 @@
 import angular from "angular";
-import {timApp} from "../app";
-import {$http, $window} from "../ngimport";
+import {ngStorage} from "ngstorage";
+import {DialogController, registerDialogComponent, showDialog} from "../dialog";
+import {IItem} from "../IItem";
+import {$http, $localStorage, $window} from "../ngimport";
 
-/**
- * Created by miimatku on 27.3.2017.
- */
+export interface ITemplate extends IItem {
 
-timApp.controller("PrintCtrl", ['$scope', '$uibModal', 'document', '$uibModalInstance', '$location', 'templates', '$localStorage',
+}
 
-    function ($scope, $uibModal, document, $uibModalInstance, $location, templates, $localStorage) {
-        $scope.dismissModal = function() {
-            $uibModalInstance.dismiss();
-        };
+export interface IPrintParams {
+    document: IItem;
+    templates: ITemplate[];
+}
 
-        $scope.storage = $localStorage.$default({
-            timPrintingTemplateId: null
+export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "timPrint"> {
+    private storage: ngStorage.StorageService & {timPrintingTemplateId: null | number};
+    private errormsg?: string;
+    private notificationmsg?: string;
+    private docUrl?: string;
+    private loading: boolean;
+    private showPaths: boolean;
+    private pluginsUserCode: boolean;
+    private selectedTemplate?: ITemplate;
+    private templates: ITemplate[];
+    private createdUrl?: string;
+    private document: IItem;
+    private selected: {name: string};
+    private forceRefresh: boolean;
+    private removeOldImages: boolean;
+
+    private $onInit() {
+        this.storage = $localStorage.$default({
+            timPrintingTemplateId: null,
         });
 
-        $scope.options = $scope.storage.id;
+        this.document = this.resolve.params.document;
+        this.templates = this.resolve.params.templates;
+        this.loading = false;
+        this.showPaths = false;
+        this.pluginsUserCode = false;
 
-        $scope.document = document;
-        $scope.templates = templates;
-        $scope.errormsg = null;
-        $scope.notificationmsg = null;
-        $scope.docUrl = null;
-        $scope.loading = false;
-        $scope.showPaths = false;
-        $scope.pluginsUserCode = false;
+        this.selectedTemplate = this.initTemplate();
 
-        $scope.selectedTemplate = initTemplate();
+        this.selected = {
+            name: "PDF",
+        };
+    }
 
-        function initTemplate() {
-            var id = null;
+    private initTemplate() {
+        let t;
 
-            if ($scope.storage.timPrintingTemplateId && $scope.templates) {
+        if (this.storage.timPrintingTemplateId && this.templates) {
 
-                angular.forEach($scope.templates, function(template, key) {
-                    if (template.id === $scope.storage.timPrintingTemplateId) {
-                        id = template.id
-                    }
-                });
-
-            } else if ($scope.templates) {
-                if ($scope.templates.length > 0) {
-                    id = templates[0].id
+            angular.forEach(this.templates, (template, key) => {
+                if (template.id === this.storage.timPrintingTemplateId) {
+                    t = template;
                 }
-            }
+            });
 
-            return { 'id': id };
+        } else if (this.templates) {
+            if (this.templates.length > 0) {
+                t = this.templates[0];
+            }
         }
 
-        $scope.selected = {
-            name: 'PDF'
-        };
-
-
-        $scope.getPrintedDocument = function(fileType) {
-            $scope.errormsg = null;
-            $scope.docUrl = null;
-
-            /*
-            if (fileType !== 'latex' && fileType !== 'pdf') {
-                console.log("The filetype '" + fileType + "' is not valid");
-                return; //TODO: the error should do something visible
-                // TODO: also kind of pointless as the filetype comes from the predefined functions
-            }
-            */
-            var chosenTemplateId = $scope.selectedTemplate.id;
-            $scope.storage.timPrintingTemplateId = chosenTemplateId;
-
-            var pluginsUserCode = $scope.pluginsUserCode;
-            var removeOldImages = $scope.removeOldImages;
-            var force = $scope.forceRefresh;
-
-            if (chosenTemplateId) {
-                $scope.notificationmsg = null;
-
-                var postURL = '/print/' + $scope.document.path;
-                var data = JSON.stringify({
-                    'fileType' : fileType,
-                    'templateDocId' : chosenTemplateId,
-                    'printPluginsUserCode' : pluginsUserCode,
-                    'removeOldImages' : removeOldImages,
-                    'force' : force
-                });
-                $http.post<{url: string}>(postURL, data)
-                    .then(function success(response) {
-                        // console.log(response);
-
-                        // Uncomment this line to automatically open the created doc in a popup tab.
-                        // $scope.openURLinNewTab(requestURL);
-
-                        // $scope.docUrl = '/print/' + $scope.document.path + '?file_type=' + fileType
-                        //    + '&template_doc_id=' + chosenTemplateId + '&plugins_user_code=' + pluginsUserCode;
-                        $scope.docUrl = response.data.url;
-                        // console.log($scope.docUrl);
-
-                        $scope.loading = false;
-
-                    }, function error(response) {
-                        var reformatted = response.data.error.split("\\n").join("<br/>");
-                        $scope.errormsg = reformatted;
-                        $scope.loading = false;
-                    })
-                ;
-            } else {
-                $scope.notificationmsg = "You need to choose a template first!";
-            }
-        };
-
-        $scope.openURLinNewTab = function(url) {
-            $window.open(url, '_blank');
-        };
-
-        $scope.create = function () {
-            $scope.loading = true;
-            $scope.createdUrl = null;
-            $scope.getPrintedDocument($scope.selected.name.toLowerCase());
-        };
-
-        $scope.cancel = function () {
-            $uibModalInstance.dismiss('cancel');
-        };
-
-        $scope.formatPath = function (path) {
-            return path.replace('templates/printing', '../..');
-        };
-
+        return t;
     }
-])
-;
+
+    private getPrintedDocument(fileType: string) {
+        this.errormsg = undefined;
+        this.docUrl = undefined;
+
+        /*
+        if (fileType !== 'latex' && fileType !== 'pdf') {
+            console.log("The filetype '" + fileType + "' is not valid");
+            return; //TODO: the error should do something visible
+            // TODO: also kind of pointless as the filetype comes from the predefined functions
+        }
+        */
+
+        if (!this.selectedTemplate) {
+            this.notificationmsg = "You need to choose a template first!";
+            return;
+        }
+        const chosenTemplateId = this.selectedTemplate.id;
+        this.storage.timPrintingTemplateId = chosenTemplateId;
+
+        const pluginsUserCode = this.pluginsUserCode;
+        const removeOldImages = this.removeOldImages;
+        const force = this.forceRefresh;
+
+        if (chosenTemplateId) {
+            this.notificationmsg = undefined;
+
+            const postURL = "/print/" + this.document.path;
+            const data = JSON.stringify({
+                fileType,
+                templateDocId: chosenTemplateId,
+                printPluginsUserCode: pluginsUserCode,
+                removeOldImages,
+                force,
+            });
+            $http.post<{url: string}>(postURL, data)
+                .then((response) => {
+                    // console.log(response);
+
+                    // Uncomment this line to automatically open the created doc in a popup tab.
+                    // this.openURLinNewTab(requestURL);
+
+                    // this.docUrl = '/print/' + this.document.path + '?file_type=' + fileType
+                    //    + '&template_doc_id=' + chosenTemplateId + '&plugins_user_code=' + pluginsUserCode;
+                    this.docUrl = response.data.url;
+                    // console.log(this.docUrl);
+
+                    this.loading = false;
+
+                }, (response) => {
+                    const reformatted = response.data.error.split("\\n").join("<br/>");
+                    this.errormsg = reformatted;
+                    this.loading = false;
+                })
+            ;
+        }
+    }
+
+    private openURLinNewTab(url: string) {
+        $window.open(url, "_blank");
+    }
+
+    private create() {
+        this.loading = true;
+        this.createdUrl = undefined;
+        this.getPrintedDocument(this.selected.name.toLowerCase());
+    }
+
+    private cancel() {
+        this.dismiss();
+    }
+
+    private formatPath(path: string) {
+        return path.replace("templates/printing", "../..");
+    }
+}
+
+registerDialogComponent("timPrint",
+    PrintCtrl,
+    {templateUrl: "/static/templates/printDialog.html"});
+
+export async function showPrintDialog(p: IPrintParams) {
+    return await showDialog<PrintCtrl>("timPrint", {params: () => p});
+}

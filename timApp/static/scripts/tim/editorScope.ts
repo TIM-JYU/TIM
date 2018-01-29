@@ -3,7 +3,7 @@ import {TextAreaParEditor} from "./directives/TextAreaParEditor";
 
 let currentEditorScope: AceParEditor | TextAreaParEditor | null = null;
 
-export function editorChangeValue(attributes, text) {
+export function editorChangeValue(attributes: string[], text: string) {
     if (!currentEditorScope) {
         return;
     }

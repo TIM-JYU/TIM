@@ -29,7 +29,7 @@ export class SettingsCtrl implements IController {
 
     }
 
-    async submit(saveUrl) {
+    async submit(saveUrl: string) {
         this.saving = true;
         try {
             const response = await $http.post<ISettings>(saveUrl, this.settings);

@@ -156,7 +156,7 @@ export class VelpWindowController implements IController {
         if (this.teacherRight) {
             return false;
         } else {
-            if (points === null) {
+            if (points == null) {
                 return false;
             } else {
                 return true;
@@ -463,7 +463,7 @@ export class VelpWindowController implements IController {
         const oldDefaultGroup = this.velpSelection.getDefaultVelpGroup();
 
         const newDefaultGroup = await this.velpSelection.generateDefaultVelpGroup();
-        if (newDefaultGroup === null) {
+        if (newDefaultGroup == null) {
             return;
         }
         const oldGroupIndex = this.velp.velp_groups.indexOf(oldDefaultGroup.id);
@@ -486,7 +486,7 @@ export class VelpWindowController implements IController {
     }
 
     getCustomColor() {
-        if (typeof this.velp.color !== UNDEFINED || this.velp.color !== null) {
+        if (typeof this.velp.color !== UNDEFINED || this.velp.color != null) {
             return this.velp.color;
         }
     }

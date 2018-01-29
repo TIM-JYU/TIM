@@ -134,7 +134,7 @@ class DocumentPrinter:
             ppar = par
             # Replace plugin- and question pars with regular docpars with the md defined in the 'print' block
             # of their yaml as the md content of the replacement par
-            if par.is_plugin() or par.is_question():
+            if par.is_plugin():
                 plugin_yaml = parse_plugin_values_macros(par=par,
                                                          global_attrs=pdoc_plugin_attrs,
                                                          macros=pdoc_macros,
@@ -391,16 +391,16 @@ class DocumentPrinter:
 
         default_templates = list(set(all_templates) - set(user_templates))
 
-        user_templates_list = []
+        user_templates_list: List[DocInfo] = []
         for t in user_templates:
-            user_templates_list.append({'id': t.id, 'path': t.name, 'origin': 'user', 'name': t.title})
+            user_templates_list.append(t)
 
-        default_templates_list = []
+        default_templates_list: List[DocInfo] = []
         for t in default_templates:
-            default_templates_list.append({'id': t.id, 'path': t.name, 'origin': 'doctree', 'name': t.title})
+            default_templates_list.append(t)
 
-        user_templates_list.sort(key=lambda x: x['name'])
-        default_templates_list.sort(key=lambda x: x['name'])
+        user_templates_list.sort(key=lambda x: x.title)
+        default_templates_list.sort(key=lambda x: x.title)
 
         templates_list = user_templates_list + default_templates_list
 

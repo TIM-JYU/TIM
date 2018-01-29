@@ -4,7 +4,7 @@ from typing import List, Tuple, Optional
 from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.block import Block, insert_block
-from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
 
 
 class Files(TimDbBase):
@@ -91,7 +91,7 @@ class Files(TimDbBase):
 
         cursor = self.db.cursor()
         cursor.execute('SELECT id, id || \'/\' || description AS file FROM Block WHERE type_id = %s', [blocktypes.FILE])
-        files = self.resultAsDictionary(cursor)
+        files = result_as_dict_list(cursor)
         return files
 
     def get_file_block(self, file_id: int, file_filename: str) -> Optional[Block]:

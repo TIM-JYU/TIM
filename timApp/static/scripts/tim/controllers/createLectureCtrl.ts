@@ -18,14 +18,14 @@ import {$http, $log, $window} from "../ngimport";
  * @copyright 2015 Timppa project authors
  */
 
-export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: ILectureFormParams}, ILecture, "timCreateLecture"> {
+export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: ILectureFormParams | null}, ILecture, "timCreateLecture"> {
     private useDate: boolean;
     private useDuration: boolean;
     private dateChosen: boolean;
     private durationChosen: boolean;
     private durationHour: number;
     private durationMin: number;
-    private lectureId: number;
+    private lectureId?: number;
     private dateCheck: boolean;
     private dueCheck: boolean;
     private errorMessage: string;
@@ -43,7 +43,6 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
         super();
         this.dateChosen = false;
         this.durationChosen = false;
-        this.lectureId = null;
         this.dateCheck = false;
         this.showEarlyJoin = true;
         this.errorMessage = "";
@@ -69,7 +68,7 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
         this.startTime = data.start_time;
         this.endTime = data.end_time;
         this.enableDate2();
-        if (data.password !== undefined) {
+        if (data.password != null) {
             this.password = data.password;
         }
         this.options = data.options;
@@ -77,7 +76,7 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
 
     $onInit() {
         this.item = this.resolve.item;
-        if (this.resolve.lecture !== null) {
+        if (this.resolve.lecture != null) {
             this.setLecture(this.resolve.lecture);
         }
     }
@@ -136,43 +135,12 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
      * Remove border from given element.
      * @param element ID of the field whose border will be removed.
      */
-    defInputStyle(element) {
-        if (element !== null || !element.isDefined) {
-            angular.element("#" + element).css("border", "");
-        }
-    }
-
-    /**
-     * Checks if the value is between 0-23
-     * @param element The value of the element to be validated.
-     * @param val The ID of the input field so user can be notified of the error.
-     */
-    isHour(element, val) {
-        if (element === "" || isNaN(element) || element > 23 || element < 0) {
-            this.errorize(val, "Hour has to be between 0 and 23.");
-        }
-    }
-
-    isNumber(element, val) {
-        $log.info(element);
-        if (!(element === "") && (isNaN(element) || element < 0)) {
-            this.errorize(val, "Max number of students must be a positive number or empty.");
-        }
-    }
-
-    /**
-     * Checks if the value is between 0-59
-     * @param element The value of the element to be validated.
-     * @param val The ID of the input field so user can be notified of the error.
-     */
-    isMinute(element, val) {
-        if (element === "" || isNaN(element) || element > 59 || element < 0) {
-            this.errorize(val, "Minutes has to be between 0 and 59.");
-        }
+    defInputStyle(element: string) {
+        angular.element("#" + element).css("border", "");
     }
 
     creatingNew() {
-        return this.lectureId === null;
+        return this.lectureId == null;
     }
 
     /**
@@ -193,13 +161,12 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
         if (this.dateCheck === false && this.dueCheck === false) {
             this.errorize("endInfo", "A date or duration must be chosen.");
         }
-        this.isNumber(this.options.max_students, "maxStudents");
 
-        if (this.startTime !== null) {
+        if (this.startTime != null) {
             const lectureStartingInPast = moment().diff(this.startTime) >= 0;
 
             /* Checks that are run if end date is used*/
-            if (this.useDate && this.endTime !== null) {
+            if (this.useDate && this.endTime != null) {
                 if (this.endTime.diff(this.startTime) < 120000) {
                     this.errorize("endDateDiv", "Lecture has to last at least two minutes.");
                 }
@@ -239,8 +206,7 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
             if (this.earlyJoining) {
                 this.startTime.subtract(15, "minutes");
             }
-            const lectureParams: ILecture = {
-                is_full: null,
+            const lectureParams = {
                 lecture_id: this.lectureId,
                 doc_id: this.item.id,
                 lecture_code: this.lectureCode,
@@ -249,13 +215,13 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
                 end_time: this.endTime,
                 options: this.options,
             };
-            const response = await $http.post<{lectureId: number}>("/createLecture", lectureParams);
+            const response = await $http.post<ILecture>("/createLecture", lectureParams);
             if (!this.creatingNew()) {
-                $log.info("Lecture " + response.data.lectureId + " updated.");
+                $log.info("Lecture " + response.data.lecture_id + " updated.");
             } else {
-                $log.info("Lecture created: " + response.data.lectureId);
+                $log.info("Lecture created: " + response.data.lecture_id);
             }
-            this.close(lectureParams);
+            this.close(response.data);
         }
     }
 
@@ -264,7 +230,7 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
      * @param inputId The ID of the input field so user can be notified of the error.
      * @param errorText Error text that will be printed if the error occurs.
      */
-    errorize(inputId, errorText) {
+    errorize(inputId: string, errorText: string) {
         angular.element("#" + inputId).css("border", "1px solid red");
         if (errorText.length > 0) {
             this.errorMessage += errorText + "<br />";
@@ -289,7 +255,7 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
             "long_poll",
         ];
         for (let i = 0; i < elementsToRemoveErrorsFrom.length; i++) {
-            if (elementsToRemoveErrorsFrom[i] !== undefined) {
+            if (elementsToRemoveErrorsFrom[i] != null) {
                 this.defInputStyle(elementsToRemoveErrorsFrom[i]);
             }
         }

@@ -1,10 +1,12 @@
+import {IScope} from "angular";
 import $ from "jquery";
-export function watchEditMode(newVal, oldVal, $scope) {
+
+export function watchEditMode(newVal: string | null, oldVal: string | null, $scope: IScope) {
     const w: any = window;
     w.editMode = newVal;
     $(".editmode").removeClass("editmode");
 
-    if (newVal === null) {
+    if (newVal == null) {
         $(".parEditButton").removeClass("active");
         $(".areaEditButton").removeClass("active");
         enableParEdit();
@@ -43,7 +45,7 @@ function enableAreaEditPassive() {
 function disableAreaEdit() {
 }
 
-function showHidden(showParam) {
+function showHidden(showParam: string | null) {
     const displayValue = showParam == null ? "none" : "initial";
     $(".mdcontent").css("display", displayValue);
 

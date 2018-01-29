@@ -1,18 +1,29 @@
 import angular, {IFormController, IRootElementService} from "angular";
 import $ from "jquery";
 import {
-    fixQuestionJson, getPointsTable, IPreviewParams, makePreview,
+    fixQuestionJson,
+    getPointsTable,
+    IPreviewParams,
+    makePreview,
     minimizeJson,
 } from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed, setsetting} from "tim/utils";
 import {QuestionMatrixController} from "../components/questionMatrix";
-import {DialogController, registerDialogComponent, showDialog} from "../dialog";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
 import {IParResponse} from "../IParResponse";
 import {
-    IAskedJsonJson, IAskedJsonJsonJson, IColumn, IExplCollection, IHeader, IQuestionUI, IRow,
-    IUnprocessedHeadersCompat, MatrixType, QuestionType,
+    IAskedJsonJson,
+    IAskedQuestion,
+    IColumn,
+    IExplCollection,
+    IHeader,
+    IQuestionParagraph,
+    IQuestionUI,
+    IRow,
+    MatrixType,
+    QuestionType,
 } from "../lecturetypes";
-import {$http, $log, $timeout, $window} from "../ngimport";
+import {$http, $timeout, $window} from "../ngimport";
 import {ParCompiler} from "../services/parCompiler";
 
 markAsUsed(QuestionMatrixController);
@@ -65,19 +76,7 @@ export interface INewQuestionParams {
     docId: number;
 }
 
-export interface IEditAskedParams {
-    asked_id: number;
-    markup: IAskedJsonJson;
-    docId: number;
-}
-
-export interface IEditNotAskedParams {
-    markup: IAskedJsonJson;
-    par_id: string;
-    docId: number;
-}
-
-export type IEditQuestionParams = IEditAskedParams | IEditNotAskedParams;
+export type IEditQuestionParams = IQuestionParagraph | IAskedQuestion;
 
 export interface IQuestionDialogResult {
     data: IParResponse;
@@ -86,29 +85,33 @@ export interface IQuestionDialogResult {
 }
 
 function isNewQuestion(params: IQuestionDialogParams): params is INewQuestionParams {
-    return (params as INewQuestionParams).qst !== undefined;
+    return (params as INewQuestionParams).par_id_next != null;
 }
 
-function isAskedQuestion(params: IEditQuestionParams): params is IEditAskedParams {
-    return (params as IEditAskedParams).asked_id !== undefined;
+function isAskedQuestion(params: IQuestionDialogParams): params is IAskedQuestion {
+    return (params as IAskedQuestion).asked_id != null;
 }
 
-export async function fetchQuestion(docId: number, parId: string, edit: boolean = true): Promise<IAskedJsonJson> {
-    const response = await $http<{markup: IAskedJsonJson}>({
+export async function fetchQuestion(docId: number, parId: string, edit: boolean = true): Promise<IQuestionParagraph> {
+    const response = await $http<IQuestionParagraph>({
         url: "/getQuestionByParId",
         method: "GET",
-        params: {par_id: parId, doc_id: docId, edit: edit},
+        params: {par_id: parId, doc_id: docId, edit},
     });
-    return response.data.markup;
+    return response.data;
+}
+
+export async function fetchAskedQuestion(askedId: number): Promise<IAskedQuestion> {
+    const response = await $http<IAskedQuestion>({
+        url: "/getAskedQuestionById",
+        method: "GET",
+        params: {asked_id: askedId},
+    });
+    return response.data;
 }
 
 export async function fetchAndEditQuestion(docId: number, parId: string, edit: boolean = true) {
-    const data = await fetchQuestion(docId, parId, edit);
-    return await showQuestionEditDialog({
-        markup: data,
-        par_id: parId,
-        docId: docId,
-    });
+    return await showQuestionEditDialog(await fetchQuestion(docId, parId, edit));
 }
 
 export async function deleteQuestionWithConfirm(docId: number, parId: string): Promise<IParResponse | null> {
@@ -123,18 +126,14 @@ export async function deleteQuestionWithConfirm(docId: number, parId: string): P
 export class QuestionController extends DialogController<{params: IQuestionDialogParams}, IQuestionDialogResult, "timEditQuestion"> {
     private static $inject = ["$element"];
     private answerFieldTypes: IAnswerField[];
-    private asked_id?: number;
     private dateTimeOptions: EonasdanBootstrapDatetimepicker.SetOptions;
     private settings: {timelimit: number | null};
-    private question: IAskedJsonJsonJson & IQuestionUI;
+    private question: IAskedJsonJson;
+    private ui: IQuestionUI;
     private rows: IExtendedRow[];
-    private columns: {}[];
+    private columns: Array<{}>;
     private columnHeaders: IHeader[];
-    private new_question: boolean;
-    private par_id: string;
-    private par_id_next: string;
     private titleChanged: boolean;
-    private markup: IAskedJsonJson;
     private oldMarkupJson: string;
     private element: IRootElementService;
     private oldHeaders: string[];
@@ -142,6 +141,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private previewParams: IPreviewParams;
     private customError: string | null;
     private f?: IFormController;
+    private qst = false;
 
     constructor(element: IRootElementService) {
         super();
@@ -155,16 +155,18 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         this.settings = $window.sessionsettings;
 
         this.question = {
-            headers: [],
-            rows: [],
-            questionTitle: "",
-            questionText: "",
-            matrixType: "",
             answerFieldType: "text",
-            timeLimit: 30,
-            timeLimitFields: {hours: 0, minutes: 0, seconds: 30},
-            endTimeSelected: true,
+            headers: [],
+            matrixType: "",
+            questionText: "",
+            questionTitle: "",
             questionType: "",
+            rows: [],
+            timeLimit: 30,
+        };
+        this.ui = {
+            endTimeSelected: true,
+            timeLimitFields: {hours: 0, minutes: 0, seconds: 30},
         };
 
         this.rows = [];
@@ -178,10 +180,10 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         ];
         this.oldMarkupJson = "";
         this.setEmptyMarkup();
-        this.previewParams = makePreview(this.markup);
+        this.previewParams = makePreview(this.question);
     }
 
-    $onInit() {
+    private $onInit() {
         if (isNewQuestion(this.resolve.params)) {
             this.newQuestion(this.resolve.params);
         } else {
@@ -189,7 +191,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         }
     }
 
-    async $postLink() {
+    private async $postLink() {
         await $timeout();
         this.addKeyListeners();
         // ParCompiler.processAllMath($element.parent());
@@ -206,75 +208,65 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
          */
     }
 
-    putBackQuotations(x: string) {
+    private putBackQuotations(x: string) {
         const ox = x.replace(/<br>/g, "\n");
         return ox.replace(/&quot;/g, '"');
     }
 
-    setTime() {
-        this.question.timeLimitFields = {hours: 0, minutes: 0, seconds: 30};
+    private setTime() {
+        this.ui.timeLimitFields = {hours: 0, minutes: 0, seconds: 30};
         if (this.settings && this.settings.timelimit && this.settings.timelimit > 0) {
             let time = this.settings.timelimit;
             if (time > 3600) {
-                this.question.timeLimitFields.hours = Math.floor(time / 3600);
+                this.ui.timeLimitFields.hours = Math.floor(time / 3600);
             } else {
-                this.question.timeLimitFields.hours = 0;
+                this.ui.timeLimitFields.hours = 0;
             }
             if (time > 60) {
-                this.question.timeLimitFields.minutes = Math.floor(time / 60);
+                this.ui.timeLimitFields.minutes = Math.floor(time / 60);
                 time = time % 60;
             } else {
-                this.question.timeLimitFields.minutes = 0;
+                this.ui.timeLimitFields.minutes = 0;
             }
             if (time > 0) {
-                this.question.timeLimitFields.seconds = time;
+                this.ui.timeLimitFields.seconds = time;
             } else {
-                this.question.timeLimitFields.seconds = 0;
+                this.ui.timeLimitFields.seconds = 0;
             }
         }
     }
 
-    setEmptyMarkup(qst?: boolean) {
-        this.markup = {
+    private setEmptyMarkup(qst = false) {
+        this.question = {
+            answerFieldType: "text",
             expl: {},
-            json: {
-                answerFieldType: "text",
-                headers: [],
-                matrixType: "",
-                questionText: "",
-                questionTitle: "",
-                questionType: "",
-                rows: [],
-                timeLimit: 0,
-            },
-            qst: qst,
-            taskId: "",
+            headers: [],
+            matrixType: "",
+            questionText: "",
+            questionTitle: "",
+            questionType: "",
+            rows: [],
+            timeLimit: 0,
         };
+        this.qst = qst;
     }
 
-    newQuestion(data: INewQuestionParams) {
-        this.new_question = true;
-        this.par_id = "NEW_PAR";
+    private newQuestion(data: INewQuestionParams) {
         this.setEmptyMarkup(data.qst);
-        this.par_id_next = data.par_id_next;
         this.titleChanged = false;
-        if (this.markup.qst) {
-            this.question.endTimeSelected = false; // default no time
+        if (this.qst) {
+            this.ui.endTimeSelected = false; // default no time
         }
     }
 
-    editQuestion(data: IEditQuestionParams) {
-        const json = data.markup.json;
-        this.markup = data.markup;
+    private isAskedQuestion() {
+        return isAskedQuestion(this.resolve.params);
+    }
 
-        this.asked_id = undefined;
-        this.new_question = false;
+    private editQuestion(data: IEditQuestionParams) {
+        const json = isAskedQuestion(data) ? data.json.json : data.markup;
+
         this.titleChanged = false;
-        if (isAskedQuestion(data)) {
-            this.asked_id = data.asked_id;
-        } else if (data.par_id !== undefined) {
-            this.par_id = data.par_id;
-        }
 
         if (json.questionTitle) {
             this.question.questionTitle = this.putBackQuotations(json.questionTitle);
@@ -296,8 +288,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             this.question.answerFieldType = json.answerFieldType;
         }
 
-        const jsonData: IUnprocessedHeadersCompat = json.data || json;  // compatibility for old
-        const r = fixQuestionJson(jsonData);
+        const r = fixQuestionJson(json);
         const jsonHeaders = r.headers;
         const jsonRows = r.rows;
 
@@ -312,7 +303,8 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             }
         }
         this.columnHeaders = columnHeaders;
-        const pointsTable = getPointsTable(data.markup.points);
+        const pointsTable = getPointsTable(isAskedQuestion(data) ? data.json.json.points : data.markup.points);
+        const expl: IExplCollection | undefined = isAskedQuestion(data) ? data.json.json.expl : data.markup.expl;
 
         const rows: IExtendedRow[] = [];
 
@@ -329,8 +321,8 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             };
 
             const idString = "" + (i + 1); // rows[i].id.toString();
-            if (data.markup.expl && idString in data.markup.expl) {
-                rows[i].expl = data.markup.expl[idString];
+            if (expl && idString in expl) {
+                rows[i].expl = expl[idString];
             }
 
             const jsonColumns = jsonRows[i].columns;
@@ -368,13 +360,13 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         this.rows = rows;
 
         if (json.timeLimit && json.timeLimit > 0) {
-            this.question.endTimeSelected = true;
+            this.ui.endTimeSelected = true;
         } else {
-            this.question.endTimeSelected = false;
+            this.ui.endTimeSelected = false;
         }
     }
 
-    moveToElement(event: Event, dir: number) {
+    private moveToElement(event: Event, dir: number) {
         event.preventDefault();
         const activeObj = document.activeElement;
         const id = activeObj.id;
@@ -397,7 +389,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         return 0;
     }
 
-    addKeyListeners() {
+    private addKeyListeners() {
         const questionForm = this.element.find("form")[0];
 
         questionForm.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -431,10 +423,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     /**
      * A function for creating a matrix.
-     * @memberof module:questionController
      * @param type The answer type of the matrix.
      */
-    createMatrix(type: QuestionType) {
+    private createMatrix(type: QuestionType) {
 
         if (!this.oldHeaders) {
             this.oldHeaders = [];
@@ -449,9 +440,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         const oldRows = 1;
         const oldCols = 1;
 
-        const constHeaders = {
+        const constHeaders: {[key: string]: string[] | undefined} = {
             "true-false": ["True", "False"],
-            likert: ["1", "2", "3", "4", "5"],
+            "likert": ["1", "2", "3", "4", "5"],
         };
         let rowsCount = 0;
         let columnsCount = 0;
@@ -531,10 +522,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     /**
      * A function to add a column to an existing matrix.
-     * @memberof module:questionController
      * @param loc The index in the matrix where to add the new column.
      */
-    addCol(loc: number) {
+    private addCol(loc: number) {
         let location = loc;
         if (loc === -1) {
             location = this.rows[0].columns.length;
@@ -554,7 +544,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         }
     }
 
-    createColumnsForRow(location: number): IExtendedColumn[] {
+    private createColumnsForRow(location: number): IExtendedColumn[] {
         const columns: IExtendedColumn[] = [];
         if (this.rows.length > 0) {
             for (let j = 0; j < this.rows[0].columns.length; j++) {
@@ -573,10 +563,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     /**
      * The function adds a row to an existing matrix
-     * @memberof module:questionController
      * @param loc The index in the matrix where to add the new row.
      */
-    addRow(loc: number) {
+    private addRow(loc: number) {
         let location = loc;
         if (loc === -1) {
             location = this.rows.length;
@@ -601,10 +590,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     /**
      * A function to delete a row from a matrix.
-     * @memberof module:questionController
      * @param indexToBeDeleted The index of the row to be deleted.
      */
-    delRow(indexToBeDeleted: number) {
+    private delRow(indexToBeDeleted: number) {
         if (this.rows.length > 1) {
             if (indexToBeDeleted === -1) {
                 this.rows.splice(-1, 1);
@@ -620,10 +608,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     /**
      * A function to delete a column from a matrix.
-     * @memberof module:questionController
      * @param indexToBeDeleted Index of the column to be deleted.
      */
-    delCol(indexToBeDeleted: number) {
+    private delCol(indexToBeDeleted: number) {
         for (let i = 0; i < this.rows.length; i++) {
             if (indexToBeDeleted === -1) {
                 this.rows[i].columns.splice(-1, 1);
@@ -640,20 +627,17 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     /**
      * A function to reset the question values.
-     * @memberof module:questionController
      */
-    clearQuestion() {
+    private clearQuestion() {
         this.question = {
-            headers: [],
-            rows: [],
-            questionTitle: "",
-            questionText: "",
-            matrixType: "",
             answerFieldType: "text",
-            endTimeSelected: true,
-            timeLimit: 30,
-            timeLimitFields: {hours: 0, minutes: 0, seconds: 30},
+            headers: [],
+            matrixType: "",
+            questionText: "",
+            questionTitle: "",
             questionType: "",
+            rows: [],
+            timeLimit: 30,
         };
         this.setTime();
 
@@ -664,30 +648,28 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     /**
      * The function replaces linebreaks with HTML code.
-     * @memberof module:questionController
      * @param val The input string
      * @returns {*} The reformatted line.
      */
-    replaceLinebreaksWithHTML(val: string) {
+    private replaceLinebreaksWithHTML(val: string) {
         const output = val.replace(/(?:\r\n|\r|\n)/g, "<br>");
         // output = output.replace(/"/g, '&quot;');
-        //return output.replace(/\\/g, "\\\\");
+        // return output.replace(/\\/g, "\\\\");
         // var output = val.replace(/(?:\r\n)/g, '\n');
         return output;
     }
 
     /**
      * Function for checking if the row headings are empty.
-     * @memberof module:questionController
      * @param rows The array of rows to be checked.
      * @returns {boolean} Whether or not the row headings are empty.
      */
-    rowHeadingsEmpty(rows: IRow[]) {
+    private rowHeadingsEmpty(rows: IRow[]) {
         if (rows.length < 2) {
             return false;
         }
         for (let i = 0; i < rows.length; i++) {
-            if (rows[i].text === "" || rows[i].text === null) {
+            if (rows[i].text === "" || rows[i].text == null) {
                 return true;
             }
         }
@@ -698,7 +680,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
      * Creates a string of points. Rows are separated by | and answers in the same row separated by ;
      * @returns {string}
      */
-    createPoints() {
+    private createPoints() {
         let points = "";
         let separator = "";
         let separator2 = "";
@@ -744,7 +726,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
      * Creates a dict with explanations for question rows
      * @returns {{}}
      */
-    createExplanation(): IExplCollection {
+    private createExplanation(): IExplCollection {
         const expl: IExplCollection = {};
         let n = 0;
         for (let i = 0; i < this.rows.length; i++) {
@@ -762,7 +744,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
      * @returns {{questionText: string, title: string, questionType: *, answerFieldType: string, matrixType: string,
      * timeLimit: string, data: {headers: Array, rows: Array}}}
      */
-    createJson(): IAskedJsonJsonJson | undefined {
+    private createJson(): IAskedJsonJson | undefined {
         if (this.question.questionTitle == "") {
             this.question.questionTitle = "Untitled";
         }
@@ -775,22 +757,22 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             this.customError = "You must have at least one row.";
         }
         let timeLimit: number | undefined;
-        if (this.question.endTimeSelected) {
-            if (!this.question.timeLimitFields.hours) {
-                this.question.timeLimitFields.hours = 0;
+        if (this.ui.endTimeSelected) {
+            if (!this.ui.timeLimitFields.hours) {
+                this.ui.timeLimitFields.hours = 0;
             }
-            if (!this.question.timeLimitFields.minutes) {
-                this.question.timeLimitFields.minutes = 0;
+            if (!this.ui.timeLimitFields.minutes) {
+                this.ui.timeLimitFields.minutes = 0;
             }
-            if (!this.question.timeLimitFields.seconds) {
-                this.question.timeLimitFields.seconds = 0;
+            if (!this.ui.timeLimitFields.seconds) {
+                this.ui.timeLimitFields.seconds = 0;
             }
-            timeLimit = this.question.timeLimitFields.seconds;
-            if (this.question.timeLimitFields.hours) {
-                timeLimit = timeLimit + (this.question.timeLimitFields.hours * 60 * 60);
+            timeLimit = this.ui.timeLimitFields.seconds;
+            if (this.ui.timeLimitFields.hours) {
+                timeLimit = timeLimit + (this.ui.timeLimitFields.hours * 60 * 60);
             }
-            if (this.question.timeLimitFields.minutes) {
-                timeLimit = timeLimit + (this.question.timeLimitFields.minutes * 60);
+            if (this.ui.timeLimitFields.minutes) {
+                timeLimit = timeLimit + (this.ui.timeLimitFields.minutes * 60);
             }
             if (timeLimit <= 0) {
                 this.customError = "Please enter a duration greater than zero or for unending question uncheck the duration box.";
@@ -799,7 +781,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             timeLimit = undefined;
         }
 
-        if (this.customError !== null || (this.f && this.f.$invalid)) {
+        if (this.customError != null || (this.f && this.f.$invalid)) {
             if (this.question.questionTitle === "Untitled") {
                 this.question.questionTitle = "";
             }
@@ -819,7 +801,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             }
         }
 
-        if (this.question.questionText === undefined || this.question.questionTitle === undefined || this.question.answerFieldType === undefined) {
+        if (this.question.questionText == null || this.question.questionTitle == null || this.question.answerFieldType == null) {
             return;
         }
 
@@ -862,9 +844,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         }
 
         const minimized = minimizeJson({
-            answerFieldType: this.question.answerFieldType,
             headers: headersJson,
-            questionType: this.question.questionType,
             rows: rowsJson,
         });
 
@@ -876,56 +856,46 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             questionTitle: this.question.questionTitle,
             questionType: this.question.questionType,
             rows: minimized.rows,
-            timeLimit: timeLimit,
-            timeLimitFields: this.question.timeLimitFields,
+            timeLimit,
         };
 
-        this.markup.json = questionjson;
-        const md = this.markup;
+        this.question = questionjson;
         const points = this.createPoints();
         if (points) {
-            md.points = points;
+            this.question.points = points;
         } else {
-            delete md.points;
+            delete this.question.points;
         }
-        md.expl = this.createExplanation();
+        this.question.expl = this.createExplanation();
         return questionjson;
     }
 
-    async $doCheck() {
+    private async $doCheck() {
         this.createJson();
-        const currJson = JSON.stringify(this.markup);
+        const currJson = JSON.stringify(this.question);
         if (currJson !== this.oldMarkupJson) {
             this.oldMarkupJson = currJson;
             await this.updatePreview();
         }
     }
 
-    async updatePreview() {
-        const mdStr = JSON.stringify(this.markup, null, 4);
-        const docId = this.resolve.params.docId;
+    private async updatePreview() {
+        const mdStr = JSON.stringify(this.question, null, 4);
         const response = await $http.post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", angular.extend({
-            docId,
             text: mdStr,
         }));
-        const markup = response.data.md;
-        this.previewParams = makePreview(markup);
+        this.previewParams = makePreview(response.data.md);
     }
 
     /**
      * Validates and saves the question into the database.
-     * @memberof module:questionController
      */
-    async createQuestion(ask: boolean) {
+    private async createQuestion(ask: boolean) {
         const questionjson = this.createJson();
+        const p = this.resolve.params;
         if (!questionjson) {
             return;
         }
-        const docId = this.resolve.params.docId;
-        const mdStr = JSON.stringify(this.markup, null, 4);
-
-        // var yaml = JSON2YAML(questionjson);
-        // $log.info(yaml);
 
         // Without timeout 'timelimit' won't be saved in settings session variable. Thread issue?
         this.settings.timelimit = questionjson.timeLimit || null;
@@ -937,56 +907,68 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             setsetting("timelimit", "" + v);
         }, 1000);
 
-        if (this.asked_id) {
-            await this.updatePoints();
+        if (isAskedQuestion(p)) {
+            await this.updatePoints(p);
+            return;
         }
 
         let route = "/postParagraphQ/";
-        if (this.new_question) {
+        let params;
+        if (isNewQuestion(p)) {
             route = "/newParagraphQ/";
+            params = {par_next: p.par_id_next, isTask: this.qst}; // TODO: should be possible to input taskId in the dialog
+        } else {
+            params = {par: p.parId, taskId: p.taskId, isTask: p.qst};
         }
+        const docId = p.docId;
         const response = await $http.post<IParResponse>(route, angular.extend({
             docId,
-            par: cleanParId(this.par_id),
-            par_next: this.par_id_next,
-            text: mdStr,
+            ...params,
+            question: this.question,
         }));
         const data = response.data;
-        $log.info("The question was successfully added to database");
-        this.close({data: data, deleted: false, ask: ask});
+        this.close({data, deleted: false, ask});
     }
 
     /**
      * Calls /updatePoints/ to update questions points according to form
      */
-    async updatePoints() {
+    private async updatePoints(a: IAskedQuestion) {
         const points = this.createPoints();
         const expl = this.createExplanation();
         await $http({
             method: "POST",
             url: "/updatePoints/",
             params: {
-                asked_id: this.asked_id,
+                asked_id: a.asked_id,
                 expl,
                 points,
             },
         });
     }
 
-    async deleteQuestion() {
+    private async deleteQuestion() {
+        if (isNewQuestion(this.resolve.params)) {
+            await showMessageDialog("Not editing a question - there is nothing to delete.");
+            return;
+        }
+        if (isAskedQuestion(this.resolve.params)) {
+            await showMessageDialog("Editing an asked question - cannot delete now.");
+            return;
+        }
         const docId = this.resolve.params.docId;
-        const parId = this.par_id;
+        const parId = this.resolve.params.parId;
         const data = await deleteQuestionWithConfirm(docId, parId);
-        if (data !== null) {
-            this.close({data: data, deleted: true, ask: false});
+        if (data != null) {
+            this.close({data, deleted: true, ask: false});
         }
     }
 
-    explFocus($event: Event) {
+    private explFocus($event: Event) {
         $($event.target).parent().addClass("explFocus");
     }
 
-    explBlur($event: Event) {
+    private explBlur($event: Event) {
         $($event.target).parent().removeClass("explFocus");
     }
 
@@ -994,13 +976,13 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
      * Changes the question title field to match the question if user hasn't defined title
      * @param question of question
      */
-    changeQuestionTitle(question: string) {
+    private changeQuestionTitle(question: string) {
         if (!this.titleChanged) {
             this.question.questionTitle = question;
         }
     }
 
-    titleIsChanged() {
+    private titleIsChanged() {
         this.titleChanged = true;
     }
 }

@@ -1,5 +1,6 @@
 import {IController} from "angular";
 import {timApp} from "tim/app";
+import {IUser} from "../IUser";
 import {Users} from "../services/userService";
 
 class LoginMenuController implements IController {
@@ -21,33 +22,29 @@ class LoginMenuController implements IController {
     getCurrentUser = () => Users.getCurrent();
     getSessionUsers = () => Users.getSessionUsers();
 
-    addUser($event) {
+    addUser($event: Event) {
         $event.stopPropagation();
         this.addingToSession = !this.addingToSession;
     }
 
-    logout = (user, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);
+    logout = (user: IUser, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);
     isLoggedIn = () => Users.isLoggedIn();
 
-    korppiLogin(addingToSession) {
+    korppiLogin(addingToSession: boolean) {
         this.korppiLoading = true;
         Users.korppiLogin(addingToSession);
     }
 
     isKorppi = () => Users.isKorppi();
 
-    stopClick($event) {
+    stopClick($event: Event) {
         $event.stopPropagation();
     }
 
-    toggled(open) {
+    toggled(open: boolean) {
         if (!open) {
             this.addingToSession = false;
         }
-    }
-
-    addTestUser($event) {
-        Users.addUser();
     }
 
     loginWithEmail() {
@@ -57,7 +54,7 @@ class LoginMenuController implements IController {
             });
     }
 
-    beginLogout($event) {
+    beginLogout($event: Event) {
         if (Users.isKorppi()) {
             this.loggingout = true;
             $event.stopPropagation();

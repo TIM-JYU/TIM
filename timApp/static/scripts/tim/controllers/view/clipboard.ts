@@ -1,12 +1,13 @@
+import {IScope} from "angular";
+import {IParResponse} from "../../IParResponse";
 import {$http, $window} from "../../ngimport";
+import {Users} from "../../services/userService";
+import {Coords} from "../../utils";
 import {
     createNewPar, dereferencePar, getAreaDocId, getAreaId, getFirstParId, getLastParId,
-    getParId,
+    getParId, Paragraph, ParOrArea,
 } from "./parhelpers";
-import {Users} from "../../services/userService";
-import {IScope} from "angular";
 import {ViewCtrl} from "./ViewCtrl";
-import {IParResponse} from "../../IParResponse";
 
 export class ClipboardHandler {
     public sc: IScope;
@@ -21,29 +22,29 @@ export class ClipboardHandler {
         view.pasteFunctions = this.getPasteFunctions();
     }
 
-    showPasteMenu(e, $parOrArea, coords) {
+    showPasteMenu(e: Event, $parOrArea: ParOrArea, coords: Coords) {
         this.viewctrl.pasteFunctions = this.getPasteFunctions();
         this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "$ctrl.pasteFunctions", contenturl: "/clipboard"});
     }
 
-    showMoveMenu(e, $parOrArea, coords) {
+    showMoveMenu(e: Event, $parOrArea: ParOrArea, coords: Coords) {
         this.viewctrl.pasteFunctions = this.getMoveFunctions();
         this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "$ctrl.pasteFunctions", contenturl: "/clipboard"});
     }
 
-    pasteContentAbove(e, $par) {
+    pasteContentAbove(e: Event, $par: Paragraph) {
         this.pasteAbove(e, $par, false);
     }
 
-    pasteRefAbove(e, $par) {
+    pasteRefAbove(e: Event, $par: Paragraph) {
         this.pasteAbove(e, $par, true);
     }
 
-    pasteContentBelow(e, $par) {
+    pasteContentBelow(e: Event, $par: Paragraph) {
         this.pasteBelow(e, $par, false);
     }
 
-    pasteRefBelow(e, $par) {
+    pasteRefBelow(e: Event, $par: Paragraph) {
         this.pasteBelow(e, $par, true);
     }
 
@@ -66,7 +67,7 @@ export class ClipboardHandler {
         this.viewctrl.allowPasteRef = false;
     }
 
-    async moveAbove(e, $parOrArea) {
+    async moveAbove(e: Event, $parOrArea: ParOrArea) {
         try {
             var response = await $http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
                 par_before: getFirstParId($parOrArea),
@@ -75,7 +76,7 @@ export class ClipboardHandler {
             $window.alert(e.data.error);
             return;
         }
-        if (response.data === null) {
+        if (response.data == null) {
             return;
         }
 
@@ -83,16 +84,14 @@ export class ClipboardHandler {
         $parOrArea.before($newpar);
 
         const extraData = {
-            docId: this.viewctrl.docId, // current document id
-            par: getFirstParId($newpar), // the id of paragraph on which the editor was opened
-            par_next: $parOrArea.id, // the id of the paragraph that follows par
+            par: getParId($newpar)!, // the id of paragraph on which the editor was opened
         };
 
         this.viewctrl.addSavedParToDom(response.data, extraData);
         this.deleteFromSource();
     }
 
-    async moveBelow(e, $parOrArea) {
+    async moveBelow(e: Event, $parOrArea: ParOrArea) {
         try {
             var response = await $http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
                 par_after: getLastParId($parOrArea),
@@ -101,7 +100,7 @@ export class ClipboardHandler {
             $window.alert(e.data.error);
             return;
         }
-        if (response.data === null) {
+        if (response.data == null) {
             return;
         }
 
@@ -109,16 +108,14 @@ export class ClipboardHandler {
         $parOrArea.after($newpar);
 
         const extraData = {
-            docId: this.viewctrl.docId, // current document id
-            par: getFirstParId($newpar), // the id of paragraph on which the editor was opened
-            par_next: $parOrArea.id, // the id of the paragraph that follows par
+            par: getParId($newpar)!, // the id of paragraph on which the editor was opened
         };
 
         this.viewctrl.addSavedParToDom(response.data, extraData);
         this.deleteFromSource();
     }
 
-    async pasteAbove(e, $parOrArea, asRef) {
+    async pasteAbove(e: Event, $parOrArea: ParOrArea, asRef: boolean) {
         try {
             var response = await $http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
                 par_before: getFirstParId($parOrArea),
@@ -128,7 +125,7 @@ export class ClipboardHandler {
             $window.alert(e.data.error);
             return;
         }
-        if (response.data === null) {
+        if (response.data == null) {
             return;
         }
 
@@ -136,15 +133,13 @@ export class ClipboardHandler {
         $parOrArea.before($newpar);
 
         const extraData = {
-            docId: this.viewctrl.docId, // current document id
-            par: getFirstParId($newpar), // the id of paragraph on which the editor was opened
-            par_next: $parOrArea.id, // the id of the paragraph that follows par
+            par: getParId($newpar)!, // the id of paragraph on which the editor was opened
         };
 
         this.viewctrl.addSavedParToDom(response.data, extraData);
     }
 
-    async pasteBelow(e, $parOrArea, asRef) {
+    async pasteBelow(e: Event, $parOrArea: ParOrArea, asRef: boolean) {
         try {
             var response = await $http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
                 par_after: getLastParId($parOrArea),
@@ -154,7 +149,7 @@ export class ClipboardHandler {
             $window.alert(e.data.error);
             return;
         }
-        if (response.data === null) {
+        if (response.data == null) {
             return;
         }
 
@@ -162,9 +157,7 @@ export class ClipboardHandler {
         $parOrArea.after($newpar);
 
         const extraData = {
-            docId: this.viewctrl.docId, // current document id
-            par: getFirstParId($newpar), // the id of paragraph on which the editor was opened
-            par_next: $parOrArea.id, // the id of the paragraph that follows par
+            par: getParId($newpar)!, // the id of paragraph on which the editor was opened
         };
 
         this.viewctrl.addSavedParToDom(response.data, extraData);
@@ -195,23 +188,23 @@ export class ClipboardHandler {
     getPasteFunctions() {
         this.updateClipboardStatus();
         return [
-            {func: (e, $par) => this.pasteRefAbove(e, $par), desc: "Above, as a reference", show: this.viewctrl.allowPasteRef},
-            {func: (e, $par) => this.pasteContentAbove(e, $par), desc: "Above, as content", show: this.viewctrl.allowPasteContent},
-            {func: (e, $par) => this.pasteRefBelow(e, $par), desc: "Below, as a reference", show: this.viewctrl.allowPasteRef},
-            {func: (e, $par) => this.pasteContentBelow(e, $par), desc: "Below, as content", show: this.viewctrl.allowPasteContent},
-            {func: (e, $par) => this.viewctrl.nothing(), desc: "Cancel", show: true},
+            {func: (e: Event, $par: Paragraph) => this.pasteRefAbove(e, $par), desc: "Above, as a reference", show: this.viewctrl.allowPasteRef},
+            {func: (e: Event, $par: Paragraph) => this.pasteContentAbove(e, $par), desc: "Above, as content", show: this.viewctrl.allowPasteContent},
+            {func: (e: Event, $par: Paragraph) => this.pasteRefBelow(e, $par), desc: "Below, as a reference", show: this.viewctrl.allowPasteRef},
+            {func: (e: Event, $par: Paragraph) => this.pasteContentBelow(e, $par), desc: "Below, as content", show: this.viewctrl.allowPasteContent},
+            {func: (e: Event, $par: Paragraph) => this.viewctrl.nothing(), desc: "Cancel", show: true},
         ];
     }
 
     getMoveFunctions() {
         return [
-            {func: (e, $par) => this.moveAbove(e, $par), desc: "Above", show: this.viewctrl.allowPasteContent},
-            {func: (e, $par) => this.moveBelow(e, $par), desc: "Below", show: this.viewctrl.allowPasteContent},
-            {func: (e, $par) => this.viewctrl.nothing(), desc: "Cancel", show: true},
+            {func: (e: Event, $par: Paragraph) => this.moveAbove(e, $par), desc: "Above", show: this.viewctrl.allowPasteContent},
+            {func: (e: Event, $par: Paragraph) => this.moveBelow(e, $par), desc: "Below", show: this.viewctrl.allowPasteContent},
+            {func: (e: Event, $par: Paragraph) => this.viewctrl.nothing(), desc: "Cancel", show: true},
         ];
     }
 
-    async cutPar(e, $par) {
+    async cutPar(e: Event, $par: Paragraph) {
         const docParId = [this.viewctrl.docId, $par.attr("id")];
 
         try {
@@ -232,8 +225,11 @@ export class ClipboardHandler {
         this.viewctrl.allowPasteRef = false;
     }
 
-    async copyPar(e, $par) {
+    async copyPar(e: Event, $par: Paragraph) {
         const docParId = dereferencePar($par);
+        if (!docParId) {
+            return;
+        }
 
         try {
             await $http.post("/clipboard/copy/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {});
@@ -245,7 +241,7 @@ export class ClipboardHandler {
         this.viewctrl.allowPasteRef = true;
     }
 
-    async copyArea(e, $parOrArea, overrideDocId, cut) {
+    async copyArea(e: Event, $parOrArea: ParOrArea, overrideDocId: number, cut: boolean) {
         let refDocId;
         let areaName;
         let areaStart;
@@ -311,7 +307,7 @@ export class ClipboardHandler {
         }
     }
 
-    cutArea(e, $parOrArea, cut) {
+    cutArea(e: Event, $parOrArea: ParOrArea, cut: boolean) {
         this.copyArea(e, $parOrArea, this.viewctrl.docId, true);
     }
 }

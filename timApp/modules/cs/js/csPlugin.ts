@@ -1946,8 +1946,8 @@ csApp.Controller = function($scope,$transclude) {
 		csApp.taunoNr++;
 		var vid = 'tauno'+csApp.taunoNr;
 		$scope.taunoId = vid;
-        if ( dw === undefined ) dw = "100%"
-        if ( dh === undefined ) dh = 500
+        if ( dw == null ) dw = "100%"
+        if ( dh == null ) dh = 500
 		var w = csApp.ifIs($scope.width,"width",dw);
 		var h = csApp.ifIs($scope.height,"height",dh);
         return {vid:vid,w:w,h:h};
@@ -2295,7 +2295,7 @@ csApp.Controller = function($scope,$transclude) {
     
 	$scope.showMD = function() {
         if ( !$scope.usercode ) return;
-        if ( $scope.precode === undefined ) {
+        if ( $scope.precode == null ) {
             $scope.getAllCode($scope.showMD);
             return;
         }

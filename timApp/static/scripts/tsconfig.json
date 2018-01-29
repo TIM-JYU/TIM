@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "module": "system",
-    "noImplicitAny": false,
-    "noImplicitThis": false,
+    "strict": true,
     "allowUnreachableCode": true,
     "removeComments": true,
     "preserveConstEnums": true,
@@ -19,6 +18,7 @@
       "scripthost"
     ],
     "experimentalDecorators": true,
+    "downlevelIteration": true,
     "noEmit": false,
     "declarationDir": "decls",
     "declaration": true,
