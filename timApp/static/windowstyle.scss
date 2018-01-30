@@ -455,40 +455,6 @@ th:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop
     margin-bottom: 2em;
 }
 
-/*Kännykät*/
-
-/* ----------- Galaxy S3 & iPhone 6 & iPhone 5 & 5S & iPhone 4 & 4S----------- */
-/* Portrait and Landscape */
-@media screen
-and (min-device-width: 320px)
-and (max-device-width: 667px)
-and (-webkit-device-pixel-ratio: 2) {
-
-    .pop-up-dialog {
-        width: 100%;
-        overflow: auto;
-        z-index: 6;
-        background-color: #fff;
-        box-shadow: 4px 4px 80px #000;
-    }
-
-}
-
-/* ----------- Galaxy S4 & S5 & iPhone 6+ ----------- */
-/* Portrait and Landscape */
-@media screen
-and (min-device-width: 320px)
-and (max-device-width: 736px)
-and (-webkit-device-pixel-ratio: 3) {
-    .pop-up-dialog {
-        width: 100%;
-        overflow: auto;
-        z-index: 6;
-        background-color: #fff;
-        box-shadow: 4px 4px 80px #000;
-    }
-}
-
 @media only screen and (max-device-width: 500px) {
     .buttons button {
         font-size: 15px;
