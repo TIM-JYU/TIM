@@ -183,7 +183,7 @@ export class NotesHandler {
      * @param $par - Element where the badge needs to be attached
      */
     updateNoteBadge($par: Paragraph) {
-        if (!$par) return null;
+        if (!$par) return;
         if (!isActionablePar($par)) {
             return;
         }
@@ -192,7 +192,7 @@ export class NotesHandler {
         }
         markParRead($par, readingTypes.clickPar);
         const newElement = $par[0];
-        if (!newElement) return null;
+        if (!newElement) return;
         addElementToParagraphMargin(newElement, this.createNoteBadge($par));
     }
 

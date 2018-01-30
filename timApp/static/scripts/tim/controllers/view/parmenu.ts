@@ -26,8 +26,9 @@ function selectionToStr(selection: JQuery) {
 export interface IPopupMenuAttrs {
     actions: string;
     editbutton?: boolean;
-    save: string | null;
-    onclose: string;
+    contenturl?: string;
+    save: boolean;
+    onclose?: string;
 }
 
 export class ParmenuHandler {
@@ -108,7 +109,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
 
         this.viewctrl.popupMenuAttrs = {
             actions: "$ctrl.editorFunctions",
-            save: "$ctrl.defaultAction",
+            save: true,
             onclose: "$ctrl.optionsWindowClosed",
         };
         this.updatePopupMenu();
@@ -132,8 +133,8 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         if (attrs.editbutton) {
             $popup.attr("editbutton", attrs.editbutton.toString());
         }
-        $popup.attr("save", attrs.save);
-        $popup.attr("on-close", attrs.onclose);
+        $popup.attr("save", (attrs.save || true).toString());
+        $popup.attr("on-close", attrs.onclose || "");
 
         // todo: cache this value if needed
         if ($(".area").length > 0) {
@@ -201,7 +202,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         this.viewctrl.updateClipboardStatus();
         this.viewctrl.updatePopupMenu($par);
         $par.children(".editline").addClass("menuopen");
-        this.viewctrl.showPopupMenu(e, $par, coords, this.viewctrl.popupMenuAttrs, null, "par");
+        this.viewctrl.showPopupMenu(e, $par, coords, this.viewctrl.popupMenuAttrs, undefined, "par");
     }
 
     optionsWindowClosed() {
@@ -211,10 +212,10 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
     updatePopupMenu($par?: Paragraph) {
         this.viewctrl.editorFunctions = this.viewctrl.getEditorFunctions($par);
         if (this.viewctrl.selection.start != null && $window.editMode) {
-            this.viewctrl.popupMenuAttrs.save = null;
+            this.viewctrl.popupMenuAttrs.save = false;
             this.viewctrl.popupMenuAttrs.editbutton = false;
         } else {
-            this.viewctrl.popupMenuAttrs.save = "defaultAction";
+            this.viewctrl.popupMenuAttrs.save = true;
             this.viewctrl.popupMenuAttrs.editbutton = true;
         }
     }

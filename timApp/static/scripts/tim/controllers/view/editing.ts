@@ -507,7 +507,7 @@ export class EditingHandler {
     }
 
     showAddParagraphMenu(e: Event, $parOrArea: JQuery, coords: Coords) {
-        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "$ctrl.addParagraphFunctions"});
+        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "$ctrl.addParagraphFunctions", save: false});
     }
 
     getAddParagraphFunctions() {

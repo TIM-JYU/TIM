@@ -2,7 +2,7 @@ import {IController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {watchEditMode} from "tim/editmode";
-import {MenuFunctionEntry} from "../controllers/view/IViewCtrl";
+import {MenuFunctionCollection, MenuFunctionEntry} from "../controllers/view/IViewCtrl";
 import {ViewCtrl} from "../controllers/view/viewctrl";
 import {$http, $window} from "../ngimport";
 
@@ -22,9 +22,17 @@ class PopupMenuController implements IController {
     private colClass: string;
     private halfColClass: string;
     private vctrl: ViewCtrl;
-    private save: string;
+    private save: boolean;
+    private scope: IScope;
+    private actions: MenuFunctionCollection;
 
     constructor(scope: IScope, element: IRootElementService) {
+        this.element = element;
+        this.scope = scope;
+    }
+
+    $onInit() {
+        console.log(this.actions);
         this.$pars = $(this.srcid);
         this.editbutton = false;
         this.areaEditButton = false;
@@ -34,16 +42,13 @@ class PopupMenuController implements IController {
         this.halfColClass = this.save ? "col-xs-5" : "col-xs-6";
 
         this.model = {editState: $window.editMode};
-        this.element = element;
-        scope.$watch(() => this.model.editState, watchEditMode);
-        scope.$watch(() => this.model.editState, (newEditMode, oldEditMode) => this.watchEditMode(newEditMode, oldEditMode));
 
-        element.css("position", "absolute"); // IE needs this
-
+        this.scope.$watch(() => this.model.editState, watchEditMode);
+        this.scope.$watch(() => this.model.editState, (newEditMode, oldEditMode) => this.watchEditMode(newEditMode, oldEditMode));
     }
 
-    $onInit() {
-
+    $postLink() {
+        this.element.css("position", "absolute"); // IE needs this
     }
 
     closePopup() {
@@ -73,6 +78,9 @@ class PopupMenuController implements IController {
     }
 
     clicked(f: MenuFunctionEntry) {
+        if (!this.save) {
+            return;
+        }
         if (this.vctrl.defaultAction && this.vctrl.defaultAction.desc === f.desc) {
             this.vctrl.defaultAction = null;
             this.vctrl.$storage.defaultAction = null;
@@ -97,7 +105,7 @@ class PopupMenuController implements IController {
     }
 
     watchEditMode(newEditMode: EditMode | null, oldEditMode: EditMode | null) {
-        if (this.editcontext && newEditMode && newEditMode != this.editcontext) {
+        if (this.editcontext && newEditMode && newEditMode !== this.editcontext) {
             // We don't want to destroy our scope before returning from this function
             $window.setTimeout(() => this.closePopup(), 0.1);
         }
@@ -116,6 +124,7 @@ timApp.component("popupMenu", {
         editbutton: "@",
         editcontext: "@",
         onClose: "&",
+        save: "<?",
         srcid: "@",
     },
     controller: PopupMenuController,

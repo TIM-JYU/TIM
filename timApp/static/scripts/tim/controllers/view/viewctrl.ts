@@ -1,4 +1,4 @@
-import angular, {IController, IScope, IPromise} from "angular";
+import angular, {IController, IPromise, IScope} from "angular";
 import $ from "jquery";
 import ngs, {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
@@ -15,23 +15,23 @@ import {initReadings} from "tim/controllers/view/readings";
 import * as popupMenu from "tim/directives/popupMenu";
 import {timLogTime} from "tim/timTiming";
 import {applyMixins, Coords, isPageDirty, markAsUsed, markPageNotDirty} from "tim/utils";
-import {IPluginInfoResponse, ParCompiler} from "../../services/parCompiler";
-import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../../ngimport";
-import {Users} from "../../services/userService";
-import {Document, setActiveDocument} from "./document";
-import {onClick} from "./eventhandlers";
-import {MenuFunction, MenuFunctionCollection, MenuFunctionEntry} from "./IViewCtrl";
-import {EditingHandler, IParEditorAttrs, IParEditorOptions} from "./editing";
-import {IPopupAttrs, RefPopupHandler} from "./refpopup";
-import {IUser} from "../../IUser";
-import {IItem} from "../../IItem";
 import {initCssPrint} from "../../cssPrint";
+import {IItem} from "../../IItem";
+import {IExtraData, IParResponse} from "../../IParResponse";
+import {IUser} from "../../IUser";
+import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../../ngimport";
+import {IPluginInfoResponse, ParCompiler} from "../../services/parCompiler";
+import {Users} from "../../services/userService";
+import {LectureController} from "../lectureController";
 import * as printctrl from "../printCtrl";
 import {ReviewController} from "../reviewController";
-import {IExtraData, IParResponse} from "../../IParResponse";
 import {INameAreaOptions} from "./areas";
-import {LectureController} from "../lectureController";
+import {Document, setActiveDocument} from "./document";
+import {EditingHandler, IParEditorAttrs, IParEditorOptions} from "./editing";
+import {onClick} from "./eventhandlers";
+import {MenuFunction, MenuFunctionCollection, MenuFunctionEntry} from "./IViewCtrl";
 import {IPopupMenuAttrs} from "./parmenu";
+import {IPopupAttrs, RefPopupHandler} from "./refpopup";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -73,7 +73,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
     overPopup: boolean;
     private notification: string;
 
-    initRefPopup(sc: IScope, view: ViewCtrl): any {
+    initRefPopup(sc: IScope, view: ViewCtrl): void {
         throw new Error(this.mixinMsg);
     }
 
@@ -81,49 +81,49 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    hideRefPopup(): any {
+    hideRefPopup(): void {
         throw new Error(this.mixinMsg);
     }
 
     lastclicktime: number;
     lastclickplace: Coords;
 
-    initParMenu(sc: IScope, view: ViewCtrl): any {
+    initParMenu(sc: IScope, view: ViewCtrl): void {
         throw new Error(this.mixinMsg);
     }
 
-    toggleActionButtons(e: Event, $par: Paragraph, toggle1: boolean, toggle2: boolean, coords: Coords): any {
+    toggleActionButtons(e: Event, $par: Paragraph, toggle1: boolean, toggle2: boolean, coords: Coords): void {
         throw new Error(this.mixinMsg);
     }
 
-    optionsWindowClosed(): any {
+    optionsWindowClosed(): void {
         throw new Error(this.mixinMsg);
     }
 
-    updatePopupMenu($par?: Paragraph): any {
+    updatePopupMenu($par?: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
     noteBadgePar: JQuery;
     noteBadge: HTMLElement;
 
-    initNotes(sc: IScope, view: ViewCtrl): any {
+    initNotes(sc: IScope, view: ViewCtrl): void {
         throw new Error(this.mixinMsg);
     }
 
-    toggleNoteEditor($parOrArea: ParOrArea, options: INoteEditorOptions): any {
+    toggleNoteEditor($parOrArea: ParOrArea, options: INoteEditorOptions): void {
         throw new Error(this.mixinMsg);
     }
 
-    handleNoteCancel(): any {
+    handleNoteCancel(): void {
         throw new Error(this.mixinMsg);
     }
 
-    handleNoteDelete(saveData: IParResponse, extraData: IExtraData): any {
+    handleNoteDelete(saveData: IParResponse, extraData: IExtraData): void {
         throw new Error(this.mixinMsg);
     }
 
-    handleNoteSave(saveData: IParResponse, extraData: IExtraData): any {
+    handleNoteSave(saveData: IParResponse, extraData: IExtraData): void {
         throw new Error(this.mixinMsg);
     }
 
@@ -131,42 +131,42 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    addNote(): any {
+    addNote(): void {
         throw new Error(this.mixinMsg);
     }
 
-    setNotePadge($event: Event): any {
+    setNotePadge($event: Event): void {
         throw new Error(this.mixinMsg);
     }
 
-    updateNoteBadge($par: Paragraph): any | any {
+    updateNoteBadge($par: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
-    clearNoteBadge(e: Event): any {
+    clearNoteBadge(e: Event): void {
         throw new Error(this.mixinMsg);
     }
 
     initQuestions(sc: IScope, view: ViewCtrl): void {
     }
 
-    initClipboard(sc: IScope, view: ViewCtrl): any {
+    initClipboard(sc: IScope, view: ViewCtrl): void {
         throw new Error(this.mixinMsg);
     }
 
-    initEditing(sc: IScope, view: ViewCtrl): any {
+    initEditing(sc: IScope, view: ViewCtrl): void {
         throw new Error(this.mixinMsg);
     }
 
-    initAreas(sc: IScope, view: ViewCtrl): any {
+    initAreas(sc: IScope, view: ViewCtrl): void {
         throw new Error(this.mixinMsg);
     }
 
-    toggleParEditor($pars: Paragraphs, options: IParEditorOptions): any {
+    toggleParEditor($pars: Paragraphs, options: IParEditorOptions): void {
         throw new Error(this.mixinMsg);
     }
 
-    toggleEditor($par: Paragraph, options: IParEditorOptions, attrs: IParEditorAttrs, caption: string, directive: string): any {
+    toggleEditor($par: Paragraph, options: IParEditorOptions, attrs: IParEditorAttrs, caption: string, directive: string): void {
         throw new Error(this.mixinMsg);
     }
 
@@ -174,35 +174,35 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    showEditWindow(e: Event, $par: Paragraph): any {
+    showEditWindow(e: Event, $par: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
-    beginAreaEditing(e: Event, $par: Paragraph): any {
+    beginAreaEditing(e: Event, $par: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
-    handleCancel(extraData: IExtraData): any {
+    handleCancel(extraData: IExtraData): void {
         throw new Error(this.mixinMsg);
     }
 
-    showAddParagraphAbove(e: Event, $par: Paragraph): any {
+    showAddParagraphAbove(e: Event, $par: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
-    showAddParagraphBelow(e: Event, $par: Paragraph): any {
+    showAddParagraphBelow(e: Event, $par: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
-    goToEditor(): any {
+    goToEditor(): void {
         throw new Error(this.mixinMsg);
     }
 
-    closeAndSave(e: Event, $par: Paragraph): any {
+    closeAndSave(e: Event, $par: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
-    closeWithoutSaving(e: Event, $par: Paragraph): any {
+    closeWithoutSaving(e: Event, $par: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
@@ -210,7 +210,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    showAddParagraphMenu(e: Event, $parOrArea: ParOrArea, coords: Coords): any {
+    showAddParagraphMenu(e: Event, $parOrArea: ParOrArea, coords: Coords): void {
         throw new Error(this.mixinMsg);
     }
 
@@ -218,13 +218,13 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    removeDefaultPars(): any {
+    removeDefaultPars(): void {
         throw new Error(this.mixinMsg);
     }
 
     showNoteWindow: MenuFunction;
 
-    showOptionsWindow(e: any, $par: Paragraph, coords?: Coords): void {
+    showOptionsWindow(e: Event, $par: Paragraph, coords?: Coords): void {
         throw new Error(this.mixinMsg);
     }
 
@@ -234,27 +234,27 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
     allowPasteRef: boolean;
     allowPasteContent: boolean;
 
-    showPasteMenu(e: Event, $parOrArea: ParOrArea, coords?: Coords): any {
+    showPasteMenu(e: Event, $parOrArea: ParOrArea, coords?: Coords): void {
         throw new Error(this.mixinMsg);
     }
 
-    showMoveMenu(e: Event, $parOrArea: ParOrArea, coords?: Coords): any {
+    showMoveMenu(e: Event, $parOrArea: ParOrArea, coords?: Coords): void {
         throw new Error(this.mixinMsg);
     }
 
-    pasteContentAbove(e: Event, $par: Paragraph): any {
+    pasteContentAbove(e: Event, $par: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
-    pasteRefAbove(e: Event, $par: Paragraph): any {
+    pasteRefAbove(e: Event, $par: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
-    pasteContentBelow(e: Event, $par: Paragraph): any {
+    pasteContentBelow(e: Event, $par: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
-    pasteRefBelow(e: Event, $par: Paragraph): any {
+    pasteRefBelow(e: Event, $par: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
@@ -302,7 +302,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    cutArea(e: Event, $parOrArea: ParOrArea, cut?: boolean): any {
+    cutArea(e: Event, $parOrArea: ParOrArea, cut?: boolean): void {
         throw new Error(this.mixinMsg);
     }
 
@@ -322,15 +322,15 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    showAreaOptionsWindow(e: Event, $area: Area, $pars: Paragraphs, coords: Coords): any {
+    showAreaOptionsWindow(e: Event, $area: Area, $pars: Paragraphs, coords: Coords): void {
         throw new Error(this.mixinMsg);
     }
 
-    startArea(e: Event, $par: Paragraph): any {
+    startArea(e: Event, $par: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
-    nameArea(e: Event, $pars: Paragraph): any {
+    nameArea(e: Event, $pars: Paragraph): void {
         throw new Error(this.mixinMsg);
     }
 
@@ -338,11 +338,11 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    nameAreaCancel($area: Area): any {
+    nameAreaCancel($area: Area): void {
         throw new Error(this.mixinMsg);
     }
 
-    cancelArea(): any {
+    cancelArea(): void {
         throw new Error(this.mixinMsg);
     }
 
@@ -350,11 +350,11 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    extendSelection($par: any, allowShrink?: boolean): void {
+    extendSelection($par: Paragraph, allowShrink?: boolean): void {
         throw new Error(this.mixinMsg);
     }
 
-    showPopupMenu(e: any, $pars: any, coords: any, popupMenuAttrs: any, $area?: any, s?: string): void {
+    showPopupMenu(e: Event, $pars: Paragraphs, coords: Coords, popupMenuAttrs: IPopupMenuAttrs, $area?: Area, s?: string): void {
         throw new Error(this.mixinMsg);
     }
 
@@ -375,11 +375,11 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    editQst(e: any, $par: any): Promise<void> {
+    editQst(e: Event, $par: Paragraph): Promise<void> {
         throw new Error(this.mixinMsg);
     }
 
-    addQuestion(e: any, $par: any): Promise<void> {
+    addQuestion(e: Event, $par: Paragraph): Promise<void> {
         throw new Error(this.mixinMsg);
     }
 
@@ -419,7 +419,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
     public $storage: ngStorage.StorageService & {defaultAction: string | null; noteAccess: string};
     private liveUpdates: number;
     private oldWidth: number;
-    public editorFunctions: any[];
+    public editorFunctions: MenuFunctionCollection;
     public defaultAction: MenuFunctionEntry | null;
     public reviewCtrlScope: IScope & {$ctrl: ReviewController};
     public lectureCtrl?: LectureController;
@@ -569,7 +569,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         if (!origLiveUpdates) return;
         let stop: IPromise<any> | undefined;
         stop = $interval(async () => {
-            const response = await $http.get<{version: any, diff: DiffResult[], live: number}>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]);
+            const response = await $http.get<{version: [number, number], diff: DiffResult[], live: number}>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]);
             this.docVersion = response.data.version;
             this.liveUpdates = response.data.live; // TODO: start new loop by this or stop if None
             const replaceFn = async (d: DiffResult, parId: string) => {
