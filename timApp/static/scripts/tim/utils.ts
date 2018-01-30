@@ -61,7 +61,7 @@ export function checkIfElement(x: any): x is Element {
  * @method scrollToElement
  * @param element - Element to scroll to.
  */
-export function scrollToElement(element: HTMLElement) {
+export function scrollToElement(element: Element) {
     if (!!element && element.scrollIntoView) {
         element.scrollIntoView();
     }

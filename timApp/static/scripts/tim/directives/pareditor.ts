@@ -12,7 +12,7 @@ import {IAceEditor} from "../ace-types";
 import {getActiveDocument} from "../controllers/view/document";
 import {isSettings} from "../controllers/view/parhelpers";
 import {$compile, $http, $localStorage, $log, $timeout, $upload, $window} from "../ngimport";
-import {ParCompiler} from "../services/parCompiler";
+import {IPluginInfoResponse, ParCompiler} from "../services/parCompiler";
 import {AceParEditor} from "./AceParEditor";
 import {TextAreaParEditor} from "./TextAreaParEditor";
 
@@ -496,7 +496,7 @@ or newer one that is more familiar to write in YAML:
             this.timer = $timeout(() => {
                 const text = this.editor.getEditorText();
                 this.scrollPos = this.element.find(".previewcontent").scrollTop();
-                $http.post(this.previewUrl, angular.extend({
+                $http.post<IPluginInfoResponse>(this.previewUrl, angular.extend({
                     text,
                 }, this.extraData)).then(async (response) => {
                     const data = response.data;
@@ -1023,7 +1023,7 @@ or newer one that is more familiar to write in YAML:
         }
     }
 
-    closeMenu(e: Event, force: boolean) {
+    closeMenu(e: JQueryEventObject, force: boolean) {
         const container = $(MENU_BUTTON_CLASS_DOT);
         if (force || (!container.is(e.target) && container.has(e.target as Element).length === 0)) {
             container.remove();
@@ -1059,7 +1059,7 @@ or newer one that is more familiar to write in YAML:
         $actionDiv.css("position", "absolute"); // IE needs this
         $actionDiv = $compile($actionDiv)(this.scope);
         $button.parent().prepend($actionDiv);
-        $(document).on("mouseup.closemenu", (e) => this.closeMenu(e, false));
+        $(document).on("mouseup.closemenu", (e: JQueryEventObject) => this.closeMenu(e, false));
     }
 
     tableClicked($event) {
