@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "system",
-    "strict": true,
+    "strict": false,
     "allowUnreachableCode": true,
     "removeComments": true,
     "preserveConstEnums": true,
