@@ -211,12 +211,18 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         window.getSelection().addRange(range);
         """)
 
-    def find_element(self, selector: str, times=1) -> WebElement:
+    def find_element_and_move_to(self, selector: str, times=1) -> WebElement:
         e = None
         for i in range(0, times):
             e = self.drv.find_element_by_css_selector(selector)
             ActionChains(self.drv).move_to_element(e).perform()
         return e
+
+    def find_element(self, selector: str) -> WebElement:
+        return self.drv.find_element_by_css_selector(selector)
+
+    def touch(self, e: WebElement):
+        ActionChains(self.drv).move_to_element(e).perform()
 
     def wait_and_click(self, selector: str):
         self.wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, selector)))

@@ -92,7 +92,7 @@ class ParEditorTest(BrowserTest):
         pareditor = self.get_editor_element()
         cb = find_element_by_text(pareditor, 'Autocomplete', 'label')
         cb.click()
-        editor = self.find_element('.ace_editor')
+        editor = self.find_element_and_move_to('.ace_editor')
         editor.click()
         ActionChains(self.drv).send_keys('d').perform()
         self.wait_for_preview_to_finish()

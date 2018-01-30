@@ -211,7 +211,7 @@ class QuestionTest(BrowserTest):
         self.assert_same_screenshot(answersheet, f'questions/answer_sheet_{questiontype}', move_to_element=True)
         find_button_by_text(dialog, 'Save').click()
         self.wait_until_hidden('tim-edit-question')
-        qst = self.find_element('qst-runner')
+        qst = self.find_element_and_move_to('qst-runner')
         self.assert_same_screenshot(qst, f'questions/qst_{questiontype}')
         d.document.clear_mem_cache()
         qst_par = d.document.get_paragraphs()[0]
