@@ -1,8 +1,10 @@
 """Server tests for printing."""
+import json
 import urllib.parse
 import warnings
 
 from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
+from timApp.responsehelper import to_json_str
 from timApp.tests.server.timroutetest import TimRouteTest
 
 
@@ -44,8 +46,9 @@ class PrintingTest(TimRouteTest):
 $body$
 ```
         """)
+        tj = json.loads(to_json_str(t))
         self.get(f'/print/templates/{d.path}',
-                 expect_content=[{'id': t.id, 'path': t.path, 'origin': 'user', 'name': t.title}])
+                 expect_content=[tj])
         params_post = {'fileType': 'latex', 'templateDocId': t.id, 'printPluginsUserCode': False}
         params_url = {'file_type': 'latex', 'template_doc_id': t.id, 'plugins_user_code': False}
         expected_url = f'http://localhost/print/{d.path}?{urllib.parse.urlencode(params_url)}'
@@ -58,8 +61,8 @@ $body$
 
         t2 = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/base', from_file='example_docs/templates/print_base.md')
         self.get(f'/print/templates/{d.path}',
-                 expect_content=[{'id': t.id, 'path': t.path, 'origin': 'user', 'name': t.title},
-                                 {'id': t2.id, 'path': t2.path, 'origin': 'user', 'name': t2.title}])
+                 expect_content=[tj,
+                                 json.loads(to_json_str(t2))])
 
         params_url = {'file_type': 'latex', 'template_doc_id': t2.id, 'plugins_user_code': False}
         expected_url = f'http://localhost/print/{d.path}?{urllib.parse.urlencode(params_url)}'

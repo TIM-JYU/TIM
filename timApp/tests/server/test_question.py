@@ -17,10 +17,13 @@ class QuestionTest(TimLiveServer, TimRouteTest):
          id="{first_id}"
          t="{pars[0].get_hash()}"
          attrs="{{&#34;plugin&#34;: &#34;qst&#34;, &#34;question&#34;: &#34;true&#34;, &#34;taskId&#34;: &#34;test1&#34;}}">
-        <a href="#{'test1'}" title="Permlink" class="headerlink">#</a>
-        <div class="parContent" id="{'test1'}">
-            <a class="questionAddedNew"><span class="glyphicon glyphicon-question-sign" title="Today"></span></a>
-            <p class="questionNumber">Today</p>
+        <answerbrowserlazy task-id="{d.id}.test1"/>
+        <a href="#test1" title="Permlink" class="headerlink">#</a>
+        <div class="parContent" id="test1">
+            <div id="{d.id}.test1.{first_id}" data-plugin="/qst">
+                <qst-runner
+                        json="{{&quot;markup&quot;: {{&quot;timeLimit&quot;: 90, &quot;questionText&quot;: &quot;What day is it today?&quot;, &quot;questionType&quot;: &quot;radio-vertical&quot;, &quot;questionTitle&quot;: &quot;Today&quot;, &quot;rows&quot;: [&quot;Monday&quot;, &quot;Wednesday&quot;, &quot;Friday&quot;], &quot;headers&quot;: [], &quot;matrixType&quot;: &quot;&quot;, &quot;answerFieldType&quot;: &quot;radio&quot;, &quot;isTask&quot;: false}}, &quot;state&quot;: null, &quot;taskID&quot;: &quot;3.test1&quot;, &quot;taskIDExt&quot;: &quot;{d.id}.test1.{first_id}&quot;, &quot;doLazy&quot;: false, &quot;userPrint&quot;: false, &quot;preview&quot;: false, &quot;anonymous&quot;: true, &quot;info&quot;: null, &quot;targetFormat&quot;: &quot;latex&quot;, &quot;show_result&quot;: false}}"/>
+            </div>
         </div>
         <div class="editline" title="Click to edit this paragraph"></div>
         <div class="readline"
@@ -66,34 +69,39 @@ points: '2:1'</code></pre>
         self.get('/getQuestionByParId',
                  query_string={'doc_id': d.id, 'par_id': first_id},
                  expect_content={
-                     'answerFieldType': 'radio',
-                     'headers': [],
-                     'matrixType': '',
-                     'questionText': 'What day is it today?',
-                     'questionTitle': 'Today',
-                     'questionType': 'radio-vertical',
-                     'rows': ['Monday', 'Wednesday', 'Friday'],
-                     'timeLimit': 90,
-                     'points': '2:1',
-                     # 'qst': False,
-                     # 'taskId': 'test1',
+                     'docId': d.id,
+                     'markup': {
+                         'answerFieldType': 'radio',
+                         'headers': [],
+                         'matrixType': '',
+                         'points': '2:1',
+                         'questionText': 'What day is it today?',
+                         'questionTitle': 'Today',
+                         'questionType': 'radio-vertical',
+                         'rows': ['Monday', 'Wednesday', 'Friday'],
+                         'timeLimit': 90},
+                     'parId': first_id,
+                     'qst': False,
+                     'taskId': 'test1'
                  })
 
         self.get('/getQuestionByParId',
                  query_string={'doc_id': d.id, 'par_id': second_id},
                  expect_content={
-                     'answerFieldType': 'radio',
-                     'headers': [],
-                     'matrixType': '',
-                     'questionText': 'What day is it today?',
-                     'questionTitle': 'Today',
-                     'questionType': 'radio-vertical',
-                     'rows': ['Monday', 'Wednesday', 'Friday'],
-                     'timeLimit': 90,
-                     'points': '2:1',
-                     # 'qst': True,
-                     # 'taskId': 'test2',
-                 })
+                     'docId': d.id,
+                     'markup': {
+                         'answerFieldType': 'radio',
+                         'headers': [],
+                         'matrixType': '',
+                         'points': '2:1',
+                         'questionText': 'What day is it today?',
+                         'questionTitle': 'Today',
+                         'questionType': 'radio-vertical',
+                         'rows': ['Monday', 'Wednesday', 'Friday'],
+                         'timeLimit': 90},
+                     'parId': second_id,
+                     'qst': True,
+                     'taskId': 'test2'})
 
         self.get('/getQuestionByParId',
                  query_string={'doc_id': d.id, 'par_id': pars[2].get_id()},
