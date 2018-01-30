@@ -35,4 +35,4 @@ case "$1" in
   db="tempdb_tim-test"
 esac
 
-./docker-compose.sh run -v ${PWD}/pg_backup:/backup -v ${PWD}/timApp/sql:/sql/:ro postgresql psql -P pager=off -h ${host} -p 5432 -d ${db} -U postgres ${fileOpt}
+./docker-compose.sh run --rm -v ${PWD}/pg_backup:/backup -v ${PWD}/timApp/sql:/sql/:ro postgresql psql -P pager=off -h ${host} -p 5432 -d ${db} -U postgres ${fileOpt}
