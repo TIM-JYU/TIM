@@ -3,7 +3,7 @@ import os
 import re
 import shutil
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Dict, Any
 
 import dateutil.parser
 
@@ -208,6 +208,14 @@ def remove_prefix(text: str, prefix: str):
     if text.startswith(prefix):
         return text[len(prefix):]
     return text
+
+
+def include_keys(obj: Dict[str, Any], *keys: str):
+    return {k: v for k, v in obj.items() if k in keys}
+
+
+def exclude_keys(obj: Dict[str, Any], *keys: str):
+    return {k: v for k, v in obj.items() if k not in keys}
 
 
 class cached_property:
