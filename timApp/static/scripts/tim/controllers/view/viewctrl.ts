@@ -31,7 +31,7 @@ import {EditingHandler, IParEditorAttrs, IParEditorOptions} from "./editing";
 import {onClick} from "./eventhandlers";
 import {MenuFunction, MenuFunctionCollection, MenuFunctionEntry} from "./IViewCtrl";
 import {IPopupMenuAttrs} from "./parmenu";
-import {IPopupAttrs, RefPopupHandler} from "./refpopup";
+import {IRefPopupAttrs, RefPopupHandler} from "./refpopup";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -77,7 +77,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    showRefPopup(e: Event, $ref: JQuery, coords: Coords, attrs: IPopupAttrs): JQuery {
+    showRefPopup(e: Event, $ref: JQuery, coords: Coords, attrs: IRefPopupAttrs) {
         throw new Error(this.mixinMsg);
     }
 

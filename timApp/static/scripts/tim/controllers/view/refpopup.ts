@@ -8,8 +8,9 @@ import {ViewCtrl} from "./viewctrl";
 
 markAsUsed(refPopup);
 
-export interface IPopupAttrs {
-    [index: string]: string;
+export interface IRefPopupAttrs {
+    docid: string;
+    parid: string;
 }
 
 export class RefPopupHandler {
@@ -17,29 +18,30 @@ export class RefPopupHandler {
     public viewctrl: ViewCtrl;
     public overReflink: boolean;
     public overPopup: boolean;
+    private popupElement?: JQLite;
 
     initRefPopup(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
         onMouseOver(".parlink", ($this, e) => {
+            if (this.overReflink || this.overPopup) {
+                return;
+            }
             this.overReflink = true;
 
             const $par = $this.parents(".par").find(".parContent");
             const offset = $par.offset() || {left: 0, top: 0};
             const coords = {left: e.pageX - offset.left + 10, top: e.pageY - offset.top + 10};
-            let params;
 
-            try {
-                params = {
-                    docid: $this[0].attributes["data-docid"].value,
-                    parid: $this[0].attributes["data-parid"].value,
-                };
-            } catch (TypeError) {
-                // The element was modified
+            const docid = $this.attr("data-docid");
+            if (!docid) {
                 return;
             }
-
-            this.showRefPopup(e, $this, coords, params);
+            const parid = $this.attr("data-parid");
+            if (!parid) {
+                return;
+            }
+            this.showRefPopup(e, $this, coords, {docid, parid});
         });
 
         onMouseOver(".ref-popup", ($this, e) => {
@@ -48,35 +50,36 @@ export class RefPopupHandler {
 
         onMouseOut(".ref-popup", ($this, e) => {
             this.overPopup = false;
-            this.hideRefPopup();
+            if (!this.overReflink) {
+                this.hideRefPopup();
+            }
         });
 
         onMouseOut(".parlink", ($this, e) => {
             this.overReflink = false;
-            this.hideRefPopup();
+            if (!this.overPopup) {
+                this.hideRefPopup();
+            }
         });
     }
 
-    showRefPopup(e: Event, $ref: JQuery, coords: Coords, attrs: IPopupAttrs) {
+    showRefPopup(e: Event, $ref: JQuery, coords: Coords, attrs: IRefPopupAttrs) {
         const $popup = $("<ref-popup>");
         $popup.offset(coords);
 
-        for (const attr in attrs) {
-            if (attrs.hasOwnProperty(attr)) {
-                $popup.attr(attr, attrs[attr]);
-            }
-        }
+        $popup.attr("docid", attrs.docid);
+        $popup.attr("parid", attrs.parid);
 
         $ref.parent().prepend($popup); // need to prepend to DOM before compiling
-        $compile($popup[0])(this.sc);
-        return $popup;
+        this.popupElement = $compile($popup[0])(this.sc);
     }
 
     hideRefPopup() {
-        if (this.overReflink || this.overPopup) {
+        if (!this.popupElement) {
             return;
         }
 
-        $(".refPopup").remove();
+        this.popupElement.remove();
+        this.popupElement = undefined;
     }
 }

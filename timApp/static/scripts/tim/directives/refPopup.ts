@@ -3,9 +3,10 @@ import {timApp} from "tim/app";
 import {$http} from "../ngimport";
 
 class RefPopupController implements IController {
+    private static $inject = ["$element"];
     private loaded: boolean;
     private ref_loaded: boolean;
-    private docid: number;
+    private docid: string;
     private parid: string;
     private error: string;
     private doc_name: string;
@@ -20,7 +21,7 @@ class RefPopupController implements IController {
 
     async $onInit() {
         try {
-            const response = await $http.get<{doc_name: string, doc_author: string, par_name: string}>("/par_info/" + this.docid + "/" + this.parid);
+            const response = await $http.get<{doc_name: string, doc_author: string, par_name: string}>(`/par_info/${this.docid}/${this.parid}`);
             this.doc_name = response.data.doc_name;
             this.doc_author = response.data.doc_author;
             this.par_name = response.data.par_name;
@@ -41,8 +42,8 @@ class RefPopupController implements IController {
  */
 timApp.component("refPopup", {
     bindings: {
-        docid: "<",
-        parid: "<",
+        docid: "@",
+        parid: "@",
     },
     controller: RefPopupController,
     templateUrl: "/static/templates/refPopup.html",
