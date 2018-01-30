@@ -91,6 +91,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
         const force = this.forceRefresh;
 
         if (chosenTemplateId) {
+            this.loading = true;
             this.notificationmsg = undefined;
 
             const postURL = "/print/" + this.document.path;
@@ -129,7 +130,6 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
     }
 
     private create() {
-        this.loading = true;
         this.createdUrl = undefined;
         this.getPrintedDocument(this.selected.name.toLowerCase());
     }
