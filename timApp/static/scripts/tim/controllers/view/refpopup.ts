@@ -4,7 +4,7 @@ import * as refPopup from "tim/directives/refPopup";
 import {Coords, markAsUsed} from "tim/utils";
 import {$compile} from "../../ngimport";
 import {onMouseOut, onMouseOver} from "./eventhandlers";
-import {ViewCtrl} from "./ViewCtrl";
+import {ViewCtrl} from "./viewctrl";
 
 markAsUsed(refPopup);
 

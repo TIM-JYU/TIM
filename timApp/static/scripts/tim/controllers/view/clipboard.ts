@@ -7,7 +7,7 @@ import {
     createNewPar, dereferencePar, getAreaDocId, getAreaId, getFirstParId, getLastParId,
     getParId, Paragraph, ParOrArea,
 } from "./parhelpers";
-import {ViewCtrl} from "./ViewCtrl";
+import {ViewCtrl} from "./viewctrl";
 
 export class ClipboardHandler {
     public sc: IScope;

@@ -11,7 +11,7 @@ import {
     getNextPar, getParAttributes, getParId, getParIndex, getPars, getRefAttrs, isPreamble, isReference,
     Paragraph,
 } from "./parhelpers";
-import {ViewCtrl} from "./ViewCtrl";
+import {ViewCtrl} from "./viewctrl";
 import {INoteEditorOptions} from "./notes";
 
 export interface IParEditorOptions {

@@ -14,7 +14,7 @@ import {
     ParOrArea,
 } from "./parhelpers";
 import {markParRead, readingTypes} from "./readings";
-import {ViewCtrl} from "./ViewCtrl";
+import {ViewCtrl} from "./viewctrl";
 
 export interface INoteEditorOptions {
     noteData?: {id: string};

@@ -5,7 +5,7 @@ import {$compile, $log, $timeout, $window} from "../../ngimport";
 import {Coords, dist} from "../../utils";
 import {onClick} from "./eventhandlers";
 import {getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
-import {ViewCtrl} from "./ViewCtrl";
+import {ViewCtrl} from "./viewctrl";
 
 export function closeOptionsWindow() {
     const $actionButtons = $(".actionButtons");

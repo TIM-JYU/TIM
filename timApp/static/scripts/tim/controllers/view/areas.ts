@@ -6,7 +6,7 @@ import {$compile, $http, $timeout, $window} from "../../ngimport";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {Area, getArea, getFirstParId, getLastParId, Paragraph, Paragraphs} from "./parhelpers";
 import {closeOptionsWindow} from "./parmenu";
-import {ViewCtrl} from "./ViewCtrl";
+import {ViewCtrl} from "./viewctrl";
 
 markAsUsed(nameArea);
 
