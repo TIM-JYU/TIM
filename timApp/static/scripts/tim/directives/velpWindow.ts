@@ -1,8 +1,9 @@
-import {IController} from "angular";
+import {IController, IFormController} from "angular";
 import {timApp} from "tim/app";
-import {ILabel, IUIFields, IVelp, IVelpGroup} from "./velptypes";
-import {VelpSelectionController} from "./velpSelection";
 import {$http} from "../ngimport";
+import {clone} from "../utils";
+import {VelpSelectionController} from "./velpSelection";
+import {ILabel, ILabelUI, INewLabel, IVelp, IVelpGroup, IVelpGroupUI, IVelpUI} from "./velptypes";
 
 /**
  * Created by Seppo Tarvainen on 25.11.2016.
@@ -26,17 +27,17 @@ export let colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "corn
 export class VelpWindowController implements IController {
     private onVelpSelect: (params: {$VELP: IVelp}) => void;
     private velpLocal: IVelp;
-    private velp: IVelp & IUIFields;
-    private newLabel: ILabel & IUIFields;
-    private labelToEdit: ILabel & IUIFields;
+    private velp: IVelpUI;
+    private newLabel: INewLabel;
+    private labelToEdit: INewLabel;
     private visible_options: {type: string; title: string; values: [number, number, number, number]; names: [string, string, string, string]};
     private settings: {teacherRightsError: string; labelContentError: string; velpGroupError: string; velpGroupWarning: string; velpContentError: string};
     private submitted: boolean;
     private hasEditAccess: boolean;
     private new: boolean;
-    private velpGroups: (IVelpGroup & IUIFields)[];
+    private velpGroups: IVelpGroupUI[];
     private velpSelection: VelpSelectionController;
-    private labels: (ILabel & IUIFields)[];
+    private labels: ILabelUI[];
     private docId: number;
     private teacherRight: boolean;
 
@@ -73,7 +74,7 @@ export class VelpWindowController implements IController {
         if (this.new) {
             this.hasEditAccess = true;
         } else {
-            this.hasEditAccess = this.velpGroups.some((g) => g.edit_access && this.isGroupInVelp(g));
+            this.hasEditAccess = this.velpGroups.some((g) => g.edit_access && this.isGroupInVelp(g) || false);
         }
     }
 
@@ -116,7 +117,7 @@ export class VelpWindowController implements IController {
      * Saves velp to database
      * @param form
      */
-    saveVelp(form) {
+    saveVelp(form: IFormController) {
         if (!form.$valid) {
             return;
         }
@@ -152,7 +153,7 @@ export class VelpWindowController implements IController {
      * @param points - Points given in velp or annotation
      * @returns {boolean} - Right to make annotations
      */
-    notAnnotationRights(points: number) {
+    notAnnotationRights(points: number | null) {
         if (this.teacherRight) {
             return false;
         } else {
@@ -175,7 +176,7 @@ export class VelpWindowController implements IController {
         return this.isSomeVelpGroupSelected() && this.velp.content.length > 0;
     }
 
-    setLabelValid(label) {
+    setLabelValid(label: INewLabel) {
         label.valid = label.content.length > 0;
     }
 
@@ -185,7 +186,10 @@ export class VelpWindowController implements IController {
      * @param label - Label to check
      * @returns {boolean} Whether the velp contains the label or not.
      */
-    isLabelInVelp(label) {
+    isLabelInVelp(label: ILabel): boolean {
+        if (label.id == null) {
+            return false;
+        }
         return this.velp.labels.indexOf(label.id) >= 0;
     }
 
@@ -195,8 +199,8 @@ export class VelpWindowController implements IController {
      * @param group - Velp group to check
      * @returns {boolean} Whether the velp contains the velp group or not
      */
-    isGroupInVelp(group) {
-        if (typeof this.velp.velp_groups === UNDEFINED || typeof group.id === UNDEFINED) {
+    isGroupInVelp(group: IVelpGroup) {
+        if (this.velp.velp_groups == null || group.id == null) {
             return false;
         }
         return this.velp.velp_groups.indexOf(group.id) >= 0;
@@ -207,8 +211,10 @@ export class VelpWindowController implements IController {
      * @method updateVelpLabels
      * @param label - Label to be added or removed from the velp
      */
-    updateVelpLabels(label) {
-
+    updateVelpLabels(label: ILabel) {
+        if (label.id == null) {
+            return;
+        }
         const index = this.velp.labels.indexOf(label.id);
         if (index < 0) {
             this.velp.labels.push(label.id);
@@ -222,7 +228,10 @@ export class VelpWindowController implements IController {
      * @method updateVelpGroups
      * @param group - Group to be added or removed from the velp
      */
-    updateVelpGroups(group) {
+    updateVelpGroups(group: IVelpGroup) {
+        if (group.id == null) {
+            return;
+        }
         const index = this.velp.velp_groups.indexOf(group.id);
         if (index < 0) {
             this.velp.velp_groups.push(group.id);
@@ -269,15 +278,17 @@ export class VelpWindowController implements IController {
             return;
         }
 
-        const labelToAdd = {
+        const data = {
             content: this.newLabel.content,
             language_id: "FI", // TODO: Change to user language
-            selected: false,
-            id: null,
         };
 
-        const json = await $http.post<{id: number}>("/add_velp_label", labelToAdd);
-        labelToAdd.id = json.data.id;
+        const json = await $http.post<{id: number}>("/add_velp_label", data);
+        const labelToAdd = {
+            ...data,
+            selected: false,
+            id: json.data.id,
+        };
         this.resetNewLabel();
         this.labels.push(labelToAdd);
         //this.labelAdded = false;
@@ -289,7 +300,7 @@ export class VelpWindowController implements IController {
      * @method toggleLabelToEdit
      * @param label - Label to edit
      */
-    toggleLabelToEdit(label) {
+    toggleLabelToEdit(label: INewLabel) {
 
         if (this.labelToEdit.edit && label.id === this.labelToEdit.id) {
             this.cancelLabelEdit(label);
@@ -308,7 +319,7 @@ export class VelpWindowController implements IController {
         this.setLabelValid(this.labelToEdit);
     }
 
-    cancelLabelEdit(label) {
+    cancelLabelEdit(label: INewLabel) {
         label.edit = false;
         this.labelToEdit = {content: "", selected: false, edit: false, valid: true, id: null};
     }
@@ -324,14 +335,8 @@ export class VelpWindowController implements IController {
         return false;
     }
 
-    copyLabelToEditLabel(label) {
-        for (const key in label) {
-            if (!label.hasOwnProperty(key)) {
-                continue;
-            }
-
-            this.labelToEdit[key] = label[key];
-        }
+    copyLabelToEditLabel(label: INewLabel) {
+        this.labelToEdit = clone(label);
     }
 
     /**
@@ -413,8 +418,10 @@ export class VelpWindowController implements IController {
      * @method addNewVelpToDatabase
      */
     async addNewVelpToDatabase() {
-        const velpToAdd: IVelp = {
-            id: null,
+
+
+        //this.velp.edit = false;
+        const data = {
             labels: this.velp.labels,
             used: 0,
             points: this.velp.points,
@@ -427,10 +434,11 @@ export class VelpWindowController implements IController {
             visible_to: this.velp.visible_to,
             velp_groups: JSON.parse(JSON.stringify(this.velp.velp_groups)),
         };
-
-        //this.velp.edit = false;
-
-        const json = await $http.post<number>("/add_velp", velpToAdd);
+        const json = await $http.post<number>("/add_velp", data);
+        const velpToAdd: IVelp = {
+            id: json.data,
+            ...data,
+        };
         velpToAdd.id = json.data;
         this.velpSelection.velps.push(velpToAdd);
 
@@ -466,6 +474,9 @@ export class VelpWindowController implements IController {
         if (newDefaultGroup == null) {
             return;
         }
+        if (oldDefaultGroup.id == null || newDefaultGroup.id == null) {
+            return;
+        }
         const oldGroupIndex = this.velp.velp_groups.indexOf(oldDefaultGroup.id);
         if (oldGroupIndex >= 0) {
             this.velp.velp_groups.splice(oldGroupIndex, 1);
@@ -481,7 +492,7 @@ export class VelpWindowController implements IController {
      * @param index - Index of the color in the colorPalette variable (modulo by lenght of color palette)
      * @returns {string} String representation of the color
      */
-    getColor(index) {
+    getColor(index: number) {
         return colorPalette[index % colorPalette.length];
     }
 

@@ -1,13 +1,24 @@
-import angular from "angular";
-import {IController} from "angular";
+import angular, {IController, IFormController, IHttpPromise} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import * as velpSummary from "tim/directives/velpSummary";
 import {colorPalette, VelpWindowController} from "tim/directives/velpWindow";
 import {markAsUsed} from "tim/utils";
-import {$http, $q, $window} from "../ngimport";
-import {IAnnotation, ILabel, IUIFields, IVelp, IVelpGroup, VelpGroupSelectionType} from "./velptypes";
 import {ReviewController} from "../controllers/reviewController";
+import {$http, $log, $q, $window} from "../ngimport";
+import {
+    ILabel,
+    ILabelUI,
+    INewLabel,
+    INewVelp,
+    INewVelpGroup,
+    IVelp,
+    IVelpGroup,
+    IVelpGroupCollection,
+    IVelpGroupUI,
+    IVelpUI,
+    VelpGroupSelectionType,
+} from "./velptypes";
 
 markAsUsed(velpSummary);
 
@@ -32,19 +43,19 @@ const UNDEFINED = "undefined";
  * @lends module:velpSelection
  */
 export class VelpSelectionController implements IController {
-    public velps: (IVelp & IUIFields)[];
-    private labels: (ILabel & IUIFields)[];
-    private velpGroups: (IVelpGroup & IUIFields)[];
-    private newVelp: IVelp & IUIFields;
-    private velpToEdit: IVelp & IUIFields;
-    private newLabel: ILabel & IUIFields;
-    private labelToEdit: ILabel & IUIFields;
-    private newVelpGroup: IVelpGroup & IUIFields;
+    public velps: IVelpUI[];
+    private labels: ILabelUI[];
+    private velpGroups: IVelpGroupUI[];
+    private newVelp: INewVelp;
+    private velpToEdit: INewVelp;
+    private newLabel: INewLabel;
+    private labelToEdit: INewLabel;
+    private newVelpGroup: INewVelpGroup;
     private settings: {selectedAllShows: boolean; selectedAllDefault: boolean};
     private submitted: {velp: boolean; velpGroup: boolean};
-    private groupAttachment: {target_type: number; id: number};
-    private groupSelections: {};
-    private groupDefaults: {};
+    private groupAttachment: {target_type: number; id: number | null};
+    private groupSelections: IVelpGroupCollection;
+    private groupDefaults: IVelpGroupCollection;
     private docId: number;
     private order: string;
     private selectedLabels: number[];
@@ -52,7 +63,7 @@ export class VelpSelectionController implements IController {
     private velpOrderingKey: string;
     private velpLabelsKey: string;
     private advancedOnKey: string;
-    private default_velp_group: IVelpGroup & IUIFields;
+    private default_velp_group: IVelpGroupUI;
     private labelAdded: boolean;
     private rctrl: ReviewController;
     private default_personal_velp_group: IVelpGroup;
@@ -131,7 +142,7 @@ export class VelpSelectionController implements IController {
         this.advancedOn = JSON.parse(this.getValuesFromLocalStorage(this.advancedOnKey, "false"));
 
         // Get velpgroup data
-        const promises = [];
+        const promises: IHttpPromise<any>[] = [];
         promises.push();
         const p1 = $http.get<IVelpGroup[]>("/{0}/get_velp_groups".replace("{0}", doc_id.toString()));
         promises.push(p1);
@@ -270,7 +281,7 @@ export class VelpSelectionController implements IController {
                 });
             });
 
-            const p6 = $http.get("/{0}/get_velp_group_personal_selections".replace("{0}", doc_id.toString()));
+            const p6 = $http.get<IVelpGroupCollection>("/{0}/get_velp_group_personal_selections".replace("{0}", doc_id.toString()));
             promises.push(p6);
             p6.then((response2) => {
                 this.groupSelections = response2.data;
@@ -293,7 +304,7 @@ export class VelpSelectionController implements IController {
 
             });
 
-            const p7 = $http.get("/{0}/get_velp_group_default_selections".replace("{0}", doc_id.toString()));
+            const p7 = $http.get<IVelpGroupCollection>("/{0}/get_velp_group_default_selections".replace("{0}", doc_id.toString()));
             promises.push(p7);
             p7.then((response2) => {
                 this.groupDefaults = response2.data;
@@ -332,13 +343,14 @@ export class VelpSelectionController implements IController {
      * @returns {*}
      */
     getValuesFromLocalStorage(key: string, defaultValue: string): string {
-        if ($window.localStorage.getItem(key) == null) {
+        const item = $window.localStorage.getItem(key);
+        if (item == null) {
             return defaultValue;
         }
-        return $window.localStorage.getItem(key);
+        return item;
     }
 
-    changeOrdering(order) {
+    changeOrdering(order: string) {
         $window.localStorage.setItem(this.velpOrderingKey, order);
     }
 
@@ -361,7 +373,7 @@ export class VelpSelectionController implements IController {
      * @param index - Index of the color in the colorPalette variable (modulo by lenght of color palette)
      * @returns {string} String representation of the color
      */
-    getColor(index) {
+    getColor(index: number) {
         return colorPalette[index % colorPalette.length];
     }
 
@@ -370,7 +382,7 @@ export class VelpSelectionController implements IController {
      * @method toggleLabel
      * @param label - Label to toggle
      */
-    toggleLabel(label) {
+    toggleLabel(label: ILabelUI) {
         label.selected = !label.selected;
         const labelIndex = this.selectedLabels.indexOf(label.id);
         if (labelIndex < 0) {
@@ -392,7 +404,7 @@ export class VelpSelectionController implements IController {
     };
      */
 
-    setAdvancedOnlocalStorage(value) {
+    setAdvancedOnlocalStorage(value: boolean) {
         $window.localStorage.setItem(this.advancedOnKey, value.toString());
     }
 
@@ -401,22 +413,23 @@ export class VelpSelectionController implements IController {
      * @method addLabel
      * @param velp - Velp where the label is to be added.
      */
-    async addLabel(velp) {
+    async addLabel(velp: IVelp) {
 
         if (this.newLabel.content.length < 1) {
             this.newLabel.valid = false;
             return;
         }
 
-        const labelToAdd = {
-            id: null,
+        const data = {
             content: this.newLabel.content,
             language_id: "FI", // TODO: Change to user language
+        };
+        const response = await $http.post<{id: number}>("/add_velp_label", data);
+        const labelToAdd = {
+            ...data,
+            id: response.data.id,
             selected: false,
         };
-
-        const response = await $http.post<{id: number}>("/add_velp_label", labelToAdd);
-        labelToAdd.id = response.data.id;
         this.resetNewLabel();
         this.labels.push(labelToAdd);
         this.labelAdded = false;
@@ -464,8 +477,13 @@ export class VelpSelectionController implements IController {
      * @method selectVelpToEdit
      */
     openCreateNewVelpWindow() {
+        const newVelpWindow = document.getElementById("newVelp");
+        if (newVelpWindow == null) {
+            $log.error("Couldn't find newVelp element");
+            return;
+        }
         const velp: VelpWindowController = angular.element(
-            document.getElementById("newVelp"),
+            newVelpWindow,
         ).isolateScope<any>().$ctrl;
         velp.toggleVelpToEdit();
 
@@ -546,7 +564,7 @@ export class VelpSelectionController implements IController {
      * Generates the default velp group.
      * @method generateDefaultVelpGroup
      */
-    async generateDefaultVelpGroup(): Promise<IVelpGroup> {
+    async generateDefaultVelpGroup(): Promise<IVelpGroup | null> {
         if (this.default_velp_group.edit_access) {
             const json = await $http.post<IVelpGroup>("/{0}/create_default_velp_group".replace("{0}", this.docId.toString()), "{}");
             const new_default_velp_group = json.data;
@@ -572,7 +590,7 @@ export class VelpSelectionController implements IController {
      * @param velp - Velp information, contains all edited info
      * @param resetFunction - Function to execute in cancel edit
      */
-    setVelpToEdit(velp, resetFunction) {
+    setVelpToEdit(velp: IVelp, resetFunction: () => void) {
         this.velpToEdit = velp;
         this.resetEditVelp = resetFunction;
     }
@@ -683,8 +701,8 @@ export class VelpSelectionController implements IController {
                 g.show = this.isVelpGroupShownHere(g.id, this.rctrl.selectedElement.id);
                 g.default = this.isVelpGroupDefaultHere(g.id, this.rctrl.selectedElement.id);
             } else {
-                g.show = this.isVelpGroupShownHere(g.id, 0);
-                g.default = this.isVelpGroupDefaultHere(g.id, 0);
+                g.show = this.isVelpGroupShownHere(g.id, "0");
+                g.default = this.isVelpGroupDefaultHere(g.id, "0");
             }
         });
     }
@@ -696,7 +714,7 @@ export class VelpSelectionController implements IController {
      * @param paragraphId - Paragraph ID or "0" for the document
      * @returns {boolean} Whether the velp group is shown here or not
      */
-    isVelpGroupShownHere(groupId, paragraphId) {
+    isVelpGroupShownHere(groupId: number, paragraphId: string) {
         let returnValue;
         // Are we checking for the whole document? This "if" might be unnecessary.
         if (paragraphId === "0") {
@@ -732,7 +750,7 @@ export class VelpSelectionController implements IController {
      * @param paragraphId - Paragraph ID or "0" for the document
      * @returns {boolean} Whether the velp group is default here or not.
      */
-    isVelpGroupDefaultHere(groupId, paragraphId) {
+    isVelpGroupDefaultHere(groupId: number, paragraphId: string) {
         let returnValue;
         // First check defaults here
         returnValue = this.lazyIsVelpGroupDefaultInParagraph(groupId, paragraphId);
@@ -755,7 +773,7 @@ export class VelpSelectionController implements IController {
      * @param groupId - Velp group ID
      * @returns {boolean} Whether the group is personal default or document default group or not.
      */
-    isVelpGroupDefaultFallBack(groupId) {
+    isVelpGroupDefaultFallBack(groupId: number) {
         return (groupId === this.default_personal_velp_group.id || groupId === this.default_velp_group.id);
     }
 
@@ -767,7 +785,7 @@ export class VelpSelectionController implements IController {
      * @param paragraphId - Paragraph ID or "0" for the document
      * @returns true/false/null
      */
-    lazyIsVelpGroupSelectedInParagraph(groupId, paragraphId) {
+    lazyIsVelpGroupSelectedInParagraph(groupId: number, paragraphId: string) {
         return this.checkCollectionForSelected(groupId, paragraphId, this.groupSelections);
     }
 
@@ -779,7 +797,7 @@ export class VelpSelectionController implements IController {
      * @param paragraphId - Paragraph ID or "0" for the document
      * @returns true/false/null
      */
-    lazyIsVelpGroupDefaultInParagraph(groupId, paragraphId) {
+    lazyIsVelpGroupDefaultInParagraph(groupId: number, paragraphId: string) {
         return this.checkCollectionForSelected(groupId, paragraphId, this.groupDefaults);
     }
 
@@ -791,7 +809,7 @@ export class VelpSelectionController implements IController {
      * @param collection - Shows or defaults
      * @returns {boolean|null} Whether the collection is selected or not. Null if paragraph is not found.
      */
-    checkCollectionForSelected(groupId, paragraphId, collection) {
+    checkCollectionForSelected(groupId: number, paragraphId: string, collection: IVelpGroupCollection) {
         if (collection.hasOwnProperty(paragraphId)) {
             const selectionsHere = collection[paragraphId];
             for (let i = 0; i < selectionsHere.length; ++i) {
@@ -808,7 +826,7 @@ export class VelpSelectionController implements IController {
      * @method addVelpGroup
      * @param form - Velp group form
      */
-    async addVelpGroup(form) {
+    async addVelpGroup(form: IFormController) {
         const valid = form.$valid;
         this.submitted.velpGroup = true;
         if (!valid) {
@@ -819,7 +837,7 @@ export class VelpSelectionController implements IController {
 
         const json = await $http.post<IVelpGroup>("/{0}/create_velp_group".replace("{0}", this.docId.toString()),
             this.newVelpGroup);
-        const group: IVelpGroup & IUIFields = json.data;
+        const group: IVelpGroupUI = json.data;
         group.selected = false;
         group.show = true;
         this.velpGroups.push(json.data);
@@ -909,7 +927,7 @@ export class VelpSelectionController implements IController {
      */
     changeAllVelpGroupSelections(type: VelpGroupSelectionType) {
 
-        let targetID;
+        let targetID: string;
         let targetType;
 
         if (this.isAttachedToParagraph()) {
@@ -1006,7 +1024,7 @@ export class VelpSelectionController implements IController {
      * @param type - Paragraph ID or "0" for the document
      * @returns {boolean} Whether all velp groups are used in the selected element or document
      */
-    checkCheckBoxes(type) {
+    checkCheckBoxes(type: VelpGroupSelectionType) {
         let targetID = null;
 
         if (this.groupAttachment.target_type === 1) {
@@ -1104,9 +1122,14 @@ export class VelpSelectionController implements IController {
     releaseClicked() {
         const div = $("#selectVelpsDiv");
         this.previewReleased = !(this.previewReleased);
-        const top = div.offset().top;
-        const left = div.offset().left - 270;
+        const offset = div.offset() || {top: 0, left: 0};
+        const top = offset.top;
+        const left = offset.left - 270;
         const element = div.detach();
+        const btn = document.getElementById("releaseSelectVelpsButton");
+        if (btn == null) {
+            return;
+        }
         if (div.css("position") === "fixed") {
             $("#selectVelpsStack").append(element);
             // If preview has been clicked back in, save the preview position before making it static again
@@ -1116,7 +1139,7 @@ export class VelpSelectionController implements IController {
             div.css("display", "default");
             div.css("padding", 0);
 
-            document.getElementById("releaseSelectVelpsButton").innerHTML = "&#8592;";
+            btn.innerHTML = "&#8592;";
 
         } else {
             // If preview has just been released or it was released last time editor was open
@@ -1129,7 +1152,7 @@ export class VelpSelectionController implements IController {
             div.css("width", "19em");
             div.css("padding", 5);
             div.css("z-index", 9999);
-            document.getElementById("releaseSelectVelpsButton").innerHTML = "&#8594;";
+            btn.innerHTML = "&#8594;";
 
             div.offset({left, top});
 
@@ -1142,10 +1165,9 @@ export class VelpSelectionController implements IController {
  * Filter for ordering velps
  */
 timApp.filter("filterByLabels", () => {
-    "use strict";
-    return (velps, labels, advancedOn) => {
+    return (velps?: IVelp[], labels?: ILabelUI[], advancedOn?: boolean) => {
 
-        const selectedVelps = {};
+        const selectedVelps: {[index: number]: [IVelp, number]} = {};
         const selectedLabels = [];
 
         if (!advancedOn) {
@@ -1201,13 +1223,12 @@ timApp.filter("filterByLabels", () => {
 });
 
 timApp.filter("filterByVelpGroups", () => {
-    "use strict";
-    return (velps, groups) => {
+    return (velps?: INewVelp[], groups?: IVelpGroupUI[]) => {
 
         const selected = [];
         const checkedGroups = [];
 
-        if (typeof groups === UNDEFINED || typeof velps === UNDEFINED) {
+        if (groups == null || velps == null) {
             return velps;
         }
 
@@ -1236,9 +1257,7 @@ timApp.filter("filterByVelpGroups", () => {
 });
 
 timApp.filter("orderByWhenNotEditing", () => {
-    "use strict";
-
-    return (velps, order, filteredVelps) => {
+    return (velps: INewVelp[], orderStr: string, filteredVelps: IVelp[]) => {
         for (let i = 0; i < velps.length; i++) {
             if (velps[i].edit) {
                 return filteredVelps;
@@ -1247,29 +1266,27 @@ timApp.filter("orderByWhenNotEditing", () => {
 
         let list;
         let reverse = false;
-
-        if (order[0] === "-") {
+        let order: keyof IVelp = orderStr as keyof IVelp;
+        if (orderStr[0] === "-") {
             reverse = true;
-            order = order.substring(1);
+            order = order.substring(1) as keyof IVelp;
         }
 
         if (order === "labels") {
             list = velps;
         } else if (order === "content") {
-            list = velps.sort((v1, v2) => v1[order].localeCompare(v2[order]));
+            list = velps.sort((v1, v2) => v1.content.localeCompare(v2.content));
         } else {
             list = velps.sort((v1, v2) => {
-                if (v1[order] == null && v2[order] != null) {
-                    return -1;
-                } else if (v1[order] != null && v2[order] == null) {
+                const v1o = v1[order];
+                const v2o = v2[order];
+                if (v1o == null) {
+                    return v2o != null ? -1 : 0;
+                } else if (v2o == null) {
                     return 1;
-                } else if (v1[order] == null && v2[order] == null) {
-                    return 0;
-                }
-
-                if (v1[order] < v2[order]) {
+                } else if (v1o < v2o) {
                     return -1;
-                } else if (v1[order] > v2[order]) {
+                } else if (v1o > v2o) {
                     return 1;
                 }
                 return 0;

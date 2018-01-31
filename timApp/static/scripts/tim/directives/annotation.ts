@@ -15,9 +15,9 @@
 import angular from "angular";
 import {IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
-import {$http, $window} from "../ngimport";
 import {ReviewController} from "../controllers/reviewController";
 import {IUser} from "../IUser";
+import {$http, $window} from "../ngimport";
 import {IAnnotation} from "./velptypes";
 
 const UNDEFINED = "undefined";
@@ -42,12 +42,12 @@ class AnnotationController implements IController {
     private original: {
         points: number;
         velp: {};
-        color: string;
+        color: string | null;
         visible_to: number;
         comment: string;
         aid: number,
-        annotation_id: number,
-        doc_id: number
+        annotation_id: number | null,
+        doc_id: number | null
     };
     private velp: {};
     private rctrl: ReviewController;
@@ -138,6 +138,9 @@ class AnnotationController implements IController {
      * @method toggleAnnotation
      */
     toggleAnnotation() {
+        if (this.velpElement.parentElement == null) {
+            return;
+        }
         const elementName = this.velpElement.parentElement.offsetParent.className;
         const annotationElements = document.querySelectorAll('[aid="{0}"]'.replace("{0}", this.annotation.id.toString()));
 
@@ -167,7 +170,10 @@ class AnnotationController implements IController {
         this.changeColor();
     }
 
-    isVelpCustomColor() {
+    isVelpCustomColor(): boolean {
+        if (this.annotation.color == null) {
+            return false;
+        }
         return this.annotation.color.length === 7; // hex colors are 7 characters long
     }
 
@@ -221,6 +227,9 @@ class AnnotationController implements IController {
      */
     updateAnnotation() {
         let margin = false;
+        if (this.velpElement.parentElement == null) {
+            return;
+        }
         if (this.velpElement.parentElement.offsetParent.className === "notes") {
             margin = true;
         }
@@ -334,7 +343,7 @@ class AnnotationController implements IController {
      * @method keyDownFunc
      * @param event - Current event
      */
-    keyDownFunc(event) {
+    keyDownFunc(event: KeyboardEvent) {
         if (event.keyCode === this.ctrlKey) {
             this.ctrlDown = true;
         }
@@ -354,7 +363,7 @@ class AnnotationController implements IController {
      * @method keyUpFunc
      * @param event - Current event
      */
-    keyUpFunc(event) {
+    keyUpFunc(event: KeyboardEvent) {
         if (event.keyCode === this.ctrlKey) {
             this.ctrlDown = false;
         }
