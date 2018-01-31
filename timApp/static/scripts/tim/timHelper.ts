@@ -1,12 +1,15 @@
 import {$sanitize} from "./ngimport";
 
-export function initAttributes(clone, $scope) {
+export function initAttributes(clone: JQuery, $scope: any) {
     if (!clone[0]) {
         return;
     }
     const markJSON = "xxxJSONxxx";
     const markHex = "xxxHEXJSONxxx";
     let s = clone[0].textContent;
+    if (s == null) {
+        return;
+    }
     const chex = s.indexOf(markHex) === 0;
     const cjson = s.indexOf(markJSON) === 0;
     if (!chex && !cjson) {
@@ -22,7 +25,7 @@ export function initAttributes(clone, $scope) {
     $scope.scope = $scope;
 }
 
-export function getHeading($scope, attrs, key, defElem) {
+export function getHeading($scope: any, attrs: IAttributes, key: string, defElem: string) {
     const h = set($scope, attrs, key, "");
     return toHeading(h, defElem);
 }
@@ -78,7 +81,7 @@ export function get(jso: IAttributes, keys: string[]) {
 }
 
 export interface IAttributes {
-
+    [index: string]: any;
 }
 
 export interface ISettable {
