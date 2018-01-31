@@ -79,7 +79,6 @@ timApp.config(["$qProvider", ($qProvider: IQProvider) => {
 
 // Filter to make string URL friendly
 timApp.filter("escape", () => {
-    "use strict";
     return (str: string) => {
         return encodeURIComponent(str).replace(/%2F/g, "/");
     };

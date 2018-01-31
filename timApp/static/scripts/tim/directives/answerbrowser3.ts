@@ -24,7 +24,6 @@ const RLAZYSTART = new RegExp(LAZYSTART, "g");
 const RLAZYEND = new RegExp(LAZYEND, "g");
 
 function makeNotLazy(html: string) {
-    "use strict";
     let s = html.replace(RLAZYSTART, "");
     const i = s.lastIndexOf(LAZYEND);
     if (i >= 0) s = s.substring(0, i);
