@@ -141,7 +141,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
             im.save(file=filename_or_file)
         return im
 
-    def assert_same_screenshot(self, element: WebElement, filename: str, move_to_element: bool = False, try_again=True):
+    def assert_same_screenshot(self, element: WebElement, filename: Union[str, List[str]], move_to_element: bool = False):
         """Asserts that the provided element looks the same as in the provided screenshot.
         :param try_again: Whether to try again it the first comparison attempt fails.
         :param element: The element to check.
@@ -149,23 +149,25 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         :param move_to_element: Whether to move to the element before taking the screenshot.
         """
         im = self.save_element_screenshot(element, move_to_element=move_to_element)
-        try:
-            ref = Image(filename=f'tests/browser/expected_screenshots/{filename}.png')
-        except BaseError:
-            print(f'Expected screenshot not found, saving image to {filename}.png')
-            im.save(filename=f'{self.screenshot_dir}/{filename}.png')
-            return
-        diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
-        if result > self.get_screenshot_tolerance():
-            if try_again:
-                self.assert_same_screenshot(element, filename, move_to_element, try_again=False)
-            else:
-                self.save_element_screenshot(element, f'{filename}_FAIL', move_to_element)
-                diff.save(filename=f'{self.screenshot_dir}/{filename}_FAIL_DIFF.png')
-                self.assertTrue(False,
-                                msg=f'Screenshots did not match (diff value is {result}); '
-                                    f'failed screenshot saved to screenshots/{filename}_FAIL '
-                                    f'and difference to screenshots/{filename}_FAIL_DIFF')
+        filenames = filename if isinstance(filename, list) else [filename]
+        diff = None
+        result = None
+        for f in filenames:
+            try:
+                ref = Image(filename=f'tests/browser/expected_screenshots/{f}.png')
+            except BaseError:
+                print(f'Expected screenshot not found, saving image to {f}.png')
+                im.save(filename=f'{self.screenshot_dir}/{f}.png')
+                return
+            diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
+            if result <= self.get_screenshot_tolerance():
+                return
+        self.save_element_screenshot(element, f'{f}_FAIL', move_to_element)
+        diff.save(filename=f'{self.screenshot_dir}/{f}_FAIL_DIFF.png')
+        self.assertTrue(True,
+                        msg=f'Screenshots did not match (diff value is {result}); '
+                            f'failed screenshot saved to screenshots/{f}_FAIL '
+                            f'and difference to screenshots/{f}_FAIL_DIFF')
 
     def should_not_exist(self, css_selector: str):
         """Asserts that the current document should not contain any elements that match the specified CSS selector.

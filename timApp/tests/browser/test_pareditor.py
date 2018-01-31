@@ -108,4 +108,6 @@ class ParEditorTest(BrowserTest):
         pareditor = self.get_editor_element()
         ActionChains(self.drv).send_keys('d').perform()
         self.wait_for_preview_to_finish()
-        self.assert_same_screenshot(pareditor, 'pareditor/autocomplete_no_document')
+        self.assert_same_screenshot(pareditor,
+                                    ['pareditor/autocomplete_no_document',
+                                     'pareditor/autocomplete_no_document_alt'])
