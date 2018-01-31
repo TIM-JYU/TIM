@@ -1,7 +1,7 @@
 import angular, {IScope} from "angular";
 import $ from "jquery";
 import {Coords, markPageDirty} from "tim/utils";
-import {IExtraData, IParResponse} from "../../IParResponse";
+import {IExtraData, IParResponse} from "../../edittypes";
 import {$compile, $http, $timeout, $window} from "../../ngimport";
 import {ParCompiler} from "../../services/parCompiler";
 import {onClick} from "./eventhandlers";

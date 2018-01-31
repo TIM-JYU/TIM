@@ -1,5 +1,5 @@
 import {IScope} from "angular";
-import {IParResponse} from "../../IParResponse";
+import {IParResponse} from "../../edittypes";
 import {$http, $window} from "../../ngimport";
 import {Users} from "../../services/userService";
 import {Coords} from "../../utils";

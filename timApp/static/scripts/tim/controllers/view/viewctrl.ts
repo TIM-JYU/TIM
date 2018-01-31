@@ -17,7 +17,7 @@ import {timLogTime} from "tim/timTiming";
 import {applyMixins, Coords, isPageDirty, markAsUsed, markPageNotDirty} from "tim/utils";
 import {initCssPrint} from "../../cssPrint";
 import {IItem} from "../../IItem";
-import {IExtraData, IParResponse} from "../../IParResponse";
+import {IExtraData, IParResponse} from "../../edittypes";
 import {IUser} from "../../IUser";
 import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../../services/parCompiler";

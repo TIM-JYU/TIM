@@ -10,6 +10,6 @@ export function editorChangeValue(attributes: string[], text: string) {
     currentEditorScope.changeValue(attributes, text);
 }
 
-export function setEditorScope(scope: AceParEditor | TextAreaParEditor) {
+export function setEditorScope(scope: AceParEditor | TextAreaParEditor | null) {
     currentEditorScope = scope;
 }

@@ -11,6 +11,7 @@ import {markAsUsed, setsetting} from "tim/utils";
 import {IAceEditor} from "../ace-types";
 import {getActiveDocument} from "../controllers/view/document";
 import {isSettings} from "../controllers/view/parhelpers";
+import {Duplicate} from "../edittypes";
 import {$compile, $http, $localStorage, $log, $timeout, $upload, $window} from "../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../services/parCompiler";
 import {AceParEditor} from "./AceParEditor";
@@ -31,7 +32,7 @@ export class PareditorController implements IController {
     private dataLoaded: boolean;
     private deleteUrl: string;
     private deleting: boolean;
-    private duplicates: any[];
+    private duplicates: Duplicate[];
     private editor: TextAreaParEditor | AceParEditor;
     private element: JQuery;
     private extraData: {
@@ -85,7 +86,7 @@ export class PareditorController implements IController {
         strokes: string,
         pipe: string,
     };
-    private timer: IPromise<void>;
+    private timer?: IPromise<void>;
     private unreadUrl: string;
     private uploadedFile: string;
     private scope: IScope;
@@ -126,26 +127,26 @@ export class PareditorController implements IController {
 
         this.citeText = this.getCiteText();
 
-        this.tables = {normal: null, example: null, noheaders: null, multiline: null, pipe: null, strokes: null};
+        this.tables = {
 
-        this.tables.normal = "Otsikko1 Otsikko2 Otsikko3 Otsikko4\n" +
+        normal: "Otsikko1 Otsikko2 Otsikko3 Otsikko4\n" +
             "-------- -------- -------- --------\n" +
             "1.rivi   x        x        x       \n" +
-            "2.rivi   x        x        x       ";
+            "2.rivi   x        x        x       ",
 
-        this.tables.example = "Table:  Otsikko taulukolle\n\n" +
+        example: "Table:  Otsikko taulukolle\n\n" +
             "Otsikko    Vasen laita    Keskitetty    Oikea laita\n" +
             "---------- ------------- ------------ -------------\n" +
             "1. rivi      2                  3         4\n" +
-            "2. rivi        1000      2000             30000";
+            "2. rivi        1000      2000             30000",
 
-        this.tables.noheaders = ":  Otsikko taulukolle\n\n" +
+        noheaders: ":  Otsikko taulukolle\n\n" +
             "---------- ------------- ------------ -------------\n" +
             "1. rivi      2                  3         4\n" +
             "2. rivi        1000      2000             30000\n" +
-            "---------- ------------- ------------ -------------\n";
+            "---------- ------------- ------------ -------------\n",
 
-        this.tables.multiline = "Table:  Otsikko taulukolle voi\n" +
+        multiline: "Table:  Otsikko taulukolle voi\n" +
             "jakaantua usealle riville\n\n" +
             "-----------------------------------------------------\n" +
             "Ekan       Toisen\         kolmas\            neljäs\\\n" +
@@ -160,8 +161,8 @@ export class PareditorController implements IController {
             "            rivillä\n" +
             "            \n" +
             "2. rivi        1000      2000             30000\n" +
-            "-----------------------------------------------------\n";
-        this.tables.strokes = ": Viivoilla tehty taulukko\n\n" +
+            "-----------------------------------------------------\n",
+        strokes: ": Viivoilla tehty taulukko\n\n" +
             "+---------------+---------------+----------------------+\n" +
             "| Hedelmä       | Hinta         | Edut                 |\n" +
             "+===============+===============+======================+\n" +
@@ -170,14 +171,15 @@ export class PareditorController implements IController {
             "+---------------+---------------+----------------------+\n" +
             "| Appelsiini    |  2.10 €       | - auttaa keripukkiin |\n" +
             "|               |               | - makea              |\n" +
-            "+---------------+---------------+----------------------+\n";
+            "+---------------+---------------+----------------------+\n",
 
-        this.tables.pipe = ": Taulukko, jossa tolpat määräävat sarkkeiden paikat.\n\n" +
+        pipe: ": Taulukko, jossa tolpat määräävat sarkkeiden paikat.\n\n" +
             "|Oikea  | Vasen | Oletus | Keskitetty |\n" +
             "|------:|:-----|---------|:------:|\n" +
             "|   12  |  12  |    12   |    12  |\n" +
             "|  123  |  123 |   123   |   123  |\n" +
-            "|    1  |    1 |     1   |     1  |\n";
+            "|    1  |    1 |     1   |     1  |\n",
+        };
 
         $(document).on("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", (event) => {
             const editor = $(element).find("#pareditor").get(0);
@@ -188,7 +190,6 @@ export class PareditorController implements IController {
             }
         });
 
-        this.timer = null;
         this.outofdate = false;
         this.parCount = 0;
         this.touchDevice = false;
@@ -284,11 +285,11 @@ export class PareditorController implements IController {
         this.minSizeSet = true;
     }
 
-    deleteAttribute(key) {
+    deleteAttribute(key: string) {
         delete this.extraData.attrs[key];
     }
 
-    deleteClass(classIndex) {
+    deleteClass(classIndex: number) {
         this.extraData.attrs.classes.splice(classIndex, 1);
     }
 
@@ -366,9 +367,9 @@ or newer one that is more familiar to write in YAML:
                             const tempdata = (template.data || null);
                             let clickfn;
                             if (tempdata)
-                                clickfn = "$ctrl.putTemplate('" + tempdata + "')";
+                                clickfn = `$ctrl.putTemplate('${tempdata}')`;
                             else
-                                clickfn = "$ctrl.getTemplate('" + plugin + "','" + template.file + "', '" + j + "')";
+                                clickfn = `$ctrl.getTemplate('${plugin}','${template.file}', '${j}')`;
                             this.pluginButtonList[tab].push(this.createMenuButton(text, template.expl, clickfn));
                         }
                     }
@@ -514,7 +515,7 @@ or newer one that is more familiar to write in YAML:
         });
     }
 
-    wrapFn(func = null) {
+    wrapFn(func: (() => void) | null = null) {
         if (!this.touchDevice) {
             // For some reason, on Chrome, re-focusing the editor messes up scroll position
             // when clicking a tab and moving mouse while clicking, so
@@ -659,7 +660,7 @@ or newer one that is more familiar to write in YAML:
         this.adjustPreview();
     }
 
-    savePreviewData(savePreviewPosition) {
+    savePreviewData(savePreviewPosition: boolean) {
         const tag = this.options.localSaveTag || "";
         const storage = $window.localStorage;
         const editorOffset = this.element.offset();
@@ -702,7 +703,7 @@ or newer one that is more familiar to write in YAML:
      * @param duplicates - The duplicate tasks, contains duplicate taskIds and relevant parIds
      * @param renameDuplicates - Whether user wants to rename task names or not
      */
-    renameTaskNamesClicked(inputs, duplicates, renameDuplicates = false) {
+    renameTaskNamesClicked(inputs: JQuery[], duplicates: Duplicate[], renameDuplicates = false) {
         // If user wants to ignore duplicates proceed like normal after saving
         if (!renameDuplicates) {
             this.renameFormShowing = false;
@@ -742,7 +743,7 @@ or newer one that is more familiar to write in YAML:
             }
         }
         // Save the new task names for duplicates
-        $http.post<{duplicates: string[]}>("/postNewTaskNames/", angular.extend({
+        $http.post<{duplicates: Duplicate[]}>("/postNewTaskNames/", angular.extend({
             duplicates: duplicateData,
             renameDuplicates,
         }, this.extraData)).then((response) => {
@@ -778,7 +779,7 @@ or newer one that is more familiar to write in YAML:
      * Function that creates a form for renaming plugins with duplicate tasknames
      * @param data - The data received after saving editor text
      */
-    createPluginRenameForm(data) {
+    createPluginRenameForm(data: {duplicates: Duplicate[]}) {
         // Hides other texteditor elements when form is created
         this.renameFormShowing = true;
         this.duplicates = data.duplicates;
@@ -884,7 +885,7 @@ or newer one that is more familiar to write in YAML:
         this.inputs[0].focus();
         this.pluginRenameForm = $actionDiv;
         // Add hotkey for quick saving (Ctrl + S)
-        this.pluginRenameForm.keydown((e) => {
+        this.pluginRenameForm.keydown((e: KeyboardEvent) => {
             if (e.ctrlKey) {
                 if (e.keyCode === 83) {
                     this.renameTaskNamesClicked(this.inputs, this.duplicates, true);
@@ -916,7 +917,7 @@ or newer one that is more familiar to write in YAML:
             return;
         }
         $http.post<{
-            duplicates: string[],
+            duplicates: Duplicate[],
             original_par: string,
             new_par_ids: string[],
         }>(this.saveUrl, angular.extend({
@@ -1031,7 +1032,7 @@ or newer one that is more familiar to write in YAML:
         }
     }
 
-    createMenuButton(text, title, clickfunction) {
+    createMenuButton(text: string, title: string, clickfunction: string) {
         const $span = $("<span>", {class: "actionButtonRow"});
         const button_width = 130;
         $span.append($("<button>", {
@@ -1044,7 +1045,7 @@ or newer one that is more familiar to write in YAML:
         return $span;
     }
 
-    createMenu($event, buttons) {
+    createMenu($event: Event, buttons: JQuery[]) {
         this.closeMenu(null, true);
         const $button = $($event.target);
         const coords = {left: $button.position().left, top: $button.position().top};
@@ -1062,7 +1063,7 @@ or newer one that is more familiar to write in YAML:
         $(document).on("mouseup.closemenu", (e: JQueryEventObject) => this.closeMenu(e, false));
     }
 
-    tableClicked($event) {
+    tableClicked($event: Event) {
         const buttons = [];
         for (const key in this.tables) {
             if (this.tables.hasOwnProperty(key)) {
@@ -1074,7 +1075,7 @@ or newer one that is more familiar to write in YAML:
         this.createMenu($event, buttons);
     }
 
-    slideClicked($event) {
+    slideClicked($event: Event) {
         const buttons = [];
         buttons.push(this.createMenuButton("Slide break", "Break text to start a new slide", "$ctrl.editor.ruleClicked()"));
         buttons.push(this.createMenuButton("Slide fragment", "Content inside the fragment will be hidden and shown when next is clicked in slide view", "$ctrl.editor.surroundClicked('§§', '§§')"));
@@ -1082,18 +1083,18 @@ or newer one that is more familiar to write in YAML:
         this.createMenu($event, buttons);
     }
 
-    pluginClicked($event, key) {
+    pluginClicked($event: Event, key: string) {
         this.createMenu($event, this.pluginButtonList[key]);
     }
 
-    putTemplate(data) {
+    putTemplate(data: string) {
         if (!this.touchDevice) {
             this.editor.focus();
         }
         this.editor.insertTemplate(data);
     }
 
-    getTemplate(plugin, template, index) {
+    getTemplate(plugin: string, template: string, index: string) {
         $.ajax({
             type: "GET",
             url: "/" + plugin + "/template/" + template + "/" + index,
@@ -1112,7 +1113,7 @@ or newer one that is more familiar to write in YAML:
         }
     }
 
-    tabClicked($event, area) {
+    tabClicked($event: Event, area: string) {
         const active = $($event.target).parent();
         setsetting("editortab", area);
         this.setActiveTab(active, area);
@@ -1124,7 +1125,7 @@ or newer one that is more familiar to write in YAML:
      * @param active tab <li> element
      * @param area area to make visible
      */
-    setActiveTab(active, area) {
+    setActiveTab(active: JQuery, area: string) {
         const naviArea = this.element.find("#" + area);
         const buttons = this.element.find(".extraButtonArea");
         const tabs = this.element.find(".tab");
@@ -1188,7 +1189,7 @@ or newer one that is more familiar to write in YAML:
     /**
      * Switches editor between Ace and textarea.
      */
-    async changeEditor(newMode) {
+    async changeEditor(newMode: string) {
         let text = "";
         const editorContainer = this.element.find(".editorContainer");
         editorContainer.addClass("editor-loading");
@@ -1240,7 +1241,7 @@ or newer one that is more familiar to write in YAML:
             const wordListStr = (await $http.get<{word_list: string}>("/settings/get/word_list", {params: {_: Date.now()}})).data.word_list;
             const userWordList = wordListStr ? wordListStr.split("\n") : [];
             const createCompleter = (wordList: string[], context: string) => ({
-                getCompletions(editor, session, pos, prefix, callback) {
+                getCompletions(editor: any, session: any, pos: any, prefix: any, callback: any) {
                     callback(null, wordList.map((word) => ({
                         caption: word,
                         meta: context,

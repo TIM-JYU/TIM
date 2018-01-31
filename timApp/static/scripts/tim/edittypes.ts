@@ -9,3 +9,5 @@ export interface IExtraData {
     area_start?: string;
     area_end?: string;
 }
+
+export type Duplicate = [string, string] | [string, string, "hasAnswers"];

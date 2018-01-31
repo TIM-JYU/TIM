@@ -10,7 +10,7 @@ import {
 import {markAsUsed, setsetting} from "tim/utils";
 import {QuestionMatrixController} from "../components/questionMatrix";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
-import {IParResponse} from "../IParResponse";
+import {IParResponse} from "../edittypes";
 import {
     IAskedJsonJson,
     IAskedQuestion,

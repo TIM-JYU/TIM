@@ -1,7 +1,7 @@
 import angular, {IScope} from "angular";
 import $ from "jquery";
 import {showMessageDialog} from "../../dialog";
-import {IExtraData, IParResponse} from "../../IParResponse";
+import {IExtraData, IParResponse} from "../../edittypes";
 import {$compile, $window} from "../../ngimport";
 import {getElementParent} from "../../utils";
 import {onClick} from "./eventhandlers";

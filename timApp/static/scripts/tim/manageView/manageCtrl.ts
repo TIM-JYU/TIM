@@ -1,18 +1,17 @@
-import angular, {IFormController, IScope, IController, IRootElementService} from "angular";
+import angular, {IController, IFormController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {$compile, $http, $log, $timeout, $upload, $window} from "../ngimport";
 import {IItem} from "../IItem";
 import {markAsUsed} from "../utils";
 import * as copyFolder from "./copyFolder";
+import {Duplicate} from "../edittypes";
 
 markAsUsed(copyFolder);
 
 interface IChangelogEntry {
 
 }
-
-export type Duplicate = [string, string];
 
 export interface ITranslation {
     id: number;
