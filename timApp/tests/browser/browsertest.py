@@ -164,7 +164,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
                 return
         self.save_element_screenshot(element, f'{f}_FAIL', move_to_element)
         diff.save(filename=f'{self.screenshot_dir}/{f}_FAIL_DIFF.png')
-        self.assertTrue(True,
+        self.assertTrue(False,
                         msg=f'Screenshots did not match (diff value is {result}); '
                             f'failed screenshot saved to screenshots/{f}_FAIL '
                             f'and difference to screenshots/{f}_FAIL_DIFF')

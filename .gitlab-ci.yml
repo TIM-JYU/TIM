@@ -26,6 +26,6 @@ test:
   - ./run_tests.sh
   artifacts:
     name: failed_screenshots
-    when: always
+    when: on_failure
     paths:
     - screenshots
