@@ -58,7 +58,8 @@ class VelpTest(BrowserTest):
         # get mouse out of the newly created velp so that the velp is not highlighted
         ActionChains(self.drv).move_to_element(create_velp_btn).perform()
 
-        self.assert_same_screenshot(velp_selection_element, 'velps/velp_selection_one_velp')
+        self.assert_same_screenshot(velp_selection_element, ['velps/velp_selection_one_velp',
+                                                             'velps/velp_selection_one_velp_alt'])
 
         # Selecting text using these styles does not work for some reason:
         # par: WebElement = self.drv.find_element_by_css_selector('.parContent > p')
