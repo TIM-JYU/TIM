@@ -1,5 +1,6 @@
 from time import sleep
 
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 
@@ -18,7 +19,10 @@ type: python
         dt.document.set_settings({'global_plugin_attrs': {'all': {'lang': 'en'}}})
         self.goto_document(dt)
         par = self.find_element('#py')
-        self.touch(par)
+        try:
+            self.touch(par)
+        except StaleElementReferenceException:
+            pass
         self.wait_until_hidden('answerbrowserlazy')
         self.wait_until_present('#py textarea')
         textarea = self.find_element_and_move_to('#py textarea')
