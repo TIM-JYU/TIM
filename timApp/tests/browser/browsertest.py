@@ -6,7 +6,7 @@ from pprint import pprint
 from typing import Union, List
 
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -222,6 +222,19 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
     def find_element(self, selector: str) -> WebElement:
         return self.drv.find_element_by_css_selector(selector)
+
+    def find_element_avoid_staleness(self, selector: str, tries: int = 10) -> WebElement:
+        while True:
+            e = self.find_element(selector)
+            try:
+                self.touch(e)
+            except StaleElementReferenceException:
+                tries -= 1
+                if tries == 0:
+                    raise
+                continue
+            else:
+                return e
 
     def touch(self, e: WebElement):
         ActionChains(self.drv).move_to_element(e).perform()
