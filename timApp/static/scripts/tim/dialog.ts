@@ -54,8 +54,7 @@ registerDialogComponent("timMessageDialog",
         template: `<div class="modal-header">
     <h4 class="modal-title" id="modal-title">Message</h4>
 </div>
-<div class="modal-body" id="modal-body">
-    {{$ctrl.getMessage()}}
+<div class="modal-body" id="modal-body" ng-bind-html="$ctrl.getMessage()">
 </div>
 <div class="modal-footer">
     <button class="timButton" type="button" ng-click="$ctrl.ok()">OK
