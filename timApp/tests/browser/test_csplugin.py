@@ -20,6 +20,7 @@ type: python
         par = self.find_element('#py')
         self.touch(par)
         self.wait_until_hidden('answerbrowserlazy')
+        self.wait_until_present('#py textarea')
         textarea = self.find_element_and_move_to('#py textarea')
         textarea.send_keys('print("Hello world!")')
         self.find_element('.breadcrumb .active').click()
