@@ -1,3 +1,6 @@
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions
+
 from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
 
 
@@ -32,8 +35,7 @@ type: python
         par = self.find_element('#py')
 
         # Wait until the height workaround completes (see answerbrowser3.ts)
-        # self.save_screenshot()
-        # self.wait.until(ec.presence_of_element_located((By.XPATH, "//*[@id='py'][@style='opacity: 1;']")))
+        self.wait.until(expected_conditions.presence_of_element_located((By.XPATH, "//*[@id='py'][@style='opacity: 1;']")))
 
         # TODO: Why is this slightly different from python_before_answer ?
         self.assert_same_screenshot(par, 'csplugin/python_after_answer_switch')
