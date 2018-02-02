@@ -1,17 +1,16 @@
 import hashlib
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, List
+from typing import Optional, List
 
 import bcrypt
-from sqlalchemy import func
 
 from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.timdb.blocktypes import BlockType, blocktypes
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.folder import Folder
-from timApp.timdb.special_group_names import ADMIN_GROUPNAME, LOGGED_IN_GROUPNAME, ANONYMOUS_GROUPNAME, \
-    LOGGED_IN_USERNAME, ANONYMOUS_USERNAME
-from timApp.timdb.tim_models import db, AccessType, BlockAccess, UserGroupMember
+from timApp.timdb.special_group_names import ANONYMOUS_GROUPNAME, \
+    ANONYMOUS_USERNAME
+from timApp.timdb.tim_models import db, AccessType, BlockAccess
 
 ANON_USER_ID = None
 LOGGED_USER_ID = None
@@ -34,36 +33,12 @@ class NoSuchUserException(TimDbException):
         self.user_id = user_id
 
 
-def get_admin_group_id() -> int:
-    global ADMIN_GROUP_ID
-    if ADMIN_GROUP_ID is not None:
-        return ADMIN_GROUP_ID
-    ADMIN_GROUP_ID = get_usergroup_by_name(ADMIN_GROUPNAME)
-    return ADMIN_GROUP_ID
-
-
-def get_logged_group_id() -> int:
-    global LOGGED_GROUP_ID
-    if LOGGED_GROUP_ID is not None:
-        return LOGGED_GROUP_ID
-    LOGGED_GROUP_ID = get_usergroup_by_name(LOGGED_IN_GROUPNAME)
-    return LOGGED_GROUP_ID
-
-
 def get_anon_group_id() -> int:
     global ANON_GROUP_ID
     if ANON_GROUP_ID is not None:
         return ANON_GROUP_ID
     ANON_GROUP_ID = get_usergroup_by_name(ANONYMOUS_GROUPNAME)
     return ANON_GROUP_ID
-
-
-def get_logged_user_id() -> int:
-    global LOGGED_USER_ID
-    if LOGGED_USER_ID is not None:
-        return LOGGED_USER_ID
-    LOGGED_USER_ID = get_user_id_by_name(LOGGED_IN_USERNAME)
-    return LOGGED_USER_ID
 
 
 def get_anon_user_id() -> int:
@@ -80,89 +55,6 @@ def get_access_type_id(access_type):
         for row in result:
             access_type_map[row.name] = row.id
     return access_type_map[access_type]
-
-
-def get_viewable_blocks(user_id: int) -> Dict[int, BlockAccess]:
-    return get_accessible_blocks(user_id, [get_view_access_id(),
-                                           get_edit_access_id(),
-                                           get_manage_access_id(),
-                                           get_teacher_access_id(),
-                                           get_seeanswers_access_id(),
-                                           get_owner_access_id()])
-
-
-def get_editable_blocks(user_id: int) -> Dict[int, BlockAccess]:
-    return get_accessible_blocks(user_id, [get_edit_access_id(),
-                                           get_manage_access_id(),
-                                           get_owner_access_id()])
-
-
-def get_see_answers_blocks(user_id: int) -> Dict[int, BlockAccess]:
-    return get_accessible_blocks(user_id, [get_seeanswers_access_id(),
-                                           get_teacher_access_id(),
-                                           get_manage_access_id(),
-                                           get_owner_access_id()])
-
-
-def get_teachable_blocks(user_id: int) -> Dict[int, BlockAccess]:
-    return get_accessible_blocks(user_id, [get_teacher_access_id(),
-                                           get_manage_access_id(),
-                                           get_owner_access_id()])
-
-
-def get_manageable_blocks(user_id: int) -> Dict[int, BlockAccess]:
-    return get_accessible_blocks(user_id, [get_manage_access_id(),
-                                           get_owner_access_id()])
-
-
-def get_owned_blocks(user_id: int) -> Dict[int, BlockAccess]:
-    return get_accessible_blocks(user_id, [get_owner_access_id()])
-
-
-def prepare_access_query(access_types, user_ids):
-    user_query = db.session.query(UserGroupMember.usergroup_id).filter(UserGroupMember.user_id.in_(user_ids))
-    q = BlockAccess.query.filter(
-        BlockAccess.usergroup_id.in_(user_query)
-        & BlockAccess.type.in_(access_types)
-        & (func.current_timestamp().between(BlockAccess.accessible_from, func.coalesce(BlockAccess.accessible_to,
-                                                                                       'infinity'))))
-    return q
-
-
-def get_accessible_blocks(user_id: int, access_types: List[int]) -> Dict[int, BlockAccess]:
-    user_ids = [user_id, get_anon_user_id()]
-    if user_id > 0:
-        user_ids.append(get_logged_user_id())
-    q = prepare_access_query(access_types, user_ids)
-    return {row.block_id: row for row in q.all()}
-
-
-def has_admin_access(user_id: int) -> bool:
-    return is_user_id_in_group_id(user_id, get_admin_group_id())
-
-
-def get_owner_access_id() -> int:
-    return get_access_type_id('owner')
-
-
-def get_seeanswers_access_id() -> int:
-    return get_access_type_id('see answers')
-
-
-def get_manage_access_id() -> int:
-    return get_access_type_id('manage')
-
-
-def get_teacher_access_id() -> int:
-    return get_access_type_id('teacher')
-
-
-def get_edit_access_id() -> int:
-    return get_access_type_id('edit')
-
-
-def get_view_access_id() -> int:
-    return get_access_type_id('view')
 
 
 def grant_edit_access(group_id: int, block_id: int):
@@ -229,11 +121,6 @@ def grant_access(group_id: int,
     if commit:
         db.session.commit()
     return ba
-
-
-def is_user_id_in_group_id(user_id: int, usergroup_id: int) -> bool:
-    q = UserGroupMember.query.filter_by(user_id=user_id, usergroup_id=usergroup_id)
-    return db.session.query(q.exists()).scalar()
 
 
 def get_usergroup_by_name(name: str) -> Optional[int]:

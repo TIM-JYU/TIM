@@ -7,7 +7,7 @@ from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import get_anon_group_id
-from timApp.timdb.userutils import grant_access, get_view_access_id
+from timApp.timdb.userutils import grant_access
 
 
 class UserTest(TimDbTest):
@@ -168,11 +168,9 @@ class UserTest(TimDbTest):
         self.assertFalse(user.has_teacher_access(test_block))
         self.assertFalse(user.has_seeanswers_access(test_block))
 
-        self.assertDictEqual({2: test_block_2.owner_access}, user.get_viewable_blocks())
         user.groups.append(UserGroup.get_admin_group())
         timdb.session.commit()
         del user.__dict__['is_admin']
-        self.assertDictEqual({2: test_block_2.owner_access}, user.get_viewable_blocks())
         for b in (test_block, test_block_2):
             self.assertTrue(user.has_manage_access(b))
             self.assertTrue(user.has_edit_access(b))
@@ -186,33 +184,27 @@ class UserTest(TimDbTest):
         b = block.id
         user = User.query.get(TEST_USER_1_ID)
         self.assertFalse(user.has_view_access(block))
-        self.assertDictEqual({}, user.get_accessible_blocks([get_view_access_id()]))
         v = 'view'
 
         grant_access(self.get_test_user_1_group_id(), b, v,
                      accessible_from=datetime.now(tz=timezone.utc) + timedelta(days=1))
         self.assertFalse(user.has_view_access(block))
-        self.assertDictEqual({}, user.get_accessible_blocks([get_view_access_id()]))
         db.users.remove_access(self.get_test_user_1_group_id(), b, v)
 
         ba = grant_access(self.get_test_user_1_group_id(), b, v,
                           accessible_from=datetime.now(tz=timezone.utc) - timedelta(days=1))
         self.assertTrue(user.has_view_access(block))
-        self.assertDictEqual({3: ba},
-                             user.get_accessible_blocks([get_view_access_id()]))
         db.users.remove_access(self.get_test_user_1_group_id(), b, v)
 
         grant_access(self.get_test_user_1_group_id(), b, v,
                      accessible_from=datetime.now(tz=timezone.utc) - timedelta(days=1),
                      accessible_to=datetime.now(tz=timezone.utc) - timedelta(seconds=1))
         self.assertFalse(user.has_view_access(block))
-        self.assertDictEqual({}, user.get_accessible_blocks([get_view_access_id()]))
         db.users.remove_access(self.get_test_user_1_group_id(), b, v)
 
         grant_access(self.get_test_user_1_group_id(), b, v,
                      duration=timedelta(days=1))
         self.assertFalse(user.has_view_access(block))
-        self.assertDictEqual({}, user.get_accessible_blocks([get_view_access_id()]))
         db.users.remove_access(self.get_test_user_1_group_id(), b, v)
 
 

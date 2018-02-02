@@ -19,7 +19,7 @@ from timApp.timdb.models.notification import Notification
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
 from timApp.timdb.tim_models import db, UserGroupMember, BlockAccess
-from timApp.timdb.userutils import get_viewable_blocks, get_accessible_blocks, grant_access, get_access_type_id, \
+from timApp.timdb.userutils import grant_access, get_access_type_id, \
     create_password_hash, check_password_hash
 from timApp.utils import remove_path_special_chars, generate_theme_scss, ThemeNotFoundException, \
     get_combined_css_filename, cached_property
@@ -345,12 +345,6 @@ class User(db.Model):
         BlockAccess.query.filter_by(block_id=block_id,
                                     usergroup_id=self.get_personal_group().id,
                                     type=get_access_type_id(access_type)).delete()
-
-    def get_viewable_blocks(self) -> Dict[int, BlockAccess]:
-        return get_viewable_blocks(self.id)
-
-    def get_accessible_blocks(self, access_types: List[int]) -> Dict[int, BlockAccess]:
-        return get_accessible_blocks(self.id, access_types)
 
     def get_notify_settings(self, doc: DocInfo):
         n = self.notifications.filter_by(doc_id=doc.id).first()

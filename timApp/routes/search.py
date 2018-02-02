@@ -5,7 +5,7 @@ from flask import Blueprint, render_template
 from flask import abort
 from flask import request
 
-from timApp.accesshelper import verify_logged_in, get_viewable_blocks_or_none_if_admin
+from timApp.accesshelper import verify_logged_in
 from timApp.cache import cache
 from timApp.common import post_process_pars, get_user_settings
 from timApp.documentmodel.docparagraph import DocParagraph

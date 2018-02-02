@@ -229,6 +229,11 @@ class TimTest(TimRouteTest):
     def test_ping(self):
         self.get('/ping')
 
+    def test_par_info(self):
+        d = self.create_doc(initial_par='testing')
+        self.get(f'/par_info/{d.id}/{d.document.get_paragraphs()[0].get_id()}',
+                 expect_content={'doc_author': 'Test user 1 (testuser1)', 'doc_name': d.title})
+
 
 if __name__ == '__main__':
     unittest.main()

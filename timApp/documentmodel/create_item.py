@@ -2,7 +2,6 @@
 
 from typing import List, Optional, Generator, Tuple
 
-from timApp.accesshelper import get_viewable_blocks_or_none_if_admin
 from timApp.accesshelper import grant_access_to_session_users, reset_request_access_cache
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_NAME

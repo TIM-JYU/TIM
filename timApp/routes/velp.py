@@ -16,7 +16,7 @@ from flask import abort
 from flask import request
 
 from timApp.accesshelper import verify_logged_in, has_edit_access, has_manage_access, \
-    get_viewable_blocks_or_none_if_admin, get_doc_or_abort, verify_edit_access
+    get_doc_or_abort, verify_edit_access
 from timApp.dbaccess import get_timdb
 from timApp.responsehelper import json_response, set_no_cache_headers, ok_response
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group

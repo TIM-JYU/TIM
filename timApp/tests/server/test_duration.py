@@ -4,8 +4,9 @@ from timApp.filters import humanize_datetime
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.accesstype import AccessType
 from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db, BlockAccess
-from timApp.timdb.userutils import get_logged_group_id, get_access_type_id
+from timApp.timdb.userutils import get_access_type_id
 from timApp.timdb.userutils import grant_access
 
 
@@ -100,7 +101,7 @@ class DurationTest(TimRouteTest):
         self.login_test2()
         duration = timedelta(days=1)
         now = datetime.now(tz=timezone.utc)
-        access = grant_access(get_logged_group_id(), doc_id, 'view',
+        access = grant_access(UserGroup.get_logged_in_group().id, doc_id, 'view',
                               duration=duration,
                               duration_to=now + duration)
         accesses = self.current_group().accesses.filter_by(type=AccessType.view.value).all()

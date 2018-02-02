@@ -2,7 +2,6 @@ from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db
-from timApp.timdb.userutils import get_admin_group_id
 
 
 class AnswerBrowserTest(BrowserTest):
