@@ -140,7 +140,11 @@ def par_info(doc_id, par_id):
 
 @view_page.route("/getItems")
 def items_route():
-    return json_response(get_items(request.args.get('folder', '')))
+    folderpath = request.args.get('folder', '')
+    f = Folder.find_by_path(folderpath)
+    if not f.is_root():
+        verify_view_access(f)
+    return json_response(get_items(folderpath))
 
 
 @view_page.route("/view")
@@ -440,15 +444,14 @@ def redirect_to_login():
 
 
 def get_items(folder: str):
-    docs = get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
-                         search_recursively=False,
-                         filter_folder=folder)
+    u = get_current_user_object()
+    docs = get_documents(search_recursively=False,
+                         filter_folder=folder,
+                         filter_user=u)
     docs.sort(key=lambda d: d.title.lower())
-    folders = Folder.get_all_in_path(root_path=folder,
-                                     filter_ids=get_viewable_blocks_or_none_if_admin())
+    folders = Folder.get_all_in_path(root_path=folder)
     folders.sort(key=lambda d: d.title.lower())
-    items = folders + docs
-    return items
+    return [f for f in folders if u.has_view_access(f)] + docs
 
 
 def should_hide_links(settings: DocSettings, rights: dict):

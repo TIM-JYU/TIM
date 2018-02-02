@@ -8,6 +8,7 @@ from timApp.timdb.gamification_models.gamificationdocument import GamificationDo
 from timApp.timdb.models.block import insert_block
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.tim_models import db
+from timApp.types import UserType
 from timApp.utils import split_location
 
 
@@ -151,11 +152,12 @@ def create_document_and_block(owner_group_id: int, desc: Optional[str]=None):
 
 
 def get_documents(include_nonpublic: bool = False,
-                  filter_ids: Optional[Iterable[int]] = None,
                   filter_folder: str = None,
-                  search_recursively: bool = True) -> List[DocEntry]:
+                  search_recursively: bool = True,
+                  filter_user: Optional[UserType]=None) -> List[DocEntry]:
     """Gets all the documents in the database matching the given criteria.
 
+    :param filter_user: If specified, returns only the documents that the user has view access to.
     :param search_recursively: Whether to search recursively.
     :param filter_folder: Optionally restricts the search to a specific folder.
     :param filter_ids: An optional iterable of document ids for filtering the documents.
@@ -168,8 +170,6 @@ def get_documents(include_nonpublic: bool = False,
     q = DocEntry.query
     if not include_nonpublic:
         q = q.filter_by(public=True)
-    if filter_ids:
-        q = q.filter(DocEntry.id.in_(filter_ids))
     if filter_folder:
         filter_folder = filter_folder.strip('/') + '/'
         if filter_folder == '/':
@@ -177,12 +177,14 @@ def get_documents(include_nonpublic: bool = False,
         q = q.filter(DocEntry.name.like(filter_folder + '%'))
     if not search_recursively:
         q = q.filter(DocEntry.name.notlike(filter_folder + '%/%'))
-    return q.all()
+    result = q.all()
+    if not filter_user:
+        return result
+    return [r for r in result if filter_user.has_view_access(r)]
 
 
 def get_documents_in_folder(folder_pathname: str,
-                            include_nonpublic: bool = False,
-                            filter_ids: Optional[Iterable[int]] = None) -> List[DocEntry]:
+                            include_nonpublic: bool = False) -> List[DocEntry]:
     """Gets all the documents in a folder.
 
     :param filter_ids: An optional iterable of document ids for filtering the documents.
@@ -194,5 +196,4 @@ def get_documents_in_folder(folder_pathname: str,
     """
     return get_documents(include_nonpublic=include_nonpublic,
                          filter_folder=folder_pathname,
-                         search_recursively=False,
-                         filter_ids=filter_ids)
+                         search_recursively=False)

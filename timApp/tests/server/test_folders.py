@@ -104,6 +104,8 @@ class FolderTest(TimRouteTest):
                                   'unpublished': False,
                                   'public': True}])
         self.logout()
+        self.get('/getItems', query_string={'folder': user_folder}, expect_status=403)
+        grant_view_access(get_anon_group_id(), self.test_user_1.get_personal_folder().id)
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing2',
                                   'title': 'foldertitle',
@@ -286,3 +288,41 @@ class FolderParentTest(TimRouteTest):
     def test_root_parents(self):
         f = Folder.get_root()
         self.assertEqual([], [p.title for p in f.parents_to_root])
+
+
+class FolderContentTest(TimRouteTest):
+    def test_folder_content(self):
+        self.login_test1()
+        d = self.create_doc()
+        d_id = d.id
+        docpath = d.path
+        doctitle = d.title
+        docname = d.short_name
+        folder = self.test_user_1.get_personal_folder()
+        folderpath = folder.path
+        grant_view_access(get_anon_group_id(), folder.id)
+        self.login_test2()
+        self.get('/getItems', query_string={'folder': folderpath},
+                 expect_content=[])
+        grant_view_access(get_anon_group_id(), d_id)
+        self.get('/getItems', query_string={'folder': folderpath},
+                 expect_content=[{
+                     'id': d_id,
+                     'isFolder': False,
+                     'location': folderpath,
+                     'modified': 'just now',
+                     'name': docname,
+                     'owner': {'id': self.get_test_user_1_group_id(), 'name': self.test_user_1.name},
+                     'path': docpath,
+                     'public': True,
+                     'rights': {'browse_own_answers': True,
+                                'can_comment': True,
+                                'can_mark_as_read': True,
+                                'editable': False,
+                                'manage': False,
+                                'owner': False,
+                                'see_answers': False,
+                                'teacher': False},
+                     'title': doctitle,
+                     'unpublished': False
+                 }])

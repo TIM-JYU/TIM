@@ -22,8 +22,9 @@ from timApp.responsehelper import json_response, set_no_cache_headers, ok_respon
 from timApp.sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group
 from timApp.timdb.folders import check_velp_group_folder_path, check_personal_velp_folder
 from timApp.timdb.models.block import Block
-from timApp.timdb.models.docentry import DocEntry, get_documents_in_folder
+from timApp.timdb.models.docentry import DocEntry, get_documents_in_folder, get_documents
 from timApp.timdb.models.folder import Folder
+from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import grant_access
 from timApp.utils import split_location
@@ -844,26 +845,25 @@ def get_velp_groups_from_tree(document_id: int):
     # owner_group_id = 3  # TODO: Choose owner group correctly, now uses All Korppi users
 
     velp_groups: List[DocEntry] = []
-    viewable = get_viewable_blocks_or_none_if_admin()
 
     # Velp groups for areas, plugins etc
     folders = Folder.get_all_in_path(doc_velp_path)
     for path in folders:
         full_path = path.get_full_path()
-        velp_groups += get_folder_velp_groups(full_path, viewable)
+        velp_groups += get_folder_velp_groups(full_path, user)
 
     # Document's own velp group
-    velp_groups += get_folder_velp_groups(current_path + "/" + velp_group_folder + "/" + doc_name, viewable)
+    velp_groups += get_folder_velp_groups(current_path + "/" + velp_group_folder + "/" + doc_name, user)
 
     # Velp group folder when going towards root in tree
     while True:
-        velp_groups += get_folder_velp_groups(current_path + "/" + velp_group_folder, viewable)
+        velp_groups += get_folder_velp_groups(current_path + "/" + velp_group_folder, user)
         if current_path == '':
             break
         current_path, _ = split_location(current_path)
 
     # User's own velp groups
-    velp_groups += get_folder_velp_groups(personal_velps_path, viewable)
+    velp_groups += get_folder_velp_groups(personal_velps_path, user)
 
     # remove duplicates
     velp_group_ids = set()
@@ -883,5 +883,8 @@ def get_velp_groups_from_tree(document_id: int):
     return results
 
 
-def get_folder_velp_groups(folder, viewable) -> List[DocEntry]:
-    return get_documents_in_folder(folder, filter_ids=viewable)
+def get_folder_velp_groups(folder, u: User) -> List[DocEntry]:
+    return get_documents(include_nonpublic=False,
+                         filter_folder=folder,
+                         search_recursively=False,
+                         filter_user=u)

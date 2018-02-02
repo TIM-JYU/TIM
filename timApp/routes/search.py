@@ -43,9 +43,8 @@ def search(query):
         abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
     show_full_pars = get_option(request, 'show_pars', False)
     max_results = get_option(request, 'max', 100)
-    viewable = get_viewable_blocks_or_none_if_admin()
-    docs = get_documents(filter_ids=viewable)
     current_user = get_current_user_object()
+    docs = get_documents(filter_user=current_user)
     all_texts = []
     all_js = []
     all_css = []
