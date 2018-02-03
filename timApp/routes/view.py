@@ -218,7 +218,7 @@ def get_module_ids(js_paths: List[str]):
 
 
 def view(item_path, template_name, usergroup=None, route="view"):
-    taketime("view begin")
+    taketime("view begin",zero=True)
     if has_special_chars(item_path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
 
