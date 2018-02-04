@@ -109,7 +109,7 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
                 if pos >= 0:
                     gm = str(globalmacros.get(gmacro, ""))
                     text = text.replace(macrotext, gm)
-            gm = str(globalmacros.get("ADDFOREVERY", None))
+            gm = str(globalmacros.get("ADDFOREVERY", ''))
             if gm:
                 text = gm + "\n" + text
         startstr = env.comment_start_string + "LOCAL"
