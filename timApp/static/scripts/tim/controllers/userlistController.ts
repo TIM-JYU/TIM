@@ -1,11 +1,12 @@
 import angular, {IAngularEvent} from "angular";
-import {IRootElementService, IScope, IController} from "angular";
+import {IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
-import {$timeout, $uibModal} from "../ngimport";
-import {ViewCtrl} from "./view/viewctrl";
 import * as allanswersctrl from "tim/controllers/allAnswersController";
-import {markAsUsed} from "../utils";
+import uiGrid from "ui-grid";
 import {IUser} from "../IUser";
+import {$timeout, $uibModal} from "../ngimport";
+import {markAsUsed} from "../utils";
+import {ViewCtrl} from "./view/viewctrl";
 
 markAsUsed(allanswersctrl);
 

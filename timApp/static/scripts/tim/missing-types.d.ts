@@ -7,9 +7,6 @@ declare module "angular-eonasdan-datetimepicker";
 declare module "bootstrap-sass";
 declare module "angular-touch";
 declare module "angular-bootstrap-colorpicker";
-declare module "ng-file-upload";
-// For some reason, importing ui-grid does not work ("cannot find name 'uiGrid'"), so we declare it manually.
-declare module "ui-grid";
 declare module "katex-auto-render" {
     const renderMathInElement: (e: Element) => void;
     export = renderMathInElement;

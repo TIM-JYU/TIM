@@ -11,6 +11,7 @@ import {markAsUsed, setsetting} from "tim/utils";
 import {IAceEditor} from "../ace-types";
 import {getActiveDocument} from "../controllers/view/document";
 import {isSettings} from "../controllers/view/parhelpers";
+import {showMessageDialog} from "../dialog";
 import {Duplicate} from "../edittypes";
 import {$compile, $http, $localStorage, $log, $timeout, $upload, $window} from "../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../services/parCompiler";
@@ -36,14 +37,14 @@ export class PareditorController implements IController {
     private editor: TextAreaParEditor | AceParEditor;
     private element: JQuery;
     private extraData: {
-        attrs: {classes: string[]},
+        attrs: {classes: string[], [i: string]: any},
         docId: number,
         par: string,
         access: string,
         tags: {markread: boolean},
         isComment: boolean,
     };
-    private file: any;
+    private file: File & {progress?: number, error?: string};
     private initialText: string;
     private initialTextUrl: string;
     private inputs: JQuery[];
@@ -104,11 +105,10 @@ export class PareditorController implements IController {
         this.storage = localStorage;
 
         const sn = this.storage.getItem("wrap" + this.lstag);
-        let n;
-        n = parseInt(sn);
-        if (isNaN(n))
-            if (sn === "") n = "";
-            else n = -90;
+        let n = parseInt(sn || "-90");
+        if (isNaN(n)) {
+            n = -90;
+        }
 
         this.wrap = {n: n};
 
@@ -204,16 +204,20 @@ export class PareditorController implements IController {
             this.options.metaset = true;
         }
 
+        const scrollTop = $(window).scrollTop() || 0;
+        const height = $(window).height() || 500;
         const viewport = {
-            bottom: $(window).scrollTop() + $(window).height(),
-            top: $(window).scrollTop(),
+            bottom: scrollTop + height,
+            top: scrollTop,
         };
+        const offset = element.offset() || {top: 0};
+        const outerHeight = element.outerHeight() || 200;
         const bounds = {
-            bottom: element.offset().top + element.outerHeight(),
-            top: element.offset().top,
+            bottom: offset.top + outerHeight,
+            top: offset.top,
         };
         if (bounds.bottom > viewport.bottom || bounds.top < viewport.top) {
-            $("html, body").scrollTop(element.offset().top);
+            $("html, body").scrollTop(offset.top);
         }
     }
 
@@ -276,7 +280,10 @@ export class PareditorController implements IController {
         const editorOffsetStr = this.storage.getItem("editorReleasedOffset" + this.lstag);
         if (editorOffsetStr) {
             const editorOffset = JSON.parse(editorOffsetStr);
-            editor.css("left", editorOffset.left - editor.offset().left);
+            const offset = editor.offset();
+            if (offset) {
+                editor.css("left", editorOffset.left - offset.left);
+            }
         }
 
         if (this.storage.getItem("previewIsReleased" + this.lstag) === "true") {
@@ -442,21 +449,31 @@ or newer one that is more familiar to write in YAML:
             // If preview is released make sure that preview doesn't go out of bounds
             if (this.previewReleased) {
                 const previewOffset = previewDiv.offset();
+                if (!previewOffset) {
+                    return;
+                }
+                const newOffset = previewOffset;
                 if (previewOffset.top < 0 /*|| previewOffset.top > $window.innerHeight */) {
-                    previewDiv.offset({top: 0, left: previewDiv.offset().left});
+                    newOffset.top = 0;
                 }
                 if (previewOffset.left < 0 || previewOffset.left > $window.innerWidth) {
-                    previewDiv.offset({top: previewDiv.offset().top, left: 0});
+                    newOffset.left = 0;
                 }
+                previewDiv.offset(newOffset);
             }
             // Check that editor doesn't go out of bounds
             const editorOffset = $editor.offset();
+            if (!editorOffset) {
+                return;
+            }
+            const newOffset = editorOffset;
             if (editorOffset.top < 0) {
-                $editor.offset({top: 0, left: $editor.offset().left});
+                newOffset.top = 0;
             }
             if (editorOffset.left < 0) {
-                $editor.offset({top: $editor.offset().top, left: 0});
+                newOffset.left = 0;
             }
+            $editor.offset(newOffset);
             $previewContent.scrollTop(this.scrollPos);
         }, 25);
 
@@ -496,7 +513,7 @@ or newer one that is more familiar to write in YAML:
 
             this.timer = $timeout(() => {
                 const text = this.editor.getEditorText();
-                this.scrollPos = this.element.find(".previewcontent").scrollTop();
+                this.scrollPos = this.element.find(".previewcontent").scrollTop() || this.scrollPos;
                 $http.post<IPluginInfoResponse>(this.previewUrl, angular.extend({
                     text,
                 }, this.extraData)).then(async (response) => {
@@ -522,7 +539,7 @@ or newer one that is more familiar to write in YAML:
             // we save and restore it manually.
             const s = $(window).scrollTop();
             this.editor.focus();
-            $(window).scrollTop(s);
+            $(window).scrollTop(s || this.scrollPos);
         }
         if (func != null) {
             func();
@@ -610,6 +627,11 @@ or newer one that is more familiar to write in YAML:
         const tag = this.options.localSaveTag || "";
         const storage = $window.localStorage;
 
+        const releaseBtn = document.getElementById("releaseButton");
+        if (!releaseBtn) {
+            showMessageDialog("Failed to release preview; button not found");
+            return;
+        }
         if (div.css("position") === "absolute") {
             // If preview has been clicked back in, save the preview position before making it static again
             if (this.minSizeSet) {
@@ -624,23 +646,32 @@ or newer one that is more familiar to write in YAML:
             content.css("overflow-x", "");
             content.css("width", "");
             div.css("padding", 0);
-            document.getElementById("releaseButton").innerHTML = "&#8594;";
+            releaseBtn.innerHTML = "&#8594;";
         } else {
-            let top = div.offset().top;
-            let left = div.offset().left;
+            const currDivOffset = div.offset();
+            const winWidth = $(window).width();
+            const divWidth = div.width();
+            const editorOffset = editor.offset();
+            const editorWidth = editor.width();
+            if (!currDivOffset || !winWidth || !divWidth || !editorOffset || !editorWidth) {
+                return;
+            }
             // If preview has just been released or it was released last time editor was open
             if (this.minSizeSet || storage.getItem("previewIsReleased" + tag) === "true") {
-                if (storage.getItem("previewReleasedOffset" + tag)) {
-                    const savedOffset = (JSON.parse(storage.getItem("previewReleasedOffset" + tag)));
-                    left = editor.offset().left + savedOffset.left;
-                    top = editor.offset().top + savedOffset.top;
+                const storedOffset = storage.getItem("previewReleasedOffset" + tag);
+
+                if (storedOffset) {
+                    const savedOffset = JSON.parse(storedOffset);
+                    currDivOffset.left = editorOffset.left + savedOffset.left;
+                    currDivOffset.top = editorOffset.top + savedOffset.top;
                 } else {
-                    if ($(window).width() < editor.width() + div.width()) {
-                        top += 5;
-                        left += 5;
+
+                    if (winWidth < editorWidth + divWidth) {
+                        currDivOffset.top += 5;
+                        currDivOffset.left += 5;
                     } else {
-                        top = editor.offset().top;
-                        left = editor.offset().left + editor.width() + 3;
+                        currDivOffset.top = editorOffset.top;
+                        currDivOffset.left = editorOffset.left + editorWidth + 3;
                     }
                 }
             }
@@ -654,8 +685,8 @@ or newer one that is more familiar to write in YAML:
             content.css("max-height", height);
             content.css("max-width", window.innerWidth - 90);
             content.css("overflow-x", "auto");
-            document.getElementById("releaseButton").innerHTML = "&#8592;";
-            div.offset({left, top});
+            releaseBtn.innerHTML = "&#8592;";
+            div.offset(currDivOffset);
         }
         this.adjustPreview();
     }
@@ -668,9 +699,11 @@ or newer one that is more familiar to write in YAML:
         if (savePreviewPosition) {
             // Calculate distance from editor's top and left
             const previewOffset = this.element.find("#previewDiv").offset();
-            const left = previewOffset.left - editorOffset.left;
-            const top = previewOffset.top - editorOffset.top;
-            storage.setItem("previewReleasedOffset" + tag, JSON.stringify({left, top}));
+            if (previewOffset && editorOffset) {
+                const left = previewOffset.left - editorOffset.left;
+                const top = previewOffset.top - editorOffset.top;
+                storage.setItem("previewReleasedOffset" + tag, JSON.stringify({left, top}));
+            }
         }
         storage.setItem("previewIsReleased" + tag, this.previewReleased.toString());
     }
@@ -978,15 +1011,15 @@ or newer one that is more familiar to write in YAML:
         this.setLocalValue("oldMode", oldMode);
     }
 
-    onFileSelect(file) {
+    onFileSelect(file: File) {
         this.uploadedFile = "";
         this.editor.focus();
         this.file = file;
 
         if (file) {
             this.file.progress = 0;
-            this.file.error = null;
-            file.upload = $upload.upload({
+            this.file.error = undefined;
+            const upload = $upload.upload<{image: string, file: string}>({
                 data: {
                     file,
                 },
@@ -994,7 +1027,7 @@ or newer one that is more familiar to write in YAML:
                 url: "/upload/",
             });
 
-            file.upload.then((response) => {
+            upload.then((response) => {
                 $timeout(() => {
                     var isplugin = (this.editor.editorStartsWith("``` {"));
                     var start = "[File](";
@@ -1019,14 +1052,14 @@ or newer one that is more familiar to write in YAML:
                     evt.loaded / evt.total));
             });
 
-            file.upload.finally(() => {
+            upload.finally(() => {
             });
         }
     }
 
-    closeMenu(e: JQueryEventObject, force: boolean) {
+    closeMenu(e: JQueryEventObject | null, force: boolean) {
         const container = $(MENU_BUTTON_CLASS_DOT);
-        if (force || (!container.is(e.target) && container.has(e.target as Element).length === 0)) {
+        if (force || (e != null && !container.is(e.target) && container.has(e.target as Element).length === 0)) {
             container.remove();
             $(document).off("mouseup.closemenu");
         }
