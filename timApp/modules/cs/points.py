@@ -10,23 +10,32 @@ def give_points(points_rule, rule, default=0):
     if not points_rule.get("cumulative", True):
         points_rule["result"] = max(points_rule.get("result", 0), p)
         return
-    print("rule: ", rule)
+    # print("rule: ", rule)
     ptstype = "run"
+    pts = points_rule.get("points", None)
+    doc_limit = points_rule.get("doc_limit", 0.5)
     if "test" in rule:
         ptstype = "test"
     if "doc" in rule:
         ptstype = "doc"
+        other = pts.get("run", 0) + pts.get("test", 0) + pts.get("code", 0)
+        if other < doc_limit:  # if not enough other points, no doc points
+            p = 0
     # if "code" in rule: ptstype = "code"
-    pts = points_rule.get("points", None)
     if pts:
         ptype = pts.get(ptstype, 0)
-        print(ptstype, "===", pts[ptstype], p)
+        # print(ptstype, "===", pts[ptstype], p)
         pts[ptstype] = ptype + p
     else:
         pts = dict()
         points_rule["points"] = pts
         pts[ptstype] = p
-    points_rule["result"] = pts.get("run", 0) + pts.get("test", 0) + pts.get("doc", 0) + pts.get("code", 0)
+
+    other = pts.get("run", 0) + pts.get("test", 0) + pts.get("code", 0)
+    docpts = pts.get("doc", 0)
+    if other < doc_limit:  # if not enough other points, no doc points
+        docpts = 0
+    points_rule["result"] = other + docpts
 
 
 def check_number_rule(s, number_rule):

@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 
 from timApp.timdb.blocktypes import BlockType
 from timApp.timdb.exceptions import TimDbException
@@ -9,8 +9,9 @@ from timApp.timdb.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUP
     LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME
 from timApp.timdb.tim_models import BlockAccess, db
-from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
-from timApp.timdb.userutils import NoSuchUserException, get_anon_group_id, \
+from timApp.timdb.timdbbase import TimDbBase
+from timApp.timdb.timdbbase import result_as_dict_list
+from timApp.timdb.userutils import get_anon_group_id, \
     get_anon_user_id, get_access_type_id, get_default_right_document
 
 
@@ -91,14 +92,6 @@ class Users(TimDbBase):
         doc = get_default_right_document(folder_id, object_type, create_if_not_exist=True)
         self.remove_access(group_id, doc.id, access_type)
 
-    def get_owner_group(self, block_id: int) -> UserGroup:
-        """Returns the owner group of the specified block.
-
-        :param block_id: The id of the block.
-
-        """
-        return self.session.query(Block).filter_by(id=block_id).one().owner
-
     def get_user(self, user_id: int, include_authdata=False) -> Optional[dict]:
         """Gets the user with the specified id.
 
@@ -112,18 +105,6 @@ class Users(TimDbBase):
         cursor.execute(f'SELECT id, name, real_name, email {authtemplate} FROM UserAccount WHERE id = %s', [user_id])
         result = result_as_dict_list(cursor)
         return result[0] if len(result) > 0 else None
-
-    def get_user_group_name(self, group_id: int) -> Optional[str]:
-        """Gets the user group name.
-
-        :param group_id: The id of the group.
-        :returns: The name of the group.
-
-        """
-        cursor = self.db.cursor()
-        cursor.execute('SELECT name FROM UserGroup WHERE id = %s', [group_id])
-        result = cursor.fetchone()
-        return result[0] if result is not None else None
 
     def get_usergroups_by_name(self, name: str):
         """Gets the usergroups that have the specified name.
@@ -160,16 +141,6 @@ class Users(TimDbBase):
 
         raise TimDbException(f'Personal usergroup for user {userName} was not found!')
 
-    def get_users_in_group(self, group_id: int, limit: int = 1000) -> List[dict]:
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT UserGroupMember.User_id as id, UserAccount.real_name as name, UserAccount.email as email
-                          FROM UserGroupMember
-                          INNER JOIN UserAccount ON UserGroupMember.User_id=UserAccount.id
-                          WHERE UserGroupMember.UserGroup_id=%s
-                          LIMIT %s
-                       """, [group_id, limit])
-        return result_as_dict_list(cursor)
-
     def is_user_id_in_group(self, user_id: int, usergroup_name: str) -> bool:
         cursor = self.db.cursor()
         cursor.execute("""SELECT User_id FROM UserGroupMember WHERE
@@ -185,41 +156,6 @@ class Users(TimDbBase):
             if a.usergroup_id == group_id and a.type == access_type_id:
                 db.session.delete(a)
                 break
-
-    def get_preferences(self, user_id: int) -> str:
-        """Gets the preferences of a user.
-
-        :param user_id: The id of the user.
-        :returns: The user preferences as a string.
-
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""SELECT prefs FROM UserAccount WHERE id = %s""", [user_id])
-        result = result_as_dict_list(cursor)
-        if not result:
-            raise NoSuchUserException(user_id)
-        return result[0]['prefs']
-
-    def set_preferences(self, user_id: int, prefs: str):
-        """Sets the preferences for a user.
-
-        :param user_id: The id of the user.
-        :param prefs: The preferences to set.
-
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""UPDATE UserAccount SET prefs = %s WHERE id = %s""", [prefs, user_id])
-        self.db.commit()
-
-    def get_users_for_group(self, usergroup_name, order=False):
-        c = self.db.cursor()
-        order_sql = ' ORDER BY UserAccount.name' if order else ''
-        c.execute(f"""SELECT UserAccount.id, UserAccount.name, real_name, email
-            FROM UserAccount
-            JOIN UserGroupMember ON UserAccount.id = UserGroupMember.User_id
-            JOIN UserGroup ON UserGroup.id = UserGroupMember.UserGroup_id
-            WHERE UserGroup.name = %s{order_sql}""", [usergroup_name])
-        return result_as_dict_list(c)
 
     def check_if_in_group(self, username, usergroup_name):
         c = self.db.cursor()

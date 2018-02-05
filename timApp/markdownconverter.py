@@ -86,6 +86,7 @@ class Belongs:
 
 
 def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None, env=None, ignore_errors: bool=False):
+    # return text  # comment out when want to take time if this slows things
     if not has_macros(text, macros, macro_delimiter):
         return text
     if env is None:
@@ -108,6 +109,9 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
                 if pos >= 0:
                     gm = str(globalmacros.get(gmacro, ""))
                     text = text.replace(macrotext, gm)
+            gm = str(globalmacros.get("ADDFOREVERY", ''))
+            if gm:
+                text = gm + "\n" + text
         startstr = env.comment_start_string + "LOCAL"
         beg = text.find(startstr)
         if beg >= 0:

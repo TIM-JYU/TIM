@@ -980,12 +980,13 @@ class Document:
 
     def get_closest_paragraph_title(self, par_id: Optional[str]):
         last_title = None
-        for par in self:
-            title = par.get_title()
-            if title is not None:
-                last_title = title
-            if par.get_id() == par_id:
-                return last_title
+        with self.__iter__() as it:
+            for par in it:
+                title = par.get_title()
+                if title is not None:
+                    last_title = title
+                if par.get_id() == par_id:
+                    return last_title
 
         return None
 

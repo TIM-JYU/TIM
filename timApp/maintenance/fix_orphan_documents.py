@@ -9,15 +9,15 @@ from timApp.timdb.models.block import Block
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.translation import Translation
+from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db
-from timApp.timdb.userutils import get_admin_group_id
 
 
 def fix_orphans_without_docentry():
     """Finds all documents that do not have a DocEntry and creates a DocEntry for them under 'orphans' directory."""
     with app.test_request_context():
         orphan_folder_title = 'orphans'
-        f = Folder.create('orphans', get_admin_group_id())
+        f = Folder.create('orphans', UserGroup.get_admin_group().id)
         orphans: List[Block] = Block.query.filter(
             (Block.type_id == 0) &
             Block.id.notin_(DocEntry.query.with_entities(DocEntry.id)) &

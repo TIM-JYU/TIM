@@ -14,7 +14,7 @@ from flask import session
 import timApp.routes.lecture
 import timApp.timdb.models.lecture
 from timApp.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    get_rights, get_viewable_blocks_or_none_if_admin, has_edit_access, get_doc_or_abort
+    get_rights, has_edit_access, get_doc_or_abort
 from timApp.common import get_user_settings, save_last_page, has_special_chars, post_process_pars, \
     hide_names_in_teacher
 from timApp.dbaccess import get_timdb
@@ -115,24 +115,19 @@ def slide_document(doc_name):
 
 @view_page.route("/par_info/<int:doc_id>/<par_id>")
 def par_info(doc_id, par_id):
-    timdb = get_timdb()
     info = {}
 
-    def just_name(fullpath):
-        return ('/' + fullpath).rsplit('/', 1)[1]
-
     doc = get_doc_or_abort(doc_id)
-    doc_name = doc.path
-    info['doc_name'] = just_name(doc_name) if doc_name is not None else f'Document #{doc_id}'
+    info['doc_name'] = doc.title
 
-    group = timdb.users.get_owner_group(doc_id)
-    users = timdb.users.get_users_in_group(group.id, limit=2)
+    group: UserGroup = doc.owner
+    users = group.users.all()
     if len(users) == 1:
-        info['doc_author'] = f'{users[0]["name"]} ({group.name})'
+        info['doc_author'] = f'{users[0].real_name} ({group.name})'
     else:
         info['doc_author'] = group.name
 
-    par_name = Document(doc_id).get_closest_paragraph_title(par_id)
+    par_name = doc.document.get_closest_paragraph_title(par_id)
     if par_name is not None:
         info['par_name'] = par_name
 
@@ -141,7 +136,11 @@ def par_info(doc_id, par_id):
 
 @view_page.route("/getItems")
 def items_route():
-    return json_response(get_items(request.args.get('folder', '')))
+    folderpath = request.args.get('folder', '')
+    f = Folder.find_by_path(folderpath)
+    if not f.is_root():
+        verify_view_access(f)
+    return json_response(get_items(folderpath))
 
 
 @view_page.route("/view")
@@ -217,7 +216,7 @@ def get_module_ids(js_paths: List[str]):
 
 
 def view(item_path, template_name, usergroup=None, route="view"):
-    taketime("view begin")
+    taketime("view begin",zero=True)
     if has_special_chars(item_path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
 
@@ -434,15 +433,14 @@ def redirect_to_login():
 
 
 def get_items(folder: str):
-    docs = get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
-                                         search_recursively=False,
-                                         filter_folder=folder)
+    u = get_current_user_object()
+    docs = get_documents(search_recursively=False,
+                         filter_folder=folder,
+                         filter_user=u)
     docs.sort(key=lambda d: d.title.lower())
-    folders = Folder.get_all_in_path(root_path=folder,
-                                     filter_ids=get_viewable_blocks_or_none_if_admin())
+    folders = Folder.get_all_in_path(root_path=folder)
     folders.sort(key=lambda d: d.title.lower())
-    items = folders + docs
-    return items
+    return [f for f in folders if u.has_view_access(f)] + docs
 
 
 def should_hide_links(settings: DocSettings, rights: dict):

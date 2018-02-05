@@ -2,7 +2,6 @@
 
 from typing import List, Optional, Generator, Tuple
 
-from timApp.accesshelper import get_viewable_blocks_or_none_if_admin
 from timApp.accesshelper import grant_access_to_session_users, reset_request_access_cache
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_NAME
@@ -45,10 +44,11 @@ def create_item(item_path, item_type_str, item_title, create_function, owner_gro
 def get_templates_for_folder(folder: Folder) -> List[DocEntry]:
     current_path = folder.path
     templates = []
+    u = get_current_user_object()
     while True:
-        for t in get_documents(filter_ids=get_viewable_blocks_or_none_if_admin(),
-                               filter_folder=current_path + '/' + TEMPLATE_FOLDER_NAME,
-                               search_recursively=False):
+        for t in get_documents(filter_folder=current_path + '/' + TEMPLATE_FOLDER_NAME,
+                               search_recursively=False,
+                               filter_user=u):
             if t.short_name not in (DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME):
                 templates.append(t)
         if current_path == '':

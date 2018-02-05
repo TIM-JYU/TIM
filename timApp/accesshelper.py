@@ -6,11 +6,10 @@ from flask import request, g
 from sqlalchemy import inspect
 from werkzeug.exceptions import abort
 
-import timApp.timdb
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document, dereference_pars
 from timApp.requesthelper import get_option
-from timApp.sessioninfo import get_current_user_id, logged_in, get_other_users_as_list, \
+from timApp.sessioninfo import logged_in, get_other_users_as_list, \
     get_current_user_group, get_current_user_object
 from timApp.timdb.accesstype import AccessType
 from timApp.timdb.docinfo import DocInfo
@@ -284,48 +283,6 @@ def grant_access_to_session_users(timdb: TimDb, block_id: int):
                      block_id,
                      'manage',
                      commit=False)
-
-
-def get_owned_blocks():
-    if not hasattr(g, 'owned'):
-        g.owned = timApp.timdb.userutils.get_owned_blocks(get_current_user_id())
-    return g.owned
-
-
-def get_editable_blocks():
-    if not hasattr(g, 'editable'):
-        g.editable = timApp.timdb.userutils.get_editable_blocks(get_current_user_id())
-    return g.editable
-
-
-def get_viewable_blocks_or_none_if_admin():
-    if get_current_user_object().is_admin:
-        return None
-    return get_viewable_blocks()
-
-
-def get_viewable_blocks():
-    if not hasattr(g, 'viewable'):
-        g.viewable = timApp.timdb.userutils.get_viewable_blocks(get_current_user_id())
-    return g.viewable
-
-
-def get_manageable_blocks():
-    if not hasattr(g, 'manageable'):
-        g.manageable = timApp.timdb.userutils.get_manageable_blocks(get_current_user_id())
-    return g.manageable
-
-
-def get_teachable_blocks():
-    if not hasattr(g, 'teachable'):
-        g.teachable = timApp.timdb.userutils.get_teachable_blocks(get_current_user_id())
-    return g.teachable
-
-
-def get_see_answers_blocks():
-    if not hasattr(g, 'see_answers'):
-        g.see_answers = timApp.timdb.userutils.get_see_answers_blocks(get_current_user_id())
-    return g.see_answers
 
 
 def reset_request_access_cache():
