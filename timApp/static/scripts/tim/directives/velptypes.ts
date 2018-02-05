@@ -1,4 +1,4 @@
-import {Overwrite} from "type-zoo";
+import {Omit, Overwrite, Required} from "type-zoo";
 
 export type VelpGroupSelectionType = "show" | "default";
 
@@ -11,11 +11,15 @@ export interface IUIFields {
 
 export interface IAnnotationCoordinate {
     par_id: string;
-    t: string;
-    offset: number;
-    el_path: number[];
-    node: number;
-    depth: number;
+    t: string | null;
+    offset: number | null;
+    el_path: number[] | null;
+    node: number | null;
+    depth: number | null;
+}
+
+export function isFullCoord(c: IAnnotationCoordinate): c is Required<IAnnotationCoordinate> {
+    return c.offset != null && c.el_path != null && c.node != null && c.depth != null && c.t != null;
 }
 
 export interface IAnnotationInterval {
@@ -29,9 +33,9 @@ export interface IAnnotationComment {
 
 export interface IAnnotation {
     id: number;
-    user_id: number;
+    user_id: number | null;
     doc_id: number;
-    reason: string;
+    reason: string | null;
     email: string;
     edit_access: boolean;
     timesince: string;
@@ -39,15 +43,17 @@ export interface IAnnotation {
     newannotation: boolean;
     content: string;
     velp: number;
-    points: number;
+    points: number | null;
     color: string | null;
     coord: IAnnotationInterval;
-    answer_id: number;
+    answer_id: number | null;
     comments: IAnnotationComment[];
     visible_to: number;
     default_comment: string;
     annotator_name: string;
 }
+
+export type IAnnotationCoordless = Omit<IAnnotation, "coord">;
 
 export interface IVelp {
     content: string;

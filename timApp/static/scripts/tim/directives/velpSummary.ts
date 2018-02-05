@@ -39,7 +39,7 @@ export class VelpSummaryController implements IController {
 
         for (let i = 0; i < annotations.length; i++) {
 
-            p += this.annotations[i].points;
+            p += this.annotations[i].points || 0;
 
         }
         // cast back to a number, the string has trailing zeros.

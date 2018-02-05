@@ -1,15 +1,16 @@
 import angular, {IController, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {checkIfElement, getElementParent, assertIsText, scrollToElement, stringOrNull, angularWait} from "../utils";
-import {$compile, $http, $window} from "../ngimport";
-import {addElementToParagraphMargin} from "./view/parhelpers";
-import {IItem} from "../IItem";
-import {IAnnotation, IVelp} from "../directives/velptypes";
-import {ViewCtrl} from "./view/viewctrl";
-import {VelpSelectionController} from "../directives/velpSelection";
-import {IAnswer} from "../IAnswer";
+import {showMessageDialog} from "../dialog";
 import {AnswerBrowserController} from "../directives/answerbrowser3";
+import {VelpSelectionController} from "../directives/velpSelection";
+import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVelp} from "../directives/velptypes";
+import {IAnswer} from "../IAnswer";
+import {IItem} from "../IItem";
+import {$compile, $http, $window} from "../ngimport";
+import {angularWait, assertIsText, checkIfElement, getElementParent, scrollToElement, stringOrNull} from "../utils";
+import {addElementToParagraphMargin} from "./view/parhelpers";
+import {ViewCtrl} from "./view/viewctrl";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
@@ -33,11 +34,11 @@ const illegalClasses = ["annotation-element", "highlighted", "editorArea", "prev
 export class ReviewController implements IController {
     private static $inject = ["$scope"];
     private annotationsAdded: boolean;
-    private selectedArea: Range;
-    public selectedElement: Element;
+    private selectedArea?: Range;
+    public selectedElement?: Element;
     public item: IItem;
     private annotations: IAnnotation[];
-    private annotationids: {0: number};
+    private annotationids: {[i: number]: number};
     public zIndex: number;
     public docId: number;
     private scope: IScope;
@@ -51,8 +52,6 @@ export class ReviewController implements IController {
     constructor(scope: IScope) {
         this.scope = scope;
         this.annotationsAdded = false;
-        this.selectedArea = null;
-        this.selectedElement = null;
         this.velpMode = $window.velpMode;
         this.item = $window.item;
         this.docId = this.item.id;
@@ -97,10 +96,18 @@ export class ReviewController implements IController {
                 continue;
             }
 
-            if (parent.getAttribute("t") === placeInfo.start.t && placeInfo.start.offset != null) {
+            if (parent.getAttribute("t") === placeInfo.start.t && isFullCoord(placeInfo.start) && isFullCoord(placeInfo.end)) {
 
                 try {
                     let elements = parent.querySelector(".parContent");
+                    if (elements == null) {
+                        this.addAnnotationToElement(
+                            parent,
+                            this.annotations[i],
+                            false,
+                            "Could not show annotation in correct place");
+                        return;
+                    }
 
                     const startElpath = placeInfo.start.el_path;
 
@@ -162,9 +169,9 @@ export class ReviewController implements IController {
      * @param attribute - Attribute as a string
      * @returns {Element} First element that has the given attribute
      */
-    getElementParentUntilAttribute(element: Node, attribute: string): Element {
+    getElementParentUntilAttribute(element: Node, attribute: string): Element | null {
         let e = getElementParent(element);
-        while (!e.hasAttribute(attribute)) {
+        while (e && !e.hasAttribute(attribute)) {
             e = getElementParent(e);
         }
         return e;
@@ -214,8 +221,10 @@ export class ReviewController implements IController {
         const oldAnnotations = par.querySelectorAll(".notes [aid]");
         if (oldAnnotations.length > 0) {
             const annotationParent = getElementParent(oldAnnotations[0]);
-            for (let a = 0; a < oldAnnotations.length; a++) {
-                annotationParent.removeChild(oldAnnotations[a]);
+            if (annotationParent) {
+                for (let a = 0; a < oldAnnotations.length; a++) {
+                    annotationParent.removeChild(oldAnnotations[a]);
+                }
             }
         }
 
@@ -228,14 +237,16 @@ export class ReviewController implements IController {
             }
             const element = preElem.firstChild;
 
-            if (!showInPlace || placeInfo.start.offset == null) {
+            if (!showInPlace || !isFullCoord(placeInfo.start) || !isFullCoord(placeInfo.end)) {
                 this.addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
-            } else {
+            } else if (element) {
                 const range = document.createRange();
                 range.setStart(element, placeInfo.start.offset);
                 range.setEnd(element, placeInfo.end.offset);
                 this.addAnnotationToCoord(range, annotations[i], false);
                 this.addAnnotationToElement(par, annotations[i], false, "Added also margin annotation");
+            } else {
+                showMessageDialog("Couldn't add annotations");
             }
         }
     }
@@ -247,14 +258,14 @@ export class ReviewController implements IController {
      * @returns {Array} Annotations of the answer
      */
     getAnnotationsByAnswerId(id: number): IAnnotation[] {
-        const annotations = [];
+        const annotations: IAnnotation[] = [];
         this.annotations.forEach((a) => {
             if (a.answer_id != null && a.answer_id === id) {
                 annotations.push(a);
             }
         });
 
-        annotations.sort((a, b) => b.coord.start.offset - a.coord.start.offset);
+        annotations.sort((a, b) => (b.coord.start.offset || 0) - (a.coord.start.offset || 0));
 
         return annotations;
     }
@@ -266,13 +277,13 @@ export class ReviewController implements IController {
      * @param annotation - Annotation info
      * @param show - Whether annotation is shown when created or not
      */
-    addAnnotationToCoord(range, annotation: IAnnotation, show: boolean): void {
+    addAnnotationToCoord(range: Range, annotation: IAnnotationCoordless, show: boolean): void {
         const span = this.createPopOverElement(annotation, show);
         try {
             range.surroundContents(span);
         } catch (err) {
             this.addAnnotationToElement(span, annotation, true, "Annotation crosses taglines");
-            this.selectedArea = null;
+            this.selectedArea = undefined;
 
             /*
              var new_range = document.createRange();
@@ -298,7 +309,7 @@ export class ReviewController implements IController {
      * @param show - Whether annotation is shown when created or not
      * @param reason - The reason why the annotation is put here (not implemented yet)
      */
-    addAnnotationToElement(el: Element, annotation: IAnnotation, show: boolean, reason: string): void {
+    addAnnotationToElement(el: Element, annotation: IAnnotationCoordless, show: boolean, reason: string): void {
         annotation.reason = reason;
         const span = this.createPopOverElement(annotation, show);
         const text = document.createTextNode("\u00A0" + annotation.content + "\u00A0");
@@ -339,9 +350,9 @@ export class ReviewController implements IController {
      * @param oldElement - Element where the badge was
      * @param newElement - Element where the badge needs to be attached
      */
-    updateVelpBadge(oldElement: Element, newElement: Element): void {
+    updateVelpBadge(oldElement: Element | null, newElement: Element | null): void {
         if (newElement == null) {
-            return null;
+            return;
         } else if (oldElement == null) {
             addElementToParagraphMargin(newElement, this.createVelpBadge(newElement.id));
         } else if (oldElement.id !== newElement.id) {
@@ -354,7 +365,7 @@ export class ReviewController implements IController {
      * Removes the velp badge and clears the element selection.
      * @param e - Current click event
      */
-    clearVelpBadge(e): void {
+    clearVelpBadge(e: Event | null): void {
         const btn = this.velpBadge;
         if (btn) {
             const parent = getElementParent(btn);
@@ -364,8 +375,8 @@ export class ReviewController implements IController {
         }
 
         if (e != null) {
-            this.selectedElement = null;
-            this.selectedArea = null;
+            this.selectedElement = undefined;
+            this.selectedArea = undefined;
             this.velpSelection.updateVelpList();
             e.stopPropagation();
         }
@@ -377,7 +388,7 @@ export class ReviewController implements IController {
      * @param id - Annotation ID generated by the client
      * @returns {int} Annotation ID generated by the server
      */
-    getRealAnnotationId(id): number {
+    getRealAnnotationId(id: number): number {
         if (id < 0) {
             return this.annotationids[id];
         }
@@ -389,8 +400,8 @@ export class ReviewController implements IController {
      * @method deleteAnnotation
      * @param id - Annotation ID
      */
-    async deleteAnnotation(id): Promise<void> {
-        const annotationParents = document.querySelectorAll('[aid="{0}"]'.replace("{0}", id));
+    async deleteAnnotation(id: number): Promise<void> {
+        const annotationParents = document.querySelectorAll('[aid="{0}"]'.replace("{0}", id.toString()));
         const annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
 
         if (annotationParents.length > 1) {
@@ -401,9 +412,15 @@ export class ReviewController implements IController {
                 savedHTML += addHTML;
             }
             annotationParents[0].outerHTML = savedHTML;
-            annotationParents[1].parentNode.removeChild(annotationParents[1]);
+            const node = annotationParents[1].parentNode;
+            if (node) {
+                node.removeChild(annotationParents[1]);
+            }
         } else {
-            annotationParents[0].parentNode.removeChild(annotationParents[0]);
+            const node = annotationParents[0].parentNode;
+            if (node) {
+                node.removeChild(annotationParents[0]);
+            }
         }
 
         for (let a = 0; a < this.annotations.length; a++) {
@@ -423,15 +440,18 @@ export class ReviewController implements IController {
      * @param id - Annotation ID
      * @param inmargin - Whether the annotation is to be placed in the margin or not
      */
-    updateAnnotation(id, inmargin): void {
-        const annotationParents = document.querySelectorAll('[aid="{0}"]'.replace("{0}", id));
-        const annotationElement = $('[aid="{0}"]'.replace("{0}", id));
+    updateAnnotation(id: number, inmargin: boolean): void {
+        const annotationParents = document.querySelectorAll('[aid="{0}"]'.replace("{0}", id.toString()));
+        const annotationElement = $('[aid="{0}"]'.replace("{0}", id.toString()));
         const par = annotationElement.parents(".par");
         const annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
         if (!inmargin) {
             for (let a = 0; a < this.annotations.length; a++) {
                 if (id === this.annotations[a].id) {
-                    annotationElement[1].parentNode.removeChild(annotationElement[1]);
+                    const node = annotationElement[1].parentNode;
+                    if (node) {
+                        node.removeChild(annotationElement[1]);
+                    }
                     this.addAnnotationToElement(par[0], this.annotations[a], false, "Added also margin annotation");
                     //addAnnotationToElement(this.annotations[a], false, "Added also margin annotation");
                 }
@@ -459,7 +479,7 @@ export class ReviewController implements IController {
      * @param id - Annotation ID
      * @param points - Annotation points
      */
-    changeAnnotationPoints(id, points): void {
+    changeAnnotationPoints(id: number, points: number | null): void {
         for (let i = 0; i < this.annotations.length; i++) {
             if (this.annotations[i].id === id) {
                 this.annotations[i].points = points;
@@ -468,7 +488,7 @@ export class ReviewController implements IController {
         }
     }
 
-    changeAnnotationColor(id, color): void {
+    changeAnnotationColor(id: number, color: string | null): void {
         for (let i = 0; i < this.annotations.length; i++) {
             if (this.annotations[i].id === id) {
                 this.annotations[i].color = color;
@@ -484,7 +504,7 @@ export class ReviewController implements IController {
      * @param name - Commenter name
      * @param comment - Content of the given comment
      */
-    addComment(id, name, comment): void {
+    addComment(id: number, name: string, comment: string): void {
         for (let i = 0; i < this.annotations.length; i++) {
             if (this.annotations[i].id === id) {
                 this.annotations[i].comments.push({
@@ -510,7 +530,7 @@ export class ReviewController implements IController {
      * @param id - Annoation ID
      * @param visibility - Annotation visibility (1, 2, 3 or 4)
      */
-    changeVisibility(id, visiblity): void {
+    changeVisibility(id: number, visiblity: number): void {
         for (let i = 0; i < this.annotations.length; i++) {
             if (this.annotations[i].id === id) {
                 this.annotations[i].visible_to = visiblity;
@@ -524,7 +544,7 @@ export class ReviewController implements IController {
      * @method selectText
      * @todo When annotations can break tags, check annotations from all elements in the selection.
      */
-    selectText($event): void {
+    selectText($event: Event): void {
         const $par = $($event.target).parents(".par")[0];
 
         let oldElement = null;
@@ -541,9 +561,9 @@ export class ReviewController implements IController {
             }
             if (range.toString().length > 0) {
                 this.selectedArea = range.getRangeAt(0);
-                this.selectedElement = this.getElementParentUntilAttribute(this.selectedArea.startContainer, "t");
+                this.selectedElement = this.getElementParentUntilAttribute(this.selectedArea.startContainer, "t") || undefined;
             } else {
-                this.selectedArea = null;
+                this.selectedArea = undefined;
             }
         } catch (err) {
             //return;
@@ -554,7 +574,7 @@ export class ReviewController implements IController {
             if (this.isSelectionTagParentsUnequal(this.selectedArea) ||
                 this.hasSelectionParentAnnotation(this.selectedArea) ||
                 this.hasSelectionChildrenAnnotation(this.selectedArea)) {
-                this.selectedArea = null;
+                this.selectedArea = undefined;
             }
         } else {
             /*
@@ -569,7 +589,7 @@ export class ReviewController implements IController {
         }
 
         const newElement = this.selectedElement;
-        this.updateVelpBadge(oldElement, newElement);
+        this.updateVelpBadge(oldElement, newElement || null);
         if (newElement != null) {
             this.velpSelection.updateVelpList();
         }
@@ -581,7 +601,7 @@ export class ReviewController implements IController {
      * @param range - Range object containing the user's selection
      * @returns {boolean} Whether the HTML tags were broken or not.
      */
-    isSelectionTagParentsUnequal(range): boolean {
+    isSelectionTagParentsUnequal(range: Range): boolean {
         return getElementParent(range.startContainer) !== getElementParent(range.endContainer);
     }
 
@@ -591,19 +611,19 @@ export class ReviewController implements IController {
      * @param range - Range object containing the user's selection
      * @returns {boolean} Whether the element has an annotation element as its parent or not
      */
-    hasSelectionParentAnnotation(range): boolean {
+    hasSelectionParentAnnotation(range: Range): boolean {
         let startcont = getElementParent(range.startContainer);
-        while (!startcont.hasAttribute("t")) {
+        while (startcont && !startcont.hasAttribute("t")) {
             startcont = getElementParent(startcont);
-            if (this.checkIfAnnotation(startcont) || this.hasAnyIllegalClass(startcont)) {
+            if (startcont && (this.checkIfAnnotation(startcont) || this.hasAnyIllegalClass(startcont))) {
                 return true;
             }
         }
 
         let endcont = getElementParent(range.endContainer);
-        while (!endcont.hasAttribute("t")) {
+        while (endcont && !endcont.hasAttribute("t")) {
             endcont = getElementParent(endcont);
-            if (this.checkIfAnnotation(endcont)) {
+            if (endcont && this.checkIfAnnotation(endcont)) {
                 return true;
             }
         }
@@ -617,7 +637,7 @@ export class ReviewController implements IController {
      * @param element - Element to be checked
      * @returns {boolean} Whether illegal classes were found or not.
      */
-    hasAnyIllegalClass(element): boolean {
+    hasAnyIllegalClass(element: Element): boolean {
         for (let i = 0; i < illegalClasses.length; i++) {
             if (element.classList.contains(illegalClasses[i])) {
                 return true;
@@ -632,7 +652,7 @@ export class ReviewController implements IController {
      * @param range - Range object containing the user's selection
      * @returns {boolean} Whether the selection has any annotation elements as children or not
      */
-    hasSelectionChildrenAnnotation(range): boolean {
+    hasSelectionChildrenAnnotation(range: Range): boolean {
         const div = document.createElement("div");
         const clone = range.cloneContents();
         div.appendChild(clone);
@@ -651,7 +671,7 @@ export class ReviewController implements IController {
      * @param element - Element to check
      * @returns {boolean} Whether annotation was found or not
      */
-    hasElementChildrenAnnotation(element): boolean {
+    hasElementChildrenAnnotation(element: Element | Node): boolean {
 
         if (this.checkIfAnnotation(element)) {
             return true;
@@ -673,7 +693,7 @@ export class ReviewController implements IController {
      * @param id - Velp to be found
      * @returns {Object|null} Velp or null
      */
-    getVelpById(id): IVelp {
+    getVelpById(id: number): IVelp | null {
         if (typeof this.velpSelection.velps === UNDEFINED) {
             return null;
         }
@@ -693,7 +713,7 @@ export class ReviewController implements IController {
      * @param points - Points given in marking
      * @returns {string} Highlight style
      */
-    getAnnotationHighlight(points): string {
+    getAnnotationHighlight(points: number): string {
         let highlightStyle = "positive";
         if (points === 0) {
             highlightStyle = "neutral";
@@ -709,7 +729,7 @@ export class ReviewController implements IController {
      * @returns {string} - Caption text
      */
 
-    showDisabledText(state): string | undefined {
+    showDisabledText(state: boolean): string | undefined {
         if (state) {
             return "You need to have teacher rights to make annotations with points.";
         }
@@ -740,7 +760,7 @@ export class ReviewController implements IController {
          }
          */
 
-        const newAnnotation: IAnnotation = {
+        const newAnnotation: IAnnotationCoordless = {
             id: -(this.annotations.length + 1),
             velp: velp.id,
             points: velp.points,
@@ -752,7 +772,6 @@ export class ReviewController implements IController {
             email: "",
             timesince: "just now",
             creationtime: "now",
-            coord: null,
             color: velp.color,
             comments: [],
             default_comment: velp.default_comment,
@@ -761,7 +780,7 @@ export class ReviewController implements IController {
             reason: null,
             answer_id: null,
         };
-
+        let coord: IAnnotationInterval;
         if (this.selectedArea != null) {
 
             let parelement = getElementParent(this.selectedArea.startContainer);
@@ -771,8 +790,12 @@ export class ReviewController implements IController {
             const cloned = this.selectedArea.cloneContents();
             innerDiv.appendChild(cloned);
 
-            while (!parelement.hasAttribute("t")) {
+            while (parelement && !parelement.hasAttribute("t")) {
                 parelement = getElementParent(parelement);
+            }
+            if (!parelement || !startElement) {
+                showMessageDialog("Could not add annotation");
+                return;
             }
 
             const elementPath = this.getElementPositionInTree(startElement, []);
@@ -793,14 +816,25 @@ export class ReviewController implements IController {
                 }
             }
 
-            newAnnotation.coord = {
+            if (answerInfo != null) {
+                newAnnotation.answer_id = answerInfo.id;
+            }
+
+            if (this.selectedElement != null) {
+                this.addAnnotationToElement(this.selectedElement, newAnnotation, false, "Added also margin annotation");
+            }
+            this.addAnnotationToCoord(this.selectedArea, newAnnotation, true);
+            await angularWait();
+
+            const nodeNums = this.getNodeNumbers(this.selectedArea.startContainer, newAnnotation.id, innerDiv);
+            coord = {
                 start: {
                     par_id: parelement.id,
                     t: parelement.getAttribute("t"),
                     el_path: elementPath,
                     offset: startoffset,
                     depth: elementPath.length,
-                    node: null,
+                    node: nodeNums[0],
                 },
                 end: {
                     par_id: parelement.id,
@@ -808,29 +842,17 @@ export class ReviewController implements IController {
                     el_path: elementPath,
                     offset: endOffset,
                     depth: elementPath.length,
-                    node: null,
+                    node: nodeNums[1],
                 },
             };
-
-            if (answerInfo != null) {
-                newAnnotation.answer_id = answerInfo.id;
-            }
-
-            this.addAnnotationToElement(this.selectedElement, newAnnotation, false, "Added also margin annotation");
-            this.addAnnotationToCoord(this.selectedArea, newAnnotation, true);
-            await angularWait();
-            this.annotations.push(newAnnotation);
+            this.annotations.push({...newAnnotation, coord});
             this.annotationids[newAnnotation.id] = newAnnotation.id;
-
-            const nodeNums = this.getNodeNumbers(this.selectedArea.startContainer, newAnnotation.id, innerDiv);
-            newAnnotation.coord.start.node = nodeNums[0];
-            newAnnotation.coord.end.node = nodeNums[1];
 
             this.selectedArea = undefined;
 
         } else if (this.selectedElement != null) {
 
-            newAnnotation.coord = {
+            coord = {
                 start: {
                     par_id: this.selectedElement.id,
                     t: this.selectedElement.getAttribute("t"),
@@ -857,13 +879,19 @@ export class ReviewController implements IController {
 
             this.addAnnotationToElement(this.selectedElement, newAnnotation, true, "No coordinate found");
             this.annotationids[newAnnotation.id] = newAnnotation.id;
+        } else {
+            throw new Error("selectedArea and selectedElement were both null");
         }
 
-        velp.used += 1;
+        if (!velp.used) {
+            velp.used = 1;
+        } else {
+            velp.used += 1;
+        }
 
         this.annotationsAdded = true;
 
-        const json = await $http.post<IAnnotation>("/add_annotation", newAnnotation);
+        const json = await $http.post<IAnnotation>("/add_annotation", {...newAnnotation, coord});
         this.annotationids[newAnnotation.id] = json.data.id;
     }
 
@@ -873,7 +901,7 @@ export class ReviewController implements IController {
      * @param start - Paragraph where the answerbrowser element is searched for.
      * @returns {Element|null} answerbrowser element or null.
      */
-    getAnswerInfo(start: Element): IAnswer {
+    getAnswerInfo(start: Element): IAnswer | null {
 
         if (start.hasAttribute("attrs") && start.hasAttribute("t")) {
             const answ = start.getElementsByTagName("answerbrowser");
@@ -885,6 +913,9 @@ export class ReviewController implements IController {
         }
 
         const myparent = getElementParent(start);
+        if (myparent == null) {
+            return null;
+        }
 
         if (myparent.tagName === "ANSWERBROWSER") {
             const ctrl = angular.element(myparent).isolateScope<any>().$ctrl as AnswerBrowserController;
@@ -912,6 +943,9 @@ export class ReviewController implements IController {
      */
     getElementPositionInTree(start: Element, array: number[]): number[] {
         const myparent = getElementParent(start);
+        if (myparent == null) {
+            throw new Error("Element position in tree was not found (getElementParent returned null)");
+        }
 
         if (myparent.hasAttribute("t")) {
             return array.reverse();
@@ -996,12 +1030,16 @@ export class ReviewController implements IController {
      * @returns {Array} array with the start and end node numbers
      */
     getNodeNumbers(el: Node, aid: number, innerElement: Element): [number, number] {
-        let parent = el;
+        let parent: Node | null = el;
         const lastInnerFirstChild = this.getFirstChildUntilNull(innerElement);
         const lastInnerLastChild = this.getLastChildUntilNull(innerElement);
 
-        while (parent.nodeName === "#text") {
+        while (parent && parent.nodeName === "#text") {
             parent = parent.parentNode;
+        }
+
+        if (parent == null) {
+            throw new Error("No node found; parent was null");
         }
 
         let num = 0;
@@ -1014,7 +1052,8 @@ export class ReviewController implements IController {
 
             if (this.checkIfAnnotation(child)) {
 
-                if (parseInt(child.getAttribute("aid")) === aid) {
+                const aidAttr = child.getAttribute("aid");
+                if (aidAttr && parseInt(aidAttr) === aid) {
 
                     let startnum = num - 1;
                     num += innerElement.childNodes.length;
@@ -1062,7 +1101,7 @@ export class ReviewController implements IController {
      * @param id - Annotation ID
      * @returns Object - Annotation
      */
-    getAnnotation(id: number): IAnnotation {
+    getAnnotation(id: number): IAnnotation | undefined {
         for (let i = 0; i < this.annotations.length; i++) {
             if (id === this.annotations[i].id) {
                 return this.annotations[i];
@@ -1077,7 +1116,7 @@ export class ReviewController implements IController {
      * @param show - Whether to show the annotation on creation or not
      * @returns {Element} - Annotation element
      */
-    createPopOverElement(annotation: IAnnotation, show: boolean): HTMLElementTagNameMap["span"] {
+    createPopOverElement(annotation: IAnnotationCoordless, show: boolean): HTMLElementTagNameMap["span"] {
         const element = document.createElement("annotation");
 
         const velpData = this.getVelpById(annotation.velp);
@@ -1090,11 +1129,11 @@ export class ReviewController implements IController {
             velpContent = annotation.content;
         }
 
-        if (this.isUndefinedOrNull(annotation.default_comment)) {
+        if (annotation.default_comment == null) {
             annotation.default_comment = "";
         }
 
-        if (this.isUndefinedOrNull(annotation.color)) {
+        if (annotation.color == null) {
             annotation.color = "";
         }
 
@@ -1109,10 +1148,6 @@ export class ReviewController implements IController {
         return element;
     }
 
-    isUndefinedOrNull(attr): boolean {
-        return typeof attr === UNDEFINED || attr == null;
-    }
-
     /**
      * Shows the annotation (despite the name).
      * @todo If the annotation should be toggled, change all `showAnnotation()` methods to `toggleAnnotation()`.
@@ -1121,6 +1156,9 @@ export class ReviewController implements IController {
      */
     toggleAnnotation(annotation: IAnnotation): void {
         const parent = document.getElementById(annotation.coord.start.par_id);
+        if (parent == null) {
+            return;
+        }
 
         try {
             const annotationElement = parent.querySelectorAll("annotation[aid='{0}']".replace("{0}", annotation.id.toString()))[0];

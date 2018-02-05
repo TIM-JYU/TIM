@@ -18,7 +18,7 @@ import {timApp} from "tim/app";
 import {ReviewController} from "../controllers/reviewController";
 import {IUser} from "../IUser";
 import {$http, $window} from "../ngimport";
-import {IAnnotation} from "./velptypes";
+import {IAnnotation, IAnnotationCoordless} from "./velptypes";
 
 const UNDEFINED = "undefined";
 
@@ -40,7 +40,7 @@ class AnnotationController implements IController {
     private show: boolean;
     private showStr: string;
     private original: {
-        points: number;
+        points: number | null;
         velp: {};
         color: string | null;
         visible_to: number;
@@ -53,7 +53,7 @@ class AnnotationController implements IController {
     private rctrl: ReviewController;
     private scope: IScope;
     private annotationdata: string;
-    private annotation: IAnnotation;
+    private annotation: IAnnotationCoordless;
 
     constructor(scope: IScope, element: IRootElementService) {
         this.scope = scope;

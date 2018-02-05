@@ -697,7 +697,7 @@ export class VelpSelectionController implements IController {
      */
     updateVelpList() {
         this.velpGroups.forEach((g) => {
-            if (this.isAttachedToParagraph()) {
+            if (this.isAttachedToParagraph() && this.rctrl.selectedElement != null) {
                 g.show = this.isVelpGroupShownHere(g.id, this.rctrl.selectedElement.id);
                 g.default = this.isVelpGroupDefaultHere(g.id, this.rctrl.selectedElement.id);
             } else {
@@ -855,7 +855,7 @@ export class VelpSelectionController implements IController {
 
         let target_id: string;
         let target_type: number;
-        if (this.isAttachedToParagraph()) {
+        if (this.isAttachedToParagraph() && this.rctrl.selectedElement != null) {
             target_id = this.rctrl.selectedElement.id;
             target_type = 1;
         } else {
@@ -930,7 +930,7 @@ export class VelpSelectionController implements IController {
         let targetID: string;
         let targetType;
 
-        if (this.isAttachedToParagraph()) {
+        if (this.isAttachedToParagraph() && this.rctrl.selectedElement != null) {
             targetID = this.rctrl.selectedElement.id;
             targetType = 1;
         } else {
@@ -986,7 +986,7 @@ export class VelpSelectionController implements IController {
     }
 
     private isAttachedToParagraph() {
-        return this.groupAttachment.target_type === 1 && this.rctrl.selectedElement != null;
+        return this.groupAttachment.target_type === 1;
     }
 
     /**
@@ -996,7 +996,7 @@ export class VelpSelectionController implements IController {
     async resetCurrentShowsToDefaults() {
 
         let targetID;
-        if (this.isAttachedToParagraph()) {
+        if (this.isAttachedToParagraph() && this.rctrl.selectedElement != null) {
             targetID = this.rctrl.selectedElement.id;
         } else {
             targetID = "0";
@@ -1027,7 +1027,7 @@ export class VelpSelectionController implements IController {
     checkCheckBoxes(type: VelpGroupSelectionType) {
         let targetID = null;
 
-        if (this.groupAttachment.target_type === 1) {
+        if (this.isAttachedToParagraph()  && this.rctrl.selectedElement != null) {
             targetID = this.rctrl.selectedElement.id;
         } else {
             targetID = "0";
