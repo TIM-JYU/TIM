@@ -3,7 +3,8 @@ import unittest
 import yaml
 from yaml import YAMLError
 
-from timApp.documentmodel.yamlblock import YamlBlock, MergeStyle, yaml_loader, BlockEndMissingError
+from timApp.documentmodel.yamlblock import YamlBlock, MergeStyle, yaml_loader, BlockEndMissingError, \
+    DuplicateKeyMergeHintError
 
 
 class YamlBlockTest(unittest.TestCase):
@@ -150,3 +151,58 @@ test2
     def test_multiple_multiline(self):
         yb = YamlBlock.from_markdown(self.multiple_multiline)
         self.assertEqual(yb.values, {'a': 'test1\n', 'b': 'test2\n'})
+
+    def test_same_key_diff_level(self):
+        yb = YamlBlock.from_markdown("""
+a: test
+macros:
+ a: test2
+        """)
+        self.assertEqual(yb, {'a': 'test', 'macros': {'a': 'test2'}})
+
+    def test_multiline_append_deeper(self):
+        yb = YamlBlock.from_markdown("""
+macros:
+ a: |!!
+test
+ing
+!!
+ b: test2""")
+        self.assertEqual(yb.values, {'macros': {'a': 'test\ning\n', 'b': 'test2'}})
+        yb2 = YamlBlock.from_markdown("""
+macros:
+ a: |!! a
+continued
+!!
+ b: xxx""")
+        ybm = yb.merge_with(yb2)
+        self.assertEqual(ybm.values, {'macros': {'a': 'test\ning\ncontinued\n', 'b': 'xxx'}})
+
+    def test_duplicate_key_append(self):
+        invalid_mds = ["""
+a: |!! a
+yyy
+!!
+macros:
+ a: |!! a
+test
+!!
+        """, """
+a: yyy
+macros:
+ a: |!! a
+test
+!!
+        """, """
+a: |!! a
+yyy
+!!
+macros:
+ a: test
+        """]
+        for md in invalid_mds:
+            with self.assertRaises(DuplicateKeyMergeHintError) as e:
+                YamlBlock.from_markdown(md)
+            self.assertEqual(
+                'Using merge hints in a key ("a") having same name in different levels is not currently supported',
+                str(e.exception))

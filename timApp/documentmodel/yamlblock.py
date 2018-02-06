@@ -15,6 +15,11 @@ class BlockEndMissingError(YAMLError):
         self.end_str = end_str
 
 
+class DuplicateKeyMergeHintError(YAMLError):
+    def __init__(self, key: str):
+        super().__init__(f'Using merge hints in a key ("{key}") having same name in different levels is not currently supported')
+
+
 class MergeStyle(Enum):
     Replace = 'r'
     Append = 'a'
@@ -98,6 +103,7 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
     end_str = ''
     indent = None
     merge_hints = {}
+    encountered_keys = set()
     for line in lines:
         line = line.rstrip()
         if missing_space_after_colon.match(line) and not multiline:
@@ -111,14 +117,23 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
             key = r.group(2)
             hint = r.group(5)
             if hint in ('a', 'r', 'r?'):
+                if key in encountered_keys:
+                    raise DuplicateKeyMergeHintError(key)
                 merge_hints[key] = MergeStyle(hint)
             s = s + '\n' + line + '|'
+            encountered_keys.add(key)
             continue
         if multiline:
             if line == end_str:
                 multiline = False
                 continue
             line = indent + line
+        else:
+            key = line.split(':', 1)[0].strip()
+            if key:
+                if key in encountered_keys and key in merge_hints:
+                    raise DuplicateKeyMergeHintError(key)
+                encountered_keys.add(key)
         s = s + '\n' + line
     if multiline:
         raise BlockEndMissingError(end_str)
@@ -155,13 +170,13 @@ def __merge_helper(a: dict, b: dict, depth: int = 0, merge_info: Optional[YamlMe
     for key in b:
         if key in a:
             if isinstance(a[key], dict) and isinstance(b[key], dict):
-                __merge_helper(a[key], b[key], depth + 1)
+                __merge_helper(a[key], b[key], depth + 1, merge_info)
             elif a[key] == b[key]:
                 pass
             elif type(a[key]) != type(b[key]):
                 a[key] = b[key]
             else:
-                if depth == 0 and merge_info:
+                if merge_info:
                     m = merge_info.get(key, MergeStyle.Replace)
                     if m == MergeStyle.Replace:
                         a[key] = b[key]
