@@ -34,7 +34,8 @@ class MessageDialogController extends DialogController<{message: string}, {}, "t
 
 export function registerDialogComponent<T extends Dialog<T>>(name: T["component"],
                                                              controller: new (...args: any[]) => T,
-                                                             {template, templateUrl}: {template?: string, templateUrl?: string},
+                                                             tmpl: {template: string, templateUrl?: never}
+                                                                 | {templateUrl: string, template?: never},
                                                              controllerAs: string = "$ctrl") {
     timApp.component(name, {
         bindings: {
@@ -43,8 +44,7 @@ export function registerDialogComponent<T extends Dialog<T>>(name: T["component"
         },
         controller,
         controllerAs,
-        template,
-        templateUrl,
+        ...tmpl,
     });
 }
 
