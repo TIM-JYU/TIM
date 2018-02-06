@@ -1,10 +1,19 @@
-<div class="actionButtons">
+<div class="modal-header">
+    <h4 class="modal-title" id="modal-title">Name area</h4>
+</div>
+<div class="modal-body" id="modal-body">
     <form class="form-horizontal">
         <div class="form-group">
             <label for="areaname" class="col-sm-3 control-label">Area name:</label>
             <div class="col-sm-9">
-                <input id="areaname" class="form-control" type="text" ng-model="$ctrl.areaName" title="No spaces allowed"
-                       autofocus no-period />
+                <input id="areaname"
+                       ng-keyup="$event.keyCode == 13 && $ctrl.addArea()"
+                       class="form-control"
+                       type="text"
+                       ng-model="$ctrl.areaName"
+                       title="No spaces allowed"
+                       focus-me="true"
+                       no-period />
             </div>
         </div>
         <div class="form-group">
@@ -19,7 +28,8 @@
         <div ng-show="$ctrl.options.collapsible" class="form-group">
             <label for="areatitle" class="col-sm-3 control-label">Area title:</label>
             <div class="col-sm-9">
-                <input id="areatitle" type="text" class="form-control" ng-model="$ctrl.options.title" placeholder="Optional"/>
+                <input id="areatitle" type="text" class="form-control" ng-model="$ctrl.options.title"
+                       placeholder="Optional"/>
             </div>
         </div>
         <div ng-show="$ctrl.options.collapsible" class="form-group">
@@ -82,14 +92,10 @@
                 </textarea>
             </div>
         </div>
-
-        <div class="form-group">
-            <div class="col-sm-6">
-                <button type="submit" class="wideButton" ng-click="$ctrl.addArea()" ng-disabled="!$ctrl.areaName">Add</button>
-            </div>
-            <div class="col-sm-6">
-                <button type="submit" class="wideButton" ng-click="$ctrl.cancelAdd()">Cancel</button>
-            </div>
-        </div>
     </form>
+</div>
+<div class="modal-footer">
+    <button class="timButton" ng-click="$ctrl.addArea()" ng-disabled="!$ctrl.areaName">Add
+    </button>
+    <button class="btn btn-default" ng-click="$ctrl.dismiss()">Cancel</button>
 </div>

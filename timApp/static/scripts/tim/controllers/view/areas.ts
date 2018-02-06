@@ -2,24 +2,14 @@ import {IScope} from "angular";
 import $ from "jquery";
 import * as nameArea from "tim/directives/nameArea";
 import {Coords, markAsUsed} from "tim/utils";
-import {$compile, $http, $timeout, $window} from "../../ngimport";
+import {INameAreaOptions, showNameAreaDialog} from "../../directives/nameArea";
+import {$http, $timeout, $window} from "../../ngimport";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {Area, getArea, getFirstParId, getLastParId, Paragraph, Paragraphs} from "./parhelpers";
 import {closeOptionsWindow} from "./parmenu";
 import {ViewCtrl} from "./viewctrl";
 
 markAsUsed(nameArea);
-
-export interface INameAreaOptions {
-    collapsible: boolean;
-    timed: boolean;
-    starttime: string;
-    endtime: string;
-    alttext: string;
-    collapse: boolean;
-    hlevel: number;
-    title: string;
-}
 
 function selectArea(areaName: string, className: string, selected: boolean) {
     const $selection = $(".area.area_" + areaName).children(className);
@@ -132,27 +122,15 @@ export class AreaHandler {
         this.viewctrl.extendSelection($par);
     }
 
-    nameArea(e: Event, $pars: Paragraphs) {
-        let $newArea = $('<div class="area" id="newarea" />');
-        $newArea.attr("data-doc-id", this.viewctrl.docId);
+    async nameArea(e: Event, $pars: Paragraphs) {
         if (!this.viewctrl.selection.pars) {
             return;
         }
-        this.viewctrl.selection.pars.wrapAll($newArea);
-
-        $newArea = $("#newarea");
-        const $popup = $("<name-area>");
-        $popup.attr("tim-draggable-fixed", "");
-        $popup.attr("onok", "vctrl.nameAreaOk");
-        $popup.attr("oncancel", "vctrl.nameAreaCancel");
-        $newArea.prepend($popup);
-
-        $compile($popup[0])(this.sc);
+        const result = await showNameAreaDialog();
+        await this.nameAreaOk(this.viewctrl.selection.pars, result.areaName, result.options);
     }
 
     async nameAreaOk($area: Area, areaName: string, options: INameAreaOptions) {
-        $area.attr("data-name", areaName);
-
         try {
             await $http.post("/name_area/" + this.viewctrl.docId + "/" + areaName, {
                 area_start: getFirstParId($area.first()),
@@ -165,12 +143,7 @@ export class AreaHandler {
             this.viewctrl.reload();
         } catch (e) {
             $window.alert(e.data.error);
-            this.nameAreaCancel($area);
         }
-    }
-
-    nameAreaCancel($area: Area) {
-        $area.children().unwrap();
     }
 
     cancelArea(e: Event, $par: Paragraph) {

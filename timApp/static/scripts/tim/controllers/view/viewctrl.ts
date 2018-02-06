@@ -16,8 +16,9 @@ import * as popupMenu from "tim/directives/popupMenu";
 import {timLogTime} from "tim/timTiming";
 import {applyMixins, Coords, isPageDirty, markAsUsed, markPageNotDirty} from "tim/utils";
 import {initCssPrint} from "../../cssPrint";
-import {IItem} from "../../IItem";
+import {INameAreaOptions} from "../../directives/nameArea";
 import {IExtraData, IParResponse} from "../../edittypes";
+import {IItem} from "../../IItem";
 import {IUser} from "../../IUser";
 import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../../services/parCompiler";
@@ -25,7 +26,6 @@ import {Users} from "../../services/userService";
 import {LectureController} from "../lectureController";
 import * as printctrl from "../printCtrl";
 import {ReviewController} from "../reviewController";
-import {INameAreaOptions} from "./areas";
 import {Document, setActiveDocument} from "./document";
 import {EditingHandler, IParEditorAttrs, IParEditorOptions} from "./editing";
 import {onClick} from "./eventhandlers";
@@ -330,7 +330,7 @@ export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
         throw new Error(this.mixinMsg);
     }
 
-    nameArea(e: Event, $pars: Paragraph): void {
+    nameArea(e: Event, $pars: Paragraph): Promise<void> {
         throw new Error(this.mixinMsg);
     }
 
