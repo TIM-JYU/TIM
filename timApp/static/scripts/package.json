@@ -48,7 +48,7 @@
     "replace-in-file": "^2.5.0",
     "systemjs-builder": "^0.16.9",
     "tslint": "^5.0.0",
-    "typescript": "^2.4.0"
+    "typescript": "^2.7.1"
   },
   "jspm": {
     "dependencies": {
@@ -87,12 +87,12 @@
       "oclazyload": "npm:oclazyload@^1.1.0",
       "rangyinputs": "github:jigargosar/rangyinputs@^1.2.0",
       "text": "github:systemjs/plugin-text@^0.0.9",
-      "ts": "github:frankwallis/plugin-typescript@^7.0.6",
+      "ts": "github:frankwallis/plugin-typescript@^9.0.0",
       "tslib": "npm:tslib@^1.7.1"
     },
     "devDependencies": {
       "core-js": "npm:core-js@^1.1.4",
-      "plugin-typescript": "github:frankwallis/plugin-typescript@^7.0.6",
+      "plugin-typescript": "github:frankwallis/plugin-typescript@^9.0.0",
       "ts-runtime": "npm:babel-runtime@^5.8.24"
     },
     "peerDependencies": {
@@ -117,7 +117,7 @@
       "process": "npm:jspm-nodelibs-process@^0.2.0",
       "stream": "npm:jspm-nodelibs-stream@^0.2.0",
       "string_decoder": "npm:jspm-nodelibs-string_decoder@^0.2.0",
-      "typescript": "npm:typescript@^2.4.0",
+      "typescript": "npm:typescript@^2.7.1",
       "url": "npm:jspm-nodelibs-url@^0.2.0",
       "util": "npm:jspm-nodelibs-util@^0.2.0",
       "vm": "npm:jspm-nodelibs-vm@^0.2.0"
@@ -200,11 +200,6 @@
           "jquery": "^2.2"
         }
       },
-      "npm:inherits@2.0.1": {
-        "ignore": [
-          "test.js"
-        ]
-      },
       "npm:inherits@2.0.3": {
         "ignore": [
           "test.js"
@@ -219,13 +214,10 @@
       "npm:moment@2.6.0": {
         "jspmNodeConversion": false
       },
-      "npm:pbkdf2@3.0.12": {
+      "npm:pbkdf2@3.0.14": {
         "main": "browser.js"
       },
-      "npm:safe-buffer@5.0.1": {
-        "browser": "index.js"
-      },
-      "npm:safe-buffer@5.1.0": {
+      "npm:safe-buffer@5.1.1": {
         "browser": "index.js"
       },
       "npm:tslib@1.7.1": {
@@ -236,7 +228,7 @@
           }
         }
       },
-      "npm:typescript@2.4.0": {
+      "npm:typescript@2.7.1": {
         "browser": {},
         "map": {
           "buffer": "@empty",
