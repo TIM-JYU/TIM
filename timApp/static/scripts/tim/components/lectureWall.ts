@@ -60,8 +60,8 @@ timApp.component("timLectureWall", {
     template: `<div class="wall-message-area">
     <ul class="list-unstyled" id="wallArea">
         <li ng-repeat="m in $ctrl.messages">
-            <span ng-if="$ctrl.messageName">{{m.sender}}</span>
-            <span ng-if="$ctrl.messageTime">&lt;{{m.time}}&gt;</span>
+            <span ng-if="$ctrl.messageName">{{m.user.name}}</span>
+            <span ng-if="$ctrl.messageTime">&lt;{{ m.timestamp | timtim }}&gt;</span>
             <span ng-if="$ctrl.messageTime || $ctrl.messageName">:</span>
             {{m.message}}
         </li>
