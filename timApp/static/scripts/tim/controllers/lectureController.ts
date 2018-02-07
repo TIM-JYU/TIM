@@ -45,7 +45,7 @@ import {$http, $log, $rootScope, $timeout, $window} from "../ngimport";
 import {Users} from "../services/userService";
 import {showLectureDialog} from "./createLectureCtrl";
 import {ViewCtrl} from "./view/viewctrl";
-import {showQuestionAnswerDialog} from "./answerToQuestionController";
+import {currentQuestion, showQuestionAnswerDialog} from "./answerToQuestionController";
 
 markAsUsed(wall);
 
@@ -444,7 +444,9 @@ export class LectureController implements IController {
         this.lectureSettings.useWall = response.useWall;
         this.lectureSettings.useQuestions = response.useQuestions;
 
-        await this.getAllMessages();
+        // TODO: Fix this to scroll bottom without cheating.
+        const wallArea = $("#wallArea");
+        wallArea.animate({scrollTop: wallArea[0].scrollHeight * 10}, 1000);
 
         if (this.isLecturer) {
             this.canStop = true;
@@ -582,22 +584,6 @@ export class LectureController implements IController {
     }
 
     /**
-     * Sends http request to get all the messages from the current lecture.
-     */
-    async getAllMessages() {
-        const response = await $http<ILectureMessage[]>({
-            url: "/getAllMessages",
-            method: "GET",
-            params: {lecture_id: this.lectureOrThrow().lecture_id, buster: new Date().getTime()},
-        });
-        this.wallMessages = response.data;
-
-        // TODO: Fix this to scroll bottom without cheating.
-        const wallArea = $("#wallArea");
-        wallArea.animate({scrollTop: wallArea[0].scrollHeight * 10}, 1000);
-    }
-
-    /**
      * Starts long polling for the updates.(messages, questions, lecture ending)
      * @param lastID Last id which was received.
      */
@@ -608,13 +594,13 @@ export class LectureController implements IController {
                 await $timeout(5000);
                 continue;
             }
-            const [timeout, last] = await this.message_longPolling(lastID);
+            const [timeout, last] = await this.pollOnce(lastID);
             lastID = last;
             await $timeout(Math.max(timeout, 1000));
         }
     }
 
-    async message_longPolling(lastID: number): Promise<[number, number]> {
+    async pollOnce(lastID: number): Promise<[number, number]> {
         let buster = "" + new Date().getTime();
         buster = buster.substring(buster.length - 4);
         const response = await $http<IUpdateResponse>({
@@ -670,12 +656,20 @@ export class LectureController implements IController {
                 if (endTimeChanged(answer.extra)) {
                     // extend or end question according to new_end_time
                     if (!this.isLecturer) {
-                        $rootScope.$broadcast("update_end_time", answer.extra.new_end_time);
+                        if (currentQuestion) {
+                            currentQuestion.updateEndTime(answer.extra.new_end_time);
+                        } else {
+                            $log.error("currentQuestion was undefined when trying to update end time");
+                        }
                     }
                     // If 'question' or 'result' is in answer, show question/explanation accordingly
                 } else if (pointsClosed(answer.extra)) {
                     this.currentPointsId = undefined;
-                    $rootScope.$broadcast("update_end_time", null);
+                    if (currentQuestion) {
+                        currentQuestion.updateEndTime(null);
+                    } else {
+                        $log.error("currentQuestion was undefined when set end time to null");
+                    }
                 } else if (!alreadyAnswered(answer.extra) && !questionHasAnswer(answer.extra)) {
                     if (this.isLecturer) {
                         if (questionAnswerReceived(answer.extra)) {
@@ -703,7 +697,11 @@ export class LectureController implements IController {
             if (isNaN(pollInterval) || pollInterval < 1000) {
                 pollInterval = 4000;
             }
-            return [pollInterval, answer.lastid];
+            let newLastId = lastID;
+            if (answer.msgs.length > 0) {
+                newLastId = answer.msgs[answer.msgs.length - 1].msg_id;
+            }
+            return [pollInterval, newLastId];
         }
         return [0, lastID];
         // }, () => {
@@ -711,7 +709,7 @@ export class LectureController implements IController {
         //     $window.clearTimeout(this.pollTimeout);
         //     // Odottaa 30s ennen kuin yrittää uudelleen errorin jälkeen.
         //     this.pollTimeout = setTimeout(() => {
-        //         this.message_longPolling(this.lastID);
+        //         this.pollOnce(this.lastID);
         //     }, 30000);
         // });
     }

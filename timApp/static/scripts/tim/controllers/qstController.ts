@@ -215,7 +215,7 @@ qstApp.component("qstRunner", {
     <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning"
             ng-click="$ctrl.saveText()"></button>
     &nbsp;&nbsp;
-    <a class="questionAddedNew" ng-show="$ctrl.checkQstMode()">
+    <a class="questionAddedNew" ng-show="$ctrl.checkQstMode()" ng-click="$ctrl.questionClicked()">
         <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
     </a>
     <span ng-show="$ctrl.result">{{$ctrl.result}}</span>

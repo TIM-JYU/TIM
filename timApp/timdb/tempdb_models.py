@@ -3,6 +3,7 @@
 Each model MUST have 'tempdb' as the __bind_key__ attribute.
 
 """
+from datetime import datetime
 from typing import Optional
 
 from sqlalchemy.orm import scoped_session
@@ -21,8 +22,8 @@ class Runningquestion(db.Model):
     __bind_key__ = 'tempdb'
     asked_id = db.Column(db.Integer, primary_key=True)
     lecture_id = db.Column(db.Integer, primary_key=True)  # TODO should not be part of primary key (asked_id is enough)
-    ask_time = db.Column(db.BigInteger, nullable=False)
-    end_time = db.Column(db.BigInteger)
+    ask_time = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    end_time = db.Column(db.DateTime(timezone=True))
 
     def __init__(self, asked_id, lecture_id, ask_time, end_time=None):
         self.asked_id = asked_id

@@ -1,10 +1,12 @@
+from datetime import datetime, timedelta
+
 from timApp.timdb.tempdbbase import TempDbBase
 
 
 class RunningQuestions(TempDbBase):
     """LectureAnswer class to handle database for lecture answers."""
 
-    def add_running_question(self, lecture_id: int, asked_id: int, ask_time: int, end_time: int=None):
+    def add_running_question(self, lecture_id: int, asked_id: int, ask_time: datetime, end_time: datetime=None):
         running = self.table(asked_id, lecture_id, ask_time, end_time)
         self.session.merge(running)
         self.session.commit()
@@ -26,7 +28,7 @@ class RunningQuestions(TempDbBase):
         question = questions.first()
         return question
 
-    def extend_question(self, asked_id: int, extend: int):
+    def extend_question(self, asked_id: int, extend: timedelta):
         questions = self.table.query.filter_by(asked_id=asked_id)
         question = questions.first()
         question.end_time += extend

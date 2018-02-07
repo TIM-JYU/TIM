@@ -1,7 +1,7 @@
 import json
 import threading
 import time
-from datetime import timezone, datetime
+from datetime import timezone, datetime, timedelta
 from random import randrange
 from typing import List, Optional
 
@@ -722,7 +722,7 @@ def extend_question():
     extend = int(request.args.get('extend'))
 
     tempdb = get_tempdb()
-    tempdb.runningquestions.extend_question(asked_id, extend * 1000)
+    tempdb.runningquestions.extend_question(asked_id, timedelta(seconds=extend))
 
     return ok_response()
 
@@ -803,8 +803,8 @@ def ask_question():
     except:
         pass
 
-    ask_time = int(time.time() * 1000)
-    end_time = ask_time + question_timelimit * 1000
+    ask_time = datetime.now(tz=timezone.utc)
+    end_time = ask_time + timedelta(seconds=question_timelimit)
     thread_to_stop_question = threading.Thread(target=stop_question_from_running,
                                                args=(lecture_id, asked_id, question_timelimit, end_time))
 

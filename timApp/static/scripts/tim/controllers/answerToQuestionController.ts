@@ -33,7 +33,7 @@ export type IAnswerQuestionResult =
     | {type: "reask"}
     | {type: "reask_as_new"};
 
-let currentQuestion: AnswerToQuestionController | undefined;
+export let currentQuestion: AnswerToQuestionController | undefined;
 
 export class AnswerToQuestionController extends DialogController<{params: IAnswerQuestionParams}, IAnswerQuestionResult, "timAnswerQuestion"> {
     private barFilled: number;
@@ -83,7 +83,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         }
         this.askedTime = this.question.asked_time.subtract(this.clockOffset);
 
-        // clockOffset usually in range [-100, -25], so it's almost meaningless?
+        // clockOffset usually in range [-100, -25] (milliseconds), so it's almost meaningless?
         this.endTime = this.askedTime.add(this.question.json.json.timeLimit!, "seconds").subtract(this.clockOffset);
         this.isLecturer = this.resolve.params.isLecturer;
         this.buttonText = "Answer"; // TODO: Make configurable
@@ -189,7 +189,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
      * Else time is set as questions new end time.
      * Event: update_end_time
      */
-    private updateEndTime(time: Moment) {
+    public updateEndTime(time: Moment | null) {
         if (time != null) {
             this.endTime = time.subtract(this.clockOffset);
             this.progressMax = this.endTime.diff(this.askedTime);
@@ -249,10 +249,14 @@ registerDialogComponent("timAnswerQuestion",
 <div class="popUpWindow">
     <div class="questionAskedWindow">
         <dynamic-answer-sheet
-        questiondata="$ctrl.preview"
-        on-answer-change="$ctrl.updateAnswer">
-</dynamic-answer-sheet>
+                questiondata="$ctrl.preview"
+                on-answer-change="$ctrl.updateAnswer">
+        </dynamic-answer-sheet>
     </div>
+    <uib-progressbar
+      max="$ctrl.progressMax"
+      value="$ctrl.barFilled">
+</uib-progressbar>
     <div class="buttons">
         <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.edit()">
             Edit points

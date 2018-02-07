@@ -187,7 +187,7 @@ export interface IUniqueParId {
 export type IUpdateResponse = IGotUpdatesResponse | INoUpdatesResponse | ILectureListResponse;
 
 export interface IQuestionEndTimeChange {
-    new_end_time: number | null;
+    new_end_time: Moment | null;
 }
 
 export interface IPointsClosed {
