@@ -109,7 +109,7 @@ registerDialogComponent("timAskQuestion", QuestionPreviewController, {
         <!-- <button ng-click="deleteQuestion()" class="btn btn-danger pull-left">Delete</button> -->
         <button ng-show="$ctrl.showAsk" ng-click="$ctrl.ask()" class="timButton">Ask</button>&nbsp;&nbsp;
         <button ng-click="$ctrl.editQuestion()" class="timButton">Edit</button>
-        <button ng-click="$ctrl.close()" class="timButton">Close</button>
+        <button ng-click="$ctrl.dismiss()" class="timButton">Close</button>
     </div>
 </div>
 `,
