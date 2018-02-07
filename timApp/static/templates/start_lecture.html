@@ -34,9 +34,11 @@
         <div class="endingTime">
             Ending time:
             <div id="endInfo">
+                <label>
                 <input type="radio" id="dateChosen2" name="dateStop" ng-click="clctrl.enableDate2()"
                        ng-model="clctrl.dateChosen" ng-checked="clctrl.dateCheck"/>
                 Use date:
+                </label>
                 <div class="form-inline">
                     <div class="input-group date" datetimepicker ng-model="clctrl.endTime"
                          data-options="clctrl.dateTimeOptions">
@@ -49,10 +51,12 @@
                     </div>
                 </div>
 
+                <label>
                 <input type="radio" id="durationChosen" name="dueStop" ng-click="clctrl.enableDue2()"
                        ng-model="clctrl.durationChosen"
                        ng-checked="clctrl.dueCheck"/>
                 Duration:
+                </label>
                 <div id="durationDiv">
                     <label>Hours:
                         <input type="number" name="durationHour" min="0"
