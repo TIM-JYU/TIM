@@ -33,7 +33,7 @@ class Lecture(db.Model):
     @staticmethod
     def get_all_in_document(doc_id: int, time: Optional[datetime]=None) -> List['Lecture']:
         if not time:
-            time = datetime.max.replace(tzinfo=timezone.utc)
+            time = datetime.min.replace(tzinfo=timezone.utc)
         return Lecture.query.filter_by(doc_id=doc_id).filter(Lecture.end_time > time).order_by(Lecture.lecture_code.asc()).all()
 
     @property
