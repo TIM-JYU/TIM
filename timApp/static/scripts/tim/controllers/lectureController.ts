@@ -16,7 +16,7 @@ import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
 import sessionsettings from "tim/session";
-import {clone, GetURLParameter, markAsUsed, setsetting} from "tim/utils";
+import {clone, GetURLParameter, markAsUsed, setsetting, to} from "tim/utils";
 import {showLectureEnding} from "../components/lectureEnding";
 import * as wall from "../components/lectureWall";
 import {showMessageDialog} from "../dialog";
@@ -26,6 +26,7 @@ import {
     hasLectureEnded,
     hasUpdates,
     IAlreadyAnswered,
+    IAskedQuestion,
     ILecture,
     ILectureListResponse,
     ILectureMessage,
@@ -34,18 +35,21 @@ import {
     ILectureSettings,
     IQuestionAsked,
     IQuestionHasAnswer,
-    IQuestionResult, isAskedQuestion,
+    IQuestionResult,
+    isAskedQuestion,
     isLectureListResponse,
     IUpdateResponse,
     pointsClosed,
-    questionAnswerReceived, questionAsked,
+    questionAnswerReceived,
+    questionAsked,
     questionHasAnswer,
 } from "../lecturetypes";
-import {$http, $log, $rootScope, $timeout, $window} from "../ngimport";
+import {$http, $log, $timeout, $window} from "../ngimport";
 import {Users} from "../services/userService";
-import {showLectureDialog} from "./createLectureCtrl";
-import {ViewCtrl} from "./view/viewctrl";
 import {currentQuestion, showQuestionAnswerDialog} from "./answerToQuestionController";
+import {showLectureDialog} from "./createLectureCtrl";
+import {askQuestion} from "./questionAskController";
+import {ViewCtrl} from "./view/viewctrl";
 
 markAsUsed(wall);
 
@@ -199,31 +203,28 @@ export class LectureController implements IController {
             tryToAutoJoin = false;
         }
         if (tryToJoin) {
-            $http<boolean>({
-                url: "/lectureNeedsPassword",
+            const [err, resp] = await to($http<ILecture>({
+                url: "/getLectureByCode",
                 method: "GET",
                 params: {
                     doc_id: this.viewctrl!.docId,
                     lecture_code: lectureCode,
                     buster: new Date().getTime(),
                 },
-            }).then((resp) => {
-                const needsPassword = resp.data;
-                if (lectureCode == null) {
-                    throw new Error("lectureCode was unexpectedly null");
-                }
-                const changeLecture = this.joinLecture(lectureCode, needsPassword);
-                if (!changeLecture) {
-                    this.showRightView(answer);
-                }
-            }, () => {
+            }));
+            if (!resp) {
                 if (tryToAutoJoin) {
-                    showMessageDialog("Could not find a lecture for this document.");
+                    await showMessageDialog("Could not find a lecture for this document.");
                 } else {
-                    showMessageDialog(`Lecture ${lectureCode} not found.`);
+                    await showMessageDialog(`Lecture ${lectureCode} not found.`);
                 }
                 this.showRightView(answer);
-            });
+                return;
+            }
+            const changeLecture = this.joinLecture(resp.data);
+            if (!changeLecture) {
+                this.showRightView(answer);
+            }
         } else {
             this.showRightView(answer);
         }
@@ -231,12 +232,12 @@ export class LectureController implements IController {
 
     /**
      * Method to join selected lecture. Checks that lecture is chosen and sends http request to server.
-     * @param lectureCode Name of the lecture to be joined.
-     * @param codeRequired True if lecture needs password, else false
      * @return {boolean} true, if successfully joined lecture, else false
      */
-    async joinLecture(lectureCode: string, codeRequired: boolean) {
+    async joinLecture(lecture: ILecture) {
         let changeLecture = true;
+        const lectureCode = lecture.lecture_code;
+        const codeRequired = lecture.is_access_code;
         if (this.lecture) {
             const inLecture = this.lectureSettings.inLecture;
             if (inLecture) {
@@ -338,38 +339,6 @@ export class LectureController implements IController {
             throw new Error("this.lecture was null");
         }
         return this.lecture;
-    }
-
-    async initEventHandlers() {
-        this.scope.$on("joinLecture", (event, lecture) => {
-            this.joinLecture(lecture.lecture_code, lecture.is_access_code);
-        });
-
-        /*
-         Event listener for closeQuestion. Closes question pop-up.
-         */
-        this.scope.$on("closeQuestion", () => {
-            this.currentQuestionId = undefined;
-        });
-
-        this.scope.$on("questionStopped", () => {
-            this.currentQuestionId = undefined;
-        });
-
-        this.scope.$on("pointsClosed", (event, askedId) => {
-            this.currentPointsId = undefined;
-            $http({
-                url: "/closePoints",
-                method: "PUT",
-                params: {
-                    asked_id: askedId,
-                    buster: new Date().getTime(),
-                },
-            }).then(() => {
-            }, () => {
-                $log.info("Failed to answer to question");
-            });
-        });
     }
 
     /**
@@ -715,18 +684,38 @@ export class LectureController implements IController {
     }
 
     async showQuestion(answer: IQuestionAsked | IQuestionResult) {
+        let question: IAskedQuestion;
         if (isAskedQuestion(answer.data)) {
             this.currentQuestionId = answer.data.asked_id;
+            question = answer.data;
         } else {
             this.currentQuestionId = undefined;
             this.currentPointsId = answer.data.asked_question.asked_id;
+            question = answer.data.asked_question;
         }
         const result = await showQuestionAnswerDialog({qa: answer.data, isLecturer: this.isLecturer});
-        // TODO: handle result
+        if (result.type === "pointsclosed") {
+            this.currentPointsId = undefined;
+            await $http({
+                url: "/closePoints",
+                method: "PUT",
+                params: {
+                    asked_id: result.askedId,
+                    buster: new Date().getTime(),
+                },
+            });
+        } else if (result.type === "closed") {
+            this.currentQuestionId = undefined;
+        } else if (result.type === "reask") {
+            await askQuestion({askedId: question.asked_id});
+        } else {
+            // reask as new
+            await askQuestion({parId: question.par_id, docId: question.doc_id});
+        }
     }
 
     async getQuestionManually(event: Event) {
-        const response = await $http<IAlreadyAnswered | IQuestionAsked | IQuestionHasAnswer | IQuestionResult>({
+        const response = await $http<IAlreadyAnswered | IQuestionAsked | IQuestionHasAnswer | IQuestionResult | null>({
             url: "/getQuestionManually",
             method: "GET",
             params: {

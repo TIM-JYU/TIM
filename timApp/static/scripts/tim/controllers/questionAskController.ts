@@ -24,20 +24,35 @@ export interface IShowAsk {
     showAsk: boolean;
 }
 
-export interface IAskNew extends IUniqueParId, IShowAsk {
+export interface IAskNew extends IUniqueParId {
 }
 
-export interface IReAsk extends IShowAsk {
+export interface IReAsk {
     askedId: number;
 }
 
-function isReasking(p: QuestionPreviewParams): p is IReAsk {
+export type AskParams = IAskNew | IReAsk;
+
+function isReasking(p: AskParams): p is IReAsk {
     return (p as IReAsk).askedId != null;
 }
 
-export type QuestionPreviewParams = IAskNew | IReAsk;
+export type QuestionPreviewParams = AskParams & IShowAsk;
 
-export class QuestionPreviewController extends DialogController<{params: QuestionPreviewParams}, IAskedQuestion, "timAskQuestion"> {
+export async function askQuestion(p: AskParams) {
+    const args = isReasking(p) ? {
+        asked_id: p.askedId,
+    } : {
+        doc_id: p.docId,
+        par_id: p.parId,
+    };
+    const response = await $http.post<IAskedQuestion>("/askQuestion", {}, {
+        params: {buster: new Date().getTime(), ...args},
+    });
+    return response.data;
+}
+
+export class QuestionPreviewController extends DialogController<{ params: QuestionPreviewParams }, IAskedQuestion, "timAskQuestion"> {
     private questiondata?: IPreviewParams;
     private showAsk: boolean;
 
@@ -70,16 +85,7 @@ export class QuestionPreviewController extends DialogController<{params: Questio
             return;
         }
         const p = this.resolve.params;
-        const args = isReasking(p) ? {
-            asked_id: p.askedId,
-        } : {
-            doc_id: p.docId,
-            par_id: p.parId,
-        };
-        const response = await $http.post<IAskedQuestion>("/askQuestion", {}, {
-            params: {buster: new Date().getTime(), ...args},
-        });
-        const question = response.data;
+        const question = await askQuestion(p);
         this.close(question);
     }
 

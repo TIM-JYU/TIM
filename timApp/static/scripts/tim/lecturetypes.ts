@@ -125,6 +125,7 @@ export interface ILecture {
     password: string;
     options: ILectureOptions;
     is_full: boolean;
+    is_access_code: boolean;
 }
 
 export interface IQuestionAnswer {
@@ -227,7 +228,6 @@ export type IGetNewQuestionResponse =
 
 export interface IGotUpdatesResponse {
     msgs: ILectureMessage[];
-    lastid: number;
     lectureEnding: 1 | 5 | 100;
     lectureId: number;
     lecturers: ILecturePerson[];

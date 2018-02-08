@@ -117,7 +117,7 @@ class QstController implements IController {
             {
                 docId: this.lctrl.viewctrl.docId,
                 parId: parId,
-                showAsk: this.lctrl.viewctrl.inLecture,
+                showAsk: this.lctrl.lectureSettings.inLecture,
             });
         void showStatisticsDialog(result);
     }

@@ -2,10 +2,7 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {showMessageDialog} from "../../dialog";
 import {$window} from "../../ngimport";
-import {showQuestionAskDialog} from "../questionAskController";
 import {fetchAndEditQuestion, showQuestionEditDialog} from "../questionController";
-import {showStatisticsDialog} from "../showStatisticsToQuestionController";
-import {onClick} from "./eventhandlers";
 import {createNewPar, getParId, Paragraph} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
 

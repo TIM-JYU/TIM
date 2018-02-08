@@ -475,15 +475,12 @@ def show_lecture_info_given_name():
     return json_response(lecture.to_json(show_password=is_lecturer_of(lecture)))
 
 
-@lecture_routes.route('/lectureNeedsPassword')
+@lecture_routes.route('/getLectureByCode')
 def lecture_needs_password():
-    if 'lecture_id' in request.args:
-        lecture = Lecture.find_by_id(int(request.args.get('lecture_id')))
-    else:
-        lecture = Lecture.find_by_code(request.args.get('lecture_code'), int(request.args.get('doc_id')))
+    lecture = Lecture.find_by_code(request.args.get('lecture_code'), int(request.args.get('doc_id')))
     if not lecture:
-        abort(400)
-    return json_response(lecture.password != '')
+        abort(404)
+    return json_response(lecture)
 
 
 def get_lecture_users(tempdb, lecture: Lecture):

@@ -88,7 +88,7 @@
                         <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
                         <button ng-if="$ctrl.lctrl.lecture.lecture_id != lecture.lecture_id" style="margin-left: 5px;"
                                 value="Join"
-                                ng-click="$emit('joinLecture', lecture)">Join
+                                ng-click="$ctrl.lctrl.joinLecture(lecture)">Join
                         </button>
                     </li>
                     <li ng-show="$ctrl.currentLecturesList.length == 0"><p>No current lectures</p></li>

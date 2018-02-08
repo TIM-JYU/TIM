@@ -165,3 +165,22 @@ export function printJson(data: any, desc: string = "") {
 export function clone<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
 }
+
+/**
+ * Wraps the given promise so that it always gets fulfilled.
+ * Adapted from await-to-js library: https://github.com/scopsy/await-to-js
+ * @param promise Promise to wrap.
+ * @param errorExt Optional error information.
+ * @returns A promise that resolves to either a success or error.
+ */
+export function to<T, U = any>(promise: IPromise<T>,
+                               errorExt?: object): IPromise<[U, undefined] | [null, T]> {
+    return promise
+        .then<[null, T]>((data: T) => [null, data])
+        .catch<[U, undefined]>((err) => {
+            if (errorExt) {
+                Object.assign(err, errorExt);
+            }
+            return [err, undefined];
+        });
+}
