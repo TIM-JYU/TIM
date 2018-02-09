@@ -14,7 +14,7 @@ import {
     ParOrArea,
 } from "./parhelpers";
 import {markParRead, readingTypes} from "./readings";
-import {ViewCtrl} from "./viewctrl";
+import {ViewCtrl, viewCtrlDot} from "./viewctrl";
 
 export interface INoteEditorOptions {
     noteData?: {id: string};
@@ -105,9 +105,9 @@ export class NotesHandler {
                     },
                     destroyAfterSave: true,
                 },
-                "after-save": "$ctrl.handleNoteSave(saveData, extraData)",
-                "after-cancel": "$ctrl.handleNoteCancel(extraData)",
-                "after-delete": "$ctrl.handleNoteDelete(saveData, extraData)",
+                "after-save": `${viewCtrlDot("handleNoteSave")}(saveData, extraData)`,
+                "after-cancel": `${viewCtrlDot("handleNoteCancel")}(extraData)`,
+                "after-delete": `${viewCtrlDot("handleNoteDelete")}(saveData, extraData)`,
                 "preview-url": "/preview/" + this.viewctrl.docId,
                 "delete-url": "/deleteNote",
                 "initial-text-url": initUrl,

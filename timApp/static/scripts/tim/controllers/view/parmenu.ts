@@ -5,7 +5,7 @@ import {$compile, $log, $timeout, $window} from "../../ngimport";
 import {Coords, dist} from "../../utils";
 import {onClick} from "./eventhandlers";
 import {getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
-import {ViewCtrl} from "./viewctrl";
+import {ViewCtrl, viewCtrlDot} from "./viewctrl";
 
 export function closeOptionsWindow() {
     const $actionButtons = $(".actionButtons");
@@ -108,9 +108,9 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         }, true);
 
         this.viewctrl.popupMenuAttrs = {
-            actions: "$ctrl.editorFunctions",
+            actions: viewCtrlDot("editorFunctions"),
             save: true,
-            onclose: "$ctrl.optionsWindowClosed",
+            onclose: viewCtrlDot("optionsWindowClosed"),
         };
         this.updatePopupMenu();
     }

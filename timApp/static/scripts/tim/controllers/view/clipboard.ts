@@ -7,7 +7,7 @@ import {
     createNewPar, dereferencePar, getAreaDocId, getAreaId, getFirstParId, getLastParId,
     getParId, Paragraph, ParOrArea,
 } from "./parhelpers";
-import {ViewCtrl} from "./viewctrl";
+import {viewCtrlDot, ViewCtrl} from "./viewctrl";
 
 export class ClipboardHandler {
     public sc: IScope;
@@ -24,12 +24,12 @@ export class ClipboardHandler {
 
     showPasteMenu(e: Event, $parOrArea: ParOrArea, coords: Coords) {
         this.viewctrl.pasteFunctions = this.getPasteFunctions();
-        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "$ctrl.pasteFunctions", contenturl: "/clipboard", save: false});
+        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: viewCtrlDot("pasteFunctions"), contenturl: "/clipboard", save: false});
     }
 
     showMoveMenu(e: Event, $parOrArea: ParOrArea, coords: Coords) {
         this.viewctrl.pasteFunctions = this.getMoveFunctions();
-        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "$ctrl.pasteFunctions", contenturl: "/clipboard", save: false});
+        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: viewCtrlDot("pasteFunctions"), contenturl: "/clipboard", save: false});
     }
 
     pasteContentAbove(e: Event, $par: Paragraph) {

@@ -14,7 +14,7 @@ import {QuestionHandler} from "tim/controllers/view/questions";
 import {initReadings} from "tim/controllers/view/readings";
 import * as popupMenu from "tim/directives/popupMenu";
 import {timLogTime} from "tim/timTiming";
-import {applyMixins, Coords, isPageDirty, markAsUsed, markPageNotDirty} from "tim/utils";
+import {applyMixins, Coords, isPageDirty, markAsUsed, markPageNotDirty, nameofFactoryCtrl} from "tim/utils";
 import {initCssPrint} from "../../cssPrint";
 import {INameAreaOptions} from "../../directives/nameArea";
 import {IExtraData, IParResponse} from "../../edittypes";
@@ -66,6 +66,8 @@ export interface IChangeDiffResult {
 }
 
 export type DiffResult = IInsertDiffResult | IReplaceDiffResult | IDeleteDiffResult | IChangeDiffResult;
+
+export const viewCtrlDot = nameofFactoryCtrl<ViewCtrl>();
 
 export class ViewCtrl implements QuestionHandler, AreaHandler, ClipboardHandler,
     EditingHandler, NotesHandler, ParmenuHandler, RefPopupHandler, IController {

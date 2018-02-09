@@ -184,3 +184,7 @@ export function to<T, U = any>(promise: IPromise<T>,
             return [err, undefined];
         });
 }
+
+export const nameofFactory = <T>() => (name: keyof T) => name;
+
+export const nameofFactoryCtrl = <T>() => (name: keyof T, ctrl = "$ctrl") => `${ctrl}.${name}`;

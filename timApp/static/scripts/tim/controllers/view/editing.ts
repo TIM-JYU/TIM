@@ -5,14 +5,27 @@ import {IExtraData, IParResponse} from "../../edittypes";
 import {$compile, $http, $timeout, $window} from "../../ngimport";
 import {ParCompiler} from "../../services/parCompiler";
 import {onClick} from "./eventhandlers";
+import {INoteEditorOptions} from "./notes";
 import {
-    canEditPar, createNewPar, EDITOR_CLASS, EDITOR_CLASS_DOT, getElementByParId, getElementByRefId, getFirstPar,
+    canEditPar,
+    createNewPar,
+    EDITOR_CLASS,
+    EDITOR_CLASS_DOT,
+    getElementByParId,
+    getElementByRefId,
+    getFirstPar,
     getLastParId,
-    getNextPar, getParAttributes, getParId, getParIndex, getPars, getRefAttrs, isPreamble, isReference,
+    getNextPar,
+    getParAttributes,
+    getParId,
+    getParIndex,
+    getPars,
+    getRefAttrs,
+    isPreamble,
+    isReference,
     Paragraph,
 } from "./parhelpers";
-import {ViewCtrl} from "./viewctrl";
-import {INoteEditorOptions} from "./notes";
+import {ViewCtrl, viewCtrlDot} from "./viewctrl";
 
 export interface IParEditorOptions {
     forcedClasses?: string[];
@@ -221,9 +234,9 @@ export class EditingHandler {
                     {name: "markread", desc: "Mark as read"},
                 ],
             },
-            "after-save": "$ctrl.addSavedParToDom(saveData, extraData)",
-            "after-cancel": "$ctrl.handleCancel(extraData)",
-            "after-delete": "$ctrl.handleDelete(saveData, extraData)",
+            "after-save": `${viewCtrlDot("addSavedParToDom")}(saveData, extraData)`,
+            "after-cancel": `${viewCtrlDot("handleCancel")}(extraData)`,
+            "after-delete": `${viewCtrlDot("handleDelete")}(saveData, extraData)`,
             "preview-url": "/preview/" + this.viewctrl.docId,
             "delete-url": "/deleteParagraph/" + this.viewctrl.docId,
             "unread-url": "/unread/" + this.viewctrl.docId,
@@ -507,7 +520,7 @@ export class EditingHandler {
     }
 
     showAddParagraphMenu(e: Event, $parOrArea: JQuery, coords: Coords) {
-        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: "$ctrl.addParagraphFunctions", save: false});
+        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: viewCtrlDot("addParagraphFunctions"), save: false});
     }
 
     getAddParagraphFunctions() {
