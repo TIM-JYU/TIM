@@ -11,7 +11,7 @@ export class QuestionHandler {
     public noQuestionAutoNumbering: boolean;
     public viewctrl: ViewCtrl;
 
-    public initQuestions(sc: IScope, view: ViewCtrl): void {
+    constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
         if (view.lectureMode) {
@@ -30,7 +30,7 @@ export class QuestionHandler {
         const result = await showQuestionEditDialog({par_id_next: parNextId, qst: true, docId: this.viewctrl.docId});
         const $newpar = createNewPar();
         $par.before($newpar);
-        this.viewctrl.addSavedParToDom(result.data, {par: getParId($newpar)!});
+        this.viewctrl.editingHandler.addSavedParToDom(result.data, {par: getParId($newpar)!});
     }
 
     async editQst(e: Event, $par: Paragraph) {
@@ -41,9 +41,9 @@ export class QuestionHandler {
         }
         const result = await fetchAndEditQuestion(this.viewctrl.docId, parId);
         if (result.deleted) {
-            this.viewctrl.handleDelete(result.data, {par: parId});
+            this.viewctrl.editingHandler.handleDelete(result.data, {par: parId});
         } else {
-            this.viewctrl.addSavedParToDom(result.data, {par: parId});
+            this.viewctrl.editingHandler.addSavedParToDom(result.data, {par: parId});
         }
     }
 
@@ -58,7 +58,7 @@ export class QuestionHandler {
         const result = await showQuestionEditDialog({par_id_next: parNextId, qst: false, docId: this.viewctrl.docId});
         const $newpar = createNewPar();
         $par.after($newpar);
-        this.viewctrl.addSavedParToDom(result.data, {par: getParId($newpar)!});
+        this.viewctrl.editingHandler.addSavedParToDom(result.data, {par: getParId($newpar)!});
     }
 
     processQuestions() {

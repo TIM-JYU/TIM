@@ -5,7 +5,8 @@ import {$compile, $log, $timeout, $window} from "../../ngimport";
 import {Coords, dist} from "../../utils";
 import {onClick} from "./eventhandlers";
 import {getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
-import {ViewCtrl, viewCtrlDot} from "./viewctrl";
+import {ViewCtrl} from "./viewctrl";
+import {getEmptyCoords, parMenuDot, viewCtrlDot} from "./viewutils";
 
 export function closeOptionsWindow() {
     const $actionButtons = $(".actionButtons");
@@ -37,7 +38,7 @@ export class ParmenuHandler {
     public lastclicktime: number;
     public lastclickplace: Coords;
 
-    initParMenu(sc: IScope, view: ViewCtrl) {
+    constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
         onClick(".paragraphs .parContent", ($this, e) => {
@@ -61,9 +62,9 @@ export class ParmenuHandler {
             }
 
             if (this.viewctrl.selection.start != null) {
-                this.viewctrl.extendSelection($par, true);
+                this.viewctrl.editingHandler.extendSelection($par, true);
             } else {
-                const offset = $par.offset() || {left: 0, top: 0};
+                const offset = $par.offset() || getEmptyCoords();
                 const coords = {left: e.pageX - offset.left, top: e.pageY - offset.top};
                 const toggle1 = $par.find(".actionButtons").length === 0;
                 const toggle2 = $par.hasClass("lightselect");
@@ -78,7 +79,7 @@ export class ParmenuHandler {
         }, true);
 
         this.viewctrl.defaultAction = {
-            func: (e: Event, $par: Paragraph) => this.showOptionsWindow(e, $par, {left: 0, top: 0}),
+            func: (e: Event, $par: Paragraph) => this.showOptionsWindow(e, $par, getEmptyCoords()),
             desc: "Show options window",
             show: true,
         };
@@ -95,14 +96,14 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
                 return;
             }
             if (this.viewctrl.selection.start != null) {
-                this.viewctrl.extendSelection($par);
+                this.viewctrl.editingHandler.extendSelection($par);
             }
-            const offset = $par.offset() || {left: 0, top: 0};
+            const offset = $par.offset() || getEmptyCoords();
             const coords = {left: e.pageX - offset.left, top: e.pageY - offset.top};
 
             // We need the timeout so we don't trigger the ng-clicks on the buttons
             $timeout(() => {
-                this.viewctrl.showOptionsWindow(e, $par, coords);
+                this.showOptionsWindow(e, $par, coords);
             }, 80);
             return false;
         }, true);
@@ -110,7 +111,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         this.viewctrl.popupMenuAttrs = {
             actions: viewCtrlDot("editorFunctions"),
             save: true,
-            onclose: viewCtrlDot("optionsWindowClosed"),
+            onclose: parMenuDot("optionsWindowClosed"),
         };
         this.updatePopupMenu();
     }
@@ -119,8 +120,8 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
                   $pars: Paragraph,
                   coords: Coords,
                   attrs: IPopupMenuAttrs,
-                  $rootElement: JQuery,
-                  editcontext: string) {
+                  $rootElement?: JQuery,
+                  editcontext?: string) {
         if (!$rootElement) {
             $rootElement = $pars;
         }
@@ -128,7 +129,9 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         const $popup = $("<popup-menu>");
         $popup.attr("tim-draggable-fixed", "");
         $popup.attr("srcid", selectionToStr($pars));
-        $popup.attr("editcontext", editcontext);
+        if (editcontext) {
+            $popup.attr("editcontext", editcontext);
+        }
         $popup.attr("actions", attrs.actions);
         if (attrs.editbutton) {
             $popup.attr("editbutton", attrs.editbutton.toString());
@@ -198,11 +201,11 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         }
     }
 
-    showOptionsWindow(e: Event, $par: Paragraph, coords: Coords) {
-        this.viewctrl.updateClipboardStatus();
-        this.viewctrl.updatePopupMenu($par);
+    showOptionsWindow(e: Event, $par: Paragraph, coords?: Coords) {
+        this.viewctrl.clipboardHandler.updateClipboardStatus();
+        this.updatePopupMenu($par);
         $par.children(".editline").addClass("menuopen");
-        this.viewctrl.showPopupMenu(e, $par, coords, this.viewctrl.popupMenuAttrs, undefined, "par");
+        this.showPopupMenu(e, $par, coords || getEmptyCoords(), this.viewctrl.popupMenuAttrs, undefined, "par");
     }
 
     optionsWindowClosed() {
@@ -210,7 +213,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
     }
 
     updatePopupMenu($par?: Paragraph) {
-        this.viewctrl.editorFunctions = this.viewctrl.getEditorFunctions($par);
+        this.viewctrl.editorFunctions = this.viewctrl.editingHandler.getEditorFunctions($par);
         if (this.viewctrl.selection.start != null && $window.editMode) {
             this.viewctrl.popupMenuAttrs.save = false;
             this.viewctrl.popupMenuAttrs.editbutton = false;

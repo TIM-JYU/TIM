@@ -8,6 +8,7 @@ import {onClick, onMouseOverOut} from "./eventhandlers";
 import {Area, getArea, getFirstParId, getLastParId, Paragraph, Paragraphs} from "./parhelpers";
 import {closeOptionsWindow} from "./parmenu";
 import {ViewCtrl} from "./viewctrl";
+import {getEmptyCoords} from "./viewutils";
 
 markAsUsed(nameArea);
 
@@ -25,7 +26,7 @@ export class AreaHandler {
     public sc: IScope;
     public viewctrl: ViewCtrl;
 
-    initAreas(sc: IScope, view: ViewCtrl) {
+    constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
 
@@ -101,7 +102,7 @@ export class AreaHandler {
         }
         const $pars = getArea(areaName).find(".par");
         const $areaPart = $this.parent().filter(".area");
-        const offset = $areaPart.offset() || {left: 0, top: 0};
+        const offset = $areaPart.offset() || getEmptyCoords();
         const coords = {left: e.pageX - offset.left, top: e.pageY - offset.top};
 
         this.selectedAreaName = areaName;
@@ -114,12 +115,12 @@ export class AreaHandler {
     }
 
     showAreaOptionsWindow(e: Event, $area: Area, $pars: Paragraphs, coords: Coords) {
-        this.viewctrl.updateClipboardStatus();
-        this.viewctrl.showPopupMenu(e, $pars, coords, this.viewctrl.popupMenuAttrs, $area, "area");
+        this.viewctrl.clipboardHandler.updateClipboardStatus();
+        this.viewctrl.parmenuHandler.showPopupMenu(e, $pars, coords, this.viewctrl.popupMenuAttrs, $area, "area");
     }
 
     startArea(e: Event, $par: Paragraph) {
-        this.viewctrl.extendSelection($par);
+        this.viewctrl.editingHandler.extendSelection($par);
     }
 
     async nameArea(e: Event, $pars: Paragraphs) {
@@ -146,7 +147,7 @@ export class AreaHandler {
         }
     }
 
-    cancelArea(e: Event, $par: Paragraph) {
+    cancelArea() {
         this.viewctrl.selection.start = null;
         this.viewctrl.selection.end = null;
     }

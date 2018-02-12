@@ -138,14 +138,6 @@ export function setsetting(setting: string, value: string) {
     });
 }
 
-export function applyMixins(derivedCtor: any, baseCtors: any[]) {
-    baseCtors.forEach((baseCtor) => {
-        Object.getOwnPropertyNames(baseCtor.prototype).forEach((name) => {
-            derivedCtor.prototype[name] = baseCtor.prototype[name];
-        });
-    });
-}
-
 /**
  * Marks seemingly unused imports as used so that TypeScript compiler won't optimize them out when compiling.
  *
@@ -188,3 +180,7 @@ export function to<T, U = any>(promise: IPromise<T>,
 export const nameofFactory = <T>() => (name: keyof T) => name;
 
 export const nameofFactoryCtrl = <T>() => (name: keyof T, ctrl = "$ctrl") => `${ctrl}.${name}`;
+
+export const nameofFactoryCtrl2 = <T, U extends keyof T>(name: U) => (name2: keyof T[U], ctrl = "$ctrl") => `${ctrl}.${name}.${name2}`;
+
+export const empty = () => {};

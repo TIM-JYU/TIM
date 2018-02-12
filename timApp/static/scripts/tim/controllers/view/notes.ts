@@ -14,7 +14,8 @@ import {
     ParOrArea,
 } from "./parhelpers";
 import {markParRead, readingTypes} from "./readings";
-import {ViewCtrl, viewCtrlDot} from "./viewctrl";
+import {ViewCtrl} from "./viewctrl";
+import {notesDot} from "./viewutils";
 
 export interface INoteEditorOptions {
     noteData?: {id: string};
@@ -27,7 +28,7 @@ export class NotesHandler {
     public noteBadgePar: JQuery;
     public noteBadge: HTMLElement;
 
-    initNotes(sc: IScope, view: ViewCtrl) {
+    constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
         onClick(".note", ($this, e) => {
@@ -105,16 +106,16 @@ export class NotesHandler {
                     },
                     destroyAfterSave: true,
                 },
-                "after-save": `${viewCtrlDot("handleNoteSave")}(saveData, extraData)`,
-                "after-cancel": `${viewCtrlDot("handleNoteCancel")}(extraData)`,
-                "after-delete": `${viewCtrlDot("handleNoteDelete")}(saveData, extraData)`,
+                "after-save": `${notesDot("handleNoteSave")}(saveData, extraData)`,
+                "after-cancel": `${notesDot("handleNoteCancel")}(extraData)`,
+                "after-delete": `${notesDot("handleNoteDelete")}(saveData, extraData)`,
                 "preview-url": "/preview/" + this.viewctrl.docId,
                 "delete-url": "/deleteNote",
                 "initial-text-url": initUrl,
                 "unread-url": "/unread/" + this.viewctrl.docId,
             };
 
-        this.viewctrl.toggleEditor($par, options, attrs, caption, "pareditor");
+        this.viewctrl.editingHandler.toggleEditor($par, options, attrs, caption, "pareditor");
     }
 
     handleNoteCancel() {
@@ -122,11 +123,11 @@ export class NotesHandler {
     }
 
     handleNoteDelete(saveData: IParResponse, extraData: IExtraData) {
-        this.viewctrl.addSavedParToDom(saveData, extraData);
+        this.viewctrl.editingHandler.addSavedParToDom(saveData, extraData);
     }
 
     handleNoteSave(saveData: IParResponse, extraData: IExtraData) {
-        this.viewctrl.addSavedParToDom(saveData, extraData);
+        this.viewctrl.editingHandler.addSavedParToDom(saveData, extraData);
     }
 
     showNoteWindow(e: Event, $par: Paragraph) {

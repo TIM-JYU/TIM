@@ -5,6 +5,7 @@ import {Coords, markAsUsed} from "tim/utils";
 import {$compile} from "../../ngimport";
 import {onMouseOut, onMouseOver} from "./eventhandlers";
 import {ViewCtrl} from "./viewctrl";
+import {getEmptyCoords} from "./viewutils";
 
 markAsUsed(refPopup);
 
@@ -20,7 +21,7 @@ export class RefPopupHandler {
     public overPopup: boolean;
     private popupElement?: JQLite;
 
-    initRefPopup(sc: IScope, view: ViewCtrl) {
+    constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
         onMouseOver(".parlink", ($this, e) => {
@@ -30,7 +31,7 @@ export class RefPopupHandler {
             this.overReflink = true;
 
             const $par = $this.parents(".par").find(".parContent");
-            const offset = $par.offset() || {left: 0, top: 0};
+            const offset = $par.offset() || getEmptyCoords();
             const coords = {left: e.pageX - offset.left + 10, top: e.pageY - offset.top + 10};
 
             const docid = $this.attr("data-docid");

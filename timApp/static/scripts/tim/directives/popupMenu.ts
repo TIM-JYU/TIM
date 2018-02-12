@@ -2,8 +2,8 @@ import {IController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {watchEditMode} from "tim/editmode";
-import {MenuFunctionCollection, MenuFunctionEntry} from "../controllers/view/IViewCtrl";
 import {ViewCtrl} from "../controllers/view/viewctrl";
+import {MenuFunctionCollection, MenuFunctionEntry} from "../controllers/view/viewutils";
 import {$http, $window} from "../ngimport";
 
 type EditMode = "par" | "area";
@@ -32,7 +32,6 @@ class PopupMenuController implements IController {
     }
 
     $onInit() {
-        console.log(this.actions);
         this.$pars = $(this.srcid);
         this.editbutton = false;
         this.areaEditButton = false;

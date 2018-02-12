@@ -4,6 +4,7 @@ import {Coords, markPageDirty} from "tim/utils";
 import {IExtraData, IParResponse} from "../../edittypes";
 import {$compile, $http, $timeout, $window} from "../../ngimport";
 import {ParCompiler} from "../../services/parCompiler";
+import {empty} from "../../utils";
 import {onClick} from "./eventhandlers";
 import {INoteEditorOptions} from "./notes";
 import {
@@ -25,7 +26,8 @@ import {
     isReference,
     Paragraph,
 } from "./parhelpers";
-import {ViewCtrl, viewCtrlDot} from "./viewctrl";
+import {ViewCtrl} from "./viewctrl";
+import {editingDot, viewCtrlDot} from "./viewutils";
 
 export interface IParEditorOptions {
     forcedClasses?: string[];
@@ -104,7 +106,7 @@ export class EditingHandler {
     public viewctrl: ViewCtrl;
     public sc: IScope;
 
-    initEditing(sc: IScope, view: ViewCtrl) {
+    constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
         this.viewctrl.editing = false;
@@ -153,12 +155,12 @@ export class EditingHandler {
 
             onClick(".pasteBottom", ($this, e) => {
                 $(".actionButtons").remove();
-                this.viewctrl.pasteAbove(e, $(".addBottomContainer"), false);
+                this.viewctrl.clipboardHandler.pasteAbove(e, $(".addBottomContainer"), false);
             });
 
             onClick(".pasteRefBottom", ($this, e) => {
                 $(".actionButtons").remove();
-                this.viewctrl.pasteAbove(e, $(".addBottomContainer"), true);
+                this.viewctrl.clipboardHandler.pasteAbove(e, $(".addBottomContainer"), true);
             });
         }
     }
@@ -234,9 +236,9 @@ export class EditingHandler {
                     {name: "markread", desc: "Mark as read"},
                 ],
             },
-            "after-save": `${viewCtrlDot("addSavedParToDom")}(saveData, extraData)`,
-            "after-cancel": `${viewCtrlDot("handleCancel")}(extraData)`,
-            "after-delete": `${viewCtrlDot("handleDelete")}(saveData, extraData)`,
+            "after-save": `${editingDot("addSavedParToDom")}(saveData, extraData)`,
+            "after-cancel": `${editingDot("handleCancel")}(extraData)`,
+            "after-delete": `${editingDot("handleDelete")}(saveData, extraData)`,
             "preview-url": "/preview/" + this.viewctrl.docId,
             "delete-url": "/deleteParagraph/" + this.viewctrl.docId,
             "unread-url": "/unread/" + this.viewctrl.docId,
@@ -329,7 +331,7 @@ export class EditingHandler {
             $(pars).addClass("selected");
             this.toggleParEditor($(pars), {area: true});
             $(pars).removeClass("selected");
-            this.viewctrl.cancelArea();
+            this.viewctrl.areaHandler.cancelArea();
         }
     }
 
@@ -362,7 +364,7 @@ export class EditingHandler {
         }
         $par.remove();
         this.viewctrl.editing = false;
-        this.viewctrl.cancelArea();
+        this.viewctrl.areaHandler.cancelArea();
         this.viewctrl.beginUpdate();
     }
 
@@ -416,7 +418,7 @@ export class EditingHandler {
         ParCompiler.processAllMathDelayed($newPars);
         this.viewctrl.docVersion = data.version;
         this.viewctrl.editing = false;
-        this.viewctrl.cancelArea();
+        this.viewctrl.areaHandler.cancelArea();
         this.removeDefaultPars();
         markPageDirty();
         this.viewctrl.beginUpdate();
@@ -428,12 +430,12 @@ export class EditingHandler {
 
     closeAndSave(e: Event, $par: Paragraph) {
         $("pareditor").isolateScope<any>().saveClicked();
-        this.viewctrl.showOptionsWindow(e, $par);
+        this.viewctrl.parmenuHandler.showOptionsWindow(e, $par);
     }
 
     closeWithoutSaving(e: Event, $par: Paragraph) {
         $("pareditor").isolateScope<any>().cancelClicked();
-        this.viewctrl.showOptionsWindow(e, $par);
+        this.viewctrl.parmenuHandler.showOptionsWindow(e, $par);
     }
 
     getEditorFunctions($par?: Paragraph) {
@@ -443,7 +445,7 @@ export class EditingHandler {
                 {func: () => this.goToEditor(), desc: "Go to editor", show: true},
                 {func: (e: Event, par: Paragraph) => this.closeAndSave(e, par), desc: "Close editor and save", show: true},
                 {func: (e: Event, par: Paragraph) => this.closeWithoutSaving(e, par), desc: "Close editor and cancel", show: true},
-                {func: () => this.viewctrl.nothing(), desc: "Close menu", show: true},
+                {func: empty, desc: "Close menu", show: true},
             ];
         } else if (this.viewctrl.selection.start != null && $window.editMode) {
             return [
@@ -452,40 +454,40 @@ export class EditingHandler {
                     desc: "Edit area",
                     show: true,
                 },
-                {func: (e: Event, par: Paragraph) => this.viewctrl.nameArea(e, par), desc: "Name area", show: true},
-                {func: (e: Event, par: Paragraph) => this.viewctrl.cutArea(e, par), desc: "Cut area", show: parEditable},
-                {func: (e: Event, par: Paragraph) => this.viewctrl.copyArea(e, par), desc: "Copy area", show: true},
-                {func: (e: Event, par: Paragraph) => this.viewctrl.cancelArea(), desc: "Cancel area", show: true},
-                {func: (e: Event, par: Paragraph) => this.viewctrl.nothing(), desc: "Close menu", show: true},
+                {func: (e: Event, par: Paragraph) => this.viewctrl.areaHandler.nameArea(e, par), desc: "Name area", show: true},
+                {func: (e: Event, par: Paragraph) => this.viewctrl.clipboardHandler.cutArea(e, par), desc: "Cut area", show: parEditable},
+                {func: (e: Event, par: Paragraph) => this.viewctrl.clipboardHandler.copyArea(e, par), desc: "Copy area", show: true},
+                {func: (e: Event, par: Paragraph) => this.viewctrl.areaHandler.cancelArea(), desc: "Cancel area", show: true},
+                {func: empty, desc: "Close menu", show: true},
             ];
         } else {
             return [
                 {
-                    func: (e: Event, par: Paragraph) => this.viewctrl.showNoteWindow(e, par),
+                    func: (e: Event, par: Paragraph) => this.viewctrl.notesHandler.showNoteWindow(e, par),
                     desc: "Comment/note",
                     show: this.viewctrl.item.rights.can_comment,
                 },
                 {func: (e: Event, par: Paragraph) => this.showEditWindow(e, par), desc: "Edit", show: parEditable},
                 {
-                    func: (e: Event, par: Paragraph) => this.viewctrl.cutPar(e, par),
+                    func: (e: Event, par: Paragraph) => this.viewctrl.clipboardHandler.cutPar(e, par),
                     desc: "Cut paragraph",
                     show: $window.editMode === "par" && parEditable,
                 },
                 {
-                    func: (e: Event, par: Paragraph) => this.viewctrl.copyPar(e, par),
+                    func: (e: Event, par: Paragraph) => this.viewctrl.clipboardHandler.copyPar(e, par),
                     desc: "Copy paragraph",
                     show: $window.editMode !== "area",
                 },
                 //{func: (e, par) => this.cutArea(e, par), desc: 'Cut area', show: $window.editMode === 'area'},
                 //{func: (e, par) => this.copyArea(e, par), desc: 'Copy area', show: $window.editMode === 'area'},
                 {
-                    func: (e: Event, par: Paragraph) => this.viewctrl.showPasteMenu(e, par),
+                    func: (e: Event, par: Paragraph) => this.viewctrl.clipboardHandler.showPasteMenu(e, par),
                     desc: "Paste...",
                     show: $window.editMode && (this.viewctrl.allowPasteRef || this.viewctrl.allowPasteContent),
                 },
-                {func: (e: Event, par: Paragraph) => this.viewctrl.showMoveMenu(e, par), desc: "Move here...", show: $window.allowMove},
+                {func: (e: Event, par: Paragraph) => this.viewctrl.clipboardHandler.showMoveMenu(e, par), desc: "Move here...", show: $window.allowMove},
                 {
-                    func: (e: Event, par: Paragraph) => this.viewctrl.removeAreaMarking(e, par),
+                    func: (e: Event, par: Paragraph) => this.viewctrl.areaHandler.removeAreaMarking(e, par),
                     desc: "Remove area marking",
                     show: $window.editMode === "area",
                 },
@@ -495,39 +497,39 @@ export class EditingHandler {
                     show: this.viewctrl.item.rights.editable,
                 },
                 {
-                    func: (e: Event, par: Paragraph) => this.viewctrl.addQuestionQst(e, par),
+                    func: (e: Event, par: Paragraph) => this.viewctrl.questionHandler.addQuestionQst(e, par),
                     desc: "Add question above",
                     show: this.viewctrl.lectureMode && this.viewctrl.item.rights.editable,
                 },
                 {
-                    func: (e: Event, par: Paragraph) => this.viewctrl.editQst(e, par),
+                    func: (e: Event, par: Paragraph) => this.viewctrl.questionHandler.editQst(e, par),
                     desc: "Edit question",
                     show: this.viewctrl.lectureMode && parEditable,
                 },
                 {
-                    func: (e: Event, par: Paragraph) => this.viewctrl.addQuestion(e, par),
+                    func: (e: Event, par: Paragraph) => this.viewctrl.questionHandler.addQuestion(e, par),
                     desc: "Create lecture question",
                     show: this.viewctrl.lectureMode && this.viewctrl.item.rights.editable,
                 },
                 {
-                    func: (e: Event, par: Paragraph) => this.viewctrl.startArea(e, par),
+                    func: (e: Event, par: Paragraph) => this.viewctrl.areaHandler.startArea(e, par),
                     desc: "Start selecting area",
                     show: $window.editMode === "par" && this.viewctrl.selection.start == null,
                 },
-                {func: (e: Event, par: Paragraph) => this.viewctrl.nothing(), desc: "Close menu", show: true},
+                {func: empty, desc: "Close menu", show: true},
             ];
         }
     }
 
     showAddParagraphMenu(e: Event, $parOrArea: JQuery, coords: Coords) {
-        this.viewctrl.showPopupMenu(e, $parOrArea, coords, {actions: viewCtrlDot("addParagraphFunctions"), save: false});
+        this.viewctrl.parmenuHandler.showPopupMenu(e, $parOrArea, coords, {actions: viewCtrlDot("addParagraphFunctions"), save: false});
     }
 
     getAddParagraphFunctions() {
         return [
             {func: (e: Event, $par: Paragraph) => this.showAddParagraphAbove(e, $par), desc: "Above", show: true},
             {func: (e: Event, $par: Paragraph) => this.showAddParagraphBelow(e, $par), desc: "Below", show: true},
-            {func: (e: Event, $par: Paragraph) => this.viewctrl.nothing(), desc: "Cancel", show: true},
+            {func: empty, desc: "Cancel", show: true},
         ];
     }
 
@@ -535,7 +537,7 @@ export class EditingHandler {
         getElementByParId("HELP_PAR").remove();
     }
 
-    extendSelection($par: Paragraph, allowShrink: boolean) {
+    extendSelection($par: Paragraph, allowShrink = false) {
         if (this.viewctrl.selection.start == null) {
             this.viewctrl.selection.start = $par;
             this.viewctrl.selection.end = $par;

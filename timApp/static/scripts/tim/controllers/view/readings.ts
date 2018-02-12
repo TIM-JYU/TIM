@@ -1,13 +1,13 @@
+import {IPromise} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {$http, $log, $timeout, $window} from "../../ngimport";
-import {getArea, getParId, getRefAttrs, isReference} from "./parhelpers";
-import {markPageDirty} from "../../utils";
 import {Users} from "../../services/userService";
+import {markPageDirty} from "../../utils";
 import {getActiveDocument} from "./document";
 import {onClick, onMouseOverOut} from "./eventhandlers";
+import {getArea, getParId, getRefAttrs, isReference} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
-import {IPromise} from 'angular';
 
 export const readClasses = {
     1: "screen",

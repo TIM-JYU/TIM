@@ -1,6 +1,6 @@
-import {getParAttributes, getParId, getRefAttrs, Paragraph} from "./parhelpers";
-import {$window} from "../../ngimport";
 import moment from "moment";
+import {$window} from "../../ngimport";
+import {getParAttributes, getParId, getRefAttrs, Paragraph} from "./parhelpers";
 
 export class Document {
     get sections(): {[p: string]: JQuery[]} {
