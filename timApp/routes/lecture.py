@@ -743,10 +743,8 @@ def get_current_lecture_or_abort() -> Lecture:
 
 @lecture_routes.route("/askQuestion", methods=['POST'])
 def ask_question():
-    if not request.args.get('doc_id') or not \
-            (request.args.get('question_id') or request.args.get('asked_id') or request.args.get('par_id')):
+    if not (request.args.get('question_id') or request.args.get('asked_id') or request.args.get('par_id')):
         abort(400, "Bad request")
-    doc_id = int(request.args.get('doc_id'))
     question_id = None
     asked_id = None
     par_id = None
@@ -762,6 +760,9 @@ def ask_question():
     lecture_id = lecture.lecture_id
 
     if question_id or par_id:
+        doc_id = get_option(request, 'doc_id', None, cast=int)
+        if not doc_id:
+            abort(400, 'doc_id missing')
         if question_id:
             question = Question.query.get(question_id)  # Old version???
             question_json_str = question.questionjson
@@ -779,9 +780,10 @@ def ask_question():
         # Set points and expl as None because they're already contained in the JSON.
         # Only if /updatePoints is called, they are set.
         question = AskedQuestion(lecture_id=lecture_id, doc_id=doc_id, asked_time=asked_time, points=None, expl=None,
-                           asked_json=asked_json)
+                                 asked_json=asked_json, par_id=par_id)
         db.session.add(question)
         db.session.commit()
+        asked_id = question.asked_id
     elif asked_id:
         question = get_asked_question(asked_id)
         if not question:
@@ -950,7 +952,7 @@ def get_lecture_answers():
         return abort(400, 'No running question')
     lecture = Lecture.query.get(rq.lecture_id)
     question = get_asked_question(asked_id)
-    verify_ownership(lecture.doc_id)
+    verify_is_lecturer(lecture)
     tempdb = get_tempdb()
 
     step = 0

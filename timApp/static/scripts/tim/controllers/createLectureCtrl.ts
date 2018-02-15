@@ -48,8 +48,10 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
         this.errorMessage = "";
         this.lectureCode = "";
         this.password = "";
-        this.options = {max_students: 100, poll_interval: 4, poll_interval_t: 1,
-                          long_poll: false, long_poll_t: false  };
+        this.options = {
+            max_students: 100, poll_interval: 4, poll_interval_t: 1,
+            long_poll: false, long_poll_t: false
+        };
 
         this.dateTimeOptions = {
             format: "D.M.YYYY HH:mm:ss",
@@ -58,6 +60,10 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
         this.startTime = moment();
         this.earlyJoining = true;
         this.enableDue2();
+    }
+
+    public getTitle() {
+        return "Create lecture";
     }
 
     setLecture(data: ILectureFormParams) {

@@ -38,7 +38,6 @@ export let currentQuestion: AnswerToQuestionController | undefined;
 export class AnswerToQuestionController extends DialogController<{params: IAnswerQuestionParams}, IAnswerQuestionResult, "timAnswerQuestion"> {
     private barFilled: number;
     private progressText: string;
-    private timeLeft: number;
     private isLecturer = false;
     private askedTime: Moment;
     private endTime?: Moment;
@@ -47,7 +46,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     private buttonText: string;
     private result: boolean;
     private question: IAskedQuestion;
-    private clockOffset = moment.duration(0);
+    private clockOffset = moment.duration(0, "milliseconds");
     private preview: IPreviewParams;
     private questionEnded: boolean;
     private answer: AnswerTable;
@@ -81,22 +80,27 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
             this.questionEnded = true;
             this.answered = true;
         }
-        this.askedTime = this.question.asked_time.subtract(this.clockOffset);
+        this.askedTime = this.question.asked_time.clone().subtract(this.clockOffset);
 
-        // clockOffset usually in range [-100, -25] (milliseconds), so it's almost meaningless?
-        this.endTime = this.askedTime.add(this.question.json.json.timeLimit!, "seconds").subtract(this.clockOffset);
+        // clockOffset usually in range [-100, -25] (milliseconds), so it's almost meaningless? Using 0 for now.
+        if (this.question.json.json.timeLimit) {
+            this.endTime = this.askedTime.clone().add(this.question.json.json.timeLimit, "seconds").subtract(this.clockOffset);
+        }
         this.isLecturer = this.resolve.params.isLecturer;
         this.buttonText = "Answer"; // TODO: Make configurable
 
         if (!this.result) {
-            const now = moment();
-            this.timeLeft = this.endTime.diff(now);
             this.barFilled = 0;
-            if (this.endTime && this.question.json.json.timeLimit) {
+            if (this.endTime) {
                 this.progressText = "";
+                this.progressMax = this.endTime.diff(this.askedTime);
                 this.start(500);
             }
         }
+    }
+
+    public getTitle() {
+        return "Answer question";
     }
 
     private $onDestroy() {
@@ -187,11 +191,10 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
      * Use time parameter to either close question/points window or extend question end time.
      * If time is null, question/points is closed.
      * Else time is set as questions new end time.
-     * Event: update_end_time
      */
     public updateEndTime(time: Moment | null) {
         if (time != null) {
-            this.endTime = time.subtract(this.clockOffset);
+            this.endTime = time.clone().subtract(this.clockOffset);
             this.progressMax = this.endTime.diff(this.askedTime);
         } else {
             if (!this.isLecturer) {
@@ -200,33 +203,35 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         }
     }
 
-    private start(timeBetween: number) {
-        void this.updateBar(timeBetween);
+    private start(updateInterval: number) {
+        void this.updateBar(updateInterval);
     }
 
     /**
      * Updates progressbar and time left text
      */
-    private async updateBar(timeBetween: number) {
+    private async updateBar(updateInterval: number) {
         // TODO: Problem with inactive tab.
-        const now = moment();
         if (!this.endTime) {
             return;
         }
         while (true) {
-            this.timeLeft = this.endTime.diff(now);
-            this.barFilled = (this.endTime.diff(this.askedTime)) - this.timeLeft;
-            this.progressText = Math.max(this.timeLeft / 1000, 0).toFixed(0) + " s";
+            const now = moment();
+            const timeLeft = this.endTime.diff(now);
+            this.barFilled = (this.endTime.diff(this.askedTime)) - timeLeft;
+            this.progressText = Math.max(timeLeft / 1000, 0).toFixed(0) + " s";
             if (this.barFilled >= this.progressMax) {
                 if (!this.isLecturer && !this.questionEnded) {
-                    this.answerToQuestion();
+                    await this.answerToQuestion();
                 } else {
                     this.progressText = "Time's up";
                 }
                 this.questionEnded = true;
+            }
+            await $timeout(updateInterval);
+            if (this.questionEnded) {
                 return;
             }
-            await $timeout(timeBetween);
         }
     }
 
@@ -256,6 +261,7 @@ registerDialogComponent("timAnswerQuestion",
     <uib-progressbar
       max="$ctrl.progressMax"
       value="$ctrl.barFilled">
+      {{ $ctrl.progressText }}
 </uib-progressbar>
     <div class="buttons">
         <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.edit()">
@@ -267,8 +273,9 @@ registerDialogComponent("timAnswerQuestion",
         <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.reAsk()">
             Reask
         </button>
-        <button ng-show="!$ctrl.questionEnded && !$ctrl.answered && !$ctrl.result" class="answerButton timButton"
-                ng-click="$ctrl.answer()">{{$ctrl.buttonText}}
+        <button ng-show="!$ctrl.questionEnded && !$ctrl.answered && !$ctrl.result && $ctrl.answer"
+                class="answerButton timButton"
+                ng-click="$ctrl.answerToQuestion()">{{$ctrl.buttonText}}
         </button>
 
         <br/>

@@ -1,8 +1,7 @@
 import angular, {IPromise} from "angular";
-import $ from "jquery";
 import moment from "moment";
 import sessionsettings from "tim/session";
-import {$log, $timeout} from "./ngimport";
+import {$http, $timeout} from "./ngimport";
 
 export function checkBindings(controller: any, bindings: {[name: string]: string}) {
     for (const k of Object.keys(bindings)) {
@@ -125,17 +124,12 @@ export function GetURLParameter(sParam: string): string | null {
     return null;
 }
 
-export function setsetting(setting: string, value: string) {
-    $.ajax({
-        type: "POST",
+export async function setSetting(setting: "editortab" | "clock_offset" | "timelimit", value: string) {
+    await $http({
+        method: "POST",
         url: "/sessionsetting/" + setting + "/" + value,
-        success(data) {
-            (sessionsettings as any)[setting] = value; // TODO: get rid of "any"
-        },
-        error() {
-            $log.info("Could not set setting.");
-        },
     });
+    sessionsettings[setting] = value;
 }
 
 /**
@@ -175,6 +169,12 @@ export function to<T, U = any>(promise: IPromise<T>,
             }
             return [err, undefined];
         });
+}
+
+export function assertNotNull(obj: any) {
+    if (obj == null) {
+        throw new Error("object was unexpectedly null or undefined");
+    }
 }
 
 export const nameofFactory = <T>() => (name: keyof T) => name;

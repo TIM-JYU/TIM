@@ -29,7 +29,7 @@ export interface INameAreaOptions {
 class NameAreaController extends DialogController<{}, {areaName: string, options: INameAreaOptions}, "timNameArea"> {
     private areaName: string;
     private options: INameAreaOptions;
-    private datePickerOptions: { format: string; showTodayButton: boolean };
+    private datePickerOptions: {format: string; showTodayButton: boolean};
 
     constructor() {
         super();
@@ -43,6 +43,10 @@ class NameAreaController extends DialogController<{}, {areaName: string, options
             format: "D.M.YYYY HH:mm:ss",
             showTodayButton: true,
         };
+    }
+
+    public getTitle() {
+        return "Name area";
     }
 
     private $onInit() {

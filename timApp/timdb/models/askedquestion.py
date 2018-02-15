@@ -30,7 +30,7 @@ class AskedQuestion(db.Model):
             aj['points'] = self.points
         return {
             'asked_id': self.asked_id,
-            'asked_json': aj,
+            'json': aj,
             'asked_time': self.asked_time,
             'doc_id': self.doc_id,
             'lecture_id': self.lecture_id,

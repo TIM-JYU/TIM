@@ -7,7 +7,7 @@ import {timApp} from "tim/app";
 import * as draggable from "tim/directives/draggable";
 import {setEditorScope} from "tim/editorScope";
 import sessionsettings from "tim/session";
-import {markAsUsed, setsetting} from "tim/utils";
+import {markAsUsed, setSetting} from "tim/utils";
 import {IAceEditor} from "../ace-types";
 import {getActiveDocument} from "../controllers/view/document";
 import {isSettings} from "../controllers/view/parhelpers";
@@ -1148,7 +1148,7 @@ or newer one that is more familiar to write in YAML:
 
     tabClicked($event: Event, area: string) {
         const active = $($event.target).parent();
-        setsetting("editortab", area);
+        setSetting("editortab", area);
         this.setActiveTab(active, area);
         this.wrapFn();
     }

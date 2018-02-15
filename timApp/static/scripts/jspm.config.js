@@ -55,6 +55,7 @@ SystemJS.config({
       "es7",
       "scripthost"
     ],
+    "downlevelIteration": true,
     "importHelpers": true
   },
   packages: {

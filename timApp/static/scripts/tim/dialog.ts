@@ -9,13 +9,18 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
     public readonly component: ComponentName;
     public readonly ret: Ret;
     public readonly resolve: T;
-    protected readonly modalInstance: angular.ui.bootstrap.IModalInstanceService;
+    protected closed = false;
+    private readonly modalInstance: angular.ui.bootstrap.IModalInstanceService;
+
+    abstract getTitle(): string;
 
     protected close(returnValue: Ret) {
+        this.closed = true;
         this.modalInstance.close(returnValue);
     }
 
     protected dismiss() {
+        this.closed = true;
         this.modalInstance.dismiss();
     }
 }
@@ -23,6 +28,10 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
 export type Dialog<T extends DialogController<T["resolve"], T["ret"], T["component"]>> = DialogController<T["resolve"], T["ret"], T["component"]>;
 
 class MessageDialogController extends DialogController<{message: string}, {}, "timMessageDialog"> {
+    public getTitle() {
+        return "Message";
+    }
+
     public ok() {
         this.close({});
     }

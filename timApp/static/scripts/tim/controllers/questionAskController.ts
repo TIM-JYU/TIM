@@ -4,7 +4,10 @@ import {DialogController, registerDialogComponent, showDialog, showMessageDialog
 import {IPreviewParams, makePreview} from "../directives/dynamicAnswerSheet";
 import {IAskedQuestion, IUniqueParId} from "../lecturetypes";
 import {$http} from "../ngimport";
-import {deleteQuestionWithConfirm, fetchAndEditQuestion, fetchQuestion} from "./questionController";
+import {
+    deleteQuestionWithConfirm, fetchAndEditQuestion, fetchAskedQuestion, fetchQuestion,
+    showQuestionEditDialog,
+} from "./questionController";
 
 markAsUsed(answerSheet);
 
@@ -52,12 +55,18 @@ export async function askQuestion(p: AskParams) {
     return response.data;
 }
 
-export class QuestionPreviewController extends DialogController<{ params: QuestionPreviewParams }, IAskedQuestion, "timAskQuestion"> {
+export class QuestionPreviewController extends DialogController<{params: QuestionPreviewParams}, IAskedQuestion, "timAskQuestion"> {
     private questiondata?: IPreviewParams;
-    private showAsk: boolean;
 
     constructor() {
         super();
+    }
+
+    public getTitle() {
+        if (!this.questiondata) {
+            return "";
+        }
+        return `Question: ${this.questiondata.markup.questionTitle}`;
     }
 
     private async $onInit() {
@@ -65,16 +74,20 @@ export class QuestionPreviewController extends DialogController<{ params: Questi
             const data = await fetchQuestion(this.resolve.params.docId, this.resolve.params.parId, false);
             this.questiondata = makePreview(data.markup);
         } else {
-            // TODO
+            const data = await fetchAskedQuestion(this.resolve.params.askedId);
+            this.questiondata = makePreview(data.json.json);
         }
-        this.showAsk = this.resolve.params.showAsk;
+    }
+
+    private showAsk() {
+        return this.resolve.params.showAsk;
     }
 
     private async editQuestion() {
         if (!isReasking(this.resolve.params)) {
             await fetchAndEditQuestion(this.resolve.params.docId, this.resolve.params.parId);
         } else {
-            // TODO
+            await showQuestionEditDialog(await fetchAskedQuestion(this.resolve.params.askedId));
         }
         this.dismiss();
     }
@@ -95,6 +108,13 @@ export class QuestionPreviewController extends DialogController<{ params: Questi
             this.dismiss();
         }
     }
+
+    private getTimeLimit() {
+        if (!this.questiondata) {
+            return undefined;
+        }
+        return this.questiondata.markup.timeLimit;
+    }
 }
 
 registerDialogComponent("timAskQuestion", QuestionPreviewController, {
@@ -102,8 +122,8 @@ registerDialogComponent("timAskQuestion", QuestionPreviewController, {
 <div class="popUpWindow questionPopUp">
     <div class="questionPreview">
         <div id="questionTypeAndTimeLimit">
-            <span ng-if="$ctrl.questiondata.markup.timeLimit > 0">
-            Time limit: {{ $ctrl.markup.json.timeLimit }} seconds
+            <span ng-if="$ctrl.getTimeLimit()">
+            Time limit: {{ $ctrl.getTimeLimit() }} seconds
             </span>
             <span ng-if="!$ctrl.questiondata.markup.timeLimit">
             No time limit.
@@ -113,7 +133,7 @@ registerDialogComponent("timAskQuestion", QuestionPreviewController, {
     </div>
     <div class="buttons">
         <!-- <button ng-click="deleteQuestion()" class="btn btn-danger pull-left">Delete</button> -->
-        <button ng-show="$ctrl.showAsk" ng-click="$ctrl.ask()" class="timButton">Ask</button>&nbsp;&nbsp;
+        <button ng-show="$ctrl.showAsk()" ng-click="$ctrl.ask()" class="timButton">Ask</button>&nbsp;&nbsp;
         <button ng-click="$ctrl.editQuestion()" class="timButton">Edit</button>
         <button ng-click="$ctrl.dismiss()" class="timButton">Close</button>
     </div>

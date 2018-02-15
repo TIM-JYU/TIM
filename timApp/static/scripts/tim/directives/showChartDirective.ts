@@ -1,11 +1,11 @@
 import {IChangesObject, IController, IOnChangesObject, IRootElementService, IScope} from "angular";
-import {ChartData} from "chart.js";
+import Chart, {ChartData} from "chart.js";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {fixQuestionJson, getJsonAnswers} from "tim/directives/dynamicAnswerSheet";
+import {fixQuestionJson} from "tim/directives/dynamicAnswerSheet";
 import {Overwrite} from "type-zoo";
-import {IAskedQuestion} from "../lecturetypes";
-import {clone} from "../utils";
+import {IAskedQuestion, IQuestionAnswer} from "../lecturetypes";
+import {assertNotNull, clone} from "../utils";
 
 /**
  * Created by hajoviin on 13.5.2015.
@@ -136,11 +136,11 @@ function timGetLSIntValue(key: string, def: number): number {
 
 let qstChartIndex = timGetLSIntValue("qstChartIndex", 0);
 
-type AnswerList = Array<{answer: string}>;
+type AnswerList = IQuestionAnswer[];
 
 function* enumAnswers(answers: AnswerList): Iterable<[number, string]> {
     for (const answ of answers) {
-        const onePersonAnswers = getJsonAnswers(answ.answer);
+        const onePersonAnswers = answ.answer;
         for (let a = 0; a < onePersonAnswers.length; a++) {
             const singleAnswers = onePersonAnswers[a];
             for (let sa = 0; sa < singleAnswers.length; sa++) {
@@ -171,16 +171,17 @@ type TimChart = Overwrite<Chart, {data: TimChartData}>;
 class ShowChartController implements IController {
     private static $inject = ["$scope", "$element"];
     private isText = true;
-    private div: JQuery<HTMLDivElement>;
+    private div?: JQuery<HTMLDivElement>;
     private charts: [string, string];
     private chartIndex: number;
     private canvasw = 400;
     private canvash = 300;
     private divresize = false;
     private question?: IAskedQuestion;
-    private answers?: AnswerList;
+    private answers?: IQuestionAnswer[];
     private chartConfig?: ChartConfig;
     private answerChart?: TimChart;
+    private lastAnswerCount = 0;
 
     // TODO: If more than 12 choices this will break. Refactor to better format.
     private basicSets: IDataSet[] = [
@@ -332,8 +333,17 @@ class ShowChartController implements IController {
         }
     }
 
+    $doCheck() {
+        if (this.answers && this.lastAnswerCount !== this.answers.length) {
+            this.lastAnswerCount = this.answers.length;
+            this.update();
+        }
+    }
+
     $postLink() {
-        this.div = this.element.find(".canvasContainer") as any;
+        this.div = this.element.find(".canvasContainer") as JQuery<HTMLDivElement>;
+        assertNotNull(this.div);
+        this.createChart();
         this.scope.$on("resizeElement", (event, data) => {
             if (this.isText) {
                 return;
@@ -362,7 +372,7 @@ class ShowChartController implements IController {
     }
 
     async createChart() {
-        if (!this.question) {
+        if (!this.question || !this.div) {
             return;
         }
 
@@ -490,7 +500,7 @@ class ShowChartController implements IController {
     }
 
     async changeType() {
-        if (!this.chartConfig) {
+        if (!this.chartConfig || !this.div) {
             return;
         }
         if (this.answerChart) {
@@ -534,6 +544,9 @@ class ShowChartController implements IController {
     }
 
     resizeDiv() {
+        if (!this.div) {
+            return;
+        }
         const w = this.div.width() || 400;
         const h = this.div.height() || 300;
         this.resize(w, h);

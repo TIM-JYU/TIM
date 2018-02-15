@@ -29,6 +29,10 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
     private forceRefresh: boolean;
     private removeOldImages: boolean;
 
+    public getTitle() {
+        return "Printing document";
+    }
+
     private $onInit() {
         this.storage = $localStorage.$default({
             timPrintingTemplateId: null,

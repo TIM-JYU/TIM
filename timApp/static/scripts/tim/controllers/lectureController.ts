@@ -16,7 +16,7 @@ import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
 import sessionsettings from "tim/session";
-import {clone, GetURLParameter, markAsUsed, setsetting, to} from "tim/utils";
+import {clone, GetURLParameter, markAsUsed, setSetting, to} from "tim/utils";
 import {showLectureEnding} from "../components/lectureEnding";
 import * as wall from "../components/lectureWall";
 import {showMessageDialog} from "../dialog";
@@ -323,7 +323,7 @@ export class LectureController implements IController {
             const t1 = data.t1;
             this.clockOffset = ((t2 - t1) + (t2 - t4)) / 2;
             window.setTimeout(() => {
-                setsetting("clock_offset", this.clockOffset.toString());
+                setSetting("clock_offset", this.clockOffset.toString());
             }, 1000);
         }, () => {
             if (this.settings.clock_offset) {
@@ -645,7 +645,7 @@ export class LectureController implements IController {
                             this.currentQuestionId = undefined;
                             this.currentPointsId = answer.extra.data.asked_question.asked_id;
                         } else {
-                            this.currentQuestionId = answer.extra.data.asked_id;
+                            this.showQuestion(answer.extra);
                         }
                     } else {
                         this.showQuestion(answer.extra);

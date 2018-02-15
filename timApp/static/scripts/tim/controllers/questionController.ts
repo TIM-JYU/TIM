@@ -7,7 +7,8 @@ import {
     makePreview,
     minimizeJson,
 } from "tim/directives/dynamicAnswerSheet";
-import {markAsUsed, setsetting} from "tim/utils";
+import session, {timelimit} from "tim/session";
+import {markAsUsed, setSetting} from "tim/utils";
 import {QuestionMatrixController} from "../components/questionMatrix";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
 import {IParResponse} from "../edittypes";
@@ -127,7 +128,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private static $inject = ["$element"];
     private answerFieldTypes: IAnswerField[];
     private dateTimeOptions: EonasdanBootstrapDatetimepicker.SetOptions;
-    private settings: {timelimit: number | null};
     private question: IAskedJsonJson;
     private ui: IQuestionUI;
     private rows: IExtendedRow[];
@@ -151,8 +151,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             format: "D.M.YYYY HH:mm:ss",
             showTodayButton: true,
         };
-
-        this.settings = $window.sessionsettings;
 
         this.question = {
             answerFieldType: "text",
@@ -181,6 +179,10 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         this.oldMarkupJson = "";
         this.setEmptyMarkup();
         this.previewParams = makePreview(this.question);
+    }
+
+    public getTitle() {
+        return "Editing question";
     }
 
     private $onInit() {
@@ -215,8 +217,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     private setTime() {
         this.ui.timeLimitFields = {hours: 0, minutes: 0, seconds: 30};
-        if (this.settings && this.settings.timelimit && this.settings.timelimit > 0) {
-            let time = this.settings.timelimit;
+        const timeLimit = parseInt(timelimit || "30");
+        if (timeLimit > 0) {
+            let time = timeLimit;
             if (time > 3600) {
                 this.ui.timeLimitFields.hours = Math.floor(time / 3600);
             } else {
@@ -361,6 +364,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
         if (json.timeLimit && json.timeLimit > 0) {
             this.ui.endTimeSelected = true;
+            this.ui.timeLimitFields.seconds = json.timeLimit;
         } else {
             this.ui.endTimeSelected = false;
         }
@@ -897,15 +901,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             return;
         }
 
-        // Without timeout 'timelimit' won't be saved in settings session variable. Thread issue?
-        this.settings.timelimit = questionjson.timeLimit || null;
-        setTimeout(() => {
-            let v = questionjson.timeLimit || "";
-            if (!v) {
-                v = 0;
-            }
-            setsetting("timelimit", "" + v);
-        }, 1000);
+        await setSetting("timelimit", (questionjson.timeLimit && questionjson.timeLimit.toString()) || "30");
 
         if (isAskedQuestion(p)) {
             await this.updatePoints(p);

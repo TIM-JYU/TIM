@@ -85,7 +85,7 @@
                 <h5>Current Lectures</h5>
                 <ul>
                     <li ng-repeat="lecture in $ctrl.currentLecturesList">
-                        <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
+                        <a href="/showLectureInfo/{{ lecture.lecture_id }}">{{ lecture.lecture_code }}</a>
                         <button ng-if="$ctrl.lctrl.lecture.lecture_id != lecture.lecture_id" style="margin-left: 5px;"
                                 value="Join"
                                 ng-click="$ctrl.lctrl.joinLecture(lecture)">Join
@@ -96,14 +96,14 @@
                 <h5>Coming Lectures</h5>
                 <ul>
                     <li ng-repeat="lecture in $ctrl.futureLecturesList">
-                        <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
+                        <a href="/showLectureInfo/{{ lecture.lecture_id }}">{{ lecture.lecture_code }}</a>
                     </li>
                     <li ng-show="$ctrl.futureLecturesList.length == 0"><p>No coming lectures</p></li>
                 </ul>
                 <h5>Past Lectures</h5>
                 <ul>
                     <li ng-repeat="lecture in $ctrl.pastLecturesList">
-                        <a href="{{ lecture.target }}">{{ lecture.lecture_code }}</a>
+                        <a href="/showLectureInfo/{{ lecture.lecture_id }}">{{ lecture.lecture_code }}</a>
                     </li>
                     <li ng-show="$ctrl.pastLecturesList.length == 0"><p>No past lectures</p></li>
                 </ul>

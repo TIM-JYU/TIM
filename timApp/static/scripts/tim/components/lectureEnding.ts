@@ -10,6 +10,10 @@ class LectureEndingCtrl extends DialogController<{lecture: ILecture}, ILectureEn
     private extendTimes = [5, 10, 15, 30, 45, 60];
     private selectedTime = 15;
 
+    public getTitle() {
+        return "Lecture ending";
+    }
+
     public noExtend() {
         this.close({result: "dontextend", extendTime: this.selectedTime});
     }
