@@ -34,6 +34,15 @@ services:
   image: postgres:9.5
   tmpfs:
    - /var/lib/postgresql/data
+ imagex:
+  image: timimages/cs3sudo:compose
+  volumes:
+   - ./timApp/modules/imagex:/imagex:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /imagex
+  command: ${IMAGEX_DEV_COMMAND:-/usr/sbin/sshd -D}
+  ports:
+   - "49995:22"
  pali:
   image: timimages/palisudo:compose
   build:
