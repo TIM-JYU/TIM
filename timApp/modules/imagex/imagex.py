@@ -83,7 +83,7 @@ class ImagexServer(tim_server.TimServer):
             if allow_anonymous != "true":
                 return NOLAZY + '<p class="pluginError"><a href="/login?anchor=' + jump +\
                        '">Please login to interact with this component</a></p><pre class="csRunDiv">' + \
-                       get_param(query, "byCode", "") + '</pre>'
+                       query.get_param("byCode", "") + '</pre>' # imageX does not have byCode???
 
         # Send query 2 instead of normal query if it exists.
         if query2:
@@ -122,10 +122,10 @@ class ImagexServer(tim_server.TimServer):
         # Get templates for plugin
         templs = get_all_templates('templates')
         #print("--templates--" + str(templs))
-        ret = {"js": ["/static/scripts/timHelper.js", "/static/scripts/imagexTunne.js", "angular-bootstrap-colorpicker"], "angularModule": ["imagexApp", "colorpicker.module"],
-              "css": ["static/css/imagex.css", "/static/scripts/jspm_packages/npm/angular-bootstrap-colorpicker@3.0.26/css/colorpicker.min.css"], "multihtml": True}
-        # ret = {"js": ["tim/imagex", "angular-bootstrap-colorpicker"], "angularModule": ["imagexApp", "colorpicker.module"],
-        #       "css": ["static/css/imagex.css", "/static/scripts/jspm_packages/npm/angular-bootstrap-colorpicker@3.0.26/css/colorpicker.min.css"], "multihtml": True}
+        # ret = {"js": ["/static/scripts/timHelper.js", "/static/scripts/imagexTunne.js", "angular-bootstrap-colorpicker"], "angularModule": ["imagexApp", "colorpicker.module"],
+        #      "css": ["static/css/imagex.css", "/static/scripts/jspm_packages/npm/angular-bootstrap-colorpicker@3.0.26/css/colorpicker.min.css"], "multihtml": True}
+        ret = {"js": ["tim/imagex", "angular-bootstrap-colorpicker"], "angularModule": ["imagexApp", "colorpicker.module"],
+               "css": ["static/css/imagex.css", "/static/scripts/jspm_packages/npm/angular-bootstrap-colorpicker@3.0.26/css/colorpicker.min.css"], "multihtml": True}
         # Add templates to reqs.
         ret.update(templs)
         return ret
