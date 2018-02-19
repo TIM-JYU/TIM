@@ -3,6 +3,7 @@ import ngSanitize from "angular-sanitize";
 import {editorChangeValue} from "tim/editorScope";
 import * as timHelper from "tim/timHelper";
 import {markAsUsed} from "tim/utils";
+import {$window} from "./ngimport";
 
 markAsUsed(ngSanitize);
 
@@ -1512,7 +1513,7 @@ imagexApp.initScope = function(scope, element, attrs) {
 
     // Free hand drawing things:
     scope.freeHandDrawing = new FreeHand(scope.emotion);
-    const vp = videoApp.videos[scope.followid];
+    const vp = $window.videoApp && videoApp.videos[scope.followid];
     if (vp) {
         scope.freeHandDrawing.videoPlayer = vp;
         scope.videoPlayer = vp;
