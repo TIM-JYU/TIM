@@ -1,0 +1,22 @@
+Järjestely
+Tehtävä jossa käyttäjä järjestelee tekstejä
+``` {plugin="csPlugin" #PLUGINNAMEHERE}
+type: text
+-pointsRule:
+    code: 1.0
+    expectCode: byCode
+wrap: -1
+lazy: false
+editorModes: 2
+header: "Järjestä suuruusjärjestykseen"
+stem: Järjestä suuruusjärjestykseen pienen ensin
+style-words: "font-size: 1.5em;font-weight: bold;"
+#words: true
+byCode: |!!
+Pieni
+Keskikokoinen
+Suuri
+Jättimäinen
+!!
+```
+
