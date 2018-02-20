@@ -19,7 +19,6 @@ test:
   - cp variables.sh.template variables.sh
   - chmod +x variables.sh
   - sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh
-  - sed -i 's/IS_DEVELOPMENT=false/IS_DEVELOPMENT=true/' variables.sh
   - ./docker-compose.sh pull
   - ./build_js.sh
   - ./build_plugin_js.sh
