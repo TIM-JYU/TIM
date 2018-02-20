@@ -195,11 +195,16 @@ FreeHand.prototype.line = function(ctx, p1, p2) {
     ctx.stroke();
 };
 
+function pad(num, size) {
+    var s = "000000000" + num;
+    return s.substr(s.length-size);
+}
+
 function dateToString(d) {
     const t = new Date(d * 1000);
     //return t.toLocaleTimeString('fi-FI');
     //return t.format("HH:mm:ss.f");
-    return t.getHours() + ":" + t.getMinutes() + ":" + t.getSeconds() + "." + t.getMilliseconds();
+    return pad(t.getHours(),2) + ":" + pad(t.getMinutes(),2) + ":" + pad(t.getSeconds(),2) + "." + pad(t.getMilliseconds(),3);
 }
 
 function drawText(ctx, s, x, y) {
@@ -501,6 +506,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                 drawFillCircle(this.canvas, 30, this.mousePosition.x, this.mousePosition.y, "black", 0.5);
                 this.freeHand.startSegmentDraw(this.canvas, this.mousePosition);
                 this.freeHand.addPointDraw(this.canvas, this.mousePosition);
+                if ( scope.autosave ) scope.imagexScope.save();
             }
 
             if (this.activeDragObject) {
@@ -1483,6 +1489,7 @@ imagexApp.initScope = function(scope, element, attrs) {
     timHelper.set(scope, attrs, "stem");
     timHelper.set(scope, attrs, "user_id");
     timHelper.set(scope, attrs, "emotion", false);
+    timHelper.set(scope, attrs, "autosave", false);
     timHelper.set(scope, attrs, "followid", "");
     timHelper.set(scope, attrs, "button", "Save");
     timHelper.set(scope, attrs, "resetText", "Reset");
