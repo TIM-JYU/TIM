@@ -43,6 +43,7 @@ def get_plugins():
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/"},
+            "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/"},
             "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
         }
     return PLUGINS

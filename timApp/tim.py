@@ -54,6 +54,7 @@ from timApp.routes.notes import notes
 from timApp.routes.notify import notify, send_email
 from timApp.routes.print import print_blueprint
 from timApp.routes.qst import qst_plugin
+from timApp.plugins.timTable import timTable_plugin
 from timApp.routes.readings import readings
 from timApp.routes.search import search_routes
 from timApp.routes.settings import settings_page
@@ -82,6 +83,7 @@ app.register_blueprint(generateMap)
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
 app.register_blueprint(qst_plugin)
+app.register_blueprint(timTable_plugin)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
 app.register_blueprint(login_page)
