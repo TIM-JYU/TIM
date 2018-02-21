@@ -12,7 +12,9 @@ fi
 
 . ${DIR}/variables.sh
 
-if [ "$IS_DEVELOPMENT" = true ]; then
+if [ "$IS_TESTING" = true ]; then
+  docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.test.yml" "$@"
+elif [ "$IS_DEVELOPMENT" = true ]; then
   docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.dev.yml" "$@"
 else
   docker-compose -f "${DIR}/docker-compose.yml" "$@"

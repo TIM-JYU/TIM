@@ -3040,7 +3040,7 @@ csConsoleApp.directiveTemplateCS = function (t, isInput) {
 };
  
  
-function truthTable(sentence,topbottomLines) {
+export function truthTable(sentence,topbottomLines) {
   
   var result = "";
   try {

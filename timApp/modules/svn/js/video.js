@@ -9,6 +9,8 @@ if (angular.isDefined(window.videoApp)) {
 
 
 var videoApp = angular.module('videoApp', ['ngSanitize']);
+
+window.videoApp = videoApp;
 videoApp.directive('videoRunner',['$sanitize', function ($sanitize) { videoApp.sanitize = $sanitize; return videoApp.directiveFunction('video'); }]);
 videoApp.directive('smallVideoRunner',['$sanitize', function ($sanitize) { videoApp.sanitize = $sanitize; return videoApp.directiveFunction('smallvideo'); }]);
 videoApp.directive('listVideoRunner',['$sanitize', function ($sanitize) {
