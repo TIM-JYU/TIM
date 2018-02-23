@@ -13,8 +13,6 @@ services:
    - imagex
    - uploader
    - dumbo
-   - ts-watcher
-   - funnel
   volumes:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
@@ -28,23 +26,10 @@ services:
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST}
   restart: unless-stopped
- funnel:
-  image: timimages/funnel:latest
-  volumes:
-   - ./funnel:/service
-   - ./tim_logs/funnel:/var/log/funnel
-  working_dir: /service
-  command: ${FUNNEL_COMMAND}
-  restart: unless-stopped
  postgresql:
   image: postgres:9.5
   volumes:
    - data:/var/lib/postgresql/data
-#  healthcheck:
-#   test: ["CMD-SHELL", "psql -h 'localhost' -U 'postgres' -c '\\l'"]
-#   interval: 30s
-#   timeout: 1s
-#   retries: 10
   restart: unless-stopped
  postgresql-tempdb:
   image: postgres:9.5
@@ -107,21 +92,12 @@ services:
   image: villet/uploaderplugin:13_10_16_15
   command: ${UPLOADER_COMMAND}
   restart: unless-stopped
- ts-watcher:
-  image: timimages/tim:${TIM_IMAGE_TAG}
-  volumes:
-   - .:/service
-  working_dir: /service/timApp/static/scripts
-  command: jspm bundle tim/main + tim/slide - "(tim/main + tim/slide - [tim/**/*])" build/tim.js -wm
-  restart: unless-stopped
  nginx:
   image: timimages/local_nginx:compose
   build:
    context: ./local_nginx
   depends_on:
    - tim
-  ports:
-   - "${NGINX_PORT}:80"
   volumes:
    - ./timApp/modules/cs/static:/csstatic:ro
    - ./timApp/modules/cs/generated:/csgenerated:ro

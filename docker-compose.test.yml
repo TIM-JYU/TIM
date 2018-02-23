@@ -4,18 +4,14 @@ services:
   depends_on:
    - postgresql-test
    - postgresql-tempdb-test
-   - csplugin
-   - pali
-   - showfile
-   - haskellplugins
-   - imagex
-   - uploader
    - chrome
-   - dumbo
-   - ts-watcher
-   - funnel
   tmpfs:
    - /tmp
+  command: "sleep infinity"
+ postgresql:
+  command: "sleep infinity"
+ postgresql-tempdb:
+  command: "sleep infinity"
  postgresql-test:
   image: postgres:9.5
   tmpfs:
@@ -34,12 +30,6 @@ services:
   build:
    args:
     MAIN_CONFIG: tim_dev.conf
-  ports:
-   - "${NGINX_PORT}:80"
-   - "81:81"
-   - "82:82"
- ts-watcher:
-  command: "sleep infinity"
  tests:
   image: timimages/tim:${TIM_IMAGE_TAG}
   command: "python3 -m unittest ${TEST_PARAMS:-discover tests/ 'test_*.py' .}"
