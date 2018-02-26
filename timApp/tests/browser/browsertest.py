@@ -55,7 +55,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         except socket.timeout:
             self.skipTest('socket timeout occurred when trying to initialize webdriver')
         self.drv.implicitly_wait(10)
-        self.wait = WebDriverWait(self.drv, 10)
+        self.wait = WebDriverWait(self.drv, 15)
 
     def login_browser_as(self, email: str, password: str, name: str):
         self.client.__exit__(None, None, None)
