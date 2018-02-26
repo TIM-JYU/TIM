@@ -159,7 +159,7 @@ export function clone<T>(obj: T): T {
  * @param errorExt Optional error information.
  * @returns A promise that resolves to either a success or error.
  */
-export function to<T, U = any>(promise: IPromise<T>,
+export function to<T, U = {data: {error: string}}>(promise: IPromise<T>,
                                errorExt?: object): IPromise<[U, undefined] | [null, T]> {
     return promise
         .then<[null, T]>((data: T) => [null, data])

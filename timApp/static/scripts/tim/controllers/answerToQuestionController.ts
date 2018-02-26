@@ -61,42 +61,15 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
             throw new Error("Question window was already open.");
         }
         currentQuestion = this;
-        if (isAskedQuestion(this.resolve.params.qa)) {
-            this.question = this.resolve.params.qa;
-            this.result = false;
-            this.preview = makePreview(this.question.json.json, [], false);
-            this.questionEnded = false;
-            this.answered = false;
-        } else {
-            this.question = this.resolve.params.qa.asked_question;
-            this.result = true;
-            this.preview = makePreview(
-                this.question.json.json,
-                this.resolve.params.qa.answer,
-                false,
-                true,
-                this.resolve.params.qa.points,
-            );
-            this.questionEnded = true;
-            this.answered = true;
-        }
-        this.askedTime = this.question.asked_time.clone().subtract(this.clockOffset);
+        this.setData(this.resolve.params.qa);
+    }
 
-        // clockOffset usually in range [-100, -25] (milliseconds), so it's almost meaningless? Using 0 for now.
-        if (this.question.json.json.timeLimit) {
-            this.endTime = this.askedTime.clone().add(this.question.json.json.timeLimit, "seconds").subtract(this.clockOffset);
-        }
-        this.isLecturer = this.resolve.params.isLecturer;
-        this.buttonText = "Answer"; // TODO: Make configurable
+    public getQuestion() {
+        return this.question;
+    }
 
-        if (!this.result) {
-            this.barFilled = 0;
-            if (this.endTime) {
-                this.progressText = "";
-                this.progressMax = this.endTime.diff(this.askedTime);
-                this.start(500);
-            }
-        }
+    public hasResult() {
+        return this.result;
     }
 
     public getTitle() {
@@ -245,6 +218,45 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         this.progressText = "Time's up";
         this.questionEnded = true;
     }
+
+    public setData(data: IAskedQuestion | IQuestionAnswer) {
+        if (isAskedQuestion(data)) {
+            this.question = data;
+            this.result = false;
+            this.preview = makePreview(this.question.json.json, [], false);
+            this.questionEnded = false;
+            this.answered = false;
+        } else {
+            this.question = data.asked_question;
+            this.result = true;
+            this.preview = makePreview(
+                this.question.json.json,
+                data.answer,
+                false,
+                true,
+                data.points,
+            );
+            this.questionEnded = true;
+            this.answered = true;
+        }
+        this.askedTime = this.question.asked_time.clone().subtract(this.clockOffset);
+
+        // clockOffset usually in range [-100, -25] (milliseconds), so it's almost meaningless? Using 0 for now.
+        if (this.question.json.json.timeLimit) {
+            this.endTime = this.askedTime.clone().add(this.question.json.json.timeLimit, "seconds").subtract(this.clockOffset);
+        }
+        this.isLecturer = this.resolve.params.isLecturer;
+        this.buttonText = "Answer"; // TODO: Make configurable
+
+        if (!this.result) {
+            this.barFilled = 0;
+            if (this.endTime) {
+                this.progressText = "";
+                this.progressMax = this.endTime.diff(this.askedTime);
+                this.start(500);
+            }
+        }
+    }
 }
 
 registerDialogComponent("timAnswerQuestion",
@@ -259,10 +271,10 @@ registerDialogComponent("timAnswerQuestion",
         </dynamic-answer-sheet>
     </div>
     <uib-progressbar
-      max="$ctrl.progressMax"
-      value="$ctrl.barFilled">
-      {{ $ctrl.progressText }}
-</uib-progressbar>
+            max="$ctrl.progressMax"
+            value="$ctrl.barFilled">
+        {{ $ctrl.progressText }}
+    </uib-progressbar>
     <div class="buttons">
         <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.edit()">
             Edit points

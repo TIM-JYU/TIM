@@ -1,5 +1,5 @@
 import * as chart from "tim/directives/showChartDirective";
-import {markAsUsed} from "tim/utils";
+import {markAsUsed, to} from "tim/utils";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IAskedQuestion, IQuestionAnswer} from "../lecturetypes";
 import {$http, $timeout} from "../ngimport";
@@ -12,6 +12,7 @@ export interface IStatisticsResult {
 }
 export class ShowStatisticsToQuestionController extends DialogController<{params: IStatisticsParams}, IStatisticsResult, "timQuestionStatistics"> {
     private answers: IQuestionAnswer[] = [];
+    private ended = false;
 
     constructor() {
         super();
@@ -30,15 +31,20 @@ export class ShowStatisticsToQuestionController extends DialogController<{params
      */
     private async getLectureAnswers() {
         while (!this.closed) {
-            const response = await $http.get<IQuestionAnswer[]>("/getLectureAnswers", {
+            const [err, response] = await to($http.get<IQuestionAnswer[]>("/getLectureAnswers", {
                 params: {
                     asked_id: this.resolve.params.asked_id,
                     buster: new Date().getTime(),
                 },
-            });
-            const data = response.data;
-            for (const ans of data) {
-                this.answers.push(ans);
+            }));
+            if (response) {
+                const data = response.data;
+                for (const ans of data) {
+                    this.answers.push(ans);
+                }
+            } else {
+                this.ended = true;
+                return;
             }
             await $timeout(1000);
         }
@@ -57,6 +63,7 @@ registerDialogComponent("timQuestionStatistics",
             divresize="true"
             question="$ctrl.resolve.params"
             answers="$ctrl.answers"></show-chart-directive>
+    <p ng-show="$ctrl.ended">Question has ended.</p>
 </div>
 <div class="modal-footer">
     <button class="timButton" ng-click="$ctrl.close()">Close</button>

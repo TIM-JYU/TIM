@@ -46,9 +46,10 @@ import {
 } from "../lecturetypes";
 import {$http, $log, $timeout, $window} from "../ngimport";
 import {Users} from "../services/userService";
-import {currentQuestion, showQuestionAnswerDialog} from "./answerToQuestionController";
+import {currentQuestion, IAnswerQuestionResult, showQuestionAnswerDialog} from "./answerToQuestionController";
 import {showLectureDialog} from "./createLectureCtrl";
 import {askQuestion} from "./questionAskController";
+import {showStatisticsDialog} from "./showStatisticsToQuestionController";
 import {ViewCtrl} from "./view/viewctrl";
 
 markAsUsed(wall);
@@ -72,8 +73,6 @@ export class LectureController implements IController {
     private canStop: boolean;
     private chosenLecture: ILecture | undefined;
     private clockOffset: number;
-    private currentPointsId: number | undefined;
-    private currentQuestionId: number | undefined;
     private futureLecture: ILecture | undefined;
     private futureLectures: ILecture[];
     private gettingAnswers: boolean;
@@ -580,8 +579,8 @@ export class LectureController implements IController {
                 d: this.getDocIdOrNull(), // doc_id
                 m: this.lectureSettings.useWall ? "t" : null, // get_messages
                 q: this.lectureSettings.useQuestions ? "t" : null, // get_questions
-                i: this.currentQuestionId || null, // current_question_id
-                p: this.currentPointsId || null, // current_points_id
+                i: this.getCurrentQuestionId(), // current_question_id
+                p: this.getCurrentPointsId(), // current_points_id
                 b: buster,
             },
         });
@@ -633,23 +632,13 @@ export class LectureController implements IController {
                     }
                     // If 'question' or 'result' is in answer, show question/explanation accordingly
                 } else if (pointsClosed(answer.extra)) {
-                    this.currentPointsId = undefined;
                     if (currentQuestion) {
                         currentQuestion.updateEndTime(null);
                     } else {
                         $log.error("currentQuestion was undefined when set end time to null");
                     }
                 } else if (!alreadyAnswered(answer.extra) && !questionHasAnswer(answer.extra)) {
-                    if (this.isLecturer) {
-                        if (questionAnswerReceived(answer.extra)) {
-                            this.currentQuestionId = undefined;
-                            this.currentPointsId = answer.extra.data.asked_question.asked_id;
-                        } else {
-                            this.showQuestion(answer.extra);
-                        }
-                    } else {
-                        this.showQuestion(answer.extra);
-                    }
+                    this.showQuestion(answer.extra);
                 }
             }
 
@@ -683,19 +672,38 @@ export class LectureController implements IController {
         // });
     }
 
+    getCurrentQuestionId() {
+        if (!currentQuestion || currentQuestion.hasResult()) {
+            return undefined;
+        }
+        return currentQuestion.getQuestion().asked_id;
+    }
+
+    getCurrentPointsId() {
+        if (!currentQuestion || !currentQuestion.hasResult()) {
+            return undefined;
+        }
+        return currentQuestion.getQuestion().asked_id;
+    }
+
     async showQuestion(answer: IQuestionAsked | IQuestionResult) {
         let question: IAskedQuestion;
         if (isAskedQuestion(answer.data)) {
-            this.currentQuestionId = answer.data.asked_id;
             question = answer.data;
         } else {
-            this.currentQuestionId = undefined;
-            this.currentPointsId = answer.data.asked_question.asked_id;
             question = answer.data.asked_question;
         }
-        const result = await showQuestionAnswerDialog({qa: answer.data, isLecturer: this.isLecturer});
+        let result: IAnswerQuestionResult;
+        if (currentQuestion) {
+            currentQuestion.setData(answer.data);
+            return;
+        } else {
+            if (this.isLecturer) {
+                void showStatisticsDialog(question);
+            }
+            result = await showQuestionAnswerDialog({qa: answer.data, isLecturer: this.isLecturer});
+        }
         if (result.type === "pointsclosed") {
-            this.currentPointsId = undefined;
             await $http({
                 url: "/closePoints",
                 method: "PUT",
@@ -705,7 +713,7 @@ export class LectureController implements IController {
                 },
             });
         } else if (result.type === "closed") {
-            this.currentQuestionId = undefined;
+            // empty
         } else if (result.type === "reask") {
             await askQuestion({askedId: question.asked_id});
         } else {

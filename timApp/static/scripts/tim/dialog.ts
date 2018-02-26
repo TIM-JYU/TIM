@@ -12,7 +12,7 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
     protected closed = false;
     private readonly modalInstance: angular.ui.bootstrap.IModalInstanceService;
 
-    abstract getTitle(): string;
+    protected abstract getTitle(): string;
 
     protected close(returnValue: Ret) {
         this.closed = true;
