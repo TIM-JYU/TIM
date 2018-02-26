@@ -429,12 +429,12 @@ export class EditingHandler {
     }
 
     closeAndSave(e: Event, $par: Paragraph) {
-        $("pareditor").isolateScope<any>().saveClicked();
+        $("pareditor").isolateScope<any>().$ctrl.saveClicked();
         this.viewctrl.parmenuHandler.showOptionsWindow(e, $par);
     }
 
     closeWithoutSaving(e: Event, $par: Paragraph) {
-        $("pareditor").isolateScope<any>().cancelClicked();
+        $("pareditor").isolateScope<any>().$ctrl.cancelClicked();
         this.viewctrl.parmenuHandler.showOptionsWindow(e, $par);
     }
 
