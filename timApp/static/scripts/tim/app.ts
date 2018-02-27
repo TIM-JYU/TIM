@@ -116,7 +116,6 @@ timApp.filter("timpreciseduration", ["$filter", ($filter: IFilterService) => {
 }]);
 
 timApp.filter("timtim", ["$filter", ($filter: IFilterService) => {
-    const dateFilter = $filter("date");
     return (date: Moment) => {
         return date.format("HH:mm:ss");
     };
