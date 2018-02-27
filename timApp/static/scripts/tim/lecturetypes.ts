@@ -236,6 +236,14 @@ export interface IGotUpdatesResponse {
     extra?: IExtraResponse;
 }
 
+export interface IEmptyResponse {
+    empty: true;
+}
+
+export function isEmptyResponse(r: ILectureResponse | ILectureListResponse | IEmptyResponse): r is IEmptyResponse {
+    return (r as IEmptyResponse).empty === true;
+}
+
 export interface INoUpdatesResponse {
     ms: number;
 }

@@ -1,6 +1,5 @@
 import {IController, IRootElementService} from "angular";
 import {timApp} from "tim/app";
-import {fixQuestionJson} from "tim/directives/dynamicAnswerSheet";
 import * as showChart from "tim/directives/showChartDirective";
 import {markAsUsed} from "tim/utils";
 import {IItem} from "../IItem";
@@ -36,12 +35,11 @@ export class LectureInfoController implements IController {
     private msg: string;
     private isLecturer: boolean;
     private answerers: IUser[];
-    private showPoints: boolean;
-    private points: number[];
     private answers: IQuestionAnswer[];
     private questions: IAskedQuestion[];
-    private questionAnswerData: Array<{question: any, answers: any}>;
     private selectedUser: IUser;
+    private showAll = false;
+    private answerMap: {[index: number]: IQuestionAnswer[]} = {};
 
     constructor(element: IRootElementService) {
         this.item = $window.item;
@@ -50,8 +48,6 @@ export class LectureInfoController implements IController {
         this.msg = "";
         this.isLecturer = false;
         this.answerers = [];
-        this.showPoints = false;
-        this.points = [];
         this.element = element;
     }
 
@@ -90,6 +86,12 @@ export class LectureInfoController implements IController {
         this.isLecturer = data.isLecturer;
         this.answerers = data.answerers;
         this.selectedUser = Users.getCurrent();
+        this.updateAnswerMap();
+    }
+
+    private updateAnswerMap() {
+        this.answerMap = {};
+        this.questions.forEach((q) => this.answerMap[q.asked_id] = this.getAnswers(q));
     }
 
     private async editPoints(askedId: number) {
@@ -134,6 +136,12 @@ export class LectureInfoController implements IController {
         menu.appendChild(linkToLecture);
     }
 
+    private getAnswers(question: IAskedQuestion) {
+        return this.answers.filter((q) =>
+            q.asked_question.asked_id === question.asked_id &&
+            (this.showAll || this.selectedUser.id === q.user.id));
+    }
+
     /**
      * Sends http request to delete the lecture.
      */
@@ -158,105 +166,97 @@ export class LectureInfoController implements IController {
         const lecture = response.data;
         this.lecture = await showLectureDialog(this.item, lecture);
     }
-
-    /**
-     * Draws charts from the answer of the current lecture.
-     * @param userToShow Which users answers to shows. If undefined shows from every user.
-     */
-    private async drawCharts(userToShow?: IUser) {
-        for (let p = 0; p < this.points.length; p++) {
-            this.points[p] = 0;
-        }
-        this.showPoints = true;
-        // TODO
-    }
 }
 
 timApp.component("timLectureInfo", {
     controller: LectureInfoController,
-    controllerAs: "lictrl",
-    // language=HTML
     template: `
-        <div class="panel panel-default">
-            <div class="panel-heading">Lecture info</div>
-            <div class="panel-body">
-                <strong>Lecture code:</strong>
+<div class="panel panel-default">
+    <div class="panel-heading">Lecture info</div>
+    <div class="panel-body">
+        <strong>Lecture code:</strong>
 
-                <p ng-bind="lictrl.lecture.lecture_code"></p>
+        <p ng-bind="$ctrl.lecture.lecture_code"></p>
 
-                <strong>Start time:</strong>
+        <strong>Start time:</strong>
 
-                <p ng-bind="lictrl.lecture.start_time | timdate"></p>
+        <p ng-bind="$ctrl.lecture.start_time | timdate"></p>
 
-                <strong>End time:</strong>
+        <strong>End time:</strong>
 
-                <p ng-bind="lictrl.lecture.end_time | timdate"></p>
+        <p ng-bind="$ctrl.lecture.end_time | timdate"></p>
 
-                <div ng-show="lictrl.isLecturer">
-                    <!--TODO: Preview questions. Needs directive from the question preview and then just use it.-->
-                    <strong>Questions asked:</strong>
-                    <ul>
-                        <li ng-repeat="question in lictrl.questions">
-                            {{ $index + 1 }}. <span ng-bind="question.asked_time | timtim"></span>
-                            <a ng-click="lictrl.editPoints(question.asked_id)">{{ question.json.questionTitle }}</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+        <div ng-show="$ctrl.isLecturer">
+            <strong>Questions asked:</strong>
+            <ul>
+                <li ng-repeat="question in $ctrl.questions">
+                    {{ $index + 1 }}. <span ng-bind="question.asked_time | timtim"></span>
+                    <a ng-click="$ctrl.editPoints(question.asked_id)">{{ question.json.json.questionTitle }}</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">Lecture wall</div>
+    <div class="panel-body">
+        <textarea class="form-control" ng-model="$ctrl.msg" readonly id="lectureInfoWall"></textarea>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">Find answers
+    </div>
+    <div class="panel-body">
+        <label ng-show="$ctrl.isLecturer">User name
+            <select
+                    ng-disabled="$ctrl.showAll"
+                    class="form-control"
+                    ng-model="$ctrl.selectedUser"
+                    ng-options="user.name for user in $ctrl.answerers track by user.id"
+                    ng-change="$ctrl.updateAnswerMap()">
+            </select>
+        </label>
+        <div class="checkbox">
+            <label>
+                <input
+                        type="checkbox"
+                        ng-show="$ctrl.isLecturer"
+                        ng-model="$ctrl.showAll"
+                        ng-change="$ctrl.updateAnswerMap()">Show all users
+            </label>
+        </div>
+        <a class="timButton"
+           href="/getLectureAnswerTotals/{{ $ctrl.lecture.lecture_id }}?sum_field_name=sum&count_field_name=cnt">
+            Download as plain text</a>
+        <div ng-repeat="question in $ctrl.questions">
+            <p>{{ $index + 1 }}.
+                <span class="bold" ng-bind-html="question.json.json.questionTitle"></span>
+                /
+                <span ng-bind="question.asked_time | timtim"></span>
+            </p>
+            <p ng-bind-html="question.json.json.questionText"></p>
+            <show-chart-directive
+                    question="question"
+                    answers="$ctrl.answerMap[question.asked_id]">
+            </show-chart-directive>
         </div>
 
-        <div class="panel panel-default">
-            <div class="panel-heading">Lecture wall</div>
-            <div class="panel-body">
-                <textarea class="form-control" data-ng-model="lictrl.msg" readonly id="lectureInfoWall"></textarea>
-            </div>
-        </div>
+        <p ng-show="$ctrl.answers.length === 0">
+            No answers from this lecture
+        </p>
+    </div>
+</div>
 
-        <div class="panel panel-default">
-            <div class="panel-heading">Find answers <span ng-show="!lictrl.isLecturer"
-                                                          ng-bind="lictrl.selectedUser.name"></span>
-            </div>
-            <div class="panel-body">
-                <label ng-show="isLecturer">User name
-                    <select class="form-control" ng-model="lictrl.selectedUser"
-                            ng-options="user.name for user in lictrl.answerers track by user.id">
-                    </select>
-                </label>
-                <button class="timButton" ng-click="lictrl.drawCharts(lictrl.selectedUser)">Show answers</button>
-                <button class="timButton" ng-show="lictrl.isLecturer" ng-click="lictrl.drawCharts()">Show all</button>
-                <a class="timButton"
-                   href="/getLectureAnswerTotals/{{ lictrl.lectureId }}?sum_field_name=sum&count_field_name=cnt">
-                    Download as plain text</a>
-                <div>
-                    <div ng-repeat="question in lictrl.questions" style="margin-bottom: 2em">
-                        <div ng-show="lictrl.showPoints">
-                            <p>{{ $index + 1 }}. <span class="bold" ng-bind-html="question.json.questionTitle"></span>
-                                /
-                                <span ng-bind="question.asked_time | timtim"></span>
-                            </p>
-                            <p ng-bind-html="question.json.questionText"
-                               ng-click="lictrl.dynamicAnswerShowControls[$index].toggle()"></p>
-                        </div>
-                        <show-chart-directive data="lictrl.questionAnswerData">
-                        </show-chart-directive>
-                        <p ng-show="lictrl.showPoints">Points: <span ng-bind="lictrl.points[$index]"> </span></p>
-                    </div>
-                </div>
-
-                <p ng-show="lictrl.answers.length">
-                    No answers from this lecture
-                </p>
-            </div>
-        </div>
-
-        <div ng-show="lictrl.isLecturer" class="panel panel-default">
-            <div class="panel-heading">
-                Actions
-            </div>
-            <div class="panel-body">
-                <button class="timButton" ng-click="lictrl.editLecture()">Edit lecture</button>
-                <button class="btn btn-danger" ng-click="lictrl.deleteLecture()">Delete lecture</button>
-            </div>
-        </div>
+<div ng-show="$ctrl.isLecturer" class="panel panel-default">
+    <div class="panel-heading">
+        Actions
+    </div>
+    <div class="panel-body">
+        <button class="timButton" ng-click="$ctrl.editLecture()">Edit lecture</button>
+        <button class="btn btn-danger" ng-click="$ctrl.deleteLecture()">Delete lecture</button>
+    </div>
+</div>
     `,
 });

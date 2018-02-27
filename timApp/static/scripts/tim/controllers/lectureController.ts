@@ -26,7 +26,7 @@ import {
     hasLectureEnded,
     hasUpdates,
     IAlreadyAnswered,
-    IAskedQuestion,
+    IAskedQuestion, IEmptyResponse,
     ILecture,
     ILectureListResponse,
     ILectureMessage,
@@ -36,7 +36,7 @@ import {
     IQuestionAsked,
     IQuestionHasAnswer,
     IQuestionResult,
-    isAskedQuestion,
+    isAskedQuestion, isEmptyResponse,
     isLectureListResponse,
     IUpdateResponse,
     pointsClosed,
@@ -173,12 +173,15 @@ export class LectureController implements IController {
      * Makes http request to check if the current user is in lecture.
      */
     async checkIfInLecture() {
-        const response = await $http<ILectureResponse | ILectureListResponse>({
+        const response = await $http<ILectureResponse | ILectureListResponse | IEmptyResponse>({
             url: "/checkLecture",
             method: "GET",
             params: {doc_id: this.getDocIdOrNull(), buster: new Date().getTime()},
         });
         const answer = response.data;
+        if (isEmptyResponse(answer)) {
+            return;
+        }
         let lectureCode = GetURLParameter("lecture");
 
         // Check if the lecture parameter is autojoin.

@@ -598,6 +598,13 @@ class ShowChartController implements IController {
             this.answerChart.update();
         }
     }
+
+    getTotalPoints() {
+        if (!this.answers) {
+            return undefined;
+        }
+        return this.answers.reduce((prev, curr) => curr.points + prev, 0);
+    }
 }
 
 timApp.component("showChartDirective", {
@@ -614,6 +621,7 @@ timApp.component("showChartDirective", {
 <div ng-show="$ctrl.isText">
     <p ng-repeat="t in $ctrl.textAnswers" ng-bind="t"></p>
 </div>
+<p ng-show="$ctrl.answers">Total points: {{ $ctrl.getTotalPoints() }}</p>
 <p ng-show="!$ctrl.isText" class="chart-menu">
     <span ng-click="$ctrl.toggle()">Bar</span>
     <span ng-click="$ctrl.zoom(-1,0)">w-</span>
