@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node build.js",
-    "buildDev": "jspm bundle tim/main + tim/slide - \"(tim/main + tim/slide - [tim/**/*])\" build/tim.js -wd",
+    "buildDev": "jspm bundle tim/main + tim/slide + tim/imagex - \"(tim/main + tim/slide - [tim/**/*])\" build/tim.js -wd",
+
     "fixKatex": "node fix-katex-auto-render.js",
     "fixWatcher": "node fix-watcher.js",
     "fixAll": "npm run fixKatex && npm run fixWatcher"

@@ -1199,7 +1199,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.textBoxY = - objectValues.pinPosition.off.y
                         - objectValues.pinPosition.y;
                 }
-                else if (objectValues.name === "fixedobject") {
+                else if (objectValues.name === "fixedobject" && objectValues.type === "textbox") {
                     this.textBoxX = objectValues.x;
                     this.textBoxY = objectValues.y;
                 }
