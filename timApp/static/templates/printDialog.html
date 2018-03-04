@@ -16,7 +16,7 @@
         <div class="form-group input-group-sm">
             <div ng-repeat="item in templates">
                 <div class="radio" >
-                    <label ng-show="showPaths || item.name != 'empty'">
+                    <label ng-show="showPaths || item.name != 'empty' || (item.name == 'empty' && item.id == selectedTemplate.id)">
                         <input type="radio" ng-model="selectedTemplate.id" ng-value="item.id" name="template-selection">
                         <span>{{ item.name }} <span ng-show="showPaths && item.name != 'empty'">({{ item.path }})</span></span>
                         <a ng-show="showPaths && item.name != 'empty'" ng-href="/view/{{ item.path }}" target="_blank" class="force-hyphenate-link">
