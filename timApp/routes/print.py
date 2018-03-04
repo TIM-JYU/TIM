@@ -81,7 +81,7 @@ def print_document(doc_path):
 
     print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
 
-    if force == 'true':
+    if force == 'true' or force == True:
         existing_doc = None
 
     if existing_doc is not None and not plugins_user_print:  # never cache user print
@@ -123,7 +123,10 @@ def get_printed_document(doc_path):
         abort(400, "The supplied query parameter 'file_type' was invalid.")
 
     if template_doc_id is None:
-        abort(400, "The supplied query parameter 'template_doc_id' was invalid.")
+        template_doc = DocEntry.find_by_path('templates/printing/runko')
+        if template_doc is None:
+            abort(400, "The supplied query parameter 'template_doc_id' was invalid.")
+        template_doc_id = template_doc.id
 
     if plugins_user_print is None or isinstance(plugins_user_print, bool):
         plugins_user_print = 'false'

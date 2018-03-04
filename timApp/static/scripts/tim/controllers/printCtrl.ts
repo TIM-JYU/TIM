@@ -43,7 +43,9 @@ timApp.controller("PrintCtrl", ['$scope', '$uibModal', 'document', '$uibModalIns
 
             } else if ($scope.templates) {
                 if ($scope.templates.length > 0) {
-                    id = templates[0].id
+                    id = templates[0].id;
+                    if ( templates[0].name == 'empty' && templates.length > 1)  // rather not choose empty as default
+                        id = templates[1].id;
                 }
             }
 
