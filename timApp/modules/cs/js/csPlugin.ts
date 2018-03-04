@@ -157,6 +157,7 @@ interface ICSAppScope extends IConsolePWDScope {
     write(s: string);
     moveCursor(dx: number, dy: number);
     element0: HTMLElement;
+    iframeopts: string;
     mode: string;
     checkEditorModeLocalStorage();
     editorModes: string;
@@ -1000,6 +1001,7 @@ csApp.directiveFunction = function(t,isInput) {
             csApp.set(scope,attrs,"validityCheckMessage","");
   			csApp.set(scope,attrs,"savestate");
   			csApp.set(scope,attrs,"mode");
+  			csApp.set(scope,attrs,"iframeopts","");
 
             csApp.set(scope,attrs,"wrap", scope.isText ? 70 : -1);
             scope.wrap = {n:scope.wrap}; // to avoid child scope problems
@@ -1485,7 +1487,7 @@ csApp.Controller = function($scope,$transclude) {
         }
         if ( type.indexOf("text") == 0 ) {
             html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
-            html += '<iframe  width="800" src="' + file +'" target="csdocument" allowfullscreen  onload="resizeIframe(this)" />';
+            html += '<iframe  width="800" src="' + file +'" target="csdocument" allowfullscreen  onload="resizeIframe(this)" '+$scope.iframeopts+' />';
             html += '</div>';
 			$scope.uploadresult = $sce.trustAsHtml(html);
 			return;
@@ -1494,7 +1496,7 @@ csApp.Controller = function($scope,$transclude) {
 
         if ( uploadFileTypes.is(uploadFileTypes.show, file)) {
             html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:1200px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
-            html += '<iframe width="800" height="900"  src="' + file +'" target="csdocument" allowfullscreen onload="resizeIframe(this)" />';
+            html += '<iframe width="800" height="900"  src="' + file +'" target="csdocument" allowfullscreen onload="resizeIframe(this)" '+$scope.iframeopts+' />';
             //html += '<embed  width="800" height="16000"  src="' + file +'" />';
             //html += '<object width="800" height="600"   data="' + file +'" type="' + type +'"  ></object>';
             html += '</div>';
@@ -2066,7 +2068,7 @@ csApp.Controller = function($scope,$transclude) {
 		if ( $scope.iframe )
 			$scope.taunoHtml.innerHTML = 
 			// '<p class="pluginHide"" ><a ng-click="hideTauno()">hide Tauno</a></p>' + // ng-click ei toimi..
-			'<iframe id="'+v.vid+'" class="showTauno" src="' + taunoUrl + '" ' + v.w + v.h + ' ></iframe>';
+			'<iframe id="'+v.vid+'" class="showTauno" src="' + taunoUrl + '" ' + v.w + v.h + ' '+$scope.iframeopts+' ></iframe>';
 			// youtube: <iframe width="480" height="385" src="//www.youtube.com/embed/RwmU0O7hXts" frameborder="0" allowfullscreen></iframe>
 		else   
 			$scope.taunoHtml.innerHTML = '<div class="taunoNaytto" id="'+v.vid+'" />';
@@ -2093,7 +2095,7 @@ csApp.Controller = function($scope,$transclude) {
 		if ( $scope.iframe )
 			$scope.taunoHtml.innerHTML =
 			// '<p class="pluginHide"" ><a ng-click="hideTauno()">hide Tauno</a></p>' + // ng-click ei toimi..
-			'<iframe id="'+v.vid+'" class="showWeScheme" src="' + weSchemeUrl + '" ' + v.w + v.h + ' ></iframe>';
+			'<iframe id="'+v.vid+'" class="showWeScheme" src="' + weSchemeUrl + '" ' + v.w + v.h + ' '+$scope.iframeopts+' ></iframe>';
 		else
 			$scope.taunoHtml.innerHTML = '<div class="taunoNaytto" id="'+v.vid+'" />';
 		$scope.taunoOn = true;
@@ -2662,10 +2664,12 @@ csApp.Controller = function($scope,$transclude) {
                 $scope.irrotaKiinnita = $scope.english ? "Release" : "Irrota";
                 html = ($scope.attrs.html||html);
                 html = encodeURI(html);
+                var opts = 'seamless="seamless" sandbox="allow-scripts allow-forms allow-same-origin"';
+                if ( $scope.iframeopts ) opts = $scope.iframeopts;
                 var angularElement = '<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20" >'+
                   '<span class="csRunMenu"><div><a href ng-click="toggleFixed()" >{{irrotaKiinnita}}</a><a href ng-click="closeFrame()" style="float: right" >[X]</a></div></span>'+
-                    (!$scope.fullhtml ? '<iframe id="'+v.vid+'" class="jsCanvas" src="' + fsrc + '?scripts='+($scope.attrs.scripts||scripts)+'&html='+ html + '" ' + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin">':
-                    '<iframe id="'+v.vid+'" class="jsCanvas" '  + v.w + v.h + ' style="border:0" seamless="seamless" sandbox="allow-scripts allow-same-origin">')+
+                    (!$scope.fullhtml ? '<iframe id="'+v.vid+'" class="jsCanvas" src="' + fsrc + '?scripts='+($scope.attrs.scripts||scripts)+'&html='+ html + '" ' + v.w + v.h + ' style="border:0" '+ opts +'>':
+                    '<iframe id="'+v.vid+'" class="jsCanvas" '  + v.w + v.h + ' style="border:0" '+ opts + ' >')+
                   '</iframe>'+
                   '</div>';
                 $scope.aelement = angular.element(angularElement);
