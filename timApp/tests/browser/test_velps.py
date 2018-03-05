@@ -2,10 +2,11 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
 
-from timApp.tests.browser.browsertest import BrowserTest
+from timApp.tests.browser.browsertest import BrowserTest, ignore_timeout
 
 
 class VelpTest(BrowserTest):
+    @ignore_timeout
     def test_velps(self):
         """Ensures:
 
