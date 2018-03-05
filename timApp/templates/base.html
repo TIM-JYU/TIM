@@ -183,7 +183,7 @@
                                     col-sm-{{ col_m_sm }} col-sm-offset-{{ (12 - col_m_sm) // 2 }}">
                             <div class="material">
                                 {% if lecture_assets %}
-                                    {% include 'partials/lectureinfo_menu.html' %}
+                                    <tim-lecture-menu></tim-lecture-menu>
                                 {% endif %}
                                 {% block content %}{% endblock %}
                             </div>

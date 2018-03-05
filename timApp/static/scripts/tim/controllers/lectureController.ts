@@ -12,6 +12,7 @@
  */
 
 import angular, {IController, IScope} from "angular";
+import {IModalInstanceService} from "angular-ui-bootstrap";
 import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
@@ -19,7 +20,7 @@ import sessionsettings from "tim/session";
 import {clone, GetURLParameter, markAsUsed, setSetting, to} from "tim/utils";
 import {showLectureEnding} from "../components/lectureEnding";
 import * as wall from "../components/lectureWall";
-import {showMessageDialog} from "../dialog";
+import {showMessageDialog, IModalInstance} from "../dialog";
 import {
     alreadyAnswered,
     endTimeChanged,
@@ -51,6 +52,7 @@ import {showLectureDialog} from "./createLectureCtrl";
 import {askQuestion} from "./questionAskController";
 import {showStatisticsDialog} from "./showStatisticsToQuestionController";
 import {ViewCtrl} from "./view/viewctrl";
+import {showLectureWall} from "../components/lectureWall";
 
 markAsUsed(wall);
 
@@ -91,6 +93,7 @@ export class LectureController implements IController {
     viewctrl: ViewCtrl | undefined;
     private wallMessages: ILectureMessage[];
     private wallName: string;
+    private wallInstance: IModalInstance<{}> | undefined;
 
     constructor(scope: IScope) {
         this.scope = scope;
@@ -152,6 +155,18 @@ export class LectureController implements IController {
         });
 
         this.focusOn();
+    }
+
+    async $doCheck() {
+        if (!this.lecture) {
+            return;
+        }
+        if (this.lectureSettings.useWall && !this.wallInstance) {
+            this.wallInstance = showLectureWall(this.lecture.lecture_id, this.wallMessages);
+        } else if (!this.lectureSettings.useWall && this.wallInstance) {
+            this.wallInstance.close({});
+            this.wallInstance = undefined;
+        }
     }
 
     showRightView(answer: ILectureListResponse | ILectureResponse) {
@@ -415,10 +430,6 @@ export class LectureController implements IController {
         this.lectureSettings.useWall = response.useWall;
         this.lectureSettings.useQuestions = response.useQuestions;
 
-        // TODO: Fix this to scroll bottom without cheating.
-        const wallArea = $("#wallArea");
-        wallArea.animate({scrollTop: wallArea[0].scrollHeight * 10}, 1000);
-
         if (this.isLecturer) {
             this.canStop = true;
             this.addPeopleToList(response.students, this.studentTable);
@@ -651,8 +662,6 @@ export class LectureController implements IController {
             this.newMessagesAmount += answer.msgs.length;
             this.newMessagesAmountText = " (" + this.newMessagesAmount + ")";
             this.wallName = "Wall - " + this.lecture.lecture_code + this.newMessagesAmountText;
-            const wallArea = $("#wallArea");
-            wallArea.scrollTop(wallArea[0].scrollHeight);
 
             let pollInterval = answer.ms;
             if (isNaN(pollInterval) || pollInterval < 1000) {

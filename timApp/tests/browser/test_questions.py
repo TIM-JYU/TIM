@@ -61,6 +61,7 @@ class QuestionTest(BrowserTest):
 
         self.login_browser_quick_test1()
         self.login_test1()
+        self.skip_screenshot_tests = True
 
         points = ['3', '1', '', '0']
         choices = [

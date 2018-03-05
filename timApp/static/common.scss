@@ -1,8 +1,3 @@
-.logintext {
-    @extend .text-center;
-    margin-top: 13px;
-}
-
 .margin-4 {
     margin: 4px;
 }
@@ -74,19 +69,10 @@
     opacity: 0.1;
 }
 
-.minimize {
-    padding-left: 15px;
-    right: 55px;
+tim-duration-picker {
+    display: contents;
 }
 
-.close {
-    padding-right: 15px;
-    right: 10px;
-}
-
-.titlebutton {
-    z-index: 2;
-    top: 0;
-    position: absolute;
-    cursor: pointer;
+.pos-rel {
+    position: relative;
 }

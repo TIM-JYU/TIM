@@ -4,6 +4,7 @@ import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
 import {markAsUsed} from "tim/utils";
 import {$http, $window} from "../ngimport";
+import {durationTypes} from "../components/durationPicker";
 
 markAsUsed(focusMe);
 
@@ -39,7 +40,6 @@ class RightsEditorController implements IController {
     };
     private grouprights: IRight[];
     private showActiveOnly: boolean;
-    private durationTypes: moment.unitOfTime.Base[];
     private selectedRight: IRight | null;
     private datePickerOptionsFrom: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
@@ -61,7 +61,6 @@ class RightsEditorController implements IController {
         this.timeOpt = {type: "always", durationType: "hours", durationAmount: 4};
         this.selectedRight = null;
         this.showActiveOnly = true;
-        this.durationTypes = ["seconds", "minutes", "hours", "days", "weeks", "months", "years"];
         this.datePickerOptionsFrom = {
             format: "D.M.YYYY HH:mm:ss",
             defaultDate: moment(),
@@ -248,12 +247,12 @@ class RightsEditorController implements IController {
         if (group.duration && group.accessible_from == null) {
             const d = moment.duration(group.duration);
             this.timeOpt.type = "duration";
-            for (let i = this.durationTypes.length - 1; i >= 0; --i) {
-                const amount = d.as(this.durationTypes[i]);
+            for (let i = durationTypes.length - 1; i >= 0; --i) {
+                const amount = d.as(durationTypes[i]);
                 if (Math.floor(amount) === amount || i === 0) {
                     // preserve last duration type choice if the amount is zero
                     if (amount !== 0) {
-                        this.timeOpt.durationType = this.durationTypes[i];
+                        this.timeOpt.durationType = durationTypes[i];
                     }
                     this.timeOpt.durationAmount = amount;
                     break;

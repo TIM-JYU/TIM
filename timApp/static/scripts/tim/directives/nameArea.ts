@@ -66,5 +66,5 @@ registerDialogComponent("timNameArea",
     {templateUrl: "/static/templates/nameArea.html"});
 
 export async function showNameAreaDialog() {
-    return await showDialog<NameAreaController>("timNameArea", {});
+    return await showDialog<NameAreaController>("timNameArea", {}).result;
 }

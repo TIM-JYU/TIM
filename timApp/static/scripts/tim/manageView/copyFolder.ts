@@ -63,18 +63,18 @@ timApp.component("timCopyFolder", {
     template: `
 <form name="copyForm">
     <p>You can copy all documents and folders in this folder to another folder.</p>
-    <div class="form-group" tim-error-state data-for="copyForm.copyPath">
+    <div class="form-group" tim-error-state>
         <label for="destination" class="control-label">Destination:</label>
         <input name="copyPath" class="form-control" tim-location id="destination" type="text" autocomplete="off"
                ng-model="$ctrl.copyFolderPath" ng-change="$ctrl.copyParamChanged()">
-        <tim-error-message for="copyForm.copyPath"></tim-error-message>
+        <tim-error-message></tim-error-message>
     </div>
     <p>You can optionally exclude some documents/folders from being copied.</p>
-    <div class="form-group" tim-error-state data-for="copyForm.exclude">
+    <div class="form-group" tim-error-state>
         <label for="exclude" class="control-label">Exclude documents/folders that match:</label>
         <input name="exclude" class="form-control" id="exclude" type="text" autocomplete="off"
                ng-model="$ctrl.copyFolderExclude" ng-change="$ctrl.copyParamChanged()">
-        <tim-error-message for="copyForm.exclude"></tim-error-message>
+        <tim-error-message></tim-error-message>
     </div>
     <button ng-click="$ctrl.copyFolderPreview($ctrl.copyFolderPath, $ctrl.copyFolderExclude)" class="timButton"
             ng-disabled="$ctrl.copyFolderPath === $ctrl.item.path ||

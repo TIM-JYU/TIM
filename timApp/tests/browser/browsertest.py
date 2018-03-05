@@ -39,6 +39,10 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     login_dropdown_path = '//login-menu/div/button'
     screenshot_dir = '/service/screenshots'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.skip_screenshot_tests = False
+
     def get_screenshot_tolerance(self) -> float:
         return 0.001
 
@@ -159,7 +163,6 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
     def assert_same_screenshot(self, element: WebElement, filename: Union[str, List[str]], move_to_element: bool = False):
         """Asserts that the provided element looks the same as in the provided screenshot.
-        :param try_again: Whether to try again it the first comparison attempt fails.
         :param element: The element to check.
         :param filename: The filename of the expected screenshot.
         :param move_to_element: Whether to move to the element before taking the screenshot.
@@ -180,10 +183,10 @@ class BrowserTest(TimLiveServer, TimRouteTest):
                 return
         self.save_element_screenshot(element, f'{f}_FAIL', move_to_element)
         diff.save(filename=f'{self.screenshot_dir}/{f}_FAIL_DIFF.png')
-        self.assertTrue(False,
-                        msg=f'Screenshots did not match (diff value is {result}); '
-                            f'failed screenshot saved to screenshots/{f}_FAIL '
-                            f'and difference to screenshots/{f}_FAIL_DIFF')
+        assert_msg = f'Screenshots did not match (diff value is {result}); ' \
+                     f'failed screenshot saved to screenshots/{f}_FAIL ' \
+                     f'and difference to screenshots/{f}_FAIL_DIFF'
+        self.assertTrue(self.skip_screenshot_tests, msg=assert_msg)
 
     def should_not_exist(self, css_selector: str):
         """Asserts that the current document should not contain any elements that match the specified CSS selector.

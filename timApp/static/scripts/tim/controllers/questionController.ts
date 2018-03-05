@@ -991,5 +991,5 @@ registerDialogComponent("timEditQuestion",
 export async function showQuestionEditDialog(params: IQuestionDialogParams): Promise<IQuestionDialogResult> {
     return showDialog<QuestionController>("timEditQuestion", {
         params: () => params,
-    });
+    }).result;
 }

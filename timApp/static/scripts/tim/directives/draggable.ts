@@ -110,17 +110,14 @@ class DraggableController implements IController {
         }
 
         if (attr.click) {
-            const minimizeElem = $("<img>", {
-                src: "/static/images/minimize-window-16.png",
-                class: "titlebutton minimize",
-            });
+            const minimizeElem = $(`<a><i class="glyphicon glyphicon-minus pull-right"></a>`);
             minimizeElem.on("click", () => {
                 this.clickFn(this.scope);
             });
             this.handle.append(minimizeElem);
         }
         if (attr.close) {
-            const close = $("<img>", {src: "/static/images/close-window-16.png", class: "titlebutton close"});
+            const close = $(`<a><i class="glyphicon glyphicon-remove pull-right"></a>`);
             close.on("click", () => {
                 closeFn!(this.scope);
             });

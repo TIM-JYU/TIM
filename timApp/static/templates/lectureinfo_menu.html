@@ -1,0 +1,83 @@
+<div ng-cloak class="menuSection" ng-show="$ctrl.lctrl.lectureSettings.inLecture || $ctrl.lctrl.lectureSettings.lectureMode">
+    <div id="largeMenu">
+        <div class="lectureSection" ng-show="!$ctrl.lctrl.lectureSettings.inLecture">
+            <h1>Now:</h1>
+            <div ng-show="$ctrl.lctrl.lectures.length > 0" class="lectureArea">
+                <select ng-change="$ctrl.lctrl.clearChange()" ng-model="$ctrl.lctrl.chosenLecture"
+                        ng-options="lecture.lecture_code for lecture in $ctrl.lctrl.lectures">
+                </select>
+                <button class="timButton btn-lg"
+                        ng-click="$ctrl.lctrl.joinLecture($ctrl.lctrl.chosenLecture.lecture_code, $ctrl.lctrl.chosenLecture.is_access_code)"
+                        title="Join the lecture" ng-show="$ctrl.lctrl.lectureSettings">
+                    <span class="glyphicon glyphicon-log-in" aria-hidden="true"></span>
+                </button>
+                <button class="timButton btn-lg"
+                        ng-click="$ctrl.lctrl.editLecture($ctrl.lctrl.chosenLecture.lecture_id)" title="Edit this lecture"
+                        ng-show="$ctrl.lctrl.isLecturer">
+                    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+                </button>
+                <button class="timButton btn-lg"
+                        ng-click="$ctrl.lctrl.toggleLecture()" title="Add new lecture" ng-show="$ctrl.lctrl.isLecturer">
+                    <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+                </button>
+            </div>
+            <div ng-show="$ctrl.lctrl.lectures.length <= 0">
+                <p>No running lectures</p>
+                <button class="timButton btn-lg"
+                        ng-click="$ctrl.lctrl.toggleLecture()" title="Add new lecture" ng-show="$ctrl.lctrl.isLecturer">
+                    <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+        <div class="lectureSection" ng-show="$ctrl.lctrl.lectureSettings.inLecture">
+            <h1 ng-bind="$ctrl.lctrl.lecture.lecture_code"></h1>
+
+            <p>Started: {{ $ctrl.lctrl.lecture.start_time | timdate }}</p>
+
+            <p>Ends: {{ $ctrl.lctrl.lecture.end_time | timdate }}</p>
+            <div id="inLectureIconSection">
+                <button class="timButton btn-lg"
+                        ng-click="$ctrl.lctrl.leaveLecture()" title="Leave this lecture"
+                        ng-show="$ctrl.lctrl.lectureSettings.inLecture">
+                    <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
+                </button>
+                <button class="timButton btn-lg"
+                        ng-click="$ctrl.lctrl.endLecture()" title="End this lecture" ng-show="$ctrl.lctrl.canStop">
+                    <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+                </button>
+                <button class="timButton btn-lg"
+                        ng-click="$ctrl.lctrl.editLecture($ctrl.lctrl.lecture.lecture_id)" title="Edit this lecture"
+                        ng-show="$ctrl.lctrl.canStop">
+                    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+                </button>
+                <a href="">Return to lecture</a>
+            </div>
+        </div>
+
+        <div class="lectureSection" ng-show="!$ctrl.lctrl.lectureSettings.inLecture">
+            <h1>Later:</h1>
+
+            <div class="lectureArea">
+                <p ng-show="$ctrl.lctrl.futureLectures.length <= 0">No upcoming lectures</p>
+
+                <div ng-show="$ctrl.lctrl.futureLectures.length > 0">
+                    <select ng-model="$ctrl.lctrl.futureLecture"
+                            ng-options="lecture.lecture_code + ' ' + (lecture.start_time | timdate) for lecture in $ctrl.lctrl.futureLectures">
+                    </select>
+                </div>
+                <div class="iconSection" ng-show="$ctrl.lctrl.futureLectures.length > 0">
+                    <button class="timButton btn-lg"
+                            ng-click="$ctrl.lctrl.startFutureLecture()" title="Start lecture now" ng-show="$ctrl.lctrl.isLecturer">
+                        <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+                    </button>
+                    <button class="timButton btn-lg"
+                            ng-click="$ctrl.lctrl.editLecture($ctrl.lctrl.futureLecture.lecture_id)" title="Edit this lecture"
+                            ng-show="$ctrl.lctrl.isLecturer">
+                        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <tim-small-menu></tim-small-menu>
+</div>

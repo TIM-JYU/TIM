@@ -498,11 +498,11 @@ timApp.component("dynamicAnswerSheet", {
     },
     controller: AnswerSheetController,
     template: `
-<form class="qstAnswerSheet" ng-if="$ctrl.json">
+<form ng-if="$ctrl.json">
     <h5 ng-bind="$ctrl.getHeader()"></h5>
     <p ng-if="$ctrl.userpoints != null" ng-bind="$ctrl.userpoints"></p>
     <div>
-        <table class="table table-borderless answer-sheet-table" ng-class="$ctrl.getTableClass()">
+        <table class="table table-borderless" ng-class="$ctrl.getTableClass()">
             <tbody>
             <tr ng-if="$ctrl.hasHeaders()" class="answer-heading-row">
                 <th ng-if="$ctrl.isMatrix()"></th>
@@ -513,8 +513,8 @@ timApp.component("dynamicAnswerSheet", {
                 <td ng-if="$ctrl.isMatrix()" ng-bind="$ctrl.fixText(row.text)"></td>
                 <td ng-repeat="col in row.columns track by $index" ng-init="coli = $index">
                     <label>
-                <span ng-class="$ctrl.getInputClass(rowi, coli)">
                 <input ng-if="$ctrl.isRadio()"
+                       ng-class="$ctrl.getInputClass(rowi, coli)"
                        ng-disabled="$ctrl.disabled"
                        ng-change="$ctrl.signalUpdate()"
                        type="radio"
@@ -522,6 +522,7 @@ timApp.component("dynamicAnswerSheet", {
                        name="{{$ctrl.getGroupName(rowi)}}"
                        ng-value="$ctrl.getInputValue(rowi, coli)">
                 <input ng-if="$ctrl.isCheckbox()"
+                       ng-class="$ctrl.getInputClass(rowi, coli)"
                        ng-disabled="$ctrl.disabled"
                        ng-change="$ctrl.signalUpdate()"
                        type="checkbox"
@@ -530,12 +531,13 @@ timApp.component("dynamicAnswerSheet", {
                        ng-true-value="1"
                        ng-false-value="0">
                 <textarea
+                        class="form-control"
                         ng-if="$ctrl.isText()"
                         ng-disabled="$ctrl.disabled"
                         ng-change="$ctrl.signalUpdate()"
                         ng-model="$ctrl.answerMatrix[rowi][coli]">
 </textarea>
-</span>{{$ctrl.getLabelText(row, col)}}</label>
+{{$ctrl.getLabelText(row, col)}}</label>
                     <p ng-if="(p = $ctrl.getPoints(rowi, coli)) != null" class="qst-points" ng-bind="p"></p>
                 </td>
                 <td ng-if="p = $ctrl.getExpl(rowi)" ng-bind="p" class="explanation"></td>

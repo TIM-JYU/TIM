@@ -73,10 +73,6 @@ export class LectureInfoController implements IController {
         const data = response.data;
         /*Update the header links to correct urls*/
         this.updateHeaderLinks();
-        /*Add a return link icon to lecture header if user is in lecture*/
-        if (this.inLecture) {
-            this.addReturnLinkToHeader();
-        }
 
         data.messages.forEach((msg) => {
             this.msg += msg.user.name + " <" + msg.timestamp + ">: " + msg.message + "\n";
@@ -114,26 +110,6 @@ export class LectureInfoController implements IController {
                 elem.setAttribute("href", `/${name.toLowerCase()}/${this.item.path}`);
             }
         }
-    }
-
-    /**
-     * Adds a header to lectureMenu that allows user to return to lecture
-     * if user is currently on the lecture.
-     */
-    private addReturnLinkToHeader() {
-        const menu = document.getElementById("inLectureIconSection");
-        if (!menu) {
-            return;
-        }
-        const linkToLecture = document.createElement("a");
-        linkToLecture.setAttribute("href", /* "https://" + location.host + */ "/lecture/" + this.item.path + "?Lecture=" + this.lecture.lecture_code);
-        linkToLecture.setAttribute("title", "Return to lecture");
-        const returnImg = document.createElement("img");
-        returnImg.setAttribute("src", "/static/images/join-icon3.png");
-        returnImg.setAttribute("class", "icon");
-        returnImg.setAttribute("title", "Return to lecture");
-        linkToLecture.appendChild(returnImg);
-        menu.appendChild(linkToLecture);
     }
 
     private getAnswers(question: IAskedQuestion) {
@@ -201,7 +177,7 @@ timApp.component("timLectureInfo", {
 <div class="panel panel-default">
     <div class="panel-heading">Lecture wall</div>
     <div class="panel-body">
-        <textarea class="form-control" ng-model="$ctrl.msg" readonly id="lectureInfoWall"></textarea>
+        <textarea class="form-control" ng-model="$ctrl.msg" readonly></textarea>
     </div>
 </div>
 
@@ -232,7 +208,7 @@ timApp.component("timLectureInfo", {
             Download as plain text</a>
         <div ng-repeat="question in $ctrl.questions">
             <p>{{ $index + 1 }}.
-                <span class="bold" ng-bind-html="question.json.json.questionTitle"></span>
+                <strong ng-bind-html="question.json.json.questionTitle"></strong>
                 /
                 <span ng-bind="question.asked_time | timtim"></span>
             </p>

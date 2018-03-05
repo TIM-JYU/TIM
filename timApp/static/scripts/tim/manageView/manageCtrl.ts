@@ -1,11 +1,11 @@
 import angular, {IController, IFormController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {$compile, $http, $log, $timeout, $upload, $window} from "../ngimport";
+import {Duplicate} from "../edittypes";
 import {IItem} from "../IItem";
+import {$compile, $http, $log, $timeout, $upload, $window} from "../ngimport";
 import {markAsUsed} from "../utils";
 import * as copyFolder from "./copyFolder";
-import {Duplicate} from "../edittypes";
 
 markAsUsed(copyFolder);
 

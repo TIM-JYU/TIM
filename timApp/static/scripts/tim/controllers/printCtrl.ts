@@ -152,5 +152,5 @@ registerDialogComponent("timPrint",
     {templateUrl: "/static/templates/printDialog.html"});
 
 export async function showPrintDialog(p: IPrintParams) {
-    return await showDialog<PrintCtrl>("timPrint", {params: () => p});
+    return await showDialog<PrintCtrl>("timPrint", {params: () => p}).result;
 }

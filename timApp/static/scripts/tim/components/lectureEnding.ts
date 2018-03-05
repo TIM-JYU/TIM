@@ -34,22 +34,26 @@ class LectureEndingCtrl extends DialogController<{lecture: ILecture}, ILectureEn
 registerDialogComponent("timLectureEnding",
     LectureEndingCtrl,
     {
-        template: `<div>
-    <h1>Lecture ends in
-    <timer interval="1000"
-           max-time-unit="'day'"
-           end-time="$ctrl.resolve.lecture.end_time">
-           {{ days > 0 ? days + ' day' + daysS + ' +' : '' }} {{ hhours }}:{{ mminutes }}:{{ sseconds }}
-           </timer></h1>
-
-    <form class="extendLectureOptions">
-        <label> Extend by
-            <select ng-model="$ctrl.selectedTime" ng-options="choice for choice in $ctrl.extendTimes">
-            </select>
-            minutes
-        </label>
-    </form>
-    <div class="buttons">
+        template: `
+<tim-dialog>
+    <dialog-header>
+        Lecture ends in
+        <timer interval="1000"
+               max-time-unit="'day'"
+               end-time="$ctrl.resolve.lecture.end_time">
+            {{ days > 0 ? days + ' day' + daysS + ' +' : '' }} {{ hhours }}:{{ mminutes }}:{{ sseconds }}
+        </timer>
+    </dialog-header>
+    <dialog-body>
+        <form>
+            <label> Extend by
+                <select ng-model="$ctrl.selectedTime" ng-options="choice for choice in $ctrl.extendTimes">
+                </select>
+                minutes
+            </label>
+        </form>
+    </dialog-body>
+    <dialog-footer>
         <button class="timButton" autofocus ng-click="$ctrl.extend()">Extend</button>
         <button class="timButton" ng-show="!$ctrl.hasLectureEnded()" ng-click="$ctrl.end()">End</button>
         <button
@@ -57,11 +61,11 @@ registerDialogComponent("timLectureEnding",
                 ng-show="$ctrl.hasLectureEnded()"
                 ng-click="$ctrl.noExtend()">Don't extend
         </button>
-    </div>
-</div>
+    </dialog-footer>
+</tim-dialog>
 `,
     });
 
 export async function showLectureEnding(lecture: ILecture) {
-    return await showDialog<LectureEndingCtrl>("timLectureEnding", {lecture: () => lecture});
+    return await showDialog<LectureEndingCtrl>("timLectureEnding", {lecture: () => lecture}).result;
 }

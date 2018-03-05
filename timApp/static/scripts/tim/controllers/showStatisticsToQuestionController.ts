@@ -55,22 +55,24 @@ registerDialogComponent("timQuestionStatistics",
     ShowStatisticsToQuestionController,
     {
         template: `
-<div class="modal-header">
-    <h4 class="modal-title" id="modal-title" ng-bind-html="$ctrl.getTitle()"></h4>
-</div>
-<div class="modal-body" id="modal-body">
-    <show-chart-directive
-            divresize="true"
-            question="$ctrl.resolve.params"
-            answers="$ctrl.answers"></show-chart-directive>
-    <p ng-show="$ctrl.ended">Question has ended.</p>
-</div>
-<div class="modal-footer">
-    <button class="timButton" ng-click="$ctrl.close()">Close</button>
-</div>
+<tim-dialog>
+    <dialog-header ng-bind-html="$ctrl.getTitle()">
+
+    </dialog-header>
+    <dialog-body>
+        <show-chart-directive
+                divresize="true"
+                question="$ctrl.resolve.params"
+                answers="$ctrl.answers"></show-chart-directive>
+        <p ng-show="$ctrl.ended">Question has ended.</p>
+    </dialog-body>
+    <dialog-footer>
+        <button class="timButton" ng-click="$ctrl.close()">Close</button>
+    </dialog-footer>
+</tim-dialog>
 `,
     });
 
 export async function showStatisticsDialog(p: IStatisticsParams) {
-    return await showDialog<ShowStatisticsToQuestionController>("timQuestionStatistics", {params: () => p});
+    return await showDialog<ShowStatisticsToQuestionController>("timQuestionStatistics", {params: () => p}).result;
 }

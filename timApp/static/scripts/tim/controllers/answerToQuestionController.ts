@@ -263,19 +263,22 @@ registerDialogComponent("timAnswerQuestion",
     AnswerToQuestionController,
     {
         template: `
-<div class="popUpWindow">
-    <div class="questionAskedWindow">
+<tim-dialog>
+    <dialog-header>
+        Answer question
+    </dialog-header>
+    <dialog-body>
         <dynamic-answer-sheet
                 questiondata="$ctrl.preview"
                 on-answer-change="$ctrl.updateAnswer">
         </dynamic-answer-sheet>
-    </div>
-    <uib-progressbar
-            max="$ctrl.progressMax"
-            value="$ctrl.barFilled">
-        {{ $ctrl.progressText }}
-    </uib-progressbar>
-    <div class="buttons">
+        <uib-progressbar
+                max="$ctrl.progressMax"
+                value="$ctrl.barFilled">
+            {{ $ctrl.progressText }}
+        </uib-progressbar>
+    </dialog-body>
+    <dialog-footer>
         <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.edit()">
             Edit points
         </button>
@@ -302,11 +305,11 @@ registerDialogComponent("timAnswerQuestion",
         <button ng-show="$ctrl.isLecturer && !$ctrl.questionEnded" class="timButton" ng-click="$ctrl.stopQuestion()">
             End question
         </button>
-    </div>
-</div>
+    </dialog-footer>
+</tim-dialog>
 `,
     });
 
 export async function showQuestionAnswerDialog(p: IAnswerQuestionParams) {
-    return await showDialog<AnswerToQuestionController>("timAnswerQuestion", {params: () => p});
+    return await showDialog<AnswerToQuestionController>("timAnswerQuestion", {params: () => p}).result;
 }
