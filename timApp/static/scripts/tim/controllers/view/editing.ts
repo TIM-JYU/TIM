@@ -400,13 +400,12 @@ export class EditingHandler {
             const $endpar = getElementByParId(extraData.area_end);
             $par.nextUntil($endpar).add($endpar).remove();
         }
-        const lectureTransclude = this.viewctrl.lectureCtrl != null ? {timLecture: {instance: this.viewctrl.lectureCtrl}} : {};
         const $newPars = $($compile(data.texts)(this.viewctrl.reviewCtrlScope, undefined,
             {
                 transcludeControllers: {
                     timReview: {instance: this.viewctrl.reviewCtrlScope.$ctrl},
                     timView: {instance: this.viewctrl},
-                    ...lectureTransclude,
+                    ...(this.viewctrl.lectureCtrl != null ? {timLecture: {instance: this.viewctrl.lectureCtrl}} : {}),
                 },
             }));
         // const $newPars = $($compile($par)(this.sc.$new(true, this.viewctrl.reviewCtrlScope)));

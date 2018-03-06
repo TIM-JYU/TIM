@@ -748,11 +748,11 @@ export async function loadMap() {
         // Tile images used to draw the building frames
         const frameTile = findTileImagePos(tileFrameSet!, 0);
 
-        const grayTile = findTileImagePos(tileFrameSet, 1);
+        const grayTile = findTileImagePos(tileFrameSet!, 1);
 
         const roofTile = findTileImagePos(roofFrameSet!, 1);
 
-        const roofFrameTile = findTileImagePos(roofFrameSet, 0);
+        const roofFrameTile = findTileImagePos(roofFrameSet!, 0);
 
         // Draw the map
         let tiles = drawMap();

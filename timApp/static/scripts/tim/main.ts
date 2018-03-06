@@ -1,7 +1,7 @@
 import angular from "angular";
 import ad from "bootstrap";
 import $ from "jquery";
-import lectureMenu from "tim/components/lectureMenu";
+import * as lectureMenu from "tim/components/lectureMenu";
 import * as a from "tim/controllers/answerToQuestionController";
 import * as b from "tim/controllers/breadcrumbs";
 import * as c from "tim/controllers/createLectureCtrl";

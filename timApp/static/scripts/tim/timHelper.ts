@@ -86,6 +86,7 @@ export interface IAttributes {
 
 export interface ISettable {
     attrs: IAttributes;
+    [index: string]: {} | undefined;
 }
 
 export function setk<T extends ISettable, K extends keyof T>(scope: T, sname: K, attrs: IAttributes, keys: string[], def: T[K]): T[K] {
