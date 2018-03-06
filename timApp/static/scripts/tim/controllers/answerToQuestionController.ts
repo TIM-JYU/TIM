@@ -56,7 +56,8 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         this.updateAnswer = this.updateAnswer.bind(this);
     }
 
-    private $onInit() {
+    $onInit() {
+        super.$onInit();
         if (currentQuestion) {
             throw new Error("Question window was already open.");
         }

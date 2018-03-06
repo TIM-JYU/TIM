@@ -20,6 +20,13 @@
         cursor: default;
         touch-action: none;
         margin-bottom: 0pt;
+        display: inline;
+    }
+
+    i {
+        color: set-text-color($draghandle-bg-color);
+        cursor: pointer;
+        padding-right: 1em;
     }
 }
 

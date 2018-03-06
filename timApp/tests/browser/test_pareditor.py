@@ -50,6 +50,7 @@ class ParEditorTest(BrowserTest):
         ActionChains(self.drv).send_keys('# hello\n\nworld').perform()
         preview = find_preview_element(pareditor)
         self.wait_for_preview_to_finish()
+        ActionChains(self.drv).move_to_element(preview).perform()  # avoids having mouse above a toolbar button
         self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world')
         change_editor_button = get_change_editor_button(pareditor)
         change_editor_button.click()

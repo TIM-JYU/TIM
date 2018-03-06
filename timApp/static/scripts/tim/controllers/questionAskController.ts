@@ -69,7 +69,8 @@ export class QuestionPreviewController extends DialogController<{params: Questio
         return `Question: ${this.questiondata.markup.questionTitle}`;
     }
 
-    private async $onInit() {
+    async $onInit() {
+        super.$onInit();
         if (!isReasking(this.resolve.params)) {
             const data = await fetchQuestion(this.resolve.params.docId, this.resolve.params.parId, false);
             this.questiondata = makePreview(data.markup);

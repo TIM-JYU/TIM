@@ -49,10 +49,6 @@ class NameAreaController extends DialogController<{}, {areaName: string, options
         return "Name area";
     }
 
-    private $onInit() {
-
-    }
-
     private addArea() {
         if (!this.areaName) {
             return;

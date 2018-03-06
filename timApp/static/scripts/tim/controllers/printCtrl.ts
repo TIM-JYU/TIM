@@ -2,7 +2,7 @@ import angular from "angular";
 import {ngStorage} from "ngstorage";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IItem} from "../IItem";
-import {$http, $localStorage, $window} from "../ngimport";
+import {$http, $localStorage, $timeout, $window} from "../ngimport";
 
 export interface ITemplate extends IItem {
 
@@ -33,7 +33,8 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
         return "Printing document";
     }
 
-    private $onInit() {
+    $onInit() {
+        super.$onInit();
         this.storage = $localStorage.$default({
             timPrintingTemplateId: null,
         });

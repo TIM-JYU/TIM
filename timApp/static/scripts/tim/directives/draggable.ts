@@ -1,9 +1,8 @@
-import {ICompiledExpression, IController} from "angular";
-import {IAttributes, IRootElementService, IScope} from "angular";
+import {IAttributes, IChangesObject, IController, IOnChangesObject, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
-import {$document, $parse} from "../ngimport";
+import {$compile, $document} from "../ngimport";
 
 function setStorage(key: string, value: any) {
     value = JSON.stringify(value);
@@ -42,20 +41,42 @@ function wmax(value: string, min: number, max: number) {
     return value;
 }
 
-timApp.directive("timDraggableFixed", [function() {
+const draggableTemplate = `
+<div class="draghandle">
+    <p ng-show="d.caption" ng-bind="d.caption"></p>
+    <i ng-show="d.closeFn"
+       title="Close dialog"
+       ng-click="d.closeFn()"
+       class="glyphicon glyphicon-remove pull-right"></i>
+    <i ng-show="d.click"
+       title="Minimize dialog"
+       ng-click="d.minimize()"
+       class="glyphicon glyphicon-minus pull-right"></i>
+</div>
+    `;
+
+timApp.directive("timDraggableFixed", [function () {
     return {
+        bindToController: {
+            caption: "@?",
+            click: "<?",
+            resize: "<?",
+            save: "@?",
+        },
         controller: DraggableController,
+        controllerAs: "d", // default $ctrl does not work, possibly because of some ng-init
         restrict: "A",
+        // Using template + transclude here does not work for some reason with uib-modal, so we compile the
+        // template manually in $postLink.
     };
 }]);
 
 type Pos = {X: number, Y: number};
 
-class DraggableController implements IController {
+export class DraggableController implements IController {
     private static $inject = ["$scope", "$attrs", "$element"];
 
     private posKey: string;
-    private clickFn: ((scope: IScope) => void);
     private areaMinimized: boolean = false;
     private areaHeight: number = 0;
     private setLeft: boolean = true;
@@ -78,66 +99,46 @@ class DraggableController implements IController {
     private element: IRootElementService;
     private scope: IScope;
     private lastPageXYPos = {X: 0, Y: 0};
-    private handle = $("<div>", {class: "draghandle"});
-    private broadcastMsg: string;
-    private attr: IAttributes;
+    private handle: JQuery;
+    private closeFn?: () => void;
+    private caption?: string;
+    private click?: boolean;
+    private resize?: boolean;
+    private save?: string;
 
     constructor(scope: IScope, attr: IAttributes, element: IRootElementService) {
         this.scope = scope;
         this.element = element;
-        this.attr = attr;
-        if (attr.save) {
+    }
+
+    $onInit() {
+        if (this.save) {
             const pageId = window.location.pathname.split("/")[1];  // /velp/???
-            this.posKey = attr.save.replace("%%PAGEID%%", pageId);
+            this.posKey = this.save.replace("%%PAGEID%%", pageId);
         }
+    }
 
-        this.broadcastMsg = attr.broadcastmsg;
+    setCloseFn(fn: () => void) {
+        this.closeFn = fn;
+    }
 
-        if (attr.click) {
-            if (attr.click === "true") {
-                this.clickFn = () => this.minimize();
+    $onChanges(onChangesObj?: IOnChangesObject) {
+        if (!onChangesObj) {
+            return;
+        }
+        const resize = onChangesObj.resize as IChangesObject<boolean> | undefined;
+        if (resize) {
+            if (resize.currentValue) {
+                this.createResizeHandles();
             } else {
-                this.clickFn = $parse(attr.click);
+                this.removeResizeHandles();
             }
         }
     }
 
     $postLink() {
-        const attr = this.attr;
-        let closeFn: null | ICompiledExpression = null;
-        if (attr.close) {
-            closeFn = $parse(attr.close);
-        }
-
-        if (attr.click) {
-            const minimizeElem = $(`<a><i class="glyphicon glyphicon-minus pull-right"></a>`);
-            minimizeElem.on("click", () => {
-                this.clickFn(this.scope);
-            });
-            this.handle.append(minimizeElem);
-        }
-        if (attr.close) {
-            const close = $(`<a><i class="glyphicon glyphicon-remove pull-right"></a>`);
-            close.on("click", () => {
-                closeFn!(this.scope);
-            });
-            this.handle.append(close);
-        }
-        this.element.prepend(this.handle); // TODO.  Laita elementin ympärille se mitä raahataan.
-
-        attr.$observe("resize", () => {
-            if (attr.resize === "true") {
-                this.createResizeHandles();
-            } else {
-                this.removeResizeHandles();
-            }
-        });
-
-        attr.$observe("caption", () => {
-            const handle = $(this.element).find(".draghandle");
-            handle.find("p").remove();
-            handle.append("<p>" + attr.caption + "</p>");
-        });
+        this.element.prepend($compile(draggableTemplate)(this.scope));
+        this.handle = this.element.children(".draghandle");
 
         this.updateHandle(this.element, this.handle);
 
@@ -160,11 +161,9 @@ class DraggableController implements IController {
             $document.on("mousemove pointermove touchmove", this.move);
         });
 
-        // TODO context is deprecated
-        ((this.element as any).context as HTMLElement).style.msTouchAction =
-            "none";
+        this.element[0].style.msTouchAction = "none";
 
-        if (attr.save) {
+        if (this.save) {
             this.getSetDirs();
             const oldSize: any = getStorage(this.posKey +
                 "Size");
@@ -226,9 +225,6 @@ class DraggableController implements IController {
             this.element.height(this.areaHeight);
             setStorage(this.posKey + "min", false);
             this.element.find(".resizehandle").css("display", "");
-        }
-        if (handles && handles.length) {
-            this.scope.$apply();
         }
     }
 
@@ -336,8 +332,8 @@ class DraggableController implements IController {
 
     getPageXYnull(e: JQueryEventObject) {
         if (!(
-            "pageX" in e) || (
-            e.pageX == 0 && e.pageY == 0)) {
+                "pageX" in e) || (
+                e.pageX == 0 && e.pageY == 0)) {
             const originalEvent = e.originalEvent as any;
             if (originalEvent.touches.length) {
                 return {
@@ -461,11 +457,6 @@ class DraggableController implements IController {
         const size = this.element.css(["width", "height"]);
         if (this.posKey) {
             setStorage(this.posKey + "Size", size);
-        }
-        if (this.broadcastMsg) {
-            this.scope.$broadcast(
-                this.broadcastMsg, {size});
-            // $rootScope.$broadcast(broadcastMsg, {size: size});
         }
     }
 }

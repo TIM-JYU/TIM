@@ -21,6 +21,7 @@ class LectureWallController extends DialogController<{params: {lectureId: number
     }
 
     public $onInit() {
+        super.$onInit();
         this.lectureId = this.resolve.params.lectureId;
         this.messages = this.resolve.params.messages;
     }

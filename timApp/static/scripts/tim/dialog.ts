@@ -1,8 +1,8 @@
-import angular from "angular";
-import {IController} from "angular";
+import angular, {IController} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "./app";
+import {DraggableController} from "./directives/draggable";
 import {$templateCache, $uibModal, $window} from "./ngimport";
 
 export abstract class DialogController<T, Ret, ComponentName extends string> implements IController {
@@ -10,9 +10,14 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
     public readonly ret: Ret;
     public readonly resolve: T;
     protected closed = false;
+    protected readonly draggable: DraggableController;
     private readonly modalInstance: angular.ui.bootstrap.IModalInstanceService;
 
     protected abstract getTitle(): string;
+
+    $onInit() {
+        this.draggable.setCloseFn(() => this.dismiss());
+    }
 
     protected close(returnValue: Ret) {
         this.closed = true;
@@ -53,6 +58,9 @@ export function registerDialogComponent<T extends Dialog<T>>(name: T["component"
         },
         controller,
         controllerAs,
+        require: {
+            draggable: "^timDraggableFixed",
+        },
         ...tmpl,
     });
 }
@@ -107,8 +115,10 @@ export function showDialog<T extends Dialog<T>>(component: T["component"],
                                                 classes = ["no-pointer-events"],
                                                 size: "sm" | "md" | "lg" = "md"): IModalInstance<T["ret"]> {
     $templateCache.put("uib/template/modal/window.html", `
-<div tim-draggable-fixed="" style="pointer-events: auto;" class="modal-dialog {{size ? 'modal-' + size : ''}}">
-    <div class="modal-content" uib-modal-transclude>
+<div tim-draggable-fixed click="true" resize="true"
+     style="pointer-events: auto;"
+     class="modal-dialog {{size ? 'modal-' + size : ''}}">
+    <div class="draggable-content modal-content" uib-modal-transclude>
 
     </div>
 </div>`);

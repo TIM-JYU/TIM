@@ -74,6 +74,7 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
     }
 
     $onInit() {
+        super.$onInit();
         this.item = this.resolve.item;
         if (this.resolve.lecture != null) {
             this.setLecture(this.resolve.lecture);

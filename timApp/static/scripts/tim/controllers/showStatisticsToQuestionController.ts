@@ -22,7 +22,8 @@ export class ShowStatisticsToQuestionController extends DialogController<{params
         return `Question ${this.resolve.params.json.json.questionTitle} statistics`;
     }
 
-    private $onInit() {
+    $onInit() {
+        super.$onInit();
         void this.getLectureAnswers();
     }
 
