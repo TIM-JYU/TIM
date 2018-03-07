@@ -74,8 +74,13 @@ $body$
         params_url = {'file_type': 'pdf', 'template_doc_id': t2.id, 'plugins_user_code': False}
         expected_url = f'http://localhost/print/{d.path}?{urllib.parse.urlencode(params_url)}'
         result = self.get_no_warn(expected_url)
-        with open('tests/server/expected/printing/hello_1_2.pdf', 'rb') as f:
-            self.assertEqual(result, f.read())
+        try:
+            with open('tests/server/expected/printing/hello_1_2.pdf', 'rb') as f:
+                self.assertEqual(result, f.read())
+        except AssertionError:
+            with open('tests/server/expected/printing/hello_1_2_actual.pdf', 'wb') as f:
+                f.write(result)
+            raise
 
         self.login_test2()
         self.get(expected_url, expect_status=403)
