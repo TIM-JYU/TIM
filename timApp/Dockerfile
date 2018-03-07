@@ -172,7 +172,7 @@ RUN chown -R agent /service
 
 RUN bash -c "${APT_INSTALL} curl && ${APT_CLEANUP}"
 RUN (curl -sL https://deb.nodesource.com/setup_8.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
-RUN npm install -g typescript tslint jspm typescript-formatter && npm cache clean --force
+RUN npm install -g typescript@2.6 tslint jspm typescript-formatter && npm cache clean --force
 
 RUN bash -c "${APT_INSTALL} pdftk && ${APT_CLEANUP}"
 
