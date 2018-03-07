@@ -12,6 +12,7 @@
  */
 
 import angular, {IController, IScope} from "angular";
+import {IModalInstanceService} from "angular-ui-bootstrap";
 import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
@@ -19,14 +20,14 @@ import sessionsettings from "tim/session";
 import {clone, GetURLParameter, markAsUsed, setSetting, to} from "tim/utils";
 import {showLectureEnding} from "../components/lectureEnding";
 import * as wall from "../components/lectureWall";
-import {showMessageDialog} from "../dialog";
+import {showMessageDialog, IModalInstance} from "../dialog";
 import {
     alreadyAnswered,
     endTimeChanged,
     hasLectureEnded,
     hasUpdates,
     IAlreadyAnswered,
-    IAskedQuestion,
+    IAskedQuestion, IEmptyResponse,
     ILecture,
     ILectureListResponse,
     ILectureMessage,
@@ -36,7 +37,7 @@ import {
     IQuestionAsked,
     IQuestionHasAnswer,
     IQuestionResult,
-    isAskedQuestion,
+    isAskedQuestion, isEmptyResponse,
     isLectureListResponse,
     IUpdateResponse,
     pointsClosed,
@@ -46,10 +47,12 @@ import {
 } from "../lecturetypes";
 import {$http, $log, $timeout, $window} from "../ngimport";
 import {Users} from "../services/userService";
-import {currentQuestion, showQuestionAnswerDialog} from "./answerToQuestionController";
+import {currentQuestion, IAnswerQuestionResult, showQuestionAnswerDialog} from "./answerToQuestionController";
 import {showLectureDialog} from "./createLectureCtrl";
 import {askQuestion} from "./questionAskController";
+import {showStatisticsDialog} from "./showStatisticsToQuestionController";
 import {ViewCtrl} from "./view/viewctrl";
+import {showLectureWall} from "../components/lectureWall";
 
 markAsUsed(wall);
 
@@ -72,8 +75,6 @@ export class LectureController implements IController {
     private canStop: boolean;
     private chosenLecture: ILecture | undefined;
     private clockOffset: number;
-    private currentPointsId: number | undefined;
-    private currentQuestionId: number | undefined;
     private futureLecture: ILecture | undefined;
     private futureLectures: ILecture[];
     private gettingAnswers: boolean;
@@ -92,6 +93,7 @@ export class LectureController implements IController {
     viewctrl: ViewCtrl | undefined;
     private wallMessages: ILectureMessage[];
     private wallName: string;
+    private wallInstance: IModalInstance<{}> | undefined;
 
     constructor(scope: IScope) {
         this.scope = scope;
@@ -155,6 +157,18 @@ export class LectureController implements IController {
         this.focusOn();
     }
 
+    async $doCheck() {
+        if (!this.lecture) {
+            return;
+        }
+        if (this.lectureSettings.useWall && !this.wallInstance) {
+            this.wallInstance = showLectureWall(this.lecture.lecture_id, this.wallMessages);
+        } else if (!this.lectureSettings.useWall && this.wallInstance) {
+            this.wallInstance.close({});
+            this.wallInstance = undefined;
+        }
+    }
+
     showRightView(answer: ILectureListResponse | ILectureResponse) {
         if (!isLectureListResponse(answer)) {
             this.showLectureView(answer);
@@ -174,12 +188,15 @@ export class LectureController implements IController {
      * Makes http request to check if the current user is in lecture.
      */
     async checkIfInLecture() {
-        const response = await $http<ILectureResponse | ILectureListResponse>({
+        const response = await $http<ILectureResponse | ILectureListResponse | IEmptyResponse>({
             url: "/checkLecture",
             method: "GET",
             params: {doc_id: this.getDocIdOrNull(), buster: new Date().getTime()},
         });
         const answer = response.data;
+        if (isEmptyResponse(answer)) {
+            return;
+        }
         let lectureCode = GetURLParameter("lecture");
 
         // Check if the lecture parameter is autojoin.
@@ -413,10 +430,6 @@ export class LectureController implements IController {
         this.lectureSettings.useWall = response.useWall;
         this.lectureSettings.useQuestions = response.useQuestions;
 
-        // TODO: Fix this to scroll bottom without cheating.
-        const wallArea = $("#wallArea");
-        wallArea.animate({scrollTop: wallArea[0].scrollHeight * 10}, 1000);
-
         if (this.isLecturer) {
             this.canStop = true;
             this.addPeopleToList(response.students, this.studentTable);
@@ -580,8 +593,8 @@ export class LectureController implements IController {
                 d: this.getDocIdOrNull(), // doc_id
                 m: this.lectureSettings.useWall ? "t" : null, // get_messages
                 q: this.lectureSettings.useQuestions ? "t" : null, // get_questions
-                i: this.currentQuestionId || null, // current_question_id
-                p: this.currentPointsId || null, // current_points_id
+                i: this.getCurrentQuestionId(), // current_question_id
+                p: this.getCurrentPointsId(), // current_points_id
                 b: buster,
             },
         });
@@ -633,23 +646,13 @@ export class LectureController implements IController {
                     }
                     // If 'question' or 'result' is in answer, show question/explanation accordingly
                 } else if (pointsClosed(answer.extra)) {
-                    this.currentPointsId = undefined;
                     if (currentQuestion) {
                         currentQuestion.updateEndTime(null);
                     } else {
                         $log.error("currentQuestion was undefined when set end time to null");
                     }
                 } else if (!alreadyAnswered(answer.extra) && !questionHasAnswer(answer.extra)) {
-                    if (this.isLecturer) {
-                        if (questionAnswerReceived(answer.extra)) {
-                            this.currentQuestionId = undefined;
-                            this.currentPointsId = answer.extra.data.asked_question.asked_id;
-                        } else {
-                            this.showQuestion(answer.extra);
-                        }
-                    } else {
-                        this.showQuestion(answer.extra);
-                    }
+                    this.showQuestion(answer.extra);
                 }
             }
 
@@ -659,8 +662,6 @@ export class LectureController implements IController {
             this.newMessagesAmount += answer.msgs.length;
             this.newMessagesAmountText = " (" + this.newMessagesAmount + ")";
             this.wallName = "Wall - " + this.lecture.lecture_code + this.newMessagesAmountText;
-            const wallArea = $("#wallArea");
-            wallArea.scrollTop(wallArea[0].scrollHeight);
 
             let pollInterval = answer.ms;
             if (isNaN(pollInterval) || pollInterval < 1000) {
@@ -683,19 +684,38 @@ export class LectureController implements IController {
         // });
     }
 
+    getCurrentQuestionId() {
+        if (!currentQuestion || currentQuestion.hasResult()) {
+            return undefined;
+        }
+        return currentQuestion.getQuestion().asked_id;
+    }
+
+    getCurrentPointsId() {
+        if (!currentQuestion || !currentQuestion.hasResult()) {
+            return undefined;
+        }
+        return currentQuestion.getQuestion().asked_id;
+    }
+
     async showQuestion(answer: IQuestionAsked | IQuestionResult) {
         let question: IAskedQuestion;
         if (isAskedQuestion(answer.data)) {
-            this.currentQuestionId = answer.data.asked_id;
             question = answer.data;
         } else {
-            this.currentQuestionId = undefined;
-            this.currentPointsId = answer.data.asked_question.asked_id;
             question = answer.data.asked_question;
         }
-        const result = await showQuestionAnswerDialog({qa: answer.data, isLecturer: this.isLecturer});
+        let result: IAnswerQuestionResult;
+        if (currentQuestion) {
+            currentQuestion.setData(answer.data);
+            return;
+        } else {
+            if (this.isLecturer) {
+                void showStatisticsDialog(question);
+            }
+            result = await showQuestionAnswerDialog({qa: answer.data, isLecturer: this.isLecturer});
+        }
         if (result.type === "pointsclosed") {
-            this.currentPointsId = undefined;
             await $http({
                 url: "/closePoints",
                 method: "PUT",
@@ -705,7 +725,7 @@ export class LectureController implements IController {
                 },
             });
         } else if (result.type === "closed") {
-            this.currentQuestionId = undefined;
+            // empty
         } else if (result.type === "reask") {
             await askQuestion({askedId: question.asked_id});
         } else {

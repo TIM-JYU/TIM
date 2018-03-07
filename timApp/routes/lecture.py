@@ -21,7 +21,7 @@ from timApp.documentmodel.randutils import hashfunc
 from timApp.requesthelper import get_option, verify_json_params
 from timApp.responsehelper import json_response, ok_response, empty_response
 from timApp.routes.login import log_in_as_anonymous
-from timApp.routes.qst import get_question_data_from_document, delete_key, create_points_table, \
+from timApp.routes.qst import get_question_data_from_document, create_points_table, \
     calculate_points_from_json_answer, calculate_points
 from timApp.sessioninfo import get_current_user_id, logged_in, get_current_user_name, get_current_user_object, \
     current_user_in_lecture
@@ -782,37 +782,26 @@ def ask_question():
         question = AskedQuestion(lecture_id=lecture_id, doc_id=doc_id, asked_time=asked_time, points=None, expl=None,
                                  asked_json=asked_json, par_id=par_id)
         db.session.add(question)
-        db.session.commit()
-        asked_id = question.asked_id
     elif asked_id:
         question = get_asked_question(asked_id)
         if not question:
             abort(404, 'Asked question not found.')
+        question.asked_time = datetime.now(timezone.utc)
         lecture_id = question.lecture_id
-        markup = question.asked_json.to_json()
     else:
         return abort(400, 'Missing parameters')
+    db.session.commit()
 
-    question_timelimit = 0
-    try:
-        tl = markup.get("timeLimit", "0")
-        if not tl:
-            tl = "0"
-        question_timelimit = int(tl)
-    except:
-        pass
+    if question.time_limit:
+        thread_to_stop_question = threading.Thread(target=stop_question_from_running,
+                                                   args=(question,))
 
-    ask_time = datetime.now(tz=timezone.utc)
-    end_time = ask_time + timedelta(seconds=question_timelimit)
-    thread_to_stop_question = threading.Thread(target=stop_question_from_running,
-                                               args=(lecture_id, asked_id, question_timelimit, end_time))
-
-    thread_to_stop_question.start()
+        thread_to_stop_question.start()
 
     tempdb = get_tempdb()
-    delete_question_temp_data(asked_id, lecture_id, tempdb)
+    delete_question_temp_data(question.asked_id, lecture_id, tempdb)
 
-    tempdb.runningquestions.add_running_question(lecture_id, asked_id, ask_time, end_time)
+    tempdb.runningquestions.add_running_question(lecture_id, question.asked_id, question.asked_time, question.end_time)
 
     return json_response(question)
 
@@ -872,20 +861,20 @@ def update_question_points():
     return ok_response()
 
 
-def stop_question_from_running(lecture_id, asked_id, question_timelimit, end_time):
+def stop_question_from_running(question: AskedQuestion):
+    end_time = question.end_time
+    asked_id = question.asked_id
     with app.app_context():
-        if question_timelimit == 0:
-            return
         tempdb = get_tempdb()
         # Adding extra time to limit so when people gets question a bit later than others they still get to answer
-        extra_time = 3
-        end_time += extra_time * 1000
-        while int(time.time() * 1000) < end_time:  # TODO: check carefully if any sense
+        extra_time = timedelta(seconds=3)
+        end_time += extra_time
+        while datetime.now(tz=timezone.utc) < end_time:
             time.sleep(1)
             stopped = True
             question = tempdb.runningquestions.get_running_question_by_id(asked_id)
             if question:
-                end_time = extra_time * 1000 + question.end_time
+                end_time = extra_time + question.end_time
                 stopped = False
 
             if stopped:

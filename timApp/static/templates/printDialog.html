@@ -1,101 +1,104 @@
-<div class="modal-header">
-    <button type="button" ng-click="$ctrl.cancel()" class="close">
-        <span aria-hidden="true">&times;</span>
-    </button>
-    <h4 class="modal-title">Printing document:</h4>
-    <h4>{{ $ctrl.document.title }}</h4>
-</div>
-<div class="modal-body" id="modal-body">
-    <div ng-show="($ctrl.templates.length > 0)"></div>
-    <p>The following LaTeX-templates were found that you can use.</p>
+<tim-dialog>
+    <dialog-header>
+        Print document
+    </dialog-header>
+    <dialog-body>
+        <div ng-show="($ctrl.templates.length > 0)"></div>
+        <p>The following LaTeX-templates were found that you can use.</p>
 
-    <form id="template-picker">
-        <h5>Please choose a template:</h5>
-        <div class="form-group input-group-sm">
-            <div ng-repeat="item in $ctrl.templates">
-                <div class="radio">
-                    <label>
-                        <input type="radio" ng-model="$ctrl.selectedTemplate" ng-value="item" name="template-selection">
-                        <span>{{ item.title }} <span ng-show="$ctrl.showPaths">({{ item.path }})</span></span>
-                        <a ng-show="$ctrl.showPaths" ng-href="/view/{{ item.path }}" target="_blank" class="force-hyphenate-link">
-                            <span class="glyphicon glyphicon-pencil"></span>
-                        </a>
-                    </label>
+        <form id="template-picker">
+            <h5>Please choose a template:</h5>
+            <div class="form-group input-group-sm">
+                <div ng-repeat="item in $ctrl.templates">
+                    <div class="radio">
+                        <label>
+                            <input type="radio" ng-model="$ctrl.selectedTemplate" ng-value="item"
+                                   name="template-selection">
+                            <span>{{ item.title }} <span ng-show="$ctrl.showPaths">({{ item.path }})</span></span>
+                            <a ng-show="$ctrl.showPaths" ng-href="/view/{{ item.path }}" target="_blank"
+                               class="force-hyphenate-link">
+                                <span class="glyphicon glyphicon-pencil"></span>
+                            </a>
+                        </label>
+                    </div>
                 </div>
             </div>
+        </form>
+
+        <p ng-hide="($ctrl.templates.length > 0)" class="text-danger">
+            No printing templates were found.
+        </p>
+
+        <div ng-if="$ctrl.notificationmsg" class="alert alert-warning">
+            <strong>Warning!</strong>
+            <p>{{ $ctrl.notificationmsg }}</p>
         </div>
-    </form>
-
-    <p ng-hide="($ctrl.templates.length > 0)" class="text-danger">
-        No printing templates were found.
-    </p>
-
-    <div ng-if="$ctrl.notificationmsg" class="alert alert-warning">
-        <strong>Warning!</strong><p>{{ $ctrl.notificationmsg }}</p>
-    </div>
-    <div ng-if="$ctrl.errormsg" class="alert alert-danger">
-        <strong>Error!</strong><p ng-bind-html="$ctrl.errormsg"></p>
-    </div>
-</div>
-
-<div class="printdlgfooter modal-footer">
-    <div>
-        <label class="footerLabel">
-            <input type="checkbox" ng-model="$ctrl.pluginsUserCode">
-            Show user answers in plugins
-        </label>
-    </div>
-    <div>
-        <label id="printing-dialog-show-paths" title="More output formats and other options">
-            <input type="checkbox" ng-model="$ctrl.showPaths">
-            Show advanced options
-        </label>
-    </div>
-    <div>
-        Output format: &nbsp;
-        <label class="footerLabel">
-            <input type="radio" ng-model="$ctrl.selected.name" value="PDF">
-            PDF
-        </label>&nbsp;
-        <label class="footerLabel">
-            <input type="radio" ng-model="$ctrl.selected.name" value="LaTeX">
-            LaTeX
-        </label>&nbsp;
-        <label class="footerLabel" ng-show="$ctrl.showPaths">
-            <input type="radio" ng-model="$ctrl.selected.name" value="MD">
-            MD
-        </label>&nbsp;
-        <label class="footerLabel" ng-show="$ctrl.showPaths">
-            <input type="radio" ng-model="$ctrl.selected.name" value="JSON">
-            JSON
-        </label>&nbsp;
-        <label class="footerLabel" ng-show="$ctrl.showPaths">
-            <input type="radio" ng-model="$ctrl.selected.name" value="HTML">
-            HTML
-        </label>
-        <label class="footerLabel" ng-show="$ctrl.showPaths">
-            <input type="radio" ng-model="$ctrl.selected.name" value="PLAIN">
-            Plain
-        </label>
-    </div>
-    <div ng-show="$ctrl.showPaths">
-        <label class="footerLabel" title="If you think images have changed after last print">
-            <input type="checkbox" ng-model="$ctrl.removeOldImages">
-            Reload extrenal images
-        </label>
-    </div>
-    <div ng-show="$ctrl.showPaths">
-        <label class="footerLabel" title="Use this in case referenced docs have changed">
-            <input type="checkbox" ng-model="$ctrl.forceRefresh">
-            Force to new calculation
-        </label>
-    </div>
-    <button class="btn timButton" ng-click="$ctrl.create()">
+        <div ng-if="$ctrl.errormsg" class="alert alert-danger">
+            <strong>Error!</strong>
+            <p ng-bind-html="$ctrl.errormsg"></p>
+        </div>
+    </dialog-body>
+    <dialog-footer>
+        <div>
+            <label class="footerLabel">
+                <input type="checkbox" ng-model="$ctrl.pluginsUserCode">
+                Show user answers in plugins
+            </label>
+        </div>
+        <div>
+            <label id="printing-dialog-show-paths" title="More output formats and other options">
+                <input type="checkbox" ng-model="$ctrl.showPaths">
+                Show advanced options
+            </label>
+        </div>
+        <div>
+            Output format: &nbsp;
+            <label class="footerLabel">
+                <input type="radio" ng-model="$ctrl.selected.name" value="PDF">
+                PDF
+            </label>&nbsp;
+            <label class="footerLabel">
+                <input type="radio" ng-model="$ctrl.selected.name" value="LaTeX">
+                LaTeX
+            </label>&nbsp;
+            <label class="footerLabel" ng-show="$ctrl.showPaths">
+                <input type="radio" ng-model="$ctrl.selected.name" value="MD">
+                MD
+            </label>&nbsp;
+            <label class="footerLabel" ng-show="$ctrl.showPaths">
+                <input type="radio" ng-model="$ctrl.selected.name" value="JSON">
+                JSON
+            </label>&nbsp;
+            <label class="footerLabel" ng-show="$ctrl.showPaths">
+                <input type="radio" ng-model="$ctrl.selected.name" value="HTML">
+                HTML
+            </label>
+            <label class="footerLabel" ng-show="$ctrl.showPaths">
+                <input type="radio" ng-model="$ctrl.selected.name" value="PLAIN">
+                Plain
+            </label>
+        </div>
+        <div ng-show="$ctrl.showPaths">
+            <label class="footerLabel" title="If you think images have changed after last print">
+                <input type="checkbox" ng-model="$ctrl.removeOldImages">
+                Reload extrenal images
+            </label>
+        </div>
+        <div ng-show="$ctrl.showPaths">
+            <label class="footerLabel" title="Use this in case referenced docs have changed">
+                <input type="checkbox" ng-model="$ctrl.forceRefresh">
+                Force to new calculation
+            </label>
+        </div>
+        <button class="btn timButton" ng-click="$ctrl.create()">
         <span ng-show="$ctrl.loading"><i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
         Creating</span>
-        <span ng-hide="$ctrl.loading">Create</span>
-    </button>
-    <div id="print-success" ng-show="$ctrl.docUrl" class="alert alert-success">
-        <p><span class="glyphicon glyphicon-ok"></span>Creation succeeded! <a ng-href="{{ $ctrl.docUrl }}" target="_blank">View the document.</a></p>
-    </div>
-</div>
+            <span ng-hide="$ctrl.loading">Create</span>
+        </button>
+        <div id="print-success" ng-show="$ctrl.docUrl" class="alert alert-success">
+            <p><span class="glyphicon glyphicon-ok"></span>Creation succeeded! <a ng-href="{{ $ctrl.docUrl }}"
+                                                                                  target="_blank">View the document.</a>
+            </p>
+        </div>
+    </dialog-footer>
+</tim-dialog>

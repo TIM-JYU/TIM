@@ -1,462 +1,192 @@
 @charset "UTF-8";
-.createLecture, .showAnswersWindow, .questioninfoWindow, .questionAskedWindow, .joinLecture, .createQuestion, .joinLectureOptions,
-.questionAskedWindow, .questionPreview, .extendLectureOptions {
-    display: block;
-    width: 100%;
-    height: 100%;
-    background: #F0F0F0;
-    padding: 10px;
-    color: #505050;
-    text-shadow: 1px 1px 1px #FFF;
-    border: 1px solid #E4E4E4;
-    text-align: left;
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-}
-
-/*
-.showAnswersWindow {
-    position: fixed;
-}
-*/
-
-.startingTime, .endingTime, #infoFields div {
-    margin-bottom: 10px;
-}
 
 .questionPar {
+  display: inline-block;
+  text-align: center;
+  margin-top: 0.5em;
+  min-height: 4em;
+  min-width: 4.8em;
+
+  .parContent {
     display: inline-block;
-    text-align: center;
-    margin-top: 0.5em;
-    min-height: 4em;
-    min-width: 4.8em;
+    vertical-align: top;
+  }
 
-    .parContent {
-        display: inline-block;
-        vertical-align: top;
-    }
+  .readline {
+    border-width: 0.4em;
+    width: 1.1em;
+    height: 2.8em;
+    display: inline-block;
+    margin-left: -3px;
+    border-radius: 3px 6px 6px 3px;
+    z-index: 3;
+    right: 0;
+    position: relative;
+    top: 0.3em;
+  }
 
-    .readline {
-        border-width: 0.4em;
-        width: 1.1em;
-        height: 2.8em;
-        display: inline-block;
-        margin-left: -3px;
-        border-radius: 3px 6px 6px 3px;
-        z-index: 3;
-        right: 0;
-        position: relative;
-        top: 0.3em;
-    }
-
-    .editline {
-        display: inline-block;
-        width: 1.5em;
-        height: 2.8em;
-        border-radius: 6px 3px 3px 6px;
-        position: relative;
-    }
+  .editline {
+    display: inline-block;
+    width: 1.5em;
+    height: 2.8em;
+    border-radius: 6px 3px 3px 6px;
+    position: relative;
+  }
 }
 
 .questionNumber {
-    margin: 0.4em auto !important;
-    left: 50%;
-    transform: translateX(-50%);
-    line-height: 1em;
-    font-size: x-small;
-    position: absolute;
-    text-align: center;
-}
-
-input:disabled::-webkit-input-placeholder {
-    /* WebKit browsers */
-    display: none;
-}
-
-input:disabled:-moz-placeholder {
-    /* Mozilla Firefox 4 to 18 */
-    display: none;
-}
-
-input:disabled::-moz-placeholder {
-    /* Mozilla Firefox 19+ */
-    display: none;
-}
-
-input:disabled:-ms-input-placeholder {
-    /* Internet Explorer 10+ */
-    display: none;
-}
-
-fieldset, form {
-    margin-left: auto;
-    margin-right: auto;
-    display: inline-block;
-    width: 100%;
-    height: 100%;
-}
-
-#studentsJoinEarly {
-    margin-bottom: 10px;
-}
-
-#infoFields input, #lLink , #lLink2 {
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-    height: 30px;
-    width: 100%;
-}
-
-#startDate, #endDate {
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-    height: 30px;
-    width: 80px;
-}
-
-#startHour, #startMin, #endHour, #endMin {
-    width: 25px;
-}
-
-.questionTable textarea {
-    width: 100% !important;
-    box-sizing: border-box;
-    resize: horizontal;
-    margin: 0;
-}
-
-#infoFields label, .linkLabel {
-    display: inline-block;
-}
-
-.linkLabelWide {
-    display: block;
-    line-height: 1.8em;
-}
-
-.choose label {
-    display: block;
-}
-
-.icon {
-    width: 35px;
-    height: 35px;
-    cursor: pointer;
-}
-
-.questionInfo {
-    border: 1px solid #E4E4E4;
-    margin-bottom: 10px;
-    padding: 10px;
-}
-
-.startingTime #startInfo, #endInfo {
-    margin-left: 20px;
-}
-
-.popUpWindow h1 {
-    font-family: verdana;
-    font-size: 18px;
-    padding: 0;
-    text-align: left;
-    margin-top: 0;
-    margin-bottom: 0;
-    border-top: none;
-    border-bottom: none;
-    line-height: 1;
-}
-
-.createLecture input[type="text"], .createLecture input[type="date"],
-.createLecture select, .createQuestion input, .createQuestion textarea {
-    border: 1px solid $basic-color;
-    color: #505050;
-    outline: 0 none;
-    font-size: 12px;
-    line-height: 15px;
-    box-shadow: inset 0 1px 4px #ECECEC;
-    -moz-box-shadow: inset 0 1px 4px #ECECEC;
-    -webkit-box-shadow: inset 0 1px 4px #ECECEC;
-}
-
-.createQuestion select {
-    border: 1px solid $basic-color;
-    color: #505050;
-    margin: 2px 6px 10px 2px;
-    outline: 0 none;
-    padding: 3px 3px 3px 5px;
-    font-size: 12px;
-    line-height: 15px;
-    box-shadow: inset 0 1px 4px #ECECEC;
-    -moz-box-shadow: inset 0 1px 4px #ECECEC;
-    -webkit-box-shadow: inset 0 1px 4px #ECECEC;
-    height: 30px;
-}
-
-.createQuestion input[type="checkbox"], .createQuestion input[type="radio"] {
-    margin: 0;
-    vertical-align: middle;
+  margin: 0.4em auto !important;
+  left: 50%;
+  transform: translateX(-50%);
+  line-height: 1em;
+  font-size: x-small;
+  position: absolute;
+  text-align: center;
 }
 
 .explField.explFocus, .explField.hasText, tr:hover .explField {
-    opacity: 1;
-    border: 1px solid #CCC !important;
+  opacity: 1;
+  border: 1px solid #CCC !important;
 }
 
 .explField {
-    border: none !important;
-    opacity: 0;
-}
-
-.createQuestion textarea {
-    width: 95%;
-    resize: none;
-}
-
-.rowHeading {
-    height: 50px !important;
+  border: none !important;
+  opacity: 0;
 }
 
 .true-false-title {
-    text-align: center;
-    width: 50px;
-}
-
-.answer-columns {
-    text-align: center;
-}
-
-.answer-sheet-table {
-    background: white;
-    width: auto;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.answer-button {
-    text-align: center;
-}
-
-.answer-button2 {
-    text-align: left;
-
-    input[type=checkbox] {
-        /* margin-right: 5px; */
-    }
+  text-align: center;
+  width: 50px;
 }
 
 .explanation {
-    border-left: 1px solid #CCC !important;
-    text-align: left !important;
-}
-
-#textarea-answer {
-    width: 100%
+  border-left: 1px solid #CCC !important;
+  text-align: left !important;
 }
 
 .qst label {
-    margin-bottom: 5px;
-    font-weight: normal;
+  margin-bottom: 5px;
+  font-weight: normal;
 }
 
 .qst .answer-sheet-table {
-    margin-left: 2em;
+  margin-left: 2em;
 }
 
 .qst button.timButton {
-    margin-left: 2em;
-}
-
-.qstAnswerSheet h5 {
-    margin-left: 0.5em;
-    margin-top: 0.0em;
+  margin-left: 2em;
 }
 
 .qst-points {
-    font-size: 0.5em;
-    line-height: 0.0em;
-    margin-bottom: 1pt;
+  font-size: 0.5em;
+  line-height: 0.0em;
+  margin-bottom: 1pt;
 }
 
 .qst-correct {
-    border-color: $basic-color;
-    border-style: solid;
-    border-width: 2pt;
-    border-radius: 10pt;
-    border-spacing: 1em;
-    padding-left: 2pt;
-    padding-right: 2pt;
+  outline: 2pt solid $basic-color;
+  outline-offset: 1pt;
 }
 
 .qst-normal {
-    padding-left: 2pt;
-    padding-right: 2pt;
+  padding-left: 2pt;
+  padding-right: 2pt;
 }
 
 .colorchange-button {
-    width: 2em;
+  width: 2em;
 }
 
 .smallButton {
-    height: 1.7em;
-    margin-top: 0px;
-    padding: 0.1em;
-    font-size: 0.9em;
-}
-
-.buttons {
-    margin-top: 5px;
-    margin-bottom: 5px;
-    text-align: right;
-}
-
-.createLecture input[type="text"]:disabled, .createQuestion input[type="text"]:disabled {
-    background-color: #DCDCDC;
-    border: 1px solid #DCDCDC;
+  height: 1.7em;
+  margin-top: 0px;
+  padding: 0.1em;
+  font-size: 0.9em;
 }
 
 .error_message {
-    color: red;
-    margin-left: 0;
-}
-
-.createLecture p {
-    color: red;
-    margin-left: 0;
+  color: red;
+  margin-left: 0;
 }
 
 .lectureArea {
-    vertical-align: middle;
+  vertical-align: middle;
 }
 
-#endDateDiv, #durationDiv {
-    margin-left: 24px;
+@mixin make-cells-middle {
+  .table {
+    label {
+      display: inline;
+    }
+    > thead, > tbody {
+      > tr {
+        > th, > td {
+          vertical-align: middle;
+        }
+      }
+    }
+  }
 }
 
-.questionAskedWindow {
-    max-width: 800px;
-}
+tim-question-matrix {
+  display: block;
+  margin-left: 1em;
+  margin-top: 2em;
+  font-weight: normal;
 
-.answerStatistics select, .questioninfoWindow label, .questionAskedWindow label {
-    display: block;
-}
+  @include make-cells-middle();
 
-.sectionDetails {
-    border: 1px solid #E4E4E4;
-}
+  .form-control {
+    padding: 0.2em;
+  }
 
-.createQuestion td {
-    border: 1px solid #cccccc;
-    background: white;
-}
+  .form-inline .form-control {
+    max-width: 50px;
+    max-height: 50px;
+  }
 
-
-.createQuestion th {
-    max-width: 15em;
-}
-
-.createQuestion table {
-    margin: 2em;
-    background: #F0F0F0;
-    width: auto;
-}
-
-.createQuestion th {
-    border: 1px solid #cccccc;
-    width: auto;
-}
-
-.createQuestion .emptyBlock {
-    border: none;
-    background: #F0F0F0
-}
-
-.row-heading {
-    text-align: center;
-}
-
-#pausedWindow {
-    margin: auto;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    max-width: 20em;
-    max-height: 17em;
-    width: auto;
-}
-
-.matrixButtons, .buttonsTop {
+  .matrixButtons, .buttonsTop {
     position: absolute;
     opacity: 0;
-    -webkit-transition: opacity 0.2s ease-in-out;
-    -moz-transition: opacity 0.2s ease-in-out;
-    -ms-transition: opacity 0.2s ease-in-out;
-    -o-transition: opacity 0.2s ease-in-out;
     transition: opacity 0.2s ease-in-out;
-}
+  }
 
-.matrixButtons {
+  .matrixButtons {
     padding: 0;
     top: -21px;
     left: -26px;
-}
 
-.buttonsTop {
+    button:nth-child(2) {
+      margin-top: 13px;
+    }
+  }
+
+  .buttonsTop {
     top: -25px;
     width: 100%;
 
     button:first-child {
-        position: absolute;
-        left: -21px;
+      position: absolute;
+      left: -21px;
     }
 
     button:nth-child(2) {
-        position: relative;
-        left: 0;
+      position: relative;
+      left: 0;
     }
-}
+  }
 
-th:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop:hover {
+  td:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop:hover {
     opacity: 1;
+  }
 }
 
-#questionTimer {
-    margin-left: 10px;
-    margin-top: 10px;
-}
-
-#questionTimer label {
-    display: inline;
-}
-
-.questionTimer {
-    display: inline;
-}
-
-#questionName label {
+dynamic-answer-sheet {
     display: block;
-}
-
-#questionName {
-    margin-bottom: 10px;
-    margin-top: 10px;
-}
-
-#questionTiming {
-    margin-top: 10px;
-    display: block;
-}
-
-#questionTypeAndTimeLimit {
-    font-size: 15px;
-    margin-bottom: 2em;
-}
-
-@media only screen and (max-device-width: 500px) {
-    .buttons button {
-        font-size: 15px;
+    padding-left: 1em;
+    .table {
+      width: auto;
+      display: inline-table;
     }
+    @include make-cells-middle();
 }

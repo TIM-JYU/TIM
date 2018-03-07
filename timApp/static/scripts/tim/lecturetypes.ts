@@ -1,4 +1,5 @@
 import moment, {Moment} from "moment";
+import {DurationChoice} from "./components/durationPicker";
 import {IUser} from "./IUser";
 
 export interface IExplCollection {
@@ -80,8 +81,8 @@ export interface IProcessedHeaders {
 }
 
 export interface IQuestionUI {
-    endTimeSelected: boolean;
-    timeLimitFields: {hours: number, minutes: number, seconds: number};
+    durationAmount?: number;
+    durationType: DurationChoice;
 }
 
 export interface IAskedJson {
@@ -234,6 +235,14 @@ export interface IGotUpdatesResponse {
     students: ILecturePerson[];
     ms: number;
     extra?: IExtraResponse;
+}
+
+export interface IEmptyResponse {
+    empty: true;
+}
+
+export function isEmptyResponse(r: ILectureResponse | ILectureListResponse | IEmptyResponse): r is IEmptyResponse {
+    return (r as IEmptyResponse).empty === true;
 }
 
 export interface INoUpdatesResponse {

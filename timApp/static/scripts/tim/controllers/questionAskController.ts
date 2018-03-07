@@ -69,7 +69,8 @@ export class QuestionPreviewController extends DialogController<{params: Questio
         return `Question: ${this.questiondata.markup.questionTitle}`;
     }
 
-    private async $onInit() {
+    async $onInit() {
+        super.$onInit();
         if (!isReasking(this.resolve.params)) {
             const data = await fetchQuestion(this.resolve.params.docId, this.resolve.params.parId, false);
             this.questiondata = makePreview(data.markup);
@@ -119,28 +120,29 @@ export class QuestionPreviewController extends DialogController<{params: Questio
 
 registerDialogComponent("timAskQuestion", QuestionPreviewController, {
     template: `
-<div class="popUpWindow questionPopUp">
-    <div class="questionPreview">
-        <div id="questionTypeAndTimeLimit">
-            <span ng-if="$ctrl.getTimeLimit()">
+<tim-dialog>
+    <dialog-header>
+        Question
+    </dialog-header>
+    <dialog-body>
+<span ng-if="$ctrl.getTimeLimit()">
             Time limit: {{ $ctrl.getTimeLimit() }} seconds
             </span>
-            <span ng-if="!$ctrl.questiondata.markup.timeLimit">
+        <span ng-if="!$ctrl.questiondata.markup.timeLimit">
             No time limit.
             </span>
-        </div>
         <dynamic-answer-sheet questiondata="$ctrl.questiondata"></dynamic-answer-sheet>
-    </div>
-    <div class="buttons">
+    </dialog-body>
+    <dialog-footer>
         <!-- <button ng-click="deleteQuestion()" class="btn btn-danger pull-left">Delete</button> -->
         <button ng-show="$ctrl.showAsk()" ng-click="$ctrl.ask()" class="timButton">Ask</button>&nbsp;&nbsp;
         <button ng-click="$ctrl.editQuestion()" class="timButton">Edit</button>
         <button ng-click="$ctrl.dismiss()" class="timButton">Close</button>
-    </div>
-</div>
+    </dialog-footer>
+</tim-dialog>
 `,
 });
 
 export async function showQuestionAskDialog(p: QuestionPreviewParams) {
-    return await showDialog<QuestionPreviewController>("timAskQuestion", {params: () => p});
+    return await showDialog<QuestionPreviewController>("timAskQuestion", {params: () => p}).result;
 }

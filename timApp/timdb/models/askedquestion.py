@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta, datetime
 from typing import Optional
 
 from timApp.timdb.models.askedjson import AskedJson
@@ -21,6 +22,17 @@ class AskedQuestion(db.Model):
     asked_json: AskedJson = db.relationship('AskedJson', back_populates='asked_questions', lazy='joined')
     lecture: Lecture = db.relationship('Lecture', back_populates='asked_questions', lazy='joined')
     answers = db.relationship('LectureAnswer', back_populates='asked_question', lazy='dynamic')
+
+    @property
+    def end_time(self) -> Optional[datetime]:
+        timelimit = self.time_limit
+        if not timelimit:
+            return None
+        return self.asked_time + timedelta(seconds=timelimit)
+
+    @property
+    def time_limit(self):
+        return self.asked_json.to_json()['json'].get('timeLimit')
 
     def to_json(self):
         aj = self.asked_json

@@ -5,20 +5,9 @@ services:
   ports:
    - "49999:22"
   depends_on:
-   - postgresql
-   - postgresql-tempdb
    - postgresql-test
    - postgresql-tempdb-test
-   - csplugin
-   - pali
-   - showfile
-   - haskellplugins
-   - imagex
-   - uploader
    - chrome
-   - dumbo
-   - ts-watcher
-   - funnel
   tmpfs:
    - /tmp
  postgresql:
@@ -37,6 +26,15 @@ services:
   image: postgres:9.5
   tmpfs:
    - /var/lib/postgresql/data
+ imagex:
+  image: timimages/cs3sudo:compose
+  volumes:
+   - ./timApp/modules/imagex:/imagex:ro
+   - ./timApp/modules/py:/py:ro
+  working_dir: /imagex
+  command: ${IMAGEX_DEV_COMMAND:-/usr/sbin/sshd -D}
+  ports:
+   - "49995:22"
  pali:
   image: timimages/palisudo:compose
   build:
@@ -77,24 +75,3 @@ services:
     MAIN_CONFIG: tim_dev.conf
   ports:
    - "${NGINX_PORT}:80"
-   - "81:81"
-   - "82:82"
- ts-watcher:
-  command: "sleep infinity"  # in development, the watcher is supposed to be launched from IDE
- tests:
-  image: timimages/tim:${TIM_IMAGE_TAG}
-  command: "python3 -m unittest ${TEST_PARAMS:-discover tests/ 'test_*.py' .}"
-  volumes:
-   - .:/service:ro
-   - ./screenshots:/service/screenshots:rw
-   - ./timApp/static/testgen:/service/timApp/static/testgen:rw
-   - ./timApp/static/.webassets-cache:/service/timApp/static/.webassets-cache:rw
-   - ./timApp/static/scripts:/service/timApp/static/scripts:rw
-  environment:
-   TIM_SETTINGS: testconfig.py
-   PYTHONPATH: /service
-  depends_on:
-   - nginx
-  tmpfs:
-   - /tmp/doctest_files
-  working_dir: /service/timApp

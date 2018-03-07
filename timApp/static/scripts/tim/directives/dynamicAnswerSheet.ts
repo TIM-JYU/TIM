@@ -335,7 +335,7 @@ class AnswerSheetController implements IController {
     private getTableClass(): string | null {
         let totalBorderless = true;
         const data = this.processed;
-        if (this.hasHeaders() || data.rows.length > 1) {
+        if (this.hasHeaders() || (data.rows.length > 1 && data.rows[0].columns.length > 1)) {
             totalBorderless = false;
         }
         return totalBorderless ? "total-borderless" : null;
@@ -498,51 +498,51 @@ timApp.component("dynamicAnswerSheet", {
     },
     controller: AnswerSheetController,
     template: `
-<form class="qstAnswerSheet" ng-if="$ctrl.json">
+<form ng-if="$ctrl.json">
     <h5 ng-bind="$ctrl.getHeader()"></h5>
     <p ng-if="$ctrl.userpoints != null" ng-bind="$ctrl.userpoints"></p>
-    <div>
-        <table class="table table-borderless answer-sheet-table" ng-class="$ctrl.getTableClass()">
-            <tbody>
-            <tr ng-if="$ctrl.hasHeaders()" class="answer-heading-row">
-                <th ng-if="$ctrl.isMatrix()"></th>
-                <th ng-repeat="h in $ctrl.processed.headers" ng-bind="$ctrl.fixText(h.text)"></th>
-                <th ng-if="$ctrl.canShowExpl()"></th>
-            </tr>
-            <tr ng-repeat="row in $ctrl.processed.rows track by $index" ng-init="rowi = $index">
-                <td ng-if="$ctrl.isMatrix()" ng-bind="$ctrl.fixText(row.text)"></td>
-                <td ng-repeat="col in row.columns track by $index" ng-init="coli = $index">
-                    <label>
-                <span ng-class="$ctrl.getInputClass(rowi, coli)">
-                <input ng-if="$ctrl.isRadio()"
-                       ng-disabled="$ctrl.disabled"
-                       ng-change="$ctrl.signalUpdate()"
-                       type="radio"
-                       ng-model="$ctrl.answerMatrix[$ctrl.isMatrix() ? rowi : 0][0]"
-                       name="{{$ctrl.getGroupName(rowi)}}"
-                       ng-value="$ctrl.getInputValue(rowi, coli)">
-                <input ng-if="$ctrl.isCheckbox()"
-                       ng-disabled="$ctrl.disabled"
-                       ng-change="$ctrl.signalUpdate()"
-                       type="checkbox"
-                       ng-model="$ctrl.answerMatrix[rowi][coli]"
-                       name="{{$ctrl.getGroupName(rowi)}}"
-                       ng-true-value="1"
-                       ng-false-value="0">
-                <textarea
-                        ng-if="$ctrl.isText()"
-                        ng-disabled="$ctrl.disabled"
-                        ng-change="$ctrl.signalUpdate()"
-                        ng-model="$ctrl.answerMatrix[rowi][coli]">
+    <table class="table" ng-class="$ctrl.getTableClass()">
+        <tbody>
+        <tr ng-if="$ctrl.hasHeaders()" class="answer-heading-row">
+            <th ng-if="$ctrl.isMatrix()"></th>
+            <th ng-repeat="h in $ctrl.processed.headers" ng-bind="$ctrl.fixText(h.text)"></th>
+            <th ng-if="$ctrl.canShowExpl()"></th>
+        </tr>
+        <tr ng-repeat="row in $ctrl.processed.rows track by $index" ng-init="rowi = $index">
+            <td ng-if="$ctrl.isMatrix()" ng-bind="$ctrl.fixText(row.text)"></td>
+            <td ng-repeat="col in row.columns track by $index" ng-init="coli = $index">
+                <label>
+                    <input ng-if="$ctrl.isRadio()"
+                           ng-class="$ctrl.getInputClass(rowi, coli)"
+                           ng-disabled="$ctrl.disabled"
+                           ng-change="$ctrl.signalUpdate()"
+                           type="radio"
+                           ng-model="$ctrl.answerMatrix[$ctrl.isMatrix() ? rowi : 0][0]"
+                           name="{{$ctrl.getGroupName(rowi)}}"
+                           ng-value="$ctrl.getInputValue(rowi, coli)">
+                    <input ng-if="$ctrl.isCheckbox()"
+                           ng-class="$ctrl.getInputClass(rowi, coli)"
+                           ng-disabled="$ctrl.disabled"
+                           ng-change="$ctrl.signalUpdate()"
+                           type="checkbox"
+                           ng-model="$ctrl.answerMatrix[rowi][coli]"
+                           name="{{$ctrl.getGroupName(rowi)}}"
+                           ng-true-value="1"
+                           ng-false-value="0">
+                    <textarea
+                            class="form-control"
+                            ng-if="$ctrl.isText()"
+                            ng-disabled="$ctrl.disabled"
+                            ng-change="$ctrl.signalUpdate()"
+                            ng-model="$ctrl.answerMatrix[rowi][coli]">
 </textarea>
-</span>{{$ctrl.getLabelText(row, col)}}</label>
-                    <p ng-if="(p = $ctrl.getPoints(rowi, coli)) != null" class="qst-points" ng-bind="p"></p>
-                </td>
-                <td ng-if="p = $ctrl.getExpl(rowi)" ng-bind="p" class="explanation"></td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+                    {{$ctrl.getLabelText(row, col)}}</label>
+                <p ng-if="(p = $ctrl.getPoints(rowi, coli)) != null" class="qst-points" ng-bind="p"></p>
+            </td>
+            <td ng-if="p = $ctrl.getExpl(rowi)" ng-bind="p" class="explanation"></td>
+        </tr>
+        </tbody>
+    </table>
 </form>
 `,
 });

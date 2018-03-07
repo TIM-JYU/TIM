@@ -1,110 +1,117 @@
-<div id="matrix" class="matrix">
-    <div class="questionTable">
-        <table class="table" id="question-table">
-            <thead>
-            <tr ng-show="$ctrl.qctrl.question.questionType == 'matrix' || $ctrl.qctrl.question.questionType == 'true-false' ">
-                <th class="emptyBlock"></th>
+<table class="table">
+    <thead>
+    <tr ng-show="$ctrl.qctrl.question.questionType == 'matrix' || $ctrl.qctrl.question.questionType == 'true-false' ">
+        <th></th>
 
-                <!--<th ng-show="$ctrl.qctrl.question.questionType == 'true-false'" class="true-false-title">True</th>
-                <th ng-show="$ctrl.qctrl.question.questionType == 'true-false'" class="true-false-title">False</th>-->
+        <!--<th ng-show="$ctrl.qctrl.question.questionType == 'true-false'" class="true-false-title">True</th>
+        <th ng-show="$ctrl.qctrl.question.questionType == 'true-false'" class="true-false-title">False</th>-->
 
-                <!--<th ng-repeat="item in columnHeaders" ng-if="$ctrl.qctrl.question.questionType == 'matrix' || $ctrl.qctrl.question.questionType == 'true-false' " id="row-heading">-->
-                <th ng-if="$ctrl.qctrl.asked_id" ng-repeat="item in $ctrl.qctrl.columnHeaders"  class="row-heading" ng-bind-html="$ctrl.qctrl.columnHeaders[$index].text">
-                <th ng-if="!$ctrl.qctrl.asked_id" ng-repeat="item in $ctrl.qctrl.columnHeaders"  class="row-heading">
-                    <!-- {{ asked_id !== false ? columnHeaders[$index].text : "" }} -->
-                    <div style="position: relative" ng-if="!$ctrl.qctrl.asked_id">
-                    <div class="cart">
-                        <textarea class="rowHeading" rows="1" cols="10"
+        <!--<th ng-repeat="item in columnHeaders" ng-if="$ctrl.qctrl.question.questionType == 'matrix' || $ctrl.qctrl.question.questionType == 'true-false' " id="row-heading">-->
+        <th ng-if="$ctrl.qctrl.asked_id" ng-repeat="item in $ctrl.qctrl.columnHeaders" class="text-center"
+            ng-bind-html="$ctrl.qctrl.columnHeaders[$index].text">
+        <th ng-if="!$ctrl.qctrl.asked_id" ng-repeat="item in $ctrl.qctrl.columnHeaders" class="text-center">
+            <!-- {{ asked_id !== false ? columnHeaders[$index].text : "" }} -->
+            <div class="pos-rel" ng-if="!$ctrl.qctrl.asked_id">
+                        <textarea class="form-control" rows="1" cols="10"
                                   ng-model="$ctrl.qctrl.columnHeaders[$index].text"></textarea>
-                        <br/>
-                    </div>
-                    <div class="buttonsTop" ng-if ="$ctrl.qctrl.question.questionType != 'true-false'">
-                        <button class="timButton btn-xs" tabindex="-1" ng-click="$ctrl.qctrl.addCol($index)"><span class="glyphicon glyphicon-plus"></span></button>
-                        <button class="timButton btn-xs btn-danger" tabindex="-1" ng-click="$ctrl.qctrl.delCol($index)"><span class="glyphicon glyphicon-minus"></span></button>
-                    </div>
-                    </div>
-                </th>
-                <th ng-if="($ctrl.qctrl.question.questionType == 'matrix' ) && !$ctrl.qctrl.asked_id">
-                    <button class="wideButton" ng-click="$ctrl.qctrl.addCol(-1)"><span class="glyphicon glyphicon-plus"></span></button>
-                </th>
+                <div class="buttonsTop" ng-if="$ctrl.qctrl.question.questionType != 'true-false'">
+                    <button class="timButton btn-xs" tabindex="-1" ng-click="$ctrl.qctrl.addCol($index)"><span
+                            class="glyphicon glyphicon-plus"></span></button>
+                    <button class="timButton btn-xs btn-danger" tabindex="-1" ng-click="$ctrl.qctrl.delCol($index)">
+                        <span class="glyphicon glyphicon-minus"></span></button>
+                </div>
+            </div>
+        </th>
+        <th ng-if="($ctrl.qctrl.question.questionType == 'matrix' ) && !$ctrl.qctrl.asked_id">
+            <button class="wideButton" ng-click="$ctrl.qctrl.addCol(-1)"><span
+                    class="glyphicon glyphicon-plus"></span></button>
+        </th>
 
-            </tr>
-            </thead>
-            <tbody>
-            <tr ng-repeat="row in $ctrl.qctrl.rows">
-                <th ng-if="$ctrl.qctrl.asked_id" ng-bind-html="row.text">
-                <th ng-if="!$ctrl.qctrl.asked_id">
-                    <!--{{ asked_id !== false ? row.text : "" }} -->
-                    <div style="position: relative">
-                    <textarea required class="rowHeading questiontext" ng-model="row.text" rows="1"  id = "{{ 'r'+row.id }}" name="{{'r'+row.id}}"></textarea>
-                    <div class="matrixButtons">
-                        <button class="timButton btn-xs btn-block" tabindex="-1" ng-click="$ctrl.qctrl.addRow($index)"><span class="glyphicon glyphicon-plus"></span></button>
-                        <button class="btn btn-danger btn-xs btn-block" tabindex="-1" ng-click="$ctrl.qctrl.delRow($index)" style="margin-top: 13px;"><span class="glyphicon glyphicon-minus"></span></button>
-                    </div>
-                        <tim-error-message for="$ctrl.qctrl.f['r' + row.id]"></tim-error-message>
-                    </div>
-                </th>
-                <td ng-repeat="column in row.columns" class="answer-columns">
-                    <!-- Horizontal radio-button-->
-                    <div ng-if="($ctrl.qctrl.question.matrixType == 'radiobutton-horizontal' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType == 'true-false' ">
-                        <!-- ng-model="row.id" -->
-                        <div><input type="radio"
-                               ng-value="column.id"
-                               placeholder=""
-                               disabled/></div>
-                        <div><input type="text"
-                               size="2"
-                               placeholder="pts"
-                               ng-model="column.points" /></div>
-                    </div>
-                    <!-- Vertical radio-button -->
-                    <div ng-if="$ctrl.qctrl.question.questionType != 'true-false'">
-                        <div ng-if="($ctrl.qctrl.question.matrixType == 'radiobutton-vertical' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType == 'radio-vertical'">
-                            <div><input type="radio"
-                                   name="column.rowId"
-                                   ng-value="column.id"
-                                   placeholder=""
-                                    disabled/></div>
-                            <div><input type="text"
-                                   size="2"
-                                   placeholder="pts"
-                                   ng-model="column.points"/></div>
-                        </div>
-                        <!-- Text area-->
-                        <div ng-if="$ctrl.qctrl.question.questionType != 'radio-button'">
-                            <textarea ng-if="$ctrl.qctrl.question.matrixType == 'textArea' && $ctrl.qctrl.question.questionType=='matrix'"
-                                      type="text"
-                                      placeholder=""
-                                      id="matrix-textarea"
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="row in $ctrl.qctrl.rows">
+        <td ng-if="$ctrl.qctrl.asked_id" ng-bind-html="row.text">
+        <td ng-if="!$ctrl.qctrl.asked_id">
+            <!--{{ asked_id !== false ? row.text : "" }} -->
+            <div class="pos-rel">
+                    <textarea required class="form-control questiontext" ng-model="row.text" rows="1"
+                              id="{{ 'r'+row.id }}" name="{{'r'+row.id}}"></textarea>
+                <div class="matrixButtons">
+                    <button class="timButton btn-xs btn-block" tabindex="-1" ng-click="$ctrl.qctrl.addRow($index)">
+                        <span class="glyphicon glyphicon-plus"></span></button>
+                    <button class="btn btn-danger btn-xs btn-block" tabindex="-1"
+                            ng-click="$ctrl.qctrl.delRow($index)"><span
+                            class="glyphicon glyphicon-minus"></span></button>
+                </div>
+                <tim-error-message for="$ctrl.qctrl.f['r' + row.id]"></tim-error-message>
+            </div>
+        </td>
+        <td ng-repeat="column in row.columns" class="text-center form-inline">
+            <!-- Horizontal radio-button-->
+            <div ng-if="($ctrl.qctrl.question.matrixType == 'radiobutton-horizontal' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType == 'true-false' ">
+                <!-- ng-model="row.id" -->
+                <div><input type="radio"
+                            ng-value="column.id"
+                            placeholder=""
+                            disabled/></div>
+                <div><input type="text"
+                            class="form-control"
+                            size="2"
+                            placeholder="pts"
+                            ng-model="column.points"/></div>
+            </div>
+            <!-- Vertical radio-button -->
+            <div ng-if="$ctrl.qctrl.question.questionType != 'true-false'">
+                <div ng-if="($ctrl.qctrl.question.matrixType == 'radiobutton-vertical' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType == 'radio-vertical'">
+                    <div><input type="radio"
+                                name="column.rowId"
+                                ng-value="column.id"
+                                placeholder=""
+                                disabled/></div>
+                    <div><input type="text"
+                                class="form-control"
+                                size="2"
+                                placeholder="pts"
+                                ng-model="column.points"/></div>
+                </div>
+                <!-- Text area-->
+                <div ng-if="$ctrl.qctrl.question.questionType != 'radio-button'">
+                            <textarea
+                                    class="form-control"
+                                    ng-if="$ctrl.qctrl.question.matrixType == 'textArea' && $ctrl.qctrl.question.questionType=='matrix'"
+                                    type="text"
+                                    placeholder=""
                                     disabled></textarea>
-                            <!-- Checkbox-->
-                            <div ng-if="($ctrl.qctrl.question.matrixType == 'checkbox' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType=='checkbox-vertical'">
-                                <div><input type="checkbox"
-                                       ng-model="row.id"
-                                        disabled/></div>
-                                <div><input type="text"
-                                       size="2"
-                                       placeholder="pts"
-                                       ng-model="column.points"/></div>
-                            </div>
-                        </div>
+                    <!-- Checkbox-->
+                    <div ng-if="($ctrl.qctrl.question.matrixType == 'checkbox' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType=='checkbox-vertical'">
+                        <div><input type="checkbox"
+                                    ng-model="row.id"
+                                    disabled/></div>
+                        <div><input type="text"
+                                    class="form-control"
+                                    size="2"
+                                    placeholder="pts"
+                                    ng-model="column.points"/></div>
                     </div>
-                </td>
-                <td ng-class="['explField', row.expl ? 'hasText' : '']">
-                    <textarea placeholder="Optional: Explain why answer is right/wrong" class="rowHeading"
-                              ng-focus="$ctrl.qctrl.explFocus($event)" ng-blur="$ctrl.qctrl.explBlur($event)" ng-model="row.expl"
+                </div>
+            </div>
+        </td>
+        <td ng-class="['explField', row.expl ? 'hasText' : '']">
+                    <textarea placeholder="Optional: Explain why answer is right/wrong" class="form-control"
+                              ng-focus="$ctrl.qctrl.explFocus($event)" ng-blur="$ctrl.qctrl.explBlur($event)"
+                              ng-model="row.expl"
                               rows="1"></textarea>
-                </td>
-                <!-- ADD COMMENTS FIELD HERE. Appropriate edits need to be done to questionjson at ViewCtrl and then displaying them at directives/dynamicanswersheet.js -->
-            </tr>
-            <tr ng-if="!$ctrl.qctrl.asked_id">
-                <th>
-                    <div>
-                        <button class="wideButton" ng-click="$ctrl.qctrl.addRow(-1)"><span class="glyphicon glyphicon-plus"></span></button>
-                    </div>
-                </th>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
+        </td>
+        <!-- ADD COMMENTS FIELD HERE. Appropriate edits need to be done to questionjson at ViewCtrl and then displaying them at directives/dynamicanswersheet.js -->
+    </tr>
+    <tr ng-if="!$ctrl.qctrl.asked_id">
+        <th>
+            <div>
+                <button class="wideButton" ng-click="$ctrl.qctrl.addRow(-1)"><span
+                        class="glyphicon glyphicon-plus"></span></button>
+            </div>
+        </th>
+    </tr>
+    </tbody>
+</table>

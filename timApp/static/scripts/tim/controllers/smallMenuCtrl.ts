@@ -1,8 +1,8 @@
 import angular from "angular";
 import {IController} from "angular";
 import {timApp} from "tim/app";
-import {$http, $window} from "../ngimport";
 import {ILecture, ILectureListResponse2} from "../lecturetypes";
+import {$http, $window} from "../ngimport";
 import {LectureController} from "./lectureController";
 import {ViewCtrl} from "./view/viewctrl";
 
@@ -24,7 +24,7 @@ export class SmallMenuCtrl implements IController {
     private showCurrentList: boolean;
     private showFutureList: boolean;
     private readonly lctrl: LectureController;
-    private readonly viewctrl: ViewCtrl;
+    private readonly viewctrl?: ViewCtrl;
 
     constructor() {
         this.currentLecturesList = [];
@@ -54,6 +54,9 @@ export class SmallMenuCtrl implements IController {
     }
 
     private async getLectures() {
+        if (!this.viewctrl) {
+            return;
+        }
         const response = await $http<ILectureListResponse2>({
             url: "/getAllLecturesFromDocument",
             method: "GET",
@@ -78,7 +81,7 @@ timApp.component("timSmallMenu", {
     controller: SmallMenuCtrl,
     require: {
         lctrl: "^timLecture",
-        viewctrl: "^timView",
+        viewctrl: "?^timView",
     },
     template: `<div class="smallMenu" ng-show="!$ctrl.lctrl.lectureSettings.inLecture">
     <div class="current">

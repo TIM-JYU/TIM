@@ -7,9 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node build.js",
     "buildDev": "jspm bundle tim/main + tim/slide - \"(tim/main + tim/slide - [tim/**/*])\" build/tim.js -wd",
-    "fixKatex": "node fix-katex-auto-render.js",
-    "fixWatcher": "node fix-watcher.js",
-    "fixAll": "npm run fixKatex && npm run fixWatcher",
+    "fixLibs": "node fix-libs.js",
     "jspmInstall": "jspm install"
   },
   "repository": {
@@ -44,9 +42,9 @@
     "type-zoo": "^1.0.1"
   },
   "devDependencies": {
-    "jspm": "^0.17.0-beta.42",
+    "jspm": "^0.17.0-beta.47",
     "replace-in-file": "^2.5.0",
-    "systemjs-builder": "^0.16.9",
+    "systemjs-builder": "^0.16.12",
     "tslint": "^5.0.0",
     "typescript": "^2.7.1"
   },

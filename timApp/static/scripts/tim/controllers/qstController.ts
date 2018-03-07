@@ -10,7 +10,6 @@ import {AnswerTable, IQuestionMarkup} from "../lecturetypes";
 import {$http} from "../ngimport";
 import {LectureController} from "./lectureController";
 import {showQuestionAskDialog} from "./questionAskController";
-import {showStatisticsDialog} from "./showStatisticsToQuestionController";
 import {getParId} from "./view/parhelpers";
 
 export interface IQstAttributes {
@@ -119,7 +118,6 @@ class QstController implements IController {
                 parId: parId,
                 showAsk: this.lctrl.lectureSettings.inLecture,
             });
-        void showStatisticsDialog(result);
     }
 
     private initCode() {

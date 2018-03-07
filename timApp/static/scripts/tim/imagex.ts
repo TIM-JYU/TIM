@@ -3,11 +3,15 @@ import ngSanitize from "angular-sanitize";
 import {editorChangeValue} from "tim/editorScope";
 import * as timHelper from "tim/timHelper";
 import {markAsUsed} from "tim/utils";
+import {$window} from "./ngimport";
 
 markAsUsed(ngSanitize);
 
 const imagexApp: any = angular.module("imagexApp", ["ngSanitize"]);
 imagexApp.TESTWITHOUTPLUGINS = false; // if one wants to test without imagex plugins
+
+declare const videoApp: any;
+declare const teacherMode: boolean;
 
 imagexApp.directive("imagexRunner",
     ["$sanitize", "$compile",
@@ -42,7 +46,7 @@ imagexApp.directiveFunction = function() {
     };
 };
 
-function FreeHand() {
+function FreeHand(emt) {
     this.params = {};
     this.params.w = 2;
     this.params.color = "Red";
@@ -50,18 +54,30 @@ function FreeHand() {
     this.prevPos = null;
     this.freeDrawing = [];
     this.redraw = null;
+    this.emotion = emt;
+    this.videoPlayer = {currentTime: 1e60, fakeVideo: true};  // fake
 }
 
 FreeHand.prototype.draw = function(ctx) {
-    drawFreeHand(ctx, this.freeDrawing);
+    if (this.emotion) {
+        if (teacherMode)
+            if (this.videoPlayer.fakeVideo)
+                drawCirclesVideo(ctx, this.freeDrawing, this.videoPlayer);
+            else
+                //Siirrä johonkin missä kutsutaan vain kerran.
+                this.videoPlayer.ontimeupdate = drawCirclesVideo.bind(this, ctx, this.freeDrawing, this.videoPlayer);
+    }
+    else drawFreeHand(ctx, this.freeDrawing);
 };
 
 FreeHand.prototype.startSegment = function(pxy) {
     if (!pxy) return;
     const p = [Math.round(pxy.x), Math.round(pxy.y)];
     const ns: any = {};
-    ns.color = this.params.color;
-    ns.w = this.params.w;
+    if (!this.emotion) {
+        ns.color = this.params.color;
+        ns.w = this.params.w;
+    }
     ns.lines = [p];
     this.freeDrawing.push(ns);
     this.prevPos = p;
@@ -73,11 +89,18 @@ FreeHand.prototype.endSegment = function() {
 
 FreeHand.prototype.startSegmentDraw = function(redraw, pxy) {
     if (!pxy) return;
-    const p = [Math.round(pxy.x), Math.round(pxy.y)];
+    let p;
+    if (this.emotion) {
+        if (this.freeDrawing.length != 0) return;
+        p = [Math.round(pxy.x), Math.round(pxy.y),
+        Date.now() / 1000, this.videoPlayer.currentTime];
+    } else p = [Math.round(pxy.x), Math.round(pxy.y)];
     this.redraw = redraw;
     const ns: any = {};
-    ns.color = this.params.color;
-    ns.w = this.params.w;
+    if (!this.emotion) {
+        ns.color = this.params.color;
+        ns.w = this.params.w;
+    }
     ns.lines = [p];
     this.freeDrawing.push(ns);
     this.prevPos = p;
@@ -85,14 +108,25 @@ FreeHand.prototype.startSegmentDraw = function(redraw, pxy) {
 
 FreeHand.prototype.addPoint = function(pxy) {
     if (!pxy) return;
-    const p = [Math.round(pxy.x), Math.round(pxy.y)];
+    this.scope;
+    //if (!this.params.startTime) var startTime = 0;
+    //else var startTime = this.params.startTime;
+    //var ns = {};
+
+    let p;
+    if (this.emotion) {
+        p = [Math.round(pxy.x), Math.round(pxy.y),
+        Date.now() / 1000, this.videoPlayer.currentTime];
+    } else p = [Math.round(pxy.x), Math.round(pxy.y)];
     const n = this.freeDrawing.length;
     if (n == 0) this.startSegment(p);
     else {
         const ns = this.freeDrawing[n - 1];
+        //    ns.lines = [p];
         ns.lines.push(p);
     }
-    if (!this.params.lineMode) this.prevPos = p;
+    if (!this.params.lineMode || this.emotion)
+        this.prevPos = p;
 };
 
 FreeHand.prototype.popPoint = function(minlen) {
@@ -115,7 +149,8 @@ FreeHand.prototype.addPointDraw = function(ctx, pxy) {
         this.popPoint(1);
         if (this.redraw) this.redraw();
     }
-    this.line(ctx, this.prevPos, [pxy.x, pxy.y]);
+    if (!this.emotion)
+        this.line(ctx, this.prevPos, [pxy.x, pxy.y]);
     this.addPoint(pxy);
 };
 
@@ -160,6 +195,53 @@ FreeHand.prototype.line = function(ctx, p1, p2) {
     ctx.stroke();
 };
 
+function pad(num, size) {
+    var s = "000000000" + num;
+    return s.substr(s.length-size);
+}
+
+function dateToString(d) {
+    const t = new Date(d * 1000);
+    //return t.toLocaleTimeString('fi-FI');
+    //return t.format("HH:mm:ss.f");
+    return pad(t.getHours(),2) + ":" + pad(t.getMinutes(),2) + ":" + pad(t.getSeconds(),2) + "." + pad(t.getMilliseconds(),3);
+}
+
+function drawText(ctx, s, x, y) {
+    ctx.save();
+    ctx.textBaseline = "top";
+    ctx.font = "10px Arial";
+    const width = ctx.measureText(s).width;
+    ctx.fillStyle = "#ffff00";
+    ctx.fillRect(x, y, width + 1, parseInt(ctx.font, 10));
+    ctx.fillStyle = "#000000";
+    ctx.fillText(s, x, y);
+    ctx.restore();
+}
+
+function drawCirclesVideo(ctx, dr, videoPlayer) {
+    for (let dri = 0; dri < dr.length; dri++) {
+        const seg = dr[dri];
+        if (seg.lines.length < 2) continue;
+        ctx.beginPath();
+        ctx.strokeStyle = seg.color;
+        ctx.lineWidth = seg.w;
+        ctx.moveTo(seg.lines[0][0], seg.lines[0][1]);
+        let s = dateToString(seg.lines[0][2]);
+        drawText(ctx, s, seg.lines[0][0], seg.lines[0][1]);
+        for (let lni = 1; lni < seg.lines.length; lni++) {
+            if (videoPlayer.currentTime < seg.lines[lni][3])
+                break;
+            ctx.lineTo(seg.lines[lni][0], seg.lines[lni][1]);
+            if (videoPlayer.fakeVideo) {
+                s = dateToString(seg.lines[lni][2]);
+                drawText(ctx, s, seg.lines[lni][0], seg.lines[lni][1]);
+            }
+        }
+        ctx.stroke();
+    }
+}
+
 function drawFreeHand(ctx, dr) {
     for (let dri = 0; dri < dr.length; dri++) {
         const seg = dr[dri];
@@ -189,6 +271,8 @@ imagexApp.directiveTemplate = function() {
         "</div>" +
         "</div>" +
         '<p class="csRunMenu">&nbsp;<button ng-if="button" class="timButton" ng-disabled="isRunning" ng-click="imagexScope.save();">{{button}}</button>&nbsp&nbsp' +
+        '<button ng-if="buttonPlay" ng-disabled="isRunning" ng-click="imagexScope.videoPlay();">{{buttonPlay}}</button>&nbsp&nbsp' +
+        '<button ng-if="buttonRevert" ng-disabled="isRunning" ng-click="imagexScope.videoBeginning();">{{buttonRevert}}</button>&nbsp&nbsp' +
         '<button ng-show="finalanswer && userHasAnswered" ng-disabled="isRunning" ng-click="imagexScope.showAnswer();">Showanswer</button>&nbsp&nbsp' +
         '<a ng-if="button" ng-disabled="isRunning" ng-click="imagexScope.resetExercise();">{{resetText}}</a>&nbsp&nbsp' +
         '<a href="" ng-if="muokattu" ng-click="imagexScope.initCode()">{{resetText}}</a>' +
@@ -228,6 +312,18 @@ imagexApp.directiveTemplate = function() {
 };
 
 imagexApp.initDrawing = function(scope, canvas) {
+
+    //piirtää ympyrän
+    function drawFillCircle(ctx, r, p1, p2, c, tr) {
+        if (!p1 || !p2) return;
+        const p = ctx.getContext("2d");
+        p.globalAlpha = tr;
+        p.beginPath();
+        p.fillStyle = c;
+        p.arc(p1, p2, r, 0, 2 * Math.PI);
+        p.fill();
+        p.globalAlpha = 1;
+    }
 
     function toRange(range, p) {
         if (!range) return p;
@@ -358,7 +454,6 @@ imagexApp.initDrawing = function(scope, canvas) {
                                 this.drawObjects, "target");
                             if (onTopOf && onTopOf.objectCount < onTopOf.maxObjects) {
                                 onTopOf.color = onTopOf.snapColor;
-                                //this.drawObjects[i].objectCount++;
                             }
                             const onTopOfB = areObjectsOnTopOf(this.drawObjects[i],
                                 this.drawObjects, "target");
@@ -400,10 +495,19 @@ imagexApp.initDrawing = function(scope, canvas) {
 
         this.canvas.style.touchAction = "double-tap-zoom"; // To get IE and EDGE touch to work
 
+        //if () this.freeHand.startSegmentDraw(this.redraw, this.mousePosition);
+
         this.downEvent = function(event, p) {
             this.mousePosition = getPos(this.canvas, p);
             this.activeDragObject =
                 areObjectsOnTopOf(this.mousePosition, this.drawObjects, "dragobject");
+
+            if (scope.emotion) {
+                drawFillCircle(this.canvas, 30, this.mousePosition.x, this.mousePosition.y, "black", 0.5);
+                this.freeHand.startSegmentDraw(this.canvas, this.mousePosition);
+                this.freeHand.addPointDraw(this.canvas, this.mousePosition);
+                if ( scope.autosave ) scope.imagexScope.save();
+            }
 
             if (this.activeDragObject) {
                 this.canvas.style.cursor = "pointer";
@@ -415,8 +519,10 @@ imagexApp.initDrawing = function(scope, canvas) {
             else if (scope.freeHand) {
                 this.canvas.style.cursor = "pointer";
                 mouseDown = true;
-                // this.freeHand.lineMode = scope.lineMode;
-                this.freeHand.startSegmentDraw(this.redraw, this.mousePosition);
+                //this.freeHand.lineMode = scope.lineMode;
+
+                //drawFillCircle(this.canvas,50,this.mousePosition.x, this.mousePosition.y, "red", 0.3);
+                if (!scope.emotion) this.freeHand.startSegmentDraw(this.redraw, this.mousePosition);
             }
 
             if (this.canvas.coords && scope.preview) {
@@ -441,22 +547,14 @@ imagexApp.initDrawing = function(scope, canvas) {
                 // if (this.activeDragObject)
                 if (event != p) event.preventDefault();
                 this.mousePosition = getPos(this.canvas, p);
-                this.draw();
+                if (!scope.emotion) this.draw();
             } else if (mouseDown) {
                 if (event != p) event.preventDefault();
-                this.freeHand.addPointDraw(this.ctx, getPos(this.canvas, p));
+                if (!scope.emotion) this.freeHand.addPointDraw(this.ctx, getPos(this.canvas, p));
             }
         };
 
         this.upEvent = function(event, p) {
-            /*
-            var isObjectInTarget =
-                areObjectsOnTopOf(this.drawObjects[i], this.drawObjects, 'target');
-            if (isObjectInTarget) {
-                //isObjectInTarget.objectCount++;
-            }
-            */
-            //this.drawObjects[i].objectCount--;
 
             if (this.activeDragObject) {
                 this.canvas.style.cursor = "default";
@@ -475,19 +573,18 @@ imagexApp.initDrawing = function(scope, canvas) {
                             this.activeDragObject.y = isTarget.y + isTarget.snapOffset[1];
                         }
                     }
-                    //isTarget.objectCount++;
                 }
 
                 this.activeDragObject = null;
-                this.draw();
+                if (!scope.emotion) this.draw();
 
             } else if (mouseDown) {
                 this.canvas.style.cursor = "default";
                 mouseDown = false;
                 this.freeHand.endSegment();
             }
-
-            this.draw(); // TODO: Miksi tama on taalla?
+            setTimeout(this.draw, 1000);
+            if (!scope.emotion) this.draw(); // TODO: Miksi tama on taalla?
         };
 
         function te(event) {
@@ -549,17 +646,6 @@ imagexApp.initDrawing = function(scope, canvas) {
                         let values: any = {beg: objects[p], end: rightdrags[j]};
                         rightdrags[j].x = rightdrags[j].position[0];
                         rightdrags[j].y = rightdrags[j].position[1];
-                        // get positions for drawing.
-                        /*
-                        values.position = [];
-                        values.position[0] = getValue(dragtable[p].position[0], 0);
-                        values.position[1] = getValue(dragtable[p].position[1], 0);
-                        values.endposition = [];
-                        values.endposition[0] = getValue(rightdrags[j].position[0], 0);
-                        values.endposition[1] = getValue(rightdrags[j].position[1], 0);
-                        */
-                        //values.ctx = doc_ctx.getContext("2d");
-                        //give context and values for draw function.
                         const line = new Line(dt, values);
                         line.did = "-";
                         this.drawObjects.push(line);
@@ -730,6 +816,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.init(values);
         this.draw = shapeFunctions[this.type].draw;
     }
+
     // Kutsuu viivaa piirtavaa funktiota.
     function Line(dt, values) {
         this.ctx = dt.ctx;
@@ -1267,26 +1354,6 @@ imagexApp.initDrawing = function(scope, canvas) {
         scope.yamlobjects = [];
     }
     const userObjects = scope.attrs.markup.objects;
-    /*
-        if (scope.attrs.state && scope.attrs.state.userAnswer ) {
-            // used to reset object positions.
-           // scope.yamlobjects = scope.attrs.state.markup.objects.yamlobjects;
-            // lisatty oikeiden vastausten lukemiseen ja piirtamiseen.
-            var userDrags = scope.attrs.state.userAnswer.drags;
-            if (userObjects && userDrags && userDrags.length > 0) {
-                for (var i = 0; i < userObjects.length; i++) {
-                    if ( !userObjects[i].did ) userObjects[i].did = "obj" + (i+1);
-                    if (!userObjects[i]) continue; // looks like the first may be null
-                    for (var j = 0; j < userDrags.length; j++) {
-                        if (userObjects[i].did === userDrags[j].did) {
-                            userObjects[i].position[0] = userDrags[j].position[0];
-                            userObjects[i].position[1] = userDrags[j].position[1]
-                        }
-                    }
-                }
-            }
-        }
-    */
 
     const userTargets = scope.attrs.markup.targets;
     const userFixedObjects = scope.attrs.markup.fixedobjects;
@@ -1386,6 +1453,8 @@ imagexApp.initDrawing = function(scope, canvas) {
     scope.objects = objects;
 };
 
+const videos = {};
+
 imagexApp.Controller = function($scope, $http, $transclude, $sce, $interval) {
     "use strict";
     // Tata kutsutaan kerran jokaiselle pluginin esiintymalle.
@@ -1410,8 +1479,6 @@ imagexApp.initScope = function(scope, element, attrs) {
     "use strict";
     // Tata kutsutaan kerran jokaiselle pluginin esiintymalle.
     // Angular kutsuu tata koska se on sanottu direktiivifunktiossa Link-metodiksi.
-    scope.freeHandDrawing = new FreeHand();
-
     scope.cursor = "\u0383"; //"\u0347"; // "\u02FD";
     scope.plugin = element.parent().attr("data-plugin");
     scope.taskId = element.parent().attr("id");
@@ -1421,6 +1488,9 @@ imagexApp.initScope = function(scope, element, attrs) {
     // Jos ei ole, kaytetaan oletusta.
     timHelper.set(scope, attrs, "stem");
     timHelper.set(scope, attrs, "user_id");
+    timHelper.set(scope, attrs, "emotion", false);
+    timHelper.set(scope, attrs, "autosave", false);
+    timHelper.set(scope, attrs, "followid", "");
     timHelper.set(scope, attrs, "button", "Save");
     timHelper.set(scope, attrs, "resetText", "Reset");
     timHelper.set(scope, attrs, "state.tries", 0);
@@ -1437,12 +1507,27 @@ imagexApp.initScope = function(scope, element, attrs) {
     timHelper.set(scope, attrs, "fixedobjects");
     timHelper.set(scope, attrs, "finalanswer");
 
+    /*
+    timHelper.set(scope, attrs, "circleRadius", 30);
+    timHelper.set(scope, attrs, "circleColor");
+    timHelper.set(scope, attrs, "circleTransparency", 0.5);
+    */
+
     timHelper.set(scope, attrs, "canvaswidth", 800);
     timHelper.set(scope, attrs, "canvasheight", 600);
     //timHelper.set(scope,attrs,"preview", false);
     timHelper.set(scope, attrs, "preview", scope.attrs.preview);
 
     // Free hand drawing things:
+    scope.freeHandDrawing = new FreeHand(scope.emotion);
+    const vp = $window.videoApp && videoApp.videos[scope.followid];
+    if (vp) {
+        scope.freeHandDrawing.videoPlayer = vp;
+        scope.videoPlayer = vp;
+    }
+    // scope.freeHandDrawing.emotion = scope.emotion;
+    timHelper.set(scope, attrs, "buttonPlay", vp ? "Aloita/Pysäytä" : "");
+    timHelper.set(scope, attrs, "buttonRevert", vp ? "Video alkuun" : "");
     timHelper.set(scope, attrs, "freeHand", false); // is free hand drawing on, if "use", it it off, but usable
     let use = false;
     if (scope.freeHand == "use") {scope.freeHand = false; use = true;}
@@ -1481,20 +1566,6 @@ imagexApp.initScope = function(scope, element, attrs) {
     scope.previewColorInput = element.find("#previewColorInput")[0];
     scope.canvas.coords = scope.coords;
     scope.previewColor = globalPreviewColor;
-    /*
-      $(scope.canvas).bind('keydown', function(event) {
-      if (event.ctrlKey || event.metaKey) {
-      switch (String.fromCharCode(event.which).toLowerCase()) {
-      case 'c':
-      event.preventDefault();
-      scope.coords.select();
-      document.execCommand('copy');
-      break;
-      }
-      }
-      });
-    */
-    // imagexApp.initDrawing.DragTask(element[0].childNodes[1].childNodes[0]);
     scope.attrs = {}; // not needed any more
 };
 
@@ -1653,12 +1724,28 @@ ImagexScope.prototype.svgImageSnippet = function() {
     return s;
 };
 
+ImagexScope.prototype.videoPlay = function() {
+    const video = this.scope.videoPlayer;
+    if (video.fakeVideo) return;
+    //    var $scope = this.scope;
+    //this.scope.startTime = Date.now();
+    if (video.paused)
+        video.play();
+    else
+        video.pause();
+    //return startTime;
+};
+
+ImagexScope.prototype.videoBeginning = function() {
+    const video = this.scope.videoPlayer;
+    if (video.fakeVideo) return;
+    if (video.paused)
+        video.currentTime = 0;
+};
+
 ImagexScope.prototype.doSave = function(nosave) {
     "use strict";
     const $scope = this.scope;
-    // These break the whole javascript if used, positions are updated somehow anyways.
-    //$scope.$digest();
-    //$scope.$apply();
 
     $scope.error = "... saving ...";
     $scope.isRunning = true;
@@ -1672,7 +1759,6 @@ ImagexScope.prototype.doSave = function(nosave) {
             nosave: false,
         },
     };
-    //    $log.info(params);
 
     if (nosave) params.input.nosave = true;
     let url = "/imagex/answer";
@@ -1697,5 +1783,4 @@ ImagexScope.prototype.doSave = function(nosave) {
         $scope.errors.push(status);
         $scope.error = "Ikuinen silmukka tai jokin muu vika?";
     });
-
 };

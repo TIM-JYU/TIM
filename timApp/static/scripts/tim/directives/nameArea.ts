@@ -49,10 +49,6 @@ class NameAreaController extends DialogController<{}, {areaName: string, options
         return "Name area";
     }
 
-    private $onInit() {
-
-    }
-
     private addArea() {
         if (!this.areaName) {
             return;
@@ -66,5 +62,5 @@ registerDialogComponent("timNameArea",
     {templateUrl: "/static/templates/nameArea.html"});
 
 export async function showNameAreaDialog() {
-    return await showDialog<NameAreaController>("timNameArea", {});
+    return await showDialog<NameAreaController>("timNameArea", {}).result;
 }

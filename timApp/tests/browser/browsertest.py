@@ -1,5 +1,7 @@
 import math
 import os
+import socket
+import traceback
 from base64 import b64decode
 from io import BytesIO
 from pprint import pprint
@@ -9,6 +11,7 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.remote_connection import RemoteConnection
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
@@ -23,9 +26,22 @@ from timApp.timdb.docinfo import DocInfo
 PREV_ANSWER = 'answerbrowser .prevAnswer'
 
 
+def ignore_timeout(func):
+    def dec(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except socket.timeout:
+            warn_about_socket_timeout()
+    return dec
+
+
 class BrowserTest(TimLiveServer, TimRouteTest):
     login_dropdown_path = '//login-menu/div/button'
     screenshot_dir = '/service/screenshots'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.skip_screenshot_tests = False
 
     def get_screenshot_tolerance(self) -> float:
         return 0.001
@@ -36,10 +52,14 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
         options.set_headless()
         options.add_argument('--window-size=1024x768')
-        self.drv = webdriver.Remote(command_executor=self.app.config['SELENIUM_REMOTE_URL'] + ':4444/wd/hub',
-                                    desired_capabilities=options.to_capabilities())
+        RemoteConnection.set_timeout(15)  # according to experience, 10 is too low
+        try:
+            self.drv = webdriver.Remote(command_executor=self.app.config['SELENIUM_REMOTE_URL'] + ':4444/wd/hub',
+                                        desired_capabilities=options.to_capabilities())
+        except socket.timeout:
+            self.skipTest('socket timeout occurred when trying to initialize webdriver')
         self.drv.implicitly_wait(10)
-        self.wait = WebDriverWait(self.drv, 10)
+        self.wait = WebDriverWait(self.drv, 15)
 
     def login_browser_as(self, email: str, password: str, name: str):
         self.client.__exit__(None, None, None)
@@ -143,7 +163,6 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
     def assert_same_screenshot(self, element: WebElement, filename: Union[str, List[str]], move_to_element: bool = False):
         """Asserts that the provided element looks the same as in the provided screenshot.
-        :param try_again: Whether to try again it the first comparison attempt fails.
         :param element: The element to check.
         :param filename: The filename of the expected screenshot.
         :param move_to_element: Whether to move to the element before taking the screenshot.
@@ -164,10 +183,10 @@ class BrowserTest(TimLiveServer, TimRouteTest):
                 return
         self.save_element_screenshot(element, f'{f}_FAIL', move_to_element)
         diff.save(filename=f'{self.screenshot_dir}/{f}_FAIL_DIFF.png')
-        self.assertTrue(False,
-                        msg=f'Screenshots did not match (diff value is {result}); '
-                            f'failed screenshot saved to screenshots/{f}_FAIL '
-                            f'and difference to screenshots/{f}_FAIL_DIFF')
+        assert_msg = f'Screenshots did not match (diff value is {result}); ' \
+                     f'failed screenshot saved to screenshots/{f}_FAIL ' \
+                     f'and difference to screenshots/{f}_FAIL_DIFF'
+        self.assertTrue(self.skip_screenshot_tests, msg=assert_msg)
 
     def should_not_exist(self, css_selector: str):
         """Asserts that the current document should not contain any elements that match the specified CSS selector.
@@ -187,7 +206,10 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
     def tearDown(self):
         TimLiveServer.tearDown(self)
-        self.drv.quit()
+        try:
+            self.drv.quit()
+        except socket.timeout:
+            pass
 
     def goto_document(self, d: DocInfo, view='view'):
         self.goto(f'/{view}/{d.path}')
@@ -262,3 +284,8 @@ def find_by_ngclick(element: WebElement, value: str, tagname='*') -> WebElement:
 
 def find_all_by_ngmodel(element: WebElement, model: str, tagname='*') -> List[WebElement]:
     return element.find_elements_by_css_selector(f'{tagname}[ng-model="{model}"]')
+
+
+def warn_about_socket_timeout():
+    print("WARNING: socket timeout occurred during test")
+    traceback.print_exc()
