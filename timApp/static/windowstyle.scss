@@ -183,8 +183,10 @@ tim-question-matrix {
 
 dynamic-answer-sheet {
     display: block;
+    padding-left: 1em;
     .table {
       width: auto;
+      display: inline-table;
     }
     @include make-cells-middle();
 }
