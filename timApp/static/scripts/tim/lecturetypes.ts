@@ -1,4 +1,5 @@
 import moment, {Moment} from "moment";
+import {DurationChoice} from "./components/durationPicker";
 import {IUser} from "./IUser";
 
 export interface IExplCollection {
@@ -80,8 +81,8 @@ export interface IProcessedHeaders {
 }
 
 export interface IQuestionUI {
-    endTimeSelected: boolean;
-    timeLimitFields: {hours: number, minutes: number, seconds: number};
+    durationAmount?: number;
+    durationType: DurationChoice;
 }
 
 export interface IAskedJson {

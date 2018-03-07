@@ -1,5 +1,6 @@
 import angular, {IFormController, IRootElementService} from "angular";
 import $ from "jquery";
+import moment from "moment";
 import {
     fixQuestionJson,
     getPointsTable,
@@ -7,7 +8,7 @@ import {
     makePreview,
     minimizeJson,
 } from "tim/directives/dynamicAnswerSheet";
-import session, {timelimit} from "tim/session";
+import {timelimit} from "tim/session";
 import {markAsUsed, setSetting} from "tim/utils";
 import {QuestionMatrixController} from "../components/questionMatrix";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
@@ -163,8 +164,8 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             timeLimit: 30,
         };
         this.ui = {
-            endTimeSelected: true,
-            timeLimitFields: {hours: 0, minutes: 0, seconds: 30},
+            durationAmount: 30,
+            durationType: "seconds",
         };
 
         this.rows = [];
@@ -217,26 +218,10 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     }
 
     private setTime() {
-        this.ui.timeLimitFields = {hours: 0, minutes: 0, seconds: 30};
+        this.ui = {durationType: "seconds", durationAmount: 30};
         const timeLimit = parseInt(timelimit || "30");
         if (timeLimit > 0) {
-            let time = timeLimit;
-            if (time > 3600) {
-                this.ui.timeLimitFields.hours = Math.floor(time / 3600);
-            } else {
-                this.ui.timeLimitFields.hours = 0;
-            }
-            if (time > 60) {
-                this.ui.timeLimitFields.minutes = Math.floor(time / 60);
-                time = time % 60;
-            } else {
-                this.ui.timeLimitFields.minutes = 0;
-            }
-            if (time > 0) {
-                this.ui.timeLimitFields.seconds = time;
-            } else {
-                this.ui.timeLimitFields.seconds = 0;
-            }
+            this.ui.durationAmount = timeLimit;
         }
     }
 
@@ -259,7 +244,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         this.setEmptyMarkup(data.qst);
         this.titleChanged = false;
         if (this.qst) {
-            this.ui.endTimeSelected = false; // default no time
+            this.ui.durationAmount = undefined; // default no time
         }
     }
 
@@ -270,7 +255,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private editQuestion(data: IEditQuestionParams) {
         const json = isAskedQuestion(data) ? data.json.json : data.markup;
 
-        this.titleChanged = false;
+        if (!isAskedQuestion(data)) {
+            this.qst = data.qst;
+        }
 
         if (json.questionTitle) {
             this.question.questionTitle = this.putBackQuotations(json.questionTitle);
@@ -364,10 +351,10 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         this.rows = rows;
 
         if (json.timeLimit && json.timeLimit > 0) {
-            this.ui.endTimeSelected = true;
-            this.ui.timeLimitFields.seconds = json.timeLimit;
+            this.ui.durationType = "seconds";
+            this.ui.durationAmount = json.timeLimit;
         } else {
-            this.ui.endTimeSelected = false;
+            this.ui.durationAmount = undefined;
         }
     }
 
@@ -762,23 +749,8 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             this.customError = "You must have at least one row.";
         }
         let timeLimit: number | undefined;
-        if (this.ui.endTimeSelected) {
-            if (!this.ui.timeLimitFields.hours) {
-                this.ui.timeLimitFields.hours = 0;
-            }
-            if (!this.ui.timeLimitFields.minutes) {
-                this.ui.timeLimitFields.minutes = 0;
-            }
-            if (!this.ui.timeLimitFields.seconds) {
-                this.ui.timeLimitFields.seconds = 0;
-            }
-            timeLimit = this.ui.timeLimitFields.seconds;
-            if (this.ui.timeLimitFields.hours) {
-                timeLimit = timeLimit + (this.ui.timeLimitFields.hours * 60 * 60);
-            }
-            if (this.ui.timeLimitFields.minutes) {
-                timeLimit = timeLimit + (this.ui.timeLimitFields.minutes * 60);
-            }
+        if (this.ui.durationAmount) {
+            timeLimit = moment.duration(this.ui.durationAmount, this.ui.durationType).seconds();
             if (timeLimit <= 0) {
                 this.customError = "Please enter a duration greater than zero or for unending question uncheck the duration box.";
             }
