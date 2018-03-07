@@ -115,7 +115,7 @@ export function showDialog<T extends Dialog<T>>(component: T["component"],
                                                 classes = ["no-pointer-events"],
                                                 size: "sm" | "md" | "lg" = "md"): IModalInstance<T["ret"]> {
     $templateCache.put("uib/template/modal/window.html", `
-<div tim-draggable-fixed click="true" resize="true"
+<div tim-draggable-fixed click="true" resize="true" save="${component}"
      style="pointer-events: auto;"
      class="modal-dialog {{size ? 'modal-' + size : ''}}">
     <div class="draggable-content modal-content" uib-modal-transclude>
