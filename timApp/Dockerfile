@@ -1,5 +1,5 @@
 # Start from the Ubuntu image
-FROM ubuntu:17.04
+FROM ubuntu:17.10
 
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
     APT_CLEANUP="rm -r /var/lib/apt/lists/*"
@@ -34,7 +34,6 @@ RUN bash -c "${APT_INSTALL} git-core \
  && ${APT_CLEANUP}"
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.5 1 && \
     python3 -V
 
 # Install dependencies of texlive-full excluding packages that are not needed (such as documentation files).
@@ -173,7 +172,7 @@ RUN chown -R agent /service
 
 RUN bash -c "${APT_INSTALL} curl && ${APT_CLEANUP}"
 RUN (curl -sL https://deb.nodesource.com/setup_8.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
-RUN npm install -g typescript tslint jspm typescript-formatter && npm cache clean --force
+RUN npm install -g typescript@2.6 tslint jspm typescript-formatter && npm cache clean --force
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:test' | chpasswd
