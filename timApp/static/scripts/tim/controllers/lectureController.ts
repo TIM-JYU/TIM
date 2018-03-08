@@ -83,7 +83,7 @@ export class LectureController implements IController {
     private lecturerTable: ILecturePerson[];
     private newMessagesAmount: number;
     private newMessagesAmountText: string;
-    private passwordQuess: string | undefined;
+    private passwordGuess: string | undefined;
     private polling: boolean;
     private scope: IScope;
     private settings: any;
@@ -106,7 +106,7 @@ export class LectureController implements IController {
         this.canStop = false;
         this.lectures = [];
         this.futureLectures = [];
-        this.passwordQuess = "";
+        this.passwordGuess = "";
         this.isLecturer = false;
         this.studentTable = [];
         this.lecturerTable = [];
@@ -270,8 +270,8 @@ export class LectureController implements IController {
         }
 
         if (codeRequired) {
-            this.passwordQuess = $window.prompt("Please enter a password:", "") || undefined;
-            if (this.passwordQuess == null) {
+            this.passwordGuess = $window.prompt("Please enter a password:", "") || undefined;
+            if (this.passwordGuess == null) {
                 return;
             }
         }
@@ -286,12 +286,12 @@ export class LectureController implements IController {
             params: {
                 doc_id: this.viewctrl!.docId,
                 lecture_code: lectureCode,
-                password_quess: this.passwordQuess,
+                password_quess: this.passwordGuess,
                 buster: new Date().getTime(),
             },
         });
         const answer = response.data;
-        this.passwordQuess = "";
+        this.passwordGuess = "";
         const input = $("#passwordInput");
         if (hasLectureEnded(answer.lecture)) {
             showMessageDialog(`Lecture '${lectureCode}' has ended`);
@@ -365,7 +365,7 @@ export class LectureController implements IController {
      * Clears the password input when changing the lecture from current lectures list.
      */
     clearChange() {
-        this.passwordQuess = "";
+        this.passwordGuess = "";
     }
 
     /**
