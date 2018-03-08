@@ -194,11 +194,10 @@ timApp.component("timLectureInfo", {
                     ng-change="$ctrl.updateAnswerMap()">
             </select>
         </label>
-        <div class="checkbox">
+        <div class="checkbox" ng-show="$ctrl.isLecturer">
             <label>
                 <input
                         type="checkbox"
-                        ng-show="$ctrl.isLecturer"
                         ng-model="$ctrl.showAll"
                         ng-change="$ctrl.updateAnswerMap()">Show all users
             </label>
