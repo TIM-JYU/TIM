@@ -86,7 +86,7 @@
                 <ul>
                     <li ng-repeat="lecture in $ctrl.currentLecturesList">
                         <a href="/showLectureInfo/{{ lecture.lecture_id }}">{{ lecture.lecture_code }}</a>
-                        <button ng-if="$ctrl.lctrl.lecture.lecture_id != lecture.lecture_id" style="margin-left: 5px;"
+                        <button class="timButton btn-xs" ng-if="$ctrl.lctrl.lecture.lecture_id != lecture.lecture_id"
                                 value="Join"
                                 ng-click="$ctrl.lctrl.joinLecture(lecture)">Join
                         </button>
