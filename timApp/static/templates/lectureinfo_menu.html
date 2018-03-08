@@ -7,7 +7,7 @@
                         ng-options="lecture.lecture_code for lecture in $ctrl.lctrl.lectures">
                 </select>
                 <button class="timButton btn-lg"
-                        ng-click="$ctrl.lctrl.joinLecture($ctrl.lctrl.chosenLecture.lecture_code, $ctrl.lctrl.chosenLecture.is_access_code)"
+                        ng-click="$ctrl.lctrl.joinLecture($ctrl.lctrl.chosenLecture)"
                         title="Join the lecture" ng-show="$ctrl.lctrl.lectureSettings">
                     <span class="glyphicon glyphicon-log-in" aria-hidden="true"></span>
                 </button>
