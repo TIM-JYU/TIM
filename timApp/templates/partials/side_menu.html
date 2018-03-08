@@ -128,14 +128,14 @@
                 <h5>Lecturers (<span ng-bind="$ctrl.lctrl.lecturerTable.length">None</span>)</h5>
                 <ul>
                     <li ng-repeat="lecturer in $ctrl.lctrl.lecturerTable">
-                        {{ lecturer.name }} > {{ lecturer.active }}
+                        {{ lecturer.user.name }} > {{ lecturer.active }}
                     </li>
                 </ul>
                 <h5>Students (<span ng-bind="$ctrl.lctrl.studentTable.length">None</span>)</h5>
                 <p ng-show="$ctrl.lctrl.lecturerTable.length == 0">No lecturers</p>
                 <ul>
                     <li ng-repeat="person in $ctrl.lctrl.studentTable track by $index">
-                        {{ person.name }} > {{ person.active }}
+                        {{ person.user.name }} > {{ person.active }}
                     </li>
                 </ul>
                 <p ng-show="$ctrl.lctrl.studentTable.length == 0">No students</p>
