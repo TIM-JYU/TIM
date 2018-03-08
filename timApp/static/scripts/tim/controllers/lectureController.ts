@@ -271,6 +271,9 @@ export class LectureController implements IController {
 
         if (codeRequired) {
             this.passwordQuess = $window.prompt("Please enter a password:", "") || undefined;
+            if (this.passwordQuess == null) {
+                return;
+            }
         }
         if (this.chosenLecture == null && lectureCode === "") {
             $window.alert("Choose lecture to join");
