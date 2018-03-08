@@ -25,7 +25,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
 RUN echo "deb http://download.mono-project.com/repo/ubuntu xenial main" > /etc/apt/sources.list.d/mono-official.list
 RUN bash -c "${APT_INSTALL} mono-complete fsharp && ${APT_CLEANUP}"
 
-RUN bash -c "${APT_INSTALL} libsdl1.2debian libsdl-mixer1.2 xvfb imagemagick nunit-console wget && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} libsdl1.2debian libsdl-mixer1.2 xvfb imagemagick nunit-console wget firejail && ${APT_CLEANUP}"
 
 # Get GPG keys for Java 8
 # RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
@@ -157,7 +157,7 @@ RUN bash -c "${APT_INSTALL} cmake" && \
     cd nlopt && cmake -DCMAKE_CXX_FLAGS=-std=c++11 . && make && make install && cd .. && rm -r nlopt && apt-get remove -y cmake && ${APT_CLEANUP}
 
 RUN ldconfig
-RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArmadillo", "psych", "GPArotation", "candisc", "car", "heplots", "vegan"))'
+RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArmadillo", "psych", "GPArotation", "candisc", "car", "heplots", "vegan", "lavaan"))'
 
 RUN bash -c "${APT_INSTALL} python3-tk && ${APT_CLEANUP}"
 RUN pip3 install sympy
