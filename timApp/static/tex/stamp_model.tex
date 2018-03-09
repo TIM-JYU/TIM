@@ -1,0 +1,36 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=0.09cm]{geometry}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{framed}
+\usepackage{xcolor}
+\usepackage{lipsum} % for dummy text only
+\usepackage[alpine,misc]{ifsym}
+\textheight=9.0in
+\pagestyle{empty}
+\setlength{\tabcolsep}{0in}
+
+\usepackage{hyperref}
+
+\newcommand\invisiblesection[1]{%
+  \refstepcounter{section}%
+  \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}%
+  \sectionmark{#1}}
+
+\begin{document}
+\color{red}
+\nopagecolor
+\hspace{0cm}
+\begin{wrapfigure}{r}{3.14cm} %laatikon koko
+\vspace{-1.3cm}
+\footnotesize
+\begin{framed}
+
+\invisiblesection{\textit{Side Bar}}
+
+%TEXT_HERE
+
+
+\end{framed}
+\end{wrapfigure}
+\end{document}

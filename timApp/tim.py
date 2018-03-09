@@ -77,6 +77,9 @@ from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import NoSuchUserException
 
+import timApp.tools.pdftools  # for pdf stamp & merge testing
+from uuid import uuid4  # for pdf stamp & merge testing
+
 cache.init_app(app)
 
 app.register_blueprint(generateMap)
@@ -193,6 +196,22 @@ Exception happened on {datetime.now(tz=timezone.utc)} at {request.url}
 @app.route('/empty')
 def empty_response_route():
     return Response('', mimetype='text/plain')
+
+
+# testing route for pdftools.py
+@app.route('/pdfstamptest')
+def test_pdf():
+    pdftestdata = [
+        {'path': "static/testpdf/wlan.pdf",
+         'date': "9.3.2018", 'attachment': 1, 'issue': 2},
+        {'path': "static/testpdf/TIM-esittely.pdf",
+         'text': "LEIMATEKSTIN\nvoi valita\nvapaasti"}
+    ]
+    output_name = "static/testpdf/"+str(uuid4())+".pdf"
+
+    timApp.tools.pdftools.stamp_merge_pdfs(pdftestdata, output_name)
+    return send_file(output_name, mimetype="application/pdf")
+
 
 
 @app.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])

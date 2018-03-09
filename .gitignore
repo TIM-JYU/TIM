@@ -16,6 +16,7 @@ pg_backup/
 /timApp/docs/_build/
 /timApp/static/gen/
 /timApp/static/testgen/
+/timApp/static/testpdf/
 /timApp/static/scripts/node_modules/
 /timApp/static/scripts/jspm_packages/
 /timApp/static/scripts/build/
