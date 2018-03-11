@@ -524,7 +524,7 @@ languageTypes.runTypes     = ["fortran","css","jypeli","scala","java","graphics"
                               "xml", "octave","lua", "swift","mathcheck", "html", "processing", "r", "wescheme", "ping", "kotlin" ];
 languageTypes.aceModes     = ["fortran", "css","csharp","scala","java","java"    ,"c_cpp","c_cpp","sh","python","python","fsharp","lisp",
                               "javascript","sql","sql","alloy","text","csharp","run","text","javascript","javascript","python","json",
-                              "xml","octave","lua","swift","text", "html", "javascript", "r", "scheme", "text", "kotlin"];
+                              "xml","matlab","lua","swift","text", "html", "javascript", "r", "scheme", "text", "kotlin"];
 // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
 
 // What are known test types (be carefull not to include partial word):

@@ -213,10 +213,10 @@ function dateToString(d,h) {
     return hs + pad(t.getMinutes(),2) + ":" + pad(t.getSeconds(),2) + "." + pad(t.getMilliseconds(),3);
 }
 
-function drawText(ctx, s, x, y) {
+function drawText(ctx, s, x, y, font = "10px Arial") {
     ctx.save();
     ctx.textBaseline = "top";
-    ctx.font = "10px Arial";
+    ctx.font = font;
     const width = ctx.measureText(s).width;
     ctx.fillStyle = "#ffff00";
     ctx.fillRect(x, y, width + 1, parseInt(ctx.font, 10));
@@ -225,24 +225,40 @@ function drawText(ctx, s, x, y) {
     ctx.restore();
 }
 
+function showTime(ctx, vt, x, y, font) {
+    ctx.beginPath();
+    const s = dateToString(vt, false);
+    drawText(ctx, s, x, y, font);
+    ctx.stroke();
+}
+
 
 function drawCirclesVideoDot(ctx, dr, videoPlayer) {
     for (let dri = 0; dri < dr.length; dri++) {
         const seg = dr[dri];
-        if (seg.lines.length < 1) continue;
-        var seg1 = 0;
+        var vt =  videoPlayer.currentTime;
+        console.log("vt: " + vt + " " + this.scope.lastDrawnSeg );
+        var seg1 = -1;
         var seg2 = 0;
         var s = "";
-        for (let lni = 1; lni < seg.lines.length; lni++) {
-            if (videoPlayer.currentTime < seg.lines[lni][3])
+        for (let lni = 0; lni < seg.lines.length; lni++) {
+            if (vt < seg.lines[lni][3])
                 break;
             seg1 = seg2;
             seg2 = lni;
         }
 
-        if ( this.scope.lastDrawnSeg == seg1 ) return;
+        showTime(ctx, vt, 0, 0, "13px Arial");
+
+        // console.log("" + seg1 + "-" + seg2 + ": " + seg.lines[seg2][3]);
+        if ( this.scope.lastDrawnSeg == seg2 ) return;
         this.scope.lastDrawnSeg = -1;
         this.scope.draw();
+        showTime(ctx, vt, 0, 0, "13px Arial");
+        if ( seg1 < 0 ) return;
+
+        // console.log("" + seg1 + "-" + seg2 + ": " + seg.lines[seg2][3]);
+
 
         ctx.beginPath();
         this.scope.drawFillCircle(ctx, 30, seg.lines[seg2][0], seg.lines[seg2][1], "black", 0.5);
@@ -251,14 +267,17 @@ function drawCirclesVideoDot(ctx, dr, videoPlayer) {
         ctx.moveTo(seg.lines[seg1][0], seg.lines[seg1][1]);
         ctx.lineTo(seg.lines[seg2][0], seg.lines[seg2][1]);
         s = dateToString(seg.lines[seg2][3], false);
-        drawText(ctx, s, seg.lines[seg2][0], seg.lines[seg2][1]);
+        drawText(ctx, s, seg.lines[seg2][0], seg.lines[seg2][1], "13px Arial");
+
         ctx.stroke();
-        this.scope.lastDrawnSeg = seg1;
+        this.scope.lastDrawnSeg = seg2;
     }
 }
 
 
 function drawCirclesVideo(ctx, dr, videoPlayer) {
+    if ( !videoPlayer.fakeVideo ) this.scope.draw();
+    const vt = videoPlayer.currentTime;
     for (let dri = 0; dri < dr.length; dri++) {
         const seg = dr[dri];
         if (seg.lines.length < 1) continue;
@@ -267,10 +286,15 @@ function drawCirclesVideo(ctx, dr, videoPlayer) {
         ctx.strokeStyle = seg.color;
         ctx.lineWidth = seg.w;
         ctx.moveTo(seg.lines[0][0], seg.lines[0][1]);
-        s = dateToString(seg.lines[0][2], true);
-        drawText(ctx, s, seg.lines[0][0], seg.lines[0][1]);
+        if (videoPlayer.fakeVideo) {
+            s = dateToString(seg.lines[0][2], true);
+            drawText(ctx, s, seg.lines[0][0], seg.lines[0][1]);
+        } else {
+            if (vt >= seg.lines[0][3])
+                this.scope.drawFillCircle(ctx, 5, seg.lines[0][0], seg.lines[0][1], "black", 0.5);
+        }
         for (let lni = 1; lni < seg.lines.length; lni++) {
-            if (videoPlayer.currentTime < seg.lines[lni][3])
+            if (vt < seg.lines[lni][3])
                 break;
             ctx.lineTo(seg.lines[lni][0], seg.lines[lni][1]);
             if (videoPlayer.fakeVideo) {
