@@ -530,11 +530,13 @@ class CComtest(Language):
 class Fortran(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        if self.filename.endswith(".f") :
+        extension = os.path.splitext(self.filename)[1]
+        if extension.startswith(".f"):
+            self.fileext = extension[1:]
             self.sourcefilename = "/tmp/%s/%s" % (self.basename, self.filename)
         else:
+            self.fileext = 'f'
             self.sourcefilename = "/tmp/%s/%s.f" % (self.basename, self.filename)
-        self.fileext = "f"
         self.compiler = "gfortran"
 
     def get_cmdline(self, sourcecode):
