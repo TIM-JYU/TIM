@@ -165,6 +165,34 @@ RUN pip3 install sympy
 # yaml
 RUN pip3 install pyaml
 
+# snap
+RUN bash -c "${APT_INSTALL} snapd"
+
+# Kotlin
+# RUN snap install --classic kotlin
+
+#RUN curl -s https://get.sdkman.io | bash
+#RUN chmod 777 "/root/.sdkman/bin/sdkman-init.sh"
+#RUN bash -c  "source /root/.sdkman/bin/sdkman-init.sh && sdk install kotlin"
+#RUN bash -c  "mv /root/.sdkman/candidates/kotlin/1.2.30/bin /bin/kotlin"
+#RUN chmod -R 755 /root/.sdkman/
+#RUN chmod 755 /bin/kotlin
+#ENV PATH=/bin/kotlin:$PATH
+
+ENV         KOTLIN_VERSION=1.2.30 \
+            KOTLIN_HOME=/usr/local/kotlin
+
+RUN         cd  /tmp && \
+            wget -k "https://github.com/JetBrains/kotlin/releases/download/v${KOTLIN_VERSION}/kotlin-compiler-${KOTLIN_VERSION}.zip"  && \
+            unzip "kotlin-compiler-${KOTLIN_VERSION}.zip" && \
+            mkdir -p "${KOTLIN_HOME}" && \
+            mv "/tmp/kotlinc/bin" "/tmp/kotlinc/lib" "${KOTLIN_HOME}" && \
+            rm ${KOTLIN_HOME}/bin/*.bat && \
+            chmod +x ${KOTLIN_HOME}/bin/* && \
+            ln -s "${KOTLIN_HOME}/bin/"* "/usr/bin/" && \
+            rm -rf /tmp/* /var/cache/apk/*
+
+
 RUN useradd -m agent
 ENV HOME /home/agent
 RUN mkdir -p /service

@@ -346,6 +346,24 @@ class Java(Language):
         return code, out, err, pwddir
 
 
+class Kotlin(Java):
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.fileext = "kt"
+        self.filename = self.classname + "." + self.fileext
+        self.javaname = self.filepath + "/" + self.filename
+        self.sourcefilename = self.javaname
+        self.jarname = self.classname + ".jar"
+
+    def get_cmdline(self, sourcecode):
+        return "kotlinc  %s -include-runtime -d %s" % (self.filename, self.jarname)
+
+    def run(self, web, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(["java", "-jar", self.jarname],
+                                              ulimit=df(self.ulimit, "ulimit -f 10000"))
+        return code, out, err, pwddir
+
+
 def check_comtest(self, ttype, code, out, err, web, points_rule):
     eri = -1
     out = remove_before("Execution Runtime:", out)
@@ -507,6 +525,23 @@ class CComtest(Language):
         code, out, err, pwddir = self.runself(["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", self.testcs])
         out, err = check_comtest(self, "ccomtest", code, out, err, web, points_rule)
         return code, out, err, pwddir
+
+
+class Fortran(Language):
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        if self.filename.endswith(".f") :
+            self.sourcefilename = "/tmp/%s/%s" % (self.basename, self.filename)
+        else:
+            self.sourcefilename = "/tmp/%s/%s.f" % (self.basename, self.filename)
+        self.fileext = "f"
+        self.compiler = "gfortran"
+
+    def get_cmdline(self, sourcecode):
+        return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sourcefilename, self.exename)
+
+    def run(self, web, sourcelines, points_rule):
+        return self.runself([self.pure_exename])
 
 
 class PY3(Language):
@@ -924,3 +959,5 @@ languages["octave"] = Octave
 languages["processing"] = Processing
 languages["wescheme"] = WeScheme
 languages["ping"] = Ping
+languages["kotlin"] = Kotlin
+languages["fortran"] = Fortran
