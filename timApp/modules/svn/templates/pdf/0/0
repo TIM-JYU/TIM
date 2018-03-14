@@ -1,4 +1,6 @@
-``` {plugin="showVideo" .hidden-print}
+PDF
+PDF attachment
+``` {plugin="showPdf" .hidden-print}
 iframe: true
 open: false
 videoicon: false

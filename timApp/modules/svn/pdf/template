@@ -1,4 +1,4 @@
-``` {plugin="showVideo" .hidden-print}
+``` {plugin="showPdf" .hidden-print}
 iframe: true
 open: false
 videoicon: false
