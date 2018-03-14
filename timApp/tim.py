@@ -205,14 +205,18 @@ def empty_response_route():
 def test_pdf():
     pdftestdata = [
         {'path': "static/testpdf/wlan.pdf",
-         'date': "9.3.2018", 'attachment': 1, 'issue': 2},
+         'date': "9.3.2018", 'attachment': 2, 'issue': 3},
         {'path': "static/testpdf/TIM-esittely.pdf",
          'text': "LEIMATEKSTIN\nvoi valita\nvapaasti"}
     ]
-    output_name = "static/testpdf/"+str(uuid4())+".pdf"
 
-    timApp.tools.pdftools.stamp_merge_pdfs(pdftestdata, output_name)
-    return send_file(output_name, mimetype="application/pdf")
+    output_name = "static/testpdf/" + str(uuid4()) + ".pdf"
+    try:
+        timApp.tools.pdftools.stamp_merge_pdfs(pdftestdata, output_name)
+        return send_file(output_name, mimetype="application/pdf")
+    except Exception as e:
+        message = str(e.__class__.__name__) + " " + str(e)
+        abort(404, message)
 
 # testing route for processing pdf attachments
 @app.route('/processAttachments/<path:doc>')
@@ -237,6 +241,24 @@ def enninerikoinen(doc):
                 #name = plugin_creature.get_attr.name
             print (plug_type)
     abort(403, paragraphs)
+
+
+@app.route('/pdfmergetest')
+def test_pdfmerge():
+    pdftestdata = [
+        {'path': "static/testpdf/wlan.pdf",
+         'date': "9.3.2018", 'attachment': 2, 'issue': 3},
+        {'path': "static/testpdf/TIM-esittely.pdf",
+         'text': "LEIMATEKSTIN\nvoi valita\nvapaasti"}
+    ]
+    output_name = "static/testpdf/merged_"+str(uuid4())+".pdf"
+    try:
+        timApp.tools.pdftools.merge_pdf(["static/testpdf/wlan.pdf","static/testpdf/TIM-esittely.pdf"], output_name)
+        return send_file(output_name, mimetype="application/pdf")
+    except Exception as e:
+        message = str(e.__class__.__name__) + " " + str(e)
+        abort(404, message)
+
 
 @app.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def throw_ex():

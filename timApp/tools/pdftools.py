@@ -1,4 +1,4 @@
-from subprocess import Popen, PIPE, check_call, CalledProcessError
+from subprocess import Popen, PIPE, check_call, call as subprocess_call
 from os import remove, path
 from typing import Union, List
 from uuid import uuid4
@@ -7,15 +7,14 @@ from uuid import uuid4
 Stamping and merging pdf-files with pdftk and pdflatex
 
 Visa Naukkarinen
-9.3.2018
 """
 
 # TODO: scandinavian letters in stamps
-# TODO: subprocess call validity checks (check_call?)
 
 
 # Default parameter values
-temp_folder_default_path = "/tmp"
+# temp_folder_default_path = "/tmp"
+temp_folder_default_path = "static/testpdf"
 stamp_model_default_path = "static/tex/stamp_model.tex"
 
 
@@ -87,11 +86,15 @@ class StampDataMissingKeyError(Exception):
         self.item = item
 
 
+class StampDataEmptyError(Exception):
+    pass
+
+
 ##############################################################################
 # Functions:
 
 
-def merge_pdf(pdf_path_list: Union[str, List[str]], output_path: str) -> str:
+def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
     """
     Merges a list of pdfs using pdftk
     :param pdf_path_list: list of pdfs to merge OR
@@ -99,16 +102,11 @@ def merge_pdf(pdf_path_list: Union[str, List[str]], output_path: str) -> str:
     :param output_path: merged output file path
     :return: output_path
     """
-    cmd = "pdftk "
-    if type(pdf_path_list) is list:  # if argument is a list
-        cmd += " ".join(pdf_path_list)
-    else:  # if argument is already a properly formatted string
-        cmd += pdf_path_list
-    cmd += " cat output " + output_path
-    print(cmd)
-    # TODO: try giving cmd as list
-    # check_call(cmd)  # gives CalledProcessError if pdftk can't handle cmd
-    p = Popen(cmd, shell=True, stdout=PIPE)
+    args = ["pdftk"]
+    args += pdf_path_list + ["cat", "output", output_path]
+    print(args)
+    check_call(args)  # gives CalledProcessError if pdftk can't handle cmd
+    p = Popen(args, stdout=PIPE)
     print(str(p.communicate()))
     return output_path
 
@@ -149,7 +147,6 @@ def create_stamp(model_path: str, work_dir: str, stamp_name: str, text: str) -> 
     :return: complete path of the created stamp pdf-file
     """
     try:
-        # TODO: does stamp_model file close properly later?
         stamp_model = open(model_path, "r")
     # raises custom error if stamp_model is missing
     except FileNotFoundError:
@@ -162,18 +159,17 @@ def create_stamp(model_path: str, work_dir: str, stamp_name: str, text: str) -> 
                 else:
                     stamp_temp.write(line)
         # if stamp_model file is broken
-        # TODO: check if failure to write a new stamp file may raise this as well
+        # TODO: check if failure to write a new stamp file raises proper error
         except UnicodeDecodeError:
             raise ModelStampInvalidError(model_path)
+    args = ["pdflatex", stamp_name]
+    print(args)
 
-    # pdflatex can't write files outside of working directory!
-    cmd = "pdflatex " + stamp_name
-    print(cmd)
-    # gives CalledProcessError if pdflatex can't handle cmd
-    # pdflatex floods the console if there's no errors
-    # check_call(cmd, cwd=work_dir)
-    p = Popen(cmd, cwd=work_dir, shell=True, stdout=PIPE)
-    print(str(p.communicate()))
+    # TODO: fix pdflatex flooding the console
+    # pdflatex can't write files outside of working directory so use cwd
+    # check_call gives CalledProcessError if pdflatex can't handle cmmds
+    check_call(args, cwd=work_dir)
+    subprocess_call(args, cwd=work_dir)
     return work_dir + stamp_name + ".pdf"
 
 
@@ -185,11 +181,10 @@ def stamp_pdf(pdf_path: str, stamp_path: str, output_path: str) -> str:
     :param output_path:
     :return: output_path
     """
-    cmd = "pdftk " + pdf_path + " stamp " + \
-          stamp_path + " output " + output_path
-    print(cmd)
-    # check_call(cmd)  # gives CalledProcessError if pdftk can't handle cmd
-    p = Popen(cmd, shell=True, stdout=PIPE)
+    args = ["pdftk", pdf_path, "stamp", stamp_path, "output", output_path]
+    print(args)
+    check_call(args)
+    p = Popen(args, stdout=PIPE)
     print(str(p.communicate()))
     return output_path
 
@@ -224,7 +219,7 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
         raise StampDataInvalidError("is not a list")
     # if empty
     if not stamp_data:
-        raise StampDataInvalidError("is empty")
+        raise StampDataEmptyError()
     for item in stamp_data:
         # if there are no dictionaries inside the list
         if type(item) is not dict:
@@ -262,14 +257,14 @@ def stamp_merge_pdfs(
     # a number counter to separate subsequent temp files
     counter = 0
     # string that will have all stamped pdf paths (for pdftk)
-    stamped_pdf_paths = ""
+    stamped_pdf_paths = []
 
     # creates a new stamp and stamps the corresponding pdfs based on
     # the data-item in dictionary
     try:
         # check if temp-folder exists
         if not (path.isdir(dir_path) and path.exists(dir_path)):
-            # TODO: option to create a temp-dir if missing?
+            # TODO: create a temp-dir if missing?
             raise TempFolderNotFoundError(dir_path)
 
         # check if model stamp exists
@@ -292,16 +287,15 @@ def stamp_merge_pdfs(
                       path.join(dir_path, temp_file_name + c + ".pdf"),
                       stamp_i_path)
             # adds the created stamp's path to be used by the merge command
-            stamped_pdf_paths += stamp_i_path + " "
+            stamped_pdf_paths.append(stamp_i_path)
 
         merge_pdf(stamped_pdf_paths, merged_file_path)
 
     # in any case delete all potential temp-files
     finally:
-        while counter > 0:
-            c = str(counter)
+        for i in range(1, counter + 1):
+            c = str(i)
             remove_temp_files(dir_path, temp_file_name + c)
-            counter -= 1
 
 
 ##############################################################
