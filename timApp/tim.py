@@ -80,6 +80,8 @@ from timApp.timdb.userutils import NoSuchUserException
 import timApp.tools.pdftools  # for pdf stamp & merge testing
 from uuid import uuid4  # for pdf stamp & merge testing
 
+import timApp.plugin
+
 cache.init_app(app)
 
 app.register_blueprint(generateMap)
@@ -212,7 +214,29 @@ def test_pdf():
     timApp.tools.pdftools.stamp_merge_pdfs(pdftestdata, output_name)
     return send_file(output_name, mimetype="application/pdf")
 
-
+# testing route for processing pdf attachments
+@app.route('/processAttachments/<path:doc>')
+def enninerikoinen(doc):
+    d = DocEntry.find_by_path(doc, try_translation=True)
+    if not d:
+        abort(404)
+    verify_view_access(d)
+    paragraphs  = d.document.get_paragraphs(d)
+    for section in paragraphs:
+        plug = section.is_plugin()
+        if plug:
+            print (section)
+            plugin_creature = timApp.plugin.Plugin(task_id = "0", values={},plugin_type = "showVideo")
+            plugin_creature = plugin_creature.from_paragraph(section)
+            print("TEST") #not important
+            print(plugin_creature.values)
+            plug_type = section.get_attr('plugin')
+            if plug_type == 'showVideo':
+                print("TEST") #not important
+                name = section.get_attr('list\nvideoname')
+                #name = plugin_creature.get_attr.name
+            print (plug_type)
+    abort(403, paragraphs)
 
 @app.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def throw_ex():

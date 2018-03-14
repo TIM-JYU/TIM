@@ -35,6 +35,7 @@ def get_plugins():
             "showCode": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
             "showImage": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
             "showVideo": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
+            "showPdf": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/pdf/", "browser": False},
             "mcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
             "mmcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
             "uploader": {"host": current_app.config['UPLOADER_CONTAINER_URL']},

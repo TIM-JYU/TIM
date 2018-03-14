@@ -461,6 +461,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
         is_reqs = self.path.find('/reqs') >= 0
         is_image = self.path.find('/image') >= 0
         is_video = self.path.find('/video') >= 0
+        is_pdf = self.path.find('/pdf') >= 0
 
         content_type = 'text/plain'
         if is_reqs:
@@ -484,6 +485,8 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
             tempdir = "image"
         if is_video:
             tempdir = "video"
+        if is_pdf:
+            tempdir = "pdf"
         tempdir = "templates/" + tempdir
 
         if is_template:
@@ -517,6 +520,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
 def get_md(self, query):
     is_image = self.path.find('/image/') >= 0
     is_video = self.path.find('/video/') >= 0
+    is_pdf = self.path.find('/pdf/') >= 0
     is_template = self.path.find('/template') >= 0
     tempfile = get_param(query, "file", "")
 
@@ -529,6 +533,12 @@ def get_md(self, query):
     if is_video:
         if is_template:
             return file_to_string('templates/video/' + tempfile)
+        s = get_video_md(query)
+        return s
+
+    if is_pdf:
+        if is_template:
+            return file_to_string('templates/pdf/' + tempfile)
         s = get_video_md(query)
         return s
 
