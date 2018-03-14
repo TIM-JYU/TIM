@@ -9,7 +9,6 @@ from typing import Optional
 from sqlalchemy.orm import scoped_session
 
 from timApp.logger import log_info
-from timApp.timdb.newanswers import NewAnswers
 from timApp.timdb.runningquestion import RunningQuestions
 from timApp.timdb.showpoints import ShowPoints
 from timApp.timdb.slidestatus import SlideStatuses
@@ -78,18 +77,6 @@ class Showpoints(db.Model):
         self.asked_id = asked_id
 
 
-class Newanswer(db.Model):
-    __bind_key__ = 'tempdb'
-    lecture_id = db.Column(db.Integer, nullable=False)
-    asked_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, primary_key=True)
-
-    def __init__(self, lecture_id, asked_id, user_id):
-        self.lecture_id = lecture_id
-        self.asked_id = asked_id
-        self.user_id = user_id
-
-
 class Useractivity(db.Model):
     __bind_key__ = 'tempdb'
     lecture_id = db.Column(db.Integer, primary_key=True)
@@ -145,7 +132,6 @@ class TempDb(object):
         self.runningquestions = RunningQuestions(session, Runningquestion)
         self.showpoints = ShowPoints(session, Showpoints)
         self.useractivity = UserActivity(session, Useractivity)
-        self.newanswers = NewAnswers(session, Newanswer)
         self.usersshown = TempInfoUserQuestion(session, Usershown)
         self.usersextended = TempInfoUserQuestion(session, Userextended)
         self.usersanswered = TempInfoUserQuestion(session, Useranswered)

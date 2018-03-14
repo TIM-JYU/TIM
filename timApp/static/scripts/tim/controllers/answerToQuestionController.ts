@@ -30,6 +30,7 @@ export interface IAnswerQuestionParams {
 export type IAnswerQuestionResult =
     {type: "pointsclosed", askedId: number}
     | {type: "closed"}
+    | {type: "answered"}
     | {type: "reask"}
     | {type: "reask_as_new"};
 
@@ -95,7 +96,11 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         if (answer.questionLate) {
             await showMessageDialog(answer.questionLate);
         }
-        super.close({type: "closed"});
+        this.answered = true;
+        this.preview = makePreview(this.preview.markup, {answerTable: this.answer});
+        if (!this.isLecturer) {
+            super.close({type: "answered"});
+        }
     }
 
     protected close() {
@@ -135,7 +140,13 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     private async edit() {
         const asked = await fetchAskedQuestion(this.question.asked_id);
         const r = await showQuestionEditDialog(asked);
-        // TODO: update state?
+        if (isAskedQuestion(this.resolve.params.qa)) {
+            this.setData(await fetchAskedQuestion(this.question.asked_id));
+        } else {
+            this.setData((await $http.get<IQuestionAnswer>("/getQuestionAnswer", {
+                params: {id: this.resolve.params.qa.answer_id},
+            })).data);
+        }
     }
 
     private async showPoints() {
@@ -150,15 +161,21 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         const d = response.data;
         if (questionAnswerReceived(d)) {
             this.result = true;
-            this.preview = makePreview(d.data.asked_question.json.json, d.data.answer, false, true, d.data.points);
+            this.preview = makePreview(d.data.asked_question.json.json, {
+                answerTable: d.data.answer,
+                showCorrectChoices: true,
+                showExplanations: true,
+                userpoints: d.data.points,
+            });
         } else if (questionAsked(d)) {
             this.result = true;
-            this.preview = makePreview(d.data.json.json, [], false, true);
+            this.preview = makePreview(d.data.json.json, {
+                showCorrectChoices: true,
+                showExplanations: true,
+            });
         } else {
             await showMessageDialog("Did not receive result to show points.");
         }
-        // TODO: Is it necessary to update current_points_id here?
-        // this.current_points_id = this.question.asked_id;
     }
 
     /**
@@ -224,18 +241,21 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         if (isAskedQuestion(data)) {
             this.question = data;
             this.result = false;
-            this.preview = makePreview(this.question.json.json, [], false);
+            this.preview = makePreview(this.question.json.json, {
+                enabled: true,
+            });
             this.questionEnded = false;
             this.answered = false;
         } else {
             this.question = data.asked_question;
             this.result = true;
             this.preview = makePreview(
-                this.question.json.json,
-                data.answer,
-                false,
-                true,
-                data.points,
+                this.question.json.json, {
+                    answerTable: data.answer,
+                    showCorrectChoices: true,
+                    showExplanations: true,
+                    userpoints: data.points,
+                },
             );
             this.questionEnded = true;
             this.answered = true;

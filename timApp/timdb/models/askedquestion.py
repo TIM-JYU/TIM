@@ -35,11 +35,11 @@ class AskedQuestion(db.Model):
         return self.asked_json.to_json()['json'].get('timeLimit')
 
     def to_json(self):
-        aj = self.asked_json
+        aj = self.asked_json.to_json()
         if self.expl:
-            aj['expl'] = json.loads(self.expl)
+            aj['json']['expl'] = json.loads(self.expl)
         if self.points:
-            aj['points'] = self.points
+            aj['json']['points'] = self.points
         return {
             'asked_id': self.asked_id,
             'json': aj,

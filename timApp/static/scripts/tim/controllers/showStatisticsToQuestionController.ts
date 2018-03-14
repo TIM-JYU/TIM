@@ -1,3 +1,4 @@
+import moment from "moment";
 import * as chart from "tim/directives/showChartDirective";
 import {markAsUsed, to} from "tim/utils";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
@@ -10,9 +11,15 @@ export type IStatisticsParams = IAskedQuestion;
 
 export interface IStatisticsResult {
 }
+
+function getQuestionEndTime(q: IAskedQuestion) {
+    return q.asked_time.clone().add(moment.duration(q.json.json.timeLimit || 999999, "seconds"));
+}
+
 export class ShowStatisticsToQuestionController extends DialogController<{params: IStatisticsParams}, IStatisticsResult, "timQuestionStatistics"> {
     private answers: IQuestionAnswer[] = [];
     private ended = false;
+    private lastFetch = moment({year: 1900});
 
     constructor() {
         super();
@@ -32,8 +39,10 @@ export class ShowStatisticsToQuestionController extends DialogController<{params
      */
     private async getLectureAnswers() {
         while (!this.closed) {
+            const now = moment();
             const [err, response] = await to($http.get<IQuestionAnswer[]>("/getLectureAnswers", {
                 params: {
+                    after: this.lastFetch.toISOString(),
                     asked_id: this.resolve.params.asked_id,
                     buster: new Date().getTime(),
                 },
@@ -42,6 +51,13 @@ export class ShowStatisticsToQuestionController extends DialogController<{params
                 const data = response.data;
                 for (const ans of data) {
                     this.answers.push(ans);
+                }
+                if (this.answers.length > 0) {
+                    this.lastFetch = this.answers[this.answers.length - 1].answered_on.clone().add(1, "ms");
+                }
+                if (getQuestionEndTime(this.resolve.params) < now) {
+                    this.ended = true;
+                    return;
                 }
             } else {
                 this.ended = true;

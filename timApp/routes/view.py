@@ -11,8 +11,6 @@ from flask import redirect
 from flask import request
 from flask import session
 
-import timApp.routes.lecture
-import timApp.timdb.models.lecture
 from timApp.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort
 from timApp.common import get_user_settings, save_last_page, has_special_chars, post_process_pars, \

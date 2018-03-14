@@ -2,7 +2,6 @@ import {IController, IRootElementService} from "angular";
 import {timApp} from "tim/app";
 import * as showChart from "tim/directives/showChartDirective";
 import {markAsUsed} from "tim/utils";
-import {IItem} from "../IItem";
 import {IUser} from "../IUser";
 import {IAskedQuestion, ILecture, ILectureMessage, IQuestionAnswer} from "../lecturetypes";
 import {$http, $window} from "../ngimport";
@@ -29,10 +28,8 @@ markAsUsed(showChart);
 export class LectureInfoController implements IController {
     private static $inject = ["$element"];
     private element: IRootElementService;
-    private item: IItem;
     private lecture: ILecture;
     private inLecture: boolean;
-    private msg: string;
     private isLecturer: boolean;
     private answerers: IUser[];
     private answers: IQuestionAnswer[];
@@ -40,12 +37,11 @@ export class LectureInfoController implements IController {
     private selectedUser: IUser;
     private showAll = false;
     private answerMap: {[index: number]: IQuestionAnswer[]} = {};
+    private messages: ILectureMessage[] = [];
 
     constructor(element: IRootElementService) {
-        this.item = $window.item;
         this.inLecture = $window.inLecture;
         this.lecture = $window.lecture;
-        this.msg = "";
         this.isLecturer = false;
         this.answerers = [];
         this.element = element;
@@ -71,12 +67,7 @@ export class LectureInfoController implements IController {
             params: {lecture_id: this.lecture.lecture_id},
         });
         const data = response.data;
-        /*Update the header links to correct urls*/
-        this.updateHeaderLinks();
-
-        data.messages.forEach((msg) => {
-            this.msg += msg.user.name + " <" + msg.timestamp + ">: " + msg.message + "\n";
-        });
+        this.messages = data.messages;
         this.answers = data.answers;
         this.questions = data.questions;
         this.isLecturer = data.isLecturer;
@@ -99,19 +90,6 @@ export class LectureInfoController implements IController {
         await showQuestionEditDialog(response.data);
     }
 
-    /*
-     Updates the header links in base.html
-     */
-    private updateHeaderLinks() {
-        const viewNames = ["View", "Manage", "Teacher", "Answers", "Lecture", "Slide"];
-        for (const name of viewNames) {
-            const elem = document.getElementById(`header${name}`);
-            if (elem) {
-                elem.setAttribute("href", `/${name.toLowerCase()}/${this.item.path}`);
-            }
-        }
-    }
-
     private getAnswers(question: IAskedQuestion) {
         return this.answers.filter((q) =>
             q.asked_question.asked_id === question.asked_id &&
@@ -127,7 +105,7 @@ export class LectureInfoController implements IController {
             await $http({
                 url: "/deleteLecture",
                 method: "POST",
-                params: {doc_id: this.item.id, lecture_id: this.lecture.lecture_id},
+                params: {lecture_id: this.lecture.lecture_id},
             });
             $window.history.back();
         }
@@ -140,7 +118,7 @@ export class LectureInfoController implements IController {
             params: {lecture_id: this.lecture.lecture_id},
         });
         const lecture = response.data;
-        this.lecture = await showLectureDialog(this.item, lecture);
+        this.lecture = await showLectureDialog(lecture);
     }
 }
 
@@ -177,7 +155,11 @@ timApp.component("timLectureInfo", {
 <div class="panel panel-default">
     <div class="panel-heading">Lecture wall</div>
     <div class="panel-body">
-        <textarea class="form-control" ng-model="$ctrl.msg" readonly></textarea>
+        <tim-lecture-wall-content
+                messages="$ctrl.messages"
+                show-name="true"
+                show-time="true">
+        </tim-lecture-wall-content>
     </div>
 </div>
 

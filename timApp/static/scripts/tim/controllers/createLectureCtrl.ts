@@ -2,7 +2,7 @@ import angular, {IFormController} from "angular";
 import moment from "moment";
 import {DurationChoice} from "../components/durationPicker";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
-import {IItem} from "../IItem";
+import {getItem, IItem} from "../IItem";
 import {ILecture, ILectureFormParams, ILectureOptions} from "../lecturetypes";
 import {$http} from "../ngimport";
 
@@ -18,7 +18,20 @@ import {$http} from "../ngimport";
  * @copyright 2015 Timppa project authors
  */
 
-export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: ILectureFormParams | null}, ILecture, "timCreateLecture"> {
+function isLecture(item: any): item is ILecture {
+    const l = item as ILecture;
+    return l.end_time !== undefined &&
+        l.is_access_code !== undefined &&
+        l.lecture_code !== undefined &&
+        l.doc_id !== undefined &&
+        l.is_full !== undefined &&
+        l.lecture_id !== undefined &&
+        l.options !== undefined &&
+        l.password !== undefined &&
+        l.start_time !== undefined;
+}
+
+export class CreateLectureCtrl extends DialogController<{params: ILectureFormParams}, ILecture, "timCreateLecture"> {
     private useDate: boolean;
     private durationAmount: number;
     private durationType: DurationChoice;
@@ -30,7 +43,7 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
     private dateTimeOptions: EonasdanBootstrapDatetimepicker.SetOptions;
     private startTime: moment.Moment | undefined;
     private endTime: moment.Moment | undefined;
-    private item: IItem;
+    private item?: IItem;
     private options: ILectureOptions;
     private form: IFormController;
 
@@ -58,7 +71,7 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
         return "Create lecture";
     }
 
-    setLecture(data: ILectureFormParams) {
+    setLecture(data: ILecture) {
         this.showEarlyJoin = false;
         this.earlyJoining = false;
         this.lectureCode = data.lecture_code;
@@ -73,11 +86,11 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
         this.options = data.options;
     }
 
-    $onInit() {
+    async $onInit() {
         super.$onInit();
-        this.item = this.resolve.item;
-        if (this.resolve.lecture != null) {
-            this.setLecture(this.resolve.lecture);
+        this.item = isLecture(this.resolve.params) ? (await getItem(this.resolve.params.doc_id)) : this.resolve.params;
+        if (isLecture(this.resolve.params)) {
+            this.setLecture(this.resolve.params);
         }
     }
 
@@ -93,10 +106,16 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
     }
 
     getJoinLectureLink() {
+        if (!this.item) {
+            return "";
+        }
         return `https://${encodeURIComponent(location.host)}/lecture/${this.item.path}?lecture=${encodeURIComponent(this.lectureCode)}`;
     }
 
     getAutoJoinLink() {
+        if (!this.item) {
+            return "";
+        }
         return `https://${encodeURIComponent(location.host)}/lecture/${this.item.path}?lecture=autojoin`;
     }
 
@@ -172,6 +191,10 @@ export class CreateLectureCtrl extends DialogController<{item: IItem, lecture: I
         if (this.startTime == null) {
             return;
         }
+        if (!this.item) {
+            await showMessageDialog("this.item was unexpectedly null");
+            return;
+        }
         if (this.lectureTooShort()) {
             await showMessageDialog("Lecture must last at least two minutes.");
             return;
@@ -210,9 +233,8 @@ registerDialogComponent("timCreateLecture",
     {templateUrl: "/static/templates/start_lecture.html"},
     "clctrl");
 
-export async function showLectureDialog(item: IItem, lecture: ILectureFormParams | null = null): Promise<ILecture> {
+export async function showLectureDialog(item: IItem | ILecture): Promise<ILecture> {
     return showDialog<CreateLectureCtrl>("timCreateLecture", {
-        item: () => item,
-        lecture: () => lecture,
+        params: () => item,
     }).result;
 }

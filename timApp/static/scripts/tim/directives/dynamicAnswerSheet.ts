@@ -184,9 +184,10 @@ export function fixQuestionJson(json: IUnprocessedHeaders): IProcessedHeaders {
 
 export interface IPreviewParams {
     answerTable: AnswerTable;
-    preview: boolean;
+    enabled: boolean;
     markup: IAskedJsonJson;
-    showResult: boolean;
+    showExplanations: boolean;
+    showCorrectChoices: boolean;
     userpoints?: number;
 }
 
@@ -206,17 +207,24 @@ function createArray(...args: number[]) {
     return arr;
 }
 
-export function makePreview(markup: IAskedJsonJson,
-                            answerTable: AnswerTable = [],
-                            preview = true,
-                            showResult = false,
-                            userpoints?: number,
-                            ): IPreviewParams {
+export function makePreview(markup: IAskedJsonJson, {
+    answerTable = [],
+    enabled = false,
+    showExplanations = false,
+    showCorrectChoices = false,
+    userpoints,
+}: Partial<IPreviewParams> = {
+    answerTable: [],
+    enabled: false,
+    showCorrectChoices: false,
+    showExplanations: false,
+}): IPreviewParams {
     return {
         answerTable,
+        enabled,
         markup,
-        preview,
-        showResult,
+        showCorrectChoices: false,
+        showExplanations,
         userpoints,
     };
 }
@@ -274,7 +282,7 @@ class AnswerSheetController implements IController {
         if (!this.questiondata) {
             return null;
         }
-        if (!this.questiondata.showResult && !this.questiondata.preview) {
+        if (!this.questiondata.showCorrectChoices) {
             return null;
         }
         if (this.isVertical()) {
@@ -310,7 +318,7 @@ class AnswerSheetController implements IController {
         if (!this.questiondata) {
             return false;
         }
-        return (this.questiondata.showResult || this.questiondata.preview) && this.expl != null;
+        return (this.questiondata.showExplanations) && this.expl != null;
     }
 
     private getExpl(rowIndex: number): string | null {
@@ -372,8 +380,7 @@ class AnswerSheetController implements IController {
             return;
         }
 
-        // If showing preview or question result, inputs are disabled
-        this.disabled = params.preview || params.showResult;
+        this.disabled = !params.enabled;
 
         this.json = params.markup;
         this.processed = fixQuestionJson(this.json);

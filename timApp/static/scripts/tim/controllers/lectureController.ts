@@ -12,7 +12,6 @@
  */
 
 import angular, {IController, IScope} from "angular";
-import {IModalInstanceService} from "angular-ui-bootstrap";
 import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
@@ -20,14 +19,16 @@ import sessionsettings from "tim/session";
 import {clone, GetURLParameter, markAsUsed, setSetting, to} from "tim/utils";
 import {showLectureEnding} from "../components/lectureEnding";
 import * as wall from "../components/lectureWall";
-import {showMessageDialog, IModalInstance} from "../dialog";
+import {showLectureWall} from "../components/lectureWall";
+import {IModalInstance, showMessageDialog} from "../dialog";
 import {
     alreadyAnswered,
     endTimeChanged,
     hasLectureEnded,
     hasUpdates,
     IAlreadyAnswered,
-    IAskedQuestion, IEmptyResponse,
+    IAskedQuestion,
+    IEmptyResponse,
     ILecture,
     ILectureListResponse,
     ILectureMessage,
@@ -37,7 +38,8 @@ import {
     IQuestionAsked,
     IQuestionHasAnswer,
     IQuestionResult,
-    isAskedQuestion, isEmptyResponse,
+    isAskedQuestion,
+    isEmptyResponse,
     isLectureListResponse,
     IUpdateResponse,
     pointsClosed,
@@ -52,7 +54,6 @@ import {showLectureDialog} from "./createLectureCtrl";
 import {askQuestion} from "./questionAskController";
 import {showStatisticsDialog} from "./showStatisticsToQuestionController";
 import {ViewCtrl} from "./view/viewctrl";
-import {showLectureWall} from "../components/lectureWall";
 
 markAsUsed(wall);
 
@@ -531,7 +532,7 @@ export class LectureController implements IController {
             params,
         });
         const lecture = response.data;
-        await showLectureDialog(this.viewctrl!.item, lecture);
+        await showLectureDialog(lecture);
     }
 
     /**
@@ -647,7 +648,6 @@ export class LectureController implements IController {
                             $log.error("currentQuestion was undefined when trying to update end time");
                         }
                     }
-                    // If 'question' or 'result' is in answer, show question/explanation accordingly
                 } else if (pointsClosed(answer.extra)) {
                     if (currentQuestion) {
                         currentQuestion.updateEndTime(null);
@@ -731,6 +731,8 @@ export class LectureController implements IController {
             // empty
         } else if (result.type === "reask") {
             await askQuestion({askedId: question.asked_id});
+        } else if (result.type === "answered") {
+            // empty
         } else {
             // reask as new
             await askQuestion({parId: question.par_id, docId: question.doc_id});

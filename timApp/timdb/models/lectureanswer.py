@@ -20,10 +20,15 @@ class LectureAnswer(db.Model):
     asked_question = db.relationship('AskedQuestion', back_populates='answers', lazy='joined')
     user = db.relationship('User', back_populates='lectureanswers', lazy='joined')
 
+    @staticmethod
+    def get_by_id(ans_id: int) -> Optional['LectureAnswer']:
+        return LectureAnswer.query.get(ans_id)
+
     def to_json(self):
         return {
             'answer': json.loads(self.answer),
             'answer_id': self.answer_id,
+            'answered_on': self.answered_on,
             'asked_question': self.asked_question,
             'points': self.points,
             'user': self.user,

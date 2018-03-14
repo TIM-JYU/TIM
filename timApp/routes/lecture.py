@@ -599,7 +599,6 @@ def clean_dictionaries_by_lecture(lecture_id):
     tempdb.usersshown.delete_all_from_lecture(lecture_id)
     tempdb.usersextended.delete_all_from_lecture(lecture_id)
     tempdb.useractivity.delete_lecture_activity(lecture_id)
-    tempdb.newanswers.delete_lecture_answers(lecture_id)
     tempdb.showpoints.stop_showing_points(lecture_id)
     tempdb.pointsshown.delete_all_from_lecture(lecture_id)
 
@@ -810,7 +809,6 @@ def delete_question_temp_data(asked_id, lecture_id, tempdb):
     tempdb.runningquestions.delete_lectures_running_questions(lecture_id)
     tempdb.usersshown.delete_all_from_question(asked_id)
     tempdb.usersextended.delete_all_from_question(asked_id)
-    tempdb.newanswers.delete_question_answers(asked_id)
     tempdb.showpoints.stop_showing_points(lecture_id)
     tempdb.pointsshown.delete_all_from_lecture(lecture_id)
     tempdb.pointsclosed.delete_all_from_lecture(lecture_id)
@@ -878,14 +876,12 @@ def stop_question_from_running(question: AskedQuestion):
                 stopped = False
 
             if stopped:
-                tempdb.newanswers.delete_question_answers(asked_id)
                 return
 
         tempdb.runningquestions.delete_running_question(asked_id)
         tempdb.usersshown.delete_all_from_question(asked_id)
         tempdb.usersextended.delete_all_from_question(asked_id)
         tempdb.usersanswered.delete_all_from_lecture(asked_id)
-        tempdb.newanswers.delete_question_answers(asked_id)
 
 
 @lecture_routes.route("/getQuestionByParId", methods=['GET'])
@@ -911,6 +907,18 @@ def get_asked_question_by_id():
     return json_response(question)
 
 
+@lecture_routes.route("/getQuestionAnswer", methods=['GET'])
+def get_question_answer_by_id():
+    answer_id = get_option(request, 'id', default=None, cast=int)
+    if answer_id:
+        abort(400)
+    ans = LectureAnswer.get_by_id(answer_id)
+    if not ans:
+        abort(404, 'Answer not found')
+    verify_is_lecturer(ans.asked_question.lecture)
+    return json_response(ans)
+
+
 @lecture_routes.route("/stopQuestion", methods=['POST'])
 def stop_question():
     """Route to stop question from running."""
@@ -929,33 +937,18 @@ def stop_question():
 @lecture_routes.route("/getLectureAnswers", methods=['GET'])
 def get_lecture_answers():
     """Changing this to long poll requires removing threads."""
-    asked_id_str = request.args.get('asked_id')
-    if not asked_id_str:
+    asked_id = get_option(request, 'asked_id', None, cast=int)
+
+    if not asked_id:
         return abort(400, "Bad request")
 
-    asked_id = int(asked_id_str)
-
-    try:
-        rq = Runningquestion.query.filter_by(asked_id=asked_id).one()
-    except NoResultFound:
-        return abort(400, 'No running question')
-    lecture = Lecture.query.get(rq.lecture_id)
     question = get_asked_question(asked_id)
-    verify_is_lecturer(lecture)
-    tempdb = get_tempdb()
+    verify_is_lecturer(question.lecture)
+    if not question:
+        return abort(404, "Asked question not found")
+    after = get_option(request, 'after', default=question.asked_time, cast=dateutil.parser.parse)
 
-    step = 0
-    user_ids = []
-    while step <= 10:
-        step = 11
-        user_ids = tempdb.newanswers.get_new_answers(asked_id)
-        if user_ids:
-            break
-
-        step += 1
-        # time.sleep(1)
-
-    lecture_answers = question.answers.filter(LectureAnswer.user_id.in_(user_ids)).all() if user_ids else []
+    lecture_answers = question.answers.filter(LectureAnswer.answered_on > after).order_by(LectureAnswer.answered_on.asc()).all()
 
     return json_response(lecture_answers)
 
@@ -1002,7 +995,6 @@ def answer_to_question():
                                 answered_on=time_now, points=points)
             db.session.add(ans)
         db.session.commit()
-        tempdb.newanswers.user_answered(lecture_id, asked_id, current_user)
 
     return ok_response()
 
