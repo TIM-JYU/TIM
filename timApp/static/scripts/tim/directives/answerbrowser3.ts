@@ -160,7 +160,6 @@ timApp.directive("answerbrowser", [function() {
 
             $scope.changeAnswer = function() {
                 if ($scope.selectedAnswer == null) {
-                    $scope.dimPlugin();
                     return;
                 }
                 $scope.parContent.css("opacity", "1.0");
