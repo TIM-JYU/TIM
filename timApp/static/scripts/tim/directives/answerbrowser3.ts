@@ -159,9 +159,11 @@ timApp.directive("answerbrowser", [function() {
             };
 
             $scope.changeAnswer = function() {
-                if ($scope.selectedAnswer === null) {
+                if ($scope.selectedAnswer == null) {
+                    $scope.dimPlugin();
                     return;
                 }
+                $scope.parContent.css("opacity", "1.0");
                 $scope.updatePoints();
                 const $par = $scope.element;
                 const ids = dereferencePar($par);
@@ -363,9 +365,14 @@ timApp.directive("answerbrowser", [function() {
                             $scope.answers = data;
                             $scope.updateFiltered();
                             $scope.selectedAnswer = $scope.filteredAnswers[0];
-                            $scope.updatePoints();
-                            if (updateHtml) {
-                                $scope.changeAnswer();
+                            if (!$scope.selectedAnswer) {
+                                $scope.dimPlugin();
+                            } else {
+                                $scope.parContent.css("opacity", "1.0");
+                                $scope.updatePoints();
+                                if (updateHtml) {
+                                    $scope.changeAnswer();
+                                }
                             }
                         } else {
                             $scope.answers = data;
@@ -501,7 +508,7 @@ timApp.directive("answerbrowser", [function() {
             };
 
             $scope.findSelectedAnswerIndex = function() {
-                if ($scope.filteredAnswers === null) {
+                if ($scope.filteredAnswers === null || !$scope.selectedAnswer) {
                     return -1;
                 }
                 for (let i = 0; i < $scope.filteredAnswers.length; i++) {
