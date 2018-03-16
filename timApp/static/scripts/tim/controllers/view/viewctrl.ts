@@ -333,6 +333,10 @@ export class ViewCtrl implements IController {
         });
     }
 
+    isEmptyDocument() {
+        return this.docVersion[0] === 0 && this.docVersion[1] === 0; // TODO can be empty otherwise too
+    }
+
     setReviewCtrlScope(scope: IScope & {$ctrl: ReviewController}) {
         this.reviewCtrlScope = scope;
     }

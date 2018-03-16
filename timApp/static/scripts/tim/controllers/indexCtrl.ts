@@ -12,8 +12,6 @@ class IndexCtrl implements IController {
     private parentfolder: string;
     private itemList: IItem[];
     private item: any;
-    private templateList: IItem[];
-    private templates: any[];
     private showUpload: boolean;
     private file: any;
     private canCreate: boolean;
@@ -25,12 +23,7 @@ class IndexCtrl implements IController {
         this.parentfolder = "";
         this.itemList = $window.items;
         this.item = $window.item;
-        this.templateList = [];
-        this.templates = $window.templates;
         this.canCreate = Users.isLoggedIn();
-        if (this.templates) {
-            this.getTemplates();
-        }
     }
 
     $onInit() {
@@ -48,16 +41,6 @@ class IndexCtrl implements IController {
         return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
 
-    copyDocument(docId: number, templateName: string) {
-        $http.post("/update/" + docId, {
-            template_name: templateName,
-        }).then(function(response) {
-            $window.location.reload();
-        }, function(response) {
-            $window.alert(response.data.error);
-        });
-    }
-
     getItems() {
         $http<IItem[]>({
             method: "GET",
@@ -69,20 +52,6 @@ class IndexCtrl implements IController {
             this.itemList = response.data;
         }, (response) => {
             this.itemList = [];
-            // TODO: Show some error message.
-        });
-    }
-
-    getTemplates() {
-        $http<IItem[]>({
-            method: "GET",
-            url: "/getTemplates",
-            params: {
-                item_path: this.item.path,
-            },
-        }).then((response) => {
-            this.templateList = response.data;
-        }, (response) => {
             // TODO: Show some error message.
         });
     }

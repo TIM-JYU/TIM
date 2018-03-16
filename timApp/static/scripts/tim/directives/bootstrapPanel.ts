@@ -6,6 +6,7 @@ class BootstrapPanelController implements IController {
     private static $inject = ["$element"];
     private element: IRootElementService;
     private closeFn: () => void;
+    private show: boolean | undefined;
 
     constructor(element: IRootElementService) {
         this.element = element;
@@ -16,6 +17,7 @@ class BootstrapPanelController implements IController {
     }
 
     public close() {
+        this.show = false;
         this.closeFn();
     }
 }
@@ -23,6 +25,7 @@ class BootstrapPanelController implements IController {
 timApp.component("bootstrapPanel", {
     bindings: {
         closeFn: "&",
+        show: "=?",
         showClose: "=?",
         title: "@?",
     },
