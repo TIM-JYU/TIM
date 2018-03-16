@@ -23,7 +23,7 @@
                 <a href="/settings">Customize TIM</a>
                 {% if route and item.rights.manage %}
                 <h5>Document settings</h5>
-                <button class="timButton btn btn-block" ng-click="$ctrl.vctrl.editSettingsPars()">Edit settings</button>
+                <button class="timButton btn btn-block" ng-click="$ctrl.vctrl.editingHandler.editSettingsPars()">Edit settings</button>
                 {% else %}
                     <br />
                 {% endif %}
