@@ -1,22 +1,23 @@
-import angular from "angular";
-import {IController} from "angular";
+import angular, {IController, IFormController, IPromise} from "angular";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
-import {markAsUsed} from "tim/utils";
-import {$http, $timeout, $uibModal, $window} from "../ngimport";
+import {markAsUsed, to} from "tim/utils";
+import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IItem} from "../IItem";
+import {$http, $timeout, $window} from "../ngimport";
 
 markAsUsed(focusMe);
 
 export interface IBookmarkGroup {
     name: string;
     isOpen: boolean;
-    items: IBookmark[]
+    items: IBookmark[];
 }
 
 export interface IBookmark {
     group: string;
     link: string;
+    name: string;
 }
 
 class BookmarksController implements IController {
@@ -75,83 +76,47 @@ class BookmarksController implements IController {
         return true;
     }
 
-    newBookmark(group: IBookmarkGroup, e: Event) {
+    async newBookmark(group: string | undefined, e: Event) {
         e.preventDefault();
         const suggestedName = ($window.item || {}).title || document.title;
-        const modalInstance = $uibModal.open({
-            animation: false,
-            ariaLabelledBy: "modal-title",
-            ariaDescribedBy: "modal-body",
-            templateUrl: "createBookmark.html",
-            controller: "CreateBookmarkCtrl",
-            controllerAs: "$ctrl",
-            size: "md",
-            resolve: {
-                bookmark() {
-                    return {
-                        group: group || "",
-                        name: suggestedName,
-                        link: "",
-                    };
-                },
-            },
+        const bookmark = await showBookmarkDialog({
+            group: group || "",
+            name: suggestedName,
+            link: "",
         });
 
-        modalInstance.result.then((bookmark) => {
-            if (!bookmark.name) {
-                return;
-            }
-            $http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark)
-                .then((resp) => this.getFromServer(resp.data), (response) => {
-                    $window.alert("Could not add bookmark.");
-                });
-        }, () => {
-        });
+        if (!bookmark.name) {
+            return;
+        }
+        const resp = await $http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark);
+        this.getFromServer(resp.data);
     }
 
-    editItem(group: IBookmarkGroup, item: IItem, e: Event) {
+    async editItem(group: IBookmarkGroup, item: IItem, e: Event) {
         e.stopPropagation();
         e.preventDefault();
-        const modalInstance = $uibModal.open({
-            animation: false,
-            ariaLabelledBy: "modal-title",
-            ariaDescribedBy: "modal-body",
-            templateUrl: "createBookmark.html",
-            controller: "CreateBookmarkCtrl",
-            controllerAs: "$ctrl",
-            size: "md",
-            resolve: {
-                bookmark() {
-                    return {
-                        group: group.name,
-                        name: item.name,
-                        link: item.path,
-                    };
-                },
-            },
-        });
-
-        modalInstance.result.then((bookmark) => {
-            if (!bookmark.name) {
-                return;
-            }
-            $http.post<IBookmarkGroup[]>("/bookmarks/edit", {
-                old: {
-                    group: group.name,
-                    name: item.name,
-                    link: item.path,
-                }, new: bookmark,
-            })
-                .then((response) => {
-                    this.getFromServer(response.data, group);
-                }, response => {
-                    $window.alert("Could not edit bookmark.");
-                });
-        }, () => {
+        const [err, bookmark] = await to(showBookmarkDialog({
+            group: group.name,
+            name: item.name,
+            link: item.path,
+        }));
+        if (!bookmark) {
             $timeout(() => {
                 this.keepGroupOpen(group);
             }, 0);
+            return;
+        }
+        if (!bookmark.name) {
+            return;
+        }
+        const response = await $http.post<IBookmarkGroup[]>("/bookmarks/edit", {
+            old: {
+                group: group.name,
+                name: item.name,
+                link: item.path,
+            }, new: bookmark,
         });
+        this.getFromServer(response.data, group);
     }
 
     deleteItem(group: IBookmarkGroup, item: IItem, e: Event) {
@@ -188,17 +153,16 @@ class BookmarksController implements IController {
 
 timApp.component("bookmarks", {
     bindings: {
-        data: "=?",
-        userId: "=?",
+        data: "<?",
+        userId: "<?",
     },
     controller: BookmarksController,
     templateUrl: "/static/templates/bookmarks.html",
 });
 
-class CreateBookmarkCtrl implements IController {
-    private static $inject = ["bookmark", "$uibModalInstance"];
+class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark, "timBookmarksDialog"> {
 
-    private bookmarkForm: {};
+    private f: IFormController;
     private focusName: boolean;
     private focusGroup: boolean;
     private showParamsCheckbox: boolean;
@@ -206,14 +170,11 @@ class CreateBookmarkCtrl implements IController {
     private bookmark: IBookmark;
     private includeParams: boolean;
     private includeHash: boolean;
-    private uibModalInstance: angular.ui.bootstrap.IModalInstanceService;
 
-    constructor(bookmark: IBookmark, uibModalInstance: angular.ui.bootstrap.IModalInstanceService) {
-        this.uibModalInstance = uibModalInstance;
-        this.bookmarkForm = {};
-        this.bookmark = bookmark;
-        if (bookmark.group === "Last edited" || bookmark.group === "Last read") {
-            bookmark.group = "";
+    $onInit() {
+        this.bookmark = this.resolve.params;
+        if (this.bookmark.group === "Last edited" || this.bookmark.group === "Last read") {
+            this.bookmark.group = "";
         }
         this.focusGroup = false;
         this.focusName = true;
@@ -221,8 +182,8 @@ class CreateBookmarkCtrl implements IController {
         this.showHashCheckbox = $window.location.hash.length > 1;
     }
 
-    $onInit() {
-
+    protected getTitle(): string {
+        return "Bookmark";
     }
 
     public ok() {
@@ -236,12 +197,78 @@ class CreateBookmarkCtrl implements IController {
             }
         }
 
-        this.uibModalInstance.close(this.bookmark);
+        this.close(this.bookmark);
     }
 
     public cancel() {
-        this.uibModalInstance.dismiss("cancel");
+        this.dismiss();
     }
 }
 
-timApp.controller("CreateBookmarkCtrl", CreateBookmarkCtrl);
+registerDialogComponent("timBookmarksDialog", CreateBookmarkCtrl,
+    {
+        template: `
+<tim-dialog>
+    <dialog-header>
+        Bookmark
+    </dialog-header>
+    <dialog-body>
+        <form name="$ctrl.f" class="form-horizontal">
+            <div class="form-group"
+                 ng-class="{'has-error': !$ctrl.f.nameField.$pristine && $ctrl.f.nameField.$error.required}">
+                <label for="name" class="col-sm-2 control-label">Name</label>
+                <div class="col-sm-10">
+                    <input required focus-me="$ctrl.focusName" ng-model="$ctrl.bookmark.name" name="nameField"
+                           type="text"
+                           class="form-control" id="name" placeholder="Bookmark name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="group" class="col-sm-2 control-label">Folder</label>
+                <div class="col-sm-10">
+                    <input focus-me="$ctrl.focusGroup" ng-model="$ctrl.bookmark.group" name="groupField" type="text"
+                           class="form-control" id="group"
+                           placeholder="Folder name or blank to make a top-level bookmark">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="link" class="col-sm-2 control-label">Link</label>
+                <div class="col-sm-10">
+                    <input ng-model="$ctrl.bookmark.link" type="text" class="form-control" name="linkField" id="link"
+                           placeholder="Leave blank to add current page">
+                </div>
+            </div>
+            <div ng-show="$ctrl.showParamsCheckbox" class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <div class="checkbox">
+                        <label>
+                            <input ng-model="$ctrl.includeParams" ng-disabled="$ctrl.bookmark.link" type="checkbox">
+                            Include URL parameters in link
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div ng-show="$ctrl.showHashCheckbox" class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <div class="checkbox">
+                        <label>
+                            <input ng-model="$ctrl.includeHash" ng-disabled="$ctrl.bookmark.link" type="checkbox">
+                            Include URL hash in link
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </dialog-body>
+    <dialog-footer>
+        <button ng-disabled="!$ctrl.f.$valid" class="timButton" type="button" ng-click="$ctrl.ok()">Save
+        </button>
+        <button class="btn btn-default" type="button" ng-click="$ctrl.cancel()">Cancel</button>
+    </dialog-footer>
+</tim-dialog>
+    `,
+    });
+
+function showBookmarkDialog(bookmark: IBookmark): IPromise<IBookmark> {
+    return showDialog<CreateBookmarkCtrl>("timBookmarksDialog", {params: () => bookmark}).result;
+}

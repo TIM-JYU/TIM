@@ -1,4 +1,4 @@
-import angular, {IController} from "angular";
+import angular, {IController, IPromise} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "./app";
@@ -105,7 +105,7 @@ export async function showMessageDialog(message: string) {
 }
 
 export interface IModalInstance<Result> {
-    result: PromiseLike<Result>;
+    result: IPromise<Result>;
 
     close(result: Result): void;
 }
