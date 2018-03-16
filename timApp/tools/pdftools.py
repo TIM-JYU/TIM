@@ -22,7 +22,18 @@ stamp_model_default_path = "static/tex/stamp_model.tex"
 # Custom error classes:
 
 
-class ModelStampMissingError(Exception):
+class PdfError(Exception):
+    """
+    Inherited by all the other custom errors pdftools-module uses.
+    """
+    pass
+
+
+class ModelStampMissingError(PdfError):
+    """
+    Raised if model tex-file for creating stamps can't be found.
+    """
+
     def __init__(self, file_path: str = ""):
         """
         :param file_path:
@@ -30,7 +41,11 @@ class ModelStampMissingError(Exception):
         self.file_path = file_path
 
 
-class ModelStampInvalidError(Exception):
+class ModelStampInvalidError(PdfError):
+    """
+    Raised if model tex-file for creating stamps is broken,
+    """
+
     def __init__(self, file_path: str = ""):
         """
         :param file_path:
@@ -38,7 +53,7 @@ class ModelStampInvalidError(Exception):
         self.file_path = file_path
 
 
-class TempFolderNotFoundError(Exception):
+class TempFolderNotFoundError(PdfError):
     """
     Raised if the folder for temporary files is missing
     """
@@ -50,7 +65,11 @@ class TempFolderNotFoundError(Exception):
         self.folder_path = folder_path
 
 
-class AttachmentNotFoundError(Exception):
+class AttachmentNotFoundError(PdfError):
+    """
+    Raised when at least one pdf file in input data is missing.
+    """
+
     def __init__(self, file_path: str = ""):
         """
         :param file_path: path of the attachment pdf that caused the error
@@ -58,7 +77,7 @@ class AttachmentNotFoundError(Exception):
         self.file_path = file_path
 
 
-class StampDataInvalidError(Exception):
+class StampDataInvalidError(PdfError):
     """
     Raised if stamp data type is wrong
     """
@@ -72,7 +91,7 @@ class StampDataInvalidError(Exception):
         self.item = item
 
 
-class StampDataMissingKeyError(Exception):
+class StampDataMissingKeyError(PdfError):
     """
     Raised when stamp data is missing one or more required keys.
     """
@@ -86,8 +105,20 @@ class StampDataMissingKeyError(Exception):
         self.item = item
 
 
-class StampDataEmptyError(Exception):
+class StampDataEmptyError(PdfError):
+    """
+    Raised if input data is an empty list.
+    """
     pass
+
+
+class SubprocessError(PdfError):
+    """
+    Raised when subprocesses (pdftk, pdflatex, possibly others) return
+    error code or otherwise raise exception.
+    """
+    def __init__(self, cmd: str = ""):
+        self.cmd = cmd
 
 
 ##############################################################################
@@ -102,12 +133,19 @@ def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
     :param output_path: merged output file path
     :return: output_path
     """
-    args = ["pdftk"]
-    args += pdf_path_list + ["cat", "output", output_path]
+    args = ["pdftk"] + pdf_path_list + ["cat", "output", output_path]
     print(args)
-    check_call(args)  # gives CalledProcessError if pdftk can't handle cmd
-    p = Popen(args, stdout=PIPE)
-    print(str(p.communicate()))
+    # raise SubprocessError is done twice because Popen raises
+    # FileNotFoundError in some cases and skips the return code check
+    try:
+        p = Popen(args, stdout=PIPE)
+        streamdata = p.communicate()[0]
+        print(str(streamdata))
+        rc = p.returncode
+        if rc != 0:
+            raise SubprocessError(" ".join(args))
+    except FileNotFoundError as e:
+        raise SubprocessError(" ".join(args))
     return output_path
 
 
@@ -164,12 +202,16 @@ def create_stamp(model_path: str, work_dir: str, stamp_name: str, text: str) -> 
             raise ModelStampInvalidError(model_path)
     args = ["pdflatex", stamp_name]
     print(args)
-
-    # TODO: fix pdflatex flooding the console
+    # quick check in case function for one reason or another gets this far
+    # without a stamp file, because otherwise pdflatex will keep on waiting
+    # for args
+    if len(args) < 2:
+        raise SubprocessError(" ".join(args))
     # pdflatex can't write files outside of working directory so use cwd
-    # check_call gives CalledProcessError if pdflatex can't handle cmmds
-    check_call(args, cwd=work_dir)
-    subprocess_call(args, cwd=work_dir)
+    rc = subprocess_call(args, cwd=work_dir)
+    # check return code, presumably 0 means everything's ok
+    if rc != 0:
+        raise SubprocessError(" ".join(args))
     return work_dir + stamp_name + ".pdf"
 
 
@@ -183,9 +225,15 @@ def stamp_pdf(pdf_path: str, stamp_path: str, output_path: str) -> str:
     """
     args = ["pdftk", pdf_path, "stamp", stamp_path, "output", output_path]
     print(args)
-    check_call(args)
-    p = Popen(args, stdout=PIPE)
-    print(str(p.communicate()))
+    try:
+        p = Popen(args, stdout=PIPE)
+        streamdata = p.communicate()[0]
+        print(str(streamdata))
+        rc = p.returncode
+        if rc != 0:
+            raise SubprocessError(" ".join(args))
+    except FileNotFoundError as e:
+        raise SubprocessError(" ".join(args))
     return output_path
 
 
@@ -299,7 +347,7 @@ def stamp_merge_pdfs(
 
 
 ##############################################################
-# Testing/example:
+# Testing/examples (may be outdated):
 """
 data = [
     # normal case

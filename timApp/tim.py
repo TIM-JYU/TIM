@@ -209,55 +209,51 @@ def test_pdf():
         {'path': "static/testpdf/TIM-esittely.pdf",
          'text': "LEIMATEKSTIN\nvoi valita\nvapaasti"}
     ]
-
-    output_name = "static/testpdf/" + str(uuid4()) + ".pdf"
+    output_name = f"static/testpdf/{uuid4()}.pdf"
     try:
         timApp.tools.pdftools.stamp_merge_pdfs(pdftestdata, output_name)
-        return send_file(output_name, mimetype="application/pdf")
     except Exception as e:
-        message = str(e.__class__.__name__) + " " + str(e)
+        message = repr(e)
         abort(404, message)
+    else:
+        return send_file(output_name, mimetype="application/pdf")
+
+
+@app.route('/pdfmergetest')
+def test_pdfmerge():
+    output_name = f"static/testpdf/{uuid4()}.pdf"
+    try:
+        timApp.tools.pdftools.merge_pdf(["static/testpdf/wlan.pdf","static/testpdf/TIM-esittely.pdf"], output_name)
+    except Exception as e:
+        message = repr(e)
+        abort(404, message)
+    else:
+        return send_file(output_name, mimetype="application/pdf")
+
 
 # testing route for processing pdf attachments
 @app.route('/processAttachments/<path:doc>')
-def enninerikoinen(doc):
+def process_attachments(doc):
     d = DocEntry.find_by_path(doc, try_translation=True)
     if not d:
         abort(404)
     verify_view_access(d)
     paragraphs  = d.document.get_paragraphs(d)
-    for section in paragraphs:
-        plug = section.is_plugin()
+    for par in paragraphs:
+        plug = par.is_plugin()
         if plug:
-            print (section)
+            print (par)
             plugin_creature = timApp.plugin.Plugin(task_id = "0", values={},plugin_type = "showVideo")
-            plugin_creature = plugin_creature.from_paragraph(section)
+            plugin_creature = plugin_creature.from_paragraph(par)
             print("TEST") #not important
             print(plugin_creature.values)
-            plug_type = section.get_attr('plugin')
+            plug_type = par.get_attr('plugin')
             if plug_type == 'showVideo':
                 print("TEST") #not important
-                name = section.get_attr('list\nvideoname')
+                name = par.get_attr('list\nvideoname')
                 #name = plugin_creature.get_attr.name
             print (plug_type)
     abort(403, paragraphs)
-
-
-@app.route('/pdfmergetest')
-def test_pdfmerge():
-    pdftestdata = [
-        {'path': "static/testpdf/wlan.pdf",
-         'date': "9.3.2018", 'attachment': 2, 'issue': 3},
-        {'path': "static/testpdf/TIM-esittely.pdf",
-         'text': "LEIMATEKSTIN\nvoi valita\nvapaasti"}
-    ]
-    output_name = "static/testpdf/merged_"+str(uuid4())+".pdf"
-    try:
-        timApp.tools.pdftools.merge_pdf(["static/testpdf/wlan.pdf","static/testpdf/TIM-esittely.pdf"], output_name)
-        return send_file(output_name, mimetype="application/pdf")
-    except Exception as e:
-        message = str(e.__class__.__name__) + " " + str(e)
-        abort(404, message)
 
 
 @app.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])

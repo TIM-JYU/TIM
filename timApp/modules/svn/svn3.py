@@ -497,7 +497,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
 
         if is_reqs:
             result_json = join_dict({"multihtml": True, "multimd": True}, get_all_templates(tempdir))
-            if is_video:
+            if is_video or is_pdf:
                 result_json.update({"js": ["/svn/video/js/video.js"], "angularModule": ["videoApp"]})
             result_str = json.dumps(result_json)
             self.wout(result_str)
