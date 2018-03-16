@@ -172,6 +172,7 @@ class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark
     private includeHash: boolean;
 
     $onInit() {
+        super.$onInit();
         this.bookmark = this.resolve.params;
         if (this.bookmark.group === "Last edited" || this.bookmark.group === "Last read") {
             this.bookmark.group = "";
