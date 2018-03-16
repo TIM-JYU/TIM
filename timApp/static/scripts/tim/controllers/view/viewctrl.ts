@@ -303,12 +303,14 @@ export class ViewCtrl implements IController {
             $timeout(() => {
                 this.document.rebuildSections();
             }, 1000);
-            if ( this.liveUpdates != origLiveUpdates ) { // if value hase changes, stop and start new poll
+            if (this.liveUpdates != origLiveUpdates) { // if value hase changes, stop and start new poll
                 if (stop) {
                     $interval.cancel(stop);
                     stop = undefined;
                 }
-                $timeout(() => { this.startLiveUpdates(); }, 100);
+                $timeout(() => {
+                    this.startLiveUpdates();
+                }, 100);
             }
         }, Math.max(1000 * this.liveUpdates, 1000));
     }
