@@ -1487,7 +1487,8 @@ csApp.Controller = function($scope,$transclude) {
         }
         if ( type.indexOf("text") == 0 ) {
             html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
-            html += '<iframe  width="800" src="' + file +'" target="csdocument" allowfullscreen  onload="resizeIframe(this)" '+$scope.iframeopts+' />';
+            // html += '<iframe  width="800" src="' + file +'" target="csdocument" allowfullscreen  onload="resizeIframe(this)" '+$scope.iframeopts+' />';
+            html += '<iframe  width="800" src="' + file +'" target="csdocument" allowfullscreen   '+$scope.iframeopts+' />';
             html += '</div>';
 			$scope.uploadresult = $sce.trustAsHtml(html);
 			return;
@@ -1496,7 +1497,8 @@ csApp.Controller = function($scope,$transclude) {
 
         if ( uploadFileTypes.is(uploadFileTypes.show, file)) {
             html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:1200px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
-            html += '<iframe width="800" height="900"  src="' + file +'" target="csdocument" allowfullscreen onload="resizeIframe(this)" '+$scope.iframeopts+' />';
+            // html += '<iframe width="800" height="900"  src="' + file +'" target="csdocument" allowfullscreen onload="resizeIframe(this)" '+$scope.iframeopts+' />';
+            html += '<iframe width="800" height="900"  src="' + file +'" target="csdocument" allowfullscreen " '+$scope.iframeopts+' />';
             //html += '<embed  width="800" height="16000"  src="' + file +'" />';
             //html += '<object width="800" height="600"   data="' + file +'" type="' + type +'"  ></object>';
             html += '</div>';

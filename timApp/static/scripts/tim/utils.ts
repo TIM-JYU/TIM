@@ -2,6 +2,21 @@ import angular from "angular";
 import $ from "jquery";
 import sessionsettings from "tim/session";
 
+
+/**
+ * Check if element is in view
+ * @method isInViewport
+ * @param element - Element to check
+ * @returns {boolean} true if in view
+ */
+export function isInViewport(element) {
+    var elementTop = $(element).offset().top;
+    var elementBottom = elementTop + $(element).outerHeight();
+    var viewportTop = $(window).scrollTop();
+    var viewportBottom = viewportTop + $(window).height();
+    return elementBottom > viewportTop && elementTop < viewportBottom;
+};
+
 /**
  * Scroll window to the given element.
  * @method scrollToElement

@@ -368,12 +368,19 @@ def get_html(ttype, query):
     if is_review(query):
         userinput = get_json_eparam(query.jso, "state", "userinput", None)
         userargs = get_json_eparam(query.jso, "state", "userargs", None)
+        uploaded_file = get_json_eparam(query.jso, "state", "uploadedFile", None)
         s = ""
         if userinput is not None:
             s = s + '<p>Input:</p><pre>' + userinput + '</pre>'
         if userargs is not None:
             s = s + '<p>Args:</p><pre>' + userargs + '</pre>'
-        result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>' + s + '</div>'
+        if uploaded_file is not None:
+            s = s + '<p>File:</p><pre>' + os.path.basename(uploaded_file) + '</pre>'
+        if usercode:
+            s = '<pre>' + usercode + '</ pre>' + s
+        if not s:
+            s = "No answer"
+        result = NOLAZY + '<div class="review" ng-non-bindable>'+s + '</div>'
         return result
 
     r = runner + is_input

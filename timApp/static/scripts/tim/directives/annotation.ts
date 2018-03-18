@@ -87,23 +87,8 @@ timApp.directive("annotation", [function() {
                 if (scope.velpElement === null) {
                     scope.velpElement = element[0].getElementsByClassName("annotation-info")[0];
                 }
-                const elementName = scope.velpElement.parentNode.offsetParent.className;
-                const annotationElements = document.querySelectorAll('[aid="{0}"]'.replace("{0}", scope.aid));
-
-                scope.toggleAnnotationShow();
-
-                if (elementName === "notes" && annotationElements.length > 1) {
-                    for (let i = 0; i < annotationElements.length; i++) {
-                        const e = annotationElements[i].parentNode as HTMLElement;
-                        if (e.offsetParent.className !== "notes") {
-                            angular.element(
-                                annotationElements[i],
-                            ).isolateScope<any>().toggleAnnotationShow();
-                            scope.toggleAnnotationShow();
-                        }
-                    }
-                }
-
+                var annotation = scope.$parent.getAnnotationById(scope.aid);
+                scope.$parent.toggleAnnotation(annotation, false);
             };
 
             scope.toggleAnnotationShow = function() {
@@ -267,7 +252,7 @@ timApp.directive("annotation", [function() {
              * @param points - Points given in velp or annotation
              * @returns {boolean} - Whether user has rights to make annotations
 
-            scope.notAnnotationRights = function (points) {
+             scope.notAnnotationRights = function(points) {
                 if (scope.$parent.item.rights.teacher) {
                     return false;
                 } else {
@@ -363,6 +348,6 @@ timApp.directive("annotation", [function() {
                     scope.updateVelpZIndex();
                 }
             }, 0);
-        },
+       },
     };
 }]);

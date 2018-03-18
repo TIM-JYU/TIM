@@ -1,7 +1,7 @@
 import angular from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {getElementParent, scrollToElement} from "../utils";
+import {getElementParent, scrollToElement, isInViewport} from "../utils";
 import {$compile, $http, $window} from "../ngimport";
 
 /**
@@ -202,6 +202,7 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
      * @method loadAnnotationsToAnswer
      * @param answer_id - Answer ID
      * @param par - Paragraph element
+     * @param showInPlace - show velp inside answer text
      */
     $scope.loadAnnotationsToAnswer = function(answer_id, par, showInPlace) {
         const annotations = $scope.getAnnotationsByAnswerId(answer_id);
@@ -227,8 +228,11 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
                 addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
             } else {
                 const range = document.createRange();
-                range.setStart(element, placeInfo.start.offset);
-                range.setEnd(element, placeInfo.end.offset);
+                try {
+                    range.setStart(element, placeInfo.start.offset);
+                    range.setEnd(element, placeInfo.end.offset);
+                } catch (err) {
+                }
                 $scope.addAnnotationToCoord(range, annotations[i], false);
                 addAnnotationToElement(par, annotations[i], false, "Added also margin annotation");
             }
@@ -255,6 +259,24 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
         });
 
         return annotations;
+    };
+
+    /**
+     * Gets all the annotations with a given answer ID.
+     * @method getAnnotationById
+     * @param id - annotation ID
+     * @returns annotation with this id
+     */
+    $scope.getAnnotationById = function(id) {
+        const annotations = $scope.annotations;
+        for (var i = 0; i < annotations.length; i++) {
+            const a = annotations[i];
+            if (a.id === id) {
+                return a;
+            }
+        }
+
+        return null;
     };
 
     /**
@@ -726,7 +748,7 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
      * @param points - Points given in velp or annotation
      * @returns {boolean} - Right to make annotations
 
-    $scope.notAnnotationRights = function (points) {
+     $scope.notAnnotationRights = function(points) {
         if ($scope.item.rights.teacher) {
             return false;
         } else {
@@ -737,7 +759,7 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
             }
         }
     };
-    */
+     */
     /**
      * Return caption text if the user has no rights to the annotation.
      * @param state - Whether the annotation is disabled to the user or not
@@ -1146,55 +1168,71 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
      * @method toggleAnnotation
      * @param annotation - Annotation to be showed.
      */
-    $scope.toggleAnnotation = function(annotation) {
+    $scope.toggleAnnotation = function(annotation, scrollToWindow) {
         const parent = document.getElementById(annotation.coord.start.par_id);
 
         try {
             const annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
-            angular.element(annotationElement).isolateScope<any>().showAnnotation();
-            if (annotation.parentNode.classname === "notes") {
-                const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-                abl.isolateScope<any>().loadAnswerBrowser();
+            const ae = angular.element(annotationElement).isolateScope<any>();
+            // if (annotation.parentNode.classname === "notes") {
+            //    const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
+            //    abl.isolateScope<any>().loadAnswerBrowser();
+            // }
+            if (annotation.offset_start == null || ae.show) {
+                if ( ae.show )  scrollToWindow = false;
+                ae.toggleAnnotationShow();
+                if ( scrollToWindow  && !isInViewport(annotationElement)) scrollToElement(annotationElement);
+                //addAnnotationToElement(par, annotation, false, "Added also margin annotation");
+                return;
             }
-            scrollToElement(annotationElement);
-            //addAnnotationToElement(par, annotation, false, "Added also margin annotation");
 
         } catch (e) {
-            // Find answer browser and isolate its scope
-            // set answer id -> change answer to that
-            // query selector element -> toggle annotation
-            if (e.name === "TypeError" && annotation.answer_id !== null) {
-                //var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-                let ab: any = parent.getElementsByTagName("ANSWERBROWSER")[0];
-
-                if (typeof ab === UNDEFINED) {
-                    const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-                    abl.isolateScope<any>().loadAnswerBrowser();
-                }
-                if (this.selectedUser.id !== annotation.user_id) {
-                    for (let i = 0; i < this.users.length; i++) {
-                        if (this.users[i].id === annotation.user_id) {
-                            $scope.changeUser(this.users[i], false);
-                            break;
-                        }
-                    }
-
-                }
-
-                setTimeout(function() {
-                    ab = angular.element(parent.getElementsByTagName("ANSWERBROWSER")[0]);
-                    const abscope = ab.isolateScope();
-                    abscope.review = true;
-                    abscope.setAnswerById(annotation.answer_id);
-
-                    setTimeout(function() {
-                        const annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
-                        angular.element(annotationElement).isolateScope<any>().showAnnotation();
-                        $scope.$apply();
-                        scrollToElement(annotationElement);
-                    }, 500);
-                }, 300);
+            if (e.name !== "TypeError" || annotation.answer_id === null) {
+                //var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0])
+                return;
             }
         }
+
+        // Find answer browser and isolate its scope
+        // set answer id -> change answer to that
+        // query selector element -> toggle annotation
+        let ab: any = parent.getElementsByTagName("ANSWERBROWSER")[0];
+
+        if (typeof ab === UNDEFINED) {
+            const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
+            abl.isolateScope<any>().loadAnswerBrowser();
+        }
+        if (this.selectedUser.id !== annotation.user_id) {
+            for (let i = 0; i < this.users.length; i++) {
+                if (this.users[i].id === annotation.user_id) {
+                    $scope.changeUser(this.users[i], false);
+                    break;
+                }
+            }
+
+        }
+
+        var abtimeout = 300;
+        if ( ab ) abtimeout = 1;
+
+        setTimeout(function() {
+            ab = angular.element(parent.getElementsByTagName("ANSWERBROWSER")[0]);
+            const abscope = ab.isolateScope();
+            var abscopetimeout = 500;
+            if ( abscope.review && abscope.selectedAnswer && abscope.selectedAnswer.id === annotation.answer_id ) abscopetimeout = 1;
+            else abscope.setAnswerById(annotation.answer_id);
+            abscope.review = true;
+
+            setTimeout(function() {
+                const annotationElement = parent.querySelectorAll("span[aid='{0}']".replace("{0}", annotation.id))[0];
+                const ae = angular.element(annotationElement).isolateScope<any>();
+                // ae.toggleAnnotationShow();
+                // TODO: tutki ylimääräinen show ja miten saadaan toggleksi.
+                ae.showAnnotation();
+                $scope.$apply();
+                // if ( abscopetimeout > 1 && scrollToWindow) scrollToElement(annotationElement);
+                if ( scrollToWindow && !isInViewport(annotationElement) ) scrollToElement(annotationElement);
+            }, abscopetimeout);
+        }, abtimeout);
     };
 }]);

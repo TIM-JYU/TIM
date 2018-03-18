@@ -40,9 +40,9 @@ timApp.controller("VelpSummaryController", ["$scope", function($scope) {
      * @method toggleAnnotation
      * @param annotation - Annotation to toggle
      */
-    $scope.toggleAnnotation = function(annotation) {
+    $scope.toggleAnnotation = function(annotation, scrollToWindow) {
         console.log("Annotation");
-        $scope.$parent.toggleAnnotation(annotation);
+        $scope.$parent.toggleAnnotation(annotation, scrollToWindow);
     };
 
     /**
