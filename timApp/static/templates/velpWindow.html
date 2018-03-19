@@ -1,4 +1,4 @@
-<div class="velp" ng-style="{top: 2+index*2 + 'em'}"  ng-click="$ctrl.notAnnotationRights($ctrl.velp.points) || $ctrl.useVelp()">
+<div class="velp" ng-style="{top: 2+$ctrl.index*2 + 'em'}"  ng-click="$ctrl.notAnnotationRights($ctrl.velp.points) || $ctrl.useVelp()">
     <div ng-class="['velp-data', 'emphasise', 'default',
                     {neutral: $ctrl.velp.points == 0,
                     positive: $ctrl.velp.points > 0,
