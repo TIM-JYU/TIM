@@ -1178,7 +1178,7 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
             //    const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
             //    abl.isolateScope<any>().loadAnswerBrowser();
             // }
-            if (annotation.offset_start == null || ae.show) {
+            if (annotation.offset_start == null || ae.show || !annotation.user_id ) {
                 if ( ae.show )  scrollToWindow = false;
                 ae.toggleAnnotationShow();
                 if ( scrollToWindow  && !isInViewport(annotationElement)) scrollToElement(annotationElement);
@@ -1200,7 +1200,10 @@ timApp.controller("ReviewController", ["$scope", function($scope) {
 
         if (typeof ab === UNDEFINED) {
             const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-            abl.isolateScope<any>().loadAnswerBrowser();
+            let ablis: any = abl.isolateScope<any>();
+            if ( !ablis ) { console.log("Should not happend that no answer browser"); return; }
+            ablis.loadAnswerBrowser();
+
         }
         if (this.selectedUser.id !== annotation.user_id) {
             for (let i = 0; i < this.users.length; i++) {

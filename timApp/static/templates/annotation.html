@@ -1,4 +1,5 @@
 <!-- Pop over element --><span class="annotation-element"><span   ng-init="showHidden=newannotation" ng-show="show" ng-click="updateVelpZIndex()"
+                                                                  class="no-popup-menu"
                                                                 ng-class="['annotation-info', 'emphasise', 'default', {neutral: points == 0, negative: points<0, positive: points > 0}]"
                                                                 ng-keydown="keyDownFunc($event)" ng-keyup="keyUpFunc($event)"
                                                                 ng-style="{backgroundColor: getCustomColor()}">
@@ -8,7 +9,7 @@
             <p ng-show="showHidden"><a class="username" href="mailto:{{ email }}">{{ annotator }}</a>
                     <span class="timestamp" title="{{ creationtime }}">{{ timesince }}</span></p>
         </span>
-        <span class="div-10">
+        <span class="div-10  no-popup-menu">
             <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon closeAnn"
                   ng-click="toggleAnnotation();showHidden=false"></span>
         </span>
@@ -99,6 +100,6 @@
     </div>
 
 </span></span><!--
-Highlighted text--><span ng-click="showHidden=false;toggleAnnotation()" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
+Highlighted text--><span ng-click="showHidden=false;toggleAnnotation()" class="no-popup-menu" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
 {neutral: points == 0, negative: points < 0, positive: points > 0}]" ng-transclude
 ng-style="{backgroundColor: getCustomColor()}"></span>
