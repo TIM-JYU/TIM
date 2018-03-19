@@ -201,13 +201,13 @@ def empty_response_route():
 
 
 # testing route for pdftools.py
-@app.route('/pdfstamptest')
+@app.route('/pdftest')
 def test_pdf():
     pdftestdata = [
         {'path': "static/testpdf/wlan.pdf",
-         'date': "9.3.2018", 'attachment': 2, 'issue': 3},
+         'date': "9.3.2018", 'attachment': "A", 'issue': "3"},
         {'path': "static/testpdf/TIM-esittely.pdf",
-         'text': "LEIMATEKSTIN\nvoi valita\nvapaasti"}
+         'text': "LEIMATEKSTIN\n\nvoi valita\n\ntäysin vapaasti!"}
     ]
     output_name = f"static/testpdf/{uuid4()}.pdf"
     try:
@@ -219,6 +219,27 @@ def test_pdf():
         return send_file(output_name, mimetype="application/pdf")
 
 
+# testing route for pdftools.py
+@app.route('/pdfstamptest')
+def test_pdf_stamp():
+    output_name = f"static/testpdf/{uuid4()}.pdf"
+    try:
+        """
+        timApp.tools.pdftools.create_stamp(
+        "static/tex/stamp_model.tex",
+        "static/testpdf",
+        "test_stamp",
+        "Kokous 2/2018\n\nLIITE B lista 2")
+        """
+        timApp.tools.pdftools.stamp_pdf("static/testpdf/TIM-esittely.pdf", "static/testpdf/test_stamp.pdf", output_name)
+    except Exception as e:
+        message = repr(e)
+        abort(404, message)
+    else:
+        return send_file(output_name, mimetype="application/pdf")
+
+
+# testing route for pdftools.py
 @app.route('/pdfmergetest')
 def test_pdfmerge():
     output_name = f"static/testpdf/{uuid4()}.pdf"

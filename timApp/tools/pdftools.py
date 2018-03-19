@@ -1,4 +1,4 @@
-from subprocess import Popen, PIPE, check_call, call as subprocess_call
+from subprocess import Popen, PIPE, run as subprocess_run
 from os import remove, path
 from typing import Union, List
 from uuid import uuid4
@@ -9,13 +9,14 @@ Stamping and merging pdf-files with pdftk and pdflatex
 Visa Naukkarinen
 """
 
-# TODO: scandinavian letters in stamps
-
-
-# Default parameter values
+# Default parameter values:
 # temp_folder_default_path = "/tmp"
 temp_folder_default_path = "static/testpdf"
 stamp_model_default_path = "static/tex/stamp_model.tex"
+# default format for stamp text
+default_stamp_format = "Kokous {1}\n\nLiite {2} asia {3}"
+# how long (seconds) subprocess can take until TimeoutExpired
+default_subprocess_timeout = 10
 
 
 ##############################################################################
@@ -117,6 +118,7 @@ class SubprocessError(PdfError):
     Raised when subprocesses (pdftk, pdflatex, possibly others) return
     error code or otherwise raise exception.
     """
+
     def __init__(self, cmd: str = ""):
         self.cmd = cmd
 
@@ -137,30 +139,28 @@ def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
     print(args)
     # raise SubprocessError is done twice because Popen raises
     # FileNotFoundError in some cases and skips the return code check
-    try:
-        p = Popen(args, stdout=PIPE)
-        streamdata = p.communicate()[0]
-        print(str(streamdata))
-        rc = p.returncode
-        if rc != 0:
-            raise SubprocessError(" ".join(args))
-    except FileNotFoundError as e:
-        raise SubprocessError(" ".join(args))
+    call_popen(args)
     return output_path
 
 
-def get_stamp_text(item: dict) -> str:
+def get_stamp_text(
+        item: dict,
+        text_format: str = default_stamp_format) -> str:
     """
     Gives formatted stamp text; note: may not work properly with non-ascii
     :param item: dictionary with 'date','attachment' and 'issue' keys
            or alternatively just 'text'
-    :return: either contents of 'text' key or a formatted string like:
-             "Kokous 25.2.2018\nLiite 1 asia 2"
+    :param text_format: formatting for path=0, date=1, attachment=2 and
+           issue=3 keys
+    :return: either contents of 'text' key or a formatted string
     """
     # normal formatted stamp data takes precedence
     try:
-        return "Kokous {0}\nLiite {1} asia {2}". \
-            format(item['date'], item['attachment'], item['issue'])
+        return text_format.format(
+            item['path'],
+            item['date'],
+            item['attachment'],
+            item['issue'])
     # if stamp data has only a free-form text, use that
     except KeyError:
         try:
@@ -189,7 +189,8 @@ def create_stamp(model_path: str, work_dir: str, stamp_name: str, text: str) -> 
     # raises custom error if stamp_model is missing
     except FileNotFoundError:
         raise ModelStampMissingError()
-    with stamp_model, open(path.join(work_dir, stamp_name + ".tex"), "w+") as stamp_temp:
+    with stamp_model, \
+         open(path.join(work_dir, stamp_name + ".tex"), "w+", encoding='utf-8') as stamp_temp:
         try:
             for line in stamp_model:
                 if "%TEXT_HERE" in line:
@@ -202,16 +203,20 @@ def create_stamp(model_path: str, work_dir: str, stamp_name: str, text: str) -> 
             raise ModelStampInvalidError(model_path)
     args = ["pdflatex", stamp_name]
     print(args)
-    # quick check in case function for one reason or another gets this far
-    # without a stamp file, because otherwise pdflatex will keep on waiting
-    # for args
-    if len(args) < 2:
-        raise SubprocessError(" ".join(args))
-    # pdflatex can't write files outside of working directory so use cwd
-    rc = subprocess_call(args, cwd=work_dir)
-    # check return code, presumably 0 means everything's ok
-    if rc != 0:
-        raise SubprocessError(" ".join(args))
+    # direct pdflatex text flood to the log-file pdflatex will create anyway
+    with open(path.join(work_dir, stamp_name + ".log"), "a") as pdflatex_log:
+        try:
+            # pdflatex can't write files outside of work dir so use cwd
+            rc = subprocess_run(
+                args,
+                stdout=pdflatex_log,
+                cwd=work_dir,
+                timeout=default_subprocess_timeout
+            ).returncode
+            if rc != 0:
+                raise SubprocessError(" ".join(args))
+        except FileNotFoundError:
+            raise SubprocessError(" ".join(args))
     return work_dir + stamp_name + ".pdf"
 
 
@@ -225,16 +230,26 @@ def stamp_pdf(pdf_path: str, stamp_path: str, output_path: str) -> str:
     """
     args = ["pdftk", pdf_path, "stamp", stamp_path, "output", output_path]
     print(args)
+    call_popen(args)
+    return output_path
+
+
+def call_popen(args: List[str]) -> None:
+    """
+    Calls Popen with args list, checks return code and
+    raises error if timeouted.
+    :param args: List of arguments
+    :return: None
+    """
     try:
         p = Popen(args, stdout=PIPE)
-        streamdata = p.communicate()[0]
-        print(str(streamdata))
+        streamdata = p.communicate(timeout=default_subprocess_timeout)[0]
+        # print(str(streamdata))
         rc = p.returncode
         if rc != 0:
             raise SubprocessError(" ".join(args))
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         raise SubprocessError(" ".join(args))
-    return output_path
 
 
 def remove_temp_files(dir_path: str, temp_file_name: str) -> None:
@@ -242,7 +257,7 @@ def remove_temp_files(dir_path: str, temp_file_name: str) -> None:
     Deletes temp files created for the stamping process
     :param dir_path: temp-file folder path
     :param temp_file_name: common part of the names
-    :return:
+    :return: None
     """
     ext_list = [".aux", ".log", ".out", ".pdf", ".tex", "_stamped.pdf"]
     # fail_list = []
@@ -348,15 +363,17 @@ def stamp_merge_pdfs(
 
 ##############################################################
 # Testing/examples (may be outdated):
+
 """
 data = [
     # normal case
-    {"path": "C:/Testi/testi1.pdf", "date": "20.12.2009", "attachment": 1, "issue": 2},
+    {"path": "C:/Testi/testi1.pdf", "date": "20.12.2009", "attachment": "A", "issue": "2"},
     # allowed case
     {"path": "C:/Testi/testi2.pdf", "text": "Sample text"},
     # text will go out of bounds a little, but will compile
     {"path": "C:/Testi/testi2.pdf", "text": "TOOOOOO LOOOOOONNNNGGGG TEEEEEEEXXXXTTTTTTTTTTTTT!"},
 ]
+
 output = "C:/Testi/temp/" + str(uuid4()) + ".pdf"
 
 # Error test cases:
@@ -368,6 +385,13 @@ stamp_merge_pdfs([{"path": "C:/Testi/testi2.pdf", "banana": "If this ends up\nin
 stamp_merge_pdfs([{"path": "C:/Testi/broken.pdf", "text": "If this ends up\nin stamp, it's a mistake!"}], output)
 stamp_merge_pdfs([{"path": "C:/Testi/i_don't_exist.pdf", "text": "If this ends up\nin stamp, it's a mistake!"}], output)
 
-# Real case:
+# Real cases:
 stamp_merge_pdfs(data, output)
+
+create_stamp(
+    "C:/Testi/stamp_model.tex",
+    "C:/Testi",
+    "stamp",
+    get_stamp_text(data[0], "Kokous {1}\n\nLIITE {2} lista {3}"))
+stamp_pdf("C:/Testi/testi1.pdf","C:/Testi/stamp.pdf","C:/Testi/stamped.pdf")
 """
