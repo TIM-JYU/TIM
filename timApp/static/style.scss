@@ -13,6 +13,22 @@ $buttons-width: 75%;
     max-height: 50vh;
 }
 
+.modal-content {
+    &.draggable-content {
+        border-top: none;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+}
+
+.modal-dialog {
+    .draghandle {
+        border-top-left-radius: 6px;
+        border-top-right-radius: 6px;
+        height: 16px;
+    }
+}
+
 @media (min-width: 768px) {
     .modal-dialog {
         width: 600px;
