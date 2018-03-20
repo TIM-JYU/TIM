@@ -66,6 +66,7 @@ timApp.directive("timDraggableFixed", [function () {
         controller: DraggableController,
         controllerAs: "d", // default $ctrl does not work, possibly because of some ng-init
         restrict: "A",
+        scope: {},
         // Using template + transclude here does not work for some reason with uib-modal, so we compile the
         // template manually in $postLink.
     };
