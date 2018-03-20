@@ -71,7 +71,7 @@ class ParEditorTest(BrowserTest):
         self.wait_until_hidden('.editor-loading')
 
     def get_editor_element(self) -> WebElement:
-        pareditor = self.drv.find_element_by_css_selector('pareditor')
+        pareditor = self.drv.find_element_by_css_selector('.editorArea')
         return pareditor
 
     def click_add_bottom(self):
