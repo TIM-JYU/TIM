@@ -1,16 +1,17 @@
+import {IController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {timLogTime} from "tim/timTiming";
-import {dereferencePar, getParId} from "../controllers/view/parhelpers";
-import {Users} from "../services/userService";
-import {ParCompiler} from "../services/parCompiler";
-import {$compile, $filter, $http, $timeout, $uibModal, $window} from "../ngimport";
-import {IScope, IRootElementService, IController} from "angular";
-import {ViewCtrl} from "../controllers/view/viewctrl";
-import {IUser} from "../IUser";
-import {IAnswer} from "../IAnswer";
-import {ReviewController} from "../controllers/reviewController";
 import * as allanswersctrl from "tim/controllers/allAnswersController";
+import {timLogTime} from "tim/timTiming";
+import {showAllAnswers} from "../controllers/allAnswersController";
+import {ReviewController} from "../controllers/reviewController";
+import {dereferencePar, getParId} from "../controllers/view/parhelpers";
+import {ViewCtrl} from "../controllers/view/viewctrl";
+import {IAnswer} from "../IAnswer";
+import {IUser} from "../IUser";
+import {$compile, $filter, $http, $timeout, $window} from "../ngimport";
+import {ParCompiler} from "../services/parCompiler";
+import {Users} from "../services/userService";
 import {markAsUsed} from "../utils";
 
 markAsUsed(allanswersctrl);
@@ -576,22 +577,11 @@ export class AnswerBrowserController implements IController {
         }
     }
 
-    getAllAnswers() {
-        $uibModal.open({
-            animation: false,
-            ariaLabelledBy: "modal-title",
-            ariaDescribedBy: "modal-body",
-            component: "timAllAnswers",
-            size: "md",
-            resolve: {
-                options() {
-                    return {
-                        url: "/allAnswersPlain/" + this.taskId,
-                        identifier: this.taskId,
-                        allTasks: false,
-                    };
-                },
-            },
+    async getAllAnswers() {
+        await showAllAnswers({
+            url: "/allAnswersPlain/" + this.taskId,
+            identifier: this.taskId,
+            allTasks: false,
         });
     }
 

@@ -1,10 +1,17 @@
-import {IController} from "angular";
+import {IPromise} from "angular";
 import moment from "moment";
 import {ngStorage} from "ngstorage";
-import {timApp} from "tim/app";
+import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {$http, $httpParamSerializer, $localStorage, $log, $window} from "../ngimport";
 
-type Options = {age: string, valid: string, name: string, sort: string; periodFrom: any; periodTo: any;};
+interface IOptions {
+    age: string;
+    valid: string;
+    name: string;
+    sort: string;
+    periodFrom: any;
+    periodTo: any;
+}
 
 export interface IAllAnswersParams {
     identifier: string;
@@ -12,19 +19,22 @@ export interface IAllAnswersParams {
     allTasks: boolean;
 }
 
-export class AllAnswersCtrl implements IController {
-    private static $inject = ["$uibModalInstance", "options"];
+export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}, {}, "timAllAnswers"> {
     private showSort: boolean;
-    private options: Options;
-    private $storage: ngStorage.StorageService & {allAnswersOptions: Options};
+    private options: IOptions;
+    private $storage: ngStorage.StorageService & {allAnswersOptions: IOptions};
     private datePickerOptionsFrom: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
     private lastFetch: any;
-    private uibModalInstance: angular.ui.bootstrap.IModalInstanceService;
     private url: string;
 
-    constructor(uibModalInstance: angular.ui.bootstrap.IModalInstanceService, options: IAllAnswersParams) {
-        this.uibModalInstance = uibModalInstance;
+    protected getTitle(): string {
+        return "Get answers";
+    }
+
+    $onInit() {
+        super.$onInit();
+        const options = this.resolve.params;
         moment.locale("en", {
             week: {dow: 1, doy: 4}, // set Monday as the first day of the week
         });
@@ -73,10 +83,6 @@ export class AllAnswersCtrl implements IController {
         });
     }
 
-    $onInit() {
-
-    }
-
     ok() {
         if (this.options.periodFrom) {
             this.options.periodFrom = this.options.periodFrom.toDate();
@@ -85,15 +91,16 @@ export class AllAnswersCtrl implements IController {
             this.options.periodTo = this.options.periodTo.toDate();
         }
         $window.open(this.url + "?" + $httpParamSerializer(this.options), "_blank");
-        this.uibModalInstance.close("close");
+        this.close({});
     }
 
     cancel() {
-        this.uibModalInstance.dismiss("cancel");
+        this.dismiss();
     }
 }
 
-timApp.component("timAllAnswers", {
-    controller: AllAnswersCtrl,
-    templateUrl: "/static/templates/allAnswersOptions.html",
-});
+registerDialogComponent("timAllAnswers", AllAnswersCtrl, {templateUrl: "/static/templates/allAnswersOptions.html"});
+
+export function showAllAnswers(p: IAllAnswersParams): IPromise<AllAnswersCtrl["ret"]> {
+    return showDialog<AllAnswersCtrl>("timAllAnswers", {params: () => p}).result;
+}
