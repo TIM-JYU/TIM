@@ -42,7 +42,6 @@ export interface IParEditorAttrs {
 }
 
 function prepareOptions($this: Element, saveTag: string): [JQuery, IParEditorOptions] {
-    $(".actionButtons").remove();
     // var $par = $('.par').last();
     // return sc.showAddParagraphBelow(e, $par);
     // return sc.showAddParagraphAbove(e, sc.$pars);
@@ -137,29 +136,31 @@ export class EditingHandler {
 
         if (this.viewctrl.item.rights.editable) {
             onClick(".addBottom", ($this, e) => {
-                $(".actionButtons").remove();
+                this.viewctrl.closePopupIfOpen();
                 //var $par = $('.par').last();
                 //return this.showAddParagraphBelow(e, $par);
                 return this.showAddParagraphAbove(e, $(".addBottomContainer"));
             });
 
             onClick(".addAbove", ($this, e) => {
+                this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addAbove");
                 return this.showAddParagraphAbove(e, par, options);
             });
 
             onClick(".addBelow", ($this, e) => {
+                this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
                 return this.showAddParagraphBelow(e, par, options);
             });
 
             onClick(".pasteBottom", ($this, e) => {
-                $(".actionButtons").remove();
+                this.viewctrl.closePopupIfOpen();
                 this.viewctrl.clipboardHandler.pasteAbove(e, $(".addBottomContainer"), false);
             });
 
             onClick(".pasteRefBottom", ($this, e) => {
-                $(".actionButtons").remove();
+                this.viewctrl.closePopupIfOpen();
                 this.viewctrl.clipboardHandler.pasteAbove(e, $(".addBottomContainer"), true);
             });
         }

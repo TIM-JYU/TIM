@@ -911,14 +911,17 @@ input[type="file"] {
 
 /* TODO: check how to prevent too narrow menu better way than min-width */
 .actionButtons {
-    @include container-fixed();
     position: absolute;
-    white-space: nowrap;
-    border-radius: 3px;
-    background-color: #f8f8ff;
     z-index: 100;
-    min-height: 50px;
-    min-width: 200px;
+
+    .inner {
+        @include container-fixed();
+        white-space: nowrap;
+        border-radius: 3px;
+        background-color: #f8f8ff;
+        min-height: 50px;
+        min-width: 200px;
+    }
 }
 
 .menuButtons {

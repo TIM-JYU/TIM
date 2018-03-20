@@ -460,4 +460,8 @@ export class DraggableController implements IController {
             setStorage(this.posKey + "Size", size);
         }
     }
+
+    $destroy() {
+        this.element.remove();
+    }
 }

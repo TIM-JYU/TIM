@@ -8,13 +8,6 @@ import {getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhel
 import {ViewCtrl} from "./viewctrl";
 import {getEmptyCoords, parMenuDot, viewCtrlDot} from "./viewutils";
 
-export function closeOptionsWindow() {
-    const $actionButtons = $(".actionButtons");
-    const $parOrArea = $actionButtons.parent();
-    $actionButtons.remove();
-    optionsWindowClosed($parOrArea);
-}
-
 export function optionsWindowClosed($parOrArea?: JQuery) {
     const $editline = $(".menuopen");
     $editline.removeClass("menuopen");
@@ -71,7 +64,7 @@ export class ParmenuHandler {
 
                 $(".par.selected").removeClass("selected");
                 $(".par.lightselect").removeClass("lightselect");
-                closeOptionsWindow();
+                this.viewctrl.closePopupIfOpen();
                 this.toggleActionButtons(e, $par, toggle1, toggle2, coords);
             }
             sc.$apply();
@@ -85,7 +78,7 @@ export class ParmenuHandler {
         };
 
         onClick(".editline", ($this, e) => {
-            closeOptionsWindow();
+            this.viewctrl.closePopupIfOpen();
             const $par = $this.parent().filter(".par");
             if (isPreamble($par)) {
                 showMessageDialog(`
@@ -127,7 +120,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         }
 
         const $popup = $("<popup-menu>");
-        $popup.attr("tim-draggable-fixed", "");
+        const draggable = $("<div class='actionButtons' tim-draggable-fixed>");
         $popup.attr("srcid", selectionToStr($pars));
         if (editcontext) {
             $popup.attr("editcontext", editcontext);
@@ -143,9 +136,9 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         if ($(".area").length > 0) {
             $popup.attr("areaeditbutton", "true");
         }
-
-        $rootElement.prepend($popup); // need to prepend to DOM before compiling
-        $compile($popup[0])(this.sc);
+        draggable.append($popup);
+        $rootElement.prepend(draggable); // need to prepend to DOM before compiling
+        $compile(draggable[0])(this.sc);
         // TODO: Set offset for the popup
         const element = $popup;
         const viewport: any = {};
