@@ -17,6 +17,7 @@ import {$compile, $http, $localStorage, $log, $timeout, $upload, $window} from "
 import {IPluginInfoResponse, ParCompiler} from "../services/parCompiler";
 import {AceParEditor} from "./AceParEditor";
 import {TextAreaParEditor} from "./TextAreaParEditor";
+import {DraggableController} from "./draggable";
 
 markAsUsed(draggable, rangyinputs);
 
@@ -96,6 +97,7 @@ export class PareditorController implements IController {
     private plugintab: JQuery;
     private autocomplete: boolean;
     private citeText: string;
+    private draggable: DraggableController | undefined;
 
     constructor(scope: IScope, element: IRootElementService) {
         this.element = element;
@@ -575,7 +577,7 @@ or newer one that is more familiar to write in YAML:
                 saveData: data,
             });
             if (this.options.destroyAfterSave) {
-                this.element.remove();
+                this.destroy();
             }
             this.deleting = false;
         }, (response) => {
@@ -584,6 +586,13 @@ or newer one that is more familiar to write in YAML:
         });
         if (this.options.touchDevice) {
             this.changeMeta();
+        }
+    }
+
+    destroy() {
+        this.element.remove();
+        if (this.draggable) {
+            this.draggable.$destroy();
         }
     }
 
@@ -598,7 +607,7 @@ or newer one that is more familiar to write in YAML:
         $http.put(this.unreadUrl + "/" + this.extraData.par, {}).then((response) => {
             this.element.parents(".par").find(".readline").removeClass("read read-modified");
             if (this.initialText === this.editor.getEditorText()) {
-                this.element.remove();
+                this.destroy();
                 this.afterCancel({
                     extraData: this.extraData,
                 });
@@ -613,7 +622,7 @@ or newer one that is more familiar to write in YAML:
         if (this.options.touchDevice) {
             this.changeMeta();
         }
-        this.element.remove();
+        this.destroy();
         this.afterCancel({
             extraData: this.extraData,
         });
@@ -745,7 +754,7 @@ or newer one that is more familiar to write in YAML:
                     extraData: this.extraData,
                     saveData: this.data,
                 });
-                this.element.remove();
+                this.destroy();
                 return;
             }
         }
@@ -789,7 +798,7 @@ or newer one that is more familiar to write in YAML:
                     saveData: this.data,
                 });
                 if (this.options.destroyAfterSave) {
-                    this.element.remove();
+                    this.destroy();
                 }
             }
             // If there still are duplicates remake the form
@@ -969,7 +978,7 @@ or newer one that is more familiar to write in YAML:
             }
             if (data.duplicates.length <= 0) {
                 if (this.options.destroyAfterSave) {
-                    this.element.remove();
+                    this.destroy();
                 }
                 this.afterSave({
                     extraData: this.extraData,
@@ -1303,7 +1312,7 @@ or newer one that is more familiar to write in YAML:
                 $window.alert("Error occurred: " + response.data.error);
             }
             $timeout(() => {
-                this.element.remove();
+                this.destroy();
             }, 1000);
             return;
         }
@@ -1330,6 +1339,9 @@ timApp.component("pareditor", {
         afterDelete: "&",
         options: "=",
         initialTextUrl: "@",
+    },
+    require: {
+        draggable: "?^timDraggableFixed",
     },
     controller: PareditorController,
 });
