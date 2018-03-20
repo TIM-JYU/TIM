@@ -266,14 +266,15 @@ export class EditingHandler {
             $(EDITOR_CLASS_DOT).remove();
 
             const createEditor = (attrs: any) => {
-                const $div = $("<" + directive + ">", {class: EDITOR_CLASS});
+                const $div = $("<" + directive + ">");
                 $div.attr(attrs);
-                $div.attr("tim-draggable-fixed", "");
+                const draggable = $("<div class='editorArea' tim-draggable-fixed>");
                 if (caption) {
-                    $div.attr("caption", caption);
+                    draggable.attr("caption", caption);
                 }
-                $par.append($div);
-                $compile($div[0])(this.sc);
+                draggable.append($div);
+                $par.append(draggable);
+                $compile(draggable[0])(this.sc);
                 this.viewctrl.editing = true;
                 $timeout(() => {
                     this.goToEditor();
