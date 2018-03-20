@@ -51,7 +51,6 @@ export class PopupMenuController implements IController {
 
     closePopup() {
         if (this.draggable) {
-            console.log("removing");
             this.draggable.$destroy();
         }
         this.element.remove();
