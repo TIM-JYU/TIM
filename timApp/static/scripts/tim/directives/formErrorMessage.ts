@@ -87,7 +87,7 @@ timApp.component("timErrorMessage", {
 /**
  * Adds 'has-error' class to the element if the given form element is invalid and dirty; otherwise removes it.
  */
-timApp.directive("timErrorState", [function() {
+timApp.directive("timErrorState", [() => {
     return {
         restrict: "A",
         bindToController: {

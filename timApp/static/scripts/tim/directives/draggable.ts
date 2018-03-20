@@ -55,7 +55,7 @@ const draggableTemplate = `
 </div>
     `;
 
-timApp.directive("timDraggableFixed", [function () {
+timApp.directive("timDraggableFixed", [() => {
     return {
         bindToController: {
             caption: "@?",
