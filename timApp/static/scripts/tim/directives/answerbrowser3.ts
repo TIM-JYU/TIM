@@ -129,8 +129,8 @@ export class AnswerBrowserController implements IController {
     private viewctrl: ViewCtrl;
     private rctrl: ReviewController;
     private parContent: JQuery;
-    private user: IUser;
-    private fetchedUser: IUser | null;
+    private user: IUser | undefined;
+    private fetchedUser: IUser | undefined;
     private firstLoad: boolean;
     private shouldUpdateHtml: boolean;
     private saveTeacher: boolean;
@@ -138,23 +138,22 @@ export class AnswerBrowserController implements IController {
     private answers: IAnswer[];
     private filteredAnswers: IAnswer[];
     private onlyValid: boolean;
-    public selectedAnswer: IAnswer | null;
+    public selectedAnswer: IAnswer | undefined;
     private anyInvalid: boolean;
     private giveCustomPoints: boolean;
     private review: boolean;
     private shouldFocus: boolean;
     private alerts: {}[];
-    private taskInfo: ITaskInfo | null;
-    private points: number;
+    private taskInfo: ITaskInfo | undefined;
+    private points: number | undefined;
     private scope: IScope;
-    private skipAnswerUpdateForId: number | null;
+    private skipAnswerUpdateForId: number | undefined;
 
     constructor(scope: IScope, element: IRootElementService) {
         this.scope = scope;
         this.element = element.parents(".par");
         this.parContent = this.element.find(".parContent");
         this.loading = 0;
-        this.skipAnswerUpdateForId = null;
     }
 
     $onInit() {
@@ -198,7 +197,6 @@ export class AnswerBrowserController implements IController {
             this.user = Users.getCurrent();
         }
 
-        this.fetchedUser = null;
         this.firstLoad = true;
         this.shouldUpdateHtml = this.viewctrl.users.length > 0 && this.user !== this.viewctrl.users[0];
         if (this.shouldUpdateHtml) {
@@ -209,8 +207,6 @@ export class AnswerBrowserController implements IController {
         this.answers = [];
         this.filteredAnswers = [];
         this.onlyValid = true;
-        this.selectedAnswer = null;
-        this.taskInfo = null;
         this.anyInvalid = false;
         this.giveCustomPoints = false;
         this.review = false;
@@ -244,7 +240,7 @@ export class AnswerBrowserController implements IController {
     }
 
     savePoints() {
-        if (!this.selectedAnswer) {
+        if (!this.selectedAnswer || !this.user) {
             return;
         }
         $http.put("/savePoints/" + this.user.id + "/" + this.selectedAnswer.id,
@@ -277,14 +273,14 @@ export class AnswerBrowserController implements IController {
     }
 
     changeAnswer(forceUpdate = false) {
-        if (this.selectedAnswer == null) {
+        if (this.selectedAnswer == null || !this.user) {
             return;
         }
         if (!forceUpdate && this.skipAnswerUpdateForId === this.selectedAnswer.id) {
-            this.skipAnswerUpdateForId = null;
+            this.skipAnswerUpdateForId = undefined;
             return;
         }
-        this.skipAnswerUpdateForId = null;
+        this.skipAnswerUpdateForId = undefined;
         this.updatePoints();
         const $par = this.element;
         const ids = dereferencePar($par);
@@ -338,7 +334,7 @@ export class AnswerBrowserController implements IController {
     }
 
     findSelectedUserIndex() {
-        if (this.users == null) {
+        if (!this.users || !this.user) {
             return -1;
         }
         for (let i = 0; i < this.users.length; i++) {
@@ -433,7 +429,7 @@ export class AnswerBrowserController implements IController {
     }
 
     getBrowserData() {
-        if (this.answers.length > 0 && this.selectedAnswer) {
+        if (this.answers.length > 0 && this.selectedAnswer && this.user) {
             return {
                 answer_id: this.selectedAnswer.id,
                 saveTeacher: this.saveTeacher,
@@ -472,7 +468,7 @@ export class AnswerBrowserController implements IController {
         if (!this.viewctrl.item.rights || !this.viewctrl.item.rights.browse_own_answers) {
             return;
         }
-        if (this.user == null) {
+        if (!this.user) {
             return;
         }
         this.loading++;
@@ -488,6 +484,10 @@ export class AnswerBrowserController implements IController {
                         // The selectedAnswer assignment causes changeAnswer to be called (by Angular),
                         // but we don't want to update it again because it was already updated.
                         this.skipAnswerUpdateForId = this.selectedAnswer.id;
+                    } else if (this.fetchedUser && this.user && this.user.id !== this.fetchedUser.id) {
+                        // If user was changed, apparently changeAnswer isn't called by Angular (because the whole
+                        // collection is modified).
+                        this.changeAnswer();
                     }
                 } else {
                     this.answers = data;

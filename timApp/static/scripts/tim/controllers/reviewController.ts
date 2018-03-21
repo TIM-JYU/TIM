@@ -901,7 +901,7 @@ export class ReviewController implements IController {
      * @param start - Paragraph where the answerbrowser element is searched for.
      * @returns {Element|null} answerbrowser element or null.
      */
-    getAnswerInfo(start: Element): IAnswer | null {
+    getAnswerInfo(start: Element): IAnswer | undefined {
 
         if (start.hasAttribute("attrs") && start.hasAttribute("t")) {
             const answ = start.getElementsByTagName("answerbrowser");
@@ -909,12 +909,12 @@ export class ReviewController implements IController {
                 const ctrl = angular.element(answ[0]).isolateScope<any>().$ctrl as AnswerBrowserController;
                 return ctrl.selectedAnswer;
             }
-            return null;
+            return undefined;
         }
 
         const myparent = getElementParent(start);
         if (myparent == null) {
-            return null;
+            return undefined;
         }
 
         if (myparent.tagName === "ANSWERBROWSER") {
@@ -923,7 +923,7 @@ export class ReviewController implements IController {
         }
 
         if (myparent.hasAttribute("t")) {
-            return null;
+            return undefined;
         }
 
         return this.getAnswerInfo(myparent);

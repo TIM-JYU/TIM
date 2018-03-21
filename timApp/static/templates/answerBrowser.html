@@ -62,7 +62,9 @@
                                       ng-blur="$ctrl.shouldFocus = false"
                                       ng-model="$ctrl.points"
                                       name="points"
-                                      type="text"
+                                      type="number"
+                                      step="0.01"
+                                      style="max-width: 5em"
                                       autocomplete="off"
                                       size="2">
                         </label>
