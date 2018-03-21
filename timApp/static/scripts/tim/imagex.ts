@@ -237,7 +237,7 @@ function drawCirclesVideoDot(ctx, dr, videoPlayer) {
     for (let dri = 0; dri < dr.length; dri++) {
         const seg = dr[dri];
         var vt =  videoPlayer.currentTime;
-        console.log("vt: " + vt + " " + this.scope.lastDrawnSeg );
+        // console.log("vt: " + vt + " " + this.scope.lastDrawnSeg );
         var seg1 = -1;
         var seg2 = 0;
         var s = "";
@@ -265,7 +265,8 @@ function drawCirclesVideoDot(ctx, dr, videoPlayer) {
         ctx.strokeStyle = seg.color;
         ctx.lineWidth = seg.w;
         ctx.moveTo(seg.lines[seg1][0], seg.lines[seg1][1]);
-        ctx.lineTo(seg.lines[seg2][0], seg.lines[seg2][1]);
+        if ( this.scope.drawLast )
+            ctx.lineTo(seg.lines[seg2][0], seg.lines[seg2][1]);
         s = dateToString(seg.lines[seg2][3], false);
         drawText(ctx, s, seg.lines[seg2][0], seg.lines[seg2][1], "13px Arial");
 
@@ -1557,6 +1558,7 @@ imagexApp.initScope = function(scope, element, attrs) {
     timHelper.set(scope, attrs, "stem");
     timHelper.set(scope, attrs, "user_id");
     timHelper.set(scope, attrs, "emotion", false);
+    timHelper.set(scope, attrs, "drawLast", false);
     timHelper.set(scope, attrs, "autosave", false);
     timHelper.set(scope, attrs, "followid", "");
     timHelper.set(scope, attrs, "button", "Save");
