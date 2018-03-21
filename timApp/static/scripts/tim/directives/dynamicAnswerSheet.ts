@@ -223,7 +223,7 @@ export function makePreview(markup: IAskedJsonJson, {
         answerTable,
         enabled,
         markup,
-        showCorrectChoices: false,
+        showCorrectChoices,
         showExplanations,
         userpoints,
     };
