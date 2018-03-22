@@ -1,4 +1,4 @@
-import angular, {IController, IPromise} from "angular";
+import angular, {IController, IPromise, IScope} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "./app";
@@ -65,16 +65,50 @@ export function registerDialogComponent<T extends Dialog<T>>(name: T["component"
     });
 }
 
+class TimDialogCtrl implements IController {
+    private static $inject = ["$scope"];
+    private draggable: DraggableController | undefined;
+
+    constructor(private scope: IScope) {
+    }
+
+    $onInit() {
+        if (this.draggable) {
+            this.draggable.setDragClickFn(() => this.bringToFront());
+        }
+    }
+
+    bringToFront() {
+        const mymodal = this.scope.$parent.$parent as any;
+        let modal = this.scope.$parent.$parent as any;
+        while (modal.$$prevSibling != null) {
+            modal = modal.$$prevSibling;
+        }
+        let maxIndex = -1;
+        while (modal != null) {
+            if (modal.$$topModalIndex !== undefined) {
+                maxIndex = Math.max(maxIndex, modal.$$topModalIndex);
+            }
+            modal = modal.$$nextSibling;
+        }
+        mymodal.$$topModalIndex = maxIndex + 1;
+    }
+}
+
 timApp.component("timDialog", {
     template: `
-<div class="modal-header">
+<div ng-mousedown="$ctrl.bringToFront()" class="modal-header">
     <h4 class="modal-title" id="modal-title" ng-transclude="header">Modal</h4>
 </div>
-<div class="modal-body" id="modal-body" ng-transclude="body">
+<div ng-mousedown="$ctrl.bringToFront()" class="modal-body" id="modal-body" ng-transclude="body">
 </div>
-<div class="modal-footer" ng-transclude="footer">
+<div ng-mousedown="$ctrl.bringToFront()" class="modal-footer" ng-transclude="footer">
 </div>
     `,
+    controller: TimDialogCtrl,
+    require: {
+        draggable: "?^timDraggableFixed",
+    },
     transclude: {
         body: "dialogBody",
         footer: "dialogFooter",

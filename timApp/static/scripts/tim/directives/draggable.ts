@@ -42,7 +42,7 @@ function wmax(value: string, min: number, max: number) {
 }
 
 const draggableTemplate = `
-<div class="draghandle">
+<div class="draghandle" ng-mousedown="d.dragClick()">
     <p ng-show="d.caption" ng-bind="d.caption"></p>
     <i ng-show="d.closeFn"
        title="Close dialog"
@@ -106,6 +106,7 @@ export class DraggableController implements IController {
     private click?: boolean;
     private resize?: boolean;
     private save?: string;
+    private dragClick?: () => void;
 
     constructor(scope: IScope, attr: IAttributes, element: IRootElementService) {
         this.scope = scope;
@@ -117,6 +118,10 @@ export class DraggableController implements IController {
             const pageId = window.location.pathname.split("/")[1];  // /velp/???
             this.posKey = this.save.replace("%%PAGEID%%", pageId);
         }
+    }
+
+    setDragClickFn(fn: () => void) {
+        this.dragClick = fn;
     }
 
     setCloseFn(fn: () => void) {
