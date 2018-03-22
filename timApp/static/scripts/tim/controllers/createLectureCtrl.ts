@@ -68,7 +68,7 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
     }
 
     public getTitle() {
-        return "Create lecture";
+        return isLecture(this.resolve.params) ? "Edit lecture" : "Create lecture";
     }
 
     setLecture(data: ILecture) {

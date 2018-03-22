@@ -63,10 +63,7 @@ export class QuestionPreviewController extends DialogController<{params: Questio
     }
 
     public getTitle() {
-        if (!this.questiondata) {
-            return "";
-        }
-        return `Question: ${this.questiondata.markup.questionTitle}`;
+        return "Ask a question";
     }
 
     async $onInit() {

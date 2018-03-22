@@ -194,7 +194,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     }
 
     public getTitle() {
-        return "Editing question";
+        return isNewQuestion(this.resolve.params) ? "Create a question" : "Edit question";
     }
 
     $onInit() {

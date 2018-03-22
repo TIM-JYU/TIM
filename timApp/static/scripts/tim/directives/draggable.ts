@@ -120,6 +120,10 @@ export class DraggableController implements IController {
         }
     }
 
+    setCaption(caption: string) {
+        this.caption = caption;
+    }
+
     setDragClickFn(fn: () => void) {
         this.dragClick = fn;
     }

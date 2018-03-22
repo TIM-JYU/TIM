@@ -1,4 +1,4 @@
-import angular, {IController, IPromise, IScope} from "angular";
+import angular, {IController, IPromise, IRootScopeService, IScope} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "./app";
@@ -17,6 +17,7 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
 
     $onInit() {
         this.draggable.setCloseFn(() => this.dismiss());
+        this.draggable.setCaption(this.getTitle());
     }
 
     protected close(returnValue: Ret) {
@@ -66,21 +67,25 @@ export function registerDialogComponent<T extends Dialog<T>>(name: T["component"
 }
 
 class TimDialogCtrl implements IController {
-    private static $inject = ["$scope"];
+    private static $inject = ["$scope", "$rootScope"];
     private draggable: DraggableController | undefined;
 
-    constructor(private scope: IScope) {
+    constructor(private scope: IScope, private rootScope: any) {
     }
 
     $onInit() {
         if (this.draggable) {
             this.draggable.setDragClickFn(() => this.bringToFront());
         }
+        this.bringToFront();
     }
 
     bringToFront() {
-        const mymodal = this.scope.$parent.$parent as any;
-        let modal = this.scope.$parent.$parent as any;
+        let mymodal = this.scope as any;
+        while (mymodal.$$topModalIndex === undefined) {
+            mymodal = mymodal.$parent;
+        }
+        let modal = this.rootScope.$$childHead;
         while (modal.$$prevSibling != null) {
             modal = modal.$$prevSibling;
         }
@@ -97,7 +102,7 @@ class TimDialogCtrl implements IController {
 
 timApp.component("timDialog", {
     template: `
-<div ng-mousedown="$ctrl.bringToFront()" class="modal-header">
+<div style="display: none" ng-mousedown="$ctrl.bringToFront()" class="modal-header">
     <h4 class="modal-title" id="modal-title" ng-transclude="header">Modal</h4>
 </div>
 <div ng-mousedown="$ctrl.bringToFront()" class="modal-body" id="modal-body" ng-transclude="body">
