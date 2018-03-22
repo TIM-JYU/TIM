@@ -71,7 +71,7 @@ class LectureWallController extends DialogController<{params: {lectureId: number
         this.newMsg = "";
     }
 
-    protected getTitle(): string {
+    protected getTitle() {
         return "Lecture wall";
     }
 }

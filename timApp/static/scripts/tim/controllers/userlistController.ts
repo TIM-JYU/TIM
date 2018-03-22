@@ -234,7 +234,7 @@ timApp.component("timUserList", {
 export class KorppiExportCtrl extends DialogController<{}, IExportOptions, "timKorppiExport"> {
     private options: IExportOptions;
 
-    protected getTitle(): string {
+    protected getTitle() {
         return "Export to Korppi";
     }
 

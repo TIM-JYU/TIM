@@ -28,7 +28,7 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
     private lastFetch: any;
     private url: string;
 
-    protected getTitle(): string {
+    protected getTitle() {
         return "Get answers";
     }
 

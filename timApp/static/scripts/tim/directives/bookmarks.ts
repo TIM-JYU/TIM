@@ -183,7 +183,7 @@ class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark
         this.showHashCheckbox = $window.location.hash.length > 1;
     }
 
-    protected getTitle(): string {
+    protected getTitle() {
         return "Bookmark";
     }
 
