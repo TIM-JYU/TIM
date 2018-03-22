@@ -713,9 +713,6 @@ export class LectureController implements IController {
             currentQuestion.setData(answer.data);
             return;
         } else {
-            if (this.isLecturer) {
-                void showStatisticsDialog(question);
-            }
             result = await showQuestionAnswerDialog({qa: answer.data, isLecturer: this.isLecturer});
         }
         if (result.type === "pointsclosed") {
