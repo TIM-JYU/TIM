@@ -80,10 +80,17 @@ export interface INewQuestionParams {
 
 export type IEditQuestionParams = IQuestionParagraph | IAskedQuestion;
 
-export interface IQuestionDialogResult {
+export type IQuestionDialogResult = IQuestionEditResult | IPointsUpdate;
+
+export interface IQuestionEditResult {
     data: IParResponse;
     ask: boolean;
     deleted: boolean;
+    type: "edit";
+}
+
+export interface IPointsUpdate {
+    type: "points";
 }
 
 function isNewQuestion(params: IQuestionDialogParams): params is INewQuestionParams {
@@ -179,11 +186,15 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         ];
         this.oldMarkupJson = "";
         this.setEmptyMarkup();
-        this.previewParams = makePreview(this.question);
+        this.previewParams = makePreview(this.question, {
+            enabled: false,
+            showCorrectChoices: true,
+            showExplanations: true,
+        });
     }
 
     public getTitle() {
-        return "Editing question";
+        return isNewQuestion(this.resolve.params) ? "Create a question" : "Edit question";
     }
 
     $onInit() {
@@ -861,7 +872,11 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         const response = await $http.post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", angular.extend({
             text: mdStr,
         }));
-        this.previewParams = makePreview(response.data.md);
+        this.previewParams = makePreview(response.data.md, {
+            enabled: false,
+            showCorrectChoices: true,
+            showExplanations: true,
+        });
     }
 
     /**
@@ -878,6 +893,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
         if (isAskedQuestion(p)) {
             await this.updatePoints(p);
+            this.close({type: "points"});
             return;
         }
 
@@ -896,7 +912,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             question: this.question,
         }));
         const data = response.data;
-        this.close({data, deleted: false, ask});
+        this.close({data, deleted: false, ask, type: "edit"});
     }
 
     /**
@@ -929,7 +945,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         const parId = this.resolve.params.parId;
         const data = await deleteQuestionWithConfirm(docId, parId);
         if (data != null) {
-            this.close({data, deleted: true, ask: false});
+            this.close({data, deleted: true, ask: false, type: "edit"});
         }
     }
 

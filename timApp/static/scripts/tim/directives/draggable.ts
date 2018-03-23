@@ -42,7 +42,7 @@ function wmax(value: string, min: number, max: number) {
 }
 
 const draggableTemplate = `
-<div class="draghandle">
+<div class="draghandle" ng-mousedown="d.dragClick()">
     <p ng-show="d.caption" ng-bind="d.caption"></p>
     <i ng-show="d.closeFn"
        title="Close dialog"
@@ -55,7 +55,7 @@ const draggableTemplate = `
 </div>
     `;
 
-timApp.directive("timDraggableFixed", [function () {
+timApp.directive("timDraggableFixed", [() => {
     return {
         bindToController: {
             caption: "@?",
@@ -66,6 +66,7 @@ timApp.directive("timDraggableFixed", [function () {
         controller: DraggableController,
         controllerAs: "d", // default $ctrl does not work, possibly because of some ng-init
         restrict: "A",
+        scope: {},
         // Using template + transclude here does not work for some reason with uib-modal, so we compile the
         // template manually in $postLink.
     };
@@ -105,6 +106,7 @@ export class DraggableController implements IController {
     private click?: boolean;
     private resize?: boolean;
     private save?: string;
+    private dragClick?: () => void;
 
     constructor(scope: IScope, attr: IAttributes, element: IRootElementService) {
         this.scope = scope;
@@ -116,6 +118,14 @@ export class DraggableController implements IController {
             const pageId = window.location.pathname.split("/")[1];  // /velp/???
             this.posKey = this.save.replace("%%PAGEID%%", pageId);
         }
+    }
+
+    setCaption(caption: string) {
+        this.caption = caption;
+    }
+
+    setDragClickFn(fn: () => void) {
+        this.dragClick = fn;
     }
 
     setCloseFn(fn: () => void) {
@@ -458,5 +468,9 @@ export class DraggableController implements IController {
         if (this.posKey) {
             setStorage(this.posKey + "Size", size);
         }
+    }
+
+    $destroy() {
+        this.element.remove();
     }
 }

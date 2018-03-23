@@ -1,11 +1,12 @@
-import angular, {IAngularEvent} from "angular";
-import {IController, IRootElementService, IScope} from "angular";
+import {IAngularEvent, IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as allanswersctrl from "tim/controllers/allAnswersController";
 import uiGrid from "ui-grid";
+import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IUser} from "../IUser";
-import {$timeout, $uibModal} from "../ngimport";
+import {$timeout} from "../ngimport";
 import {markAsUsed} from "../utils";
+import {showAllAnswers} from "./allAnswersController";
 import {ViewCtrl} from "./view/viewctrl";
 
 markAsUsed(allanswersctrl);
@@ -115,17 +116,9 @@ export class UserListController implements IController {
                 {
                     title: "Export to Korppi",
                     action: ($event: IAngularEvent) => {
-                        $timeout(() => {
-                            const instance = $uibModal.open({
-                                animation: false,
-                                ariaLabelledBy: "modal-title",
-                                ariaDescribedBy: "modal-body",
-                                component: "timKorppiExport",
-                                size: "md",
-                            });
-                            instance.result.then((options) => this.exportKorppi(options), () => {
-
-                            });
+                        $timeout(async () => {
+                            const options = await showKorppiExportDialog();
+                            this.exportKorppi(options);
                         });
                     },
                     order: 10,
@@ -154,22 +147,11 @@ export class UserListController implements IController {
                 },
                 {
                     title: "Answers as plain text",
-                    action: ($event: IAngularEvent) => {
-                        $uibModal.open({
-                            animation: false,
-                            ariaLabelledBy: "modal-title",
-                            ariaDescribedBy: "modal-body",
-                            component: "timAllAnswers",
-                            size: "md",
-                            resolve: {
-                                options() {
-                                    return {
-                                        url: "/allDocumentAnswersPlain/" + this.docId,
-                                        identifier: this.docId,
-                                        allTasks: true,
-                                    };
-                                },
-                            },
+                    action: async ($event: IAngularEvent) => {
+                        await showAllAnswers({
+                            url: "/allDocumentAnswersPlain/" + this.viewctrl.item.id,
+                            identifier: this.viewctrl.item.id.toString(),
+                            allTasks: true,
                         });
                     },
                     order: 40,
@@ -242,38 +224,27 @@ timApp.component("timUserList", {
      ui-grid-selection
      ui-grid-exporter
      ui-grid-auto-resize
-     ui-grid-cellNav class="grid">
+     ui-grid-cellNav>
 </div>
 <div ng-if="!$ctrl.users">
     No answerers.
 </div>`,
 });
 
-export class KorppiExportCtrl implements IController {
-    private static $inject = ["$uibModalInstance"];
+export class KorppiExportCtrl extends DialogController<{}, IExportOptions, "timKorppiExport"> {
+    private options: IExportOptions;
 
-    private options: {};
-    private uibModalInstance: angular.ui.bootstrap.IModalInstanceService;
-
-    constructor(uibModalInstance: angular.ui.bootstrap.IModalInstanceService) {
-        this.uibModalInstance = uibModalInstance;
-        this.options = {};
-    }
-
-    $onInit() {
-
+    protected getTitle() {
+        return "Export to Korppi";
     }
 
     ok() {
-        this.uibModalInstance.close(this.options);
-    }
-
-    cancel() {
-        this.uibModalInstance.dismiss("cancel");
+        this.close(this.options);
     }
 }
 
-timApp.component("timKorppiExport", {
-    controller: KorppiExportCtrl,
-    templateUrl: "/static/templates/korppiExport.html",
-});
+registerDialogComponent("timKorppiExport", KorppiExportCtrl, {templateUrl: "/static/templates/korppiExport.html"});
+
+function showKorppiExportDialog() {
+    return showDialog<KorppiExportCtrl>("timKorppiExport", {}).result;
+}

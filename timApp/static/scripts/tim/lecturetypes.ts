@@ -1,6 +1,7 @@
 import moment, {Moment} from "moment";
 import {DurationChoice} from "./components/durationPicker";
 import {IUser} from "./IUser";
+import {IItem} from "./IItem";
 
 export interface IExplCollection {
     [idString: string]: string;
@@ -106,8 +107,7 @@ export interface ILectureMessage {
     message: string;
 }
 
-export interface ILectureFormParams extends ILecture {
-}
+export type ILectureFormParams = ILecture | IItem;
 
 export interface ILectureOptions {
     max_students: number;
@@ -134,6 +134,7 @@ export interface IQuestionAnswer {
     user: IUser;
     points: number;
     answer: AnswerTable;
+    answered_on: Moment;
     asked_question: IAskedQuestion;
 }
 

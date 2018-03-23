@@ -65,13 +65,14 @@ class ParEditorTest(BrowserTest):
         # after deleting the '!', the screenshot should be the same
         ActionChains(self.drv).send_keys(Keys.PAGE_DOWN, Keys.BACKSPACE).perform()
         self.wait_for_preview_to_finish()
+        ActionChains(self.drv).move_to_element(preview).perform()
         self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world_2')
 
     def wait_for_editor_load(self):
         self.wait_until_hidden('.editor-loading')
 
     def get_editor_element(self) -> WebElement:
-        pareditor = self.drv.find_element_by_css_selector('pareditor')
+        pareditor = self.drv.find_element_by_css_selector('.editorArea')
         return pareditor
 
     def click_add_bottom(self):

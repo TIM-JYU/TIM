@@ -71,7 +71,7 @@ class LectureWallController extends DialogController<{params: {lectureId: number
         this.newMsg = "";
     }
 
-    protected getTitle(): string {
+    protected getTitle() {
         return "Lecture wall";
     }
 }
@@ -90,6 +90,24 @@ timApp.component("timDropdownCheckbox", {
     transclude: true,
 });
 
+timApp.component("timLectureWallContent", {
+    bindings: {
+        messages: "<",
+        showName: "<",
+        showTime: "<",
+    },
+    template: `
+<ul class="list-unstyled">
+    <li ng-repeat="m in $ctrl.messages">
+        <span ng-if="$ctrl.showName">{{m.user.name}}</span>
+        <span ng-if="$ctrl.showTime">&lt;{{ m.timestamp | timtim }}&gt;</span>
+        <span ng-if="$ctrl.showTime || $ctrl.showName">:</span>
+        {{m.message}}
+    </li>
+</ul>
+    `,
+});
+
 registerDialogComponent(
     "timLectureWall",
     LectureWallController,
@@ -100,14 +118,11 @@ registerDialogComponent(
         Lecture wall
     </dialog-header>
     <dialog-body>
-        <ul class="list-unstyled">
-            <li ng-repeat="m in $ctrl.messages">
-                <span ng-if="$ctrl.messageName">{{m.user.name}}</span>
-                <span ng-if="$ctrl.messageTime">&lt;{{ m.timestamp | timtim }}&gt;</span>
-                <span ng-if="$ctrl.messageTime || $ctrl.messageName">:</span>
-                {{m.message}}
-            </li>
-        </ul>
+        <tim-lecture-wall-content
+                messages="$ctrl.messages"
+                show-name="$ctrl.messageName"
+                show-time="$ctrl.messageTime">
+        </tim-lecture-wall-content>
     </dialog-body>
     <dialog-footer>
         <div class="row">

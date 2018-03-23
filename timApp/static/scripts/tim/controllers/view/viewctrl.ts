@@ -9,13 +9,14 @@ import {initIndex} from "tim/controllers/view/index";
 import * as interceptor from "tim/controllers/view/interceptor";
 import {NotesHandler} from "tim/controllers/view/notes";
 import {getElementByParId, Paragraph} from "tim/controllers/view/parhelpers";
-import {closeOptionsWindow, ParmenuHandler} from "tim/controllers/view/parmenu";
+import {ParmenuHandler} from "tim/controllers/view/parmenu";
 import {QuestionHandler} from "tim/controllers/view/questions";
 import {initReadings} from "tim/controllers/view/readings";
 import * as popupMenu from "tim/directives/popupMenu";
 import {timLogTime} from "tim/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty} from "tim/utils";
 import {initCssPrint} from "../../cssPrint";
+import {PopupMenuController} from "../../directives/popupMenu";
 import {IItem} from "../../IItem";
 import {IUser} from "../../IUser";
 import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../../ngimport";
@@ -26,7 +27,7 @@ import {ReviewController} from "../reviewController";
 import {Document, setActiveDocument} from "./document";
 import {EditingHandler} from "./editing";
 import {onClick} from "./eventhandlers";
-import {IPopupMenuAttrs} from "./parmenu";
+import {IPopupMenuAttrs, optionsWindowClosed} from "./parmenu";
 import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
 
@@ -110,6 +111,7 @@ export class ViewCtrl implements IController {
     public notesHandler: NotesHandler;
     public parmenuHandler: ParmenuHandler;
     public refpopupHandler: RefPopupHandler;
+    private popupmenu?: PopupMenuController;
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -206,7 +208,7 @@ export class ViewCtrl implements IController {
                 }
             }
 
-            closeOptionsWindow();
+            this.closePopupIfOpen();
 
             if (tagName !== "p") {
                 $(".selected").removeClass("selected");
@@ -303,12 +305,14 @@ export class ViewCtrl implements IController {
             $timeout(() => {
                 this.document.rebuildSections();
             }, 1000);
-            if ( this.liveUpdates != origLiveUpdates ) { // if value hase changes, stop and start new poll
+            if (this.liveUpdates != origLiveUpdates) { // if value hase changes, stop and start new poll
                 if (stop) {
                     $interval.cancel(stop);
                     stop = undefined;
                 }
-                $timeout(() => { this.startLiveUpdates(); }, 100);
+                $timeout(() => {
+                    this.startLiveUpdates();
+                }, 100);
             }
         }, Math.max(1000 * this.liveUpdates, 1000));
     }
@@ -331,6 +335,10 @@ export class ViewCtrl implements IController {
                 this.notification = "";
             }
         });
+    }
+
+    isEmptyDocument() {
+        return this.docVersion[0] === 0 && this.docVersion[1] === 0; // TODO can be empty otherwise too
     }
 
     setReviewCtrlScope(scope: IScope & {$ctrl: ReviewController}) {
@@ -421,6 +429,19 @@ export class ViewCtrl implements IController {
 
     getAllowMove() {
         return $window.allowMove;
+    }
+
+    registerPopupMenu(param: PopupMenuController) {
+        this.popupmenu = param;
+    }
+
+    closePopupIfOpen() {
+        if (this.popupmenu) {
+            const par = this.popupmenu.element.parents(".par");
+            this.popupmenu.closePopup();
+            this.popupmenu = undefined;
+            optionsWindowClosed(par);
+        }
     }
 }
 

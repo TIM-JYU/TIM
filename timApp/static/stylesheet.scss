@@ -751,7 +751,6 @@ br {
 
 .editorArea {
     display: table;
-    overflow: hidden;
     z-index: 110;
     position: absolute;
     width: 100%;
@@ -767,11 +766,16 @@ br {
 
 #pareditor {
     background: inherit;
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
 
     .editortags, .choices, .editoropts {
         display: inline-block;
     }
+}
+
+pareditor {
+    background: inherit;
 }
 
 .editButtonArea {
@@ -907,14 +911,17 @@ input[type="file"] {
 
 /* TODO: check how to prevent too narrow menu better way than min-width */
 .actionButtons {
-    @include container-fixed();
     position: absolute;
-    white-space: nowrap;
-    border-radius: 3px;
-    background-color: #f8f8ff;
     z-index: 100;
-    min-height: 50px;
-    min-width: 200px;
+
+    .inner {
+        @include container-fixed();
+        white-space: nowrap;
+        border-radius: 3px;
+        background-color: #f8f8ff;
+        min-height: 50px;
+        min-width: 200px;
+    }
 }
 
 .menuButtons {

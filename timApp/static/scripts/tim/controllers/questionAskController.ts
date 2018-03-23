@@ -63,20 +63,25 @@ export class QuestionPreviewController extends DialogController<{params: Questio
     }
 
     public getTitle() {
-        if (!this.questiondata) {
-            return "";
-        }
-        return `Question: ${this.questiondata.markup.questionTitle}`;
+        return "Ask a question";
     }
 
     async $onInit() {
         super.$onInit();
         if (!isReasking(this.resolve.params)) {
             const data = await fetchQuestion(this.resolve.params.docId, this.resolve.params.parId, false);
-            this.questiondata = makePreview(data.markup);
+            this.questiondata = makePreview(data.markup, {
+                enabled: false,
+                showCorrectChoices: false,
+                showExplanations: false,
+            });
         } else {
             const data = await fetchAskedQuestion(this.resolve.params.askedId);
-            this.questiondata = makePreview(data.json.json);
+            this.questiondata = makePreview(data.json.json, {
+                enabled: false,
+                showCorrectChoices: false,
+                showExplanations: false,
+            });
         }
     }
 

@@ -2,6 +2,7 @@ import angular from "angular";
 import ad from "bootstrap";
 import $ from "jquery";
 import * as lectureMenu from "tim/components/lectureMenu";
+import * as templateList from "tim/components/templateList";
 import * as a from "tim/controllers/answerToQuestionController";
 import * as b from "tim/controllers/breadcrumbs";
 import * as c from "tim/controllers/createLectureCtrl";
@@ -33,7 +34,7 @@ import {markAsUsed} from "tim/utils";
 import {ParCompiler} from "./services/parCompiler";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./timTiming";
 
-markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, x, y, ab, ac, ad, ae, lectureMenu);
+markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, x, y, ab, ac, ad, ae, lectureMenu, templateList);
 
 timLogInit(document.location.search.slice(1));
 

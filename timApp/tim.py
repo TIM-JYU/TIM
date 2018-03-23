@@ -69,6 +69,7 @@ from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.bookmarks import Bookmarks
 from timApp.timdb.documents import create_citation, create_translation
 from timApp.timdb.exceptions import TimDbException, ItemAlreadyExistsException
+from timApp.timdb.item import Item
 from timApp.timdb.models.block import copy_default_rights
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
@@ -516,6 +517,15 @@ def get_block(doc_id, par_id):
         except TimDbException as e:
             return abort(404, str(e))
         return json_response({"text": par.get_exported_markdown()})
+
+
+@app.route("/items/<int:item_id>")
+def get_item(item_id: int):
+    i = Item.find_by_id(item_id)
+    if not i:
+        abort(404, 'Item not found')
+    verify_view_access(i)
+    return json_response(i)
 
 
 @app.route("/<plugin>/<path:filename>")

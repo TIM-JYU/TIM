@@ -8,9 +8,31 @@
 
 $buttons-width: 75%;
 
+tim-dialog {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 95vh;
+}
+
 .modal-body {
     overflow-y: auto;
-    max-height: 50vh;
+}
+
+.modal-content {
+    &.draggable-content {
+        border-top: none;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        height: 100%;
+    }
+}
+
+.modal-dialog {
+    .draghandle {
+        border-top-left-radius: 6px;
+        border-top-right-radius: 6px;
+    }
 }
 
 @media (min-width: 768px) {

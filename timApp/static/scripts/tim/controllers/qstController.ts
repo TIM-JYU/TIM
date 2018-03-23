@@ -56,7 +56,7 @@ class QstController implements IController {
         this.isLecturer = (this.lctrl && this.lctrl.isLecturer) || false;
         this.attrs = JSON.parse(this.json);
         // console.log(this.attrs);
-        this.preview = makePreview(this.attrs.markup, this.attrs.state || [], false);
+        this.preview = makePreview(this.attrs.markup, {answerTable: this.attrs.state || [], enabled: true});
         this.errors = [];
         this.result = "";
         this.preclass = "qst";
@@ -190,7 +190,7 @@ class QstController implements IController {
         this.error = "";
         this.result = data.web.result;
         if (data.web.markup && data.web.show_result) {
-            this.preview = makePreview(data.web.markup, data.web.state, false);
+            this.preview = makePreview(data.web.markup, {answerTable: data.web.state, enabled: true});
         }
     }
 }

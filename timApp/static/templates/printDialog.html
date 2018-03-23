@@ -10,7 +10,7 @@
             <h5>Please choose a template:</h5>
             <div class="form-group input-group-sm">
                 <div ng-repeat="item in $ctrl.templates">
-                    <div class="radio">
+                    <div class="radio" ng-show="$ctrl.showTemplate(item)">
                         <label>
                             <input type="radio" ng-model="$ctrl.selectedTemplate" ng-value="item"
                                    name="template-selection">
@@ -37,8 +37,6 @@
             <strong>Error!</strong>
             <p ng-bind-html="$ctrl.errormsg"></p>
         </div>
-    </dialog-body>
-    <dialog-footer>
         <div>
             <label class="footerLabel">
                 <input type="checkbox" ng-model="$ctrl.pluginsUserCode">
@@ -100,5 +98,6 @@
                                                                                   target="_blank">View the document.</a>
             </p>
         </div>
-    </dialog-footer>
+    </dialog-body>
+    <dialog-footer></dialog-footer>
 </tim-dialog>

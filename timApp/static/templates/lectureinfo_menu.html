@@ -3,11 +3,11 @@
         <div class="lectureSection" ng-show="!$ctrl.lctrl.lectureSettings.inLecture">
             <h1>Now:</h1>
             <div ng-show="$ctrl.lctrl.lectures.length > 0" class="lectureArea">
-                <select ng-change="$ctrl.lctrl.clearChange()" ng-model="$ctrl.lctrl.chosenLecture"
+                <select class="form-control" ng-change="$ctrl.lctrl.clearChange()" ng-model="$ctrl.lctrl.chosenLecture"
                         ng-options="lecture.lecture_code for lecture in $ctrl.lctrl.lectures">
                 </select>
                 <button class="timButton btn-lg"
-                        ng-click="$ctrl.lctrl.joinLecture($ctrl.lctrl.chosenLecture.lecture_code, $ctrl.lctrl.chosenLecture.is_access_code)"
+                        ng-click="$ctrl.lctrl.joinLecture($ctrl.lctrl.chosenLecture)"
                         title="Join the lecture" ng-show="$ctrl.lctrl.lectureSettings">
                     <span class="glyphicon glyphicon-log-in" aria-hidden="true"></span>
                 </button>
@@ -50,7 +50,7 @@
                         ng-show="$ctrl.lctrl.canStop">
                     <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
                 </button>
-                <a href="">Return to lecture</a>
+                <a ng-show="$ctrl.item && $ctrl.item.id !== $ctrl.lctrl.viewctrl.item.id" href="/lecture/{{$ctrl.item.path}}">Go to lecture document</a>
             </div>
         </div>
 
@@ -61,7 +61,7 @@
                 <p ng-show="$ctrl.lctrl.futureLectures.length <= 0">No upcoming lectures</p>
 
                 <div ng-show="$ctrl.lctrl.futureLectures.length > 0">
-                    <select ng-model="$ctrl.lctrl.futureLecture"
+                    <select class="form-control" ng-model="$ctrl.lctrl.futureLecture"
                             ng-options="lecture.lecture_code + ' ' + (lecture.start_time | timdate) for lecture in $ctrl.lctrl.futureLectures">
                     </select>
                 </div>

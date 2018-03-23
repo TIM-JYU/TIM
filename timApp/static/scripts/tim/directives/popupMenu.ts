@@ -5,13 +5,14 @@ import {watchEditMode} from "tim/editmode";
 import {ViewCtrl} from "../controllers/view/viewctrl";
 import {MenuFunctionCollection, MenuFunctionEntry} from "../controllers/view/viewutils";
 import {$http, $window} from "../ngimport";
+import {DraggableController} from "./draggable";
 
-type EditMode = "par" | "area";
+export type EditMode = "par" | "area";
 
-class PopupMenuController implements IController {
+export class PopupMenuController implements IController {
     private static $inject = ["$scope", "$element"];
     private model: {editState: EditMode | null};
-    private element: IRootElementService;
+    public element: IRootElementService;
     private contenturl: string;
     private srcid: string;
     private $pars: JQuery;
@@ -25,6 +26,7 @@ class PopupMenuController implements IController {
     private save: boolean;
     private scope: IScope;
     private actions: MenuFunctionCollection;
+    private draggable: DraggableController | undefined;
 
     constructor(scope: IScope, element: IRootElementService) {
         this.element = element;
@@ -32,6 +34,7 @@ class PopupMenuController implements IController {
     }
 
     $onInit() {
+        this.vctrl.registerPopupMenu(this);
         this.$pars = $(this.srcid);
         this.editbutton = false;
         this.areaEditButton = false;
@@ -46,11 +49,10 @@ class PopupMenuController implements IController {
         this.scope.$watch(() => this.model.editState, (newEditMode, oldEditMode) => this.watchEditMode(newEditMode, oldEditMode));
     }
 
-    $postLink() {
-        this.element.css("position", "absolute"); // IE needs this
-    }
-
     closePopup() {
+        if (this.draggable) {
+            this.draggable.$destroy();
+        }
         this.element.remove();
 
         if (this.onClose) {
@@ -129,6 +131,7 @@ timApp.component("popupMenu", {
     controller: PopupMenuController,
     require: {
         vctrl: "^timView",
+        draggable: "?^timDraggableFixed",
     },
     templateUrl: "/static/templates/popupMenu.html",
 });

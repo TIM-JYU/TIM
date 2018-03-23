@@ -8,9 +8,9 @@
         aria-labelledby="single-button">
         <li ng-repeat="item in group.items" role="menuitem">
             <a ng-href="{{ item.path }}">{{ item.name }}
-                <i ng-click="editItem(group, item, $event)" ng-show="$ctrl.deleting"
+                <i ng-click="$ctrl.editItem(group, item, $event)" ng-show="$ctrl.deleting"
                    class="glyphicon glyphicon-pencil"></i>
-                <i ng-click="deleteItem(group, item, $event)" ng-show="$ctrl.deleting"
+                <i ng-click="$ctrl.deleteItem(group, item, $event)" ng-show="$ctrl.deleting"
                    class="glyphicon glyphicon-remove"></i>
             </a>
         </li>
@@ -36,64 +36,6 @@
    ng-href="{{ bookmark.path }}"
    ng-bind="bookmark.name"
    class="btn btn-sm btn-default"></a>
-<button ng-click="$ctrl.newBookmark(null, $event)" class="btn btn-sm btn-default">
+<button ng-click="$ctrl.newBookmark(undefined, $event)" class="btn btn-sm btn-default">
     <i class="glyphicon glyphicon-plus"></i> New bookmark...
 </button>
-<script type="text/ng-template" id="createBookmark.html">
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-title">Bookmark</h4>
-    </div>
-    <div class="modal-body" id="modal-body">
-        <form name="bookmarkForm" class="form-horizontal">
-            <div class="form-group"
-                 ng-class="{'has-error': !bookmarkForm.nameField.$pristine && bookmarkForm.nameField.$error.required}">
-                <label for="name" class="col-sm-2 control-label">Name</label>
-                <div class="col-sm-10">
-                    <input required focus-me="$ctrl.focusName" ng-model="$ctrl.bookmark.name" name="nameField"
-                           type="text"
-                           class="form-control" id="name" placeholder="Bookmark name">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="group" class="col-sm-2 control-label">Folder</label>
-                <div class="col-sm-10">
-                    <input focus-me="$ctrl.focusGroup" ng-model="$ctrl.bookmark.group" name="groupField" type="text"
-                           class="form-control" id="group"
-                           placeholder="Folder name or blank to make a top-level bookmark">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="link" class="col-sm-2 control-label">Link</label>
-                <div class="col-sm-10">
-                    <input ng-model="$ctrl.bookmark.link" type="text" class="form-control" name="linkField" id="link"
-                           placeholder="Leave blank to add current page">
-                </div>
-            </div>
-            <div ng-show="$ctrl.showParamsCheckbox" class="form-group">
-                <div class="col-sm-offset-2 col-sm-10">
-                    <div class="checkbox">
-                        <label>
-                            <input ng-model="$ctrl.includeParams" ng-disabled="$ctrl.bookmark.link" type="checkbox">
-                            Include URL parameters in link
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div ng-show="$ctrl.showHashCheckbox" class="form-group">
-                <div class="col-sm-offset-2 col-sm-10">
-                    <div class="checkbox">
-                        <label>
-                            <input ng-model="$ctrl.includeHash" ng-disabled="$ctrl.bookmark.link" type="checkbox">
-                            Include URL hash in link
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-    <div class="modal-footer">
-        <button ng-disabled="!bookmarkForm.$valid" class="timButton" type="button" ng-click="$ctrl.ok()">Save
-        </button>
-        <button class="btn btn-default" type="button" ng-click="$ctrl.cancel()">Cancel</button>
-    </div>
-</script>

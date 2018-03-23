@@ -6,7 +6,6 @@ import {INameAreaOptions, showNameAreaDialog} from "../../directives/nameArea";
 import {$http, $timeout, $window} from "../../ngimport";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {Area, getArea, getFirstParId, getLastParId, Paragraph, Paragraphs} from "./parhelpers";
-import {closeOptionsWindow} from "./parmenu";
 import {ViewCtrl} from "./viewctrl";
 import {getEmptyCoords} from "./viewutils";
 
@@ -95,7 +94,7 @@ export class AreaHandler {
     }
 
     onAreaEditClicked($this: JQuery, e: JQueryEventObject, className: string) {
-        closeOptionsWindow();
+        this.viewctrl.closePopupIfOpen();
         const areaName = $this.attr("data-area");
         if (!areaName) {
             return;

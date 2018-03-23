@@ -28,6 +28,9 @@ export class QuestionHandler {
             return;
         }
         const result = await showQuestionEditDialog({par_id_next: parNextId, qst: true, docId: this.viewctrl.docId});
+        if (result.type === "points") {
+            throw new Error("unexpected result type from dialog");
+        }
         const $newpar = createNewPar();
         $par.before($newpar);
         this.viewctrl.editingHandler.addSavedParToDom(result.data, {par: getParId($newpar)!});
@@ -40,6 +43,9 @@ export class QuestionHandler {
             return;
         }
         const result = await fetchAndEditQuestion(this.viewctrl.docId, parId);
+        if (result.type === "points") {
+            throw new Error("unexpected result type from dialog");
+        }
         if (result.deleted) {
             this.viewctrl.editingHandler.handleDelete(result.data, {par: parId});
         } else {
@@ -56,6 +62,9 @@ export class QuestionHandler {
             return;
         }
         const result = await showQuestionEditDialog({par_id_next: parNextId, qst: false, docId: this.viewctrl.docId});
+        if (result.type === "points") {
+            throw new Error("unexpected result type from dialog");
+        }
         const $newpar = createNewPar();
         $par.after($newpar);
         this.viewctrl.editingHandler.addSavedParToDom(result.data, {par: getParId($newpar)!});

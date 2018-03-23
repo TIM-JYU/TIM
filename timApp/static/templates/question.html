@@ -1,4 +1,4 @@
-<tim-dialog ng-if="!qctrl.asked_id">
+<tim-dialog ng-if="!qctrl.isAskedQuestion()">
     <dialog-header></dialog-header>
     <dialog-body>
         <form name="qctrl.f">
@@ -71,8 +71,8 @@
         <button class="timButton" ng-click="qctrl.dismiss()">Cancel</button>
     </dialog-footer>
 </tim-dialog>
-<tim-dialog ng-if="qctrl.asked_id">
-    <dialog-header></dialog-header>
+<tim-dialog ng-if="qctrl.isAskedQuestion()">
+    <dialog-header>Edit points and explanations</dialog-header>
     <dialog-body>
         <form>
             <!-- <h5 >{{ qctrl.question.questionText }}</h5> -->
@@ -85,19 +85,14 @@
 
             <p ng-if="qctrl.question.questionType == 'matrix'">Answer type: {{ qctrl.question.matrixType }} </p>
             -->
-            <div ng-if="qctrl.question.questionType" style="overflow-x: auto">
+            <div ng-if="qctrl.question.questionType">
                 <tim-question-matrix></tim-question-matrix>
             </div>
             <tim-alert ng-show="qctrl.customError">{{ qctrl.customError }}</tim-alert>
         </form>
     </dialog-body>
     <dialog-footer>
-        <button class="timButton" ng-if="!qctrl.asked_id" ng-if="lctrl.lectureSettings.inLecture"
-                ng-click="qctrl.createQuestion(true)" title="Ctrl-R">Save and ask
-        </button>
         <button class="timButton" ng-click="qctrl.createQuestion()" title="Ctrl-S">Save</button>
         <button class="timButton" ng-click="qctrl.dismiss()">Cancel</button>
-        <span ng-if="(qctrl.question.question_id)"> <button class="btn btn-danger"
-                                                            ng-click="qctrl.deleteQuestion()">Delete</button> </span>
     </dialog-footer>
 </tim-dialog>

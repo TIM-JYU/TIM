@@ -156,16 +156,16 @@
             </tim-review>
         {% endif %}
     </div>
-    {% if not text and item.rights.manage %}
-        <bootstrap-panel title="Review document permissions" show-close="true">
-            <p>These are the current permissions for this document; please modify if needed.
-                You can always modify these permissions from the manage page.</p>
-            <rights-editor
-                    item-id="$ctrl.docId"
-                    url-root="permissions">
-            </rights-editor>
-        </bootstrap-panel>
-    {% endif %}
-    <p id="test"></p>
-
+    <tim-template-list ng-if="$ctrl.item.rights.edit" ng-show="$ctrl.isEmptyDocument()" doc="$ctrl.item"></tim-template-list>
+    <bootstrap-panel ng-if="$ctrl.item.rights.manage" ng-show="$ctrl.isEmptyDocument()"
+                     title="Review document permissions"
+                     show-close="true"
+                     ng-cloak>
+        <p>These are the current permissions for this document; please modify if needed.
+            You can always modify these permissions from the manage page.</p>
+        <rights-editor
+                item-id="$ctrl.docId"
+                url-root="permissions">
+        </rights-editor>
+    </bootstrap-panel>
 {% endblock %}

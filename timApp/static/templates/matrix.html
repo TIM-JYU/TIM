@@ -7,11 +7,10 @@
         <th ng-show="$ctrl.qctrl.question.questionType == 'true-false'" class="true-false-title">False</th>-->
 
         <!--<th ng-repeat="item in columnHeaders" ng-if="$ctrl.qctrl.question.questionType == 'matrix' || $ctrl.qctrl.question.questionType == 'true-false' " id="row-heading">-->
-        <th ng-if="$ctrl.qctrl.asked_id" ng-repeat="item in $ctrl.qctrl.columnHeaders" class="text-center"
+        <th ng-if="$ctrl.qctrl.isAskedQuestion()" ng-repeat="item in $ctrl.qctrl.columnHeaders" class="text-center"
             ng-bind-html="$ctrl.qctrl.columnHeaders[$index].text">
-        <th ng-if="!$ctrl.qctrl.asked_id" ng-repeat="item in $ctrl.qctrl.columnHeaders" class="text-center">
-            <!-- {{ asked_id !== false ? columnHeaders[$index].text : "" }} -->
-            <div class="pos-rel" ng-if="!$ctrl.qctrl.asked_id">
+        <th ng-if="!$ctrl.qctrl.isAskedQuestion()" ng-repeat="item in $ctrl.qctrl.columnHeaders" class="text-center">
+            <div class="pos-rel" ng-if="!$ctrl.qctrl.isAskedQuestion()">
                         <textarea class="form-control" rows="1" cols="10"
                                   ng-model="$ctrl.qctrl.columnHeaders[$index].text"></textarea>
                 <div class="buttonsTop" ng-if="$ctrl.qctrl.question.questionType != 'true-false'">
@@ -22,7 +21,7 @@
                 </div>
             </div>
         </th>
-        <th ng-if="($ctrl.qctrl.question.questionType == 'matrix' ) && !$ctrl.qctrl.asked_id">
+        <th ng-if="($ctrl.qctrl.question.questionType == 'matrix' ) && !$ctrl.qctrl.isAskedQuestion()">
             <button class="wideButton" ng-click="$ctrl.qctrl.addCol(-1)"><span
                     class="glyphicon glyphicon-plus"></span></button>
         </th>
@@ -31,9 +30,8 @@
     </thead>
     <tbody>
     <tr ng-repeat="row in $ctrl.qctrl.rows">
-        <td ng-if="$ctrl.qctrl.asked_id" ng-bind-html="row.text">
-        <td ng-if="!$ctrl.qctrl.asked_id">
-            <!--{{ asked_id !== false ? row.text : "" }} -->
+        <td ng-if="$ctrl.qctrl.isAskedQuestion()" ng-bind-html="row.text">
+        <td ng-if="!$ctrl.qctrl.isAskedQuestion()">
             <div class="pos-rel">
                     <textarea required class="form-control questiontext" ng-model="row.text" rows="1"
                               id="{{ 'r'+row.id }}" name="{{'r'+row.id}}"></textarea>
@@ -105,7 +103,7 @@
         </td>
         <!-- ADD COMMENTS FIELD HERE. Appropriate edits need to be done to questionjson at ViewCtrl and then displaying them at directives/dynamicanswersheet.js -->
     </tr>
-    <tr ng-if="!$ctrl.qctrl.asked_id">
+    <tr ng-if="!$ctrl.qctrl.isAskedQuestion()">
         <th>
             <div>
                 <button class="wideButton" ng-click="$ctrl.qctrl.addRow(-1)"><span

@@ -102,7 +102,7 @@ def get_option(req: Request, name: str, default, cast=None):
         try:
             result = cast(result)
         except ValueError:
-            pass
+            return default
     return result
 
 
