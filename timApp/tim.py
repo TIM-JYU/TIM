@@ -109,7 +109,6 @@ app.register_blueprint(global_notification)
 app.register_blueprint(static_blueprint)
 app.register_blueprint(print_blueprint)
 
-
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 assets = Environment(app)
@@ -205,9 +204,9 @@ def empty_response_route():
 @app.route('/pdftest')
 def test_pdf():
     pdftestdata = [
-        {'path': "static/testpdf/wlan.pdf",
+        {'file': "static/testpdf/wlan.pdf",
          'date': "9.3.2018", 'attachment': "A", 'issue': "3"},
-        {'path': "static/testpdf/TIM-esittely.pdf",
+        {'file': "static/testpdf/TIM-esittely.pdf",
          'text': "LEIMATEKSTIN\n\nvoi valita\n\ntäysin vapaasti!"}
     ]
     output_name = f"static/testpdf/{uuid4()}.pdf"
@@ -223,29 +222,33 @@ def test_pdf():
 # testing route for pdftools.py
 @app.route('/pdfstamptest')
 def test_pdf_stamp():
-    output_name = f"static/testpdf/{uuid4()}.pdf"
+    pdftestdata = [
+        {'file': "static/testpdf/wlan.pdf",
+         'date': "9.3.2018", 'attachment': "A", 'issue': "3"},
+        {'file': "static/testpdf/TIM-esittely.pdf",
+         'text': "LEIMATEKSTIN\n\nvoi valita\n\ntäysin vapaasti!"}
+    ]
     try:
-        """
-        timApp.tools.pdftools.create_stamp(
-        "static/tex/stamp_model.tex",
-        "static/testpdf",
-        "test_stamp",
-        "Kokous 2/2018\n\nLIITE B lista 2")
-        """
-        timApp.tools.pdftools.stamp_pdf("static/testpdf/TIM-esittely.pdf", "static/testpdf/test_stamp.pdf", output_name)
+        paths = timApp.tools.pdftools.stamp_merge_pdfs(pdftestdata, "", merge=False)
     except Exception as e:
         message = repr(e)
         abort(404, message)
     else:
-        return send_file(output_name, mimetype="application/pdf")
+        abort(404, repr(paths))
 
 
 # testing route for pdftools.py
 @app.route('/pdfmergetest')
 def test_pdfmerge():
     output_name = f"static/testpdf/{uuid4()}.pdf"
+    files = ['static/testpdf/13dae5e4-8608-4f2d-b25e-85ad64d758dd_1_stamped.pdf',
+            'static/testpdf/13dae5e4-8608-4f2d-b25e-85ad64d758dd_2_stamped.pdf',
+            'static/testpdf/13dae5e4-8608-4f2d-b25e-85ad64d758dd_3_stamped.pdf',
+            'static/testpdf/13dae5e4-8608-4f2d-b25e-85ad64d758dd_4_stamped.pdf',
+            'static/testpdf/13dae5e4-8608-4f2d-b25e-85ad64d758dd_5_stamped.pdf',
+            'static/testpdf/13dae5e4-8608-4f2d-b25e-85ad64d758dd_6_stamped.pdf']
     try:
-        timApp.tools.pdftools.merge_pdf(["static/testpdf/wlan.pdf","static/testpdf/TIM-esittely.pdf"], output_name)
+        timApp.tools.pdftools.merge_pdf(files, output_name)
     except Exception as e:
         message = repr(e)
         abort(404, message)
@@ -256,26 +259,37 @@ def test_pdfmerge():
 # testing route for processing pdf attachments
 @app.route('/processAttachments/<path:doc>')
 def process_attachments(doc):
-    d = DocEntry.find_by_path(doc, try_translation=True)
-    if not d:
-        abort(404)
-    verify_view_access(d)
-    paragraphs  = d.document.get_paragraphs(d)
-    for par in paragraphs:
-        plug = par.is_plugin()
-        if plug:
-            print (par)
-            plugin_creature = timApp.plugin.Plugin(task_id = "0", values={},plugin_type = "showVideo")
-            plugin_creature = plugin_creature.from_paragraph(par)
-            print("TEST") #not important
-            print(plugin_creature.values)
-            plug_type = par.get_attr('plugin')
-            if plug_type == 'showVideo':
-                print("TEST") #not important
-                name = par.get_attr('list\nvideoname')
-                #name = plugin_creature.get_attr.name
-            print (plug_type)
-    abort(403, paragraphs)
+    try:
+        d = DocEntry.find_by_path(doc, try_translation=True)
+        if not d:
+            abort(404)
+        verify_view_access(d)
+
+        paragraphs = d.document.get_paragraphs(d)
+        pdf_stamp_data = []
+        for par in paragraphs:
+            if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
+                plugin_creature = timApp.plugin.Plugin.from_paragraph(par)
+                par_data = plugin_creature.values
+                par_file = par_data["file"]
+                # if attachment is url link, download it to temp folder and operate the
+                # downloaded file
+                if timApp.tools.pdftools.is_url(par_file):
+                    print(f"Downloading {par_file}")
+                    par_data["file"] = timApp.tools.pdftools.download_file_from_url(par_file)
+
+                pdf_stamp_data += [par_data]
+                print(repr(par_data))
+
+        output_name = f"static/testpdf/{uuid4()}.pdf"
+        # TODO: can't find files uploaded to TIM
+        # TODO: raises FileNotFoundError if an error occurs inside try-finally block in pdftools?
+        timApp.tools.pdftools.stamp_merge_pdfs(pdf_stamp_data, output_name)
+    except Exception as e:
+        message = repr(e)
+        abort(404, message)
+    else:
+        return send_file(output_name, mimetype="application/pdf")
 
 
 @app.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])
@@ -494,6 +508,7 @@ def create_citation_doc(doc_id, doc_path, doc_title):
 
     def factory(path, group, title):
         return create_citation(src_doc, group, path, title)
+
     item = create_item(doc_path, 'document', doc_title, factory, get_current_user_group())
     db.session.commit()
     return json_response(item)
@@ -545,6 +560,7 @@ def echo_request(filename):
         yield 'Request URL: ' + request.url + "\n\n"
         yield 'Headers:\n\n'
         yield from (k + ": " + v + "\n" for k, v in request.headers.items())
+
     return Response(stream_with_context(generate()), mimetype='text/plain')
 
 
