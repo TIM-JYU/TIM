@@ -118,7 +118,7 @@ function qstShortText(s: string): string | string[] {
     if (typeof result === "string") {
         return truncate(text, max);
     } else {
-        return result.map(truncate);
+        return result.map((row) => truncate(row, max));
     }
 }
 
