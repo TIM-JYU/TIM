@@ -47,31 +47,31 @@
         </td>
         <td ng-repeat="column in row.columns" class="text-center form-inline">
             <!-- Horizontal radio-button-->
-            <div ng-if="($ctrl.qctrl.question.matrixType == 'radiobutton-horizontal' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType == 'true-false' ">
+            <div class="checkRadioCell" ng-if="($ctrl.qctrl.question.matrixType == 'radiobutton-horizontal' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType == 'true-false' ">
                 <!-- ng-model="row.id" -->
-                <div><input type="radio"
+                <input type="radio"
                             ng-value="column.id"
                             placeholder=""
-                            disabled/></div>
-                <div><input type="text"
+                            disabled/>
+                <input type="text"
                             class="form-control"
                             size="2"
                             placeholder="pts"
-                            ng-model="column.points"/></div>
+                            ng-model="column.points"/>
             </div>
             <!-- Vertical radio-button -->
             <div ng-if="$ctrl.qctrl.question.questionType != 'true-false'">
-                <div ng-if="($ctrl.qctrl.question.matrixType == 'radiobutton-vertical' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType == 'radio-vertical'">
-                    <div><input type="radio"
+                <div class="checkRadioCell" ng-if="($ctrl.qctrl.question.matrixType == 'radiobutton-vertical' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType == 'radio-vertical'">
+                    <input type="radio"
                                 name="column.rowId"
                                 ng-value="column.id"
                                 placeholder=""
-                                disabled/></div>
-                    <div><input type="text"
+                                disabled/>
+                    <input type="text"
                                 class="form-control"
                                 size="2"
                                 placeholder="pts"
-                                ng-model="column.points"/></div>
+                                ng-model="column.points"/>
                 </div>
                 <!-- Text area-->
                 <div ng-if="$ctrl.qctrl.question.questionType != 'radio-button'">
@@ -82,15 +82,15 @@
                                     placeholder=""
                                     disabled></textarea>
                     <!-- Checkbox-->
-                    <div ng-if="($ctrl.qctrl.question.matrixType == 'checkbox' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType=='checkbox-vertical'">
-                        <div><input type="checkbox"
+                    <div class="checkRadioCell" ng-if="($ctrl.qctrl.question.matrixType == 'checkbox' && $ctrl.qctrl.question.questionType=='matrix') || $ctrl.qctrl.question.questionType=='checkbox-vertical'">
+                        <input type="checkbox"
                                     ng-model="row.id"
-                                    disabled/></div>
-                        <div><input type="text"
+                                    disabled/>
+                        <input type="text"
                                     class="form-control"
                                     size="2"
                                     placeholder="pts"
-                                    ng-model="column.points"/></div>
+                                    ng-model="column.points"/>
                     </div>
                 </div>
             </div>

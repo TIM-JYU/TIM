@@ -179,6 +179,16 @@ tim-question-matrix {
   td:hover .matrixButtons, .matrixButtons:hover, th:hover .buttonsTop, .buttonsTop:hover {
     opacity: 1;
   }
+
+  .checkRadioCell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    input[type="radio"], input[type="checkbox"] {
+      margin: 2px;
+    }
+  }
 }
 
 dynamic-answer-sheet {
