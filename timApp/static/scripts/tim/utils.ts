@@ -177,6 +177,26 @@ export function assertNotNull(obj: any) {
     }
 }
 
+export function getOutOffset(el: Element) {
+    const rect = el.getBoundingClientRect();
+    const bounds = {left: 0, top: 0, right: 0, bottom: 0};
+    if (rect.top < 0) {
+        bounds.top = rect.top;
+    }
+    const height = (window.innerHeight || document.documentElement.clientHeight);
+    if (rect.bottom > height) {
+        bounds.bottom = height - rect.bottom;
+    }
+    const width = (window.innerWidth || document.documentElement.clientWidth);
+    if (rect.right > width) {
+        bounds.right = width - rect.right;
+    }
+    if (rect.left < 0) {
+        bounds.left = rect.left;
+    }
+    return bounds;
+}
+
 export const nameofFactory = <T>() => (name: keyof T) => name;
 
 export const nameofFactoryCtrl = <T>() => (name: keyof T, ctrl = "$ctrl") => `${ctrl}.${name}`;
