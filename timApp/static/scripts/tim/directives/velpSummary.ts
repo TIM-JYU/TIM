@@ -17,7 +17,7 @@ import {IAnnotation, IUIFields} from "./velptypes";
 export class VelpSummaryController implements IController {
     private settings: {selectedAll: boolean};
     private annotations: (IAnnotation & IUIFields)[];
-    private toggleAnnotation: (params: {$ANNOTATION: IAnnotation}) => void;
+    private toggleAnnotation: (params: {$ANNOTATION: IAnnotation, $SCROLL: boolean}) => void;
 
     constructor() {
         this.settings = {selectedAll: false};

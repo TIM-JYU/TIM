@@ -2,15 +2,24 @@ import angular, {IController, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {showMessageDialog} from "../dialog";
-import {AnswerBrowserController} from "../directives/answerbrowser3";
+import {AnswerBrowserController, AnswerBrowserLazyController} from "../directives/answerbrowser3";
 import {VelpSelectionController} from "../directives/velpSelection";
 import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVelp} from "../directives/velptypes";
 import {IAnswer} from "../IAnswer";
 import {IItem} from "../IItem";
-import {$compile, $http, $window} from "../ngimport";
-import {angularWait, assertIsText, checkIfElement, getElementParent, scrollToElement, stringOrNull} from "../utils";
+import {$compile, $http, $timeout, $window} from "../ngimport";
+import {
+    angularWait,
+    assertIsText,
+    checkIfElement,
+    getElementParent,
+    isInViewport,
+    scrollToElement,
+    stringOrNull
+} from "../utils";
 import {addElementToParagraphMargin} from "./view/parhelpers";
 import {ViewCtrl} from "./view/viewctrl";
+import {AnnotationController} from "../directives/annotation";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
@@ -214,6 +223,7 @@ export class ReviewController implements IController {
      * @method loadAnnotationsToAnswer
      * @param answerId - Answer ID
      * @param par - Paragraph element
+     * @param showInPlace - show velp inside answer text
      */
     loadAnnotationsToAnswer(answerId: number, par: Element, showInPlace: boolean): void {
         const annotations = this.getAnnotationsByAnswerId(answerId);
@@ -241,8 +251,12 @@ export class ReviewController implements IController {
                 this.addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
             } else if (element) {
                 const range = document.createRange();
-                range.setStart(element, placeInfo.start.offset);
-                range.setEnd(element, placeInfo.end.offset);
+                try {
+                    range.setStart(element, placeInfo.start.offset);
+                    range.setEnd(element, placeInfo.end.offset);
+                } catch (e) {
+                    // catch: Failed to execute 'setStart' on 'Range': The offset XX is larger than the node's length (YY).
+                }
                 this.addAnnotationToCoord(range, annotations[i], false);
                 this.addAnnotationToElement(par, annotations[i], false, "Added also margin annotation");
             } else {
@@ -268,6 +282,21 @@ export class ReviewController implements IController {
         annotations.sort((a, b) => (b.coord.start.offset || 0) - (a.coord.start.offset || 0));
 
         return annotations;
+    }
+
+    /**
+     * Gets all the annotations with a given answer ID.
+     * @method getAnnotationById
+     * @param id - annotation ID
+     * @returns annotation with this id
+     */
+    getAnnotationById(id: number) {
+        for (const a of this.annotations) {
+            if (a.id === id) {
+                return a;
+            }
+        }
+        return undefined;
     }
 
     /**
@@ -297,7 +326,6 @@ export class ReviewController implements IController {
              this.addAnnotationToCoord(new_range, annotation, show);
              */
         }
-
         $compile(span)(this.scope);
     }
 
@@ -724,6 +752,26 @@ export class ReviewController implements IController {
     }
 
     /**
+     <<<<<<< HEAD
+     =======
+     * Detect user right to annotation to document.
+     * @param points - Points given in velp or annotation
+     * @returns {boolean} - Right to make annotations
+
+     $scope.notAnnotationRights = function(points) {
+        if ($scope.item.rights.teacher) {
+            return false;
+        } else {
+            if (points === null) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    };
+     */
+    /**
+     >>>>>>> master
      * Return caption text if the user has no rights to the annotation.
      * @param state - Whether the annotation is disabled to the user or not
      * @returns {string} - Caption text
@@ -1154,52 +1202,67 @@ export class ReviewController implements IController {
      * @method toggleAnnotation
      * @param annotation - Annotation to be showed.
      */
-    toggleAnnotation(annotation: IAnnotation): void {
+    async toggleAnnotation(annotation: IAnnotation, scrollToWindow: boolean) {
         const parent = document.getElementById(annotation.coord.start.par_id);
         if (parent == null) {
             return;
         }
 
-        try {
-            const annotationElement = parent.querySelectorAll("annotation[aid='{0}']".replace("{0}", annotation.id.toString()))[0];
-            angular.element(annotationElement).isolateScope<any>().actrl.showAnnotation();
-        } catch (e) {
-            // Find answer browser and its scope
-            // set answer id -> change answer to that
-            // query selector element -> toggle annotation
-            if (e.name === "TypeError" && annotation.answer_id != null) {
-                //var abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-                let ab: any = parent.getElementsByTagName("ANSWERBROWSER")[0];
-
-                if (typeof ab === UNDEFINED) {
-                    const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-                    abl.isolateScope<any>().$ctrl.loadAnswerBrowser();
-                }
-                if (this.vctrl.selectedUser.id !== annotation.user_id) {
-                    for (let i = 0; i < this.vctrl.users.length; i++) {
-                        if (this.vctrl.users[i].id === annotation.user_id) {
-                            this.vctrl.changeUser(this.vctrl.users[i], false);
-                            break;
-                        }
-                    }
-
-                }
-
-                setTimeout(() => {
-                    ab = angular.element(parent.getElementsByTagName("ANSWERBROWSER")[0]);
-                    const abscope = ab.isolateScope().$ctrl;
-                    abscope.review = true;
-                    abscope.setAnswerById(annotation.answer_id);
-
-                    setTimeout(() => {
-                        const annotationElement = parent.querySelectorAll("annotation[aid='{0}']".replace("{0}", annotation.id.toString()))[0];
-                        angular.element(annotationElement).isolateScope<any>().actrl.showAnnotation();
-                        this.scope.$apply();
-                        scrollToElement(annotationElement);
-                    }, 500);
-                }, 300);
+        let annotationElement = parent.querySelectorAll(`annotation[aid='${annotation.id}']`)[0];
+        const isolateScope = angular.element(annotationElement).isolateScope<any>();
+        if (isolateScope) {
+            const actrl: AnnotationController | undefined = isolateScope.actrl;
+            if (actrl && (annotation.coord.start == null || actrl.show || !annotation.user_id)) {
+                if (actrl.show) scrollToWindow = false;
+                actrl.toggleAnnotationShow();
+                if (scrollToWindow && !isInViewport(annotationElement))
+                    scrollToElement(annotationElement);
+                //addAnnotationToElement(par, annotation, false, "Added also margin annotation");
+                return;
             }
         }
+
+        // Find answer browser and its scope
+        // set answer id -> change answer to that
+        // query selector element -> toggle annotation
+        let ab: any = parent.getElementsByTagName("ANSWERBROWSER")[0];
+
+        if (typeof ab === UNDEFINED) {
+            const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
+            const ablis: AnswerBrowserLazyController = abl.isolateScope<any>().$ctrl;
+            ablis.loadAnswerBrowser();
+        }
+        if (this.vctrl.selectedUser.id !== annotation.user_id) {
+            for (let i = 0; i < this.vctrl.users.length; i++) {
+                if (this.vctrl.users[i].id === annotation.user_id) {
+                    this.vctrl.changeUser(this.vctrl.users[i], false);
+                    break;
+                }
+            }
+
+        }
+
+        let abtimeout = 300;
+        if (ab) abtimeout = 1;
+
+        await $timeout(abtimeout);
+
+        ab = angular.element(parent.getElementsByTagName("ANSWERBROWSER")[0]);
+        const abscope = ab.isolateScope().$ctrl;
+        let abscopetimeout = 500;
+        if (abscope.review && abscope.selectedAnswer && abscope.selectedAnswer.id === annotation.answer_id) abscopetimeout = 1;
+        else abscope.setAnswerById(annotation.answer_id);
+        abscope.review = true;
+
+        await $timeout(abscopetimeout);
+
+        annotationElement = parent.querySelectorAll(`annotation[aid='${annotation.id}']`)[0];
+        const ae = angular.element(annotationElement).isolateScope<any>().actrl;
+        // ae.toggleAnnotationShow();
+        // TODO: tutki ylimääräinen show ja miten saadaan toggleksi.
+        ae.showAnnotation();
+        // if ( abscopetimeout > 1 && scrollToWindow) scrollToElement(annotationElement);
+        if (scrollToWindow && !isInViewport(annotationElement)) scrollToElement(annotationElement);
     }
 }
 

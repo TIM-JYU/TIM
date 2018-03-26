@@ -1,4 +1,5 @@
 <!-- Pop over element --><span class="annotation-element"><span   ng-init="actrl.showHidden=actrl.newannotation" ng-show="actrl.show" ng-click="actrl.updateVelpZIndex()"
+                                                                  class="no-popup-menu"
                                                                 ng-class="['annotation-info', 'emphasise', 'default', {neutral: actrl.annotation.points == 0, negative: actrl.annotation.points<0, positive: actrl.annotation.points > 0}]"
                                                                 ng-keydown="actrl.keyDownFunc($event)" ng-keyup="actrl.keyUpFunc($event)"
                                                                 ng-style="{backgroundColor: actrl.getCustomColor()}">
@@ -8,7 +9,7 @@
             <p ng-show="actrl.showHidden"><a class="username" href="mailto:{{ actrl.annotation.email }}">{{ actrl.annotation.annotator_name }}</a>
                     <span class="timestamp" title="{{ actrl.annotation.creationtime }}">{{ actrl.annotation.timesince }}</span></p>
         </span>
-        <span class="div-10">
+        <span class="div-10 no-popup-menu">
             <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon closeAnn"
                   ng-click="actrl.toggleAnnotation();actrl.showHidden=false"></span>
         </span>
@@ -99,6 +100,6 @@
     </div>
 
 </span></span><!--
-Highlighted text--><span ng-click="actrl.showHidden=false;actrl.toggleAnnotation()" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
+Highlighted text--><span ng-click="actrl.showHidden=false;actrl.toggleAnnotation()" class="no-popup-menu" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
 {neutral: actrl.annotation.points == 0, negative: actrl.annotation.points < 0, positive: actrl.annotation.points > 0}]" ng-transclude
 ng-style="{backgroundColor: actrl.getCustomColor()}"></span>

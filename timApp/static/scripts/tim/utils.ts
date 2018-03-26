@@ -56,6 +56,23 @@ export function checkIfElement(x: any): x is Element {
 }
 
 /**
+ * Check if element is in view
+ * @method isInViewport
+ * @param el - Element to check
+ * @returns {boolean} true if in view
+ */
+export function isInViewport(el: Element) {
+    const rect = el.getBoundingClientRect();
+
+    return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+}
+
+/**
  * Scroll window to the given element.
  * @method scrollToElement
  * @param element - Element to scroll to.

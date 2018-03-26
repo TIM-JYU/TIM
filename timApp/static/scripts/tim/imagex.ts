@@ -46,7 +46,7 @@ imagexApp.directiveFunction = function() {
     };
 };
 
-function FreeHand(emt) {
+function FreeHand(scope) {
     this.params = {};
     this.params.w = 2;
     this.params.color = "Red";
@@ -54,7 +54,8 @@ function FreeHand(emt) {
     this.prevPos = null;
     this.freeDrawing = [];
     this.redraw = null;
-    this.emotion = emt;
+    this.emotion = scope.emotion;
+    this.scope = scope;
     this.videoPlayer = {currentTime: 1e60, fakeVideo: true};  // fake
 }
 
@@ -63,6 +64,9 @@ FreeHand.prototype.draw = function(ctx) {
         if (teacherMode)
             if (this.videoPlayer.fakeVideo)
                 drawCirclesVideo(ctx, this.freeDrawing, this.videoPlayer);
+            else if ( this.scope.analyzeDot )
+                //Siirrä johonkin missä kutsutaan vain kerran.
+                this.videoPlayer.ontimeupdate = drawCirclesVideoDot.bind(this, ctx, this.freeDrawing, this.videoPlayer);
             else
                 //Siirrä johonkin missä kutsutaan vain kerran.
                 this.videoPlayer.ontimeupdate = drawCirclesVideo.bind(this, ctx, this.freeDrawing, this.videoPlayer);
@@ -200,17 +204,19 @@ function pad(num, size) {
     return s.substr(s.length-size);
 }
 
-function dateToString(d) {
+function dateToString(d,h) {
     const t = new Date(d * 1000);
     //return t.toLocaleTimeString('fi-FI');
     //return t.format("HH:mm:ss.f");
-    return pad(t.getHours(),2) + ":" + pad(t.getMinutes(),2) + ":" + pad(t.getSeconds(),2) + "." + pad(t.getMilliseconds(),3);
+    var hs = "";
+    if ( h ) hs =  pad(t.getHours(),2) + ":";
+    return hs + pad(t.getMinutes(),2) + ":" + pad(t.getSeconds(),2) + "." + pad(t.getMilliseconds(),3);
 }
 
-function drawText(ctx, s, x, y) {
+function drawText(ctx, s, x, y, font = "10px Arial") {
     ctx.save();
     ctx.textBaseline = "top";
-    ctx.font = "10px Arial";
+    ctx.font = font;
     const width = ctx.measureText(s).width;
     ctx.fillStyle = "#ffff00";
     ctx.fillRect(x, y, width + 1, parseInt(ctx.font, 10));
@@ -219,22 +225,81 @@ function drawText(ctx, s, x, y) {
     ctx.restore();
 }
 
-function drawCirclesVideo(ctx, dr, videoPlayer) {
+function showTime(ctx, vt, x, y, font) {
+    ctx.beginPath();
+    const s = dateToString(vt, false);
+    drawText(ctx, s, x, y, font);
+    ctx.stroke();
+}
+
+
+function drawCirclesVideoDot(ctx, dr, videoPlayer) {
     for (let dri = 0; dri < dr.length; dri++) {
         const seg = dr[dri];
-        if (seg.lines.length < 2) continue;
+        var vt =  videoPlayer.currentTime;
+        // console.log("vt: " + vt + " " + this.scope.lastDrawnSeg );
+        var seg1 = -1;
+        var seg2 = 0;
+        var s = "";
+        for (let lni = 0; lni < seg.lines.length; lni++) {
+            if (vt < seg.lines[lni][3])
+                break;
+            seg1 = seg2;
+            seg2 = lni;
+        }
+
+        showTime(ctx, vt, 0, 0, "13px Arial");
+
+        // console.log("" + seg1 + "-" + seg2 + ": " + seg.lines[seg2][3]);
+        if ( this.scope.lastDrawnSeg == seg2 ) return;
+        this.scope.lastDrawnSeg = -1;
+        this.scope.draw();
+        showTime(ctx, vt, 0, 0, "13px Arial");
+        if ( seg1 < 0 ) return;
+
+        // console.log("" + seg1 + "-" + seg2 + ": " + seg.lines[seg2][3]);
+
+
+        ctx.beginPath();
+        this.scope.drawFillCircle(ctx, 30, seg.lines[seg2][0], seg.lines[seg2][1], "black", 0.5);
+        ctx.strokeStyle = seg.color;
+        ctx.lineWidth = seg.w;
+        ctx.moveTo(seg.lines[seg1][0], seg.lines[seg1][1]);
+        if ( this.scope.drawLast )
+            ctx.lineTo(seg.lines[seg2][0], seg.lines[seg2][1]);
+        s = dateToString(seg.lines[seg2][3], false);
+        drawText(ctx, s, seg.lines[seg2][0], seg.lines[seg2][1], "13px Arial");
+
+        ctx.stroke();
+        this.scope.lastDrawnSeg = seg2;
+    }
+}
+
+
+function drawCirclesVideo(ctx, dr, videoPlayer) {
+    if ( !videoPlayer.fakeVideo ) this.scope.draw();
+    const vt = videoPlayer.currentTime;
+    for (let dri = 0; dri < dr.length; dri++) {
+        const seg = dr[dri];
+        if (seg.lines.length < 1) continue;
+        var s = "";
         ctx.beginPath();
         ctx.strokeStyle = seg.color;
         ctx.lineWidth = seg.w;
         ctx.moveTo(seg.lines[0][0], seg.lines[0][1]);
-        let s = dateToString(seg.lines[0][2]);
-        drawText(ctx, s, seg.lines[0][0], seg.lines[0][1]);
+        if (videoPlayer.fakeVideo) {
+            s = dateToString(seg.lines[0][2], true);
+            drawText(ctx, s, seg.lines[0][0], seg.lines[0][1]);
+        } else {
+            if (vt >= seg.lines[0][3])
+                this.scope.drawFillCircle(ctx, 5, seg.lines[0][0], seg.lines[0][1], "black", 0.5);
+        }
         for (let lni = 1; lni < seg.lines.length; lni++) {
-            if (videoPlayer.currentTime < seg.lines[lni][3])
+            if (vt < seg.lines[lni][3])
                 break;
             ctx.lineTo(seg.lines[lni][0], seg.lines[lni][1]);
             if (videoPlayer.fakeVideo) {
-                s = dateToString(seg.lines[lni][2]);
+                s = dateToString(seg.lines[lni][2],true);
                 drawText(ctx, s, seg.lines[lni][0], seg.lines[lni][1]);
             }
         }
@@ -313,10 +378,12 @@ imagexApp.directiveTemplate = function() {
 
 imagexApp.initDrawing = function(scope, canvas) {
 
-    //piirtää ympyrän
+    //  piirtää ympyrän
+    //  ctx on joko canvas tai ctx
     function drawFillCircle(ctx, r, p1, p2, c, tr) {
         if (!p1 || !p2) return;
-        const p = ctx.getContext("2d");
+        var p = ctx;
+        if ( p. getContext ) p = ctx.getContext("2d");
         p.globalAlpha = tr;
         p.beginPath();
         p.fillStyle = c;
@@ -419,6 +486,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         this.drawObjects = [];
         this.activeDragObject = null;
         this.mousePosition = {x: 0, y: 0};
+        scope.drawFillCircle = drawFillCircle;
         this.freeHand = scope.freeHandDrawing;
         let topmostIndex;
         let topmostElement;
@@ -490,6 +558,7 @@ imagexApp.initDrawing = function(scope, canvas) {
         }.bind(this);
 
         this.interval = setTimeout(this.draw, 20);
+        scope.draw = this.draw;
 
         let mouseDown = false;
 
@@ -1199,7 +1268,7 @@ imagexApp.initDrawing = function(scope, canvas) {
                     this.textBoxY = - objectValues.pinPosition.off.y
                         - objectValues.pinPosition.y;
                 }
-                else if (objectValues.name === "fixedobject") {
+                else if (objectValues.name === "fixedobject" && objectValues.type === "textbox") {
                     this.textBoxX = objectValues.x;
                     this.textBoxY = objectValues.y;
                 }
@@ -1489,6 +1558,7 @@ imagexApp.initScope = function(scope, element, attrs) {
     timHelper.set(scope, attrs, "stem");
     timHelper.set(scope, attrs, "user_id");
     timHelper.set(scope, attrs, "emotion", false);
+    timHelper.set(scope, attrs, "drawLast", false);
     timHelper.set(scope, attrs, "autosave", false);
     timHelper.set(scope, attrs, "followid", "");
     timHelper.set(scope, attrs, "button", "Save");
@@ -1519,7 +1589,7 @@ imagexApp.initScope = function(scope, element, attrs) {
     timHelper.set(scope, attrs, "preview", scope.attrs.preview);
 
     // Free hand drawing things:
-    scope.freeHandDrawing = new FreeHand(scope.emotion);
+    scope.freeHandDrawing = new FreeHand(scope);
     const vp = $window.videoApp && videoApp.videos[scope.followid];
     if (vp) {
         scope.freeHandDrawing.videoPlayer = vp;
@@ -1541,6 +1611,7 @@ imagexApp.initScope = function(scope, element, attrs) {
     timHelper.set(scope, attrs, "freeHandWidth", scope.freeHandDrawing.params.w);
     timHelper.set(scope, attrs, "state.freeHandData", null);
     timHelper.set(scope, attrs, "state.freeHandData", null);
+    timHelper.set(scope, attrs, "analyzeDot", false);
 
     scope.w = scope.freeHandWidth;
     scope.color = scope.freeHandColor;

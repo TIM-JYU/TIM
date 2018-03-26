@@ -3,7 +3,7 @@ import $ from "jquery";
 import moment from "moment";
 import {$http, $log, $timeout, $window} from "../../ngimport";
 import {Users} from "../../services/userService";
-import {markPageDirty} from "../../utils";
+import {isInViewport, markPageDirty} from "../../utils";
 import {getActiveDocument} from "./document";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {getArea, getParId, getRefAttrs, isReference} from "./parhelpers";
@@ -126,17 +126,6 @@ function readlineHandler($this: JQuery, e: Event) {
     return true;
 }
 
-function isInScreen(el: Element) {
-    const rect = el.getBoundingClientRect();
-
-    return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-    );
-}
-
 export function initReadings(sc: ViewCtrl) {
     onClick(".readline", readlineHandler);
 
@@ -167,7 +156,7 @@ export function initReadings(sc: ViewCtrl) {
         return false;
     });
 
-    ($ as any).expr[":"].onScreen = isInScreen;
+    ($ as any).expr[":"].onScreen = isInViewport;
 
     $($window).scroll(queueParagraphForReading);
 

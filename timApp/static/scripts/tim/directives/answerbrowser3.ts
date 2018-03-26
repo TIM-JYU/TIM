@@ -52,7 +52,7 @@ function loadPlugin(html: string, $par: JQuery, scope: IScope) {
     }, 500);
 }
 
-class AnswerBrowserLazyController implements IController {
+export class AnswerBrowserLazyController implements IController {
     private static $inject = ["$element", "$scope"];
     private compiled: boolean;
     private element: IRootElementService;
@@ -280,6 +280,7 @@ export class AnswerBrowserController implements IController {
             this.skipAnswerUpdateForId = undefined;
             return;
         }
+        this.parContent.css("opacity", "1.0");
         this.skipAnswerUpdateForId = undefined;
         this.updatePoints();
         const $par = this.element;
@@ -478,16 +479,20 @@ export class AnswerBrowserController implements IController {
                 if (data.length > 0 && (this.hasUserChanged() || data.length !== (this.answers || []).length)) {
                     this.answers = data;
                     this.updateFiltered();
-                    this.selectedAnswer = this.filteredAnswers[0];
+                    this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
                     this.updatePoints();
-                    if (!updateHtml) {
-                        // The selectedAnswer assignment causes changeAnswer to be called (by Angular),
-                        // but we don't want to update it again because it was already updated.
-                        this.skipAnswerUpdateForId = this.selectedAnswer.id;
-                    } else if (this.fetchedUser && this.user && this.user.id !== this.fetchedUser.id) {
-                        // If user was changed, apparently changeAnswer isn't called by Angular (because the whole
-                        // collection is modified).
-                        this.changeAnswer();
+                    if (!this.selectedAnswer) {
+                        this.dimPlugin();
+                    } else {
+                        if (!updateHtml) {
+                            // The selectedAnswer assignment causes changeAnswer to be called (by Angular),
+                            // but we don't want to update it again because it was already updated.
+                            this.skipAnswerUpdateForId = this.selectedAnswer.id;
+                        } else if (this.fetchedUser && this.user && this.user.id !== this.fetchedUser.id) {
+                            // If user was changed, apparently changeAnswer isn't called by Angular (because the whole
+                            // collection is modified).
+                            this.changeAnswer();
+                        }
                     }
                 } else {
                     this.answers = data;

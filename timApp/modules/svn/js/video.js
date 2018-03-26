@@ -133,6 +133,7 @@ videoApp.directiveFunction = function(t) {
             timHelper.set(scope,attrs,".followid");
             timHelper.set(scope,attrs,".autoplay", true);
 			timHelper.set(scope,attrs,".open",false);
+			timHelper.set(scope,attrs,".iframeopts", "");
             if ( scope.videoicon === "False" || !scope.videoicon ) scope.videoicon = "";
             if ( scope.docicon === "False" || !scope.docicon  ) scope.docicon = "";
 			scope.start = videoApp.muunna(scope.attrs.start);
@@ -270,7 +271,7 @@ videoApp.Controller = function($scope,$http,$transclude,$element) {
                     file = yembed + parts[1];
                 else if ( iy >= 0 ) file = yembed + file.substring(iy+yname.length);
             }
-			$scope.videoHtml.innerHTML = '<iframe id="'+vid+'" class="showVideo" src="' + file + t +  '" ' + w + h + '  frameborder="0" allowfullscreen></iframe>';
+			$scope.videoHtml.innerHTML = '<iframe id="'+vid+'" class="showVideo" src="' + file + t +  '" ' + w + h + '  frameborder="0" allowfullscreen'+$scope.iframeopts+'></iframe>';
 			// '&rel=0'+
 			// youtube: <iframe width="480" height="385" src="//www.youtube.com/embed/RwmU0O7hXts" frameborder="0" allowfullscreen></iframe>
 		} else  { 

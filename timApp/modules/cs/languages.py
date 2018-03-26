@@ -111,7 +111,11 @@ class Language:
         return err
 
     def runself(self, args, cwd=None, shell=None, kill_tree=None, timeout=None, env=None, stdin=None, uargs=None,
-                code=None, extra=None, ulimit=None, no_x11=None, savestate=None, dockercontainer=None):
+                code=None, extra=None, ulimit=None, no_x11=None, savestate=None, dockercontainer=None,
+                no_uargs=False):
+        uargs = df(uargs, self.userargs)
+        if no_uargs:
+            uargs = None
         return run2(args,
                     cwd=df(cwd, self.prgpath),
                     shell=df(shell, False),
@@ -119,7 +123,7 @@ class Language:
                     timeout=df(timeout, self.timeout),
                     env=df(env, self.env),
                     stdin=df(stdin, self.stdin),
-                    uargs=df(uargs, self.userargs),
+                    uargs=uargs,
                     code=df(code, "utf-8"),
                     extra=df(extra, ""),
                     ulimit=df(ulimit, self.ulimit),
@@ -346,6 +350,24 @@ class Java(Language):
         return code, out, err, pwddir
 
 
+class Kotlin(Java):
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.fileext = "kt"
+        self.filename = self.classname + "." + self.fileext
+        self.javaname = self.filepath + "/" + self.filename
+        self.sourcefilename = self.javaname
+        self.jarname = self.classname + ".jar"
+
+    def get_cmdline(self, sourcecode):
+        return "kotlinc  %s -include-runtime -d %s" % (self.filename, self.jarname)
+
+    def run(self, web, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(["java", "-jar", self.jarname],
+                                              ulimit=df(self.ulimit, "ulimit -f 10000"))
+        return code, out, err, pwddir
+
+
 def check_comtest(self, ttype, code, out, err, web, points_rule):
     eri = -1
     out = remove_before("Execution Runtime:", out)
@@ -412,7 +434,7 @@ class JComtest(Java):
         return "java comtest.ComTest %s && javac %s %s" % (self.sourcefilename, self.sourcefilename, self.testcs)
 
     def run(self, web, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.testdll])
+        code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.testdll], no_uargs=True)
         out, err = check_comtest(self, "jcomtest", code, out, err, web, points_rule)
         return code, out, err, pwddir
 
@@ -507,6 +529,25 @@ class CComtest(Language):
         code, out, err, pwddir = self.runself(["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", self.testcs])
         out, err = check_comtest(self, "ccomtest", code, out, err, web, points_rule)
         return code, out, err, pwddir
+
+
+class Fortran(Language):
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        extension = os.path.splitext(self.filename)[1]
+        if extension.startswith(".f"):
+            self.fileext = extension[1:]
+            self.sourcefilename = "/tmp/%s/%s" % (self.basename, self.filename)
+        else:
+            self.fileext = 'f'
+            self.sourcefilename = "/tmp/%s/%s.f" % (self.basename, self.filename)
+        self.compiler = "gfortran"
+
+    def get_cmdline(self, sourcecode):
+        return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sourcefilename, self.exename)
+
+    def run(self, web, sourcelines, points_rule):
+        return self.runself([self.pure_exename])
 
 
 class PY3(Language):
@@ -924,3 +965,5 @@ languages["octave"] = Octave
 languages["processing"] = Processing
 languages["wescheme"] = WeScheme
 languages["ping"] = Ping
+languages["kotlin"] = Kotlin
+languages["fortran"] = Fortran

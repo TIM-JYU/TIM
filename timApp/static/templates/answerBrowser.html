@@ -52,7 +52,7 @@
                     <span ng-show="$ctrl.showTeacher()"> | <a ng-click="$ctrl.getAllAnswers()">All answers</a></span>
                 </div>
             </div>
-            <div class="row">
+            <div class="row" ng-show="$ctrl.selectedAnswer">
                 <div class="col-xs-12">
                     <form ng-submit="$ctrl.savePoints()" class="point-form form-inline">
                         <label ng-show="$ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())">
@@ -105,7 +105,7 @@
 
             </div>
         </div>
-        <span class="triesLeft" ng-show="$ctrl.taskInfo.answerLimit && $ctrl.taskInfo.triesText">{{ $ctrl.taskInfo.triesText }} {{ $ctrl.getTriesLeft() }}</span>
+        <span class="triesLeft" ng-show="$ctrl.taskInfo.answerLimit && $ctrl.taskInfo.triesText && $ctrl.selectedAnswer">{{ $ctrl.taskInfo.triesText }} {{ $ctrl.getTriesLeft() }}</span>
         <span ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">(no answers)</span>
     </div>
     <span ng-show="$ctrl.taskInfo.starttime || $ctrl.taskInfo.deadline">

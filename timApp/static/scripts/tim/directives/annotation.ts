@@ -19,10 +19,11 @@ import {ReviewController} from "../controllers/reviewController";
 import {IUser} from "../IUser";
 import {$http, $window} from "../ngimport";
 import {IAnnotation, IAnnotationCoordless} from "./velptypes";
+import {showMessageDialog} from "../dialog";
 
 const UNDEFINED = "undefined";
 
-class AnnotationController implements IController {
+export class AnnotationController implements IController {
     private static $inject = ["$scope", "$element"];
     private ctrlKey: number;
     private ctrlDown: boolean;
@@ -37,7 +38,7 @@ class AnnotationController implements IController {
     private element: IRootElementService;
     private velpElement: HTMLElement;
     private showHidden: boolean;
-    private show: boolean;
+    public show: boolean;
     private showStr: string;
     private original: {
         points: number | null;
@@ -141,23 +142,12 @@ class AnnotationController implements IController {
         if (this.velpElement.parentElement == null) {
             return;
         }
-        const elementName = this.velpElement.parentElement.offsetParent.className;
-        const annotationElements = document.querySelectorAll('[aid="{0}"]'.replace("{0}", this.annotation.id.toString()));
-
-        this.toggleAnnotationShow();
-
-        if (elementName === "notes" && annotationElements.length > 1) {
-            for (let i = 0; i < annotationElements.length; i++) {
-                const e = annotationElements[i].parentNode as HTMLElement;
-                if (e.offsetParent.className !== "notes") {
-                    angular.element(
-                        annotationElements[i],
-                    ).isolateScope<any>().actrl.toggleAnnotationShow();
-                    this.toggleAnnotationShow();
-                }
-            }
+        const a = this.rctrl.getAnnotationById(this.annotation.id);
+        if (!a) {
+            showMessageDialog(`Could not annotation with id ${this.annotation.id}`);
+            return;
         }
-
+        this.rctrl.toggleAnnotation(a, false);
     }
 
     toggleAnnotationShow() {
