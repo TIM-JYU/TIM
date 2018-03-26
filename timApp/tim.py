@@ -79,7 +79,7 @@ from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import NoSuchUserException
 
 import timApp.tools.pdftools  # for pdf stamp & merge testing
-from uuid import uuid4  # for pdf stamp & merge testing
+# from uuid import uuid4  # for pdf stamp & merge testing
 
 import timApp.plugin
 
@@ -200,62 +200,6 @@ def empty_response_route():
     return Response('', mimetype='text/plain')
 
 
-# testing route for pdftools.py
-@app.route('/pdftest')
-def test_pdf():
-    pdftestdata = [
-        {'file': "static/testpdf/wlan.pdf",
-         'date': "9.3.2018", 'attachment': "A", 'issue': "3"},
-        {'file': "static/testpdf/TIM-esittely.pdf",
-         'text': "LEIMATEKSTIN\n\nvoi valita\n\ntäysin vapaasti!"}
-    ]
-    output_name = f"static/testpdf/{uuid4()}.pdf"
-    try:
-        timApp.tools.pdftools.stamp_merge_pdfs(pdftestdata, output_name)
-    except Exception as e:
-        message = repr(e)
-        abort(404, message)
-    else:
-        return send_file(output_name, mimetype="application/pdf")
-
-
-# testing route for pdftools.py
-@app.route('/pdfstamptest')
-def test_pdf_stamp():
-    pdftestdata = [
-        {'file': "static/testpdf/wlan.pdf",
-         'date': "9.3.2018", 'attachment': "A", 'issue': "3"},
-        {'file': "static/testpdf/TIM-esittely.pdf",
-         'text': "LEIMATEKSTIN\n\nvoi valita\n\ntäysin vapaasti!"}
-    ]
-    try:
-        paths = timApp.tools.pdftools.stamp_merge_pdfs(pdftestdata, "", merge=False)
-    except Exception as e:
-        message = repr(e)
-        abort(404, message)
-    else:
-        abort(404, repr(paths))
-
-
-# testing route for pdftools.py
-@app.route('/pdfmergetest')
-def test_pdfmerge():
-    output_name = f"static/testpdf/{uuid4()}.pdf"
-    files = ['static/testpdf/13dae5e4-8608-4f2d-b25e-85ad64d758dd_1_stamped.pdf',
-            'static/testpdf/13dae5e4-8608-4f2d-b25e-85ad64d758dd_2_stamped.pdf',
-            'static/testpdf/13dae5e4-8608-4f2d-b25e-85ad64d758dd_3_stamped.pdf',
-            'static/testpdf/13dae5e4-8608-4f2d-b25e-85ad64d758dd_4_stamped.pdf',
-            'static/testpdf/13dae5e4-8608-4f2d-b25e-85ad64d758dd_5_stamped.pdf',
-            'static/testpdf/13dae5e4-8608-4f2d-b25e-85ad64d758dd_6_stamped.pdf']
-    try:
-        timApp.tools.pdftools.merge_pdf(files, output_name)
-    except Exception as e:
-        message = repr(e)
-        abort(404, message)
-    else:
-        return send_file(output_name, mimetype="application/pdf")
-
-
 # testing route for processing pdf attachments
 @app.route('/processAttachments/<path:doc>')
 def process_attachments(doc):
@@ -272,6 +216,11 @@ def process_attachments(doc):
                 plugin_creature = timApp.plugin.Plugin.from_paragraph(par)
                 par_data = plugin_creature.values
                 par_file = par_data["file"]
+
+                # TODO: check if 'file' is a TIM upload
+                # currently adding TIM's url prefix (http://192.168.99.100/)
+                # to it works: file'll be downloaded like any other url link
+
                 # if attachment is url link, download it to temp folder and operate the
                 # downloaded file
                 if timApp.tools.pdftools.is_url(par_file):
@@ -281,15 +230,21 @@ def process_attachments(doc):
                 pdf_stamp_data += [par_data]
                 print(repr(par_data))
 
-        output_name = f"static/testpdf/{uuid4()}.pdf"
-        # TODO: can't find files uploaded to TIM
-        # TODO: raises FileNotFoundError if an error occurs inside try-finally block in pdftools?
-        timApp.tools.pdftools.stamp_merge_pdfs(pdf_stamp_data, output_name)
+        # uses document name as the base of the merged file name
+        # TODO: give user option to set it manually?
+        output_path = f"static/testpdf/{doc}_merged.pdf"
+
+        # if merge=False, would return a list of paths of the stamped pdfs
+        output = timApp.tools.pdftools.stamp_merge_pdfs(
+            pdf_stamp_data,
+            output_path,
+            merge=True)
+        print(output)
     except Exception as e:
         message = repr(e)
         abort(404, message)
     else:
-        return send_file(output_name, mimetype="application/pdf")
+        return send_file(output_path, mimetype="application/pdf")
 
 
 # route for creating extracts of faculty council minutes

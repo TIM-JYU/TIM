@@ -1,7 +1,7 @@
 from subprocess import Popen, PIPE, run as subprocess_run
 from os import remove, path as os_path
 from typing import Union, List
-from uuid import uuid4
+# from uuid import uuid4
 from urllib import request as url_request
 from urllib.error import HTTPError
 
@@ -16,11 +16,10 @@ Visa Naukkarinen
 temp_folder_default_path = "static/testpdf"
 stamp_model_default_path = "static/tex/stamp_model.tex"
 # default format for stamp text
-default_stamp_format = "Kokous {1}\n\nLiite {2} asia {3}"
+default_stamp_format = "Kokous {1}\n\nLiite {2} lista {3}"
 # how long (seconds) subprocess can take until TimeoutExpired
 default_subprocess_timeout = 10
 pdfmerge_timeout = 300
-
 
 ##############################################################################
 # Custom error classes:
@@ -81,18 +80,33 @@ class AttachmentNotFoundError(PdfError):
         self.file_path = file_path
 
 
+class StampFileNotFoundError(PdfError):
+    """
+    Raised when stamp to use is missing.
+    """
+
+    def __init__(self, file_path: str = ""):
+        """
+        :param file_path: path of the stamp file that caused the error
+        """
+        self.file_path = file_path
+
+
 class StampDataInvalidError(PdfError):
     """
     Raised if stamp data type is wrong
     """
 
-    def __init__(self, reason: str = "", item: Union[str, dict] = ""):
+    def __init__(self, reason: str = "", item: Union[str, dict, List[dict]] = ""):
         """
         :param reason: error cause
-        :param item: item that caused the error
+        :param item: item or data that caused the error
         """
         self.reason = reason
         self.item = item
+
+    def __str__(self):
+        return self.reason + ": " + repr(self.item)
 
 
 class StampDataMissingKeyError(PdfError):
@@ -107,6 +121,9 @@ class StampDataMissingKeyError(PdfError):
         """
         self.key = key
         self.item = item
+
+    def __str__(self):
+        return repr(self.key) + " not found: " + repr(self.item)
 
 
 class StampDataEmptyError(PdfError):
@@ -172,7 +189,7 @@ def get_stamp_text(
         # normally this part is obsolete, since checks have been done before
         except KeyError:
             raise StampDataMissingKeyError('text', item)
-    # if input data wasn't dictionary
+    # if input data wasn't a dictionary
     except TypeError:
         raise StampDataInvalidError("wrong type", item)
 
@@ -181,7 +198,8 @@ def create_stamp(
         model_path: str,
         work_dir: str,
         stamp_name: str,
-        text: str) -> str:
+        text: str,
+        remove_pdflatex_files: bool=False) -> str:
     """
     Creates a stamp pdf-file with given text into temp folder
     :param model_path: model stamp tex-file's complete path; contains
@@ -189,13 +207,17 @@ def create_stamp(
     :param work_dir: the folder where stamp output and temp files will be
     :param stamp_name: name of the stamp and temp files (no file extension)
     :param text: text displayed in the stamp
+    :param remove_pdflatex_files: if true, newly created .aux, .log, .out and
+           .tex files will be deleted
     :return: complete path of the created stamp pdf-file
     """
     try:
         stamp_model = open(model_path, "r")
+
     # raises custom error if stamp_model is missing
     except FileNotFoundError:
         raise ModelStampMissingError()
+
     with stamp_model, open(os_path.join(work_dir, stamp_name + ".tex"),
                            "w+", encoding='utf-8') as stamp_temp:
         try:
@@ -210,7 +232,8 @@ def create_stamp(
             raise ModelStampInvalidError(model_path)
     args = ["pdflatex", stamp_name]
     print(args)
-    # direct pdflatex text flood to the log-file pdflatex will create anyway
+
+    # directs pdflatex text flood to the log-file pdflatex will create anyway
     with open(os_path.join(work_dir, stamp_name + ".log"), "a") as pdflatex_log:
         try:
             # pdflatex can't write files outside of work dir so use cwd
@@ -224,20 +247,39 @@ def create_stamp(
                 raise SubprocessError(" ".join(args))
         except FileNotFoundError:
             raise SubprocessError(" ".join(args))
+
+    # optional; delete the files pdflatex created, except the stamp-pdf file,
+    # which is obviously needed for stamping
+    if remove_pdflatex_files:
+        remove_temp_files(
+            work_dir,
+            stamp_name,
+            [".aux", ".log", ".out", ".tex"])
     return work_dir + stamp_name + ".pdf"
 
 
-def stamp_pdf(pdf_path: str, stamp_path: str, output_path: str) -> str:
+def stamp_pdf(
+        pdf_path: str, stamp_path: str, output_path: str,
+        remove_stamp: bool = False) -> str:
     """
     Creates a new stamped pdf file (with stamp overlay on each page)
     :param pdf_path:
     :param stamp_path:
     :param output_path:
+    :param remove_stamp: delete stamp file after use
     :return: output_path
     """
+    if not os_path.exists(pdf_path):
+        raise AttachmentNotFoundError(pdf_path)
+    if not os_path.exists(stamp_path):
+        raise StampFileNotFoundError(stamp_path)
     args = ["pdftk", pdf_path, "stamp", stamp_path, "output", output_path]
     print(args)
     call_popen(args)
+
+    # optionally clean up the stamp-pdf after use
+    if remove_stamp:
+        remove(stamp_path)
     return output_path
 
 
@@ -246,12 +288,13 @@ def call_popen(args: List[str], timeout_seconds=default_subprocess_timeout) -> N
     Calls Popen with args list, checks return code and
     raises error if timeouted.
     :param args: List of arguments
+    :param timeout_seconds: timeout after which error is raised
     :return: None
     """
     try:
         p = Popen(args, stdout=PIPE)
-        streamdata = p.communicate(timeout=timeout_seconds)[0]
-        # print(str(streamdata))
+        stream_data = p.communicate(timeout=timeout_seconds)[0]
+        print(str(stream_data))
         rc = p.returncode
         if rc != 0:
             raise SubprocessError(" ".join(args))
@@ -260,19 +303,14 @@ def call_popen(args: List[str], timeout_seconds=default_subprocess_timeout) -> N
 
 
 def remove_temp_files(
-        dir_path: str,
-        temp_file_name: str,
-        remove_stamped: bool = True) -> None:
+        dir_path: str, temp_file_name: str, ext_list: List[str]) -> None:
     """
     Deletes temp files created for the stamping process
     :param dir_path: temp-file folder path
     :param temp_file_name: common part of the names
-    :param remove_stamped: if true will delete stamped pdfs
+    :param ext_list: list of extensions after common part for files to remove
     :return: None
     """
-    ext_list = [".aux", ".log", ".out", ".pdf", ".tex"]
-    if remove_stamped:
-        ext_list += ["_stamped.pdf"]
     # fail_list = []
     for ext in ext_list:
         try:
@@ -292,7 +330,7 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
     """
     # not a list
     if type(stamp_data) is not list:
-        raise StampDataInvalidError("is not a list")
+        raise StampDataInvalidError("is not a list", stamp_data)
     # if empty
     if not stamp_data:
         raise StampDataEmptyError()
@@ -329,10 +367,11 @@ def is_url(string: str) -> bool:
         return False
 
 
-def download_file_from_url(url: str, output_dir: str = temp_folder_default_path) -> str:
+def download_file_from_url(
+        url: str,
+        output_dir: str = temp_folder_default_path) -> str:
     """
     Downloads a file from url, keeps the filename same.
-    Potential errors include HTTPError
     :param url: file url
     :param output_dir: download folder
     :return: path of the saved file
@@ -363,7 +402,7 @@ def stamp_merge_pdfs(
         merged_file_path: str,
         dir_path: str = temp_folder_default_path,
         stamp_model_path: str = stamp_model_default_path,
-        merge: bool = True):
+        merge: bool = True) -> Union[str, List[str]]:
     """
     Creates stamps, stamps pdf-files and merges them into a single file.
     :param stamp_data: dict-list containing pdf-names and stamp-contents
@@ -374,17 +413,17 @@ def stamp_merge_pdfs(
     :return: merged_file_path or list of stamped
     """
     # uses 128-bit random string as temp name!
-    temp_file_name = str(uuid4()) + "_"
+    # temp_file_name = str(uuid4()) + "_"
     # a number counter to separate subsequent temp files
-    counter = 0
+    # counter = 0
+
     # string that will have all stamped pdf paths (for pdftk)
-    stamped_pdf_paths = []
+    pdfs_to_merge = []
 
     # creates a new stamp and stamps the corresponding pdfs based on
     # the data-item in dictionary
     # check if temp-folder exists
     if not (os_path.isdir(dir_path) and os_path.exists(dir_path)):
-        # TODO: create a temp-dir if missing?
         raise TempFolderNotFoundError(dir_path)
 
     # check if model stamp exists
@@ -394,53 +433,54 @@ def stamp_merge_pdfs(
     # checks multiple potential problems and raises error if invalid
     check_stamp_data_validity(stamp_data)
 
-    try:
-        for item in stamp_data:
-            counter += 1
-            c = str(counter)
-            # the path for the current item's stamp
-            stamp_i_path = os_path.join(dir_path, temp_file_name + c + "_stamped.pdf")
-            create_stamp(stamp_model_path,
-                         dir_path,
-                         temp_file_name + c,
-                         get_stamp_text(item))
-            stamp_pdf(item['file'],
-                      os_path.join(dir_path, temp_file_name + c + ".pdf"),
-                      stamp_i_path)
-            # adds the created stamp's path to be used by the merge command
-            stamped_pdf_paths.append(stamp_i_path)
+    for item in stamp_data:
+        # TODO: check for duplicate file names and add numbers to avoid conflicts
+        # TODO: option to use random names for stamp or stamped files
 
-        if merge:
-            merge_pdf(stamped_pdf_paths, merged_file_path)
+        # names and paths of new files to use as params
+        item_basename = get_base_filename(item['file'], True)
+        item_stamp_name_no_ext = item_basename + "_stamp"
+        item_stamp_path = os_path.join(dir_path, item_stamp_name_no_ext + ".pdf")
+        item_stamped_name = item_basename + "_stamped.pdf"
+        item_stamped_path = os_path.join(dir_path, item_stamped_name)
 
-    # in any case delete all potential temp-files
-    except Exception as e:
-        print(repr(e))
-        raise e
-    finally:
-        for i in range(1, counter + 1):
-            c = str(i)
-            remove_temp_files(dir_path, temp_file_name + c, merge)
-        if merge:
-            return merged_file_path
-        else:
-            return stamped_pdf_paths
+        # set
+        create_stamp(stamp_model_path,
+                     dir_path,
+                     item_stamp_name_no_ext,
+                     get_stamp_text(item),
+                     remove_pdflatex_files=True)
 
+        # set to remove stamp-pdf after use
+        stamp_pdf(item['file'],
+                  item_stamp_path,
+                  item_stamped_path,
+                  remove_stamp=True)
+
+        # adds the created stamp's path to be used by the merge command
+        pdfs_to_merge.append(item_stamped_path)
+
+    # TODO: returns both the merged file and stamped individual files (tuple?)
+    if merge:
+        merge_pdf(pdfs_to_merge, merged_file_path)
+        return merged_file_path
+    else:
+        return pdfs_to_merge
 
 ##############################################################
 # Testing/examples (may be outdated):
+
 
 """
 data = [
     # normal case
     {"file": "C:/Testi/testi1.pdf", "date": "20.12.2009", "attachment": "A", "issue": "2"},
     # allowed case
-    {"file": "C:/Testi/testi2.pdf", "text": "Sample text"},
+    {"file": "C:/Testi/testi2.pdf", "text": "Sample text \\newline with some LaTeX \\newline formatting"},
     # text will go out of bounds a little, but will compile
-    {"file": "C:/Testi/testi2.pdf", "text": "TOOOOOO LOOOOOONNNNGGGG TEEEEEEEXXXXTTTTTTTTTTTTT!"},
 ]
 
-output = "C:/Testi/temp/" + str(uuid4()) + ".pdf"
+output = "C:/Testi/merged.pdf"
 
 # Error test cases:
 
@@ -452,7 +492,8 @@ stamp_merge_pdfs([{"path": "C:/Testi/broken.pdf", "text": "If this ends up\nin s
 stamp_merge_pdfs([{"path": "C:/Testi/i_don't_exist.pdf", "text": "If this ends up\nin stamp, it's a mistake!"}], output)
 
 # Real cases:
-stamp_merge_pdfs(data, output)
+print(stamp_merge_pdfs(data, output, merge=True))
+
 
 create_stamp(
     "C:/Testi/stamp_model.tex",
@@ -460,4 +501,5 @@ create_stamp(
     "stamp",
     get_stamp_text(data[0], "Kokous {1}\n\nLIITE {2} lista {3}"))
 stamp_pdf("C:/Testi/testi1.pdf","C:/Testi/stamp.pdf","C:/Testi/stamped.pdf")
+
 """
