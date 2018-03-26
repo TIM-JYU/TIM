@@ -4,24 +4,24 @@
     </dialog-header>
     <dialog-body>
         <form name="clctrl.form" ng-keydown="clctrl.handleKey($event)">
-            <div class="form-group" tim-error-state>
+            <div class="form-group form-horz-flex" tim-error-state>
                 <label for="lCode">Lecture name</label>
                 <input type="text" class="form-control" name="code" id="lCode" required
                        ng-model="clctrl.lectureCode">
                 <tim-error-message></tim-error-message>
             </div>
-            <div class="form-group">
+            <div class="form-group form-horz-flex">
                 <label for="lPassword">Access code</label>
                 <input class="form-control" id="lPassword" type="text" name="password" ng-model="clctrl.password"
                        placeholder="Optional"/>
             </div>
-            <div class="form-group" tim-error-state>
+            <div class="form-group form-horz-flex" tim-error-state>
                 <label for="maxStudents">Max number of students</label>
                 <input class="form-control" max="999" min="0" id="maxStudents" type="number" name="max_students"
                        ng-model="clctrl.maxStudents" placeholder="Optional"/>
                 <tim-error-message></tim-error-message>
             </div>
-            <div class="form-group" tim-error-state>
+            <div class="form-group form-horz-flex" tim-error-state>
                 <label for="startTime" class="control-label">Starting time</label>
                 <div class="input-group">
                     <input type="text"
@@ -38,18 +38,19 @@
                 </div>
                 <tim-error-message></tim-error-message>
             </div>
-            <tim-alert severity="warning" ng-show="clctrl.startingBeforeNow()">Lecture start time is set in the past.</tim-alert>
+            <tim-alert severity="warning" ng-show="clctrl.startingBeforeNow()">Lecture start time is set in the past.
+            </tim-alert>
             <div class="checkbox" ng-show="clctrl.showEarlyJoin">
                 <label><input type="checkbox"
                               ng-model="clctrl.earlyJoining">
                     Allow students to join 15 minutes prior to the start of the lecture.</label>
             </div>
-            <label>
-                <input type="radio" name="useDate" ng-click="clctrl.enableDate2()"
-                       ng-model="clctrl.useDate"  ng-value="true"/>
-                Ending time
-            </label>
-            <div class="form-group" tim-error-state>
+            <div class="form-group form-horz-flex" tim-error-state>
+                <label>
+                    <input type="radio" name="useDate" ng-click="clctrl.enableDate2()"
+                           ng-model="clctrl.useDate" ng-value="true"/>
+                    Ending time
+                </label>
                 <div class="input-group">
                     <input type="text"
                            datetimepicker ng-model="clctrl.endTime"
@@ -65,19 +66,20 @@
                 <tim-error-message></tim-error-message>
             </div>
 
-            <label>
-                <input type="radio" name="useDate" ng-click="clctrl.enableDue2()"
-                       ng-model="clctrl.useDate" ng-value="false"/>
-                Duration
-            </label>
-            <div class="row">
+            <div class="form-horz-flex">
+                <label>
+                    <input type="radio" name="useDate" ng-click="clctrl.enableDue2()"
+                           ng-model="clctrl.useDate" ng-value="false"/>
+                    Duration
+                </label>
                 <tim-duration-picker disabled="clctrl.useDate"
                                      required="!clctrl.useDate"
                                      amount="clctrl.durationAmount"
                                      type="clctrl.durationType"></tim-duration-picker>
             </div>
             <tim-alert ng-show="clctrl.lectureTooShort()">Lecture must last at least two minutes.</tim-alert>
-            <tim-alert severity="warning" ng-show="clctrl.endingBeforeNow()">Lecture end time is set in the past.</tim-alert>
+            <tim-alert severity="warning" ng-show="clctrl.endingBeforeNow()">Lecture end time is set in the past.
+            </tim-alert>
             <div class="form-group">
                 <label for="lLink">Direct link to join lecture:</label>
                 <input class="form-control" ng-focus="clctrl.selectText($event)"
@@ -143,6 +145,7 @@
                 ng-disabled="!clctrl.form.$valid">Update
         </button>
         <button class="timButton"
-                ng-click="clctrl.cancelCreation()">Cancel</button>
+                ng-click="clctrl.cancelCreation()">Cancel
+        </button>
     </dialog-footer>
 </tim-dialog>
