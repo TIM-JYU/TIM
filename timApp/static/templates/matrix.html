@@ -33,7 +33,7 @@
         <td ng-if="$ctrl.qctrl.isAskedQuestion()" ng-bind-html="row.text">
         <td ng-if="!$ctrl.qctrl.isAskedQuestion()">
             <div class="pos-rel">
-                    <textarea required class="form-control questiontext" ng-model="row.text" rows="1"
+                    <textarea ng-required="$ctrl.qctrl.rows.length > 1" class="form-control questiontext" ng-model="row.text" rows="1"
                               id="{{ 'r'+row.id }}" name="{{'r'+row.id}}"></textarea>
                 <div class="matrixButtons">
                     <button class="timButton btn-xs btn-block" tabindex="-1" ng-click="$ctrl.qctrl.addRow($index)">
