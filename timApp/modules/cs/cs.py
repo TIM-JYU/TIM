@@ -1295,6 +1295,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             removedir(language.prgpath)
 
         out = out[0:get_param(query, "maxConsole", 20000)]
+
+        out_replace = get_param(query, "outReplace", None)
+        out_by = get_param(query, "outBy", "")
+        if out_replace:
+            if type(out_replace) is list:
+                for rep in out_replace:
+                    replace = rep.get("replace", "")
+                    if replace:
+                        out = re.sub(replace, rep.get("by", out_by), out, flags=re.M)
+            else:
+                out = re.sub(out_replace, out_by, out, flags=re.M)
+
         web["console"] = out
         web["error"] = err + warnmessage
         web["pwd"] = pwddir.strip()

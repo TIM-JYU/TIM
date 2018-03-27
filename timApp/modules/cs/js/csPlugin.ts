@@ -295,6 +295,7 @@ interface ICSAppScope extends IConsolePWDScope {
     maxRows: number;
     rows: number;
     wavURL: string;
+    noConsoleClear: boolean;
     showUploaded(file: string, type: string): void;
     doRunCode(s: string, b: boolean, extraMarkup?: {}): void;
     $watch(s: string, param2: (newValue, oldValue) => any, b?: boolean): void;
@@ -499,11 +500,11 @@ uploadFileTypes.is = function(types, file) {
         }
     }
     return false;
-}
+};
 
 uploadFileTypes.name = function(file) {
     return file.split('\\').pop().split('/').pop();
-}
+};
 
 function resizeIframe(obj) {
   obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';
@@ -1002,6 +1003,7 @@ csApp.directiveFunction = function(t,isInput) {
   			csApp.set(scope,attrs,"savestate");
   			csApp.set(scope,attrs,"mode");
   			csApp.set(scope,attrs,"iframeopts","");
+  			csApp.set(scope,attrs,"noConsoleClear",false);
 
             csApp.set(scope,attrs,"wrap", scope.isText ? 70 : -1);
             scope.wrap = {n:scope.wrap}; // to avoid child scope problems
@@ -1573,12 +1575,12 @@ csApp.Controller = function($scope,$transclude) {
     $scope.logTime = function(msg) {
         csLogTime(msg + " " + $scope.taskId);
         return true;
-    }
+    };
     
     $scope.runCodeIfCR = function(event) {
         $scope.runError ="";
         if ( event.keyCode == 13 ) $scope.runCode();
-    }
+    };
 
     $scope.runCodeCommon = function(nosave, extraMarkUp)
     {
@@ -1587,7 +1589,7 @@ csApp.Controller = function($scope,$transclude) {
         if ( t == "md" ) { $scope.showMD(); if (nosave || $scope.nosave) return; }
         if ( languageTypes.isInArray(t, csJSTypes ) ) { $scope.jstype = t; $scope.showJS(); if (nosave || $scope.nosave) return; } 
 		$scope.doRunCode(t,nosave || $scope.nosave);
-    }
+    };
     
     $scope.runCodeAuto = function() {
         window.clearInterval($scope.runTimer);
@@ -1710,7 +1712,7 @@ csApp.Controller = function($scope,$transclude) {
 		$scope.imgURL = "";
 		$scope.wavURL = "";
 		$scope.runSuccess = false;
-		if ( !languageTypes.isInArray(runType, csJSTypes ) ) $scope.result = "";
+		if ( !(languageTypes.isInArray(runType, csJSTypes ) || $scope.noConsoleClear) ) $scope.result = "";
 		$scope.runTestGreen = false;
 		$scope.runTestRed = false;
         var isInput = false;
