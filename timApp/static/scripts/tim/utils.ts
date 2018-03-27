@@ -56,6 +56,23 @@ export function checkIfElement(x: any): x is Element {
 }
 
 /**
+ * Check if element is in view
+ * @method isInViewport
+ * @param el - Element to check
+ * @returns {boolean} true if in view
+ */
+export function isInViewport(el: Element) {
+    const rect = el.getBoundingClientRect();
+
+    return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+}
+
+/**
  * Scroll window to the given element.
  * @method scrollToElement
  * @param element - Element to scroll to.
@@ -160,7 +177,7 @@ export function clone<T>(obj: T): T {
  * @returns A promise that resolves to either a success or error.
  */
 export function to<T, U = {data: {error: string}}>(promise: IPromise<T>,
-                               errorExt?: object): IPromise<[U, undefined] | [null, T]> {
+                                                   errorExt?: object): IPromise<[U, undefined] | [null, T]> {
     return promise
         .then<[null, T]>((data: T) => [null, data])
         .catch<[U, undefined]>((err) => {
@@ -177,10 +194,31 @@ export function assertNotNull(obj: any) {
     }
 }
 
+export function getOutOffset(el: Element) {
+    const rect = el.getBoundingClientRect();
+    const bounds = {left: 0, top: 0, right: 0, bottom: 0};
+    if (rect.top < 0) {
+        bounds.top = rect.top;
+    }
+    const height = (window.innerHeight || document.documentElement.clientHeight);
+    if (rect.bottom > height) {
+        bounds.bottom = height - rect.bottom;
+    }
+    const width = (window.innerWidth || document.documentElement.clientWidth);
+    if (rect.right > width) {
+        bounds.right = width - rect.right;
+    }
+    if (rect.left < 0) {
+        bounds.left = rect.left;
+    }
+    return bounds;
+}
+
 export const nameofFactory = <T>() => (name: keyof T) => name;
 
 export const nameofFactoryCtrl = <T>() => (name: keyof T, ctrl = "$ctrl") => `${ctrl}.${name}`;
 
 export const nameofFactoryCtrl2 = <T, U extends keyof T>(name: U) => (name2: keyof T[U], ctrl = "$ctrl") => `${ctrl}.${name}.${name2}`;
 
-export const empty = () => {};
+export const empty = () => {
+};

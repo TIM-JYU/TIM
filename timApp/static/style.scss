@@ -124,3 +124,27 @@ p.chart-menu {
         }
     }
 }
+
+.form-horz-flex {
+    display: flex;
+    align-items: center;
+
+    label {
+        flex: 0 0 auto;
+        margin-right: 0.5em;
+    }
+    input, .input-group, tim-duration-picker, textarea, select {
+        flex: 0 1 auto;
+    }
+    tim-error-message {
+        flex: 0 0 auto;
+
+        .alert {
+            margin: 0;
+        }
+    }
+
+    tim-duration-picker .form-group {
+        margin-bottom: 4px;
+    }
+}

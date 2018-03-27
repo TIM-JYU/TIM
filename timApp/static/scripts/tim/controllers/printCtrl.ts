@@ -64,10 +64,8 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
                 }
             });
 
-        } else if (this.templates) {
-            if (this.templates.length > 0) {
-                t = this.templates[0];
-            }
+        } else {
+            t = this.templates.find((tmpl) => tmpl.name !== "empty");
         }
 
         return t;

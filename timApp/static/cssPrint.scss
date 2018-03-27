@@ -99,7 +99,7 @@
 
   //Video
   .paragraphs .showVideo{
-    display: none;
+    /* display: none; */  // Why not show videos and if that is not purpose, use .hidden-print
   }
 
   .paragraphs .csRunDiv {

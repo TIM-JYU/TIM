@@ -429,8 +429,8 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 /* Annotation styles */
 .has-annotation:before {
     background: #3CC;
-    /* float: left; */
-    content: "\2002 V\2002";
+    float: right;
+    content: "\00A0V\00A0";
     color: white;
     padding: 0.1em;
 }

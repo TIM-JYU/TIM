@@ -11,7 +11,7 @@
             </tr>
             <tr ng-repeat="a in ( filteredList1 = (vsumctrl.annotations | orderBy:'creationtime' | filter: {'user_id': vsumctrl.selectedUser.id}:true)) ">
                 <!--<td class="summCheckbox"><input type="checkbox" ng-model="a.selected"></td> See comment above^-->
-                <td class="summSecColumn"><a ng-click="vsumctrl.toggleAnnotation({$ANNOTATION: a})">{{ a.content }}</a></td>
+                <td class="summSecColumn"><a ng-click="vsumctrl.toggleAnnotation({$ANNOTATION: a, $SCROLL: true})">{{ a.content }}</a></td>
                 <td class="summThiColumn"><span>{{ a.points }}</span></td>
             </tr>
             <tr>
@@ -31,7 +31,7 @@
             </tr>
             <tr ng-repeat="b in vsumctrl.annotations | orderBy:'creationtime' | filter: {'user_id': null}:true ">
                 <!--<td class="summCheckbox"><input type="checkbox" ng-model="a.selected"></td> See comment above^-->
-                <td class="summSecColumn"><a ng-click="vsumctrl.toggleAnnotation({$ANNOTATION: b})">{{ b.content }}</a></td>
+                <td class="summSecColumn"><a ng-click="vsumctrl.toggleAnnotation({$ANNOTATION: b, $SCROLL: true})">{{ b.content }}</a></td>
                 <td class="summThiColumn"><span>{{ b.points }}</span></td>
             </tr>
             <!--<tr>

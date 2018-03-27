@@ -2,14 +2,14 @@
     <dialog-header></dialog-header>
     <dialog-body>
         <form name="qctrl.f">
-            <div class="form-group" tim-error-state>
+            <div class="form-group form-horz-flex" tim-error-state>
                 <label for="question{{$id}}">Question text</label>
                 <textarea class="form-control" required name="question" id="question{{$id}}"
                           ng-model="qctrl.question.questionText"
                           ng-change="qctrl.changeQuestionTitle(qctrl.question.questionText)"></textarea>
                 <tim-error-message></tim-error-message>
             </div>
-            <div class="form-group" tim-error-state>
+            <div class="form-group form-horz-flex" tim-error-state>
                 <label for="title{{$id}}">
                     Question title</label>
                 <input class="form-control"
@@ -19,7 +19,7 @@
                 <tim-error-message></tim-error-message>
             </div>
 
-            <div class="form-group">
+            <div class="form-group form-horz-flex">
                 <label for="qtype{{$id}}">Question type</label>
                 <select class="form-control"
                         name="type" id="qtype{{$id}}" ng-model="qctrl.question.questionType" ng-dropdown required
@@ -45,10 +45,10 @@
             </div>
             <tim-question-matrix ng-if="qctrl.question.questionType"></tim-question-matrix>
 
-            <label>
-                Duration
-            </label>
-            <div class="row">
+            <div class="form-horz-flex">
+                <label>
+                    Duration
+                </label>
                 <tim-duration-picker amount="qctrl.ui.durationAmount"
                                      type="qctrl.ui.durationType"></tim-duration-picker>
             </div>
