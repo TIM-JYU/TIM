@@ -328,16 +328,16 @@ def create_minute_extracts(doc):
     base_path = f"{d.location}/otteet/kokous{minute_number}/"
 
     # create the composite document that has links to all the extract documents
-    composite_docentry = do_create_item(f"{base_path}kokous{minute_number}", "document",
-                                        f"kokous{minute_number}", None, None)
-    composite_docentry.document.add_paragraph("## Pöytäkirjan asiakohtien otteet")
+    composite_docentry = create_or_get_and_wipe_document(f"{base_path}kokous{minute_number}", f"kokous{minute_number}")
+    composite_docentry.document.add_paragraph("## Pöytäkirjan asiakohtien otteet",
+                                              attrs=dict([("area", f"kokous{minute_number}")]))
 
     composite_paragraph = composite_docentry.document.add_paragraph("")
 
     # loop through the extracts and create new documents for them
     for extract_number, paragraphs in extract_dict.items():
-        docentry = do_create_item(f"{base_path}lista{extract_number}", "document",
-                                  f"lista{extract_number}", None, None)
+        docentry = create_or_get_and_wipe_document(f"{base_path}lista{extract_number}",  f"lista{extract_number}")
+
         for par in paragraphs:
             docentry.document.add_paragraph_obj(par.create_reference(docentry.document, add_rd=True))
         docentry.document.add_paragraph("Allekirjoitukset: _________________________")
@@ -348,9 +348,28 @@ def create_minute_extracts(doc):
                                          f"([PDF](/print/{docentry.path_without_lang}))")
 
     composite_paragraph.save()
+    composite_docentry.document.add_paragraph("", attrs=dict([("area_end", f"kokous{minute_number}")]))
     db.session.commit()
     return safe_redirect(f"/view/{composite_docentry.path_without_lang}")
 
+
+def create_or_get_and_wipe_document(path: str, title: str):
+    """ Creates a document to the given path and returns the DocEntry.
+    If a document already exists in the given path, the already existing document is wiped clean and then its DocEntry
+    is returned.
+    :param path: The path to the document.
+    :param title: The title of the document.
+    :return: The DocEntry of a new document or an already existing document that has been wiped clean.
+    """
+    d = DocEntry.find_by_path(path, try_translation=False)
+
+    if not d:
+        return do_create_item(path, "document", title, None, None)
+
+    # d.short_name = title ; doesn't work
+    d.document.update("", d.document.export_markdown())
+
+    return d
 
 @app.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def throw_ex():
