@@ -30,6 +30,7 @@ export class SidebarMenuCtrl implements IController {
     private lastTab: number;
     private vctrl?: ViewCtrl;
     private bookmarks: {};
+    private isDocumentMinutes: boolean;
 
     constructor() {
         this.currentLecturesList = [];
@@ -53,7 +54,7 @@ export class SidebarMenuCtrl implements IController {
     }
 
     $onInit() {
-
+        this.isDocumentMinutes = $window.isMinutes;
     }
 
     updateLeftSide() {
@@ -140,6 +141,11 @@ export class SidebarMenuCtrl implements IController {
 
         // FOR DEBUGGING
         // UndoAutoPageBreak();
+    }
+
+    createMinuteExtracts() {
+        // Might not be the best way of doing this?
+        window.location.href = window.location.href.replace("/view/", "/createMinuteExtracts/" );
     }
 }
 

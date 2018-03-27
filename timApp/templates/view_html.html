@@ -45,7 +45,8 @@
         var liveUpdates = {{ live_updates|tojson}};
         var docVersion = {{ version|tojson }};
         var wordList = {{ word_list|tojson }};
-        var readExpiry = {{ doc_settings.read_expiry()|tojson }}
+        var readExpiry = {{ doc_settings.read_expiry()|tojson }};
+        var isMinutes = {{is_minutes|tojson}};
     </script>
 {% endblock %}
 
