@@ -258,14 +258,14 @@ def create_minute_extracts(doc):
     # figure out the index of the minute, get the value of the 'nr' macro
 
     macros = d.document.get_settings().get_macroinfo().get_macros()
-    if "nr" not in macros:
-        return abort(Response("Error creating extracts: the document is not a minute document (no 'nr' macro found)"))
+    minute_number = macros.get("nr")
+    if not minute_number:
+        return abort(400, "Error creating extracts: the document is not a minute document (no 'nr' macro found)")
 
-    minute_number = macros["nr"]
     if not isinstance(minute_number, int):
-        return abort(Response("Error creating extracts: the value of the 'nr' macro is not a valid integer"))
+        return abort(400, "Error creating extracts: the value of the 'nr' macro is not a valid integer")
 
-    paragraphs = d.document.get_paragraphs(d)
+    paragraphs = d.document.get_paragraphs()
 
     extract_dict = dict()
     current_paragraphs = []
@@ -289,26 +289,22 @@ def create_minute_extracts(doc):
             # if we can't parse the extract index, abort
             comma_position = markdown.find(",", macro_position + len(markdown_to_find))
             if comma_position == -1:
-                abort(Response("Failed to parse extract index from macro, from paragraph: \n" + markdown))
+                abort(400, f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
 
             new_extract_index = 0
             try:
-                new_extract_index = int(markdown[macro_position + 8:comma_position])
+                new_extract_index = int(markdown[macro_position + len(markdown_to_find):comma_position])
             except ValueError:
-                abort(Response("Failed to parse extract index from macro, from paragraph: \n" + markdown))
+                abort(400, f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
 
             if current_extract_index > -1:
                 # if we were in another extract's paragraph before, save the previous extract's paragraphs into the dict
                 # don't allow duplicate extract numbers
                 if current_extract_index in extract_dict:
-                    return abort(Response("Error creating extracts: the same extract \
-                     entry cannot exist multiple times in the document."))
+                    return abort(400, f"Error creating extracts: the same extract entry ({current_extract_index}) " +
+                                 "cannot exist multiple times in the document.")
                 extract_dict[current_extract_index] = current_paragraphs
-                # TODO check if assignment in python lists works "by reference" or whether they're copied
-                # like c# structs
-                # in other words, figure out if the copying here is necessary
-                current_paragraphs = current_paragraphs.copy()
-                current_paragraphs.clear()
+                current_paragraphs = []
 
             current_extract_index = new_extract_index
             current_paragraphs.append(par)
@@ -322,38 +318,38 @@ def create_minute_extracts(doc):
     # if so, add the last extract to the dict
     if current_extract_index > -1:
         if current_extract_index in extract_dict:
-            return abort(Response("Error creating extracts: the same extract entry cannot \
-             exist multiple times in the document."))
+            return abort(400, f"Error creating extracts: the same extract entry ({current_extract_index}) cannot " +
+                         "exist multiple times in the document.")
         extract_dict[current_extract_index] = current_paragraphs
 
-    if len(extract_dict) == 0:
-        return abort(Response("The document has no extract macros!"))
+    if not extract_dict:
+        return abort(400, "The document has no extract macros!")
 
-    base_path = d.location + "/otteet/kokous" + str(minute_number) + "/"
+    base_path = f"{d.location}/otteet/kokous{minute_number}/"
 
     # create the composite document that has links to all the extract documents
-    composite_docentry = do_create_item(base_path + "kokous" + str(minute_number), "document", "kokous"
-                                        + str(minute_number), None, None)
+    composite_docentry = do_create_item(f"{base_path}kokous{minute_number}", "document",
+                                        f"kokous{minute_number}", None, None)
     composite_docentry.document.add_paragraph("## Pöytäkirjan asiakohtien otteet")
 
     composite_paragraph = composite_docentry.document.add_paragraph("")
 
     # loop through the extracts and create new documents for them
     for extract_number, paragraphs in extract_dict.items():
-        docentry = do_create_item(base_path + "lista" + str(extract_number), "document",
-                                  "lista" + str(extract_number), None, None)
+        docentry = do_create_item(f"{base_path}lista{extract_number}", "document",
+                                  f"lista{extract_number}", None, None)
         for par in paragraphs:
             docentry.document.add_paragraph_obj(par.create_reference(docentry.document, add_rd=True))
         docentry.document.add_paragraph("Allekirjoitukset: _________________________")
 
         # add into the composite document a link leading to the new extract document
-        composite_paragraph.set_markdown(composite_paragraph.get_markdown() + "\n" + "- [Lista " + str(extract_number) +
-                                         "](lista" + str(extract_number) + "), ([PDF](/print/" +
-                                         docentry.path_without_lang + "))")
+        composite_paragraph.set_markdown(f"{composite_paragraph.get_markdown()}\n" +
+                                         f"- [Lista {extract_number}](lista{extract_number}), " +
+                                         f"([PDF](/print/{docentry.path_without_lang}))")
 
     composite_paragraph.save()
     db.session.commit()
-    return safe_redirect("/view/" + composite_docentry.path_without_lang)
+    return safe_redirect(f"/view/{composite_docentry.path_without_lang}")
 
 
 @app.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])
