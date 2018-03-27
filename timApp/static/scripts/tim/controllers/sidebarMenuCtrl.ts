@@ -147,6 +147,16 @@ export class SidebarMenuCtrl implements IController {
         // Might not be the best way of doing this?
         window.location.href = window.location.href.replace("/view/", "/createMinuteExtracts/" );
     }
+
+ stampPdf() {
+        //Todo: must do some kind of dialog to manage stamping and merging.
+        window.location.href = window.location.href.replace("/view/", "/manage/");
+    }
+
+    mergePdf() {
+        //
+    }
+
 }
 
 timApp.component("timSidebarMenu", {
