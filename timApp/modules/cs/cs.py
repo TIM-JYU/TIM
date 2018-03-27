@@ -1110,8 +1110,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 else:
                     cmdline = language.get_cmdline(s)
 
-                if get_param(query, "justSave", False):
-                    cmdline = ""
+                if get_param(query, "justSave", False) or get_param(query, "justCmd", False):
+                    cmdline = "" 
 
                 compiler_output = ""
                 if cmdline:

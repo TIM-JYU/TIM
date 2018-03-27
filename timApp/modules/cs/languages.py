@@ -509,7 +509,7 @@ class CC(Language):
 class CPP(CC):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        if self.filename.endswith(".h") or self.filename.endswith(".hpp") or self.filename.endswith(".cpp"):
+        if self.filename.endswith(".h") or self.filename.endswith(".hpp") or self.filename.endswith(".cpp") or self.filename.endswith(".cc"):
             self.sourcefilename = "/tmp/%s/%s" % (self.basename, self.filename)
         else:
             self.sourcefilename = "/tmp/%s/%s.cpp" % (self.basename, self.filename)
