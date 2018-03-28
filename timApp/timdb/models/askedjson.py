@@ -43,7 +43,7 @@ FIELD_NAME_MAP = dict(
     xpl='expl',
 )
 KNOWN_TITLE_KEYS = {'TITLE', 'title', 'questionTitle'}
-
+MANDATORY_FIELDS = {'answerFieldType', 'headers', 'matrixType', 'questionTitle', 'questionText', 'questionType', 'rows'}
 
 def normalize_question_json(q: Dict[str, Any], allow_top_level_keys: Set[str] = None):
     """Normalizes the JSON data of a question.
@@ -58,7 +58,7 @@ def normalize_question_json(q: Dict[str, Any], allow_top_level_keys: Set[str] = 
     normalized = {}
     json_data = find_json(q)
     if not json_data:
-        raise Exception('Invalid question data')
+        return make_error_question('Missing field: questionTitle')
     process_json(
         json_data,
         normalized,
@@ -71,8 +71,26 @@ def normalize_question_json(q: Dict[str, Any], allow_top_level_keys: Set[str] = 
     data_field = json_data.get('data') or json_data.get('DATA')
     if data_field:
         process_json(data_field, normalized)
+    missing_keys = MANDATORY_FIELDS - set(normalized.keys())
+    if missing_keys:
+        return make_error_question(f'Missing fields: {", ".join(sorted(list(missing_keys)))}')
     normalize_rows(normalized['rows'])
     return normalized
+
+
+def make_error_question(desc: str):
+    return {
+        'answerFieldType': 'text',
+        'expl': {},
+        'headers': [''],
+        'matrixType': 'textArea',
+        'questionText': f'Invalid question data: {desc}',
+        'questionTitle': f'Invalid question data: {desc}',
+        'questionType': 'matrix',
+        'rows': [''],
+        'isTask': True, # for better preview
+        'invalid': True,
+    }
 
 
 def process_json(json_data: Dict[str, Any],

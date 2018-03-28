@@ -342,22 +342,16 @@ def mmcq_get_md(jso):
     return result
 
 
+qst_attrs = {'button', 'buttonText', 'footer', 'header', 'isTask', 'lazy', 'resetText', 'stem', }
+
+
 def qst_get_html(jso, review):
     result = False
     info = jso['info']
     markup = jso['markup']
     markup = normalize_question_json(markup,
                                      allow_top_level_keys=
-                                     {
-                                         'button',
-                                         'buttonText',
-                                         'footer',
-                                         'header',
-                                         'isTask',
-                                         'lazy',
-                                         'resetText',
-                                         'stem',
-                                     })
+                                     qst_attrs)
     jso['markup'] = markup
     if info and info['max_answers'] and info['max_answers'] <= info.get('earlier_answers', 0):
         result = True
@@ -520,7 +514,7 @@ def qst_get_md(jso):
 
 def question_convert_js_to_yaml(markup: Dict, is_task: bool, task_id: Optional[str]):
     # save question. How to pick up question see lecture.py, get_question_data_from_document
-    markup = normalize_question_json(markup)
+    markup = normalize_question_json(markup, allow_top_level_keys=qst_attrs)
     question_title = markup["questionTitle"]
     question_title = question_title.replace('"', '').replace("'", '')
     # taskid = questionTitle.replace(" ", "")  # TODO: make better conversion to ID
@@ -570,7 +564,7 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
         convert_md(plugindata)
     markup = plugindata.get('markup')
     return QuestionInDocument(
-        markup=normalize_question_json(markup),
+        markup=normalize_question_json(markup, allow_top_level_keys=qst_attrs),
         qst=not par.is_question(),
         taskId=par.get_attr('taskId'),
         docId=d.id,

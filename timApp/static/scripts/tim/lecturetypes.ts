@@ -16,6 +16,7 @@ export interface IQuestionMarkup extends IAskedJsonJson {
     footer?: string;
     resetText?: string;
     stem?: string;
+    invalid?: boolean;
 }
 
 export interface IQuestionParagraph extends IUniqueParId {
