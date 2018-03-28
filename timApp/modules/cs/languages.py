@@ -6,6 +6,18 @@ sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/mo
 
 from fileParams import *  # noqa
 
+cmdline_whitelist = "A-Za-z+\-/\.åöäÅÖÄ 0-9!'\"#$%()\[\]?\{}_:="
+
+
+def sanitize_cmdline(s):
+    global cmdline_whitelist
+    return re.sub("[^" + cmdline_whitelist + "]", "", s)
+
+
+def illegal_cmdline_chars(s):
+    global cmdline_whitelist
+    return re.sub("[" + cmdline_whitelist + "]", "", s)
+
 
 def df(value, default):
     if value is not None:
@@ -837,6 +849,8 @@ class Mathcheck(Language):
         cmdline = "/cs/mathcheck/mathcheck_subhtml.out <%s" % self.sourcefilename
         print("mathcheck: ", self.stdin)
         # code, out, err, pwddir = self.runself(["/cs/mathcheck/mathcheck_subhtml.out"])
+        self.prgpath = sanitize_cmdline(self.prgpath)
+        cmdline = sanitize_cmdline(cmdline)
         out = check_output(["cd " + self.prgpath + " && " + cmdline], stderr=subprocess.STDOUT,
                            shell=True).decode("utf-8")
         return 0, out, "", ""

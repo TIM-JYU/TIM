@@ -8,6 +8,8 @@ import socketserver
 import threading
 from languages import *
 import pwd, os
+
+
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)
 
@@ -1086,6 +1088,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     userdoc = "/csgenerated/docs/%s" % self.user_id
                     docrnd = generate_filename()
                     doccmd = "/cs/doxygen/csdoc.sh %s %s/%s %s" % (language.prgpath, userdoc, docrnd, userdoc)
+                    doccmd = sanitize_cmdline(doccmd)
                     p = re.compile('\.java')
                     docfilename = p.sub("", language.filename)
                     p = re.compile('[^.]*\.')
@@ -1111,9 +1114,23 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     cmdline = language.get_cmdline(s)
 
                 if get_param(query, "justSave", False) or get_param(query, "justCmd", False):
-                    cmdline = "" 
+                    cmdline = ""
+
+                wrong_chars = illegal_cmdline_chars(cmdline)
+                if wrong_chars:
+                    error_str = "Illegal chars: " + wrong_chars + "\nin:  "+ cmdline.replace(language.prgpath, "") + \
+                                "\n" +\
+                                "If there is chars you need for compiler, please email those to tim@jyu.fi"
+                    # result = "Not compiled!"
+                    print("ILLEGAL CHARS:", wrong_chars,
+                          "user:", get_json_param(query.jso, 'info', 'current_user_id', ''),
+                          "task:", get_param(query, 'taskID', '??'), "cmdline:",
+                          cmdline
+                          )
+                    return write_json_error(self.wfile, error_str, result, points_rule)
 
                 compiler_output = ""
+                language.prgpath = sanitize_cmdline(language.prgpath)
                 if cmdline:
                     compiler_output = check_output(["cd " + language.prgpath + " && " + cmdline],
                                                    stderr=subprocess.STDOUT,
