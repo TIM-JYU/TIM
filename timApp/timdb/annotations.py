@@ -325,8 +325,12 @@ class Annotations(TimDbBase):
 
         for result in results:
             if result['element_path_start'] is not None and result['element_path_end'] is not None:
-                start_path = [int(i) for i in result['element_path_start'][1:-1].split(',')]
-                end_path = [int(i) for i in result['element_path_end'][1:-1].split(',')]
+                try:
+                    start_path = [int(i) for i in result['element_path_start'][1:-1].split(',')]
+                    end_path = [int(i) for i in result['element_path_end'][1:-1].split(',')]
+                except ValueError:
+                    start_path = None
+                    end_path = None
             else:
                 start_path = None
                 end_path = None
