@@ -270,9 +270,10 @@ def create_minute_extracts(doc):
     extract_dict = dict()
     current_paragraphs = []
     current_extract_index = -1
+    current_extract_title = ""
 
     # we build a dict of the extracts first before creating any new files
-    # for each extract, we need its list index / extract index and the related paragraphs
+    # for each extract, we need its list index / extract index, related paragraphs, and its title
 
     # we detect an extract by searching the document's non-expanded markdown for the extract macro
     # all paragraphs between two such macros belong to the same extract
@@ -303,16 +304,27 @@ def create_minute_extracts(doc):
                 if current_extract_index in extract_dict:
                     return abort(400, f"Error creating extracts: the same extract entry ({current_extract_index}) " +
                                  "cannot exist multiple times in the document.")
-                extract_dict[current_extract_index] = current_paragraphs
+                extract_dict[current_extract_index] = (current_extract_title, current_paragraphs)
+                current_extract_title = ""
                 current_paragraphs = []
 
             current_extract_index = new_extract_index
-            current_paragraphs.append(par)
 
-        elif current_extract_index > -1:
+        if current_extract_index > -1:
             # if the macro doesn't exist in the current paragraph but it existed in some previous paragraph,
             # we're in a paragraph related to an extract -> add the paragraph to the extract's list of paragraphs
             current_paragraphs.append(par)
+
+            # find the extract's title from after the first number sign (#) that we find
+            if not current_extract_title:
+                title_search_string = "# "
+                number_sign_position = markdown.find(title_search_string)
+                if number_sign_position > -1:
+                    current_extract_title = markdown[number_sign_position + len(title_search_string):]
+                    # if there's other content in the same paragraph than just the title, cut the other content out
+                    linebreak_position = current_extract_title.find("\n")
+                    if linebreak_position > -1:
+                        current_extract_title = current_extract_title[:linebreak_position]
 
     # after the loop has ended, check if we're still within an extract
     # if so, add the last extract to the dict
@@ -320,7 +332,7 @@ def create_minute_extracts(doc):
         if current_extract_index in extract_dict:
             return abort(400, f"Error creating extracts: the same extract entry ({current_extract_index}) cannot " +
                          "exist multiple times in the document.")
-        extract_dict[current_extract_index] = current_paragraphs
+        extract_dict[current_extract_index] = (current_extract_title, current_paragraphs)
 
     if not extract_dict:
         return abort(400, "The document has no extract macros!")
@@ -335,7 +347,7 @@ def create_minute_extracts(doc):
     composite_paragraph = composite_docentry.document.add_paragraph("")
 
     # loop through the extracts and create new documents for them
-    for extract_number, paragraphs in extract_dict.items():
+    for extract_number, (extract_title, paragraphs) in extract_dict.items():
         docentry = create_or_get_and_wipe_document(f"{base_path}lista{extract_number}",  f"lista{extract_number}")
 
         for par in paragraphs:
@@ -345,7 +357,7 @@ def create_minute_extracts(doc):
         # add into the composite document a link leading to the new extract document
         composite_paragraph.set_markdown(f"{composite_paragraph.get_markdown()}\n" +
                                          f"- [Lista {extract_number}](lista{extract_number}), " +
-                                         f"([PDF](/print/{docentry.path_without_lang}))")
+                                         f"([PDF](/print/{docentry.path_without_lang})) - {extract_title}")
 
     composite_paragraph.save()
     composite_docentry.document.add_paragraph("", attrs=dict([("area_end", f"kokous{minute_number}")]))
