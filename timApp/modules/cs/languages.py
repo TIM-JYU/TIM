@@ -16,7 +16,8 @@ def sanitize_cmdline(s):
 
 def illegal_cmdline_chars(s):
     global cmdline_whitelist
-    return re.sub("[" + cmdline_whitelist + "]", "", s)
+    return "";
+    # return re.sub("[" + cmdline_whitelist + "]", "", s)
 
 
 def df(value, default):
