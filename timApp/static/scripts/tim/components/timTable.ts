@@ -1,6 +1,5 @@
 import {IController, IScope} from "angular";
 import $ from "jquery";
-import {CellEntity} from "../../decls/components/timTable";
 import {timApp} from "../app";
 import {ViewCtrl} from "../controllers/view/viewctrl";
 import {showMessageDialog} from "../dialog";
@@ -76,7 +75,7 @@ class TimTableController implements IController {
         this.$pars = $(this.srcid);
     }
 
-    private cellClicked(cell: ICell | string) {
+    private cellClicked(cell: CellEntity) {
         if (typeof cell === "string") return;
         if (this.editing)
             cell.editing = true;
