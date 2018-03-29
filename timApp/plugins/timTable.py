@@ -39,8 +39,9 @@ NUMBER = 'number'
 @timTable_plugin.route("reqs")
 def timTable_reqs():
     reqs = {
-        "type": "Hello World",
+        "type": "embedded",
         "js": [
+           #"js/timTable.js"
             # "tim/controllers/qstController",
                ],
         "angularModule": [],
@@ -51,6 +52,78 @@ def timTable_reqs():
     return json_response(reqs)
 
 
+@timTable_plugin.route("multihtml/", methods=["POST"])
+def qst_multihtml():
+    jsondata = request.get_json()
+    multi = []
+    for jso in jsondata:
+        multi.append(qst_get_html(jso, is_review(request)))
+    return json_response(multi)
+
+
+def is_review(request):
+    # print(query)
+    result = request.full_path.find("review=") >= 0
+    return result
+
+NOLAZY = "<!--nolazy-->"
+
+
+def qst_get_html(jso, review):
+    result = False
+    info = jso['info']
+    markup = jso['markup']
+    #markup = normalize_question_json(markup,
+                                     #allow_top_level_keys=
+                                     #{
+                                     #    'button',
+                                     #    'buttonText',
+                                     #    'footer',
+                                     #    'header',
+                                     #    'isTask',
+                                     #    'lazy',
+                                     #    'resetText',
+                                     #    'stem',
+                                    # })
+    #jso['markup'] = markup
+    if info and info['max_answers'] and info['max_answers'] <= info.get('earlier_answers', 0):
+        result = True
+    if not result:
+        delete_key(markup, 'points')
+        delete_key(markup, 'expl')
+    jso['show_result'] = result
+
+    if review:
+        usercode = qst_str(jso.get("state", "-"))
+        s = ""
+        result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>' + s + '</div>'
+        return result
+
+    attrs = json.dumps(jso['markup'])
+
+    #runner = 'qst-runner'
+    #s = f'<{runner} json={quoteattr(attrs)}></{runner}>'
+
+    runner = 'tim-table'
+    s = f'<{runner} data={quoteattr(attrs)}>HAHAA</{runner}>'
+
+    return s
+
+def delete_key(d: Dict[str, Any], key: str):
+    if key in d:
+        del d[key]
+
+
+def qst_str(state):
+    s = str(state)
+    s = s.replace("], ", "\n")
+    s = s.replace("]", "")
+    s = s.replace("[", "")
+    s = s.replace("''", "-")
+    s = s.replace("'", "")
+    return s
+
+"""
 @timTable_plugin.route("multihtml/", methods=["POST"])
 def timTable_multihtml():
     jsondata = request.get_json()
@@ -67,6 +140,7 @@ def timTable_multihtml():
         for row in table[ROWS]:
                 multi[0] =  multi[0] + parse_row(row)
     return json_response(multi)
+"""
 
 def parse_columns(columns: list) -> str:
     colHtml = ''
@@ -166,3 +240,5 @@ def stylesAndAttributes(elements: dict) -> dict:
         if key == "height":
             styleDefinitions.append(key + ":" + str(value) + ";")
     return retDict
+
+
