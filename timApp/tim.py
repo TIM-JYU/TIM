@@ -287,10 +287,12 @@ def create_minute_extracts(doc):
 
         if macro_position > -1:
             # if the extract macro exists in the current paragraph, figure out the extract index from the markdown
-            # if we can't parse the extract index, abort
+            # if we can't parse the extract index, just ignore the paragraph
             comma_position = markdown.find(",", macro_position + len(markdown_to_find))
             if comma_position == -1:
-                abort(400, f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
+                continue
+                # sometimes there's intentionally a macro without the extract index
+                # abort(400, f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
 
             new_extract_index = 0
             try:
