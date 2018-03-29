@@ -2,6 +2,15 @@
 # Set locale
 export LANG=en_US.UTF-8
 # export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/
+export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
+export MONO_PATH=/cs/jypeli
+
+run/compile.sh
+if [ $? -ne 0 ]
+then
+   (>&2 echo "Compile error")
+   exit
+fi
 
 if [ $2 != "True" ]; then
   # For X server emulation
@@ -20,8 +29,6 @@ fi
 # Copy Jypeli dll's to temp directory
 # cp /cs/jypeli/* /tmp/
 
-export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
-export MONO_PATH=/cs/jypeli
 
 #if ! [ -f ".bashrc" ]; then
 #    cp /cs/bash/.bashrc ".bashrc"

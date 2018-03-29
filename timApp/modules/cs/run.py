@@ -25,7 +25,7 @@ def wait_file(f1):
             s1 = os.stat(f1)
             if s1.st_size > 50:
                 return s1
-            print(s1.st_size, " ??????????????????????? ")
+            # print(s1.st_size, " ??????????????????????? ")
         time.sleep(0.05)
     return False
 
@@ -57,12 +57,12 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
     p = Popen(args, shell=shell, cwd=cwd, stdout=PIPE, stderr=PIPE, env=env, stdin=s_in)  # , timeout=timeout)
     try:
         if stdin:
-            print(stdin)
+            # print(stdin)
             file = codecs.open(stdin, 'r', "utf-8")
             lines = file.read()
-            print("Input ======")
-            print(lines)
-            print("===========")
+            # print("Input ======")
+            # print(lines)
+            # print("===========")
             file.close()
             # p.stdin.write(str.encode(lines))
             # p.stdin.close()
@@ -78,7 +78,7 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
 
 # noinspection PyBroadException
 def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
-         extra="", ulimit=None, no_x11=False, savestate="", dockercontainer="timimages/cs3:compose"):
+         extra="", ulimit=None, no_x11=False, savestate="", dockercontainer="timimages/cs3:compose", compile_commandline = ""):
     """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
     run inside docker.
 
@@ -96,6 +96,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     :param savestate: to which file to save te state of shell
     :param no_x11: do not use X11
     :param dockercontainer: what container to run, container needs user with name agent
+    :param compile_commandline: command line to compile code
     :return: error code, stdout text, stderr text
 
     """
@@ -112,8 +113,9 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     urndname = "run/" + tmpname  # ohjaustiedostojen nimet
     stdoutf = urndname + ".in"
     stderrf = urndname + ".err"
-    print("cwd=", cwd)
+    # print("cwd=", cwd)
     cmdf = cwd + "/" + urndname + ".sh"  # varsinaisen ajoskriptin nimi
+    compf = cwd + "/run/compile.sh"
     cmnds = ' '.join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
     source = ''
     if savestate:
@@ -121,15 +123,24 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     # tehdään komentojono jossa suuntaukset
     cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n" + extra + source + cmnds + \
             " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
+    compile_cmnds = None
+    if compile_commandline:
+        compile_cmnds = "#!/usr/bin/env bash\n" + compile_commandline + \
+                " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + "\n"
+    else:
+        compile_cmnds = "#!/usr/bin/env bash\n"
+    codecs.open(compf, "w", "utf-8").write(compile_cmnds)  # kirjoitetaan kääntämisskripti
+    os.chmod(compf, 0o777)
+
     # cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" +
     # stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
-    print("============")
-    print(cwd)
-    print(stdoutf)
-    print(stderrf)
-    print(cmdf)
-    print(cmnds)
-    print("============")
+    # print("============")
+    # print(cwd)
+    # print(stdoutf)
+    # print(stderrf)
+    # print(cmdf)
+    # print(cmnds)
+    # print("============")
     codecs.open(cmdf, "w", "utf-8").write(cmnds)  # kirjoitetaan komentotiedosto
     mkdirs("/tmp/run")  # varmistetaan run-hakemisto
     udir = cwd.replace("/tmp/", "")  # koska mountattu eri tavalla, poistetaan tmp alusta
@@ -147,16 +158,17 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     errtxt = ""
     try:
         stdout, stderr = p.communicate(timeout=timeout)
-        print("stdout: ", stdout[:100])
-        print("stderr: ", stderr)
-        print("Run2 done!")
+        # print("stdout: ", stdout[:100])
+        # print("stderr: ", stderr)
+        # print("Run2 done!")
         try:
             pwddir = codecs.open(cwd + '/pwd.txt', 'r', "utf-8").read()  # .encode("utf-8")
         except:
             pwddir = ""
-        print("pwddir=", pwddir)
+        # print("pwddir=", pwddir)
+        err = stderr.decode()
 
-        if stderr:
+        if stderr and err.find("Compile error") < 0:
             remove(cwd + "/" + stdoutf)
             remove(cwd + "/" + stderrf)
             err = stderr.decode()
@@ -170,23 +182,29 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
             # errtxt = "Run error: " + str(err) + "\n"
             return -3, '', ("Run error: " + str(err)), pwddir
         try:
-            stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read()  # luetaan stdin ja err
-        except UnicodeDecodeError:
-            stdout = codecs.open(cwd + "/" + stdoutf, 'r', "iso-8859-15").read()  # luetaan stdin ja err
+            try:
+                stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read()  # luetaan stdin ja err
+            except UnicodeDecodeError:
+                stdout = codecs.open(cwd + "/" + stdoutf, 'r', "iso-8859-15").read()  # luetaan stdin ja err
+        except:
+            stdout = ""
 
         try:
-            stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read()
-        except UnicodeDecodeError:
             try:
-                stderr = codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read()
+                stderr = err + codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read()
             except UnicodeDecodeError:
-                stderr = codecs.open(cwd + "/" + stderrf, 'r', "iso-8859-15").read()
+                try:
+                    stderr = err + codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read()
+                except UnicodeDecodeError:
+                    stderr = err + codecs.open(cwd + "/" + stderrf, 'r', "iso-8859-15").read()
+        except:
+            stderr = err
 
         remove(cwd + "/" + stdoutf)
         remove(cwd + "/" + stderrf)
         remove(cwd + '/pwd.txt')
         # print(stdout)
-        print("stderr", stderr)
+        # print("stderr", stderr)
     except subprocess.TimeoutExpired:
         # p.kill()
         remove(cwd + "/" + stdoutf)
@@ -215,7 +233,7 @@ def copy_file(f1, f2, remove_f1=False, is_optional=False):
 
     """
     try:
-        print(f1, f2)
+        # print(f1, f2)
         count = 0
         while count < 10:
             count += 1
@@ -228,12 +246,12 @@ def copy_file(f1, f2, remove_f1=False, is_optional=False):
             shutil.copy2(f1, f2)
             # os.system("cp " + f1 + " " + f2)
             s2 = os.stat(f2)
-            print(s1.st_size, " ?? ", s2.st_size)
+            # print(s1.st_size, " ?? ", s2.st_size)
             if s1.st_size == s2.st_size:
                 if remove_f1:
                     remove(f1)
                 return True, ""
-            print(s1.st_size, " != ", s2.st_size)
+            # print(s1.st_size, " != ", s2.st_size)
         print("Copy error!!!")
         return False, "Copy error!!!"
     except OSError as e:

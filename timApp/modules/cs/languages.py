@@ -6,7 +6,13 @@ sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/mo
 
 from fileParams import *  # noqa
 
-cmdline_whitelist = "A-Za-z+\-/\.åöäÅÖÄ 0-9!'\"#$%()\[\]?\{}_:="
+cmdline_whitelist = "A-Za-z\-/\.åöäÅÖÄ 0-9_"
+filename_whitelist = "A-Za-z\-/\.åöäÅÖÄ 0-9_"
+
+
+def sanitize_filename(s):
+    global cmdline_whitelist
+    return re.sub("[^" + filename_whitelist + "]", "", s)
 
 
 def sanitize_cmdline(s):
@@ -55,6 +61,7 @@ class Language:
         self.hide_compile_out = False
         self.run_points_given = False  # Put this on if give run or test points
         self.readpoints_default = None # what is default string for readpoints
+        self.compile_commandline = ""
 
         # Check if user name or temp name
 
@@ -74,7 +81,7 @@ class Language:
                 self.basename = self.userpath + "/ERRORPATH"
             self.delete_tmp = False
             mkdirs("/tmp/user")
-            print(self.task_id, self.doc_id, self.fullpath)
+            # print(self.task_id, self.doc_id, self.fullpath)
         else:
             # Generate random cs and exe filenames
             self.basename = "tmp/" + self.rndname
@@ -86,8 +93,12 @@ class Language:
         self.fileext = ""
         self.filedext = ""
 
+        self.extension()
+
         self.sourcefilename = "/tmp/%s/%s%s" % (self.basename, self.filename, self.filedext)
         self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
+        # self.sourcefilename = "./%s%s" % (self.filename, self.filedext)
+        # self.exename = "./%s.exe" % self.filename
         self.pure_exename = "./%s.exe" % self.filename
         self.inputfilename = "/tmp/%s/%s" % (self.basename, self.ifilename)
         self.prgpath = "/tmp/%s" % self.basename
@@ -96,6 +107,19 @@ class Language:
         self.pngname = ""
 
         self.before_code = get_param(query, "beforeCode", "")
+
+    def extension(self):
+        return
+
+    def check_extension(self, extensions, ext, exe):
+        self.fileext = ext
+        self.filedext = ext
+        for ex in extensions:
+            if self.filename.endswith(ex):
+                self.fileext = ex.replace(".","")
+                self.filedext = ex
+                self.filename = self.filename[:-len(ex)]
+                break
 
     def get_cmdline(self, sourcecode):
         return ""
@@ -142,7 +166,8 @@ class Language:
                     ulimit=df(ulimit, self.ulimit),
                     no_x11=df(no_x11, self.no_x11),
                     savestate=df(savestate, self.savestate),
-                    dockercontainer=df(dockercontainer, self.dockercontainer))
+                    dockercontainer=df(dockercontainer, self.dockercontainer),
+                    compile_commandline = self.compile_commandline)
 
     def copy_image(self, web, code, out, err, points_rule):
         if code == -9:
@@ -155,7 +180,7 @@ class Language:
             image_ok, e = copy_file(ims, self.pngname, True, self.is_optional_image)
             if e:
                 err = (str(err) + "\n" + str(e) + "\n" + str(out))
-            print(self.is_optional_image, image_ok)
+            # print(self.is_optional_image, image_ok)
             remove(self.imgsource)
             if image_ok:
                 web["image"] = "/csgenerated/" + self.rndname + ".png"
@@ -230,7 +255,7 @@ class Jypeli(CS):
         wait_file(self.imgsource)
         run(["convert", "-flip", self.imgsource, self.pngname], cwd=self.prgpath, timeout=20)
         remove(self.imgsource)
-        print("*** Screenshot: https://tim.it.jyu.fi/csgenerated/%s\n" % self.pure_pngname)
+        # print("*** Screenshot: https://tim.it.jyu.fi/csgenerated/%s\n" % self.pure_pngname)
         out = re.sub('Number of joysticks:.*\n.*', "", out)
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
@@ -323,7 +348,7 @@ class Shell(Language):
         extra = ""  # ""cd $PWD\nsource "
         try:
             code, out, err, pwddir = self.runself([self.pure_exename], extra=extra)
-            print(pwddir)
+            # print(pwddir)
         except OSError as e:
             print(e)
             code, out, err, pwddir = (-1, "", str(e), "")
@@ -340,7 +365,7 @@ class Java(Language):
         super().__init__(query, sourcecode)
         self.classpath = get_param(query, "-cp", ".") + ":$CLASSPATH"
         self.fileext = "java"
-        print("classpath=", self.classpath)
+        # print("classpath=", self.classpath)
         self.package, self.classname = find_java_package(sourcecode)
         self.javaclassname = self.classname
         if not self.classname:
@@ -479,7 +504,7 @@ class Graphics(Java):
         rect = get_json_param(self.query.jso, "markup", "rect", None)
         if rect:
             a.extend(["--rect", rect])
-        print(a)
+        # print(a)
         runcmd = ["java", "sample.Runner", self.javaclassname, "--captureName", "run/capture.png"]
         runcmd.extend(a)
         code, out, err, pwddir = self.runself(runcmd, cwd=self.prgpath)
@@ -505,12 +530,10 @@ class Scala(Language):
 class CC(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        if self.filename.endswith(".h") or self.filename.endswith(".c") or self.filename.endswith(".cc"):
-            self.sourcefilename = "/tmp/%s/%s" % (self.basename, self.filename)
-        else:
-            self.sourcefilename = "/tmp/%s/%s.c" % (self.basename, self.filename)
-        self.fileext = "c"
         self.compiler = "gcc"
+
+    def extension(self):
+        self.check_extension([".h", ".c", ".cc"], ".c", ".exe")
 
     def get_cmdline(self, sourcecode):
         return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sourcefilename, self.exename)
@@ -522,12 +545,10 @@ class CC(Language):
 class CPP(CC):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        if self.filename.endswith(".h") or self.filename.endswith(".hpp") or self.filename.endswith(".cpp") or self.filename.endswith(".cc"):
-            self.sourcefilename = "/tmp/%s/%s" % (self.basename, self.filename)
-        else:
-            self.sourcefilename = "/tmp/%s/%s.cpp" % (self.basename, self.filename)
-        self.fileext = "cpp"
         self.compiler = "g++ -std=c++14"
+
+    def extension(self):
+        self.check_extension([".h", ".hpp", ".hh", ".cpp", ".cc"], ".cpp", ".exe")
 
 
 class CComtest(Language):
@@ -763,14 +784,14 @@ class Run(Language):
         if extra != "":
             cmd = []
             uargs = ""
-        print("run: ", cmd, extra, self.pure_exename, self.sourcefilename)
-        print("Run1: ", self.imgsource, self.pngname)
+        # print("run: ", cmd, extra, self.pure_exename, self.sourcefilename)
+        # print("Run1: ", self.imgsource, self.pngname)
         try:
             code, out, err, pwddir = self.runself(cmd, uargs=uargs, extra=extra)
         except Exception as e:
             print(e)
             code, out, err = (-1, "", str(e))
-        print("Run2: ", self.imgsource, self.pngname)
+        # print("Run2: ", self.imgsource, self.pngname)
         out, err = self.copy_image(web, code, out, err, points_rule)
         return code, out, err, pwddir
 
@@ -847,11 +868,11 @@ class Mathcheck(Language):
 
     def run(self, web, sourcelines, points_rule):
         self.stdin = "%s.txt" % self.filename
-        cmdline = "/cs/mathcheck/mathcheck_subhtml.out <%s" % self.sourcefilename
-        print("mathcheck: ", self.stdin)
+        cmdline = "/cs/mathcheck/mathcheck_subhtml.out <%s" % sanitize_filename(self.sourcefilename)
+        # print("mathcheck: ", self.stdin)
         # code, out, err, pwddir = self.runself(["/cs/mathcheck/mathcheck_subhtml.out"])
-        self.prgpath = sanitize_cmdline(self.prgpath)
-        cmdline = sanitize_cmdline(cmdline)
+        self.prgpath = sanitize_filename(self.prgpath)
+        # cmdline = sanitize_cmdline(cmdline)
         out = check_output(["cd " + self.prgpath + " && " + cmdline], stderr=subprocess.STDOUT,
                            shell=True).decode("utf-8")
         return 0, out, "", ""
@@ -878,7 +899,7 @@ class Octave(Language):
         mkdirs("/csgenerated/%s" % self.user_id)
 
     def run(self, web, sourcelines, points_rule):
-        print("octave: ", self.exename)
+        # print("octave: ", self.exename)
         extra = get_param(self.query, "extra", "").format(self.pure_exename, self.userargs)
         self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer", "timimages/cs3:compose")
         code, out, err, pwddir = self.runself(["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],
@@ -917,7 +938,7 @@ class Octave(Language):
             wav_ok, e = copy_file(self.filepath + "/" + self.wavsource, self.wavdest, True, self.is_optional_image)
             if e:
                 err = (str(err) + "\n" + str(e) + "\n" + str(out))
-            print("WAV: ", self.is_optional_image, wav_ok, self.wavname, self.wavsource, self.wavdest)
+            # print("WAV: ", self.is_optional_image, wav_ok, self.wavname, self.wavsource, self.wavdest)
             remove(self.wavsource)
             if wav_ok:
                 web["wav"] = "/csgenerated/" + self.wavname

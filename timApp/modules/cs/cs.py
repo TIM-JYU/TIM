@@ -562,8 +562,23 @@ def check_fullprogram(query, cut_errors=False):
     by_code = ""
     if m:
         by_code = m.group(1)
-    by_code_replace = [{'replace': "((\n|)[^\\n]*BYCODEBEGIN.*?BYCODEEND[^\\n]*)", 'by': "\nREPLACEBYCODE"}]
+        by_code_replace = [{'replace': "((\n|)[^\\n]*BYCODEBEGIN.*?BYCODEEND[^\\n]*)", 'by': "\nREPLACEBYCODE"}]
+    else:  # no BYCODEBEGIN
+        m = re.search("BYCODEBEGIN[^\\n]*\n(.*)", program, flags=re.S)
+        if m:
+            by_code = m.group(1)
+            by_code_replace = [{'replace': "((\n|)[^\\n]*BYCODEBEGIN.*)", 'by': "\nREPLACEBYCODE"}]
+        else:
+            m = re.search("[^\\n]*\n(.*)\n.*?BYCODEEND", program, flags=re.S)
+            if m:
+                by_code = m.group(1)
+                by_code_replace = [{'replace': "((\n|)[^\\n]*.*?BYCODEEND[^\\n]*)", 'by': "\nREPLACEBYCODE"}]
+            else:
+                by_code = fullprogram
+                program = "REPLACEBYCODE"
     program = replace_code(by_code_replace, program)
+    if program.startswith("\nREPLACEBYCODE") and not fullprogram.startswith("\n"):
+        program = program[1:]  # remove extra \n from begin
     if cut_errors:
         program = replace_code(query.cut_errors, program)
     query.query["replace"] = ["REPLACEBYCODE"]
@@ -864,6 +879,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # answer-route
 
+        print("taskID:", get_param(query, "taskID", "???"))
+
         points_rule = None
 
         is_doc = False
@@ -1076,105 +1093,55 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # print(ttype)
             # ########################## Compiling programs ###################################################
-            try:
-                log(self)
+            log(self)
+            cmdline = ""
+
+            if is_doc:
+                # doxygen
+                # ./doxygen/csdoc.sh /tmp/user/4d85...17114/3 /csgenerated/docs/vesal/abcd /csgenerated/docs/vesal
+                # http://tim3/csgenerated/docs/vesal/abcd/html/index.html
+                #
+                userdoc = "/csgenerated/docs/%s" % self.user_id
+                docrnd = generate_filename()
+                doccmd = "/cs/doxygen/csdoc.sh %s %s/%s %s" % (language.prgpath, userdoc, docrnd, userdoc)
+                doccmd = sanitize_cmdline(doccmd)
+                p = re.compile('\.java')
+                docfilename = p.sub("", language.filename)
+                p = re.compile('[^.]*\.')
+                docfilename = p.sub("", docfilename)
+                docfilename = docfilename.replace("_", "__")  # jostakin syystä tekee näin
+                dochtml = "/csgenerated/docs/%s/%s/html/%s_8%s.html" % (
+                    self.user_id, docrnd, docfilename, language.fileext)
+                docfile = "%s/%s/html/%s_8%s.html" % (userdoc, docrnd, docfilename, language.fileext)
+                # print("XXXXXXXXXXXXXXXXXXXXXX", language.filename)
+                # print("XXXXXXXXXXXXXXXXXXXXXX", docfilename)
+                # print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
+                # print("XXXXXXXXXXXXXXXXXXXXXX", docfile)
+                check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
+                if not os.path.isfile(
+                        docfile):  # There is maybe more files with same name and it is difficult to guess the name
+                    dochtml = "/csgenerated/docs/%s/%s/html/%s" % (self.user_id, docrnd, "files.html")
+                    # print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
+
+                web["docurl"] = dochtml
+                give_points(points_rule, "doc")
+
+            else:
+                cmdline = language.get_cmdline(s)
+
+            if get_param(query, "justSave", False) or get_param(query, "justCmd", False):
                 cmdline = ""
 
-                if is_doc:
-                    # doxygen
-                    # ./doxygen/csdoc.sh /tmp/user/4d85...17114/3 /csgenerated/docs/vesal/abcd /csgenerated/docs/vesal
-                    # http://tim3/csgenerated/docs/vesal/abcd/html/index.html
-                    #
-                    userdoc = "/csgenerated/docs/%s" % self.user_id
-                    docrnd = generate_filename()
-                    doccmd = "/cs/doxygen/csdoc.sh %s %s/%s %s" % (language.prgpath, userdoc, docrnd, userdoc)
-                    doccmd = sanitize_cmdline(doccmd)
-                    p = re.compile('\.java')
-                    docfilename = p.sub("", language.filename)
-                    p = re.compile('[^.]*\.')
-                    docfilename = p.sub("", docfilename)
-                    docfilename = docfilename.replace("_", "__")  # jostakin syystä tekee näin
-                    dochtml = "/csgenerated/docs/%s/%s/html/%s_8%s.html" % (
-                        self.user_id, docrnd, docfilename, language.fileext)
-                    docfile = "%s/%s/html/%s_8%s.html" % (userdoc, docrnd, docfilename, language.fileext)
-                    print("XXXXXXXXXXXXXXXXXXXXXX", language.filename)
-                    print("XXXXXXXXXXXXXXXXXXXXXX", docfilename)
-                    print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
-                    print("XXXXXXXXXXXXXXXXXXXXXX", docfile)
-                    check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
-                    if not os.path.isfile(
-                            docfile):  # There is maybe more files with same name and it is difficult to guess the name
-                        dochtml = "/csgenerated/docs/%s/%s/html/%s" % (self.user_id, docrnd, "files.html")
-                        print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
+            language.compile_commandline = cmdline.replace(language.prgpath, ".")
 
-                    web["docurl"] = dochtml
-                    give_points(points_rule, "doc")
+            language.prgpath = sanitize_cmdline(language.prgpath)
 
-                else:
-                    cmdline = language.get_cmdline(s)
+            if nocode and ttype != "jcomtest":
+                print("Poistetaan ", ttype, language.sourcefilename)
+                # remove(language.sourcefilename)
+                # print(compiler_output)
+                language.compile_commandline += " && rm " + language.sourcefilename.replace(language.prgpath, ".")
 
-                if get_param(query, "justSave", False) or get_param(query, "justCmd", False):
-                    cmdline = ""
-
-                wrong_chars = illegal_cmdline_chars(cmdline)
-                if wrong_chars:
-                    error_str = "Illegal chars: " + wrong_chars + "\nin:  "+ cmdline.replace(language.prgpath, "") + \
-                                "\n" +\
-                                "If there is chars you need for compiler, please email those to tim@jyu.fi"
-                    # result = "Not compiled!"
-                    print("ILLEGAL CHARS:", wrong_chars,
-                          "user:", get_json_param(query.jso, 'info', 'current_user_id', ''),
-                          "task:", get_param(query, 'taskID', '??'), "cmdline:",
-                          cmdline
-                          )
-                    return write_json_error(self.wfile, error_str, result, points_rule)
-
-                compiler_output = ""
-                language.prgpath = sanitize_cmdline(language.prgpath)
-                if cmdline:
-                    compiler_output = check_output(["cd " + language.prgpath + " && " + cmdline],
-                                                   stderr=subprocess.STDOUT,
-                                                   shell=True).decode("utf-8")
-                    compiler_output = compiler_output.replace(language.prgpath, "")
-                    if language.hide_compile_out:
-                        compiler_output = ""
-                    give_points(points_rule, is_test + "compile")
-
-                # self.wfile.write("*** Success!\n")
-                print("*** Compile Success")
-                if nocode and ttype != "jcomtest":
-                    print("Poistetaan ", ttype, language.sourcefilename)
-                    remove(language.sourcefilename)
-                    # print(compiler_output)
-            except subprocess.CalledProcessError as e:
-                '''
-                self.wout("!!! Error code " + str(e.returncode) + "\n")
-                self.wout(e.output)
-                file = open(sourcefilename, 'r')
-                lines = file.read().splitlines()
-                # self.wfile.write(file.read())
-                printLines(self.wfile,lines,0,10000)
-                '''
-                print("directory = " + os.curdir)
-                error_str = "!!! Error code " + str(e.returncode) + "\n"
-                # error_str += e.output.decode("utf-8") + "\n"
-                error_str += e.output.decode("utf-8") + "\n"
-                # errorStr = re.sub("^/tmp/.*cs\(\n", "tmp.cs(", errorStr, flags=re.M)
-                error_str = error_str.replace(language.prgpath, "")
-                output = io.StringIO()
-                file = codecs.open(language.sourcefilename, 'r', "utf-8")
-                lines = file.read().splitlines()
-                file.close()
-                if not nocode:
-                    print_lines(output, lines, 0, 10000)
-                error_str += output.getvalue()
-                output.close()
-                error_str = replace_code(query.cut_errors, error_str)
-
-                if language.delete_tmp:
-                    removedir(language.prgpath)
-                give_points(points_rule, is_test + "notcompile")
-                return write_json_error(self.wfile, error_str, result, points_rule)
 
             # ########################## Running programs ###################################################
             # delete_tmp = False
@@ -1238,9 +1205,34 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 else:  # Most languages are run from here
                     code, out, err, pwddir = language.run(web, slines, points_rule)
 
+                if err.find("Compile error") >= 0:
+                    print("directory = " + os.curdir)
+                    #error_str = "!!! Error code " + str(e.returncode) + "\n"
+                    # error_str += e.output.decode("utf-8") + "\n"
+                    # error_str += e.output.decode("utf-8") + "\n"
+                    # errorStr = re.sub("^/tmp/.*cs\(\n", "tmp.cs(", errorStr, flags=re.M)
+                    error_str = err.replace(language.prgpath, "")
+                    error_str += out
+                    output = io.StringIO()
+                    file = codecs.open(language.sourcefilename, 'r', "utf-8")
+                    lines = file.read().splitlines()
+                    file.close()
+                    if not nocode:
+                        print_lines(output, lines, 0, 10000)
+                    error_str += output.getvalue()
+                    output.close()
+                    error_str = replace_code(query.cut_errors, error_str)
+
+                    if language.delete_tmp:
+                        removedir(language.prgpath)
+                    give_points(points_rule, is_test + "notcompile")
+                    return write_json_error(self.wfile, error_str, result, points_rule)
+
+                give_points(points_rule, is_test + "compile")
+
                 if not err and not language.run_points_given:  # because test points are allready given
                     give_points(points_rule, "run")
-                print(code, out, err, pwddir, compiler_output)
+                # print(code, out, err, pwddir)
 
                 if code == -9:
                     out = "Runtime exceeded, maybe loop forever\n" + out
@@ -1340,7 +1332,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         sresult = json.dumps(result)
         self.wout(sresult)
         # print("Result ========")
-        print(sresult)
+        # print(sresult)
         # print(out)
         # print(err)
 
