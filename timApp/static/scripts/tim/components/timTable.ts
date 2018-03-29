@@ -8,6 +8,22 @@ import {showMessageDialog} from "../dialog";
 export const EDITOR_CLASS = "editorArea";
 export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
 
+const styleToHtml: { [index: string]: string } =
+    {
+        "textAlign": "text-align",
+        "backgroundColor": "background-color",
+        "horizontalAlign": "horizontal-align",
+        "verticalAlign": "vertical-align",
+        "border": "border",
+        "borderTop": "border-top",
+        "borderBottom": "border-bottom",
+        "borderLeft": "border-left",
+        "borderRight": "border-right",
+        "width": "width",
+        "height": "height",
+        "color": "color",
+        "fontSize": "font-size"
+    };
 
 export interface TimTable {
     table: ITable;
@@ -21,38 +37,42 @@ export interface ITable {
 export type CellEntity = ICell | string;
 
 export interface RowsEntity {
-    backgroundColor?: string;
-    row?: ( CellEntity)[];
+    row?: (CellEntity)[];
 }
 
-export interface ICell {
-    editing?: boolean;
-    cell: string;
-    type?: string;
-    colspan?: number;
-    horizontalalign?: string;
+export interface ICellStyles {
+    verticalAlign?: string;
+    fontSize?: string;
     border?: string;
     borderTop?: string;
     borderBottom?: string;
     borderLeft?: string;
     borderRight?: string;
     backgroundColor?: string;
-    textalign?: string;
+    textAlign?: string;
+}
+
+export interface ICell extends ICellStyles {
+    cell: string;
+    editing?: boolean;
+    type?: string;
+    colspan?: number;
     rowspan?: number;
-    verticalAlign?: string;
 }
 
 export interface ColumnsEntity {
-    style?: string;
-    width?: string;
-    backgroundColor?: string;
-    formula?: string;
-    column?: Column;
+    column?: IColumn[];
 }
 
-export interface Column {
-    width: number;
-    name: string;
+export interface IColumn extends IColumnStyles {
+    id?: string;
+    span?: number;
+    formula?: string;
+}
+
+export interface IColumnStyles {
+    width?: string;
+    backgroundColor?: string;
 }
 
 
@@ -85,11 +105,29 @@ class TimTableController implements IController {
 
     private stylingForCell(cell: CellEntity) {
 
-        if (typeof cell == "string") return {};
-        let styles: { [index: string]: string } = {};
+        if (typeof cell === "string") { return {}; }
+        const styles: { [index: string]: string } = {};
 
+        for (const key of Object.keys(cell)) {
+            const property: string = styleToHtml[key];
+            if (property === undefined) { continue; }
+            const c = cell[key as keyof ICellStyles];
+            if (!c) { continue; }
+            styles[property] = c;
+        }
+        return styles;
+    }
 
-        if (cell.backgroundColor) styles["background-color"] = cell.backgroundColor;
+    private stylingForColumn(col: IColumn) {
+        const styles: { [index: string]: string } = {};
+
+        for (const key of Object.keys(col)) {
+            const property: string = styleToHtml[key];
+            if (property === undefined) { continue; }
+            const c = col[key as keyof IColumnStyles];
+            if (!c) { continue; }
+            styles[property] = c;
+        }
         return styles;
     }
 
@@ -115,6 +153,7 @@ timApp.component("timTable", {
     template: `<div ng-class="{editable: $ctrl.editing}""><table>
   <button ng-click="$ctrl.editor()">Edit</button>
    <!--<button ng-app="myApp">Edit</button>-->
+    <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" ng-style="$ctrl.stylingForColumn(c)"/>
     <tr ng-repeat="r in $ctrl.data.table.rows"  style="background-color:{{r.backgroundColor}}">
         <td ng-repeat="td in r.row" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
             ng-style="$ctrl.stylingForCell(td)" ng-click="$ctrl.cellClicked(td)">
