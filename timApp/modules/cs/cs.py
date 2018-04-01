@@ -1356,7 +1356,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         web["pwd"] = pwddir.strip()
 
         t2 = time.time()
-        ts = "%7.4f %7.4f" % ((t2 - t1start), t_run_time)
+        ts = "%7.3f %7.3f" % ((t2 - t1start), t_run_time)
         ts += times_string
         print(ts)
         web["runtime"] = ts

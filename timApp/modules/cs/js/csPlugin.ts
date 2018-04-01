@@ -1773,6 +1773,7 @@ csApp.Controller = function($scope,$transclude) {
             if ( i > 0 ) url = url.substring(i);
             url += "/" + $scope.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
         }
+        let t0run = performance.now();
 		$http<{
             web: {
                 error?: string,
@@ -1794,8 +1795,10 @@ csApp.Controller = function($scope,$transclude) {
 				//return;
 			}
 
-			$scope.runtime = (data.web.runtime || "").trim();
-			$scope.oneruntime = $scope.runtime.split(' ', 1)[0]
+			let tsruntime = ((performance.now() - t0run)/1000).toFixed(3);
+			let runtime = (data.web.runtime || "").trim();
+			$scope.oneruntime = "" + tsruntime + " " +runtime.split(' ', 1)[0]
+			$scope.runtime = "\nWhole: " + tsruntime + "\ncsPlugin: " + runtime;
             if ( data.web.pwd ) ConsolePWD.setPWD(data.web.pwd,$scope);
 			$scope.error = data.web.error;
 			var imgURL = "";
