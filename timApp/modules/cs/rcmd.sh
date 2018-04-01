@@ -30,7 +30,6 @@ eval savestate=$3
 if [  -z "$cmd"  ]; then
     cmd="cmd.sh"
 fi
- 
 #
 if  ! [  -z "$savestate"  ] && [ -f $savestate ]; then
     chmod 755 $savestate
@@ -44,12 +43,12 @@ fi
 ulimit -f 200000 # -t 1 -v 2000 -s 100 -u 10
 
 printf '\nRun time:' >>~/run/time.txt
-(time source ~/$cmd) &>> ~/run/time.txt
+(time source ~/$cmd
 
 if ! [  -z "$savestate"  ]; then
     pwd >~/pwd.txt
     export >$savestate
 fi
-
+) &>> ~/run/time.txt
 rm ~/$cmd # Tämä ansiosta csRun jatkaa sitten suorittamista ja lukee inputin
 
