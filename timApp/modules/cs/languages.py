@@ -87,6 +87,7 @@ class Language:
             self.basename = "tmp/" + self.rndname
             mkdirs("/tmp/tmp")
 
+        self.fullpath = "/tmp/" + self.basename  # check it is sure under userpath
         self.filename = get_param(query, "filename", "prg")
         self.ifilename = get_param(query, "inputfilename", "/input.txt")
 

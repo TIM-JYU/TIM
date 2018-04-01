@@ -737,6 +737,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(str(e))
 
     def do_all_t(self, query):
+        t1start = time.time()
+        t_run_time = 0
+        times_string = ""
+        print("t:", time.time() - t1start)
+
         query.randomcheck = binascii.hexlify(os.urandom(16)).decode()
         pwddir = ""
         print(threading.currentThread().getName())
@@ -887,6 +892,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         extra_files = None
         warnmessage = ""
         language = dummy_language
+        print("t:", time.time() - t1start)
 
         try:
             # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
@@ -911,6 +917,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if not extra_files:
                 extra_files = get_json_param(query.jso, "markup", "-extrafiles", None)
 
+            print("t:", time.time() - t1start)
             if userargs:
                 save["userargs"] = userargs
 
@@ -1090,6 +1097,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # gid = grp.getgrnam("agent").gr_gid
             # os.chown(prgpath, uid, gid)
             shutil.chown(language.prgpath, user="agent", group="agent")
+            print("t:", time.time() - t1start)
 
             # print(ttype)
             # ########################## Compiling programs ###################################################
@@ -1132,6 +1140,26 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if get_param(query, "justSave", False) or get_param(query, "justCmd", False):
                 cmdline = ""
 
+            '''
+            # old unsafe compile
+            compiler_output = ""
+            t1startrun = time.time()
+            if cmdline:
+                compiler_output = check_output(["cd " + language.prgpath + " && " + cmdline],
+                                               stderr=subprocess.STDOUT,
+                                               shell=True).decode("utf-8")
+                compiler_output = compiler_output.replace(language.prgpath, "")
+                if language.hide_compile_out:
+                    compiler_output = ""
+                give_points(points_rule, is_test + "compile")
+
+            # self.wfile.write("*** Success!\n")
+            print("*** Compile Success")
+            t_run_time = time.time() - t1startrun
+            times_string = "\n" + str(t_run_time)
+            '''
+
+            # change old long file names to relatice paths
             language.compile_commandline = cmdline.replace(language.prgpath, ".")
 
             language.prgpath = sanitize_cmdline(language.prgpath)
@@ -1141,7 +1169,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 # remove(language.sourcefilename)
                 # print(compiler_output)
                 language.compile_commandline += " && rm " + language.sourcefilename.replace(language.prgpath, ".")
-
 
             # ########################## Running programs ###################################################
             # delete_tmp = False
@@ -1164,6 +1191,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             out = ""
 
             pwddir = ""
+
+            t1startrun = time.time()
 
             if is_doc:
                 pass  # jos doc ei ajeta
@@ -1205,9 +1234,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 else:  # Most languages are run from here
                     code, out, err, pwddir = language.run(web, slines, points_rule)
 
+                t_run_time = time.time() - t1startrun
+                try:
+                    times_string += codecs.open(language.fullpath + "/run/time.txt", 'r', "iso-8859-15").read() or ""
+                except:
+                    pass
+
                 if err.find("Compile error") >= 0:
                     print("directory = " + os.curdir)
-                    #error_str = "!!! Error code " + str(e.returncode) + "\n"
+                    # error_str = "!!! Error code " + str(e.returncode) + "\n"
                     # error_str += e.output.decode("utf-8") + "\n"
                     # error_str += e.output.decode("utf-8") + "\n"
                     # errorStr = re.sub("^/tmp/.*cs\(\n", "tmp.cs(", errorStr, flags=re.M)
@@ -1319,6 +1354,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         web["console"] = out
         web["error"] = err + warnmessage
         web["pwd"] = pwddir.strip()
+
+        t2 = time.time()
+        ts = "%7.4f %7.4f" % ((t2 - t1start), t_run_time)
+        ts += times_string
+        print(ts)
+        web["runtime"] = ts
 
         result["web"] = web
         # print(result)

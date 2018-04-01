@@ -5,11 +5,16 @@ export LANG=en_US.UTF-8
 export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
 export MONO_PATH=/cs/jypeli
 
-run/compile.sh
-if [ $? -ne 0 ]
-then
-   (>&2 echo "Compile error")
-   exit
+printf "\n" >~/run/time.txt
+if [ -e run/compile.sh ]
+    then
+    printf "Compile time:" >>~/run/time.txt
+    (time run/compile.sh) &>> ~/run/time.txt
+    if [ $? -ne 0 ]
+    then
+       (>&2 echo "Compile error")
+       exit
+    fi
 fi
 
 if [ $2 != "True" ]; then
@@ -53,7 +58,8 @@ fi
 
 ulimit -f 200000 # -t 1 -v 2000 -s 100 -u 10
 
-source ~/$cmd
+printf '\nRun time:' >>~/run/time.txt
+(time source ~/$cmd) &>> ~/run/time.txt
 
 if ! [  -z "$savestate"  ]; then
     pwd >~/pwd.txt
@@ -62,5 +68,3 @@ fi
 rm ~/$cmd # Tämä ansiosta csRun jatkaa sitten suorittamista ja lukee inputin
 #set >>~/.state
 
- 
- 

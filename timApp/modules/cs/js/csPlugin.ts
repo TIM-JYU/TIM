@@ -271,6 +271,8 @@ interface ICSAppScope extends IConsolePWDScope {
     runSuccess: boolean;
     viewCode: boolean;
     imgURL: string;
+    oneruntime: string;
+    runtime: string;
     resImage: string;
     result: string;
     taunoOn: boolean;
@@ -825,6 +827,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
 				  ' <a href="" ng-if="!noeditor" ng-click="showOtherEditor();">{{editorText[editorModeIndecies[editorMode+1]]}}</a>' +
+                  ' <span ng-if="showRuntime" class="inputSmall" style="float: right;" title="Run time in sec {{runtime}}">{{oneruntime}}</span>' +
                   ' <span ng-if="wrap.n!=-1" class="inputSmall" style="float: right;"><label title="Put 0 to no wrap">wrap: <input type="text"  ng-pattern="/[-0-9]*/" ng-model="wrap.n" size="2" /></label></span>' +
                   '</p>'+
                   '</div>'+
@@ -1004,6 +1007,7 @@ csApp.directiveFunction = function(t,isInput) {
   			csApp.set(scope,attrs,"mode");
   			csApp.set(scope,attrs,"iframeopts","");
   			csApp.set(scope,attrs,"noConsoleClear",false);
+  			csApp.set(scope,attrs,"showRuntime",false);
 
             csApp.set(scope,attrs,"wrap", scope.isText ? 70 : -1);
             scope.wrap = {n:scope.wrap}; // to avoid child scope problems
@@ -1715,6 +1719,7 @@ csApp.Controller = function($scope,$transclude) {
 		if ( !(languageTypes.isInArray(runType, csJSTypes ) || $scope.noConsoleClear) ) $scope.result = "";
 		$scope.runTestGreen = false;
 		$scope.runTestRed = false;
+        $scope.oneruntime = ""
         var isInput = false;
         if ( $scope.type.indexOf("input") >= 0 ) isInput = true;
 
@@ -1779,6 +1784,7 @@ csApp.Controller = function($scope,$transclude) {
                 comtestError?: string,
                 docurl?: string,
                 console?: string,
+                runtime?: string,
             }
         }>({method: 'PUT', url: url, data:params, headers: {'Content-Type': 'application/json'}, timeout: 20000 }
 		).then(function(response) {
@@ -1787,6 +1793,9 @@ csApp.Controller = function($scope,$transclude) {
 				$scope.error = data.web.error;
 				//return;
 			}
+
+			$scope.runtime = (data.web.runtime || "").trim();
+			$scope.oneruntime = $scope.runtime.split(' ', 1)[0]
             if ( data.web.pwd ) ConsolePWD.setPWD(data.web.pwd,$scope);
 			$scope.error = data.web.error;
 			var imgURL = "";

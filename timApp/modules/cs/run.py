@@ -127,10 +127,13 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     if compile_commandline:
         compile_cmnds = "#!/usr/bin/env bash\n" + compile_commandline + \
                 " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + "\n"
+        codecs.open(compf, "w", "utf-8").write(compile_cmnds)  # kirjoitetaan kääntämisskripti
+        os.chmod(compf, 0o777)
     else:
-        compile_cmnds = "#!/usr/bin/env bash\n"
-    codecs.open(compf, "w", "utf-8").write(compile_cmnds)  # kirjoitetaan kääntämisskripti
-    os.chmod(compf, 0o777)
+        try:
+            os.remove(compf)
+        except:
+            pass
 
     # cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" +
     # stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
