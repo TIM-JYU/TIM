@@ -9,7 +9,6 @@ import threading
 from languages import *
 import pwd, os
 
-
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)
 
@@ -224,7 +223,7 @@ def get_md(ttype, query):
         runner = 'cs-wescheme-runner'
 
     usercode = None
-    user_print = get_json_param(query.jso, "userPrint", None,  False)
+    user_print = get_json_param(query.jso, "userPrint", None, False)
     if user_print:
         usercode = get_json_eparam(query.jso, "state", "usercode", None, False)
     if usercode is None:
@@ -267,8 +266,8 @@ def get_md(ttype, query):
         return s
 
     if target_format == "latex":
-        code = '\\begin{lstlisting}\n' +\
-               str(usercode) + '\n' +\
+        code = '\\begin{lstlisting}\n' + \
+               str(usercode) + '\n' + \
                '\\end{lstlisting}\n'
 
         if 'text' in ttype and rows is not None and str(usercode) == '':
@@ -276,13 +275,13 @@ def get_md(ttype, query):
             rows = str_to_int(rows, 1)
             for i in range(0, rows):
                 r += "\n"
-            code = '\\begin{verbatim}\n' +\
-                   r +\
+            code = '\\begin{verbatim}\n' + \
+                   r + \
                    '\\end{verbatim}\n'
 
-        s = '\\begin{taskenv}{' + header + '}{' + stem + '}{'+footer + '}' +\
-            '\\lstset{language=[Sharp]C, numbers=left}\n' +\
-            code +\
+        s = '\\begin{taskenv}{' + header + '}{' + stem + '}{' + footer + '}' + \
+            '\\lstset{language=[Sharp]C, numbers=left}\n' + \
+            code + \
             '\\end{taskenv}'
 
         return s
@@ -382,7 +381,7 @@ def get_html(ttype, query):
             s = '<pre>' + usercode + '</ pre>' + s
         if not s:
             s = "No answer"
-        result = NOLAZY + '<div class="review" ng-non-bindable>'+s + '</div>'
+        result = NOLAZY + '<div class="review" ng-non-bindable>' + s + '</div>'
         return result
 
     r = runner + is_input
