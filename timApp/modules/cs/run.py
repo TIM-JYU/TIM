@@ -118,7 +118,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     compf = cwd + "/run/compile.sh"
     cmnds = ' '.join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
     source = ''
-    if savestate:
+    if savestate and cmnds.endswith('.sh'): # source works only for shell scripts
         source = 'source '
     # tehdään komentojono jossa suuntaukset
     cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n" + extra + source + cmnds + \

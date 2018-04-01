@@ -31,26 +31,11 @@ if [  -z "$cmd"  ]; then
     cmd="cmd.sh"
 fi
  
-# Copy Jypeli dll's to temp directory
-# cp /cs/jypeli/* /tmp/
-
-
-#if ! [ -f ".bashrc" ]; then
-#    cp /cs/bash/.bashrc ".bashrc"
-#fi
-
-# ./.bashrc
+#
 if  ! [  -z "$savestate"  ] && [ -f $savestate ]; then
     chmod 755 $savestate
     source $savestate
 fi
-# cd /home/agent/run
-# echo "Running: $cmd" >> /tmp/log/log.txt
-# echo "Running: $cmd" >> log.txt
-#set +e
-#chmod 755 ~/$cmd || echo ""
-#set -e
-#cp $cmd a.sh
 
 if ! [  -z "$savestate"  ]; then
     cd $PWD # ei tässä kun kaikki eivät kestä muutosta, mutta ilman tätä ei aloita edellisestä hakemistosta
@@ -65,6 +50,6 @@ if ! [  -z "$savestate"  ]; then
     pwd >~/pwd.txt
     export >$savestate
 fi
+
 rm ~/$cmd # Tämä ansiosta csRun jatkaa sitten suorittamista ja lukee inputin
-#set >>~/.state
 

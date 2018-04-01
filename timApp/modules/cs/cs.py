@@ -1159,7 +1159,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             '''
 
             # change old long file names to relatice paths
-            language.compile_commandline = cmdline.replace(language.prgpath, ".")
+            language.compile_commandline = cmdline.replace(language.prgpath, "/home/agent")
 
             language.prgpath = sanitize_cmdline(language.prgpath)
 
@@ -1167,7 +1167,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 print("Poistetaan ", ttype, language.sourcefilename)
                 # remove(language.sourcefilename)
                 # print(compiler_output)
-                language.compile_commandline += " && rm " + language.sourcefilename.replace(language.prgpath, ".")
+                language.compile_commandline += " && rm " + \
+                                                language.sourcefilename.replace(language.prgpath, "/home/agent")
 
             # ########################## Running programs ###################################################
             # delete_tmp = False

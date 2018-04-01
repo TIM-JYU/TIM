@@ -100,7 +100,7 @@ class Language:
         self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
         # self.sourcefilename = "./%s%s" % (self.filename, self.filedext)
         # self.exename = "./%s.exe" % self.filename
-        self.pure_exename = "./%s.exe" % self.filename
+        self.pure_exename = "/home/agent/%s.exe" % self.filename
         self.inputfilename = "/tmp/%s/%s" % (self.basename, self.ifilename)
         self.prgpath = "/tmp/%s" % self.basename
         self.filepath = self.prgpath
