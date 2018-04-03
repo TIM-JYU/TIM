@@ -63,7 +63,7 @@ def get_templates_for_folder(folder: Folder) -> List[DocEntry]:
     return templates
 
 
-def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInfo], template_name):
+def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInfo], template_name, use_template=True):
     item = create_item(item_path,
                        item_type,
                        item_title,
@@ -74,7 +74,7 @@ def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInf
         if copied_doc:
             for tr, new_tr in copy_document_and_enum_translations(copied_doc, item):
                 copy_default_rights(new_tr.id, blocktypes.DOCUMENT)
-        else:
+        elif use_template:
             templates = get_templates_for_folder(item.parent)
             matched_templates = None
             if template_name:

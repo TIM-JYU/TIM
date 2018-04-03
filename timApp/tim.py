@@ -378,9 +378,10 @@ def create_or_get_and_wipe_document(path: str, title: str):
     d = DocEntry.find_by_path(path, try_translation=False)
 
     if not d:
-        return do_create_item(path, "document", title, None, None)
+        return do_create_item(path, "document", title, None, None, False)
+    else:
+        d.title = title  # update title of existing document
 
-    d.title = title
     d.document.update("", d.document.export_markdown())
 
     return d
