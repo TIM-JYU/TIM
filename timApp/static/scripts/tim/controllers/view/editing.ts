@@ -440,7 +440,7 @@ export class EditingHandler {
     }
 
     getEditorFunctions($par?: Paragraph) {
-        const parEditable = (!$par || canEditPar(this.viewctrl.item, $par));
+        const parEditable = ((!$par && this.viewctrl.item.rights.editable) || ($par && canEditPar(this.viewctrl.item, $par)));
         if (this.viewctrl.editing) {
             return [
                 {func: () => this.goToEditor(), desc: "Go to editor", show: true},

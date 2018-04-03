@@ -243,7 +243,7 @@ export function canEditPar(item: IItem, $par: JQuery) {
     const attrs = getParAttributes($par);
     const right = item.rights[attrs.edit];
     if (right == null) {
-        return true;
+        return item.rights.editable;
     }
     return right;
 }
