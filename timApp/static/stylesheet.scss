@@ -109,10 +109,10 @@ a .glyphicon {
         min-width: $paragraph-preferred-width;
     }
     max-width: $paragraph-preferred-width;
-    .smalltext > .parContent {
+    .smalltext .parContent {
         font-size: small;
     }
-    .linkit > .parContent {
+    .linkit .parContent {
         font-size: small;
     }
     .authorinfo {
