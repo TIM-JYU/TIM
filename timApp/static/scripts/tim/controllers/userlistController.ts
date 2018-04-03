@@ -172,27 +172,31 @@ export class UserListController implements IController {
         const data = this.gridApi.core.getVisibleRows(this.gridApi.grid);
         let dataKorppi = "";
 
-        const fields = ["task_points", "velp_points", "total_points"];
+        const fields = ["total_points", "task_points", "velp_points"];
         const fieldNames: {[index: string]: string} = {};
-        fieldNames[fields[0]] = options.taskPointField;
-        fieldNames[fields[1]] = options.velpPointField;
-        fieldNames[fields[2]] = options.totalPointField;
-
+        fieldNames[fields[0]] = options.totalPointField;
+        fieldNames[fields[1]] = options.taskPointField;
+        fieldNames[fields[2]] = options.velpPointField;
+        let filename;
         for (let i = 0; i < fields.length; ++i) {
-            if (fieldNames[fields[i]]) {
+            const fieldName = fieldNames[fields[i]];
+            if (fieldName) {
+                filename = (filename || fieldName + ".txt");
                 if (dataKorppi !== "") {
                     dataKorppi += "\n";
                 }
                 for (let j = 0; j < data.length; j++) {
                     const entity = data[j].entity as any;
                     if (entity[fields[i]] != null) {
-                        dataKorppi += entity.name + ";" + fieldNames[fields[i]] + ";" + entity[fields[i]] + "\n";
+                        dataKorppi += entity.name + ";" + fieldName + ";" + entity[fields[i]] + "\n";
                     }
                 }
             }
         }
 
-        const filename = "korppi_" + this.viewctrl.docId + ".txt";
+        if (!filename) {
+            filename = "korppi_" + this.viewctrl.docId + ".txt";
+        }
         // from https://stackoverflow.com/a/33542499
         const blob = new Blob([dataKorppi], {type: "text/plain"});
         if (window.navigator.msSaveOrOpenBlob) {
