@@ -148,7 +148,7 @@ export async function loadMap() {
         // Canvases used to draw the final map
         for (let j = 0; j < 3; j++) {
             canvas = document.createElement("canvas");
-            container.appendChild(canvas);
+            $(".mapContainer").append(canvas);
 
             // Set some attributes for the canvas
             if (j === 0) {
@@ -633,7 +633,7 @@ export async function loadMap() {
             middleCanvas.width = json.width * json.tilewidth * scale;
             middleCanvas.height = json.height * json.tileheight + json.tileheight * 3 * scale;
 
-            container.appendChild(middleCanvas);
+            $(".mapContainer").append(middleCanvas);
 
             // Deactivate currently active tiles
             tiles.forEach(function(t) {
@@ -771,10 +771,11 @@ export async function loadMap() {
         // On change event for the zoom input
         $(".mapZoom").on("change", function() {
             const val = $(".mapZoom").val();
-            if (typeof val !== "number") {
-                return;
+            if (typeof val === "number") {
+                scale = val;
+            } else if (typeof val === "string") {
+                scale = parseFloat(val);
             }
-            scale = val;
             clearSelection(tiles);
             createCanvases();
             tiles = drawMap();
@@ -783,10 +784,11 @@ export async function loadMap() {
         // On change event for the alpha input
         $(".alphaRange").on("change", function() {
             const val = $(".alphaRange").val();
-            if (typeof val !== "number") {
-                return;
+            if (typeof val === "number") {
+                alpha = val;
+            } else if (typeof val === "string") {
+                alpha = parseFloat(val);
             }
-            alpha = val;
             clearSelection(tiles);
             createCanvases();
             tiles = drawMap();
