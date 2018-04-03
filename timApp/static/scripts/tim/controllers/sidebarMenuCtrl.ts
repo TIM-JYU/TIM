@@ -7,6 +7,7 @@ import {ILecture, ILectureListResponse2} from "../lecturetypes";
 import {ViewCtrl} from "./view/viewctrl";
 import {showMessageDialog} from "../dialog";
 import {ITemplate, showPrintDialog} from "./printCtrl";
+import {showMergePdfDialog} from "./mergePdfCtrl";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -148,15 +149,12 @@ export class SidebarMenuCtrl implements IController {
         window.location.href = window.location.href.replace("/view/", "/createMinuteExtracts/" );
     }
 
- stampPdf() {
-        //Todo: must do some kind of dialog to manage stamping and merging.
-        window.location.href = window.location.href.replace("/view/", "/manage/");
+    stampPdf() {
     }
 
     mergePdf() {
-        //
+        showMergePdfDialog({});
     }
-
 }
 
 timApp.component("timSidebarMenu", {
