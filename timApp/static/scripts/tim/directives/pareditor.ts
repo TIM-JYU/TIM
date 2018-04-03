@@ -662,7 +662,7 @@ or newer one that is more familiar to write in YAML:
             const divWidth = div.width();
             const editorOffset = editor.offset();
             const editorWidth = editor.width();
-            if (!currDivOffset || !winWidth || !divWidth || !editorOffset || !editorWidth) {
+            if (currDivOffset == null || winWidth == null || divWidth == null || editorOffset == null || editorWidth == null) {
                 return;
             }
             // If preview has just been released or it was released last time editor was open
