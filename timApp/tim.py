@@ -380,10 +380,11 @@ def create_or_get_and_wipe_document(path: str, title: str):
     if not d:
         return do_create_item(path, "document", title, None, None)
 
-    # d.short_name = title ; doesn't work
+    d.title = title
     d.document.update("", d.document.export_markdown())
 
     return d
+
 
 @app.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def throw_ex():
