@@ -8,6 +8,7 @@ import {ViewCtrl} from "./view/viewctrl";
 import {showMessageDialog} from "../dialog";
 import {ITemplate, showPrintDialog} from "./printCtrl";
 import {showMergePdfDialog} from "./mergePdfCtrl";
+import angular from "angular";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -32,6 +33,7 @@ export class SidebarMenuCtrl implements IController {
     private vctrl?: ViewCtrl;
     private bookmarks: {};
     private isDocumentMinutes: boolean;
+    private docSettings: {macros: {nr: string}}
 
     constructor() {
         this.currentLecturesList = [];
@@ -56,6 +58,7 @@ export class SidebarMenuCtrl implements IController {
 
     $onInit() {
         this.isDocumentMinutes = $window.isMinutes;
+        this.docSettings = $window.docSettings;
     }
 
     updateLeftSide() {
@@ -145,8 +148,24 @@ export class SidebarMenuCtrl implements IController {
     }
 
     createMinuteExtracts() {
-        // Might not be the best way of doing this?
         window.location.href = window.location.href.replace("/view/", "/createMinuteExtracts/" );
+    }
+
+    /**
+     * Creates minutes from a IT faculty council meeting invitation
+     */
+    createMinutes() {
+        // why can't we debug this (the breakpoint isn't hit)?
+        $http.post<{path: string}>("/createItem", angular.extend({
+            item_path: this.vctrl.item.location + "/PK/PK" + this.docSettings.macros.nr,
+            item_type: "document",
+            item_title: "PK" + this.docSettings.macros.nr,
+            copy: this.vctrl.item.id,
+        })).then((response) => {
+            $window.location.href = "/view/" + response.data.path;
+        }, async (response) => {
+            await showMessageDialog(response.data.error);
+        });
     }
 
     stampPdf() {

@@ -63,6 +63,9 @@
                     <br>
                     <button class="timButton btn btn-block" ng-show="$ctrl.isDocumentMinutes" ng-click="$ctrl.createMinuteExtracts()">Create extracts</button>
                     <br>
+                    <!-- <button class="timButton btn btn-block" ng-show="$ctrl.docSettings.macros.nr != null && !$ctrl.isDocumentMinutes" ng-click="$ctrl.createMinutes()">Create minutes</button> -->
+                    <button class="timButton btn btn-block" ng-show="!$ctrl.isDocumentMinutes" ng-click="$ctrl.createMinutes()">Create minutes</button>
+                    <br ng-show="$ctrl.docSettings.macros.nr != null && !$ctrl.isDocumentMinutes">
                     <button class="timButton btn btn-block" ng-show="$ctrl.isDocumentMinutes" ng-click="$ctrl.stampPdf()">Stamp attachments</button>
                     <br>
                     <button class="timButton btn btn-block" ng-show="$ctrl.isDocumentMinutes" ng-click="$ctrl.mergePdf()">Merge attachments</button>
