@@ -77,35 +77,38 @@ export async function loadMap() {
         return;
     }
 
-    const container = $container[0];
-    $container.css({
-        "z-index": 0,
-        "display": "none",
-        "position": "relative",
-    });
+    // separate scope is intentional
+    {
+        const container = $container[0];
+        $container.css({
+            "z-index": 0,
+            "display": "none",
+            "position": "relative",
+        });
 
-    // Set properties for zoom input
-    const zoomInput = $(".mapZoom");
-    zoomInput.attr({max: 1, min: 0.3, step: 0.05});
-    zoomInput.val(scale);
-    zoomInput.width(300);
+        // Set properties for zoom input
+        const zoomInput = $(".mapZoom");
+        zoomInput.attr({max: 1, min: 0.3, step: 0.05});
+        zoomInput.val(scale);
+        zoomInput.width(300);
 
-    // Set properties for alpha input
-    const alphaInput = $(".alphaRange");
-    alphaInput.attr({max: 1, min: 0, step: 0.05});
-    alphaInput.val(alpha);
-    alphaInput.width(300);
+        // Set properties for alpha input
+        const alphaInput = $(".alphaRange");
+        alphaInput.attr({max: 1, min: 0, step: 0.05});
+        alphaInput.val(alpha);
+        alphaInput.width(300);
 
-    // Title and description elements for the info box
-    const title = $("<p></p>");
-    title.addClass("infoBoxTitle");
-    title.css("position", "absolute");
-    title.appendTo(container);
+        // Title and description elements for the info box
+        const title = $("<p></p>");
+        title.addClass("infoBoxTitle");
+        title.css("position", "absolute");
+        title.appendTo(container);
 
-    const description = $("<p></p>");
-    description.addClass("infoBoxDescription");
-    description.css("position", "absolute");
-    description.appendTo(container);
+        const description = $("<p></p>");
+        description.addClass("infoBoxDescription");
+        description.css("position", "absolute");
+        description.appendTo(container);
+    }
 
     /**
      * Function for preloading the images
@@ -437,7 +440,8 @@ export async function loadMap() {
             }
 
             // Set style settings for info box text elements
-
+            const title = $(".mapContainer .infoBoxTitle");
+            const description = $(".mapContainer .infoBoxDescription");
             title.css({
                 "position": "absolute",
                 "left": (rectX + 10 * tscale) + "px",
@@ -634,6 +638,8 @@ export async function loadMap() {
             middleCanvas.height = json.height * json.tileheight + json.tileheight * 3 * scale;
 
             $(".mapContainer").append(middleCanvas);
+            const title = $(".mapContainer .infoBoxTitle");
+            const description = $(".mapContainer .infoBoxDescription");
 
             // Deactivate currently active tiles
             tiles.forEach(function(t) {
