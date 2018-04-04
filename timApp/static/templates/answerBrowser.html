@@ -75,7 +75,7 @@
                         </button>
                     </form>
                     <span ng-show="$ctrl.points !== null && !($ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())) && $ctrl.taskInfo.pointsText">{{ $ctrl.taskInfo.pointsText }} {{ $ctrl.points }}</span>
-                    <span ng-show="$ctrl.taskInfo.maxPoints && $ctrl.points !== null">/ {{ taskInfo.maxPoints }}</span>
+                    <span ng-show="$ctrl.taskInfo.maxPoints && $ctrl.points !== null">/ {{ $ctrl.taskInfo.maxPoints }}</span>
                     <span ng-show="!$ctrl.selectedAnswer.valid && $ctrl.points !== null">(invalid)</span>
                     <span ng-show="!$ctrl.viewctrl.teacherMode && $ctrl.allowCustomPoints()">
                         <label class="checkbox-inline">
