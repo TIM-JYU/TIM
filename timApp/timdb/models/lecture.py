@@ -46,7 +46,10 @@ class Lecture(db.Model):
     def max_students(self):
         m = self.options_parsed.get('max_students')
         if m is not None:
-            m = int(m)  # TODO is this needed?
+            try:
+                m = int(m)
+            except ValueError:
+                m = None
         return m
 
     @property
