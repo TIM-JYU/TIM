@@ -15,11 +15,13 @@ for creating interactive documents such as:
 
 TIM can be used for:
 
-* normal lectures
-* peer instruction
-* self studying
-* MOOC
-* Flipped Classroom
+* teaching:
+    * normal lectures
+    * peer instruction
+    * self studying
+    * MOOC
+    * Flipped Classroom
+* documentation
 * anything else you can imagine!
 
 For more information about TIM, please
