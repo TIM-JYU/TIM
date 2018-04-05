@@ -125,6 +125,7 @@ flask-assets \
 flask-cache \
 flask-compress \
 flask-migrate \
+flask-openid \
 flask-sqlalchemy \
 flask-testing \
 gevent \

@@ -20,6 +20,7 @@ from yubico_client.yubico_exceptions import YubicoError
 
 from timApp.accesshelper import verify_logged_in, verify_admin
 from timApp.dbaccess import get_timdb
+from timApp.korppi.openid import KorppiOpenIDResponse
 from timApp.logger import log_error
 from timApp.requesthelper import verify_json_params, get_option, is_xhr
 from timApp.responsehelper import safe_redirect, json_response, ok_response
@@ -27,6 +28,7 @@ from timApp.routes.notify import send_email
 from timApp.sessioninfo import get_current_user, get_other_users, get_session_users_ids, get_other_users_as_list, \
     get_current_user_object
 from timApp.sessioninfo import get_current_user_id, logged_in
+from timApp.tim_app import oid
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.newuser import NewUser
 from timApp.timdb.models.user import User
@@ -122,7 +124,10 @@ def login_with_korppi():
     user_name = pieces[0]
     real_name = pieces[1]
     email = pieces[2]
+    return create_or_update_user(email, real_name, user_name)
 
+
+def create_or_update_user(email: str, real_name: str, user_name: str):
     user: User = User.query.filter_by(name=user_name).first()
 
     if user is None:
@@ -148,6 +153,50 @@ def login_with_korppi():
     db.session.commit()
     set_user_to_session(user)
     return finish_login()
+
+
+@login_page.route("/openIDLogin")
+@oid.loginhandler
+def login_with_openid():
+    add_user = get_option(request, 'add_user', False)
+    if not logged_in() and add_user:
+        return abort(403, 'You must be logged in before adding users to session.')
+    if not add_user and logged_in():
+        flash("You're already logged in.")
+        return finish_login()
+    if session.get('adding_user') is None:
+        session['adding_user'] = add_user
+
+    provider = get_option(request, 'provider', None)
+    if provider != 'korppi':
+        return abort(400, 'Unknown OpenID provider. Only korppi is supported so far.')
+    save_came_from()
+    # see possible fields at http://openid.net/specs/openid-simple-registration-extension-1_0.html
+    return oid.try_login(current_app.config['OPENID_IDENTITY_URL'],
+                         ask_for_optional=['email', 'fullname', 'firstname', 'lastname'])
+
+
+username_parse_error = 'Could not parse username from OpenID response.'
+
+
+@oid.after_login
+def openid_success_handler(resp: KorppiOpenIDResponse):
+    m = re.fullmatch('https://korppi.jyu.fi/openid/account/([a-z]+)', resp.identity_url)
+    if not m:
+        return abort(400, username_parse_error)
+    username = m.group(1)
+    if not username:
+        return abort(400, username_parse_error)
+    if not resp.email:
+        return abort(400, 'Missing email')
+    if not resp.fullname:
+        return abort(400, 'Missing fullname')
+    if not resp.firstname:
+        return abort(400, 'Missing firstname')
+    if not resp.lastname:
+        return abort(400, 'Missing lastname')
+    fullname = f'{resp.lastname} {resp.firstname}'
+    return create_or_update_user(resp.email, fullname, username)
 
 
 def set_user_to_session(user: User):
