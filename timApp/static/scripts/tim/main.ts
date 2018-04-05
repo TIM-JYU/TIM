@@ -47,7 +47,7 @@ $(() => {
 
     // For some reason, anchor link in URL doesn't work when loading a page for the first time.
     // This is a workaround for it.
-    if (location.hash) {
+    if (location.hash && !location.hash.includes("/")) {
         const element = $(location.hash)[0];
         if (element) {
             // Both with and without setTimeout are needed to get smooth experience.
