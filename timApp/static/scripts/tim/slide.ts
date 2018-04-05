@@ -4,47 +4,6 @@ import {background_color, background_url, is_owner, item} from "tim/show_slide_v
 import {GetURLParameter} from "tim/utils";
 import {$log} from "./ngimport";
 
-// Full list of configuration options available here:
-// https://github.com/hakimel/reveal.js#configuration
-Reveal.initialize({
-    fragments: true,
-    width: 1150,
-    controls: true,
-    progress: true,
-    history: true,
-    center: true,
-    // Flags if speaker notes should be visible to all viewers
-    showNotes: false,
-    viewDistance: 10,
-    theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
-    transition: Reveal.getQueryHash().transition || "fade", // default/cube/page/concave/zoom/linear/fade/none
-    updateSlideStatus,
-    isOwner: is_owner,
-    // Optional libraries used to extend on reveal.js
-    dependencies: [
-        {
-            src: "/static/scripts/reveal/lib/js/classList.js",
-            condition() {
-                return !document.body.classList;
-            },
-        },
-        {
-
-            src: "/static/scripts/reveal/plugin/zoom-js/zoom.js",
-            async: true,
-            condition() {
-                return !!document.body.classList;
-            },
-        },
-        {
-            src: "/static/scripts/reveal/plugin/notes/notes.js",
-            async: true,
-            condition() {
-                return !!document.body.classList;
-            },
-        },
-    ],
-});
 const pollInterval = 500;
 let pollTimeout: number;
 let receiving = true;
@@ -115,31 +74,75 @@ function updateSlideStatus(h: number, v: number, f: number) {
     });
 }
 
-if (GetURLParameter("controls") == null && is_owner) {
-    pollTimeout = setTimeout(refresh, pollInterval);
+function initReveal() {
+    // Full list of configuration options available here:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        fragments: true,
+        width: 1150,
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+        viewDistance: 10,
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || "fade", // default/cube/page/concave/zoom/linear/fade/none
+        updateSlideStatus,
+        isOwner: is_owner,
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+            {
+                src: "/static/scripts/reveal/lib/js/classList.js",
+                condition() {
+                    return !document.body.classList;
+                },
+            },
+            {
+
+                src: "/static/scripts/reveal/plugin/zoom-js/zoom.js",
+                async: true,
+                condition() {
+                    return !!document.body.classList;
+                },
+            },
+            {
+                src: "/static/scripts/reveal/plugin/notes/notes.js",
+                async: true,
+                condition() {
+                    return !!document.body.classList;
+                },
+            },
+        ],
+    });
 }
 
-window.onload = function() {
-    document.onkeyup = function(evt) {
+$(() => {
+    if (GetURLParameter("controls") == null && is_owner) {
+        pollTimeout = setTimeout(refresh, pollInterval);
+    }
+    document.onkeyup = function (evt) {
         if (evt.keyCode == 82) {
             pollTimeout = setTimeout(refresh, pollInterval);
         }
     };
-    setTimeout(function() {
+    initReveal();
+    setTimeout(function () {
         Reveal.slide();
     }, 2000);
-};
 
-if (background_url) {
-    if (background_url == "none") {
-        $(".backgrounds").css("background-image", "None");
-    } else {
-        $(".backgrounds").css("background-image", "url('" + background_url + "')");
+    if (background_url) {
+        if (background_url == "none") {
+            $(".backgrounds").css("background-image", "None");
+        } else {
+            $(".backgrounds").css("background-image", "url('" + background_url + "')");
+        }
     }
-}
 
-if (background_color) {
-    if (background_color != "none") {
-        $(".backgrounds").css("background-color", background_color);
+    if (background_color) {
+        if (background_color != "none") {
+            $(".backgrounds").css("background-color", background_color);
+        }
     }
-}
+});
