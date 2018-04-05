@@ -18,7 +18,7 @@ from timApp.htmlSanitize import sanitize_html
 from timApp.markdownconverter import par_list_to_html_list, expand_macros
 from timApp.rndutils import get_rands_as_dict, get_rands_as_str
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
-from timApp.types import DocumentType
+from timApp.timtypes import DocumentType
 from timApp.utils import count_chars, get_error_html, title_to_id
 
 SKIPPED_ATTRS = {'r', 'rd', 'rp', 'ra', 'rt', 'settings'}

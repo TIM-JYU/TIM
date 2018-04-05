@@ -8,7 +8,7 @@ from timApp.timdb.gamification_models.gamificationdocument import GamificationDo
 from timApp.timdb.models.block import insert_block
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.tim_models import db
-from timApp.types import UserType
+from timApp.timtypes import UserType
 from timApp.utils import split_location
 
 

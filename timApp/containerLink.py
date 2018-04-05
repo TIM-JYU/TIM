@@ -10,7 +10,7 @@ from timApp.dumboclient import call_dumbo
 from timApp.logger import log_warning
 from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.pluginexception import PluginException
-from timApp.types import DocumentType as Document
+from timApp.timtypes import DocumentType as Document
 
 TIM_URL = ""
 

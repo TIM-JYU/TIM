@@ -25,7 +25,7 @@ from timApp.documentmodel.validationresult import ValidationResult
 from timApp.documentmodel.version import Version
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.exceptions import TimDbException, PreambleException, InvalidReferenceException
-from timApp.types import UserType, DocInfoType
+from timApp.timtypes import UserType, DocInfoType
 from timApp.utils import get_error_html, trim_markdown
 
 
