@@ -127,10 +127,10 @@ $(() => {
             pollTimeout = setTimeout(refresh, pollInterval);
         }
     };
-    initReveal();
     setTimeout(function () {
+        initReveal();
         Reveal.slide();
-    }, 2000);
+    }, 1000);
 
     if (background_url) {
         if (background_url == "none") {
