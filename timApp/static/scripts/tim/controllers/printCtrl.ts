@@ -160,7 +160,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
 
 registerDialogComponent("timPrint",
     PrintCtrl,
-    {templateUrl: "/static/templvbv ates/printDialog.html"});
+    {templateUrl: "/static/templates/printDialog.html"});
 
 export async function showPrintDialog(p: IPrintParams) {
     return await showDialog<PrintCtrl>("timPrint", {params: () => p}).result;
