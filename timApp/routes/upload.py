@@ -124,10 +124,10 @@ def upload_file():
 
     # if there's an attachment macro in editor, this will be true
     autostamp = request.form.get('autostamp')
-    print("Autostamping: ", autostamp)
+    print("Autostamping: ", repr(autostamp))
 
     # directed to stamping upload if true
-    if autostamp:
+    if "true" in autostamp or "True" in autostamp:
         attachment_params = json.loads(request.form.get('attachmentParams'))
         stamp_data = timApp.tools.pdftools.attachment_params_to_dict(attachment_params)
         return upload_and_stamp_attachment(file, stamp_data)
