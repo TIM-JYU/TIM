@@ -388,6 +388,11 @@ export class TextAreaParEditor extends BaseParEditor {
         return this.getEditorText().startsWith(text);
     }
 
+    editorGetRow(i: number) {
+        //TODO: korjaa palauttamaan vain rivi i
+        return this.getEditorText();
+    }
+
     changeValue(attributes: string[], text: string) {
         const sel = this.editor.getSelection();
         const t = this.getEditorText();

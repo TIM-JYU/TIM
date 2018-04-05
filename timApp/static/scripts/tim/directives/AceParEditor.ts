@@ -467,6 +467,11 @@ export class AceParEditor extends BaseParEditor {
         return this.editor.session.getLine(0).startsWith(text);
     }
 
+
+    editorGetRow(i: number) {
+        return this.editor.session.getLine(i);
+    }
+
     changeValue(attributes: string[], text: string) {
         const pos = this.editor.getCursorPosition();
         let line = this.editor.session.getLine(pos.row);

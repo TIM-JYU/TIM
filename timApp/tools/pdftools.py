@@ -21,6 +21,7 @@ default_stamp_format = "Kokous {1}\n\nLiite {2} lista {3}"
 default_subprocess_timeout = 10
 pdfmerge_timeout = 300
 
+
 ##############################################################################
 # Custom error classes:
 
@@ -163,9 +164,7 @@ def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
     return output_path
 
 
-def get_stamp_text(
-        item: dict,
-        text_format: str = default_stamp_format) -> str:
+def get_stamp_text(item: dict, text_format: str) -> str:
     """
     Gives formatted stamp text; note: may not work properly with non-ascii
     :param item: dictionary with 'date','attachment' and 'issue' keys
@@ -199,7 +198,7 @@ def create_stamp(
         work_dir: str,
         stamp_name: str,
         text: str,
-        remove_pdflatex_files: bool=False) -> str:
+        remove_pdflatex_files: bool = False) -> str:
     """
     Creates a stamp pdf-file with given text into temp folder
     :param model_path: model stamp tex-file's complete path; contains
@@ -397,28 +396,34 @@ def get_base_filename(path: str, no_extension: bool = False) -> str:
         return os_path.basename(path)
 
 
-def stamp_merge_pdfs(
+def attachment_params_to_dict(params: List[str]) -> List[dict]:
+    if params.__len__() < 6:
+        raise StampDataInvalidError("request missing params", ", ".join(params))
+
+    # TODO: more intelligent "-removal in cases of inner quotes
+    attachment = params[3].replace('"', '').strip()
+    issue = params[4].replace('"', '').strip()
+
+    # file path isn't available yet
+    return [{'date': params[0], 'format': params[1], 'attachment': attachment, 'issue': issue}]
+
+
+def stamp_pdfs(
         stamp_data: List[dict],
-        merged_file_path: str,
         dir_path: str = temp_folder_default_path,
         stamp_model_path: str = stamp_model_default_path,
-        merge: bool = True) -> Union[str, List[str]]:
+        stamp_text_format: str = default_stamp_format) -> List[str]:
     """
-    Creates stamps, stamps pdf-files and merges them into a single file.
+    Creates stamps and stamps pdf-files.
     :param stamp_data: dict-list containing pdf-names and stamp-contents
-    :param merged_file_path: path the merged pdf-file shall have
     :param dir_path: folder for temp files
     :param stamp_model_path: tex-file to be used as model for stamps
-    :param merge
-    :return: merged_file_path or list of stamped
+    :param stamp_text_format: formatting for stamp text, with
+            file=0, date=1, attachment=2 and issue=3 keys
+    :return: list of stamped pdf paths
     """
-    # uses 128-bit random string as temp name!
-    # temp_file_name = str(uuid4()) + "_"
-    # a number counter to separate subsequent temp files
-    # counter = 0
 
-    # string that will have all stamped pdf paths (for pdftk)
-    pdfs_to_merge = []
+    stamped_pdfs = []
 
     # creates a new stamp and stamps the corresponding pdfs based on
     # the data-item in dictionary
@@ -448,7 +453,7 @@ def stamp_merge_pdfs(
         create_stamp(stamp_model_path,
                      dir_path,
                      item_stamp_name_no_ext,
-                     get_stamp_text(item),
+                     get_stamp_text(item, stamp_text_format),
                      remove_pdflatex_files=True)
 
         # set to remove stamp-pdf after use
@@ -457,49 +462,6 @@ def stamp_merge_pdfs(
                   item_stamped_path,
                   remove_stamp=True)
 
-        # adds the created stamp's path to be used by the merge command
-        pdfs_to_merge.append(item_stamped_path)
+        stamped_pdfs.append(item_stamped_path)
 
-    # TODO: returns both the merged file and stamped individual files (tuple?)
-    if merge:
-        merge_pdf(pdfs_to_merge, merged_file_path)
-        return merged_file_path
-    else:
-        return pdfs_to_merge
-
-##############################################################
-# Testing/examples (may be outdated):
-
-
-"""
-data = [
-    # normal case
-    {"file": "C:/Testi/testi1.pdf", "date": "20.12.2009", "attachment": "A", "issue": "2"},
-    # allowed case
-    {"file": "C:/Testi/testi2.pdf", "text": "Sample text \\newline with some LaTeX \\newline formatting"},
-    # text will go out of bounds a little, but will compile
-]
-
-output = "C:/Testi/merged.pdf"
-
-# Error test cases:
-
-stamp_merge_pdfs("banana", output)
-stamp_merge_pdfs([], output)
-stamp_merge_pdfs(["banana"], output)
-stamp_merge_pdfs([{"path": "C:/Testi/testi2.pdf", "banana": "If this ends up\nin stamp, it's a mistake!"}], output)
-stamp_merge_pdfs([{"path": "C:/Testi/broken.pdf", "text": "If this ends up\nin stamp, it's a mistake!"}], output)
-stamp_merge_pdfs([{"path": "C:/Testi/i_don't_exist.pdf", "text": "If this ends up\nin stamp, it's a mistake!"}], output)
-
-# Real cases:
-print(stamp_merge_pdfs(data, output, merge=True))
-
-
-create_stamp(
-    "C:/Testi/stamp_model.tex",
-    "C:/Testi",
-    "stamp",
-    get_stamp_text(data[0], "Kokous {1}\n\nLIITE {2} lista {3}"))
-stamp_pdf("C:/Testi/testi1.pdf","C:/Testi/stamp.pdf","C:/Testi/stamped.pdf")
-
-"""
+    return stamped_pdfs

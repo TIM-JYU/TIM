@@ -201,6 +201,7 @@ def empty_response_route():
 
 
 # testing route for processing pdf attachments
+# possibly obsolete
 @app.route('/processAttachments/<path:doc>')
 def process_attachments(doc):
     try:
@@ -213,13 +214,14 @@ def process_attachments(doc):
         pdf_stamp_data = []
         for par in paragraphs:
             if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
-                plugin_creature = timApp.plugin.Plugin.from_paragraph(par)
-                par_data = plugin_creature.values
+                par_plugin = timApp.plugin.Plugin.from_paragraph(par)
+                par_data = par_plugin.values
                 par_file = par_data["file"]
 
-                # TODO: check if 'file' is a TIM upload
-                # currently adding TIM's url prefix (http://192.168.99.100/)
-                # to it works: file'll be downloaded like any other url link
+                # checks if attachment is TIM-upload
+                # TODO: better check?
+                if par_file.startswith("/files/"):
+                    par_file = "http://192.168.99.100" + par_file
 
                 # if attachment is url link, download it to temp folder and operate the
                 # downloaded file
@@ -230,21 +232,20 @@ def process_attachments(doc):
                 pdf_stamp_data += [par_data]
                 print(repr(par_data))
 
-        # uses document name as the base of the merged file name
-        # TODO: give user option to set it manually?
-        output_path = f"static/testpdf/{doc}_merged.pdf"
+        # now separate stamp and merge
+        stamped_pdfs = timApp.tools.pdftools.stamp_pdfs(pdf_stamp_data)
+        print(stamped_pdfs)
 
-        # if merge=False, would return a list of paths of the stamped pdfs
-        output = timApp.tools.pdftools.stamp_merge_pdfs(
-            pdf_stamp_data,
-            output_path,
-            merge=True)
-        print(output)
+        # uses document name as the base for the merged file name
+        merged_pdf_path = f"static/testpdf/{doc}_merged.pdf"
+        timApp.tools.pdftools.merge_pdf(stamped_pdfs, merged_pdf_path)
+
     except Exception as e:
         message = repr(e)
         abort(404, message)
     else:
-        return send_file(output_path, mimetype="application/pdf")
+        # TODO: do something more intelligent here
+        return send_file(merged_pdf_path, mimetype="application/pdf")
 
 
 # route for creating extracts of faculty council minutes

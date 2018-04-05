@@ -27,10 +27,10 @@ const CURSOR = "⁞";
 
 export class PareditorController implements IController {
     private static $inject = ["$scope", "$element"];
-    private afterDelete: (params: {extraData: {}, saveData: {}}) => void;
-    private afterCancel: (params: {extraData: {}}) => void;
-    private afterSave: (params: {extraData: {}, saveData: {}}) => void;
-    private data: {original_par: any};
+    private afterDelete: (params: { extraData: {}, saveData: {} }) => void;
+    private afterCancel: (params: { extraData: {} }) => void;
+    private afterSave: (params: { extraData: {}, saveData: {} }) => void;
+    private data: { original_par: any };
     private dataLoaded: boolean;
     private deleteUrl: string;
     private deleting: boolean;
@@ -38,14 +38,14 @@ export class PareditorController implements IController {
     private editor: TextAreaParEditor | AceParEditor;
     private element: JQuery;
     private extraData: {
-        attrs: {classes: string[], [i: string]: any},
+        attrs: { classes: string[], [i: string]: any },
         docId: number,
         par: string,
         access: string,
-        tags: {markread: boolean},
+        tags: { markread: boolean },
         isComment: boolean,
     };
-    private file: File & {progress?: number, error?: string};
+    private file: File & { progress?: number, error?: string };
     private initialText: string;
     private initialTextUrl: string;
     private inputs: JQuery[];
@@ -55,7 +55,7 @@ export class PareditorController implements IController {
     private newAttr: string;
     private newPars: string[];
     private oldmeta: HTMLMetaElement;
-    private wrap: {n: number};
+    private wrap: { n: number };
     private options: {
         localSaveTag: string,
         texts: {
@@ -71,7 +71,7 @@ export class PareditorController implements IController {
     private originalPar: any;
     private outofdate: boolean;
     private parCount: number;
-    private pluginButtonList: {[tabName: string]: JQuery[]};
+    private pluginButtonList: { [tabName: string]: JQuery[] };
     private pluginRenameForm: any;
     private previewReleased: boolean;
     private previewUrl: string;
@@ -98,6 +98,7 @@ export class PareditorController implements IController {
     private autocomplete: boolean;
     private citeText: string;
     private draggable: DraggableController | undefined;
+    private docSettings: { macros: { dates: string[], knro: number, stampformat: string } };
 
     constructor(scope: IScope, element: IRootElementService) {
         this.element = element;
@@ -131,24 +132,24 @@ export class PareditorController implements IController {
 
         this.tables = {
 
-        normal: "Otsikko1 Otsikko2 Otsikko3 Otsikko4\n" +
+            normal: "Otsikko1 Otsikko2 Otsikko3 Otsikko4\n" +
             "-------- -------- -------- --------\n" +
             "1.rivi   x        x        x       \n" +
             "2.rivi   x        x        x       ",
 
-        example: "Table:  Otsikko taulukolle\n\n" +
+            example: "Table:  Otsikko taulukolle\n\n" +
             "Otsikko    Vasen laita    Keskitetty    Oikea laita\n" +
             "---------- ------------- ------------ -------------\n" +
             "1. rivi      2                  3         4\n" +
             "2. rivi        1000      2000             30000",
 
-        noheaders: ":  Otsikko taulukolle\n\n" +
+            noheaders: ":  Otsikko taulukolle\n\n" +
             "---------- ------------- ------------ -------------\n" +
             "1. rivi      2                  3         4\n" +
             "2. rivi        1000      2000             30000\n" +
             "---------- ------------- ------------ -------------\n",
 
-        multiline: "Table:  Otsikko taulukolle voi\n" +
+            multiline: "Table:  Otsikko taulukolle voi\n" +
             "jakaantua usealle riville\n\n" +
             "-----------------------------------------------------\n" +
             "Ekan       Toisen\         kolmas\            neljäs\\\n" +
@@ -164,7 +165,7 @@ export class PareditorController implements IController {
             "            \n" +
             "2. rivi        1000      2000             30000\n" +
             "-----------------------------------------------------\n",
-        strokes: ": Viivoilla tehty taulukko\n\n" +
+            strokes: ": Viivoilla tehty taulukko\n\n" +
             "+---------------+---------------+----------------------+\n" +
             "| Hedelmä       | Hinta         | Edut                 |\n" +
             "+===============+===============+======================+\n" +
@@ -175,7 +176,7 @@ export class PareditorController implements IController {
             "|               |               | - makea              |\n" +
             "+---------------+---------------+----------------------+\n",
 
-        pipe: ": Taulukko, jossa tolpat määräävat sarkkeiden paikat.\n\n" +
+            pipe: ": Taulukko, jossa tolpat määräävat sarkkeiden paikat.\n\n" +
             "|Oikea  | Vasen | Oletus | Keskitetty |\n" +
             "|------:|:-----|---------|:------:|\n" +
             "|   12  |  12  |    12   |    12  |\n" +
@@ -232,6 +233,7 @@ export class PareditorController implements IController {
                 this.editor.setAutoCompletion(this.autocomplete);
             }
         });
+        this.docSettings = $window.docSettings;
     }
 
     $postLink() {
@@ -429,7 +431,7 @@ or newer one that is more familiar to write in YAML:
         }
         this.editor.setEditorText("Loading text...");
         this.dataLoaded = true; // prevent data load in future
-        const response = await $http.get<{text: string, extraData: any}>(this.initialTextUrl, {
+        const response = await $http.get<{ text: string, extraData: any }>(this.initialTextUrl, {
             params: this.extraData,
         });
         const data = response.data;
@@ -785,7 +787,7 @@ or newer one that is more familiar to write in YAML:
             }
         }
         // Save the new task names for duplicates
-        $http.post<{duplicates: Duplicate[]}>("/postNewTaskNames/", angular.extend({
+        $http.post<{ duplicates: Duplicate[] }>("/postNewTaskNames/", angular.extend({
             duplicates: duplicateData,
             renameDuplicates,
         }, this.extraData)).then((response) => {
@@ -821,7 +823,7 @@ or newer one that is more familiar to write in YAML:
      * Function that creates a form for renaming plugins with duplicate tasknames
      * @param data - The data received after saving editor text
      */
-    createPluginRenameForm(data: {duplicates: Duplicate[]}) {
+    createPluginRenameForm(data: { duplicates: Duplicate[] }) {
         // Hides other texteditor elements when form is created
         this.renameFormShowing = true;
         this.duplicates = data.duplicates;
@@ -1021,16 +1023,38 @@ or newer one that is more familiar to write in YAML:
     }
 
     onFileSelect(file: File) {
+        // TODO: (into GUI) add checkbox? for autostamping a pdf
+        // and get stamp_text from macro
         this.uploadedFile = "";
         this.editor.focus();
         this.file = file;
+        const editorText = this.editor.getEditorText();
+        let autostamp = false;
+        let attachmentParams;
 
+        // if there's an attachment macro in editor, assume need to stamp
+        // needs data from preamble to work correctly: dates, knro, stampFormat
+        if (editorText.length > 0 && editorText.lastIndexOf("%%liite(") > 0) {
+            autostamp = true;
+            const macroParams = editorText.substring(
+                editorText.lastIndexOf("%%liite(") + 8,
+                editorText.lastIndexOf(")%%")).split(",");
+            const knro = this.docSettings.macros.knro;
+            const dates = this.docSettings.macros.dates;
+            const kokousDate = dates[knro];
+            const stampFormat = this.docSettings.macros.stampformat;
+            attachmentParams = [kokousDate, stampFormat, ...macroParams];
+            console.log("Editor text: " + editorText);
+            console.log("Params: " + attachmentParams);
+        }
         if (file) {
             this.file.progress = 0;
             this.file.error = undefined;
-            const upload = $upload.upload<{image: string, file: string}>({
+            const upload = $upload.upload<{ image: string, file: string }>({
                 data: {
                     file,
+                    autostamp,
+                    attachmentParams: JSON.stringify(attachmentParams),
                 },
                 method: "POST",
                 url: "/upload/",
@@ -1280,7 +1304,7 @@ or newer one that is more familiar to write in YAML:
 
             const langTools = ace.require("ace/ext/language_tools");
 
-            const wordListStr = (await $http.get<{word_list: string}>("/settings/get/word_list", {params: {_: Date.now()}})).data.word_list;
+            const wordListStr = (await $http.get<{ word_list: string }>("/settings/get/word_list", {params: {_: Date.now()}})).data.word_list;
             const userWordList = wordListStr ? wordListStr.split("\n") : [];
             const createCompleter = (wordList: string[], context: string) => ({
                 getCompletions(editor: any, session: any, pos: any, prefix: any, callback: any) {
