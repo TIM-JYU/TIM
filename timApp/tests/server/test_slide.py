@@ -43,7 +43,7 @@ New paragraph
         pars = [p for p in d.document.get_paragraphs() if not p.is_setting()]
         # TODO get rid of the empty <p></p> tags
         expected_html = f"""
-<div class="reveal" ng-controller="ViewCtrl as vctrl">
+<div class="reveal">
     <div class="slides">
         <section>
             <div class="par" id="{pars[0].get_id()}" t="{pars[0].get_hash()}" attrs="{{}}">
