@@ -89,12 +89,12 @@
                 out<span ng-show="$ctrl.isKorppi()">...</span></a>
             </li>
             <li ng-show="$ctrl.loggingout" role="menuitem">
-                <a ng-click="logout(getCurrentUser(), true)" href="#">Log out (TIM + Korppi)</a>
+                <a ng-click="$ctrl.logout(getCurrentUser(), true)" href="#">Log out (TIM + Korppi)</a>
             </li>
             <li ng-show="$ctrl.loggingout" role="menuitem">
                 <a ng-click="$ctrl.logout($ctrl.getCurrentUser(), false)" href="#">Log out (TIM only)</a>
             </li>
-            <li role="menuitem" ng-repeat="u in $ctrl.getSessionUsers()"><a ng-click="logout(u)"
+            <li role="menuitem" ng-repeat="u in $ctrl.getSessionUsers()"><a ng-click="$ctrl.logout(u)"
                                                                       href="#">Log {{ u.real_name }} out</a></li>
         </ul>
     </div>
