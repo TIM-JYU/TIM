@@ -506,17 +506,17 @@ timApp.component("dynamicAnswerSheet", {
     controller: AnswerSheetController,
     template: `
 <form ng-if="$ctrl.json">
-    <h5 ng-bind="$ctrl.getHeader()"></h5>
+    <h5 ng-bind-html="$ctrl.getHeader()"></h5>
     <p ng-if="$ctrl.userpoints != null" ng-bind="$ctrl.userpoints"></p>
     <table class="table" ng-class="$ctrl.getTableClass()">
         <tbody>
         <tr ng-if="$ctrl.hasHeaders()" class="answer-heading-row">
             <th ng-if="$ctrl.isMatrix()"></th>
-            <th ng-repeat="h in $ctrl.processed.headers" ng-bind="$ctrl.fixText(h.text)"></th>
+            <th ng-repeat="h in $ctrl.processed.headers" ng-bind-html="$ctrl.fixText(h.text)"></th>
             <th ng-if="$ctrl.canShowExpl()"></th>
         </tr>
         <tr ng-repeat="row in $ctrl.processed.rows track by $index" ng-init="rowi = $index">
-            <td ng-if="$ctrl.isMatrix()" ng-bind="$ctrl.fixText(row.text)"></td>
+            <td ng-if="$ctrl.isMatrix()" ng-bind-html="$ctrl.fixText(row.text)"></td>
             <td ng-repeat="col in row.columns track by $index" ng-init="coli = $index">
                 <label>
                     <input ng-if="$ctrl.isRadio()"
@@ -543,10 +543,10 @@ timApp.component("dynamicAnswerSheet", {
                             ng-change="$ctrl.signalUpdate()"
                             ng-model="$ctrl.answerMatrix[rowi][coli]">
 </textarea>
-                    {{$ctrl.getLabelText(row, col)}}</label>
+                    <span ng-bind-html="$ctrl.getLabelText(row, col)"></span></label>
                 <p ng-if="(p = $ctrl.getPoints(rowi, coli)) != null" class="qst-points" ng-bind="p"></p>
             </td>
-            <td ng-if="p = $ctrl.getExpl(rowi)" ng-bind="p" class="explanation"></td>
+            <td ng-if="p = $ctrl.getExpl(rowi)" ng-bind-html="p" class="explanation"></td>
         </tr>
         </tbody>
     </table>
