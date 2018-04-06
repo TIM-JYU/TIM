@@ -1030,7 +1030,7 @@ or newer one that is more familiar to write in YAML:
         this.file = file;
         const editorText = this.editor.getEditorText();
         let autostamp = false;
-        let attachmentParams;
+        let attachmentParams = undefined;
 
         // if there's an attachment macro in editor, assume need to stamp
         // needs data from preamble to work correctly: dates, knro, stampFormat
@@ -1043,9 +1043,7 @@ or newer one that is more familiar to write in YAML:
             const dates = this.docSettings.macros.dates;
             const kokousDate = dates[knro];
             const stampFormat = this.docSettings.macros.stampformat;
-            attachmentParams = [kokousDate, stampFormat, ...macroParams];
-            console.log("Editor text: " + editorText);
-            console.log("Params: " + attachmentParams);
+            attachmentParams = [kokousDate, stampFormat, ...macroParams, autostamp];
         }
         if (file) {
             this.file.progress = 0;
@@ -1053,13 +1051,13 @@ or newer one that is more familiar to write in YAML:
             const upload = $upload.upload<{ image: string, file: string }>({
                 data: {
                     file,
-                    autostamp,
                     attachmentParams: JSON.stringify(attachmentParams),
                 },
                 method: "POST",
                 url: "/upload/",
             });
 
+            // TODO: better check for cases with multiple paragraphs
             upload.then((response) => {
                 $timeout(() => {
                     var isplugin = (this.editor.editorStartsWith("``` {"));

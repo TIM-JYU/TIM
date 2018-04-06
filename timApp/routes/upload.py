@@ -122,15 +122,23 @@ def upload_file():
     if file is None:
         abort(400, 'Missing file')
 
-    # if there's an attachment macro in editor, this will be true
-    autostamp = request.form.get('autostamp')
-    print("Autostamping: ", repr(autostamp))
-
-    # directed to stamping upload if true
-    if "true" in autostamp or "True" in autostamp:
+    try:
         attachment_params = json.loads(request.form.get('attachmentParams'))
-        stamp_data = timApp.tools.pdftools.attachment_params_to_dict(attachment_params)
-        return upload_and_stamp_attachment(file, stamp_data)
+        autostamp = attachment_params[len(attachment_params) - 1]
+    except:
+        # just go on with normal upload if necessary conditions are not met
+        pass
+    else:
+        if autostamp:
+            # only go here if attachment params are valid enough and autostamping is valid and true
+            # because otherwise normal uploading may be interrupted
+            try:
+                stamp_data = timApp.tools.pdftools.attachment_params_to_dict(attachment_params)
+                return upload_and_stamp_attachment(file, stamp_data)
+            except Exception as e:
+                # TODO: nicer messages to user
+                print(repr(e))
+                abort(400, repr(e))
 
     folder = request.form.get('folder')
 
@@ -170,7 +178,6 @@ def upload_and_stamp_attachment(file, stamp_data):
     # add the uploaded file path (the one to stamp)
     stamp_data[0]['file'] = os_path.join(attachment_folder, str(file_id) + "/" + file_filename)
     print("Stamp data: ", stamp_data)
-    print("Stamp format: ", stamp_format)
 
     # whether stamp format is set or not
     if stamp_format:
@@ -184,6 +191,8 @@ def upload_and_stamp_attachment(file, stamp_data):
             dir_path=os_path.join(attachment_folder, str(file_id) + "/"))[0]
 
     stamped_filename = timApp.tools.pdftools.get_base_filename(output)
+
+    # TODO: in case of raised errors give proper no-upload response?
     return json_response({"file": str(file_id) + '/' + stamped_filename})
 
 

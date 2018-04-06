@@ -16,9 +16,9 @@ Visa Naukkarinen
 temp_folder_default_path = "static/testpdf"
 stamp_model_default_path = "static/tex/stamp_model.tex"
 # default format for stamp text
-default_stamp_format = "Kokous {1}\n\nLiite {2} lista {3}"
+default_stamp_format = "Kokous {1}\n\nLIITE {2} lista {3}"
 # how long (seconds) subprocess can take until TimeoutExpired
-default_subprocess_timeout = 10
+default_subprocess_timeout = 30
 pdfmerge_timeout = 300
 
 
@@ -77,6 +77,18 @@ class AttachmentNotFoundError(PdfError):
     def __init__(self, file_path: str = ""):
         """
         :param file_path: path of the attachment pdf that caused the error
+        """
+        self.file_path = file_path
+
+
+class AttachmentNotAPdfError(PdfError):
+    """
+    Raised when at least one file in input is not a pdf.
+    """
+
+    def __init__(self, file_path: str = ""):
+        """
+        :param file_path: path of the attachment that caused the error
         """
         self.file_path = file_path
 
@@ -351,6 +363,8 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
                 raise StampDataMissingKeyError("attachment", item)
             if "issue" not in item:
                 raise StampDataMissingKeyError("issue", item)
+        if ".pdf" not in item["file"]:
+            raise AttachmentNotAPdfError(item["file"])
 
 
 def is_url(string: str) -> bool:
