@@ -161,6 +161,8 @@ interface ICSAppScope extends IConsolePWDScope {
     mode: string;
     checkEditorModeLocalStorage();
     editorModes: string;
+    // aceEnabled: boolean;
+    // autocomplete: boolean;
     initEditorKeyBindings();
     showCsParsons(sortable: Element);
     words: boolean;
@@ -827,6 +829,7 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
 				  ' <a href="" ng-if="!noeditor" ng-click="showOtherEditor();">{{editorText[editorModeIndecies[editorMode+1]]}}</a>' +
+                  // ' <label class="font-weight-normal" ng-show="aceEnabled"><input type="checkbox" ng-model="autocomplete"/> Autocomplete</label>' +
                   ' <span ng-if="showRuntime" class="inputSmall" style="float: right;" title="Run time in sec {{runtime}}">{{oneruntime}}</span>' +
                   ' <span ng-if="wrap.n!=-1" class="inputSmall" style="float: right;"><label title="Put 0 to no wrap">wrap: <input type="text"  ng-pattern="/[-0-9]*/" ng-model="wrap.n" size="2" /></label></span>' +
                   '</p>'+
@@ -2513,20 +2516,23 @@ csApp.Controller = function($scope,$transclude) {
         var editorDiv: JQuery = angular.element(otherEditDiv);
         $scope.edit = $compile(html[eindex])($scope as any)[0] as HTMLTextAreaElement; // TODO unsafe cast
         // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
+        // $scope.aceEnabled = eindex == 1;
         if ( eindex == 1 ) {
             const ace = (await lazyLoad<typeof acemodule>("tim/ace")).ace;
             editorDiv.empty().append($scope.edit);
             var editor = ace.edit(editorDiv.find('.csAceEditor')[0]);
+
             $scope.aceLoaded(ace, editor as IAceEditor);
             if ($scope.mode) {
                 $scope.aceEditor.getSession().setMode('ace/mode/' + $scope.mode);
             }
             $scope.aceEditor.setOptions({
                 enableBasicAutocompletion: true,
-                enableLiveAutocompletion: true,
+                enableLiveAutocompletion: false,
                 enableSnippets: true,
                 maxLines: $scope.maxRows
             });
+            // $scope.aceEditor.setOptions({enableLiveAutocompletion: $scope.autocomplete});
             $scope.aceEditor.setFontSize(15);
             if (editorDiv.parents(".reveal").length > 0) {
                 $scope.aceEditor.setFontSize(25);

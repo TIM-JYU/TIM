@@ -635,18 +635,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         print(self.headers)
 
     def do_GET(self):
-        print("do_GET ==================================================")
+        # print("do_GET ==================================================")
         self.do_all(get_params(self))
 
     def do_POST(self):
-        print("do_POST =================================================")
+        # print("do_POST =================================================")
         multimd = self.path.find('/multimd') >= 0
 
         if self.path.find('/multihtml') < 0 and not multimd:
             self.do_all(post_params(self))
             return
 
-        print("do_POST MULTIHML ==========================================")
+        # print("do_POST MULTIHML ==========================================")
         t1 = time.clock()
         t1t = time.time()
         querys = multi_post_params(self)
@@ -656,7 +656,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_parsons = self.path.find('/parsons') >= 0
         htmls = []
         self.user_id = get_param(querys[0], "user_id", "--")
-        print("UserId:", self.user_id)
+        if self.user_id != "--":
+            print("UserId:", self.user_id)
         log(self)
         # print(querys)
 
@@ -712,7 +713,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         print(ts)
 
     def do_PUT(self):
-        print("do_PUT =================================================")
+        # print("do_PUT =================================================")
         t1put = time.time()
         self.do_all(post_params(self))
         t2 = time.time()
@@ -727,7 +728,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             signal.signal(signal.SIGALRM, signal_handler)
             signal.alarm(20)  # Ten seconds
         except Exception as e:
-            print("No signal", e)
+            # print("No signal", e)  #  TODO; why is this signal at all when it allways comes here?
+            pass
         try:
             self.do_all_t(query)
         except Exception as e:
@@ -739,11 +741,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         t1start = time.time()
         t_run_time = 0
         times_string = ""
-        print("t:", time.time() - t1start)
+        # print("t:", time.time() - t1start)
 
         query.randomcheck = binascii.hexlify(os.urandom(16)).decode()
         pwddir = ""
-        print(threading.currentThread().getName())
+        # print(threading.currentThread().getName())
         result = {}  # query.jso
         if not result:
             result = {}
@@ -761,7 +763,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # print(query)
         self.user_id = get_param(query, "user_id", "--")
-        print("UserId:", self.user_id)
+        if self.user_id != "--":
+            print("UserId:", self.user_id)
         log(self)
         '''
         if self.path.find('/login') >= 0:
@@ -809,7 +812,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_template:
             tempfile = get_param(query, "file", "")
             tidx = get_param(query, "idx", "0")
-            print("tempfile: ", tempfile, tidx)
+            # print("tempfile: ", tempfile, tidx)
             # return self.wout(file_to_string('templates/' + tempfile))
             return self.wout(get_template('templates', tidx, tempfile))
 
@@ -822,7 +825,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             scripts = get_param(query, "scripts", "")
             inchtml = get_param(query, "html", "")
             p = self.path.split("?")
-            print(p, scripts)
+            # print(p, scripts)
             htmlstring = file_to_string(p[0])
             htmlstring = replace_scripts(htmlstring, scripts, "%INCLUDESCRIPTS%")
             htmlstring = htmlstring.replace("%INCLUDEHTML%", inchtml)
@@ -883,7 +886,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # answer-route
 
-        print("taskID:", get_param(query, "taskID", "???"))
+        task_id = get_param(query, "taskID", None)
+        if task_id:
+            print("taskID:", task_id)
 
         points_rule = None
 
@@ -891,7 +896,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         extra_files = None
         warnmessage = ""
         language = dummy_language
-        print("t:", time.time() - t1start)
+        # print("t:", time.time() - t1start)
 
         try:
             # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
@@ -916,7 +921,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if not extra_files:
                 extra_files = get_json_param(query.jso, "markup", "-extrafiles", None)
 
-            print("t:", time.time() - t1start)
+            # print("t:", time.time() - t1start)
             if userargs:
                 save["userargs"] = userargs
 
@@ -970,7 +975,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             #
             if p0.breakCount > 0:
                 parts = get_file_parts_to_output(query, False)
-                print(parts)
+                # print(parts)
                 if print_file == "2":
                     return self.wout(json.dumps(parts))
                 s = join_file_parts(parts)
@@ -1025,9 +1030,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         warnmessage = "\n" + get_json_param(query.jso, "markup", "warnmessage",
                                                             "Not recomended to use: " + warncondition)
 
-                print(os.path.dirname(language.sourcefilename))
+                # print(os.path.dirname(language.sourcefilename))
                 mkdirs(os.path.dirname(language.sourcefilename))
-                print("Write file: " + language.sourcefilename)
+                # print("Write file: " + language.sourcefilename)
                 if s == "":
                     s = "\n"
 
@@ -1059,7 +1064,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         points_rule["points"]["test"] = 0
                     elif is_doc:
                         points_rule["points"]["doc"] = 0
-                        print("doc points: ", points_rule["points"]["doc"])
+                        # ("doc points: ", points_rule["points"]["doc"])
                     else:
                         points_rule["points"]["run"] = 0
                 if not is_doc:
@@ -1090,13 +1095,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     number_rule = get_points_rule(points_rule, is_test + "numberRule", None)
                     if number_rule:
                         give_points(points_rule, "code", check_number_rule(usercode, number_rule))
-            print(points_rule)
+            # print(points_rule)
 
             # uid = pwd.getpwnam("agent").pw_uid
             # gid = grp.getgrnam("agent").gr_gid
             # os.chown(prgpath, uid, gid)
             shutil.chown(language.prgpath, user="agent", group="agent")
-            print("t:", time.time() - t1start)
+            # print("t:", time.time() - t1start)
 
             # print(ttype)
             # ########################## Compiling programs ###################################################
@@ -1209,7 +1214,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 language.set_stdin(userinput)
                 runcommand = get_param(query, "cmd", "")
                 if ttype != "run" and (runcommand or get_param(query, "cmds", "")) and not is_test:
-                    print("runcommand: ", runcommand)
+                    # print("runcommand: ", runcommand)
                     # code, out, err, pwddir = run2([runcommand], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                     #                               uargs=get_param(query, "runargs", "") + " " + userargs)
                     cmd = shlex.split(runcommand)
@@ -1218,18 +1223,19 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     if extra != "":
                         cmd = []
                         uargs = ""
-                    print("run: ", cmd, extra, language.pure_exename, language.sourcefilename)
+                    # print("run: ", cmd, extra, language.pure_exename, language.sourcefilename)
                     try:
                         code, out, err, pwddir = run2(cmd, cwd=language.prgpath, timeout=language.timeout, env=env,
                                                       stdin=language.stdin,
                                                       uargs=get_param(query, "runargs", "") + " " + uargs,
                                                       extra=extra, no_x11=language.no_x11,
-                                                      ulimit=language.ulimit
+                                                      ulimit=language.ulimit,
+                                                      compile_commandline = language.compile_commandline
                                                       )
                     except Exception as e:
                         print(e)
                         code, out, err = (-1, "", str(e))
-                    print("Run2: ", language.imgsource, language.pngname)
+                    # print("Run2: ", language.imgsource, language.pngname)
                     out, err = language.copy_image(web, code, out, err, points_rule)
                 else:  # Most languages are run from here
                     code, out, err, pwddir = language.run(web, slines, points_rule)
@@ -1241,7 +1247,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     pass
 
                 if err.find("Compile error") >= 0:
-                    print("directory = " + os.curdir)
+                    # print("directory = " + os.curdir)
                     # error_str = "!!! Error code " + str(e.returncode) + "\n"
                     # error_str += e.output.decode("utf-8") + "\n"
                     # error_str += e.output.decode("utf-8") + "\n"
@@ -1358,7 +1364,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         t2 = time.time()
         ts = "%7.3f %7.3f" % ((t2 - t1start), t_run_time)
         ts += times_string
-        print(ts)
+        # print(ts)
         web["runtime"] = ts
 
         result["web"] = web
