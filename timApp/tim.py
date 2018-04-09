@@ -379,7 +379,7 @@ def create_or_get_and_wipe_document(path: str, title: str):
     d = DocEntry.find_by_path(path, try_translation=False)
 
     if not d:
-        return do_create_item(path, "document", title, None, None, False)
+        return do_create_item(path, "document", title, copied_doc=None, template_name=None, use_template=False)
     else:
         d.title = title  # update title of existing document
 
@@ -526,7 +526,16 @@ def get_templates():
 @app.route("/createItem", methods=["POST"])
 def create_item_route():
     item_path, item_type, item_title = verify_json_params('item_path', 'item_type', 'item_title')
-    cite_id, copy_id, template_name = verify_json_params('cite', 'copy', 'template', require=False)
+    cite_id, copy_id, template_name, use_template = verify_json_params('cite', 'copy', 'template', 'use_template',
+                                                                       require=False)
+
+    item = create_or_copy_item(item_path, item_type, item_title, cite_id, copy_id, template_name, use_template)
+    db.session.commit()
+    return json_response(item)
+
+
+def create_or_copy_item(item_path: str, item_type: str, item_title: str, cite_id: int = None, copy_id: int = None,
+                        template_name: str = None, use_template: bool = True):
     if cite_id:
         return create_citation_doc(cite_id, item_path, item_title)
 
@@ -538,7 +547,22 @@ def create_item_route():
         vr = d.document.validate()
         if vr.issues:
             abort(400, f'The following errors must be fixed before copying:\n{vr}')
-    item = do_create_item(item_path, item_type, item_title, d, template_name)
+    item = do_create_item(item_path, item_type, item_title, d, template_name, use_template)
+    return item
+
+
+@app.route("/createMinutes", methods=["POST"])
+def create_minutes_route():
+    """
+    Creates a base document for minutes from an IT faculty council meeting invitation.
+    :return: A web response for the new document.
+    """
+
+    item_path, item_title, copy_id = verify_json_params('item_path', 'item_title', 'copy')
+
+    item = create_or_copy_item(item_path, "document", item_title, copy_id=copy_id, use_template=False)
+    # maybe we could use DocSettings.is_minutes_key instead of getting the variable from the instance?
+    item.document.add_setting(item.document.get_settings().is_minutes_key, True)
     db.session.commit()
     return json_response(item)
 
@@ -606,8 +630,7 @@ def create_citation_doc(doc_id, doc_path, doc_title):
         return create_citation(src_doc, group, path, title)
 
     item = create_item(doc_path, 'document', doc_title, factory, get_current_user_group())
-    db.session.commit()
-    return json_response(item)
+    return item
 
 
 @app.route("/getBlock/<int:doc_id>/<par_id>")
