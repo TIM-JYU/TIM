@@ -230,7 +230,8 @@ def merge_attachments(doc):
 
         # uses document name as the base for the merged file name and tmp as folder
         doc_name = timApp.tools.pdftools.get_base_filename(doc)
-        merged_pdf_path = timApp.tools.pdftools.temp_folder_default_path + f"{doc_name}_merged.pdf"
+        merged_pdf_path = timApp.tools.pdftools.temp_folder_default_path + "/"+ f"{doc_name}_merged.pdf"
+
         timApp.tools.pdftools.merge_pdf(pdf_paths, merged_pdf_path)
 
     except Exception as e:

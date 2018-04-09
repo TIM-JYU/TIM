@@ -1,16 +1,13 @@
 import {ngStorage} from "ngstorage";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IItem} from "../IItem";
-
-export interface ITemplate extends IItem {
-
-}
+import {$http} from "../ngimport";
 
 export interface IMergeParams {
-
+    document: IItem;
 }
 
-export class ShowMergePdfController extends DialogController<{ params: IMergeParams }, {}, "mergePdf"> {
+export class ShowMergePdfController extends DialogController<{ params: IMergeParams }, {}, "timMergePdf"> {
     private storage: ngStorage.StorageService & { timPrintingTemplateId: null | number };
 
 
@@ -22,12 +19,26 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
         return "Merging attachments";
     }
 
+    async mergeClicked() {
+        console.log(this.resolve.params.document.id);
+        console.log(this.resolve.params.document);
+
+        const response = await $http.get<{ url: string }>(`/mergeAttachments/${this.resolve.params.document.location}/${this.resolve.params.document.name}`);
+
+        //console.log(response.data);
+        //console.log(response.data.url);
+
+        //const response = await $http.get<{url:string}>('/processAttachments/${this.resolve.params.document.id');
+        //console.log(response.data.url);
+        //response.data.url;
+    }
+
     $onInit() {
         super.$onInit();
     }
 }
 
-registerDialogComponent("mergePdf",
+registerDialogComponent("timMergePdf",
     ShowMergePdfController,
     {
         template:
@@ -41,6 +52,7 @@ registerDialogComponent("mergePdf",
                 </p>
             </dialog-body>
             <dialog-footer>
+                <button class = "timButton" ng-click ="$ctrl.mergeClicked()">Merge</button>
                 <button class="timButton" ng-click="$ctrl.close()">Close</button>
             </dialog-footer>
         </tim-dialog>
@@ -48,5 +60,5 @@ registerDialogComponent("mergePdf",
     });
 
 export async function showMergePdfDialog(p: IMergeParams) {
-    return await showDialog<ShowMergePdfController>("mergePdf", {params: () => p}).result;
+    return await showDialog<ShowMergePdfController>("timMergePdf", {params: () => p}).result;
 }
