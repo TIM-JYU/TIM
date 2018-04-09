@@ -43,7 +43,7 @@ class LectureTest(TimRouteTest):
                                   'lecture_id': lecture_id,
                                   'end_time': end_time.isoformat(),
                                   'start_time': start_time.isoformat(),
-                                  'options': '{}',
+                                  'options': {},
                                   'doc_id': doc.id,
                                   'lecturer': self.current_user.id,
                                   'is_access_code': True,

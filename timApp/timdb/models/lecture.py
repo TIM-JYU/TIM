@@ -73,7 +73,7 @@ class Lecture(db.Model):
             'lecturer': self.lecturer,
             'start_time': self.start_time,
             'end_time': self.end_time,
-            'options': self.options,
+            'options': self.options_parsed,
             'is_access_code': self.password != "",
         # don't expose password to client directly unless explicitly requested with the parameter
             'password': self.password if show_password else None,
