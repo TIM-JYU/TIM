@@ -155,16 +155,19 @@ export class SidebarMenuCtrl implements IController {
      * Creates minutes from a IT faculty council meeting invitation
      */
     createMinutes() {
-        // why can't we debug this (the breakpoint isn't hit)?
-        $http.post<{path: string}>("/createItem", angular.extend({
+        if (!this.vctrl) {
+            void showMessageDialog("Not in a document");
+            return;
+        }
+
+        $http.post<{path: string}>("/createMinutes", angular.extend({
             item_path: this.vctrl.item.location + "/PK/PK" + this.docSettings.macros.nr,
-            item_type: "document",
             item_title: "PK" + this.docSettings.macros.nr,
             copy: this.vctrl.item.id,
         })).then((response) => {
             $window.location.href = "/view/" + response.data.path;
-        }, async (response) => {
-            await showMessageDialog(response.data.error);
+        }, (response) => {
+            void showMessageDialog(response.data.error);
         });
     }
 
