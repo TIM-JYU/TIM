@@ -12,8 +12,8 @@ Visa Naukkarinen
 """
 
 # Default parameter values:
-# temp_folder_default_path = "/tmp"
-temp_folder_default_path = "static/testpdf"
+temp_folder_default_path = "/tmp"
+# temp_folder_default_path = "static/testpdf"
 stamp_model_default_path = "static/tex/stamp_model.tex"
 # default format for stamp text
 default_stamp_format = "Kokous {1}\n\nLIITE {2} lista {3}"

@@ -1023,8 +1023,6 @@ or newer one that is more familiar to write in YAML:
     }
 
     onFileSelect(file: File) {
-        // TODO: (into GUI) add checkbox? for autostamping a pdf
-        // and get stamp_text from macro
         this.uploadedFile = "";
         this.editor.focus();
         this.file = file;
@@ -1033,7 +1031,8 @@ or newer one that is more familiar to write in YAML:
         let attachmentParams = undefined;
 
         // if there's an attachment macro in editor, assume need to stamp
-        // needs data from preamble to work correctly: dates, knro, stampFormat
+        // also requires data from preamble to work correctly (dates and knro)
+        // if there's no stampFormat set in preamble, uses hard coded default format
         if (editorText.length > 0 && editorText.lastIndexOf("%%liite(") > 0) {
             autostamp = true;
             const macroParams = editorText.substring(

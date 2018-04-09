@@ -156,11 +156,15 @@ def upload_file():
 
 def upload_and_stamp_attachment(file, stamp_data):
     """
-    Uploads the file and stamps it into the same location.
+    Uploads the file and stamps it into the same folder.
     :param file: file to upload
     :param stamp_data: stamp data (attachment and list ids and format) without the path
     :return: json response of the stamped file
     """
+
+    # currently multiple changes in different modules are needed
+    # if the upload folder is changed
+    # TODO: get this from a global variable;
     attachment_folder = "/tim_files/blocks/files"
     content = file.read()
     timdb = get_timdb()
@@ -169,7 +173,8 @@ def upload_and_stamp_attachment(file, stamp_data):
                                                   get_current_user_group())
     grant_view_access(get_anon_group_id(), file_id)  # So far everyone can see all files
 
-    # if format not set, default format set in pdftools will be used
+    # if format not set or invalid, default format set in pdftools will be used
+    # TODO: needs testing
     try:
         stamp_format = stamp_data[0]['format']
     except:

@@ -78,8 +78,8 @@ from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import NoSuchUserException
 
-import timApp.tools.pdftools  # for pdf stamp & merge testing
-# from uuid import uuid4  # for pdf stamp & merge testing
+# for pdf merging
+import timApp.tools.pdftools
 
 import timApp.plugin
 
@@ -200,6 +200,48 @@ def empty_response_route():
     return Response('', mimetype='text/plain')
 
 
+# route for mergin all attachments in document
+@app.route('/mergeAttachments/<path:doc>')
+def merge_attachments(doc):
+    try:
+        d = DocEntry.find_by_path(doc, try_translation=True)
+        if not d:
+            abort(404)
+        verify_view_access(d)
+
+        paragraphs = d.document.get_paragraphs(d)
+        pdf_paths = []
+
+        for par in paragraphs:
+            if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
+                par_plugin = timApp.plugin.Plugin.from_paragraph(par)
+                par_data = par_plugin.values
+                par_file = par_data["file"]
+
+                # checks if attachment is TIM-upload and adds prefix
+                # changes in upload location need to be updated here as well!
+                if par_file.startswith("/files/"):
+                    pdf_paths += ["/tim_files/blocks" + par_file]
+
+                # if attachment is url link, download it to temp folder to operate
+                elif timApp.tools.pdftools.is_url(par_file):
+                    print(f"Downloading {par_file}")
+                    pdf_paths += [timApp.tools.pdftools.download_file_from_url(par_file)]
+
+        # uses document name as the base for the merged file name
+        merged_pdf_path = f"static/testpdf/{doc}_merged.pdf"
+        timApp.tools.pdftools.merge_pdf(pdf_paths, merged_pdf_path)
+
+    except Exception as e:
+        message = repr(e)
+        abort(404, message)
+    else:
+        # TODO: do something more intelligent here
+        return send_file(merged_pdf_path, mimetype="application/pdf")
+
+
+
+
 # testing route for processing pdf attachments
 # possibly obsolete
 @app.route('/processAttachments/<path:doc>')
@@ -218,10 +260,9 @@ def process_attachments(doc):
                 par_data = par_plugin.values
                 par_file = par_data["file"]
 
-                # checks if attachment is TIM-upload
-                # TODO: better check?
+                # checks if attachment is TIM-upload and adds prefix
                 if par_file.startswith("/files/"):
-                    par_file = "http://192.168.99.100" + par_file
+                    par_file = "/tim_files/blocks" + par_file
 
                 # if attachment is url link, download it to temp folder and operate the
                 # downloaded file
