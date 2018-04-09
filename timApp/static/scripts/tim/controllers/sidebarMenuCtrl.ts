@@ -201,7 +201,10 @@ export class SidebarMenuCtrl implements IController {
     }
 
     mergePdf() {
-        showMergePdfDialog({});
+        if (!this.vctrl) {
+            return;
+        }
+        showMergePdfDialog({document: this.vctrl.item});
     }
 }
 
