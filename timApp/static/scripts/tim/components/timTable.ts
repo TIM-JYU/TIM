@@ -3,6 +3,7 @@ import $ from "jquery";
 import {timApp} from "../app";
 import {ViewCtrl} from "../controllers/view/viewctrl";
 import {showMessageDialog} from "../dialog";
+import {IHash} from "../../decls/components/timTable";
 
 
 export const EDITOR_CLASS = "editorArea";
@@ -34,7 +35,7 @@ export interface TimTable {
 export interface ITable extends ITableStyles {
     rows?: (IRow)[];
     columns?: (IColumn)[];
-    cellData?: string;
+    datablock?: DataEntity;
 }
 
 export interface ITableStyles {
@@ -50,6 +51,17 @@ export interface ITableStyles {
     fontFamily?: string;
     fontSize: string;
 }
+
+export interface DataEntity {
+    type: string;
+    cells: (CellDataEntity)[];
+}
+
+export interface CellDataEntity {
+    [key: string]: string;
+}
+
+
 
 export type CellEntity = ICell | string;
 
@@ -112,6 +124,10 @@ export interface IColumnStyles {
     borderRight?: string;
 }
 
+export interface IHash {
+    [details: string]: number;
+}
+
 
 class TimTableController implements IController {
     private srcid: string;  // document id
@@ -124,6 +140,10 @@ class TimTableController implements IController {
     public sc: IScope;
     private editing: boolean;
     private helpCell: CellEntity;
+    public cellDataMatrix: string[][];
+    public dataCells: DataEntity;
+    public DataHash: IHash;
+    private DataHashLength: number;
 
     constructor(private scope: IScope) {
 
@@ -132,36 +152,96 @@ class TimTableController implements IController {
     $onInit() {
         this.count = 0;
         this.$pars = $(this.srcid);
+        this.DefineDataHash();
 
-        // read cellData (string)
-        var cellp = this.data.table.cellData;
-        console.log(cellp);
-        // this.data.cellData;
-        var cellITems = "";
+        this.cellDataMatrix = [];
+        if (this.data.table.rows) {
+            for (let i in this.data.table.rows) {
+                this.cellDataMatrix[i] = []
+                if (this.data.table.rows[i].row)
+                    for (let j in this.data.table.rows[i].row!) {
+                        var ii = this.data.table.rows[i].row![j] as ICell;
+                        this.cellDataMatrix[i][j] = ii.cell;
+                    }
+            }
+        }
 
-        // parse cellldata at | mark and put single items in to allcellData table
-
-        this.allcellData = cellITems.split("|");
-
-        // now allcellData should have:
-        // 0.     (empty)
-        // 1.  Kissa  (items as they are ahown to user)
-
-
-        // now that they are in a table, they are "easily" read in template
-
-
-        /** var jj = this.data.
-         if(this.data.cellData != undefined)*/
+        if (this.data.table.datablock)
+            for (let item in this.data.table.datablock.cells) {
 
 
-        // if (this.data.cellData != undefined ) showMessageDialog(this.data.cellData);
-        // var allCellData = $(this.data.rows);
+                var alphaRegExp = new RegExp('([A-Z]*)');
+                var alpha = alphaRegExp.exec(item);
+                let value = this.data.table.datablock.cells[item];
 
-        //showMessageDialog(allCellData);
 
+                if (alpha == null) continue;
+                var numberPlace = item.substring(alpha[0].length);
+
+                var col = this.DataHash[alpha[0]];
+                var row = numberPlace[0];
+                var iiii = this.data.table.datablock.cells;
+
+                this.setValueToMatrix(col.valueOf(), parseInt(row), value.toString());
+            }
 
     }
+
+
+    /*
+    Define HashTable that contains final table
+    */
+    private DefineDataHash() {
+        this.DataHash = {};
+        this.DataHash["A"] = 0; //set
+        this.DataHash["B"] = 1; //set
+        this.DataHash["C"] = 2; //set
+        this.DataHash["D"] = 3; //set
+        this.DataHash["E"] = 4; //set
+        this.DataHash["F"] = 5; //set
+        this.DataHash["G"] = 6; //set
+        this.DataHash["H"] = 7; //set
+        this.DataHash["I"] = 8; //set
+        this.DataHash["J"] = 9; //set
+        this.DataHash["K"] = 10; //set
+        this.DataHash["L"] = 11; //set
+        this.DataHash["M"] = 12; //set
+        this.DataHash["N"] = 13; //set
+        this.DataHash["O"] = 14; //set
+        this.DataHash["P"] = 15; //set
+        this.DataHash["Q"] = 16; //set
+        this.DataHash["R"] = 17; //set
+        this.DataHash["S"] = 18; //set
+        this.DataHash["T"] = 19; //set
+        this.DataHash["U"] = 20; //set
+        this.DataHash["V"] = 21; //set
+        this.DataHash["W"] = 22; //set
+        this.DataHash["X"] = 23; //set
+        this.DataHash["Y"] = 24; //set
+        this.DataHash["Z"] = 25; //set
+
+        this.DataHashLength = 25;
+
+        //let value = charPlacement["somestring"]; //get
+        //todo: calculate after z
+    }
+
+
+    /*
+    Update DataHashTable
+     */
+    UpdateDataHashTable(){
+        this.DataHash[""] = this.DataHashLength +1;
+        this.DataHashLength++;
+        //todo: calculate further
+    }
+    /*
+    Sets a value to specific index in cellDataMatrix
+     */
+    private setValueToMatrix(row: number, col: number, value: string) {
+        this.cellDataMatrix[col][row] = value;
+    }
+
 
     private cellClicked(cell: CellEntity) {
 
@@ -170,15 +250,12 @@ class TimTableController implements IController {
         {
             if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
                 this.helpCell.editing = false;
-
             }
             cell.editing = true;
             this.helpCell = cell;
-            //cell.cell = "uusi";
-            //cell.cell = cell.cell;
         }
-
     }
+
 
     private stylingForCell(cell: CellEntity) {
 
@@ -258,33 +335,37 @@ class TimTableController implements IController {
         return styles;
     }
 
+    /*
+
+     */
     async openEditor() {
         await showMessageDialog("Press OK to get a cat");
         return "cat";
 
     }
 
-
     private editor() {
-
-        if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
-            this.helpCell.editing = false;
-        }
+         if(this.helpCell != undefined && typeof(this.helpCell) != "string")
+            {
+                this.helpCell.editing = false;
+            }
         if (!this.editing) this.editSave();
         this.editing = !this.editing;
-
-
     }
 
+
+    /*
+    Saving
+     */
     public editSave() {
-
         this.editing = false;
-
-        // mofdify data storage
-        // send data to server
-
-
     }
+
+
+    public isCellbeingEdited(rowi: string, coli: string) {
+        return true;
+    }
+
 
     public editCancel() {
         // undo all changes
@@ -292,10 +373,6 @@ class TimTableController implements IController {
     }
 }
 
-// - yaml-taulukko oliotaulukoksi (kaikki solut olioita) - ei tarvitse, jos solun editointitilaa ei tallenneta soluun itseensä (voisi olla indeksien perusteella)
-// - kun editoidaan solua, katsotaan onko cellDatassa vastaavaa ja jos ei, kopioidaan solun sisältö sinne
-// - taulukon templatessa on solun kohdalla kutsu tyyliin $ctrl.getCellContent(td)
-// - tallennettaessa lähetetään cellData palvelimelle johonkin reittiin
 
 timApp.component("timTable", {
     controller: TimTableController,
@@ -306,7 +383,30 @@ timApp.component("timTable", {
   <button ng-click="$ctrl.editor()">Edit</button>
    <!--<button ng-app="myApp">Edit</button>-->
     <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" ng-style="$ctrl.stylingForColumn(c)"/>
-    <tr ng-repeat="r in $ctrl.data.table.rows"  ng-style="$ctrl.stylingForRow(r)">
+    <tr ng-repeat="r in $ctrl.data.table.rows"  ng-init="rowi = $index" ng-style="$ctrl.stylingForRow(r)">
+       <!-- if data does not exists -->
+      <div ng-if="$ctrl.allcellData == undefined">
+        <td ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
+            ng-style="$ctrl.stylingForCell(td)" ng-click="$ctrl.cellClicked(td)">
+            <div ng-if="td.cell != null && !td.editing" ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
+            <!--{{td.cell}}-->
+           </div>
+            <div ng-if="td.cell == null && !td.editing" ng-bind-html="td">
+               
+            </div> 
+            <input ng-if="td.editing" ng-model="$ctrl.cellDataMatrix[rowi][coli]">
+           <!-- <input ng-if="td.editing" ng-model="ctrl.cellDataMatrix[rowi][coli]">-->
+            <!-- <input ng-if="td.editing" ng-model="td.cell">-->
+           <!-- <input ng-if="ctrl.isCellBeingEdited(rowi, coli)" ng-model="ctrl.cellDataMatrix[rowi][coli]"> -->
+        </td>
+       </tr>
+     <div> 
+    
+    
+    
+    
+    
+
        <!-- if data exists -->
      <!--   <div ng-if="$ctrl.allcellData != undefined">
          <td ng-repeat="item in $ctrl.allcellData" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
@@ -317,32 +417,16 @@ timApp.component("timTable", {
         </div>  -->
         <!-- if data exists ends  -->
         
-       <!-- <div ng-if="$ctrl.allcellData != undefined">
+     
+     
+     
+     <!--  <div ng-if="$ctrl.allcellData != undefined">
          <td ng-repeat="item in $ctrl.allcellData" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
             ng-style="$ctrl.stylingForCell(td)" ng-click="$ctrl.cellClicked(td)">
            {{item}}
             <input ng-if="$ctrl.isCellBeingEdited(rowi, coli)" ng-model="$ctrl.cellDataMatrix[rowi][coli]">
         </td>
         </div>  -->
-        
-        
-        
-        <!-- if data does not exists -->
-        <div ng-if="$ctrl.allcellData == undefined">
-        <td ng-repeat="td in r.row" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
-            ng-style="$ctrl.stylingForCell(td)" ng-click="$ctrl.cellClicked(td)">
-            <div ng-if="td.cell != null && !td.editing" ng-bind-html="td.cell">
-            <!--{{td.cell}}-->
-            </div>
-            <div ng-if="td.cell == null && !td.editing" ng-bind-html="td">
-               
-            </div> 
-            <input ng-if="td.editing" ng-model="td.cell">
-        </td>
-       </tr>
-     <div>
-     
-     <!-- if data does not exists ENDS -->
     
 </table>
 <!--<p ng-repeat="item in $ctrl.allcellData">{{item}}</p>
