@@ -10,38 +10,66 @@ export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
 
 const styleToHtml: { [index: string]: string } =
     {
-        "textAlign": "text-align",
-        "backgroundColor": "background-color",
-        "horizontalAlign": "horizontal-align",
-        "verticalAlign": "vertical-align",
-        "border": "border",
-        "borderTop": "border-top",
-        "borderBottom": "border-bottom",
-        "borderLeft": "border-left",
-        "borderRight": "border-right",
-        "width": "width",
-        "height": "height",
-        "color": "color",
-        "fontSize": "font-size"
+        textAlign: "text-align",
+        backgroundColor: "background-color",
+        horizontalAlign: "horizontal-align",
+        verticalAlign: "vertical-align",
+        border: "border",
+        borderTop: "border-top",
+        borderBottom: "border-bottom",
+        borderLeft: "border-left",
+        borderRight: "border-right",
+        width: "width",
+        height: "height",
+        color: "color",
+        fontSize: "font-size",
+        fontFamily: "font-family"
     };
 
 export interface TimTable {
     table: ITable;
+    id?: string;
 }
 
-export interface ITable {
-    rows?: (RowsEntity)[];
-    columns?: (ColumnsEntity)[];
+export interface ITable extends ITableStyles {
+    rows?: (IRow)[];
+    columns?: (IColumn)[];
     cellData?: string;
 }
 
-
-
+export interface ITableStyles {
+    backgroundColor?: string;
+    border?: string;
+    borderTop?: string;
+    borderBottom?: string;
+    borderLeft?: string;
+    borderRight?: string;
+    verticalAlign?: string;
+    textAlign?: string;
+    color?: string;
+    fontFamily?: string;
+    fontSize: string;
+}
 
 export type CellEntity = ICell | string;
 
-export interface RowsEntity {
+export interface IRow extends IRowStyles {
     row?: (CellEntity)[];
+    id?: string;
+}
+
+export interface IRowStyles {
+    backgroundColor?: string;
+    border?: string;
+    borderTop?: string;
+    borderBottom?: string;
+    borderLeft?: string;
+    borderRight?: string;
+    verticalAlign?: string;
+    textAlign?: string;
+    color?: string;
+    fontFamily?: string;
+    fontSize: string;
 }
 
 export interface ICellStyles {
@@ -54,6 +82,8 @@ export interface ICellStyles {
     borderRight?: string;
     backgroundColor?: string;
     textAlign?: string;
+    fontFamily?: string;
+    color?: string;
 }
 
 export interface ICell extends ICellStyles {
@@ -62,10 +92,8 @@ export interface ICell extends ICellStyles {
     type?: string;
     colspan?: number;
     rowspan?: number;
-}
-
-export interface ColumnsEntity {
-    column?: IColumn[];
+    id?: string;
+    formula?: string;
 }
 
 export interface IColumn extends IColumnStyles {
@@ -77,6 +105,11 @@ export interface IColumn extends IColumnStyles {
 export interface IColumnStyles {
     width?: string;
     backgroundColor?: string;
+    border?: string;
+    borderTop?: string;
+    borderBottom?: string;
+    borderLeft?: string;
+    borderRight?: string;
 }
 
 
@@ -115,19 +148,15 @@ class TimTableController implements IController {
         // 1.  Kissa  (items as they are ahown to user)
 
 
-
-
         // now that they are in a table, they are "easily" read in template
 
 
         /** var jj = this.data.
-        if(this.data.cellData != undefined)*/
-
-
+         if(this.data.cellData != undefined)*/
 
 
         // if (this.data.cellData != undefined ) showMessageDialog(this.data.cellData);
-       // var allCellData = $(this.data.rows);
+        // var allCellData = $(this.data.rows);
 
         //showMessageDialog(allCellData);
 
@@ -139,8 +168,7 @@ class TimTableController implements IController {
         if (typeof cell === "string") return;
         if (this.editing)  // editing is on
         {
-            if(this.helpCell != undefined && typeof(this.helpCell) != "string")
-            {
+            if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
                 this.helpCell.editing = false;
 
             }
@@ -154,14 +182,21 @@ class TimTableController implements IController {
 
     private stylingForCell(cell: CellEntity) {
 
-        if (typeof cell === "string") { return {}; }
+        if (typeof cell === "string") {
+            return {};
+        }
         const styles: { [index: string]: string } = {};
 
         for (const key of Object.keys(cell)) {
-            const property: string = styleToHtml[key];
-            if (property === undefined) { continue; }
-            const c = cell[key as keyof ICellStyles];
-            if (!c) { continue; }
+            const keyofCell = key as keyof ICell;
+            const property: string = styleToHtml[keyofCell];
+            if (property === undefined) {
+                continue;
+            }
+            const c = (cell as ICellStyles)[keyofCell as keyof ICellStyles];
+            if (!c) {
+                continue;
+            }
             styles[property] = c;
         }
         return styles;
@@ -172,9 +207,52 @@ class TimTableController implements IController {
 
         for (const key of Object.keys(col)) {
             const property: string = styleToHtml[key];
-            if (property === undefined) { continue; }
+            if (property === undefined) {
+                continue;
+            }
             const c = col[key as keyof IColumnStyles];
-            if (!c) { continue; }
+            if (!c) {
+                continue;
+            }
+            styles[property] = c;
+        }
+        return styles;
+    }
+
+    private stylingForRow(row: IRow) {
+        const styles: { [index: string]: string } = {};
+
+        for (const key of Object.keys(row)) {
+            const property: string = styleToHtml[key];
+            if (property === undefined) {
+                continue;
+            }
+            const c = row[key as keyof IRowStyles];
+            if (!c) {
+                continue;
+            }
+            styles[property] = c;
+        }
+        return styles;
+    }
+
+    /**
+     * Ei toimi vielä
+     * @returns {{[p: string]: string}}
+     */
+    private stylingForTable() {
+        let tab = this.data.table;
+        const styles: { [index: string]: string } = {};
+
+        for (const key of Object.keys(tab)) {
+            const property: string = styleToHtml[key];
+            if (property === undefined) {
+                continue;
+            }
+            const c = tab[key as keyof ITableStyles];
+            if (!c) {
+                continue;
+            }
             styles[property] = c;
         }
         return styles;
@@ -187,32 +265,28 @@ class TimTableController implements IController {
     }
 
 
-
     private editor() {
 
-         if(this.helpCell != undefined && typeof(this.helpCell) != "string")
-            {
-                this.helpCell.editing = false;
-            }
+        if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
+            this.helpCell.editing = false;
+        }
         if (!this.editing) this.editSave();
         this.editing = !this.editing;
 
 
-
     }
 
-    public editSave(){
+    public editSave() {
 
         this.editing = false;
 
-      // mofdify data storage
-      // send data to server
-
+        // mofdify data storage
+        // send data to server
 
 
     }
 
-    public editCancel(){
+    public editCancel() {
         // undo all changes
         this.editing = false;
     }
@@ -231,8 +305,8 @@ timApp.component("timTable", {
     template: `<div ng-class="{editable: $ctrl.editing}""><table>
   <button ng-click="$ctrl.editor()">Edit</button>
    <!--<button ng-app="myApp">Edit</button>-->
-    <col ng-repeat="c in $ctrl.finalTable.columns" ng-attr-span="{{c.span}}}" ng-style="$ctrl.stylingForColumn(c)"/>
-    <tr ng-repeat="r in $ctrl.data.table.rows"  style="background-color:{{r.backgroundColor}}">
+    <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" ng-style="$ctrl.stylingForColumn(c)"/>
+    <tr ng-repeat="r in $ctrl.data.table.rows"  ng-style="$ctrl.stylingForRow(r)">
        <!-- if data exists -->
      <!--   <div ng-if="$ctrl.allcellData != undefined">
          <td ng-repeat="item in $ctrl.allcellData" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
