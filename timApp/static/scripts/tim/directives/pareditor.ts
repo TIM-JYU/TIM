@@ -1030,14 +1030,18 @@ or newer one that is more familiar to write in YAML:
         let autostamp = false;
         let attachmentParams = undefined;
 
+        // to identify attachment-macro
+        let macroStringBegin = "%%liite(";
+        let macroStringEnd = ")%%";
+
         // if there's an attachment macro in editor, assume need to stamp
         // also requires data from preamble to work correctly (dates and knro)
         // if there's no stampFormat set in preamble, uses hard coded default format
-        if (editorText.length > 0 && editorText.lastIndexOf("%%liite(") > 0) {
+        if (editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0) {
             autostamp = true;
             const macroParams = editorText.substring(
-                editorText.lastIndexOf("%%liite(") + 8,
-                editorText.lastIndexOf(")%%")).split(",");
+                editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
+                editorText.lastIndexOf(macroStringEnd)).split(",");
             const knro = this.docSettings.macros.knro;
             const dates = this.docSettings.macros.dates;
             const kokousDate = dates[knro];

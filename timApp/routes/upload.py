@@ -135,10 +135,10 @@ def upload_file():
             try:
                 stamp_data = timApp.tools.pdftools.attachment_params_to_dict(attachment_params)
                 return upload_and_stamp_attachment(file, stamp_data)
-            except Exception as e:
+            except timApp.tools.pdftools.PdfError as e:
                 # TODO: nicer messages to user
                 print(repr(e))
-                abort(400, repr(e))
+                abort(400, str(e))
 
     folder = request.form.get('folder')
 
@@ -178,27 +178,21 @@ def upload_and_stamp_attachment(file, stamp_data):
     try:
         stamp_format = stamp_data[0]['format']
     except:
-        stamp_format = None
+        stamp_format = timApp.tools.pdftools.default_stamp_format
 
     # add the uploaded file path (the one to stamp)
-    stamp_data[0]['file'] = os_path.join(attachment_folder, str(file_id) + "/" + file_filename)
+    stamp_data[0]['file'] = os_path.join(attachment_folder, f"{str(file_id)}/{file_filename}")
     print("Stamp data: ", stamp_data)
 
-    # whether stamp format is set or not
-    if stamp_format:
-        output = timApp.tools.pdftools.stamp_pdfs(
+    output = timApp.tools.pdftools.stamp_pdfs(
             stamp_data,
             dir_path=os_path.join(attachment_folder, str(file_id) + "/"),
             stamp_text_format=stamp_format)[0]
-    else:
-        output = timApp.tools.pdftools.stamp_pdfs(
-            stamp_data,
-            dir_path=os_path.join(attachment_folder, str(file_id) + "/"))[0]
 
     stamped_filename = timApp.tools.pdftools.get_base_filename(output)
 
     # TODO: in case of raised errors give proper no-upload response?
-    return json_response({"file": str(file_id) + '/' + stamped_filename})
+    return json_response({"file": f"{str(file_id)}/{stamped_filename}"})
 
 
 def try_upload_image(image_file):

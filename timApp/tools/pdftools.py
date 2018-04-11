@@ -1,15 +1,15 @@
+"""
+Stamping and merging pdf-files with pdftk and pdflatex.
+
+Visa Naukkarinen
+"""
+
 from subprocess import Popen, PIPE, run as subprocess_run
 from os import remove, path as os_path
 from typing import Union, List
 # from uuid import uuid4
 from urllib import request as url_request
 from urllib.error import HTTPError
-
-"""
-Stamping and merging pdf-files with pdftk and pdflatex
-
-Visa Naukkarinen
-"""
 
 # Default parameter values:
 temp_folder_default_path = "/tmp"
@@ -30,7 +30,6 @@ class PdfError(Exception):
     """
     Inherited by all the other custom errors pdftools-module uses.
     """
-    pass
 
 
 class ModelStampMissingError(PdfError):
@@ -143,7 +142,6 @@ class StampDataEmptyError(PdfError):
     """
     Raised if input data is an empty list.
     """
-    pass
 
 
 class SubprocessError(PdfError):
@@ -181,14 +179,14 @@ def get_stamp_text(item: dict, text_format: str) -> str:
     Gives formatted stamp text; note: may not work properly with non-ascii
     :param item: dictionary with 'date','attachment' and 'issue' keys
            or alternatively just 'text'
-    :param text_format: formatting for file=0, date=1, attachment=2 and
+    :param text_format: formatting for filename=0, date=1, attachment=2 and
            issue=3 keys
     :return: either contents of 'text' key or a formatted string
     """
     # normal formatted stamp data takes precedence
     try:
         return text_format.format(
-            item['file'],
+            get_base_filename(item['file']),
             item['date'],
             item['attachment'],
             item['issue'])
@@ -340,14 +338,14 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
     :return:
     """
     # not a list
-    if type(stamp_data) is not list:
+    if not isinstance(stamp_data, list):
         raise StampDataInvalidError("is not a list", stamp_data)
     # if empty
     if not stamp_data:
         raise StampDataEmptyError()
     for item in stamp_data:
         # if there are no dictionaries inside the list
-        if type(item) is not dict:
+        if not isinstance(item, dict):
             raise StampDataInvalidError("is not a dictionary", item)
         # path is always required
         if "file" not in item:
@@ -357,12 +355,10 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
             raise AttachmentNotFoundError(item["file"])
         # text or date, attachment & issue are alternatives
         if "text" not in item:
-            if "date" not in item:
-                raise StampDataMissingKeyError("date", item)
-            if "attachment" not in item:
-                raise StampDataMissingKeyError("attachment", item)
-            if "issue" not in item:
-                raise StampDataMissingKeyError("issue", item)
+            keys = ["date", "attachment", "issue"]
+            for key in keys:
+                if key not in item:
+                    raise StampDataMissingKeyError(key, item)
         if ".pdf" not in item["file"]:
             raise AttachmentNotAPdfError(item["file"])
 
@@ -373,8 +369,8 @@ def is_url(string: str) -> bool:
     :param string:
     :return:
     """
-    # TODO: check special cases
-    if string.startswith("http"):
+    # TODO: check special cases like
+    if string.startswith("http://") or string.startswith("https://"):
         return True
     else:
         return False
@@ -411,6 +407,12 @@ def get_base_filename(path: str, no_extension: bool = False) -> str:
 
 
 def attachment_params_to_dict(params: List[str]) -> List[dict]:
+    """
+    Changes list of attachment params to dictionary list that pdftools can use.
+    Sets values to right keys and cleans up extra quotes.
+    :param params:
+    :return:
+    """
     if params.__len__() < 6:
         raise StampDataInvalidError("request missing params", ", ".join(params))
 
@@ -436,6 +438,7 @@ def stamp_pdfs(
             file=0, date=1, attachment=2 and issue=3 keys
     :return: list of stamped pdf paths
     """
+    # TODO: create a new class for stamp_data
 
     stamped_pdfs = []
 
@@ -453,9 +456,6 @@ def stamp_pdfs(
     check_stamp_data_validity(stamp_data)
 
     for item in stamp_data:
-        # TODO: check for duplicate file names and add numbers to avoid conflicts
-        # TODO: option to use random names for stamp or stamped files
-
         # names and paths of new files to use as params
         item_basename = get_base_filename(item['file'], True)
         item_stamp_name_no_ext = item_basename + "_stamp"

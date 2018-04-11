@@ -200,9 +200,13 @@ def empty_response_route():
     return Response('', mimetype='text/plain')
 
 
-# route for mergin all attachments in document
 @app.route('/mergeAttachments/<path:doc>')
 def merge_attachments(doc):
+    """
+    A route for merging all the attachments in a document.
+    :param doc: document path
+    :return: merged pdf-file
+    """
     try:
         d = DocEntry.find_by_path(doc, try_translation=True)
         if not d:
@@ -225,29 +229,31 @@ def merge_attachments(doc):
 
                 # if attachment is url link, download it to temp folder to operate
                 elif timApp.tools.pdftools.is_url(par_file):
-                    print(f"Downloading {par_file}")
+                    # print(f"Downloading {par_file}")
                     pdf_paths += [timApp.tools.pdftools.download_file_from_url(par_file)]
 
         # uses document name as the base for the merged file name and tmp as folder
         doc_name = timApp.tools.pdftools.get_base_filename(doc)
-        merged_pdf_path = timApp.tools.pdftools.temp_folder_default_path + "/"+ f"{doc_name}_merged.pdf"
-
+        merged_pdf_path = timApp.tools.pdftools.temp_folder_default_path + "/" + f"{doc_name}_merged.pdf"
         timApp.tools.pdftools.merge_pdf(pdf_paths, merged_pdf_path)
 
     except Exception as e:
-        message = repr(e)
+        message = str(e)
         abort(404, message)
     else:
         # TODO: do something more intelligent here
         return send_file(merged_pdf_path, mimetype="application/pdf")
 
 
-
-
-# testing route for processing pdf attachments
-# possibly obsolete
 @app.route('/processAttachments/<path:doc>')
 def process_attachments(doc):
+    """
+    A testing route for processing pdf attachments.
+    Note: possibly obsolete.
+    :param doc:
+    :return: merged & stamped pdf
+    """
+    # TODO: divide try-block a bit (use PdfError for pdftools methods)
     try:
         d = DocEntry.find_by_path(doc, try_translation=True)
         if not d:
@@ -291,9 +297,13 @@ def process_attachments(doc):
         return send_file(merged_pdf_path, mimetype="application/pdf")
 
 
-# route for creating extracts of faculty council minutes
 @app.route('/createMinuteExtracts/<path:doc>')
 def create_minute_extracts(doc):
+    """
+    A route for creating extracts of faculty council minutes.
+    :param doc:
+    :return:
+    """
     d = DocEntry.find_by_path(doc, try_translation=True)
     if not d:
         abort(404)
@@ -394,7 +404,7 @@ def create_minute_extracts(doc):
 
     # loop through the extracts and create new documents for them
     for extract_number, (extract_title, paragraphs) in extract_dict.items():
-        docentry = create_or_get_and_wipe_document(f"{base_path}lista{extract_number}",  f"lista{extract_number}")
+        docentry = create_or_get_and_wipe_document(f"{base_path}lista{extract_number}", f"lista{extract_number}")
 
         for par in paragraphs:
             docentry.document.add_paragraph_obj(par.create_reference(docentry.document, add_rd=True))
