@@ -280,7 +280,7 @@ class TimTableController implements IController {
 
     private getRealValue(cell: CellEntity, rowi:number, coli: number){
         //docentry.py
-        // todo: miten päästään käsiksi docentry.py???? 
+        // todo: miten päästään käsiksi docentry.py????
         //find_bt_id
         return "Kissa";
     }
