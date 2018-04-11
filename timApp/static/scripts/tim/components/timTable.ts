@@ -54,7 +54,7 @@ export interface ITableStyles {
 
 export interface DataEntity {
     type: string;
-    cells: (CellDataEntity)[];
+    cells: CellDataEntity;
 }
 
 export interface CellDataEntity {
@@ -152,7 +152,7 @@ class TimTableController implements IController {
     $onInit() {
         this.count = 0;
         this.$pars = $(this.srcid);
-        this.DefineDataHash();
+        // this.DefineDataHash();
 
         this.cellDataMatrix = [];
         if (this.data.table.rows) {
@@ -176,22 +176,17 @@ class TimTableController implements IController {
                 if (alpha == null) continue;
                 var numberPlace = item.substring(alpha[0].length);
 
-                var col = this.DataHash[alpha[0]];
                 var address = this.getAddress(item);
-                address.col;
-
-                var row = numberPlace[0];
-
-                this.setValueToMatrix(col.valueOf(), parseInt(row), value.toString());
+                this.setValueToMatrix(address.col,address.row, value.toString());
             }
     }
 
 
     private getAddress(address: string) {
 
-        var str = "A";
-        var col = address.charCodeAt(0) - str.charCodeAt(0);
-        var row: number = parseInt(address.substring(1))-1;
+        const str = "A";
+        let col = address.charCodeAt(0) - str.charCodeAt(0);
+        let row: number = parseInt(address.substring(1));
 
         //todo: calculate characters further
      return {col: col, row: row}
@@ -201,7 +196,7 @@ class TimTableController implements IController {
     /*
     Define HashTable that contains final table
     */
-    private DefineDataHash() {
+    /*private DefineDataHash() {
         this.DataHash = {};
         this.DataHash["A"] = 0; //set
         this.DataHash["B"] = 1; //set
@@ -234,7 +229,7 @@ class TimTableController implements IController {
 
         //let value = charPlacement["somestring"]; //get
         //todo: calculate after z
-    }
+    }*/
 
 
     /*
@@ -261,12 +256,19 @@ class TimTableController implements IController {
         if (typeof cell === "string") return;
         if (this.editing)  // editing is on
         {
+            if(!(this.data.table.datablock)) this.createDataBlock();
+
             if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
                 this.helpCell.editing = false;
             }
             cell.editing = true;
             this.helpCell = cell;
         }
+    }
+
+    private createDataBlock(){
+      //this.data.table.datablock = new DataEntity();
+
     }
 
 
