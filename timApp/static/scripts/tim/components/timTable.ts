@@ -53,9 +53,10 @@ export interface ITableStyles {
 }
 
 export interface DataEntity {
-    type: string;
+    type: "Relative" | "Abstract";
     cells: CellDataEntity;
 }
+
 
 export interface CellDataEntity {
     [key: string]: string;
@@ -181,9 +182,11 @@ class TimTableController implements IController {
             }
     }
 
-
+    /*
+      Get placement, ex. A1 -> 1,1
+      C5 -> 3,5
+     */
     private getAddress(address: string) {
-
         const str = "A";
         let col = address.charCodeAt(0) - str.charCodeAt(0);
         let row: number = parseInt(address.substring(1));
@@ -251,12 +254,20 @@ class TimTableController implements IController {
     }
 
 
-    private cellClicked(cell: CellEntity) {
+    private cellClicked(cell: CellEntity, rowi: number, coli: number) {
 
         if (typeof cell === "string") return;
         if (this.editing)  // editing is on
         {
-            if(!(this.data.table.datablock)) this.createDataBlock();
+            if(!(this.data.table.datablock)) {
+                this.createDataBlock();
+                cell.cell = this.getRealValue(cell, rowi, coli);
+                let value = cell.cell;
+
+
+                let placement = this.calculatePlace(rowi, coli);
+                this.addtoDataBlock(placement, value);
+            }
 
             if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
                 this.helpCell.editing = false;
@@ -266,9 +277,46 @@ class TimTableController implements IController {
         }
     }
 
-    private createDataBlock(){
-      //this.data.table.datablock = new DataEntity();
 
+    private getRealValue(cell: CellEntity, rowi:number, coli: number){
+        //docentry.py
+        // todo: miten päästään käsiksi docentry.py???? 
+        //find_bt_id
+        return "Kissa";
+    }
+
+    /*
+    Calculates index to abstract form, ex. 1,1 -> A1
+    3,2 -> C2
+    */
+    private calculatePlace(rowi: number, coli: number){
+        const str = "A";
+        // col is a number like 2 -> B
+        let col:string = String.fromCharCode(str.charCodeAt(0)-1+coli); // 65 -1 = 64 + 2 = 66 = B
+        return col + rowi;
+    }
+
+    /*
+    Add element to DataBlock
+     */
+    private addtoDataBlock(key: string, value: string){
+        if(this.data.table.datablock) {
+            var modal: CellDataEntity = <CellDataEntity>{
+                key: value,
+            };
+            // modal.key = "A1";
+            // modal[1] = "Kissa";
+            this.data.table.datablock.cells = modal;
+        }
+    }
+
+    /*
+    Create new DataBlock with type, but no cells
+     */
+    private createDataBlock(){
+        var modal: DataEntity = <DataEntity>{};
+        modal.type = "Relative" ;
+        this.data.table.datablock = modal;
     }
 
 
@@ -401,7 +449,7 @@ timApp.component("timTable", {
        <!-- if data does not exists -->
       <div ng-if="$ctrl.allcellData == undefined">
         <td ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
-            ng-style="$ctrl.stylingForCell(td)" ng-click="$ctrl.cellClicked(td)">
+            ng-style="$ctrl.stylingForCell(td)" ng-click="$ctrl.cellClicked(td, rowi, coli)">
             <div ng-if="td.cell != null && !td.editing" ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
             <!--{{td.cell}}-->
            </div>
