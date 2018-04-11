@@ -169,22 +169,32 @@ class TimTableController implements IController {
         if (this.data.table.datablock)
             for (let item in this.data.table.datablock.cells) {
 
-
                 var alphaRegExp = new RegExp('([A-Z]*)');
                 var alpha = alphaRegExp.exec(item);
                 let value = this.data.table.datablock.cells[item];
-
 
                 if (alpha == null) continue;
                 var numberPlace = item.substring(alpha[0].length);
 
                 var col = this.DataHash[alpha[0]];
+                var address = this.getAddress(item);
+                address.col;
+
                 var row = numberPlace[0];
-                var iiii = this.data.table.datablock.cells;
 
                 this.setValueToMatrix(col.valueOf(), parseInt(row), value.toString());
             }
+    }
 
+
+    private getAddress(address: string) {
+
+        var str = "A";
+        var col = address.charCodeAt(0) - str.charCodeAt(0);
+        var row: number = parseInt(address.substring(1))-1;
+
+        //todo: calculate characters further
+     return {col: col, row: row}
     }
 
 
@@ -231,8 +241,11 @@ class TimTableController implements IController {
     Update DataHashTable
      */
     UpdateDataHashTable(){
-        this.DataHash[""] = this.DataHashLength +1;
-        this.DataHashLength++;
+
+        for(var i = 0; i < 25; i++) {
+            this.DataHash[""] = this.DataHashLength + 1;
+            this.DataHashLength++;
+        }
         //todo: calculate further
     }
     /*
