@@ -248,6 +248,8 @@ class Jypeli(CS):
     def run(self, web, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["mono", self.pure_exename],
                                               ulimit=df(self.ulimit, "ulimit -f 80000"))
+        if err.find("Compile error") >= 0:
+            return code, out, err, pwddir
         err = re.sub("^ALSA.*\n", "", err, flags=re.M)
         err = re.sub("^W: \[pulse.*\n", "", err, flags=re.M)
         err = re.sub("^AL lib:.*\n", "", err, flags=re.M)
@@ -597,6 +599,8 @@ class PY3(Language):
 
     def run(self, web, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["python3", self.pure_exename])
+        if err:
+            return code, out, err, pwddir
         out, err = self.copy_image(web, code, out, err, points_rule)
         err = re.sub("/usr/lib/python3/dist-packages/matplotlib/font_manager(.*\n)*.*This may take a moment.'\)",
                      "", err, flags=re.M)
