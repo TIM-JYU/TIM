@@ -388,14 +388,13 @@ class TimTableController implements IController {
     }
 }
 
-
 timApp.component("timTable", {
     controller: TimTableController,
     bindings: {
         data: "<",
     },
     template: `<div ng-class="{editable: $ctrl.editing}""><table>
-  <button ng-click="$ctrl.editor()">Edit</button>
+  <button class="timButton" ng-click="$ctrl.editor()">Edit</button>
    <!--<button ng-app="myApp">Edit</button>-->
     <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" ng-style="$ctrl.stylingForColumn(c)"/>
     <tr ng-repeat="r in $ctrl.data.table.rows"  ng-init="rowi = $index" ng-style="$ctrl.stylingForRow(r)">
@@ -447,8 +446,8 @@ timApp.component("timTable", {
 <!--<p ng-repeat="item in $ctrl.allcellData">{{item}}</p>
 <p ng-bind-html="$ctrl.data.table.cellData"></p>-->
 
-<button ng-show="$ctrl.editing" ng-click="$ctrl.editSave()">Save</button>
-<button ng-show="$ctrl.editing" ng-click="$ctrl.editCancel()">Cancel</button>
+<button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.editSave()">Save</button>
+<button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.editCancel()">Cancel</button>
 </div>
 
 
