@@ -34,6 +34,7 @@ from timApp.containerLink import call_plugin_resource
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.create_item import do_create_item, get_templates_for_folder, create_item
 from timApp.documentmodel.document import Document
+from timApp.documentmodel.docsettings import DocSettings
 from timApp.documentmodel.documentversion import DocumentVersion
 from timApp.logger import log_info, log_error, log_debug, log_warning
 from timApp.pluginexception import PluginException
@@ -614,8 +615,7 @@ def create_minutes_route():
     item_path, item_title, copy_id = verify_json_params('item_path', 'item_title', 'copy')
 
     item = create_or_copy_item(item_path, "document", item_title, copy_id=copy_id, use_template=False)
-    # maybe we could use DocSettings.is_minutes_key instead of getting the variable from the instance?
-    item.document.add_setting(item.document.get_settings().is_minutes_key, True)
+    item.document.add_setting(DocSettings.is_minutes_key, True)
     db.session.commit()
     return json_response(item)
 
