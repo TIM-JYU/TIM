@@ -9,12 +9,6 @@ from timApp.documentmodel.document import Document
 from timApp.timdb.readparagraphtype import ReadParagraphType
 from timApp.timdb.tim_models import ReadParagraph, db
 
-Rp = db.aliased(ReadParagraph)
-
-
-# workaround for suppressing warning about None comparison
-N = None
-
 
 def get_read_expiry_condition(delta: timedelta):
     return ((ReadParagraph.type == ReadParagraphType.click_red) |
