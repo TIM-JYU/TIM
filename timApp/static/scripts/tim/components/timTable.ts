@@ -3,7 +3,9 @@ import $ from "jquery";
 import {timApp} from "../app";
 import {ViewCtrl} from "../controllers/view/viewctrl";
 import {showMessageDialog} from "../dialog";
-import {IHash} from "../../decls/components/timTable";
+import {setSetting} from "../utils";
+import {$http} from "../ngimport";
+//import {IHash} from "../../decls/components/timTable";
 
 
 export const EDITOR_CLASS = "editorArea";
@@ -145,6 +147,7 @@ class TimTableController implements IController {
     public dataCells: DataEntity;
     public DataHash: IHash;
     private DataHashLength: number;
+    private editedCellContent: string;
 
     constructor(private scope: IScope) {
 
@@ -259,9 +262,10 @@ class TimTableController implements IController {
         if (typeof cell === "string") return;
         if (this.editing)  // editing is on
         {
-            if(!(this.data.table.datablock)) {
+            if((!this.data.table.datablock)) {
                 this.createDataBlock();
-                cell.cell = this.getRealValue(cell, rowi, coli);
+                this.getCellData(2, "3BJ49GKL2W7m", rowi, coli); //docId ja parId Matin omista testidokuista
+                cell.cell = this.editedCellContent;                            //TODO: miten saadaan tietää nuo id:t oikeasti?
                 let value = cell.cell;
 
 
@@ -274,16 +278,11 @@ class TimTableController implements IController {
             }
             cell.editing = true;
             this.helpCell = cell;
+            this.getCellData(2, "3BJ49GKL2W7m", rowi, coli);
+            this.helpCell.cell = this.editedCellContent;
         }
     }
 
-
-    private getRealValue(cell: CellEntity, rowi:number, coli: number){
-        //docentry.py
-        // todo: miten päästään käsiksi docentry.py????
-        //find_bt_id
-        return "Kissa";
-    }
 
     /*
     Calculates index to abstract form, ex. 1,1 -> A1
@@ -433,6 +432,25 @@ class TimTableController implements IController {
     public editCancel() {
         // undo all changes
         this.editing = false;
+    }
+
+    /**
+     * Gets the contents of a cell from the server
+     * @param {number} docId
+     * @param {string} parId
+     * @param {number} row
+     * @param {number} col
+     * @returns {Promise<void>}
+     */
+    async getCellData(docId: number, parId: string, row: number, col: number) {
+        const response = await $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
+            url: "/timTable/getCellData",
+            method: "GET",
+            params: {docId, parId, row, col},
+        }); //TODO: virhekasittely
+        const data = response.data;
+        this.editedCellContent = data[0]
+        showMessageDialog(this.editedCellContent);
     }
 }
 

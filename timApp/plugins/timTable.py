@@ -18,6 +18,7 @@ from timApp.responsehelper import json_response
 from timApp.sessioninfo import get_current_user_object
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.askedjson import normalize_question_json
+from timApp.timdb.models.docentry import DocEntry
 
 timTable_plugin = Blueprint('timTable_plugin',
                        __name__,
@@ -34,6 +35,10 @@ TYPE = 'type'
 TEXT = 'text'
 FORMULA = 'formula'
 NUMBER = 'number'
+DATABLOCK = 'datablock'
+CELLS = 'cells'
+COL = 'col'
+ASCII_OF_A = 65
 
 @timTable_plugin.route("reqs/")
 @timTable_plugin.route("reqs")
@@ -61,6 +66,45 @@ def qst_multihtml():
     return json_response(multi)
 
 
+@timTable_plugin.route("getCellData", methods=["GET"])
+def tim_table_get_cell_data():
+    multi = []
+    args = request.args
+    doc = DocEntry.find_by_id(int(args['docId'])).document
+    par = doc.get_paragraph(args['parId'])
+    plug = Plugin.from_paragraph(par)
+    yaml = plug.values
+    if yaml[TABLE][DATABLOCK]:
+        cell_cnt = find_cell_from_datablock(yaml[TABLE][DATABLOCK][CELLS],int(args[ROW]),int(args[COL]))
+    if cell_cnt != '':
+        multi.append(cell_cnt)
+    else:
+        rows = yaml[TABLE][ROWS]
+        cell_content = find_cell(rows,int(args['row']),int(args['col']))
+        multi.append(cell_content)
+    return json_response(multi)
+
+def find_cell(rows: list, row: int, col: int) -> str:
+   right_row = rows[row][ROW]
+   right_cell = right_row[col]
+   return right_cell[CELL]
+
+def find_cell_from_datablock(cells: dict, row: int, col: int) -> str:
+    ret = ''
+    coordinate = colnum_to_letters(col) + str(row)
+    try:
+        value = cells[coordinate]
+        ret = value
+    except:
+        pass
+    return ret
+
+def colnum_to_letters(col: int) -> str:
+    '''TODO: Working with values over 122 meaning more than one letter
+    '''
+    return chr(ASCII_OF_A+col)
+
+
 def is_review(request):
     # print(query)
     result = request.full_path.find("review=") >= 0
@@ -73,6 +117,7 @@ def qst_get_html(jso, review):
     result = False
     info = jso['info']
     markup = jso['markup']
+    """
     #markup = normalize_question_json(markup,
                                      #allow_top_level_keys=
                                      #{
@@ -98,7 +143,7 @@ def qst_get_html(jso, review):
         s = ""
         result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>' + s + '</div>'
         return result
-
+    """
     attrs = json.dumps(jso['markup'])
 
     #runner = 'qst-runner'
