@@ -4,6 +4,8 @@ export LANG=en_US.UTF-8
 # export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/
 export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
 export MONO_PATH=/cs/jypeli
+export PATH="/cs/jypeli:$PATH"
+
 
 printf "\n" >~/run/time.txt
 if [ -e run/compile.sh ]

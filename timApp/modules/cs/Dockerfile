@@ -192,11 +192,19 @@ RUN         cd  /tmp && \
             ln -s "${KOTLIN_HOME}/bin/"* "/usr/bin/" && \
             rm -rf /tmp/* /var/cache/apk/*
 
+# RUN bash -c "${APT_INSTALL} uuid-runtime && ${APT_CLEANUP}"
+
+# RUN dbus-uuidgen > /etc/machine-id
+# run echo 3c99bef9df635abd860662e8594b78af >/etc/machine-id
+
+RUN bash -c "${APT_INSTALL} bsdmainutils && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} iputils-ping && ${APT_CLEANUP}"
 
 RUN useradd -m agent
 ENV HOME /home/agent
 RUN mkdir -p /service
 RUN chown -R agent /service
+
 
 # RUN groupadd docker
 #RUN gpasswd -a agent docker

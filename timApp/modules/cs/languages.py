@@ -240,9 +240,10 @@ class Jypeli(CS):
         # /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing.dll
         # /cs/jypeli/Ohjelma.cs %s" % (
         cmdline = ("%s /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
-                   "/r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll "
-                   "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Numerics.dll /r:System.Drawing.dll %s %s") % (
+                   "/r:/cs/jypeli/Jypeli.Physics2d.dll  "
+                   "/r:System.Numerics.dll /r:System.Drawing.dll %s %s") % (
                       self.compiler, self.exename, mainfile, self.sourcefilename)
+        # /r:/cs/jypeli/Tao.Sdl.dll  /r:/cs/jypeli/OpenTK.dll
         return cmdline
 
     def run(self, web, sourcelines, points_rule):
