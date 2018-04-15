@@ -3,7 +3,7 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
 import {$compile, $document} from "../ngimport";
-import {getOutOffset} from "../utils";
+import {getOutOffsetFully, getOutOffsetVisible} from "../utils";
 
 function setStorage(key: string, value: any) {
     value = JSON.stringify(value);
@@ -81,6 +81,7 @@ export class DraggableController implements IController {
     private posKey: string;
     private areaMinimized: boolean = false;
     private areaHeight: number = 0;
+    private areaWidth: number = 0;
     private setLeft: boolean = true;
     private setRight: boolean = false;
     private setBottom: boolean = false;
@@ -213,6 +214,7 @@ export class DraggableController implements IController {
                 this.minimize();
             }
         }
+        this.ensureVisibleInViewport();
     }
 
     minimize() {
@@ -221,7 +223,11 @@ export class DraggableController implements IController {
         const base = this.element.find(".draggable-content");
         if (this.areaMinimized) {
             this.areaHeight = this.element.height() || 200;
+            this.areaWidth = this.element.width() || 200;
             this.element.height(15);
+            this.element.width(200);
+            this.element.css("left", this.getCss("left") + (this.areaWidth-this.element.width()));
+
             base.css("display", "none");
             this.element.css("min-height", "0");
             setStorage(this.posKey + "min", true);
@@ -233,7 +239,9 @@ export class DraggableController implements IController {
         } else {
             base.css("display", "");
             this.element.css("min-height", "");
+            this.element.css("left", this.getCss("left") - (this.areaWidth-this.element.width()));
             this.element.height(this.areaHeight);
+            this.element.width(this.areaWidth);
             setStorage(this.posKey + "min", false);
             this.element.find(".resizehandle").css("display", "");
         }
@@ -384,7 +392,7 @@ export class DraggableController implements IController {
         $document.off("mousemove pointermove touchmove", this.moveResize);
         // this.element.css("background", "red");
         this.pos = this.getPageXY(e);
-        this.ensureFullyInViewport();
+        this.ensureVisibleInViewport();
         // this.element.css("background", "blue");
         if (this.posKey) {
             // this.element.css("background", "yellow");
@@ -405,7 +413,27 @@ export class DraggableController implements IController {
     }
 
     private ensureFullyInViewport() {
-        const bound = getOutOffset(this.element[0]);
+        const bound = getOutOffsetFully(this.element[0]);
+        if (this.setTop) {
+            this.element.css("top", this.getCss("top") - bound.top);
+            this.element.css("top", this.getCss("top") + bound.bottom);
+        }
+        if (this.setBottom) {
+            this.element.css("bottom", this.getCss("bottom") - bound.bottom);
+            this.element.css("bottom", this.getCss("bottom") + bound.top);
+        }
+        if (this.setLeft) {
+            this.element.css("left", this.getCss("left") - bound.left);
+            this.element.css("left", this.getCss("left") + bound.right);
+        }
+        if (this.setRight) {
+            this.element.css("right", this.getCss("right") - bound.right);
+            this.element.css("right", this.getCss("right") + bound.left);
+        }
+    }
+
+    private ensureVisibleInViewport() {
+        const bound = getOutOffsetVisible(this.element[0]);
         if (this.setTop) {
             this.element.css("top", this.getCss("top") - bound.top);
             this.element.css("top", this.getCss("top") + bound.bottom);
