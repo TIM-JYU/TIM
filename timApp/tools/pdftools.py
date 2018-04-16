@@ -7,10 +7,8 @@ Visa Naukkarinen
 from subprocess import Popen, PIPE, run as subprocess_run
 from os import remove, path as os_path
 from typing import Union, List
-# from uuid import uuid4
 from urllib import request as url_request
 from urllib.error import HTTPError
-from pathlib import Path
 
 # Default parameter values:
 temp_folder_default_path = "/tmp"
@@ -171,7 +169,7 @@ def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
     :return: output_path
     """
     for pdf in pdf_path_list:
-        if Path(pdf).is_file():
+        if not os_path.exists(pdf):
             raise AttachmentNotFoundError(pdf)
 
     args = ["pdftk"] + pdf_path_list + ["cat", "output", output_path]

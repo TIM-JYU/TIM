@@ -212,7 +212,7 @@ def get_attachments(doc):
         d = DocEntry.find_by_path(doc, try_translation=True)
         if not d:
             abort(404)
-        verify_view_access(d) or verify_edit_access(d)
+        verify_manage_access(d) or verify_edit_access(d)
 
         paragraphs = d.document.get_paragraphs(d)
         pdf_paths = []
@@ -240,11 +240,10 @@ def get_attachments(doc):
 
     except Exception as e:
         message = str(e)
+        print(message)
         abort(404, message)
     else:
        return send_file(merged_pdf_path, mimetype="application/pdf")
-    #return ok_response()  # TODO
-
 
 @app.route('/mergeAttachments/<path:doc>', methods=['POST'])
 def merge_attachments(doc):

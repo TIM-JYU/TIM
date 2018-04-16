@@ -41,7 +41,7 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
         this.loading = true;
         const postURL = "/merge" + this.resolve.params.document.path;
 
-        const response = await $http.get<{url: string}>(`/mergeAttachments/${this.resolve.params.document.path}`, {});
+       const response = await $http.get<{url: string}>(`/mergeAttachments/${this.resolve.params.document.path}`, {});
 
         const response1 = await $http.post<{url: string}>(`/mergeAttachments/${this.resolve.params.document.path}`, {});
 
