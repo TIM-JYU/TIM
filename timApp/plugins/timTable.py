@@ -21,8 +21,8 @@ from timApp.timdb.models.askedjson import normalize_question_json
 from timApp.timdb.models.docentry import DocEntry
 
 timTable_plugin = Blueprint('timTable_plugin',
-                       __name__,
-                       url_prefix='/timTable/')
+                            __name__,
+                            url_prefix='/timTable/')
 
 # Reserved words in the TimTable format
 TABLE = 'table'
@@ -40,15 +40,16 @@ CELLS = 'cells'
 COL = 'col'
 ASCII_OF_A = 65
 
+
 @timTable_plugin.route("reqs/")
 @timTable_plugin.route("reqs")
 def timTable_reqs():
     reqs = {
         "type": "embedded",
         "js": [
-           #"js/timTable.js"
+            # "js/timTable.js"
             # "tim/controllers/qstController",
-               ],
+        ],
         "angularModule": [],
         "multihtml": True,
         "multimd": True
@@ -57,6 +58,7 @@ def timTable_reqs():
     return json_response(reqs)
 
 
+"""
 @timTable_plugin.route("multihtml/", methods=["POST"])
 def qst_multihtml():
     jsondata = request.get_json()
@@ -64,6 +66,7 @@ def qst_multihtml():
     for jso in jsondata:
         multi.append(qst_get_html(jso, is_review(request)))
     return json_response(multi)
+"""
 
 
 @timTable_plugin.route("getCellData", methods=["GET"])
@@ -110,6 +113,7 @@ def is_review(request):
     result = request.full_path.find("review=") >= 0
     return result
 
+
 NOLAZY = "<!--nolazy-->"
 
 
@@ -146,13 +150,14 @@ def qst_get_html(jso, review):
     """
     attrs = json.dumps(jso['markup'])
 
-    #runner = 'qst-runner'
-    #s = f'<{runner} json={quoteattr(attrs)}></{runner}>'
+    # runner = 'qst-runner'
+    # s = f'<{runner} json={quoteattr(attrs)}></{runner}>'
 
     runner = 'tim-table'
     s = f'<{runner} data={quoteattr(attrs)}>HAHAA</{runner}>'
 
     return s
+
 
 def delete_key(d: Dict[str, Any], key: str):
     if key in d:
@@ -168,7 +173,7 @@ def qst_str(state):
     s = s.replace("'", "")
     return s
 
-"""
+
 @timTable_plugin.route("multihtml/", methods=["POST"])
 def timTable_multihtml():
     jsondata = request.get_json()
@@ -176,24 +181,26 @@ def timTable_multihtml():
     for jso in jsondata:
         table = jso['markup'].get(TABLE)
         multi.append('')
+        print(table)
         stylesAttributes = stylesAndAttributes(table)
         multi[0] = '<table' + concatDefinitions(stylesAttributes['attributes']) + concatStyleDefinitions(
             stylesAttributes['styles']
         ) + '>'
         if COLUMNS in table:
-            multi[0] = multi[0]  + parse_columns(table[COLUMNS])
+            multi[0] = multi[0] + parse_columns(table[COLUMNS])
         for row in table[ROWS]:
-                multi[0] =  multi[0] + parse_row(row)
+            multi[0] = multi[0] + parse_row(row)
     return json_response(multi)
-"""
+
 
 def parse_columns(columns: list) -> str:
     colHtml = ''
     for col in columns:
         stylesAttributes = stylesAndAttributes(col)
         colHtml += '<col' + concatDefinitions(stylesAttributes['attributes'])
-        colHtml +=  concatStyleDefinitions(stylesAttributes['styles']) + '>'
+        colHtml += concatStyleDefinitions(stylesAttributes['styles']) + '>'
     return colHtml
+
 
 def parse_row(row: dict) -> str:
     """Here
@@ -202,7 +209,8 @@ def parse_row(row: dict) -> str:
     if ROW in row:
         for item in row[ROW]:
             if isinstance(item, str) or isinstance(item, int) or isinstance(item, float):
-                tdStr += "<td>" + str(item) + "</td>"  # In this case the cell is represented just by the content, TODO: md-parser
+                tdStr += "<td>" + str(
+                    item) + "</td>"  # In this case the cell is represented just by the content, TODO: md-parser
             else:
                 tdStr += parse_cell(item)
         stylesAttributes = stylesAndAttributes(row)
@@ -214,7 +222,7 @@ def parse_row(row: dict) -> str:
 def parse_cell(cell: dict) -> str:
     """
         """
-    #if isinstance(cell, str):
+    # if isinstance(cell, str):
     #    return "<td>"+cell+"</td>"
     stylesAttributes = stylesAndAttributes(cell)
     attributes = stylesAttributes['attributes']
@@ -224,16 +232,16 @@ def parse_cell(cell: dict) -> str:
     ans = start.strip() + ">" + handleType(cell) + "</td>"
     return ans
 
-def handleType(cell: dict):
 
+def handleType(cell: dict):
     cellContent = cell[CELL]
     if isinstance(cellContent, int) or isinstance(cellContent, float):
-        cellContent = str(cellContent) #Because formulas are not implemented, casting to string can be done.
+        cellContent = str(cellContent)  # Because formulas are not implemented, casting to string can be done.
 
     if TYPE in cell:
-        if (cell[TYPE] == TEXT): return cellContent  #Todo: md-parseri
-        if (cell[TYPE] == NUMBER): return cellContent #Not implemented yet.
-        if (cell[TYPE] == FORMULA): return ""  #Not implemented yet.
+        if (cell[TYPE] == TEXT): return cellContent  # Todo: md-parseri
+        if (cell[TYPE] == NUMBER): return cellContent  # Not implemented yet.
+        if (cell[TYPE] == FORMULA): return ""  # Not implemented yet.
     return cellContent
 
 
@@ -246,6 +254,7 @@ def concatDefinitions(definitions: list) -> str:
         defStr += definition + ' '
     return " " + defStr.strip()
 
+
 def concatStyleDefinitions(definitions: list) -> str:
     defStr = 'style=\"'
     for definition in definitions:
@@ -256,19 +265,19 @@ def concatStyleDefinitions(definitions: list) -> str:
 def stylesAndAttributes(elements: dict) -> dict:
     styleDefinitions = []
     attributeDefinitions = []
-    retDict = {'styles': styleDefinitions, 'attributes':attributeDefinitions}
+    retDict = {'styles': styleDefinitions, 'attributes': attributeDefinitions}
     for key, value in elements.items():
         if key == "colspan":
-            attributeDefinitions.append(key+"=" + "\"" + str(value) + "\"")
-        if key  == "rowspan":
-            attributeDefinitions.append(key+"=" + "\"" + str(value) + "\"")
+            attributeDefinitions.append(key + "=" + "\"" + str(value) + "\"")
+        if key == "rowspan":
+            attributeDefinitions.append(key + "=" + "\"" + str(value) + "\"")
         if key == "id":
             attributeDefinitions.append(key + "=" + "\"" + str(value) + "\"")
-        if key  == "text-align":
+        if key == "text-align":
             styleDefinitions.append(key + ":" + value + ";")
-        if key  == "vertical-align":
+        if key == "vertical-align":
             styleDefinitions.append(key + ":" + value + ";")
-        if key  == "background-color":
+        if key == "background-color":
             styleDefinitions.append(key + ":" + value + ";")
         if key == "border":
             styleDefinitions.append(key + ":" + value + ";")
@@ -285,5 +294,3 @@ def stylesAndAttributes(elements: dict) -> dict:
         if key == "height":
             styleDefinitions.append(key + ":" + str(value) + ";")
     return retDict
-
-

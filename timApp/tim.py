@@ -257,7 +257,7 @@ def merge_attachments(doc):
         d = DocEntry.find_by_path(doc, try_translation=True)
         if not d:
             abort(404)
-        verify_view_access(d)
+        verify_edit_access(d)
 
         paragraphs = d.document.get_paragraphs(d)
         pdf_paths = []

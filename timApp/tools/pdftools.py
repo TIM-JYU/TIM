@@ -10,13 +10,14 @@ from typing import Union, List
 # from uuid import uuid4
 from urllib import request as url_request
 from urllib.error import HTTPError
+from pathlib import Path
 
 # Default parameter values:
 temp_folder_default_path = "/tmp"
 # temp_folder_default_path = "static/testpdf"
 stamp_model_default_path = "static/tex/stamp_model.tex"
 # default format for stamp text
-default_stamp_format = "Kokous {1}\n\nLIITE {2} lista {3}"
+default_stamp_format = "Kokous {date}\n\nLIITE {attachment} lista {issue}"
 # how long (seconds) subprocess can take until TimeoutExpired
 default_subprocess_timeout = 30
 pdfmerge_timeout = 300
@@ -46,7 +47,7 @@ class ModelStampMissingError(PdfError):
 
 class ModelStampInvalidError(PdfError):
     """
-    Raised if model tex-file for creating stamps is broken,
+    Raised if model tex-file for creating stamps is broken.
     """
 
     def __init__(self, file_path: str = ""):
@@ -58,7 +59,7 @@ class ModelStampInvalidError(PdfError):
 
 class TempFolderNotFoundError(PdfError):
     """
-    Raised if the folder for temporary files is missing
+    Raised if the folder for temporary files is missing.
     """
 
     def __init__(self, folder_path: str = ""):
@@ -78,6 +79,9 @@ class AttachmentNotFoundError(PdfError):
         :param file_path: path of the attachment pdf that caused the error
         """
         self.file_path = file_path
+
+    def __str__(self):
+        return f"Attachment not found: {self.file_path}"
 
 
 class AttachmentNotAPdfError(PdfError):
@@ -106,7 +110,7 @@ class StampFileNotFoundError(PdfError):
 
 class StampDataInvalidError(PdfError):
     """
-    Raised if stamp data type is wrong
+    Raised if stamp data type is wrong.
     """
 
     def __init__(self, reason: str = "", item: Union[str, dict, List[dict]] = ""):
@@ -128,8 +132,8 @@ class StampDataMissingKeyError(PdfError):
 
     def __init__(self, key: str = "", item: Union[str, dict] = ""):
         """
-        :param key: the missing key
-        :param item: the dict item which caused the error
+        :param key: The missing key.
+        :param item: The dict item which caused the error.
         """
         self.key = key
         self.item = item
@@ -166,39 +170,42 @@ def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
     :param output_path: merged output file path
     :return: output_path
     """
+    for pdf in pdf_path_list:
+        if Path(pdf).is_file():
+            raise AttachmentNotFoundError(pdf)
+
     args = ["pdftk"] + pdf_path_list + ["cat", "output", output_path]
     print(args)
-    # raise SubprocessError is done twice because Popen raises
-    # FileNotFoundError in some cases and skips the return code check
     call_popen(args, pdfmerge_timeout)
     return output_path
 
 
 def get_stamp_text(item: dict, text_format: str) -> str:
     """
-    Gives formatted stamp text; note: may not work properly with non-ascii
-    :param item: dictionary with 'date','attachment' and 'issue' keys
-           or alternatively just 'text'
-    :param text_format: formatting for filename=0, date=1, attachment=2 and
-           issue=3 keys
-    :return: either contents of 'text' key or a formatted string
+    Gives formatted stamp text; note: may not work properly with non-ascii.
+    :param item: Dictionary with 'date','attachment' and 'issue' keys
+           or alternatively just 'text'.
+    :param text_format: Formatting for filename, meeting date,
+           attachment letter and issue/list number.
+    :return: Either contents of 'text' key or a formatted string.
     """
-    # normal formatted stamp data takes precedence
+    # Normal formatted stamp data takes precedence.
     try:
         return text_format.format(
-            get_base_filename(item['file']),
-            item['date'],
-            item['attachment'],
-            item['issue'])
-    # if stamp data has only a free-form text, use that
+            file=get_base_filename(item['file']),
+            date=item['date'],
+            attachment=item['attachment'],
+            issue=item['issue'])
+
+    # If stamp data has only a free-form text, use that.
     except KeyError:
         try:
             return item['text']
-        # if dictionary doesn't have 'text'-key either;
-        # normally this part is obsolete, since checks have been done before
+        # If dictionary doesn't have 'text'-key either;
+        # normally this part is obsolete, since checks have been done before.
         except KeyError:
             raise StampDataMissingKeyError('text', item)
-    # if input data wasn't a dictionary
+    # If input data wasn't a dictionary.
     except TypeError:
         raise StampDataInvalidError("wrong type", item)
 
@@ -210,20 +217,20 @@ def create_stamp(
         text: str,
         remove_pdflatex_files: bool = False) -> str:
     """
-    Creates a stamp pdf-file with given text into temp folder
-    :param model_path: model stamp tex-file's complete path; contains
-           '%TEXT_HERE' to locate the text area
-    :param work_dir: the folder where stamp output and temp files will be
-    :param stamp_name: name of the stamp and temp files (no file extension)
-    :param text: text displayed in the stamp
-    :param remove_pdflatex_files: if true, newly created .aux, .log, .out and
-           .tex files will be deleted
-    :return: complete path of the created stamp pdf-file
+    Creates a stamp pdf-file with given text into temp folder.
+    :param model_path: Model stamp tex-file's complete path; contains
+           '%TEXT_HERE' to locate the text area.
+    :param work_dir: The folder where stamp output and temp files will be.
+    :param stamp_name: Name of the stamp and temp files (no file extension).
+    :param text: Text displayed in the stamp.
+    :param remove_pdflatex_files: If true, newly created .aux, .log, .out and
+           .tex files will be deleted.
+    :return: Complete path of the created stamp pdf-file.
     """
     try:
         stamp_model = open(model_path, "r")
 
-    # raises custom error if stamp_model is missing
+    # Raises custom error if stamp_model is missing.
     except FileNotFoundError:
         raise ModelStampMissingError()
 
@@ -235,17 +242,17 @@ def create_stamp(
                     stamp_temp.write(text)
                 else:
                     stamp_temp.write(line)
-        # if stamp_model file is broken
+        # If stamp_model file is broken.
         # TODO: check if failure to write a new stamp file raises proper error
         except UnicodeDecodeError:
             raise ModelStampInvalidError(model_path)
     args = ["pdflatex", stamp_name]
     print(args)
 
-    # directs pdflatex text flood to the log-file pdflatex will create anyway
+    # Directs pdflatex text flood to the log-file pdflatex will create anyway.
     with open(os_path.join(work_dir, stamp_name + ".log"), "a") as pdflatex_log:
         try:
-            # pdflatex can't write files outside of work dir so use cwd
+            # Pdflatex can't write files outside of work dir so use cwd.
             rc = subprocess_run(
                 args,
                 stdout=pdflatex_log,
@@ -257,8 +264,8 @@ def create_stamp(
         except FileNotFoundError:
             raise SubprocessError(" ".join(args))
 
-    # optional; delete the files pdflatex created, except the stamp-pdf file,
-    # which is obviously needed for stamping
+    # Optional; delete the files pdflatex created, except the stamp-pdf file,
+    # which is obviously needed for stamping.
     if remove_pdflatex_files:
         remove_temp_files(
             work_dir,
@@ -271,11 +278,11 @@ def stamp_pdf(
         pdf_path: str, stamp_path: str, output_path: str,
         remove_stamp: bool = False) -> str:
     """
-    Creates a new stamped pdf file (with stamp overlay on each page)
+    Creates a new stamped pdf file (with stamp overlay on each page).
     :param pdf_path:
     :param stamp_path:
     :param output_path:
-    :param remove_stamp: delete stamp file after use
+    :param remove_stamp: Delete stamp file after use.
     :return: output_path
     """
     if not os_path.exists(pdf_path):
@@ -286,7 +293,7 @@ def stamp_pdf(
     print(args)
     call_popen(args)
 
-    # optionally clean up the stamp-pdf after use
+    # Optionally clean up the stamp-pdf after use.
     if remove_stamp:
         remove(stamp_path)
     return output_path
@@ -314,7 +321,7 @@ def call_popen(args: List[str], timeout_seconds=default_subprocess_timeout) -> N
 def remove_temp_files(
         dir_path: str, temp_file_name: str, ext_list: List[str]) -> None:
     """
-    Deletes temp files created for the stamping process
+    Deletes temp files created for the stamping process.
     :param dir_path: temp-file folder path
     :param temp_file_name: common part of the names
     :param ext_list: list of extensions after common part for files to remove
@@ -333,7 +340,7 @@ def remove_temp_files(
 
 def check_stamp_data_validity(stamp_data: List[dict]) -> None:
     """
-    Raises a specific error if stamp_data is invalid
+    Raises a specific error if stamp_data is invalid.
     :param stamp_data:
     :return:
     """
@@ -365,11 +372,11 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
 
 def is_url(string: str) -> bool:
     """
-    Simple test to see if str is url
+    Simple test to see if str is an url.
     :param string:
     :return:
     """
-    # TODO: check special cases like
+    # TODO: check special cases like ftp?
     if string.startswith("http://") or string.startswith("https://"):
         return True
     else:
