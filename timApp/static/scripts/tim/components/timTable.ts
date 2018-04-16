@@ -51,7 +51,7 @@ export interface ITableStyles {
     textAlign?: string;
     color?: string;
     fontFamily?: string;
-    fontSize: string;
+    fontSize?: string;
 }
 
 export interface DataEntity {
@@ -63,7 +63,6 @@ export interface DataEntity {
 export interface CellDataEntity {
     [key: string]: string;
 }
-
 
 
 export type CellEntity = ICell | string;
@@ -153,35 +152,61 @@ class TimTableController implements IController {
 
     }
 
+
     $onInit() {
         this.count = 0;
         this.$pars = $(this.srcid);
-        // this.DefineDataHash();
 
+        this.InitializeCellDataMatrix();
+        this.readDataBlockAndSetValuesToDataCellMatrix();
+    }
+
+
+    /*
+    Initialize CellDataMatrix with values from yaml table
+     */
+    private InitializeCellDataMatrix() {
         this.cellDataMatrix = [];
-        if (this.data.table.rows) {
-            for (let i in this.data.table.rows) {
-                this.cellDataMatrix[i] = []
-                if (this.data.table.rows[i].row)
-                    for (let j in this.data.table.rows[i].row!) {
-                        var ii = this.data.table.rows[i].row![j] as ICell;
-                        this.cellDataMatrix[i][j] = ii.cell;
-                    }
-            }
-        }
+        if (this.data.table.rows)
+            this.data.table.rows.forEach((item, index) => {
+                this.cellDataMatrix[index] = [];
+                if (item.row)
+                    item.row.forEach((item2, index2) => {
+                        if (item.row) {
+                            let itemInRow = item.row[index2] as ICell;
+                            this.cellDataMatrix[index][index2] = itemInRow.cell;
+                        }
+                    });
+            });
+        /*  this.cellDataMatrix = [];
+         if (this.data.table.rows) {
+             for (let i in this.data.table.rows) {
+                 this.cellDataMatrix[i] = []
+                 if (this.data.table.rows[i].row)
+                     for (let j in this.data.table.rows[i].row!) {
+                         var ii = this.data.table.rows[i].row![j] as ICell;
+                         this.cellDataMatrix[i][j] = ii.cell;
+                     }
+             }
+         }*/
+    }
 
-        if (this.data.table.datablock)
+    /*
+    Reads DataBlock and sets all values to DataCellMatrix
+     */
+    private readDataBlockAndSetValuesToDataCellMatrix() {
+        if (this.data.table.datablock)   // reads datablock and sets all values to datacellmatrix
             for (let item in this.data.table.datablock.cells) {
 
-                var alphaRegExp = new RegExp('([A-Z]*)');
-                var alpha = alphaRegExp.exec(item);
+                const alphaRegExp = new RegExp('([A-Z]*)');
+                let alpha = alphaRegExp.exec(item);
                 let value = this.data.table.datablock.cells[item];
 
                 if (alpha == null) continue;
-                var numberPlace = item.substring(alpha[0].length);
+                let numberPlace = item.substring(alpha[0].length);
 
-                var address = this.getAddress(item);
-                this.setValueToMatrix(address.col,address.row, value.toString());
+                let address = this.getAddress(item);
+                this.setValueToMatrix(address.col, address.row, value.toString());
             }
     }
 
@@ -195,7 +220,7 @@ class TimTableController implements IController {
         let row: number = parseInt(address.substring(1));
 
         //todo: calculate characters further
-     return {col: col, row: row}
+        return {col: col, row: row}
     }
 
 
@@ -241,14 +266,15 @@ class TimTableController implements IController {
     /*
     Update DataHashTable
      */
-    UpdateDataHashTable(){
+    UpdateDataHashTable() {
 
-        for(var i = 0; i < 25; i++) {
+        for (var i = 0; i < 25; i++) {
             this.DataHash[""] = this.DataHashLength + 1;
             this.DataHashLength++;
         }
         //todo: calculate further
     }
+
     /*
     Sets a value to specific index in cellDataMatrix
      */
@@ -257,18 +283,21 @@ class TimTableController implements IController {
     }
 
 
+    /*
+    Deals with whatever happens when clicked cell
+     */
     private cellClicked(cell: CellEntity, rowi: number, coli: number) {
 
         if (typeof cell === "string") return;
         if (this.editing)  // editing is on
         {
-            if((!this.data.table.datablock)) {
-                this.createDataBlock();
-                this.getCellData(2, "3BJ49GKL2W7m", rowi, coli); //docId ja parId Matin omista testidokuista
+            if ((!this.data.table.datablock)) {
+                this.createDataBlock();  // now it has datablock, but it is not shown in yaml and it has no cell content
+
+                this.getCellData(1, "fYsjsuXeFngC", rowi, coli); //docId ja parId Matin omista testidokuista
                 cell.cell = this.editedCellContent;                            //TODO: miten saadaan tietää nuo id:t oikeasti?
+
                 let value = cell.cell;
-
-
                 let placement = this.calculatePlace(rowi, coli);
                 this.addtoDataBlock(placement, value);
             }
@@ -278,29 +307,62 @@ class TimTableController implements IController {
             }
             cell.editing = true;
             this.helpCell = cell;
-            this.getCellData(2, "3BJ49GKL2W7m", rowi, coli);
+            this.getCellData(2, "fYsjsuXeFngC", rowi, coli);
             this.helpCell.cell = this.editedCellContent;
+
+            this.modifyDataBlock(coli, rowi, this.editedCellContent);  // modify datablock -> change cellValue if existed
+
         }
     }
 
 
     /*
+    Modifying datablock: changes the value of cell or creates new one
+     */
+    private modifyDataBlock(coli: number, rowi: number, value: string) {
+        let flag = false;  // helper flag
+        if (this.data.table.datablock)  // datablock has to exist
+            for (let item in this.data.table.datablock.cells) {  // loop through datablock cells
+
+                const alphaRegExp = new RegExp('([A-Z]*)');
+                let alpha = alphaRegExp.exec(item);
+                let value = this.data.table.datablock.cells[item];
+
+                if (alpha == null) continue;
+                let numberPlace = item.substring(alpha[0].length);
+
+                let address = this.getAddress(item);
+                this.setValueToMatrix(address.col, address.row, value.toString());
+
+                if (address.col == coli && address.row == rowi) {
+                    // we have a match, lets change the value
+                    this.data.table.datablock.cells[item] = value;  // now datablock has a right value
+                    this.setValueToMatrix(address.col, address.row, value.toString());  // now datacellMtrix has the right value
+                    flag = true;
+                }
+            }
+        if (!flag) {  // no cells were a match
+            this.addtoDataBlock("A" + rowi, value);  // add new cell
+        }
+    }
+
+    /*
     Calculates index to abstract form, ex. 1,1 -> A1
     3,2 -> C2
     */
-    private calculatePlace(rowi: number, coli: number){
+    private calculatePlace(rowi: number, coli: number) {
         const str = "A";
         // col is a number like 2 -> B
-        let col:string = String.fromCharCode(str.charCodeAt(0)-1+coli); // 65 -1 = 64 + 2 = 66 = B
+        let col: string = String.fromCharCode(str.charCodeAt(0) - 1 + coli); // 65 -1 = 64 + 2 = 66 = B
         return col + rowi;
     }
 
     /*
     Add element to DataBlock
      */
-    private addtoDataBlock(key: string, value: string){
-        if(this.data.table.datablock) {
-            var modal: CellDataEntity = <CellDataEntity>{
+    private addtoDataBlock(key: string, value: string) {
+        if (this.data.table.datablock) {
+            let modal: CellDataEntity = <CellDataEntity>{
                 key: value,
             };
             // modal.key = "A1";
@@ -312,9 +374,9 @@ class TimTableController implements IController {
     /*
     Create new DataBlock with type, but no cells
      */
-    private createDataBlock(){
-        var modal: DataEntity = <DataEntity>{};
-        modal.type = "Relative" ;
+    private createDataBlock() {
+        let modal: DataEntity = <DataEntity>{};
+        modal.type = "Relative";
         this.data.table.datablock = modal;
     }
 
@@ -407,10 +469,9 @@ class TimTableController implements IController {
     }
 
     private editor() {
-         if(this.helpCell != undefined && typeof(this.helpCell) != "string")
-            {
-                this.helpCell.editing = false;
-            }
+        if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
+            this.helpCell.editing = false;
+        }
         if (!this.editing) this.editSave();
         this.editing = !this.editing;
     }
@@ -429,6 +490,9 @@ class TimTableController implements IController {
     }
 
 
+    /*
+    Cancel
+     */
     public editCancel() {
         // undo all changes
         this.editing = false;
@@ -450,7 +514,7 @@ class TimTableController implements IController {
         }); //TODO: virhekasittely
         const data = response.data;
         this.editedCellContent = data[0]
-        showMessageDialog(this.editedCellContent);
+        //showMessageDialog(this.editedCellContent);
     }
 }
 
