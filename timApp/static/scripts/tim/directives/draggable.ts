@@ -99,7 +99,7 @@ export class DraggableController implements IController {
     private lastPos: Pos;
     private pos: Pos;
     private delta: Pos;
-    private element: IRootElementService;
+    private readonly element: IRootElementService;
     private scope: IScope;
     private lastPageXYPos = {X: 0, Y: 0};
     private handle: JQuery;
@@ -192,8 +192,8 @@ export class DraggableController implements IController {
             const oldPos: any = getStorage(this.posKey);
             const w = window.innerWidth;
             const h = window.innerHeight;
-            const ew = this.element.width() || 500;
-            const eh = this.element.height();
+            const ew = this.getWidth();
+            const eh = this.getHeight();
             if (oldPos) {
                 if (oldPos.top && this.setTop) {
                     this.element.css("top", wmax(oldPos.top, 0, h - 20));
@@ -217,16 +217,34 @@ export class DraggableController implements IController {
         this.ensureVisibleInViewport();
     }
 
+    getWidth(): number {
+        const w = this.element.width();
+        if (w == null) {
+            // should never happen because element is not empty set
+            throw new Error("this.element.width() returned null");
+        }
+        return w;
+    }
+
+    getHeight(): number {
+        const w = this.element.height();
+        if (w == null) {
+            // should never happen because element is not empty set
+            throw new Error("this.element.height() returned null");
+        }
+        return w;
+    }
+
     minimize() {
         this.areaMinimized = !this.areaMinimized;
         let handles;
         const base = this.element.find(".draggable-content");
         if (this.areaMinimized) {
-            this.areaHeight = this.element.height() || 200;
-            this.areaWidth = this.element.width() || 200;
+            this.areaHeight = this.getHeight();
+            this.areaWidth = this.getWidth();
             this.element.height(15);
             this.element.width(200);
-            this.element.css("left", this.getCss("left") + (this.areaWidth-this.element.width()));
+            this.element.css("left", this.getCss("left") + (this.areaWidth - this.getWidth()));
 
             base.css("display", "none");
             this.element.css("min-height", "0");
@@ -239,7 +257,7 @@ export class DraggableController implements IController {
         } else {
             base.css("display", "");
             this.element.css("min-height", "");
-            this.element.css("left", this.getCss("left") - (this.areaWidth-this.element.width()));
+            this.element.css("left", this.getCss("left") - (this.areaWidth - this.getWidth()));
             this.element.height(this.areaHeight);
             this.element.width(this.areaWidth);
             setStorage(this.posKey + "min", false);
@@ -262,8 +280,8 @@ export class DraggableController implements IController {
         const botSet = this.element.css("bottom") != "auto";
         this.setTop = (!topSet && !botSet) || topSet;
         this.setBottom = botSet;
-        this.prevHeight = this.element.height() || 200;
-        this.prevWidth = this.element.width() || 500;
+        this.prevHeight = this.getHeight();
+        this.prevWidth = this.getWidth();
 
         this.prevTop = getPixels(this.element.css("top"));
         this.prevLeft = getPixels(this.element.css("left"));
