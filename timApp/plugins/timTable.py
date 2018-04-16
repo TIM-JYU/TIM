@@ -79,7 +79,7 @@ def tim_table_get_cell_data():
     yaml = plug.values
     if yaml[TABLE][DATABLOCK]:
         cell_cnt = find_cell_from_datablock(yaml[TABLE][DATABLOCK][CELLS],int(args[ROW]),int(args[COL]))
-    if cell_cnt != '':
+    if cell_cnt != '': #TODO voisi olla myös tyhjä
         multi.append(cell_cnt)
     else:
         rows = yaml[TABLE][ROWS]

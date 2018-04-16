@@ -141,7 +141,7 @@ class TimTableController implements IController {
     public viewctrl: ViewCtrl;
     public sc: IScope;
     private editing: boolean;
-    private helpCell: CellEntity;
+    private helpCell: ICell;
     public cellDataMatrix: string[][];
     public dataCells: DataEntity;
     public DataHash: IHash;
@@ -288,31 +288,36 @@ class TimTableController implements IController {
      */
     private cellClicked(cell: CellEntity, rowi: number, coli: number) {
 
-        if (typeof cell === "string") return;
-        if (this.editing)  // editing is on
-        {
-            if ((!this.data.table.datablock)) {
-                this.createDataBlock();  // now it has datablock, but it is not shown in yaml and it has no cell content
+        if (typeof cell === "string") return; // todo: fixit
+        if (!this.editing) return;
 
-                this.getCellData(1, "fYsjsuXeFngC", rowi, coli); //docId ja parId Matin omista testidokuista
-                cell.cell = this.editedCellContent;                            //TODO: miten saadaan tietää nuo id:t oikeasti?
-
-                let value = cell.cell;
-                let placement = this.calculatePlace(rowi, coli);
-                this.addtoDataBlock(placement, value);
-            }
-
-            if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
-                this.helpCell.editing = false;
-            }
-            cell.editing = true;
-            this.helpCell = cell;
-            this.getCellData(2, "fYsjsuXeFngC", rowi, coli);
-            this.helpCell.cell = this.editedCellContent;
-
-            this.modifyDataBlock(coli, rowi, this.editedCellContent);  // modify datablock -> change cellValue if existed
-
+        if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
+            this.helpCell.editing = false;
         }
+
+        cell.editing = true;
+
+        if ((!this.data.table.datablock)) {
+            this.createDataBlock();  // now it has datablock, but it is not shown in yaml and it has no cell content
+
+            this.getCellData(1, "fYsjsuXeFngC", rowi, coli); //docId ja parId Matin omista testidokuista
+            cell.cell = this.editedCellContent;                            //TODO: miten saadaan tietää nuo id:t oikeasti?
+
+            let value = cell.cell;
+            let placement = this.calculatePlace(rowi, coli);
+            this.addtoDataBlock(placement, value);
+        }
+        else {
+
+            this.getCellData(1, "fYsjsuXeFngC", rowi, coli);
+            cell.cell = this.editedCellContent;
+
+            //this.modifyDataBlock(coli, rowi, this.editedCellContent);  // modify datablock -> change cellValue if existed
+        }
+
+        //cell.editing = true;
+        this.helpCell = cell;
+        var t = "k";
     }
 
 
@@ -515,6 +520,7 @@ class TimTableController implements IController {
         const data = response.data;
         this.editedCellContent = data[0]
         //showMessageDialog(this.editedCellContent);
+        this.cellDataMatrix[row][col] = data[0];
     }
 }
 
@@ -535,7 +541,7 @@ timApp.component("timTable", {
             <div ng-if="td.cell != null && !td.editing" ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
             <!--{{td.cell}}-->
            </div>
-            <div ng-if="td.cell == null && !td.editing" ng-bind-html="td">
+            <div ng-if="td.cell == null && !td.editing" ng-bind-html="td.cell">
                
             </div> 
             <input ng-if="td.editing" ng-model="$ctrl.cellDataMatrix[rowi][coli]">
