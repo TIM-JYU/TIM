@@ -301,7 +301,8 @@ class TimTableController implements IController {
             this.createDataBlock();  // now it has datablock, but it is not shown in yaml and it has no cell content
 
             this.getCellData(1, "fYsjsuXeFngC", rowi, coli); //docId ja parId Matin omista testidokuista
-            cell.cell = this.editedCellContent;                            //TODO: miten saadaan tietää nuo id:t oikeasti?
+            if(this.editedCellContent)
+            cell.cell = this.editedCellContent; //TODO: miten saadaan tietää nuo id:t oikeasti?
 
             let value = cell.cell;
             let placement = this.calculatePlace(rowi, coli);
@@ -310,6 +311,7 @@ class TimTableController implements IController {
         else {
 
             this.getCellData(1, "fYsjsuXeFngC", rowi, coli);
+              if(this.editedCellContent)
             cell.cell = this.editedCellContent;
 
             //this.modifyDataBlock(coli, rowi, this.editedCellContent);  // modify datablock -> change cellValue if existed
