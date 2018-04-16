@@ -58,7 +58,7 @@ def timTable_reqs():
     return json_response(reqs)
 
 
-"""
+
 @timTable_plugin.route("multihtml/", methods=["POST"])
 def qst_multihtml():
     jsondata = request.get_json()
@@ -66,7 +66,7 @@ def qst_multihtml():
     for jso in jsondata:
         multi.append(qst_get_html(jso, is_review(request)))
     return json_response(multi)
-"""
+
 
 
 @timTable_plugin.route("getCellData", methods=["GET"])
@@ -87,10 +87,42 @@ def tim_table_get_cell_data():
         multi.append(cell_content)
     return json_response(multi)
 
+@timTable_plugin.route("saveCell", methods=["POST"])
+def tim_table_save_cell_list():
+    multi = []
+    args = request.args  #params
+    doc = DocEntry.find_by_id(int(args['docId'])).document
+    par = doc.get_paragraph(args['parId'])
+    plug = Plugin.from_paragraph(par)
+    yaml = plug.values
+    if yaml[TABLE][DATABLOCK]:
+        cell_coordinate = save_cell(yaml[TABLE][DATABLOCK], int(args[ROW]),int(args[COL]), args['cellContent'])
+    plug.save();
+
+def save_cell(datablock: dict, row: int, col: int, cell_content: str) -> str:
+    coordinate = colnum_to_letters(col) + str(row)
+    try:
+        datablock['cells'][coordinate] = cell_content
+    except:
+        pass
+
+
+
+
 def find_cell(rows: list, row: int, col: int) -> str:
    right_row = rows[row][ROW]
    right_cell = right_row[col]
    return right_cell[CELL]
+
+def find_cell_from_datablock(cells: dict, row: int, col: int) -> str:
+    ret = ''
+    coordinate = colnum_to_letters(col) + str(row)
+    try:
+        value = cells[coordinate]
+        ret = value
+    except:
+        pass
+    return ret
 
 def find_cell_from_datablock(cells: dict, row: int, col: int) -> str:
     ret = ''
@@ -173,7 +205,7 @@ def qst_str(state):
     s = s.replace("'", "")
     return s
 
-
+"""
 @timTable_plugin.route("multihtml/", methods=["POST"])
 def timTable_multihtml():
     jsondata = request.get_json()
@@ -190,7 +222,7 @@ def timTable_multihtml():
             multi[0] = multi[0] + parse_columns(table[COLUMNS])
         for row in table[ROWS]:
             multi[0] = multi[0] + parse_row(row)
-    return json_response(multi)
+    return json_response(multi)"""
 
 
 def parse_columns(columns: list) -> str:

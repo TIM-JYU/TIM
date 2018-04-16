@@ -1,10 +1,12 @@
-import {IController, IScope} from "angular";
+import {IController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "../app";
 import {ViewCtrl} from "../controllers/view/viewctrl";
 import {showMessageDialog} from "../dialog";
 import {setSetting} from "../utils";
 import {$http} from "../ngimport";
+import {getParId} from 'tim/controllers/view/parhelpers';
+
 //import {IHash} from "../../decls/components/timTable";
 
 
@@ -134,11 +136,11 @@ export interface IHash {
 class TimTableController implements IController {
     private srcid: string;  // document id
     private $pars: JQuery;  // paragraph
-    private static $inject = ["$scope"];
+    private static $inject = ["$scope", "$element"];
     private data: TimTable;
     private allcellData: string[];
     private count: number;
-    public viewctrl: ViewCtrl;
+    public viewctrl?: ViewCtrl;
     public sc: IScope;
     private editing: boolean;
     private helpCell: ICell;
@@ -148,7 +150,8 @@ class TimTableController implements IController {
     private DataHashLength: number;
     private editedCellContent: string;
 
-    constructor(private scope: IScope) {
+
+    constructor(private scope: IScope, private element: IRootElementService) {
 
     }
 
@@ -288,7 +291,9 @@ class TimTableController implements IController {
      */
     private cellClicked(cell: CellEntity, rowi: number, coli: number) {
 
-        if (typeof cell === "string") return; // todo: fixit
+        let parId = getParId(this.element.parents(".par"))
+        if (typeof cell === "string" || !this.viewctrl || !parId) return; // todo: fixit
+
         if (!this.editing) return;
 
         if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
@@ -300,9 +305,9 @@ class TimTableController implements IController {
         if ((!this.data.table.datablock)) {
             this.createDataBlock();  // now it has datablock, but it is not shown in yaml and it has no cell content
 
-            this.getCellData(1, "fYsjsuXeFngC", rowi, coli); //docId ja parId Matin omista testidokuista
-            if(this.editedCellContent)
-            cell.cell = this.editedCellContent; //TODO: miten saadaan tietää nuo id:t oikeasti?
+            this.getCellData(this.viewctrl.item.id, parId, rowi, coli); //docId ja parId Matin omista testidokuista
+            if (this.editedCellContent)
+                cell.cell = this.editedCellContent; //TODO: miten saadaan tietää nuo id:t oikeasti?
 
             let value = cell.cell;
             let placement = this.calculatePlace(rowi, coli);
@@ -310,17 +315,22 @@ class TimTableController implements IController {
         }
         else {
 
-            this.getCellData(1, "fYsjsuXeFngC", rowi, coli);
-              if(this.editedCellContent)
-            cell.cell = this.editedCellContent;
-
-            //this.modifyDataBlock(coli, rowi, this.editedCellContent);  // modify datablock -> change cellValue if existed
+            this.getCellData(this.viewctrl.item.id, parId, rowi, coli);
+            if (this.editedCellContent){
+                cell.cell = this.editedCellContent;
+                this.modifyDataBlock(coli, rowi, this.editedCellContent);
+            } // modify datablock -> change cellValue if existed
         }
 
         //cell.editing = true;
+        if (this.helpCell) {
+            this.saveCells(this.helpCell.cell, this.viewctrl.item.id, parId, rowi, coli);
+        }
         this.helpCell = cell;
-        var t = "k";
     }
+
+
+
 
 
     /*
@@ -328,27 +338,47 @@ class TimTableController implements IController {
      */
     private modifyDataBlock(coli: number, rowi: number, value: string) {
         let flag = false;  // helper flag
+         const alphaRegExp = new RegExp('([A-Z]*)');
+/*
         if (this.data.table.datablock)  // datablock has to exist
             for (let item in this.data.table.datablock.cells) {  // loop through datablock cells
 
-                const alphaRegExp = new RegExp('([A-Z]*)');
                 let alpha = alphaRegExp.exec(item);
                 let value = this.data.table.datablock.cells[item];
 
                 if (alpha == null) continue;
                 let numberPlace = item.substring(alpha[0].length);
 
-                let address = this.getAddress(item);
-                this.setValueToMatrix(address.col, address.row, value.toString());
+                let address = this.getAddress(item);*/
+        this.setValueToMatrix(coli, rowi, value);   // sets value to matrix
+        if (this.data.table.datablock)
+            for (let item in this.data.table.datablock.cells) { // go trough all cells
 
-                if (address.col == coli && address.row == rowi) {
-                    // we have a match, lets change the value
-                    this.data.table.datablock.cells[item] = value;  // now datablock has a right value
-                    this.setValueToMatrix(address.col, address.row, value.toString());  // now datacellMtrix has the right value
-                    flag = true;
-                }
+                // compare databloc values to coli + rowi
+
+                let alpha = alphaRegExp.exec(item);
+                let value = this.data.table.datablock.cells[item];
+
+                if (alpha == null) continue;
+                let numberPlace = item.substring(alpha[0].length);
+                 let address = this.getAddress(item);
+
+                 if (address.col == coli && address.row == rowi) {
+                     this.data.table.datablock!.cells[item] = value;
+                 }
+
+
+
+                 // datablocks value = itemvalue
+                // if (address.col == coli && address.row == rowi) {
+                // we have a match, lets change the value
+                // this.data.table.datablock.cells[item] = value;  // now datablock has a right value
+                //  this.setValueToMatrix(address.col, address.row, value.toString());  // now datacellMatrix has the right value
+                flag = true;
             }
+
         if (!flag) {  // no cells were a match
+            //this.calculatePlace()
             this.addtoDataBlock("A" + rowi, value);  // add new cell
         }
     }
@@ -489,6 +519,7 @@ class TimTableController implements IController {
      */
     public editSave() {
         this.editing = false;
+        if (this.helpCell) this.helpCell.editing = false;
     }
 
 
@@ -503,6 +534,20 @@ class TimTableController implements IController {
     public editCancel() {
         // undo all changes
         this.editing = false;
+        if (this.helpCell) this.helpCell.editing = false;
+    }
+
+
+    async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
+            // tallenna solun sisältö
+        const response = await $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
+            url: "/timTable/saveCell",
+            method: "POST",
+            params: {cellContent, docId, parId, row, col},
+        });
+
+        const data = response.data;
+        this.editedCellContent = data[0]
     }
 
     /**
@@ -530,6 +575,9 @@ timApp.component("timTable", {
     controller: TimTableController,
     bindings: {
         data: "<",
+    },
+    require: {
+        viewctrl: "?^timView",
     },
     template: `<div ng-class="{editable: $ctrl.editing}""><table>
   <button class="timButton" ng-click="$ctrl.editor()">Edit</button>
