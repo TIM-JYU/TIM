@@ -3,6 +3,20 @@ import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IItem} from "../IItem";
 import {$http} from "../ngimport";
 
+
+
+
+/**
+ * @module mergePdfCtrl
+ * @author Matti Leinonen
+ * @author Ronja Lindholm
+ * @author Visa Naukkarinen
+ * @author Rami Pasanen
+ * @author Enni Stylman
+ * @licence MIT
+ * @copyright 2018 Titus project authors
+ */
+
 export interface IMergeParams {
     document: IItem;
 }
@@ -25,16 +39,20 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
 
         //this.document.path = `/mergeAttachments/${this.resolve.params.document.location}/${this.resolve.params.document.name}`;
         this.loading = true;
-        //const postURL = "/print" + this.document.path;
-        const response = await $http.post<{url: string}>(`/mergeAttachments/${this.resolve.params.document.path}`, {});
+        const postURL = "/merge" + this.resolve.params.document.path;
 
-        console.log(this.resolve.params.document.path);
+        const response = await $http.get<{url: string}>(`/mergeAttachments/${this.resolve.params.document.path}`, {});
+
+        const response1 = await $http.post<{url: string}>(`/mergeAttachments/${this.resolve.params.document.path}`, {});
+
+        //console.log(this.resolve.params.document.path);
 
         if (response) {
             this.loading = false;
         }
 
-        this.docUrl = response.data.url;
+        this.docUrl = response1.data.url;
+        //console.log(this.docUrl); undefined
     }
 
     $onInit() {
