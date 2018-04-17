@@ -30,10 +30,9 @@ import {onClick} from "./eventhandlers";
 import {IPopupMenuAttrs, optionsWindowClosed} from "./parmenu";
 import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
+import {PendingCollection} from "../../edittypes";
 
 markAsUsed(ngs, popupMenu, interceptor);
-
-export type PendingCollection = {[parId: string]: string};
 
 export interface IInsertDiffResult {
     type: "insert";

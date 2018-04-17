@@ -1,5 +1,4 @@
-import {IAttributes, IChangesObject, IController, IOnChangesObject, IRootElementService, IScope} from "angular";
-import $ from "jquery";
+import {IAttributes, IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
 import {$compile, $document} from "../ngimport";
@@ -54,6 +53,12 @@ const draggableTemplate = `
        ng-click="d.minimize()"
        class="glyphicon glyphicon-minus pull-right"></i>
 </div>
+<div ng-show="!d.areaMinimized && d.resize && !d.autoWidth"
+     class="resizehandle-r resizehandle"></div>
+<div ng-show="!d.areaMinimized && d.resize && !d.autoHeight"
+     class="resizehandle-d resizehandle"></div>
+<div ng-show="!d.areaMinimized && d.resize && !d.autoWidth && !d.autoHeight"
+     class="resizehandle-rd resizehandle"></div>
     `;
 
 timApp.directive("timDraggableFixed", [() => {
@@ -109,6 +114,7 @@ export class DraggableController implements IController {
     private resize?: boolean;
     private save?: string;
     private dragClick?: () => void;
+    private autoHeight: boolean;
 
     constructor(scope: IScope, attr: IAttributes, element: IRootElementService) {
         this.scope = scope;
@@ -126,6 +132,11 @@ export class DraggableController implements IController {
         this.caption = caption;
     }
 
+    makeHeightAutomatic() {
+        this.element.css("height", "unset");
+        this.autoHeight = true;
+    }
+
     setDragClickFn(fn: () => void) {
         this.dragClick = fn;
     }
@@ -134,22 +145,9 @@ export class DraggableController implements IController {
         this.closeFn = fn;
     }
 
-    $onChanges(onChangesObj?: IOnChangesObject) {
-        if (!onChangesObj) {
-            return;
-        }
-        const resize = onChangesObj.resize as IChangesObject<boolean> | undefined;
-        if (resize) {
-            if (resize.currentValue) {
-                this.createResizeHandles();
-            } else {
-                this.removeResizeHandles();
-            }
-        }
-    }
-
     $postLink() {
         this.element.prepend($compile(draggableTemplate)(this.scope));
+        this.createResizeHandlers();
         this.handle = this.element.children(".draghandle");
 
         this.updateHandle(this.element, this.handle);
@@ -237,7 +235,6 @@ export class DraggableController implements IController {
 
     minimize() {
         this.areaMinimized = !this.areaMinimized;
-        let handles;
         const base = this.element.find(".draggable-content");
         if (this.areaMinimized) {
             this.areaHeight = this.getHeight();
@@ -249,19 +246,17 @@ export class DraggableController implements IController {
             base.css("display", "none");
             this.element.css("min-height", "0");
             setStorage(this.posKey + "min", true);
-            handles = this.element.find(".resizehandle");
-            if (handles.length) {
-                handles.css("display", "none");
-            }
-
         } else {
             base.css("display", "");
             this.element.css("min-height", "");
             this.element.css("left", this.getCss("left") - (this.areaWidth - this.getWidth()));
-            this.element.height(this.areaHeight);
+            if (this.autoHeight) {
+                this.element.height("unset");
+            } else {
+                this.element.height(this.areaHeight);
+            }
             this.element.width(this.areaWidth);
             setStorage(this.posKey + "min", false);
-            this.element.find(".resizehandle").css("display", "");
         }
     }
 
@@ -312,33 +307,19 @@ export class DraggableController implements IController {
      this.element.css('top', this.element.position().top);
      this.element.css('left', this.element.position().left); */
 
-    createResizeHandles() {
-        const handleRight = $("<div>", {class: "resizehandle-r resizehandle"});
+    createResizeHandlers() {
+        const handleRight = this.element.children(".resizehandle-r");
         handleRight.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
             this.resizeElement(e, false, true, false, false);
         });
-        this.element.append(handleRight);
-        const handleDown = $("<div>", {class: "resizehandle-d resizehandle"});
+        const handleDown = this.element.children(".resizehandle-d");
         handleDown.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
             this.resizeElement(e, false, false, true, false);
         });
-        this.element.append(handleDown);
-        const handleRightDown = $("<div>", {class: "resizehandle-rd resizehandle"});
+        const handleRightDown = this.element.children(".resizehandle-rd");
         handleRightDown.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
             this.resizeElement(e, false, true, true, false);
         });
-        this.element.append(handleRightDown);
-
-        if (this.areaMinimized) {
-            const handles = this.element.find(".resizehandle");
-            if (handles.length) {
-                handles.css("display", "none");
-            }
-        }
-    }
-
-    removeResizeHandles() {
-        this.element.find(".resizehandle").remove();
     }
 
     /* Prevent document scrolling, when element inside draggable is scrolled. Currently doesn't work on touch

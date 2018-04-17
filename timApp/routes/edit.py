@@ -209,7 +209,8 @@ def modify_paragraph():
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
 
     """
-    doc_id, md, par_id, par_next_id = verify_json_params('docId', 'text', 'par', 'par_next')
+    doc_id, md, par_id = verify_json_params('docId', 'text', 'par')
+    par_next_id, = verify_json_params('par_next', require=False)
     return modify_paragraph_common(doc_id, md, par_id, par_next_id)
 
 
@@ -586,7 +587,8 @@ def add_paragraph():
     :return: A JSON object containing the paragraphs in HTML form along with JS, CSS and Angular module dependencies.
 
     """
-    md, doc_id, par_next_id = verify_json_params('text', 'docId', 'par_next')
+    md, doc_id = verify_json_params('text', 'docId')
+    par_next_id, = verify_json_params('par_next', require=False)
     return add_paragraph_common(md, doc_id, par_next_id)
 
 

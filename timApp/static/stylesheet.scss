@@ -354,10 +354,6 @@ p.caption {
     border-radius: $material-border-radius;
 }
 
-.editorArea {
-    background-color: #B0B0B0;
-}
-
 .pluginError, .error {
     border: 1px solid red;
     background-color: pink;
@@ -449,16 +445,17 @@ p.caption {
     min-height: 1px;
     padding-left: 2em;
     padding-right: 2em;
+    min-width: unset;
 }
 
 .timButton, .editorButton {
     @extend .btn, .btn-primary;
 }
 
-a.helpButton {
-    margin-left: auto;
-    padding-left: 10px;
-    font-size: large;
+#helpButtons {
+    .helpButton {
+        font-size: large;
+    }
 }
 
 .editMenuButton {
@@ -632,10 +629,6 @@ button.showMap {
     top: 0;
 }
 
-#editorHelpCiteText {
-    margin-left: 2.0em;
-}
-
 .par {
     position: relative;
 
@@ -736,10 +729,7 @@ br {
 }
 
 .editor {
-    width: 100%;
     padding: 5px 0;
-    text-align: left;
-    resize: both;
     border-radius: 5px;
 }
 
@@ -749,33 +739,13 @@ br {
     box-sizing: border-box;
 }
 
-.editorArea {
-    display: table;
-    z-index: 110;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    left: 0;
-    top: 0;
-    min-height: 6.5em;
-    padding: 0.5em;
-    border-radius: 5px;
-    background: #e0e0e0;
-    max-height: 99vh;
-}
-
-#pareditor {
+pareditor {
+    display: block;
     background: inherit;
-    overflow: visible;
-    position: relative;
 
     .editortags, .choices, .editoropts {
         display: inline-block;
     }
-}
-
-pareditor {
-    background: inherit;
 }
 
 .editButtonArea {
@@ -1199,41 +1169,6 @@ body > .footer {
 
 #doctext {
     font-family: $font-family-monospace;
-}
-
-.pluginRenameObject {
-    display: inline-block;
-    margin: 5px;
-    min-width: 80px;
-}
-
-#pluginRenameForm {
-    padding-bottom: 15px;
-}
-
-.pluginRenameForm {
-    overflow: auto;
-    width: 100%;
-    position: absolute;
-    background: #e0e0e0;
-    z-index: 110;
-    border-radius: 3px;
-}
-
-.pluginRenameInner {
-    margin-left: 15px;
-    margin-top: 15px;
-}
-
-.pluginRenameExclamation {
-    background-color: #cc0000;
-    border: 2px solid #00001a;
-    border-radius: 10px;
-    text-align: center;
-    font-weight: bold;
-    display: inline-block;
-    min-width: 1.5em;
-    max-height: 1.4em;
 }
 
 .notes .note-badge {

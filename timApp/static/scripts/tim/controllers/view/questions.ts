@@ -5,6 +5,7 @@ import {$window} from "../../ngimport";
 import {fetchAndEditQuestion, showQuestionEditDialog} from "../questionController";
 import {createNewPar, getParId, Paragraph} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
+import {EditPosition, EditType} from "./editing";
 
 export class QuestionHandler {
     public sc: IScope;
@@ -19,7 +20,6 @@ export class QuestionHandler {
         }
     }
 
-    // Event handler for "Add question below"
     // Opens pop-up window to create question.
     async addQuestionQst(e: Event, $par: Paragraph) {
         const parNextId = getParId($par);
@@ -31,9 +31,7 @@ export class QuestionHandler {
         if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
-        const $newpar = createNewPar();
-        $par.before($newpar);
-        this.viewctrl.editingHandler.addSavedParToDom(result.data, {par: getParId($newpar)!});
+        this.viewctrl.editingHandler.addSavedParToDom(result.data, {type: EditType.AddAbove, par: $par});
     }
 
     async editQst(e: Event, $par: Paragraph) {
@@ -46,10 +44,11 @@ export class QuestionHandler {
         if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
+        const position: EditPosition = {type: EditType.Edit, pars: $par};
         if (result.deleted) {
-            this.viewctrl.editingHandler.handleDelete(result.data, {par: parId});
+            this.viewctrl.editingHandler.handleDelete(position);
         } else {
-            this.viewctrl.editingHandler.addSavedParToDom(result.data, {par: parId});
+            this.viewctrl.editingHandler.addSavedParToDom(result.data, position);
         }
     }
 
@@ -65,9 +64,7 @@ export class QuestionHandler {
         if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
-        const $newpar = createNewPar();
-        $par.after($newpar);
-        this.viewctrl.editingHandler.addSavedParToDom(result.data, {par: getParId($newpar)!});
+        this.viewctrl.editingHandler.addSavedParToDom(result.data, {type: EditType.AddBelow, par: $par});
     }
 
     processQuestions() {

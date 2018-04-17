@@ -1,17 +1,13 @@
-import angular, {IController, IFormController, IRootElementService, IScope} from "angular";
-import $ from "jquery";
+import {IController, IFormController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
-import {Duplicate} from "../edittypes";
+import {isManageResponse, showRenameDialog} from "../components/pluginRenameForm";
+import {IChangelogEntry, IManageResponse} from "../edittypes";
 import {IItem} from "../IItem";
-import {$compile, $http, $log, $timeout, $upload, $window} from "../ngimport";
-import {markAsUsed} from "../utils";
+import {$http, $log, $timeout, $upload, $window} from "../ngimport";
+import {markAsUsed, to} from "../utils";
 import * as copyFolder from "./copyFolder";
 
 markAsUsed(copyFolder);
-
-interface IChangelogEntry {
-
-}
 
 export interface ITranslation {
     id: number;
@@ -52,14 +48,10 @@ export class PermCtrl implements IController {
     private old_title: string;
     private fileUploadError: string | null;
     private tracWikiText: string;
-    private renameFormShowing: boolean;
-    private inputs: JQuery[];
     private saving: boolean;
     private readUpdating: boolean;
     private file: any;
     private newAliasForm: IFormController;
-    private duplicates: Duplicate[];
-    private data: {};
     private notifySettings: {};
     private sc: IScope;
     private element: IRootElementService;
@@ -401,151 +393,22 @@ export class PermCtrl implements IController {
         this.fulltext = text;
     }
 
-    cancelPluginRenameClicked() {
-        $("#pluginRenameForm").remove();
-        this.renameFormShowing = false;
-    }
-
-    renameTaskNamesClicked(duplicates: Duplicate[], renameDuplicates: boolean) {
-        // A list of duplicate task names and possible new names
-        if (typeof renameDuplicates === "undefined" || renameDuplicates === false) {
-            $("#pluginRenameForm").remove();
-            this.renameFormShowing = false;
-            //$element.find("#pluginRenameForm").get(0).remove();
-            return;
-        }
-        const duplicateData: {}[] = [];
-        let duplicate;
-        // use given names from the input fields
-        for (let i = 0; i < duplicates.length; i++) {
-            duplicate = [];
-            duplicate.push(duplicates[i][0]);
-            duplicate.push($("#" + duplicates[i][1]).prop("value"));
-            duplicate.push(duplicates[i][1]);
-            duplicateData.push(duplicate);
-        }
-        $http.post<{fulltext: string, versions: IChangelogEntry[], duplicates: Duplicate[]}>("/postNewTaskNames/", angular.extend({
-            duplicates: duplicateData,
-            renameDuplicates,
-            manageView: true,
-            docId: this.item.id,
-        })).then((response) => {
-            const data = response.data;
-            this.renameFormShowing = false;
-            this.fulltext = data.fulltext;
-            this.item.fulltext = this.fulltext;
-            this.item.versions = data.versions;
-            $("#pluginRenameForm").remove();
-            if (data.duplicates.length > 0) {
-                this.createPluginRenameForm(data);
-            }
-        }, (response) => {
-            $window.alert("Failed to save: " + response.data.error);
-        });
-    }
-
-    createPluginRenameForm(data: {duplicates: Duplicate[]}) {
-        this.renameFormShowing = true;
-        this.duplicates = data.duplicates;
-        this.data = data;
-
-        // TODO make this an Angular component!
-        const $editorTop = $("#documentEditorDiv");
-        //var coords = {left: $editorTop.position().left, top: $editorTop.position().top};
-        let $actionDiv = $("<div>", {class: "pluginRenameForm", id: "pluginRenameForm"});
-        $actionDiv.css("position", "relative");
-        const $innerTextDiv = $("<div>", {class: "pluginRenameInner"});
-        $innerTextDiv.append($("<strong>", {
-            text: "Warning!",
-        }));
-        $innerTextDiv.append($("<p>", {
-            text: "There are multiple objects with the same task name in this document.",
-        }));
-        $innerTextDiv.append($("<p>", {
-            text: "Plugins with duplicate task names might not work properly.",
-        }));
-        $innerTextDiv.append($("<p>", {
-            text: 'Rename the duplicates by writing new names in the field(s) below and click "Save",',
-        }));
-        $innerTextDiv.append($("<p>", {
-            text: 'choose "Rename automatically" or "Ignore" to proceed without renaming.',
-        }));
-        $innerTextDiv.append($("<strong>", {
-            text: "Rename duplicates:",
-        }));
-        $actionDiv.append($innerTextDiv);
-        const $form = $("<form>", {class: "pluginRenameInner"});
-        this.inputs = [];
-        let input;
-        let span;
-        for (let i = 0; i < data.duplicates.length; i++) {
-            span = $("<span>");
-            span.css("display", "block");
-            const $warningSpan = $("<span>", {
-                class: "pluginRenameExclamation",
-                text: "!",
-                title: "There are answers related to this task. Those answers might be lost upon renaming this task.",
-            });
-            if (data.duplicates[i][2] !== "hasAnswers") {
-                $warningSpan.css("visibility", "hidden");
-            }
-            span.append($warningSpan);
-            span.append($("<label>", {
-                class: "pluginRenameObject",
-                text: data.duplicates[i][0],
-                for: "newName" + i,
-            }));
-            input = $("<input>", {
-                class: "pluginRenameObject",
-                type: "text",
-                id: data.duplicates[i][1],
-            });
-            this.inputs.push(input);
-            span.append(input);
-            $form.append(span);
-        }
-        const $buttonDiv = $("<div>", {class: "pluginRenameInner"});
-        $buttonDiv.append($("<button>", {
-            "class": "timButton, pluginRenameObject",
-            "text": "Save",
-            "title": "Rename task names with given names",
-            "ng-click": "renameTaskNamesClicked(duplicates, true)",
-        }));
-        $buttonDiv.append($("<button>", {
-            "class": "timButton, pluginRenameObject",
-            "text": "Rename Automatically",
-            "title": "Rename duplicate task names automatically",
-            "ng-click": "renameTaskNamesClicked(duplicates, true)",
-        }));
-        $buttonDiv.append($("<button>", {
-            "class": "timButton, pluginRenameObject",
-            "text": "Ignore",
-            "title": "Proceed without renaming",
-            "ng-click": "renameTaskNamesClicked(undefined, false)",
-        }));
-        $buttonDiv.append($("<button>", {
-            "class": "timButton, pluginRenameObject",
-            "text": "Cancel",
-            "title": "Return to editing document",
-            "ng-click": "cancelPluginRenameClicked()",
-        }));
-        $actionDiv.append($form);
-        $actionDiv.append($buttonDiv);
-        $actionDiv = $compile($actionDiv)(this.sc);
-        $editorTop.parent().prepend($actionDiv);
-    }
-
     saveDocument() {
         this.saving = true;
-        $http.post<{duplicates: Duplicate[], fulltext: string, versions: IChangelogEntry[]}>("/update/" + this.item.id,
+        $http.post<IManageResponse>("/update/" + this.item.id,
             {
                 fulltext: this.fulltext,
                 original: this.item.fulltext,
                 version: this.item.versions[0],
-            }).then((response) => {
-            const data = response.data;
+            }).then(async (response) => {
+            let data = response.data;
             if (data.duplicates.length > 0) {
-                this.createPluginRenameForm(data);
+                const [err, result] = await to(showRenameDialog({
+                    duplicates: data.duplicates,
+                }));
+                if (result && isManageResponse(result)) {
+                    data = result;
+                }
             }
             this.fulltext = data.fulltext;
             this.item.fulltext = this.fulltext;
@@ -554,7 +417,7 @@ export class PermCtrl implements IController {
         }, (response) => {
             const data = response.data;
             this.saving = false;
-            if ("is_warning" in data && data.is_warning) {
+            if (data.is_warning) {
                 if ($window.confirm(data.error + "\n\nDo you still wish to save the document?")) {
                     this.saveDocumentWithWarnings();
                 }

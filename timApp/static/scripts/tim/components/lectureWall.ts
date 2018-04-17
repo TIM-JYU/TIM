@@ -153,6 +153,7 @@ registerDialogComponent(
 export function showLectureWall(lid: number, messages: ILectureMessage[]): IModalInstance<{}> {
     return showDialog<LectureWallController>("timLectureWall",
         {params: () => ({lectureId: lid, messages})},
+        "timLectureWall",
         ["no-pointer-events"],
         "sm");
 }

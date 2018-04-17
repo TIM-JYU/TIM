@@ -1,16 +1,14 @@
-<div id="pareditor">
   <div ng-show="$ctrl.proeditor">
     <ul class="tabsarea">
         <li id="navigate" class="tab active"><a ng-click="$ctrl.tabClicked($event, 'navigateButtons')">Navigation</a></li>
         <li id="style" class="tab"><a ng-click="$ctrl.tabClicked($event, 'styleButtons')">Style</a></li>
         <li id="insert" class="tab"><a ng-click="$ctrl.tabClicked($event, 'insertButtons')">Insert</a></li>
-        <li id="special" class="tab"><a ng-click="$ctrl.tabClicked($event, 'specialButtons')">Special characters</a></li>
+        <li id="special" class="tab"><a ng-click="$ctrl.tabClicked($event, 'specialButtons')">Special chars</a></li>
         <li id="tex" class="tab"><a ng-click="$ctrl.tabClicked($event, 'texButtons')">TeX</a></li>
-        <li id="plugin" class="tab" ng-show="$ctrl.options.showPlugins"><a ng-click="$ctrl.tabClicked($event, 'pluginButtons')">Plugins</a>
+        <li id="plugin" class="tab" ng-show="$ctrl.getOptions().showPlugins"><a ng-click="$ctrl.tabClicked($event, 'pluginButtons')">Plugins</a>
         </li>
-        <li id="settings" class="tab" ng-show="$ctrl.options.showSettings"><a ng-click="$ctrl.tabClicked($event, 'settingsButtons')">Settings</a>
-        <li id="upload" class="tab" ng-show="$ctrl.options.showImageUpload"><a ng-click="$ctrl.tabClicked($event, 'uploadButtons')">Upload
-            file/image</a>
+        <li id="settings" class="tab" ng-show="$ctrl.getOptions().showSettings"><a ng-click="$ctrl.tabClicked($event, 'settingsButtons')">Settings</a></li>
+        <li id="upload" class="tab" ng-show="$ctrl.getOptions().showImageUpload"><a ng-click="$ctrl.tabClicked($event, 'uploadButtons')">Upload</a>
         </li>
         <li id="help" class="tab"><a ng-click="$ctrl.tabClicked($event, 'helpButtons')">Help</a></li>
     </ul>
@@ -92,7 +90,7 @@
         <button class="editorButton" ng-click="$ctrl.editor.powerClicked()">X&#x207f;</button>
         <button class="editorButton" ng-click="$ctrl.editor.squareClicked()">&radic;</button>
     </div>
-    <div id="settingsButtons" class="settingsButtonArea hidden" ng-if="$ctrl.options.showSettings">
+    <div id="settingsButtons" class="settingsButtonArea hidden" ng-if="$ctrl.getOptions().showSettings">
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('auto_number_headings: 1\n')" title="Auto number headings level">Heading numbering</button>
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('css: |!!\n.style {\n\n}\n!!\n')" title="Styles for this document">CSS</button>
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('macros:\n  key: value\n')" title="Macro values fo document">Macros</button>
@@ -102,8 +100,8 @@
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('global_plugin_attrs:\n csPlugin:\n   stem: value\n all:\n   stem: value\n')" title="Global values for the plugins">Global plugin</button>
         <a class="helpButton" href="https://tim.jyu.fi/view/tim/ohjeita/documentin-asetukset#settings_list" target="_blank">[?]</a>
     </div>
-    <div id="pluginButtons" class="extraButtonArea hidden" ng-show="$ctrl.options.showPlugins"></div>
-    <div id="uploadButtons" class="extraButtonArea hidden" ng-show="$ctrl.options.showImageUpload">
+    <div id="pluginButtons" class="extraButtonArea hidden" ng-show="$ctrl.getOptions().showPlugins"></div>
+    <div id="uploadButtons" class="extraButtonArea hidden" ng-show="$ctrl.getOptions().showImageUpload">
         <span>
             Upload image/file: <input type="file" ngf-select="$ctrl.onFileSelect($file)">
             <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"
@@ -112,18 +110,19 @@
         </span>
         <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
     </div>
-    <div id="helpButtons" class="extraButtonArea hidden">
-        <a class="helpButton" href="https://tim.jyu.fi/view/tim/TIM-ohjeet" target="_blank" title="General TIM Help">TIM Help</a>
-        <span id="editorHelpCiteText">
-            To cite this paragraph:
-            <input readonly
-                   type="text"
-                   ng-model="$ctrl.citeText"
-                   title="Copy this line to cite this paragraph"
-                   size="50"
-                   ng-focus="$ctrl.selectAllText($event)" />
-            <a class="helpButton" href="https://tim.jyu.fi/view/tim/TIM-ohjeet#viitteen-katsominen" target="_blank" title="Help for references">[?]</a>
-        </span>
+    <div id="helpButtons" class="extraButtonArea hidden form-inline" style="display: flex; align-items: center">
+        <a class="helpButton margin-4" href="https://tim.jyu.fi/view/tim/TIM-ohjeet" target="_blank" title="General TIM Help">TIM
+            Help</a>
+        <span class="margin-4">To cite this paragraph:</span>
+        <input readonly
+               class="form-control"
+               style="flex: 0 1 auto"
+               type="text"
+               ng-model="$ctrl.citeText"
+               title="Copy this line to cite this paragraph"
+               ng-focus="$ctrl.selectAllText($event)"/>
+        <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#viitteen-katsominen" target="_blank"
+           title="Help for references"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
     </div>
   </div>
     <div class="editorContainer">
@@ -137,14 +136,14 @@
         <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.cancelClicked()">Cancel</button>
         <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()" ng-click="$ctrl.unreadClicked()">Mark as unread</button>
         <span ng-show="$ctrl.proeditor">
-        <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.options.showDelete" ng-click="$ctrl.deleteClicked()">Delete</button>
+        <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.getOptions().showDelete" ng-click="$ctrl.deleteClicked()">Delete</button>
         </span>
     </div>
     <div class="choices">
-        <div ng-repeat="choice in $ctrl.options.choices.desc">
+        <div ng-repeat="choice in $ctrl.getOptions().choices.desc">
             {{ choice.desc }}
             <label ng-repeat="opt in choice.opts">
-                <input type="radio" ng-model="$ctrl.extraData[choice.name]" ng-value="opt.value"/> {{ opt.desc }}&nbsp;
+                <input type="radio" ng-model="$ctrl.getExtraData()[choice.name]" ng-value="opt.value"/> {{ opt.desc }}&nbsp;
             </label>
         </div>
     </div>
@@ -153,8 +152,8 @@
         <label class="font-weight-normal" ng-show="$ctrl.aceEnabled()"><input type="checkbox" ng-model="$ctrl.autocomplete"/> Autocomplete</label>
     </div>
     <div class="editortags">
-        <label class="font-weight-normal" ng-repeat="tag in $ctrl.options.tags">
-            <input type="checkbox" ng-model="$ctrl.extraData.tags[tag.name]"/> {{ tag.desc }}
+        <label class="font-weight-normal" ng-repeat="tag in $ctrl.getOptions().tags">
+            <input type="checkbox" ng-model="$ctrl.getExtraData().tags[tag.name]"/> {{ tag.desc }}
         </label>
     </div>
     <label class="pull-right font-weight-normal" ng-if="$ctrl.wrap.n!=-1" title="Put 0 to no wrap" ng-click="$ctrl.editor.forceWrap(true)">Wrap:
@@ -173,6 +172,5 @@
             &#8594;</button>
         <span ng-show="$ctrl.outofdate">...</span>
 
-        <div class="previewcontent"></div>
+        <div class="previewcontent paragraphs"></div>
     </div>
-</div>

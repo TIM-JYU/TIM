@@ -1,9 +1,13 @@
-import angular, {IController, IPromise, IRootScopeService, IScope} from "angular";
+import angular, {IController, IPromise, IScope} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "./app";
 import {DraggableController} from "./directives/draggable";
+import * as dg from "./directives/draggable";
 import {$templateCache, $uibModal, $window} from "./ngimport";
+import {markAsUsed} from "./utils";
+
+markAsUsed(dg);
 
 export abstract class DialogController<T, Ret, ComponentName extends string> implements IController {
     public readonly component: ComponentName;
@@ -151,10 +155,11 @@ export interface IModalInstance<Result> {
 
 export function showDialog<T extends Dialog<T>>(component: T["component"],
                                                 resolve: {[P in keyof T["resolve"]]: () => T["resolve"][P]},
+                                                saveKey: string = component,
                                                 classes = ["no-pointer-events"],
                                                 size: "sm" | "md" | "lg" = "md"): IModalInstance<T["ret"]> {
     $templateCache.put("uib/template/modal/window.html", `
-<div tim-draggable-fixed click="true" resize="true" save="${component}"
+<div tim-draggable-fixed click="true" resize="true" save="${saveKey}"
      style="pointer-events: auto;"
      class="modal-dialog {{size ? 'modal-' + size : ''}}">
     <div class="draggable-content modal-content" uib-modal-transclude>
