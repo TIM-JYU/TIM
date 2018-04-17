@@ -6,6 +6,7 @@ import {showMessageDialog} from "../dialog";
 import {setSetting} from "../utils";
 import {$http} from "../ngimport";
 import {getParId} from 'tim/controllers/view/parhelpers';
+import {openEditorSimple} from "../directives/pareditor";
 
 //import {IHash} from "../../decls/components/timTable";
 
@@ -105,6 +106,7 @@ export interface ICellStyles {
 export interface ICell extends ICellStyles {
     cell: string;
     editing?: boolean;
+    editorOpen?: boolean;
     type?: string;
     colspan?: number;
     rowspan?: number;
@@ -145,7 +147,7 @@ class TimTableController implements IController {
     public viewctrl?: ViewCtrl;
     public sc: IScope;
     private editing: boolean;
-    private helpCell: ICell;
+    private currentCell: ICell;
     public cellDataMatrix: string[][];
     public dataCells: DataEntity;
     public DataHash: IHash;
@@ -291,23 +293,28 @@ class TimTableController implements IController {
     /*
     Deals with whatever happens when clicked cell
      */
-    private cellClicked(cell: CellEntity, rowi: number, coli: number) {
+     private async cellClicked(cell: CellEntity, rowi: number, coli: number) {
+         if ( this.currentCell && this.currentCell.editorOpen ) return;
 
         let parId = getParId(this.element.parents(".par"))
         if (typeof cell === "string" || !this.viewctrl || !parId) return; // todo: fixit
 
         if (!this.editing) return;
 
-        if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
-            this.helpCell.editing = false;
+       // this.getCellData(this.viewctrl.item.id, parId, rowi, coli );
+
+
+
+       if (this.currentCell != undefined && typeof(this.currentCell) != "string") {
+            this.currentCell.editing = false;
         }
 
-        cell.editing = true;
+         cell.editing = true;
 
         if ((!this.data.table.datablock)) {
             this.createDataBlock();  // now it has datablock, but it is not shown in yaml and it has no cell content
 
-            this.getCellData(this.viewctrl.item.id, parId, rowi, coli); //docId ja parId Matin omista testidokuista
+           if(!this.currentCell) this.getCellData(this.viewctrl.item.id, parId, rowi, coli); //docId ja parId Matin omista testidokuista
             if (this.editedCellContent)
                 cell.cell = this.editedCellContent; //TODO: miten saadaan tietää nuo id:t oikeasti?
 
@@ -325,12 +332,17 @@ class TimTableController implements IController {
         }
 
         //cell.editing = true;
-        if (this.helpCell != undefined && this.helpCell.row != undefined && this.helpCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
-            this.saveCells(this.helpCell.cell, this.viewctrl.item.id, parId, this.helpCell.row, this.helpCell.col);
+        if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
+            this.saveCells(this.currentCell.cell, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
         }
-        this.helpCell = cell;
-        this.helpCell.row = rowi;
-        this.helpCell.col = coli;
+
+
+
+
+
+        this.currentCell = cell;
+        this.currentCell.row = rowi;
+        this.currentCell.col = coli;
     }
 
 
@@ -514,8 +526,8 @@ class TimTableController implements IController {
     
      */
     private editor() {
-        if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
-            this.helpCell.editing = false;
+        if (this.currentCell != undefined && typeof(this.currentCell) != "string") {
+            this.currentCell.editing = false;
         }
         if (!this.editing) this.editSave();
         this.editing = !this.editing;
@@ -527,7 +539,7 @@ class TimTableController implements IController {
      */
     public editSave() {
         this.editing = false;
-        if (this.helpCell) this.helpCell.editing = false;
+        if (this.currentCell) this.currentCell.editing = false;
     }
 
 
@@ -542,7 +554,7 @@ class TimTableController implements IController {
     public editCancel() {
         // undo all changes
         this.editing = false;
-        if (this.helpCell) this.helpCell.editing = false;
+        if (this.currentCell) this.currentCell.editing = false;
     }
 
 
@@ -557,6 +569,48 @@ class TimTableController implements IController {
        const response = await $http.post<ICell>("/timTable/saveCell", {cellContent, docId, parId, row, col});
     }
 
+
+      getCellData(docId: number, parId: string, row: number, col: number) {
+          let ctrl = this;
+         $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
+            url: "/timTable/getCellData",
+            method: "GET",
+            params: {docId, parId, row, col},
+        }).then( async function(response){
+
+
+            const data = response.data;
+        ctrl.editedCellContent = data[0]
+        //showMessageDialog(this.editedCellContent);
+        ctrl.cellDataMatrix[row][col] = data[0];
+
+
+         let i = ctrl.editedCellContent;
+        // this.cellDataMatrix[rowi][coli] = this.editedCellContent;
+             ctrl.currentCell.editorOpen = true;
+             const result = await openEditorSimple(docId, ctrl.editedCellContent);
+             ctrl.currentCell.editorOpen = false;
+        if(result.type == "save") {
+            console.log(result.text);
+            ctrl.saveCells(result.text, docId, parId, row, col);
+            ctrl.cellDataMatrix[row][col] = result.text
+        }
+
+
+
+
+
+
+
+        },  function(response) {
+             console.log("virhe");
+         });
+
+        //TODO: virhekasittely
+
+    }
+
+
     /**
      * Gets the contents of a cell from the server
      * @param {number} docId
@@ -565,7 +619,7 @@ class TimTableController implements IController {
      * @param {number} col
      * @returns {Promise<void>}
      */
-    async getCellData(docId: number, parId: string, row: number, col: number) {
+    /*async getCellData(docId: number, parId: string, row: number, col: number) {
         const response = await $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
             url: "/timTable/getCellData",
             method: "GET",
@@ -575,7 +629,7 @@ class TimTableController implements IController {
         this.editedCellContent = data[0]
         //showMessageDialog(this.editedCellContent);
         this.cellDataMatrix[row][col] = data[0];
-    }
+    }*/
 }
 
 timApp.component("timTable", {
