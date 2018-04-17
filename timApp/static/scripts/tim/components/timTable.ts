@@ -509,6 +509,10 @@ class TimTableController implements IController {
 
     }
 
+
+    /*
+    
+     */
     private editor() {
         if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
             this.helpCell.editing = false;
