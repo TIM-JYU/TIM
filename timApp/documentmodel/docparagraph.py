@@ -18,7 +18,7 @@ from timApp.htmlSanitize import sanitize_html
 from timApp.markdownconverter import par_list_to_html_list, expand_macros
 from timApp.rndutils import get_rands_as_dict, get_rands_as_str
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
-from timApp.types import DocumentType
+from timApp.timtypes import DocumentType
 from timApp.utils import count_chars, get_error_html, title_to_id
 
 SKIPPED_ATTRS = {'r', 'rd', 'rp', 'ra', 'rt', 'settings'}
@@ -376,7 +376,8 @@ class DocParagraph:
         if macroinfo is None:
             macroinfo = self.doc.get_settings().get_macroinfo()
         macros = macroinfo.get_macros(nocache=self.get_nocache())
-        if self.insert_rnds(None): # TODO: RND_SEED: check what seed should be used, is this used to plugins?
+
+        if self.insert_rnds(md+macros.get("username","")): # TODO: RND_SEED: check what seed should be used, is this used to plugins?
             macros = {**macros, **self.__rands}
         return expand_macros(md, macros, macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
 

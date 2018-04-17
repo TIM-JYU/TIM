@@ -8,7 +8,7 @@ from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOL
 from timApp.timdb.item import Item
 from timApp.timdb.models.notification import NotificationType, Notification
 from timApp.timdb.tim_models import db
-from timApp.types import TranslationType
+from timApp.timtypes import TranslationType
 
 
 class DocInfo(Item):

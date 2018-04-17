@@ -161,6 +161,8 @@ interface ICSAppScope extends IConsolePWDScope {
     mode: string;
     checkEditorModeLocalStorage();
     editorModes: string;
+    // aceEnabled: boolean;
+    // autocomplete: boolean;
     initEditorKeyBindings();
     showCsParsons(sortable: Element);
     words: boolean;
@@ -271,6 +273,8 @@ interface ICSAppScope extends IConsolePWDScope {
     runSuccess: boolean;
     viewCode: boolean;
     imgURL: string;
+    oneruntime: string;
+    runtime: string;
     resImage: string;
     result: string;
     taunoOn: boolean;
@@ -295,6 +299,7 @@ interface ICSAppScope extends IConsolePWDScope {
     maxRows: number;
     rows: number;
     wavURL: string;
+    noConsoleClear: boolean;
     showUploaded(file: string, type: string): void;
     doRunCode(s: string, b: boolean, extraMarkup?: {}): void;
     $watch(s: string, param2: (newValue, oldValue) => any, b?: boolean): void;
@@ -499,11 +504,11 @@ uploadFileTypes.is = function(types, file) {
         }
     }
     return false;
-}
+};
 
 uploadFileTypes.name = function(file) {
     return file.split('\\').pop().split('/').pop();
-}
+};
 
 function resizeIframe(obj) {
   obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';
@@ -824,6 +829,8 @@ csApp.directiveTemplateCS = function(t,isInput) {
 				  '<a href="" ng-if="muokattu" ng-click="initCode();">{{resetText}}</a>' +
 				  ' <a href="" ng-if="toggleEditor" ng-click="hideShowEditor();">{{toggleEditorText[noeditor?0:1]}}</a>' +
 				  ' <a href="" ng-if="!noeditor" ng-click="showOtherEditor();">{{editorText[editorModeIndecies[editorMode+1]]}}</a>' +
+                  // ' <label class="font-weight-normal" ng-show="aceEnabled"><input type="checkbox" ng-model="autocomplete"/> Autocomplete</label>' +
+                  ' <span ng-if="showRuntime" class="inputSmall" style="float: right;" title="Run time in sec {{runtime}}">{{oneruntime}}</span>' +
                   ' <span ng-if="wrap.n!=-1" class="inputSmall" style="float: right;"><label title="Put 0 to no wrap">wrap: <input type="text"  ng-pattern="/[-0-9]*/" ng-model="wrap.n" size="2" /></label></span>' +
                   '</p>'+
                   '</div>'+
@@ -1002,6 +1009,8 @@ csApp.directiveFunction = function(t,isInput) {
   			csApp.set(scope,attrs,"savestate");
   			csApp.set(scope,attrs,"mode");
   			csApp.set(scope,attrs,"iframeopts","");
+  			csApp.set(scope,attrs,"noConsoleClear",false);
+  			csApp.set(scope,attrs,"showRuntime",false);
 
             csApp.set(scope,attrs,"wrap", scope.isText ? 70 : -1);
             scope.wrap = {n:scope.wrap}; // to avoid child scope problems
@@ -1573,12 +1582,12 @@ csApp.Controller = function($scope,$transclude) {
     $scope.logTime = function(msg) {
         csLogTime(msg + " " + $scope.taskId);
         return true;
-    }
+    };
     
     $scope.runCodeIfCR = function(event) {
         $scope.runError ="";
         if ( event.keyCode == 13 ) $scope.runCode();
-    }
+    };
 
     $scope.runCodeCommon = function(nosave, extraMarkUp)
     {
@@ -1587,7 +1596,7 @@ csApp.Controller = function($scope,$transclude) {
         if ( t == "md" ) { $scope.showMD(); if (nosave || $scope.nosave) return; }
         if ( languageTypes.isInArray(t, csJSTypes ) ) { $scope.jstype = t; $scope.showJS(); if (nosave || $scope.nosave) return; } 
 		$scope.doRunCode(t,nosave || $scope.nosave);
-    }
+    };
     
     $scope.runCodeAuto = function() {
         window.clearInterval($scope.runTimer);
@@ -1710,9 +1719,10 @@ csApp.Controller = function($scope,$transclude) {
 		$scope.imgURL = "";
 		$scope.wavURL = "";
 		$scope.runSuccess = false;
-		if ( !languageTypes.isInArray(runType, csJSTypes ) ) $scope.result = "";
+		if ( !(languageTypes.isInArray(runType, csJSTypes ) || $scope.noConsoleClear) ) $scope.result = "";
 		$scope.runTestGreen = false;
 		$scope.runTestRed = false;
+        $scope.oneruntime = ""
         var isInput = false;
         if ( $scope.type.indexOf("input") >= 0 ) isInput = true;
 
@@ -1766,6 +1776,7 @@ csApp.Controller = function($scope,$transclude) {
             if ( i > 0 ) url = url.substring(i);
             url += "/" + $scope.taskId + "/answer/";  // Häck piti vähän muuttaa, jotta kone häviää.
         }
+        let t0run = performance.now();
 		$http<{
             web: {
                 error?: string,
@@ -1777,6 +1788,7 @@ csApp.Controller = function($scope,$transclude) {
                 comtestError?: string,
                 docurl?: string,
                 console?: string,
+                runtime?: string,
             }
         }>({method: 'PUT', url: url, data:params, headers: {'Content-Type': 'application/json'}, timeout: 20000 }
 		).then(function(response) {
@@ -1785,6 +1797,11 @@ csApp.Controller = function($scope,$transclude) {
 				$scope.error = data.web.error;
 				//return;
 			}
+
+			let tsruntime = ((performance.now() - t0run)/1000).toFixed(3);
+			let runtime = (data.web.runtime || "").trim();
+			$scope.oneruntime = "" + tsruntime + " " +runtime.split(' ', 1)[0]
+			$scope.runtime = "\nWhole: " + tsruntime + "\ncsPlugin: " + runtime;
             if ( data.web.pwd ) ConsolePWD.setPWD(data.web.pwd,$scope);
 			$scope.error = data.web.error;
 			var imgURL = "";
@@ -2499,20 +2516,23 @@ csApp.Controller = function($scope,$transclude) {
         var editorDiv: JQuery = angular.element(otherEditDiv);
         $scope.edit = $compile(html[eindex])($scope as any)[0] as HTMLTextAreaElement; // TODO unsafe cast
         // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
+        // $scope.aceEnabled = eindex == 1;
         if ( eindex == 1 ) {
             const ace = (await lazyLoad<typeof acemodule>("tim/ace")).ace;
             editorDiv.empty().append($scope.edit);
             var editor = ace.edit(editorDiv.find('.csAceEditor')[0]);
+
             $scope.aceLoaded(ace, editor as IAceEditor);
             if ($scope.mode) {
                 $scope.aceEditor.getSession().setMode('ace/mode/' + $scope.mode);
             }
             $scope.aceEditor.setOptions({
                 enableBasicAutocompletion: true,
-                enableLiveAutocompletion: true,
+                enableLiveAutocompletion: false,
                 enableSnippets: true,
                 maxLines: $scope.maxRows
             });
+            // $scope.aceEditor.setOptions({enableLiveAutocompletion: $scope.autocomplete});
             $scope.aceEditor.setFontSize(15);
             if (editorDiv.parents(".reveal").length > 0) {
                 $scope.aceEditor.setFontSize(25);

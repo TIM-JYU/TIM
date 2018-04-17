@@ -275,3 +275,27 @@ class QuestionJsonNormalizeTest(unittest.TestCase):
         self.assertEqual(result4, normalize_question_json(result4))
         result4.update(isTask=True)
         self.assertEqual(result4, normalize_question_json(result4, allow_top_level_keys={'isTask'}))
+
+    def test_invalid(self):
+        self.assertEqual({'answerFieldType': 'text',
+                          'expl': {},
+                          'headers': [''],
+                          'invalid': True,
+                          'isTask': True,
+                          'matrixType': 'textArea',
+                          'questionText': 'Invalid question data: Missing field: questionTitle',
+                          'questionTitle': 'Invalid question data: Missing field: questionTitle',
+                          'questionType': 'matrix',
+                          'rows': ['']}, normalize_question_json({}))
+        self.assertEqual({'answerFieldType': 'text',
+                          'expl': {},
+                          'headers': [''],
+                          'invalid': True,
+                          'isTask': True,
+                          'matrixType': 'textArea',
+                          'questionText': 'Invalid question data: Missing fields: answerFieldType, '
+                                          'headers, matrixType, questionText, questionType, rows',
+                          'questionTitle': 'Invalid question data: Missing fields: answerFieldType, '
+                                           'headers, matrixType, questionText, questionType, rows',
+                          'questionType': 'matrix',
+                          'rows': ['']}, normalize_question_json({'questionTitle': ''}))

@@ -8,6 +8,7 @@ import socketserver
 import threading
 from languages import *
 import pwd, os
+
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)
 
@@ -222,7 +223,7 @@ def get_md(ttype, query):
         runner = 'cs-wescheme-runner'
 
     usercode = None
-    user_print = get_json_param(query.jso, "userPrint", None,  False)
+    user_print = get_json_param(query.jso, "userPrint", None, False)
     if user_print:
         usercode = get_json_eparam(query.jso, "state", "usercode", None, False)
     if usercode is None:
@@ -265,8 +266,8 @@ def get_md(ttype, query):
         return s
 
     if target_format == "latex":
-        code = '\\begin{lstlisting}\n' +\
-               str(usercode) + '\n' +\
+        code = '\\begin{lstlisting}\n' + \
+               str(usercode) + '\n' + \
                '\\end{lstlisting}\n'
 
         if 'text' in ttype and rows is not None and str(usercode) == '':
@@ -274,13 +275,13 @@ def get_md(ttype, query):
             rows = str_to_int(rows, 1)
             for i in range(0, rows):
                 r += "\n"
-            code = '\\begin{verbatim}\n' +\
-                   r +\
+            code = '\\begin{verbatim}\n' + \
+                   r + \
                    '\\end{verbatim}\n'
 
-        s = '\\begin{taskenv}{' + header + '}{' + stem + '}{'+footer + '}' +\
-            '\\lstset{language=[Sharp]C, numbers=left}\n' +\
-            code +\
+        s = '\\begin{taskenv}{' + header + '}{' + stem + '}{' + footer + '}' + \
+            '\\lstset{language=[Sharp]C, numbers=left}\n' + \
+            code + \
             '\\end{taskenv}'
 
         return s
@@ -380,7 +381,7 @@ def get_html(ttype, query):
             s = '<pre>' + usercode + '</ pre>' + s
         if not s:
             s = "No answer"
-        result = NOLAZY + '<div class="review" ng-non-bindable>'+s + '</div>'
+        result = NOLAZY + '<div class="review" ng-non-bindable>' + s + '</div>'
         return result
 
     r = runner + is_input
@@ -560,8 +561,23 @@ def check_fullprogram(query, cut_errors=False):
     by_code = ""
     if m:
         by_code = m.group(1)
-    by_code_replace = [{'replace': "((\n|)[^\\n]*BYCODEBEGIN.*?BYCODEEND[^\\n]*)", 'by': "\nREPLACEBYCODE"}]
+        by_code_replace = [{'replace': "((\n|)[^\\n]*BYCODEBEGIN.*?BYCODEEND[^\\n]*)", 'by': "\nREPLACEBYCODE"}]
+    else:  # no BYCODEBEGIN
+        m = re.search("BYCODEBEGIN[^\\n]*\n(.*)", program, flags=re.S)
+        if m:
+            by_code = m.group(1)
+            by_code_replace = [{'replace': "((\n|)[^\\n]*BYCODEBEGIN.*)", 'by': "\nREPLACEBYCODE"}]
+        else:
+            m = re.search("[^\\n]*\n(.*)\n.*?BYCODEEND", program, flags=re.S)
+            if m:
+                by_code = m.group(1)
+                by_code_replace = [{'replace': "((\n|)[^\\n]*.*?BYCODEEND[^\\n]*)", 'by': "\nREPLACEBYCODE"}]
+            else:
+                by_code = fullprogram
+                program = "REPLACEBYCODE"
     program = replace_code(by_code_replace, program)
+    if program.startswith("\nREPLACEBYCODE") and not fullprogram.startswith("\n"):
+        program = program[1:]  # remove extra \n from begin
     if cut_errors:
         program = replace_code(query.cut_errors, program)
     query.query["replace"] = ["REPLACEBYCODE"]
@@ -619,18 +635,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         print(self.headers)
 
     def do_GET(self):
-        print("do_GET ==================================================")
+        # print("do_GET ==================================================")
         self.do_all(get_params(self))
 
     def do_POST(self):
-        print("do_POST =================================================")
+        # print("do_POST =================================================")
         multimd = self.path.find('/multimd') >= 0
 
         if self.path.find('/multihtml') < 0 and not multimd:
             self.do_all(post_params(self))
             return
 
-        print("do_POST MULTIHML ==========================================")
+        # print("do_POST MULTIHML ==========================================")
         t1 = time.clock()
         t1t = time.time()
         querys = multi_post_params(self)
@@ -640,7 +656,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_parsons = self.path.find('/parsons') >= 0
         htmls = []
         self.user_id = get_param(querys[0], "user_id", "--")
-        print("UserId:", self.user_id)
+        if self.user_id != "--":
+            print("UserId:", self.user_id)
         log(self)
         # print(querys)
 
@@ -696,7 +713,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         print(ts)
 
     def do_PUT(self):
-        print("do_PUT =================================================")
+        # print("do_PUT =================================================")
         t1put = time.time()
         self.do_all(post_params(self))
         t2 = time.time()
@@ -711,7 +728,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             signal.signal(signal.SIGALRM, signal_handler)
             signal.alarm(20)  # Ten seconds
         except Exception as e:
-            print("No signal", e)
+            # print("No signal", e)  #  TODO; why is this signal at all when it allways comes here?
+            pass
         try:
             self.do_all_t(query)
         except Exception as e:
@@ -720,9 +738,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(str(e))
 
     def do_all_t(self, query):
+        t1start = time.time()
+        t_run_time = 0
+        times_string = ""
+        # print("t:", time.time() - t1start)
+
         query.randomcheck = binascii.hexlify(os.urandom(16)).decode()
         pwddir = ""
-        print(threading.currentThread().getName())
+        # print(threading.currentThread().getName())
         result = {}  # query.jso
         if not result:
             result = {}
@@ -740,7 +763,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # print(query)
         self.user_id = get_param(query, "user_id", "--")
-        print("UserId:", self.user_id)
+        if self.user_id != "--":
+            print("UserId:", self.user_id)
         log(self)
         '''
         if self.path.find('/login') >= 0:
@@ -788,7 +812,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if is_template:
             tempfile = get_param(query, "file", "")
             tidx = get_param(query, "idx", "0")
-            print("tempfile: ", tempfile, tidx)
+            # print("tempfile: ", tempfile, tidx)
             # return self.wout(file_to_string('templates/' + tempfile))
             return self.wout(get_template('templates', tidx, tempfile))
 
@@ -801,7 +825,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             scripts = get_param(query, "scripts", "")
             inchtml = get_param(query, "html", "")
             p = self.path.split("?")
-            print(p, scripts)
+            # print(p, scripts)
             htmlstring = file_to_string(p[0])
             htmlstring = replace_scripts(htmlstring, scripts, "%INCLUDESCRIPTS%")
             htmlstring = htmlstring.replace("%INCLUDEHTML%", inchtml)
@@ -862,12 +886,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # answer-route
 
+        task_id = get_param(query, "taskID", None)
+        if task_id:
+            print("taskID:", task_id)
+
         points_rule = None
 
         is_doc = False
         extra_files = None
         warnmessage = ""
         language = dummy_language
+        # print("t:", time.time() - t1start)
 
         try:
             # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
@@ -892,6 +921,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if not extra_files:
                 extra_files = get_json_param(query.jso, "markup", "-extrafiles", None)
 
+            # print("t:", time.time() - t1start)
             if userargs:
                 save["userargs"] = userargs
 
@@ -945,7 +975,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             #
             if p0.breakCount > 0:
                 parts = get_file_parts_to_output(query, False)
-                print(parts)
+                # print(parts)
                 if print_file == "2":
                     return self.wout(json.dumps(parts))
                 s = join_file_parts(parts)
@@ -1000,9 +1030,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         warnmessage = "\n" + get_json_param(query.jso, "markup", "warnmessage",
                                                             "Not recomended to use: " + warncondition)
 
-                print(os.path.dirname(language.sourcefilename))
+                # print(os.path.dirname(language.sourcefilename))
                 mkdirs(os.path.dirname(language.sourcefilename))
-                print("Write file: " + language.sourcefilename)
+                # print("Write file: " + language.sourcefilename)
                 if s == "":
                     s = "\n"
 
@@ -1034,7 +1064,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         points_rule["points"]["test"] = 0
                     elif is_doc:
                         points_rule["points"]["doc"] = 0
-                        print("doc points: ", points_rule["points"]["doc"])
+                        # ("doc points: ", points_rule["points"]["doc"])
                     else:
                         points_rule["points"]["run"] = 0
                 if not is_doc:
@@ -1065,99 +1095,85 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     number_rule = get_points_rule(points_rule, is_test + "numberRule", None)
                     if number_rule:
                         give_points(points_rule, "code", check_number_rule(usercode, number_rule))
-            print(points_rule)
+            # print(points_rule)
 
             # uid = pwd.getpwnam("agent").pw_uid
             # gid = grp.getgrnam("agent").gr_gid
             # os.chown(prgpath, uid, gid)
             shutil.chown(language.prgpath, user="agent", group="agent")
+            # print("t:", time.time() - t1start)
 
             # print(ttype)
             # ########################## Compiling programs ###################################################
-            try:
-                log(self)
+            log(self)
+            cmdline = ""
+
+            if is_doc:
+                # doxygen
+                # ./doxygen/csdoc.sh /tmp/user/4d85...17114/3 /csgenerated/docs/vesal/abcd /csgenerated/docs/vesal
+                # http://tim3/csgenerated/docs/vesal/abcd/html/index.html
+                #
+                userdoc = "/csgenerated/docs/%s" % self.user_id
+                docrnd = generate_filename()
+                doccmd = "/cs/doxygen/csdoc.sh %s %s/%s %s" % (language.prgpath, userdoc, docrnd, userdoc)
+                doccmd = sanitize_cmdline(doccmd)
+                p = re.compile('\.java')
+                docfilename = p.sub("", language.filename)
+                p = re.compile('[^.]*\.')
+                docfilename = p.sub("", docfilename)
+                docfilename = docfilename.replace("_", "__")  # jostakin syystä tekee näin
+                dochtml = "/csgenerated/docs/%s/%s/html/%s_8%s.html" % (
+                    self.user_id, docrnd, docfilename, language.fileext)
+                docfile = "%s/%s/html/%s_8%s.html" % (userdoc, docrnd, docfilename, language.fileext)
+                # print("XXXXXXXXXXXXXXXXXXXXXX", language.filename)
+                # print("XXXXXXXXXXXXXXXXXXXXXX", docfilename)
+                # print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
+                # print("XXXXXXXXXXXXXXXXXXXXXX", docfile)
+                check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
+                if not os.path.isfile(
+                        docfile):  # There is maybe more files with same name and it is difficult to guess the name
+                    dochtml = "/csgenerated/docs/%s/%s/html/%s" % (self.user_id, docrnd, "files.html")
+                    # print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
+
+                web["docurl"] = dochtml
+                give_points(points_rule, "doc")
+
+            else:
+                cmdline = language.get_cmdline(s)
+
+            if get_param(query, "justSave", False) or get_param(query, "justCmd", False):
                 cmdline = ""
 
-                if is_doc:
-                    # doxygen
-                    # ./doxygen/csdoc.sh /tmp/user/4d85...17114/3 /csgenerated/docs/vesal/abcd /csgenerated/docs/vesal
-                    # http://tim3/csgenerated/docs/vesal/abcd/html/index.html
-                    #
-                    userdoc = "/csgenerated/docs/%s" % self.user_id
-                    docrnd = generate_filename()
-                    doccmd = "/cs/doxygen/csdoc.sh %s %s/%s %s" % (language.prgpath, userdoc, docrnd, userdoc)
-                    p = re.compile('\.java')
-                    docfilename = p.sub("", language.filename)
-                    p = re.compile('[^.]*\.')
-                    docfilename = p.sub("", docfilename)
-                    docfilename = docfilename.replace("_", "__")  # jostakin syystä tekee näin
-                    dochtml = "/csgenerated/docs/%s/%s/html/%s_8%s.html" % (
-                        self.user_id, docrnd, docfilename, language.fileext)
-                    docfile = "%s/%s/html/%s_8%s.html" % (userdoc, docrnd, docfilename, language.fileext)
-                    print("XXXXXXXXXXXXXXXXXXXXXX", language.filename)
-                    print("XXXXXXXXXXXXXXXXXXXXXX", docfilename)
-                    print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
-                    print("XXXXXXXXXXXXXXXXXXXXXX", docfile)
-                    check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
-                    if not os.path.isfile(
-                            docfile):  # There is maybe more files with same name and it is difficult to guess the name
-                        dochtml = "/csgenerated/docs/%s/%s/html/%s" % (self.user_id, docrnd, "files.html")
-                        print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
+            '''
+            # old unsafe compile
+            compiler_output = ""
+            t1startrun = time.time()
+            if cmdline:
+                compiler_output = check_output(["cd " + language.prgpath + " && " + cmdline],
+                                               stderr=subprocess.STDOUT,
+                                               shell=True).decode("utf-8")
+                compiler_output = compiler_output.replace(language.prgpath, "")
+                if language.hide_compile_out:
+                    compiler_output = ""
+                give_points(points_rule, is_test + "compile")
 
-                    web["docurl"] = dochtml
-                    give_points(points_rule, "doc")
+            # self.wfile.write("*** Success!\n")
+            print("*** Compile Success")
+            t_run_time = time.time() - t1startrun
+            times_string = "\n" + str(t_run_time)
+            '''
 
-                else:
-                    cmdline = language.get_cmdline(s)
+            # change old long file names to relatice paths
+            language.compile_commandline = cmdline.replace(language.prgpath, "/home/agent")
 
-                if get_param(query, "justSave", False):
-                    cmdline = ""
+            language.prgpath = sanitize_cmdline(language.prgpath)
 
-                compiler_output = ""
-                if cmdline:
-                    compiler_output = check_output(["cd " + language.prgpath + " && " + cmdline],
-                                                   stderr=subprocess.STDOUT,
-                                                   shell=True).decode("utf-8")
-                    compiler_output = compiler_output.replace(language.prgpath, "")
-                    if language.hide_compile_out:
-                        compiler_output = ""
-                    give_points(points_rule, is_test + "compile")
-
-                # self.wfile.write("*** Success!\n")
-                print("*** Compile Success")
-                if nocode and ttype != "jcomtest":
-                    print("Poistetaan ", ttype, language.sourcefilename)
-                    remove(language.sourcefilename)
-                    # print(compiler_output)
-            except subprocess.CalledProcessError as e:
-                '''
-                self.wout("!!! Error code " + str(e.returncode) + "\n")
-                self.wout(e.output)
-                file = open(sourcefilename, 'r')
-                lines = file.read().splitlines()
-                # self.wfile.write(file.read())
-                printLines(self.wfile,lines,0,10000)
-                '''
-                print("directory = " + os.curdir)
-                error_str = "!!! Error code " + str(e.returncode) + "\n"
-                # error_str += e.output.decode("utf-8") + "\n"
-                error_str += e.output.decode("utf-8") + "\n"
-                # errorStr = re.sub("^/tmp/.*cs\(\n", "tmp.cs(", errorStr, flags=re.M)
-                error_str = error_str.replace(language.prgpath, "")
-                output = io.StringIO()
-                file = codecs.open(language.sourcefilename, 'r', "utf-8")
-                lines = file.read().splitlines()
-                file.close()
-                if not nocode:
-                    print_lines(output, lines, 0, 10000)
-                error_str += output.getvalue()
-                output.close()
-                error_str = replace_code(query.cut_errors, error_str)
-
-                if language.delete_tmp:
-                    removedir(language.prgpath)
-                give_points(points_rule, is_test + "notcompile")
-                return write_json_error(self.wfile, error_str, result, points_rule)
+            if nocode and ttype != "jcomtest":
+                print("Poistetaan ", ttype, language.sourcefilename)
+                # remove(language.sourcefilename)
+                # print(compiler_output)
+                language.compile_commandline += " && rm " + \
+                                                language.sourcefilename.replace(language.prgpath, "/home/agent")
 
             # ########################## Running programs ###################################################
             # delete_tmp = False
@@ -1181,6 +1197,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             pwddir = ""
 
+            t1startrun = time.time()
+
             if is_doc:
                 pass  # jos doc ei ajeta
             elif get_param(query, "justSave", False):
@@ -1196,7 +1214,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 language.set_stdin(userinput)
                 runcommand = get_param(query, "cmd", "")
                 if ttype != "run" and (runcommand or get_param(query, "cmds", "")) and not is_test:
-                    print("runcommand: ", runcommand)
+                    # print("runcommand: ", runcommand)
                     # code, out, err, pwddir = run2([runcommand], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                     #                               uargs=get_param(query, "runargs", "") + " " + userargs)
                     cmd = shlex.split(runcommand)
@@ -1205,25 +1223,57 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     if extra != "":
                         cmd = []
                         uargs = ""
-                    print("run: ", cmd, extra, language.pure_exename, language.sourcefilename)
+                    # print("run: ", cmd, extra, language.pure_exename, language.sourcefilename)
                     try:
                         code, out, err, pwddir = run2(cmd, cwd=language.prgpath, timeout=language.timeout, env=env,
                                                       stdin=language.stdin,
                                                       uargs=get_param(query, "runargs", "") + " " + uargs,
                                                       extra=extra, no_x11=language.no_x11,
-                                                      ulimit=language.ulimit
+                                                      ulimit=language.ulimit,
+                                                      compile_commandline = language.compile_commandline
                                                       )
                     except Exception as e:
                         print(e)
                         code, out, err = (-1, "", str(e))
-                    print("Run2: ", language.imgsource, language.pngname)
+                    # print("Run2: ", language.imgsource, language.pngname)
                     out, err = language.copy_image(web, code, out, err, points_rule)
                 else:  # Most languages are run from here
                     code, out, err, pwddir = language.run(web, slines, points_rule)
 
+                t_run_time = time.time() - t1startrun
+                try:
+                    times_string += codecs.open(language.fullpath + "/run/time.txt", 'r', "iso-8859-15").read() or ""
+                except:
+                    pass
+
+                if err.find("Compile error") >= 0:
+                    # print("directory = " + os.curdir)
+                    # error_str = "!!! Error code " + str(e.returncode) + "\n"
+                    # error_str += e.output.decode("utf-8") + "\n"
+                    # error_str += e.output.decode("utf-8") + "\n"
+                    # errorStr = re.sub("^/tmp/.*cs\(\n", "tmp.cs(", errorStr, flags=re.M)
+                    error_str = err.replace(language.prgpath, "")
+                    error_str += out
+                    output = io.StringIO()
+                    file = codecs.open(language.sourcefilename, 'r', "utf-8")
+                    lines = file.read().splitlines()
+                    file.close()
+                    if not nocode:
+                        print_lines(output, lines, 0, 10000)
+                    error_str += output.getvalue()
+                    output.close()
+                    error_str = replace_code(query.cut_errors, error_str)
+
+                    if language.delete_tmp:
+                        removedir(language.prgpath)
+                    give_points(points_rule, is_test + "notcompile")
+                    return write_json_error(self.wfile, error_str, result, points_rule)
+
+                give_points(points_rule, is_test + "compile")
+
                 if not err and not language.run_points_given:  # because test points are allready given
                     give_points(points_rule, "run")
-                print(code, out, err, pwddir, compiler_output)
+                # print(code, out, err, pwddir)
 
                 if code == -9:
                     out = "Runtime exceeded, maybe loop forever\n" + out
@@ -1295,9 +1345,27 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             removedir(language.prgpath)
 
         out = out[0:get_param(query, "maxConsole", 20000)]
+
+        out_replace = get_param(query, "outReplace", None)
+        out_by = get_param(query, "outBy", "")
+        if out_replace:
+            if type(out_replace) is list:
+                for rep in out_replace:
+                    replace = rep.get("replace", "")
+                    if replace:
+                        out = re.sub(replace, rep.get("by", out_by), out, flags=re.M)
+            else:
+                out = re.sub(out_replace, out_by, out, flags=re.M)
+
         web["console"] = out
         web["error"] = err + warnmessage
         web["pwd"] = pwddir.strip()
+
+        t2 = time.time()
+        ts = "%7.3f %7.3f" % ((t2 - t1start), t_run_time)
+        ts += times_string
+        # print(ts)
+        web["runtime"] = ts
 
         result["web"] = web
         # print(result)
@@ -1311,7 +1379,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         sresult = json.dumps(result)
         self.wout(sresult)
         # print("Result ========")
-        print(sresult)
+        # print(sresult)
         # print(out)
         # print(err)
 

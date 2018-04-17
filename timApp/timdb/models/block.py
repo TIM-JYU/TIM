@@ -7,7 +7,7 @@ from timApp.timdb.accesstype import AccessType
 from timApp.timdb.blocktypes import blocktypes, BlockType
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db, BlockAccess
-from timApp.types import FolderType
+from timApp.timtypes import FolderType
 
 
 class Block(db.Model):

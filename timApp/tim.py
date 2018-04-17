@@ -884,9 +884,21 @@ def disable_cache_for_testing(response):
     return response
 
 
+def should_log_request():
+    p = request.path
+    # don't log OpenID completion URL because it contains email etc.
+    if p.startswith('/openIDLogin') and b'&openid_complete=yes' in request.query_string:
+        return False
+    if p.startswith('/static/'):
+        return False
+    if p == '/favicon.ico':
+        return False
+    return True
+
+
 @app.after_request
 def log_request(response):
-    if not request.path.startswith('/static/') and request.path != '/favicon.ico':
+    if should_log_request():
         status_code = response.status_code
         log_info(get_request_message(status_code))
         if request.method in ('PUT', 'POST', 'DELETE'):

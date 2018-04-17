@@ -122,6 +122,7 @@ timApp.component("popupMenu", {
     bindings: {
         actions: "=",
         areaEditButton: "<",
+        contenturl: "@",
         editbutton: "@",
         editcontext: "@",
         onClose: "&",

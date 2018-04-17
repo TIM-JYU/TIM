@@ -193,10 +193,24 @@ RUN         cd  /tmp && \
             rm -rf /tmp/* /var/cache/apk/*
 
 
+RUN bash -c "${APT_INSTALL} bsdmainutils && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} iputils-ping && ${APT_CLEANUP}"
+
+RUN add-apt-repository ppa:webupd8team/java
+RUN apt-get update
+RUN bash -c "${APT_INSTALL} oracle-java9-installer && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} oracle-java9-set-default && ${APT_CLEANUP}"
+
+# RUN bash -c "${APT_INSTALL} uuid-runtime && ${APT_CLEANUP}"
+# RUN uuidgen > /etc/machine-id
+# RUN dbus-uuidgen > /etc/machine-id
+# run echo 3c99bef9df635abd860662e8594b78af >/etc/machine-id
+
 RUN useradd -m agent
 ENV HOME /home/agent
 RUN mkdir -p /service
 RUN chown -R agent /service
+
 
 # RUN groupadd docker
 #RUN gpasswd -a agent docker

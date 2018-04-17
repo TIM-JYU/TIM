@@ -1,83 +1,77 @@
 // TODO: save cursor position when changing editor
 
-import angular, {IController, IPromise, IRootElementService, IScope} from "angular";
+import angular, {IPromise, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
-import {timApp} from "tim/app";
-import * as draggable from "tim/directives/draggable";
 import {setEditorScope} from "tim/editorScope";
 import sessionsettings from "tim/session";
 import {markAsUsed, setSetting} from "tim/utils";
 import {IAceEditor} from "../ace-types";
-import {getActiveDocument} from "../controllers/view/document";
-import {isSettings} from "../controllers/view/parhelpers";
-import {showMessageDialog} from "../dialog";
-import {Duplicate} from "../edittypes";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
+import {IExtraData} from "../edittypes";
 import {$compile, $http, $localStorage, $log, $timeout, $upload, $window} from "../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../services/parCompiler";
 import {AceParEditor} from "./AceParEditor";
 import {TextAreaParEditor} from "./TextAreaParEditor";
-import {DraggableController} from "./draggable";
 
-markAsUsed(draggable, rangyinputs);
+markAsUsed(rangyinputs);
 
 const MENU_BUTTON_CLASS = "menuButtons";
 const MENU_BUTTON_CLASS_DOT = "." + MENU_BUTTON_CLASS;
 const CURSOR = "⁞";
 
-export class PareditorController implements IController {
-    private static $inject = ["$scope", "$element"];
-    private afterDelete: (params: {extraData: {}, saveData: {}}) => void;
-    private afterCancel: (params: {extraData: {}}) => void;
-    private afterSave: (params: {extraData: {}, saveData: {}}) => void;
-    private data: {original_par: any};
-    private dataLoaded: boolean;
-    private deleteUrl: string;
-    private deleting: boolean;
-    private duplicates: Duplicate[];
-    private editor: TextAreaParEditor | AceParEditor;
-    private element: JQuery;
-    private extraData: {
-        attrs: {classes: string[], [i: string]: any},
-        docId: number,
-        par: string,
-        access: string,
-        tags: {markread: boolean},
-        isComment: boolean,
-    };
-    private file: File & {progress?: number, error?: string};
-    private initialText: string;
-    private initialTextUrl: string;
-    private inputs: JQuery[];
-    private isIE: boolean;
-    private lstag: string;
-    private minSizeSet: boolean;
-    private newAttr: string;
-    private newPars: string[];
-    private oldmeta: HTMLMetaElement;
-    private wrap: {n: number};
-    private options: {
+export interface IPreviewResult {
+    html: string;
+}
+
+export interface ITag {
+    name: string;
+    desc: string;
+}
+
+export interface IChoice {
+    desc: string;
+    name: string;
+    opts: {desc: string, value: string}[];
+}
+
+export interface IEditorParams {
+    initialText?: string;
+    extraData: IExtraData;
+    options: {
+        caption: string,
         localSaveTag: string,
-        texts: {
-            initialText: string;
-        },
         showDelete: boolean,
         showPlugins: boolean,
         showSettings: boolean,
-        destroyAfterSave: boolean,
+        showImageUpload: boolean,
         touchDevice: boolean,
-        metaset: boolean,
+        tags: ITag[],
+        choices?: IChoice[],
     };
-    private originalPar: any;
+    previewCb: (text: string) => Promise<IPluginInfoResponse>;
+    saveCb: (text: string, data: IExtraData) => Promise<{error?: string}>;
+    deleteCb: () => Promise<{error?: string}>;
+    unreadCb: () => Promise<void>;
+}
+
+export type IEditorResult = {type: "save", text: string} | {type: "delete"} | {type: "markunread"} | {type: "cancel"};
+
+export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult, "pareditor"> {
+    private static $inject = ["$scope", "$element"];
+    private deleting: boolean;
+    private editor: TextAreaParEditor | AceParEditor;
+    private file: File & {progress?: number, error?: string};
+    private isIE: boolean;
+    private lstag: string;
+    private minSizeSet: boolean;
+    private oldmeta: HTMLMetaElement;
+    private wrap: {n: number};
     private outofdate: boolean;
     private parCount: number;
     private pluginButtonList: {[tabName: string]: JQuery[]};
-    private pluginRenameForm: any;
     private previewReleased: boolean;
-    private previewUrl: string;
     private proeditor: boolean;
-    private renameFormShowing: boolean;
-    private saveUrl: string;
     private saving: boolean;
     private scrollPos: number;
     private tables: {
@@ -88,23 +82,30 @@ export class PareditorController implements IController {
         strokes: string,
         pipe: string,
     };
-    private timer?: IPromise<void>;
-    private unreadUrl: string;
     private uploadedFile: string;
-    private scope: IScope;
     private storage: Storage;
     private touchDevice: boolean;
     private plugintab: JQuery;
     private autocomplete: boolean;
     private citeText: string;
-    private draggable: DraggableController | undefined;
     private docSettings: {macros: {dates: string[], knro: number, stampformat: string}};
+    private metaset = false;
 
-    constructor(scope: IScope, element: IRootElementService) {
-        this.element = element;
-        this.options.showSettings = false;
-        this.scope = scope;
-        this.lstag = this.options.localSaveTag || ""; // par/note/addAbove
+    private getOptions() {
+        return this.resolve.params.options;
+    }
+
+    private getExtraData() {
+        return this.resolve.params.extraData;
+    }
+
+    protected getTitle(): string {
+        return this.resolve.params.options.caption;
+    }
+
+    constructor(private scope: IScope, private element: IRootElementService) {
+        super();
+        this.lstag = this.getOptions().localSaveTag || ""; // par/note/addAbove
         this.storage = localStorage;
 
         const sn = this.storage.getItem("wrap" + this.lstag);
@@ -123,8 +124,6 @@ export class PareditorController implements IController {
         if ((navigator.userAgent.match(/Trident/i))) {
             this.isIE = true;
         }
-
-        this.dataLoaded = false; // allow load in first time what ever editor
 
         this.element.find(".editorContainer").on("resize", () => this.adjustPreview());
 
@@ -185,7 +184,7 @@ export class PareditorController implements IController {
         };
 
         $(document).on("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", (event) => {
-            const editor = $(element).find("#pareditor").get(0);
+            const editor = element[0];
             const doc: any = document;
             if (!doc.fullscreenElement &&    // alternative standard method
                 !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
@@ -197,14 +196,14 @@ export class PareditorController implements IController {
         this.parCount = 0;
         this.touchDevice = false;
 
-        if (this.options.touchDevice) {
-            if (!this.options.metaset) {
+        if (this.getOptions().touchDevice) {
+            if (!this.metaset) {
                 const $meta = $("meta[name='viewport']");
                 this.oldmeta = $meta[0] as HTMLMetaElement;
                 $meta.remove();
                 $("head").prepend('<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=0">');
             }
-            this.options.metaset = true;
+            this.metaset = true;
         }
 
         const scrollTop = $(window).scrollTop() || 0;
@@ -225,7 +224,9 @@ export class PareditorController implements IController {
     }
 
     $onInit() {
-        const oldMode = $window.localStorage.getItem("oldMode" + this.options.localSaveTag) || (this.options.touchDevice ? "text" : "ace");
+        super.$onInit();
+        this.draggable.makeHeightAutomatic();
+        const oldMode = $window.localStorage.getItem("oldMode" + this.getOptions().localSaveTag) || (this.getOptions().touchDevice ? "text" : "ace");
         this.changeEditor(oldMode);
         this.scope.$watch(() => this.autocomplete, () => {
             if (this.isAce(this.editor)) {
@@ -254,7 +255,7 @@ export class PareditorController implements IController {
     }
 
     getCiteText(): string {
-        return `#- {rd="${this.extraData.docId}" rl="no" rp="${this.extraData.par}"}`;
+        return `#- {rd="${this.getExtraData().docId}" rl="no" rp="${this.getExtraData().par}"}`;
     }
 
     selectAllText(evt: Event) {
@@ -294,27 +295,6 @@ export class PareditorController implements IController {
             this.releaseClicked();
         }
         this.minSizeSet = true;
-    }
-
-    deleteAttribute(key: string) {
-        delete this.extraData.attrs[key];
-    }
-
-    deleteClass(classIndex: number) {
-        this.extraData.attrs.classes.splice(classIndex, 1);
-    }
-
-    addClass() {
-        this.extraData.attrs.classes.push("");
-    }
-
-    addAttribute() {
-        if (this.newAttr === "classes") {
-            this.extraData.attrs[this.newAttr] = [];
-        } else {
-            this.extraData.attrs[this.newAttr] = "";
-        }
-        this.newAttr = "";
     }
 
     /*
@@ -410,39 +390,20 @@ or newer one that is more familiar to write in YAML:
         this.plugintab.append($compile(help)(this.scope));
     }
 
+    getInitialText() {
+        return this.resolve.params.initialText;
+    }
+
     async setInitialText() {
-        if (this.dataLoaded) return;
-        if (!this.initialTextUrl) {
-            var initialText = "";
-            if (this.options.texts) initialText = this.options.texts.initialText;
-            if (initialText) {
-                var pos = initialText.indexOf(CURSOR);
-                if (pos >= 0) initialText = initialText.replace(CURSOR, ""); // cursor pos
-                this.editor.setEditorText(initialText);
-                this.initialText = initialText;
-                angular.extend(this.extraData, {});
-                this.editorChanged();
-                $timeout(() => {
-                    if (pos >= 0) this.editor.setPosition(pos);
-                }, 10);
-            }
-            this.dataLoaded = true;
-            return;
+        let initialText = this.getInitialText();
+        if (initialText) {
+            const pos = initialText.indexOf(CURSOR);
+            if (pos >= 0) initialText = initialText.replace(CURSOR, ""); // cursor pos
+            this.editor.setEditorText(initialText);
+            this.editorChanged();
+            await $timeout(10);
+            if (pos >= 0) this.editor.setPosition(pos);
         }
-        this.editor.setEditorText("Loading text...");
-        this.dataLoaded = true; // prevent data load in future
-        const response = await $http.get<{text: string, extraData: any}>(this.initialTextUrl, {
-            params: this.extraData,
-        });
-        const data = response.data;
-        this.editor.setEditorText(data.text);
-        this.initialText = data.text;
-        if (isSettings(data.text)) {
-            this.options.showPlugins = false;
-            this.options.showSettings = true;
-        }
-        angular.extend(this.extraData, data.extraData);
-        this.editorChanged();
     }
 
     adjustPreview() {
@@ -509,30 +470,22 @@ or newer one that is more familiar to write in YAML:
     }
 
     editorChanged() {
-        this.scope.$evalAsync(() => {
+        this.scope.$evalAsync(async () => {
             this.outofdate = true;
-            if (this.timer) {
-                $timeout.cancel(this.timer);
+            const text = this.editor.getEditorText();
+            await $timeout(500);
+            if (text !== this.editor.getEditorText()) {
+                return;
             }
-
-            this.timer = $timeout(() => {
-                const text = this.editor.getEditorText();
-                this.scrollPos = this.element.find(".previewcontent").scrollTop() || this.scrollPos;
-                $http.post<IPluginInfoResponse>(this.previewUrl, angular.extend({
-                    text,
-                }, this.extraData)).then(async (response) => {
-                    const data = response.data;
-                    const compiled = await ParCompiler.compile(data, this.scope);
-                    const $previewDiv = angular.element(".previewcontent");
-                    $previewDiv.empty().append(compiled);
-                    this.outofdate = false;
-                    this.parCount = $previewDiv.children().length;
-                    this.element.find(".editorContainer").resize();
-                }, (response) => {
-                    $window.alert("Failed to show preview: " + response.data.error);
-                });
-                this.outofdate = true;
-            }, 500);
+            this.scrollPos = this.element.find(".previewcontent").scrollTop() || this.scrollPos;
+            this.outofdate = true;
+            const data = await this.resolve.params.previewCb(text);
+            const compiled = await ParCompiler.compile(data, this.scope);
+            const $previewDiv = angular.element(".previewcontent");
+            $previewDiv.empty().append(compiled);
+            this.outofdate = false;
+            this.parCount = $previewDiv.children().length;
+            this.element.find(".editorContainer").resize();
         });
     }
 
@@ -559,8 +512,8 @@ or newer one that is more familiar to write in YAML:
         $("head").prepend($meta);
     }
 
-    deleteClicked() {
-        if (!this.options.showDelete) {
+    async deleteClicked() {
+        if (!this.getOptions().showDelete) {
             this.cancelClicked(); // when empty and save clicked there is no par
             return;
         }
@@ -571,63 +524,35 @@ or newer one that is more familiar to write in YAML:
             return;
         }
         this.deleting = true;
-
-        $http.post(this.deleteUrl, this.extraData).then((response) => {
-            const data = response.data;
-            this.afterDelete({
-                extraData: this.extraData,
-                saveData: data,
-            });
-            if (this.options.destroyAfterSave) {
-                this.destroy();
-            }
+        const result = await this.resolve.params.deleteCb();
+        if (result.error) {
+            await showMessageDialog(result.error);
             this.deleting = false;
-        }, (response) => {
-            $window.alert("Failed to delete: " + response.data.error);
-            this.deleting = false;
-        });
-        if (this.options.touchDevice) {
-            this.changeMeta();
+            return;
         }
-    }
-
-    destroy() {
-        this.element.remove();
-        if (this.draggable) {
-            this.draggable.$destroy();
-        }
+        this.close({type: "delete"});
     }
 
     showUnread() {
-        return this.extraData.par !== "NEW_PAR" && this.element.parents(".par").find(".readline.read").length > 0;
+        return this.getExtraData().par !== "NEW_PAR" && this.element.parents(".par").find(".readline.read").length > 0;
     }
 
-    unreadClicked() {
-        if (this.options.touchDevice) {
+    async unreadClicked() {
+        await this.resolve.params.unreadCb();
+        if (this.resolve.params.initialText === this.editor.getEditorText()) {
+            this.close({type: "markunread"});
+        }
+    }
+
+    close(r: IEditorResult) {
+        if (this.getOptions().touchDevice) {
             this.changeMeta();
         }
-        $http.put(this.unreadUrl + "/" + this.extraData.par, {}).then((response) => {
-            this.element.parents(".par").find(".readline").removeClass("read read-modified");
-            if (this.initialText === this.editor.getEditorText()) {
-                this.destroy();
-                this.afterCancel({
-                    extraData: this.extraData,
-                });
-            }
-            getActiveDocument().refreshSectionReadMarks();
-        }, (response) => {
-            $log.error("Failed to mark paragraph as unread");
-        });
+        super.close(r);
     }
 
     cancelClicked() {
-        if (this.options.touchDevice) {
-            this.changeMeta();
-        }
-        this.destroy();
-        this.afterCancel({
-            extraData: this.extraData,
-        });
+        this.close({type: "cancel"});
     }
 
     releaseClicked() {
@@ -635,7 +560,7 @@ or newer one that is more familiar to write in YAML:
         const content = this.element.find(".previewcontent");
         const editor = this.element;
         this.previewReleased = !(this.previewReleased);
-        const tag = this.options.localSaveTag || "";
+        const tag = this.getOptions().localSaveTag || "";
         const storage = $window.localStorage;
 
         const releaseBtn = document.getElementById("releaseButton");
@@ -664,7 +589,7 @@ or newer one that is more familiar to write in YAML:
             const divWidth = div.width();
             const editorOffset = editor.offset();
             const editorWidth = editor.width();
-            if (!currDivOffset || !winWidth || !divWidth || !editorOffset || !editorWidth) {
+            if (currDivOffset == null || winWidth == null || divWidth == null || editorOffset == null || editorWidth == null) {
                 return;
             }
             // If preview has just been released or it was released last time editor was open
@@ -703,7 +628,7 @@ or newer one that is more familiar to write in YAML:
     }
 
     savePreviewData(savePreviewPosition: boolean) {
-        const tag = this.options.localSaveTag || "";
+        const tag = this.getOptions().localSaveTag || "";
         const storage = $window.localStorage;
         const editorOffset = this.element.offset();
         storage.setItem("editorReleasedOffset" + tag, JSON.stringify(editorOffset));
@@ -719,236 +644,13 @@ or newer one that is more familiar to write in YAML:
         storage.setItem("previewIsReleased" + tag, this.previewReleased.toString());
     }
 
-    /**
-     * Called when user wants to cancel changes after entering duplicate task-ids
-     */
-    cancelPluginRenameClicked() {
-        // Cancels recent changes to paragraph/document
-        $http.post("/cancelChanges/", angular.extend({
-            newPars: this.newPars,
-            originalPar: this.originalPar,
-            docId: this.extraData.docId,
-            parId: this.extraData.par,
-        }, this.extraData)).then((response) => {
-            // Remove the form and return to editor
-            this.element.find("#pluginRenameForm").get(0).remove();
-            this.renameFormShowing = false;
-            this.saving = false;
-            this.deleting = false;
-        }, (response) => {
-            $window.alert("Failed to cancel save: " + response.data.error);
-        });
-    }
-
-    /**
-     * Function that handles different cases of user input in plugin rename form
-     * after user has saved multiple plugins with the same taskname
-     * @param inputs - The input fields in plugin rename form
-     * @param duplicates - The duplicate tasks, contains duplicate taskIds and relevant parIds
-     * @param renameDuplicates - Whether user wants to rename task names or not
-     */
-    renameTaskNamesClicked(inputs: JQuery[], duplicates: Duplicate[], renameDuplicates = false) {
-        // If user wants to ignore duplicates proceed like normal after saving
-        if (!renameDuplicates) {
-            this.renameFormShowing = false;
-            if (this.options.destroyAfterSave) {
-                this.afterSave({
-                    extraData: this.extraData,
-                    saveData: this.data,
-                });
-                this.destroy();
-                return;
-            }
-        }
-        const duplicateData = [];
-        let duplicate;
-
-        // if duplicates are to be renamed automatically (user pressed "rename automatically")
-        if (typeof inputs === "undefined") {
-            if (renameDuplicates) {
-                if (duplicates.length > 0) {
-                    for (let i = 0; i < duplicates.length; i++) {
-                        duplicate = [];
-                        duplicate.push(duplicates[i][0]);
-                        duplicate.push("");
-                        duplicate.push(duplicates[i][1]);
-                        duplicateData.push(duplicate);
-                    }
-                }
-            }
-        } else {
-            // use given names from the input fields
-            for (let j = 0; j < duplicates.length; j++) {
-                duplicate = [];
-                duplicate.push(duplicates[j][0]);
-                duplicate.push((inputs[j][0] as HTMLInputElement).value);
-                duplicate.push(duplicates[j][1]);
-                duplicateData.push(duplicate);
-            }
-        }
-        // Save the new task names for duplicates
-        $http.post<{duplicates: Duplicate[]}>("/postNewTaskNames/", angular.extend({
-            duplicates: duplicateData,
-            renameDuplicates,
-        }, this.extraData)).then((response) => {
-            const data = response.data;
-            // If no new duplicates were founds
-            if (data.duplicates.length <= 0) {
-                this.renameFormShowing = false;
-                this.afterSave({
-                    extraData: this.extraData,
-                    saveData: this.data,
-                });
-                if (this.options.destroyAfterSave) {
-                    this.destroy();
-                }
-            }
-            // If there still are duplicates remake the form
-            if (data.duplicates.length > 0) {
-                this.element.find("#pluginRenameForm").get(0).remove();
-                this.createPluginRenameForm(data);
-            }
-            if (angular.isDefined(this.extraData.access)) {
-                $localStorage.noteAccess = this.extraData.access;
-            }
-        }, (response) => {
-            $window.alert("Failed to save: " + response.data.error);
-        });
-        if (this.options.touchDevice) {
-            this.changeMeta();
-        }
-    }
-
-    /**
-     * Function that creates a form for renaming plugins with duplicate tasknames
-     * @param data - The data received after saving editor text
-     */
-    createPluginRenameForm(data: {duplicates: Duplicate[]}) {
-        // Hides other texteditor elements when form is created
-        this.renameFormShowing = true;
-        this.duplicates = data.duplicates;
-        // Get the editor div
-        const editor = this.element;
-        // Create a new div
-        let $actionDiv = $("<div>", {class: "pluginRenameForm", id: "pluginRenameForm"});
-        $actionDiv.css("position", "relative");
-        // Add warning and info texts
-        $actionDiv.append($("<strong>", {
-            text: "Warning!",
-        }));
-        $actionDiv.append($("<p>", {
-            text: "There are multiple objects with the same task name in this document.",
-        }));
-        $actionDiv.append($("<p>", {
-            text: "Plugins with duplicate task names might not work properly.",
-        }));
-        $actionDiv.append($("<p>", {
-            text: 'Rename the duplicates by writing new names in the field(s) below and click "Save",',
-        }));
-        $actionDiv.append($("<p>", {
-            text: 'choose "Rename automatically" or "Ignore" to proceed without renaming.',
-        }));
-        $actionDiv.append($("<strong>", {
-            text: "Rename duplicates:",
-        }));
-
-        // Create the rename form
-        const $form = $("<form>");
-        this.inputs = [];
-        let input;
-        let span;
-
-        // Add inputs and texts for each duplicate
-        for (let i = 0; i < data.duplicates.length; i++) {
-            // Make a span element
-            span = $("<span>");
-            span.css("display", "block");
-            // Add a warning if the plugin has answers related to it
-            const $warningSpan = $("<span>", {
-                class: "pluginRenameExclamation",
-                text: "!",
-                title: "There are answers related to this task. Those answers might be lost upon renaming this task.",
-            });
-            if (data.duplicates[i][2] !== "hasAnswers") {
-                $warningSpan.css("visibility", "hidden");
-            }
-            span.append($warningSpan);
-            // Add the duplicate name
-            span.append($("<label>", {
-                class: "pluginRenameObject",
-                text: data.duplicates[i][0],
-                for: "newName" + i,
-            }));
-            // Add input field for a new name to the duplicate
-            input = $("<input>", {
-                class: "pluginRenameObject",
-                type: "text",
-                id: data.duplicates[i][1],
-            });
-            // Add the span to the form
-            this.inputs.push(input);
-            span.append(input);
-            $form.append(span);
-        }
-        // Make a new div for buttons
-        const $buttonDiv = $("<div>");
-        // A button for saving with input field values or automatically if no values given
-        $buttonDiv.append($("<button>", {
-            "class": "timButton, pluginRenameObject",
-            "text": "Save",
-            "title": "Rename task names with given names (Ctrl + S)",
-            "ng-click": "$ctrl.renameTaskNamesClicked(inputs, duplicates, true)",
-        }));
-        // Button for renaming duplicates automatically
-        $buttonDiv.append($("<button>", {
-            "class": "timButton, pluginRenameObject",
-            "text": "Rename Automatically",
-            "title": "Rename duplicate task names automatically",
-            "ng-click": "$ctrl.renameTaskNamesClicked(undefined, duplicates, true)",
-        }));
-        // Button for ignoring duplicates
-        $buttonDiv.append($("<button>", {
-            "class": "timButton, pluginRenameObject",
-            "text": "Ignore",
-            "title": "Proceed without renaming",
-            "ng-click": "$ctrl.renameTaskNamesClicked(undefined, undefined, false)",
-        }));
-        // Button that allows user to return to edit and cancel save
-        $buttonDiv.append($("<button>", {
-            "class": "timButton, pluginRenameObject",
-            "text": "Cancel",
-            "title": "Return to editor",
-            "ng-click": "$ctrl.cancelPluginRenameClicked()",
-        }));
-        // Add the new divs to editor container
-        $actionDiv.append($form);
-        $actionDiv.append($buttonDiv);
-        $actionDiv = $compile($actionDiv)(this.scope);
-        editor.append($actionDiv);
-        // Focus the first input element
-        this.inputs[0].focus();
-        this.pluginRenameForm = $actionDiv;
-        // Add hotkey for quick saving (Ctrl + S)
-        this.pluginRenameForm.keydown((e: KeyboardEvent) => {
-            if (e.ctrlKey) {
-                if (e.keyCode === 83) {
-                    this.renameTaskNamesClicked(this.inputs, this.duplicates, true);
-                    e.preventDefault();
-                }
-            }
-        });
-    }
-
-    saveClicked() {
+    async saveClicked() {
         if (this.saving) {
             return;
         }
         this.saving = true;
         // if ( $scope.wrap.n != -1) //  wrap -1 is not saved
         this.setLocalValue("wrap", "" + this.wrap.n);
-        if (this.renameFormShowing) {
-            this.renameTaskNamesClicked(this.inputs, this.duplicates, true);
-        }
         if (this.previewReleased) {
             this.savePreviewData(true);
         } else {
@@ -960,38 +662,17 @@ or newer one that is more familiar to write in YAML:
             this.saving = false;
             return;
         }
-        $http.post<{
-            duplicates: Duplicate[],
-            original_par: string,
-            new_par_ids: string[],
-        }>(this.saveUrl, angular.extend({
-            text,
-        }, this.extraData)).then((response) => {
-            const data = response.data;
-            if (data.duplicates.length > 0) {
-                this.data = data;
-                this.createPluginRenameForm(data);
-                if (data.original_par != null) {
-                    this.originalPar = data.original_par;
-                }
-                if (data.new_par_ids != null) {
-                    this.newPars = data.new_par_ids;
-                }
+        const result = await this.resolve.params.saveCb(text, this.getExtraData());
+        if (result.error) {
+            await showMessageDialog(result.error);
+            this.saving = false;
+            return;
+        } else {
+            if (angular.isDefined(this.getExtraData().access)) {
+                $localStorage.noteAccess = this.getExtraData().access;
             }
-            if (data.duplicates.length <= 0) {
-                if (this.options.destroyAfterSave) {
-                    this.destroy();
-                }
-                this.afterSave({
-                    extraData: this.extraData,
-                    saveData: data,
-                });
-            }
-            if (angular.isDefined(this.extraData.access)) {
-                $localStorage.noteAccess = this.extraData.access;
-            }
-            if (angular.isDefined(this.extraData.tags.markread)) { // TODO: tee silmukassa
-                $window.localStorage.setItem("markread", this.extraData.tags.markread.toString());
+            if (angular.isDefined(this.getExtraData().tags.markread)) { // TODO: tee silmukassa
+                $window.localStorage.setItem("markread", this.getExtraData().tags.markread.toString());
             }
             this.setLocalValue("proeditor", this.proeditor.toString());
 
@@ -999,14 +680,7 @@ or newer one that is more familiar to write in YAML:
                 this.setLocalValue("acewrap", this.editor.editor.getSession().getUseWrapMode().toString());
                 this.setLocalValue("acebehaviours", this.editor.editor.getBehavioursEnabled().toString()); // some of these are in editor and some in session?
             }
-            this.saving = false;
-
-        }, (response) => {
-            $window.alert("Failed to save: " + response.data.error);
-            this.saving = false;
-        });
-        if (this.options.touchDevice) {
-            this.changeMeta();
+            this.close({type: "save", text});
         }
     }
 
@@ -1223,7 +897,7 @@ or newer one that is more familiar to write in YAML:
      * Makes editor div fullscreen
      */
     goFullScreen() {
-        const div: any = $(this.element).find("#pareditor").get(0);
+        const div: any = this.element[0];
         const doc: any = document;
         if (!doc.fullscreenElement &&    // alternative standard method
             !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
@@ -1324,49 +998,49 @@ or newer one that is more familiar to write in YAML:
                 createCompleter(userWordList, "user"),
             ]);
         }
-        try {
-            await this.setInitialText();
-        } catch (response) {
-            if (response.status === 404) {
-                if (this.extraData.isComment) {
-                    $window.alert("This comment has been deleted.");
-                } else {
-                    $window.alert("This paragraph has been deleted.");
-                }
-            } else {
-                $window.alert("Error occurred: " + response.data.error);
-            }
-            $timeout(() => {
-                this.destroy();
-            }, 1000);
-            return;
-        }
+        await this.setInitialText();
         this.editorReady();
         setEditorScope(this.editor);
         this.adjustPreview();
-        if (!this.proeditor && this.lstag === "note") {
-            const editor = this.element;
-            editor.css("max-width", "40em");
-        }
     }
 }
 
-timApp.component("pareditor", {
-    templateUrl: "/static/templates/parEditor.html",
-    bindings: {
-        saveUrl: "@",
-        deleteUrl: "@",
-        previewUrl: "@",
-        unreadUrl: "@",
-        extraData: "=",
-        afterSave: "&",
-        afterCancel: "&",
-        afterDelete: "&",
-        options: "=",
-        initialTextUrl: "@",
-    },
-    require: {
-        draggable: "?^timDraggableFixed",
-    },
-    controller: PareditorController,
-});
+registerDialogComponent("pareditor",
+    PareditorController,
+    {templateUrl: "/static/templates/parEditor.html"});
+
+export function openEditor(p: IEditorParams): IPromise<IEditorResult> {
+    return showDialog<PareditorController>(
+        "pareditor",
+        {params: () => p},
+        p.options.localSaveTag).result;
+}
+
+export function openEditorSimple(docId: number, text: string) {
+    return openEditor({
+        initialText: text,
+        extraData: {docId, tags: {markread: false}, par: "nothing"}, options: {
+            caption: "",
+            choices: undefined,
+            localSaveTag: "",
+            showDelete: false,
+            showImageUpload: false,
+            showPlugins: false,
+            showSettings: false,
+            tags: [],
+            touchDevice: false,
+        }, previewCb: async (txt) => {
+            const resp = await $http.post<IPluginInfoResponse>(`/preview/${docId}`, {txt, isComment: true});
+            return resp.data;
+        },
+        saveCb: async (txt, data) => {
+            return await {};
+        },
+        deleteCb: async () => {
+            return await {};
+        },
+        unreadCb: async () => {
+
+        },
+    });
+}

@@ -46,7 +46,10 @@ class Lecture(db.Model):
     def max_students(self):
         m = self.options_parsed.get('max_students')
         if m is not None:
-            m = int(m)  # TODO is this needed?
+            try:
+                m = int(m)
+            except ValueError:
+                m = None
         return m
 
     @property
@@ -70,7 +73,7 @@ class Lecture(db.Model):
             'lecturer': self.lecturer,
             'start_time': self.start_time,
             'end_time': self.end_time,
-            'options': self.options,
+            'options': self.options_parsed,
             'is_access_code': self.password != "",
         # don't expose password to client directly unless explicitly requested with the parameter
             'password': self.password if show_password else None,

@@ -5,7 +5,7 @@ import timApp.timdb.models
 from timApp.documentmodel.changelogentry import ChangelogEntry
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.timdb.tim_models import db
-from timApp.types import UserOrGroup
+from timApp.timtypes import UserOrGroup
 
 
 def get_author_str(u: UserOrGroup, es: List[ChangelogEntry]):

@@ -77,35 +77,38 @@ export async function loadMap() {
         return;
     }
 
-    const container = $container[0];
-    $container.css({
-        "z-index": 0,
-        "display": "none",
-        "position": "relative",
-    });
+    // separate scope is intentional
+    {
+        const container = $container[0];
+        $container.css({
+            "z-index": 0,
+            "display": "none",
+            "position": "relative",
+        });
 
-    // Set properties for zoom input
-    const zoomInput = $(".mapZoom");
-    zoomInput.attr({max: 1, min: 0.3, step: 0.05});
-    zoomInput.val(scale);
-    zoomInput.width(300);
+        // Set properties for zoom input
+        const zoomInput = $(".mapZoom");
+        zoomInput.attr({max: 1, min: 0.3, step: 0.05});
+        zoomInput.val(scale);
+        zoomInput.width(300);
 
-    // Set properties for alpha input
-    const alphaInput = $(".alphaRange");
-    alphaInput.attr({max: 1, min: 0, step: 0.05});
-    alphaInput.val(alpha);
-    alphaInput.width(300);
+        // Set properties for alpha input
+        const alphaInput = $(".alphaRange");
+        alphaInput.attr({max: 1, min: 0, step: 0.05});
+        alphaInput.val(alpha);
+        alphaInput.width(300);
 
-    // Title and description elements for the info box
-    const title = $("<p></p>");
-    title.addClass("infoBoxTitle");
-    title.css("position", "absolute");
-    title.appendTo(container);
+        // Title and description elements for the info box
+        const title = $("<p></p>");
+        title.addClass("infoBoxTitle");
+        title.css("position", "absolute");
+        title.appendTo(container);
 
-    const description = $("<p></p>");
-    description.addClass("infoBoxDescription");
-    description.css("position", "absolute");
-    description.appendTo(container);
+        const description = $("<p></p>");
+        description.addClass("infoBoxDescription");
+        description.css("position", "absolute");
+        description.appendTo(container);
+    }
 
     /**
      * Function for preloading the images
@@ -148,7 +151,7 @@ export async function loadMap() {
         // Canvases used to draw the final map
         for (let j = 0; j < 3; j++) {
             canvas = document.createElement("canvas");
-            container.appendChild(canvas);
+            $(".mapContainer").append(canvas);
 
             // Set some attributes for the canvas
             if (j === 0) {
@@ -437,7 +440,8 @@ export async function loadMap() {
             }
 
             // Set style settings for info box text elements
-
+            const title = $(".mapContainer .infoBoxTitle");
+            const description = $(".mapContainer .infoBoxDescription");
             title.css({
                 "position": "absolute",
                 "left": (rectX + 10 * tscale) + "px",
@@ -633,7 +637,9 @@ export async function loadMap() {
             middleCanvas.width = json.width * json.tilewidth * scale;
             middleCanvas.height = json.height * json.tileheight + json.tileheight * 3 * scale;
 
-            container.appendChild(middleCanvas);
+            $(".mapContainer").append(middleCanvas);
+            const title = $(".mapContainer .infoBoxTitle");
+            const description = $(".mapContainer .infoBoxDescription");
 
             // Deactivate currently active tiles
             tiles.forEach(function(t) {
@@ -771,10 +777,11 @@ export async function loadMap() {
         // On change event for the zoom input
         $(".mapZoom").on("change", function() {
             const val = $(".mapZoom").val();
-            if (typeof val !== "number") {
-                return;
+            if (typeof val === "number") {
+                scale = val;
+            } else if (typeof val === "string") {
+                scale = parseFloat(val);
             }
-            scale = val;
             clearSelection(tiles);
             createCanvases();
             tiles = drawMap();
@@ -783,10 +790,11 @@ export async function loadMap() {
         // On change event for the alpha input
         $(".alphaRange").on("change", function() {
             const val = $(".alphaRange").val();
-            if (typeof val !== "number") {
-                return;
+            if (typeof val === "number") {
+                alpha = val;
+            } else if (typeof val === "string") {
+                alpha = parseFloat(val);
             }
-            alpha = val;
             clearSelection(tiles);
             createCanvases();
             tiles = drawMap();

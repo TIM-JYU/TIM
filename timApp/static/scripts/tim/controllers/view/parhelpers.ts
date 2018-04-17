@@ -156,39 +156,15 @@ export function getArea(area: string): Area {
 }
 
 export function getPars($parFirst: Paragraph, $parLast: Paragraph): JQuery {
-    const pars = [$parFirst];
-    let $par = $parFirst;
-    let $next = $par.next();
-    let i = 1000000;
-
-    while (i > 0) {
-        if ($next.length === 0) {
-            $par = $par.parent();
-            $next = $par.next();
-            if ($par.prop("tagName").toLowerCase() === "html") {
-                break;
-            }
-
-            continue;
+    const pars = [];
+    let next: Paragraph | null = $parFirst;
+    while (next != null) {
+        pars.push(next);
+        if (next.is($parLast)) {
+            break;
         }
-
-        if ($next.hasClass("area")) {
-            $next = $next.children(".areaContent").children().first();
-            continue;
-        }
-
-        if ($next.hasClass("par") && getParIndex($next) != null) {
-            pars.push($next);
-            if ($next.is($parLast)) {
-                break;
-            }
-        }
-
-        $par = $next;
-        $next = $par.next();
-        i -= 1;
+        next = getNextPar(next);
     }
-
     return pars.reduce((previousValue, currentValue, currentIndex, array) => previousValue.add(currentValue));
 }
 
@@ -243,7 +219,7 @@ export function canEditPar(item: IItem, $par: JQuery) {
     const attrs = getParAttributes($par);
     const right = item.rights[attrs.edit];
     if (right == null) {
-        return true;
+        return item.rights.editable;
     }
     return right;
 }

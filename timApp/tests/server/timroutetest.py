@@ -15,6 +15,7 @@ from lxml.html import HtmlElement
 import timApp.tim
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
+from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.routes.login import log_in_as_anonymous
 from timApp.tests.db.timdbtest import TimDbTest
@@ -642,6 +643,11 @@ class TimRouteTest(TimDbTest):
 
     def show(self, doc: DocInfo):
         self.get('/clipboard', query_string={'doc_id': doc.id})
+
+    def create_preamble_for(self, d: DocInfo, preamble_name='preamble', **kwargs):
+        folder = d.location
+        p = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name}', **kwargs)
+        return p
 
 
 if __name__ == '__main__':

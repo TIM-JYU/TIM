@@ -15,6 +15,7 @@ from sqlalchemy.sql.ddl import CreateTable
 
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.filters import map_format, timdate, humanize_timedelta, humanize_datetime
+from timApp.korppi.openid import KorppiOpenID
 from timApp.logger import setup_logging
 # noinspection PyUnresolvedReferences
 from timApp.timdb.tim_models import db
@@ -82,6 +83,7 @@ default_secret = app.config['SECRET_KEY']
 db.init_app(app)
 db.app = app
 migrate = Migrate(app, db)
+oid = KorppiOpenID(app, safe_roots=['https://korppi.jyu.fi'])
 
 app.jinja_env.filters['map_format'] = map_format
 app.jinja_env.filters['datestr_to_relative'] = datestr_to_relative

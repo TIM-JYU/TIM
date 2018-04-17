@@ -25,7 +25,7 @@ from timApp.documentmodel.validationresult import ValidationResult
 from timApp.documentmodel.version import Version
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.timdb.exceptions import TimDbException, PreambleException, InvalidReferenceException
-from timApp.types import UserType, DocInfoType
+from timApp.timtypes import UserType, DocInfoType
 from timApp.utils import get_error_html, trim_markdown
 
 
@@ -74,6 +74,8 @@ class Document:
         self.single_par_cache: Dict[str, DocParagraph] = {}
         # Used for accessing previous/next paragraphs quickly based on id
         self.par_map = None
+        # List of preamble pars if they have been inserted
+        self.preamble_pars = None
 
     @classmethod
     def get_default_files_root(cls):
@@ -208,7 +210,7 @@ class Document:
 
     def get_settings_pars(self) -> Generator[DocParagraph, None, None]:
         self.ensure_par_ids_loaded()
-        for p_id in self.par_ids:
+        for p_id in self.get_par_ids(no_preamble=True):
             curr = self.get_paragraph(p_id)
             if curr.is_setting():
                 yield curr
@@ -1015,9 +1017,12 @@ class Document:
         pars = [par for par in self]
         return pars[-1] if pars else None
 
-    def get_par_ids(self):
+    def get_par_ids(self, no_preamble=False):
         self.ensure_par_ids_loaded()
-        return self.par_ids
+        if self.preamble_included and no_preamble:
+            return self.par_ids[len(self.preamble_pars):]
+        else:
+            return self.par_ids
 
     def ensure_par_ids_loaded(self):
         if self.par_ids is None:
@@ -1059,6 +1064,7 @@ class Document:
                 p.set_attr('rd', p.doc.get_source_document().doc_id)
                 p.set_attr('rl', 'no')
             p.doc = self
+        self.preamble_pars = pars
         self.par_cache = pars + self.par_cache
         self.__update_par_map()
         self.preamble_included = True

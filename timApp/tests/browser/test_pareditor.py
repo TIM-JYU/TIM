@@ -40,6 +40,7 @@ class ParEditorTest(BrowserTest):
         * preview works
         * switching between plain text area and Ace works
         """
+        self.skip_screenshot_tests = True
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc()
@@ -72,7 +73,7 @@ class ParEditorTest(BrowserTest):
         self.wait_until_hidden('.editor-loading')
 
     def get_editor_element(self) -> WebElement:
-        pareditor = self.drv.find_element_by_css_selector('.editorArea')
+        pareditor = self.drv.find_element_by_css_selector('pareditor')
         return pareditor
 
     def click_add_bottom(self):
@@ -80,6 +81,7 @@ class ParEditorTest(BrowserTest):
         add_bottom.click()
 
     def test_autocomplete(self):
+        self.skip_screenshot_tests = True
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par='words in the document')

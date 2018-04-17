@@ -194,7 +194,8 @@ export function assertNotNull(obj: any) {
     }
 }
 
-export function getOutOffset(el: Element) {
+
+export function getOutOffsetFully(el: Element) {
     const rect = el.getBoundingClientRect();
     const bounds = {left: 0, top: 0, right: 0, bottom: 0};
     if (rect.top < 0) {
@@ -210,6 +211,28 @@ export function getOutOffset(el: Element) {
     }
     if (rect.left < 0) {
         bounds.left = rect.left;
+    }
+    return bounds;
+}
+
+
+export function getOutOffsetVisible(el: Element) {
+    const limit = 20;
+    const rect = el.getBoundingClientRect();
+    const bounds = {left: 0, top: 0, right: 0, bottom: 0};
+    if (rect.top < 0) {
+        bounds.top = rect.top;
+    }
+    const height = (window.innerHeight || document.documentElement.clientHeight);
+    if (rect.top > height - 1.5*limit) { // may be a scroll bar
+        bounds.bottom = height - rect.bottom + rect.height - 1.5*limit;
+    }
+    const width = (window.innerWidth || document.documentElement.clientWidth);
+    if (rect.left > width - 2*limit) {
+        bounds.right = width - rect.right + rect.width - 2*limit;
+    }
+    if (rect.left + rect.width < limit) {
+        bounds.left = rect.left + rect.width - limit;
     }
     return bounds;
 }

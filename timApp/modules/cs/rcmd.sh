@@ -2,6 +2,22 @@
 # Set locale
 export LANG=en_US.UTF-8
 # export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/
+export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
+export MONO_PATH=/cs/jypeli
+export PATH="/cs/jypeli:$PATH"
+
+
+printf "\n" >~/run/time.txt
+if [ -e run/compile.sh ]
+    then
+    printf "Compile time:" >>~/run/time.txt
+    (time run/compile.sh) &>> ~/run/time.txt
+    if [ $? -ne 0 ]
+    then
+       (>&2 echo "Compile error")
+       exit
+    fi
+fi
 
 if [ $2 != "True" ]; then
   # For X server emulation
@@ -16,29 +32,11 @@ eval savestate=$3
 if [  -z "$cmd"  ]; then
     cmd="cmd.sh"
 fi
- 
-# Copy Jypeli dll's to temp directory
-# cp /cs/jypeli/* /tmp/
-
-export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
-export MONO_PATH=/cs/jypeli
-
-#if ! [ -f ".bashrc" ]; then
-#    cp /cs/bash/.bashrc ".bashrc"
-#fi
-
-# ./.bashrc
+#
 if  ! [  -z "$savestate"  ] && [ -f $savestate ]; then
     chmod 755 $savestate
     source $savestate
 fi
-# cd /home/agent/run
-# echo "Running: $cmd" >> /tmp/log/log.txt
-# echo "Running: $cmd" >> log.txt
-#set +e
-#chmod 755 ~/$cmd || echo ""
-#set -e
-#cp $cmd a.sh
 
 if ! [  -z "$savestate"  ]; then
     cd $PWD # ei tässä kun kaikki eivät kestä muutosta, mutta ilman tätä ei aloita edellisestä hakemistosta
@@ -46,14 +44,13 @@ fi
 
 ulimit -f 200000 # -t 1 -v 2000 -s 100 -u 10
 
-source ~/$cmd
+printf '\nRun time:' >>~/run/time.txt
+(time source ~/$cmd
 
 if ! [  -z "$savestate"  ]; then
     pwd >~/pwd.txt
     export >$savestate
 fi
+) &>> ~/run/time.txt
 rm ~/$cmd # Tämä ansiosta csRun jatkaa sitten suorittamista ja lukee inputin
-#set >>~/.state
 
- 
- 

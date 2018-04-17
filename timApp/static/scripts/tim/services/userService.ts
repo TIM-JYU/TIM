@@ -43,7 +43,7 @@ export class UserService {
     }
 
     public korppiLogin(addUser: boolean) {
-        const targetUrl = "/korppiLogin";
+        const targetUrl = "/openIDLogin?provider=korppi";
         const separator = targetUrl.indexOf("?") >= 0 ? "&" : "?";
         const cameFromRaw = $window.came_from || "";
         const cameFrom = encodeURIComponent(cameFromRaw.replace("#", "%23"));
@@ -64,27 +64,16 @@ export class UserService {
     }
 
     public korppiLogout(redirectFn: () => any) {
-        $http.get("https://korppi.jyu.fi/kotka/portal/showLogout.jsp",
+        $http(
             {
                 withCredentials: true,
-                // the request is disallowed with the default custom headers (see base.html), so we disable them
+                method: "POST",
+                url: "https://korppi.jyu.fi/openid/manage/manage",
                 headers: {
-                    "If-Modified-Since": undefined,
-                    "Cache-Control": undefined,
-                    "Pragma": undefined,
+                    "Content-Type": "application/x-www-form-urlencoded",
                 },
-            }).finally(function() {
-            $http(
-                {
-                    withCredentials: true,
-                    method: "POST",
-                    url: "https://korppi.jyu.fi/openid/manage/manage",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                    data: $httpParamSerializer({logout: "Logout"}),
-                }).finally(redirectFn);
-        });
+                data: $httpParamSerializer({logout: "Logout"}),
+            }).finally(redirectFn);
     }
 
     public loginWithEmail(email: string, password: string, addUser: boolean, successFn: () => void) {

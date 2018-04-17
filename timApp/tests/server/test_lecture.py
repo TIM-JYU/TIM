@@ -1,13 +1,15 @@
 import datetime
+import json
 from datetime import timezone
 
 import dateutil.parser
 
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.tim_models import db
-from timApp.timdb.models.lectureanswer import LectureAnswer
 from timApp.timdb.models.askedjson import AskedJson
 from timApp.timdb.models.askedquestion import AskedQuestion
+from timApp.timdb.models.lecture import Lecture
+from timApp.timdb.models.lectureanswer import LectureAnswer
+from timApp.timdb.tim_models import db
 
 
 class LectureTest(TimRouteTest):
@@ -41,7 +43,7 @@ class LectureTest(TimRouteTest):
                                   'lecture_id': lecture_id,
                                   'end_time': end_time.isoformat(),
                                   'start_time': start_time.isoformat(),
-                                  'options': '{}',
+                                  'options': {},
                                   'doc_id': doc.id,
                                   'lecturer': self.current_user.id,
                                   'is_access_code': True,
@@ -113,3 +115,9 @@ class LectureTest(TimRouteTest):
         returned_time = datetime.datetime.strptime(resp['lecturers'][0]['active'], time_format).replace(
             tzinfo=timezone.utc)
         self.assertLess(returned_time - current_time, datetime.timedelta(seconds=2))
+
+    def test_invalid_max_students(self):
+        self.login_test1()
+        d = self.create_doc()
+        l = Lecture(doc_id=d.id, lecturer=self.current_user_id(), options=json.dumps({'max_students': ''}))
+        self.assertIsNone(l.max_students)

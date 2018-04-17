@@ -24,3 +24,12 @@ class PreviewTest(TimRouteTest):
         d = self.create_doc()
         e = self.json_post(f'/preview/{d.id}', {'text': 'test\\\ntest2\\'}, json_key='texts', as_tree=True)
         self.assert_content(e, ['test\ntest2'])
+
+    def test_preamble_preview_first(self):
+        """Make sure an exception won't occur when editing the first paragraph of a document with a preamble."""
+        self.login_test1()
+        d = self.create_doc(initial_par='test')
+        p = self.create_preamble_for(d)
+        p.document.add_paragraph('test2')
+        first = d.document.get_paragraphs()[0]
+        self.json_post(f'/preview/{d.id}', {'text': 'asd', 'par': first.get_id()}, json_key='texts', as_tree=True)

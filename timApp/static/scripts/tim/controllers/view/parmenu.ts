@@ -129,6 +129,9 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         if (attrs.editbutton) {
             $popup.attr("editbutton", attrs.editbutton.toString());
         }
+        if (attrs.contenturl) {
+            $popup.attr("contenturl", attrs.contenturl.toString());
+        }
         $popup.attr("save", (attrs.save || true).toString());
         $popup.attr("on-close", attrs.onclose || "");
 

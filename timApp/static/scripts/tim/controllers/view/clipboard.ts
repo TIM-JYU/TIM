@@ -7,15 +7,16 @@ import {
     createNewPar,
     dereferencePar,
     getAreaDocId,
-    getAreaId,
+    getAreaId, getElementByParId,
     getFirstParId,
     getLastParId,
-    getParId,
+    getParId, getPars,
     Paragraph,
     ParOrArea,
 } from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
 import {getEmptyCoords, viewCtrlDot} from "./viewutils";
+import {EditType} from './editing';
 
 export class ClipboardHandler {
     public sc: IScope;
@@ -76,10 +77,9 @@ export class ClipboardHandler {
         if (pars.length > 0) {
             const firstPar = pars[0].id;
             const lastPar = pars[pars.length - 1].id;
-            this.viewctrl.editingHandler.handleDelete({version: doc_ver, texts: ""}, {
-                par: firstPar,
-                area_start: firstPar,
-                area_end: lastPar
+            this.viewctrl.editingHandler.handleDelete({
+                pars: getPars(getElementByParId(firstPar), getElementByParId(lastPar)),
+                type: EditType.Edit,
             });
         }
 
@@ -100,14 +100,7 @@ export class ClipboardHandler {
             return;
         }
 
-        const $newpar = createNewPar();
-        $parOrArea.before($newpar);
-
-        const extraData = {
-            par: getParId($newpar)!, // the id of paragraph on which the editor was opened
-        };
-
-        this.viewctrl.editingHandler.addSavedParToDom(response.data, extraData);
+        this.viewctrl.editingHandler.addSavedParToDom(response.data, {type: EditType.AddAbove, par: $parOrArea});
         this.deleteFromSource();
     }
 
@@ -124,21 +117,14 @@ export class ClipboardHandler {
             return;
         }
 
-        const $newpar = createNewPar();
-        $parOrArea.after($newpar);
-
-        const extraData = {
-            par: getParId($newpar)!, // the id of paragraph on which the editor was opened
-        };
-
-        this.viewctrl.editingHandler.addSavedParToDom(response.data, extraData);
+        this.viewctrl.editingHandler.addSavedParToDom(response.data, {type: EditType.AddBelow, par: $parOrArea});
         this.deleteFromSource();
     }
 
-    async pasteAbove(e: Event, $parOrArea: ParOrArea, asRef: boolean) {
+    async pasteAbove(e: Event, $parOrArea: ParOrArea | undefined, asRef: boolean) {
         try {
             var response = await $http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
-                par_before: getFirstParId($parOrArea),
+                par_before: $parOrArea ? getFirstParId($parOrArea) : null,
                 as_ref: asRef,
             });
         } catch (e) {
@@ -149,14 +135,7 @@ export class ClipboardHandler {
             return;
         }
 
-        const $newpar = createNewPar();
-        $parOrArea.before($newpar);
-
-        const extraData = {
-            par: getParId($newpar)!, // the id of paragraph on which the editor was opened
-        };
-
-        this.viewctrl.editingHandler.addSavedParToDom(response.data, extraData);
+        this.viewctrl.editingHandler.addSavedParToDom(response.data, $parOrArea ? {type: EditType.AddAbove, par: $parOrArea} : {type: EditType.AddBottom});
     }
 
     async pasteBelow(e: Event, $parOrArea: ParOrArea, asRef: boolean) {
@@ -173,14 +152,7 @@ export class ClipboardHandler {
             return;
         }
 
-        const $newpar = createNewPar();
-        $parOrArea.after($newpar);
-
-        const extraData = {
-            par: getParId($newpar)!, // the id of paragraph on which the editor was opened
-        };
-
-        this.viewctrl.editingHandler.addSavedParToDom(response.data, extraData);
+        this.viewctrl.editingHandler.addSavedParToDom(response.data, {type: EditType.AddBelow, par: $parOrArea});
     }
 
     async updateClipboardStatus() {
@@ -262,10 +234,9 @@ export class ClipboardHandler {
         if (pars.length > 0) {
             const firstPar = pars[0].id;
             const lastPar = pars[pars.length - 1].id;
-            this.viewctrl.editingHandler.handleDelete({version: doc_ver, texts: ""}, {
-                par: firstPar,
-                area_start: firstPar,
-                area_end: lastPar
+            this.viewctrl.editingHandler.handleDelete({
+                pars: getPars(getElementByParId(firstPar), getElementByParId(lastPar)),
+                type: EditType.Edit,
             });
         }
 
@@ -327,10 +298,9 @@ export class ClipboardHandler {
                 if (pars.length > 0) {
                     const firstPar = pars[0].id;
                     const lastPar = pars[pars.length - 1].id;
-                    this.viewctrl.editingHandler.handleDelete({version: doc_ver, texts: ""}, {
-                        par: firstPar,
-                        area_start: firstPar,
-                        area_end: lastPar,
+                    this.viewctrl.editingHandler.handleDelete({
+                        pars: getPars(getElementByParId(firstPar), getElementByParId(lastPar)),
+                        type: EditType.Edit,
                     });
 
                     this.viewctrl.allowPasteContent = true;

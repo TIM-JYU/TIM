@@ -187,19 +187,23 @@ def get_rnds(attrs: Dict, name: str ="rnd", rnd_seed: Optional[int]=None) -> Tup
     """
     if attrs is None:
         return None, rnd_seed
+
+    jso = attrs.get(name, None)
+    if jso is None:
+        return None, rnd_seed
+
     rnd_seed = attrs.get('seed', rnd_seed)
-    if rnd_seed is None:
+    if not rnd_seed:
         rnd_seed = time.clock()*1000
+
+    if type(rnd_seed) is str:
+        rnd_seed = myhash(rnd_seed)
 
     # noinspection PyBroadException
     try:
         rnd_seed = int(rnd_seed)
     except:
         rnd_seed = int(time.clock()*1000)
-
-    jso = attrs.get(name, None)
-    if jso is None:
-        return None, rnd_seed
     myrandom = Random()
     myrandom.seed(a=rnd_seed)
 

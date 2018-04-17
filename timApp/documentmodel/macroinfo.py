@@ -1,7 +1,7 @@
 from copy import deepcopy
 from typing import Dict, Optional
 
-from timApp.types import UserType, DocumentType
+from timApp.timtypes import UserType, DocumentType
 
 
 class MacroInfo:

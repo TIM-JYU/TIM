@@ -1,9 +1,8 @@
-import {IAttributes, IChangesObject, IController, IOnChangesObject, IRootElementService, IScope} from "angular";
-import $ from "jquery";
+import {IAttributes, IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
 import {$compile, $document} from "../ngimport";
-import {getOutOffset} from "../utils";
+import {getOutOffsetFully, getOutOffsetVisible} from "../utils";
 
 function setStorage(key: string, value: any) {
     value = JSON.stringify(value);
@@ -54,6 +53,12 @@ const draggableTemplate = `
        ng-click="d.minimize()"
        class="glyphicon glyphicon-minus pull-right"></i>
 </div>
+<div ng-show="!d.areaMinimized && d.resize && !d.autoWidth"
+     class="resizehandle-r resizehandle"></div>
+<div ng-show="!d.areaMinimized && d.resize && !d.autoHeight"
+     class="resizehandle-d resizehandle"></div>
+<div ng-show="!d.areaMinimized && d.resize && !d.autoWidth && !d.autoHeight"
+     class="resizehandle-rd resizehandle"></div>
     `;
 
 timApp.directive("timDraggableFixed", [() => {
@@ -81,6 +86,7 @@ export class DraggableController implements IController {
     private posKey: string;
     private areaMinimized: boolean = false;
     private areaHeight: number = 0;
+    private areaWidth: number = 0;
     private setLeft: boolean = true;
     private setRight: boolean = false;
     private setBottom: boolean = false;
@@ -98,7 +104,7 @@ export class DraggableController implements IController {
     private lastPos: Pos;
     private pos: Pos;
     private delta: Pos;
-    private element: IRootElementService;
+    private readonly element: IRootElementService;
     private scope: IScope;
     private lastPageXYPos = {X: 0, Y: 0};
     private handle: JQuery;
@@ -108,6 +114,7 @@ export class DraggableController implements IController {
     private resize?: boolean;
     private save?: string;
     private dragClick?: () => void;
+    private autoHeight: boolean;
 
     constructor(scope: IScope, attr: IAttributes, element: IRootElementService) {
         this.scope = scope;
@@ -125,6 +132,11 @@ export class DraggableController implements IController {
         this.caption = caption;
     }
 
+    makeHeightAutomatic() {
+        this.element.css("height", "unset");
+        this.autoHeight = true;
+    }
+
     setDragClickFn(fn: () => void) {
         this.dragClick = fn;
     }
@@ -133,22 +145,9 @@ export class DraggableController implements IController {
         this.closeFn = fn;
     }
 
-    $onChanges(onChangesObj?: IOnChangesObject) {
-        if (!onChangesObj) {
-            return;
-        }
-        const resize = onChangesObj.resize as IChangesObject<boolean> | undefined;
-        if (resize) {
-            if (resize.currentValue) {
-                this.createResizeHandles();
-            } else {
-                this.removeResizeHandles();
-            }
-        }
-    }
-
     $postLink() {
         this.element.prepend($compile(draggableTemplate)(this.scope));
+        this.createResizeHandlers();
         this.handle = this.element.children(".draghandle");
 
         this.updateHandle(this.element, this.handle);
@@ -191,8 +190,8 @@ export class DraggableController implements IController {
             const oldPos: any = getStorage(this.posKey);
             const w = window.innerWidth;
             const h = window.innerHeight;
-            const ew = this.element.width() || 500;
-            const eh = this.element.height();
+            const ew = this.getWidth();
+            const eh = this.getHeight();
             if (oldPos) {
                 if (oldPos.top && this.setTop) {
                     this.element.css("top", wmax(oldPos.top, 0, h - 20));
@@ -213,29 +212,51 @@ export class DraggableController implements IController {
                 this.minimize();
             }
         }
+        this.ensureVisibleInViewport();
+    }
+
+    getWidth(): number {
+        const w = this.element.width();
+        if (w == null) {
+            // should never happen because element is not empty set
+            throw new Error("this.element.width() returned null");
+        }
+        return w;
+    }
+
+    getHeight(): number {
+        const w = this.element.height();
+        if (w == null) {
+            // should never happen because element is not empty set
+            throw new Error("this.element.height() returned null");
+        }
+        return w;
     }
 
     minimize() {
         this.areaMinimized = !this.areaMinimized;
-        let handles;
         const base = this.element.find(".draggable-content");
         if (this.areaMinimized) {
-            this.areaHeight = this.element.height() || 200;
+            this.areaHeight = this.getHeight();
+            this.areaWidth = this.getWidth();
             this.element.height(15);
+            this.element.width(200);
+            this.element.css("left", this.getCss("left") + (this.areaWidth - this.getWidth()));
+
             base.css("display", "none");
             this.element.css("min-height", "0");
             setStorage(this.posKey + "min", true);
-            handles = this.element.find(".resizehandle");
-            if (handles.length) {
-                handles.css("display", "none");
-            }
-
         } else {
             base.css("display", "");
             this.element.css("min-height", "");
-            this.element.height(this.areaHeight);
+            this.element.css("left", this.getCss("left") - (this.areaWidth - this.getWidth()));
+            if (this.autoHeight) {
+                this.element.height("unset");
+            } else {
+                this.element.height(this.areaHeight);
+            }
+            this.element.width(this.areaWidth);
             setStorage(this.posKey + "min", false);
-            this.element.find(".resizehandle").css("display", "");
         }
     }
 
@@ -254,8 +275,8 @@ export class DraggableController implements IController {
         const botSet = this.element.css("bottom") != "auto";
         this.setTop = (!topSet && !botSet) || topSet;
         this.setBottom = botSet;
-        this.prevHeight = this.element.height() || 200;
-        this.prevWidth = this.element.width() || 500;
+        this.prevHeight = this.getHeight();
+        this.prevWidth = this.getWidth();
 
         this.prevTop = getPixels(this.element.css("top"));
         this.prevLeft = getPixels(this.element.css("left"));
@@ -286,33 +307,19 @@ export class DraggableController implements IController {
      this.element.css('top', this.element.position().top);
      this.element.css('left', this.element.position().left); */
 
-    createResizeHandles() {
-        const handleRight = $("<div>", {class: "resizehandle-r resizehandle"});
+    createResizeHandlers() {
+        const handleRight = this.element.children(".resizehandle-r");
         handleRight.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
             this.resizeElement(e, false, true, false, false);
         });
-        this.element.append(handleRight);
-        const handleDown = $("<div>", {class: "resizehandle-d resizehandle"});
+        const handleDown = this.element.children(".resizehandle-d");
         handleDown.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
             this.resizeElement(e, false, false, true, false);
         });
-        this.element.append(handleDown);
-        const handleRightDown = $("<div>", {class: "resizehandle-rd resizehandle"});
+        const handleRightDown = this.element.children(".resizehandle-rd");
         handleRightDown.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
             this.resizeElement(e, false, true, true, false);
         });
-        this.element.append(handleRightDown);
-
-        if (this.areaMinimized) {
-            const handles = this.element.find(".resizehandle");
-            if (handles.length) {
-                handles.css("display", "none");
-            }
-        }
-    }
-
-    removeResizeHandles() {
-        this.element.find(".resizehandle").remove();
     }
 
     /* Prevent document scrolling, when element inside draggable is scrolled. Currently doesn't work on touch
@@ -384,7 +391,7 @@ export class DraggableController implements IController {
         $document.off("mousemove pointermove touchmove", this.moveResize);
         // this.element.css("background", "red");
         this.pos = this.getPageXY(e);
-        this.ensureFullyInViewport();
+        this.ensureVisibleInViewport();
         // this.element.css("background", "blue");
         if (this.posKey) {
             // this.element.css("background", "yellow");
@@ -405,7 +412,27 @@ export class DraggableController implements IController {
     }
 
     private ensureFullyInViewport() {
-        const bound = getOutOffset(this.element[0]);
+        const bound = getOutOffsetFully(this.element[0]);
+        if (this.setTop) {
+            this.element.css("top", this.getCss("top") - bound.top);
+            this.element.css("top", this.getCss("top") + bound.bottom);
+        }
+        if (this.setBottom) {
+            this.element.css("bottom", this.getCss("bottom") - bound.bottom);
+            this.element.css("bottom", this.getCss("bottom") + bound.top);
+        }
+        if (this.setLeft) {
+            this.element.css("left", this.getCss("left") - bound.left);
+            this.element.css("left", this.getCss("left") + bound.right);
+        }
+        if (this.setRight) {
+            this.element.css("right", this.getCss("right") - bound.right);
+            this.element.css("right", this.getCss("right") + bound.left);
+        }
+    }
+
+    private ensureVisibleInViewport() {
+        const bound = getOutOffsetVisible(this.element[0]);
         if (this.setTop) {
             this.element.css("top", this.getCss("top") - bound.top);
             this.element.css("top", this.getCss("top") + bound.bottom);

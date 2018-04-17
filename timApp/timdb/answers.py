@@ -277,8 +277,8 @@ ORDER BY {order_by}, a.answered_on
                 FROM (
                 SELECT UserAccount.id, name, real_name, email,
                        COUNT(task_id) AS task_count,
-                       ROUND(SUM(cast(points as float))::numeric,2) as task_points,
-                       ROUND(SUM(velp_points)::numeric,2) as velp_points,
+                       ROUND(SUM(cast(points as float))::numeric,4) as task_points,
+                       ROUND(SUM(velp_points)::numeric,4) as velp_points,
                        COUNT(annotation_answer_id) AS velped_task_count
                        {', MIN(task_id) as task_id' if not group_by_user else ''}
                 FROM UserAccount
