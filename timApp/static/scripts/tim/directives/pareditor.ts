@@ -27,10 +27,10 @@ const CURSOR = "⁞";
 
 export class PareditorController implements IController {
     private static $inject = ["$scope", "$element"];
-    private afterDelete: (params: { extraData: {}, saveData: {} }) => void;
-    private afterCancel: (params: { extraData: {} }) => void;
-    private afterSave: (params: { extraData: {}, saveData: {} }) => void;
-    private data: { original_par: any };
+    private afterDelete: (params: {extraData: {}, saveData: {}}) => void;
+    private afterCancel: (params: {extraData: {}}) => void;
+    private afterSave: (params: {extraData: {}, saveData: {}}) => void;
+    private data: {original_par: any};
     private dataLoaded: boolean;
     private deleteUrl: string;
     private deleting: boolean;
@@ -38,14 +38,14 @@ export class PareditorController implements IController {
     private editor: TextAreaParEditor | AceParEditor;
     private element: JQuery;
     private extraData: {
-        attrs: { classes: string[], [i: string]: any },
+        attrs: {classes: string[], [i: string]: any},
         docId: number,
         par: string,
         access: string,
-        tags: { markread: boolean },
+        tags: {markread: boolean},
         isComment: boolean,
     };
-    private file: File & { progress?: number, error?: string };
+    private file: File & {progress?: number, error?: string};
     private initialText: string;
     private initialTextUrl: string;
     private inputs: JQuery[];
@@ -55,7 +55,7 @@ export class PareditorController implements IController {
     private newAttr: string;
     private newPars: string[];
     private oldmeta: HTMLMetaElement;
-    private wrap: { n: number };
+    private wrap: {n: number};
     private options: {
         localSaveTag: string,
         texts: {
@@ -71,7 +71,7 @@ export class PareditorController implements IController {
     private originalPar: any;
     private outofdate: boolean;
     private parCount: number;
-    private pluginButtonList: { [tabName: string]: JQuery[] };
+    private pluginButtonList: {[tabName: string]: JQuery[]};
     private pluginRenameForm: any;
     private previewReleased: boolean;
     private previewUrl: string;
@@ -98,7 +98,7 @@ export class PareditorController implements IController {
     private autocomplete: boolean;
     private citeText: string;
     private draggable: DraggableController | undefined;
-    private docSettings: { macros: { dates: string[], knro: number, stampformat: string } };
+    private docSettings: {macros: {dates: string[], knro: number, stampformat: string}};
 
     constructor(scope: IScope, element: IRootElementService) {
         this.element = element;
@@ -431,7 +431,7 @@ or newer one that is more familiar to write in YAML:
         }
         this.editor.setEditorText("Loading text...");
         this.dataLoaded = true; // prevent data load in future
-        const response = await $http.get<{ text: string, extraData: any }>(this.initialTextUrl, {
+        const response = await $http.get<{text: string, extraData: any}>(this.initialTextUrl, {
             params: this.extraData,
         });
         const data = response.data;
@@ -787,7 +787,7 @@ or newer one that is more familiar to write in YAML:
             }
         }
         // Save the new task names for duplicates
-        $http.post<{ duplicates: Duplicate[] }>("/postNewTaskNames/", angular.extend({
+        $http.post<{duplicates: Duplicate[]}>("/postNewTaskNames/", angular.extend({
             duplicates: duplicateData,
             renameDuplicates,
         }, this.extraData)).then((response) => {
@@ -823,7 +823,7 @@ or newer one that is more familiar to write in YAML:
      * Function that creates a form for renaming plugins with duplicate tasknames
      * @param data - The data received after saving editor text
      */
-    createPluginRenameForm(data: { duplicates: Duplicate[] }) {
+    createPluginRenameForm(data: {duplicates: Duplicate[]}) {
         // Hides other texteditor elements when form is created
         this.renameFormShowing = true;
         this.duplicates = data.duplicates;
@@ -1051,7 +1051,7 @@ or newer one that is more familiar to write in YAML:
         if (file) {
             this.file.progress = 0;
             this.file.error = undefined;
-            const upload = $upload.upload<{ image: string, file: string }>({
+            const upload = $upload.upload<{image: string, file: string}>({
                 data: {
                     file,
                     attachmentParams: JSON.stringify(attachmentParams),
@@ -1305,7 +1305,7 @@ or newer one that is more familiar to write in YAML:
 
             const langTools = ace.require("ace/ext/language_tools");
 
-            const wordListStr = (await $http.get<{ word_list: string }>("/settings/get/word_list", {params: {_: Date.now()}})).data.word_list;
+            const wordListStr = (await $http.get<{word_list: string}>("/settings/get/word_list", {params: {_: Date.now()}})).data.word_list;
             const userWordList = wordListStr ? wordListStr.split("\n") : [];
             const createCompleter = (wordList: string[], context: string) => ({
                 getCompletions(editor: any, session: any, pos: any, prefix: any, callback: any) {
