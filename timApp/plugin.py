@@ -198,7 +198,7 @@ class Plugin:
         return points
 
     def to_paragraph(self) -> DocParagraph:
-        text = '```\n' + yaml.dump(self.values) + '\n```'
+        text = '```\n' + yaml.dump(self.values, default_flow_style=False) + '\n```'
         if self.task_id:
             return DocParagraph.create(self.par.doc, par_id=self.par.get_id(),
                                        md=text, attrs={'taskId': self.task_id, 'plugin': self.type})

@@ -110,6 +110,8 @@ export interface ICell extends ICellStyles {
     rowspan?: number;
     id?: string;
     formula?: string;
+    row? : number;
+    col?: number;
 }
 
 export interface IColumn extends IColumnStyles {
@@ -323,10 +325,12 @@ class TimTableController implements IController {
         }
 
         //cell.editing = true;
-        if (this.helpCell) {
-            this.saveCells(this.helpCell.cell, this.viewctrl.item.id, parId, rowi, coli);
+        if (this.helpCell != undefined && this.helpCell.row != undefined && this.helpCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
+            this.saveCells(this.helpCell.cell, this.viewctrl.item.id, parId, this.helpCell.row, this.helpCell.col);
         }
         this.helpCell = cell;
+        this.helpCell.row = rowi;
+        this.helpCell.col = coli;
     }
 
 
@@ -540,14 +544,13 @@ class TimTableController implements IController {
 
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
             // tallenna solun sisältö
-        const response = await $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
+       /* const response = await $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
             url: "/timTable/saveCell",
             method: "POST",
             params: {cellContent, docId, parId, row, col},
-        });
+        });*/
 
-        const data = response.data;
-        this.editedCellContent = data[0]
+       const response = await $http.post<ICell>("/timTable/saveCell", {cellContent, docId, parId, row, col});
     }
 
     /**

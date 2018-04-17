@@ -14,11 +14,12 @@ from timApp.plugin import Plugin, PluginException
 from timApp.plugin import get_num_value
 from timApp.plugin import get_value
 from timApp.requesthelper import verify_json_params
-from timApp.responsehelper import json_response
+from timApp.responsehelper import json_response, ok_response
 from timApp.sessioninfo import get_current_user_object
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.askedjson import normalize_question_json
 from timApp.timdb.models.docentry import DocEntry
+
 
 timTable_plugin = Blueprint('timTable_plugin',
                             __name__,
@@ -90,19 +91,49 @@ def tim_table_get_cell_data():
 @timTable_plugin.route("saveCell", methods=["POST"])
 def tim_table_save_cell_list():
     multi = []
-    args = request.args  #params
-    doc = DocEntry.find_by_id(int(args['docId'])).document
-    par = doc.get_paragraph(args['parId'])
+   # args = request.args  #params
+    # par = doc.get_paragraph(args['parId'])
+    # doc = DocEntry.find_by_id(int(args['docId'])).document
+    cellContent = verify_json_params('cellContent')
+    docId = verify_json_params('docId')
+    parId = verify_json_params('parId')
+    row = verify_json_params('row')
+    col = verify_json_params('col')  # todo: put directly in below use cases
+    #doc = DocEntry.find_by_id(int(docId)).document
+    doc = DocEntry.find_by_id(docId[0]).document
+    par = doc.get_paragraph(parId[0])
     plug = Plugin.from_paragraph(par)
     yaml = plug.values
-    if yaml[TABLE][DATABLOCK]:
-        cell_coordinate = save_cell(yaml[TABLE][DATABLOCK], int(args[ROW]),int(args[COL]), args['cellContent'])
-    plug.save();
+    if is_datablock(yaml):
+        #cell_coordinate = save_cell(yaml[TABLE][DATABLOCK], int(args[ROW]),int(args[COL]), args['cellContent'])
+        save_cell(yaml[TABLE][DATABLOCK], row[0], col[0], cellContent[0])
+    else:
+        create_datablock(yaml[TABLE])
+        save_cell(yaml[TABLE][DATABLOCK], row[0], col[0], cellContent[0])
+
+    plug.save()
+    return ok_response()
+
+def is_datablock(yaml: dict) -> bool:
+    try:
+        if yaml[TABLE][DATABLOCK]:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+def create_datablock(table: dict):
+    table['datablock'] = {}
+    table['datablock']['type'] = 'relative'
+    table['datablock']['cells'] = {}
+
+
 
 def save_cell(datablock: dict, row: int, col: int, cell_content: str) -> str:
     coordinate = colnum_to_letters(col) + str(row)
     try:
-        datablock['cells'][coordinate] = cell_content
+        datablock['cells'].update({coordinate: cell_content})
     except:
         pass
 
