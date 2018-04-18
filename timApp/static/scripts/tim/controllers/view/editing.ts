@@ -8,6 +8,7 @@ import {$compile, $http, $window} from "../../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../../services/parCompiler";
 import {empty, to} from "../../utils";
 import {getActiveDocument} from "./document";
+import {TimTable} from "../../components/timTable";
 import {onClick} from "./eventhandlers";
 import {
     canEditPar,
@@ -356,6 +357,31 @@ export class EditingHandler {
         this.toggleParEditor({type: EditType.Edit, pars: $(this.viewctrl.selection.pars)}, {area: true});
     }
 
+    /**
+     * Toggles the edit mode of a table in a given table paragraph.
+     * @param {Event} e
+     * @param {Paragraph} $par The table paragraph.
+     */
+    toggleTableEditor(e: Event, $par: Paragraph) {
+        if (typeof($par) == undefined)
+            return;
+        let parId = getParId($par);
+
+        if (parId == null) {
+            void showMessageDialog("Could not find paragraph");
+            return;
+        }
+
+        const tableCtrl = this.viewctrl.getTableControllerFromParId(parId);
+
+        if (tableCtrl == null) {
+            void showMessageDialog("Could not find table controller");
+            return;
+        }
+
+        tableCtrl.toggleEditMode();
+    }
+
     handleDelete(position: EditPosition) {
         if (position.type === EditType.Edit) {
             position.pars.remove();
@@ -436,8 +462,26 @@ export class EditingHandler {
         this.viewctrl.parmenuHandler.showOptionsWindow(e, $par);
     }
 
+    /**
+     * Checks whether the given paragraph is a table paragraph.
+     * @param {Paragraph} $par The paragraph.
+     * @returns {boolean} True if the paragraph is a table paragraph, otherwise false.
+     */
+    isParagraphTimTable($par: Paragraph) {
+
+        let parContent = $par.find(".parContent");
+        if (parContent == null)
+            return false;
+        let div = parContent.find("div");
+        if (div == null)
+            return false;
+        let plugin = div.attr("data-plugin");
+        return plugin == "/timTable";
+    }
+
     getEditorFunctions($par?: Paragraph) {
         const parEditable = ((!$par && this.viewctrl.item.rights.editable) || ($par && canEditPar(this.viewctrl.item, $par)));
+        const parTimTable = $par && this.isParagraphTimTable(<Paragraph>$par);
         if (this.viewctrl.editing) {
             return [
                 {func: () => this.goToEditor(), desc: "Go to editor", show: true},
@@ -466,6 +510,7 @@ export class EditingHandler {
                     show: this.viewctrl.item.rights.can_comment,
                 },
                 {func: (e: Event, par: Paragraph) => this.showEditWindow(e, par), desc: "Edit", show: parEditable},
+                {func: (e: Event, par: Paragraph) => this.toggleTableEditor(e, par), desc: "Edit table", show: parTimTable},
                 {
                     func: (e: Event, par: Paragraph) => this.viewctrl.clipboardHandler.cutPar(e, par),
                     desc: "Cut paragraph",

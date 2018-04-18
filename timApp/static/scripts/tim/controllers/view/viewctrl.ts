@@ -31,6 +31,7 @@ import {IPopupMenuAttrs, optionsWindowClosed} from "./parmenu";
 import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
 import {PendingCollection} from "../../edittypes";
+import {TimTableController} from "../../components/timTable";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -90,6 +91,8 @@ export class ViewCtrl implements IController {
     public users: IUser[];
     public teacherMode: boolean;
     private velpMode: boolean;
+
+    private timTables: {[parId: string]: TimTableController} = {};
 
     private pendingUpdates: PendingCollection;
     private document: Document;
@@ -334,6 +337,26 @@ export class ViewCtrl implements IController {
                 this.notification = "";
             }
         });
+    }
+
+    /**
+     * Registers a table controller to the view controller.
+     * All table controllers need to register for toggling edit mode of
+     * the table to work.
+     * @param {TimTableController} controller The table controller.
+     * @param {string} parId The ID of the table paragraph.
+     */
+    public addTable(controller: TimTableController, parId: string) {
+        this.timTables[parId] = controller;
+    }
+
+    /**
+     * Returns a table controller related to a specific table paragraph.
+     * @param {string} parId The paragraph's ID.
+     * @returns {TimTableController} The table controller related to the given table paragraph, or undefined.
+     */
+    public getTableControllerFromParId(parId: string) {
+        return this.timTables[parId];
     }
 
     isEmptyDocument() {

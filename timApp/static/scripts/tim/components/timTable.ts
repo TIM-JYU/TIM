@@ -135,7 +135,7 @@ export interface IHash {
 }
 
 
-class TimTableController implements IController {
+export class TimTableController implements IController {
     private srcid: string;  // document id
     private $pars: JQuery;  // paragraph
     private static $inject = ["$scope", "$element"];
@@ -160,10 +160,19 @@ class TimTableController implements IController {
 
     $onInit() {
         this.count = 0;
-        this.$pars = $(this.srcid);
+        // this.$pars = $(this.srcid);
 
         this.InitializeCellDataMatrix();
         this.readDataBlockAndSetValuesToDataCellMatrix();
+
+        if (this.viewctrl == null)
+            return;
+        else {
+            let parId = getParId(this.element.parents(".par"));
+            if (parId == null)
+                return;
+            this.viewctrl.addTable(this, parId);
+        }
     }
 
 
@@ -228,6 +237,8 @@ class TimTableController implements IController {
         return {col: col, row: row}
     }
 
+
+    
 
     /*
     Define HashTable that contains final table
@@ -501,15 +512,18 @@ class TimTableController implements IController {
     }
 
     /*
-
-     */
     async openEditor() {
         await showMessageDialog("Press OK to get a cat");
         return "cat";
 
     }
+     */
 
-    private editor() {
+
+    /**
+     * Toggles the table's edit mode on or off.
+     */
+    public toggleEditMode() {
         if (this.helpCell != undefined && typeof(this.helpCell) != "string") {
             this.helpCell.editing = false;
         }
@@ -583,7 +597,7 @@ timApp.component("timTable", {
         viewctrl: "?^timView",
     },
     template: `<div ng-class="{editable: $ctrl.editing}""><table>
-  <button class="timButton" ng-click="$ctrl.editor()">Edit</button>
+  <button class="timButton" ng-click="$ctrl.toggleEditMode()">Edit</button>
    <!--<button ng-app="myApp">Edit</button>-->
     <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" ng-style="$ctrl.stylingForColumn(c)"/>
     <tr ng-repeat="r in $ctrl.data.table.rows"  ng-init="rowi = $index" ng-style="$ctrl.stylingForRow(r)">
