@@ -420,7 +420,7 @@ export class PermCtrl implements IController {
 
     saveDocumentWithWarnings() {
         this.saving = true;
-        $http.post<{fulltext: string, versions: IChangelogEntry[]}>("/update/" + this.item.id,
+        $http.post<IManageResponse>("/update/" + this.item.id,
             {
                 fulltext: this.fulltext,
                 original: this.item.fulltext,
