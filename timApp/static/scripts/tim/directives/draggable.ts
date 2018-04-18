@@ -64,6 +64,7 @@ const draggableTemplate = `
 timApp.directive("timDraggableFixed", [() => {
     return {
         bindToController: {
+            absolute: "<?",
             caption: "@?",
             click: "<?",
             resize: "<?",
@@ -115,6 +116,7 @@ export class DraggableController implements IController {
     private save?: string;
     private dragClick?: () => void;
     private autoHeight: boolean;
+    private absolute?: boolean;
 
     constructor(scope: IScope, attr: IAttributes, element: IRootElementService) {
         this.scope = scope;
@@ -137,6 +139,14 @@ export class DraggableController implements IController {
         this.autoHeight = true;
     }
 
+    private makePositionAbsolute() {
+        this.element.parents(".modal").css("position", "absolute");
+    }
+
+    hasAbsolutePosition() {
+        return this.element.parents(".modal").css("position") === "absolute";
+    }
+
     setDragClickFn(fn: () => void) {
         this.dragClick = fn;
     }
@@ -148,6 +158,9 @@ export class DraggableController implements IController {
     $postLink() {
         this.element.prepend($compile(draggableTemplate)(this.scope));
         this.createResizeHandlers();
+        if (this.absolute) {
+            this.makePositionAbsolute();
+        }
         this.handle = this.element.children(".draghandle");
 
         this.updateHandle(this.element, this.handle);
@@ -192,7 +205,11 @@ export class DraggableController implements IController {
             const h = window.innerHeight;
             const ew = this.getWidth();
             const eh = this.getHeight();
-            if (oldPos) {
+
+            // it doesn't make sense to restore position if the dialog has absolute position (instead of fixed)
+            if (this.hasAbsolutePosition()) {
+                this.element.css("top", window.pageYOffset + "px");
+            } else if (oldPos) {
                 if (oldPos.top && this.setTop) {
                     this.element.css("top", wmax(oldPos.top, 0, h - 20));
                 }

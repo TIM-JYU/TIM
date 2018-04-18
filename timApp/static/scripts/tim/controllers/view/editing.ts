@@ -178,6 +178,10 @@ export class EditingHandler {
     }
 
     async toggleParEditor(params: EditPosition, options: IParEditorOptions) {
+        if (this.viewctrl.editing) {
+            await showMessageDialog("Some editor is already open.");
+            return;
+        }
         let areaStart;
         let areaEnd;
         const caption = params.type === EditType.Edit ? "Edit paragraph" : "Add paragraph";
@@ -237,7 +241,8 @@ export class EditingHandler {
             initialText = (await $http.get<{text: string}>(`/getBlock/${this.viewctrl.docId}/${parId}`,
                 {params: extraData})).data.text;
         }
-        await openEditor({
+        this.viewctrl.editing = true;
+        await to(openEditor({
             extraData,
             initialText,
             options: {
@@ -294,7 +299,7 @@ export class EditingHandler {
                 params.pars.first().find(".readline").removeClass("read read-modified");
                 getActiveDocument().refreshSectionReadMarks();
             },
-        });
+        }));
         this.viewctrl.editing = false;
     }
 
@@ -360,7 +365,6 @@ export class EditingHandler {
         if (position.type === EditType.Edit) {
             position.pars.remove();
         }
-        this.viewctrl.editing = false;
         this.viewctrl.areaHandler.cancelArea();
         this.viewctrl.beginUpdate();
     }
@@ -415,7 +419,6 @@ export class EditingHandler {
         $par.replaceWith($newPars);
         ParCompiler.processAllMathDelayed($newPars);
         this.viewctrl.docVersion = data.version;
-        this.viewctrl.editing = false;
         this.viewctrl.areaHandler.cancelArea();
         this.removeDefaultPars();
         markPageDirty();

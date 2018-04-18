@@ -155,11 +155,14 @@ export interface IModalInstance<Result> {
 
 export function showDialog<T extends Dialog<T>>(component: T["component"],
                                                 resolve: {[P in keyof T["resolve"]]: () => T["resolve"][P]},
-                                                saveKey: string = component,
-                                                classes = ["no-pointer-events"],
-                                                size: "sm" | "md" | "lg" = "md"): IModalInstance<T["ret"]> {
+                                                opts: {
+                                                    saveKey?: string,
+                                                    classes?: string[],
+                                                    size?: "sm" | "md" | "lg",
+                                                    absolute?: boolean,
+                                                } = {}): IModalInstance<T["ret"]> {
     $templateCache.put("uib/template/modal/window.html", `
-<div tim-draggable-fixed click="true" resize="true" save="${saveKey}"
+<div tim-draggable-fixed click="true" resize="true" save="${opts.saveKey || component}" absolute="${opts.absolute || false}"
      style="pointer-events: auto;"
      class="modal-dialog {{size ? 'modal-' + size : ''}}">
     <div class="draggable-content modal-content" uib-modal-transclude>
@@ -172,8 +175,8 @@ export function showDialog<T extends Dialog<T>>(component: T["component"],
         component: component,
         openedClass: "unused-class", // prevents scrolling from being disabled
         resolve: resolve,
-        windowClass: classes.join(" "), // no-pointer-events enables clicking things outside dialog
-        size: size,
+        windowClass: (opts.classes || ["no-pointer-events"]).join(" "), // no-pointer-events enables clicking things outside dialog
+        size: opts.size || "md",
     });
     return instance;
 }

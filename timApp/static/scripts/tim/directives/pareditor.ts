@@ -988,7 +988,7 @@ export function openEditor(p: IEditorParams): IPromise<IEditorResult> {
     return showDialog<PareditorController>(
         "pareditor",
         {params: () => p},
-        p.options.localSaveTag).result;
+        {saveKey: p.options.localSaveTag, absolute: true}).result;
 }
 
 export function openEditorSimple(docId: number, text: string) {

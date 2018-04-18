@@ -56,6 +56,10 @@ export class NotesHandler {
     }
 
     async toggleNoteEditor($parOrArea: ParOrArea, options: INoteEditorOptions = {}) {
+        if (this.viewctrl.editing) {
+            await showMessageDialog("Some editor is already open.");
+            return;
+        }
         let caption = "Edit comment";
         const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
         const mobile = touch && (window.screen.width < 1200);
@@ -97,7 +101,8 @@ export class NotesHandler {
             ...data,
         };
         const params: EditPosition = {type: EditType.Edit, pars: $parOrArea};
-        const result = await openEditor({
+        this.viewctrl.editing = true;
+        await to(openEditor({
             extraData,
             initialText,
             options: {
@@ -145,7 +150,8 @@ export class NotesHandler {
                 params.pars.first().find(".readline").removeClass("read read-modified");
                 getActiveDocument().refreshSectionReadMarks();
             },
-        });
+        }));
+        this.viewctrl.editing = false;
     }
 
     showNoteWindow(e: Event, $par: Paragraph) {
