@@ -112,7 +112,7 @@ export interface ICell extends ICellStyles {
     rowspan?: number;
     id?: string;
     formula?: string;
-    row? : number;
+    row?: number;
     col?: number;
 }
 
@@ -304,30 +304,29 @@ export class TimTableController implements IController {
     /*
     Deals with whatever happens when clicked cell
      */
-     private async cellClicked(cell: CellEntity, rowi: number, coli: number) {
-         if ( this.currentCell && this.currentCell.editorOpen ) return;
+    private async cellClicked(cell: CellEntity, rowi: number, coli: number) {
+        if (this.currentCell && this.currentCell.editorOpen) return;
 
         let parId = getParId(this.element.parents(".par"))
         if (typeof cell === "string" || !this.viewctrl || !parId) return; // todo: fixit
 
         if (!this.editing) return;
 
-       // this.getCellData(this.viewctrl.item.id, parId, rowi, coli );
+        // this.getCellData(this.viewctrl.item.id, parId, rowi, coli );
 
 
-
-       if (this.currentCell != undefined && typeof(this.currentCell) != "string") {
+        if (this.currentCell != undefined && typeof(this.currentCell) != "string") {
             this.currentCell.editing = false;
         }
 
-         cell.editing = true;
+        cell.editing = true;
 
         if ((!this.data.table.datablock)) {
-            this.createDataBlock();  // now it has datablock, but it is not shown in yaml and it has no cell content
+            //this.createDataBlock();  // now it has datablock, but it is not shown in yaml and it has no cell content
 
-           if(!this.currentCell) this.getCellData(this.viewctrl.item.id, parId, rowi, coli); //docId ja parId Matin omista testidokuista
+            if (!this.currentCell) this.getCellData(this.viewctrl.item.id, parId, rowi, coli);
             if (this.editedCellContent)
-                cell.cell = this.editedCellContent; //TODO: miten saadaan tietää nuo id:t oikeasti?
+                cell.cell = this.editedCellContent;
 
             let value = cell.cell;
             let placement = this.calculatePlace(rowi, coli);
@@ -336,7 +335,7 @@ export class TimTableController implements IController {
         else {
 
             this.getCellData(this.viewctrl.item.id, parId, rowi, coli);
-            if (this.editedCellContent){
+            if (this.editedCellContent) {
                 cell.cell = this.editedCellContent;
                 this.modifyDataBlock(coli, rowi, this.editedCellContent);
             } // modify datablock -> change cellValue if existed
@@ -348,16 +347,10 @@ export class TimTableController implements IController {
         }
 
 
-
-
-
         this.currentCell = cell;
         this.currentCell.row = rowi;
         this.currentCell.col = coli;
     }
-
-
-
 
 
     /*
@@ -365,18 +358,18 @@ export class TimTableController implements IController {
      */
     private modifyDataBlock(coli: number, rowi: number, value: string) {
         let flag = false;  // helper flag
-         const alphaRegExp = new RegExp('([A-Z]*)');
-/*
-        if (this.data.table.datablock)  // datablock has to exist
-            for (let item in this.data.table.datablock.cells) {  // loop through datablock cells
+        const alphaRegExp = new RegExp('([A-Z]*)');
+        /*
+                if (this.data.table.datablock)  // datablock has to exist
+                    for (let item in this.data.table.datablock.cells) {  // loop through datablock cells
 
-                let alpha = alphaRegExp.exec(item);
-                let value = this.data.table.datablock.cells[item];
+                        let alpha = alphaRegExp.exec(item);
+                        let value = this.data.table.datablock.cells[item];
 
-                if (alpha == null) continue;
-                let numberPlace = item.substring(alpha[0].length);
+                        if (alpha == null) continue;
+                        let numberPlace = item.substring(alpha[0].length);
 
-                let address = this.getAddress(item);*/
+                        let address = this.getAddress(item);*/
         this.setValueToMatrix(coli, rowi, value);   // sets value to matrix
         if (this.data.table.datablock)
             for (let item in this.data.table.datablock.cells) { // go trough all cells
@@ -388,15 +381,14 @@ export class TimTableController implements IController {
 
                 if (alpha == null) continue;
                 let numberPlace = item.substring(alpha[0].length);
-                 let address = this.getAddress(item);
+                let address = this.getAddress(item);
 
-                 if (address.col == coli && address.row == rowi) {
-                     this.data.table.datablock!.cells[item] = value;
-                 }
+                if (address.col == coli && address.row == rowi) {
+                    this.data.table.datablock!.cells[item] = value;
+                }
 
 
-
-                 // datablocks value = itemvalue
+                // datablocks value = itemvalue
                 // if (address.col == coli && address.row == rowi) {
                 // we have a match, lets change the value
                 // this.data.table.datablock.cells[item] = value;  // now datablock has a right value
@@ -505,8 +497,7 @@ export class TimTableController implements IController {
      * Ei toimi vielä
      * @returns {{[p: string]: string}}
      */
-    private stylingForTable() {
-        let tab = this.data.table;
+    private stylingForTable(tab: ITable) {
         const styles: { [index: string]: string } = {};
 
         for (const key of Object.keys(tab)) {
@@ -569,52 +560,47 @@ export class TimTableController implements IController {
 
 
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
-            // tallenna solun sisältö
-       /* const response = await $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
-            url: "/timTable/saveCell",
-            method: "POST",
-            params: {cellContent, docId, parId, row, col},
-        });*/
+        // tallenna solun sisältö
+        /* const response = await $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
+             url: "/timTable/saveCell",
+             method: "POST",
+             params: {cellContent, docId, parId, row, col},
+         });*/
 
-       const response = await $http.post<ICell>("/timTable/saveCell", {cellContent, docId, parId, row, col});
+        const response = await $http.post<ICell>("/timTable/saveCell", {cellContent, docId, parId, row, col});
     }
 
 
-      getCellData(docId: number, parId: string, row: number, col: number) {
-          let ctrl = this;
-         $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
+    getCellData(docId: number, parId: string, row: number, col: number) {
+        let ctrl = this;
+        $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
             url: "/timTable/getCellData",
             method: "GET",
             params: {docId, parId, row, col},
-        }).then( async function(response){
+        }).then(async function (response) {
 
 
             const data = response.data;
-        ctrl.editedCellContent = data[0]
-        //showMessageDialog(this.editedCellContent);
-        ctrl.cellDataMatrix[row][col] = data[0];
+            ctrl.editedCellContent = data[0]
+            //showMessageDialog(this.editedCellContent);
+            ctrl.cellDataMatrix[row][col] = data[0];
 
 
-         let i = ctrl.editedCellContent;
-        // this.cellDataMatrix[rowi][coli] = this.editedCellContent;
-             ctrl.currentCell.editorOpen = true;
-             const result = await openEditorSimple(docId, ctrl.editedCellContent);
-             ctrl.currentCell.editorOpen = false;
-        if(result.type == "save") {
-            console.log(result.text);
-            ctrl.saveCells(result.text, docId, parId, row, col);
-            ctrl.cellDataMatrix[row][col] = result.text
-        }
+            let i = ctrl.editedCellContent;
+            // this.cellDataMatrix[rowi][coli] = this.editedCellContent;
+            ctrl.currentCell.editorOpen = true;
+            const result = await openEditorSimple(docId, ctrl.editedCellContent);
+            ctrl.currentCell.editorOpen = false;
+            if (result.type == "save") {
+                console.log(result.text);
+                ctrl.saveCells(result.text, docId, parId, row, col);
+                ctrl.cellDataMatrix[row][col] = result.text
+            }
 
 
-
-
-
-
-
-        },  function(response) {
-             console.log("virhe");
-         });
+        }, function (response) {
+            console.log("virhe");
+        });
 
         //TODO: virhekasittely
 
@@ -650,7 +636,7 @@ timApp.component("timTable", {
     require: {
         viewctrl: "?^timView",
     },
-    template: `<div ng-class="{editable: $ctrl.editing}""><table>
+    template: `<div ng-class="{editable: $ctrl.editing}""><table ng-style="$ctrl.stylingForTable($ctrl.data.table)">
   <button class="timButton" ng-click="$ctrl.toggleEditMode()">Edit</button>
    <!--<button ng-app="myApp">Edit</button>-->
     <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" ng-style="$ctrl.stylingForColumn(c)"/>
