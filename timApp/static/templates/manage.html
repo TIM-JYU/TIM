@@ -242,7 +242,7 @@
                     <textarea id="doctext" class="form-control" ng-model="$ctrl.fulltext" rows="50"
                               ng-hide="$ctrl.renameFormShowing"></textarea>
                     <button id="documentEditorSaveButton" class="timButton"
-                            ng-disabled="($ctrl.item.fulltext === fulltext) || saving"
+                            ng-disabled="($ctrl.item.fulltext === $ctrl.fulltext) || $ctrl.saving"
                             ng-click="$ctrl.saveDocument()"
                             ng-hide="$ctrl.renameFormShowing">Save
                     </button>
