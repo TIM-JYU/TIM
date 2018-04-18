@@ -1,4 +1,4 @@
-import {IController, IFormController, IRootElementService, IScope} from "angular";
+import {IController, IFormController} from "angular";
 import {timApp} from "tim/app";
 import {isManageResponse, showRenameDialog} from "../components/pluginRenameForm";
 import {IChangelogEntry, IManageResponse} from "../edittypes";
@@ -26,8 +26,6 @@ export interface IAlias {
 }
 
 export class PermCtrl implements IController {
-    private static $inject = ["$scope", "$element"];
-
     private wikiRoot: string;
     private newTitle: string;
     private newFolderName: string;
@@ -53,14 +51,7 @@ export class PermCtrl implements IController {
     private file: any;
     private newAliasForm: IFormController;
     private notifySettings: {};
-    private sc: IScope;
-    private element: IRootElementService;
     private objName: string;
-
-    constructor(scope: IScope, element: IRootElementService) {
-        this.sc = scope;
-        this.element = element;
-    }
 
     $onInit() {
         this.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
