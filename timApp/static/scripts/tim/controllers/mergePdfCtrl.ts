@@ -55,6 +55,10 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
         //console.log(this.docUrl); undefined
     }
 
+    public close() {
+        this.close();
+    }
+
     $onInit() {
         super.$onInit();
         this.loading = false;
@@ -69,12 +73,15 @@ registerDialogComponent("timMergePdf",
     <dialog-header ng-bind-html="$ctrl.getTitle()">
     </dialog-header>
     <dialog-body>
+        <div>Merging all attachments from the current document.</div>
         <p id="link">
         </p>
         <button class="btn timButton" ng-click="$ctrl.mergeClicked()">
                     <span ng-show="$ctrl.loading"><i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
                     Merging</span>
             <span ng-hide="$ctrl.loading">Merge</span>
+        </button>
+        <button class="btn timButton" ng-click="$ctrl.close()"><span>Cancel</span>
         </button>
         <div ng-show="$ctrl.docUrl" class="alert alert-success">
             <span class="glyphicon glyphicon-ok"></span>Merging succeeded!
