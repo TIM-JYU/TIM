@@ -1005,7 +1005,7 @@ export function openEditorSimple(docId: number, text: string) {
             tags: [],
             touchDevice: false,
         }, previewCb: async (txt) => {
-            const resp = await $http.post<IPluginInfoResponse>(`/preview/${docId}`, {txt, isComment: true});
+            const resp = await $http.post<IPluginInfoResponse>(`/preview/${docId}`, {text: txt, isComment: true});
             return resp.data;
         },
         saveCb: async (txt, data) => {
