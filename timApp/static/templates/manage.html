@@ -239,16 +239,14 @@
         <div class="panel-body">
             <form id="fullDocumentEditor">
                 <div id="documentEditorDiv">
-                    <textarea id="doctext" class="form-control" ng-model="$ctrl.fulltext" rows="50"
-                              ng-hide="$ctrl.renameFormShowing"></textarea>
+                    <textarea id="doctext" class="form-control" ng-model="$ctrl.fulltext" rows="50"></textarea>
                     <button id="documentEditorSaveButton" class="timButton"
                             ng-disabled="($ctrl.item.fulltext === $ctrl.fulltext) || $ctrl.saving"
-                            ng-click="$ctrl.saveDocument()"
-                            ng-hide="$ctrl.renameFormShowing">Save
+                            ng-click="$ctrl.saveDocument()">Save
                     </button>
                     <span ng-show="$ctrl.saving">Saving...</span>
                 </div>
-                <div id="tracWikiDiv" ng-hide="$ctrl.renameFormShowing">
+                <div id="tracWikiDiv">
                     <label>Import TracWiki <input type="checkbox" ng-model="$ctrl.showTracWiki"></label>
                     <div ng-hide="!$ctrl.showTracWiki">
                         <p>Write the wiki root address to replace "wiki:" from URL's and then copy paste
