@@ -3,7 +3,7 @@
         <li id="navigate" class="tab active"><a ng-click="$ctrl.tabClicked($event, 'navigateButtons')">Navigation</a></li>
         <li id="style" class="tab"><a ng-click="$ctrl.tabClicked($event, 'styleButtons')">Style</a></li>
         <li id="insert" class="tab"><a ng-click="$ctrl.tabClicked($event, 'insertButtons')">Insert</a></li>
-        <li id="special" class="tab"><a ng-click="$ctrl.tabClicked($event, 'specialButtons')">Special chars</a></li>
+        <li id="special" class="tab"><a ng-click="$ctrl.tabClicked($event, 'specialButtons')">Characters</a></li>
         <li id="tex" class="tab"><a ng-click="$ctrl.tabClicked($event, 'texButtons')">TeX</a></li>
         <li id="plugin" class="tab" ng-show="$ctrl.getOptions().showPlugins"><a ng-click="$ctrl.tabClicked($event, 'pluginButtons')">Plugins</a>
         </li>
@@ -90,7 +90,7 @@
         <button class="editorButton" ng-click="$ctrl.editor.powerClicked()">X&#x207f;</button>
         <button class="editorButton" ng-click="$ctrl.editor.squareClicked()">&radic;</button>
     </div>
-    <div id="settingsButtons" class="settingsButtonArea hidden" ng-if="$ctrl.getOptions().showSettings">
+    <div id="settingsButtons" class="extraButtonArea hidden" ng-if="$ctrl.getOptions().showSettings">
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('auto_number_headings: 1\n')" title="Auto number headings level">Heading numbering</button>
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('css: |!!\n.style {\n\n}\n!!\n')" title="Styles for this document">CSS</button>
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('macros:\n  key: value\n')" title="Macro values fo document">Macros</button>
@@ -98,7 +98,8 @@
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('live_updates: 5\n')" title="Update documetn automatically in this interval (sec)">Live update</button>
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('lazy: false\n')" title="Calculate plugins lazy or not">Lazy</button>
         <button class="editorButton" ng-click="$ctrl.editor.insertTemplate('global_plugin_attrs:\n csPlugin:\n   stem: value\n all:\n   stem: value\n')" title="Global values for the plugins">Global plugin</button>
-        <a class="helpButton" href="https://tim.jyu.fi/view/tim/ohjeita/documentin-asetukset#settings_list" target="_blank">[?]</a>
+        <a href="https://tim.jyu.fi/view/tim/ohjeita/documentin-asetukset#settings_list" target="_blank"
+           title="Help for settings"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
     </div>
     <div id="pluginButtons" class="extraButtonArea hidden" ng-show="$ctrl.getOptions().showPlugins"></div>
     <div id="uploadButtons" class="extraButtonArea hidden" ng-show="$ctrl.getOptions().showImageUpload">
@@ -110,13 +111,12 @@
         </span>
         <div class="error" ng-show="$ctrl.file.error" ng-bind="$ctrl.file.error"></div>
     </div>
-    <div id="helpButtons" class="extraButtonArea hidden form-inline" style="display: flex; align-items: center">
+    <div id="helpButtons" class="extraButtonArea hidden form-inline">
         <a class="helpButton margin-4" href="https://tim.jyu.fi/view/tim/TIM-ohjeet" target="_blank" title="General TIM Help">TIM
             Help</a>
         <span class="margin-4">To cite this paragraph:</span>
         <input readonly
                class="form-control"
-               style="flex: 0 1 auto"
                type="text"
                ng-model="$ctrl.citeText"
                title="Copy this line to cite this paragraph"

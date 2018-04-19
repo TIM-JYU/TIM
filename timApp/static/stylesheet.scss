@@ -445,17 +445,11 @@ p.caption {
     min-height: 1px;
     padding-left: 2em;
     padding-right: 2em;
-    min-width: unset;
+    min-width: inherit;
 }
 
 .timButton, .editorButton {
     @extend .btn, .btn-primary;
-}
-
-#helpButtons {
-    .helpButton {
-        font-size: large;
-    }
 }
 
 .editMenuButton {
@@ -753,30 +747,32 @@ pareditor {
 }
 
 .editorButton {
-    font-size: 14px !important;
-    height: 35px;
-    margin: 0 2px 0 2px !important;
+    margin: 2px;
 }
 
 .extraButtonArea {
-    font-size: 0;
-    padding: 8px 16px;
+    padding: 4px 8px;
     margin: 0 0 3px 0;
     background: white;
     border-left: 1px solid rgb(183, 183, 183);
     border-right: 1px solid rgb(183, 183, 183);
     border-bottom-right-radius: 5px;
     border-bottom-left-radius: 5px;
-}
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
 
-.extraButtonArea * {
-    font-size: 14px;
+    .helpButton {
+        font-size: large;
+    }
+
+    .form-control {
+        width: auto;
+        flex: 1 0 auto;
+    }
 }
 
 .tabsarea, .extraButtonArea {
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
     border-bottom: 1px solid rgb(183, 183, 183);
 }
 

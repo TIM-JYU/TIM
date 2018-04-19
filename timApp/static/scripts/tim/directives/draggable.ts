@@ -135,7 +135,7 @@ export class DraggableController implements IController {
     }
 
     makeHeightAutomatic() {
-        this.element.css("height", "unset");
+        this.element.css("height", "auto");
         this.autoHeight = true;
     }
 
@@ -268,7 +268,7 @@ export class DraggableController implements IController {
             this.element.css("min-height", "");
             this.element.css("left", this.getCss("left") - (this.areaWidth - this.getWidth()));
             if (this.autoHeight) {
-                this.element.height("unset");
+                this.element.height("auto");
             } else {
                 this.element.height(this.areaHeight);
             }
