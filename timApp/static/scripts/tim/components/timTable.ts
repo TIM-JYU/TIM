@@ -301,10 +301,16 @@ export class TimTableController implements IController {
     }
 
 
+    private async cellClicked(cell: CellEntity, rowi: number, coli: number) {
+        let parId = getParId(this.element.parents(".par"));
+        if (!this.editing || typeof cell === "string" || !this.viewctrl || !parId) return;
+        this.currentCell = cell;
+        this.getCellData(this.viewctrl.item.id, parId, rowi, coli );
+    }
     /*
     Deals with whatever happens when clicked cell
      */
-    private async cellClicked(cell: CellEntity, rowi: number, coli: number) {
+    /*private async cellClicked(cell: CellEntity, rowi: number, coli: number) {
         if (this.currentCell && this.currentCell.editorOpen) return;
 
         let parId = getParId(this.element.parents(".par"))
@@ -350,7 +356,7 @@ export class TimTableController implements IController {
         this.currentCell = cell;
         this.currentCell.row = rowi;
         this.currentCell.col = coli;
-    }
+    }*/
 
 
     /*
@@ -589,7 +595,7 @@ export class TimTableController implements IController {
             let i = ctrl.editedCellContent;
             // this.cellDataMatrix[rowi][coli] = this.editedCellContent;
             ctrl.currentCell.editorOpen = true;
-            const result = await openEditorSimple(docId, ctrl.editedCellContent);
+            const result = await openEditorSimple(docId, i);
             ctrl.currentCell.editorOpen = false;
             if (result.type == "save") {
                 console.log(result.text);

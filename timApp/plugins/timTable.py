@@ -78,9 +78,10 @@ def tim_table_get_cell_data():
     par = doc.get_paragraph(args['parId'])
     plug = Plugin.from_paragraph(par)
     yaml = plug.values
-    if yaml[TABLE][DATABLOCK]:
-        cell_cnt = find_cell_from_datablock(yaml[TABLE][DATABLOCK][CELLS],int(args[ROW]),int(args[COL]))
-    if cell_cnt != '': #TODO voisi olla myös tyhjä
+    cell_cnt = None
+    if is_datablock(yaml):
+        cell_cnt = find_cell_from_datablock(yaml[TABLE][DATABLOCK][CELLS], int(args[ROW]), int(args[COL]))
+    if cell_cnt != None: #TODO voisi olla myös tyhjä
         multi.append(cell_cnt)
     else:
         rows = yaml[TABLE][ROWS]
@@ -146,17 +147,7 @@ def find_cell(rows: list, row: int, col: int) -> str:
    return right_cell[CELL]
 
 def find_cell_from_datablock(cells: dict, row: int, col: int) -> str:
-    ret = ''
-    coordinate = colnum_to_letters(col) + str(row)
-    try:
-        value = cells[coordinate]
-        ret = value
-    except:
-        pass
-    return ret
-
-def find_cell_from_datablock(cells: dict, row: int, col: int) -> str:
-    ret = ''
+    ret = None
     coordinate = colnum_to_letters(col) + str(row)
     try:
         value = cells[coordinate]
