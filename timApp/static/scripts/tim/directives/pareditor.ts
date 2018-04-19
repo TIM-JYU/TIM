@@ -905,15 +905,15 @@ or newer one that is more familiar to write in YAML:
     /**
      * Switches editor between Ace and textarea.
      */
-    async changeEditor(newMode: string) {
+    async changeEditor(initialMode?: string) {
         let text = "";
         const editorContainer = this.element.find(".editorContainer");
         editorContainer.addClass("editor-loading");
         if (this.editor) {
             text = this.editor.getEditorText();
         }
-        let oldeditor = null;
-        if (this.isAce(this.editor) || newMode === "text") {
+        let oldeditor;
+        if (this.isAce(this.editor) || initialMode === "text") {
             oldeditor = this.element.find("#ace_editor");
             oldeditor.remove();
             this.saveOldMode("text");
@@ -973,7 +973,9 @@ or newer one that is more familiar to write in YAML:
                 createCompleter(userWordList, "user"),
             ]);
         }
-        await this.setInitialText();
+        if (initialMode != null) {
+            await this.setInitialText();
+        }
         this.editorReady();
         setEditorScope(this.editor);
         this.adjustPreview();
