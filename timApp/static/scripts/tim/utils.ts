@@ -245,3 +245,8 @@ export const nameofFactoryCtrl2 = <T, U extends keyof T>(name: U) => (name2: key
 
 export const empty = () => {
 };
+
+export function isMobileDevice() {
+    const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
+    return touch && (window.screen.width < 1200);
+}

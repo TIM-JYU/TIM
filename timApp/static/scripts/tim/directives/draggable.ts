@@ -2,7 +2,7 @@ import {IAttributes, IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
 import {$compile, $document} from "../ngimport";
-import {getOutOffsetFully, getOutOffsetVisible} from "../utils";
+import {getOutOffsetFully, getOutOffsetVisible, isMobileDevice} from "../utils";
 
 function setStorage(key: string, value: any) {
     value = JSON.stringify(value);
@@ -140,11 +140,15 @@ export class DraggableController implements IController {
     }
 
     private makePositionAbsolute() {
-        this.element.parents(".modal").css("position", "absolute");
+        this.getModal().css("position", "absolute");
+    }
+
+    private getModal() {
+        return this.element.parents(".modal");
     }
 
     hasAbsolutePosition() {
-        return this.element.parents(".modal").css("position") === "absolute";
+        return this.getModal().css("position") === "absolute";
     }
 
     setDragClickFn(fn: () => void) {
@@ -160,6 +164,9 @@ export class DraggableController implements IController {
         this.createResizeHandlers();
         if (this.absolute) {
             this.makePositionAbsolute();
+        }
+        if (isMobileDevice()) {
+            this.getModal().css("overflow", "visible");
         }
         this.handle = this.element.children(".draghandle");
 

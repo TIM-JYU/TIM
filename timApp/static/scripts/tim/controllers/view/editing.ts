@@ -7,7 +7,7 @@ import {openEditor} from "../../directives/pareditor";
 import {IExtraData, IParResponse} from "../../edittypes";
 import {$compile, $http, $window} from "../../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../../services/parCompiler";
-import {empty, to} from "../../utils";
+import {empty, isMobileDevice, to} from "../../utils";
 import {getActiveDocument} from "./document";
 import {onClick} from "./eventhandlers";
 import {
@@ -186,8 +186,6 @@ export class EditingHandler {
         let areaStart;
         let areaEnd;
         const caption = params.type === EditType.Edit ? "Edit paragraph" : "Add paragraph";
-        const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
-        const mobile = touch && (window.screen.width < 1200);
         let url: string;
         const parId = params.type === EditType.Edit ? getParId(params.pars) : undefined;
         let parNextId =
@@ -256,7 +254,7 @@ export class EditingHandler {
                 tags: [
                     {name: "markread", desc: "Mark as read"},
                 ],
-                touchDevice: mobile,
+                touchDevice: isMobileDevice(),
             },
             deleteCb: async () => {
                 const [err, resp] = await to($http.post<IParResponse>(`/deleteParagraph/${this.viewctrl.docId}`, extraData));

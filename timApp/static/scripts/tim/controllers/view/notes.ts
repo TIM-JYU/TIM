@@ -6,7 +6,7 @@ import {openEditor} from "../../directives/pareditor";
 import {IExtraData, IParResponse} from "../../edittypes";
 import {$compile, $http, $window} from "../../ngimport";
 import {IPluginInfoResponse} from "../../services/parCompiler";
-import {getElementParent, to} from "../../utils";
+import {getElementParent, isMobileDevice, to} from "../../utils";
 import {getActiveDocument} from "./document";
 import {EditPosition, EditType} from "./editing";
 import {onClick} from "./eventhandlers";
@@ -61,8 +61,6 @@ export class NotesHandler {
             return;
         }
         let caption = "Edit comment";
-        const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
-        const mobile = touch && (window.screen.width < 1200);
         if (!this.viewctrl.item.rights.can_comment) {
             return;
         }
@@ -113,7 +111,7 @@ export class NotesHandler {
                 showSettings: false,
                 tags: [],
                 showPlugins: false,
-                touchDevice: mobile,
+                touchDevice: isMobileDevice(),
                 choices: [{
                     desc: "Show note to:",
                     name: "access",
