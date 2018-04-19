@@ -7,6 +7,7 @@ import {setSetting} from "../utils";
 import {$http} from "../ngimport";
 import {getParId} from 'tim/controllers/view/parhelpers';
 import {openEditorSimple} from "../directives/pareditor";
+import {CellEntity} from "../../decls/components/timTable";
 
 //import {IHash} from "../../decls/components/timTable";
 
@@ -147,7 +148,7 @@ export class TimTableController implements IController {
     public viewctrl?: ViewCtrl;
     public sc: IScope;
     private editing: boolean;
-    private currentCell: ICell;
+    public currentCell: ICell;
     public cellDataMatrix: string[][];
     public dataCells: DataEntity;
     public DataHash: IHash;
@@ -177,6 +178,17 @@ export class TimTableController implements IController {
         }
     }
 
+
+    private editorOpen(cell: CellEntity, rowi: number, coli: number){
+
+        if( typeof cell === "string") return;
+        cell.editing = false;
+        cell.editorOpen = true;
+        let parId = getParId(this.element.parents(".par"));
+        if(this.viewctrl && parId){
+        this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
+        }
+    }
 
     /*
     Initialize CellDataMatrix with values from yaml table
@@ -301,12 +313,30 @@ export class TimTableController implements IController {
     }
 
 
-    private async cellClicked(cell: CellEntity, rowi: number, coli: number) {
+    private cellClicked(cell: CellEntity, rowi: number, coli: number) {
+
+        if (this.currentCell)
+            if (this.currentCell.row == rowi && this.currentCell.col == coli)
+                return;
+
         let parId = getParId(this.element.parents(".par"));
-        if (!this.editing || typeof cell === "string" || !this.viewctrl || !parId) return;
+        if (!this.editing || typeof cell === "string" || !this.viewctrl || !parId || cell.editorOpen) return;
+        cell.editing = true;
+        if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
+            this.currentCell.editing = false;
+
+            // var a = $('#selector').parents("table:first").find('tr').eq(this.currentCell.row).find('td').eq(this.currentCell.col).find('input').text()
+           /* NYT TALLENTAA EDELLISEN SOLUN ARVON, VAIKKA PITÄISI TALLENTAA EDELLISEN INPUT- KENTÄN ARVON ??
+           
+           ????????????????????????????????????????????????????????????????????????????????????????????????
+            */
+             this.saveCells(this.currentCell.cell, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
+        }
         this.currentCell = cell;
-        this.getCellData(this.viewctrl.item.id, parId, rowi, coli );
+        this.currentCell.row = rowi;
+        this.currentCell.col = coli;
     }
+
     /*
     Deals with whatever happens when clicked cell
      */
@@ -577,7 +607,7 @@ export class TimTableController implements IController {
     }
 
 
-    getCellData(docId: number, parId: string, row: number, col: number) {
+    getCellData(cell: CellEntity, docId: number, parId: string, row: number, col: number) {
         let ctrl = this;
         $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
             url: "/timTable/getCellData",
@@ -598,18 +628,17 @@ export class TimTableController implements IController {
             const result = await openEditorSimple(docId, i);
             ctrl.currentCell.editorOpen = false;
             if (result.type == "save") {
-                console.log(result.text);
                 ctrl.saveCells(result.text, docId, parId, row, col);
                 ctrl.cellDataMatrix[row][col] = result.text
             }
-
+            if( typeof cell === "string") {}
+            else cell.editorOpen = false;
 
         }, function (response) {
             console.log("virhe");
         });
 
         //TODO: virhekasittely
-
     }
 
 
@@ -634,6 +663,9 @@ export class TimTableController implements IController {
     }*/
 }
 
+
+
+
 timApp.component("timTable", {
     controller: TimTableController,
     bindings: {
@@ -643,7 +675,7 @@ timApp.component("timTable", {
         viewctrl: "?^timView",
     },
     template: `<div ng-class="{editable: $ctrl.editing}""><table ng-style="$ctrl.stylingForTable($ctrl.data.table)">
-  <button class="timButton" ng-click="$ctrl.toggleEditMode()">Edit</button>
+ <!-- <button class="timButton" ng-click="$ctrl.toggleEditMode()">Edit</button>-->
    <!--<button ng-app="myApp">Edit</button>-->
     <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" ng-style="$ctrl.stylingForColumn(c)"/>
     <tr ng-repeat="r in $ctrl.data.table.rows"  ng-init="rowi = $index" ng-style="$ctrl.stylingForRow(r)">
@@ -657,7 +689,8 @@ timApp.component("timTable", {
             <div ng-if="td.cell == null && !td.editing" ng-bind-html="td.cell">
                
             </div> 
-            <input ng-if="td.editing" ng-model="$ctrl.cellDataMatrix[rowi][coli]">
+           <input ng-if="td.editing" ng-model="$ctrl.cellDataMatrix[rowi][coli]" ng-keypress="($event.charCode==167)? $ctrl.editorOpen(td, rowi, coli) : return">  <!-- works with $ mark --> 
+            <button ng-if="td.editing" ng-click="$ctrl.editorOpen(td, rowi, coli)">Open editor</button>
            <!-- <input ng-if="td.editing" ng-model="ctrl.cellDataMatrix[rowi][coli]">-->
             <!-- <input ng-if="td.editing" ng-model="td.cell">-->
            <!-- <input ng-if="ctrl.isCellBeingEdited(rowi, coli)" ng-model="ctrl.cellDataMatrix[rowi][coli]"> -->
@@ -695,8 +728,8 @@ timApp.component("timTable", {
 <!--<p ng-repeat="item in $ctrl.allcellData">{{item}}</p>
 <p ng-bind-html="$ctrl.data.table.cellData"></p>-->
 
-<button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.editSave()">Save</button>
-<button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.editCancel()">Cancel</button>
+<!--<button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.editSave()">Save</button>-->
+<!--<button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.editCancel()">Cancel</button>->
 </div>
 
 
