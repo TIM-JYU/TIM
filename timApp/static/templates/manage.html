@@ -101,7 +101,7 @@
                         <div class="col-md-1"></div>
                         <div class="col-md-5">
                             <div class="input-group input-group-sm" tim-error-state data-for="$ctrl.newAliasForm.newAliasLoc">
-                        <span ng-click="$ctrl.aliasPublicClicked(newAlias)" class="input-group-addon">
+                        <span ng-click="$ctrl.aliasPublicClicked($ctrl.newAlias)" class="input-group-addon">
                        <input type="checkbox" ng-checked="$ctrl.newAlias.public">
                        </span>
                                 <input class="form-control" name="newAliasLoc" tim-location type="text"
@@ -123,7 +123,7 @@
                             <tim-error-message for="$ctrl.newAliasForm.newAliasName"></tim-error-message>
                         </div>
                         <div class="col-md-1">
-                            <button type="button" class="timButton btn-sm" ng-click="$ctrl.addAlias(newAlias)"
+                            <button type="button" class="timButton btn-sm" ng-click="$ctrl.addAlias($ctrl.newAlias)"
                                     ng-disabled="$ctrl.newAliasForm.$invalid">
                                 <span class="glyphicon glyphicon-plus"></span>
                             </button>
