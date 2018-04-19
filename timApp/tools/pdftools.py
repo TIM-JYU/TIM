@@ -308,7 +308,7 @@ def call_popen(args: List[str], timeout_seconds=default_subprocess_timeout) -> N
     try:
         p = Popen(args, stdout=PIPE)
         stream_data = p.communicate(timeout=timeout_seconds)[0]
-        print(str(stream_data))
+        # print(str(stream_data))
         rc = p.returncode
         if rc != 0:
             raise SubprocessError(" ".join(args))

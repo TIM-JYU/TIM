@@ -208,11 +208,13 @@ def get_attachments(doc):
     :param doc: document path
     :return: merged pdf-file
     """
+
+    # TODO: Check if there is PDF all ready
     try:
         d = DocEntry.find_by_path(doc, try_translation=True)
         if not d:
             abort(404)
-        verify_manage_access(d) or verify_edit_access(d)
+        verify_edit_access(d)
 
         paragraphs = d.document.get_paragraphs(d)
         pdf_paths = []
@@ -258,35 +260,11 @@ def merge_attachments(doc):
             abort(404)
         verify_edit_access(d)
 
-        paragraphs = d.document.get_paragraphs(d)
-        pdf_paths = []
-
-        for par in paragraphs:
-            if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
-                par_plugin = timApp.plugin.Plugin.from_paragraph(par)
-                par_data = par_plugin.values
-                par_file = par_data["file"]
-
-                # checks if attachment is TIM-upload and adds prefix
-                # changes in upload location need to be updated here as well!
-                if par_file.startswith("/files/"):
-                    pdf_paths += ["/tim_files/blocks" + par_file]
-
-                # if attachment is url link, download it to temp folder to operate
-                elif timApp.tools.pdftools.is_url(par_file):
-                    # print(f"Downloading {par_file}")
-                    pdf_paths += [timApp.tools.pdftools.download_file_from_url(par_file)]
-
-        # uses document name as the base for the merged file name and tmp as folder
-        doc_name = timApp.tools.pdftools.get_base_filename(doc)
-        merged_pdf_path = timApp.tools.pdftools.temp_folder_default_path + "/" + f"{doc_name}_merged.pdf"
-        timApp.tools.pdftools.merge_pdf(pdf_paths, merged_pdf_path)
-
     except Exception as e:
         message = str(e)
         abort(404, message)
     else:
-        merge_access_url = f'{request.url}'
+        merge_access_url = request.url
         return json_response({'success': True, 'url': merge_access_url}, status_code=201)
 
 @app.route('/processAttachments/<path:doc>')
