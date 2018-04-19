@@ -1,9 +1,10 @@
 import {IScope} from "angular";
 import $ from "jquery";
 import {Coords, markPageDirty} from "tim/utils";
+import {isManageResponse, showRenameDialog} from "../../components/pluginRenameForm";
 import {showMessageDialog} from "../../dialog";
 import {openEditor} from "../../directives/pareditor";
-import {IExtraData, IParInfo, IParResponse} from "../../edittypes";
+import {IExtraData, IParResponse} from "../../edittypes";
 import {$compile, $http, $window} from "../../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../../services/parCompiler";
 import {empty, to} from "../../utils";
@@ -23,11 +24,11 @@ import {
     getRefAttrs,
     isPreamble,
     isReference,
+    isSettingsPar,
     Paragraph,
 } from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
 import {viewCtrlDot} from "./viewutils";
-import {isManageResponse, showRenameDialog} from "../../components/pluginRenameForm";
 
 export enum EditType {
     Edit,
@@ -251,7 +252,7 @@ export class EditingHandler {
                 showDelete: options.showDelete,
                 showImageUpload: true,
                 showPlugins: true,
-                showSettings: true,
+                showSettings: params.type === EditType.Edit ? isSettingsPar(params.pars) : false,
                 tags: [
                     {name: "markread", desc: "Mark as read"},
                 ],

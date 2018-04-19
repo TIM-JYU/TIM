@@ -197,8 +197,8 @@ export function addElementToParagraphMargin(par: Element, el: Element) {
     }
 }
 
-export function isSettings(text: string) {
-    return text.startsWith('``` {settings=""}');
+export function isSettingsPar(par: Paragraph) {
+    return getParAttributes(par).settings != null;
 }
 
 export function isPreamble($par: Paragraph) {
