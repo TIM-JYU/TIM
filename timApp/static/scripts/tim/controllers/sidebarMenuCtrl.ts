@@ -33,7 +33,7 @@ export class SidebarMenuCtrl implements IController {
     private vctrl?: ViewCtrl;
     private bookmarks: {};
     private isDocumentMinutes: boolean;
-    private docSettings: {macros?: {nr?: string}}
+    private docSettings?: {macros?: {nr?: string}}
 
     constructor() {
         this.currentLecturesList = [];
@@ -156,7 +156,7 @@ export class SidebarMenuCtrl implements IController {
      * @returns {boolean} Whether the button for creating minutes should be displayed.
      */
     enableCreateMinutesButton() : boolean {
-        if (this.docSettings.macros == null)
+        if (this.docSettings == null || this.docSettings.macros == null)
             return false;
         return this.docSettings.macros.nr != null && !this.isDocumentMinutes;
     }
@@ -166,7 +166,7 @@ export class SidebarMenuCtrl implements IController {
      * @returns {boolean} Whether the document is a faculty council meeting document.
      */
     isMinutesOrInvitation() : boolean {
-        if (this.docSettings.macros == null)
+        if (this.docSettings == null || this.docSettings.macros == null)
             return false;
 
         return this.docSettings.macros.nr != null;
@@ -181,7 +181,7 @@ export class SidebarMenuCtrl implements IController {
             return;
         }
 
-        if (!this.docSettings.macros) {
+        if (this.docSettings == null || this.docSettings.macros == null) {
             void showMessageDialog("The document has no macros defined");
             return;
         }
