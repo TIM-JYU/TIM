@@ -103,6 +103,7 @@ export class NotesHandler {
         await to(openEditor({
             extraData,
             initialText,
+            defaultSize: "md",
             options: {
                 caption,
                 localSaveTag: "note",

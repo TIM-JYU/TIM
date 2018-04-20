@@ -244,6 +244,7 @@ export class EditingHandler {
         await to(openEditor({
             extraData,
             initialText,
+            defaultSize: "lg",
             options: {
                 caption,
                 localSaveTag: options.localSaveTag || "par",

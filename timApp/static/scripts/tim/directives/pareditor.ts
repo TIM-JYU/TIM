@@ -37,6 +37,7 @@ export interface IChoice {
 
 export interface IEditorParams {
     initialText?: string;
+    defaultSize: "sm" | "md" | "lg";
     extraData: IExtraData;
     options: {
         caption: string,
@@ -990,12 +991,13 @@ export function openEditor(p: IEditorParams): IPromise<IEditorResult> {
     return showDialog<PareditorController>(
         "pareditor",
         {params: () => p},
-        {saveKey: p.options.localSaveTag, absolute: true}).result;
+        {saveKey: p.options.localSaveTag, absolute: true, size: p.defaultSize}).result;
 }
 
 export function openEditorSimple(docId: number, text: string) {
     return openEditor({
         initialText: text,
+        defaultSize: "lg",
         extraData: {docId, tags: {markread: false}, par: "nothing"}, options: {
             caption: "",
             choices: undefined,
