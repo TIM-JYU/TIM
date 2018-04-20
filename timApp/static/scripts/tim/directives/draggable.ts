@@ -10,35 +10,16 @@ function setStorage(key: string, value: any) {
 }
 
 function getStorage(key: string) {
-    let s = window.localStorage.getItem(key);
+    const s = window.localStorage.getItem(key);
     if (!s) {
         return s;
     }
-    s = JSON.parse(s);
-    return s;
+    return JSON.parse(s);
 }
 
 function getPixels(s: string) {
     const s2 = s.replace(/px$/, "");
     return Number(s2) || 0;
-}
-
-function wmax(value: string, min: number, max: number) {
-    if (!value) {
-        return min + "px";
-    }
-    if (value == "auto") {
-        return value;
-    }
-    const v = getPixels(value);
-
-    if (v <= min) {
-        return min + "px";
-    }
-    if (v >= max) {
-        return max + "px";
-    }
-    return value;
 }
 
 const draggableTemplate = `
@@ -207,27 +188,30 @@ export class DraggableController implements IController {
                         oldSize.height);
                 }
             }
-            const oldPos: any = getStorage(this.posKey);
+            const oldPos: {left: string, right: string, top: string, bottom: string} | null = getStorage(this.posKey);
             const w = window.innerWidth;
             const h = window.innerHeight;
             const ew = this.getWidth();
             const eh = this.getHeight();
 
-            // it doesn't make sense to restore position if the dialog has absolute position (instead of fixed)
+            // it doesn't make sense to restore Y position if the dialog has absolute position (instead of fixed)
             if (this.hasAbsolutePosition()) {
                 this.element.css("top", window.pageYOffset + "px");
-            } else if (oldPos) {
-                if (oldPos.top && this.setTop) {
-                    this.element.css("top", wmax(oldPos.top, 0, h - 20));
-                }
+            }
+            if (oldPos) {
                 if (oldPos.left && this.setLeft) {
-                    this.element.css("left", wmax(oldPos.left, 0 - ew + 20, w - 20));
+                    this.element.css("left", oldPos.left);
                 }
                 if (oldPos.right && this.setRight) {
-                    this.element.css("right", wmax(oldPos.right, 20, w));
+                    this.element.css("right", oldPos.right);
                 }
-                if (oldPos.bottom && this.setBottom) {
-                    this.element.css("bottom", wmax(oldPos.bottom, 20, h));
+                if (!this.hasAbsolutePosition()) {
+                    if (oldPos.top && this.setTop) {
+                        this.element.css("top", oldPos.top);
+                    }
+                    if (oldPos.bottom && this.setBottom) {
+                        this.element.css("bottom", oldPos.bottom);
+                    }
                 }
                 // this.element.css("background", "red");
                 timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
