@@ -1,12 +1,11 @@
 """
-Converts timtable-json into LaTeX.
+Converts timTable-json into LaTeX.
 
 Visa Naukkarinen
 """
 
 import copy
 from typing import List
-
 
 # Default values:
 default_bg_color = "white!0"
@@ -15,7 +14,7 @@ default_colspan = 1
 default_rowspan = 1
 default_font_size = 10
 default_width = "*"  # * = auto-width
-default_height = "0pt"
+default_height = "0pt"  # Won't cut the first line of text even at 0pt.
 default_text_h_align = "l"
 default_font_family = "cmr"
 
@@ -214,6 +213,16 @@ class Row:
         cell.index = i
         self.cells.append(cell)
 
+    def get_rowspan(self):
+        """
+        Get the sum of row's cells' colspans.
+        :return:
+        """
+        i = 0
+        for cell in self.cells:
+            i += cell.colspan
+        return i
+
     def __repr__(self):
         return custom_repr(self)
 
@@ -253,18 +262,21 @@ class HorizontalBorder:
 
         # Get cell-count from the rows.
         try:
-            above_count = len(self.row_above.cells)
+            above_count = self.row_above.get_rowspan()
         # If there's no row:
         except AttributeError:
             above_count = 0
         try:
-            below_count = len(self.row_below.cells)
+            below_count = self.row_below.get_rowspan()
         except AttributeError:
             below_count = 0
 
         max_count = max(above_count, below_count)
         if max_count <= 0:
             raise TableBorderException("Table row not found")
+
+        colspan_counter_lower = 0
+        colspan_counter_upper = 0
 
         for i in range(0, max_count):
             # Some default values:
@@ -275,36 +287,42 @@ class HorizontalBorder:
             color_above = None
             color_below = None
 
+            # These try to keep count of index drift caused by multi-column cells.
+            index_lower = i + colspan_counter_lower
+            index_upper = i + colspan_counter_upper
+
             # This block checks if there actually is a row above/below
             # and tries getting data from there without crashing if thing
             # this asks doesn't exist.
             if self.row_above:
                 try:
-                    i_upper = self.row_above.cells[i].borders.bottom
-                    i_upper_colspan = self.row_above.cells[i].colspan
+                    i_upper = self.row_above.cells[index_upper].borders.bottom
+                    i_upper_colspan = self.row_above.cells[index_upper].colspan
                 # If the row doesn't exist, won't assert the
                 # need for a line from that direction.
                 except IndexError or AttributeError:
                     pass
                 try:
-                    color_above = self.row_above.cells[i].borders.color_bottom
+                    color_above = self.row_above.cells[index_upper].borders.color_bottom
+                    # print(color_above)
                     if color_above == default_text_color:
                         color_above = None
                 except IndexError or AttributeError:
                     pass
             if self.row_below:
                 try:
-                    i_lower = self.row_below.cells[i].borders.top
-                    i_lower_colspan = self.row_below.cells[i].colspan
+                    i_lower = self.row_below.cells[index_lower].borders.top
+                    i_lower_colspan = self.row_below.cells[index_lower].colspan
                 except IndexError or AttributeError:
                     pass
                 try:
-                    color_below = self.row_below.cells[i].borders.color_top
+                    color_below = self.row_below.cells[index_lower].borders.color_top
+                    # print(color_below)
                     if color_below == default_text_color:
                         color_below = None
                 except IndexError or AttributeError:
                     pass
-            # Draws the line if either cell above or below wants one.
+            # Draws the line only if either cell above or below wants one.
             if not i_upper and not i_lower:
                 output += "~"
             else:
@@ -315,7 +333,9 @@ class HorizontalBorder:
                 else:
                     color, html_color = color_above
                 # Need to ascertain that all multicolumn cell's borders are drawn.
-                colspan = max(i_lower_colspan, i_upper_colspan)
+                colspan = max(i_upper_colspan, i_lower_colspan)
+                colspan_counter_lower = colspan_counter_lower + i_upper_colspan - 1
+                colspan_counter_upper = colspan_counter_upper + i_lower_colspan - 1
                 output += colspan * f">{{\\arrayrulecolor{format_color(color, html_color)}}}-"
         return output
 
@@ -346,8 +366,10 @@ class Table:
         # 'c' would be text horizontal alignment, but it's actually set elsewhere,
         # so here it tells only the highest amount of cols in the table.
         columns = "c" * self.col_count
-        prefix = f"\\begin{{table}}\n\\begin{{tabular}}{{{columns}}}"
-        postfix = "\\end{tabular}\n\\end{table}"
+        prefix = f"\\begin{{table}}\n" \
+                 "\\resizebox{\\columnwidth}{!}{%\n" \
+                 f"\\begin{{tabular}}{{{columns}}}"
+        postfix = "\\end{tabular}%\n}\n\\end{table}"
         output = ""
         for i in range(0, len(self.rows)):
             output += f"\n\\hhline{{{str(self.hborders[i])}}}" \
