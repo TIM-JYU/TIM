@@ -3,6 +3,8 @@
 }
 
 .draghandle {
+    -ms-touch-action: none;
+    touch-action: none;
     min-height: 13px;
     width: 100%;
     background-color: $draghandle-bg-color;
