@@ -24,6 +24,10 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
         this.draggable.setCaption(this.getTitle());
     }
 
+    public getDraggable() {
+        return this.draggable;
+    }
+
     protected close(returnValue: Ret) {
         this.closed = true;
         this.modalInstance.close(returnValue);

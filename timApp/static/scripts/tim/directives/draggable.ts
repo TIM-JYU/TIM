@@ -31,7 +31,7 @@ const draggableTemplate = `
        class="glyphicon glyphicon-remove pull-right"></i>
     <i ng-show="d.click"
        title="Minimize dialog"
-       ng-click="d.minimize()"
+       ng-click="d.toggleMinimize()"
        class="glyphicon glyphicon-minus pull-right"></i>
 </div>
 <div ng-show="!d.areaMinimized && d.resize && !d.autoWidth"
@@ -128,6 +128,10 @@ export class DraggableController implements IController {
         return this.element.parents(".modal");
     }
 
+    isMinimized() {
+        return this.areaMinimized;
+    }
+
     hasAbsolutePosition() {
         return this.getModal().css("position") === "absolute";
     }
@@ -217,7 +221,7 @@ export class DraggableController implements IController {
                 timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
             }
             if (getStorage(this.posKey + "min")) {
-                this.minimize();
+                this.toggleMinimize();
             }
         }
         this.ensureVisibleInViewport();
@@ -241,7 +245,7 @@ export class DraggableController implements IController {
         return w;
     }
 
-    minimize() {
+    toggleMinimize() {
         this.areaMinimized = !this.areaMinimized;
         const base = this.element.find(".draggable-content");
         if (this.areaMinimized) {

@@ -981,6 +981,10 @@ or newer one that is more familiar to write in YAML:
         setEditorScope(this.editor);
         this.adjustPreview();
     }
+
+    scrollIntoView() {
+        this.element[0].scrollIntoView();
+    }
 }
 
 registerDialogComponent("pareditor",

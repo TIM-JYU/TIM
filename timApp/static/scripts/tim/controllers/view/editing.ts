@@ -3,7 +3,7 @@ import $ from "jquery";
 import {Coords, markPageDirty} from "tim/utils";
 import {isManageResponse, showRenameDialog} from "../../components/pluginRenameForm";
 import {showMessageDialog} from "../../dialog";
-import {openEditor} from "../../directives/pareditor";
+import {openEditor, PareditorController} from "../../directives/pareditor";
 import {IExtraData, IParResponse} from "../../edittypes";
 import {$compile, $http, $window} from "../../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../../services/parCompiler";
@@ -425,17 +425,44 @@ export class EditingHandler {
         this.viewctrl.beginUpdate();
     }
 
+    getParEditor(): PareditorController | undefined {
+        const elem = $("pareditor");
+        if (elem.length === 0) {
+            return;
+        }
+        return elem.isolateScope<any>().$ctrl;
+    }
+
     goToEditor() {
-        $("pareditor")[0].scrollIntoView();
+        const editor = this.getParEditor();
+        if (!editor) {
+            void showMessageDialog("Editor is no longer open.");
+            return;
+        }
+        const dg = editor.getDraggable();
+        if (dg.isMinimized()) {
+            dg.toggleMinimize();
+        }
+        editor.scrollIntoView();
     }
 
     closeAndSave(e: Event, $par: Paragraph) {
-        $("pareditor").isolateScope<any>().$ctrl.saveClicked();
+        const editor = this.getParEditor();
+        if (!editor) {
+            void showMessageDialog("Editor is no longer open.");
+            return;
+        }
+        editor.saveClicked();
         this.viewctrl.parmenuHandler.showOptionsWindow(e, $par);
     }
 
     closeWithoutSaving(e: Event, $par: Paragraph) {
-        $("pareditor").isolateScope<any>().$ctrl.cancelClicked();
+        const editor = this.getParEditor();
+        if (!editor) {
+            void showMessageDialog("Editor is no longer open.");
+            return;
+        }
+        editor.cancelClicked();
         this.viewctrl.parmenuHandler.showOptionsWindow(e, $par);
     }
 
