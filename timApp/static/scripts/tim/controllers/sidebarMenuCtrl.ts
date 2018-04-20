@@ -148,7 +148,7 @@ export class SidebarMenuCtrl implements IController {
     }
 
     createMinuteExtracts() {
-        window.location.href = window.location.href.replace("/view/", "/createMinuteExtracts/" );
+        window.location.href = window.location.href.replace("/view/", "/minutes/createMinuteExtracts/" );
     }
 
     /**
@@ -186,7 +186,7 @@ export class SidebarMenuCtrl implements IController {
             return;
         }
 
-        $http.post<{path: string}>("/createMinutes", angular.extend({
+        $http.post<{path: string}>("/minutes/createMinutes", angular.extend({
             item_path: this.vctrl.item.location + "/PK/PK" + this.docSettings.macros.nr,
             item_title: "PK" + this.docSettings.macros.nr,
             copy: this.vctrl.item.id,
