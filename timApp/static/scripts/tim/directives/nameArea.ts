@@ -1,3 +1,4 @@
+import {IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
@@ -27,12 +28,13 @@ export interface INameAreaOptions {
 }
 
 class NameAreaController extends DialogController<{}, {areaName: string, options: INameAreaOptions}, "timNameArea"> {
+    private static $inject = ["$element", "$scope"];
     private areaName: string;
     private options: INameAreaOptions;
     private datePickerOptions: {format: string; showTodayButton: boolean};
 
-    constructor() {
-        super();
+    constructor(protected element: IRootElementService, protected scope: IScope) {
+        super(element, scope);
         this.areaName = "";
         this.options = {
             collapse: true,

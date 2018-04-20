@@ -1,4 +1,4 @@
-import angular, {IController, IFormController, IPromise} from "angular";
+import angular, {IController, IFormController, IPromise, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
 import {markAsUsed, to} from "tim/utils";
@@ -161,7 +161,7 @@ timApp.component("bookmarks", {
 });
 
 class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark, "timBookmarksDialog"> {
-
+    private static $inject = ["$element", "$scope"];
     private f: IFormController;
     private focusName: boolean;
     private focusGroup: boolean;
@@ -170,6 +170,10 @@ class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark
     private bookmark: IBookmark;
     private includeParams: boolean;
     private includeHash: boolean;
+
+    constructor(protected element: IRootElementService, protected scope: IScope) {
+        super(element, scope);
+    }
 
     $onInit() {
         super.$onInit();

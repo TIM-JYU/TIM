@@ -1,3 +1,4 @@
+import {IRootElementService, IScope} from "angular";
 import moment, {Moment} from "moment";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
 import {IPreviewParams, makePreview} from "../directives/dynamicAnswerSheet";
@@ -37,6 +38,7 @@ export type IAnswerQuestionResult =
 export let currentQuestion: AnswerToQuestionController | undefined;
 
 export class AnswerToQuestionController extends DialogController<{params: IAnswerQuestionParams}, IAnswerQuestionResult, "timAnswerQuestion"> {
+    private static $inject = ["$element", "$scope"];
     private barFilled: number;
     private progressText: string;
     private isLecturer = false;
@@ -52,8 +54,8 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     private questionEnded: boolean;
     private answer: AnswerTable;
 
-    constructor() {
-        super();
+    constructor(protected element: IRootElementService, protected scope: IScope) {
+        super(element, scope);
         this.updateAnswer = this.updateAnswer.bind(this);
     }
 

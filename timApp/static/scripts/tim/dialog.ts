@@ -1,10 +1,10 @@
-import angular, {IController, IPromise, IScope} from "angular";
+import angular, {IController, IPromise, IRootElementService, IScope} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "./app";
-import {DraggableController} from "./directives/draggable";
 import * as dg from "./directives/draggable";
-import {$templateCache, $uibModal, $window} from "./ngimport";
+import {DraggableController} from "./directives/draggable";
+import {$rootScope, $templateCache, $uibModal, $window} from "./ngimport";
 import {markAsUsed} from "./utils";
 
 markAsUsed(dg);
@@ -19,9 +19,22 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
 
     protected abstract getTitle(): string;
 
+    constructor(protected element: IRootElementService, protected scope: any) {
+        this.handleEscPress = this.handleEscPress.bind(this);
+    }
+
     $onInit() {
         this.draggable.setCloseFn(() => this.dismiss());
         this.draggable.setCaption(this.getTitle());
+        this.draggable.setDragClickFn(() => bringToFront(this.scope));
+        bringToFront(this.scope);
+        document.addEventListener("keydown", this.handleEscPress);
+    }
+
+    handleEscPress(e: KeyboardEvent) {
+        if (e.keyCode === 27 && this.isTopMostDialog()) {
+            this.dismiss();
+        }
     }
 
     public getDraggable() {
@@ -31,17 +44,36 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
     protected close(returnValue: Ret) {
         this.closed = true;
         this.modalInstance.close(returnValue);
+        document.removeEventListener("keydown", this.handleEscPress);
     }
 
     protected dismiss() {
-        this.closed = true;
-        this.modalInstance.dismiss();
+        if (this.confirmDismiss()) {
+            this.closed = true;
+            this.modalInstance.dismiss();
+            document.removeEventListener("keydown", this.handleEscPress);
+        }
+    }
+
+    private isTopMostDialog() {
+        const {modal, maxIndex} = getModalAndMaxIndex(this.scope);
+        return modal.$$topModalIndex === maxIndex;
+    }
+
+    protected confirmDismiss() {
+        return true;
     }
 }
 
 export type Dialog<T extends DialogController<T["resolve"], T["ret"], T["component"]>> = DialogController<T["resolve"], T["ret"], T["component"]>;
 
 class MessageDialogController extends DialogController<{message: string}, {}, "timMessageDialog"> {
+    private static $inject = ["$element", "$scope"];
+
+    constructor(protected element: IRootElementService, protected scope: IScope) {
+        super(element, scope);
+    }
+
     public getTitle() {
         return "Message";
     }
@@ -75,37 +107,38 @@ export function registerDialogComponent<T extends Dialog<T>>(name: T["component"
 }
 
 class TimDialogCtrl implements IController {
-    private static $inject = ["$scope", "$rootScope"];
+    private static $inject = ["$scope"];
     private draggable: DraggableController | undefined;
 
-    constructor(private scope: IScope, private rootScope: any) {
+    constructor(private scope: IScope) {
     }
 
     $onInit() {
-        if (this.draggable) {
-            this.draggable.setDragClickFn(() => this.bringToFront());
-        }
-        this.bringToFront();
     }
+}
 
-    bringToFront() {
-        let mymodal = this.scope as any;
-        while (mymodal.$$topModalIndex === undefined) {
-            mymodal = mymodal.$parent;
-        }
-        let modal = this.rootScope.$$childHead;
-        while (modal.$$prevSibling != null) {
-            modal = modal.$$prevSibling;
-        }
-        let maxIndex = -1;
-        while (modal != null) {
-            if (modal.$$topModalIndex !== undefined) {
-                maxIndex = Math.max(maxIndex, modal.$$topModalIndex);
-            }
-            modal = modal.$$nextSibling;
-        }
-        mymodal.$$topModalIndex = maxIndex + 1;
+function getModalAndMaxIndex(scope: any) {
+    let mymodal = scope;
+    while (mymodal.$$topModalIndex === undefined) {
+        mymodal = mymodal.$parent;
     }
+    let modal = ($rootScope as any).$$childHead;
+    while (modal.$$prevSibling != null) {
+        modal = modal.$$prevSibling;
+    }
+    let maxIndex = -1;
+    while (modal != null) {
+        if (modal.$$topModalIndex !== undefined) {
+            maxIndex = Math.max(maxIndex, modal.$$topModalIndex);
+        }
+        modal = modal.$$nextSibling;
+    }
+    return {modal: mymodal, maxIndex};
+}
+
+function bringToFront(modalScope: any) {
+    const {modal, maxIndex} = getModalAndMaxIndex(modalScope);
+    modal.$$topModalIndex = maxIndex + 1;
 }
 
 timApp.component("timDialog", {
@@ -177,6 +210,7 @@ export function showDialog<T extends Dialog<T>>(component: T["component"],
         animation: !$window.IS_TESTING,
         backdrop: false,
         component: component,
+        keyboard: false,
         openedClass: "unused-class", // prevents scrolling from being disabled
         resolve: resolve,
         windowClass: (opts.classes || ["no-pointer-events"]).join(" "), // no-pointer-events enables clicking things outside dialog

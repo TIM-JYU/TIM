@@ -1,4 +1,4 @@
-import angular, {IFormController} from "angular";
+import angular, {IFormController, IRootElementService, IScope} from "angular";
 import moment from "moment";
 import {DurationChoice} from "../components/durationPicker";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
@@ -32,6 +32,7 @@ function isLecture(item: any): item is ILecture {
 }
 
 export class CreateLectureCtrl extends DialogController<{params: ILectureFormParams}, ILecture, "timCreateLecture"> {
+    private static $inject = ["$element", "$scope"];
     private useDate: boolean;
     private durationAmount: number;
     private durationType: DurationChoice;
@@ -47,8 +48,8 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
     private options: ILectureOptions;
     private form: IFormController;
 
-    constructor() {
-        super();
+    constructor(protected element: IRootElementService, protected scope: IScope) {
+        super(element, scope);
         this.showEarlyJoin = true;
         this.useDate = false;
         this.lectureCode = "";

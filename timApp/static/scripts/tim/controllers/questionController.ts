@@ -1,4 +1,4 @@
-import angular, {IFormController, IRootElementService} from "angular";
+import angular, {IFormController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {
@@ -133,7 +133,7 @@ export async function deleteQuestionWithConfirm(docId: number, parId: string): P
 }
 
 export class QuestionController extends DialogController<{params: IQuestionDialogParams}, IQuestionDialogResult, "timEditQuestion"> {
-    private static $inject = ["$element"];
+    private static $inject = ["$element", "$scope"];
     private answerFieldTypes: IAnswerField[];
     private dateTimeOptions: EonasdanBootstrapDatetimepicker.SetOptions;
     private question: IAskedJsonJson;
@@ -143,7 +143,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private columnHeaders: IHeader[];
     private titleChanged: boolean;
     private oldMarkupJson: string;
-    private element: IRootElementService;
     private oldHeaders: string[];
     private answer: string;
     private previewParams: IPreviewParams;
@@ -151,9 +150,8 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private f?: IFormController;
     private qst = false;
 
-    constructor(element: IRootElementService) {
-        super();
-        this.element = element;
+    constructor(element: IRootElementService, protected scope: IScope) {
+        super(element, scope);
 
         this.dateTimeOptions = {
             format: "D.M.YYYY HH:mm:ss",

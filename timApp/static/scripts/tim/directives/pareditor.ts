@@ -103,8 +103,15 @@ export class PareditorController extends DialogController<{params: IEditorParams
         return this.resolve.params.options.caption;
     }
 
-    constructor(private scope: IScope, private element: IRootElementService) {
-        super();
+    protected confirmDismiss() {
+        if (this.editor.getEditorText() === this.getInitialText()) {
+            return true;
+        }
+        return window.confirm("You have unsaved changes. Close editor anyway?");
+    }
+
+    constructor(protected scope: IScope, protected element: IRootElementService) {
+        super(element, scope);
         this.lstag = this.getOptions().localSaveTag || ""; // par/note/addAbove
         this.storage = localStorage;
 
@@ -551,7 +558,7 @@ or newer one that is more familiar to write in YAML:
     }
 
     cancelClicked() {
-        this.close({type: "cancel"});
+        this.dismiss();
     }
 
     releaseClicked() {

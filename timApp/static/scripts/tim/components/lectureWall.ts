@@ -1,23 +1,21 @@
-import {IRootElementService} from "angular";
+import {IRootElementService, IScope} from "angular";
 import {timApp} from "../app";
 import {DialogController, IModalInstance, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
 import {ILectureMessage} from "../lecturetypes";
 import {$http, $timeout} from "../ngimport";
 
 class LectureWallController extends DialogController<{params: {lectureId: number, messages: ILectureMessage[]}}, {}, "timLectureWall"> {
-    private static $inject = ["$element"];
+    private static $inject = ["$element", "$scope"];
     private messageName = true;
     private messageTime = true;
     private newMsg: string;
     private messages: ILectureMessage[];
     private lectureId: number;
-    private element: IRootElementService;
     private modalBody: HTMLElement | undefined;
     private msgCount = 0;
 
-    constructor(element: IRootElementService) {
-        super();
-        this.element = element;
+    constructor(element: IRootElementService, protected scope: IScope) {
+        super(element, scope);
     }
 
     public $onInit() {

@@ -1,3 +1,4 @@
+import {IRootElementService, IScope} from "angular";
 import * as answerSheet from "tim/directives/dynamicAnswerSheet";
 import {markAsUsed} from "tim/utils";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
@@ -56,10 +57,11 @@ export async function askQuestion(p: AskParams) {
 }
 
 export class QuestionPreviewController extends DialogController<{params: QuestionPreviewParams}, IAskedQuestion, "timAskQuestion"> {
+    private static $inject = ["$element", "$scope"];
     private questiondata?: IPreviewParams;
 
-    constructor() {
-        super();
+    constructor(protected element: IRootElementService, protected scope: IScope) {
+        super(element, scope);
     }
 
     public getTitle() {

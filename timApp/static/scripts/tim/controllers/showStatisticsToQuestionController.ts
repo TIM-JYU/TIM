@@ -1,3 +1,4 @@
+import {IRootElementService, IScope} from "angular";
 import moment from "moment";
 import * as chart from "tim/directives/showChartDirective";
 import {markAsUsed, to} from "tim/utils";
@@ -17,12 +18,13 @@ function getQuestionEndTime(q: IAskedQuestion) {
 }
 
 export class ShowStatisticsToQuestionController extends DialogController<{params: IStatisticsParams}, IStatisticsResult, "timQuestionStatistics"> {
+    private static $inject = ["$element", "$scope"];
     private answers: IQuestionAnswer[] = [];
     private ended = false;
     private lastFetch = moment({year: 1900});
 
-    constructor() {
-        super();
+    constructor(protected element: IRootElementService, protected scope: IScope) {
+        super(element, scope);
     }
 
     public getTitle() {
