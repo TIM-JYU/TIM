@@ -74,7 +74,9 @@ def normalize_question_json(q: Dict[str, Any], allow_top_level_keys: Set[str] = 
     missing_keys = MANDATORY_FIELDS - set(normalized.keys())
     if missing_keys:
         return make_error_question(f'Missing fields: {", ".join(sorted(list(missing_keys)))}')
-    normalize_rows(normalized['rows'])
+    result, err = normalize_rows(normalized['rows'])
+    if not result:
+        return make_error_question(err)
     return normalized
 
 
@@ -124,6 +126,9 @@ def normalize_rows(rows):
     for r in rows:
         if isinstance(r, str):
             continue
+        if r is None:
+            return False, 'A row must not be null'
         cap_cols = r.get('COLUMNS')
         if cap_cols:
             r['columns'] = r.pop('COLUMNS')
+    return True, ''
