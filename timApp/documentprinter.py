@@ -45,6 +45,14 @@ class PrintingError(Exception):
     pass
 
 
+class PDFLaTeXError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+
 def add_nonumber(md: str) -> str:
     """
     add's {.unnumbered} after every heading line that starts with #
@@ -223,17 +231,22 @@ class DocumentPrinter:
                 '''
             export_pars.append(md)
 
-        content = '\n\n'.join(export_pars)
+        content = self._doc_entry.document.get_settings().get_doctexmacros() + '\n' + '\n\n'.join(export_pars)
+
         self._content = content
         return content
 
-    def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False) -> bytearray:
+    def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False, path: str=None) -> bytearray:
         """
         Converts the document to latex and returns the converted document as a bytearray
         :param target_format: The target file format
         :param plugins_user_print: Whether or not to print user input from plugins (instead of default values)
+        :param path:  filepath to write
         :return: Converted document as bytearray
         """
+
+        if path is None:
+            raise PrintingError("The path name should be given")
 
         output_bytes = None
 
@@ -283,7 +296,7 @@ class DocumentPrinter:
                 tim_convert_text(source=src,
                                  from_format='markdown',
                                  to=target_format.value,
-                                 outputfile=output_file.name,
+                                 outputfile=path,  # output_file.name,
                                  extra_args=['--template=' + template_file.name,
                                              '--variable=TTrue:1',
                                              '--variable=T1:1',
@@ -296,8 +309,10 @@ class DocumentPrinter:
                                              ],
                                  filters=filters
                                  )
-                template_file.seek(0)
-                output_bytes = bytearray(output_file.read())
+                # template_file.seek(0)
+                # output_bytes = bytearray(output_file.read())
+            except PDFLaTeXError as ex:
+                raise PDFLaTeXError(ex.value)
             except Exception as ex:
                 # TODO: logging of errors
                 # Might be a good idea to log these?
@@ -511,6 +526,8 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
     pandoc_path = '/usr/bin/pandoc'
 
     from_format, to = _validate_formats(from_format, to, outputfile)
+    is_pdf = outputfile and outputfile.find('.pdf') >= 0
+    latex_file = outputfile
 
     string_input = input_type == 'string'
     input_file = [source] if not string_input else []
@@ -519,7 +536,9 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
     args += input_file
 
     if outputfile:
-        args.append("--output=" + outputfile)
+        if is_pdf:
+            latex_file = outputfile.replace('.pdf', '.latex')
+        args.append("--output=" + latex_file)
 
     args.extend(extra_args)
 
@@ -560,15 +579,62 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
     except OSError:
         # this is happening only on Py2.6 when pandoc dies before reading all
         # the input. We treat that the same as when we exit with an error...
-        raise RuntimeError('Pandoc died with exitcode "%s" during conversion.' % (p.returncode))
+        raise RuntimeError('Pandoc died with exitcode "%s" during conversion.' % p.returncode)
 
     stdout = _decode_result(stdout)
     stderr = _decode_result(stderr)
+    if stdout or stderr:
+        raise RuntimeError('Pandoc died with exitcode "%s" during conversion.' % stdout + stderr)
 
-    # check that pandoc returned successfully
+    if is_pdf:
+        try:
+            filedir = os.path.dirname(outputfile)
+            args = ['pdflatex', '-output-directory', filedir,  # '-file-line-error',
+                    '-interaction',  'nonstopmode', latex_file]
+            p = subprocess.Popen(
+                args,
+                stdin=subprocess.PIPE if string_input else None,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=new_env)
+
+            # something else than 'None' indicates that the process already terminated
+            if not (p.returncode is None):
+                raise RuntimeError(
+                    'PdfLaTeX died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
+                )
+
+            stdout, stderr = p.communicate(None)
+            stdout = _decode_result(stdout)
+            stderr = _decode_result(stderr)
+        except OSError as ex:
+            # this is happening only on Py2.6 when pandoc dies before reading all
+            # the input. We treat that the same as when we exit with an error...
+            raise RuntimeError('PdfLaTeX died with error "%s" during conversion.' % str(ex))
+
+
+    # check if pdflatex returned successfully
     if p.returncode != 0:
-        raise RuntimeError(
-            'Pandoc died with exitcode "%s" during conversion: \n%s' % (p.returncode, stderr)
+        # Find errors:
+        i = stdout.find('\n!')  # find possible error line from normal output
+        # i = stdout.find('\n'+ latex_file + ':') # find possible error line in file:line:error format
+        line = ''
+        if i >= 0:
+            stdout = stdout[i:]
+            stdout = re.sub("\n\(/usr/.*[^\n]", "", stdout)
+            stdout = stdout.replace(latex_file, '')
+            i = stdout.find('/var/lib')
+            if i >= 0:
+                stdout = stdout[:i - 3]
+            i = stdout.find('\nl.')
+            if i >= 0:
+                i2 = stdout.find(' ', i)
+                if i2 >= 0:
+                    line = stdout[i + 3:i2]
+        raise PDFLaTeXError(
+            {'line': line, 'latex': latex_file, 'pdf': outputfile, 'error': stdout}
+            # 'LINE: %s\nLATEX:%s\nPDF:%s\nPdfLaTeX died with exitcode "%s" during conversion: \n%s\n%s' %
+            # (line, latex_file, outputfile, p.returncode, stdout, stderr)
         )
 
     # if there is an outputfile, then stdout is likely empty!

@@ -19,6 +19,8 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
     private errormsg?: string;
     private notificationmsg?: string;
     private docUrl?: string;
+    private latex?: string;
+    private latexline?: string;
     private loading: boolean;
     private showPaths: boolean;
     private pluginsUserCode: boolean;
@@ -117,7 +119,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
                 templateDocId: chosenTemplateId,
                 printPluginsUserCode: pluginsUserCode,
                 removeOldImages,
-                force,
+                force
             }));
             if (response) {
                 // console.log(response);
@@ -128,6 +130,9 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
                 // this.docUrl = '/print/' + this.document.path + '?file_type=' + fileType
                 //    + '&template_doc_id=' + chosenTemplateId + '&plugins_user_code=' + pluginsUserCode;
                 this.docUrl = response.data.url;
+                this.errormsg = response.data.errormsg;
+                this.latex = response.data.latex;
+                this.latexline = response.data.latexline;
                 // console.log(this.docUrl);
 
                 this.loading = false;

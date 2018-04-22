@@ -107,6 +107,12 @@
     <form name="ignore_me">
         <input type="text" id="page_is_dirty" name="page_is_dirty" value="0" style="display: none;"/>
     </form>
+    {% set dtm = doc_settings.get_doctexmacros() %}
+    {% if dtm %}
+    <p style="visibility: hidden;"><span class="math inline">\({{dtm}}\)</span></p>
+    {% endif %}
+
+
     <div class="paragraphs" ng-click="$ctrl.notesHandler.setNotePadge($event)" >
         <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="$ctrl.showRefresh">
             <p>The page has been modified since the last reload. Refresh now?</p>

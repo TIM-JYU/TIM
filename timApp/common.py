@@ -55,6 +55,9 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
             # htmlpar.insert_rnds(0)
             if not htmlpar['attrs'].get('nomacros', False):
                 htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter, env=env, ignore_errors=True)
+            # if htmlpar['attrs'].get('texmacros', False): # in view texmacros should be inside $
+            #    htmlpar['md'] = '<p><span class="math inline">\\(' + htmlpar['md'] + '\\)</span></p>';
+
 
     # taketime("macros done")
 
