@@ -222,7 +222,7 @@ export class DraggableController implements IController {
                 this.element.css("width",
                     oldSize.width);
             }
-            if (oldSize.height) {
+            if (oldSize.height && !this.autoHeight) {
                 this.element.css("height",
                     oldSize.height);
             }
