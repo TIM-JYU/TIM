@@ -7,6 +7,7 @@ import {setSetting} from "../utils";
 import {$http} from "../ngimport";
 import {getParId} from 'tim/controllers/view/parhelpers';
 import {openEditorSimple} from "../directives/pareditor";
+import {ParCompiler} from "../services/parCompiler";
 
 //import {IHash} from "../../decls/components/timTable";
 
@@ -567,7 +568,7 @@ export class TimTableController implements IController {
         const response = await $http.post<{ [cellContent: string]: string; }>("/timTable/saveCell", {cellContent, docId, parId, row, col});
         const cellHtml = response.data[0];
         this.cellDataMatrix[row][col] = cellHtml;
-
+        ParCompiler.processAllMathDelayed(this.element);
        // const response = await $http.post<ICell>("/timTable/saveCell", {cellContent, docId, parId, row, col});
 
 

@@ -20,6 +20,7 @@ from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.askedjson import normalize_question_json
 from timApp.timdb.models.docentry import DocEntry
 from timApp.markdownconverter import md_to_html
+from timApp.dumboclient import call_dumbo
 
 
 timTable_plugin = Blueprint('timTable_plugin',
@@ -82,7 +83,7 @@ def tim_table_get_cell_data():
     cell_cnt = None
     if is_datablock(yaml):
         cell_cnt = find_cell_from_datablock(yaml[TABLE][DATABLOCK][CELLS], int(args[ROW]), int(args[COL]))
-    if cell_cnt != None: #TODO voisi olla myös tyhjä
+    if cell_cnt != None:
         multi.append(cell_cnt)
     else:
         rows = yaml[TABLE][ROWS]
@@ -114,14 +115,16 @@ def tim_table_save_cell_list():
         save_cell(yaml[TABLE][DATABLOCK], row[0], col[0], cellContent[0])
 
     cc = str(cellContent[0])
-    cellHtml = cc
+    '''
     if len(cc) > 3:
         ccTmp = cc[:3]
         if ccTmp == 'md:':
             cellHtml = md_to_html(cc[3:])
             print(cellHtml)
+    '''
+    html = call_dumbo([cc], "/mdkeys")
     plug.save()
-    multi.append(cellHtml)
+    multi.append(html[0])
     return json_response(multi)
 
 def is_datablock(yaml: dict) -> bool:
@@ -146,8 +149,6 @@ def save_cell(datablock: dict, row: int, col: int, cell_content: str) -> str:
         datablock['cells'].update({coordinate: cell_content})
     except:
         pass
-
-
 
 
 def find_cell(rows: list, row: int, col: int) -> str:
