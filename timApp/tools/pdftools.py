@@ -171,6 +171,8 @@ def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
     for pdf in pdf_path_list:
         if not os_path.exists(pdf):
             raise AttachmentNotFoundError(pdf)
+        if ".pdf" not in pdf:
+            raise AttachmentNotAPdfError(pdf)
 
     args = ["pdftk"] + pdf_path_list + ["cat", "output", output_path]
     print(args)

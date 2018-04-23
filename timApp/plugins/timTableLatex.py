@@ -38,6 +38,13 @@ class TableBorderException(TimTableException):
     """
 
 
+class IndexConversionError(TimTableException):
+    """
+    Error raised if attempt to convert Excel-type cell coordinate
+    like A3 fails.
+    """
+
+
 class CellBorders:
     """
     Contains attributes of a cell's borders.
@@ -591,6 +598,22 @@ def copy_cell(cell: Cell) -> Cell:
     return n_cell
 
 
+def char_to_int(char):
+    """
+    Converts alphabets to integers. Starts from a = 0.
+    :param char: Single character.
+    :return:
+    """
+    if not char or len(char) > 1:
+        raise IndexConversionError(char)
+    i = ord(char.lower()) - ord('a')
+    if i < 0:
+        raise IndexConversionError(char)
+    else:
+        return i
+
+
+
 def convert_table(table_json) -> Table:
     """
     Converts json-table into a LaTeX-table.
@@ -641,6 +664,9 @@ def convert_table(table_json) -> Table:
                     cell_height=height,
                     borders=borders
                 )
+
+                # TODO: Check if corresponding data block for the cell exists.
+                # TODO: If it does, overwrite with values from there.
 
                 # Cells with rowspan > 1:
                 # Multirow-cells need to be set from bottom-up in LaTeX to properly show bg-colors, and
