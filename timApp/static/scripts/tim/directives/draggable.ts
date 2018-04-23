@@ -37,11 +37,11 @@ const draggableTemplate = `
 <button class="timButton pull-right" ng-show="d.detachable" ng-click="d.toggleDetach()">
     <i class="glyphicon glyphicon-arrow-{{ d.canDrag() ? 'left' : 'right' }}"></i>
 </button>
-<div ng-show="!d.areaMinimized && d.resize && !d.autoWidth"
+<div ng-show="d.canResize() && !d.autoWidth"
      class="resizehandle-r resizehandle"></div>
-<div ng-show="!d.areaMinimized && d.resize && !d.autoHeight"
+<div ng-show="d.canResize() && !d.autoHeight"
      class="resizehandle-d resizehandle"></div>
-<div ng-show="!d.areaMinimized && d.resize && !d.autoWidth && !d.autoHeight"
+<div ng-show="d.canResize() && !d.autoWidth && !d.autoHeight"
      class="resizehandle-rd resizehandle"></div>
     `;
 
@@ -378,6 +378,10 @@ export class DraggableController implements IController {
 
     private canDrag() {
         return this.element.css("position") !== "static";
+    }
+
+    private canResize() {
+        return !this.areaMinimized && this.resize && this.canDrag();
     }
 
     private getPageXYnull(e: JQueryEventObject) {
