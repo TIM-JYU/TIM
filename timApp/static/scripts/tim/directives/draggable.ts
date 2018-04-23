@@ -1,7 +1,7 @@
-import {IAttributes, IController, IRootElementService, IScope} from "angular";
+import {IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
-import {$compile, $document} from "../ngimport";
+import {$compile, $document, $timeout} from "../ngimport";
 import {getOutOffsetFully, getOutOffsetVisible, isMobileDevice} from "../utils";
 
 function setStorage(key: string, value: any) {
@@ -23,7 +23,7 @@ function getPixels(s: string) {
 }
 
 const draggableTemplate = `
-<div class="draghandle" ng-mousedown="d.dragClick()">
+<div class="draghandle" ng-mousedown="d.dragClick()" ng-show="d.canDrag()">
     <p ng-show="d.caption" ng-bind="d.caption"></p>
     <i ng-show="d.closeFn"
        title="Close dialog"
@@ -34,6 +34,9 @@ const draggableTemplate = `
        ng-click="d.toggleMinimize()"
        class="glyphicon glyphicon-minus pull-right"></i>
 </div>
+<button class="timButton pull-right" ng-show="d.detachable" ng-click="d.toggleDetach()">
+    <i class="glyphicon glyphicon-arrow-{{ d.canDrag() ? 'left' : 'right' }}"></i>
+</button>
 <div ng-show="!d.areaMinimized && d.resize && !d.autoWidth"
      class="resizehandle-r resizehandle"></div>
 <div ng-show="!d.areaMinimized && d.resize && !d.autoHeight"
@@ -48,11 +51,16 @@ timApp.directive("timDraggableFixed", [() => {
             absolute: "<?",
             caption: "@?",
             click: "<?",
+            detachable: "<?",
+            forceMaximized: "<?",
             resize: "<?",
             save: "@?",
         },
         controller: DraggableController,
         controllerAs: "d", // default $ctrl does not work, possibly because of some ng-init
+        require: {
+            parentDraggable: "?^^timDraggableFixed", // for checking whether we are inside some other draggable
+        },
         restrict: "A",
         scope: {},
         // Using template + transclude here does not work for some reason with uib-modal, so we compile the
@@ -63,9 +71,9 @@ timApp.directive("timDraggableFixed", [() => {
 type Pos = {X: number, Y: number};
 
 export class DraggableController implements IController {
-    private static $inject = ["$scope", "$attrs", "$element"];
+    private static $inject = ["$scope", "$element"];
 
-    private posKey: string;
+    private posKey?: string;
     private areaMinimized: boolean = false;
     private areaHeight: number = 0;
     private areaWidth: number = 0;
@@ -86,8 +94,6 @@ export class DraggableController implements IController {
     private lastPos: Pos;
     private pos: Pos;
     private delta: Pos;
-    private readonly element: IRootElementService;
-    private scope: IScope;
     private lastPageXYPos = {X: 0, Y: 0};
     private handle: JQuery;
     private closeFn?: () => void;
@@ -98,10 +104,10 @@ export class DraggableController implements IController {
     private dragClick?: () => void;
     private autoHeight: boolean;
     private absolute?: boolean;
+    private parentDraggable?: DraggableController;
+    private forceMaximized?: boolean;
 
-    constructor(scope: IScope, attr: IAttributes, element: IRootElementService) {
-        this.scope = scope;
-        this.element = element;
+    constructor(private scope: IScope, private element: IRootElementService) {
     }
 
     $onInit() {
@@ -120,7 +126,20 @@ export class DraggableController implements IController {
         this.autoHeight = true;
     }
 
-    private makePositionAbsolute() {
+    private toggleDetach() {
+        if (this.canDrag()) {
+            this.element.css("position", "static");
+            for (const prop of ["width", "height"]) {
+                this.element.css(prop, "");
+            }
+        } else {
+            this.element.css("position", "absolute");
+            this.restoreSizeAndPosition();
+        }
+        setStorage(this.posKey + "detach", this.canDrag());
+    }
+
+    private makeModalPositionAbsolute() {
         this.getModal().css("position", "absolute");
     }
 
@@ -128,12 +147,17 @@ export class DraggableController implements IController {
         return this.element.parents(".modal");
     }
 
-    isMinimized() {
+    public isMinimized() {
         return this.areaMinimized;
     }
 
-    hasAbsolutePosition() {
-        return this.getModal().css("position") === "absolute";
+    private modalHasAbsolutePosition() {
+        return this.getModal().css("position") === "absolute" && this.parentDraggable == null;
+    }
+
+    private elementHasAbsoluteOrRelativePosition() {
+        const s = this.element.css("position");
+        return s === "absolute" || s === "relative";
     }
 
     setDragClickFn(fn: () => void) {
@@ -144,18 +168,16 @@ export class DraggableController implements IController {
         this.closeFn = fn;
     }
 
-    $postLink() {
+    async $postLink() {
         this.element.prepend($compile(draggableTemplate)(this.scope));
         this.createResizeHandlers();
         if (this.absolute) {
-            this.makePositionAbsolute();
+            this.makeModalPositionAbsolute();
         }
         if (isMobileDevice()) {
             this.getModal().css("overflow", "visible");
         }
         this.handle = this.element.children(".draghandle");
-
-        this.updateHandle(this.element, this.handle);
 
         this.handle.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
             this.upResize = false;
@@ -175,56 +197,58 @@ export class DraggableController implements IController {
             $document.on("mouseup pointerup touchend", this.release);
             $document.on("mousemove pointermove touchmove", this.move);
         });
-
-        this.element[0].style.msTouchAction = "none";
-
-        if (this.save) {
+        await $timeout(); // the restored position will be slightly off without this
+        if (this.posKey) {
             this.getSetDirs();
-            const oldSize: any = getStorage(this.posKey +
-                "Size");
-            if (oldSize) {
-                if (oldSize.width) {
-                    this.element.css("width",
-                        oldSize.width);
-                }
-                if (oldSize.height) {
-                    this.element.css("height",
-                        oldSize.height);
-                }
-            }
-            const oldPos: {left: string, right: string, top: string, bottom: string} | null = getStorage(this.posKey);
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            const ew = this.getWidth();
-            const eh = this.getHeight();
-
-            // it doesn't make sense to restore Y position if the dialog has absolute position (instead of fixed)
-            if (this.hasAbsolutePosition()) {
-                this.element.css("top", window.pageYOffset + "px");
-            }
-            if (oldPos) {
-                if (oldPos.left && this.setLeft) {
-                    this.element.css("left", oldPos.left);
-                }
-                if (oldPos.right && this.setRight) {
-                    this.element.css("right", oldPos.right);
-                }
-                if (!this.hasAbsolutePosition()) {
-                    if (oldPos.top && this.setTop) {
-                        this.element.css("top", oldPos.top);
-                    }
-                    if (oldPos.bottom && this.setBottom) {
-                        this.element.css("bottom", oldPos.bottom);
-                    }
-                }
-                // this.element.css("background", "red");
-                timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
-            }
-            if (getStorage(this.posKey + "min")) {
+            this.restoreSizeAndPosition();
+            if (getStorage(this.posKey + "min") && !this.forceMaximized) {
                 this.toggleMinimize();
+            }
+            if (getStorage(this.posKey + "detach")) {
+                this.toggleDetach();
             }
         }
         this.ensureVisibleInViewport();
+    }
+
+    private restoreSizeAndPosition() {
+        if (!this.posKey) {
+            return;
+        }
+        const oldSize: any = getStorage(this.posKey +
+            "Size");
+        if (oldSize && this.elementHasAbsoluteOrRelativePosition()) {
+            if (oldSize.width) {
+                this.element.css("width",
+                    oldSize.width);
+            }
+            if (oldSize.height) {
+                this.element.css("height",
+                    oldSize.height);
+            }
+        }
+        const oldPos: {left: string, right: string, top: string, bottom: string} | null = getStorage(this.posKey);
+        // it doesn't make sense to restore Y position if the dialog has absolute position (instead of fixed)
+        if (this.modalHasAbsolutePosition()) {
+            this.element.css("top", window.pageYOffset + "px");
+        }
+        if (oldPos) {
+            if (oldPos.left && this.setLeft) {
+                this.element.css("left", oldPos.left);
+            }
+            if (oldPos.right && this.setRight) {
+                this.element.css("right", oldPos.right);
+            }
+            if (!this.modalHasAbsolutePosition()) {
+                if (oldPos.top && this.setTop) {
+                    this.element.css("top", oldPos.top);
+                }
+                if (oldPos.bottom && this.setBottom) {
+                    this.element.css("bottom", oldPos.bottom);
+                }
+            }
+            timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
+        }
     }
 
     getWidth(): number {
@@ -272,7 +296,7 @@ export class DraggableController implements IController {
         }
     }
 
-    getSetDirs() {
+    private getSetDirs() {
         const leftSet = this.element.css("left") != "auto";
         const rightSet = this.element.css("right") != "auto";
         this.setLeft = (!leftSet && !rightSet) || leftSet;
@@ -297,7 +321,7 @@ export class DraggableController implements IController {
         timLogTime("set:" + this.setLeft + "," + this.setTop, "drag");
     }
 
-    resizeElement(e: JQueryEventObject, up: boolean, right: boolean, down: boolean, left: boolean) {
+    private resizeElement(e: JQueryEventObject, up: boolean, right: boolean, down: boolean, left: boolean) {
         this.upResize = up;
         this.rightResize = right;
         this.downResize = down;
@@ -319,7 +343,7 @@ export class DraggableController implements IController {
      this.element.css('top', this.element.position().top);
      this.element.css('left', this.element.position().left); */
 
-    createResizeHandlers() {
+    private createResizeHandlers() {
         const handleRight = this.element.children(".resizehandle-r");
         handleRight.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
             this.resizeElement(e, false, true, false, false);
@@ -352,18 +376,14 @@ export class DraggableController implements IController {
      }
      });*/
 
-    updateHandle(e: JQuery, h: JQuery) {
-        // TODO: find an efficient way to call this whenever
-        // position is changed between static and absolute
-        const position = e.css("position");
-        const movable = position != "static";
-        h.css("display", movable ? "block" : "none");
+    private canDrag() {
+        return this.element.css("position") !== "static";
     }
 
-    getPageXYnull(e: JQueryEventObject) {
+    private getPageXYnull(e: JQueryEventObject) {
         if (!(
-                "pageX" in e) || (
-                e.pageX == 0 && e.pageY == 0)) {
+            "pageX" in e) || (
+            e.pageX == 0 && e.pageY == 0)) {
             const originalEvent = e.originalEvent as any;
             if (originalEvent.touches.length) {
                 return {
@@ -383,7 +403,7 @@ export class DraggableController implements IController {
         return {X: e.pageX, Y: e.pageY};
     }
 
-    getPageXY(e: JQueryEventObject) {
+    private getPageXY(e: JQueryEventObject) {
         const pos = this.getPageXYnull(e);
         if (pos) {
             this.lastPageXYPos = pos;
@@ -391,7 +411,7 @@ export class DraggableController implements IController {
         return this.lastPageXYPos;
     }
 
-    getCss(key: "left" | "right" | "bottom" | "top") {
+    private getCss(key: "left" | "right" | "bottom" | "top") {
         return getPixels(this.element.css(key));
     }
 

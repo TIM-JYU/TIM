@@ -159,8 +159,14 @@
     <label class="pull-right font-weight-normal" ng-if="$ctrl.wrap.n!=-1" title="Put 0 to no wrap" ng-click="$ctrl.editor.forceWrap(true)">Wrap:
         <input type="text" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
     </label>
-    <div id="previewDiv" tim-draggable-fixed="" caption="Preview" class="preview" ng-show="$ctrl.proeditor"
-         style='z-index:100; top: 0px; right: 0px;'>
+    <div id="previewDiv"
+         tim-draggable-fixed
+         detachable="true"
+         caption="Preview"
+         save="{{$ctrl.getOptions().localSaveTag}}Preview"
+         resize="true"
+         class="preview"
+         ng-show="$ctrl.proeditor">
     <span>Preview
         (<ng-pluralize count="$ctrl.parCount"
                        when="{'0': 'empty',
@@ -168,8 +174,6 @@
                      'other': '{} paragraphs'}">
         </ng-pluralize>)
     </span>
-        <button id="releaseButton" class="timButton" style='float: right' ng-click="$ctrl.releaseClicked()">
-            &#8594;</button>
         <span ng-show="$ctrl.outofdate">...</span>
 
         <div class="previewcontent paragraphs"></div>

@@ -64,14 +64,11 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private editor: TextAreaParEditor | AceParEditor;
     private file: File & {progress?: number, error?: string};
     private isIE: boolean;
-    private lstag: string;
-    private minSizeSet: boolean;
     private oldmeta: HTMLMetaElement;
     private wrap: {n: number};
     private outofdate: boolean;
     private parCount: number;
     private pluginButtonList: {[tabName: string]: JQuery[]};
-    private previewReleased: boolean;
     private proeditor: boolean;
     private saving: boolean;
     private scrollPos: number;
@@ -110,12 +107,15 @@ export class PareditorController extends DialogController<{params: IEditorParams
         return window.confirm("You have unsaved changes. Close editor anyway?");
     }
 
+    private getSaveTag() {
+        return this.getOptions().localSaveTag;
+    }
+
     constructor(protected scope: IScope, protected element: IRootElementService) {
         super(element, scope);
-        this.lstag = this.getOptions().localSaveTag || ""; // par/note/addAbove
         this.storage = localStorage;
 
-        const sn = this.storage.getItem("wrap" + this.lstag);
+        const sn = this.storage.getItem("wrap" + this.getSaveTag());
         let n = parseInt(sn || "-90");
         if (isNaN(n)) {
             n = -90;
@@ -123,7 +123,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
 
         this.wrap = {n: n};
 
-        this.proeditor = this.getLocalBool("proeditor", this.lstag === "par");
+        this.proeditor = this.getLocalBool("proeditor", this.getSaveTag() === "par");
         this.autocomplete = this.getLocalBool("autocomplete", false);
 
         this.pluginButtonList = {};
@@ -273,7 +273,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
         if (!ret) {
             ret = false;
         }
-        const val = this.storage.getItem(name + this.lstag);
+        const val = this.storage.getItem(name + this.getSaveTag());
         if (!val) {
             return ret;
         }
@@ -281,26 +281,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     }
 
     setLocalValue(name: string, val: string) {
-        $window.localStorage.setItem(name + this.lstag, val);
-    }
-
-    setEditorMinSize() {
-        const editor = this.element;
-        this.previewReleased = false;
-
-        const editorOffsetStr = this.storage.getItem("editorReleasedOffset" + this.lstag);
-        if (editorOffsetStr) {
-            const editorOffset = JSON.parse(editorOffsetStr);
-            const offset = editor.offset();
-            if (offset) {
-                editor.css("left", editorOffset.left - offset.left);
-            }
-        }
-
-        if (this.storage.getItem("previewIsReleased" + this.lstag) === "true") {
-            this.releaseClicked();
-        }
-        this.minSizeSet = true;
+        $window.localStorage.setItem(name + this.getSaveTag(), val);
     }
 
     /*
@@ -416,22 +397,6 @@ or newer one that is more familiar to write in YAML:
         window.setTimeout(() => {
             const $editor = this.element;
             const $previewContent = this.element.find(".previewcontent");
-            const previewDiv = this.element.find("#previewDiv");
-            // If preview is released make sure that preview doesn't go out of bounds
-            if (this.previewReleased) {
-                const previewOffset = previewDiv.offset();
-                if (!previewOffset) {
-                    return;
-                }
-                const newOffset = previewOffset;
-                if (previewOffset.top < 0 /*|| previewOffset.top > $window.innerHeight */) {
-                    newOffset.top = 0;
-                }
-                if (previewOffset.left < 0 || previewOffset.left > $window.innerWidth) {
-                    newOffset.left = 0;
-                }
-                previewDiv.offset(newOffset);
-            }
             // Check that editor doesn't go out of bounds
             const editorOffset = $editor.offset();
             if (!editorOffset) {
@@ -451,9 +416,6 @@ or newer one that is more familiar to write in YAML:
     }
 
     createTextArea(text: string) {
-        if (!this.minSizeSet) {
-            this.setEditorMinSize();
-        }
         const $textarea = $(`
 <textarea rows="10"
       id="teksti"
@@ -562,92 +524,7 @@ or newer one that is more familiar to write in YAML:
     }
 
     releaseClicked() {
-        const div = this.element.find("#previewDiv");
-        const content = this.element.find(".previewcontent");
-        const editor = this.element;
-        this.previewReleased = !(this.previewReleased);
-        const tag = this.getOptions().localSaveTag || "";
-        const storage = $window.localStorage;
-
-        const releaseBtn = document.getElementById("releaseButton");
-        if (!releaseBtn) {
-            showMessageDialog("Failed to release preview; button not found");
-            return;
-        }
-        if (div.css("position") === "absolute") {
-            // If preview has been clicked back in, save the preview position before making it static again
-            if (this.minSizeSet) {
-                this.savePreviewData(true);
-            }
-            div.css("position", "static");
-            div.find(".draghandle").css("display", "none");
-            content.css("max-width", "");
-            div.css("display", "default");
-            editor.css("overflow", "hidden");
-            content.css("max-height", "40vh");
-            content.css("overflow-x", "");
-            content.css("width", "");
-            div.css("padding", 0);
-            releaseBtn.innerHTML = "&#8594;";
-        } else {
-            const currDivOffset = div.offset();
-            const winWidth = $(window).width();
-            const divWidth = div.width();
-            const editorOffset = editor.offset();
-            const editorWidth = editor.width();
-            if (currDivOffset == null || winWidth == null || divWidth == null || editorOffset == null || editorWidth == null) {
-                return;
-            }
-            // If preview has just been released or it was released last time editor was open
-            if (this.minSizeSet || storage.getItem("previewIsReleased" + tag) === "true") {
-                const storedOffset = storage.getItem("previewReleasedOffset" + tag);
-
-                if (storedOffset) {
-                    const savedOffset = JSON.parse(storedOffset);
-                    currDivOffset.left = editorOffset.left + savedOffset.left;
-                    currDivOffset.top = editorOffset.top + savedOffset.top;
-                } else {
-
-                    if (winWidth < editorWidth + divWidth) {
-                        currDivOffset.top += 5;
-                        currDivOffset.left += 5;
-                    } else {
-                        currDivOffset.top = editorOffset.top;
-                        currDivOffset.left = editorOffset.left + editorWidth + 3;
-                    }
-                }
-            }
-            div.css("position", "absolute");
-            editor.css("overflow", "visible");
-            div.find(".draghandle").css("display", "block");
-            div.css("display", "table");
-            div.css("width", "100%");
-            div.css("padding", 5);
-            const height = window.innerHeight - 90;
-            content.css("max-height", height);
-            content.css("max-width", window.innerWidth - 90);
-            content.css("overflow-x", "auto");
-            releaseBtn.innerHTML = "&#8592;";
-            div.offset(currDivOffset);
-        }
         this.adjustPreview();
-    }
-
-    savePreviewData(savePreviewPosition: boolean) {
-        const tag = this.getOptions().localSaveTag || "";
-        const storage = $window.localStorage;
-        const editorOffset = this.element.offset();
-        storage.setItem("editorReleasedOffset" + tag, JSON.stringify(editorOffset));
-        if (savePreviewPosition) {
-            // Calculate distance from editor's top and left
-            const previewOffset = this.element.find("#previewDiv").offset();
-            if (previewOffset && editorOffset) {
-                const left = previewOffset.left - editorOffset.left;
-                const top = previewOffset.top - editorOffset.top;
-                storage.setItem("previewReleasedOffset" + tag, JSON.stringify({left, top}));
-            }
-        }
-        storage.setItem("previewIsReleased" + tag, this.previewReleased.toString());
     }
 
     async saveClicked() {
@@ -657,11 +534,6 @@ or newer one that is more familiar to write in YAML:
         this.saving = true;
         // if ( $scope.wrap.n != -1) //  wrap -1 is not saved
         this.setLocalValue("wrap", "" + this.wrap.n);
-        if (this.previewReleased) {
-            this.savePreviewData(true);
-        } else {
-            this.savePreviewData(false);
-        }
         const text = this.editor.getEditorText();
         if (text.trim() === "") {
             this.deleteClicked();
@@ -942,10 +814,7 @@ or newer one that is more familiar to write in YAML:
                 wrapFn: () => this.wrapFn(),
                 saveClicked: () => this.saveClicked(),
                 getWrapValue: () => this.wrap.n,
-            }, (this.lstag === "addAbove" || this.lstag === "addBelow") ? "ace/mode/text" : "ace/mode/markdown");
-            if (!this.minSizeSet) {
-                this.setEditorMinSize();
-            }
+            }, (this.getSaveTag() === "addAbove" || this.getSaveTag() === "addBelow") ? "ace/mode/text" : "ace/mode/markdown");
             this.editor.setAutoCompletion(this.autocomplete);
             this.editor.editor.renderer.$cursorLayer.setBlinking(!$window.IS_TESTING);
             /*iPad does not open the keyboard if not manually focused to editable area
@@ -1002,7 +871,7 @@ export function openEditor(p: IEditorParams): IPromise<IEditorResult> {
     return showDialog<PareditorController>(
         "pareditor",
         {params: () => p},
-        {saveKey: p.options.localSaveTag, absolute: true, size: p.defaultSize}).result;
+        {saveKey: p.options.localSaveTag, absolute: true, size: p.defaultSize, forceMaximized: true}).result;
 }
 
 export function openEditorSimple(docId: number, text: string) {
