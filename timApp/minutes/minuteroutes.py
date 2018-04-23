@@ -58,6 +58,10 @@ def create_minute_extracts(doc):
     markdown_to_find = "%%lista("
 
     for par in paragraphs:
+
+        if par.is_setting():
+            continue
+
         markdown = par.get_markdown()
         macro_position = markdown.find(markdown_to_find)
 
@@ -151,6 +155,8 @@ def create_minutes_route():
     """
 
     item_path, item_title, copy_id = verify_json_params('item_path', 'item_title', 'copy')
+
+    verify_manage_access(item_path)
 
     item = create_or_copy_item(item_path, "document", item_title, copy_id=copy_id, use_template=False)
     item.document.add_setting(DocSettings.is_minutes_key, True)
