@@ -162,6 +162,11 @@ export class TimTableController implements IController {
     }
 
 
+
+
+
+
+
     $onInit() {
         this.count = 0;
         // this.$pars = $(this.srcid);
@@ -179,6 +184,12 @@ export class TimTableController implements IController {
         }
     }
 
+    private autofocus(scope: any, elem: any) {
+               elem.focus();
+    }
+
+
+
     /*
     Opens adv editor
      */
@@ -188,10 +199,15 @@ export class TimTableController implements IController {
         cell.editing = false;
         cell.editorOpen = true;
         let parId = getParId(this.element.parents(".par"));
+        if (parId === undefined || !this.viewctrl) return;
+       /* if(this.editedCellContent)
+            if(this.editedCellContent != this.cellDataMatrix[rowi][coli]){
+                this.saveCells(this.editedCellContent, this.viewctrl.item.id, parId, rowi, coli);
+        }*/
         /*if(this.viewctrl && parId){
         this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
         }*/
-        if (parId != undefined && this.viewctrl) this.openEditor(cell, this.viewctrl.item.id, this.cellDataMatrix[rowi][coli],parId ,rowi, coli)
+         this.openEditor(cell, this.viewctrl.item.id, this.cellDataMatrix[rowi][coli],parId ,rowi, coli)
     }
 
     /*
@@ -666,19 +682,16 @@ export class TimTableController implements IController {
         let i = ctrl.editedCellContent;
         // this.cellDataMatrix[rowi][coli] = this.editedCellContent;
         if (ctrl.currentCell) ctrl.currentCell.editorOpen = true;
-        const result = await openEditorSimple(docId, i);
+        const result = await openEditorSimple(docId, ctrl.cellDataMatrix[row][col]);
         if (ctrl.currentCell) ctrl.currentCell.editorOpen = false;
-        if (result.type == "save") {
+        if (result.type == "save" && result.text != ctrl.editedCellContent) {
             ctrl.saveCells(result.text, docId, parId, row, col);
             ctrl.cellDataMatrix[row][col] = result.text
         }
         if (result.type == "cancel") {
             this.currentCell = undefined;
         }
-
-
         if (typeof cell === "string") {
-
         }
         else cell.editorOpen = false;
     }
@@ -727,7 +740,7 @@ timApp.component("timTable", {
            </div>
             <div ng-if="td.cell == null && !td.editing" ng-bind-html="td.cell">  
             </div> 
-           <input ng-if="td.editing" ng-model="$ctrl.cellDataMatrix[rowi][coli]" ng-keydown="$ctrl.keyDownPressed($event, td, rowi, coli)" ng-attr-autofocus="{{td.editing}}" > 
+           <input ng-if="td.editing" ng-model="$ctrl.cellDataMatrix[rowi][coli]" ng-keydown="$ctrl.keyDownPressed($event, td, rowi, coli)" ng-focus="td.editing" > 
            <button ng-if="td.editing" ng-click="$ctrl.editorOpen(td, rowi, coli)" class="glyphicon glyphicon-pencil"></button>
         </td>
        </tr>
