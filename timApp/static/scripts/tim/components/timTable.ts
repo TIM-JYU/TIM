@@ -521,6 +521,16 @@ export class TimTableController implements IController {
         this.editing = !this.editing;
     }
 
+    /**
+     * Checks whether the table is in edit mode.
+     * @returns {boolean} True if the table is in edit mode, otherwise false.
+     */
+    public isInEditMode() {
+        if (!this.editing)
+            return false;
+        return this.editing;
+    }
+
 
     /*
     Saving

@@ -463,25 +463,34 @@ export class EditingHandler {
     }
 
     /**
-     * Checks whether the given paragraph is a table paragraph.
+     * Checks whether the given paragraph is a table paragraph and in edit mode.
      * @param {Paragraph} $par The paragraph.
-     * @returns {boolean} True if the paragraph is a table paragraph, otherwise false.
+     * @returns {boolean | undefined} True if the paragraph is a table paragraph in edit mode, false
+     * if the paragraph is a table paragraph but not in edit mode, undefined if the paragraph is not a table paragraph
+     * at all.
      */
-    isParagraphTimTable($par: Paragraph) {
+    isTimTableInEditMode($par: Paragraph | undefined): boolean | undefined {
+        if (typeof($par) == undefined)
+            return undefined;
 
-        let parContent = $par.find(".parContent");
-        if (parContent == null)
-            return false;
-        let div = parContent.find("div");
-        if (div == null)
-            return false;
-        let plugin = div.attr("data-plugin");
-        return plugin == "/timTable";
+        let parId = getParId(<Paragraph>$par);
+
+        if (parId == null) {
+            return undefined;
+        }
+
+        const tableCtrl = this.viewctrl.getTableControllerFromParId(parId);
+
+        if (tableCtrl == null) {
+            return undefined;
+        }
+
+        return tableCtrl.isInEditMode()
     }
 
     getEditorFunctions($par?: Paragraph) {
         const parEditable = ((!$par && this.viewctrl.item.rights.editable) || ($par && canEditPar(this.viewctrl.item, $par)));
-        const parTimTable = $par && this.isParagraphTimTable(<Paragraph>$par);
+        const timTableEditMode = this.isTimTableInEditMode($par);
         if (this.viewctrl.editing) {
             return [
                 {func: () => this.goToEditor(), desc: "Go to editor", show: true},
@@ -510,7 +519,8 @@ export class EditingHandler {
                     show: this.viewctrl.item.rights.can_comment,
                 },
                 {func: (e: Event, par: Paragraph) => this.showEditWindow(e, par), desc: "Edit", show: parEditable},
-                {func: (e: Event, par: Paragraph) => this.toggleTableEditor(e, par), desc: "Edit table", show: parTimTable},
+                {func: (e: Event, par: Paragraph) => this.toggleTableEditor(e, par), desc: "Edit table", show: timTableEditMode == false},
+                {func: (e: Event, par: Paragraph) => this.toggleTableEditor(e, par), desc: "Close table editor", show: timTableEditMode == true},
                 {
                     func: (e: Event, par: Paragraph) => this.viewctrl.clipboardHandler.cutPar(e, par),
                     desc: "Cut paragraph",
