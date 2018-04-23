@@ -2,6 +2,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.tim_models import db
 
+
 class MinutesHandlingTest(TimRouteTest):
 
     def test_minutes_creation(self):
