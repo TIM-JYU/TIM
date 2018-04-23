@@ -348,6 +348,11 @@ export class TimTableController implements IController {
         let parId = getParId(this.element.parents(".par"));
         if (!this.editing || typeof cell === "string" || !this.viewctrl || !parId || cell.editorOpen) return;
 
+
+        // cell: CellEntity, docId: number, parId: string, row: number, col: number
+
+
+        this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
         cell.editing = true;
         if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
             this.currentCell.editing = false;
@@ -537,7 +542,6 @@ export class TimTableController implements IController {
     public editCancel() {
         // undo all changes
         this.editing = false;
-
         if (this.currentCell) this.currentCell.editing = false;
     }
 
@@ -550,11 +554,13 @@ export class TimTableController implements IController {
              params: {cellContent, docId, parId, row, col},
          });*/
 
-       /* const response = await $http.post<{ [cellContent: string]: string; }>("/timTable/saveCell", {cellContent, docId, parId, row, col});
+        const response = await $http.post<{ [cellContent: string]: string; }>("/timTable/saveCell", {cellContent, docId, parId, row, col});
         const cellHtml = response.data[0];
-        this.cellDataMatrix[row][col] = cellHtml;*/
+        this.cellDataMatrix[row][col] = cellHtml;
 
-        const response = await $http.post<ICell>("/timTable/saveCell", {cellContent, docId, parId, row, col});
+       // const response = await $http.post<ICell>("/timTable/saveCell", {cellContent, docId, parId, row, col});
+
+
 
     }
 
@@ -602,10 +608,10 @@ export class TimTableController implements IController {
         //TODO: virhekasittely*/
     }
 
-    async openEditor(cell: CellEntity, docId: number, value: string, parId: string,  row: number, col: number){
+    async openEditor(cell: CellEntity, docId: number, value: string, parId: string, row: number, col: number) {
 
         let ctrl = this;
-         let i = ctrl.editedCellContent;
+        let i = ctrl.editedCellContent;
         // this.cellDataMatrix[rowi][coli] = this.editedCellContent;
         if (ctrl.currentCell) ctrl.currentCell.editorOpen = true;
         const result = await openEditorSimple(docId, i);
@@ -614,10 +620,15 @@ export class TimTableController implements IController {
             ctrl.saveCells(result.text, docId, parId, row, col);
             ctrl.cellDataMatrix[row][col] = result.text
         }
+        if (result.type == "cancel") {
+            this.currentCell = undefined;
+        }
+
+
         if (typeof cell === "string") {
+
         }
         else cell.editorOpen = false;
-        //TODO: virhekasittely*/
     }
 
 
@@ -652,29 +663,21 @@ timApp.component("timTable", {
         viewctrl: "?^timView",
     },
     template: `<div ng-class="{editable: $ctrl.editing}""><table ng-style="$ctrl.stylingForTable($ctrl.data.table)">
- <!-- <button class="timButton" ng-click="$ctrl.toggleEditMode()">Edit</button>-->
-   <!--<button ng-app="myApp">Edit</button>-->
     <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" ng-style="$ctrl.stylingForColumn(c)"/>
     <tr ng-repeat="r in $ctrl.data.table.rows"  ng-init="rowi = $index" ng-style="$ctrl.stylingForRow(r)">
-       <!-- if data does not exists -->
       <div ng-if="$ctrl.allcellData == undefined">
         <td ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
             ng-style="$ctrl.stylingForCell(td)" ng-click="$ctrl.cellClicked(td, rowi, coli)">
             <div ng-if="td.cell != null && !td.editing" ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
-            <!--{{td.cell}}-->
            </div>
-            <div ng-if="td.cell == null && !td.editing" ng-bind-html="td.cell">
-               
+            <div ng-if="td.cell == null && !td.editing" ng-bind-html="td.cell">  
             </div> 
            <input ng-if="td.editing" ng-model="$ctrl.cellDataMatrix[rowi][coli]" ng-keydown="$ctrl.keyDownPressed($event, td, rowi, coli)" ng-attr-autofocus="{{td.editing}}" > 
            <button ng-if="td.editing" ng-click="$ctrl.editorOpen(td, rowi, coli)" class="glyphicon glyphicon-pencil"></button>
         </td>
        </tr>
-     <div> 
-   
+     <div>  
 </table>
-<!--<p ng-repeat="item in $ctrl.allcellData">{{item}}</p>
-<p ng-bind-html="$ctrl.data.table.cellData"></p>-->
 <button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.AddRow()">Add row</button>
 <button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.AddColumn()">Add column</button>
 
