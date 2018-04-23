@@ -7,7 +7,6 @@ import {setSetting} from "../utils";
 import {$http} from "../ngimport";
 import {getParId} from 'tim/controllers/view/parhelpers';
 import {openEditorSimple} from "../directives/pareditor";
-import {CellEntity} from "../../decls/components/timTable";
 
 //import {IHash} from "../../decls/components/timTable";
 
@@ -179,14 +178,14 @@ export class TimTableController implements IController {
     }
 
 
-    private editorOpen(cell: CellEntity, rowi: number, coli: number){
+    private editorOpen(cell: CellEntity, rowi: number, coli: number) {
 
-        if( typeof cell === "string") return;
+        if (typeof cell === "string") return;
         cell.editing = false;
         cell.editorOpen = true;
         let parId = getParId(this.element.parents(".par"));
-        if(this.viewctrl && parId){
-        this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
+        if (this.viewctrl && parId) {
+            this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
         }
     }
 
@@ -251,8 +250,6 @@ export class TimTableController implements IController {
         return {col: col, row: row}
     }
 
-
-    
 
     /*
     Define HashTable that contains final table
@@ -326,11 +323,11 @@ export class TimTableController implements IController {
             this.currentCell.editing = false;
 
             // var a = $('#selector').parents("table:first").find('tr').eq(this.currentCell.row).find('td').eq(this.currentCell.col).find('input').text()
-           /* NYT TALLENTAA EDELLISEN SOLUN ARVON, VAIKKA PITÄISI TALLENTAA EDELLISEN INPUT- KENTÄN ARVON ??
+            /* NYT TALLENTAA EDELLISEN SOLUN ARVON, VAIKKA PITÄISI TALLENTAA EDELLISEN INPUT- KENTÄN ARVON ??
 
-           ????????????????????????????????????????????????????????????????????????????????????????????????
-            */
-             this.saveCells(this.cellDataMatrix[this.currentCell.row][this.currentCell.col], this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
+            ????????????????????????????????????????????????????????????????????????????????????????????????
+             */
+            this.saveCells(this.cellDataMatrix[this.currentCell.row][this.currentCell.col], this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
         }
         this.currentCell = cell;
         this.currentCell.row = rowi;
@@ -603,7 +600,10 @@ export class TimTableController implements IController {
              params: {cellContent, docId, parId, row, col},
          });*/
 
-        const response = await $http.post<ICell>("/timTable/saveCell", {cellContent, docId, parId, row, col});
+        const response = await $http.post<{ [cellContent: string]: string; }>("/timTable/saveCell", {cellContent, docId, parId, row, col});
+        const cellHtml = response.data[0];
+        this.cellDataMatrix[row][col] = cellHtml;
+
     }
 
 
@@ -631,7 +631,8 @@ export class TimTableController implements IController {
                 ctrl.saveCells(result.text, docId, parId, row, col);
                 ctrl.cellDataMatrix[row][col] = result.text
             }
-            if( typeof cell === "string") {}
+            if (typeof cell === "string") {
+            }
             else cell.editorOpen = false;
 
         }, function (response) {
@@ -662,8 +663,6 @@ export class TimTableController implements IController {
         this.cellDataMatrix[row][col] = data[0];
     }*/
 }
-
-
 
 
 timApp.component("timTable", {

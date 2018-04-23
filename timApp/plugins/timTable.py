@@ -14,11 +14,12 @@ from timApp.plugin import Plugin, PluginException
 from timApp.plugin import get_num_value
 from timApp.plugin import get_value
 from timApp.requesthelper import verify_json_params
-from timApp.responsehelper import json_response, ok_response
+from timApp.responsehelper import json_response, ok_response, text_response
 from timApp.sessioninfo import get_current_user_object
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.askedjson import normalize_question_json
 from timApp.timdb.models.docentry import DocEntry
+from timApp.markdownconverter import md_to_html
 
 
 timTable_plugin = Blueprint('timTable_plugin',
@@ -112,8 +113,16 @@ def tim_table_save_cell_list():
         create_datablock(yaml[TABLE])
         save_cell(yaml[TABLE][DATABLOCK], row[0], col[0], cellContent[0])
 
+    cc = str(cellContent[0])
+    cellHtml = cc
+    if len(cc) > 3:
+        ccTmp = cc[:3]
+        if ccTmp == 'md:':
+            cellHtml = md_to_html(cc[3:])
+            print(cellHtml)
     plug.save()
-    return ok_response()
+    multi.append(cellHtml)
+    return json_response(multi)
 
 def is_datablock(yaml: dict) -> bool:
     try:
