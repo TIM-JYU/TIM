@@ -1,3 +1,4 @@
+import copy
 import json
 import re
 from typing import Dict, Any, NamedTuple, Optional
@@ -9,6 +10,8 @@ from flask import Response
 from flask import abort
 from flask import request
 
+from timApp.accesshelper import verify_admin, verify_edit_access, verify_manage_access, verify_view_access, \
+    has_manage_access, ItemLockedException, get_doc_or_abort
 from timApp.containerLink import convert_md
 from timApp.plugin import Plugin, PluginException
 from timApp.plugin import get_num_value
@@ -61,7 +64,6 @@ def timTable_reqs():
     return json_response(reqs)
 
 
-
 @timTable_plugin.route("multihtml/", methods=["POST"])
 def qst_multihtml():
     jsondata = request.get_json()
@@ -69,7 +71,6 @@ def qst_multihtml():
     for jso in jsondata:
         multi.append(qst_get_html(jso, is_review(request)))
     return json_response(multi)
-
 
 
 @timTable_plugin.route("getCellData", methods=["GET"])
@@ -90,6 +91,7 @@ def tim_table_get_cell_data():
         cell_content = find_cell(rows,int(args['row']),int(args['col']))
         multi.append(cell_content)
     return json_response(multi)
+
 
 @timTable_plugin.route("saveCell", methods=["POST"])
 def tim_table_save_cell_list():
@@ -127,6 +129,49 @@ def tim_table_save_cell_list():
     multi.append(html[0])
     return json_response(multi)
 
+
+@timTable_plugin.route("addRow", methods=["POST"])
+def tim_table_add_row():
+    """
+    Adds a row into the table.
+    :return:
+    """
+    doc_id, par_id = verify_json_params('docId', 'parId')
+    d = DocEntry.find_by_id(doc_id)
+    if not d:
+        abort(404)
+    verify_edit_access(d)
+    par = d.document.get_paragraph(par_id)
+    plug = Plugin.from_paragraph(par)
+    rows = plug.values[TABLE][ROWS]
+    last_row_index = len(rows) - 1
+    # clone the previous row's data into the new row
+    rows.append({'row': copy.deepcopy(rows[last_row_index]['row'])})
+    plug.save()
+    return ok_response()
+
+
+@timTable_plugin.route("addColumn", methods=["POST"])
+def tim_table_add_column():
+    """
+    Adds a new cell into each row on the table.
+    In other words, adds a column into the table.
+    :return:
+    """
+    doc_id, par_id = verify_json_params('docId', 'parId')
+    d = DocEntry.find_by_id(doc_id)
+    if not d:
+        abort(404)
+    verify_edit_access(d)
+    par = d.document.get_paragraph(par_id)
+    plug = Plugin.from_paragraph(par)
+    rows = plug.values[TABLE][ROWS]
+    for row in rows:
+        row['row'].append({'cell': 'New column'})
+    plug.save()
+    return ok_response()
+
+
 def is_datablock(yaml: dict) -> bool:
     try:
         if yaml[TABLE][DATABLOCK]:
@@ -136,11 +181,11 @@ def is_datablock(yaml: dict) -> bool:
     except:
         return False
 
+
 def create_datablock(table: dict):
     table['datablock'] = {}
     table['datablock']['type'] = 'relative'
     table['datablock']['cells'] = {}
-
 
 
 def save_cell(datablock: dict, row: int, col: int, cell_content: str) -> str:
@@ -152,9 +197,10 @@ def save_cell(datablock: dict, row: int, col: int, cell_content: str) -> str:
 
 
 def find_cell(rows: list, row: int, col: int) -> str:
-   right_row = rows[row][ROW]
-   right_cell = right_row[col]
-   return right_cell[CELL]
+    right_row = rows[row][ROW]
+    right_cell = right_row[col]
+    return right_cell[CELL]
+
 
 def find_cell_from_datablock(cells: dict, row: int, col: int) -> str:
     ret = None
@@ -165,6 +211,7 @@ def find_cell_from_datablock(cells: dict, row: int, col: int) -> str:
     except:
         pass
     return ret
+
 
 def colnum_to_letters(col: int) -> str:
     '''TODO: Working with values over 122 meaning more than one letter
@@ -236,6 +283,7 @@ def qst_str(state):
     s = s.replace("''", "-")
     s = s.replace("'", "")
     return s
+
 
 """
 @timTable_plugin.route("multihtml/", methods=["POST"])

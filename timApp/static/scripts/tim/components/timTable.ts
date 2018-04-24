@@ -441,6 +441,8 @@ export class TimTableController implements IController {
         }
         const styles: { [index: string]: string } = {};
 
+        // throws errors if cell is null, add null check?
+
         for (const key of Object.keys(cell)) {
             const keyofCell = key as keyof ICell;
             const property: string = styleToHtml[keyofCell];
@@ -530,6 +532,47 @@ export class TimTableController implements IController {
         if (!this.editing)
             return false;
         return this.editing;
+    }
+
+
+    /**
+     * Tells the server to add a new row into this table.
+     */
+    async addRow() {
+        if (this.viewctrl == null)
+            return;
+
+        let parId = this.getOwnParId();
+        let docId = this.viewctrl.item.id;
+        const response = await $http.post<{}>("/timTable/addRow",
+            {docId, parId});
+        console.log(response.status);
+
+        // TODO add row on the current page / refresh the table
+    }
+
+
+    /**
+     * Tells the server to add a new column into this table.
+     */
+    async addColumn() {
+        if (this.viewctrl == null)
+            return;
+
+        let parId = this.getOwnParId();
+        let docId = this.viewctrl.item.id;
+        const response = await $http.post<{}>("/timTable/addColumn",
+            {docId, parId});
+        console.log(response.status);
+        
+        // TODO add column on the current page / refresh the table
+    }
+
+    /**
+     * Returns the ID of the paragraph related to the current table instance.
+     */
+    private getOwnParId() {
+        return getParId(this.element.parents(".par"));
     }
 
 
@@ -643,6 +686,9 @@ export class TimTableController implements IController {
     }
 
 
+
+
+
     /**
      * Gets the contents of a cell from the server
      * @param {number} docId
@@ -689,8 +735,8 @@ timApp.component("timTable", {
        </tr>
      <div>  
 </table>
-<button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.AddRow()">Add row</button>
-<button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.AddColumn()">Add column</button>
+<button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.addRow()">Add row</button>
+<button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.addColumn()">Add column</button>
 
 </div>
 
