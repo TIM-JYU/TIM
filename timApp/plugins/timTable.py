@@ -189,7 +189,7 @@ def create_datablock(table: dict):
 
 
 def save_cell(datablock: dict, row: int, col: int, cell_content: str) -> str:
-    coordinate = colnum_to_letters(col) + str(row)
+    coordinate = colnum_to_letters(col) + str(row+1)
     try:
         datablock['cells'].update({coordinate: cell_content})
     except:
@@ -197,9 +197,11 @@ def save_cell(datablock: dict, row: int, col: int, cell_content: str) -> str:
 
 
 def find_cell(rows: list, row: int, col: int) -> str:
-    right_row = rows[row][ROW]
-    right_cell = right_row[col]
-    return right_cell[CELL]
+   right_row = rows[row][ROW]
+   right_cell = right_row[col]
+   if isinstance(right_cell, str):
+       return right_cell
+   return right_cell[CELL]
 
 
 def find_cell_from_datablock(cells: dict, row: int, col: int) -> str:
