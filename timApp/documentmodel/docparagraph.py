@@ -734,6 +734,14 @@ class DocParagraph:
         """
         return self.attrs.get(attr_name, default_value)
 
+    def set_markdown_temp(self, new_md: str):
+        """Sets markdown for this paragraph.
+
+        :param new_md: The new markdown.
+
+        """
+        self.__data['md'] = new_md
+
     def set_markdown(self, new_md: str):
         """Sets markdown for this paragraph.
 

@@ -99,7 +99,8 @@ def print_document(doc_path):
                            file_type=print_type,
                            template_doc=template_doc,
                            temp=True,
-                           plugins_user_print=plugins_user_print)
+                           plugins_user_print=plugins_user_print,
+                           urlroot = request.url_root + 'print/')
     except PDFLaTeXError as err:
         try:
             print("Error occurred: " + str(err))
@@ -148,7 +149,13 @@ def get_printed_document(doc_path):
     if template_doc_id is None:
         template_doc = DocEntry.find_by_path('templates/printing/runko')
         if template_doc is None:
-            abort(400, "The supplied query parameter 'template_doc_id' was invalid.")
+            abort(400, "The supplied query parameter 'template_doc_id' was invalid. Needed template runko")
+        template_doc_id = template_doc.id
+
+    if template_doc_id == '0':
+        template_doc = DocEntry.find_by_path('templates/printing/empty')
+        if template_doc is None:
+            abort(400, "There is no template empty")
         template_doc_id = template_doc.id
 
     if plugins_user_print is None or isinstance(plugins_user_print, bool):
@@ -160,8 +167,8 @@ def get_printed_document(doc_path):
     template_doc_id = int(float(template_doc_id))
     template_doc = DocEntry.find_by_id(template_doc_id)
 
-    if template_doc is None:
-        abort(400, "The supplied parameter 'template_doc_id' was invalid.")
+    # if template_doc is None:
+    #    abort(400, "The supplied parameter 'template_doc_id' was invalid.")
 
     print_type = PrintFormat[file_type.upper()]
 
@@ -184,7 +191,8 @@ def get_printed_document(doc_path):
                                file_type=print_type,
                                template_doc=template_doc,
                                temp=True,
-                               plugins_user_print=plugins_user_print)
+                               plugins_user_print=plugins_user_print,
+                               urlroot=request.url_root+'print/')
         except PrintingError as err:
             print("Error occurred: " + str(err))
             abort(400, str(err))  # TODO: maybe there's a better error code?
@@ -312,7 +320,7 @@ def check_print_cache(doc_entry: DocEntry,
     :return:
     """
 
-    printer = DocumentPrinter(doc_entry=doc_entry, template_to_use=template)
+    printer = DocumentPrinter(doc_entry=doc_entry, template_to_use=template, urlroot='')
 
     # if plugins_user_print:
     #     path = printer.get_print_path(file_type=file_type, plugins_user_print=plugins_user_print)
@@ -336,7 +344,8 @@ def create_printed_doc(doc_entry: DocEntry,
                        template_doc: DocInfo,
                        file_type: PrintFormat,
                        temp: bool,
-                       plugins_user_print: bool = False) -> str:
+                       plugins_user_print: bool = False,
+                       urlroot = '') -> str:
     """
     Adds a marking for a printed document to the db
 
@@ -344,14 +353,16 @@ def create_printed_doc(doc_entry: DocEntry,
     :param doc_entry: Document that is being printed
     :param file_type: File type for the document
     :param temp: Is the document stored only temporarily (gets deleted after some time)
+    :param urlroot: url root for this route
     :return str: path to the created file
     """
 
-    if template_doc is None:
-        raise PrintingError("No template file was specified for the printing!")
+    # if template_doc is None:
+    #    raise PrintingError("No template file was specified for the printing!")
 
     printer = DocumentPrinter(doc_entry=doc_entry,
-                              template_to_use=template_doc)
+                              template_to_use=template_doc,
+                              urlroot=urlroot)
 
     try:
         path = printer.get_print_path(temp=temp,

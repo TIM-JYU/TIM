@@ -214,6 +214,10 @@ class DocSettings:
         texplain = self.__dict.get('texplain', False)
         return texplain
 
+    def get_bibdoc(self):
+        bibdoc = self.__dict.get('bibdoc', None)
+        return bibdoc
+
     def show_authors(self, default=False):
         return self.__dict.get(self.show_authors_key, default)
 
