@@ -623,7 +623,7 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
         if removethis:
             if line.find(removethis) >= 0:
                 continue
-        line = line.replace(']{ ', ']{')  # correct "]{ %%" problem caused by Jinja 2 macros
+        # line = line.replace(']{ ', ']{')  # correct "]{ %%" problem caused by Jinja 2 macros
         f.write(line)
     f.close()
 
