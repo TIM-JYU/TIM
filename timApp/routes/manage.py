@@ -1,7 +1,7 @@
 """Routes for manage view."""
 import re
 from datetime import timezone, datetime
-from typing import Generator
+from typing import Generator, Tuple
 
 import dateutil.parser
 from flask import Blueprint, render_template
@@ -28,7 +28,7 @@ from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder, path_includes
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.tim_models import db, AccessType
-from timApp.timdb.userutils import grant_access, grant_default_access
+from timApp.timdb.userutils import grant_access, grant_default_access, get_access_type_id
 from timApp.utils import remove_path_special_chars, split_location, join_location
 from timApp.validation import validate_item, validate_item_and_create
 
@@ -73,6 +73,48 @@ def get_changelog(doc_id, length):
 def add_permission(item_id, group_name, perm_type):
     is_owner, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(
         item_id, group_name, perm_type)
+    i = get_item_or_abort(item_id)
+    add_perm(acc_from, acc_to, dur_from, dur_to, duration, group_ids, item_id, perm_type)
+    check_ownership_loss(is_owner, i, perm_type)
+    db.session.commit()
+    return ok_response()
+
+
+@manage_page.route("/permissions/addRecursive/<group_name>/<perm_type>/<path:folder_path>")
+def add_permission_recursive(group_name, perm_type, folder_path):
+    folder = Folder.find_by_path(folder_path)
+    if not folder:
+        abort(404)
+    item_id = folder.id
+    _, group_ids, acc_from, acc_to, dur_from, dur_to, duration = verify_and_get_params(
+        item_id, group_name, perm_type)
+    for d in folder.get_all_documents(include_subdirs=True):
+        _, is_owner = verify_permission_edit_access(d.id, perm_type)
+        add_perm(acc_from, acc_to, dur_from, dur_to, duration, group_ids, d.id, perm_type)
+        check_ownership_loss(is_owner, d, perm_type)
+    db.session.commit()
+    return ok_response()
+
+
+@manage_page.route("/permissions/removeRecursive/<group_name>/<perm_type>/<path:folder_path>")
+def remove_permission_recursive(group_name, perm_type, folder_path):
+    folder = Folder.find_by_path(folder_path)
+    if not folder:
+        abort(404)
+    item_id = folder.id
+    _, group_ids, _, _, _, _, _ = verify_and_get_params(
+        item_id, group_name, perm_type)
+    timdb = get_timdb()
+    for d in folder.get_all_documents(include_subdirs=True):
+        _, is_owner = verify_permission_edit_access(d.id, perm_type)
+        for group in group_ids:
+            timdb.users.remove_access(group, d.id, perm_type)
+        check_ownership_loss(is_owner, d, perm_type)
+    db.session.commit()
+    return ok_response()
+
+
+def add_perm(acc_from, acc_to, dur_from, dur_to, duration, group_ids, item_id, perm_type):
     if get_current_user_object().get_personal_folder().id == item_id:
         if perm_type == 'owner':
             abort(403, 'You cannot add owners to your personal folder.')
@@ -89,31 +131,28 @@ def add_permission(item_id, group_name, perm_type):
                          commit=False)
     except KeyError:
         abort(400, 'Invalid permission type.')
-    check_ownership_loss(is_owner, item_id, perm_type)
-    db.session.commit()
-    return ok_response()
 
 
 @manage_page.route("/permissions/remove/<int:item_id>/<int:group_id>/<perm_type>", methods=["PUT"])
 def remove_permission(item_id, group_id, perm_type):
-    timdb = get_timdb()
-    had_ownership = verify_permission_edit_access(item_id, perm_type)
+    i, had_ownership = verify_permission_edit_access(item_id, perm_type)
     try:
-        timdb.users.remove_access(group_id, item_id, perm_type)
+        t = get_access_type_id(perm_type)
+        for a in i.block.accesses:
+            if a.usergroup_id == group_id and a.type == t:
+                db.session.delete(a)
+                break
     except KeyError:
         abort(400, 'Unknown permission type')
-    check_ownership_loss(had_ownership, item_id, perm_type)
+    check_ownership_loss(had_ownership, i, perm_type)
     db.session.commit()
     return ok_response()
 
 
-def check_ownership_loss(had_ownership, item_id, perm_type):
-    # delete cached ownership information because it may have changed now
-    if hasattr(g, 'owned'):
-        delattr(g, 'owned')
-    i = Item.find_by_id(item_id)
-    if had_ownership and not has_ownership(i):
-        grant_access(get_current_user_group(), item_id, perm_type, commit=False)
+def check_ownership_loss(had_ownership, item, perm_type):
+    db.session.flush()
+    db.session.refresh(item)
+    if had_ownership and not has_ownership(item):
         abort(403, 'You cannot remove ownership from yourself.')
 
 
@@ -268,14 +307,14 @@ def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
 
 
 def verify_and_get_params(item_id, group_name, perm_type):
-    is_owner = verify_permission_edit_access(item_id, perm_type)
+    _, is_owner = verify_permission_edit_access(item_id, perm_type)
     groups = UserGroup.query.filter(UserGroup.name.in_([name.strip() for name in group_name.split(';')])).all()
     if len(groups) == 0:
         abort(404, 'No user group with this name was found.')
     group_ids = [group.id for group in groups]
     req_json = request.get_json()
     if req_json is None:
-        abort(400)
+        req_json = {}
     access_type = req_json.get('type', 'always')
 
     try:
@@ -312,7 +351,7 @@ def verify_and_get_params(item_id, group_name, perm_type):
     return is_owner, group_ids, accessible_from, accessible_to, duration_accessible_from, duration_accessible_to, duration
 
 
-def verify_permission_edit_access(item_id: int, perm_type: str) -> bool:
+def verify_permission_edit_access(item_id: int, perm_type: str) -> Tuple[Item, bool]:
     """Verifies that the user has right to edit a permission.
 
     :param item_id: The item id to check for permission.
@@ -323,10 +362,10 @@ def verify_permission_edit_access(item_id: int, perm_type: str) -> bool:
     i = get_item_or_abort(item_id)
     if perm_type == 'owner':
         verify_ownership(i)
-        return True
+        return i, True
     else:
         verify_manage_access(i)
-        return False
+        return i, False
 
 
 @manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])

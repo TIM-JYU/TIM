@@ -4,6 +4,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.item import Item
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.tim_models import db
 
 
 class PermissionTest(TimRouteTest):
@@ -15,11 +16,13 @@ class PermissionTest(TimRouteTest):
         self.json_put(f'/permissions/add/{d.id}/{"testuser1"}/{"owner"}',
                       {'from': datetime.now(tz=timezone.utc) + timedelta(days=1),
                        'type': 'range'},
-                      expect_status=403)
+                      expect_status=403, expect_content={'error': 'You cannot remove ownership from yourself.'})
+        db.session.remove()
         d = DocEntry.find_by_id(d.id)
         self.assertTrue(self.current_user.has_ownership(d))
         self.json_put(f'/permissions/remove/{d.id}/{self.get_test_user_1_group_id()}/{"owner"}',
                       expect_status=403)
+        db.session.remove()
         d = DocEntry.find_by_id(d.id)
         self.assertTrue(self.current_user.has_ownership(d))
 
@@ -102,3 +105,62 @@ class PermissionTest(TimRouteTest):
         self.json_put(f'/permissions/remove/{d.id}/{UserGroup.get_logged_in_group().id}/view')
         self.login_test2()
         self.get(d.url, expect_status=403)
+
+    def test_recursive_permissions(self):
+        self.login_test1()
+        paths = ['a', 'b', 'c', 'x/a', 'x/b', 'x/c', 'x/x/a', 'x/x/b', 'x/x/c', ]
+        ds = []
+        for p in paths:
+            d = self.create_doc(self.get_personal_item_path(p))
+            ds.append(d)
+            t1_f = self.test_user_1.get_personal_folder()
+            t1_f_path = t1_f.path
+            self.assertFalse(self.test_user_2.has_view_access(d))
+            self.assertFalse(self.test_user_2.has_edit_access(d))
+            self.assertFalse(self.test_user_2.has_edit_access(t1_f))
+
+        self.get(f"/permissions/removeRecursive/testuser1/owner/{t1_f_path}", expect_status=403)
+
+        self.get(f"/permissions/addRecursive/testuser2;testuser3/view/{t1_f.path}")
+        t1_f = self.test_user_1.get_personal_folder()
+        for p in paths:
+            d = DocEntry.find_by_path(self.get_personal_item_path(p))
+            self.assertTrue(self.test_user_2.has_view_access(d))
+            self.assertTrue(self.test_user_3.has_view_access(d))
+            self.assertFalse(self.test_user_2.has_edit_access(d))
+            self.assertFalse(self.test_user_2.has_edit_access(t1_f))
+
+        self.get(f"/permissions/removeRecursive/testuser2/view/{t1_f_path}")
+        t1_f = self.test_user_1.get_personal_folder()
+        for p in paths:
+            d = DocEntry.find_by_path(self.get_personal_item_path(p))
+            self.assertTrue(self.test_user_1.has_ownership(d))
+            self.assertFalse(self.test_user_2.has_view_access(d))
+            self.assertTrue(self.test_user_3.has_view_access(d))
+            self.assertFalse(self.test_user_2.has_edit_access(d))
+            self.assertFalse(self.test_user_2.has_edit_access(t1_f))
+
+        self.get(f"/permissions/removeRecursive/testuser2;testuser3/view/{t1_f_path}")
+        t1_f = self.test_user_1.get_personal_folder()
+        for p in paths:
+            d = DocEntry.find_by_path(self.get_personal_item_path(p))
+            self.assertTrue(self.test_user_1.has_ownership(d))
+            self.assertFalse(self.test_user_2.has_view_access(d))
+            self.assertFalse(self.test_user_3.has_view_access(d))
+            self.assertFalse(self.test_user_2.has_edit_access(d))
+            self.assertFalse(self.test_user_2.has_edit_access(t1_f))
+
+        self.get(f"/permissions/addRecursive/testuser1/view/{self.test_user_2.get_personal_folder().path}",
+                 expect_status=403)
+        self.get(f"/permissions/addRecursive/testuser1/asd/{self.test_user_1.get_personal_folder().path}",
+                 expect_status=400)
+        self.get(f"/permissions/addRecursive/nonexistent/view/{self.test_user_1.get_personal_folder().path}",
+                 expect_status=404)
+
+        # If the user doesn't have access to all documents, the operation should not complete.
+        d = DocEntry.find_by_path(self.get_personal_item_path(paths[-1]))
+        for a in d.block.accesses:
+            db.session.delete(a)
+        db.session.commit()
+        self.get(f"/permissions/addRecursive/testuser2;testuser3/view/{t1_f_path}", expect_status=403)
+        self.get(f"/permissions/removeRecursive/testuser2;testuser3/view/{t1_f_path}", expect_status=403)
