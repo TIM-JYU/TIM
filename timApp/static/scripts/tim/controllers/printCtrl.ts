@@ -114,7 +114,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
             this.notificationmsg = undefined;
 
             const postURL = "/print/" + this.document.path;
-            const [err, response] = await to($http.post<{url: string}>(postURL, {
+            const [err, response] = await to($http.post<{url: string, errormsg?: string, latex?: string, latexline?: string}>(postURL, {
                 fileType,
                 templateDocId: chosenTemplateId,
                 printPluginsUserCode: pluginsUserCode,
