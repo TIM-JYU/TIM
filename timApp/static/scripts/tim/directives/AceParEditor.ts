@@ -520,6 +520,9 @@ export class AceParEditor extends BaseParEditor {
     // Special characters
     @focusAfter
     charClicked($event: Event, char: string | undefined) {
+        if (!$event.target) {
+            return;
+        }
         let character = $($event.target).text();
         $log.info(char);
         if (typeof char !== "undefined") {

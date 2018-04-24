@@ -950,11 +950,15 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     }
 
     private explFocus($event: Event) {
-        $($event.target).parent().addClass("explFocus");
+        if ($event.target) {
+            $($event.target).parent().addClass("explFocus");
+        }
     }
 
     private explBlur($event: Event) {
-        $($event.target).parent().removeClass("explFocus");
+        if ($event.target) {
+            $($event.target).parent().removeClass("explFocus");
+        }
     }
 
     /**

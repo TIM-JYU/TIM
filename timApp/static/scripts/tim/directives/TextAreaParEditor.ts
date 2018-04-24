@@ -175,6 +175,9 @@ export class TextAreaParEditor extends BaseParEditor {
         const input = document.getElementById("teksti") as HTMLInputElement;
         input.addEventListener("keypress", () => {
             const s = input.selectionStart;
+            if (s == null) {
+                return;
+            }
             input.value = input.value.substr(0, s) + input.value.substr(s + 1);
             input.selectionEnd = s;
         }, false);
@@ -512,6 +515,9 @@ export class TextAreaParEditor extends BaseParEditor {
     //Special characters
     @focusAfter
     charClicked($event: Event, char: string | undefined) {
+        if (!$event.target) {
+            return;
+        }
         let character = $($event.target).text();
         $log.info(char);
         if (typeof char !== "undefined") {

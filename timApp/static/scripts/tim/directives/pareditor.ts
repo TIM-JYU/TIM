@@ -1088,6 +1088,9 @@ or newer one that is more familiar to write in YAML:
     }
 
     createMenu($event: Event, buttons: JQuery[]) {
+        if (!$event.target) {
+            return;
+        }
         this.closeMenu(null, true);
         const $button = $($event.target);
         const coords = {left: $button.position().left, top: $button.position().top};
@@ -1156,6 +1159,9 @@ or newer one that is more familiar to write in YAML:
     }
 
     tabClicked($event: Event, area: string) {
+        if (!$event.target) {
+            return;
+        }
         const active = $($event.target).parent();
         setSetting("editortab", area);
         this.setActiveTab(active, area);
