@@ -21,6 +21,8 @@ pg_backup/
 /timApp/static/scripts/build/
 /timApp/static/scripts/build-ide/
 /timApp/static/scripts/decls/
+/timApp/static/scripts/tim/imagex.js
+/timApp/static/scripts/tim/ngimport.js
 /timApp/modules/cs/data/
 /timApp/modules/cs/js/build/
 /timApp/modules/cs/test/a.b
