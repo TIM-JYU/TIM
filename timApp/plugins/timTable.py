@@ -77,8 +77,11 @@ def qst_multihtml():
 def tim_table_get_cell_data():
     multi = []
     args = request.args
-    doc = DocEntry.find_by_id(int(args['docId'])).document
-    par = doc.get_paragraph(args['parId'])
+    doc = DocEntry.find_by_id(int(args['docId']))
+    if not doc:
+        abort(404)
+    verify_edit_access(doc)
+    par = doc.document.get_paragraph(args['parId'])
     plug = Plugin.from_paragraph(par)
     yaml = plug.values
     cell_cnt = None
@@ -105,8 +108,11 @@ def tim_table_save_cell_list():
     row = verify_json_params('row')
     col = verify_json_params('col')  # todo: put directly in below use cases
     #doc = DocEntry.find_by_id(int(docId)).document
-    doc = DocEntry.find_by_id(docId[0]).document
-    par = doc.get_paragraph(parId[0])
+    doc = DocEntry.find_by_id(docId[0])
+    if not doc:
+        abort(404)
+    verify_edit_access(doc)
+    par = doc.document.get_paragraph(parId[0])
     plug = Plugin.from_paragraph(par)
     yaml = plug.values
     if is_datablock(yaml):

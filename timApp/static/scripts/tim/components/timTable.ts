@@ -310,9 +310,11 @@ export class TimTableController implements IController {
      */
     private editorOpen(cell: CellEntity, rowi: number, coli: number) {
 
-        if (typeof cell === "string") return;
-        cell.editing = false;
-        cell.editorOpen = true;
+       // if (typeof cell === "string") return;
+        // cell.editing = false;
+        //this.currentCell = undefined;
+        if(this.currentCell)
+        this.currentCell.editorOpen = true;
         let parId = getParId(this.element.parents(".par"));
         if (parId === undefined || !this.viewctrl) return;
        /* if(this.editedCellContent)
@@ -385,9 +387,8 @@ export class TimTableController implements IController {
 
         if (ev.keyCode == 113) this.editorOpen(cell, rowi, coli);
         if (ev.keyCode == 13) {
-
             let parId = getParId(this.element.parents(".par"));
-            if (!this.editing || typeof cell === "string" || !this.viewctrl || !parId || cell.editorOpen) return;
+            if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
             if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
 
                 this.saveCells(this.cellDataMatrix[this.currentCell.row][this.currentCell.col], this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
