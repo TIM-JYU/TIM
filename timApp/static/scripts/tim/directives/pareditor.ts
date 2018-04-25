@@ -237,7 +237,6 @@ export class PareditorController extends DialogController<{params: IEditorParams
         this.changeEditor(oldMode);
         this.scope.$watch(() => this.autocomplete, () => {
             if (this.isAce(this.editor)) {
-                this.setLocalValue("autocomplete", this.autocomplete.toString());
                 this.editor.setAutoCompletion(this.autocomplete);
             }
         });
@@ -513,10 +512,16 @@ or newer one that is more familiar to write in YAML:
     }
 
     close(r: IEditorResult) {
+        this.saveOptions();
         if (this.getOptions().touchDevice) {
             this.changeMeta();
         }
         super.close(r);
+    }
+
+    dismiss() {
+        this.saveOptions();
+        super.dismiss();
     }
 
     cancelClicked() {
@@ -532,8 +537,6 @@ or newer one that is more familiar to write in YAML:
             return;
         }
         this.saving = true;
-        // if ( $scope.wrap.n != -1) //  wrap -1 is not saved
-        this.setLocalValue("wrap", "" + this.wrap.n);
         const text = this.editor.getEditorText();
         if (text.trim() === "") {
             this.deleteClicked();
@@ -546,19 +549,25 @@ or newer one that is more familiar to write in YAML:
             this.saving = false;
             return;
         } else {
-            if (angular.isDefined(this.getExtraData().access)) {
-                $localStorage.noteAccess = this.getExtraData().access;
-            }
-            if (angular.isDefined(this.getExtraData().tags.markread)) { // TODO: tee silmukassa
-                $window.localStorage.setItem("markread", this.getExtraData().tags.markread.toString());
-            }
-            this.setLocalValue("proeditor", this.proeditor.toString());
-
-            if (this.isAce(this.editor)) {
-                this.setLocalValue("acewrap", this.editor.editor.getSession().getUseWrapMode().toString());
-                this.setLocalValue("acebehaviours", this.editor.editor.getBehavioursEnabled().toString()); // some of these are in editor and some in session?
-            }
             this.close({type: "save", text});
+        }
+    }
+
+    private saveOptions() {
+        this.setLocalValue("autocomplete", this.autocomplete.toString());
+        this.setLocalValue("oldMode", this.isAce(this.editor) ? "ace" : "text");
+        this.setLocalValue("wrap", "" + this.wrap.n);
+        if (this.getExtraData().access != null) {
+            $localStorage.noteAccess = this.getExtraData().access;
+        }
+        if (this.getExtraData().tags.markread != null) { // TODO: use a loop
+            $window.localStorage.setItem("markread", this.getExtraData().tags.markread.toString());
+        }
+        this.setLocalValue("proeditor", this.proeditor.toString());
+
+        if (this.isAce(this.editor)) {
+            this.setLocalValue("acewrap", this.editor.editor.getSession().getUseWrapMode().toString());
+            this.setLocalValue("acebehaviours", this.editor.editor.getBehavioursEnabled().toString()); // some of these are in editor and some in session?
         }
     }
 
@@ -568,10 +577,6 @@ or newer one that is more familiar to write in YAML:
 
     isAce(editor: AceParEditor | TextAreaParEditor): editor is AceParEditor {
         return editor && (editor.editor as IAceEditor).renderer != null;
-    }
-
-    saveOldMode(oldMode: string) {
-        this.setLocalValue("oldMode", oldMode);
     }
 
     onFileSelect(file: File) {
@@ -802,13 +807,11 @@ or newer one that is more familiar to write in YAML:
         if (this.isAce(this.editor) || initialMode === "text") {
             oldeditor = this.element.find("#ace_editor");
             oldeditor.remove();
-            this.saveOldMode("text");
             this.createTextArea(text);
         } else {
             oldeditor = this.element.find("#teksti");
             oldeditor.remove();
             const ace = (await import("tim/ace")).ace;
-            this.saveOldMode("ace");
             const neweditorElem = $("<div>", {
                 class: "editor",
                 id: "ace_editor",
