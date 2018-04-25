@@ -205,6 +205,13 @@ def par_list_to_html_list(pars,
     # to global cache. We will replace them later (in post_process_pars).
     macroinfo.preserve_user_macros = True
     texts = [p.get_expanded_markdown(macroinfo) for p in pars]
+
+    texplain = settings.is_texplain()
+    if texplain:  # add pre-markers to tex paragrpahs
+        for i in range(0,len(texts)):
+            text = texts[i]
+            if text.find('```') != 0 and text.find('#') != 0:
+                texts[i] = '```\n' + text + "\n```"
     raw = call_dumbo(texts)
 
     # Edit html after dumbo

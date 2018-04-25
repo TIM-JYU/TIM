@@ -573,6 +573,9 @@ export class ReviewController implements IController {
      * @todo When annotations can break tags, check annotations from all elements in the selection.
      */
     selectText($event: Event): void {
+        if (!$event.target) {
+            return;
+        }
         const $par = $($event.target).parents(".par")[0];
 
         let oldElement = null;

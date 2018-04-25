@@ -45,6 +45,14 @@ class PrintingError(Exception):
     pass
 
 
+class PDFLaTeXError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+
 def add_nonumber(md: str) -> str:
     """
     add's {.unnumbered} after every heading line that starts with #
@@ -73,7 +81,7 @@ def add_nonumber(md: str) -> str:
 
 
 class DocumentPrinter:
-    def __init__(self, doc_entry: DocEntry, template_to_use: DocInfo):
+    def __init__(self, doc_entry: DocEntry, template_to_use: DocInfo, urlroot: str):
         self._doc_entry = doc_entry
         # if template_to_use is None:
         #    template_to_use = DocumentPrinter.get_default_template(doc_entry)
@@ -85,6 +93,9 @@ class DocumentPrinter:
         self._content = None
         self._print_hash = None
         self._macros = {}
+        self.texplain = False
+        self.bibdoc = None
+        self.urlroot = urlroot
 
     def get_template_id(self):
         return self._template_to_use_id
@@ -119,12 +130,18 @@ class DocumentPrinter:
         self._doc_entry.document.preload_option = PreloadOption.all
         pars = dereference_pars(pars, source_doc=self._doc_entry.document.get_source_document())
         pars_to_print = []
-        texplain = self._doc_entry.document.get_settings().is_texplain()
+        self.texplain = self._doc_entry.document.get_settings().is_texplain()
+        self.bibdoc = self._doc_entry.document.get_settings().get_bibdoc()
         for par in pars:
 
             # do not print document settings pars
             if 'settings' in par.get_attrs():
                 continue
+
+            if self.texplain:
+                if par.get_markdown().find("#") == 0:
+                    continue
+
 
             par_classes = par.get_attr('classes')
 
@@ -207,7 +224,7 @@ class DocumentPrinter:
                         md = add_nonumber(md)
                     md = beginraw + md + endraw
 
-                if texplain:
+                if self.texplain:
                     if md.startswith('```'):
                         md = md[3:-3]
 
@@ -223,25 +240,30 @@ class DocumentPrinter:
                 '''
             export_pars.append(md)
 
-        content = '\n\n'.join(export_pars)
+        content = self._doc_entry.document.get_settings().get_doctexmacros() + '\n' + '\n\n'.join(export_pars)
+
         self._content = content
         return content
 
-    def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False) -> bytearray:
+    def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False, path: str=None) -> bytearray:
         """
         Converts the document to latex and returns the converted document as a bytearray
         :param target_format: The target file format
         :param plugins_user_print: Whether or not to print user input from plugins (instead of default values)
+        :param path:  filepath to write
         :return: Converted document as bytearray
         """
+
+        if path is None:
+            raise PrintingError("The path name should be given")
 
         output_bytes = None
 
         with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file, \
                 tempfile.NamedTemporaryFile(suffix='.' + target_format.value, delete=True) as output_file:
 
-            if self._template_to_use is None:
-                raise PrintingError("No template chosen for the printing. Printing was cancelled.")
+            # if self._template_to_use is None:
+            #    raise PrintingError("No template chosen for the printing. Printing was cancelled.")
 
             if self._template_to_use:
                 template_content = DocumentPrinter.parse_template_content(doc_to_print=self._doc_entry,
@@ -257,6 +279,18 @@ class DocumentPrinter:
             if re.search("^\\\\documentclass\[[^\n]*(book|report)\}", template_content, flags=re.S):
                 top_level = 'chapter'
 
+            src = self.get_content(plugins_user_print=plugins_user_print, target_format=target_format.value)
+            removethis = ''
+            if self.texplain:
+                i = src.find('\\documentclass')
+                if  (0 <= i) and (i < 20):
+                    template_content = '$body$\n'
+                else:                          # cludge to force pandoc to handle text as LaTeX
+                    removethis = 'REMOVETHIS'  # otherwise it will change for example % to \%
+                    src = '\\begin{document} % ' + removethis + '\n' + \
+                        src + \
+                        '\n\\end{document} % ' + removethis
+
             self._template_doc = self._template_to_use
             templbyte = bytearray(template_content, encoding='utf-8')
             # template_file.write(templbyte) # for some reason does not write small files
@@ -271,19 +305,25 @@ class DocumentPrinter:
                 #  os.path.join(cwd, "pandoc_headernumberingfilter.py")  # handled allready when making md
             ]
 
-            src = self.get_content(plugins_user_print=plugins_user_print, target_format=target_format.value)
             ftop = self._macros.get('texforcetoplevel', None)
             if ftop:
                 top_level = ftop
 
             os.environ["texdocid"] = str(self._doc_entry.document.doc_id)
+            from_format = 'markdown'
+            # if self.texplain:
+            #   from_format = 'latex' # ei toimi, pitäisi antaa suoraan PDFLaTeXille eikä pandocille
+
+            biburl = None
+            if self.bibdoc:
+                biburl = self.urlroot + self.bibdoc + '?file_type=latex&template_doc_id=0'
 
             # TODO: add also variables from texpandocvariables document setting, but this may leed to security hole???
             try:
                 tim_convert_text(source=src,
-                                 from_format='markdown',
+                                 from_format=from_format,
                                  to=target_format.value,
-                                 outputfile=output_file.name,
+                                 outputfile=path,  # output_file.name,
                                  extra_args=['--template=' + template_file.name,
                                              '--variable=TTrue:1',
                                              '--variable=T1:1',
@@ -294,10 +334,14 @@ class DocumentPrinter:
                                              '-Mtexdocid=' + str(self._doc_entry.document.doc_id),
                                              # '--latex-engine=xelatex'
                                              ],
-                                 filters=filters
+                                 filters=filters,
+                                 removethis = removethis,
+                                 biburl = biburl
                                  )
-                template_file.seek(0)
-                output_bytes = bytearray(output_file.read())
+                # template_file.seek(0)
+                # output_bytes = bytearray(output_file.read())
+            except PDFLaTeXError as ex:
+                raise PDFLaTeXError(ex.value)
             except Exception as ex:
                 # TODO: logging of errors
                 # Might be a good idea to log these?
@@ -482,7 +526,7 @@ class DocumentPrinter:
 # use own version, because the original fall down if scandinavian chars in erros messages
 
 def tim_convert_text(source, to, from_format, extra_args=(), encoding='utf-8',
-                     outputfile=None, filters=None):
+                     outputfile=None, filters=None, removethis=None, biburl = None):
     """Converts given `source` from `format` to `to`.
     :param str source: Unicode string or bytes (see encoding)
     :param str to: format into which the input should be converted; can be one of
@@ -494,6 +538,8 @@ def tim_convert_text(source, to, from_format, extra_args=(), encoding='utf-8',
     :param str outputfile: output will be written to outfilename or the converted content
             returned if None (Default value = None)
     :param list filters: pandoc filters e.g. filters=['pandoc-citeproc']
+    :param removethis: lines that contains this text are removed from genereted LaTeX file
+    :param biburl: where to pick bib file
     :returns: converted string (unicode) or an empty string if an outputfile was given
     :rtype: unicode
 
@@ -503,14 +549,16 @@ def tim_convert_text(source, to, from_format, extra_args=(), encoding='utf-8',
     """
     source = _as_unicode(source, encoding)
     return tim_convert_input(source, from_format, 'string', to, extra_args=extra_args,
-                             outputfile=outputfile, filters=filters)
+                             outputfile=outputfile, filters=filters, removethis=removethis, biburl=biburl)
 
 
 def tim_convert_input(source, from_format, input_type, to, extra_args=(), outputfile=None,
-                      filters=None):
+                      filters=None, removethis=None, biburl = None):
     pandoc_path = '/usr/bin/pandoc'
 
     from_format, to = _validate_formats(from_format, to, outputfile)
+    is_pdf = outputfile and outputfile.find('.pdf') >= 0
+    latex_file = outputfile
 
     string_input = input_type == 'string'
     input_file = [source] if not string_input else []
@@ -519,7 +567,9 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
     args += input_file
 
     if outputfile:
-        args.append("--output=" + outputfile)
+        if is_pdf:
+            latex_file = outputfile.replace('.pdf', '.latex')
+        args.append("--output=" + latex_file)
 
     args.extend(extra_args)
 
@@ -560,16 +610,30 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
     except OSError:
         # this is happening only on Py2.6 when pandoc dies before reading all
         # the input. We treat that the same as when we exit with an error...
-        raise RuntimeError('Pandoc died with exitcode "%s" during conversion.' % (p.returncode))
+        raise RuntimeError('Pandoc died with exitcode "%s" during conversion.' % p.returncode)
 
     stdout = _decode_result(stdout)
     stderr = _decode_result(stderr)
+    if stdout or stderr:
+        raise RuntimeError('Pandoc died with exitcode "%s" during conversion.' % stdout + stderr)
 
-    # check that pandoc returned successfully
-    if p.returncode != 0:
-        raise RuntimeError(
-            'Pandoc died with exitcode "%s" during conversion: \n%s' % (p.returncode, stderr)
-        )
+    with open(latex_file, "r", encoding='utf-8') as r:
+        lines = r.readlines()
+    with open(latex_file, "w", encoding='utf-8') as f:
+        for line in lines:
+            if removethis:
+                if line.find(removethis) >= 0:
+                    continue
+            # line = line.replace(']{ ', ']{')  # correct "]{ %%" problem caused by Jinja 2 macros
+            f.write(line)
+
+    if is_pdf:
+
+        p, stdout = run_pdflatex(outputfile, latex_file, new_env, string_input)
+        if biburl:
+            get_bibfile(latex_file, biburl, new_env)
+            run_biber(latex_file, new_env)
+            p, stdout = run_pdflatex(outputfile, latex_file, new_env, string_input)
 
     # if there is an outputfile, then stdout is likely empty!
     return stdout
@@ -588,3 +652,98 @@ def _decode_result(s):
             pass
     s = s.replace('\\n', '\n')
     return s
+
+
+def run_pdflatex(outputfile, latex_file, new_env, string_input):
+    try:
+        filedir = os.path.dirname(outputfile)
+        args = ['pdflatex', '-output-directory', filedir,  # '-file-line-error',
+                '-interaction', 'nonstopmode', latex_file]
+        p = subprocess.Popen(
+            args,
+            stdin=subprocess.PIPE if string_input else None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=new_env)
+
+        # something else than 'None' indicates that the process already terminated
+        if not (p.returncode is None):
+            raise RuntimeError(
+                'PdfLaTeX died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
+            )
+
+        stdout, stderr = p.communicate(None)
+        stdout = _decode_result(stdout)
+        stderr = _decode_result(stderr)
+        # check if pdflatex returned successfully
+        if p.returncode != 0:
+            # Find errors:
+            i = stdout.find('\n!')  # find possible error line from normal output
+            # i = stdout.find('\n'+ latex_file + ':') # find possible error line in file:line:error format
+            line = ''
+            if i >= 0:
+                stdout = stdout[i:]
+                stdout = re.sub("\n\(/usr/.*[^\n]", "", stdout)
+                stdout = stdout.replace(latex_file, '')
+                i = stdout.find('/var/lib')
+                if i >= 0:
+                    stdout = stdout[:i - 3]
+                i = stdout.find('\nl.')
+                if i >= 0:
+                    i2 = stdout.find(' ', i)
+                    if i2 >= 0:
+                        line = stdout[i + 3:i2]
+            raise PDFLaTeXError(
+                {'line': line, 'latex': latex_file, 'pdf': outputfile, 'error': stdout}
+                # 'LINE: %s\nLATEX:%s\nPDF:%s\nPdfLaTeX died with exitcode "%s" during conversion: \n%s\n%s' %
+                # (line, latex_file, outputfile, p.returncode, stdout, stderr)
+            )
+        return p, stdout
+    except OSError as ex:
+        # this is happening only on Py2.6 when pandoc dies before reading all
+        # the input. We treat that the same as when we exit with an error...
+        raise RuntimeError('PdfLaTeX died with error "%s" during conversion.' % str(ex))
+
+
+def get_bibfile(latex_file, biburl, new_env):
+     filedir = os.path.dirname(latex_file)
+     bibname = biburl[biburl.rfind("/")+1:biburl.find('?')] + '.bib'
+     args = ['wget', biburl, '-O', bibname]
+     p = subprocess.Popen(
+         args,
+         stdout=subprocess.PIPE,
+         stderr=subprocess.PIPE,
+         cwd=filedir,
+         env=new_env)
+
+     if not (p.returncode is None):
+         raise RuntimeError(
+             'PdfLaTeX died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
+         )
+
+     stdout, stderr = p.communicate(None)
+     stdout = _decode_result(stdout)
+     stderr = _decode_result(stderr)
+
+
+def run_biber(latex_file, new_env):
+    filedir = os.path.dirname(latex_file)
+    latex_name = latex_file[:latex_file.rfind('.')]
+    args = ['biber', latex_name]
+    p = subprocess.Popen(
+        args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=filedir,
+        env=new_env)
+
+    if not (p.returncode is None):
+        raise RuntimeError(
+            'PdfLaTeX died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
+        )
+
+    stdout, stderr = p.communicate(None)
+    stdout = _decode_result(stdout)
+    stderr = _decode_result(stderr)
+    return 0
+

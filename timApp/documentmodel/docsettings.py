@@ -15,6 +15,7 @@ class DocSettings:
     css_key = 'css'
     macros_key = 'macros'
     globalmacros_key = 'globalmacros'
+    doctexmacros_key = 'doctexmacros'
     macro_delimiter_key = 'macro_delimiter'
     source_document_key = 'source_document'
     auto_number_headings_key = 'auto_number_headings'
@@ -99,6 +100,9 @@ class DocSettings:
 
     def get_globalmacros(self) -> str:
         return self.__dict.get(self.globalmacros_key, {})
+
+    def get_doctexmacros(self) -> str:
+        return self.__dict.get(self.doctexmacros_key, '')
 
     def auto_number_questions(self) -> bool:
         return self.__dict.get(self.no_question_auto_numbering_key, False)
@@ -209,6 +213,10 @@ class DocSettings:
     def is_texplain(self):
         texplain = self.__dict.get('texplain', False)
         return texplain
+
+    def get_bibdoc(self):
+        bibdoc = self.__dict.get('bibdoc', None)
+        return bibdoc
 
     def show_authors(self, default=False):
         return self.__dict.get(self.show_authors_key, default)

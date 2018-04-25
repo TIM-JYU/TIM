@@ -670,6 +670,12 @@ imagexApp.initDrawing = function(scope, canvas) {
 
         if (scope.freeHandShortCuts)
             // this.canvas.parentElement.parentElement.addEventListener( "keypress", function(event) {
+            /*
+            this.canvas.addEventListener("keydown", function(event) {
+                const c = String.fromCharCode(event.keyCode);
+
+            });
+            */
             this.canvas.addEventListener("keypress", function(event) {
                 const c = String.fromCharCode(event.keyCode);
                 if (event.keyCode == 26) {th.freeHand.popSegment(0);}

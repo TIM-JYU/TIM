@@ -195,6 +195,9 @@ export class NotesHandler {
     }
 
     setNotePadge($event: Event) {
+        if (!$event.target) {
+            return;
+        }
         $event.stopPropagation();
         let $par = $($event.target);
         if (!$par.hasClass("par")) $par = $par.parents(".par");

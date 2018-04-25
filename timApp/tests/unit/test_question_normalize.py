@@ -299,3 +299,22 @@ class QuestionJsonNormalizeTest(unittest.TestCase):
                                            'headers, matrixType, questionText, questionType, rows',
                           'questionType': 'matrix',
                           'rows': ['']}, normalize_question_json({'questionTitle': ''}))
+        self.assertEqual({'answerFieldType': 'text',
+                          'expl': {},
+                          'headers': [''],
+                          'invalid': True,
+                          'isTask': True,
+                          'matrixType': 'textArea',
+                          'questionText': 'Invalid question data: A row must not be null',
+                          'questionTitle': 'Invalid question data: A row must not be null',
+                          'questionType': 'matrix',
+                          'rows': ['']}, normalize_question_json({
+            "questionText": "test",
+            "questionTitle": "test",
+            "timeLimit": 1,
+            "matrixType": "",
+            "headers": [],
+            "rows": [None],
+            "questionType": "matrix",
+            "answerFieldType": "radio"
+        }))
