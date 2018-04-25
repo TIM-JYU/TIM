@@ -40,6 +40,7 @@ export interface IEditorParams {
     defaultSize: "sm" | "md" | "lg";
     extraData: IExtraData;
     options: {
+        deleteMsg?: string;
         caption: string,
         localSaveTag: string,
         showDelete: boolean,
@@ -487,7 +488,7 @@ or newer one that is more familiar to write in YAML:
         if (this.deleting) {
             return;
         }
-        if (!$window.confirm("Delete - are you sure?")) {
+        if (!window.confirm(this.getOptions().deleteMsg || "Delete - are you sure?")) {
             return;
         }
         this.deleting = true;

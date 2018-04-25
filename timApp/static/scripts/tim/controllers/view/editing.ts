@@ -247,6 +247,7 @@ export class EditingHandler {
             defaultSize: "lg",
             options: {
                 caption,
+                deleteMsg: `This will delete the whole ${options.area ? "area" : "paragraph"} from the document. Are you sure?`,
                 localSaveTag: options.localSaveTag || "par",
                 showDelete: options.showDelete,
                 showImageUpload: true,
