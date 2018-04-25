@@ -247,7 +247,10 @@ export class EditingHandler {
             defaultSize: "lg",
             options: {
                 caption,
-                deleteMsg: `This will delete the whole ${options.area ? "area" : "paragraph"} from the document. Are you sure?`,
+                deleteMsg: `
+This will delete the whole ${options.area ? "area" : "paragraph"} from the document. Are you sure?
+
+(If you only want to remove selected text, use backspace.)`,
                 localSaveTag: options.localSaveTag || "par",
                 showDelete: options.showDelete,
                 showImageUpload: true,
