@@ -617,15 +617,15 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
     if stdout or stderr:
         raise RuntimeError('Pandoc died with exitcode "%s" during conversion.' % stdout + stderr)
 
-    lines = open(latex_file, "r").readlines()
-    f = open(latex_file, "w")
-    for line in lines:
-        if removethis:
-            if line.find(removethis) >= 0:
-                continue
-        # line = line.replace(']{ ', ']{')  # correct "]{ %%" problem caused by Jinja 2 macros
-        f.write(line)
-    f.close()
+    with open(latex_file, "r", encoding='utf-8') as r:
+        lines = r.readlines()
+    with open(latex_file, "w", encoding='utf-8') as f:
+        for line in lines:
+            if removethis:
+                if line.find(removethis) >= 0:
+                    continue
+            # line = line.replace(']{ ', ']{')  # correct "]{ %%" problem caused by Jinja 2 macros
+            f.write(line)
 
     if is_pdf:
 
