@@ -1,14 +1,11 @@
 """Defines the temporary data models used by TIM.
 
-Each model MUST have 'tempdb' as the __bind_key__ attribute.
-
 """
 from datetime import datetime
 from typing import Optional
 
 from sqlalchemy.orm import scoped_session
 
-from timApp.logger import log_info
 from timApp.timdb.runningquestion import RunningQuestions
 from timApp.timdb.showpoints import ShowPoints
 from timApp.timdb.slidestatus import SlideStatuses
@@ -18,7 +15,7 @@ from timApp.timdb.useractivity import UserActivity
 
 
 class Runningquestion(db.Model):
-    __bind_key__ = 'tempdb'
+    __bind_key__ = 'tim_main'
     asked_id = db.Column(db.Integer, primary_key=True)
     lecture_id = db.Column(db.Integer, primary_key=True)  # TODO should not be part of primary key (asked_id is enough)
     ask_time = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.utcnow)
@@ -32,7 +29,7 @@ class Runningquestion(db.Model):
 
 
 class Usershown(db.Model):
-    __bind_key__ = 'tempdb'
+    __bind_key__ = 'tim_main'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -44,7 +41,7 @@ class Usershown(db.Model):
 
 
 class Useranswered(db.Model):
-    __bind_key__ = 'tempdb'
+    __bind_key__ = 'tim_main'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -56,7 +53,7 @@ class Useranswered(db.Model):
 
 
 class Userextended(db.Model):
-    __bind_key__ = 'tempdb'
+    __bind_key__ = 'tim_main'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -68,7 +65,7 @@ class Userextended(db.Model):
 
 
 class Showpoints(db.Model):
-    __bind_key__ = 'tempdb'
+    __bind_key__ = 'tim_main'
     asked_id = db.Column(db.Integer, primary_key=True)
     lecture_id = db.Column(db.Integer, nullable=False)
 
@@ -78,7 +75,7 @@ class Showpoints(db.Model):
 
 
 class Useractivity(db.Model):
-    __bind_key__ = 'tempdb'
+    __bind_key__ = 'tim_main'
     lecture_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
     active = db.Column(db.Text)  # TODO: Change to Timestamp
@@ -90,7 +87,7 @@ class Useractivity(db.Model):
 
 
 class Pointsshown(db.Model):
-    __bind_key__ = 'tempdb'
+    __bind_key__ = 'tim_main'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -102,7 +99,7 @@ class Pointsshown(db.Model):
 
 
 class Pointsclosed(db.Model):
-    __bind_key__ = 'tempdb'
+    __bind_key__ = 'tim_main'
     lecture_id = db.Column(db.Integer, nullable=False)
     asked_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, primary_key=True)
@@ -114,7 +111,7 @@ class Pointsclosed(db.Model):
 
 
 class SlideStatus(db.Model):
-    __bind_key__ = 'tempdb'
+    __bind_key__ = 'tim_main'
     doc_id = db.Column(db.Integer, primary_key=True)
     status = db.Column(db.Text, nullable=False)
 
@@ -138,10 +135,3 @@ class TempDb(object):
         self.pointsshown = TempInfoUserQuestion(session, Pointsshown)
         self.pointsclosed = TempInfoUserQuestion(session, Pointsclosed)
         self.slidestatuses = SlideStatuses(session, SlideStatus)
-
-
-def initialize_temp_database():
-    log_info('initializing the temp database...')
-    db.drop_all(bind='tempdb')
-    db.create_all(bind='tempdb')
-    log_info('...done.')

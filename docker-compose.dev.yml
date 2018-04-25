@@ -6,24 +6,16 @@ services:
    - "49999:22"
   depends_on:
    - postgresql-test
-   - postgresql-tempdb-test
    - chrome
   tmpfs:
    - /tmp
  postgresql:
   ports:
    - "5432:5432"
- postgresql-tempdb:
-  ports:
-   - "5434:5432"
  postgresql-test:
   image: postgres:9.5
   ports:
    - "5433:5432"
-  tmpfs:
-   - /var/lib/postgresql/data
- postgresql-tempdb-test:
-  image: postgres:9.5
   tmpfs:
    - /var/lib/postgresql/data
  imagex:

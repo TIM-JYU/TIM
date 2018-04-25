@@ -3,20 +3,13 @@ services:
  tim:
   depends_on:
    - postgresql-test
-   - postgresql-tempdb-test
    - chrome
   tmpfs:
    - /tmp
   command: "sleep infinity"
  postgresql:
   command: "sleep infinity"
- postgresql-tempdb:
-  command: "sleep infinity"
  postgresql-test:
-  image: postgres:9.5
-  tmpfs:
-   - /var/lib/postgresql/data
- postgresql-tempdb-test:
   image: postgres:9.5
   tmpfs:
    - /var/lib/postgresql/data

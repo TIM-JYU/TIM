@@ -5,7 +5,6 @@ services:
   build: ./timApp
   depends_on:
    - postgresql
-   - postgresql-tempdb
    - csplugin
    - pali
    - showfile
@@ -30,9 +29,6 @@ services:
   image: postgres:9.5
   volumes:
    - data:/var/lib/postgresql/data
-  restart: unless-stopped
- postgresql-tempdb:
-  image: postgres:9.5
   restart: unless-stopped
  csplugin:
   image: timimages/cs3:compose

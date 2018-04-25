@@ -39,7 +39,6 @@ class TimDbTest(unittest.TestCase):
                 os.remove(f)
         else:
             os.mkdir(cls.test_files_path)
-        timApp.initdb2.initialize_temp_database()
         # Safety mechanism to make sure we are not wiping some production database
         assert app.config['SQLALCHEMY_BINDS']['tim_main'].endswith('-test')
         # The following throws if the testing database has not been created yet; we can safely ignore it

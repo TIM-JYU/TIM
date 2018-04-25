@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 import timApp.tim
-from timApp.initdb2 import initialize_database, initialize_temp_database
+from timApp.initdb2 import initialize_database
 from timApp.logger import log_info
 from timApp.tim_app import app
 from timApp.utils import pycharm_running
@@ -21,7 +21,6 @@ if __name__ == '__main__':
     if pycharm_running():
         signal.signal(signal.SIGINT, quit_fast)
     initialize_database()
-    initialize_temp_database()
     try:
         os.remove(app.config['GLOBAL_NOTIFICATION_FILE'])
     except FileNotFoundError:

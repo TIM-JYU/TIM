@@ -13,13 +13,7 @@ case "$1" in
   host="postgresql"
   ;;
  "2")
-  host="postgresql-tempdb"
-  ;;
- "3")
   host="postgresql-test"
-  ;;
- "4")
-  host="postgresql-tempdb-test"
 esac
 
 ./docker-compose.sh exec ${host} bash -c \

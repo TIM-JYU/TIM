@@ -62,11 +62,6 @@ def postgre_create_database(host, db_name):
         conn.close()
 
 
-def initialize_temp_database():
-    postgre_create_database(app.config['TEMPDB_HOST'], 'tempdb_' + app.config['TIM_NAME'])
-    tempdb_models.initialize_temp_database()
-
-
 def initialize_database(create_docs=True):
     files_root_path = app.config['FILES_PATH']
     Document.default_files_root = files_root_path
@@ -145,4 +140,3 @@ def exit_if_not_db_up_to_date():
 
 if __name__ == "__main__":
     initialize_database()
-    initialize_temp_database()
