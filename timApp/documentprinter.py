@@ -474,7 +474,7 @@ class DocumentPrinter:
         for par in pars:
             if par.get_attr('printing_template') is not None:
                 exp_md = par.get_expanded_markdown(macroinfo=macroinfo, ignore_errors=True)
-                out_pars.append(strip_code_block(exp_md))
+                out_pars.append(strip_code_block(exp_md.strip()))
 
         return "\n\n".join(out_pars)
 

@@ -76,7 +76,6 @@ multiline_unindented_string = re.compile(
 
 
 def strip_code_block(md: str) -> str:
-    md = md.strip()
     code_block_marker = get_code_block_str(md)
     if len(code_block_marker) < 3:
         return md
