@@ -237,8 +237,16 @@ export class EditingHandler {
         };
         let initialText = "";
         if (options.showDelete && parId !== "HELP_PAR") {
-            initialText = (await $http.get<{text: string}>(`/getBlock/${this.viewctrl.docId}/${parId}`,
-                {params: extraData})).data.text;
+            const [err, resp] = await to($http.get<{text: string}>(`/getBlock/${this.viewctrl.docId}/${parId}`,
+                {params: extraData}));
+            if (resp) {
+                initialText = resp.data.text;
+            } else if (err) {
+                await showMessageDialog(`Failed to open editor: ${err.data.error}`);
+                return;
+            } else {
+                throw new Error("unreachable");
+            }
         }
         this.viewctrl.editing = true;
         await to(openEditor({

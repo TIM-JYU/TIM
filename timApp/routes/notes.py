@@ -82,7 +82,10 @@ def edit_note():
     note_text = jsondata['text']
     access = jsondata['access']
     par_id = jsondata['par']
-    par = d.document.get_paragraph(par_id)
+    try:
+        par = d.document.get_paragraph(par_id)
+    except TimDbException as e:
+        return abort(400, str(e))
     note_id = int(jsondata['id'])
     sent_tags = jsondata.get('tags', {})
     tags = []

@@ -82,14 +82,23 @@ export class NotesHandler {
             };
         } else {
             url = "/editNote";
-            const notedata = (await $http.get<{text: string, extraData: INote}>("/note/" + options.noteData.id)).data;
-            initialText = notedata.text;
-            data = {
-                id: options.noteData.id,
-                access: notedata.extraData.access, tags: {
-                    markread: false,
-                },
-            };
+            const [err, resp] = await to($http.get<{text: string, extraData: INote}>("/note/" + options.noteData.id));
+
+            if (resp) {
+                const notedata = resp.data;
+                initialText = notedata.text;
+                data = {
+                    id: options.noteData.id,
+                    access: notedata.extraData.access, tags: {
+                        markread: false,
+                    },
+                };
+            } else if (err) {
+                await showMessageDialog(`Failed to open comment editor: ${err.data.error}`);
+                return;
+            } else {
+                throw new Error("unreachable");
+            }
         }
 
         const extraData: IExtraData = {
