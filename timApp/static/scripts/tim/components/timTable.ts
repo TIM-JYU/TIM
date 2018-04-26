@@ -87,7 +87,7 @@ export interface IRowStyles {
     textAlign?: string;
     color?: string;
     fontFamily?: string;
-    fontSize: string;
+    fontSize?: string;
 }
 
 export interface ICellStyles {
@@ -544,11 +544,10 @@ export class TimTableController implements IController {
 
         let parId = this.getOwnParId();
         let docId = this.viewctrl.item.id;
-        const response = await $http.post<{}>("/timTable/addRow",
+        const response = await $http.post<TimTable>("/timTable/addRow",
             {docId, parId});
-        console.log(response.status);
-
-        // TODO add row on the current page / refresh the table
+        this.data = response.data;
+        this.InitializeCellDataMatrix();
     }
 
 
@@ -561,11 +560,10 @@ export class TimTableController implements IController {
 
         let parId = this.getOwnParId();
         let docId = this.viewctrl.item.id;
-        const response = await $http.post<{}>("/timTable/addColumn",
+        const response = await $http.post<TimTable>("/timTable/addColumn",
             {docId, parId});
-        console.log(response.status);
-        
-        // TODO add column on the current page / refresh the table
+        this.data = response.data;
+        this.InitializeCellDataMatrix();
     }
 
     /**
@@ -629,7 +627,7 @@ export class TimTableController implements IController {
 
 
         const data = response.data;
-        ctrl.editedCellContent = data[0]
+        ctrl.editedCellContent = data[0];
         //showMessageDialog(this.editedCellContent);
         ctrl.cellDataMatrix[row][col] = data[0];
 

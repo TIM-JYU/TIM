@@ -148,7 +148,7 @@ def tim_table_add_row():
     # clone the previous row's data into the new row
     rows.append({'row': copy.deepcopy(rows[last_row_index]['row'])})
     plug.save()
-    return ok_response()
+    return json_response(call_dumbo(plug.values, '/mdkeys'))
 
 
 @timTable_plugin.route("addColumn", methods=["POST"])
@@ -169,7 +169,7 @@ def tim_table_add_column():
     for row in rows:
         row['row'].append({'cell': 'New column'})
     plug.save()
-    return ok_response()
+    return json_response(call_dumbo(plug.values, '/mdkeys'))
 
 
 def is_datablock(yaml: dict) -> bool:
