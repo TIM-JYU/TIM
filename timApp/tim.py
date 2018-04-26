@@ -203,7 +203,7 @@ def empty_response_route():
 
 
 @app.route('/mergeAttachments/<path:doc>', methods=['GET'])
-def get_attachments(doc):
+def merge_attachments(doc):
     """
     A route for getting merged document.
     :param doc: document path
@@ -249,7 +249,7 @@ def get_attachments(doc):
        return send_file(merged_pdf_path, mimetype="application/pdf")
 
 @app.route('/mergeAttachments/<path:doc>', methods=['POST'])
-def merge_attachments(doc):
+def get_attachments(doc):
     """
     A route for merging all the attachments in a document.
     :param doc: document path

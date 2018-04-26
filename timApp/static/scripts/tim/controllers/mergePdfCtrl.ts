@@ -3,9 +3,6 @@ import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IItem} from "../IItem";
 import {$http} from "../ngimport";
 
-
-
-
 /**
  * @module mergePdfCtrl
  * @author Matti Leinonen
