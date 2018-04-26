@@ -724,6 +724,11 @@ def get_bibfile(latex_file, biburl, new_env):
      stdout, stderr = p.communicate(None)
      stdout = _decode_result(stdout)
      stderr = _decode_result(stderr)
+     if p.returncode > 0:
+         raise RuntimeError(
+             'Get bibfile %s failed: "%s": %s %s' % (biburl, p.returncode, stdout, stderr)
+         )
+
 
 
 def run_biber(latex_file, new_env):
