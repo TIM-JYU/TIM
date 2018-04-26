@@ -708,7 +708,7 @@ def run_pdflatex(outputfile, latex_file, new_env, string_input):
 def get_bibfile(latex_file, biburl, new_env):
      filedir = os.path.dirname(latex_file)
      bibname = biburl[biburl.rfind("/")+1:biburl.find('?')] + '.bib'
-     args = ['wget', '--no-check-certificate ', biburl, '-O', bibname]
+     args = ['wget', biburl, '-O', bibname]
      p = subprocess.Popen(
          args,
          stdout=subprocess.PIPE,

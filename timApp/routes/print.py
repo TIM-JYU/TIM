@@ -192,7 +192,7 @@ def get_printed_document(doc_path):
                                template_doc=template_doc,
                                temp=True,
                                plugins_user_print=plugins_user_print,
-                               urlroot=request.url_root+'print/')
+                               urlroot='http://localhost:5000/print/')  # request.url_root+'print/')
         except PrintingError as err:
             print("Error occurred: " + str(err))
             abort(400, str(err))  # TODO: maybe there's a better error code?
