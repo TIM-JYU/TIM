@@ -15,6 +15,7 @@ export interface IPrintParams {
 }
 
 export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "timPrint"> {
+    private static $inject = ["$element", "$scope"];
     private storage: ngStorage.StorageService & {timPrintingTemplateId: null | number};
     private errormsg?: string;
     private notificationmsg?: string;
