@@ -126,18 +126,17 @@ def upload_file():
         attachment_params = json.loads(request.form.get('attachmentParams'))
         autostamp = attachment_params[len(attachment_params) - 1]
     except:
-        # just go on with normal upload if necessary conditions are not met
+        # Just go on with normal upload if necessary conditions are not met.
         pass
     else:
         if autostamp:
-            # only go here if attachment params are valid enough and autostamping is valid and true
-            # because otherwise normal uploading may be interrupted
+            # Only go here if attachment params are valid enough and autostamping is valid and true
+            # because otherwise normal uploading may be interrupted.
             try:
                 stamp_data = timApp.tools.pdftools.attachment_params_to_dict(attachment_params)
                 return upload_and_stamp_attachment(file, stamp_data)
+            # If attachment isn't a pdf, gives an error too (since it's in 'showPdf' plugin)
             except timApp.tools.pdftools.PdfError as e:
-                # TODO: nicer messages to user
-                print(repr(e))
                 abort(400, str(e))
 
     folder = request.form.get('folder')
@@ -182,7 +181,7 @@ def upload_and_stamp_attachment(file, stamp_data):
 
     # add the uploaded file path (the one to stamp)
     stamp_data[0]['file'] = os_path.join(attachment_folder, f"{str(file_id)}/{file_filename}")
-    print("Stamp data: ", stamp_data)
+    # print("Stamp data: ", stamp_data)
 
     output = timApp.tools.pdftools.stamp_pdfs(
             stamp_data,

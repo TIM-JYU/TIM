@@ -69,6 +69,7 @@ def qst_multihtml():
     jsondata = request.get_json()
     multi = []
     for jso in jsondata:
+        print(jso['markup'].get(TABLE))  # Temporary!
         multi.append(qst_get_html(jso, is_review(request)))
     return json_response(multi)
 

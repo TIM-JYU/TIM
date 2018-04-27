@@ -42,6 +42,9 @@ class ModelStampMissingError(PdfError):
         """
         self.file_path = file_path
 
+    def __str__(self):
+        return f"Model stamp missing: {self.file_path}"
+
 
 class ModelStampInvalidError(PdfError):
     """
@@ -54,6 +57,9 @@ class ModelStampInvalidError(PdfError):
         """
         self.file_path = file_path
 
+    def __str__(self):
+        return f"Model stamp corrupted: {self.file_path}"
+
 
 class TempFolderNotFoundError(PdfError):
     """
@@ -65,6 +71,9 @@ class TempFolderNotFoundError(PdfError):
         :param folder_path:
         """
         self.folder_path = folder_path
+
+    def __str__(self):
+        return f"Folder not found: {self.folder_path}"
 
 
 class AttachmentNotFoundError(PdfError):
@@ -93,6 +102,9 @@ class AttachmentNotAPdfError(PdfError):
         """
         self.file_path = file_path
 
+    def __str__(self):
+        return f"Attachment not a pdf: {self.file_path}"
+
 
 class StampFileNotFoundError(PdfError):
     """
@@ -104,6 +116,9 @@ class StampFileNotFoundError(PdfError):
         :param file_path: path of the stamp file that caused the error
         """
         self.file_path = file_path
+
+    def __str__(self):
+        return f"Stamp-file not foundf {self.file_path}"
 
 
 class StampDataInvalidError(PdfError):
@@ -120,7 +135,7 @@ class StampDataInvalidError(PdfError):
         self.item = item
 
     def __str__(self):
-        return self.reason + ": " + repr(self.item)
+        return f"{self.reason}: {repr(self.item)}"
 
 
 class StampDataMissingKeyError(PdfError):
@@ -137,13 +152,16 @@ class StampDataMissingKeyError(PdfError):
         self.item = item
 
     def __str__(self):
-        return repr(self.key) + " not found: " + repr(self.item)
+        return f"Key {repr(self.key)} not found: {repr(self.item)}"
 
 
 class StampDataEmptyError(PdfError):
     """
     Raised if input data is an empty list.
     """
+
+    def __str__(self):
+        return f"Stamp data missing"
 
 
 class SubprocessError(PdfError):
@@ -154,6 +172,9 @@ class SubprocessError(PdfError):
 
     def __init__(self, cmd: str = ""):
         self.cmd = cmd
+
+    def __str__(self):
+        return f"Error encountered in command: {self.cmd}"
 
 
 ##############################################################################
@@ -175,7 +196,7 @@ def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
             raise AttachmentNotAPdfError(pdf)
 
     args = ["pdftk"] + pdf_path_list + ["cat", "output", output_path]
-    print(args)
+    # print(args)
     call_popen(args, pdfmerge_timeout)
     return output_path
 
@@ -290,7 +311,7 @@ def stamp_pdf(
     if not os_path.exists(stamp_path):
         raise StampFileNotFoundError(stamp_path)
     args = ["pdftk", pdf_path, "stamp", stamp_path, "output", output_path]
-    print(args)
+    # print(args)
     call_popen(args)
 
     # Optionally clean up the stamp-pdf after use.
@@ -376,7 +397,7 @@ def is_url(string: str) -> bool:
     :param string:
     :return:
     """
-    # TODO: check special cases like ftp?
+    # TODO: Check special cases like ftp?
     if string.startswith("http://") or string.startswith("https://"):
         return True
     else:
@@ -445,7 +466,7 @@ def stamp_pdfs(
             file=0, date=1, attachment=2 and issue=3 keys
     :return: list of stamped pdf paths
     """
-    # TODO: create a new class for stamp_data
+    # TODO: Create a new class for stamp_data.
 
     stamped_pdfs = []
 

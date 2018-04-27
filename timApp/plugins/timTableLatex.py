@@ -5,10 +5,11 @@ Visa Naukkarinen
 """
 
 import copy
+import re
 from typing import List
 
 # Default values:
-default_bg_color = "white!0"
+
 default_text_color = "black"
 default_colspan = 1
 default_rowspan = 1
@@ -17,13 +18,23 @@ default_width = "*"  # * = auto-width
 default_height = "0pt"  # Won't cut the first line of text even at 0pt.
 default_text_h_align = "l"
 default_font_family = "cmr"
+# Color "none" isn't supported by LaTeX; if this value is used,
+# the setting won't be added at all, making the color transparent.
+default_transparent_color = "none"
 
 # Mappings:
-# TODO: Add missing pairs (at least more common ones).
+# TODO: Add missing pairs (at least the more common ones).
 # HTML (from json) text-styles and corresponding LaTeX-replacements:
-replace_pairs = [("<strong>", "\\textbf{"), ("</strong>", "}"), ("<em>", "\\textit{"), ("</em>", "}")]
+replace_pairs = [("<strong>", "\\textbf{"),
+                 ("</strong>", "}"),
+                 ("<em>", "\\textit{"),
+                 ("</em>", "}"),
+                 ("\\[", ""),
+                 ("\\int", "?"),
+                 ("\\]", "")]
 # HTML font families and their LaTeX-codes:
-fonts = {'monospace': 'pcr', 'sans-serif': 'cmss'}
+fonts = {'monospace': 'pcr',
+         'sans-serif': 'cmss'}
 
 
 class TimTableException(Exception):
@@ -51,10 +62,10 @@ class CellBorders:
     """
 
     def __init__(self, left=False, right=False, top=False, bottom=False,
-                 color_bottom=(default_text_color, False),
-                 color_top=(default_text_color, False),
-                 color_left=(default_text_color, False),
-                 color_right=(default_text_color, False)):
+                 color_bottom=(default_transparent_color, False),
+                 color_top=(default_transparent_color, False),
+                 color_left=(default_transparent_color, False),
+                 color_right=(default_transparent_color, False)):
         """
         :param left: Border-line exists.
         :param right:
@@ -62,16 +73,18 @@ class CellBorders:
         :param bottom:
         """
         # TODO: Add border style and thickness.
+        # Whether the borderline should be drawn.
         self.left = left
         self.right = right
         self.top = top
         self.bottom = bottom
+        # The color of the borderline.
         self.color_bottom = color_bottom
         self.color_top = color_top
         self.color_left = color_left
         self.color_right = color_right
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return custom_repr(self)
 
 
@@ -84,7 +97,7 @@ class Cell:
             self, index: int = -1, content: str = "",
             colspan: int = default_colspan, rowspan: int = default_rowspan,
             text_color=default_text_color, text_color_html: bool = False,
-            bg_color=default_bg_color, bg_color_html: bool = False,
+            bg_color=default_transparent_color, bg_color_html: bool = False,
             h_align=default_text_h_align, font_size=default_font_size,
             cell_width=default_width, cell_height=default_height,
             line_space=0, pbox="10cm", font_family=default_font_family,
@@ -137,23 +150,32 @@ class Cell:
 
         # HTML-colors have an extra tag
         cell_color = format_color(self.bg_color, self.bg_color_html)
-
-        # TODO: add linebreaks based on cell width
+        if self.bg_color == "none":
+            cell_color = ""
+        else:
+            cell_color = f"\\cellcolor{cell_color}"
         content = self.content
 
         return f"\\multicolumn{{{self.colspan}}}{{{v_border_and_align}}}{{" \
                f"\\multirow{{{self.rowspan}}}{{{self.cell_width}}}{{" \
-               f"\\cellcolor{cell_color}" \
+               f"{cell_color}" \
                f"\\fontsize{{{self.font_size}}}{{{self.line_space}}}" \
                f"\\selectfont{{\\textcolor{{{self.text_color}}}{{{{" \
                f"\\fontfamily{{{self.font_family}}}\\selectfont{{" \
                f"\\centering {content}}}}}}}}}}}}}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return custom_repr(self)
 
 
-def format_color(color, html_color):
+def format_color(color: str, html_color: bool) -> str:
+    """
+    Converts color to LaTeX-format depending on whether it's
+    html or normal color.
+    :param color: Color name or hex-code.
+    :param html_color: Whether the color is in hex or not.
+    :return:
+    """
     if html_color:
         return f"[HTML]{{{color}}}"
     else:
@@ -220,7 +242,7 @@ class Row:
         cell.index = i
         self.cells.append(cell)
 
-    def get_rowspan(self):
+    def get_rowspan(self) -> int:
         """
         Get the sum of row's cells' colspans.
         :return:
@@ -301,52 +323,65 @@ class HorizontalBorder:
             # This block checks if there actually is a row above/below
             # and tries getting data from there without crashing if thing
             # this asks doesn't exist.
+
             if self.row_above:
                 try:
                     i_upper = self.row_above.cells[index_upper].borders.bottom
                     i_upper_colspan = self.row_above.cells[index_upper].colspan
+                    # upper_cont = self.row_above.cells[index_upper].content
                 # If the row doesn't exist, won't assert the
                 # need for a line from that direction.
-                except IndexError or AttributeError:
+                except IndexError or AttributeError as e:
                     pass
                 try:
                     color_above = self.row_above.cells[index_upper].borders.color_bottom
                     # print(color_above)
-                    if color_above == default_text_color:
+                    if color_above == default_transparent_color:
                         color_above = None
-                except IndexError or AttributeError:
+                except IndexError or AttributeError as e:
                     pass
             if self.row_below:
                 try:
                     i_lower = self.row_below.cells[index_lower].borders.top
                     i_lower_colspan = self.row_below.cells[index_lower].colspan
-                except IndexError or AttributeError:
+                    # lower_cont = self.row_below.cells[index_lower].content
+                except IndexError or AttributeError as e:
                     pass
                 try:
                     color_below = self.row_below.cells[index_lower].borders.color_top
                     # print(color_below)
-                    if color_below == default_text_color:
+                    if color_below == default_transparent_color:
                         color_below = None
-                except IndexError or AttributeError:
+                except IndexError or AttributeError as e:
                     pass
+
+            colspan = max(i_upper_colspan, i_lower_colspan)
+
+            # TODO: Something wrong with the logic here.
+            # After multirow-multicolumn cell, following cell borders won't show correctly:
+            # instead there's too many border slots added.
+
             # Draws the line only if either cell above or below wants one.
             if not i_upper and not i_lower:
-                output += "~"
+                output += colspan * "~"
             else:
                 # If border color of above cell is default or there's no row above, use color from below cell.
-                if not color_above and color_below or color_above[0] == default_text_color and color_below:
+                if not color_above and color_below or color_above[0] == default_transparent_color and color_below:
                     color, html_color = color_below
                 # Otherwise default to top color.
                 else:
                     color, html_color = color_above
-                # Need to ascertain that all multicolumn cell's borders are drawn.
-                colspan = max(i_upper_colspan, i_lower_colspan)
-                colspan_counter_lower = colspan_counter_lower + i_upper_colspan - 1
-                colspan_counter_upper = colspan_counter_upper + i_lower_colspan - 1
-                output += colspan * f">{{\\arrayrulecolor{format_color(color, html_color)}}}-"
+                # If no color, don't draw the line.
+                if color == default_transparent_color:
+                    output += colspan * "~"
+                # Multicolumn cell counts as one cell but require multiple borderlines.
+                else:
+                    output += colspan * f">{{\\arrayrulecolor{format_color(color, html_color)}}}-"
+            colspan_counter_lower = colspan_counter_lower + i_upper_colspan - 1
+            colspan_counter_upper = colspan_counter_upper + i_lower_colspan - 1
         return output
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return custom_repr(self)
 
 
@@ -418,11 +453,16 @@ class Table:
             )
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return custom_repr(self)
 
 
 def custom_repr(obj) -> str:
+    """
+    Returns full contents of the object and the objects it references.
+    :param obj:
+    :return:
+    """
     return f"{str(obj.__class__)}: {str(obj.__dict__)}"
 
 
@@ -437,25 +477,30 @@ def get_content(content: str) -> str:
     # Contains corresponding html and LaTeX elements.
     for (j, l) in replace_pairs:
         text = text.replace(j, l)
+    # Unknown html-formattings will be displayed as question marks.
+    text = re.sub(r'<.+?>', '?', text).replace('\r', '').replace('\n', '')
     return text
 
 
-def get_color(item, key: str) -> (str, bool):
+def get_color(item, key: str, default_color: str, default_color_html: bool) -> (str, bool):
     """
     Parses color-data into LaTeX-format.
     :param item:
     :param key:
+    :param default_color:
+    :param default_color_html:
     :return: The color-code / name and whether its in hex or not.
     """
-    color = default_text_color
-    if 'backgroundColor' in key:
-        color = default_bg_color
-    color_html = False
+    # Normal LaTex doesn' recognize some html colors, so they need to be defined in the tex-file.
+    color = default_color
+    color_html = default_color_html
     try:
         color = item[key]
         if "#" in color:
             color_html = True
             color = color.replace("#", "")
+        else:
+            color_html = False
     except KeyError:
         pass
     finally:
@@ -486,9 +531,9 @@ def get_size(item) -> (float, float):
     :param item:
     :return:
     """
-    # TODO: cases with more than just a number?
+    # TODO: Cases with more than just a number?
     try:
-        # Source uses measurements that are roughly thrice as large as LaTeX pts.
+        # TimTable uses measurements that are roughly thrice as large as LaTeX pts.
         width = f"{item['width']/3}pt"
     except KeyError:
         width = default_width
@@ -551,11 +596,14 @@ def get_borders(item) -> CellBorders:
         borders = CellBorders(True, True, True, True)
         border_data = item['border']
         if border_data:
-            color = border_data[border_data.rfind(" "):].strip()
+            arg_count = border_data.count(" ")
+            color = default_text_color
             color_html = False
-            if "#" in color:
-                color_html = True
-                color = color.replace("#", "")
+            if arg_count == 2:
+                color = border_data[border_data.rfind(" "):].strip()
+                if "#" in color:
+                    color_html = True
+                    color = color.replace("#", "")
             borders.color_bottom = color, color_html
             borders.color_top = color, color_html
             borders.color_left = color, color_html
@@ -598,7 +646,7 @@ def copy_cell(cell: Cell) -> Cell:
     return n_cell
 
 
-def char_to_int(char):
+def char_to_int(char: str) -> int:
     """
     Converts alphabets to integers. Starts from a = 0.
     :param char: Single character.
@@ -613,6 +661,60 @@ def char_to_int(char):
         return i
 
 
+def convert_datablock_index(index: str) -> (int, int):
+    """
+    Converts string like "A1" to row and cell indexes (0,0).
+    :param index:
+    :return: Pair of integer indexes.
+    """
+    try:
+        row = char_to_int(index[0])
+        cell = int(index[1:]) - 1
+    except TypeError:
+        raise IndexConversionError(index)
+    else:
+        return row, cell
+
+
+def get_row_color(row_data, key):
+    # TODO: Complete this.
+    return ("none", False)
+
+
+def get_datablock(table):
+    """
+    Returns datablock or None, if table has no datablock element.
+    :param table:
+    :return:
+    """
+    try:
+        datablock = table['datablock']['cells']
+    except KeyError:
+        datablock = None
+    return datablock
+
+
+def update_content_from_datablock(datablock, row, cell, content):
+    """
+    Updates the cell content based on datablock if a match is found.
+    :param datablock:
+    :param row: Row-index.
+    :param cell: Cell-index.
+    :param content: Original content.
+    :return:
+    """
+    output = content
+    try:
+        datablock_index = f"{str(chr(65+cell))}{row+1}"
+        # print(datablock_index, datablock[datablock_index])
+        output = datablock[datablock_index]
+    except TypeError or KeyError:
+        pass
+    finally:
+        # If index conversion fails or there's no such key,
+        # return the original content value.
+        return output
+
 
 def convert_table(table_json) -> Table:
     """
@@ -622,11 +724,18 @@ def convert_table(table_json) -> Table:
     """
     table_rows = []
     table = Table(table_rows)
+    datablock = get_datablock(table_json)
 
     max_cells = 0
     max_colspan = 1
     for i in range(0, len(table_json['rows'])):
         table_row = table.get_or_create_row(i)
+
+        # Doesn't do anything yet.
+        # row_data = table_json['rows'][i]
+        # (row_bg_color, row_bg_color_html) = get_row_color(row_data, "backGroundColor")
+        # (row_text_color, row_text_color_html) = get_row_color(row_data, "color"
+
         for j in range(0, len(table_json['rows'][i]['row'])):
             try:
                 cell_data = table_json['rows'][i]['row'][j]
@@ -635,10 +744,18 @@ def convert_table(table_json) -> Table:
             except TypeError:
                 table_row.add_cell(j, Cell(content=get_content(table_json['rows'][i]['row'][j])))
             else:
-
+                # TODO: Use row settings as defaults, if they're set.
                 # Set cell attributes:
-                (bg_color, bg_color_html) = get_color(cell_data, 'backgroundColor')
-                (text_color, text_color_html) = get_color(cell_data, 'color')
+                (bg_color, bg_color_html) = get_color(
+                    cell_data,
+                    'backgroundColor',
+                    default_transparent_color,
+                    False)
+                (text_color, text_color_html) = get_color(
+                    cell_data,
+                    'color',
+                    default_text_color,
+                    False)
                 (colspan, rowspan) = get_span(cell_data)
                 (width, height) = get_size(cell_data)
                 borders = get_borders(cell_data)
@@ -665,8 +782,9 @@ def convert_table(table_json) -> Table:
                     borders=borders
                 )
 
-                # TODO: Check if corresponding data block for the cell exists.
-                # TODO: If it does, overwrite with values from there.
+                # Tries updating content from the datablock.
+                if datablock:
+                    c.content = update_content_from_datablock(datablock, i, j, c.content)
 
                 # Cells with rowspan > 1:
                 # Multirow-cells need to be set from bottom-up in LaTeX to properly show bg-colors, and
@@ -674,7 +792,7 @@ def convert_table(table_json) -> Table:
                 # move cells aside.
                 if rowspan > 1:
                     for y in range(0, rowspan - 1):
-                        # Empty filler cell has mostly same settings as multirow-cell:
+                        # Empty filler cell has mostly same the settings as the multirow-cell:
                         d = copy_cell(c)
                         d.content = ""
                         d.borders.color_bottom = (c.bg_color, c.bg_color_html)
