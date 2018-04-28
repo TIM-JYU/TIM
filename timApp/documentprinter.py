@@ -709,9 +709,6 @@ def get_bibfile(latex_file, biburl, new_env):
      filedir = os.path.dirname(latex_file)
      bibname = biburl[biburl.rfind("/")+1:biburl.find('?')] + '.bib'
      args = ['wget', biburl, '-O', bibname]
-     raise RuntimeError(
-         'Bibfile debug %s\n : "%s"' % (biburl, bibname)
-     )
      p = subprocess.Popen(
          args,
          stdout=subprocess.PIPE,

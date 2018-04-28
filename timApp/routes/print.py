@@ -100,7 +100,7 @@ def print_document(doc_path):
                            template_doc=template_doc,
                            temp=True,
                            plugins_user_print=plugins_user_print,
-                           urlroot = request.url_root + 'print/')
+                           urlroot = 'http://localhost:5000/print/')  # request.url_root + 'print/')
     except PDFLaTeXError as err:
         try:
             print("Error occurred: " + str(err))
@@ -352,20 +352,17 @@ def create_printed_doc(doc_entry: DocEntry,
     """
     Adds a marking for a printed document to the db
 
-
     :param doc_entry: Document that is being printed
+    :param template_doc: printing template used
     :param file_type: File type for the document
     :param temp: Is the document stored only temporarily (gets deleted after some time)
+    :param plugins_user_print: use users answers for plugins or not
     :param urlroot: url root for this route
     :return str: path to the created file
     """
 
     # if template_doc is None:
     #    raise PrintingError("No template file was specified for the printing!")
-
-    raise RuntimeError(
-        'cretate printed doc %s\n' % urlroot
-    )
 
     printer = DocumentPrinter(doc_entry=doc_entry,
                               template_to_use=template_doc,
