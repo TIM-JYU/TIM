@@ -199,6 +199,9 @@ def get_printed_document(doc_path):
         except PDFLaTeXError as err:
             print("PdfLaTeX error occurred: " + str(err))
             pdferror = err.value
+        except Exception as err:
+            print("Create_printed_doc error occurred: " + str(err))
+            abort(400, str(err))  # TODO: maybe there's a better error code?
 
     cached = check_print_cache(doc_entry=doc,
                                template=template_doc,
@@ -359,6 +362,10 @@ def create_printed_doc(doc_entry: DocEntry,
 
     # if template_doc is None:
     #    raise PrintingError("No template file was specified for the printing!")
+
+    raise RuntimeError(
+        'cretate printed doc %s\n' % urlroot
+    )
 
     printer = DocumentPrinter(doc_entry=doc_entry,
                               template_to_use=template_doc,
