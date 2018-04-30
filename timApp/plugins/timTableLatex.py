@@ -486,12 +486,12 @@ def get_color(item, key: str, default_color: str, default_color_html: bool) -> (
     """
     Parses color-data into LaTeX-format.
     :param item:
-    :param key:
-    :param default_color:
+    :param key: Key for color element (color, backgroundColor, etc.).
+    :param default_color: Color to use if key not found.
     :param default_color_html:
     :return: The color-code / name and whether its in hex or not.
     """
-    # Normal LaTex doesn' recognize some html colors, so they need to be defined in the tex-file.
+    # Normal LaTex doesn't recognize some html colors, so they need to be defined in the tex-file.
     color = default_color
     color_html = default_color_html
     try:
@@ -516,30 +516,32 @@ def get_span(item) -> (int, int):
     """
     try:
         colspan = item['colspan']
-    except KeyError:
+    except:
         colspan = default_colspan
     try:
         rowspan = item['rowspan']
-    except KeyError:
+    except:
         rowspan = default_rowspan
     return colspan, rowspan
 
 
-def get_size(item) -> (float, float):
+def get_size(item, default_width, default_height) -> (float, float):
     """
     Parse cell width and height into LaTeX-supported format.
     :param item:
+    :param default_width: Value to be used if no width-key.
+    :param default_height: Value to be used if no height-key.
     :return:
     """
     # TODO: Cases with more than just a number?
     try:
         # TimTable uses measurements that are roughly thrice as large as LaTeX pts.
         width = f"{item['width']/3}pt"
-    except KeyError:
+    except:
         width = default_width
     try:
         height = f"{item['height']/3}pt"
-    except KeyError:
+    except:
         height = default_height
     return width, height
 
@@ -553,7 +555,7 @@ def get_font_family(item) -> str:
         # Corresponding HTML and LaTeX codes need to be mapped here.
         ff = item['fontFamily']
         font = fonts[ff]
-    except KeyError:
+    except:
         font = default_font_family
     return font
 
@@ -568,7 +570,7 @@ def get_text_horizontal_align(item):
         # Options are center, right and left, which happen to be the same in LaTeX,
         # except only first letters are used.
         a = item['textAlign'][:1]
-    except KeyError:
+    except:
         a = default_text_h_align
     return a
 
@@ -581,7 +583,7 @@ def get_font_size(item):
     """
     try:
         a = item['fontSize']
-    except KeyError:
+    except:
         a = default_font_size
     return a
 
@@ -610,27 +612,27 @@ def get_borders(item) -> CellBorders:
             borders.color_right = color, color_html
 
             return borders
-    except KeyError:
+    except:
         borders = CellBorders()
         try:
             if item['borderLeft']:
                 borders.left = True
-        except KeyError:
+        except:
             pass
         try:
             if item['borderRight']:
                 borders.right = True
-        except KeyError:
+        except:
             pass
         try:
             if item['borderTop']:
                 borders.top = True
-        except KeyError:
+        except:
             pass
         try:
             if item['borderBottom']:
                 borders.bottom = True
-        except KeyError:
+        except:
             pass
         return borders
 
@@ -674,11 +676,6 @@ def convert_datablock_index(index: str) -> (int, int):
         raise IndexConversionError(index)
     else:
         return row, cell
-
-
-def get_row_color(row_data, key):
-    # TODO: Complete this.
-    return ("none", False)
 
 
 def get_datablock(table):
@@ -731,10 +728,13 @@ def convert_table(table_json) -> Table:
     for i in range(0, len(table_json['rows'])):
         table_row = table.get_or_create_row(i)
 
-        # Doesn't do anything yet.
-        # row_data = table_json['rows'][i]
-        # (row_bg_color, row_bg_color_html) = get_row_color(row_data, "backGroundColor")
-        # (row_text_color, row_text_color_html) = get_row_color(row_data, "color"
+        # If row settings found, use them as default values for cells of the row.
+        # Otherwise uses global defaults.
+        row_data = table_json['rows'][i]
+        (row_default_bg_color, row_default_bg_color_html) = get_color(row_data, "backgroundColor",
+                                                                      default_transparent_color, False)
+        (row_default_text_color, row_default_text_color_html) = get_color(row_data, "color", default_text_color, False)
+        (row_default_width, row_default_height) = get_size(row_data, default_width, default_height)
 
         for j in range(0, len(table_json['rows'][i]['row'])):
             try:
@@ -742,22 +742,21 @@ def convert_table(table_json) -> Table:
                 content = get_content(table_json['rows'][i]['row'][j]['cell'])
             # Cells that use simplified format (without 'cell').
             except TypeError:
-                table_row.add_cell(j, Cell(content=get_content(table_json['rows'][i]['row'][j])))
-            else:
-                # TODO: Use row settings as defaults, if they're set.
+                content = get_content(table_json['rows'][i]['row'][j])
+            finally:
                 # Set cell attributes:
                 (bg_color, bg_color_html) = get_color(
                     cell_data,
                     'backgroundColor',
-                    default_transparent_color,
-                    False)
+                    row_default_bg_color,
+                    row_default_bg_color_html)
                 (text_color, text_color_html) = get_color(
                     cell_data,
                     'color',
-                    default_text_color,
-                    False)
+                    row_default_text_color,
+                    row_default_text_color_html)
                 (colspan, rowspan) = get_span(cell_data)
-                (width, height) = get_size(cell_data)
+                (width, height) = get_size(cell_data, row_default_width, row_default_height)
                 borders = get_borders(cell_data)
                 text_h_align = get_text_horizontal_align(cell_data)
                 font_family = get_font_family(cell_data)
@@ -807,7 +806,6 @@ def convert_table(table_json) -> Table:
                 # Normal cells:
                 else:
                     table_row.add_cell(j, c)
-            finally:
                 max_cells = max(max_cells, len(table_row.cells))
 
     # TODO: Need to find the number of most concurrent cols more accurately.
@@ -815,3 +813,171 @@ def convert_table(table_json) -> Table:
     table.col_count = max_cells * max_colspan
     table.create_hborders()
     return table
+
+
+testi_data5 = {'rows': [{'color': 'yellow', 'backgroundColor': 'red', 'width': 100,
+                        'row': [{'cell': 'kissa'}, 'rolll', 'koll', 'koukkukäsi', 'kekola',
+                                {'cell': 'New column', 'width': 200},
+                                {'cell': 'New column'}]}, {
+                           'row': [{'cell': 'kissa'}, 'rolll', 'koll', 'koukkukäsi', 'kekola',
+                                   {'cell': 'New column', 'color': 'fuchsia'},
+                                   {'cell': 'New column'}]}], 'datablock': {
+    'cells': {'E1': 'OMENA', 'F1': 'APPELSIINI', 'C1': 'KIIVI', 'G2': 'KOOKOS', 'B2': 'KUMKWATTI', 'A2': 'SITRUUNA',
+              'G1': 'BANAANI', 'F2': 'AVOKADO', 'E2': 'MELONI', 'D1': 'CHILI', 'A1': 'PURJO', 'B1': 'PERSIMON',
+              'D2': 'BASILIKA', 'C2': 'BAMBU'}, 'type': 'relative'}}
+print(convert_table(testi_data5))
+
+test_data3 = {'rows': [{'backgroundColor': 'cyan', 'row': [{'cell': 'Rami Pasanen ', 'type': 'text'},
+                                                           {'cell': 'Keijo Kukkanen', 'colspan': 2,
+                                                            'horizontal-align': 'right'},
+                                                           {'cell': 'Visa', 'border': '10px solid red'},
+                                                           {'backgroundColor': 'blue', 'cell': 'Visa'},
+                                                           {'verticalAlign': 'middle', 'textAlign': 'center',
+                                                            'rowspan': 2, 'cell': 'kk', 'colspan': 2},
+                                                           '<strong>Kasimir</strong>']}, {
+                           'row': [{'cell': '1-10', 'borderBottom': '1px solid purple'},
+                                   {'cell': '1-11,5-6', 'borderBottom': '1px none white'}, 'Kukkuu',
+                                   '<span class="red">1-11,5-6</span>', {'cell': '1-11,5-6'}, {'cell': '1-11,5-6'},
+                                   {'backgroundColor': 'coral', 'cell': '1-11,5-6'}, {'cell': '1-11,5-6'}]}, {
+                           'row': [{'verticalAlign': 'bottom', 'backgroundColor': 'blue', 'cell': '1-10'},
+                                   '<div class="figure">\n<img src="/images/108/vesa640.png" alt="vesa" />\n<p class="caption">vesa</p>\n</div>',
+                                   {'cell': '1-11,5-6'}, {'cell': '1-11,5-6'}, '<span class="timButton">Paina</span>',
+                                   {'cell': '1-11,5-6'}, {'cell': '1-11,5-6'},
+                                   {'cell': '<span class="math display">\\[\\int f(x) dx\\]</span>'}]}],
+              'datablock': {'cells': {'H3': 'banaani', 'E1': 'sdjukfsdf', 'B1': 'Kissa'}, 'type': 'relative'},
+              'columns': [{'style': 'exampleStyle', 'backgroundColor': 'blue', 'width': '1px',
+                           'formula': '=(kurssinumero * opintopisteet)', 'column': None},
+                          {'column': {'width': 50, 'name': 'kurssinumero'}},
+                          {'column': {'width': 100, 'name': 'opintopisteet'}},
+                          {'backgroundColor': 'yellow', 'column': None}]}
+
+test_data4 = {'rows': [{'backgroundColor': 'cyan', 'row': [{'cell': 'Rami Pasanen ', 'type': 'text'},
+                                                           {'cell': 'Keijo Kukkanen', 'colspan': 2,
+                                                            'horizontal-align': 'right'},
+                                                           {'cell': 'Visa', 'border': '10px solid red'},
+                                                           {'backgroundColor': 'blue', 'cell': 'Visa'},
+                                                           {'verticalAlign': 'middle', 'textAlign': 'center',
+                                                            'rowspan': 2, 'cell': 'kk', 'colspan': 2},
+                                                           '<strong>Kasimir</strong>']}, {
+                           'row': [{'cell': '1-10', 'borderBottom': '1px solid purple'},
+                                   {'cell': '1-11,5-6', 'borderBottom': '1px none white'}, 'Kukkuu',
+                                   '1-11,5-6', {'cell': '1-11,5-6'}, {'cell': '1-11,5-6'},
+                                   {'backgroundColor': 'coral', 'cell': '1-11,5-6'}, {'cell': '1-11,5-6'}]}, {
+                           'row': [{'verticalAlign': 'bottom', 'backgroundColor': 'blue', 'cell': '1-10'},
+                                   'vesa',
+                                   {'cell': '1-11,5-6'}, {'cell': '1-11,5-6'}, 'Paina',
+                                   {'cell': '1-11,5-6'}, {'cell': '1-11,5-6'},
+                                   {'cell': 'f(x) dx'}]}],
+              'datablock': {'cells': {'H3': 'banaani', 'E1': 'AAAAAAAAAA!', 'B1': 'Kissa'}, 'type': 'relative'},
+              'columns': [{'style': 'exampleStyle', 'backgroundColor': 'blue', 'width': '1px',
+                           'formula': '=(kurssinumero * opintopisteet)', 'column': None},
+                          {'column': {'width': 50, 'name': 'kurssinumero'}},
+                          {'column': {'width': 100, 'name': 'opintopisteet'}},
+                          {'backgroundColor': 'yellow', 'column': None}]}
+
+test_data2 = {'rows': [{'row': [{'height': 50, 'verticalAlign': 'bottom', 'backgroundColor': '#dddddd', 'width': 600,
+                                 'cell': '<strong><em>Jäsen:</em></strong>', 'border': '1px solid gray',
+                                 'textAlign': 'center', 'fontSize': 20},
+                                {'height': 50, 'verticalAlign': 'bottom', 'backgroundColor': '#dddddd', 'width': 200,
+                                 'cell': '<strong><em>Läsnä asiat blablablaaaa blaa blaaa pitkääääääää:</em></strong>',
+                                 'border': '1px solid gray'},
+                                {'height': 50, 'verticalAlign': 'bottom', 'backgroundColor': '#dddddd', 'width': 400,
+                                 'cell': '<strong><em>Varajäsen:</em></strong>', 'fontFamily': 'sans-serif',
+                                 'border': '1px solid gray', 'textAlign': 'left', 'color': 'blue',
+                                 'rowspan': 2},
+                                {'height': 50, 'verticalAlign': 'bottom', 'backgroundColor': '#dddddd', 'width': 200,
+                                 'cell': '<strong><em>Läsnä asiat:</em></strong>', 'border': '1px solid gray'}]},
+                       {'row': [{'cell': '<em>Professorit </em>', }, {'cell': 'tyhjä'}, {'cell': 'tyhjä'},
+                                {'cell': 'tyhjä'}]},
+                       {'row': [{'cell': 'Dekaani, TkT Pasi Tyrväinen', 'textAlign': 'right'}, {'cell': 'tyhjä'},
+                                {'cell': 'tyhjä'},
+                                {'cell': 'tyhjä'}]}, {
+                           'row': [{'cell': 'Professori, FT Raino A.E. Mäkinen'}, {'cell': 'tyhjä'}, {'cell': 'tyhjä'},
+                                   {'cell': 'tyhjä'}]},
+                       {'row': [{'cell': 'Professori, FT Raino A.E. Mäkinen', 'fontFamily': 'monospace'},
+                                {'cell': 'tyhjä'},
+                                {'cell': ' Professori, FT Tuomo Rossi '}, {'cell': 'tyhjä'}]}, {
+                           'row': [{'cell': 'Professori, FT Timo Hämäläinen '}, {'cell': 'tyhjä'},
+                                   {'cell': 'Professori, FT Tapani Ristaniemi  '}, {'cell': 'tyhjä'}]}, {
+                           'row': [{'cell': 'Professori, FT Tommi Kärkkäinen   '}, {'cell': 'tyhjä'},
+                                   {'cell': 'Tutkimusprofessori, TkT Lauri Kettunen', 'border': '1px solid'},
+                                   {'cell': 'tyhjä'}]}, {
+                           'row': [{'height': 70, 'cell': '<em>Muu opetus- ja tutkimushlöstö ja muu hlöstö</em>'},
+                                   {'cell': 'tyhjä'}, {'cell': 'tyhjä'}, {'cell': 'tyhjä'}]}, {
+                           'row': [{'cell': 'Projektitutkija, FT Tero Tuovinen', 'border': '1px solid gray'},
+                                   {'cell': 'tyhjä', 'border': '1px solid #123456'},
+                                   {'cell': 'Lehtori, KTT, LitM Panu Moilanen '}, {'cell': 'tyhjä'}]}, {
+                           'row': [{'cell': 'Lehtori, FT Vesa Lappalainen '}, {'cell': 'tyhjä'},
+                                   {'cell': 'Yliopistonopettaja, FT Sanna Mönkölä '}, {'cell': 'tyhjä'}]}, {
+                           'row': [{'cell': 'Yliopistonopettaja, FT Antti-Juhani Kaijanaho'}, {'cell': 'tyhjä'},
+                                   {'cell': 'Yliopistonopettaja, FT Leena Hiltunenä  '}, {'cell': 'tyhjä'}]}, {
+                           'row': [{'verticalAlign': 'bottom', 'cell': '<em>Opiskelijat</em>', 'rowspan': 3,
+                                    'backgroundColor': '#eeeeee', 'border': '1px solid yellow'}, {'cell': 'tyhjä'},
+                                   {'cell': 'tyhjä', 'border': '1px solid black'},
+                                   {'height': 70, 'cell': 'tyhjä', 'border': '1px solid yellow'}]},
+                       {'row': [{'cell': 'Eveliina Mali', 'colspan': 3, 'backgroundColor': 'red',
+                                 'border': '1px solid gray'}, {'cell': 'tyhjä'},
+                                {'cell': 'Renne Hirsimäki', 'border': '1px solid blue'},
+                                {'cell': 'tyhjä'}]},
+                       {'row': [{'cell': 'Riku Tulla'}, {'cell': 'tyhjä'}, {'cell': ' Antti Louko    '},
+                                {'cell': 'tyhjä'}]},
+                       {'row': [{'cell': 'Leo Toiminen'}, {'cell': 'tyhjä'}, {'cell': 'Nuutti Rantanen    '},
+                                {'cell': 'tyhjä'}]},
+                       {'row': [{'cell': '<em>Ulkopuoliset jäsenet</em>'}, {'cell': 'tyhjä'}, {'cell': 'tyhjä'},
+                                {'cell': 'tyhjä'}]}, {
+                           'row': [{'rowspan': 2, 'cell': 'Hannu Häkkinen', 'colspan': 2, 'backgroundColor': 'yellow'},
+                                   {'cell': 'Ei varajäsentä'}, {'cell': 'tyhjä'}]},
+                       {'row': [{'cell': 'Ari Hirvonen'}, {'cell': 'tyhjä'}]},
+                       {'row': ['<em>Banaani</em>', '<strong>Omena</strong>']}]}
+
+test_data = {'rows': [{'row': [{'height': 50, 'verticalAlign': 'bottom', 'backgroundColor': '#dddddd', 'width': 600,
+                                'cell': '<strong><em>Jäsen:</em></strong>', 'border': '1px solid gray'},
+                               {'height': 50, 'verticalAlign': 'bottom', 'backgroundColor': '#dddddd', 'width': 200,
+                                'cell': '<strong><em>Läsnä asiat:</em></strong>', 'border': '1px solid gray'},
+                               {'height': 50, 'verticalAlign': 'bottom', 'backgroundColor': '#dddddd', 'width': 400,
+                                'cell': '<strong><em>Varajäsen:</em></strong>', 'border': '1px solid gray'},
+                               {'height': 50, 'verticalAlign': 'bottom', 'backgroundColor': '#dddddd', 'width': 200,
+                                'cell': '<strong><em>Läsnä asiat:</em></strong>', 'border': '1px solid gray'}]},
+                      {'row': [{'cell': '<em>Professorit </em>'}, {'cell': ''}, {'cell': ''}, {'cell': ''}]},
+                      {'row': [{'cell': 'Dekaani, TkT Pasi Tyrväinen'}, {'cell': ''}, {'cell': ''}, {'cell': ''}]}, {
+                          'row': [{'cell': 'Professori, FT Raino A.E. Mäkinen'}, {'cell': ''}, {'cell': ''},
+                                  {'cell': ''}]}, {'row': [{'cell': 'Professori, FT Raino A.E. Mäkinen'}, {'cell': ''},
+                                                           {'cell': ' Professori, FT Tuomo Rossi '}, {'cell': ''}]}, {
+                          'row': [{'cell': 'Professori, FT Timo Hämäläinen '}, {'cell': ''},
+                                  {'cell': 'Professori, FT Tapani Ristaniemi  '}, {'cell': ''}]}, {
+                          'row': [{'cell': 'Professori, FT Tommi Kärkkäinen   '}, {'cell': ''},
+                                  {'cell': 'Tutkimusprofessori, TkT Lauri Kettunen'}, {'cell': ''}]}, {
+                          'row': [{'height': 70, 'cell': '<em>Muu opetus- ja tutkimushlöstö ja muu hlöstö</em>'},
+                                  {'cell': ''}, {'cell': ''}, {'cell': ''}]}, {
+                          'row': [{'cell': 'Projektitutkija, FT Tero Tuovinen'}, {'cell': ''},
+                                  {'cell': 'Lehtori, KTT, LitM Panu Moilanen '}, {'cell': ''}]}, {
+                          'row': [{'cell': 'Lehtori, FT Vesa Lappalainen '}, {'cell': ''},
+                                  {'cell': 'Yliopistonopettaja, FT Sanna Mönkölä '}, {'cell': ''}]}, {
+                          'row': [{'cell': 'Yliopistonopettaja, FT Antti-Juhani Kaijanaho'}, {'cell': ''},
+                                  {'cell': 'Yliopistonopettaja, FT Leena Hiltunenä  '}, {'cell': ''}]}, {
+                          'row': [{'verticalAlign': 'bottom', 'cell': '<em>Opiskelijat</em>'}, {'cell': ''},
+                                  {'cell': ''}, {'height': 70, 'cell': ''}]},
+                      {'row': [{'cell': 'Eveliina Mali'}, {'cell': ''}, {'cell': 'Renne Hirsimäki'}, {'cell': ''}]},
+                      {'row': [{'cell': 'Riku Tulla'}, {'cell': ''}, {'cell': ' Antti Louko    '}, {'cell': ''}]},
+                      {'row': [{'cell': 'Leo Toiminen'}, {'cell': ''}, {'cell': 'Nuutti Rantanen    '}, {'cell': ''}]},
+                      {'row': [{'cell': '<em>Ulkopuoliset jäsenet</em>'}, {'cell': ''}, {'cell': ''}, {'cell': ''}]},
+                      {'row': [{'cell': 'Hannu Häkkinen'}, {'cell': ''}, {'cell': 'Ei varajäsentä'}, {'cell': ''}]},
+                      {'row': [{'cell': 'Ari Hirvonen'}, {'cell': ''}, {'cell': 'Ei varajäsentä'}, {'cell': ''}]}]}
+
+# -----------------------------------------------------------------------------
+# Testing:
+
+table = convert_table(test_data2)
+print("\n" + str(table) + "\n")
+print("\n", convert_table(test_data), "\n")
+print("\n", convert_table(test_data4), "\n")
+
+"""
+# For checking correct indexing:
+for row in table.rows:
+    temp = str(row.index) + ": "
+    for cell in row.cells:
+        temp += str(cell.index) + ":" + repr(cell.content) + " "
+    print(temp)
+"""
+
