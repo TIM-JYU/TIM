@@ -250,3 +250,7 @@ export function isMobileDevice() {
     const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
     return touch && (window.screen.width < 1200);
 }
+
+export function escapeRegExp(str: string) {
+  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+}
