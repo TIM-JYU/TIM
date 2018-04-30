@@ -35,6 +35,7 @@ services:
   environment:
    TIM_SETTINGS: testconfig.py
    PYTHONPATH: /service
+   GITLAB_CI: ${GITLAB_CI:-false}
   depends_on:
    - nginx
   tmpfs:
