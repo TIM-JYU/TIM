@@ -106,6 +106,8 @@ class ParEditorTest(BrowserTest):
         self.current_user.set_prefs(prefs)
         db.session.commit()
         get_cancel_button(pareditor).click()
+        alert = self.drv.switch_to.alert
+        alert.accept()
         self.goto_document(d)
         self.click_add_bottom()
         self.wait_for_editor_load()
