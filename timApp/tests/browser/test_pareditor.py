@@ -67,7 +67,7 @@ class ParEditorTest(BrowserTest):
         ActionChains(self.drv).send_keys(Keys.PAGE_DOWN, Keys.BACKSPACE).perform()
         self.wait_for_preview_to_finish()
         ActionChains(self.drv).move_to_element(preview).perform()
-        self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world_2')
+        self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world')
 
     def wait_for_editor_load(self):
         self.wait_until_hidden('.editor-loading')
