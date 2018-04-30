@@ -226,7 +226,7 @@ export class ViewCtrl implements IController {
         });
 
         this.$storage = $localStorage.$default({
-            defaultAction: "Show options window",
+            defaultAction: "Close menu",
             noteAccess: "everyone",
         });
 
