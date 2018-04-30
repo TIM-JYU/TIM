@@ -84,6 +84,8 @@ class User(db.Model):
                                back_populates='users', lazy='dynamic')
     lectureanswers = db.relationship('LectureAnswer', back_populates='user', lazy='dynamic')
     messages = db.relationship('Message', back_populates='user', lazy='dynamic')
+    questionactivity = db.relationship('QuestionActivity', back_populates='user', lazy='select')
+    useractivity = db.relationship('Useractivity', back_populates='user', lazy='select')
 
     @property
     def logged_in(self):

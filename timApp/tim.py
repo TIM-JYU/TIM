@@ -47,7 +47,7 @@ from timApp.routes.edit import edit_page
 from timApp.routes.generateMap import generateMap
 from timApp.routes.global_notification import global_notification
 from timApp.routes.groups import groups
-from timApp.routes.lecture import get_tempdb, lecture_routes
+from timApp.routes.lecture import lecture_routes
 from timApp.routes.login import login_page, logout
 from timApp.routes.manage import manage_page
 from timApp.routes.notes import notes
@@ -74,6 +74,7 @@ from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.translation import Translation
 from timApp.timdb.models.user import User
+from timApp.timdb.tim_models import SlideStatus
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import NoSuchUserException
 
@@ -181,6 +182,7 @@ Exception happened on {datetime.now(tz=timezone.utc)} at {request.url}
 
 {tb}
 """.strip()
+    db.session.rollback()
     send_email(rcpt=app.config['ERROR_EMAIL'],
                subject=f'{app.config["TIM_HOST"]}: Error at {request.path} ({get_current_user_name()})',
                mail_from=app.config['WUFF_EMAIL'],
@@ -525,12 +527,9 @@ def getslidestatus():
     if 'doc_id' not in request.args:
         abort(404, "Missing doc id")
     doc_id = int(request.args['doc_id'])
-    tempdb = get_tempdb()
-    status = tempdb.slidestatuses.get_status(doc_id)
+    status = SlideStatus.query.filter_by(doc_id=doc_id).first()
     if status:
         status = status.status
-    else:
-        status = None
     return json_response(status)
 
 
@@ -542,8 +541,9 @@ def setslidestatus():
     d = get_doc_or_abort(doc_id)
     verify_manage_access(d)
     status = request.args['status']
-    tempdb = get_tempdb()
-    tempdb.slidestatuses.update_or_add_status(doc_id, status)
+    status = SlideStatus(doc_id=doc_id, status=status)
+    db.session.merge(status)
+    db.session.commit()
     return ok_response()
 
 

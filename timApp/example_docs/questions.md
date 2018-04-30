@@ -26,7 +26,7 @@ json:
   - Monday
   - Wednesday
   - Friday
-  timeLimit: 90
+  timeLimit: 1
 points: '2:1'
 ```
 

@@ -12,14 +12,13 @@ from flask import abort
 from flask import current_app
 from flask import request
 from flask import session
-from sqlalchemy.orm.exc import NoResultFound
 
 from timApp.accesshelper import verify_ownership, get_doc_or_abort
 from timApp.common import has_ownership, \
     get_user_settings
 from timApp.documentmodel.randutils import hashfunc
 from timApp.requesthelper import get_option, verify_json_params
-from timApp.responsehelper import json_response, ok_response, empty_response
+from timApp.responsehelper import json_response, ok_response, empty_response, json_response_and_commit
 from timApp.routes.login import log_in_as_anonymous
 from timApp.routes.qst import get_question_data_from_document, create_points_table, \
     calculate_points_from_json_answer, calculate_points
@@ -33,7 +32,8 @@ from timApp.timdb.models.lecture import Lecture
 from timApp.timdb.models.lectureanswer import LectureAnswer, get_totals
 from timApp.timdb.models.message import Message
 from timApp.timdb.models.user import User
-from timApp.timdb.tempdb_models import TempDb, Runningquestion
+from timApp.timdb.runningquestion import Runningquestion
+from timApp.timdb.tim_models import Useractivity, QuestionActivityKind, QuestionActivity, Showpoints
 from timApp.timdb.tim_models import db, Question
 
 lecture_routes = Blueprint('lecture',
@@ -137,7 +137,6 @@ def do_get_updates(request):
     use_questions = get_option(request, 'q', False)  # 'get_questions'
     session['use_questions'] = use_questions
 
-    tempdb = get_tempdb()
     step = 0
     lecture = get_current_lecture()
 
@@ -156,11 +155,9 @@ def do_get_updates(request):
 
     lecturers = []
     students = []
-    current_user = get_current_user_id()
     user_name = get_current_user_name()
 
-    time_now = str(datetime.now(timezone.utc).strftime("%H:%M:%S"))
-    tempdb.useractivity.update_or_add_activity(lecture_id, current_user, time_now)
+    update_activity(lecture, get_current_user_object())
 
     options = lecture.options_parsed
     teacher_poll = options.get("teacher_poll", "")
@@ -196,11 +193,12 @@ def do_get_updates(request):
 
     lecture_ending = 100
     base_resp = None
+    u = get_current_user_object()
     # Jos poistaa tämän while loopin, muuttuu long pollista perinteiseksi polliksi
     while step <= 10:
         lecture_ending = check_if_lecture_is_ending(lecture)
         if is_lecturer:
-            lecturers, students = get_lecture_users(tempdb, lecture)
+            lecturers, students = get_lecture_users(lecture)
             poll_interval_ms = poll_interval_t_ms
             long_poll = long_poll_t
         # Gets new messages if the wall is in use.
@@ -228,18 +226,20 @@ def do_get_updates(request):
                 }
             }
 
-            question = tempdb.runningquestions.get_running_question_by_id(current_question_id)
-            already_answered = tempdb.usersanswered.has_user_info(current_question_id, current_user)
-            if question and not already_answered:
-                already_extended = tempdb.usersextended.has_user_info(current_question_id, current_user)
+            q = get_asked_question(current_question_id)
+            already_answered = None
+            if q and q.running_question:
+                already_answered = q.has_activity(QuestionActivityKind.Useranswered, u)
+            if q and q.running_question and not already_answered:
+                already_extended = q.has_activity(QuestionActivityKind.Userextended, u)
                 if not already_extended:
-                    tempdb.usersextended.add_user_info(lecture_id, current_question_id, current_user)
+                    q.add_activity(QuestionActivityKind.Userextended, u)
                     # Return this is question has been extended
-                    resp[EXTRA_FIELD_NAME]['new_end_time'] = question.end_time
-                    return json_response(resp)
+                    resp[EXTRA_FIELD_NAME]['new_end_time'] = q.running_question.end_time
+                    return json_response_and_commit(resp)
             else:
                 # Return this if question has ended or user has answered to it
-                return json_response(resp)
+                return json_response_and_commit(resp)
 
         if current_points_id:
             resp = {
@@ -248,18 +248,21 @@ def do_get_updates(request):
                     "points_closed": True,
                 }
             }
-            already_closed = tempdb.pointsclosed.has_user_info(current_points_id, current_user)
+            q = get_asked_question(current_points_id)
+            already_closed = False
+            if q:
+                already_closed = q.has_activity(QuestionActivityKind.Pointsclosed, u)
             if already_closed:
-                return json_response(resp)
+                return json_response_and_commit(resp)
 
         # Gets new questions if the questions are in use.
         if use_questions:
-            new_question = get_new_question(lecture_id, current_question_id, current_points_id)
+            new_question = get_new_question(lecture, current_question_id, current_points_id)
             if new_question:
-                return json_response({**base_resp, EXTRA_FIELD_NAME: new_question})
+                return json_response_and_commit({**base_resp, EXTRA_FIELD_NAME: new_question})
 
         if list_of_new_messages:
-            return json_response(base_resp)
+            return json_response_and_commit(base_resp)
 
         if not long_poll or current_app.config['TESTING']:
             # Don't loop when testing
@@ -269,37 +272,37 @@ def do_get_updates(request):
         step += 1
 
     if lecture_ending != 100 or lecturers or students:
-        return json_response(base_resp)
+        return json_response_and_commit(base_resp)
 
-    return json_response({"ms": poll_interval_ms})  # no new updates
+    return json_response_and_commit({"ms": poll_interval_ms})  # no new updates
 
 
 @lecture_routes.route('/getQuestionManually')
 def get_question_manually():
     """Route to use to get question manually (instead of getting question in /getUpdates)."""
     lecture = get_current_lecture_or_abort()
-    new_question = get_new_question(lecture.lecture_id, None, None, True)
+    new_question = get_new_question(lecture, None, None, True)
     return json_response(new_question)
 
 
-def get_new_question(lecture_id, current_question_id=None, current_points_id=None, force=False):
+def get_new_question(lecture: Lecture, current_question_id=None, current_points_id=None, force=False):
     """
     :param current_points_id: TODO: what is this?
     :param current_question_id: The id of the current question.
-    :param lecture_id: lecture to get running questions from
+    :param lecture: lecture to get running questions from
     :param force: Return question, even if it already has been shown to user
     :return: None if no questions are running
              dict with data of new question if there is a question running and user hasn't answered to that question.
              {'type': 'already_answered'} if there is a question running and user has answered to that.
     """
-    tempdb = get_tempdb()
     current_user = get_current_user_id()
-    question = tempdb.runningquestions.get_lectures_running_questions(lecture_id)
+    u = get_current_user_object()
+    question = lecture.running_questions
     if question:
-        question = question[0]
+        question: AskedQuestion = question[0].asked_question
         asked_id = question.asked_id
-        already_shown = tempdb.usersshown.has_user_info(asked_id, current_user)
-        already_answered = tempdb.usersanswered.has_user_info(asked_id, current_user)
+        already_shown = question.has_activity(QuestionActivityKind.Usershown, u)
+        already_answered = question.has_activity(QuestionActivityKind.Useranswered, u)
         if already_answered:
             if force:
                 return {'type': 'already_answered'}
@@ -308,27 +311,31 @@ def get_new_question(lecture_id, current_question_id=None, current_points_id=Non
         if (not already_shown or force) or (asked_id != current_question_id):
             q = get_asked_question(asked_id)
             answer = q.answers.filter_by(user_id=current_user).first()
-            tempdb.usersshown.add_user_info(lecture_id, asked_id, current_user)
-            tempdb.usersextended.add_user_info(lecture_id, asked_id, current_user)
+            question.add_activity(QuestionActivityKind.Usershown, u)
+            question.add_activity(QuestionActivityKind.Userextended, u)
             return {'type': 'answer', 'data': answer} if answer else {'type': 'question', 'data': q}
     else:
-        question_to_show_points = tempdb.showpoints.get_currently_shown_points(lecture_id)
+        question_to_show_points = get_shown_points(lecture)
         if question_to_show_points:
-            asked_id = question_to_show_points[0].asked_id
-            already_shown = tempdb.pointsshown.has_user_info(asked_id, current_user)
-            already_closed = tempdb.pointsclosed.has_user_info(asked_id, current_user)
+            asked_id = question_to_show_points.asked_id
+            already_shown = question_to_show_points.has_activity(QuestionActivityKind.Pointsshown, u)
+            already_closed = question_to_show_points.has_activity(QuestionActivityKind.Pointsclosed, u)
             if already_closed:
                 if force:
-                    tempdb.pointsclosed.delete_user_info(lecture_id, asked_id, current_user)
+                    db.session.delete(already_closed)
                 else:
                     return None
             if not (already_shown or force) or (asked_id != current_points_id):
                 question = get_asked_question(asked_id)
-                tempdb.pointsshown.add_user_info(lecture_id, asked_id, current_user)
+                question.add_activity(QuestionActivityKind.Pointsshown, u)
                 answer = question.answers.filter_by(user_id=current_user).first()
                 if answer:
                     return {'type': 'result', 'data': answer}
         return None
+
+
+def get_shown_points(lecture) -> Optional[AskedQuestion]:
+    return lecture.asked_questions.join(Showpoints).first()
 
 
 def check_if_lecture_is_ending(lecture: Lecture):
@@ -372,9 +379,8 @@ def get_lecture_session_data():
 
 
 def lecture_dict(lecture: Lecture):
-    tempdb = get_tempdb()
     is_lecturer = is_lecturer_of(lecture)
-    lecturers, students = get_lecture_users(tempdb, lecture) if is_lecturer else ([], [])
+    lecturers, students = get_lecture_users(lecture) if is_lecturer else ([], [])
     return {
         "lecture": lecture,
         "isInLecture": current_user_in_lecture(),
@@ -407,14 +413,7 @@ def check_lecture():
 
 @lecture_routes.route("/startFutureLecture", methods=['POST'])
 def start_future_lecture():
-    if not request.args.get('lecture_code') or not request.args.get("doc_id"):
-        abort(400)
-
-    lecture_code = request.args.get('lecture_code')
-    doc_id = int(request.args.get("doc_id"))
-    d = get_doc_or_abort(doc_id)
-    verify_ownership(d)
-    lecture = Lecture.find_by_code(lecture_code, doc_id)
+    lecture = get_lecture_from_request(check_access=True)
     time_now = datetime.now(timezone.utc)
     lecture.start_time = time_now
     lecture.users.append(get_current_user_object())
@@ -465,35 +464,27 @@ def show_lecture_info(lecture_id):
 
 @lecture_routes.route('/showLectureInfoGivenName')
 def show_lecture_info_given_name():
-    if 'lecture_id' in request.args:
-        lecture = Lecture.find_by_id(int(request.args.get('lecture_id')))
-    else:
-        lecture = Lecture.find_by_code(request.args.get('lecture_code'), int(request.args.get('doc_id')))
-    if not lecture:
-        abort(400)
-
+    lecture = get_lecture_from_request(check_access=False)
     return json_response(lecture.to_json(show_password=is_lecturer_of(lecture)))
 
 
 @lecture_routes.route('/getLectureByCode')
 def lecture_needs_password():
-    lecture = Lecture.find_by_code(request.args.get('lecture_code'), int(request.args.get('doc_id')))
-    if not lecture:
-        abort(404)
+    lecture = get_lecture_from_request(check_access=False)
     return json_response(lecture)
 
 
-def get_lecture_users(tempdb, lecture: Lecture):
+def get_lecture_users(lecture: Lecture):
     lecturers = []
     students = []
 
-    activity = tempdb.useractivity.get_all_user_activity(lecture.lecture_id)
+    activity = Useractivity.query.filter_by(lecture=lecture).all()
 
-    for user in activity:
-        user_id = user.user_id
-        active = user.active
+    for ac in activity:
+        user_id = ac.user_id
+        active = ac.active
         person = {
-            "user": User.get_by_id(user_id),
+            "user": ac.user,
             "active": active,
         }
         if lecture.lecturer == user_id:
@@ -575,7 +566,7 @@ def create_lecture():
 
 def empty_lecture(lec: Lecture):
     lec.users = []
-    clean_dictionaries_by_lecture(lec.lecture_id)
+    clean_dictionaries_by_lecture(lec)
 
 
 @lecture_routes.route('/endLecture', methods=['POST'])
@@ -588,19 +579,34 @@ def end_lecture():
     return get_running_lectures(lecture.doc_id)
 
 
-def clean_dictionaries_by_lecture(lecture_id):
+def clean_dictionaries_by_lecture(lecture: Lecture):
     """Cleans data from lecture that isn't running anymore.
 
-    :param lecture_id: The lecture id.
+    :param lecture: The lecture.
 
     """
-    tempdb = get_tempdb()
-    tempdb.runningquestions.delete_lectures_running_questions(lecture_id)
-    tempdb.usersshown.delete_all_from_lecture(lecture_id)
-    tempdb.usersextended.delete_all_from_lecture(lecture_id)
-    tempdb.useractivity.delete_lecture_activity(lecture_id)
-    tempdb.showpoints.stop_showing_points(lecture_id)
-    tempdb.pointsshown.delete_all_from_lecture(lecture_id)
+    for q in lecture.running_questions:
+        db.session.delete(q)
+    stop_showing_points(lecture)
+    for a in lecture.useractivity:
+        db.session.delete(a)
+    QuestionActivity.query.filter((QuestionActivity.asked_id.in_(
+        AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).with_entities(AskedQuestion.asked_id))) &
+                                  QuestionActivity.kind.in_([QuestionActivityKind.Usershown,
+                                                             QuestionActivityKind.Userextended,
+                                                             QuestionActivityKind.Pointsshown,
+                                                             QuestionActivityKind.Pointsclosed,
+                                                             QuestionActivityKind.Useranswered])).delete(synchronize_session='fetch')
+
+
+def delete_question_temp_data(question: AskedQuestion, lecture: Lecture):
+    delete_activity(question, [QuestionActivityKind.Usershown,
+                               QuestionActivityKind.Userextended,
+                               QuestionActivityKind.Useranswered,
+                               QuestionActivityKind.Pointsclosed,
+                               QuestionActivityKind.Pointsshown])
+    lecture.running_questions = []
+    stop_showing_points(lecture)
 
 
 @lecture_routes.route('/extendLecture', methods=['POST'])
@@ -617,24 +623,27 @@ def extend_lecture():
 @lecture_routes.route('/deleteLecture', methods=['POST'])
 def delete_lecture():
     lecture = get_lecture_from_request()
-    empty_lecture(lecture)
-    Message.query.filter_by(lecture_id=lecture.lecture_id).delete()
-    LectureAnswer.query.filter_by(lecture_id=lecture.lecture_id).delete()
-    AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).delete()
-    db.session.delete(lecture)
+    with db.session.no_autoflush:
+        empty_lecture(lecture)
+        Message.query.filter_by(lecture_id=lecture.lecture_id).delete()
+        LectureAnswer.query.filter_by(lecture_id=lecture.lecture_id).delete()
+        AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).delete()
+        db.session.delete(lecture)
     db.session.commit()
 
     return get_running_lectures(lecture.doc_id)
 
 
 def get_lecture_from_request(check_access=True) -> Lecture:
-    lec_id_str = request.args.get("lecture_id")
-    if not lec_id_str:
-        abort(400)
-    lecture_id = int(lec_id_str)
-    lecture = Lecture.find_by_id(lecture_id)
+    lecture_id = get_option(request, 'lecture_id', None, cast=int)
+    if not lecture_id:
+        lecture_code = get_option(request, 'lecture_code', None)
+        doc_id = get_option(request, 'doc_id', None)
+        lecture = Lecture.find_by_code(lecture_code, doc_id)
+    else:
+        lecture = Lecture.find_by_id(lecture_id)
     if not lecture:
-        abort(404)
+        abort(404, 'Lecture not found')
     if check_access:
         d = get_doc_or_abort(lecture.doc_id)
         verify_ownership(d)
@@ -648,17 +657,9 @@ def join_lecture():
     Checks that the given password is correct.
 
     """
-    if not request.args.get("doc_id") or not request.args.get("lecture_code"):
-        abort(400, "Missing parameters")
-    tempdb = get_tempdb()
-    doc_id = int(request.args.get("doc_id"))
-    lecture_code = request.args.get("lecture_code")
+    lecture = get_lecture_from_request(check_access=False)
     password_quess = request.args.get("password_quess")
-    lecture = Lecture.find_by_code(lecture_code, doc_id)
-    if not lecture:
-        return abort(404, 'Lecture with this code was not found.')
     lecture_id = lecture.lecture_id
-    current_user = get_current_user_id()
 
     lecture_ended = not lecture.is_running
 
@@ -669,20 +670,19 @@ def join_lecture():
     if lecture.password != password_quess:
         correct_password = False
 
-    lectures = get_current_user_object().lectures.all()
+    u = get_current_user_object()
+    lectures = u.lectures.all()
     if not lecture_ended and not lecture_full and correct_password:
         if not logged_in():
-            anon_user = log_in_as_anonymous(session)  # TODO check this if g.user should be reset
-            current_user = anon_user.id
+            log_in_as_anonymous(session)  # TODO check this if g.user should be reset
         if lectures:
             leave_lecture_function(lectures[0])
-        lecture.users.append(get_current_user_object())
-        db.session.commit()
+        lecture.users.append(u)
 
-        time_now = str(datetime.now(timezone.utc).strftime("%H:%M:%S"))
-        tempdb.useractivity.update_or_add_activity(lecture_id, current_user, time_now)
+        update_activity(lecture, u)
 
         session['in_lecture'] = [lecture_id]
+        db.session.commit()
 
     return json_response(
         {
@@ -691,11 +691,13 @@ def join_lecture():
         })
 
 
+def update_activity(lecture: Lecture, u: User):
+    ua = Useractivity(user_id=u.id, lecture_id=lecture.lecture_id)
+    db.session.merge(ua)
+
+
 @lecture_routes.route('/leaveLecture', methods=['POST'])
 def leave_lecture():
-    lecture_id = get_option(request, 'lecture_id', None, cast=int)
-    if not lecture_id:
-        abort(400)
     lecture = get_lecture_from_request(check_access=False)
     leave_lecture_function(lecture)
     db.session.commit()
@@ -709,17 +711,24 @@ def leave_lecture_function(lecture: Lecture):
         if lecture_id in lecture_list:
             lecture_list.remove(lecture_id)
         session['in_lecture'] = lecture_list
-    lecture.users.remove(get_current_user_object())
+    u = get_current_user_object()
+    if u in lecture.users:
+        lecture.users.remove(u)
 
 
 @lecture_routes.route("/extendQuestion", methods=['POST'])
 def extend_question():
     asked_id = int(request.args.get('asked_id'))
     extend = int(request.args.get('extend'))
-
-    tempdb = get_tempdb()
-    tempdb.runningquestions.extend_question(asked_id, timedelta(seconds=extend))
-
+    q = get_asked_question(asked_id)
+    if not q:
+        return abort(404)
+    rq: Runningquestion = q.running_question
+    if not rq:
+        abort(400, 'Question is not running')
+    rq.end_time += timedelta(seconds=extend)
+    delete_activity(q, [QuestionActivityKind.Userextended])
+    db.session.commit()
     return ok_response()
 
 
@@ -756,7 +765,6 @@ def ask_question():
 
     lecture = get_current_lecture_or_abort()
     verify_is_lecturer(lecture)
-    lecture_id = lecture.lecture_id
 
     if question_id or par_id:
         doc_id = get_option(request, 'doc_id', None, cast=int)
@@ -778,7 +786,7 @@ def ask_question():
 
         # Set points and expl as None because they're already contained in the JSON.
         # Only if /updatePoints is called, they are set.
-        question = AskedQuestion(lecture_id=lecture_id, doc_id=doc_id, asked_time=asked_time, points=None, expl=None,
+        question = AskedQuestion(lecture=lecture, doc_id=doc_id, asked_time=asked_time, points=None, expl=None,
                                  asked_json=asked_json, par_id=par_id)
         db.session.add(question)
     elif asked_id:
@@ -786,32 +794,19 @@ def ask_question():
         if not question:
             abort(404, 'Asked question not found.')
         question.asked_time = datetime.now(timezone.utc)
-        lecture_id = question.lecture_id
+        lecture = question.lecture
     else:
         return abort(400, 'Missing parameters')
-    db.session.commit()
 
+    delete_question_temp_data(question, lecture)
+    rq = Runningquestion(lecture=lecture, asked_question=question, ask_time=question.asked_time, end_time=question.end_time)
+    db.session.add(rq)
+    db.session.commit()
     if question.time_limit:
         thread_to_stop_question = threading.Thread(target=stop_question_from_running,
                                                    args=(question,))
-
         thread_to_stop_question.start()
-
-    tempdb = get_tempdb()
-    delete_question_temp_data(question.asked_id, lecture_id, tempdb)
-
-    tempdb.runningquestions.add_running_question(lecture_id, question.asked_id, question.asked_time, question.end_time)
-
     return json_response(question)
-
-
-def delete_question_temp_data(asked_id, lecture_id, tempdb):
-    tempdb.runningquestions.delete_lectures_running_questions(lecture_id)
-    tempdb.usersshown.delete_all_from_question(asked_id)
-    tempdb.usersextended.delete_all_from_question(asked_id)
-    tempdb.showpoints.stop_showing_points(lecture_id)
-    tempdb.pointsshown.delete_all_from_lecture(lecture_id)
-    tempdb.pointsclosed.delete_all_from_lecture(lecture_id)
 
 
 @lecture_routes.route('/showAnswerPoints', methods=['POST'])
@@ -821,11 +816,13 @@ def show_points():
     lecture = get_current_lecture_or_abort()
     verify_is_lecturer(lecture)
     asked_id = int(request.args.get('asked_id'))
-    lecture_id = lecture.lecture_id
+    q = get_asked_question(asked_id)
+    if not q:
+        return abort(404)
 
-    tempdb = get_tempdb()
-    tempdb.showpoints.stop_showing_points(lecture_id)
-    tempdb.showpoints.add_show_points(lecture_id, asked_id)
+    stop_showing_points(lecture)
+    sp = Showpoints(asked_question=q)
+    db.session.add(sp)
 
     current_question_id = None
     current_points_id = None
@@ -833,10 +830,16 @@ def show_points():
         current_question_id = int(request.args.get('current_question_id'))
     if 'current_points_id' in request.args:
         current_points_id = int(request.args.get('current_points_id'))
-    new_question = get_new_question(lecture_id, current_question_id, current_points_id)
+    new_question = get_new_question(lecture, current_question_id, current_points_id)
+    db.session.commit()
     if new_question is not None:
         return json_response(new_question)
     return empty_response()
+
+
+def stop_showing_points(lecture: Lecture):
+    Showpoints.query.filter(Showpoints.asked_id.in_(
+        AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).with_entities(AskedQuestion.asked_id))).delete(synchronize_session='fetch')
 
 
 @lecture_routes.route('/updatePoints/', methods=['POST'])
@@ -861,27 +864,31 @@ def update_question_points():
 
 def stop_question_from_running(question: AskedQuestion):
     end_time = question.end_time
-    asked_id = question.asked_id
-    with app.app_context():
-        tempdb = get_tempdb()
-        # Adding extra time to limit so when people gets question a bit later than others they still get to answer
-        extra_time = timedelta(seconds=3)
-        end_time += extra_time
-        while datetime.now(tz=timezone.utc) < end_time:
-            time.sleep(1)
-            stopped = True
-            question = tempdb.runningquestions.get_running_question_by_id(asked_id)
-            if question:
-                end_time = extra_time + question.end_time
-                stopped = False
+    qid = question.asked_id
+    # Adding extra time to limit so when people gets question a bit later than others they still get to answer
+    extra_time = timedelta(seconds=3 if not app.config['TESTING'] else 0)
+    end_time += extra_time
+    while datetime.now(tz=timezone.utc) < end_time:
+        question = AskedQuestion.query.get(qid)
+        if not question:
+            return
+        db.session.refresh(question)
+        rq = question.running_question
+        if rq:
+            end_time = extra_time + rq.end_time
+        else:
+            return
+        time.sleep(1)
+    Runningquestion.query.filter_by(asked_id=qid).delete()
+    delete_activity(question, [QuestionActivityKind.Usershown,
+                               QuestionActivityKind.Userextended,
+                               QuestionActivityKind.Useranswered])
+    db.session.commit()
 
-            if stopped:
-                return
 
-        tempdb.runningquestions.delete_running_question(asked_id)
-        tempdb.usersshown.delete_all_from_question(asked_id)
-        tempdb.usersextended.delete_all_from_question(asked_id)
-        tempdb.usersanswered.delete_all_from_lecture(asked_id)
+def delete_activity(question: AskedQuestion, kinds):
+    QuestionActivity.query.filter((QuestionActivity.asked_id == question.asked_id) &
+                                  QuestionActivity.kind.in_(kinds)).delete(synchronize_session='fetch')
 
 
 @lecture_routes.route("/getQuestionByParId", methods=['GET'])
@@ -925,12 +932,13 @@ def stop_question():
     if not request.args.get("asked_id"):
         abort(400)
     asked_id = int(request.args.get('asked_id'))
-    tempdb = get_tempdb()
     lecture = get_current_lecture_or_abort()
     verify_is_lecturer(lecture)
-    tempdb.runningquestions.delete_running_question(asked_id)
-    tempdb.usersshown.delete_all_from_question(asked_id)
-    tempdb.usersanswered.delete_all_from_question(asked_id)
+    Runningquestion.query.filter_by(asked_id=asked_id).delete()
+    QuestionActivity.query.filter((QuestionActivity.asked_id == asked_id) &
+                                  QuestionActivity.kind.in_([QuestionActivityKind.Usershown,
+                                                             QuestionActivityKind.Useranswered])).delete(synchronize_session='fetch')
+    db.session.commit()
     return ok_response()
 
 
@@ -956,9 +964,7 @@ def get_lecture_answers():
 @lecture_routes.route("/answerToQuestion", methods=['PUT'])
 def answer_to_question():
     if not request.args.get("asked_id") or not request.args.get('input'):
-        abort(400, "Bad request")
-
-    tempdb = get_tempdb()
+        abort(400, "missing asked_id or input")
 
     asked_id = int(request.args.get("asked_id"))
     req_input = json.loads(request.args.get("input"))
@@ -966,19 +972,19 @@ def answer_to_question():
     whole_answer = answer
     lecture = get_current_lecture_or_abort()
     lecture_id = lecture.lecture_id
-    current_user = get_current_user_id()
+    u = get_current_user_object()
     asked_question = get_asked_question(asked_id)
 
-    lecture_answer: LectureAnswer = asked_question.answers.filter_by(user_id=current_user).first()
+    lecture_answer: LectureAnswer = asked_question.answers.filter_by(user_id=u.id).first()
 
-    question = tempdb.runningquestions.get_running_question_by_id(asked_id)
-    already_answered = tempdb.usersanswered.has_user_info(asked_id, current_user)
+    question = asked_question.running_question
+    already_answered = asked_question.has_activity(QuestionActivityKind.Useranswered, u)
     if not question:
         return json_response({"questionLate": "The question has already finished. Your answer was not saved."})
     if already_answered:
         return json_response({"alreadyAnswered": "You have already answered to question. Your first answer is saved."})
 
-    tempdb.usersanswered.add_user_info(lecture_id, asked_id, current_user)
+    asked_question.add_activity(QuestionActivityKind.Useranswered, u)
 
     if (not lecture_answer) or (lecture_answer and answer != lecture_answer.answer):
         time_now = datetime.now(timezone.utc)
@@ -986,12 +992,12 @@ def answer_to_question():
         points_table = create_points_table(question_points)
         points = calculate_points_from_json_answer(answer, points_table)
         answer = json.dumps(whole_answer)
-        if lecture_answer and current_user != 0:
+        if lecture_answer and u.id != 0:
             lecture_answer.answered_on = time_now
             lecture_answer.answer = answer
             lecture_answer.points = points
         else:
-            ans = LectureAnswer(user_id=current_user, question_id=asked_id, lecture_id=lecture_id, answer=answer,
+            ans = LectureAnswer(user_id=u.id, question_id=asked_id, lecture_id=lecture_id, answer=answer,
                                 answered_on=time_now, points=points)
             db.session.add(ans)
         db.session.commit()
@@ -1001,22 +1007,19 @@ def answer_to_question():
 
 @lecture_routes.route("/closePoints", methods=['PUT'])
 def close_points():
-    if not request.args.get("asked_id"):
-        abort(400, "Bad request")
+    asked_id = get_option(request, 'asked_id', None, cast=int)
+    if not asked_id:
+        return abort(400, "Missing asked_id")
 
-    tempdb = get_tempdb()
     lecture = get_current_lecture_or_abort()
 
-    asked_id = int(request.args.get("asked_id"))
-    lecture_id = lecture.lecture_id
-    current_user = get_current_user_id()
+    q = get_asked_question(asked_id)
+    if not q:
+        return abort(404)
 
-    points = tempdb.showpoints.get_currently_shown_points(lecture_id)
+    points = get_shown_points(lecture)
     if points:
-        tempdb.pointsclosed.add_user_info(lecture_id, asked_id, current_user)
+        q.add_activity(QuestionActivityKind.Pointsclosed, get_current_user_object())
+        db.session.commit()
 
     return ok_response()
-
-
-def get_tempdb():
-    return TempDb(session=db.session)

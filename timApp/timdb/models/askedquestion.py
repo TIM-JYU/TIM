@@ -4,7 +4,9 @@ from typing import Optional
 
 from timApp.timdb.models.askedjson import AskedJson
 from timApp.timdb.models.lecture import Lecture
+from timApp.timdb.tim_models import QuestionActivityKind, QuestionActivity
 from timApp.timdb.tim_models import db
+from timApp.timtypes import UserType
 
 
 class AskedQuestion(db.Model):
@@ -22,6 +24,9 @@ class AskedQuestion(db.Model):
     asked_json: AskedJson = db.relationship('AskedJson', back_populates='asked_questions', lazy='joined')
     lecture: Lecture = db.relationship('Lecture', back_populates='asked_questions', lazy='joined')
     answers = db.relationship('LectureAnswer', back_populates='asked_question', lazy='dynamic')
+    running_question = db.relationship('Runningquestion', back_populates='asked_question', lazy='select', uselist=False)
+    questionactivity = db.relationship('QuestionActivity', back_populates='asked_question', lazy='dynamic')
+    showpoints = db.relationship('Showpoints', back_populates='asked_question', lazy='select')
 
     @property
     def end_time(self) -> Optional[datetime]:
@@ -29,6 +34,17 @@ class AskedQuestion(db.Model):
         if not timelimit:
             return None
         return self.asked_time + timedelta(seconds=timelimit)
+
+    def has_activity(self, kind: QuestionActivityKind, user: UserType):
+        return self.questionactivity.filter_by(
+            kind=kind,
+            user_id=user.id).first()
+
+    def add_activity(self, kind: QuestionActivityKind, user: UserType):
+        if self.has_activity(kind, user):
+            return
+        a = QuestionActivity(kind=kind, user=user, asked_question=self)
+        db.session.merge(a)
 
     @property
     def time_limit(self):

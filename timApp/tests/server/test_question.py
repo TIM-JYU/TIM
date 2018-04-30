@@ -98,7 +98,7 @@ points: '2:1'</code></pre>
                          'questionTitle': 'Today',
                          'questionType': 'radio-vertical',
                          'rows': ['Monday', 'Wednesday', 'Friday'],
-                         'timeLimit': 90},
+                         'timeLimit': 1},
                      'parId': second_id,
                      'qst': True,
                      'taskId': 'test2'})

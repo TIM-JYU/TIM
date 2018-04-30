@@ -18,7 +18,6 @@ from timApp.documentprinter import DocumentPrinter
 from timApp.logger import log_info, enable_loggers, log_error, log_warning
 from timApp.maintenance.migrate_to_postgre import perform_migration
 from timApp.tim_app import app
-from timApp.timdb import tempdb_models
 from timApp.timdb.documents import import_document_from_file
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.user import User

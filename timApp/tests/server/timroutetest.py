@@ -79,7 +79,7 @@ class TimRouteTest(TimDbTest):
             as_tree: bool = False,
             expect_status: Optional[int] = 200,
             expect_content: Union[None, str, Dict, List] = None,
-            expect_contains: Union[None, str, List[str]] = None,
+            expect_contains: Union[None, str, List[str], Dict] = None,
             expect_xpath: Optional[str] = None,
             json_key: Optional[str] = None,
             headers: Optional[List[Tuple[str, str]]] = None,

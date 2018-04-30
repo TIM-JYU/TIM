@@ -1,40 +1,16 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from timApp.timdb.tempdbbase import TempDbBase
+from timApp.timdb.models.askedquestion import AskedQuestion
+from timApp.timdb.tim_models import db
 
 
-class RunningQuestions(TempDbBase):
-    """LectureAnswer class to handle database for lecture answers."""
+class Runningquestion(db.Model):
+    __bind_key__ = 'tim_main'
+    asked_id = db.Column(db.Integer, db.ForeignKey('askedquestion.asked_id'), primary_key=True)
+    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'),
+                           primary_key=True)  # TODO should not be part of primary key (asked_id is enough)
+    ask_time = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    end_time = db.Column(db.DateTime(timezone=True))
 
-    def add_running_question(self, lecture_id: int, asked_id: int, ask_time: datetime, end_time: datetime=None):
-        running = self.table(asked_id, lecture_id, ask_time, end_time)
-        self.session.merge(running)
-        self.session.commit()
-
-    def delete_running_question(self, asked_id: int):
-        self.table.query.filter_by(asked_id=asked_id).delete()
-        self.session.commit()
-
-    def delete_lectures_running_questions(self, lecture_id: int):
-        self.table.query.filter_by(lecture_id=lecture_id).delete()
-        self.session.commit()
-
-    def get_lectures_running_questions(self, lecture_id: int):
-        questions = self.table.query.filter_by(lecture_id=lecture_id)
-        return questions.all()
-
-    def get_running_question_by_id(self, asked_id: int):
-        questions = self.table.query.filter_by(asked_id=asked_id)
-        question = questions.first()
-        return question
-
-    def extend_question(self, asked_id: int, extend: timedelta):
-        questions = self.table.query.filter_by(asked_id=asked_id)
-        question = questions.first()
-        question.end_time += extend
-        self.session.commit()
-
-    def get_end_time(self, asked_id: int):
-        questions = self.table.query.filter_by(asked_id=asked_id)
-        question = questions.first()
-        return question.end_time
+    asked_question: AskedQuestion = db.relationship('AskedQuestion', back_populates='running_question', lazy='select')
+    lecture = db.relationship('Lecture', back_populates='running_questions', lazy='select')

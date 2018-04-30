@@ -17,51 +17,95 @@ from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 from timApp.filters import map_format, timdate, humanize_timedelta, humanize_datetime
 from timApp.korppi.openid import KorppiOpenID
 from timApp.logger import setup_logging
-# noinspection PyUnresolvedReferences
-from timApp.timdb.tim_models import db
-
-# We want to import all database models here to make sure e.g. Flask-Migrate is aware of them
-
-# noinspection PyUnresolvedReferences
-from timApp.timdb.models.printeddoc import PrintedDoc
-# noinspection PyUnresolvedReferences
 from timApp.timdb.gamification_models.docgamified import DocGamified
-# noinspection PyUnresolvedReferences
 from timApp.timdb.gamification_models.documentgamificationpoint import DocumentGamificationPoint
-# noinspection PyUnresolvedReferences
 from timApp.timdb.gamification_models.gamificationdocument import GamificationDocument
-# noinspection PyUnresolvedReferences
 from timApp.timdb.gamification_models.gamificationdocumenttype import GamificationDocumentType
-# noinspection PyUnresolvedReferences
 from timApp.timdb.gamification_models.gamificationpointtype import GamificationPointType
-# noinspection PyUnresolvedReferences
 from timApp.timdb.gamification_models.usergamification import UserGamification
-# noinspection PyUnresolvedReferences
-from timApp.timdb.models.translation import Translation
-# noinspection PyUnresolvedReferences
-from timApp.timdb.models.user import User
-# noinspection PyUnresolvedReferences
-from timApp.timdb.models.block import Block
-# noinspection PyUnresolvedReferences
-from timApp.timdb.models.docentry import DocEntry
-# noinspection PyUnresolvedReferences
-from timApp.timdb.models.folder import Folder
-# noinspection PyUnresolvedReferences
-from timApp.timdb.models.usergroup import UserGroup
-# noinspection PyUnresolvedReferences
-from timApp.timdb.models.newuser import NewUser
-# noinspection PyUnresolvedReferences
 from timApp.timdb.models.askedjson import AskedJson
-# noinspection PyUnresolvedReferences
 from timApp.timdb.models.askedquestion import AskedQuestion
-# noinspection PyUnresolvedReferences
+from timApp.timdb.models.block import Block
+from timApp.timdb.models.docentry import DocEntry
+from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.lecture import Lecture
-# noinspection PyUnresolvedReferences
 from timApp.timdb.models.lectureanswer import LectureAnswer
-# noinspection PyUnresolvedReferences
 from timApp.timdb.models.message import Message
-# noinspection PyUnresolvedReferences
-from timApp.timdb.velp_models import *
+from timApp.timdb.models.newuser import NewUser
+from timApp.timdb.models.notification import Notification
+from timApp.timdb.models.printeddoc import PrintedDoc
+from timApp.timdb.models.translation import Translation
+from timApp.timdb.models.user import User
+from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.runningquestion import Runningquestion
+from timApp.timdb.tim_models import db, QuestionActivity, Question, Showpoints, Useractivity, SlideStatus, Answer, \
+    AnswerTag, AnswerUpload, BlockAccess, LectureUsers, ReadParagraph, UserAnswer, UserGroupMember, UserNotes, \
+    AccessType
+from timApp.timdb.velp_models import Velp, VelpContent, VelpGroup, VelpGroupDefaults, VelpGroupLabel, \
+    VelpGroupSelection, VelpGroupsInDocument, VelpInGroup, VelpLabel, VelpLabelContent, VelpVersion, ImportedVelpGroups, \
+    LabelInVelp, LabelInVelpGroup, Annotation, AnnotationComment, Icon
+
+
+def reg_models(*_):
+    pass
+
+
+reg_models(
+    AccessType,
+    Annotation,
+    AnnotationComment,
+    Answer,
+    AnswerTag,
+    AnswerUpload,
+    AskedJson,
+    AskedQuestion,
+    Block,
+    BlockAccess,
+    DocEntry,
+    DocGamified,
+    DocumentGamificationPoint,
+    Folder,
+    GamificationDocument,
+    GamificationDocumentType,
+    GamificationPointType,
+    Icon,
+    ImportedVelpGroups,
+    LabelInVelp,
+    LabelInVelpGroup,
+    Lecture,
+    LectureAnswer,
+    LectureUsers,
+    Message,
+    NewUser,
+    Notification,
+    PrintedDoc,
+    Question,
+    QuestionActivity,
+    ReadParagraph,
+    Runningquestion,
+    Showpoints,
+    SlideStatus,
+    Translation,
+    User,
+    Useractivity,
+    UserAnswer,
+    UserGamification,
+    UserGroup,
+    UserGroupMember,
+    UserNotes,
+    Velp,
+    VelpContent,
+    VelpGroup,
+    VelpGroupDefaults,
+    VelpGroupLabel,
+    VelpGroupSelection,
+    VelpGroupsInDocument,
+    VelpInGroup,
+    VelpLabel,
+    VelpLabelContent,
+    VelpVersion,
+)
+
 from timApp.utils import datestr_to_relative, date_to_relative
 
 sys.setrecursionlimit(10000)
@@ -111,6 +155,5 @@ def print_schema(bind: str = 'tim_main'):
         print(CreateTable(model_class.__table__).compile(eng), end=';')
     print()
     sys.stdout.flush()
-
 
 # print_schema()

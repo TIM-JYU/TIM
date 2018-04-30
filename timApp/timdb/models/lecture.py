@@ -21,6 +21,8 @@ class Lecture(db.Model):
                             back_populates='lectures', lazy='dynamic')
     asked_questions = db.relationship('AskedQuestion', back_populates='lecture', lazy='dynamic')
     messages = db.relationship('Message', back_populates='lecture', lazy='dynamic')
+    running_questions = db.relationship('Runningquestion', back_populates='lecture', lazy='select')
+    useractivity = db.relationship('Useractivity', back_populates='lecture', lazy='select')
 
     @staticmethod
     def find_by_id(lecture_id: int) -> Optional['Lecture']:

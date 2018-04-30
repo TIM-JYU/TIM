@@ -4,6 +4,7 @@ from urllib.parse import urlparse, urljoin
 from flask import request, redirect, url_for, Response
 
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
+from timApp.timdb.tim_models import db
 
 
 def is_safe_url(url):
@@ -23,6 +24,11 @@ def json_response(jsondata, status_code=200):
     response = Response(to_json_str(jsondata), mimetype='application/json')
     response.status_code = status_code
     return response
+
+
+def json_response_and_commit(jsondata, status_code=200):
+    db.session.commit()
+    return json_response(jsondata, status_code)
 
 
 def text_response(data, status_code=200):

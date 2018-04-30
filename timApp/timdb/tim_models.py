@@ -12,6 +12,7 @@ Use Flask-Migrate for database migrations. See <http://flask-migrate.readthedocs
 """
 import datetime
 from datetime import timezone
+from enum import Enum
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
@@ -155,16 +156,23 @@ class Question(db.Model):
     expl = db.Column(db.Text)
 
 
-class ReadParagraphOld(db.Model):
+class QuestionActivityKind(Enum):
+    Pointsclosed = 1
+    Pointsshown = 2
+    Useranswered = 3
+    Userextended = 4
+    Usershown = 5
+
+
+class QuestionActivity(db.Model):
     __bind_key__ = 'tim_main'
-    __tablename__ = 'readparagraphs'
-    usergroup_id = db.Column(db.Integer, primary_key=True)
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
-    par_id = db.Column(db.Text, primary_key=True)
-    type = db.Column(db.Enum(ReadParagraphType), nullable=False, primary_key=True)
-    par_hash = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
-    __table_args__ = (db.Index('readparagraphs_doc_id_par_id_idx', 'doc_id', 'par_id'),)
+    __tablename__ = 'question_activity'
+    asked_id = db.Column(db.Integer, db.ForeignKey('askedquestion.asked_id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), primary_key=True)
+    kind = db.Column(db.Enum(QuestionActivityKind), primary_key=True)
+
+    asked_question = db.relationship('AskedQuestion', back_populates='questionactivity', lazy='select')
+    user = db.relationship('User', back_populates='questionactivity', lazy='select')
 
 
 class ReadParagraph(db.Model):
@@ -179,6 +187,36 @@ class ReadParagraph(db.Model):
     timestamp = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
     __table_args__ = (db.Index('readparagraph_doc_id_par_id_idx', 'doc_id', 'par_id'),
                       db.Index('readparagraph_doc_id_usergroup_id_idx', 'doc_id', 'usergroup_id'),)
+
+
+class Showpoints(db.Model):
+    __bind_key__ = 'tim_main'
+    __tablename__ = 'showpoints'
+    asked_id = db.Column(db.Integer, db.ForeignKey('askedquestion.asked_id'), primary_key=True)
+
+    asked_question = db.relationship('AskedQuestion', back_populates='showpoints', lazy='select')
+
+
+class SlideStatus(db.Model):
+    __bind_key__ = 'tim_main'
+    __tablename__ = 'slide_status'
+    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
+    status = db.Column(db.Text, nullable=False)
+
+    def __init__(self, doc_id, status):
+        self.doc_id = doc_id
+        self.status = status
+
+
+class Useractivity(db.Model):
+    __bind_key__ = 'tim_main'
+    __tablename__ = 'useractivity'
+    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), primary_key=True)
+    active = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
+
+    user = db.relationship('User', back_populates='useractivity', lazy='select')
+    lecture = db.relationship('Lecture', back_populates='useractivity', lazy='select')
 
 
 class UserAnswer(db.Model):
@@ -218,4 +256,3 @@ class UserNotes(db.Model):
     access = db.Column(db.Text, nullable=False)
     tags = db.Column(db.Text, nullable=False)
     html = db.Column(db.Text)
-
