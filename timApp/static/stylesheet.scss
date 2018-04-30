@@ -392,6 +392,10 @@ p.caption {
     right: calc(-#{$note-width} + #{$readline-offset} - 5px);
 }
 
+.text-smaller {
+    font-size: smaller;
+}
+
 .headerlink {
     float: right;
     visibility: hidden;
