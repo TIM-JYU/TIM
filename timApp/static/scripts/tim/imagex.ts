@@ -1,8 +1,8 @@
 import angular from "angular";
 import ngSanitize from "angular-sanitize";
-import {editorChangeValue} from "tim/editorScope";
-import * as timHelper from "tim/timHelper";
-import {markAsUsed} from "tim/utils";
+import {editorChangeValue} from "./editorScope";
+import * as timHelper from "./timHelper";
+import {markAsUsed} from "./utils";
 import {$window} from "./ngimport";
 
 markAsUsed(ngSanitize);
@@ -248,29 +248,37 @@ function drawCirclesVideoDot(ctx, dr, videoPlayer) {
             seg2 = lni;
         }
 
-        showTime(ctx, vt, 0, 0, "13px Arial");
 
         // console.log("" + seg1 + "-" + seg2 + ": " + seg.lines[seg2][3]);
-        if ( this.scope.lastDrawnSeg == seg2 ) return;
+        var drawDone = false;
+        if ( this.scope.dotVisibleTime && this.scope.lastVT && (vt - this.scope.lastVT) > this.scope.dotVisibleTime ) { // remove old dot if needed
+            this.scope.draw();
+            drawDone = true
+        }
+        if ( this.scope.showVideoTime ) showTime(ctx, vt, 0, 0, "13px Arial");
+        if ( this.scope.lastDrawnSeg == seg2  ) return;
         this.scope.lastDrawnSeg = -1;
-        this.scope.draw();
-        showTime(ctx, vt, 0, 0, "13px Arial");
-        if ( seg1 < 0 ) return;
+        if ( !drawDone ) this.scope.draw();
+        if ( this.scope.showVideoTime ) showTime(ctx, vt, 0, 0, "13px Arial");
+        if ( seg1 < 0 || vt == 0 || seg.lines[seg2][3] == 0) return;
 
         // console.log("" + seg1 + "-" + seg2 + ": " + seg.lines[seg2][3]);
 
 
         ctx.beginPath();
-        this.scope.drawFillCircle(ctx, 30, seg.lines[seg2][0], seg.lines[seg2][1], "black", 0.5);
+        this.scope.lastVT = vt;
         ctx.strokeStyle = seg.color;
         ctx.lineWidth = seg.w;
         ctx.moveTo(seg.lines[seg1][0], seg.lines[seg1][1]);
         if ( this.scope.drawLast )
             ctx.lineTo(seg.lines[seg2][0], seg.lines[seg2][1]);
-        s = dateToString(seg.lines[seg2][3], false);
-        drawText(ctx, s, seg.lines[seg2][0], seg.lines[seg2][1], "13px Arial");
-
         ctx.stroke();
+        this.scope.drawFillCircle(ctx, 30, seg.lines[seg2][0], seg.lines[seg2][1], "black", 0.5);
+        if ( this.scope.showTimes ) {
+            s = dateToString(seg.lines[seg2][3], false);
+            drawText(ctx, s, seg.lines[seg2][0], seg.lines[seg2][1], "13px Arial");
+        }
+
         this.scope.lastDrawnSeg = seg2;
     }
 }
@@ -1618,6 +1626,9 @@ imagexApp.initScope = function(scope, element, attrs) {
     timHelper.set(scope, attrs, "state.freeHandData", null);
     timHelper.set(scope, attrs, "state.freeHandData", null);
     timHelper.set(scope, attrs, "analyzeDot", false);
+    timHelper.set(scope, attrs, "showTimes", false); // show times
+    timHelper.set(scope, attrs, "showVideoTime", true); // show video timeo
+    timHelper.set(scope, attrs, "dotVisibleTime", 1); // leave dots to screen until next dot
 
     scope.w = scope.freeHandWidth;
     scope.color = scope.freeHandColor;

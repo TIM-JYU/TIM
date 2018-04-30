@@ -32,6 +32,7 @@ pg_backup/
 /timApp/modules/cs/static/glowscript
 /timApp/modules/cs/log.txt
 /timApp/modules/cs/java/cs/ComTest.jar
+/timApp/static/scripts/tim/**/*.js
 /converters/demopisteet/*.csv
 tim_secret.py
 yubi.key
