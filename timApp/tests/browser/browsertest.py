@@ -171,6 +171,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         filenames = filename if isinstance(filename, list) else [filename]
         diff = None
         result = None
+        fail_suffix = ''
         for f in filenames:
             try:
                 ref = Image(filename=f'tests/browser/expected_screenshots/{f}.png')
@@ -181,11 +182,11 @@ class BrowserTest(TimLiveServer, TimRouteTest):
             diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
             if result <= self.get_screenshot_tolerance():
                 return
-        self.save_element_screenshot(element, f'{f}_FAIL', move_to_element)
-        diff.save(filename=f'{self.screenshot_dir}/{f}_FAIL_DIFF.png')
+        self.save_element_screenshot(element, f'{f}{fail_suffix}', move_to_element)
+        diff.save(filename=f'{self.screenshot_dir}/{f}{fail_suffix}_DIFF.png')
         assert_msg = f'Screenshots did not match (diff value is {result}); ' \
-                     f'failed screenshot saved to screenshots/{f}_FAIL ' \
-                     f'and difference to screenshots/{f}_FAIL_DIFF'
+                     f'failed screenshot saved to screenshots/{f}{fail_suffix} ' \
+                     f'and difference to screenshots/{f}{fail_suffix}_DIFF'
         self.assertTrue(self.skip_screenshot_tests, msg=assert_msg)
 
     def should_not_exist(self, css_selector: str):
