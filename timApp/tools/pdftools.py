@@ -189,16 +189,24 @@ def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
     :param output_path: merged output file path
     :return: output_path
     """
-    for pdf in pdf_path_list:
-        if not os_path.exists(pdf):
-            raise AttachmentNotFoundError(pdf)
-        if ".pdf" not in pdf:
-            raise AttachmentNotAPdfError(pdf)
-
+    for pdf_path in pdf_path_list:
+        check_pdf_validity(pdf_path)
     args = ["pdftk"] + pdf_path_list + ["cat", "output", output_path]
     # print(args)
     call_popen(args, pdfmerge_timeout)
     return output_path
+
+
+def check_pdf_validity(pdf_path: str) -> None:
+    """
+    Raises error if pdf file doesn't exist or isn't really a pdf.
+    :param pdf_path:
+    :return:
+    """
+    if not os_path.exists(pdf_path):
+        raise AttachmentNotFoundError(pdf_path)
+    if ".pdf" not in pdf_path:
+        raise AttachmentNotAPdfError(pdf_path)
 
 
 def get_stamp_text(item: dict, text_format: str) -> str:
@@ -378,17 +386,13 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
         # path is always required
         if "file" not in item:
             raise StampDataMissingKeyError("file", item)
-        # if missing a pdf-file
-        if not os_path.exists(item["file"]):
-            raise AttachmentNotFoundError(item["file"])
         # text or date, attachment & issue are alternatives
         if "text" not in item:
             keys = ["date", "attachment", "issue"]
             for key in keys:
                 if key not in item:
                     raise StampDataMissingKeyError(key, item)
-        if ".pdf" not in item["file"]:
-            raise AttachmentNotAPdfError(item["file"])
+        check_pdf_validity(item["file"])
 
 
 def is_url(string: str) -> bool:

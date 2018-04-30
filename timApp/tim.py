@@ -226,27 +226,35 @@ def merge_attachments(doc):
                 par_data = par_plugin.values
                 par_file = par_data["file"]
 
-                # checks if attachment is TIM-upload and adds prefix
-                # changes in upload location need to be updated here as well!
+                # Checks if attachment is TIM-upload and adds prefix.
+                # Changes in upload folder need to be updated here as well.
                 if par_file.startswith("/files/"):
-                    pdf_paths += ["/tim_files/blocks" + par_file]
-
-                # if attachment is url link, download it to temp folder to operate
+                    par_file = "/tim_files/blocks" + par_file
+                # If attachment is url link, download it to temp folder to operate.
                 elif timApp.tools.pdftools.is_url(par_file):
                     # print(f"Downloading {par_file}")
-                    pdf_paths += [timApp.tools.pdftools.download_file_from_url(par_file)]
+                    par_file = timApp.tools.pdftools.download_file_from_url(par_file)
+                # Remove this try-block if partial merging is not desirable.
+                try:
+                    timApp.tools.pdftools.check_pdf_validity(par_file)
+                except timApp.tools.pdftools.PdfError as e:
+                    # If file is invalid, just don't merge it and continue.
+                    # TODO: Add 'merged with warnings' etc. if excepted.
+                    pass
+                else:
+                    pdf_paths += [par_file]
 
-        # uses document name as the base for the merged file name and tmp as folder
+        # Uses document name as the base for the merged file name and tmp as folder.
         doc_name = timApp.tools.pdftools.get_base_filename(doc)
         merged_pdf_path = timApp.tools.pdftools.temp_folder_default_path + "/" + f"{doc_name}_merged.pdf"
         timApp.tools.pdftools.merge_pdf(pdf_paths, merged_pdf_path)
 
     except Exception as e:
         message = str(e)
-        print(message)
         abort(404, message)
     else:
-       return send_file(merged_pdf_path, mimetype="application/pdf")
+        return send_file(merged_pdf_path, mimetype="application/pdf")
+
 
 @app.route('/mergeAttachments/<path:doc>', methods=['POST'])
 def get_attachments(doc):
@@ -267,6 +275,7 @@ def get_attachments(doc):
     else:
         merge_access_url = request.url
         return json_response({'success': True, 'url': merge_access_url}, status_code=201)
+
 
 @app.route('/processAttachments/<path:doc>')
 def process_attachments(doc):
