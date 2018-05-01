@@ -22,6 +22,7 @@ from timApp.timdb.tim_models import ReadParagraph
 from timApp.timdb.userutils import get_anon_group_id
 from timApp.timtiming import taketime
 from timApp.utils import getdatetime
+from timApp.documentmodel.docparagraph import DocParagraph
 
 
 # noinspection PyUnusedLocal
@@ -47,13 +48,15 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     user_macros = macroinfo.get_user_specific_macros(user)
     macros = macroinfo.get_macros_with_user_specific(user)
     delimiter = macroinfo.get_macro_delimiter()
+    doc_nomacros = doc.settings.nomacros()
     # Process user-specific macros.
     # We define the environment here because it stays the same for each paragraph. This improves performance.
     env = create_environment(delimiter)
     for htmlpar in html_pars: # update only user specific, because others are done in a cache pahes
         if not htmlpar['is_plugin']:  # TODO: Think if plugins still needs to expand macros?
             # htmlpar.insert_rnds(0)
-            if not htmlpar['attrs'].get('nomacros', False):
+            no_macros = DocParagraph.is_no_macros(htmlpar['attrs'], doc_nomacros)
+            if not no_macros:
                 htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter, env=env, ignore_errors=True)
             # if htmlpar['attrs'].get('texmacros', False): # in view texmacros should be inside $
             #    htmlpar['md'] = '<p><span class="math inline">\\(' + htmlpar['md'] + '\\)</span></p>';

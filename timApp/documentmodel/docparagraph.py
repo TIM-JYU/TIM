@@ -101,7 +101,7 @@ class DocParagraph:
             'attrs': {} if attrs is None else attrs
         }
         par.attrs = par.__data['attrs']
-        par.nomacros = par.attrs.get('nomacros', False)
+        par.nomacros = None  # par.no_macros()  # par.attrs.get('nomacros', False)
         par.nocache = par.attrs.get('nocache', False)
         par._cache_props()
         return par
@@ -154,11 +154,27 @@ class DocParagraph:
         if 'attrs' not in par.__data:
             par.__data['attrs'] = {}
         par.attrs = par.__data['attrs']
-        par.nomacros = par.attrs.get('nomacros', False)
+        par.nomacros = None  # par.no_macros()  # par.attrs.get('nomacros', False)
         par.nocache = par.attrs.get('nocache', False)
         par._cache_props()
         par._compute_hash()
         return par
+
+    def no_macros(self):
+        nm =  self.attrs.get('nomacros', None)
+        if nm is not None:
+            nm = nm.lower()
+            return nm != 'false'
+        return self.doc.settings.nomacros(False)
+
+    @staticmethod
+    def is_no_macros(settings, doc_macros):
+        nm =  settings.get('nomacros', None)
+        if nm is not None:
+            nm = nm.lower()
+            return nm != 'false'
+        return doc_macros
+
 
     @classmethod
     def get_latest(cls, doc, par_id: str, files_root: Optional[str] = None) -> 'DocParagraph':
@@ -355,6 +371,9 @@ class DocParagraph:
         return self.__rands
 
     def get_nomacros(self):
+        if self.nomacros is not None:
+            return self.nomacros
+        self.nomacros = self.no_macros()
         return self.nomacros
 
     def get_nocache(self):
@@ -680,7 +699,7 @@ class DocParagraph:
         md_expanded = prev_par.get_markdown()
         if not md_expanded and deref is not None:
             md_expanded = deref.get_markdown()
-        if not prev_par.nomacros:
+        if not prev_par.get_nomacros():
             # TODO: RND_SEED should we fill the rands also?
             md_expanded = expand_macros(md_expanded, macros, macro_delim)
         blocks = DocumentParser(md_expanded, options=DocumentParserOptions.break_on_empty_lines()).get_blocks()

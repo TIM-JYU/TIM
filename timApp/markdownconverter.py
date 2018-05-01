@@ -204,6 +204,9 @@ def par_list_to_html_list(pars,
     # User-specific macros (such as %%username%% and %%realname%%) cannot be replaced here because the result will go
     # to global cache. We will replace them later (in post_process_pars).
     macroinfo.preserve_user_macros = True
+    # if settings.nomacros():
+    #    texts = [p.get_markdown() for p in pars]
+    #else:
     texts = [p.get_expanded_markdown(macroinfo) for p in pars]
 
     texplain = settings.is_texplain()

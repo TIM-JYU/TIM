@@ -30,6 +30,8 @@ class DocSettings:
     hide_links_key = 'hide_links'
     point_sum_rule_key = 'point_sum_rule'
     max_points_key = 'max_points'
+    nomacros_key = 'nomacros'
+    texplain_key = 'texplain'
     live_updates_key = 'live_updates'
     plugin_md_key = 'plugin_md'
     print_settings_key = 'print_settings'
@@ -204,6 +206,14 @@ class DocSettings:
     def plugin_md(self, default=True):
         return self.__dict.get(self.plugin_md_key, default)
 
+    def nomacros(self, default=False):
+        nm = self.__dict.get(self.nomacros_key, None)
+        if nm is None:
+            nm = self.get(self.texplain_key, None)
+            if nm is None:
+                nm = default
+        return nm
+
     def preamble(self, default=DEFAULT_PREAMBLE_DOC):
         return self.__dict.get(self.preamble_key, default)
 
@@ -211,12 +221,8 @@ class DocSettings:
         return self.__dict.get(key, default)
 
     def is_texplain(self):
-        texplain = self.__dict.get('texplain', False)
+        texplain = self.__dict.get(self.texplain_key, False)
         return texplain
-
-    def get_bibdoc(self):
-        bibdoc = self.__dict.get('bibdoc', None)
-        return bibdoc
 
     def show_authors(self, default=False):
         return self.__dict.get(self.show_authors_key, default)
