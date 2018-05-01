@@ -165,6 +165,10 @@ class DocParagraph:
         if nm is not None:
             nm = nm.lower()
             return nm != 'false'
+        if not self.doc:
+            return False
+        if not self.doc.settings:
+            return False
         return self.doc.settings.nomacros(False)
 
     @staticmethod
