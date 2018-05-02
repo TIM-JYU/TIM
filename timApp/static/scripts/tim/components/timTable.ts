@@ -658,6 +658,7 @@ export class TimTableController implements IController {
             {docId, parId});
         this.data = response.data;
         this.InitializeCellDataMatrix();
+        this.readDataBlockAndSetValuesToDataCellMatrix();
     }
 
 
@@ -674,6 +675,7 @@ export class TimTableController implements IController {
             {docId, parId});
         this.data = response.data;
         this.InitializeCellDataMatrix();
+        this.readDataBlockAndSetValuesToDataCellMatrix();
     }
 
     /**
