@@ -65,7 +65,7 @@ export class PopupMenuController implements IController {
      * @param e Event object
      * @param f The function to call
      */
-    callFunc(e: Event, f: MenuFunctionEntry) {
+    callFunc(e: JQueryEventObject, f: MenuFunctionEntry) {
         f.func(e, this.$pars);
         this.closePopup();
     }

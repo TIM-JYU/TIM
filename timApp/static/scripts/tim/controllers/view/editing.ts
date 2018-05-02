@@ -458,7 +458,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         editor.scrollIntoView();
     }
 
-    closeAndSave(e: Event, $par: Paragraph) {
+    closeAndSave(e: JQueryEventObject, $par: Paragraph) {
         const editor = this.getParEditor();
         if (!editor) {
             void showMessageDialog("Editor is no longer open.");
@@ -468,7 +468,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         this.viewctrl.parmenuHandler.showOptionsWindow(e, $par);
     }
 
-    closeWithoutSaving(e: Event, $par: Paragraph) {
+    closeWithoutSaving(e: JQueryEventObject, $par: Paragraph) {
         const editor = this.getParEditor();
         if (!editor) {
             void showMessageDialog("Editor is no longer open.");
@@ -483,8 +483,8 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         if (this.viewctrl.editing) {
             return [
                 {func: () => this.goToEditor(), desc: "Go to editor", show: true},
-                {func: (e: Event, par: Paragraph) => this.closeAndSave(e, par), desc: "Close editor and save", show: true},
-                {func: (e: Event, par: Paragraph) => this.closeWithoutSaving(e, par), desc: "Close editor and cancel", show: true},
+                {func: (e: JQueryEventObject, par: Paragraph) => this.closeAndSave(e, par), desc: "Close editor and save", show: true},
+                {func: (e: JQueryEventObject, par: Paragraph) => this.closeWithoutSaving(e, par), desc: "Close editor and cancel", show: true},
                 {func: empty, desc: "Close menu", show: true},
             ];
         } else if (this.viewctrl.selection.start != null && $window.editMode) {
@@ -521,11 +521,11 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 //{func: (e, par) => this.cutArea(e, par), desc: 'Cut area', show: $window.editMode === 'area'},
                 //{func: (e, par) => this.copyArea(e, par), desc: 'Copy area', show: $window.editMode === 'area'},
                 {
-                    func: (e: Event, par: Paragraph) => this.viewctrl.clipboardHandler.showPasteMenu(e, par),
+                    func: (e: JQueryEventObject, par: Paragraph) => this.viewctrl.clipboardHandler.showPasteMenu(e, par),
                     desc: "Paste...",
                     show: $window.editMode && (this.viewctrl.allowPasteRef || this.viewctrl.allowPasteContent),
                 },
-                {func: (e: Event, par: Paragraph) => this.viewctrl.clipboardHandler.showMoveMenu(e, par), desc: "Move here...", show: $window.allowMove},
+                {func: (e: JQueryEventObject, par: Paragraph) => this.viewctrl.clipboardHandler.showMoveMenu(e, par), desc: "Move here...", show: $window.allowMove},
                 {
                     func: (e: Event, par: Paragraph) => this.viewctrl.areaHandler.removeAreaMarking(e, par),
                     desc: "Remove area marking",
@@ -561,8 +561,8 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         }
     }
 
-    showAddParagraphMenu(e: Event, $parOrArea: JQuery, coords: Coords) {
-        this.viewctrl.parmenuHandler.showPopupMenu(e, $parOrArea, coords, {actions: viewCtrlDot("addParagraphFunctions"), save: false});
+    showAddParagraphMenu(e: JQueryEventObject, $parOrArea: JQuery) {
+        this.viewctrl.parmenuHandler.showPopupMenu(e, $parOrArea, {actions: viewCtrlDot("addParagraphFunctions"), save: false});
     }
 
     getAddParagraphFunctions() {

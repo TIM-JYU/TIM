@@ -2,7 +2,7 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {showMessageDialog} from "../../dialog";
 import {$compile, $log, $timeout, $window} from "../../ngimport";
-import {Coords, dist} from "../../utils";
+import {Coords, dist, getPageXYnull, isInViewport} from "../../utils";
 import {onClick} from "./eventhandlers";
 import {getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
@@ -72,7 +72,7 @@ export class ParmenuHandler {
         }, true);
 
         this.viewctrl.defaultAction = {
-            func: (e: Event, $par: Paragraph) => this.showOptionsWindow(e, $par, getEmptyCoords()),
+            func: (e: JQueryEventObject, $par: Paragraph) => this.showOptionsWindow(e, $par),
             desc: "Show options window",
             show: true,
         };
@@ -96,7 +96,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
 
             // We need the timeout so we don't trigger the ng-clicks on the buttons
             $timeout(() => {
-                this.showOptionsWindow(e, $par, coords);
+                this.showOptionsWindow(e, $par);
             }, 80);
             return false;
         }, true);
@@ -109,9 +109,8 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         this.updatePopupMenu();
     }
 
-    showPopupMenu(e: Event,
+    showPopupMenu(e: JQueryEventObject,
                   $pars: Paragraph,
-                  coords: Coords,
                   attrs: IPopupMenuAttrs,
                   $rootElement?: JQuery,
                   editcontext?: string) {
@@ -142,27 +141,17 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         draggable.append($popup);
         $rootElement.prepend(draggable); // need to prepend to DOM before compiling
         $compile(draggable[0])(this.sc);
-        // TODO: Set offset for the popup
-        const element = $popup;
-        const viewport: any = {};
-        viewport.top = $(window).scrollTop();
-        viewport.bottom = viewport.top + $(window).height();
-        const bounds: any = {};
-        const offset = element.offset() || {top: 0};
-        bounds.top = offset.top;
-        bounds.bottom = bounds.top + element.outerHeight();
-        let y = $(window).scrollTop() || 0;
-        if (bounds.bottom > viewport.bottom) {
-            y += (bounds.bottom - viewport.bottom);
-        } else if (bounds.top < viewport.top) {
-            y += (bounds.top - viewport.top);
+        const pos = getPageXYnull(e);
+        if (pos) {
+            draggable.offset({left: pos.X, top: pos.Y});
         }
-        $("html, body").animate({
-            scrollTop: y,
-        }, 500);
+
+        if (!isInViewport(draggable[0])) {
+            draggable[0].scrollIntoView();
+        }
     }
 
-    toggleActionButtons(e: Event, $par: Paragraph, toggle1: boolean, toggle2: boolean, coords: Coords) {
+    toggleActionButtons(e: JQueryEventObject, $par: Paragraph, toggle1: boolean, toggle2: boolean, coords: Coords) {
         if (!this.viewctrl.item.rights.editable && !this.viewctrl.item.rights.can_comment) {
             return;
         }
@@ -182,7 +171,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
                 this.viewctrl.defaultAction.func(e, $par, coords);
             } else {
                 // Two clicks
-                this.showOptionsWindow(e, $par, coords);
+                this.showOptionsWindow(e, $par);
             }
         } else if (toggle1) {
             // Clicked once
@@ -197,11 +186,11 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         }
     }
 
-    showOptionsWindow(e: Event, $par: Paragraph, coords?: Coords) {
+    showOptionsWindow(e: JQueryEventObject, $par: Paragraph) {
         this.viewctrl.clipboardHandler.updateClipboardStatus();
         this.updatePopupMenu($par);
         $par.children(".editline").addClass("menuopen");
-        this.showPopupMenu(e, $par, coords || getEmptyCoords(), this.viewctrl.popupMenuAttrs, undefined, "par");
+        this.showPopupMenu(e, $par, this.viewctrl.popupMenuAttrs, undefined, "par");
     }
 
     optionsWindowClosed() {

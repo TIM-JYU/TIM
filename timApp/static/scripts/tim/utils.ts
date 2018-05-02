@@ -194,8 +194,14 @@ export function assertNotNull(obj: any) {
     }
 }
 
+export interface IBounds {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+}
 
-export function getOutOffsetFully(el: Element) {
+export function getOutOffsetFully(el: Element): IBounds {
     const rect = el.getBoundingClientRect();
     const bounds = {left: 0, top: 0, right: 0, bottom: 0};
     if (rect.top < 0) {
@@ -224,12 +230,12 @@ export function getOutOffsetVisible(el: Element) {
         bounds.top = rect.top;
     }
     const height = (window.innerHeight || document.documentElement.clientHeight);
-    if (rect.top > height - 1.5*limit) { // may be a scroll bar
-        bounds.bottom = height - rect.bottom + rect.height - 1.5*limit;
+    if (rect.top > height - 1.5 * limit) { // may be a scroll bar
+        bounds.bottom = height - rect.bottom + rect.height - 1.5 * limit;
     }
     const width = (window.innerWidth || document.documentElement.clientWidth);
-    if (rect.left > width - 2*limit) {
-        bounds.right = width - rect.right + rect.width - 2*limit;
+    if (rect.left > width - 2 * limit) {
+        bounds.right = width - rect.right + rect.width - 2 * limit;
     }
     if (rect.left + rect.width < limit) {
         bounds.left = rect.left + rect.width - limit;
@@ -252,5 +258,28 @@ export function isMobileDevice() {
 }
 
 export function escapeRegExp(str: string) {
-  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+    return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+}
+
+export function getPageXYnull(e: JQueryEventObject) {
+    if (!(
+        "pageX" in e) || (
+        e.pageX == 0 && e.pageY == 0)) {
+        const originalEvent = e.originalEvent as any;
+        if (originalEvent.touches.length) {
+            return {
+                X: originalEvent.touches[0].pageX,
+                Y: originalEvent.touches[0].pageY,
+            };
+        }
+        if (originalEvent.changedTouches.length) {
+            return {
+                X: originalEvent.changedTouches[0].pageX,
+                Y: originalEvent.changedTouches[0].pageY,
+            };
+        }
+        return null;
+    }
+
+    return {X: e.pageX, Y: e.pageY};
 }

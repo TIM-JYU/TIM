@@ -2,7 +2,7 @@ import {IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
 import {$compile, $document, $timeout} from "../ngimport";
-import {getOutOffsetFully, getOutOffsetVisible, isMobileDevice} from "../utils";
+import {getOutOffsetFully, getOutOffsetVisible, getPageXYnull, IBounds, isMobileDevice} from "../utils";
 
 function setStorage(key: string, value: any) {
     value = JSON.stringify(value);
@@ -384,31 +384,8 @@ export class DraggableController implements IController {
         return !this.areaMinimized && this.resize && this.canDrag();
     }
 
-    private getPageXYnull(e: JQueryEventObject) {
-        if (!(
-            "pageX" in e) || (
-            e.pageX == 0 && e.pageY == 0)) {
-            const originalEvent = e.originalEvent as any;
-            if (originalEvent.touches.length) {
-                return {
-                    X: originalEvent.touches[0].pageX,
-                    Y: originalEvent.touches[0].pageY,
-                };
-            }
-            if (originalEvent.changedTouches.length) {
-                return {
-                    X: originalEvent.changedTouches[0].pageX,
-                    Y: originalEvent.changedTouches[0].pageY,
-                };
-            }
-            return null;
-        }
-
-        return {X: e.pageX, Y: e.pageY};
-    }
-
     private getPageXY(e: JQueryEventObject) {
-        const pos = this.getPageXYnull(e);
+        const pos = getPageXYnull(e);
         if (pos) {
             this.lastPageXYPos = pos;
         }
@@ -449,26 +426,15 @@ export class DraggableController implements IController {
 
     private ensureFullyInViewport() {
         const bound = getOutOffsetFully(this.element[0]);
-        if (this.setTop) {
-            this.element.css("top", this.getCss("top") - bound.top);
-            this.element.css("top", this.getCss("top") + bound.bottom);
-        }
-        if (this.setBottom) {
-            this.element.css("bottom", this.getCss("bottom") - bound.bottom);
-            this.element.css("bottom", this.getCss("bottom") + bound.top);
-        }
-        if (this.setLeft) {
-            this.element.css("left", this.getCss("left") - bound.left);
-            this.element.css("left", this.getCss("left") + bound.right);
-        }
-        if (this.setRight) {
-            this.element.css("right", this.getCss("right") - bound.right);
-            this.element.css("right", this.getCss("right") + bound.left);
-        }
+        this.setCssFromBound(bound);
     }
 
     private ensureVisibleInViewport() {
         const bound = getOutOffsetVisible(this.element[0]);
+        this.setCssFromBound(bound);
+    }
+
+    private setCssFromBound(bound: IBounds) {
         if (this.setTop) {
             this.element.css("top", this.getCss("top") - bound.top);
             this.element.css("top", this.getCss("top") + bound.bottom);

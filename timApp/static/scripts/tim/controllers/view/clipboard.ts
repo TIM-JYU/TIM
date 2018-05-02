@@ -31,18 +31,18 @@ export class ClipboardHandler {
         view.pasteFunctions = this.getPasteFunctions();
     }
 
-    showPasteMenu(e: Event, $parOrArea: ParOrArea, coords?: Coords) {
+    showPasteMenu(e: JQueryEventObject, $parOrArea: ParOrArea) {
         this.viewctrl.pasteFunctions = this.getPasteFunctions();
-        this.viewctrl.parmenuHandler.showPopupMenu(e, $parOrArea, coords || getEmptyCoords(), {
+        this.viewctrl.parmenuHandler.showPopupMenu(e, $parOrArea, {
             actions: viewCtrlDot("pasteFunctions"),
             contenturl: "/clipboard",
             save: false
         });
     }
 
-    showMoveMenu(e: Event, $parOrArea: ParOrArea, coords?: Coords) {
+    showMoveMenu(e: JQueryEventObject, $parOrArea: ParOrArea) {
         this.viewctrl.pasteFunctions = this.getMoveFunctions();
-        this.viewctrl.parmenuHandler.showPopupMenu(e, $parOrArea, coords || getEmptyCoords(), {
+        this.viewctrl.parmenuHandler.showPopupMenu(e, $parOrArea, {
             actions: viewCtrlDot("pasteFunctions"),
             contenturl: "/clipboard",
             save: false

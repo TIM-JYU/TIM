@@ -109,13 +109,13 @@ export class AreaHandler {
 
         // We need the timeout so we don't trigger the ng-clicks on the buttons
         $timeout(() => {
-            this.showAreaOptionsWindow(e, $areaPart, $pars, coords);
+            this.showAreaOptionsWindow(e, $areaPart, $pars);
         }, 80);
     }
 
-    showAreaOptionsWindow(e: Event, $area: Area, $pars: Paragraphs, coords: Coords) {
+    showAreaOptionsWindow(e: JQueryEventObject, $area: Area, $pars: Paragraphs) {
         this.viewctrl.clipboardHandler.updateClipboardStatus();
-        this.viewctrl.parmenuHandler.showPopupMenu(e, $pars, coords, this.viewctrl.popupMenuAttrs, $area, "area");
+        this.viewctrl.parmenuHandler.showPopupMenu(e, $pars, this.viewctrl.popupMenuAttrs, $area, "area");
     }
 
     startArea(e: Event, $par: Paragraph) {
