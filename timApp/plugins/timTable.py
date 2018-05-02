@@ -41,7 +41,7 @@ TYPE = 'type'
 TEXT = 'text'
 FORMULA = 'formula'
 NUMBER = 'number'
-DATABLOCK = 'datablock'
+DATABLOCK = 'tabledatablock'
 CELLS = 'cells'
 COL = 'col'
 ASCII_OF_A = 65
@@ -151,6 +151,8 @@ def tim_table_add_row():
     par = d.document.get_paragraph(par_id)
     plug = Plugin.from_paragraph(par)
     rows = plug.values[TABLE][ROWS]
+    i = 0
+    j = 0
     last_row_index = len(rows) - 1
     # clone the previous row's data into the new row
     rows.append({'row': copy.deepcopy(rows[last_row_index]['row'])})
@@ -190,9 +192,9 @@ def is_datablock(yaml: dict) -> bool:
 
 
 def create_datablock(table: dict):
-    table['datablock'] = {}
-    table['datablock']['type'] = 'relative'
-    table['datablock']['cells'] = {}
+    table['tabledatablock'] = {}
+    table['tabledatablock']['type'] = 'relative'
+    table['tabledatablock']['cells'] = {}
 
 
 def save_cell(datablock: dict, row: int, col: int, cell_content: str) -> str:

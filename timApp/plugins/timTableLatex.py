@@ -680,12 +680,12 @@ def convert_datablock_index(index: str) -> (int, int):
 
 def get_datablock(table):
     """
-    Returns datablock or None, if table has no datablock element.
+    Returns tabledatablock or None, if table has no tabledatablock element.
     :param table:
     :return:
     """
     try:
-        datablock = table['datablock']['cells']
+        datablock = table['tabledatablock']['cells']
     except KeyError:
         datablock = None
     return datablock
@@ -693,7 +693,7 @@ def get_datablock(table):
 
 def update_content_from_datablock(datablock, row, cell, content):
     """
-    Updates the cell content based on datablock if a match is found.
+    Updates the cell content based on tabledatablock if a match is found.
     :param datablock:
     :param row: Row-index.
     :param cell: Cell-index.
@@ -703,7 +703,7 @@ def update_content_from_datablock(datablock, row, cell, content):
     output = content
     try:
         datablock_index = f"{str(chr(65+cell))}{row+1}"
-        # print(datablock_index, datablock[datablock_index])
+        # print(datablock_index, tabledatablock[datablock_index])
         output = datablock[datablock_index]
     except TypeError or KeyError:
         pass
@@ -781,7 +781,7 @@ def convert_table(table_json) -> Table:
                     borders=borders
                 )
 
-                # Tries updating content from the datablock.
+                # Tries updating content from the tabledatablock.
                 if datablock:
                     c.content = update_content_from_datablock(datablock, i, j, c.content)
 
