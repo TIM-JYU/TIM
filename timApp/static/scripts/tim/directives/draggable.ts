@@ -121,7 +121,11 @@ export class DraggableController implements IController {
         this.caption = caption;
     }
 
-    makeHeightAutomatic() {
+    async makeHeightAutomatic() {
+        // workaround for Chrome issue where the browser jumps to the start of page when opening a dialog that
+        // calls this
+        await $timeout();
+
         this.element.css("height", "auto");
         this.autoHeight = true;
     }
