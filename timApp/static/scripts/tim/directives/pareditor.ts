@@ -213,22 +213,6 @@ export class PareditorController extends DialogController<{params: IEditorParams
             }
             this.metaset = true;
         }
-
-        const scrollTop = $(window).scrollTop() || 0;
-        const height = $(window).height() || 500;
-        const viewport = {
-            bottom: scrollTop + height,
-            top: scrollTop,
-        };
-        const offset = element.offset() || {top: 0};
-        const outerHeight = element.outerHeight() || 200;
-        const bounds = {
-            bottom: offset.top + outerHeight,
-            top: offset.top,
-        };
-        if (bounds.bottom > viewport.bottom || bounds.top < viewport.top) {
-            $("html, body").scrollTop(offset.top);
-        }
     }
 
     $onInit() {
