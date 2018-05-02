@@ -724,7 +724,9 @@ timApp.component("timTable", {
     require: {
         viewctrl: "?^timView",
     },
-    template: `<div ng-class="{editable: $ctrl.editing}""><table ng-style="$ctrl.stylingForTable($ctrl.data.table)">
+    template: `<div ng-class="{editable: $ctrl.editing}"">
+    <button style="float: right" class="timButton" title="Add column" ng-show="$ctrl.editing" ng-click="$ctrl.addColumn()"><span class="glyphicon glyphicon-plus"></span></button>
+    <table ng-style="$ctrl.stylingForTable($ctrl.data.table)">
     <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" ng-style="$ctrl.stylingForColumn(c)"/>
     <tr ng-repeat="r in $ctrl.data.table.rows"  ng-init="rowi = $index" ng-style="$ctrl.stylingForRow(r)">
       <div ng-if="$ctrl.allcellData == undefined">
@@ -738,8 +740,7 @@ timApp.component("timTable", {
        </tr>
      <div>  
 </table>
-<button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.addRow()">Add row</button>
-<button class="timButton" ng-show="$ctrl.editing" ng-click="$ctrl.addColumn()">Add column</button>
+<button class="timButton" title="Add row" ng-show="$ctrl.editing" ng-click="$ctrl.addRow()"><span class="glyphicon glyphicon-plus"></span></button>
 
 </div>
 
