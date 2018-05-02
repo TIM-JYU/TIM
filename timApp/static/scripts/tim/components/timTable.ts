@@ -734,8 +734,8 @@ timApp.component("timTable", {
             ng-style="$ctrl.stylingForCell(td)" ng-click="$ctrl.cellClicked(td, rowi, coli)">
             <div ng-if="!$ctrl.isCellBeingEdited(rowi, coli)" ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
            </div>
-           <input ng-if="$ctrl.isCellBeingEdited(rowi, coli)" ng-model="$ctrl.cellDataMatrix[rowi][coli]" ng-keydown="$ctrl.keyDownPressed($event, td, rowi, coli)" focus-me="$ctrl.isCellBeingEdited(rowi, coli)"> 
-           <button ng-if="$ctrl.isCellBeingEdited(rowi, coli)" ng-click="$ctrl.editorOpen(td, rowi, coli)" class="glyphicon glyphicon-pencil"></button>
+           <input style="position: absolute" ng-if="$ctrl.isCellBeingEdited(rowi, coli)" ng-model="$ctrl.cellDataMatrix[rowi][coli]" ng-keydown="$ctrl.keyDownPressed($event, td, rowi, coli)" focus-me="$ctrl.isCellBeingEdited(rowi, coli)"> 
+           <button style="position: relative; top: 30px" ng-if="$ctrl.isCellBeingEdited(rowi, coli)" ng-click="$ctrl.editorOpen(td, rowi, coli)" class="timButton"><span class="glyphicon glyphicon-pencil"></span></button>
         </td>
        </tr>
      <div>  
