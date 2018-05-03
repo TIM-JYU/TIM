@@ -45,6 +45,7 @@ DATABLOCK = 'tabledatablock'
 CELLS = 'cells'
 COL = 'col'
 ASCII_OF_A = 65
+ASCII_CHAR_COUNT = 26
 
 
 @timTable_plugin.route("reqs/")
@@ -232,10 +233,17 @@ def find_cell_from_datablock(cells: dict, row: int, col: int) -> str:
     return ret
 
 
-def colnum_to_letters(col: int) -> str:
-    '''TODO: Working with values over 122 meaning more than one letter
-    '''
-    return chr(ASCII_OF_A+col)
+def colnum_to_letters(column_index: int) -> str:
+    last_char = chr(ASCII_OF_A + (column_index % ASCII_CHAR_COUNT))
+    remainder = column_index // ASCII_CHAR_COUNT
+
+    if remainder == 0:
+        return last_char
+    elif remainder <= ASCII_CHAR_COUNT:
+        return chr(ASCII_OF_A + remainder - 1) + last_char
+
+    # recursive call to figure out the rest of the letters
+    return colnum_to_letters(remainder - 1) + last_char
 
 
 def is_review(request):

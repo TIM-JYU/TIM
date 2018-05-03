@@ -370,15 +370,22 @@ export class TimTableController implements IController {
     }
 
     /*
-      Get placement, ex. A1 -> 1,1
-      C5 -> 3,5
+      Get placement, ex. A1 -> 0,0
+      C5 -> 2,4
      */
     private getAddress(colValue: string, rowValue: string) {
-        const str = "A";
-        let col = colValue.charCodeAt(0) - str.charCodeAt(0); // ex. C - A +1= 67 - 65 +1 = 3;
-        //let row: number = parseInt(address.substring(1)) -1;
-        let row: number = parseInt(rowValue) -1;
-        return {col: col, row: row}
+        const charCodeOfA = "A".charCodeAt(0);
+        const asciiCharCount = 26;
+        let reversedCharacterPlaceInString = 0;
+        let columnIndex = 0;
+        for (let charIndex = colValue.length - 1; charIndex >= 0; charIndex--) {
+            columnIndex += (colValue.charCodeAt(charIndex) - charCodeOfA + 1) * Math.pow(asciiCharCount, reversedCharacterPlaceInString)
+            reversedCharacterPlaceInString++;
+        }
+
+        columnIndex = columnIndex - 1;
+        let rowIndex: number = parseInt(rowValue) - 1;
+        return {col: columnIndex, row: rowIndex}
     }
 
     private keyDownPressed(ev : KeyboardEvent, cell: CellEntity, rowi: number, coli: number) {
