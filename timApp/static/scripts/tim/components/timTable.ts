@@ -733,11 +733,11 @@ timApp.component("timTable", {
     },
     template: `<div ng-class="{editable: $ctrl.editing}"">
     <button style="float: right" class="timButton" title="Add column" ng-show="$ctrl.editing" ng-click="$ctrl.addColumn()"><span class="glyphicon glyphicon-plus"></span></button>
-    <table ng-style="$ctrl.stylingForTable($ctrl.data.table)">
-    <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" ng-style="$ctrl.stylingForColumn(c)"/>
-    <tr ng-repeat="r in $ctrl.data.table.rows"  ng-init="rowi = $index" ng-style="$ctrl.stylingForRow(r)">
+    <table ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
+    <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}} ng-style="$ctrl.stylingForColumn(c)"/>
+    <tr ng-repeat="r in $ctrl.data.table.rows"  ng-init="rowi = $index" id={{r.id}} ng-style="$ctrl.stylingForRow(r)">
       <div ng-if="$ctrl.allcellData == undefined">
-        <td ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
+        <td ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}" id={{td.id}}"
             ng-style="$ctrl.stylingForCell(td)" ng-click="$ctrl.cellClicked(td, rowi, coli)">
             <div ng-if="!$ctrl.isCellBeingEdited(rowi, coli)" ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
            </div>
