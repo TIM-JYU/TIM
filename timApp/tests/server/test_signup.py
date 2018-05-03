@@ -5,7 +5,9 @@ from timApp.routes.login import test_pws
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.models.newuser import NewUser
+from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
+from timApp.timdb.tim_models import db
 
 
 class TestSignUp(TimRouteTest):
@@ -238,3 +240,10 @@ class TestSignUp(TimRouteTest):
         self.assertEqual(self.current_user.name, 't3')
         self.assertEqual(self.current_user.real_name, 'Mr Test User 3')
         self.assertEqual(self.current_user.pass_, curr_pw)
+
+    def test_email_login_without_pass(self):
+        self.register_user_with_korppi('someone', 'Some One', 'someone@example.com')
+        u = User.get_by_name('someone')
+        u.pass_ = None
+        db.session.commit()
+        self.login(email='someone@example.com', passw='something', force=True, expect_status=403)

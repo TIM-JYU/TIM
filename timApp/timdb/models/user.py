@@ -169,6 +169,8 @@ class User(db.Model):
         return User.query.filter_by(email=email).first()
 
     def check_password(self, password: str, allow_old=False, update_if_old=True) -> bool:
+        if not self.pass_:
+            return False
         is_ok = check_password_hash(password, self.pass_, allow_old=False)
         if is_ok:
             return True
