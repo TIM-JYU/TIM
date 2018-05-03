@@ -244,6 +244,7 @@ table:
       - cell: "12"
         fontSize: 30
         color: red
+        border: 2px solid purple
     - row:
       - cell: "13"
       - cell: "14"
@@ -262,6 +263,44 @@ table:
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+table:
+  rows:
+    - row:
+      - cell: "Augustus"
+      - cell: "Tiberius"
+      - cell: "Caligula"
+      - cell: "Claudius"
+    - row:
+      - cell: "Nero"
+      - cell: "Galba"
+      - cell: "Otho"
+      - cell: "Vitellius"
+    - row:
+      - cell: "Vespasianus"
+      - cell: "Titus"
+      - cell: "Domitianus"
+      - cell: "Nerva"
+    - row:
+      - cell: "Per"
+      - cell: "aspera"
+      - cell: "ad"
+      - cell: "astra."
+      
+  fontFamily:"Helvetica"
+  fontSize: 25
+  color: green
+  backgroundColor: yellow
+  width: 550px
+  height: 500px
+  textAlign: center
+  verticalAlign: middle
+  borderTop: 2px solid black
+  borderBottom: 10px solid red
+  borderRight: 15px dotted purple
+  borderLeft: 5px solid green
+```
+        
                     """)
         self.goto_document(d)
         sleep(2)
@@ -273,6 +312,79 @@ table:
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+table:
+  columns:
+    - column:
+      textAlign: left
+      verticalAlign: bottom
+      borderTop: 2px solid red
+      borderBottom: 10px solid orange
+      borderRight: 5px dotted purple
+      borderLeft: 5px solid black
+      backgroundColor: beige
+    - column:
+    - column:
+      border: 4px solid orange
+      width: 150px
+      backgroundColor: crimson
+    - column:
+  rows:
+    - row:
+      - cell: "Augustus"
+      - cell: "Tiberius"
+      - cell: "Caligula"
+        textAlign: right
+        verticalAlign: bottom
+        borderTop: 2px solid magenta
+        borderBottom: 10px solid magenta
+        borderRight: 20px solid magenta
+        borderLeft: 5px solid magenta
+        backgroundColor: gold
+        fontSize: 30
+        fontFamily: Script
+        color: purple
+      - cell: "Claudius"
+      textAlign: right
+      verticalAlign: bottom
+      borderTop: 2px solid blue
+      borderBottom: 10px dotted green
+      borderRight: 20px solid green
+      borderLeft: 5px solid red
+      backgroundColor: white
+      fontSize: 15
+      fontFamily: Times
+      color: crimson
+    - row:
+      - cell: "Nero"
+      - cell: "Galba"
+      - cell: "Otho"
+      - cell: "Vitellius"
+    - row:
+      - cell: "Vespasianus"
+      - cell: "Titus"
+      - cell: "Domitianus"
+      - cell: "Nerva"
+    - row:
+      - cell: "Per"
+      - cell: "aspera"
+      - cell: "ad"
+      - cell: "astra."
+      
+  fontFamily:"Helvetica"
+  fontSize: 25
+  color: black
+  backgroundColor: yellow
+  width: 600px
+  height: 500px
+  textAlign: center
+  verticalAlign: middle
+  borderTop: 2px solid black
+  borderBottom: 10px solid red
+  borderRight: 15px dotted purple
+  borderLeft: 5px solid green
+```
+
                     """)
         self.goto_document(d)
         sleep(2)
@@ -281,9 +393,93 @@ table:
 
 
     def test_timtable_extra_styles(self):
+        """Right way to function: Added extra properties
+           senatus: "populusque romanus"
+           Julius: Caesar
+           Lucius: Vorenus
+           Marcus: Aurelius
+           have no effect. Screenshot should look just like timTableAllStyles.
+           """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+table:
+  columns:
+    - column:
+      textAlign: left
+      verticalAlign: bottom
+      borderTop: 2px solid red
+      borderBottom: 10px solid orange
+      borderRight: 5px dotted purple
+      borderLeft: 5px solid black
+      backgroundColor: beige
+    - column:
+    - column:
+      border: 4px solid orange
+      width: 150px
+      backgroundColor: crimson
+      senatus: "populusque romanus"
+    - column:
+  rows:
+    - row:
+      - cell: "Augustus"
+      - cell: "Tiberius"
+      - cell: "Caligula"
+        textAlign: right
+        verticalAlign: bottom
+        borderTop: 2px solid magenta
+        borderBottom: 10px solid magenta
+        borderRight: 20px solid magenta
+        borderLeft: 5px solid magenta
+        backgroundColor: gold
+        fontSize: 30
+        fontFamily: Script
+        color: purple
+      - cell: "Claudius"
+      textAlign: right
+      verticalAlign: bottom
+      borderTop: 2px solid blue
+      borderBottom: 10px dotted green
+      borderRight: 20px solid green
+      borderLeft: 5px solid red
+      backgroundColor: white
+      fontSize: 15
+      fontFamily: Times
+      color: crimson
+      Julius: Caesar
+    - row:
+      - cell: "Nero"
+      - cell: "Galba"
+      - cell: "Otho"
+      - cell: "Vitellius"
+    - row:
+      - cell: "Vespasianus"
+      - cell: "Titus"
+      - cell: "Domitianus"
+      - cell: "Nerva"
+    - row:
+      - cell: "Per"
+      - cell: "aspera"
+      - cell: "ad"
+      - cell: "astra."
+        Lucius: Vorenus
+      
+  fontFamily:"Helvetica"
+  fontSize: 25
+  color: black
+  backgroundColor: yellow
+  width: 600px
+  height: 500px
+  textAlign: center
+  verticalAlign: middle
+  borderTop: 2px solid black
+  borderBottom: 10px solid red
+  borderRight: 15px dotted purple
+  borderLeft: 5px solid green
+  Marcus: Aurelius
+```
+
                     """)
         self.goto_document(d)
         sleep(2)
@@ -295,6 +491,35 @@ table:
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+table:
+  rows:
+    - row:
+      - cell: "Augustus"
+      - cell: "Tiberius"
+      - cell: "Caligula"
+      - cell: "Claudius"
+    - row:
+      - cell: "Nero"
+        colspan: 1
+      - cell: "Galba"
+        colspan: 2
+      - cell: "Otho"
+      - cell: "Vitellius"
+    - row:
+      - cell: "Vespasianus"
+        colspan: 3
+      - cell: "Titus"
+      - cell: "Domitianus"
+      - cell: "Nerva"
+    - row:
+      - cell: "Per"
+        colspan: 4
+      - cell: "aspera"
+      - cell: "ad"
+      - cell: "astra."
+```
+
                     """)
         self.goto_document(d)
         sleep(2)
@@ -306,6 +531,35 @@ table:
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+table:
+  rows:
+    - row:
+      - cell: "Augustus"
+        rowspan: 1
+      - cell: "Tiberius"
+        rowspan: 2
+      - cell: "Caligula"
+        rowspan: 3
+      - cell: "Claudius"
+        rowspan: 4
+    - row:
+      - cell: "Nero"
+      - cell: "Galba"
+      - cell: "Otho"
+      - cell: "Vitellius"
+    - row:
+      - cell: "Vespasianus"
+      - cell: "Titus"
+      - cell: "Domitianus"
+      - cell: "Nerva"
+    - row:
+      - cell: "Per"
+      - cell: "aspera"
+      - cell: "ad"
+      - cell: "astra."
+```
+
                     """)
         self.goto_document(d)
         sleep(2)
@@ -316,6 +570,36 @@ table:
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+table:
+  rows:
+    - row:
+      - cell: "Augustus"
+      - cell: "Tiberius"
+        rowspan:10
+      - cell: "Caligula"
+        rowspan: 100
+      - cell: "Claudius"
+    - row:
+      - cell: "Nero"
+      - cell: "Galba"
+        rowspan:5
+      - cell: "Otho"
+      - cell: "Vitellius"
+    - row:
+      - cell: "Vespasianus"
+      - cell: "Titus"
+        rowspan: 10
+      - cell: "Domitianus"
+      - cell: "Nerva"
+    - row:
+      - cell: "Per"
+      - cell: "aspera"
+      - cell: "ad"
+      - cell: "astra."
+        rowspan: 2
+```
+
                     """)
         self.goto_document(d)
         sleep(2)
@@ -323,19 +607,78 @@ table:
         self.save_element_screenshot(we, "timTableRowspanOverRows")
 
     def test_timtable_colspan_over_columns(self):
+        """Right way to function is like HTML normally would with these colspan values"""
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+table:
+  rows:
+    - row:
+      - cell: "Augustus"
+      - cell: "Tiberius"
+      - cell: "Caligula"
+      - cell: "Claudius"
+    - row:
+      - cell: "Nero"
+      - cell: "Galba"
+        colspan: 10
+      - cell: "Otho"
+      - cell: "Vitellius"
+    - row:
+      - cell: "Vespasianus"
+      - cell: "Titus"
+      - cell: "Domitianus"
+        colspan: 100
+      - cell: "Nerva"
+    - row:
+      - cell: "Per"
+        colspan: 15
+      - cell: "aspera"
+      - cell: "ad"
+      - cell: "astra."
+```
                     """)
         self.goto_document(d)
         sleep(2)
         we = self.find_element('tim-table')
-        self.save_element_screenshot(we, "timTableOverColumns")
+        self.save_element_screenshot(we, "timTableColspanOverColumns")
 
     def test_timtable_rowspan_colspan(self):
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+table:
+  rows:
+    - row:
+      - cell: "Augustus"
+      - cell: "Tiberius"
+      - cell: "Caligula"
+      - cell: "Claudius"
+    - row:
+      - cell: "Nero"
+      - cell: "Galba"
+        rowspan: 3
+        colspan: 3
+      - cell: "Otho"
+      - cell: "Vitellius"
+    - row:
+      - cell: "Vespasianus"
+        rowspan: 2
+        colspan: 2
+      - cell: "Titus"
+      - cell: "Domitianus"
+        rowspan: 2
+        colspan: 2
+      - cell: "Nerva"
+    - row:
+      - cell: "Per"
+      - cell: "aspera"
+      - cell: "ad"
+      - cell: "astra."
+```
+
                     """)
         self.goto_document(d)
         sleep(2)
@@ -346,6 +689,90 @@ table:
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+table:
+  columns:
+    - column:
+      span:1
+      backgroundColor: magenta
+    - column:
+      span: 2
+      backgroundColor: crimson
+      border: 2px solid black
+    - column:
+      span: 100
+      backgroundColor: purple
+  rows:
+    - row:
+      - cell: "Augustus"
+      - cell: "Tiberius"
+      - cell: "Caligula"
+      - cell: "Claudius"
+    - row:
+      - cell: "Nero"
+      - cell: "Galba"
+      - cell: "Otho"
+      - cell: "Vitellius"
+    - row:
+      - cell: "Vespasianus"
+      - cell: "Titus"
+      - cell: "Domitianus"
+      - cell: "Nerva"
+    - row:
+      - cell: "Per"
+      - cell: "aspera"
+      - cell: "ad"
+      - cell: "astra."
+```
+
+                    """)
+        self.goto_document(d)
+        sleep(2)
+        we = self.find_element('tim-table')
+        self.save_element_screenshot(we, "timTableColumnSpan")
+
+    def test_timtable_id(self):
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+table:
+  columns:
+    - column:
+      id: "col1"
+    - column:
+      id: "col2"
+    - column:
+      id: "col3"
+  rows:
+    - row:
+      - cell: "Augustus"
+        id: "Augustus"
+      - cell: "Tiberius"
+        id: "Tiberius"
+      - cell: "Caligula"
+        id: "Caligula"
+      - cell: "Claudius"
+        id: "Claudius"
+      id: "row1"
+    - row:
+      - cell: "Nero"
+      - cell: "Galba"
+      - cell: "Otho"
+      - cell: "Vitellius"
+      id: "row2"
+    - row:
+      - cell: "Vespasianus"
+      - cell: "Titus"
+      - cell: "Domitianus"
+      - cell: "Nerva"
+    - row:
+      - cell: "Per"
+      - cell: "aspera"
+      - cell: "ad"
+      - cell: "astra."
+```
+
                     """)
         self.goto_document(d)
         sleep(2)
