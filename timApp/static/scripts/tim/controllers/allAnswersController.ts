@@ -20,13 +20,13 @@ export interface IAllAnswersParams {
 }
 
 export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}, {}, "timAllAnswers"> {
+    private static $inject = ["$element", "$scope"];
     private showSort: boolean;
     private options: IOptions;
     private $storage: ngStorage.StorageService & {allAnswersOptions: IOptions};
     private datePickerOptionsFrom: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
     private lastFetch: any;
-    private url: string;
 
     protected getTitle() {
         return "Get answers";
@@ -47,7 +47,6 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
             periodFrom: null,
             periodTo: null,
         };
-        this.url = options.url;
         this.options.age = "max";
         this.options.valid = "1";
         this.options.name = "both";
@@ -90,7 +89,7 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
         if (this.options.periodTo) {
             this.options.periodTo = this.options.periodTo.toDate();
         }
-        $window.open(this.url + "?" + $httpParamSerializer(this.options), "_blank");
+        $window.open(this.resolve.params.url + "?" + $httpParamSerializer(this.options), "_blank");
         this.close({});
     }
 
