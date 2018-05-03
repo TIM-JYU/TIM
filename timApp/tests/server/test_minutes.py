@@ -8,14 +8,13 @@ class MinutesHandlingTest(TimRouteTest):
     def test_minutes_creation(self):
         # Tests creation of minutes based on a meeting invitation document
         self.login_test1()
-        nr = 3
-        d = self.create_doc(settings={"macros": {"nr": nr}})
-        minutes_document_path = f"{d.location}/PK/PK{nr}"
+        knro = 3
+        d = self.create_doc(settings={"macros": {"knro": knro}})
+        minutes_document_path = f"{d.location}/PK/PK{knro}"
         self.json_post("/minutes/createMinutes",
                        json_data={"item_path": minutes_document_path,
-                                  "item_title": f"PK{nr}",
-                                  "copy": d.id},
-                       expect_status=200)
+                                  "item_title": f"PK{knro}",
+                                  "copy": d.id})
         d2 = DocEntry.find_by_path(minutes_document_path, try_translation=False)
         self.assertIsNotNone(d2)
         self.assertTrue(d2.document.get_settings().is_minutes())
@@ -23,22 +22,20 @@ class MinutesHandlingTest(TimRouteTest):
     def test_minute_extracts(self):
         # Tests creation of extracts from a full minutes document
         self.login_test1()
-        nr = 3
+        knro = 3
         d = self.create_doc(initial_par=r"""
 ``` {settings=""}
 macros:
-   nr: 3
+   knro: 3
    year: "2018"
-   sami: 'Yliopistonopettaja Sami Kollanus, puh. 0400248089, [sami.kollanus@jyu.fi](mailto:sami.kollanus@jyu.fi)'
-   eija: 'Opintopäällikkö Eija Hatanpää puh. 0503610988, [opintoasiat@it.jyu.fi](mailto:opintoasiat@it.jyu.fi)'
-   jaana: 'Hallintopäällikkö Jaana Markkanen, puh. 0408053279, [hallintopaallikko-it@jyu.fi](mailto:hallintopaallikko-it@jyu.fi)'
+   testihenkilo: 'Yliopistonopettaja Maija Meikäläinen, puh. 0123456789, [maija.meikalainen@jyu.fi](mailto:maija.meikalainen@jyu.fi)'
    stampformat: Kokous {date} \newline LIITE {attachment} lista {issue}
 editor_templates:
     templates:
        TDK:
          - text: "Listaotsikko"
            data: |
-            %%lista(,sami)%%
+            %%lista(,testihenkilo)%%
          - text: "Lakikohta"
            data: |
             #- {rd="148037" ra="arvostelu" rl="no" .laki}
@@ -85,7 +82,7 @@ Informaatioteknologian tiedekunta |
 {% endif %}
 # TIEDEKUNTANEUVOSTON KOKOUS %%kokous%%
 
-Aika %%dates[nr]%% klo %%klo%%
+Aika %%dates[knro]%% klo %%klo%%
 
 Paikka %%paikka%%
 
@@ -151,8 +148,9 @@ texprint: "- %%selitys%% ([%%teksti%%](%%server+linkki%%))"
         d.document.add_paragraph(text="Test paragraph 4")
         db.session.commit()
 
-        self.get(f"/minutes/createMinuteExtracts/{d.path_without_lang}", expect_status=302)
-        self.assertIsNotNone(DocEntry.find_by_path(f"{d.location}/otteet/kokous{nr}/kokous{nr}"))
-        self.assertIsNotNone(DocEntry.find_by_path(f"{d.location}/otteet/kokous{nr}/lista1"))
-        self.assertIsNotNone(DocEntry.find_by_path(f"{d.location}/otteet/kokous{nr}/lista2"))
-        self.assertIsNotNone(DocEntry.find_by_path(f"{d.location}/otteet/kokous{nr}/lista3"))
+        self.get(f"/minutes/createMinuteExtracts/{d.path_without_lang}", expect_status=302,
+                 expect_content=f'view/{d.location}/otteet/kokous{knro}/kokous{knro}')
+        self.assertIsNotNone(DocEntry.find_by_path(f"{d.location}/otteet/kokous{knro}/kokous{knro}"))
+        self.assertIsNotNone(DocEntry.find_by_path(f"{d.location}/otteet/kokous{knro}/lista1"))
+        self.assertIsNotNone(DocEntry.find_by_path(f"{d.location}/otteet/kokous{knro}/lista2"))
+        self.assertIsNotNone(DocEntry.find_by_path(f"{d.location}/otteet/kokous{knro}/lista3"))
