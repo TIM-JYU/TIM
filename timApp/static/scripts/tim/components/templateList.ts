@@ -45,7 +45,7 @@ timApp.component("timTemplateList", {
 <bootstrap-panel title="Choose a template" show-close="true" ng-switch on="$ctrl.templateList.length">
     <ul ng-switch-default>
         <li ng-repeat="template in $ctrl.templateList">
-            {{template.name}}
+            {{template.title}}
             <button class="timButton btn-xs" ng-click="$ctrl.loadTemplate(template)">Load</button>
         </li>
     </ul>
