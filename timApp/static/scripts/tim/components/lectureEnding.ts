@@ -7,6 +7,7 @@ export interface ILectureEndingDialogResult {
 }
 
 class LectureEndingCtrl extends DialogController<{lecture: ILecture}, ILectureEndingDialogResult, "timLectureEnding"> {
+    private static $inject = ["$element", "$scope"];
     private extendTimes = [5, 10, 15, 30, 45, 60];
     private selectedTime = 15;
 

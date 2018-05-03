@@ -236,6 +236,7 @@ timApp.component("timUserList", {
 });
 
 export class KorppiExportCtrl extends DialogController<{}, IExportOptions, "timKorppiExport"> {
+    private static $inject = ["$element", "$scope"];
     private options: IExportOptions;
 
     protected getTitle() {

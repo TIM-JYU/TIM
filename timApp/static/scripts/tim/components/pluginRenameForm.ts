@@ -30,6 +30,7 @@ export function isManageResponse(r: RenameResult): r is IManageResponse {
 }
 
 class PluginRenameForm extends DialogController<{params: IRenameParams}, RenameResult, "timPluginRename"> {
+    private static $inject = ["$element", "$scope"];
     private newNames: string[] = [];
 
     protected getTitle(): string {
