@@ -176,7 +176,15 @@ def tim_table_add_column():
     plug = Plugin.from_paragraph(par)
     rows = plug.values[TABLE][ROWS]
     for row in rows:
-        row['row'].append({'cell': 'New column'})
+        current_row = row[ROW]
+        last_cell = current_row[-1]
+        if type(last_cell) is str:
+            current_row.append({CELL: ""})
+        else:
+            # Copy the last cell's other properties for the new cell, but leave the text empty
+            new_cell = copy.deepcopy(last_cell)
+            new_cell[CELL] = ''
+            current_row.append(new_cell)
     plug.save()
     return json_response(call_dumbo(plug.values, '/mdkeys'))
 
