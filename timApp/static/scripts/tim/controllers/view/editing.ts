@@ -363,8 +363,6 @@ export class EditingHandler {
      * @param {Paragraph} $par The table paragraph.
      */
     toggleTableEditor(e: Event, $par: Paragraph) {
-        if (typeof($par) == undefined)
-            return;
         let parId = getParId($par);
 
         if (parId == null) {
@@ -470,10 +468,10 @@ export class EditingHandler {
      * at all.
      */
     isTimTableInEditMode($par: Paragraph | undefined): boolean | undefined {
-        if (typeof($par) == undefined)
+        if ($par == null)
             return undefined;
 
-        let parId = getParId(<Paragraph>$par);
+        let parId = getParId($par);
 
         if (parId == null) {
             return undefined;
@@ -485,7 +483,7 @@ export class EditingHandler {
             return undefined;
         }
 
-        return tableCtrl.isInEditMode()
+        return tableCtrl.isInEditMode();
     }
 
     getEditorFunctions($par?: Paragraph) {
