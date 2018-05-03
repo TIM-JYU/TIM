@@ -31,15 +31,15 @@ def create_minute_extracts(doc):
         abort(404)
     verify_manage_access(d)
 
-    # figure out the index of the minute, get the value of the 'nr' macro
+    # figure out the index of the minute, get the value of the 'knro' macro
 
     macros = d.document.get_settings().get_macroinfo().get_macros()
-    minute_number = macros.get("nr")
+    minute_number = macros.get("knro")
     if not minute_number:
-        return abort(400, "Error creating extracts: the document is not a minute document (no 'nr' macro found)")
+        return abort(400, "Error creating extracts: the document is not a minute document (no 'knro' macro found)")
 
     if not isinstance(minute_number, int):
-        return abort(400, "Error creating extracts: the value of the 'nr' macro is not a valid integer")
+        return abort(400, "Error creating extracts: the value of the 'knro' macro is not a valid integer")
 
     paragraphs = d.document.get_paragraphs()
 
@@ -156,7 +156,11 @@ def create_minutes_route():
 
     item_path, item_title, copy_id = verify_json_params('item_path', 'item_title', 'copy')
 
-    verify_manage_access(item_path)
+    d = DocEntry.find_by_id(copy_id, try_translation=True)
+    if not d:
+        abort(404)
+
+    verify_manage_access(d)
 
     item = create_or_copy_item(item_path, "document", item_title, copy_id=copy_id, use_template=False)
     item.document.add_setting(DocSettings.is_minutes_key, True)

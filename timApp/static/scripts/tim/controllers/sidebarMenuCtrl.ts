@@ -33,7 +33,7 @@ export class SidebarMenuCtrl implements IController {
     private vctrl?: ViewCtrl;
     private bookmarks: {};
     private isDocumentMinutes: boolean;
-    private docSettings?: {macros?: {nr?: string}}
+    private docSettings?: {macros?: {knro?: string}}
 
     constructor() {
         this.currentLecturesList = [];
@@ -158,7 +158,7 @@ export class SidebarMenuCtrl implements IController {
     enableCreateMinutesButton() : boolean {
         if (this.docSettings == null || this.docSettings.macros == null)
             return false;
-        return this.docSettings.macros.nr != null && !this.isDocumentMinutes;
+        return this.docSettings.macros.knro != null && !this.isDocumentMinutes;
     }
 
     /**
@@ -169,7 +169,7 @@ export class SidebarMenuCtrl implements IController {
         if (this.docSettings == null || this.docSettings.macros == null)
             return false;
 
-        return this.docSettings.macros.nr != null;
+        return this.docSettings.macros.knro != null;
     }
 
     /**
@@ -181,14 +181,14 @@ export class SidebarMenuCtrl implements IController {
             return;
         }
 
-        if (this.docSettings == null || this.docSettings.macros == null) {
-            void showMessageDialog("The document has no macros defined");
+        if (this.docSettings == null || this.docSettings.macros == null || this.docSettings.macros.knro == null) {
+            void showMessageDialog("The document has no 'knro' macro defined");
             return;
         }
 
         $http.post<{path: string}>("/minutes/createMinutes", angular.extend({
-            item_path: this.vctrl.item.location + "/PK/PK" + this.docSettings.macros.nr,
-            item_title: "PK" + this.docSettings.macros.nr,
+            item_path: this.vctrl.item.location + "/PK/PK" + this.docSettings.macros.knro,
+            item_title: "PK" + this.docSettings.macros.knro,
             copy: this.vctrl.item.id,
         })).then((response) => {
             $window.location.href = "/view/" + response.data.path;
