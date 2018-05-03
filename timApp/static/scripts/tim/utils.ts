@@ -129,7 +129,7 @@ export function isPageDirty() {
     return e.val() === "1";
 }
 
-export function GetURLParameter(sParam: string): string | null {
+export function getURLParameter(sParam: string): string | undefined {
     const sPageURL = window.location.search.substring(1);
     const sURLVariables = sPageURL.split("&");
     for (const urlvar of sURLVariables) {
@@ -138,7 +138,7 @@ export function GetURLParameter(sParam: string): string | null {
             return decodeURIComponent(sParameterName[1]);
         }
     }
-    return null;
+    return undefined;
 }
 
 export async function setSetting(setting: "editortab" | "clock_offset" | "timelimit", value: string) {

@@ -1,7 +1,7 @@
 import $ from "jquery";
 import Reveal from "reveal";
 import {background_color, background_url, is_owner, item} from "tim/show_slide_vars";
-import {GetURLParameter} from "tim/utils";
+import {getURLParameter} from "tim/utils";
 import {$log} from "./ngimport";
 
 const pollInterval = 500;
@@ -53,7 +53,7 @@ function refresh() {
 }
 
 function updateSlideStatus(h: number, v: number, f: number) {
-    if (GetURLParameter("controls") != null) {
+    if (getURLParameter("controls") != null) {
         return;
     }
     receiving = false;
@@ -119,7 +119,7 @@ function initReveal() {
 }
 
 $(() => {
-    if (GetURLParameter("controls") == null && is_owner) {
+    if (getURLParameter("controls") == null && is_owner) {
         pollTimeout = setTimeout(refresh, pollInterval);
     }
     document.onkeyup = function (evt) {

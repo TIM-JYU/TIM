@@ -16,7 +16,7 @@ import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
 import sessionsettings from "tim/session";
-import {clone, GetURLParameter, markAsUsed, setSetting, to} from "tim/utils";
+import {clone, getURLParameter, markAsUsed, setSetting, to} from "tim/utils";
 import {showLectureEnding} from "../components/lectureEnding";
 import * as wall from "../components/lectureWall";
 import {showLectureWall} from "../components/lectureWall";
@@ -198,7 +198,7 @@ export class LectureController implements IController {
         if (isEmptyResponse(answer)) {
             return;
         }
-        let lectureCode = GetURLParameter("lecture");
+        let lectureCode = getURLParameter("lecture");
 
         // Check if the lecture parameter is autojoin.
         // If it is and there is only one lecture going on in the document, join it automatically.

@@ -3,7 +3,7 @@ import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as formErrorMessage from "tim/directives/formErrorMessage";
 import * as shortNameValidator from "tim/directives/shortNameValidator";
-import {markAsUsed} from "tim/utils";
+import {getURLParameter, markAsUsed} from "tim/utils";
 import {$http, $window} from "../ngimport";
 import {slugify} from "../services/slugify";
 
@@ -28,7 +28,7 @@ class CreateItemController implements IController {
         if (this.fullPath) {
             const str = this.fullPath;
             this.itemLocation = str.substring(0, str.lastIndexOf("/"));
-            this.itemTitle = str.substring(str.lastIndexOf("/") + 1, str.length);
+            this.itemTitle = getURLParameter("title") || str.substring(str.lastIndexOf("/") + 1, str.length);
         }
         if (this.itemTitle) {
             this.itemName = slugify(this.itemTitle);
