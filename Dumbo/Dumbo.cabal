@@ -17,8 +17,7 @@ cabal-version:       >=1.10
 
 executable Dumbo
   main-is:             Dumbo.hs
-  -- other-extensions:    
-  build-depends:       
+  build-depends:
         base
       , pandoc >= 1.19
       , pandoc-types
@@ -38,6 +37,17 @@ executable Dumbo
       , lens-aeson
       , texmath
       , AsciiMath
+      , directory
+      , html-entities
+      , SHA
+      , attoparsec
+      , base64-bytestring
+      , deepseq
+      , temporary
+      , process
+      , optparse-generic
   -- hs-source-dirs:      
   default-language:    Haskell2010
+  other-modules: Tex2Svg
+  ghc-options:  -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates
 

@@ -130,6 +130,7 @@ writeUnaryOp (UnaryOp u _) = writeUnaryOp_ u
               writeUnaryOp_ Utt = "texttt"
               writeUnaryOp_ Ufr = "mathfrak"
               writeUnaryOp_ Usf = "mathsf"
+              writeUnaryOp_ Utilde = "tilde"
               writeUnaryOp_ Uhat = "hat"
               writeUnaryOp_ Ubar = "overline"
               writeUnaryOp_ Uul = "underline"
@@ -146,7 +147,7 @@ writeLBracket (LBracket l _) = cmd_ "left" ++ aux l
           aux LBra = "\\{"
           aux LChe = cmd "langle"
           aux LBraCons = "."
-writeRBracket (RBracket r _) = cmd_ "right" ++ aux r 
+writeRBracket (RBracket r _) = cmd_ "right" ++ aux r
    where  aux RPar = ")"
           aux RCro = "]"
           aux RBra = "\\}"
@@ -167,7 +168,7 @@ writeSimpleExpr (SimpleExpr expr _) = writeSimpleExpr_ expr
                 let ls = map (intercalate " & ") textMatrix in
                 let text = intercalate " \\\\ " ls in
                 cmdargs "begin" [mt] ++ text ++ cmdargs "end" [mt]
-              writeSimpleExpr_ (Delimited l e r) = 
+              writeSimpleExpr_ (Delimited l e r) =
                 writeLBracket l ++ writeCode e ++ writeRBracket r
               writeSimpleExpr_ (UnaryApp o e) =
                 cmdargs (writeUnaryOp o) [writeSimpleExprND e]
@@ -192,7 +193,7 @@ writeExpr (Expr e _) = writeExpr_ e
                 cmdargs "frac" [writeSimpleExprND e1, writeSimpleExprND e2]
               writeExpr_ (Under e1 e2) =
                 writeSimpleExpr e1 ++ "_{" ++ writeSimpleExprND e2 ++ "}"
-              writeExpr_ (Super e1 e2) = 
+              writeExpr_ (Super e1 e2) =
                 writeSimpleExpr e1 ++ "^{" ++ writeSimpleExprND e2 ++ "}"
               writeExpr_ (SubSuper e1 e2 e3) =
                 writeSimpleExpr e1 ++
@@ -206,4 +207,3 @@ writeCode = foldr (\e s -> writeExpr e ++ s) ""
 -- The main writer
 writeTeX :: Code -> String
 writeTeX = writeCode
-

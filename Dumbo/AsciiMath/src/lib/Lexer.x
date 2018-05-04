@@ -1,16 +1,14 @@
 {
-{-# LANGUAGE DeriveDataTypeable #-}
-module Lexer (get_tokens, Token(..), Position(..), LexicalError(..)) where
+module Lexer (get_tokens, Token(..), Position(..)) where
+
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Control.Exception (Exception)
-import System.IO.Unsafe (unsafePerformIO)
-import System.Exit (exitFailure)
 import Data.Word (Word8)
 import Data.Char (ord)
-import Data.Typeable
 import Prelude hiding (abs, EQ, LT, GT)
 import qualified Data.Bits
+
+import Exception
 
 }
 
@@ -83,7 +81,7 @@ data Token =
   | RDEL String
   | SLASH | UNDERSCORE | SUPER
   -- Greek letters
-  | GREEK String 
+  | GREEK String
   -- Standard functions
   | STDFUN String
   -- Unary ops
@@ -110,8 +108,8 @@ data Token =
   | UARR | DARR | LARR | TO
   | MAPSTO | HARR | LLARR
   -- Accents
-  | HAT | BAR | UL | VEC | DOTOP | DDOT 
-  -- Additionnal tokens 
+  | TILDE | HAT | BAR | UL | VEC | DOTOP | DDOT
+  -- Additionnal tokens
   | COMMA | DOT | SEMICOLON | QUOTE | FACTO
   deriving (Show)
 
@@ -133,7 +131,7 @@ kws = M.fromList [
   ("xx", TIMES), ("ox", OTIMES), ("sum", SUM), ("prod", PROD),
   ("vv", VV), ("vvv", VVV), ("nn", NN), ("nnn", NNN), ("uu", UU), ("uuu", UUU),
   -- Miscellaneous symbols
-  ("int", INT), ("oint", OINT), ("del", DEL), ("grad", GRAD),
+  ("int", INT), ("oint", OINT), ("partial", DEL), ("del", DEL), ("grad", GRAD),
   ("oo", INFTY), ("aleph", ALEPH),
   ("cdots", CDOTS), ("vdots", VDOTS), ("ddots", DDOTS),
   ("quad", QUAD), ("diamond", DIAMOND), ("square", SQUARE),
@@ -148,7 +146,7 @@ kws = M.fromList [
   ("uarr", UARR), ("darr", DARR), ("rarr", TO), ("larr", LARR),
   ("harr", HARR), ("rArr", IMPLIES), ("lArr", LLARR), ("hArr", IFF),
   -- Accents
-  ("hat", HAT), ("bar", BAR), ("ul", UL),
+  ("tilde", TILDE), ("hat", HAT), ("bar", BAR), ("ul", UL),
   ("vec", VEC), ("dot", DOTOP), ("ddot", DDOT)]
 
 greek_letters :: S.Set String
@@ -181,7 +179,7 @@ check_kw s = case M.lookup s kws of
 sym1 :: M.Map String Token
 sym1 = M.fromList [
   ("+", ADD), ("-", SUB), ("*", MUL), ("\\", BSLASH), ("/", SLASH),
-  ("@", COMP), ("|", ABS), ("_", UNDERSCORE), ("^", SUPER), 
+  ("@", COMP), ("|", ABS), ("_", UNDERSCORE), ("^", SUPER),
   ("=", EQ), ("<", LT), (">", GT), (",", COMMA), (".", DOT), ("\\", BSLASH),
   ("^", SUPER), ("=", EQ), ("_", UNDERSCORE), (";", SEMICOLON), ("'", QUOTE),
   ("!", FACTO)]
@@ -193,7 +191,7 @@ check_sym1 s = case M.lookup s sym1 of
     Nothing -> error ("'" ++ s ++ "' is supposed to be recognised")
 
 -- The main function
-get_tokens :: String -> Either LexicalError [(Token, Position)]
+get_tokens :: String -> Either AsciimathException [(Token, Position)]
 get_tokens = alexScanTokens
 
 
@@ -205,33 +203,6 @@ get_tokens = alexScanTokens
 -----------------------------
 
 type Byte = Word8
-
--- Location
--- abs, line, column, length
-data Position =
-  Position !Int !Int !Int
-  | PositionElement !Int !Int !Int !Int
-  deriving (Show, Eq)
-
--- Lexical Error
-data LexicalError = LexicalError String Position deriving (Typeable)
-instance Show LexicalError where
-          show (LexicalError msg (PositionElement _ l c len)) =
-            unsafePerformIO $ do {
-            putStr ("Line "
-              ++ (show l) ++ ", characters "
-              ++ (show c) ++ "-" ++ (show $ c + len) ++ ":\n"
-              ++ "lexical error near: \"" ++ msg ++ "\"\n");
-            exitFailure;
-            }
-          show (LexicalError msg (Position _ l c)) = 
-            unsafePerformIO $ do {
-            putStr ("Line " ++ show l
-              ++ ", characters " ++ show c ++ "-" ++ show (c+1) ++ ":\n"
-              ++ "lexical error near: " ++ msg ++ "\n");
-            exitFailure;
-            }
-instance Exception LexicalError
 
 -- Shortens strings
 cut :: String -> String
@@ -258,22 +229,22 @@ alexInputPrevChar (_,c,_,_) = c
 
 -- Encoding
 utf8Encode :: Char -> [Word8]
-utf8Encode = map fromIntegral . go . ord 
+utf8Encode = map fromIntegral . go . ord
  where
   go oc
    | oc <= 0x7f   = [oc]
    | oc <= 0x7ff  = [ 0xc0 + (oc `Data.Bits.shiftR` 6)
                     , 0x80 + oc Data.Bits..&. 0x3f
-                    ]   
-   | oc <= 0xffff = [ 0xe0 + (oc `Data.Bits.shiftR` 12) 
+                    ]
+   | oc <= 0xffff = [ 0xe0 + (oc `Data.Bits.shiftR` 12)
                     , 0x80 + ((oc `Data.Bits.shiftR` 6) Data.Bits..&. 0x3f)
                     , 0x80 + oc Data.Bits..&. 0x3f
-                    ]   
-   | otherwise    = [ 0xf0 + (oc `Data.Bits.shiftR` 18) 
+                    ]
+   | otherwise    = [ 0xf0 + (oc `Data.Bits.shiftR` 18)
                     , 0x80 + ((oc `Data.Bits.shiftR` 12) Data.Bits..&. 0x3f)
                     , 0x80 + ((oc `Data.Bits.shiftR` 6) Data.Bits..&. 0x3f)
                     , 0x80 + oc Data.Bits..&. 0x3f
-                    ] 
+                    ]
 
 -- Position initialisation
 alexStartPos :: Position
@@ -301,7 +272,7 @@ unletters "" _ = []
 unletters (c:s) (PositionElement abs line col len) =
     let hd = (LETTER c, PositionElement abs line col 1) in
     hd:(unletters s $ PositionElement (abs+1) line (col+1) (len-1))
-unletters (c:s) (Position abs line col) = 
+unletters (c:s) (Position abs line col) =
     let hd = (LETTER c, Position abs line col) in
     hd:(unletters s $ Position (abs+1) line (col+1))
 
@@ -310,7 +281,7 @@ cat _ (Left e) = Left e
 cat l (Right l') = Right $ l ++ l'
 
 -- The scanner
-alexScanTokens :: String -> Either LexicalError [(Token, Position)]
+alexScanTokens :: String -> Either AsciimathException [(Token, Position)]
 alexScanTokens s = go (alexStartPos,'\n',[],s) 0
   where go inp@(pos,_,_,str) sc =
           case alexScan inp sc of
@@ -328,4 +299,3 @@ alexScanTokens s = go (alexStartPos,'\n',[],s) 0
                     LETTERS_ w -> cat (unletters w elt_pos) $ go inp' new_sc
                     _ -> cat [(tok, elt_pos)] $ go inp' new_sc
 }
-

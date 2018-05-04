@@ -39,7 +39,7 @@ matrixSE_ x = x
 
 -- Usefull predicates
 com :: SimpleExpr -> Bool
-com (SimpleExpr (SEConst (Constant Comma _)) _) = True 
+com (SimpleExpr (SEConst (Constant Comma _)) _) = True
 com _ = False
 comma :: Expr -> Bool
 comma (Expr (Simple e) _) | com e = True
@@ -53,13 +53,13 @@ split p l = case break p l of
 
 -- First step of parseSeq : match a sequence of comma-separated bracketed
 -- expression
-unbracket :: [Code] -> Maybe [(LBracket_, Code)] 
+unbracket :: [Code] -> Maybe [(LBracket_, Code)]
 unbracket [] = Just []
 unbracket ([(Expr (Simple (SimpleExpr (Delimited lb c rb) _)) _)]:cs) =
     case (lb, rb, unbracket cs) of
         (LBracket LCro _, RBracket RCro _, Just l) -> Just ((LCro, c):l)
         (LBracket LPar _, RBracket RPar _, Just l) -> Just ((LPar, c):l)
-        _ -> Nothing 
+        _ -> Nothing
 unbracket _ = Nothing
 
 parseSeq1 :: Code -> Maybe [(LBracket_, Code)]
@@ -76,11 +76,10 @@ parseSeq2 (Just cs) =
     if all (\l -> n == length l) res then
       Just res
       else
-        Nothing    
+        Nothing
   else
     Nothing
 
 -- ParseSeq
 parseSeq :: Code -> Maybe [[Code]]
 parseSeq = parseSeq2 . parseSeq1
-

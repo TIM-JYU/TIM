@@ -9,58 +9,24 @@ The aim of that project is to provide a Haskell Library and a command line tool
 making possible to use asciimath everywhere, for example in interaction with
 [pandoc](http://pandoc.org/) or for preprocessing on your website.
 
-## Get started
+## Install
 
-### Quick install with stack
+Use [stack](http://docs.haskellstack.org/en/stable/install_and_upgrade.html).
 
-1. Install
-   [stack](http://docs.haskellstack.org/en/stable/install_and_upgrade.html).
+If you already have stack set up and working, you just have to type
+`stack install` at the root of the repository.  
+If you want the binaries to be stored in a different folder from the default
+`$HOME/.local/bin/` you should add the option `--local-bin-path $YOUR_BIN_DIR`.
 
-2. Clone that repository.
+If you just installed stack, stack may ask you to run `stack setup` first to
+install GHC and set up an isolated environment (either globally in your home
+or in a dedicated folder just for this repository)
 
-3. Run `stack install` (equivalent to `make stack`) to build and install the
-   project using [stack](docs.haskellstack.org/). Stack may ask you to run
-   `stack setup` if it has not installed its own version on ghc yet.  
-   If you want the binaries to be stored in another folder that the default
-   `$HOME/.local/bin/` you should add the option
-   `--local-bin-path $YOUR_BIN_DIR`.
-
-### Quick install with cabal
-
-1. Make sure you have [cabal](https://www.haskell.org/cabal/) and
-   [ghc](https://www.haskell.org/ghc/) installed on your system.
-
-2. Update your package database (`cabal update`).
-
-3. Install [alex](https://www.haskell.org/alex/) and
-   [happy](https://www.haskell.org/happy/), for example by running 
-   `cabal install alex && cabal install happy`.
-
-4. Run `cabal configure` and `cabal install` to install dependencies.
-
-5. Finally build the project running `cabal build`. Then you can find the
-   binaries in `dist/build/asciimath/` and `dist/build/pandoc-asciimath/`.
-
-_NOTE_ : Run `make cabal` or just `make` do steps 3 and 4 and copy the binaries
-in the project main folder.
-
-### Custom install 
-
-1. Compile the auxiliary modules. The source files are stored in `src/lib/`.
-   The lexer `lexer.x` must by compiled with
-   [alex](https://www.haskell.org/alex/) and the parser `parser.y` must be
-   compiled with [happy](https://www.haskell.org/happy/).
-
-2. Compile the compiler. The source file is stored in `src/compiler/`, the only
-   module required is `AsciiMath`.
-
-3. Compile the pandoc filter. The source file is stored in `src/filter`.
-   Modules `Pandoc-types` and `AsciiMath` are required.
 
 ## Usage
 
 The executable `asciimath` reads AsciiMath code from its standard input, compile
-it and prints the resulting LaTeX code on its standard output. For example :
+it and prints the resulting LaTeX code on its standard output. For example:
 
     > echo "sum_(i=1)^n i^3=((n(n+1))/2)^2" | ./asciimath
     \sum_{i=1}^{n}i^{3}=\left(\frac{n\left(n+1\right)}{2}\right)^{2}
@@ -74,19 +40,19 @@ or in "interactive mode"
 The executable `pandoc-asciimath` is a [pandoc
 filter](http://pandoc.org/scripting.html). An example of use would be
 
-    > pandoc -s -S -t latex --filter pandoc-asciimath file.md -o file.pdf
+    > pandoc --standalone -t latex --filter pandoc-asciimath file.md -o file.pdf
 
-The `Asciimath` module built by cabal also provide four functions :
+The `Asciimath` module also provide four functions:
 * `readAscii :: String -> Either LexicalError Ast.Code`
 * `writeTeX :: Ast.Code -> String`
 * `compile :: String -> Either LexicalError String`
 * `run :: String -> String`
 
+which can be used in any Haskell program to play with the AST or anything else.
+
 The `run` function do the same work as `compile` but raises a system error if it
 fails whereas `compile` returns either a `LexicalError` or the expected compiled
-`String` which is much more convenient for error handling. 
-
-which can be used in any Haskell program to play with the AST or anything else.
+`String` which is much more convenient for error handling.
 
 ## Grammar
 
@@ -98,16 +64,15 @@ changes I made respect the original idea.
 c ::= `[a-zA-Z]` | _numbers_ | _greek letters_ | _standard functions_ | `,` |
 _other symbols_ (see [list](http://asciimath.org/#syntax))
 
-u ::= `sqrt` | `text` | `bb` | `bbb` | `cc` | `tt` | `fr` | `sf`
-| `hat` | `bar` | `ul` | `vec` | `dot` | `ddot`
+u ::= `sqrt` | `text` | `bb` | `bbb` | `cc` | `tt` | `fr` | `sf` | `hat` | `bar` | `ul` | `vec` | `dot` | `ddot`
 
-b ::= `frac` | `root` | `stackrel`
+b ::= `frac` | `root` | `stackrel`
 
 l ::= `(` | `[` | `{` | `(:` | `{:`
 
 r ::= `)` | `]` | `}` | `:)` | `:}`
 
-S ::= c | l Code r | u S | b S S | `"` _any text_ `"`
+S ::= c | l Code r | u S | b S S | `"` _any text_ `"`
 
 E ::= S | S `/` S | S `_` S | S `^` S | S `_` S `^` S
 
