@@ -416,7 +416,7 @@ or newer one that is more familiar to write in YAML:
     }
 
     editorReady() {
-        this.editor.focus();
+        this.focusEditor();
         this.editor.bottomClicked();
         this.element.find(".editorContainer").removeClass("editor-loading");
     }
@@ -446,9 +446,7 @@ or newer one that is more familiar to write in YAML:
             // For some reason, on Chrome, re-focusing the editor messes up scroll position
             // when clicking a tab and moving mouse while clicking, so
             // we save and restore it manually.
-            const s = $(window).scrollTop();
-            this.editor.focus();
-            $(window).scrollTop(s || this.scrollPos);
+            this.focusEditor();
         }
         if (func != null) {
             func();
@@ -456,6 +454,14 @@ or newer one that is more familiar to write in YAML:
         if (this.isIE) {
             this.editorChanged();
         }
+    }
+
+    private async focusEditor() {
+        await $timeout();
+        const s = $(window).scrollTop();
+        this.editor.focus();
+        await $timeout();
+        $(window).scrollTop(s || this.scrollPos);
     }
 
     changeMeta() {
@@ -566,7 +572,7 @@ or newer one that is more familiar to write in YAML:
 
     onFileSelect(file: File) {
         this.uploadedFile = "";
-        this.editor.focus();
+        this.focusEditor();
         this.file = file;
 
         if (file) {
@@ -677,9 +683,7 @@ or newer one that is more familiar to write in YAML:
     }
 
     putTemplate(data: string) {
-        if (!this.touchDevice) {
-            this.editor.focus();
-        }
+        this.focusEditor();
         this.editor.insertTemplate(data);
     }
 
@@ -697,9 +701,7 @@ or newer one that is more familiar to write in YAML:
                 $log.error("Error getting template");
             },
         });
-        if (!this.touchDevice) {
-            this.editor.focus();
-        }
+        this.focusEditor();
     }
 
     tabClicked($event: Event, area: string) {

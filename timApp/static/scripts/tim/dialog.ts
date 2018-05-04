@@ -1,4 +1,4 @@
-import angular, {IController, IPromise, IRootElementService, IScope} from "angular";
+import {IController, IPromise, IRootElementService, IScope} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "./app";
@@ -15,7 +15,7 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
     public readonly resolve: T;
     protected closed = false;
     protected readonly draggable: DraggableController;
-    private readonly modalInstance: angular.ui.bootstrap.IModalInstanceService;
+    private readonly modalInstance: IModalInstanceService;
 
     protected abstract getTitle(): string;
 
@@ -24,9 +24,11 @@ export abstract class DialogController<T, Ret, ComponentName extends string> imp
     }
 
     $onInit() {
+        this.draggable.setModal(this.modalInstance);
         this.draggable.setCloseFn(() => this.dismiss());
         this.draggable.setCaption(this.getTitle());
         this.draggable.setDragClickFn(() => bringToFront(this.scope));
+        this.draggable.setInitialLayout();
         bringToFront(this.scope);
         document.addEventListener("keydown", this.handleEscPress);
     }

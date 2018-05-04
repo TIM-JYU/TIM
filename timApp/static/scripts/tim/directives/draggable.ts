@@ -1,4 +1,5 @@
 import {IController, IRootElementService, IScope} from "angular";
+import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
 import {$compile, $document, $timeout} from "../ngimport";
@@ -106,8 +107,13 @@ export class DraggableController implements IController {
     private absolute?: boolean;
     private parentDraggable?: DraggableController;
     private forceMaximized?: boolean;
+    private modal?: IModalInstanceService;
 
     constructor(private scope: IScope, private element: IRootElementService) {
+    }
+
+    isModal() {
+        return this.element.parent(".modal").length === 1;
     }
 
     $onInit() {
@@ -124,7 +130,7 @@ export class DraggableController implements IController {
     async makeHeightAutomatic() {
         // workaround for Chrome issue where the browser jumps to the start of page when opening a dialog that
         // calls this
-        await $timeout();
+        await this.getModal();
 
         this.element.css("height", "auto");
         this.autoHeight = true;
@@ -143,11 +149,19 @@ export class DraggableController implements IController {
         setStorage(this.posKey + "detach", this.canDrag());
     }
 
-    private makeModalPositionAbsolute() {
-        this.getModal().css("position", "absolute");
+    private async makeModalPositionAbsolute() {
+        const modal = await this.getModal();
+        if (!modal) {
+            return;
+        }
+        modal.css("position", "absolute");
     }
 
-    private getModal() {
+    private async getModal() {
+        if (!this.modal) {
+            return;
+        }
+        await this.modal.rendered;
         return this.element.parents(".modal");
     }
 
@@ -155,8 +169,12 @@ export class DraggableController implements IController {
         return this.areaMinimized;
     }
 
-    private modalHasAbsolutePosition() {
-        return this.getModal().css("position") === "absolute" && this.parentDraggable == null;
+    private async modalHasAbsolutePosition() {
+        const m = await this.getModal();
+        if (!m) {
+            return false;
+        }
+        return m.css("position") === "absolute" && this.parentDraggable == null;
     }
 
     private elementHasAbsoluteOrRelativePosition() {
@@ -175,12 +193,6 @@ export class DraggableController implements IController {
     async $postLink() {
         this.element.prepend($compile(draggableTemplate)(this.scope));
         this.createResizeHandlers();
-        if (this.absolute) {
-            this.makeModalPositionAbsolute();
-        }
-        if (isMobileDevice()) {
-            this.getModal().css("overflow", "visible");
-        }
         this.handle = this.element.children(".draghandle");
 
         this.handle.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
@@ -201,10 +213,26 @@ export class DraggableController implements IController {
             $document.on("mouseup pointerup touchend", this.release);
             $document.on("mousemove pointermove touchmove", this.move);
         });
-        await $timeout(); // the restored position will be slightly off without this
+
+        // DialogController will call setInitialLayout in case draggable is inside modal
+        if (!this.isModal()) {
+            await this.setInitialLayout();
+        }
+    }
+
+    public async setInitialLayout() {
+        if (this.absolute) {
+            await this.makeModalPositionAbsolute();
+        }
+        if (isMobileDevice()) {
+            const modal = await this.getModal();
+            if (modal) {
+                modal.css("overflow", "visible");
+            }
+        }
         if (this.posKey) {
             this.getSetDirs();
-            this.restoreSizeAndPosition();
+            await this.restoreSizeAndPosition();
             if (getStorage(this.posKey + "min") && !this.forceMaximized) {
                 this.toggleMinimize();
             }
@@ -215,7 +243,7 @@ export class DraggableController implements IController {
         this.ensureVisibleInViewport();
     }
 
-    private restoreSizeAndPosition() {
+    private async restoreSizeAndPosition() {
         if (!this.posKey) {
             return;
         }
@@ -233,8 +261,9 @@ export class DraggableController implements IController {
         }
         const oldPos: {left: string, right: string, top: string, bottom: string} | null = getStorage(this.posKey);
         // it doesn't make sense to restore Y position if the dialog has absolute position (instead of fixed)
-        if (this.modalHasAbsolutePosition()) {
-            this.element.css("top", window.pageYOffset + "px");
+        if (await this.modalHasAbsolutePosition()) {
+            const off = this.element.offset() || {left: 20};
+            this.element.offset({top: window.pageYOffset, left: off.left});
         }
         if (oldPos) {
             if (oldPos.left && this.setLeft) {
@@ -243,7 +272,7 @@ export class DraggableController implements IController {
             if (oldPos.right && this.setRight) {
                 this.element.css("right", oldPos.right);
             }
-            if (!this.modalHasAbsolutePosition()) {
+            if (!await this.modalHasAbsolutePosition()) {
                 if (oldPos.top && this.setTop) {
                     this.element.css("top", oldPos.top);
                 }
@@ -531,5 +560,9 @@ export class DraggableController implements IController {
 
     $destroy() {
         this.element.remove();
+    }
+
+    setModal(modalInstance: IModalInstanceService) {
+        this.modal = modalInstance;
     }
 }
