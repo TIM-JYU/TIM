@@ -151,13 +151,13 @@ def tim_table_add_row():
     verify_edit_access(d)
     par = d.document.get_paragraph(par_id)
     plug = Plugin.from_paragraph(par)
-    rows = plug.values[TABLE][ROWS]
-    i = 0
-    j = 0
-    last_row_index = len(rows) - 1
-    # clone the previous row's data into the new row
-    rows.append({'row': copy.deepcopy(rows[last_row_index]['row'])})
-    plug.save()
+    try:
+        rows = plug.values[TABLE][ROWS]
+        # clone the previous row's data into the new row
+        rows.append({'row': copy.deepcopy(rows[-1]['row'])})
+        plug.save()
+    except KeyError:
+        abort(400)
     return json_response(call_dumbo(plug.values, '/mdkeys'))
 
 
@@ -175,18 +175,21 @@ def tim_table_add_column():
     verify_edit_access(d)
     par = d.document.get_paragraph(par_id)
     plug = Plugin.from_paragraph(par)
-    rows = plug.values[TABLE][ROWS]
-    for row in rows:
-        current_row = row[ROW]
-        last_cell = current_row[-1]
-        if type(last_cell) is str:
-            current_row.append({CELL: ""})
-        else:
-            # Copy the last cell's other properties for the new cell, but leave the text empty
-            new_cell = copy.deepcopy(last_cell)
-            new_cell[CELL] = ''
-            current_row.append(new_cell)
-    plug.save()
+    try:
+        rows = plug.values[TABLE][ROWS]
+        for row in rows:
+            current_row = row[ROW]
+            last_cell = current_row[-1]
+            if isinstance(last_cell, str):
+                current_row.append({CELL: ""})
+            else:
+                # Copy the last cell's other properties for the new cell, but leave the text empty
+                new_cell = copy.deepcopy(last_cell)
+                new_cell[CELL] = ''
+                current_row.append(new_cell)
+        plug.save()
+    except KeyError:
+        abort(400)
     return json_response(call_dumbo(plug.values, '/mdkeys'))
 
 
