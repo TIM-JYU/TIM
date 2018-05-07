@@ -1,9 +1,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-#OPTIONS_GHC -Wall -fno-warn-name-shadowing -fwarn-incomplete-patterns#-}
 
-module Tex2Svg (tex2svg,findDVISVGM,findLatex,mkLatex,mkDVISVGM,LatexPath,DVISVGMPath,ConversionError(..),SetupError(..),MathType(..)) where
+module Tex2Svg (tex2svg,Tex2SvgRuntime( .. ),findDVISVGM,findLatex,mkLatex,mkDVISVGM,LatexPath,DVISVGMPath,ConversionError(..),SetupError(..),MathType(..)) where
 import Prelude hiding (head)
 import Text.Pandoc.JSON
 import System.Exit
@@ -29,13 +30,12 @@ import qualified Data.Text.Lazy.Encoding as LT
 import System.IO.Temp
 import Data.Aeson (encode)
 
-latexTemplate :: MathType -> String -> String
-latexTemplate mt  eqn = unlines [
-         "\\documentclass[a4paper,12pt]{article}"
+latexTemplate :: String -> MathType -> String -> String
+latexTemplate preamble mt  eqn = unlines [
+         "\\documentclass[a4paper,10pt]{article}"
         ,"\\usepackage{amsmath}"
         ,"\\usepackage{amsfonts}"
-        ,"\\usepackage{stmaryrd}"
-        ,"\\usepackage{hyperref}"
+        ,preamble
         ,"\\usepackage[active,displaymath,textmath,tightpage]{preview}"
         ,"\\begin{document}"
         , case mt of
@@ -120,10 +120,10 @@ mkLatex fp = do
     unless e (throw NoLatex)
     pure (LaTex fp)
 
-doConvert :: DVISVGMPath -> LatexPath -> MathType -> String -> IO Inline
-doConvert dvisvgm latex mt eqn = do
+doConvert :: DVISVGMPath -> LatexPath -> String -> MathType -> String -> IO Inline
+doConvert dvisvgm latex preamble mt eqn = do
    let fn = showDigest . sha1 . LT.encodeUtf8 . LT.pack $ eqn
-       latexFile = latexTemplate mt eqn
+       latexFile = latexTemplate preamble mt eqn
    _ <- timeoutException 1000000 LaTexTimeouted $ 
         readProcessException LaTexFailed (getLatex latex) ["-jobname="++fn,"-halt-on-error"] latexFile
    eb <- head <$> invokeDVISVGM dvisvgm fn 
@@ -204,20 +204,27 @@ wrapMath mt svg = RawInline (Format "html") $
                "<span class=\"math " ++
                (if mt == InlineMath then "inline" else "display") ++ "\">" ++
                svg ++ "</span>"
+
+data Tex2SvgRuntime = T2SR {
+      readCache   :: (Integer -> IO (Maybe Inline)) 
+    , writeCache  :: (Integer -> Inline -> IO ())   
+    , tmp         :: FilePath 
+    , latex       :: LatexPath 
+    , dvisvgm     :: DVISVGMPath}
             
-tex2svg :: (Integer -> IO (Maybe Inline)) -> 
-           (Integer -> Inline -> IO ())  -> 
-            FilePath -> LatexPath -> DVISVGMPath -> Inline -> IO Inline
-tex2svg readCache writeCache tmp latex dvisvgm (Math mt math) = do
-  let cacheKey = integerDigest . sha1 . encode $ (mt,math) -- TODO: Preamble needed here
+tex2svg :: Tex2SvgRuntime ->
+             T.Text -> Inline -> IO Inline
+tex2svg T2SR{..} preamble (Math mt math) = do
+  let cacheKey = integerDigest . sha1 . encode $ (mt,math,preamble) -- TODO: Preamble needed here
   cached <- readCache cacheKey
   case cached of
     Nothing -> do 
-                 svg' <- catch (doInTemporary tmp (doConvert dvisvgm latex mt math)) 
+                 svg' <- catch (doInTemporary tmp (doConvert dvisvgm latex (T.unpack preamble) mt math)) 
                                (\e -> return (renderConversionError math (e::ConversionError)))
                  writeCache cacheKey svg'
                  return svg'
     Just s -> pure s
 
-tex2svg _ _ _ _ _ il = return il
+tex2svg _ _ il = return il 
+
 

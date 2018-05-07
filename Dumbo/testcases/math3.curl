@@ -1,0 +1,4 @@
+{
+route="markdown/("
+,body=''{"content":["My equation: $H \\Yup O$."],"mathOption":"svg","mathPreamble":"\\usepackage{stmaryrd}"}''
+}
