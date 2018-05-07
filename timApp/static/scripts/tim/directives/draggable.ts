@@ -240,7 +240,6 @@ export class DraggableController implements IController {
                 this.toggleDetach();
             }
         }
-        this.ensureVisibleInViewport();
     }
 
     private async restoreSizeAndPosition() {
@@ -281,6 +280,9 @@ export class DraggableController implements IController {
                 }
             }
             timLogTime("oldpos:" + oldPos.left + ", " + oldPos.top, "drag");
+        }
+        if (oldPos || oldSize) {
+            this.ensureVisibleInViewport();
         }
     }
 
