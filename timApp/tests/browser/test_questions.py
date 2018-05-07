@@ -58,10 +58,8 @@ class QuestionTest(BrowserTest):
     @ignore_timeout
     def test_questions(self):
         """Create document questions and answer them."""
-
         self.login_browser_quick_test1()
         self.login_test1()
-        self.skip_screenshot_tests = True
 
         points = ['3', '1', '', '0']
         choices = [
@@ -173,8 +171,8 @@ class QuestionTest(BrowserTest):
                          ):
         d = self.create_doc(initial_par='test')
         self.goto_document(d, view='lecture')
-        par: WebElement = self.drv.find_element_by_css_selector('.par')
-        par.click()
+        self.find_element('.glyphicon-menu-hamburger').click()
+        par: WebElement = self.find_element_and_move_to('.editline')
         par.click()
         find_button_by_text(par, 'Add question above').click()
         sleep(0.5)

@@ -40,7 +40,6 @@ class ParEditorTest(BrowserTest):
         * preview works
         * switching between plain text area and Ace works
         """
-        self.skip_screenshot_tests = True
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc()
@@ -81,7 +80,6 @@ class ParEditorTest(BrowserTest):
         add_bottom.click()
 
     def test_autocomplete(self):
-        self.skip_screenshot_tests = True
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par='words in the document')

@@ -20,8 +20,7 @@ class VelpTest(BrowserTest):
         self.goto_document(d, view='velp')
 
         velp_selection_element = self.drv.find_element_by_css_selector('#velpSelection')
-        self.assert_same_screenshot(velp_selection_element, ['velps/velp_selection_empty',
-                                                             'velps/velp_selection_empty_alt'])
+        self.assert_same_screenshot(velp_selection_element, ['velps/velp_selection_empty'])
         create_velp_btn = velp_selection_element.find_element_by_css_selector('#createVelpButton')
         create_velp_btn.click()
         new_velp_selector = '.velp-data.new.edit'
@@ -59,8 +58,7 @@ class VelpTest(BrowserTest):
         # get mouse out of the newly created velp so that the velp is not highlighted
         ActionChains(self.drv).move_to_element(create_velp_btn).perform()
 
-        self.assert_same_screenshot(velp_selection_element, ['velps/velp_selection_one_velp',
-                                                             'velps/velp_selection_one_velp_alt'])
+        self.assert_same_screenshot(velp_selection_element, ['velps/velp_selection_one_velp'])
 
         # Selecting text using these styles does not work for some reason:
         # par: WebElement = self.drv.find_element_by_css_selector('.parContent > p')

@@ -167,22 +167,22 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         :param filename: The filename of the expected screenshot.
         :param move_to_element: Whether to move to the element before taking the screenshot.
         """
-        im = self.save_element_screenshot(element, move_to_element=move_to_element)
         filenames = filename if isinstance(filename, list) else [filename]
         diff = None
         result = None
         fail_suffix = ''
-        for f in filenames:
-            try:
-                ref = Image(filename=f'tests/browser/expected_screenshots/{f}.png')
-            except BaseError:
-                print(f'Expected screenshot not found, saving image to {f}.png')
-                im.save(filename=f'{self.screenshot_dir}/{f}.png')
-                return
-            diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
-            if result <= self.get_screenshot_tolerance():
-                return
-        self.save_element_screenshot(element, f'{f}{fail_suffix}', move_to_element)
+        with self.save_element_screenshot(element, move_to_element=move_to_element) as im:
+            for f in filenames:
+                try:
+                    ref = Image(filename=f'tests/browser/expected_screenshots/{f}.png')
+                except BaseError:
+                    print(f'Expected screenshot not found, saving image to {f}.png')
+                    im.save(filename=f'{self.screenshot_dir}/{f}.png')
+                    return
+                diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
+                if result <= self.get_screenshot_tolerance():
+                    return
+        self.save_element_screenshot(element, f'{f}{fail_suffix}', move_to_element).close()
         diff.save(filename=f'{self.screenshot_dir}/{f}{fail_suffix}_DIFF.png')
         assert_msg = f'Screenshots did not match (diff value is {result}); ' \
                      f'failed screenshot saved to screenshots/{f}{fail_suffix} ' \

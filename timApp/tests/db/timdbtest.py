@@ -15,7 +15,7 @@ from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.user import User
 from timApp.timdb.tim_models import db
 from timApp.timdb.timdb2 import TimDb
-from timApp.utils import del_content
+from timApp.utils import del_content, remove_prefix
 
 
 class TimDbTest(unittest.TestCase):
@@ -49,7 +49,7 @@ class TimDbTest(unittest.TestCase):
         timApp.initdb2.initialize_database(create_docs=cls.create_docs)
 
     def setUp(self):
-        if running_in_gitlab() and self.id() in GITLAB_SKIP_TESTS:
+        if running_in_gitlab() and remove_prefix(self.id(), 'timApp.') in GITLAB_SKIP_TESTS:
             self.skipTest('This test fails in GitLab')
         self.db = TimDb(files_root_path=self.test_files_path)
 
@@ -112,7 +112,7 @@ TEST_USER_2_NAME = 'Test user 2'
 TEST_USER_3_NAME = 'Test user 3'
 
 GITLAB_SKIP_TESTS = {
-    'timApp.tests.browser.test_questions.QuestionTest.test_questions',
+    'tests.browser.test_questions.QuestionTest.test_questions',
 }
 
 

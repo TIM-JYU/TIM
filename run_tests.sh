@@ -12,7 +12,7 @@
 
 export TEST_PARAMS="discover -v tests/$1 'test_*.py' ."
 if [ "$1" = "1" ] ; then
-    export TEST_PARAMS="timApp.tests.$2"
+    export TEST_PARAMS="tests.$2"
 fi
 
 export IS_TESTING=true
