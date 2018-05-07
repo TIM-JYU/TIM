@@ -155,6 +155,7 @@ def tim_table_add_row():
         rows = plug.values[TABLE][ROWS]
     except KeyError:
         return abort(400)
+    last_row_index = len(rows) - 1
     # clone the previous row's data into the new row
     rows.append({'row': copy.deepcopy(rows[-1]['row'])})
     plug.save()
