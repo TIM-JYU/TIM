@@ -1,4 +1,5 @@
 % HTML color names defined for LaTeX.
+% Source: http://latexcolor.com/
 \definecolor{airforceblue}{rgb}{0.36, 0.54, 0.66}
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
 \definecolor{alizarin}{rgb}{0.82, 0.1, 0.26}
