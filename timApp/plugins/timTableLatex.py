@@ -10,6 +10,7 @@ from typing import List
 
 # Default values:
 
+default_color_defs_path = "colors.txt"
 default_text_color = "black"
 default_colspan = 1
 default_rowspan = 1
@@ -688,36 +689,6 @@ def copy_cell(cell: Cell) -> Cell:
     return n_cell
 
 
-def char_to_int(char: str) -> int:
-    """
-    Converts alphabets to integers. Starts from a = 0.
-    :param char: Single character.
-    :return:
-    """
-    if not char or len(char) > 1:
-        raise IndexConversionError(char)
-    i = ord(char.lower()) - ord('a')
-    if i < 0:
-        raise IndexConversionError(char)
-    else:
-        return i
-
-
-def convert_datablock_index(index: str) -> (int, int):
-    """
-    Converts string like "A1" to row and cell indexes (0,0).
-    :param index:
-    :return: Pair of integer indexes.
-    """
-    try:
-        row = char_to_int(index[0])
-        cell = int(index[1:]) - 1
-    except TypeError:
-        raise IndexConversionError(index)
-    else:
-        return row, cell
-
-
 def get_datablock(table):
     """
     Returns tabledatablock or None, if table has no tabledatablock element.
@@ -738,6 +709,8 @@ def int_to_datablock_index(i: int) -> str:
     :param i: Index starting from 0.
     :return:
     """
+    if i < 0:
+        raise IndexConversionError(i)
     a, b = divmod(i, ord("Z") - ord("A") + 1)
     return (a + 1) * str(chr(ord("A") + b))
 
@@ -781,20 +754,20 @@ def get_table_size(table_data):
     return (width, height)
 
 
-def get_html_color_latex_definitions(defs:str="static/tex/colors.txt") -> List[str]:
+def get_html_color_latex_definitions(defs: str = default_color_defs_path) -> List[str]:
     """
     Returns a list of LaTeX color definitions to be used for
     displaying HTML-colors.
     :param defs: A file containing a list of color definitions.
     :return: Definitions as a list of strings.
     """
+    definition_list = []
     try:
-        definition_list = []
-        with open(defs, "r") as definition_file:
-            for line in definition_file:
-                definition_list.append(line)
+        definition_file = open(defs, "r")
+        for line in definition_file:
+            definition_list.append(line)
     except FileNotFoundError:
-        raise ColorDefinitionsMissingError(defs)
+        raise ColorDefinitionsMissingError()
     else:
         return definition_list
 
@@ -912,29 +885,18 @@ def convert_table(table_json) -> Table:
                 # properly show bg-colors, and empty cells need to be placed
                 # above to avoid overlap, since LaTeX doesn't automatically
                 # move cells aside.
+                # TODO: Multirow-multicol cells have bgcolor and border problems.
                 if rowspan > 1:
                     for y in range(0, rowspan - 1):
-                        # Empty filler cell has mostly same the settings as the
-                        # multirow-cell:
+                        # Empty filler cell has mostly same the settings as the multirow-cell:
                         d = copy_cell(c)
                         d.content = ""
-                        d.borders = CellBorders()
-                        # Hide borders by drawing them the same color as background,
-                        # if necessary. If no color, then don't draw the line.
-                        if not c.bg_color == default_transparent_color:
-                            d.borders.color_bottom = (c.bg_color, c.bg_color_html)
-                            if y > 1:
-                                d.borders.color_top = (c.bg_color, c.bg_color_html)
-                        else:
-                            d.borders.bottom = False
-                            if y > 1:
-                                d.borders.top = False
+                        d.borders.color_bottom = (c.bg_color, c.bg_color_html)
+                        if y > 1:
+                            d.borders.color_top = (c.bg_color, c.bg_color_html)
                         d.rowspan = 1
                         table.get_or_create_row(i + y).add_cell(j, d)
-                    if not c.bg_color == default_transparent_color:
-                        c.borders.color_top = (c.bg_color, c.bg_color_html)
-                    else:
-                        c.borders.top = False
+                    c.borders.color_top = (c.bg_color, c.bg_color_html)
                     c.rowspan = -rowspan
                     table.get_or_create_row(i + rowspan - 1).add_cell(j, c)
 
