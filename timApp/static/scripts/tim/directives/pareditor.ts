@@ -671,7 +671,7 @@ or newer one that is more familiar to write in YAML:
             if (angular.isDefined(this.getExtraData().access)) {
                 $localStorage.noteAccess = this.getExtraData().access;
             }
-            if (angular.isDefined(this.getExtraData().tags.markread)) { // TODO: tee silmukassa
+            if (angular.isDefined(this.getExtraData().tags.markread)) { // TODO: Loop.
                 $window.localStorage.setItem("markread", this.getExtraData().tags.markread.toString());
             }
             this.setLocalValue("proeditor", this.proeditor.toString());
@@ -704,22 +704,31 @@ or newer one that is more familiar to write in YAML:
         let autostamp = false;
         let attachmentParams = undefined;
 
-        // to identify attachment-macro
-        let macroStringBegin = "%%liite(";
-        let macroStringEnd = ")%%";
+        // To identify attachment-macro.
+        const macroStringBegin = "%%liite(";
+        const macroStringEnd = ")%%";
 
-        // if there's an attachment macro in editor, assume need to stamp
-        // also requires data from preamble to work correctly (dates and knro)
-        // if there's no stampFormat set in preamble, uses hard coded default format
+        // If there's an attachment macro in editor, assume need to stamp.
+        // Also requires data from preamble to work correctly (dates and knro).
+        // If there's no stampFormat set in preamble, uses hard coded default format.
         if (editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0) {
             autostamp = true;
             const macroParams = editorText.substring(
                 editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
                 editorText.lastIndexOf(macroStringEnd)).split(",");
+
+            // Knro usage starts from 1 but dates starts from 0, so dummy value added to
+            // dates[0] to adjust.
             const knro = this.docSettings.macros.knro;
-            const dates = this.docSettings.macros.dates;
+            let dates = this.docSettings.macros.dates;
+            dates = ["ERROR", ...dates];
             const kokousDate = dates[knro];
-            const stampFormat = this.docSettings.macros.stampformat;
+            
+            // If stampFormat isn't set in preamble,
+            let stampFormat = this.docSettings.macros.stampformat;
+            if (stampFormat === undefined) {
+                stampFormat = "";
+            }
             attachmentParams = [kokousDate, stampFormat, ...macroParams, autostamp];
         }
         if (file) {
@@ -734,7 +743,7 @@ or newer one that is more familiar to write in YAML:
                 url: "/upload/",
             });
 
-            // TODO: better check for cases with multiple paragraphs
+            // TODO: Better check for cases with non-showPdf-plugin-paragraphs.
             upload.then((response) => {
                 $timeout(() => {
                     var isplugin = (this.editor.editorStartsWith("``` {"));

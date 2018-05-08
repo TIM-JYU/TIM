@@ -788,6 +788,7 @@ def convert_table(table_json) -> Table:
     # it may not be a square like it should be.
     # HTML sets cell widths to match the table width, but this currently
     # just stretches the table.
+
     # Commented off until fixed.
     # (table_width, table_height) = get_table_size(table_json)
     # table.width = table_width

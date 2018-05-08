@@ -276,7 +276,7 @@ def create_stamp(
         except UnicodeDecodeError:
             raise ModelStampInvalidError(model_path)
     args = ["pdflatex", stamp_name]
-    print(args)
+    # print(args)
 
     # Directs pdflatex text flood to the log-file pdflatex will create anyway.
     with open(os_path.join(work_dir, stamp_name + ".log"), "a") as pdflatex_log:
@@ -392,6 +392,8 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
             for key in keys:
                 if key not in item:
                     raise StampDataMissingKeyError(key, item)
+                if not item[key]:
+                    raise StampDataInvalidError("missing value: " + key, item)
         check_pdf_validity(item["file"])
 
 
@@ -448,12 +450,17 @@ def attachment_params_to_dict(params: List[str]) -> List[dict]:
     if params.__len__() < 6:
         raise StampDataInvalidError("request missing params", ", ".join(params))
 
-    # TODO: more intelligent "-removal in cases of inner quotes
-    attachment = params[3].replace('"', '').strip()
-    issue = params[4].replace('"', '').strip()
+    # TODO: More intelligent "-removal in cases of inner quotes.
+    attachment = params[3].replace('"', '').replace("'", "").strip()
+    issue = params[4].replace('"', '').replace("'", "").strip()
 
-    # file path isn't available yet
-    return [{'date': params[0], 'format': params[1], 'attachment': attachment, 'issue': issue}]
+    # If stampformat is empty (as it's set to be if undefined in pareditor.ts), use default.
+    stampformat = params[1]
+    if not stampformat:
+        stampformat = default_stamp_format
+
+    # File path isn't available yet.
+    return [{'date': params[0], 'format': stampformat, 'attachment': attachment, 'issue': issue}]
 
 
 def stamp_pdfs(
