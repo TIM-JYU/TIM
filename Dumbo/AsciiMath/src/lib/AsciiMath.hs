@@ -1,18 +1,21 @@
-module AsciiMath (readAscii, writeTeX, compile, run, LexicalError(..)) where
+module AsciiMath (readAscii, writeTeX, compile, run, AsciimathException(..), renderError, printAndExit) where
+
 import Control.Exception (throw)
-import Lexer (get_tokens, LexicalError(..))
+
+import Ast
+import Exception
+import Lexer (get_tokens)
 import Parser (parseAscii)
 import Passes (matrix)
 import TeXWriter (writeTeX)
-import Ast
 
-readAscii :: String -> Either LexicalError Code
+readAscii :: String -> Either AsciimathException Code
 readAscii s = return . matrix =<< parseAscii =<< get_tokens s
-  
-compile :: String -> Either LexicalError String
+
+compile :: String -> Either AsciimathException String
 compile s = fmap writeTeX $ readAscii s
 
 run :: String -> String
 run s = case compile s of
   Right txt -> txt
-  Left e -> throw e
+  Left e -> throw $ ErrorAndSource e s

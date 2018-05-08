@@ -1,15 +1,21 @@
-language: haskell
+# Adapted from:
+# https://docs.haskellstack.org/en/stable/travis_ci/
 
-ghc:
-  - 7.10
+sudo: false
+language: generic
+
+cache:
+  directories:
+  - $HOME/.stack
 
 before_install:
   - mkdir -p ~/.local/bin
-  - curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  - export PATH=$HOME/.local/bin:$PATH
+  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  - stack --no-terminal --install-ghc install alex happy
 
 install:
-  - stack install --install-ghc alex happy
-  - stack setup
+  - stack --no-terminal test --only-dependencies
 
 script:
-  - stack build --test
+  - stack --no-terminal test

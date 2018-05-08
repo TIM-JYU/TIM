@@ -1,28 +1,13 @@
-CONF_FLAGS = --enable-optimization --enable-test
+.PHONY: test
+test:
+	stack build --test
 
-cabal: deps
-	cabal configure $(CONF_FLAGS)
-	cabal build
-	cp dist/build/asciimath/asciimath .
-	cp dist/build/pandoc-asciimath/pandoc-asciimath .
+.PHONY: install
+install:
+	stack install
 
-filter-only: deps
-	cabal configure $(CONF_FLAGS)
-	cabal build pandoc-asciimath
-	cp dist/build/pandoc-asciimath/pandoc-asciimath .
-
-deps:
-	cabal install --only-dependencies
-
-stack:
-	stack install --test
-
-test: 
-	cabal configure $(CONF_FLAGS)
-	cabal test
-
+.PHONY: clean
 clean:
-	cabal clean
 	stack clean
 	rm -rf dist
 	rm -f pandoc-asciimath

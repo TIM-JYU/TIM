@@ -104,6 +104,8 @@ services:
   build:
    context: ./Dumbo
    dockerfile: Dockerfile
+   args:
+    TIM_IMAGE_TAG: ${TIM_IMAGE_TAG}
   command: ./Dumbo -p 5000
   working_dir: /Dumbo
   logging:
