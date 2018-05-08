@@ -186,18 +186,23 @@ readProcessException toExc process args stdinContent = do
 
 invokeDVISVGM :: DVISVGMPath -> FilePath -> IO (NonEmpty EqnOut)
 invokeDVISVGM dvisvgm fn = do
-    (_,dvi) <- timeoutException 1000000 DVISVGMTimeouted $ 
-             readProcessException DVISVGMFailed (getDVISVGM dvisvgm)
-                                  ["-p1-","--output="++fn++"_%p", "--font-format=woff",fn++".dvi"] ""
-    case parseOnly (many1 parseBlock) (LT.toStrict $ LT.pack dvi) of
-        Right [] -> throw (UnexpectedError "many1 returned none")
-        Right (x:xs) -> pure (x :| xs)
-        Left err -> throw (CouldNotParseDVISVGM dvi err)
+  (_, dvi) <- timeoutException 1000000 DVISVGMTimeouted $ readProcessException
+    DVISVGMFailed
+    (getDVISVGM dvisvgm)
+    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", fn ++ ".dvi"]
+    ""
+  case parseOnly (many1 parseBlock) (LT.toStrict $ LT.pack dvi) of
+    Right []     -> throw (UnexpectedError "many1 returned none")
+    Right (x:xs) -> pure (x :| xs)
+    Left  err    -> throw (CouldNotParseDVISVGM dvi err)
 
 createSVGImg :: EqnOut -> LBS.ByteString -> String
-createSVGImg eb svg = "<img style='position:relative;top:"++show (depth (metrics eb))++"pt'"
+createSVGImg eb svg = "<img style='position:relative;width="++tm width++"em;top:"++tm depth++"em'"
                ++"src=\"data:image/svg+xml;base64,"++encode svg++"\" />"
-    where encode = LT.unpack . LT.decodeUtf8 . B64.encode -- .  ZLib.compress  
+    where 
+        encode = LT.unpack . LT.decodeUtf8 . B64.encode -- .  ZLib.compress  
+        tm f = show . toEm . f . metrics $ eb
+        toEm   = estimatePtToEm "" 
 
 wrapMath :: MathType -> String -> Inline
 wrapMath mt svg = RawInline (Format "html") $
@@ -211,6 +216,9 @@ data Tex2SvgRuntime = T2SR {
     , tmp         :: FilePath 
     , latex       :: LatexPath 
     , dvisvgm     :: DVISVGMPath}
+
+estimatePtToEm :: T.Text -> (Double -> Double)
+estimatePtToEm preamble = (/10) --TODO
             
 tex2svg :: Tex2SvgRuntime ->
              T.Text -> Inline -> IO Inline
