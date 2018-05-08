@@ -8,6 +8,7 @@ from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 
 DUMBO_URL = 'http://dumbo:5000'
 
+KEYS_PATHS = {'/mdkeys', '/latexkeys'}
 
 def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='') -> Union[List[str], Dict, List[Dict]]:
     """Calls Dumbo for converting the given markdown to HTML.
@@ -21,11 +22,24 @@ def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='') -> Union[List[
      HTML. The return value format will be the same as input.
 
     """
+    is_dict = isinstance(data, dict)
+    opts = {'mathOption': 'svg'}
     try:
-        r = requests.post(url=DUMBO_URL + path, data=json.dumps(data, cls=TimJsonEncoder))
+        if path in KEYS_PATHS:
+            if is_dict:
+                data_to_send = {'content': [{'content': data}], **opts}
+            else:
+                data_to_send = {'content': [{'content': d} for d in data], **opts}
+        else:
+            data_to_send = {'content': data, **opts}
+        r = requests.post(url=DUMBO_URL + path, data=json.dumps(data_to_send, cls=TimJsonEncoder))
         r.encoding = 'utf-8'
     except requests.ConnectionError:
         raise Exception('Failed to connect to Dumbo')
     if r.status_code != 200:
-        raise Exception(f'Failed to get HTML from Dumbo, status code={r.status_code}')
-    return r.json()
+        raise Exception(f'Failed to get HTML from Dumbo, status code={r.status_code}, text:\n{r.text}')
+    returned = r.json()
+    if is_dict:
+        return returned[0]
+    else:
+        return returned

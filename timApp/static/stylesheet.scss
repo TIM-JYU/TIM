@@ -293,6 +293,10 @@ a .glyphicon {
         margin: 0 auto;
     }
 
+    .math.inline img {
+        display: inline;
+    }
+
     blockquote {
         @extend .center-block;
         width: 90%;

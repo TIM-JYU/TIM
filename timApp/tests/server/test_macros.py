@@ -51,7 +51,7 @@ header: %%username%% and %%realname%%
                          pars[0].text_content().strip())
         self.assertEqual('Percents: %%',
                          pars[1].text_content().strip())
-        self.assertEqual("Syntax error in template: unexpected 'end of template'",
+        self.assertEqual("Syntax error in template: unexpected ‘end of template’",
                          pars[2].text_content().strip())
         p = Plugin.from_task_id(f'{d.id}.test', User.query.get(TEST_USER_1_ID))
         self.assertEqual('testuser1 and Test user 1', p.values['header'])

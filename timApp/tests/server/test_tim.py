@@ -211,7 +211,7 @@ class TimTest(TimRouteTest):
         doc.document.add_setting('hide_links', 'view')
         links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
         self.assertEqual(len(links), 0)
-        doc.document.add_paragraph(text='# 1\n\n#2')
+        doc.document.add_paragraph(text='# 1\n\n# 2')
 
         # Index is visible always
         links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
@@ -230,6 +230,7 @@ class TimTest(TimRouteTest):
         self.get('/ping')
 
     def test_par_info(self):
+        self.login_test1()
         d = self.create_doc(initial_par='testing')
         self.get(f'/par_info/{d.id}/{d.document.get_paragraphs()[0].get_id()}',
                  expect_content={'doc_author': 'Test user 1 (testuser1)', 'doc_name': d.title})

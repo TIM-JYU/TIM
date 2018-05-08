@@ -100,14 +100,17 @@ services:
    - ./timApp/static:/static:ro
   restart: unless-stopped
  dumbo:
-  image: timimages/dumbo:latest
+  image: timimages/dumbo:svg
   build:
    context: ./Dumbo
    dockerfile: Dockerfile
    args:
     TIM_IMAGE_TAG: ${TIM_IMAGE_TAG}
-  command: ./Dumbo -p 5000
+  command: ./Dumbo --port 5000 --cacheDir /dumbocache --tmpDir /dumbotmp
   working_dir: /Dumbo
+  volumes:
+   - ./Dumbo/cache:/dumbocache
+   - ./Dumbo/tmp:/dumbotmp
   logging:
    driver: none
   restart: unless-stopped
