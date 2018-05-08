@@ -153,11 +153,11 @@ def tim_table_add_row():
     plug = Plugin.from_paragraph(par)
     try:
         rows = plug.values[TABLE][ROWS]
-        # clone the previous row's data into the new row
-        rows.append({'row': copy.deepcopy(rows[-1]['row'])})
-        plug.save()
     except KeyError:
-        abort(400)
+        return abort(400)
+    # clone the previous row's data into the new row
+    rows.append({'row': copy.deepcopy(rows[-1]['row'])})
+    plug.save()
     return json_response(call_dumbo(plug.values, '/mdkeys'))
 
 
@@ -177,19 +177,24 @@ def tim_table_add_column():
     plug = Plugin.from_paragraph(par)
     try:
         rows = plug.values[TABLE][ROWS]
-        for row in rows:
-            current_row = row[ROW]
-            last_cell = current_row[-1]
-            if isinstance(last_cell, str):
-                current_row.append({CELL: ""})
-            else:
-                # Copy the last cell's other properties for the new cell, but leave the text empty
-                new_cell = copy.deepcopy(last_cell)
-                new_cell[CELL] = ''
-                current_row.append(new_cell)
-        plug.save()
     except KeyError:
-        abort(400)
+        return abort(400)
+
+    for row in rows:
+        try:
+            current_row = row[ROW]
+        except KeyError:
+            return abort(400)
+        last_cell = current_row[-1]
+        if isinstance(last_cell, str):
+            current_row.append({CELL: ""})
+        else:
+            # Copy the last cell's other properties for the new cell, but leave the text empty
+            new_cell = copy.deepcopy(last_cell)
+            new_cell[CELL] = ''
+            current_row.append(new_cell)
+        
+    plug.save()
     return json_response(call_dumbo(plug.values, '/mdkeys'))
 
 
