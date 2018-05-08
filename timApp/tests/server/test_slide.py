@@ -44,7 +44,7 @@ New paragraph
         # TODO get rid of the empty <p></p> tags
         expected_html = f"""
 <div class="reveal">
-    <div class="slides">
+    <div class="slides paragraphs">
         <section>
             <div class="par" id="{pars[0].get_id()}" t="{pars[0].get_hash()}" attrs="{{}}">
                 <h1 id="first">First</h1>
