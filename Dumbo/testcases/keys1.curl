@@ -1,4 +1,7 @@
-{
- route="mdkeys/"
-,body=''{"content":[{"foo":"md:My equation: $H_2 O$.","bar":15}],"mathOption":"svg"}''
+{ route =
+    "mdkeys/"
+, body =
+    "{\"content\":[{\"foo\":\"md:My equation: \$H_2 O\$.\",\"bar\":15}],\"mathOption\":\"svg\"}"
+, name =
+    "svg-keys-1"
 }

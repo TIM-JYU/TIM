@@ -2,7 +2,9 @@
 -- stack --resolver lts-11.7 script --ghc-options -threaded --package typed-process --package directory --package filepath --package tasty --package tasty-golden --package dhall --package text
 
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -threaded #-}
 module Main where
 
@@ -14,6 +16,8 @@ import Control.Exception
 import Control.Concurrent
 import System.Directory
 import Data.Monoid
+import Control.Monad
+import Control.Applicative
 import qualified Data.Text.Lazy as LT
 import Dhall
 
@@ -21,24 +25,45 @@ main :: IO ()
 main = bracket
   (startProcess "stack exec Dumbo -- --port=8888 --cacheDir=testCache --tmpDir=testTmp")
   (\dumbo -> putStrLn "Stopping dumbo">>stopProcess dumbo>>putStrLn "Dumbo done")
-  (\_ -> threadDelay 100000 >> (defaultMain =<< goldenTests))
+  (\_ -> do
+     threadDelay 100000 
+     de <- doesDirectoryExist "testCache" 
+     when de $ removeDirectoryRecursive "testCache"
+     defaultMain =<< goldenTests)
 
 goldenTests :: IO TestTree
 goldenTests = do
-          curlFiles <- findByExtension [".curl"] "testcases"
-          return $ testGroup "Dumbo golden tests"
-            [ goldenVsString
-                (takeBaseName curlFile) -- test name
-                responses -- golden file path
-                (process curlFile)  -- action whose result is tested
-            | curlFile <- curlFiles
-            , let responses = replaceExtension curlFile ".response"
-            ]
- where 
-  process curlFile = do
-                      c <- input auto (LT.concat ["./",LT.pack curlFile])
-                      (out,err) <- readProcess_ (proc "curl" [ "--silent","--data", body c,"localhost:8888/"++route c])
-                      return (out)
+  curlFiles <- findByExtension [".curl"] "testcases"
+  curlTests <- concat <$> traverse openTests curlFiles
+  print (length curlTests)
+  return $ testGroup
+    "Dumbo golden tests"
+    [ goldenVsString (name curlTest)     -- test name
+      response            -- golden file path
+      (process curlTest)  -- action whose result is tested
+    | curlTest <- curlTests
+    , let response = "testcases/"++name curlTest ++ ".response"
+    ]
+ where
+  openTests :: FilePath -> IO [CurlCase]
+  openTests curlFile = do
+    let dexp = LT.concat ["./", LT.pack curlFile]
+    tcs <- input auto dexp `catch` (\(e::SomeException) -> (\x->[x]) <$> input auto dexp)
+                           `catch` (\(e::SomeException) -> error (show e))
+    return tcs
 
-data CurlCase = CC {route::String, body::String} deriving (Show,Generic)
+
+  process curlTest = do
+    (out, err) <- readProcess_
+      ( proc
+        "curl"
+        [ "--silent"
+        , "--data"
+        , body curlTest
+        , "localhost:8888/" ++ route curlTest
+        ]
+      )
+    return (out)
+
+data CurlCase = CC {route::String, body::String,name::String} deriving (Show,Generic)
 instance Interpret CurlCase
