@@ -11,14 +11,17 @@ from urllib import request as url_request
 from urllib.error import HTTPError
 
 # Default parameter values:
+
 temp_folder_default_path = "/tmp"
-# temp_folder_default_path = "static/testpdf"
 stamp_model_default_path = "static/tex/stamp_model.tex"
-# default format for stamp text
+# Default format for stamp text.
 default_stamp_format = "Kokous {date}\n\nLIITE {attachment} lista {issue}"
-# how long (seconds) subprocess can take until TimeoutExpired
+# How long (seconds) subprocess can take until TimeoutExpired.
 default_subprocess_timeout = 30
 pdfmerge_timeout = 300
+# Max char count for 'attachment', 'issue' and 'date' params.
+stamp_param_max_length = 40
+
 
 
 ##############################################################################
@@ -234,6 +237,7 @@ def get_stamp_text(item: dict, text_format: str) -> str:
         # normally this part is obsolete, since checks have been done before.
         except KeyError:
             raise StampDataMissingKeyError('text', item)
+
     # If input data wasn't a dictionary.
     except TypeError:
         raise StampDataInvalidError("wrong type", item)
@@ -394,6 +398,8 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
                     raise StampDataMissingKeyError(key, item)
                 if not item[key]:
                     raise StampDataInvalidError("missing value: " + key, item)
+                if len(item[key]) > stamp_param_max_length:
+                    raise StampDataInvalidError("param too long: " + key, item)
         check_pdf_validity(item["file"])
 
 
