@@ -172,8 +172,9 @@ timeoutException n exc process = do
         Nothing -> throw exc
         Just f -> pure f
 
-doInTemporary :: FilePath -> IO a -> IO a
-doInTemporary base op = withTempDirectory base "_" $ \tmpDir -> withCurrentDirectory tmpDir op
+doInTemporary :: (NFData a) => FilePath -> IO a -> IO a
+doInTemporary base op = evaluate . force =<< 
+                            (withTempDirectory base "_" (\tmpDir -> withCurrentDirectory tmpDir op))
 
 readProcessException :: Exception e =>
                         (ExitCode -> String -> String -> e)
