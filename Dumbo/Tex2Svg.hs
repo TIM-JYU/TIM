@@ -129,7 +129,7 @@ doConvert curTmpDir dvisvgm latex preamble mt eqn = do
    _ <- timeoutException 1000000 LaTexTimeouted $ 
         readProcessException LaTexFailed curTmpDir (getLatex latex) ["-jobname="++fn,"-halt-on-error"] latexFile
    eb <- head <$> invokeDVISVGM curTmpDir dvisvgm fn 
-   svg <- BS.readFile (filename eb)
+   svg <- BS.readFile (curTmpDir++"/"++filename eb)
    return . force . wrapMath mt $ createSVGImg eb (LBS.fromStrict svg)
 
 
