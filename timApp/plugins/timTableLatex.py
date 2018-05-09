@@ -28,7 +28,7 @@ default_table_height = "!"
 # Mappings:
 # TODO: Add missing pairs.
 
-# TimTable text-styles and corresponding LaTeX-replacements:
+# TimTable text-styles and corresponding LaTeX-replacements (unused!):
 replace_pairs = [("$$", "$"),
                  ("md:***", "\\textbf{\\textit{"),
                  ("***", "}}"),
@@ -498,10 +498,14 @@ def get_content(content: str) -> str:
     :return: Formatted content of the cell.
     """
     text = str(content).strip()
-    # replace_pairs contains corresponding html and LaTeX elements.
+    # Replace_pairs contains corresponding html and LaTeX elements
+    # (not needed, TIM does this already).
+    # Commented off as unneeded.
+    """
     for i in range(0, len(replace_pairs)):
         text = text.replace(replace_pairs[i][0], replace_pairs[i][1])
-    # Unknown html-formattings will be removed.
+    """
+    # Unknown html-formattings and line breadks will be removed, in case any are left.
     text = re.sub(r'<.+?>', '', text).replace('\r', '').replace('\n', '')
     return text
 
@@ -784,7 +788,8 @@ def convert_table(table_json) -> Table:
     """
     Converts TimTable-json into LaTeX-compatible object.
     Note: for correct functioning all the other modules should use this.
-    :param table_json: Table data as json (dictionaries and lists).
+    :param table_json: Table data as json dictionary with
+        'rows', 'tabledatablock', etc. at the first level.
     :return: Table-object containing the rows and cells in LaTex.
     """
     table_rows = []
