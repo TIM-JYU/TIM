@@ -194,7 +194,7 @@ invokeDVISVGM curTmp dvisvgm fn = do
     DVISVGMFailed
     curTmp
     (getDVISVGM dvisvgm)
-    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", fn ++ ".dvi"]
+    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", "--exact", fn ++ ".dvi"]
     ""
   case parseOnly (many1 parseBlock) (LT.toStrict $ LT.pack dvi) of
     Right []     -> throw (UnexpectedError "many1 returned none")
@@ -204,7 +204,7 @@ invokeDVISVGM curTmp dvisvgm fn = do
 createSVGImg :: EqnOut -> LBS.ByteString -> String
 createSVGImg eb svg = "<img style='position:relative; "
                       <> "width:" <> tm width <> "; "
-                      <> "top:"   <> tm depth <>";' "
+                      <> "top:"   <> tm ((/4.0) <$> depth) <>";' "
                       <> "src=\"data:image/svg+xml;base64," <> encode svg <> "\" />"
     where 
         encode = LT.unpack . LT.decodeUtf8 . B64.encode -- .  ZLib.compress  
@@ -225,7 +225,7 @@ data Tex2SvgRuntime = T2SR {
     , dvisvgm     :: DVISVGMPath}
 
 estimatePtToEm :: T.Text -> (Double -> Double)
-estimatePtToEm preamble = (/10) --TODO
+estimatePtToEm preamble = (/8.3645834169792) --TODO
             
 tex2svg :: Tex2SvgRuntime ->
              T.Text -> Inline -> IO Inline
