@@ -111,6 +111,7 @@ initialize dargs = do
   let cacheFN :: Integer -> String
       cacheFN i = cacheDir dargs ++ "/" ++ triep (show i)
       triep :: String -> FilePath
+      triep (a:b:c:[]) = (a:b:c:".cache")
       triep (a:b:c:xs) = (a:b:c:'/':triep xs)
       triep xs = xs
       cacheRead :: Integer -> IO (Maybe PDC.Inline)

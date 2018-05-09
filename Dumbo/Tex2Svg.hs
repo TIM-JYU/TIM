@@ -29,6 +29,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as LT
 import System.IO.Temp
 import Data.Aeson (encode)
+import Data.Monoid
+import Numeric
 
 latexTemplate :: String -> MathType -> String -> String
 latexTemplate preamble mt  eqn = unlines [
@@ -120,13 +122,13 @@ mkLatex fp = do
     unless e (throw NoLatex)
     pure (LaTex fp)
 
-doConvert :: DVISVGMPath -> LatexPath -> String -> MathType -> String -> IO Inline
-doConvert dvisvgm latex preamble mt eqn = do
+doConvert :: FilePath -> DVISVGMPath -> LatexPath -> String -> MathType -> String -> IO Inline
+doConvert curTmpDir dvisvgm latex preamble mt eqn = do
    let fn = showDigest . sha1 . LT.encodeUtf8 . LT.pack $ eqn
        latexFile = latexTemplate preamble mt eqn
    _ <- timeoutException 1000000 LaTexTimeouted $ 
-        readProcessException LaTexFailed (getLatex latex) ["-jobname="++fn,"-halt-on-error"] latexFile
-   eb <- head <$> invokeDVISVGM dvisvgm fn 
+        readProcessException LaTexFailed curTmpDir (getLatex latex) ["-jobname="++fn,"-halt-on-error"] latexFile
+   eb <- head <$> invokeDVISVGM curTmpDir dvisvgm fn 
    svg <- BS.readFile (filename eb)
    return . force . wrapMath mt $ createSVGImg eb (LBS.fromStrict svg)
 
@@ -172,22 +174,25 @@ timeoutException n exc process = do
         Nothing -> throw exc
         Just f -> pure f
 
-doInTemporary :: FilePath -> IO a -> IO a
-doInTemporary base op = withTempDirectory base "_" $ \tmpDir -> withCurrentDirectory tmpDir op
+--doInTemporary :: (NFData a) => FilePath -> IO a -> IO a
+--doInTemporary base op = evaluate . force =<< 
+--                            (withTempDirectory base "temp_" (\tmpDir -> evaluate . force =<< withCurrentDirectory tmpDir op))
 
 readProcessException :: Exception e =>
                         (ExitCode -> String -> String -> e)
-                        -> FilePath -> [String] -> String -> IO (String, String)
-readProcessException toExc process args stdinContent = do  
-    res <- readProcessWithExitCode process args stdinContent
+                        -> FilePath -> FilePath -> [String] -> String -> IO (String, String)
+readProcessException toExc curTmp process args stdinContent = do  
+    let theProcess = (proc process args){cwd=Just curTmp}
+    res <- readCreateProcessWithExitCode theProcess stdinContent
     case res of
         (e@(ExitFailure _),a,b) -> throw (toExc e a b)
         (ExitSuccess,a,b) -> return (a,b)
 
-invokeDVISVGM :: DVISVGMPath -> FilePath -> IO (NonEmpty EqnOut)
-invokeDVISVGM dvisvgm fn = do
+invokeDVISVGM :: FilePath -> DVISVGMPath -> FilePath -> IO (NonEmpty EqnOut)
+invokeDVISVGM curTmp dvisvgm fn = do
   (_, dvi) <- timeoutException 1000000 DVISVGMTimeouted $ readProcessException
     DVISVGMFailed
+    curTmp
     (getDVISVGM dvisvgm)
     ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", fn ++ ".dvi"]
     ""
@@ -197,11 +202,13 @@ invokeDVISVGM dvisvgm fn = do
     Left  err    -> throw (CouldNotParseDVISVGM dvi err)
 
 createSVGImg :: EqnOut -> LBS.ByteString -> String
-createSVGImg eb svg = "<img style='position:relative;width="++tm width++"em;top:"++tm depth++"em'"
-               ++"src=\"data:image/svg+xml;base64,"++encode svg++"\" />"
+createSVGImg eb svg = "<img style='position:relative; "
+                      <> "width:" <> tm width <> "; "
+                      <> "top:"   <> tm depth <>";' "
+                      <> "src=\"data:image/svg+xml;base64," <> encode svg <> "\" />"
     where 
         encode = LT.unpack . LT.decodeUtf8 . B64.encode -- .  ZLib.compress  
-        tm f = show . toEm . f . metrics $ eb
+        tm f = ($"em") . showFFloat (Just 5) . toEm . f . metrics $ eb
         toEm   = estimatePtToEm "" 
 
 wrapMath :: MathType -> String -> Inline
@@ -226,11 +233,12 @@ tex2svg T2SR{..} preamble (Math mt math) = do
   let cacheKey = integerDigest . sha1 . encode $ (mt,math,preamble) -- TODO: Preamble needed here
   cached <- readCache cacheKey
   case cached of
-    Nothing -> do 
-                 svg' <- catch (doInTemporary tmp (doConvert dvisvgm latex (T.unpack preamble) mt math)) 
-                               (\e -> return (renderConversionError math (e::ConversionError)))
-                 writeCache cacheKey svg'
-                 return svg'
+    Nothing -> do
+                 withTempDirectory tmp "tex2svg." $ \curTmpDir -> do
+                         svg' <- catch (doConvert curTmpDir dvisvgm latex (T.unpack preamble) mt math) 
+                                       (\e -> return (renderConversionError math (e::ConversionError)))
+                         writeCache cacheKey svg'
+                         return svg'
     Just s -> pure s
 
 tex2svg _ _ il = return il 
