@@ -29,6 +29,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as LT
 import System.IO.Temp
 import Data.Aeson (encode)
+import Data.Monoid
+import Numeric
 
 latexTemplate :: String -> MathType -> String -> String
 latexTemplate preamble mt  eqn = unlines [
@@ -174,7 +176,7 @@ timeoutException n exc process = do
 
 doInTemporary :: (NFData a) => FilePath -> IO a -> IO a
 doInTemporary base op = evaluate . force =<< 
-                            (withTempDirectory base "_" (\tmpDir -> withCurrentDirectory tmpDir op))
+                            (withTempDirectory base "temp_" (\tmpDir -> withCurrentDirectory tmpDir op))
 
 readProcessException :: Exception e =>
                         (ExitCode -> String -> String -> e)
@@ -198,11 +200,13 @@ invokeDVISVGM dvisvgm fn = do
     Left  err    -> throw (CouldNotParseDVISVGM dvi err)
 
 createSVGImg :: EqnOut -> LBS.ByteString -> String
-createSVGImg eb svg = "<img style='position:relative;width="++tm width++"em;top:"++tm depth++"em'"
-               ++"src=\"data:image/svg+xml;base64,"++encode svg++"\" />"
+createSVGImg eb svg = "<img style='position:relative; "
+                      <> "width:" <> tm width <> "; "
+                      <> "top:"   <> tm depth <>";' "
+                      <> "src=\"data:image/svg+xml;base64," <> encode svg <> "\" />"
     where 
         encode = LT.unpack . LT.decodeUtf8 . B64.encode -- .  ZLib.compress  
-        tm f = show . toEm . f . metrics $ eb
+        tm f = ($"em") . showFFloat (Just 5) . toEm . f . metrics $ eb
         toEm   = estimatePtToEm "" 
 
 wrapMath :: MathType -> String -> Inline
