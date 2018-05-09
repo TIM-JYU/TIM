@@ -24,6 +24,7 @@ from timApp.timdb.models.askedjson import normalize_question_json
 from timApp.timdb.models.docentry import DocEntry
 from timApp.markdownconverter import md_to_html
 from timApp.dumboclient import call_dumbo
+from timApp.plugins.timTableLatex import convert_table
 
 
 timTable_plugin = Blueprint('timTable_plugin',
@@ -46,6 +47,7 @@ CELLS = 'cells'
 COL = 'col'
 ASCII_OF_A = 65
 ASCII_CHAR_COUNT = 26
+MARKUP = 'markup'
 
 
 @timTable_plugin.route("reqs/")
@@ -197,6 +199,17 @@ def tim_table_add_column():
         
     plug.save()
     return json_response(call_dumbo(plug.values, '/mdkeys'))
+
+@timTable_plugin.route("multimd/", methods=["POST"])
+def tim_table_multimd():
+    jsondata = request.get_json()
+    multi = []
+    for jso in jsondata:
+        tbl = jso[MARKUP][TABLE]
+        latexTable = str(convert_table(tbl))
+        multi.append(latexTable)
+        print(latexTable)
+    return json_response(multi)
 
 
 def is_datablock(yaml: dict) -> bool:

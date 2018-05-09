@@ -433,10 +433,10 @@ class Table:
         # 'c' would be text horizontal alignment, but it's actually set elsewhere,
         # so here it tells only the highest amount of cols in the table.
         columns = "c" * self.col_count
-        prefix = fr"\begin{{table}}" + "\n" \
-                 fr"\resizebox{{{self.width}}}{{{self.height}}}{{%" + "\n" \
-                 fr"\begin{{tabular}}{{{columns}}}"
-        postfix = r"\end{tabular}%" + "\n}\n" + r"\end{table}"
+        prefix = f"\\begin{{table}}[h]\n" \
+                 f"\\resizebox{{{self.width}}}{{{self.height}}}{{%\n" \
+                 f"\\begin{{tabular}}{{{columns}}}"
+        postfix = "\\end{tabular}%\n}\n\\end{table}"
         output = ""
         for i in range(0, len(self.rows)):
             output += "\n" + fr"\hhline{{{str(self.hborders[i])}}}" \
