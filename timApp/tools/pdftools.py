@@ -41,7 +41,7 @@ class ModelStampMissingError(PdfError):
 
     def __init__(self, file_path: str = ""):
         """
-        :param file_path:
+        :param file_path: Path of the missing file.
         """
         self.file_path = file_path
 
@@ -56,7 +56,7 @@ class ModelStampInvalidError(PdfError):
 
     def __init__(self, file_path: str = ""):
         """
-        :param file_path:
+        :param file_path: Path of the invalid file.
         """
         self.file_path = file_path
 
@@ -71,7 +71,7 @@ class TempFolderNotFoundError(PdfError):
 
     def __init__(self, folder_path: str = ""):
         """
-        :param folder_path:
+        :param folder_path: Path of the missing folder.
         """
         self.folder_path = folder_path
 
@@ -86,7 +86,7 @@ class AttachmentNotFoundError(PdfError):
 
     def __init__(self, file_path: str = ""):
         """
-        :param file_path: path of the attachment pdf that caused the error
+        :param file_path: Path of the attachment pdf that caused the error.
         """
         self.file_path = file_path
 
@@ -101,7 +101,7 @@ class AttachmentNotAPdfError(PdfError):
 
     def __init__(self, file_path: str = ""):
         """
-        :param file_path: path of the attachment that caused the error
+        :param file_path: Path of the attachment that caused the error.
         """
         self.file_path = file_path
 
@@ -116,7 +116,7 @@ class StampFileNotFoundError(PdfError):
 
     def __init__(self, file_path: str = ""):
         """
-        :param file_path: path of the stamp file that caused the error
+        :param file_path: Path of the stamp file that caused the error.
         """
         self.file_path = file_path
 
@@ -131,8 +131,8 @@ class StampDataInvalidError(PdfError):
 
     def __init__(self, reason: str = "", item: Union[str, dict, List[dict]] = ""):
         """
-        :param reason: error cause
-        :param item: item or data that caused the error
+        :param reason: The error cause explanation.
+        :param item: Item or data that caused the error.
         """
         self.reason = reason
         self.item = item
@@ -186,10 +186,9 @@ class SubprocessError(PdfError):
 
 def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
     """
-    Merges a list of pdfs using pdftk
-    :param pdf_path_list: list of pdfs to merge OR
-           a string with paths separated with spaces
-    :param output_path: merged output file path
+    Merges a list of pdfs using pdftk.
+    :param pdf_path_list: List of pdfs to merge.
+    :param output_path: Merged output file path.
     :return: output_path
     """
     for pdf_path in pdf_path_list:
@@ -203,8 +202,8 @@ def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
 def check_pdf_validity(pdf_path: str) -> None:
     """
     Raises error if pdf file doesn't exist or isn't really a pdf.
-    :param pdf_path:
-    :return:
+    :param pdf_path: Pdf to check.
+    :return: None if not interrupted by error.
     """
     if not os_path.exists(pdf_path):
         raise AttachmentNotFoundError(pdf_path)
@@ -312,9 +311,9 @@ def stamp_pdf(
         remove_stamp: bool = False) -> str:
     """
     Creates a new stamped pdf file (with stamp overlay on each page).
-    :param pdf_path:
-    :param stamp_path:
-    :param output_path:
+    :param pdf_path: Path of the pdf to stamp.
+    :param stamp_path: Path of the stamp file.
+    :param output_path: Path of the new stamped pdf.
     :param remove_stamp: Delete stamp file after use.
     :return: output_path
     """
@@ -336,9 +335,9 @@ def call_popen(args: List[str], timeout_seconds=default_subprocess_timeout) -> N
     """
     Calls Popen with args list, checks return code and
     raises error if timeouted.
-    :param args: List of arguments
-    :param timeout_seconds: timeout after which error is raised
-    :return: None
+    :param args: List of arguments.
+    :param timeout_seconds: Timeout after which error is raised.
+    :return: None.
     """
     try:
         p = Popen(args, stdout=PIPE)
@@ -355,16 +354,16 @@ def remove_temp_files(
         dir_path: str, temp_file_name: str, ext_list: List[str]) -> None:
     """
     Deletes temp files created for the stamping process.
-    :param dir_path: temp-file folder path
-    :param temp_file_name: common part of the names
-    :param ext_list: list of extensions after common part for files to remove
-    :return: None
+    :param dir_path: Temp-file folder path.
+    :param temp_file_name: Common part of the names.
+    :param ext_list: List of extensions after common part for files to remove.
+    :return: None.
     """
     # fail_list = []
     for ext in ext_list:
         try:
             remove(os_path.join(dir_path, temp_file_name + ext))
-        # removes the rest of files even if some are missing
+        # Removes the rest of files even if some are missing.
         except FileNotFoundError:
             # fail_list.append(path.join(dir_path, temp_file_name + ext))
             continue
@@ -374,8 +373,8 @@ def remove_temp_files(
 def check_stamp_data_validity(stamp_data: List[dict]) -> None:
     """
     Raises a specific error if stamp_data is invalid.
-    :param stamp_data:
-    :return:
+    :param stamp_data: Dictionary list containing data of the stamps.
+    :return: None, but will raise error if something invalid.
     """
     # not a list
     if not isinstance(stamp_data, list):
@@ -406,8 +405,8 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
 def is_url(string: str) -> bool:
     """
     Simple test to see if str is an url.
-    :param string:
-    :return:
+    :param string: String to test.
+    :return: True if url, false if not.
     """
     # TODO: Check special cases like ftp?
     if string.startswith("http://") or string.startswith("https://"):
@@ -421,9 +420,9 @@ def download_file_from_url(
         output_dir: str = temp_folder_default_path) -> str:
     """
     Downloads a file from url, keeps the filename same.
-    :param url: file url
-    :param output_dir: download folder
-    :return: path of the saved file
+    :param url: File url.
+    :param output_dir: Download folder.
+    :return: Path of the saved file.
     """
     try:
         output_path = os_path.join(output_dir, get_base_filename(url))
@@ -435,10 +434,11 @@ def download_file_from_url(
 
 def get_base_filename(path: str, no_extension: bool = False) -> str:
     """
-    Returns filename with or without file extension from url or path.
-    :param path: url or path to parse
-    :param no_extension: keep the extension included
-    :return: the file's basename, extension is optional
+    Returns filename with or without file extension from url or path, i.e.
+    "C:/some dir/another dir/cats_and_dogs.txt" -> "cats_and_dogs.txt".
+    :param path: Url or path to parse.
+    :param no_extension: Keep the extension included.
+    :return: File basename, extension is optional
     """
     if no_extension:
         return os_path.splitext(os_path.basename(path))[0]
@@ -450,23 +450,26 @@ def attachment_params_to_dict(params: List[str]) -> List[dict]:
     """
     Changes list of attachment params to dictionary list that pdftools can use.
     Sets values to right keys and cleans up extra quotes.
-    :param params:
-    :return:
+    :param params: Attachment data as a partially unformatted list.
+    :return: Stamp data formatted for this module's use.
     """
     if params.__len__() < 6:
         raise StampDataInvalidError("request missing params", ", ".join(params))
 
-    # TODO: More intelligent "-removal in cases of inner quotes.
+    date = params[0]
+    stampformat = params[1]
+    # If stampformat is empty (as it's set to be if undefined in pareditor.ts), use default.
+    if not stampformat:
+        stampformat = default_stamp_format
+    # TODO: More advanced quote removal in cases of inner quotes.
     attachment = params[3].replace('"', '').replace("'", "").strip()
     issue = params[4].replace('"', '').replace("'", "").strip()
 
-    # If stampformat is empty (as it's set to be if undefined in pareditor.ts), use default.
-    stampformat = params[1]
-    if not stampformat:
-        stampformat = default_stamp_format
+    if not date or not attachment or not issue:
+        raise StampDataInvalidError("request missing params", ", ".join(params))
 
     # File path isn't available yet.
-    return [{'date': params[0], 'format': stampformat, 'attachment': attachment, 'issue': issue}]
+    return [{'date': date, 'format': stampformat, 'attachment': attachment, 'issue': issue}]
 
 
 def stamp_pdfs(
@@ -475,47 +478,43 @@ def stamp_pdfs(
         stamp_model_path: str = stamp_model_default_path,
         stamp_text_format: str = default_stamp_format) -> List[str]:
     """
-    Creates stamps and stamps pdf-files.
-    :param stamp_data: dict-list containing pdf-names and stamp-contents
-    :param dir_path: folder for temp files
-    :param stamp_model_path: tex-file to be used as model for stamps
-    :param stamp_text_format: formatting for stamp text, with
-            file=0, date=1, attachment=2 and issue=3 keys
-    :return: list of stamped pdf paths
+    Creates new stamps and stamps the corresponding pdfs based on
+    the data-item in dictionary.
+    :param stamp_data: Dict-list containing pdf-names and stamp-contents.
+    :param dir_path: Folder for temp files.
+    :param stamp_model_path: Tex-file to be used as model for stamps.
+    :param stamp_text_format: Formatting for stamp text, with keys:
+            file, date, attachment and issue.
+    :return: List of stamped pdf paths.
     """
     # TODO: Create a new class for stamp_data.
 
     stamped_pdfs = []
 
-    # creates a new stamp and stamps the corresponding pdfs based on
-    # the data-item in dictionary
-    # check if temp-folder exists
+    # Check if temp-folder exists.
     if not (os_path.isdir(dir_path) and os_path.exists(dir_path)):
         raise TempFolderNotFoundError(dir_path)
 
-    # check if model stamp exists
+    # Check if model stamp exists.
     if not os_path.exists(stamp_model_path):
         raise ModelStampMissingError(stamp_model_path)
 
-    # checks multiple potential problems and raises error if invalid
+    # Checks multiple potential problems and raises error if invalid.
     check_stamp_data_validity(stamp_data)
 
     for item in stamp_data:
-        # names and paths of new files to use as params
+        # Names and paths of new files to use as params.
         item_basename = get_base_filename(item['file'], True)
         item_stamp_name_no_ext = item_basename + "_stamp"
         item_stamp_path = os_path.join(dir_path, item_stamp_name_no_ext + ".pdf")
         item_stamped_name = item_basename + "_stamped.pdf"
         item_stamped_path = os_path.join(dir_path, item_stamped_name)
 
-        # set
         create_stamp(stamp_model_path,
                      dir_path,
                      item_stamp_name_no_ext,
                      get_stamp_text(item, stamp_text_format),
                      remove_pdflatex_files=True)
-
-        # set to remove stamp-pdf after use
         stamp_pdf(item['file'],
                   item_stamp_path,
                   item_stamped_path,

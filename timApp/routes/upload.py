@@ -155,33 +155,33 @@ def upload_file():
 
 def upload_and_stamp_attachment(file, stamp_data):
     """
-    Uploads the file and stamps it into the same folder.
-    :param file: file to upload
-    :param stamp_data: stamp data (attachment and list ids and format) without the path
-    :return: json response of the stamped file
+    Uploads the file and makes a stamped version of it into the same folder.
+    :param file: The file to upload and stamp.
+    :param stamp_data: Stamp data (attachment and list ids and format) without the path.
+    :return: Json response containing the stamped file path.
     """
 
-    # currently multiple changes in different modules are needed
-    # if the upload folder is changed
-    # TODO: get this from a global variable;
+    # TODO: Get this from a global variable.
+    # Currently multiple changes in different modules are needed
+    # if the upload folder is changed.
     attachment_folder = "/tim_files/blocks/files"
     content = file.read()
     timdb = get_timdb()
     file_id, file_filename = timdb.files.saveFile(content,
                                                   secure_filename(file.filename),
                                                   get_current_user_group())
-    grant_view_access(get_anon_group_id(), file_id)  # So far everyone can see all files
+    grant_view_access(get_anon_group_id(), file_id)  # So far everyone can see all files.
 
-    # if format not set or invalid, default format set in pdftools will be used
-    # TODO: needs testing
+    # If format not set or invalid, default format set in pdftools will be used.
+    # Additional check is done inside pdftools-module,
+    # since this may not work correctly.
     try:
         stamp_format = stamp_data[0]['format']
     except:
         stamp_format = timApp.tools.pdftools.default_stamp_format
 
-    # add the uploaded file path (the one to stamp)
+    # Add the uploaded file path (the one to stamp) to stamp data.
     stamp_data[0]['file'] = os_path.join(attachment_folder, f"{str(file_id)}/{file_filename}")
-    # print("Stamp data: ", stamp_data)
 
     output = timApp.tools.pdftools.stamp_pdfs(
             stamp_data,
@@ -190,7 +190,7 @@ def upload_and_stamp_attachment(file, stamp_data):
 
     stamped_filename = timApp.tools.pdftools.get_base_filename(output)
 
-    # TODO: in case of raised errors give proper no-upload response?
+    # TODO: In case of raised errors give proper no-upload response?
     return json_response({"file": f"{str(file_id)}/{stamped_filename}"})
 
 
