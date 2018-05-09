@@ -226,14 +226,14 @@ def save_cell(datablock: dict, row: int, col: int, cell_content: str) -> str:
 def find_cell(rows: list, row: int, col: int) -> str:
    right_row = rows[row][ROW]
    right_cell = right_row[col]
-   if isinstance(right_cell, str):
+   if isinstance(right_cell, str) or isinstance(right_cell, int) or isinstance(right_cell, float):
        return right_cell
    return right_cell[CELL]
 
 
 def find_cell_from_datablock(cells: dict, row: int, col: int) -> str:
     ret = None
-    coordinate = colnum_to_letters(col) + str(row)
+    coordinate = colnum_to_letters(col) + str(row+1)
     try:
         value = cells[coordinate]
         ret = value
@@ -301,7 +301,7 @@ def qst_get_html(jso, review):
     # s = f'<{runner} json={quoteattr(attrs)}></{runner}>'
 
     runner = 'tim-table'
-    s = f'<{runner} data={quoteattr(attrs)}>HAHAA</{runner}>'
+    s = f'<{runner} data={quoteattr(attrs)}></{runner}>'
 
     return s
 

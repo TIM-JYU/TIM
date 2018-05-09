@@ -30,7 +30,9 @@ const styleToHtml: { [index: string]: string } =
         height: "height",
         color: "color",
         fontSize: "font-size",
-        fontFamily: "font-family"
+        fontFamily: "font-family",
+        fontWeight: "font-weight"
+
     };
 
 export interface TimTable {
@@ -69,7 +71,7 @@ export interface CellDataEntity {
 }
 
 
-export type CellEntity = ICell | string;
+export type CellEntity = ICell | string | number;
 
 export interface IRow extends IRowStyles {
     row?: (CellEntity)[];
@@ -88,6 +90,7 @@ export interface IRowStyles {
     color?: string;
     fontFamily?: string;
     fontSize?: string;
+    fontWeight?: string;
 }
 
 export interface ICellStyles {
@@ -102,6 +105,7 @@ export interface ICellStyles {
     textAlign?: string;
     fontFamily?: string;
     color?: string;
+    fontWeight?: string;
 }
 
 export interface ICell extends ICellStyles {
@@ -155,17 +159,16 @@ export class TimTableController implements IController {
     private DataHashLength: number;
     private editedCellContent: string;
     private currentCell?: {row: number, col: number, editorOpen: boolean};
+    private mouseInTable?: boolean;
 
     constructor(private scope: IScope, private element: IRootElementService) {
-
+        this.keyDownPressedTable = this.keyDownPressedTable.bind(this);
     }
 
 
 
     $onInit() {
         this.count = 0;
-        // this.$pars = $(this.srcid);
-
         this.InitializeCellDataMatrix();
         this.readDataBlockAndSetValuesToDataCellMatrix();
 
@@ -177,10 +180,13 @@ export class TimTableController implements IController {
                 return;
             this.viewctrl.addTable(this, parId);
         }
+        document.addEventListener("keydown", this.keyDownPressedTable);
+
     }
 
-    $showFocus(scope: any, elem: any, attr: any) {
 
+    $onDestroy(){
+        document.removeEventListener("keydown", this.keyDownPressedTable);
     }
 
     /*
@@ -194,24 +200,6 @@ export class TimTableController implements IController {
         }
         //todo: calculate further
     }
-
-    /*
-    Initialize CellDataMatrix with values from yaml table
-     */
-    /*private InitializeCellDataMatrix() {
-        this.cellDataMatrix = [];
-        if (this.data.table.rows)
-            this.data.table.rows.forEach((item, index) => {
-                this.cellDataMatrix[index] = [];
-                if (item.row)
-                    item.row.forEach((item2, index2) => {
-                        if (item.row) {
-                            let itemInRow = item.row[index2] as ICell;
-                            this.cellDataMatrix[index][index2] = itemInRow.cell;
-                        }
-                    });
-            });
-    }*/
 
     /**
      * Checks whether the table is in edit mode.
@@ -235,8 +223,17 @@ export class TimTableController implements IController {
         return this.currentCell && this.currentCell.col === coli && this.currentCell.row === rowi;
     }
 
-    /*
-    Cancel
+    public mouseInsideTable() {
+        this.mouseInTable = true;
+    }
+
+
+     public mouseOutTable() {
+        this.mouseInTable = false;
+    }
+
+    /**
+     *
      */
     public editCancel() {
         // undo all changes
@@ -251,7 +248,7 @@ export class TimTableController implements IController {
              method: "POST",
              params: {cellContent, docId, parId, row, col},
          });*/
-
+        //if (cellContent === this.cellDataMatrix[row][col]) return;
         const response = await $http.post<{ [cellContent: string]: string; }>("/timTable/saveCell", {cellContent, docId, parId, row, col});
         const cellHtml = response.data[0];
         this.cellDataMatrix[row][col] = cellHtml;
@@ -261,11 +258,10 @@ export class TimTableController implements IController {
 
     async getCellData(cell: CellEntity, docId: number, parId: string, row: number, col: number) {
         let ctrl = this;
-        let row2 = row +1;
         const response = await $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
             url: "/timTable/getCellData",
             method: "GET",
-            params: {docId, parId, row: row2, col},
+            params: {docId, parId, row, col},
         });
 
         const data = response.data;
@@ -289,7 +285,7 @@ export class TimTableController implements IController {
         if (result.type == "cancel") {
             this.currentCell = undefined;
         }
-        if (typeof cell === "string") {
+        if (typeof cell === "string" || typeof cell === "number") {
         }
         else cell.editorOpen = false;
     }
@@ -307,24 +303,19 @@ export class TimTableController implements IController {
     Opens adv editor
      */
     private editorOpen(cell: CellEntity, rowi: number, coli: number) {
-
-       // if (typeof cell === "string") return;
-        // cell.editing = false;
         //this.currentCell = undefined;
         if(this.currentCell)
         this.currentCell.editorOpen = true;
         let parId = getParId(this.element.parents(".par"));
         if (parId === undefined || !this.viewctrl) return;
-       /* if(this.editedCellContent)
-            if(this.editedCellContent != this.cellDataMatrix[rowi][coli]){
-                this.saveCells(this.editedCellContent, this.viewctrl.item.id, parId, rowi, coli);
-        }*/
-        /*if(this.viewctrl && parId){
-        this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
-        }*/
          this.openEditor(cell, this.viewctrl.item.id, this.cellDataMatrix[rowi][coli],parId ,rowi, coli)
     }
 
+
+    /**
+     * Initialize celldatamatrix with the values from yaml and yaml only
+     * @constructor
+     */
      private InitializeCellDataMatrix() {
          let ctrl = this;
         this.cellDataMatrix = [];
@@ -335,7 +326,7 @@ export class TimTableController implements IController {
                     item.row.forEach((item2, index2) => {
                         if (item.row) {
                             let itemInRow = item.row[index2];
-                            if(typeof itemInRow == "string") ctrl.cellDataMatrix[index][index2] = itemInRow;
+                            if(typeof itemInRow === "string" || typeof itemInRow === "number") ctrl.cellDataMatrix[index][index2] = String(itemInRow);
                             else this.cellDataMatrix[index][index2] = itemInRow.cell;
                         }
                     });
@@ -388,10 +379,18 @@ export class TimTableController implements IController {
         return {col: columnIndex, row: rowIndex}
     }
 
+
+    /**
+     * Deals with key events
+     * @param {KeyboardEvent} ev
+     * @param {CellEntity} cell
+     * @param {number} rowi
+     * @param {number} coli
+     */
     private keyDownPressed(ev : KeyboardEvent, cell: CellEntity, rowi: number, coli: number) {
 
-        if (ev.keyCode == 113) this.editorOpen(cell, rowi, coli);
-        if (ev.keyCode == 13) {
+        //if (ev. keyCode == 113) this.editorOpen(cell, rowi, coli);
+       /* if (ev.keyCode == 13 ||  ev.keyCode === 9) {
             let parId = getParId(this.element.parents(".par"));
             if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
             if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
@@ -399,11 +398,55 @@ export class TimTableController implements IController {
                 this.saveCells(this.cellDataMatrix[this.currentCell.row][this.currentCell.col], this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
                 this.currentCell = undefined;
             }
-        }
+            if (ev.keyCode === 13) {
+                this.openCell(rowi + 1, coli);
+            }
+            if (ev.keyCode === 9) {
+                this.openCell(rowi, coli + 1);
+            }
+        }*/
 
         if( ev.ctrlKey &&  (ev.keyCode == 40 || ev.keyCode == 39 || ev.keyCode == 38 || ev.keyCode == 37))
             this.handleArrowMovement(ev, rowi, coli);
     }
+
+
+    /**
+     * Deals with keyevents inside div
+     * @param {KeyboardEvent} ev
+     */
+     private keyDownPressedTable(ev : KeyboardEvent) {
+        if (this.mouseInTable) {
+
+
+            if (ev.keyCode == 113) {
+                var modal: CellEntity = {
+                    cell: "",
+                }
+                if (this.currentCell != undefined) this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
+            }
+
+
+            if (ev.keyCode == 13 ||  ev.keyCode === 9) {
+            let parId = getParId(this.element.parents(".par"));
+            if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
+            if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
+                this.saveCells(this.cellDataMatrix[this.currentCell.row][this.currentCell.col], this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
+            }
+            if (ev.keyCode === 13) {
+                if(this.currentCell)
+                this.openCellNextRowOrColumn(this.currentCell.row + 1, this.currentCell.col);
+            }
+            if (ev.keyCode === 9) {
+                if(this.currentCell)
+                this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
+            }
+
+
+        }
+        }
+    }
+
 
 
     private handleArrowMovement(ev: KeyboardEvent, rowi: number, coli: number){
@@ -458,6 +501,33 @@ export class TimTableController implements IController {
         this.cellClicked(modal, rowi, coli);
     }
 
+
+         /*
+     Clicks given or hops opposite side of the table
+      */
+    private openCellNextRowOrColumn(rowi: number, coli: number){
+         var modal: CellEntity = {
+                     cell: "",
+                 }
+                 if(this.   data.table.rows) {
+                     if (rowi >= this.data.table.rows.length) rowi = 0; // if bigger then 0
+                     if (rowi < 0) rowi = this.data.table.rows.length-1;
+                 }
+
+         if(this.data.table.rows && this.data.table.rows[rowi].row){
+             let rowrow = this.data.table.rows[rowi].row;
+             if(rowrow) {
+                 if(coli >= rowrow.length)  {
+                     coli = 0;
+                     if(rowi +1 >= this.data.table.rows.length) rowi = 0;
+                     else rowi +=1;
+                 }
+                 if(coli < 0) coli = rowrow.length-1;
+             }
+         }
+        this.cellClicked(modal, rowi, coli);
+    }
+
     /*
     Sets a value to specific index in cellDataMatrix
      */
@@ -505,11 +575,8 @@ export class TimTableController implements IController {
     Deals with cell clicking
      */
     private cellClicked(cell: CellEntity, rowi: number, coli: number) {
-
-
         let parId = getParId(this.element.parents(".par"));
         if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
-
 
         if (this.currentCell)
             if (this.currentCell.row == rowi && this.currentCell.col == coli)  // if same as previous cell
@@ -562,7 +629,7 @@ export class TimTableController implements IController {
 
     private stylingForCell(cell: CellEntity) {
 
-        if (typeof cell === "string") {
+        if (typeof cell === "string" || typeof cell === "number") {
             return {};
         }
         const styles: { [index: string]: string } = {};
@@ -731,9 +798,9 @@ timApp.component("timTable", {
     require: {
         viewctrl: "?^timView",
     },
-    template: `<div ng-class="{editable: $ctrl.editing}"">
+    template: `<div ng-class="{editable: $ctrl.editing}"  ng-mouseenter="$ctrl.mouseInsideTable()" ng-mouseleave="$ctrl.mouseOutTable()">
     <button style="float: right" class="timButton" title="Add column" ng-show="$ctrl.editing" ng-click="$ctrl.addColumn()"><span class="glyphicon glyphicon-plus"></span></button>
-    <table ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
+    <table  ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
     <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}} ng-style="$ctrl.stylingForColumn(c)"/>
     <tr ng-repeat="r in $ctrl.data.table.rows"  ng-init="rowi = $index" id={{r.id}} ng-style="$ctrl.stylingForRow(r)">
       <div ng-if="$ctrl.allcellData == undefined">
