@@ -202,9 +202,9 @@ invokeDVISVGM curTmp dvisvgm fn = do
     Left  err    -> throw (CouldNotParseDVISVGM dvi err)
 
 createSVGImg :: EqnOut -> LBS.ByteString -> String
-createSVGImg eb svg = "<img style='position:relative; "
+createSVGImg eb svg = "<img style='"
                       <> "width:" <> tm width <> "; "
-                      <> "top:"   <> tm ((/4.0) <$> depth) <>";' "
+                      <> "vertical-align:-"   <> tm ((/1.0) <$> depth) <>";' "
                       <> "src=\"data:image/svg+xml;base64," <> encode svg <> "\" />"
     where 
         encode = LT.unpack . LT.decodeUtf8 . B64.encode -- .  ZLib.compress  
@@ -213,7 +213,7 @@ createSVGImg eb svg = "<img style='position:relative; "
 
 wrapMath :: MathType -> String -> Inline
 wrapMath mt svg = RawInline (Format "html") $
-               "<span class=\"math " ++
+               "<span class=\"mathp " ++
                (if mt == InlineMath then "inline" else "display") ++ "\">" ++
                svg ++ "</span>"
 
