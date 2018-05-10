@@ -81,6 +81,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
         multiline: string,
         strokes: string,
         pipe: string,
+        yamlTable: string,
     };
     private uploadedFile: string;
     private storage: Storage;
@@ -181,6 +182,15 @@ export class PareditorController extends DialogController<{params: IEditorParams
             "|   12  |  12  |    12   |    12  |\n" +
             "|  123  |  123 |   123   |   123  |\n" +
             "|    1  |    1 |     1   |     1  |\n",
+
+             yamlTable:
+             "``` {plugin=\"timTable\"} \n"+
+             "table:                   \n"+
+             "    rows:                 \n"+
+             "      - row:              \n"+
+             "        - cell: elisa      \n"+
+             "                            \n"+
+             "```                        \n",
         };
 
         $(document).on("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", (event) => {

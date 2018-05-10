@@ -31,7 +31,8 @@ const styleToHtml: { [index: string]: string } =
         color: "color",
         fontSize: "font-size",
         fontFamily: "font-family",
-        fontWeight: "font-weight"
+        fontWeight: "font-weight",
+        visibility: "visibility"
 
     };
 
@@ -58,6 +59,7 @@ export interface ITableStyles {
     color?: string;
     fontFamily?: string;
     fontSize?: string;
+    visibility?: string;
 }
 
 export interface DataEntity {
