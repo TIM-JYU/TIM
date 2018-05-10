@@ -150,7 +150,7 @@ def tim_table_add_row():
     if not d:
         abort(404)
     verify_edit_access(d)
-    par = d.document.get_paragraph(par_id)
+    par = d.document_as_current_user.get_paragraph(par_id)
     plug = Plugin.from_paragraph(par)
     try:
         rows = plug.values[TABLE][ROWS]
@@ -175,7 +175,7 @@ def tim_table_add_column():
     if not d:
         abort(404)
     verify_edit_access(d)
-    par = d.document.get_paragraph(par_id)
+    par = d.document_as_current_user.get_paragraph(par_id)
     plug = Plugin.from_paragraph(par)
     try:
         rows = plug.values[TABLE][ROWS]
