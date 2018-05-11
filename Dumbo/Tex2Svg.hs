@@ -38,7 +38,7 @@ latexTemplate preamble mt  eqn = unlines [
         ,"\\usepackage{amsmath}"
         ,"\\usepackage{amsfonts}"
         ,preamble
-        ,"\\usepackage[active,displaymath,textmath,tightpage]{preview}"
+        ,"\\usepackage[active,dvips,displaymath,textmath,tightpage]{preview}"
         ,"\\begin{document}"
         , case mt of
             InlineMath -> "$"++eqn++"$"
@@ -108,7 +108,7 @@ newtype LatexPath = LaTex {getLatex :: FilePath} deriving (Eq,Show)
 findDVISVGM :: IO DVISVGMPath
 findDVISVGM = DVISVGM <$> (fromMaybe (throw NoDVISVGM) <$> findExecutable "dvisvgm")
 findLatex :: IO LatexPath
-findLatex = LaTex   <$> (fromMaybe (throw NoLatex)   <$> findExecutable "latex")
+findLatex = LaTex   <$> (fromMaybe (throw NoLatex)   <$> findExecutable "xelatex")
 
 mkDVISVGM :: FilePath -> IO DVISVGMPath 
 mkDVISVGM fp = do
@@ -127,7 +127,7 @@ doConvert curTmpDir dvisvgm latex preamble mt eqn = do
    let fn = showDigest . sha1 . LT.encodeUtf8 . LT.pack $ eqn
        latexFile = latexTemplate preamble mt eqn
    _ <- timeoutException 1000000 LaTexTimeouted $ 
-        readProcessException LaTexFailed curTmpDir (getLatex latex) ["-jobname="++fn,"-halt-on-error"] latexFile
+        readProcessException LaTexFailed curTmpDir (getLatex latex) ["-no-pdf", "-jobname="++fn,"-halt-on-error"] latexFile
    eb <- head <$> invokeDVISVGM curTmpDir dvisvgm fn 
    svg <- BS.readFile (curTmpDir++"/"++filename eb)
    return . force . wrapMath mt $ createSVGImg eb (LBS.fromStrict svg)
@@ -194,7 +194,7 @@ invokeDVISVGM curTmp dvisvgm fn = do
     DVISVGMFailed
     curTmp
     (getDVISVGM dvisvgm)
-    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", "--exact", fn ++ ".dvi"]
+    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", "--exact", fn ++ ".xdv"]
     ""
   case parseOnly (many1 parseBlock) (LT.toStrict $ LT.pack dvi) of
     Right []     -> throw (UnexpectedError "many1 returned none")
