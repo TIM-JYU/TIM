@@ -34,7 +34,7 @@ import Numeric
 
 latexTemplate :: String -> MathType -> String -> String
 latexTemplate preamble mt  eqn = unlines [
-         "\\documentclass[a4paper,10pt]{article}"
+         "\\documentclass{article}"
         ,"\\usepackage{amsmath}"
         ,"\\usepackage{amsfonts}"
         ,preamble
@@ -207,7 +207,7 @@ invokeDVISVGM curTmp dvisvgm fn = do
     DVISVGMFailed
     curTmp
     (getDVISVGM dvisvgm)
-    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", "--exact", fn ++ ".xdv"]
+    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", "--exact", "--bbox=preview", fn ++ ".xdv"]
     ""
   case parseOnly (many1 parseBlock) (LT.toStrict $ LT.pack dvi) of
     Right []     -> throw (UnexpectedError "many1 returned none")
