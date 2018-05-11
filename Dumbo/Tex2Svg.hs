@@ -14,7 +14,7 @@ import System.Process
 import System.Directory
 import Control.Monad (unless)
 import Data.Maybe (fromMaybe)
-import Data.List.NonEmpty
+import Data.List.NonEmpty hiding (map)
 import Control.DeepSeq
 import System.Directory (findExecutable,withCurrentDirectory)
 import System.Timeout
@@ -42,8 +42,20 @@ latexTemplate preamble mt  eqn = unlines [
         ,"\\begin{document}"
         , case mt of
             InlineMath -> "$"++eqn++"$"
-            DisplayMath -> "$$"++eqn++"$$"
+            DisplayMath -> case parseOnly parseMathEnv (T.pack eqn) of
+                               Right _ -> eqn
+                               Left _ -> "$$"++eqn++"$$"
         ,"\\end{document}"]
+
+parseMathEnv :: Parser MathEnv
+parseMathEnv = do
+    skipSpace
+    string "\\begin{"
+    skipSpace
+    envname <- choice $ map string ["split", "eqnarray", "equation", "multline", "gather", "align", "alignat", "flalign"]
+    _ <- option "" (string "*")
+    string "}"
+    return $ MathEnv envname
 
 parseBlock :: Parser EqnOut
 parseBlock = do
@@ -100,6 +112,7 @@ metricsLine = skipSpace *> do
   endOfLine
   return $ Metrics width height depth
 
+data MathEnv = MathEnv {name :: T.Text} deriving (Eq,Show)
 data EqnOut  = EqnOut {filename::FilePath, metrics :: !Metrics} deriving (Eq,Show)
 data Metrics = Metrics {width,height,depth :: !Double} deriving (Eq,Show)
 newtype DVISVGMPath = DVISVGM {getDVISVGM :: FilePath} deriving (Eq,Show)
