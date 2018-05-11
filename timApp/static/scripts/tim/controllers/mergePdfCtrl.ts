@@ -1,7 +1,11 @@
+/**
+Controller for merging attachments in TIM documents.
+ */
 import {ngStorage} from "ngstorage";
-import {DialogController, registerDialogComponent, showDialog} from "../dialog";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
 import {IItem} from "../IItem";
 import {$http} from "../ngimport";
+import {to} from "../utils";
 
 /**
  * @module mergePdfCtrl
@@ -32,24 +36,40 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
         return "Merging attachments";
     }
 
+    /**
+ * Deals with clicking "Merge" timMergePdf dialog.
+ * Show error messages for users.
+     * */
     async mergeClicked() {
 
-        //this.document.path = `/mergeAttachments/${this.resolve.params.document.location}/${this.resolve.params.document.name}`;
         this.loading = true;
         const postURL = "/merge" + this.resolve.params.document.path;
 
-       const response = await $http.get<{url: string}>(`/mergeAttachments/${this.resolve.params.document.path}`, {});
+       const  [err, response] = await to($http.get<{url: string}>(`/mergeAttachments/${this.resolve.params.document.path}`, {}));
 
-        const response1 = await $http.post<{url: string}>(`/mergeAttachments/${this.resolve.params.document.path}`, {});
-
-        //console.log(this.resolve.params.document.path);
+       //catch error message frin get route
+        if (err) {
+            showMessageDialog(err.data.error);
+            this.loading = false;
+            return;
+        }
 
         if (response) {
             this.loading = false;
-        }
 
-        this.docUrl = response1.data.url;
-        //console.log(this.docUrl); undefined
+            const [err2, response2] = await to($http.post<{url: string}>(`/mergeAttachments/${this.resolve.params.document.path}`, {}));
+
+            //catch error message from post route
+            if(err2) {
+                showMessageDialog (err2.data.error);
+                this.loading = false;
+                return;
+            }
+
+            else if (response2) {
+                this.docUrl = response2.data.url;
+            }
+        }
     }
 
     $onInit() {
@@ -57,6 +77,10 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
         this.loading = false;
     }
 }
+
+/**
+HTML Template for merge dialog.
+ */
 
 registerDialogComponent("timMergePdf",
     ShowMergePdfController,

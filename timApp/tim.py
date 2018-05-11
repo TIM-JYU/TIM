@@ -249,8 +249,8 @@ def merge_attachments(doc):
         merged_pdf_path = timApp.tools.pdftools.temp_folder_default_path + "/" + f"{doc_name}_merged.pdf"
         timApp.tools.pdftools.merge_pdf(pdf_paths, merged_pdf_path)
 
-    except Exception as e:
-        message = str(e)
+    except Exception as err:
+        message = str(err)
         abort(404, message)
     else:
         return send_file(merged_pdf_path, mimetype="application/pdf")
@@ -269,8 +269,8 @@ def get_attachments(doc):
             abort(404)
         verify_edit_access(d)
 
-    except Exception as e:
-        message = str(e)
+    except Exception as err:
+        message = str(err)
         abort(404, message)
     else:
         merge_access_url = request.url
@@ -321,11 +321,10 @@ def process_attachments(doc):
         merged_pdf_path = f"static/testpdf/{doc}_merged.pdf"
         timApp.tools.pdftools.merge_pdf(stamped_pdfs, merged_pdf_path)
 
-    except Exception as e:
-        message = repr(e)
+    except Exception as err:
+        message = repr(err)
         abort(404, message)
     else:
-        # TODO: do something more intelligent here
         return send_file(merged_pdf_path, mimetype="application/pdf")
 
 
