@@ -72,7 +72,7 @@ class ColorDefinitionsMissingError(TimTableException):
 
 class CellBorders:
     """
-    Contains attributes of a cell's borders.
+    Contains the attributes of a cell's borders.
     """
 
     def __init__(self, left=False, right=False, top=False, bottom=False,
@@ -81,18 +81,21 @@ class CellBorders:
                  color_left=(default_transparent_color, False),
                  color_right=(default_transparent_color, False)):
         """
-        :param left: Border-line exists.
-        :param right:
-        :param top:
-        :param bottom:
+        :param left: Whether the left-side cell border exists.
+        :param right: Right border existence.
+        :param top: Top border existence.
+        :param bottom: Bottom border existence.
+        :param color_bottom: The color of bottom border as tuple containing
+               color code/name and whether it's hex or not.
+        :param color_top: The color of top border.
+        :param color_left: The color of left border.
+        :param color_right: The color of right border.
         """
         # TODO: Add border style and thickness.
-        # Whether the borderline should be drawn.
         self.left = left
         self.right = right
         self.top = top
         self.bottom = bottom
-        # The color of the borderline.
         self.color_bottom = color_bottom
         self.color_top = color_top
         self.color_left = color_left
@@ -118,20 +121,20 @@ class Cell:
             borders: CellBorders = CellBorders()):
         """
 
-        :param index:
-        :param content:
-        :param colspan:
-        :param rowspan:
-        :param text_color:
-        :param text_color_html:
-        :param bg_color:
-        :param bg_color_html:
-        :param h_align:
-        :param font_size:
-        :param cell_width:
-        :param cell_height:
-        :param line_space:
-        :param pbox: Length of an element that allows linebreaks in text (unused now).
+        :param index: Cell index in a row.
+        :param content: Cell content (text, math-symbols, etc.).
+        :param colspan: How many columns the cell spans.
+        :param rowspan: How many rows the cell spans.
+        :param text_color: Cell text color code or name.
+        :param text_color_html: Whether the text_color-attribute is a hex code.
+        :param bg_color: Cell background color code or name.
+        :param bg_color_html: Whether the bg_color-attribute is a hex code.
+        :param h_align: Text horizontal alignment.
+        :param font_size: Font size.
+        :param cell_width: Width of the cell as pt:s.
+        :param cell_height: Heigth of the cell as pt:s.
+        :param line_space: Unused attribute.
+        :param pbox: Length of an element that allows linebreaks in text (unused).
         :param borders: Object containing border-data.
         """
         self.index = index
@@ -153,7 +156,7 @@ class Cell:
 
     def __str__(self) -> str:
         """
-        :return: Fully formatted LaTeX.
+        :return: The cell's complete LaTeX format.
         """
         # LaTeX has text-h-align and cell-v-borders in the same place:
         v_border_and_align = ""
@@ -174,13 +177,21 @@ class Cell:
         else:
             cell_color = fr"\cellcolor{cell_color}"
 
+        content = self.content
+        if "\[" in content:
+            minipage_width = self.cell_width
+            if "*" in minipage_width:
+                minipage_width = "4cm"
+            content = fr"\begin{{minipage}}{{{minipage_width}}}{content}\end{{minipage}}"
+
+
         return fr"\multicolumn{{{self.colspan}}}{{{v_border_and_align}}}{{" \
                fr"\multirow{{{self.rowspan}}}{{{self.cell_width}}}{{" \
                f"{cell_color}" \
                fr"\fontsize{{{self.font_size}}}{{{self.line_space}}}" \
                fr"\selectfont{{\textcolor{{{self.text_color}}}{{{{" \
                fr"\fontfamily{{{self.font_family}}}\selectfont{{" \
-               fr"\centering {self.content}}}}}}}}}}}}}"
+               fr"\centering {content}}}}}}}}}}}}}"
 
     def __repr__(self) -> str:
         return custom_repr(self)
@@ -192,7 +203,7 @@ def format_color(color: str, html_color: bool) -> str:
     html or normal color.
     :param color: Color name or hex-code.
     :param html_color: Whether the color is in hex or not.
-    :return:
+    :return: Just the color name, or HTML-option and hex code.
     """
     if html_color:
         return f"[HTML]{{{color}}}"
@@ -228,7 +239,7 @@ class Row:
         """
         Gives the largest cell height to be used as row height.
         Currently this way because separate cell heights aren't supported.
-        :return:
+        :return: Row height as LaTeX pt:s.
         """
         height = 0
         for i in range(0, len(self.cells)):
@@ -238,9 +249,9 @@ class Row:
     def add_cell(self, i: int, cell: Cell) -> None:
         """
         Adds a cell to index in row and uses the first free index.
-        :param i:
-        :param cell:
-        :return:
+        :param i: Row index of the cell to add.
+        :param cell: The Cell-object to add to the row.
+        :return: None.
         """
         # index:rowspan in html/json-format:
         # 0:1  1:2  2:1  3:1  4:2
@@ -260,10 +271,10 @@ class Row:
         cell.index = i
         self.cells.append(cell)
 
-    def get_rowspan(self) -> int:
+    def get_colspan(self) -> int:
         """
-        Get the sum of row's cells' colspans.
-        :return:
+        Get the sum of row's cells' colpans.
+        :return: Sum of cell's colspans.
         """
         i = 0
         for cell in self.cells:
@@ -303,18 +314,18 @@ class HorizontalBorder:
         """
         Draws line "-" between cells if there's a border coming from above or below,
         otherwise no line "~".
-        :return:
+        :return: LaTeX \hhline with colored lines.
         """
         output = ""
 
         # Get cell-count from the rows.
         try:
-            above_count = self.row_above.get_rowspan()
+            above_count = self.row_above.get_colspan()
         # If there's no row:
         except AttributeError:
             above_count = 0
         try:
-            below_count = self.row_below.get_rowspan()
+            below_count = self.row_below.get_colspan()
         except AttributeError:
             below_count = 0
 
@@ -411,7 +422,7 @@ class Table:
     """
 
     def __init__(self, rows: List[Row], col_count: int = 0, width=default_table_width,
-                 height=default_table_height) -> None:
+                 height=default_table_height, fit_to_page_width: bool = False) -> None:
         """
         :param rows: List of the rows of the table.
         :param col_count: Number of columns in the table.
@@ -423,6 +434,7 @@ class Table:
         self.width = width
         self.height = height
         self.hborders = []
+        self.fit_to_page_width = fit_to_page_width
 
     def __str__(self) -> str:
         """
@@ -434,9 +446,15 @@ class Table:
         # so here it tells only the highest amount of cols in the table.
         columns = "c" * self.col_count
         prefix = f"\\begin{{table}}[h]\n" \
-                 f"\\resizebox{{{self.width}}}{{{self.height}}}{{%\n" \
                  f"\\begin{{tabular}}{{{columns}}}"
-        postfix = "\\end{tabular}%\n}\n\\end{table}"
+        postfix = "\\end{tabular}\n\\end{table}"
+        resize = self.fit_to_page_width
+        print(resize, type(resize))
+        if resize:
+            prefix = f"\\begin{{table}}[h]\n" \
+                     f"\\resizebox{{{self.width}}}{{{self.height}}}{{%\n" \
+                     f"\\begin{{tabular}}{{{columns}}}"
+            postfix = "\\end{tabular}%\n}\n\\end{table}"
         output = ""
         for i in range(0, len(self.rows)):
             output += "\n" + fr"\hhline{{{str(self.hborders[i])}}}" \
@@ -499,13 +517,12 @@ def get_content(content: str) -> str:
     """
     text = str(content).strip()
     # Replace_pairs contains corresponding html and LaTeX elements
-    # (not needed, TIM does this already).
-    # Commented off as unneeded.
+    # Commented off as unneeded: TIM already does the conversion outside this module.
     """
     for i in range(0, len(replace_pairs)):
         text = text.replace(replace_pairs[i][0], replace_pairs[i][1])
     """
-    # Unknown html-formattings and line breadks will be removed, in case any are left.
+    # In case any are left, HTML-formattings and line breadks will be removed.
     text = re.sub(r'<.+?>', '', text).replace('\r', '').replace('\n', '')
     return text
 
@@ -608,8 +625,8 @@ def get_text_horizontal_align(item):
 def get_font_size(item):
     """
     Gets text size if set, and uses default otherwise.
-    :param item:
-    :return:
+    :param item: Cell data item.
+    :return: Font size or default font size.
     """
     try:
         a = item['fontSize']
@@ -620,9 +637,9 @@ def get_font_size(item):
 
 def get_border_color(border_data) -> (str, bool):
     """
-
-    :param border_data:
-    :return:
+    Parses border color from HTML border format.
+    :param border_data: HTML border format with line thickness, style, color.
+    :return: Border color as tuple containing color name/code and whether its a hex.
     """
     arg_count = border_data.count(" ")
     color = default_text_color
@@ -729,7 +746,7 @@ def int_to_datablock_index(i: int) -> str:
 def update_content_from_datablock(datablock, row: int, cell: int, content: str) -> str:
     """
     Updates the cell content based on tabledatablock if a match is found.
-    :param datablock:
+    :param datablock: Datablock containing updated cell contents.
     :param row: Row-index.
     :param cell: Cell-index.
     :param content: Original cell content.
@@ -784,6 +801,21 @@ def get_html_color_latex_definitions(defs: str = default_color_defs_path) -> Lis
         return definition_list
 
 
+def get_table_resize(table_data) -> bool:
+    """
+    Whether table should be resized to fit the page width.
+    If the attribute isn't set, assume it's False.
+    :param table_data: Table JSON.
+    :return: Table scaling true or false.
+    """
+    resize = False
+    try:
+        resize = table_data['fitToPageWidth']
+    except:
+        pass
+    return resize
+
+
 def convert_table(table_json) -> Table:
     """
     Converts TimTable-json into LaTeX-compatible object.
@@ -808,6 +840,9 @@ def convert_table(table_json) -> Table:
     # table.width = table_width
     # table.height = table_height
 
+    # Whether table should be fit to page.
+    table.fit_to_page_width = get_table_resize(table_json)
+
     # Table settings will be used as defaults, if set.
     (table_default_bg_color, table_default_bg_color_html) = \
         get_color(table_json,
@@ -821,6 +856,8 @@ def convert_table(table_json) -> Table:
                   False)
     table_default_font_family = get_font_family(table_json, default_font_family)
     table_default_borders = get_borders(table_json, CellBorders())
+
+
 
     max_cells = 0
     max_colspan = 1
@@ -901,8 +938,10 @@ def convert_table(table_json) -> Table:
                 # properly show bg-colors, and empty cells need to be placed
                 # above to avoid overlap, since LaTeX doesn't automatically
                 # move cells aside.
-                # TODO: Multirow-multicol cells have bgcolor, border and index problems.
+                # TODO: Multirow-multicol cells have some border problems.
                 if rowspan > 1:
+                    # Take multicol-cells messing up indices into account with this:
+                    cell_index = table_row.get_colspan()
                     for y in range(0, rowspan - 1):
                         # Empty filler cell has mostly same the settings as the multirow-cell:
                         d = copy_cell(c)
@@ -911,18 +950,17 @@ def convert_table(table_json) -> Table:
                         if y > 1:
                             d.borders.color_top = (c.bg_color, c.bg_color_html)
                         d.rowspan = 1
-                        table.get_or_create_row(i + y).add_cell(j, d)
+                        table.get_or_create_row(i + y).add_cell(cell_index, d)
                     c.borders.color_top = (c.bg_color, c.bg_color_html)
                     c.rowspan = -rowspan
-                    table.get_or_create_row(i + rowspan - 1).add_cell(j, c)
+                    table.get_or_create_row(i + rowspan - 1).add_cell(cell_index, c)
 
                 # Normal cells:
                 else:
                     table_row.add_cell(j, c)
                 max_cells = max(max_cells, len(table_row.cells))
 
-    # TODO: Need to find the number of most concurrent cols more accurately.
-    # Currently plays it safe by overestimating.
+    # Currently plays it safe by overestimating table cell count.
     table.col_count = max_cells * max_colspan
     table.create_hborders()
     return table
