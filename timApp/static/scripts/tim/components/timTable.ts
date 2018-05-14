@@ -1,9 +1,7 @@
 import {IController, IRootElementService, IScope} from "angular";
-import $ from "jquery";
 import {timApp} from "../app";
 import {ViewCtrl} from "../controllers/view/viewctrl";
 import {showMessageDialog} from "../dialog";
-import {setSetting} from "../utils";
 import {$http} from "../ngimport";
 import {getParId} from 'tim/controllers/view/parhelpers';
 import {openEditorSimple} from "../directives/pareditor";
@@ -431,7 +429,7 @@ export class TimTableController implements IController {
                 if (this.currentCell != undefined) this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
             }
 
-            if (ev.keyCode == 13 || ev.keyCode === 9 || ev.keyCode === 27)  { // enter, tab or esc
+            if (ev.keyCode == 13 || ev.keyCode === 9 || ev.keyCode === 27) { // enter, tab or esc
                 let parId = getParId(this.element.parents(".par"));
                 if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
                 if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
@@ -446,7 +444,7 @@ export class TimTableController implements IController {
                         this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
                 }
 
-                 if (ev.keyCode === 27) {
+                if (ev.keyCode === 27) {
                     this.currentCell = undefined;
                 }
 

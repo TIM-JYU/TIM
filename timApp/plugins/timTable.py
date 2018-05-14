@@ -16,7 +16,7 @@ from timApp.containerLink import convert_md
 from timApp.plugin import Plugin, PluginException
 from timApp.plugin import get_num_value
 from timApp.plugin import get_value
-from timApp.requesthelper import verify_json_params
+from timApp.requesthelper import verify_json_params, get_option
 from timApp.responsehelper import json_response, ok_response, text_response
 from timApp.sessioninfo import get_current_user_object
 from timApp.timdb.docinfo import DocInfo
@@ -80,7 +80,10 @@ def qst_multihtml():
 def tim_table_get_cell_data():
     multi = []
     args = request.args
-    doc = DocEntry.find_by_id(int(args['docId']))
+    doc_id = get_option(request, 'docId', None, cast=int)
+    if not doc_id:
+        abort(400)
+    doc = DocEntry.find_by_id(doc_id)
     if not doc:
         abort(404)
     verify_edit_access(doc)
@@ -111,7 +114,7 @@ def tim_table_save_cell_list():
     row = verify_json_params('row')
     col = verify_json_params('col')  # todo: put directly in below use cases
     #doc = DocEntry.find_by_id(int(docId)).document
-    doc = DocEntry.find_by_id(docId[0])
+    doc = DocEntry.find_by_id(docId[0]).document_as_current_user
     if not doc:
         abort(404)
     verify_edit_access(doc)
@@ -217,7 +220,7 @@ def is_datablock(yaml: dict) -> bool:
             return True
         else:
             return False
-    except:
+    except KeyError:
         return False
 
 
@@ -227,7 +230,7 @@ def create_datablock(table: dict):
     table['tabledatablock']['cells'] = {}
 
 
-def save_cell(datablock: dict, row: int, col: int, cell_content: str) -> str:
+def save_cell(datablock: dict, row: int, col: int, cell_content: str):
     coordinate = colnum_to_letters(col) + str(row+1)
     try:
         datablock['cells'].update({coordinate: cell_content})
@@ -243,7 +246,7 @@ def find_cell(rows: list, row: int, col: int) -> str:
    return right_cell[CELL]
 
 
-def find_cell_from_datablock(cells: dict, row: int, col: int) -> str:
+def find_cell_from_datablock(cells: dict, row: int, col: int) -> Optional[str]:
     ret = None
     coordinate = colnum_to_letters(col) + str(row+1)
     try:

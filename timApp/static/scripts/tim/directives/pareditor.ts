@@ -188,7 +188,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
              "table:                   \n"+
              "    rows:                 \n"+
              "      - row:              \n"+
-             "        - cell: elisa      \n"+
+             "        - cell: \"solu\"     \n"+
              "                            \n"+
              "```                        \n",
         };
