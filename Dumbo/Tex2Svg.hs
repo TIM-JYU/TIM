@@ -37,8 +37,11 @@ latexTemplate preamble mt  eqn = unlines [
          "\\documentclass{article}"
         ,"\\usepackage{amsmath}"
         ,"\\usepackage{amsfonts}"
+        ,"\\usepackage{amssymb}"
+        ,"\\usepackage[paperwidth=7.7in]{geometry}"
         ,preamble
         ,"\\usepackage[active,dvips,displaymath,textmath,tightpage]{preview}"
+        ,"\\renewcommand{\\arraystretch}{1.5}"
         ,"\\begin{document}"
         , case mt of
             InlineMath -> "$"++eqn++"$"
