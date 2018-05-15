@@ -64,10 +64,8 @@ parseBlock :: Parser EqnOut
 parseBlock = do
     preLine
     _ <- procMsg
-    skipLine 
-    m <- metricsLine<?> "Metrics line"
+    m <- choice [skipLine *> metricsLine <* metricsLineNoDepth, metricsLineNoDepth] <?> "Metrics line"
     emptyPageNote
-    skipLine
     o <- outputLine
     return $ EqnOut (LT.unpack (LT.fromStrict o)) m
 
@@ -106,6 +104,7 @@ metricItem i =
 comma :: Parser ()
 comma = (skipSpace *> char ',' *> skipSpace) <?> "a comma"
 
+-- width=480.311pt, height=172.12pt, depth=0pt
 metricsLine :: Parser Metrics
 metricsLine = skipSpace *> do
   width  <- metricItem "width" <* comma
@@ -113,11 +112,27 @@ metricsLine = skipSpace *> do
   option () (string "page is empty" *> endOfLine)
   depth <- metricItem "depth"
   endOfLine
-  return $ Metrics width height depth
+  return $ Metrics width height (Just depth)
+
+-- graphic size: 480.311pt x 172.12pt (168.81mm x 60.4932mm)
+metricsLineNoDepth :: Parser Metrics
+metricsLineNoDepth = do
+  skipSpace
+  string "graphic size:"
+  skipSpace
+  width <- double
+  string "pt"
+  skipSpace
+  string "x"
+  skipSpace
+  height <- double
+  string "pt"
+  skipLine
+  return $ Metrics width height Nothing
 
 data MathEnv = MathEnv {name :: T.Text} deriving (Eq,Show)
 data EqnOut  = EqnOut {filename::FilePath, metrics :: !Metrics} deriving (Eq,Show)
-data Metrics = Metrics {width,height,depth :: !Double} deriving (Eq,Show)
+data Metrics = Metrics {width,height :: !Double, depth :: Maybe Double} deriving (Eq,Show)
 newtype DVISVGMPath = DVISVGM {getDVISVGM :: FilePath} deriving (Eq,Show)
 newtype LatexPath = LaTex {getLatex :: FilePath} deriving (Eq,Show)
 
@@ -210,7 +225,7 @@ invokeDVISVGM curTmp dvisvgm fn mt = do
     DVISVGMFailed
     curTmp
     (getDVISVGM dvisvgm)
-    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", "--exact", "--bbox=" ++ (if mt == InlineMath then "preview" else "min"), fn ++ ".xdv"]
+    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", "--exact", "--bbox=" ++ (if mt == InlineMath then "preview" else "1"), fn ++ ".xdv"]
     ""
   case parseOnly (many1 parseBlock) (LT.toStrict $ LT.pack dvi) of
     Right []     -> throw (UnexpectedError "many1 returned none")
@@ -220,7 +235,7 @@ invokeDVISVGM curTmp dvisvgm fn mt = do
 createSVGImg :: EqnOut -> LBS.ByteString -> String
 createSVGImg eb svg = "<img style='"
                       <> "width:" <> tm width <> "; "
-                      <> "vertical-align:-"   <> tm ((/1.0) <$> depth) <>";' "
+                      <> "vertical-align:-"   <> tm ((/1.0) . (fromMaybe 0) . depth) <>";' "
                       <> "src=\"data:image/svg+xml;base64," <> encode svg <> "\" />"
     where 
         encode = LT.unpack . LT.decodeUtf8 . B64.encode -- .  ZLib.compress  
