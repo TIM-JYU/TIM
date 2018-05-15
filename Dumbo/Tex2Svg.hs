@@ -158,7 +158,7 @@ doConvert :: FilePath -> DVISVGMPath -> LatexPath -> String -> MathType -> Strin
 doConvert curTmpDir dvisvgm latex preamble mt eqn = do
    let fn = showDigest . sha1 . LT.encodeUtf8 . LT.pack $ eqn
        latexFile = latexTemplate preamble mt eqn
-   _ <- timeoutException 1000000 LaTexTimeouted $ 
+   _ <- timeoutException 2000000 LaTexTimeouted $
         readProcessException LaTexFailed curTmpDir (getLatex latex) ["-no-pdf", "-jobname="++fn,"-halt-on-error"] latexFile
    eb <- head <$> invokeDVISVGM curTmpDir dvisvgm fn mt
    svg <- BS.readFile (curTmpDir++"/"++filename eb)
