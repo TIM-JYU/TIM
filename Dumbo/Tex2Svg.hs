@@ -210,7 +210,7 @@ invokeDVISVGM curTmp dvisvgm fn mt = do
     DVISVGMFailed
     curTmp
     (getDVISVGM dvisvgm)
-    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff,ah", "--exact", "--bbox=" ++ (if mt == InlineMath then "preview" else "min"), fn ++ ".xdv"]
+    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", "--exact", "--bbox=" ++ (if mt == InlineMath then "preview" else "min"), fn ++ ".xdv"]
     ""
   case parseOnly (many1 parseBlock) (LT.toStrict $ LT.pack dvi) of
     Right []     -> throw (UnexpectedError "many1 returned none")
