@@ -114,7 +114,7 @@ def tim_table_save_cell_list():
     row = verify_json_params('row')
     col = verify_json_params('col')  # todo: put directly in below use cases
     #doc = DocEntry.find_by_id(int(docId)).document
-    doc = DocEntry.find_by_id(docId[0]).document_as_current_user
+    doc = DocEntry.find_by_id(docId[0])
     if not doc:
         abort(404)
     verify_edit_access(doc)

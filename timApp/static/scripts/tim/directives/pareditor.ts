@@ -81,7 +81,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
         multiline: string,
         strokes: string,
         pipe: string,
-        yamlTable: string,
+        timTable: string,
     };
     private uploadedFile: string;
     private storage: Storage;
@@ -183,7 +183,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
             "|  123  |  123 |   123   |   123  |\n" +
             "|    1  |    1 |     1   |     1  |\n",
 
-             yamlTable:
+             timTable:
              "``` {plugin=\"timTable\"} \n"+
              "table:                   \n"+
              "    rows:                 \n"+
