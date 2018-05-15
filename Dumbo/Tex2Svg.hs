@@ -38,6 +38,7 @@ latexTemplate preamble mt  eqn = unlines [
         ,"\\usepackage{amsmath}"
         ,"\\usepackage{amsfonts}"
         ,"\\usepackage{amssymb}"
+        ,"\\usepackage{unicode-math}"
         ,"\\usepackage[paperwidth=7.7in]{geometry}"
         ,preamble
         ,"\\usepackage[active,dvips,displaymath,textmath,tightpage]{preview}"
