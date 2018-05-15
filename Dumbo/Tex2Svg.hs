@@ -144,7 +144,7 @@ doConvert curTmpDir dvisvgm latex preamble mt eqn = do
        latexFile = latexTemplate preamble mt eqn
    _ <- timeoutException 1000000 LaTexTimeouted $ 
         readProcessException LaTexFailed curTmpDir (getLatex latex) ["-no-pdf", "-jobname="++fn,"-halt-on-error"] latexFile
-   eb <- head <$> invokeDVISVGM curTmpDir dvisvgm fn 
+   eb <- head <$> invokeDVISVGM curTmpDir dvisvgm fn mt
    svg <- BS.readFile (curTmpDir++"/"++filename eb)
    return . force . wrapMath mt $ createSVGImg eb (LBS.fromStrict svg)
 
@@ -204,13 +204,13 @@ readProcessException toExc curTmp process args stdinContent = do
         (e@(ExitFailure _),a,b) -> throw (toExc e a b)
         (ExitSuccess,a,b) -> return (a,b)
 
-invokeDVISVGM :: FilePath -> DVISVGMPath -> FilePath -> IO (NonEmpty EqnOut)
-invokeDVISVGM curTmp dvisvgm fn = do
+invokeDVISVGM :: FilePath -> DVISVGMPath -> FilePath -> MathType -> IO (NonEmpty EqnOut)
+invokeDVISVGM curTmp dvisvgm fn mt = do
   (_, dvi) <- timeoutException 1000000 DVISVGMTimeouted $ readProcessException
     DVISVGMFailed
     curTmp
     (getDVISVGM dvisvgm)
-    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", "--exact", "--bbox=preview", fn ++ ".xdv"]
+    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff,ah", "--exact", "--bbox=" ++ (if mt == InlineMath then "preview" else "min"), fn ++ ".xdv"]
     ""
   case parseOnly (many1 parseBlock) (LT.toStrict $ LT.pack dvi) of
     Right []     -> throw (UnexpectedError "many1 returned none")
