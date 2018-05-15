@@ -229,14 +229,13 @@ body::-ms-backdrop {
  * IMAGES
  *********************************************/
 .reveal section img {
-  margin: 15px 0px;
   background: rgba(255, 255, 255, 0.12);
-  /* border: 4px solid #000;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); */
-  margin-left: auto;
-  margin-right: auto;
+  margin: 15px auto;
 }
 
+.reveal section .mathp.inline img {
+  margin: 0;
+}
 
 .reveal a img {
   -webkit-transition: all 0.15s linear;
