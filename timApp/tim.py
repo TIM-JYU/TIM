@@ -210,7 +210,7 @@ def merge_attachments(doc):
     :return: merged pdf-file
     """
 
-    # TODO: Check if there is a PDF already
+    # TODO: Check if there is a PDF already (and not changes after previous merging).
     try:
         d = DocEntry.find_by_path(doc, try_translation=True)
         if not d:
