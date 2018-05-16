@@ -7,92 +7,14 @@ from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
 
 
 class TimTableTest(BrowserTest):
-    def test_timtable_initial(self):
-        self.login_browser_quick_test1()
-        self.login_test1()
-        d = self.create_doc(initial_par="""
-``` {plugin="timTable"}
-table:
-  columns:
-  - column:
-    backgroundColor: blue
-    formula: =(kurssinumero * opintopisteet)
-    style: exampleStyle
-    width: 1px
-  - column:
-      name: kurssinumero
-      width: 50
-  - column:
-      name: opintopisteet
-      width: 100
-  - backgroundColor: yellow
-    column:
-  datablock:
-    cells:
-      A0: r1s1
-      A1: 'Rami Pasanen '
-      B0: Keijo Kukkanen
-      B1: 1-11,5-6
-      C0: 1-11,5-6
-      C2: Keijo Kukkanen
-      D0: Visa
-      E0: kk
-      F1: 1-11,5-6
-      G2: 1-11,5-6
-      H2: md:joo $$\int f(x^6) dx$$
-    type: relative
-  rows:
-  - backgroundColor: cyan
-    row:
-    - cell: 'Rami Pasanen '
-      type: text
-    - cell: Keijo Kukkanen
-      colspan: 2
-      horizontal-align: right
-    - border: 10px solid red
-      cell: Visa
-    - backgroundColor: blue
-      cell: Visa
-    - cell: kk
-      colspan: 2
-      rowspan: 2
-      textAlign: center
-      verticalAlign: middle
-    - md:**Kasimir**
-  - row:
-    - borderBottom: 1px solid purple
-      cell: 1-10
-    - borderBottom: 1px none white
-      cell: 1-11,5-6
-    - Kukkuu
-    - md:[1-11,5-6]{.red}
-    - cell: 1-11,5-6
-    - cell: 1-11,5-6
-    - backgroundColor: coral
-      cell: 1-11,5-6
-    - cell: 1-11,5-6
-  - row:
-    - backgroundColor: blue
-      cell: 1-10
-      verticalAlign: bottom
-    - md:![vesa](/images/108/vesa640.png)
-    - cell: 1-11,5-6
-    - cell: 1-11,5-6
-    - md:[Paina]{.timButton}
-    - cell: 1-11,5-6
-    - cell: 1-11,5-6
-    - cell: 'md: $$\int f(x) dx$$'
 
-```
-
-        """)
-        self.goto_document(d)
-        sleep(2)
-        we = self.find_element('tim-table')
-        self.save_element_screenshot(we, "timTableInitial")
 
 
     def test_timtable_simple(self):
+        """
+        Test case 1.2. Simple table.
+
+        """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -107,12 +29,14 @@ table:
 ```
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableSimple")
 
 
     def test_timtable_all_column_styles(self):
+        """
+        Test case 1.3. All styles for column-element.
+        """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -156,12 +80,14 @@ table:
 
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableAllColumnStyles")
 
 
     def test_timtable_all_row_styles(self):
+        """
+        Test case 1.4. All styles for row-elements.
+        """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -206,12 +132,14 @@ table:
 
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableAllRowStyles")
 
 
     def test_timtable_all_cell_styles(self):
+        """
+        Test case 1.5. All styles for cell-element.
+        """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -254,12 +182,15 @@ table:
 ```
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableAllCellStyles")
 
 
     def test_timtable_all_table_styles(self):
+        """
+        Test case 1.6. All styles for table-element.
+        :return:
+        """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -303,12 +234,14 @@ table:
         
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableTableStyles")
 
 
     def test_timtable_all_styles(self):
+        """
+        Test case 1.7. All styles..
+        """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -387,13 +320,14 @@ table:
 
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableAllStyles")
 
 
-    def test_timtable_extra_styles(self):
-        """Right way to function: Added extra properties
+    def test_timtable_extra_properties(self):
+        """
+           Test case 1.8. Extra properties.
+           Right way to function: Added extra properties
            senatus: "populusque romanus"
            Julius: Caesar
            Lucius: Vorenus
@@ -482,12 +416,14 @@ table:
 
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableExtraStyles")
 
 
     def test_timtable_colspan(self):
+        """
+        Test case 1.9. Colspan
+        """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -522,12 +458,14 @@ table:
 
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableColspan")
 
 
     def test_timtable_rowspan(self):
+        """
+        Test case 1.10 Rowspan
+        """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -562,11 +500,13 @@ table:
 
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableRowspan")
 
     def test_timtable_rowspan_over_rows(self):
+        """
+        Test case 1.11 Rowspan over amount of rows.
+        """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -602,12 +542,14 @@ table:
 
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableRowspanOverRows")
 
     def test_timtable_colspan_over_columns(self):
-        """Right way to function is like HTML normally would with these colspan values"""
+        """
+        Test case 1.12. Colspan over the amount of columns.
+        Right way to function is like HTML normally would with these colspan values.
+        """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -640,11 +582,13 @@ table:
 ```
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableColspanOverColumns")
 
     def test_timtable_rowspan_colspan(self):
+        """
+        Test case 1.13. Rowspan and colspan together.
+        """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -681,11 +625,13 @@ table:
 
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableRowspanColspan")
 
     def test_timtable_column_span(self):
+        """
+        Test case 1.14. Column span.
+        """
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -727,7 +673,133 @@ table:
 
                     """)
         self.goto_document(d)
-        sleep(2)
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableColumnSpan")
 
+        def test_timtable_many_things(self):
+            """
+            Test case 1.15. Many things.
+            """
+            self.login_browser_quick_test1()
+            self.login_test1()
+            d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+    table:
+      columns:
+      - column:
+        backgroundColor: blue
+        formula: =(kurssinumero * opintopisteet)
+        style: exampleStyle
+        width: 1px
+      - column:
+          name: kurssinumero
+          width: 50
+      - column:
+          name: opintopisteet
+          width: 100
+      - backgroundColor: yellow
+        column:
+      datablock:
+        cells:
+          A1: r1s1
+          A2: 'Rami Pasanen '
+          B1: Keijo Kukkanen
+          B2: 1-11,5-6
+          C1: 1-11,5-6
+          C2: Keijo Kukkanen
+          D1: Visa
+          E1: kk
+          F1: 1-11,5-6
+          G2: 1-11,5-6
+          H2: md:joo $$\int f(x^6) dx$$
+        type: relative
+      rows:
+      - backgroundColor: cyan
+        row:
+        - cell: 'Rami Pasanen '
+          type: text
+        - cell: Keijo Kukkanen
+          colspan: 2
+          horizontal-align: right
+        - border: 10px solid red
+          cell: Visa
+        - backgroundColor: blue
+          cell: Visa
+        - cell: kk
+          colspan: 2
+          rowspan: 2
+          textAlign: center
+          verticalAlign: middle
+        - md:**Kasimir**
+      - row:
+        - borderBottom: 1px solid purple
+          cell: 1-10
+        - borderBottom: 1px none white
+          cell: 1-11,5-6
+        - Kukkuu
+        - md:[1-11,5-6]{.red}
+        - cell: 1-11,5-6
+        - cell: 1-11,5-6
+        - backgroundColor: coral
+          cell: 1-11,5-6
+        - cell: 1-11,5-6
+      - row:
+        - backgroundColor: blue
+          cell: 1-10
+          verticalAlign: bottom
+        - md:![Kuva](/images/471/testikuva.png)
+        - cell: 1-11,5-6
+        - cell: 1-11,5-6
+        - md:[Paina]{.timButton}
+        - cell: 1-11,5-6
+        - cell: 1-11,5-6
+        - cell: 'md: $$\int f(x) dx$$'
+
+```
+
+            """)
+            self.goto_document(d)
+            sleep(2)
+            we = self.find_element('tim-table')
+            self.save_element_screenshot(we, "timTableManyThings")
+
+            def test_timtable_tabledatablock(self):
+                """
+                Test case 1.16. Data block.
+                """
+                self.login_browser_quick_test1()
+                self.login_test1()
+                d = self.create_doc(initial_par="""
+``` {plugin="timTable"}
+table:
+  rows:
+    - row:
+      - cell: ''
+      - cell: 'Hei1'
+      - cell: 'Hei2'
+    - row:
+      - cell: 'Hei3'
+      - cell: 'Hei4'
+      - cell: 'Hei5'
+    - row:
+      - cell: 'Hei6'
+      - cell: 'Hei7'
+      - cell: 'Hei8'
+  tabledatablock:
+    cells:
+      A1: 'd1'
+      A2: 'd2'
+      A3: 'd3'
+      B1: 'd4'
+      B2: 'd5'
+      B3: 'd6'
+      C1: 'd7'
+      C2: 'd8'
+      C3: 'd9'
+    type: relative
+      
+```
+                        """)
+                self.goto_document(d)
+                we = self.find_element('tim-table')
+                self.save_element_screenshot(we, "timTableTabledatablock")
