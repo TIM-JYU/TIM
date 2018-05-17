@@ -43,6 +43,7 @@ latexTemplate preamble mt  eqn = unlines [
         ,preamble
         ,"\\usepackage[active,dvips,displaymath,textmath,tightpage]{preview}"
         ,"\\renewcommand{\\arraystretch}{1.5}"
+        ,"\\setmathfont[range=\\setminus]{Asana Math}"
         ,"\\begin{document}"
         , case mt of
             InlineMath -> "$"++eqn++"$"
