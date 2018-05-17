@@ -293,8 +293,13 @@ a .glyphicon {
         margin: 0 auto;
     }
 
-    .mathp.inline img {
-        display: inline;
+    .mathp {
+        &.inline img {
+            display: inline;
+        }
+        &.display {
+            max-width: inherit;
+        }
     }
 
     blockquote {
