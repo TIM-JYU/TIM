@@ -32,24 +32,25 @@ import Data.Aeson (encode)
 import Data.Monoid
 import Numeric
 
+specialCmd :: String
+specialCmd = "\\special{dvisvgm:rawdef <style type=\"text/css\"><![CDATA[path {stroke: currentColor;stroke-width: 0.05pt;}]]></style>}"
+
 latexTemplate :: String -> MathType -> String -> String
 latexTemplate preamble mt  eqn = unlines [
          "\\documentclass{article}"
         ,"\\usepackage{amsmath}"
         ,"\\usepackage{amsfonts}"
         ,"\\usepackage{amssymb}"
-        ,"\\usepackage{unicode-math}"
         ,"\\usepackage[paperwidth=7.7in]{geometry}"
         ,preamble
         ,"\\usepackage[active,dvips,displaymath,textmath,tightpage]{preview}"
         ,"\\renewcommand{\\arraystretch}{1.5}"
-        ,"\\setmathfont[range=\\setminus]{Asana Math}"
         ,"\\begin{document}"
         , case mt of
-            InlineMath -> "$"++eqn++"$"
+            InlineMath -> "$" ++ specialCmd ++ eqn ++ "$"
             DisplayMath -> case parseOnly parseMathEnv (T.pack eqn) of
-                               Right _ -> eqn
-                               Left _ -> "$$"++eqn++"$$"
+                               Right _ -> "\\begin{preview}" ++ specialCmd ++ eqn ++ "\\end{preview}"
+                               Left _ -> "$$" ++ specialCmd ++ eqn ++ "$$"
         ,"\\end{document}"]
 
 parseMathEnv :: Parser MathEnv
@@ -227,12 +228,15 @@ invokeDVISVGM curTmp dvisvgm fn mt = do
     DVISVGMFailed
     curTmp
     (getDVISVGM dvisvgm)
-    ["-p1-", "--output=" ++ fn ++ "_%p", "--font-format=woff", "--exact", "--bbox=" ++ (if mt == InlineMath then "preview" else "1"), fn ++ ".xdv"]
+    ["-p1-", "--output=" ++ fn ++ "_%p", "--no-fonts", "--exact", "--bbox=" ++ (if mt == InlineMath then "preview" else "1"), fn ++ ".xdv"]
     ""
   case parseOnly (many1 parseBlock) (LT.toStrict $ LT.pack dvi) of
     Right []     -> throw (UnexpectedError "many1 returned none")
     Right (x:xs) -> pure (x :| xs)
     Left  err    -> throw (CouldNotParseDVISVGM dvi err)
+
+addStylesheet :: LBS.ByteString -> LBS.ByteString
+addStylesheet svg = LBS.append (LT.encodeUtf8 . LT.pack $ "<?xml version='1.0' encoding='UTF-8'?><?xml-stylesheet href=\"/static/svgmath.css\" type=\"text/css\"?>") (LBS.dropWhile (\c -> c /= 10) svg)
 
 createSVGImg :: EqnOut -> LBS.ByteString -> String
 createSVGImg eb svg = "<img style='"
@@ -240,7 +244,7 @@ createSVGImg eb svg = "<img style='"
                       <> "vertical-align:-"   <> tm ((/1.0) . (fromMaybe 0) . depth) <>";' "
                       <> "src=\"data:image/svg+xml;base64," <> encode svg <> "\" />"
     where 
-        encode = LT.unpack . LT.decodeUtf8 . B64.encode -- .  ZLib.compress  
+        encode = LT.unpack . LT.decodeUtf8 . B64.encode -- .  ZLib.compress
         tm f = ($"em") . showFFloat (Just 5) . toEm . f . metrics $ eb
         toEm   = estimatePtToEm "" 
 
