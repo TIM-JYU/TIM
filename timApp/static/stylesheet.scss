@@ -296,8 +296,9 @@ a .glyphicon {
     .mathp {
         &.inline img {
             display: inline;
+            max-width: inherit;
         }
-        &.display {
+        &.display img {
             max-width: inherit;
         }
     }
