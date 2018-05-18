@@ -1,12 +1,12 @@
-{-#OPTIONS_GHC -Wall#-}
-{-#LANGUAGE OverloadedStrings, ScopedTypeVariables#-}
-{-#LANGUAGE DataKinds#-}
-{-#LANGUAGE FlexibleInstances#-}
-{-#LANGUAGE TypeOperators#-}
-{-#LANGUAGE DeriveGeneric#-}
-{-#LANGUAGE DeriveFunctor#-}
-{-#LANGUAGE DeriveFoldable#-}
-{-#LANGUAGE DeriveTraversable#-}
+{-#OPTIONS_GHC -Wall #-}
+{-#LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
+{-#LANGUAGE DataKinds #-}
+{-#LANGUAGE FlexibleInstances #-}
+{-#LANGUAGE TypeOperators #-}
+{-#LANGUAGE DeriveGeneric #-}
+{-#LANGUAGE DeriveFunctor #-}
+{-#LANGUAGE DeriveFoldable #-}
+{-#LANGUAGE DeriveTraversable #-}
 module Main where
 import Data.Monoid
 import Text.Pandoc.Walk
