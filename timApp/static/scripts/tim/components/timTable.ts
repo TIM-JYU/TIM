@@ -1,15 +1,10 @@
 import {IController, IRootElementService, IScope} from "angular";
 import {timApp} from "../app";
 import {ViewCtrl} from "../controllers/view/viewctrl";
-import {showMessageDialog} from "../dialog";
 import {$http, $timeout} from "../ngimport";
 import {getParId} from 'tim/controllers/view/parhelpers';
 import {openEditorSimple} from "../directives/pareditor";
 import {ParCompiler} from "../services/parCompiler";
-
-//import {IHash} from "../../decls/components/timTable";
-
-
 export const EDITOR_CLASS = "editorArea";
 export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
 
@@ -34,6 +29,7 @@ const styleToHtml: { [index: string]: string } =
 
     };
 
+
 export interface TimTable {
     table: ITable;
     id?: string;
@@ -45,6 +41,9 @@ export interface ITable extends ITableStyles {
     tabledatablock?: DataEntity;
 }
 
+/**
+ * Styles
+ */
 export interface ITableStyles {
     backgroundColor?: string;
     border?: string;
@@ -70,8 +69,8 @@ export interface CellDataEntity {
     [key: string]: string;
 }
 
-
-export type CellEntity = ICell | string | number;
+export type CellType = string | number | boolean | null;
+export type CellEntity = ICell | CellType;
 
 export interface IRow extends IRowStyles {
     row?: (CellEntity)[];
@@ -109,7 +108,7 @@ export interface ICellStyles {
 }
 
 export interface ICell extends ICellStyles {
-    cell: string;
+    cell: CellType;
     editing?: boolean;
     editorOpen?: boolean;
     type?: string;
@@ -138,8 +137,8 @@ export interface IColumnStyles {
     borderRight?: string;
 }
 
-export interface IHash {
-    [details: string]: number;
+function isPrimitiveCell (cell : CellEntity): cell is CellType {
+    return cell == null || (cell as ICell).cell === undefined;
 }
 
 
@@ -149,7 +148,6 @@ export class TimTableController implements IController {
     public sc: IScope;
     public cellDataMatrix: string[][];
     public dataCells: DataEntity;
-    public DataHash: IHash;
     private srcid: string;  // document id
     private $pars: JQuery;  // paragraph
     private data: TimTable;
@@ -160,11 +158,14 @@ export class TimTableController implements IController {
     private editedCellContent: string;
     private currentCell?: { row: number, col: number, editorOpen: boolean };
     private mouseInTable?: boolean;
+
     constructor(private scope: IScope, private element: IRootElementService) {
         this.keyDownPressedTable = this.keyDownPressedTable.bind(this);
     }
 
-
+    /**
+     * Set listener and initializes tabledatablock
+     */
     $onInit() {
         this.count = 0;
         this.InitializeCellDataMatrix();
@@ -178,14 +179,15 @@ export class TimTableController implements IController {
                 return;
             this.viewctrl.addTable(this, parId);
         }
-        document.addEventListener("keydown", this.keyDownPressedTable);
-
-
+        document.addEventListener("keyup", this.keyDownPressedTable);
     }
 
 
+    /**
+     * Removes listener and cleans up
+     */
     $onDestroy() {
-        document.removeEventListener("keydown", this.keyDownPressedTable);
+        document.removeEventListener("keyup", this.keyDownPressedTable);
     }
 
 
@@ -199,20 +201,28 @@ export class TimTableController implements IController {
         return this.editing;
     }
 
-    /*
-    Saving
+    /**
+     * Set attirbutes value to correct ones when saved cell values
      */
     public editSave() {
         this.editing = false;
         if (this.currentCell) this.currentCell = undefined;
     }
 
-
+    /**
+     * Return true if cell is being edited
+     * @param {number} rowi Row index
+     * @param {number} coli Col index
+     * @returns {{row: number; col: number; editorOpen: boolean} | boolean}
+     */
     public isCellBeingEdited(rowi: number, coli: number) {
         return this.currentCell && this.currentCell.col === coli && this.currentCell.row === rowi;
     }
 
-
+    /**
+     * Returns true if currentcell is not undefined
+     * @returns {{row: number; col: number; editorOpen: boolean} | undefined}
+     */
     public isSomeCellBeingEdited() {
         return this.currentCell;
     }
@@ -232,7 +242,7 @@ export class TimTableController implements IController {
     }
 
     /**
-     *
+     * When editin is cancelled, sets attributes
      */
     public editCancel() {
         this.editing = false;
@@ -242,23 +252,20 @@ export class TimTableController implements IController {
 
     /**
      * Saves cell content
-     * @param {string} cellContent
-     * @param {number} docId
-     * @param {string} parId
-     * @param {number} row
-     * @param {number} col
-     * @returns {Promise<void>}
+     * @param {string} cellContent Saved value
+     * @param {number} docId  Document id
+     * @param {string} parId Paragraph id
+     * @param {number} row  Row index
+     * @param {number} col Column index
      */
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
-
-
-        if (!(cellContent.startsWith("md:"))){
+        if (!(cellContent.startsWith("md:"))) {
             if ((cellContent === this.cellDataMatrix[row][col])) {
                 ParCompiler.processAllMathDelayed(this.element);
                 return;
             }
         }
-        const response = await $http.post<{ [cellContent: string]: string; }>("/timTable/saveCell", {
+        const response = await $http.post<string[]>("/timTable/saveCell", {
             cellContent,
             docId,
             parId,
@@ -268,43 +275,42 @@ export class TimTableController implements IController {
         const cellHtml = response.data[0];
         this.cellDataMatrix[row][col] = cellHtml;
         ParCompiler.processAllMathDelayed(this.element);
-        // const response = await $http.post<ICell>("/timTable/saveCell", {cellContent, docId, parId, row, col});
     }
 
 
     /**
      * Get cell data
-     * @param {CellEntity} cell
-     * @param {number} docId
-     * @param {string} parId
-     * @param {number} row
-     * @param {number} col
+     * @param {CellEntity} cell Handled cell
+     * @param {number} docId Document id
+     * @param {string} parId Paragraph id
+     * @param {number} row Row index
+     * @param {number} col Column index
      * @returns {Promise<string>}
      */
     async getCellData(cell: CellEntity, docId: number, parId: string, row: number, col: number) {
         let ctrl = this;
-        const response = await $http<{ [cellContent: string]: string; }>({ //Miksi tama toimii vaikka response ei oikeasti ole tuota tyyppia?
+        const response = await $http< CellType[]   >({
             url: "/timTable/getCellData",
             method: "GET",
             params: {docId, parId, row, col},
         });
 
         const data = response.data;
-        ctrl.editedCellContent = data[0]
-        //showMessageDialog(this.editedCellContent);
-        ctrl.cellDataMatrix[row][col] = data[0];
-        return data[0]
+        let value = this.cellToString(data[0]);
+        ctrl.editedCellContent = value;
+        ctrl.cellDataMatrix[row][col] = value;
+        return data[0];
     }
 
 
     /**
      * Opens editor
      * @param {CellEntity} cell
-     * @param {number} docId
-     * @param {string} value
-     * @param {string} parId
-     * @param {number} row
-     * @param {number} col
+     * @param {number} docId Document id
+     * @param {string} value Value that editor will show
+     * @param {string} parId Pargharph id
+     * @param {number} row Row index
+     * @param {number} col Column index
      * @returns {Promise<void>}
      */
     async openEditor(cell: CellEntity, docId: number, value: string, parId: string, row: number, col: number) {
@@ -318,34 +324,23 @@ export class TimTableController implements IController {
         if (result.type == "save" && result.text != ctrl.editedCellContent) {
             ctrl.saveCells(result.text, docId, parId, row, col);
             ctrl.cellDataMatrix[row][col] = result.text
+            ctrl.editedCellContent = result.text;
         }
         if (result.type == "cancel") {
             this.currentCell = undefined;
         }
-        if (typeof cell === "string" || typeof cell === "number") {
+        if (isPrimitiveCell(cell)) {
         }
         else cell.editorOpen = false;
     }
 
-
     /**
-     *
-     * @returns {() => void}
-     */
-    private focus() {
-        let ctrl = this;
-        return function () {
-            if (ctrl.editing === true) {
-                showMessageDialog("ko");
-            }
-        }
-    }
-
-    /*
-    Opens adv editor
+     * Opens advanced editor
+     * @param {CellEntity} cell Opened cell
+     * @param {number} rowi Row index
+     * @param {number} coli Column ndex
      */
     private editorOpen(cell: CellEntity, rowi: number, coli: number) {
-        //this.currentCell = undefined;
         if (this.currentCell)
             this.currentCell.editorOpen = true;
         let parId = getParId(this.element.parents(".par"));
@@ -353,12 +348,16 @@ export class TimTableController implements IController {
         this.openEditor(cell, this.viewctrl.item.id, this.cellDataMatrix[rowi][coli], parId, rowi, coli)
     }
 
+
+    /**
+     * Opens advanced editor
+     */
     private openBigEditor() {
 
-           var modal: CellEntity = {
-                    cell: "",
-                }
-                if (this.currentCell != undefined) this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
+        var modal: CellEntity = {
+            cell: this.editedCellContent,
+        }
+        if (this.currentCell != undefined) this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
     }
 
 
@@ -376,15 +375,26 @@ export class TimTableController implements IController {
                     item.row.forEach((item2, index2) => {
                         if (item.row) {
                             let itemInRow = item.row[index2];
-                            if (typeof itemInRow === "string" || typeof itemInRow === "number") ctrl.cellDataMatrix[index][index2] = String(itemInRow);
-                            else this.cellDataMatrix[index][index2] = itemInRow.cell;
+                            if (isPrimitiveCell(itemInRow)) ctrl.cellDataMatrix[index][index2] = this.cellToString(itemInRow);
+                            else this.cellDataMatrix[index][index2] = this.cellToString(itemInRow.cell);
                         }
                     });
             });
     }
 
-    /*
-    Reads DataBlock and sets all values to DataCellMatrix
+
+    /**
+     * Transforms cell to string
+     * @param {CellType} cell Changed cell
+     * @returns {string}
+     */
+    private cellToString(cell: CellType){
+        if (cell == null) return "";
+        return cell.toString();
+    }
+
+    /**
+     * Reads DataBlock and sets all values to DataCellMatrix
      */
     private readDataBlockAndSetValuesToDataCellMatrix() {
         if (this.data.table.tabledatablock)   // reads tabledatablock and sets all values to datacellmatrix
@@ -403,16 +413,21 @@ export class TimTableController implements IController {
             }
     }
 
-    /*
-    Address validation
+    /**
+     * Coordinates validation
+     * @param {{col: number; row: number}} address row and column index
+     * @returns {boolean} true if valid
      */
     private checkThatAddIsValid(address: { col: number, row: number }) {
         if (address.col >= 0 && address.row >= 0) return true;
     }
 
-    /*
-      Get placement, ex. A1 -> 0,0
-      C5 -> 2,4
+    /**
+     * Get placement, ex. A1 -> 0,0
+     * ex. C5 -> 2,4
+     * @param {string} colValue Column value, ex. 'A'
+     * @param {string} rowValue  Row value, ex. '1'
+     * @returns {{col: number; row: number}} Coordinates as index numbers
      */
     private getAddress(colValue: string, rowValue: string) {
         const charCodeOfA = "A".charCodeAt(0);
@@ -423,30 +438,25 @@ export class TimTableController implements IController {
             columnIndex += (colValue.charCodeAt(charIndex) - charCodeOfA + 1) * Math.pow(asciiCharCount, reversedCharacterPlaceInString)
             reversedCharacterPlaceInString++;
         }
-
         columnIndex = columnIndex - 1;
         let rowIndex: number = parseInt(rowValue) - 1;
         return {col: columnIndex, row: rowIndex}
     }
 
 
-
     /**
      * Deals with key events
-     * @param {KeyboardEvent} ev
-     * @param {CellEntity} cell
-     * @param {number} rowi
-     * @param {number} coli
+     * @param {KeyboardEvent} ev Pressed key event
      */
-    private keyDownPressedInSmallEditor(ev: KeyboardEvent) {
+    private keyUpPressedInSmallEditor(ev: KeyboardEvent) {
         if (ev.ctrlKey && (ev.keyCode == 40 || ev.keyCode == 39 || ev.keyCode == 38 || ev.keyCode == 37))
-        this.handleArrowMovement(ev);
+            this.handleArrowMovement(ev);
     }
 
 
     /**
      * Deals with keyevents inside div
-     * @param {KeyboardEvent} ev
+     * @param {KeyboardEvent} ev KeyboardEvent
      */
     private keyDownPressedTable(ev: KeyboardEvent) {
         if (this.mouseInTable) {
@@ -456,16 +466,14 @@ export class TimTableController implements IController {
                 }
                 if (this.currentCell != undefined) this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
             }
-
             if (ev.keyCode == 13 || ev.keyCode === 9 || ev.keyCode === 27) { // enter, tab or esc
                 let parId = getParId(this.element.parents(".par"));
                 if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
                 if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
-                    //this.cellDataMatrix[this.currentCell.row][this.currentCell.col] = this.editedCellContent.toString();
-                      let value = $(".editInput").val();
-            if(typeof value == "string") {
-                this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
-            }
+                    let value = this.editedCellContent;
+                    if (typeof value == "string") {
+                        this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
+                    }
                 }
                 if (ev.keyCode === 13) {
                     if (this.currentCell)
@@ -475,63 +483,56 @@ export class TimTableController implements IController {
                     if (this.currentCell)
                         this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
                 }
-
                 if (ev.keyCode === 27) {
                     this.currentCell = undefined;
                 }
-
-
             }
         }
     }
 
     /**
-     *
-     * @param {KeyboardEvent} ev
-     * @param {number} rowi
-     * @param {number} coli
+     * Handles arrow movement inside table
+     * @param {KeyboardEvent} ev Keyboardevent
      */
-     private handleArrowMovement(ev: KeyboardEvent) {
-          var modal: CellEntity = {
+    private handleArrowMovement(ev: KeyboardEvent) {
+        var modal: CellEntity = {
             cell: "",
         }
 
         let parId = getParId(this.element.parents(".par"));
         if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
         if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
-            let value = $(".editInput").val();
-            if(typeof value == "string") {
+            //let value = this.element.find(".editInput").val();
+            let value = this.editedCellContent;
+            if (typeof value == "string") {
                 this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
             }
         }
-
         if (ev.keyCode == 40) { // down arrow
-            if(this.currentCell)
-            this.openCell(this.currentCell.row + 1, this.currentCell.col);
+            if (this.currentCell)
+                this.openCell(this.currentCell.row + 1, this.currentCell.col);
             return;
         }
-
         if (ev.keyCode == 39) {
-             if(this.currentCell)
-            this.openCell(this.currentCell.row, this.currentCell.col + 1);
+            if (this.currentCell)
+                this.openCell(this.currentCell.row, this.currentCell.col + 1);
             return;
         }
-
         if (ev.keyCode == 37) {
-             if(this.currentCell)
-            this.openCell(this.currentCell.row, this.currentCell.col- 1);
+            if (this.currentCell)
+                this.openCell(this.currentCell.row, this.currentCell.col - 1);
             return;
         }
-
-
         if (ev.keyCode == 38) {
-             if(this.currentCell)
-            this.openCell(this.currentCell.row - 1, this.currentCell.col);
+            if (this.currentCell)
+                this.openCell(this.currentCell.row - 1, this.currentCell.col);
         }
     }
 
-    /*
-    Clicks given or hops opposite side of the table
+    /**
+     * Clicks specified cell or hops opposite side of the table
+     * @param {number} rowi Row index
+     * @param {number} coli Column index
      */
     private openCell(rowi: number, coli: number) {
         var modal: CellEntity = {
@@ -553,9 +554,11 @@ export class TimTableController implements IController {
     }
 
 
-    /*
-Clicks given or hops opposite side of the table
- */
+    /**
+     * Clicks given or hops opposite side of the table
+     * @param {number} rowi Row index
+     * @param {number} coli Column index
+     */
     private openCellNextRowOrColumn(rowi: number, coli: number) {
         var modal: CellEntity = {
             cell: "",
@@ -576,12 +579,14 @@ Clicks given or hops opposite side of the table
                 if (coli < 0) coli = rowrow.length - 1;
             }
         }
-
         this.cellClicked(modal, rowi, coli);
     }
 
-    /*
-    Sets a value to specific index in cellDataMatrix
+    /**
+     * Sets a value to specific index in cellDataMatrix
+     * @param {number} row Row index
+     * @param {number} col Column index
+     * @param {string} value Stored value
      */
     private setValueToMatrix(row: number, col: number, value: string) {
         try {
@@ -592,20 +597,14 @@ Clicks given or hops opposite side of the table
         }
     }
 
-    private updateCellDataMatrix(col: number, row: number) {
-        this.cellDataMatrix = [];
-        // if (this.data.table.rows)
-        for (var index = 0; index < row; index++) {
-            //((item, index) => {
-            this.cellDataMatrix[index] = [];
-        }
-    }
-
-    /*
-    Deals with cell picking
+    /**
+     * Deals with cell clicking
+     * @param {CellEntity} cell Cell that was clicked
+     * @param {number} rowi Row index
+     * @param {number} coli Column index
+     * @param {MouseEvent} event If mouse was clikced
      */
     private async cellClicked(cell: CellEntity, rowi: number, coli: number, event?: MouseEvent) {
-        this.editedCellContent = this.cellDataMatrix[rowi][coli];
         let parId = getParId(this.element.parents(".par"));
         if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
 
@@ -616,104 +615,76 @@ Clicks given or hops opposite side of the table
             }
 
         this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
-        //cell.editing = true;
-        //let cellContent = undefined;
         if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
-            //this.cellDataMatrix[this.currentCell.row][this.currentCell.col] = $(".editInput").val();
-            let value = $(".editInput").val();
-            if(typeof value == "string") {
+            let value = this.editedCellContent;
+
+            if (typeof value == "string") {
                 this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
                 this.currentCell = undefined;
             }
         }
         this.currentCell = {row: rowi, col: coli, editorOpen: false};
+        this.calculateElementPlaces(rowi, coli, event);
+    }
 
+
+    /**
+     * Calculates new places for plus-icons, input element and pen icon
+     * @param {number} rowi Row Index
+     * @param {number} coli Column index
+     * @param {MouseEvent} event MouseEvent
+     * @returns {Promise<void>}
+     */
+    private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent) {
         await $timeout();
-        if(event) {
+         let table = this.element.find(".timTableTable").first();
+         let tablecell = table.find('tr').eq(rowi).find('td').eq(coli);
+         let off = undefined;
+        if (event) {
             let obj = $(event.target);
             if (obj.prop('tagName') !== "TD") {
                 obj = obj.parents('td').last();
             }
-
-
-            let off = obj.offset();
-            if (!off) {
-                // this.positionStyle =  { 'position': 'absolute', left: cordX + 'px', top: 0 + 'px'};
-                return;
-
-            }
-            this.element.find(".editInput").offset(off);
-            await $timeout();
-            this.element.find(".editInput").focus();
-             let table = this.element.find(".timTable2").first();
-            let tablecell = table.find('tr').eq(rowi).find('td').eq(coli);
-            let edit = this.element.find(".editInput");
-            edit.focus();
-            let editOffset = edit.offset();
-            let editOuterHeight = edit.outerHeight();
-            let tablecellOffset = tablecell.offset();
-           if(editOffset && editOuterHeight && tablecellOffset)
-            this.element.find(".buttonOpenBigEditor").offset({top: editOffset.top + editOuterHeight ,left: tablecellOffset.left});
-
+            off = obj.offset();
+            if (!off) return;
         }
         else {
-            let table = this.element.find(".timTable2").first();
-            let tablecell = table.find('tr').eq(rowi).find('td').eq(coli);
-            let off = tablecell.offset();
-             if (!off) {
-                // this.positionStyle =  { 'position': 'absolute', left: cordX + 'px', top: 0 + 'px'};
-                return;
-             }
-
-
+            off = tablecell.offset();
+            if (!off) return;
+        }
+        if(off) {
             this.element.find(".editInput").offset(off);
-             await $timeout();
+            await $timeout();
             let edit = this.element.find(".editInput");
             edit.focus();
             let editOffset = edit.offset();
             let editOuterHeight = edit.outerHeight();
             let tablecellOffset = tablecell.offset();
-           if(editOffset && editOuterHeight && tablecellOffset)
-            this.element.find(".buttonOpenBigEditor").offset({top: editOffset.top + editOuterHeight ,left: tablecellOffset.left});
+            if (editOffset && editOuterHeight && tablecellOffset)
+                this.element.find(".buttonOpenBigEditor").offset({
+                    top: editOffset.top + editOuterHeight,
+                    left: tablecellOffset.left
+                });
         }
-
-
-         let right = 0;
-            let top = 0;
-            let bottom = 0;
-            let left = 0;
-            let timTable = this.element.find(".timTable2").first();
-            let offSet = timTable.offset();
-            let outerWidth = timTable.outerWidth();
-             let outerHeight = timTable.outerHeight();
-            if(offSet && outerWidth && outerHeight) {
-               right= offSet.left + outerWidth;
-               top = offSet.top;
-               bottom = offSet.top + outerHeight;
-               left =  offSet.left;
-            }
-
-
-
-
-            this.element.find(".buttonAddCol").offset({top: top, left: right});
-            this.element.find(".buttonAddRow").offset({top: bottom, left: left});
-
     }
 
-    /*
-    Calculates index to abstract form, ex. 1,1 -> A1
-    3,2 -> C2
-    */
+    /**
+     * Calculates index to abstract form, ex. 1,1 -> A1
+     * ex. 3,2 -> C2
+     * @param {number} rowi Row index
+     * @param {number} coli Column index
+     * @returns {string} Letter and number based coordination values
+     */
     private calculatePlace(rowi: number, coli: number) {
-        const str = "A";
-        // col is a number like 2 -> B
+        const str = "A"; // coli is a number like 2 -> B
         let col: string = String.fromCharCode(str.charCodeAt(0) - 1 + coli); // 65 -1 = 64 + 2 = 66 = B
         return col + rowi;
     }
 
-    /*
-    Add element to DataBlock
+    /**
+     * Add element to DataBlock
+     * @param {string} key Attribute name
+     * @param {string} value Attribute value
      */
     private addtoDataBlock(key: string, value: string) {
         if (this.data.table.tabledatablock) {
@@ -724,8 +695,8 @@ Clicks given or hops opposite side of the table
         }
     }
 
-    /*
-    Create new DataBlock with type, but no cells
+    /**
+     * Create new DataBlock with type, but no cells
      */
     private createDataBlock() {
         let modal: DataEntity = <DataEntity>{};
@@ -733,16 +704,17 @@ Clicks given or hops opposite side of the table
         this.data.table.tabledatablock = modal;
     }
 
+
+    /**
+     * Set styles fo cells
+     * @param {CellEntity} cell Styled cell
+     */
     private stylingForCell(cell: CellEntity) {
 
-        if (typeof cell === "string" || typeof cell === "number") {
+        if (isPrimitiveCell(cell)) {
             return {};
         }
         const styles: { [index: string]: string } = {};
-
-        // throws errors if cell is null, add null check?
-
-
         for (const key of Object.keys(cell)) {
             const keyofCell = key as keyof ICell;
             const property: string = styleToHtml[keyofCell];
@@ -758,6 +730,11 @@ Clicks given or hops opposite side of the table
         return styles;
     }
 
+
+    /**
+     * Set attributes for columns
+     * @param {IColumn} col Column that need styling
+     */
     private stylingForColumn(col: IColumn) {
         const styles: { [index: string]: string } = {};
 
@@ -775,6 +752,11 @@ Clicks given or hops opposite side of the table
         return styles;
     }
 
+
+    /**
+     * Set attributes for rows
+     * @param {IRow} row Styled row
+     */
     private stylingForRow(row: IRow) {
         const styles: { [index: string]: string } = {};
 
@@ -793,7 +775,7 @@ Clicks given or hops opposite side of the table
     }
 
     /**
-     * Ei toimi vielä
+     * Sets style for table
      * @returns {{[p: string]: string}}
      */
     private stylingForTable(tab: ITable) {
@@ -864,11 +846,6 @@ Clicks given or hops opposite side of the table
     private getOwnParId() {
         return getParId(this.element.parents(".par"));
     }
-
-
-    public isCellbeingEdited(rowi: string, coli: string) {
-        return true;
-    }
 }
 
 
@@ -881,112 +858,35 @@ timApp.component("timTable", {
     require: {
         viewctrl: "?^timView",
     },
-    template: `<div ng-class="{editable: $ctrl.editing}"  ng-mouseenter="$ctrl.mouseInsideTable()" ng-mouseleave="$ctrl.mouseOutTable()">
-    <button style="float: right" class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.editing" ng-click="$ctrl.addColumn()"><span class="glyphicon glyphicon-plus"></span></button>
-    <table class="timTable2" ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
-    <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}} ng-style="$ctrl.stylingForColumn(c)"/>
-    <tr ng-repeat="r in $ctrl.data.table.rows"  ng-init="rowi = $index" id={{r.id}} ng-style="$ctrl.stylingForRow(r)">
-      <div ng-if="$ctrl.allcellData == undefined">
-        <td ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}" id={{td.id}}"
-            ng-style="$ctrl.stylingForCell(td)"  ng-click="$ctrl.cellClicked(td, rowi, coli, $event)" >
-            <!--<div ng-if="!$ctrl.isCellBeingEdited(rowi, coli)" ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">-->
-            <div  ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
-           </div>
-           
-          <!-- <input style="position: absolute; color: #000000" ng-if="$ctrl.isCellBeingEdited(rowi, coli)" ng-model="$ctrl.cellDataMatrix[rowi][coli]" ng-keydown="$ctrl.keyDownPressed($event, td, rowi, coli)" focus-me="$ctrl.isCellBeingEdited(rowi, coli)"> 
-           <button style="position: relative; top: 3px" ng-if="$ctrl.isCellBeingEdited(rowi, coli)" ng-click="$ctrl.editorOpen(td, rowi, coli)" class="timButton"><span class="glyphicon glyphicon-pencil"></span></button>
-       -->
-        </td>
-        
-       </tr>
-       
-     <div>  
-     <!--<button ng-click="positionStyle={ 'position': 'absolute', left: 0 + 'px'}">Vaihda väriä</button>
-     <button ng-click="positionStyle={ 'position': 'absolute', left: '500' + 'px'}">Vaihda väriä</button>-->
-     
-     <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"   ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"  ng-model="$ctrl.editedCellContent"  >
-     <button class ="timButton buttonOpenBigEditor" ng-show="$ctrl.isSomeCellBeingEdited()" ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span></button>
-     
-     
-</table>
-<button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.editing" ng-click="$ctrl.addRow()"><span class="glyphicon glyphicon-plus"></span></button>
-
-</div>
-
-
-
-
-<!--
-<table style="">
-   <col ng-repeat="c in $ctrl.data.columns" style="c.style">  "background-color:{{td.background}};"
-    <tr ng-repeat="r in $ctrl.data.rows">terve</tr>
-     <tr style="">
-        <td colspan="20" style="text-align:center;background-color:yellow;"  ng-click="$ctrl.count = $ctrl.count +1"><h2 id="otsikko">{{$ctrl.count}}</h2></td>
-    </tr>
-    <tr style="background-color:blue;">
-        <td style="" ><span class="math display">[int_a^b f(x) dx]</span></td>
-        <td colspan="2" style="" ng-click="$ctrl.editor($event)">{{ans}}</td>
-        <td style="border:10px solid red;">
-            <div class="figure">
-                <img src="/images/108/vesa640.png" alt="vesa"/>
-                <p class="caption">vesa</p>
+    template: `<div ng-class="{editable: $ctrl.editing}" ng-mouseenter="$ctrl.mouseInsideTable()"
+     ng-mouseleave="$ctrl.mouseOutTable()">
+     <div class="timTableContentDiv">
+    <button style="float: right" class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.editing"
+            ng-click="$ctrl.addColumn()"><span class="glyphicon glyphicon-plus"></span></button>
+    <table class="timTableTable" ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
+        <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
+             ng-style="$ctrl.stylingForColumn(c)"/>
+        <tr ng-repeat="r in $ctrl.data.table.rows" ng-init="rowi = $index" id={{r.id}}
+            ng-style="$ctrl.stylingForRow(r)">
+            <div ng-if="$ctrl.allcellData == undefined">
+                <td ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
+                    id={{td.id}}"
+                    ng-style="$ctrl.stylingForCell(td)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
+                    <div ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
+                    </div>
+                </td>
+               </div>
+        </tr>
+    </table>
+    <button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.editing" ng-click="$ctrl.addRow()"><span
+            class="glyphicon glyphicon-plus"></span></button>
             </div>
-        </td>
-        <td style="background-color:blue;">Visa</td>
-        <td rowspan="2" colspan="2" style="text-align:center;vertical-align:middle;">I'm from a Subversion background
-            and, when I had a branch, I knew what I was working on with 'These working files point to this branch'. But
-            with Git I'm not sure when I am editing a file in NetBeans or Notepad++, whether it's tied to the master or
-            another branch. There's no problem with git in bash, it tells me what I'm doing.
-        </td>
-        <td><span class="yellow">matti</span></td>
-        <td colspan="None" style="">
-            <table>
-                <thead>
-                <tr class="header">
-                    <th>Otsikko1</th>
-                    <th align="left">Joo</th>
-                    <th align="left">Ei</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr class="odd">
-                    <td>1.rivi</td>
-                    <td align="left">x</td>
-                    <td align="left">o</td>
-                </tr>
-                <tr class="even">
-                    <td>2.rivi</td>
-                    <td align="left">o</td>
-                    <td align="left">x</td>
-                </tr>
-                </tbody>
-            </table>
-        </td>
-        <td></td>
-    </tr>
-    <tr style="">
-        <td style="border-bottom:1px solid purple;">1-10</td>
-        <td style="border-bottom:1px none white;">1-11,5-6</td>
-        <td style="">1-11,5-6</td>
-        <td style="">1-11,5-6</td>
-        <td style="">1-11,5-6</td>
-        <td style="">1-11,5-6</td>
-        <td style="">1-11,5-6</td>
-        <td style="background-color:grey;">1-11,5-6</td>
-    </tr>
-    <tr style="">
-        <td style="">1-10</td>
-        <td style="">1-11,5-6</td>
-        <td style=""><span class="red">1-11,5-6</span></td>
-        <td style="">1-11,5-6</td>
-        <td style="">1-11,5-6</td>
-        <td style="">1-11,5-6</td>
-        <td style="">1-11,5-6</td>
-        <td colspan="20" style="">1-11,5-6</td>
-    </tr>
-</table>-->
+    <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"
+                   ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
+                   ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent">
+            <button class="timButton buttonOpenBigEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
+                    ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
+            </button>
+</div>
 `
 });
-
-
-
