@@ -725,6 +725,8 @@ or newer one that is more familiar to write in YAML:
             autostamp = true;
             const macroParams = editorText.substring(
                 editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
+                // TODO: more exact parsing needed.
+                // Giving commas inside parameters will break this.
                 editorText.lastIndexOf(macroStringEnd)).split(",");
 
             // Knro usage starts from 1 but dates starts from 0, so dummy value added to

@@ -24,6 +24,7 @@ default_font_family = "cmr"
 default_transparent_color = "none"
 default_table_width = "\\columnwidth"
 default_table_height = "!"
+default_minipage_width = "4cm"
 
 # Mappings:
 # TODO: Add missing pairs.
@@ -181,7 +182,7 @@ class Cell:
         if "\[" in content:
             minipage_width = self.cell_width
             if "*" in minipage_width:
-                minipage_width = "4cm"
+                minipage_width = default_minipage_width
             content = fr"\begin{{minipage}}{{{minipage_width}}}{content}\end{{minipage}}"
 
 
@@ -449,7 +450,7 @@ class Table:
                  f"\\begin{{tabular}}{{{columns}}}"
         postfix = "\\end{tabular}\n\\end{table}"
         resize = self.fit_to_page_width
-        print(resize, type(resize))
+        # print(resize, type(resize))
         if resize:
             prefix = f"\\begin{{table}}[h]\n" \
                      f"\\resizebox{{{self.width}}}{{{self.height}}}{{%\n" \
@@ -607,31 +608,33 @@ def get_font_family(item, default: str = default_font_family) -> str:
     return font
 
 
-def get_text_horizontal_align(item):
+def get_text_horizontal_align(item, default):
     """
     Parses text horizontal alignment.
-    :param item:
-    :return:
+    :param item: Table, row or cell data.
+    :param default: Value to be used if no set align.
+    :return: Set align or default.
     """
     try:
         # Options are center, right and left, which happen to be the same in LaTeX,
         # except only first letters are used.
         a = item['textAlign'][:1]
     except:
-        a = default_text_h_align
+        a = default
     return a
 
 
-def get_font_size(item):
+def get_font_size(item, default_size):
     """
     Gets text size if set, and uses default otherwise.
     :param item: Cell data item.
+    :param default_size: Size to be used if no set font size.
     :return: Font size or default font size.
     """
     try:
         a = item['fontSize']
     except:
-        a = default_font_size
+        a = default_size
     return a
 
 
@@ -856,8 +859,8 @@ def convert_table(table_json) -> Table:
                   False)
     table_default_font_family = get_font_family(table_json, default_font_family)
     table_default_borders = get_borders(table_json, CellBorders())
-
-
+    table_default_font_size = get_font_size(table_json, default_font_size)
+    table_default_h_align = get_text_horizontal_align(table_json, default_text_h_align)
 
     max_cells = 0
     max_colspan = 1
@@ -878,6 +881,8 @@ def convert_table(table_json) -> Table:
             get_size(row_data, default_width, default_height)
         row_default_font_family = \
             get_font_family(row_data, table_default_font_family)
+        row_default_font_size = get_font_size(row_data, table_default_font_size)
+        row_default_h_align = get_text_horizontal_align(row_data, table_default_h_align)
 
         # TODO: Change the logic: in HTML these go around the whole row, not each cell!
         row_default_borders = get_borders(row_data, table_default_borders)
@@ -906,9 +911,9 @@ def convert_table(table_json) -> Table:
                 (width, height) = \
                     get_size(cell_data, row_default_width, row_default_height)
                 borders = get_borders(cell_data, row_default_borders)
-                text_h_align = get_text_horizontal_align(cell_data)
+                text_h_align = get_text_horizontal_align(cell_data, row_default_h_align)
                 font_family = get_font_family(cell_data, row_default_font_family)
-                font_size = get_font_size(cell_data)
+                font_size = get_font_size(cell_data, row_default_font_size)
 
                 # For estimating column count:
                 max_colspan = max(max_colspan, colspan)
