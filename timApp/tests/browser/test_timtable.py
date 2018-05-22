@@ -53,6 +53,7 @@ table:
       borderRight: 2px solid green
       textAlign: center
       verticalAlign: bottom
+      width: 100px
     - column:
     - column:
       border: 5px solid black
