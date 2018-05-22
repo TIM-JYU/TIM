@@ -151,31 +151,30 @@ p.chart-menu {
 
 tim-table {
     .timTableTable {
-           margin-left: 0px;
-          margin: 0px;
+        margin-left: 0px;
+        margin: 0px;
     }
 
     .editable {
         border: 2px solid red;
     }
 
-.buttonAddRow {
-   align-self : flex-start;
-}
-
     .buttonAddCol {
-   align-self : flex-end;
+        align-self: flex-start;
+    }
+
+    .buttonAddRow {
+        align-self: flex-end;
         position: relative;
         top: 0.89cm;
         left: 1.05cm;
         float: none !important;
 
-}
-    .timTableContentDiv{
+    }
+
+    .timTableContentDiv {
         display: flex;
         justify-content: center;
         padding: 1cm;
     }
-
-
 }

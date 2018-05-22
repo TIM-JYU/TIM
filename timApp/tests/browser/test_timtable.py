@@ -106,8 +106,8 @@ table:
       borderTop: 10px solid black
       borderBottom: 3px solid orange
       height: 100px
-      width: 100px
-      fontFamily:"Calibri"
+      width: 500px
+      fontFamily: "Arial"
     - row:
       - cell: "5"
       - cell: "Testi"

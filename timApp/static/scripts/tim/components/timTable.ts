@@ -861,8 +861,8 @@ timApp.component("timTable", {
     template: `<div ng-class="{editable: $ctrl.editing}" ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
      <div class="timTableContentDiv">
-    <button style="float: right" class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.editing"
-            ng-click="$ctrl.addColumn()"><span class="glyphicon glyphicon-plus"></span></button>
+    <button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.editing"
+            ng-click="$ctrl.addRow()"><span class="glyphicon glyphicon-plus"></span></button>
     <table class="timTableTable" ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
              ng-style="$ctrl.stylingForColumn(c)"/>
@@ -878,7 +878,7 @@ timApp.component("timTable", {
                </div>
         </tr>
     </table>
-    <button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.editing" ng-click="$ctrl.addRow()"><span
+    <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.editing" ng-click="$ctrl.addColumn()"><span
             class="glyphicon glyphicon-plus"></span></button>
             </div>
     <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"
