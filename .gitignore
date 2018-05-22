@@ -12,6 +12,9 @@ bower_components/
 MIRToolbox/
 pg_backup/
 .stack-work/
+/Dumbo/**/*.iml
+/Dumbo/cache/
+/Dumbo/out/
 /variables.sh
 /timApp/docs/_build/
 /timApp/static/gen/
