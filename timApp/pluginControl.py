@@ -244,7 +244,7 @@ def pluginify(doc: Document,
             if block.nocache and not is_gamified:  # get_nocache():
                 # if block.get_nocache():
                 texts = [block.get_expanded_markdown(macroinfo)]
-                htmls = call_dumbo(texts)
+                htmls = call_dumbo(texts, mathtype=doc.get_settings().mathtype())
                 html_pars[idx][output_format.value] = htmls[0]  # to collect all together before dumbo
 
                 # taketime("answ", "markup", len(plugins))

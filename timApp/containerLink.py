@@ -6,7 +6,7 @@ import requests
 from flask import current_app
 
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
-from timApp.dumboclient import call_dumbo
+from timApp.dumboclient import call_dumbo, MathType
 from timApp.logger import log_warning
 from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.pluginexception import PluginException
@@ -71,7 +71,7 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
 def render_plugin(doc: Document, plugin, plugin_data, output_format: PluginOutputFormat, params=None):
     plugin_data.update(params or {})
     if doc.get_settings().plugin_md():
-        convert_md(plugin_data)
+        convert_md(plugin_data, mathtype=doc.get_settings().mathtype())
     plugin_data = json.dumps(plugin_data,
                              cls=TimJsonEncoder)
     return call_plugin_generic(plugin,
@@ -149,9 +149,9 @@ def convert_md_old(plugin_data):
         dict_to_dumbo(pm)
 
 
-def convert_md(plugin_data):
+def convert_md(plugin_data, mathtype: MathType):
     if isinstance(plugin_data, dict):
-        plugin_data['markup'] = call_dumbo(plugin_data['markup'], '/mdkeys')
+        plugin_data['markup'] = call_dumbo(plugin_data['markup'], '/mdkeys', mathtype=mathtype)
     elif isinstance(plugin_data, list):
         markups = [p['markup'] for p in plugin_data]
         html_markups = call_dumbo(markups, '/mdkeys')
@@ -159,9 +159,9 @@ def convert_md(plugin_data):
             p['markup'] = h
 
 
-def convert_tex(plugin_data):
+def convert_tex(plugin_data, mathtype: MathType):
     if isinstance(plugin_data, dict):
-        plugin_data['markup'] = call_dumbo(plugin_data['markup'], '/latexkeys')
+        plugin_data['markup'] = call_dumbo(plugin_data['markup'], '/latexkeys', mathtype=mathtype)
     elif isinstance(plugin_data, list):
         markups = [p['markup'] for p in plugin_data]
         html_markups = call_dumbo(markups, '/latexkeys')
@@ -186,9 +186,9 @@ def render_plugin_multi(doc: Document, plugin, plugin_data, params=None,
 
     if doc.get_settings().plugin_md():
         if plugin_output_format == PluginOutputFormat.HTML:
-            convert_md(plugin_data)
+            convert_md(plugin_data, mathtype=doc.get_settings().mathtype())
         else:
-            convert_tex(plugin_data)
+            convert_tex(plugin_data, mathtype=doc.get_settings().mathtype())
 
     return call_plugin_generic(plugin,
                                'post',

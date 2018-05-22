@@ -1,5 +1,3 @@
-from lxml import html
-
 from timApp.tests.server.timroutetest import TimRouteTest
 
 
@@ -79,5 +77,4 @@ New paragraph
     </div>
 </div>
 """
-        expected_element = html.fromstring(expected_html)
-        self.assert_elements_equal(expected_element, slidesection[0])
+        self.assert_same_html(slidesection[0], expected_html)

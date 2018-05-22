@@ -215,7 +215,7 @@ def par_list_to_html_list(pars,
             text = texts[i]
             if text.find('```') != 0 and text.find('#') != 0:
                 texts[i] = '```\n' + text + "\n```"
-    raw = call_dumbo(texts)
+    raw = call_dumbo(texts, mathtype=settings.mathtype())
 
     # Edit html after dumbo
     raw = edit_html_with_own_syntax(raw)

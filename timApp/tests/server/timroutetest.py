@@ -587,11 +587,18 @@ class TimRouteTest(TimDbTest):
         return f
 
     def assert_elements_equal(self, e1, e2):
-        self.assertEqual(e1.tag, e2.tag)
-        self.assertEqual((e1.text or '').strip(), (e2.text or '').strip())
-        self.assertEqual((e1.tail or '').strip(), (e2.tail or '').strip())
-        self.assertEqual(e1.attrib, e2.attrib)
-        self.assertEqual(len(e1), len(e2), msg=html.tostring(e2, pretty_print=True).decode('utf-8'))
+        try:
+            self.assertEqual(e1.tag, e2.tag)
+            self.assertEqual((e1.text or '').strip(), (e2.text or '').strip())
+            self.assertEqual((e1.tail or '').strip(), (e2.tail or '').strip())
+            self.assertEqual(e1.attrib, e2.attrib)
+            self.assertEqual(len(e1), len(e2), msg=html.tostring(e2, pretty_print=True).decode('utf-8'))
+        except AssertionError:
+            print(html.tostring(e1).decode('utf8'))
+            print()
+            print(html.tostring(e2).decode('utf8'))
+            raise
+
         for c1, c2 in zip(e1, e2):
             self.assert_elements_equal(c1, c2)
 
@@ -648,6 +655,9 @@ class TimRouteTest(TimDbTest):
         folder = d.location
         p = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name}', **kwargs)
         return p
+
+    def assert_same_html(self, elem, expected_html: str):
+        self.assert_elements_equal(elem, html.fromstring(expected_html))
 
 
 if __name__ == '__main__':

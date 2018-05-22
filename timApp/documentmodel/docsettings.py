@@ -7,6 +7,7 @@ from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.macroinfo import MacroInfo
 from timApp.documentmodel.specialnames import DEFAULT_PREAMBLE_DOC
 from timApp.documentmodel.yamlblock import YamlBlock
+from timApp.dumboclient import MathType
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 
 
@@ -39,6 +40,7 @@ class DocSettings:
     show_authors_key = 'show_authors'
     read_expiry_key = 'read_expiry'
     add_par_button_text_key = 'add_par_button_text'
+    mathtype_key = 'math_type'
 
     @staticmethod
     def settings_to_string(par: DocParagraph) -> str:
@@ -235,6 +237,12 @@ class DocSettings:
 
     def add_par_button_text(self, default='Add paragraph') -> str:
         return self.__dict.get(self.add_par_button_text_key, default)
+
+    def mathtype(self, default='mathjax') -> MathType:
+        try:
+            return MathType(self.__dict.get(self.mathtype_key, default))
+        except ValueError:
+            return MathType.MathJax
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

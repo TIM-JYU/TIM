@@ -11,6 +11,7 @@ from flask import abort
 from flask import request
 
 from timApp.containerLink import convert_md
+from timApp.dumboclient import MathType
 from timApp.plugin import Plugin, PluginException
 from timApp.plugin import get_num_value
 from timApp.plugin import get_value
@@ -59,7 +60,7 @@ def qst_answer():
         points_table = create_points_table(spoints)
         points = calculate_points_from_json_answer(answers, points_table)
         tim_info["points"] = points
-    convert_md(jsondata)
+    convert_md(jsondata, mathtype=MathType.MathJax)  # TODO get mathtype from doc settings?
     info = jsondata['info']
     markup = jsondata['markup']
     result = False
@@ -121,7 +122,7 @@ def get_question_md():
     markup = json.loads(md)
     plugin_data = {}
     plugin_data['markup'] = markup
-    convert_md(plugin_data)
+    convert_md(plugin_data, mathtype=MathType.MathJax)
 
     return json_response({'md': plugin_data['markup']})
 
@@ -561,7 +562,7 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
         return abort(400, f'Paragraph is not a plugin: {par_id}')
     plugindata = {'markup': plugin_values}
     if not edit:
-        convert_md(plugindata)
+        convert_md(plugindata, mathtype=d.document.get_settings().mathtype())
     markup = plugindata.get('markup')
     return QuestionInDocument(
         markup=normalize_question_json(markup, allow_top_level_keys=qst_attrs),

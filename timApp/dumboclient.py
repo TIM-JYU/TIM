@@ -1,18 +1,29 @@
 """Defines a client interface for using Dumbo, the markdown converter."""
 import json
+from enum import Enum
 from typing import List, Union, Dict
 
 import requests
 
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
 
+
+class MathType(Enum):
+    SVG = 'svg'
+    MathJax = 'mathjax'
+    PNG = 'png'
+
+
 DUMBO_URL = 'http://dumbo:5000'
 
 KEYS_PATHS = {'/mdkeys', '/latexkeys'}
 
-def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='') -> Union[List[str], Dict, List[Dict]]:
+
+def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='', mathtype: MathType = MathType.MathJax) -> Union[
+    List[str], Dict, List[Dict]]:
     """Calls Dumbo for converting the given markdown to HTML.
 
+    :param mathtype: Type of output math.
     :param data: The data to be converted.
     :param path: The path of the request. Valid paths are: '', '/', '/mdkeys' and '/markdown' (same as '/' and '').
      If path is '/mdkeys', data is expected to be a Dict or List[Dict]. Any dict value that begins with 'md:' is
@@ -23,7 +34,7 @@ def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='') -> Union[List[
 
     """
     is_dict = isinstance(data, dict)
-    opts = {'mathOption': 'svg'}
+    opts = {'mathOption': mathtype.value}
     try:
         if path in KEYS_PATHS:
             if is_dict:
