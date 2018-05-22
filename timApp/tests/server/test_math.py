@@ -1,5 +1,13 @@
 from timApp.tests.server.timroutetest import TimRouteTest
 
+mathjax_html = """
+<div class="parContent">
+    <p><span class="math inline">\(a+b\)
+        </span>
+    </p>
+</div>
+"""
+
 
 class MathTest(TimRouteTest):
 
@@ -15,20 +23,19 @@ class MathTest(TimRouteTest):
     </p>
 </div>
 """)
+        return d
 
     def test_mathjax_math(self):
         self.login_test1()
         d = self.create_doc(initial_par="$a+b$")
         d.document.set_settings({'math_type': 'mathjax'})
-        mathjax_html = """
-<div class="parContent">
-    <p><span class="math inline">\(a+b\)
-        </span>
-    </p>
-</div>
-"""
         self.assert_same_html(self.get(d.url, as_tree=True).cssselect('.parContent')[1], mathjax_html)
         d.document.set_settings({'math_type': 'xxx'})
         self.assert_same_html(self.get(d.url, as_tree=True).cssselect('.parContent')[1], mathjax_html)
         d.document.set_settings({'math_type': None})
+        self.assert_same_html(self.get(d.url, as_tree=True).cssselect('.parContent')[1], mathjax_html)
+
+    def test_mathtype_change(self):
+        d = self.test_svg_math()
+        d.document.set_settings({'math_type': 'mathjax'})
         self.assert_same_html(self.get(d.url, as_tree=True).cssselect('.parContent')[1], mathjax_html)

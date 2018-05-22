@@ -5,6 +5,7 @@ import yaml
 
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.macroinfo import MacroInfo
+from timApp.documentmodel.randutils import hashfunc
 from timApp.documentmodel.specialnames import DEFAULT_PREAMBLE_DOC
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.dumboclient import MathType
@@ -244,6 +245,11 @@ class DocSettings:
         except ValueError:
             return MathType.MathJax
 
+    def get_hash(self):
+        macroinfo = self.get_macroinfo()
+        macros = macroinfo.get_macros()
+        macro_delim = macroinfo.get_macro_delimiter()
+        return hashfunc(f"{macros}{macro_delim}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}")
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
     result, _ = __resolve_final_settings_impl(pars)

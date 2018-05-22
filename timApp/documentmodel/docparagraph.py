@@ -591,9 +591,9 @@ class DocParagraph:
         dyn = 0
         l = 0
         macroinfo = settings.get_macroinfo()
-        macros = macroinfo.get_macros() if settings else None
-        macro_delim = macroinfo.get_macro_delimiter() if settings else None
-        m = str(macros) + macro_delim + str(settings.auto_number_headings()) + str(settings.heading_format())
+        macros = macroinfo.get_macros()
+        macro_delim = macroinfo.get_macro_delimiter()
+        settings_hash = settings.get_hash()
         for par in pars:
             if par.is_dynamic():
                 dyn += 1
@@ -608,7 +608,7 @@ class DocParagraph:
             except RecursionError:
                 raise TimDbException(
                     'Infinite recursion detected in get_auto_macro_values; the document may be broken.')
-            auto_macro_hash = hashfunc(m + str(auto_macros))
+            auto_macro_hash = hashfunc(settings_hash + str(auto_macros))
 
             par_headings = heading_cache.get(par.get_id())
             if cumulative_headings:
