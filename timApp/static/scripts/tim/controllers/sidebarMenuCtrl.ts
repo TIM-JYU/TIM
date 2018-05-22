@@ -152,13 +152,27 @@ export class SidebarMenuCtrl implements IController {
     }
 
     /**
+     * Checks whether the side menu should have a button for creating extracts from minutes in this document.
+     * @returns {boolean} Whether the button for creating extracts should be displayed.
+     */
+    enableCreateExtractsButton() : boolean {
+        if (this.docSettings == null || this.docSettings.macros == null || this.vctrl == null)
+            return false;
+
+        return this.docSettings.macros.knro != null && this.isDocumentMinutes &&
+            this.vctrl.item.rights.manage;
+    }
+
+    /**
      * Checks whether the side menu should have a button for creating minutes in this document.
      * @returns {boolean} Whether the button for creating minutes should be displayed.
      */
     enableCreateMinutesButton() : boolean {
-        if (this.docSettings == null || this.docSettings.macros == null)
+        if (this.docSettings == null || this.docSettings.macros == null || this.vctrl == null)
             return false;
-        return this.docSettings.macros.knro != null && !this.isDocumentMinutes;
+
+        return this.docSettings.macros.knro != null && !this.isDocumentMinutes &&
+            this.vctrl.item.rights.manage;
     }
 
     /**
