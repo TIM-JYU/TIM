@@ -159,10 +159,13 @@ table:
         borderBottom: 3px solid orange
         height: 100px
         width: 100px
-        fontFamily:"Calibri"
+        fontFamily:"Times"
+        textAlign: right
+        verticalAlign: bottom
     - row:
       - cell: "5"
       - cell: "Testi"
+        fontFamily: Times
       - cell: "7"
       - cell: "8"
         borderRight: 2px solid green
@@ -219,7 +222,7 @@ table:
       - cell: "ad"
       - cell: "astra."
       
-  fontFamily:"Helvetica"
+  fontFamily:"Times"
   fontSize: 25
   color: green
   backgroundColor: yellow
@@ -258,9 +261,9 @@ table:
       borderLeft: 5px solid black
       backgroundColor: beige
     - column:
+      width: 150px
     - column:
       border: 4px solid orange
-      width: 150px
       backgroundColor: crimson
     - column:
   rows:
@@ -276,8 +279,9 @@ table:
         borderLeft: 5px solid magenta
         backgroundColor: gold
         fontSize: 30
-        fontFamily: Script
+        fontFamily: Courier
         color: purple
+        width: 200px
       - cell: "Claudius"
       textAlign: right
       verticalAlign: bottom
@@ -677,13 +681,13 @@ table:
         we = self.find_element('tim-table')
         self.save_element_screenshot(we, "timTableColumnSpan")
 
-        def test_timtable_many_things(self):
-            """
-            Test case 1.15. Many things.
-            """
-            self.login_browser_quick_test1()
-            self.login_test1()
-            d = self.create_doc(initial_par="""
+    def test_timtable_many_things(self):
+        """
+        Test case 1.15. Many things.
+        """
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
     table:
       columns:
@@ -759,18 +763,18 @@ table:
 ```
 
             """)
-            self.goto_document(d)
-            sleep(2)
-            we = self.find_element('tim-table')
-            self.save_element_screenshot(we, "timTableManyThings")
+        self.goto_document(d)
+        sleep(2)
+        we = self.find_element('tim-table')
+        self.save_element_screenshot(we, "timTableManyThings")
 
-            def test_timtable_tabledatablock(self):
-                """
-                Test case 1.16. Data block.
-                """
-                self.login_browser_quick_test1()
-                self.login_test1()
-                d = self.create_doc(initial_par="""
+    def test_timtable_tabledatablock(self):
+        """
+        Test case 1.16. Data block.
+        """
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -801,6 +805,6 @@ table:
       
 ```
                         """)
-                self.goto_document(d)
-                we = self.find_element('tim-table')
-                self.save_element_screenshot(we, "timTableTabledatablock")
+        self.goto_document(d)
+        we = self.find_element('tim-table')
+        self.save_element_screenshot(we, "timTableTabledatablock")
