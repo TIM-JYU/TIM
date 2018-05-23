@@ -26,7 +26,7 @@ class LectureAnswer(db.Model):
 
     def to_json(self):
         return {
-            'answer': json.loads(self.answer),
+            'answer': json.loads(self.answer) if self.answer else [],
             'answer_id': self.answer_id,
             'answered_on': self.answered_on,
             'asked_question': self.asked_question,
