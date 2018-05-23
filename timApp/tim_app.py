@@ -38,9 +38,11 @@ from timApp.timdb.models.translation import Translation
 from timApp.timdb.models.user import User
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.runningquestion import Runningquestion
-from timApp.timdb.tim_models import db, QuestionActivity, Question, Showpoints, Useractivity, SlideStatus, Answer, \
-    AnswerTag, AnswerUpload, BlockAccess, LectureUsers, ReadParagraph, UserAnswer, UserGroupMember, UserNotes, \
+from timApp.timdb.tim_models import db, QuestionActivity, Question, Showpoints, Useractivity, SlideStatus, AnswerTag, AnswerUpload, BlockAccess, LectureUsers, \
+    UserAnswer, UserGroupMember, UserNotes, \
     AccessType
+from timApp.timdb.models.readparagraph import ReadParagraph
+from timApp.timdb.models.answer import Answer
 from timApp.timdb.velp_models import Velp, VelpContent, VelpGroup, VelpGroupDefaults, VelpGroupLabel, \
     VelpGroupSelection, VelpGroupsInDocument, VelpInGroup, VelpLabel, VelpLabelContent, VelpVersion, ImportedVelpGroups, \
     LabelInVelp, LabelInVelpGroup, Annotation, AnnotationComment, Icon

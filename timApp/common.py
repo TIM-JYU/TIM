@@ -18,7 +18,7 @@ from timApp.sessioninfo import get_session_usergroup_ids
 from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.user import User
 from timApp.timdb.readings import get_common_readings, get_read_expiry_condition
-from timApp.timdb.tim_models import ReadParagraph
+from timApp.timdb.models.readparagraph import ReadParagraph
 from timApp.timdb.userutils import get_anon_group_id
 from timApp.timtiming import taketime
 from timApp.utils import getdatetime

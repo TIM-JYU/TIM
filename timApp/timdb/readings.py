@@ -7,7 +7,8 @@ from sqlalchemy.orm import Query
 from timApp.documentmodel.docparagraph import DocParagraph
 from timApp.documentmodel.document import Document
 from timApp.timdb.readparagraphtype import ReadParagraphType
-from timApp.timdb.tim_models import ReadParagraph, db
+from timApp.timdb.tim_models import db
+from timApp.timdb.models.readparagraph import ReadParagraph
 
 
 def get_read_expiry_condition(delta: timedelta):

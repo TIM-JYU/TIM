@@ -10,7 +10,8 @@ from timApp.sessioninfo import get_session_usergroup_ids, get_current_user_group
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.readings import mark_read, get_readings, mark_all_read
 from timApp.timdb.readparagraphtype import ReadParagraphType
-from timApp.timdb.tim_models import ReadParagraph, db
+from timApp.timdb.tim_models import db
+from timApp.timdb.models.readparagraph import ReadParagraph
 
 readings = Blueprint('readings',
                      __name__,
