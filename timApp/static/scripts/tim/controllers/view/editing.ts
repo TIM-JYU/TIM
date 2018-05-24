@@ -517,8 +517,8 @@ export class EditingHandler {
                     show: this.viewctrl.item.rights.can_comment,
                 },
                 {func: (e: Event, par: Paragraph) => this.showEditWindow(e, par), desc: "Edit", show: parEditable},
-                {func: (e: Event, par: Paragraph) => this.toggleTableEditor(e, par), desc: "Edit table", show: timTableEditMode == false},
-                {func: (e: Event, par: Paragraph) => this.toggleTableEditor(e, par), desc: "Close table editor", show: timTableEditMode == true},
+                {func: (e: Event, par: Paragraph) => this.toggleTableEditor(e, par), desc: "Edit table", show: parEditable && timTableEditMode === false},
+                {func: (e: Event, par: Paragraph) => this.toggleTableEditor(e, par), desc: "Close table editor", show: parEditable && timTableEditMode === true},
                 {
                     func: (e: Event, par: Paragraph) => this.viewctrl.clipboardHandler.cutPar(e, par),
                     desc: "Cut paragraph",

@@ -17,7 +17,7 @@ timTable_plugin = Blueprint('timTable_plugin',
                             __name__,
                             url_prefix='/timTable/')
 
-# Reserved words in the TimTable format
+# Reserved words in the TimTable format and other needed constants
 TABLE = 'table'
 ROWS = 'rows'
 ROW = 'row'
