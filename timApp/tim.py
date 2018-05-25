@@ -206,11 +206,12 @@ def empty_response_route():
 def merge_attachments(doc):
     """
     A route for getting merged document.
-    :param doc: document path
-    :return: merged pdf-file
+    :param doc: Document path.
+    :return: Merged pdf-file.
     """
 
-    # TODO: Check if there is a PDF already (and not changes after previous merging).
+    # True, if merging process was incomplete.
+    merged_with_errors = False
     try:
         d = DocEntry.find_by_path(doc, try_translation=True)
         if not d:
@@ -237,10 +238,9 @@ def merge_attachments(doc):
                 # Remove this try-block if partial merging is not desirable.
                 try:
                     timApp.tools.pdftools.check_pdf_validity(par_file)
-                except timApp.tools.pdftools.PdfError as e:
+                except timApp.tools.pdftools.PdfError:
                     # If file is invalid, just don't merge it and continue.
-                    # TODO: Add 'merged with warnings' etc. if excepted.
-                    pass
+                    merged_with_errors = True
                 else:
                     pdf_paths += [par_file]
 
@@ -253,6 +253,9 @@ def merge_attachments(doc):
         message = str(err)
         abort(404, message)
     else:
+        if merged_with_errors:
+            # TODO: Give error message without canceling merging.
+            pass
         return send_file(merged_pdf_path, mimetype="application/pdf")
 
 

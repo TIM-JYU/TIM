@@ -25,6 +25,10 @@ default_transparent_color = "none"
 default_table_width = "\\columnwidth"
 default_table_height = "!"
 default_minipage_width = "4cm"
+# Maximum number of columns in table; overtly large count will crash LaTeX-conversion.
+max_col_count = 250
+# Number of columns after which the table will be resized to fit page.
+resizing_treshold = 10
 
 # Mappings:
 # TODO: Add missing pairs.
@@ -804,7 +808,7 @@ def get_html_color_latex_definitions(defs: str = default_color_defs_path) -> Lis
         return definition_list
 
 
-def get_table_resize(table_data) -> bool:
+def get_table_resize(table_data, table_col_count) -> bool:
     """
     Whether table should be resized to fit the page width.
     If the attribute isn't set, assume it's False.
@@ -815,7 +819,10 @@ def get_table_resize(table_data) -> bool:
     try:
         resize = table_data['fitToPageWidth']
     except:
-        pass
+        # Auto-refit if the table is large.
+        # TODO: Get more accurate way to tell that the table is larger than page width.
+        if table_col_count >= resizing_treshold:
+            resize = True
     return resize
 
 
@@ -842,9 +849,6 @@ def convert_table(table_json) -> Table:
     # (table_width, table_height) = get_table_size(table_json)
     # table.width = table_width
     # table.height = table_height
-
-    # Whether table should be fit to page.
-    table.fit_to_page_width = get_table_resize(table_json)
 
     # Table settings will be used as defaults, if set.
     (table_default_bg_color, table_default_bg_color_html) = \
@@ -966,6 +970,14 @@ def convert_table(table_json) -> Table:
                 max_cells = max(max_cells, len(table_row.cells))
 
     # Currently plays it safe by overestimating table cell count.
-    table.col_count = max_cells * max_colspan
+    # If estimation larger than max_col_count, use max_col_count instead.
+    estimation = max_cells * max_colspan
+    if estimation > max_col_count:
+        table.col_count = max_col_count
+    else:
+        table.col_count = estimation
+    # Whether table should be fit to page.
+    table.fit_to_page_width = get_table_resize(table_json, table.col_count)
+
     table.create_hborders()
     return table

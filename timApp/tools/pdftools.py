@@ -399,8 +399,6 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
                     raise StampDataInvalidError("missing value: " + key, item)
                 if len(item[key]) > stamp_param_max_length:
                     raise StampDataInvalidError("param too long: " + key, item)
-        if len(item["text"]) > stamp_param_max_length:
-            raise StampDataInvalidError("param too long: text", item)
         check_pdf_validity(item["file"])
 
 
