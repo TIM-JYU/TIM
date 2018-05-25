@@ -244,7 +244,7 @@ export class ViewCtrl implements IController {
 
         try {
             const found = $filter("filter")(this.editorFunctions,
-                {desc: this.$storage.defaultAction}, true);
+                {desc: this.$storage.defaultAction, show: true}, true);
             if (found.length) {
                 this.defaultAction = found[0];
             }
