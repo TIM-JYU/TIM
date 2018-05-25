@@ -298,7 +298,7 @@ export class TimTableController implements IController {
         const data = response.data;
         let value = this.cellToString(data[0]);
         ctrl.editedCellContent = value;
-        ctrl.cellDataMatrix[row][col] = value;
+        //ctrl.cellDataMatrix[row][col] = value;
         return data[0];
     }
 
@@ -316,10 +316,8 @@ export class TimTableController implements IController {
     async openEditor(cell: CellEntity, docId: number, value: string, parId: string, row: number, col: number) {
 
         let ctrl = this;
-        let i = ctrl.editedCellContent;
-        // this.cellDataMatrix[rowi][coli] = this.editedCellContent;
         if (ctrl.currentCell) ctrl.currentCell.editorOpen = true;
-        const result = await openEditorSimple(docId, ctrl.cellDataMatrix[row][col]);
+        const result = await openEditorSimple(docId, ctrl.editedCellContent);
         if (ctrl.currentCell) ctrl.currentCell.editorOpen = false;
         if (result.type == "save" && result.text != ctrl.editedCellContent) {
             ctrl.saveCells(result.text, docId, parId, row, col);

@@ -53,23 +53,23 @@ def timTable_reqs():
 
 
 @timTable_plugin.route("multihtml/", methods=["POST"])
-def qst_multihtml():
+def tim_table_multihtml():
     """
-    Printing
+    Route for getting the html of TimTable.
     :return:
     """
     jsondata = request.get_json()
     multi = []
     for jso in jsondata:
-        multi.append(qst_get_html(jso, is_review(request)))
+        multi.append(tim_table_get_html(jso, is_review(request)))
     return json_response(multi)
 
 
 @timTable_plugin.route("getCellData", methods=["GET"])
 def tim_table_get_cell_data():
     """
-    get data values
-    :return: returns cell content in specified index
+    Route for getting the content of a cell.
+    :return: The cell content in the specified index.
     """
     multi = []
     args = request.args
@@ -99,7 +99,7 @@ def tim_table_get_cell_data():
 def tim_table_save_cell_list():
     """
     Saves cell content
-    :return:
+    :return: The cell content as html
     """
     multi = []
     cellContent = verify_json_params('cellContent')
@@ -196,8 +196,8 @@ def tim_table_add_column():
 @timTable_plugin.route("multimd/", methods=["POST"])
 def tim_table_multimd():
     """
-    Handles lates printing
-    :return:
+    Handles lates printing.
+    :return: Table as latex.
     """
     jsondata = request.get_json()
     multi = []
@@ -212,7 +212,7 @@ def is_datablock(yaml: dict) -> bool:
     """
     Checks if tableDataBlock exists
     :param yaml:
-    :return:
+    :return: Boolean indicating the existance of tabledatablock
     """
     try:
         if yaml[TABLE][DATABLOCK]:
@@ -236,7 +236,7 @@ def create_datablock(table: dict):
 
 def save_cell(datablock: dict, row: int, col: int, cell_content: str):
     """
-    Saves cell content
+    Updates datablock with the content and the coordinate of a cell.
     :param datablock:
     :param row: Row index
     :param col: Column index
@@ -252,7 +252,7 @@ def save_cell(datablock: dict, row: int, col: int, cell_content: str):
 
 def find_cell(rows: list, row: int, col: int) -> str:
     """
-    Get cell ffrom index place if exists
+    Get cell from index place if exists
     :param rows: List of cells
     :param row: Row index
     :param col: Column index
@@ -310,172 +310,18 @@ def is_review(request):
     result = request.full_path.find("review=") >= 0
     return result
 
-
-NOLAZY = "<!--nolazy-->"
-
-def qst_get_html(jso, review):
+def tim_table_get_html(jso, review):
     """
     Returns html
     :param jso:
     :param review:
     :return:
     """
-    result = False
-    info = jso['info']
-    markup = jso['markup']
     attrs = json.dumps(jso['markup'])
     runner = 'tim-table'
     s = f'<{runner} data={quoteattr(attrs)}></{runner}>'
-
     return s
 
 
-def delete_key(d: Dict[str, Any], key: str):
-    """
-    Deletes specified attribute
-    :param d:
-    :param key:
-    :return:
-    """
-    if key in d:
-        del d[key]
 
 
-def qst_str(state):
-    """
-    Replaces needed chars
-    :param state:
-    :return:
-    """
-    s = str(state)
-    s = s.replace("], ", "\n")
-    s = s.replace("]", "")
-    s = s.replace("[", "")
-    s = s.replace("''", "-")
-    s = s.replace("'", "")
-    return s
-
-
-def parse_columns(columns: list) -> str:
-    """
-    parses all columns and sets styles and attributes to them
-    :param columns: Columns
-    :return:
-    """
-    colHtml = ''
-    for col in columns:
-        stylesAttributes = stylesAndAttributes(col)
-        colHtml += '<col' + concatDefinitions(stylesAttributes['attributes'])
-        colHtml += concatStyleDefinitions(stylesAttributes['styles']) + '>'
-    return colHtml
-
-
-def parse_row(row: dict) -> str:
-    """
-    Sets styles and attributes to rows
-    :param row: Row
-    :return:
-    """
-    tdStr = ''
-    if ROW in row:
-        for item in row[ROW]:
-            if isinstance(item, str) or isinstance(item, int) or isinstance(item, float):
-                tdStr += "<td>" + str(
-                    item) + "</td>"  # In this case the cell is represented just by the content, TODO: md-parser
-            else:
-                tdStr += parse_cell(item)
-        stylesAttributes = stylesAndAttributes(row)
-        start = "<tr" + concatDefinitions(stylesAttributes['attributes']) + concatStyleDefinitions(
-            stylesAttributes['styles'])
-    return start.strip() + ">" + tdStr + "</tr>"
-
-
-def parse_cell(cell: dict) -> str:
-    """
-    Sets all styles and attributes to cell
-    :param cell: Cell that is parsed
-    :return: Parsed cell
-    """
-    stylesAttributes = stylesAndAttributes(cell)
-    attributes = stylesAttributes['attributes']
-    start = "<td" + concatDefinitions(attributes)
-    styles = stylesAttributes['styles']
-    start += concatStyleDefinitions(styles)
-    ans = start.strip() + ">" + handleType(cell) + "</td>"
-    return ans
-
-
-def handleType(cell: dict):
-    """
-    Changes cellcontent to string if its int or float
-    If Cellcontent is formula then returns empty string
-    Otherwise returns cell as is
-    """
-    cellContent = cell[CELL]
-    if isinstance(cellContent, int) or isinstance(cellContent, float):
-        cellContent = str(cellContent)  # Because formulas are not implemented, casting to string can be done.
-
-    if TYPE in cell:
-        if (cell[TYPE] == TEXT): return cellContent  # Todo: md-parseri
-        if (cell[TYPE] == NUMBER): return cellContent  # Not implemented yet.
-        if (cell[TYPE] == FORMULA): return ""  # Not implemented yet.
-    return cellContent
-
-
-def concatDefinitions(definitions: list) -> str:
-    """{'colspan="2"', 'alignment="2"'}
-       -> 'colspan="2" alignment="2"'
-     """
-    defStr = ''
-    for definition in definitions:
-        defStr += definition + ' '
-    return " " + defStr.strip()
-
-
-def concatStyleDefinitions(definitions: list) -> str:
-    """
-    Add style-element to elements
-    """
-    defStr = 'style=\"'
-    for definition in definitions:
-        defStr += definition
-    return " " + defStr.strip() + "\""
-
-
-def stylesAndAttributes(elements: dict) -> dict:
-    """
-    Sets styles and attributes to elements
-    :param elements: styles and attributes
-    :return: modified elements
-    """
-    styleDefinitions = []
-    attributeDefinitions = []
-    retDict = {'styles': styleDefinitions, 'attributes': attributeDefinitions}
-    for key, value in elements.items():
-        if key == "colspan":
-            attributeDefinitions.append(key + "=" + "\"" + str(value) + "\"")
-        if key == "rowspan":
-            attributeDefinitions.append(key + "=" + "\"" + str(value) + "\"")
-        if key == "id":
-            attributeDefinitions.append(key + "=" + "\"" + str(value) + "\"")
-        if key == "text-align":
-            styleDefinitions.append(key + ":" + value + ";")
-        if key == "vertical-align":
-            styleDefinitions.append(key + ":" + value + ";")
-        if key == "background-color":
-            styleDefinitions.append(key + ":" + value + ";")
-        if key == "border":
-            styleDefinitions.append(key + ":" + value + ";")
-        if key == "border-top":
-            styleDefinitions.append(key + ":" + value + ";")
-        if key == "border-bottom":
-            styleDefinitions.append(key + ":" + value + ";")
-        if key == "border-left":
-            styleDefinitions.append(key + ":" + value + ";")
-        if key == "border-right":
-            styleDefinitions.append(key + ":" + value + ";")
-        if key == "width":
-            styleDefinitions.append(key + ":" + str(value) + ";")
-        if key == "height":
-            styleDefinitions.append(key + ":" + str(value) + ";")
-    return retDict
