@@ -14,9 +14,9 @@ default_color_defs_path = "colors.txt"
 default_text_color = "black"
 default_colspan = 1
 default_rowspan = 1
-default_font_size = 10
+default_font_size = 12
 default_width = "*"  # * = auto-width
-default_height = "0pt"  # Won't cut the first line of text even at 0pt.
+default_height = "0"  # Won't cut the first line of text even at 0pt.
 default_text_h_align = "l"
 default_font_family = "cmr"
 # Color "none" isn't supported by LaTeX; if this value is used,
@@ -28,7 +28,7 @@ default_minipage_width = "4cm"
 # Maximum number of columns in table; overtly large count will crash LaTeX-conversion.
 max_col_count = 250
 # Number of columns after which the table will be resized to fit page.
-resizing_treshold = 10
+resizing_threshold = 6
 
 # Mappings:
 # TODO: Add missing pairs.
@@ -136,8 +136,8 @@ class Cell:
         :param bg_color_html: Whether the bg_color-attribute is a hex code.
         :param h_align: Text horizontal alignment.
         :param font_size: Font size.
-        :param cell_width: Width of the cell as pt:s.
-        :param cell_height: Heigth of the cell as pt:s.
+        :param cell_width: Width of the cell.
+        :param cell_height: Heigth of the cell.
         :param line_space: Unused attribute.
         :param pbox: Length of an element that allows linebreaks in text (unused).
         :param borders: Object containing border-data.
@@ -189,9 +189,12 @@ class Cell:
                 minipage_width = default_minipage_width
             content = fr"\begin{{minipage}}{{{minipage_width}}}{content}\end{{minipage}}"
 
+        cell_width = self.cell_width
+        if "*" not in cell_width:
+            cell_width = f"{cell_width}pt"
 
         return fr"\multicolumn{{{self.colspan}}}{{{v_border_and_align}}}{{" \
-               fr"\multirow{{{self.rowspan}}}{{{self.cell_width}}}{{" \
+               fr"\multirow{{{self.rowspan}}}{{{cell_width}}}{{" \
                f"{cell_color}" \
                fr"\fontsize{{{self.font_size}}}{{{self.line_space}}}" \
                fr"\selectfont{{\textcolor{{{self.text_color}}}{{{{" \
@@ -244,12 +247,15 @@ class Row:
         """
         Gives the largest cell height to be used as row height.
         Currently this way because separate cell heights aren't supported.
-        :return: Row height as LaTeX pt:s.
+        :return: Row height.
         """
         height = 0
-        for i in range(0, len(self.cells)):
-            height = max(height, pt_to_float(self.cells[i].cell_height))
-        return f"{height}pt"
+        try:
+            for i in range(0, len(self.cells)):
+                height = max(float(height), float(self.cells[i].cell_height))
+        except:
+            pass
+        return height
 
     def add_cell(self, i: int, cell: Cell) -> None:
         """
@@ -369,7 +375,6 @@ class HorizontalBorder:
                     pass
                 try:
                     color_above = self.row_above.cells[index_upper].borders.color_bottom
-                    # print(color_above)
                     if color_above == default_transparent_color:
                         color_above = None
                 except (IndexError, AttributeError):
@@ -383,7 +388,6 @@ class HorizontalBorder:
                     pass
                 try:
                     color_below = self.row_below.cells[index_lower].borders.color_top
-                    # print(color_below)
                     if color_below == default_transparent_color:
                         color_below = None
                 except (IndexError, AttributeError):
@@ -454,7 +458,6 @@ class Table:
                  f"\\begin{{tabular}}{{{columns}}}"
         postfix = "\\end{tabular}\n\\end{table}"
         resize = self.fit_to_page_width
-        # print(resize, type(resize))
         if resize:
             prefix = f"\\begin{{table}}[h]\n" \
                      f"\\resizebox{{{self.width}}}{{{self.height}}}{{%\n" \
@@ -464,7 +467,7 @@ class Table:
         for i in range(0, len(self.rows)):
             output += "\n" + fr"\hhline{{{str(self.hborders[i])}}}" \
                       "\n" + f"{str(self.rows[i])}" \
-                      "\n" + fr"\tabularnewline[{self.rows[i].get_row_height()}]"
+                      "\n" + fr"\tabularnewline[{self.rows[i].get_row_height()}pt]"
 
         output += "\n" + fr"\hhline{{{str(self.hborders[-1])}}}"
         return f"{prefix}\n{output}\n{postfix}"
@@ -538,8 +541,8 @@ def get_color(item, key: str, default_color: str, default_color_html: bool) -> (
     :param item:
     :param key: Key for color element (color, backgroundColor, etc.).
     :param default_color: Color to use if key not found.
-    :param default_color_html:
-    :return: The color-code / name and whether its in hex or not.
+    :param default_color_html: Whether color is in hex or not.
+    :return: Tuple with the color-code / name and whether its in hex or not.
     """
     # Normal LaTex doesn't recognize some html colors,
     # so they need to be defined in the tex-file (colors.txt in timApp/static/tex).
@@ -576,7 +579,7 @@ def get_span(item) -> (int, int):
     return colspan, rowspan
 
 
-def get_size(item, default_width, default_height) -> (float, float):
+def get_size(item, default_width, default_height) -> (str, str):
     """
     Parse width and height into LaTeX-supported format.
     :param item: Cell data.
@@ -587,11 +590,11 @@ def get_size(item, default_width, default_height) -> (float, float):
     # TODO: Cases with more than just a number?
     try:
         # TimTable uses measurements that are roughly thrice as large as LaTeX pts.
-        width = f"{item['width']/3}pt"
+        width = parse_size_attribute(item['width'])
     except:
         width = default_width
     try:
-        height = f"{item['height']/3}pt"
+        height = parse_size_attribute(item['height'])
     except:
         height = default_height
     return width, height
@@ -622,7 +625,7 @@ def get_text_horizontal_align(item, default):
     try:
         # Options are center, right and left, which happen to be the same in LaTeX,
         # except only first letters are used.
-        a = item['textAlign'][:1]
+        a = str(item['textAlign']).strip()[:1]
     except:
         a = default
     return a
@@ -763,7 +766,6 @@ def update_content_from_datablock(datablock, row: int, cell: int, content: str) 
     output = content
     try:
         datablock_index = f"{int_to_datablock_index(cell)}{row+1}"
-        # print(datablock_index, tabledatablock[datablock_index])
         output = get_content(datablock[datablock_index])
     except (TypeError, KeyError):
         pass
@@ -773,6 +775,15 @@ def update_content_from_datablock(datablock, row: int, cell: int, content: str) 
         return output
 
 
+def parse_size_attribute(attribute) -> str:
+    """
+    Converts numeric attribute to string and removes px and spaces.
+    :param attribute: Size attribute.
+    :return: Parsed string.
+    """
+    return str(attribute).replace('px', '').strip()
+
+
 def get_table_size(table_data):
     """
     Sets table size attributes and uses default values if not found.
@@ -780,11 +791,11 @@ def get_table_size(table_data):
     :return: Table width and height as a tuple.
     """
     try:
-        width = table_data['width']
+        width = parse_size_attribute(table_data['width'])
     except KeyError:
         width = default_table_width
     try:
-        height = table_data['height']
+        height = parse_size_attribute(table_data['height'])
     except KeyError:
         height = default_table_height
     return width, height
@@ -811,7 +822,7 @@ def get_html_color_latex_definitions(defs: str = default_color_defs_path) -> Lis
 def get_table_resize(table_data, table_col_count) -> bool:
     """
     Whether table should be resized to fit the page width.
-    If the attribute isn't set, assume it's False.
+    If the attribute isn't set, automatically decide whether to resize.
     :param table_data: Table JSON.
     :return: Table scaling true or false.
     """
@@ -821,7 +832,7 @@ def get_table_resize(table_data, table_col_count) -> bool:
     except:
         # Auto-refit if the table is large.
         # TODO: Get more accurate way to tell that the table is larger than page width.
-        if table_col_count >= resizing_treshold:
+        if table_col_count >= resizing_threshold:
             resize = True
     return resize
 
@@ -845,7 +856,7 @@ def convert_table(table_json) -> Table:
     # HTML sets cell widths to match the table width, but this currently
     # just stretches the table.
 
-    # Commented off until fixed.
+    # Commented off, because doesn't work the intended way.
     # (table_width, table_height) = get_table_size(table_json)
     # table.width = table_width
     # table.height = table_height
