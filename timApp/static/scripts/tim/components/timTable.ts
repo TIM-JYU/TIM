@@ -5,6 +5,7 @@ import {$http, $timeout} from "../ngimport";
 import {getParId} from 'tim/controllers/view/parhelpers';
 import {openEditorSimple} from "../directives/pareditor";
 import {ParCompiler} from "../services/parCompiler";
+
 export const EDITOR_CLASS = "editorArea";
 export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
 
@@ -137,7 +138,7 @@ export interface IColumnStyles {
     borderRight?: string;
 }
 
-function isPrimitiveCell (cell : CellEntity): cell is CellType {
+function isPrimitiveCell(cell: CellEntity): cell is CellType {
     return cell == null || (cell as ICell).cell === undefined;
 }
 
@@ -289,7 +290,7 @@ export class TimTableController implements IController {
      */
     async getCellData(cell: CellEntity, docId: number, parId: string, row: number, col: number) {
         let ctrl = this;
-        const response = await $http< CellType[]   >({
+        const response = await $http<CellType[]>({
             url: "/timTable/getCellData",
             method: "GET",
             params: {docId, parId, row, col},
@@ -386,7 +387,7 @@ export class TimTableController implements IController {
      * @param {CellType} cell Changed cell
      * @returns {string}
      */
-    private cellToString(cell: CellType){
+    private cellToString(cell: CellType) {
         if (cell == null) return "";
         return cell.toString();
     }
@@ -635,9 +636,9 @@ export class TimTableController implements IController {
      */
     private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent) {
         await $timeout();
-         let table = this.element.find(".timTableTable").first();
-         let tablecell = table.find('tr').eq(rowi).find('td').eq(coli);
-         let off = undefined;
+        let table = this.element.find(".timTableTable").first();
+        let tablecell = table.find('tr').eq(rowi).find('td').eq(coli);
+        let off = undefined;
         if (event) {
             let obj = $(event.target);
             if (obj.prop('tagName') !== "TD") {
@@ -650,7 +651,7 @@ export class TimTableController implements IController {
             off = tablecell.offset();
             if (!off) return;
         }
-        if(off) {
+        if (off) {
             this.element.find(".editInput").offset(off);
             await $timeout();
             let edit = this.element.find(".editInput");
@@ -866,14 +867,12 @@ timApp.component("timTable", {
              ng-style="$ctrl.stylingForColumn(c)"/>
         <tr ng-repeat="r in $ctrl.data.table.rows" ng-init="rowi = $index" id={{r.id}}
             ng-style="$ctrl.stylingForRow(r)">
-            <div ng-if="$ctrl.allcellData == undefined">
                 <td ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
                     id={{td.id}}"
                     ng-style="$ctrl.stylingForCell(td)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
                     </div>
                 </td>
-               </div>
         </tr>
     </table>
     <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.editing" ng-click="$ctrl.addColumn()"><span
