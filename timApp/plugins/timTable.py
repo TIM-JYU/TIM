@@ -151,9 +151,15 @@ def tim_table_add_row():
         rows = plug.values[TABLE][ROWS]
     except KeyError:
         return abort(400)
-    last_row_index = len(rows) - 1
     # clone the previous row's data into the new row
     rows.append({'row': copy.deepcopy(rows[-1]['row'])})
+    row = rows[-1]['row']
+    for i in range(len(row)):
+        if isinstance(row[i], str) or isinstance(row[i], int) or isinstance(row[i], bool) \
+                or isinstance(row[i], float):
+            row[i] = {CELL: ''}
+        else:
+            row[i][CELL] = ''
     plug.save()
     return json_response(call_dumbo(plug.values, '/mdkeys'))
 
@@ -182,7 +188,8 @@ def tim_table_add_column():
         except KeyError:
             return abort(400)
         last_cell = current_row[-1]
-        if isinstance(last_cell, str):
+        if isinstance(last_cell, str) or isinstance(last_cell, int) or isinstance(last_cell, bool) \
+                or isinstance(last_cell, float):
             current_row.append({CELL: ""})
         else:
             # Copy the last cell's other properties for the new cell, but leave the text empty
