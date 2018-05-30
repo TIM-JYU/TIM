@@ -465,7 +465,7 @@ export class TimTableController implements IController {
                 }
                 if (this.currentCell != undefined) this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
             }
-            if (ev.keyCode == 13 || ev.keyCode === 9 || ev.keyCode === 27) { // enter, tab or esc
+            if (ev.keyCode == 13 || ev.keyCode === 9) { // enter or tab
                 let parId = getParId(this.element.parents(".par"));
                 if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
                 if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
@@ -482,10 +482,15 @@ export class TimTableController implements IController {
                     if (this.currentCell)
                         this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
                 }
-                if (ev.keyCode === 27) {
-                    this.currentCell = undefined;
-                }
+
+
             }
+            if (ev.keyCode === 27) { //esc
+                    this.currentCell = undefined;
+                    this.scope.$apply();
+            }
+
+
         }
     }
 
