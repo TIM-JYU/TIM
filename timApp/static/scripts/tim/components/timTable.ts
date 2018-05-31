@@ -157,6 +157,7 @@ export class TimTableController implements IController {
     private editing: boolean;
     private DataHashLength: number;
     private editedCellContent: string;
+    private editedCellInitialContent: string;
     private currentCell?: { row: number, col: number, editorOpen: boolean };
     private mouseInTable?: boolean;
 
@@ -260,12 +261,6 @@ export class TimTableController implements IController {
      * @param {number} col Column index
      */
     async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
-        if (!(cellContent.startsWith("md:"))) {
-            if ((cellContent === this.cellDataMatrix[row][col])) {
-                ParCompiler.processAllMathDelayed(this.element);
-                return;
-            }
-        }
         const response = await $http.post<string[]>("/timTable/saveCell", {
             cellContent,
             docId,
@@ -299,7 +294,7 @@ export class TimTableController implements IController {
         const data = response.data;
         let value = this.cellToString(data[0]);
         ctrl.editedCellContent = value;
-        //ctrl.cellDataMatrix[row][col] = value;
+        ctrl.editedCellInitialContent = value;
         return data[0];
     }
 
@@ -320,9 +315,9 @@ export class TimTableController implements IController {
         if (ctrl.currentCell) ctrl.currentCell.editorOpen = true;
         const result = await openEditorSimple(docId, ctrl.editedCellContent);
         if (ctrl.currentCell) ctrl.currentCell.editorOpen = false;
-        if (result.type == "save" && result.text != ctrl.editedCellContent) {
+        if (result.type == "save" && result.text != ctrl.editedCellInitialContent) {
             ctrl.saveCells(result.text, docId, parId, row, col);
-            ctrl.cellDataMatrix[row][col] = result.text
+            //ctrl.cellDataMatrix[row][col] = result.text
             ctrl.editedCellContent = result.text;
         }
         if (result.type == "cancel") {
@@ -470,7 +465,7 @@ export class TimTableController implements IController {
                 if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
                 if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
                     let value = this.editedCellContent;
-                    if (typeof value == "string") {
+                    if (typeof value == "string" && this.editedCellInitialContent != value) {
                         this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
                     }
                 }
@@ -486,8 +481,8 @@ export class TimTableController implements IController {
 
             }
             if (ev.keyCode === 27) { //esc
-                    this.currentCell = undefined;
-                    this.scope.$apply();
+                this.currentCell = undefined;
+                this.scope.$apply();
             }
 
 
@@ -508,7 +503,7 @@ export class TimTableController implements IController {
         if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
             //let value = this.element.find(".editInput").val();
             let value = this.editedCellContent;
-            if (typeof value == "string") {
+            if (typeof value == "string" && this.editedCellInitialContent != value) {
                 this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
             }
         }
@@ -622,7 +617,7 @@ export class TimTableController implements IController {
         if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
             let value = this.editedCellContent;
 
-            if (typeof value == "string") {
+            if (typeof value === "string" && this.editedCellInitialContent != value) {
                 this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
                 this.currentCell = undefined;
             }
@@ -642,7 +637,7 @@ export class TimTableController implements IController {
     private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent) {
         await $timeout();
         let table = this.element.find(".timTableTable").first();
-        let tablecell = table.find('tr').eq(rowi).find('td').eq(coli);
+        let tablecell = table.children('tbody').children('tr').eq(rowi).children('td').eq(coli);
         let off = undefined;
         if (event) {
             let obj = $(event.target);

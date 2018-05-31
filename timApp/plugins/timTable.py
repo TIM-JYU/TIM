@@ -111,7 +111,7 @@ def tim_table_save_cell_list():
     if not doc:
         abort(404)
     verify_edit_access(doc)
-    par = doc.document.get_paragraph(parId[0])
+    par = doc.document_as_current_user.get_paragraph(parId[0])
     plug = Plugin.from_paragraph(par)
     yaml = plug.values
     if is_datablock(yaml):
