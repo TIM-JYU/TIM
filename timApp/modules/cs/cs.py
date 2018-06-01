@@ -1206,11 +1206,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if showname == "prg":
                     showname = ""
                 code, out, err, pwddir = (0, "", ("Saved " + showname), "")
-            elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
+            #elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
+            #    language.just_compile = True
                 # code, out, err, pwddir = (0, "".encode("utf-8"), ("Compiled " + filename).encode("utf-8"), "")
-                code, out, err, pwddir = (0, "", ("Compiled " + language.filename), "")
+            #    code, out, err, pwddir = (0, "", ("Compiled " + language.filename), "")
 
             else:  # run cmd wins all other run types
+                if get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
+                    language.just_compile = True
                 language.set_stdin(userinput)
                 runcommand = get_param(query, "cmd", "")
                 if ttype != "run" and (runcommand or get_param(query, "cmds", "")) and not is_test:

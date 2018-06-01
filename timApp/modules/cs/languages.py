@@ -62,6 +62,7 @@ class Language:
         self.run_points_given = False  # Put this on if give run or test points
         self.readpoints_default = None # what is default string for readpoints
         self.compile_commandline = ""
+        self.just_compile = False
 
         # Check if user name or temp name
 
@@ -154,7 +155,9 @@ class Language:
         uargs = df(uargs, self.userargs)
         if no_uargs:
             uargs = None
-        return run2(args,
+        if self.just_compile:
+            args = []
+        code, out, err, pwddir = run2(args,
                     cwd=df(cwd, self.prgpath),
                     shell=df(shell, False),
                     kill_tree=df(kill_tree, True),
@@ -169,8 +172,13 @@ class Language:
                     savestate=df(savestate, self.savestate),
                     dockercontainer=df(dockercontainer, self.dockercontainer),
                     compile_commandline = self.compile_commandline)
+        if self.just_compile:
+            return code, "", "Compiled " + self.filename, pwddir
+        return code, out, err, pwddir
 
     def copy_image(self, web, code, out, err, points_rule):
+        if err:
+            return "", err
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
             return out, err
@@ -249,7 +257,7 @@ class Jypeli(CS):
     def run(self, web, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["mono", self.pure_exename],
                                               ulimit=df(self.ulimit, "ulimit -f 80000"))
-        if err.find("Compile error") >= 0:
+        if err.find("Compile") >= 0:
             return code, out, err, pwddir
         err = re.sub("^ALSA.*\n", "", err, flags=re.M)
         err = re.sub("^W: \[pulse.*\n", "", err, flags=re.M)
