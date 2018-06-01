@@ -636,11 +636,19 @@ export class TimTableController implements IController {
             let editOffset = edit.offset();
             let editOuterHeight = edit.outerHeight();
             let tablecellOffset = tablecell.offset();
-            if (editOffset && editOuterHeight && tablecellOffset)
+            let editOuterWidth = edit.outerWidth();
+            if (editOffset && editOuterHeight && tablecellOffset && editOuterWidth) {
                 this.element.find(".buttonOpenBigEditor").offset({
                     top: editOffset.top + editOuterHeight,
                     left: tablecellOffset.left
                 });
+
+                this.element.find(".buttonCloseSmallEditor").offset({
+                    top: editOffset.top,
+                    left: tablecellOffset.left + editOuterWidth
+                });
+
+            }
         }
     }
 
@@ -793,6 +801,10 @@ export class TimTableController implements IController {
     private getOwnParId() {
         return getParId(this.element.parents(".par"));
     }
+
+    private closeSmallEditor() {
+        this.currentCell = undefined;
+    }
 }
 
 
@@ -829,6 +841,8 @@ timApp.component("timTable", {
     <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent">
+             <button class="timButton buttonCloseSmallEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
+                    ng-click="$ctrl.closeSmallEditor()" class="timButton"><span class="glyphicon glyphicon-remove"></span>
             <button class="timButton buttonOpenBigEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
                     ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
             </button>
