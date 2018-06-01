@@ -121,7 +121,7 @@ class StampFileNotFoundError(PdfError):
         self.file_path = file_path
 
     def __str__(self):
-        return f"Stamp-file not foundf {self.file_path}"
+        return f"Stamp-file not found: {self.file_path}"
 
 
 class StampDataInvalidError(PdfError):
@@ -129,7 +129,7 @@ class StampDataInvalidError(PdfError):
     Raised if stamp data type is wrong.
     """
 
-    def __init__(self, reason: str = "", item: Union[str, dict, List[dict]] = ""):
+    def __init__(self, reason: str = "", item = ""):
         """
         :param reason: The error cause explanation.
         :param item: Item or data that caused the error.
@@ -177,7 +177,23 @@ class SubprocessError(PdfError):
         self.cmd = cmd
 
     def __str__(self):
+        if "pdftk" in self.cmd and " stamp " in self.cmd:
+            return f"Stamping process failed: {self.cmd}"
+        elif "pdftk" in self.cmd:
+            return f"Merging process failed: {self.cmd}"
+        elif "pdflatex" in self.cmd:
+            return f"Stamp creating process failed: {self.cmd}"
         return f"Error encountered in command: {self.cmd}"
+
+
+class MergeListEmptyError(PdfError):
+    """
+    Raised if empty list given to merge.
+    """
+
+    def __str__(self):
+        return f"No attachments to merge found"
+
 
 
 ##############################################################################
@@ -191,6 +207,8 @@ def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
     :param output_path: Merged output file path.
     :return: output_path
     """
+    if not pdf_path_list:
+        raise MergeListEmptyError()
     for pdf_path in pdf_path_list:
         check_pdf_validity(pdf_path)
     args = ["pdftk"] + pdf_path_list + ["cat", "output", output_path]
@@ -393,6 +411,7 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
         if "text" not in item:
             keys = ["date", "attachment", "issue"]
             for key in keys:
+                print(item[key])
                 if key not in item:
                     raise StampDataMissingKeyError(key, item)
                 if not item[key]:
@@ -454,20 +473,17 @@ def attachment_params_to_dict(params: List[str]) -> List[dict]:
     :return: Stamp data formatted for this module's use.
     """
     if params.__len__() < 6:
-        raise StampDataInvalidError("request missing params", ", ".join(params))
+        raise StampDataInvalidError("Request missing parameters", params)
 
     date = params[0]
     stampformat = params[1]
     # If stampformat is empty (as it's set to be if undefined in pareditor.ts), use default.
     if not stampformat:
         stampformat = default_stamp_format
-    # TODO: More advanced quote removal in cases of inner quotes.
     attachment = params[3].replace('"', '').replace("'", "").strip()
     issue = params[4].replace('"', '').replace("'", "").strip()
-
     if not date or not attachment or not issue:
-        raise StampDataInvalidError("request missing params", ", ".join(params))
-
+        raise StampDataInvalidError("Request missing parameters", params)
     # File path isn't available yet.
     return [{'date': date, 'format': stampformat, 'attachment': attachment, 'issue': issue}]
 

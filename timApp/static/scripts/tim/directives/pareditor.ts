@@ -713,6 +713,7 @@ or newer one that is more familiar to write in YAML:
         const editorText = this.editor.getEditorText();
         let autostamp = false;
         let attachmentParams = undefined;
+        let macroParams = undefined;
 
         // To identify attachment-macro.
         const macroStringBegin = "%%liite(";
@@ -723,19 +724,22 @@ or newer one that is more familiar to write in YAML:
         // If there's no stampFormat set in preamble, uses hard coded default format.
         if (editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0) {
             autostamp = true;
-            const macroParams = editorText.substring(
-                editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
-                // TODO: more exact parsing needed.
-                // Giving commas inside parameters will break this.
-                editorText.lastIndexOf(macroStringEnd)).split(",");
-
+            // TODO: More exact parsing needed.
+            // Giving commas inside parameters will break this.
+            //throw new Error("Unable to parse stamping parametres!");
+            try {
+                macroParams = editorText.substring(
+                    editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
+                    editorText.lastIndexOf(macroStringEnd)).split(",");
+            } catch {
+                throw new Error("Unable to parse stamping parameters!");
+            }
             // Knro usage starts from 1 but dates starts from 0, so dummy value added to
             // dates[0] to adjust.
             const knro = this.docSettings.macros.knro;
             let dates = this.docSettings.macros.dates;
             dates = ["ERROR", ...dates];
             const kokousDate = dates[knro];
-            
             // If stampFormat isn't set in preamble,
             let stampFormat = this.docSettings.macros.stampformat;
             if (stampFormat === undefined) {
