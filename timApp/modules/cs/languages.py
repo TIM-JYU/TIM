@@ -609,10 +609,12 @@ class PY3(Language):
     def run(self, web, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["python3", self.pure_exename])
         if err:
-            return code, out, err, pwddir
+            err = re.sub("/usr/lib/python3/dist-packages/matplotlib/font_manager(.*\n)*.*This may take a moment.'\)",
+                         "", err, flags=re.M)
+            err = err.strip()
+            if err:
+                return code, out, err, pwddir
         out, err = self.copy_image(web, code, out, err, points_rule)
-        err = re.sub("/usr/lib/python3/dist-packages/matplotlib/font_manager(.*\n)*.*This may take a moment.'\)",
-                     "", err, flags=re.M)
         err = err.strip()
         return code, out, err, pwddir
 
