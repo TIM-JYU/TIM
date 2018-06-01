@@ -172,7 +172,7 @@ class Language:
                     savestate=df(savestate, self.savestate),
                     dockercontainer=df(dockercontainer, self.dockercontainer),
                     compile_commandline = self.compile_commandline)
-        if self.just_compile:
+        if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
         return code, out, err, pwddir
 
