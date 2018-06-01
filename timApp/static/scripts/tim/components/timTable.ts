@@ -148,14 +148,8 @@ export class TimTableController implements IController {
     public viewctrl?: ViewCtrl;
     public sc: IScope;
     public cellDataMatrix: string[][];
-    public dataCells: DataEntity;
-    private srcid: string;  // document id
-    private $pars: JQuery;  // paragraph
     private data: TimTable;
-    private allcellData: string[];
-    private count: number;
     private editing: boolean;
-    private DataHashLength: number;
     private editedCellContent: string;
     private editedCellInitialContent: string;
     private currentCell?: { row: number, col: number, editorOpen: boolean };
@@ -169,7 +163,7 @@ export class TimTableController implements IController {
      * Set listener and initializes tabledatablock
      */
     $onInit() {
-        this.count = 0;
+
         this.InitializeCellDataMatrix();
         this.readDataBlockAndSetValuesToDataCellMatrix();
 
@@ -211,15 +205,6 @@ export class TimTableController implements IController {
         if (this.currentCell) this.currentCell = undefined;
     }
 
-    /**
-     * Return true if cell is being edited
-     * @param {number} rowi Row index
-     * @param {number} coli Col index
-     * @returns {{row: number; col: number; editorOpen: boolean} | boolean}
-     */
-    public isCellBeingEdited(rowi: number, coli: number) {
-        return this.currentCell && this.currentCell.col === coli && this.currentCell.row === rowi;
-    }
 
     /**
      * Returns true if currentcell is not undefined
@@ -241,14 +226,6 @@ export class TimTableController implements IController {
      */
     public mouseOutTable() {
         this.mouseInTable = false;
-    }
-
-    /**
-     * When editin is cancelled, sets attributes
-     */
-    public editCancel() {
-        this.editing = false;
-        if (this.currentCell) this.currentCell = undefined;
     }
 
 
@@ -667,41 +644,6 @@ export class TimTableController implements IController {
         }
     }
 
-    /**
-     * Calculates index to abstract form, ex. 1,1 -> A1
-     * ex. 3,2 -> C2
-     * @param {number} rowi Row index
-     * @param {number} coli Column index
-     * @returns {string} Letter and number based coordination values
-     */
-    private calculatePlace(rowi: number, coli: number) {
-        const str = "A"; // coli is a number like 2 -> B
-        let col: string = String.fromCharCode(str.charCodeAt(0) - 1 + coli); // 65 -1 = 64 + 2 = 66 = B
-        return col + rowi;
-    }
-
-    /**
-     * Add element to DataBlock
-     * @param {string} key Attribute name
-     * @param {string} value Attribute value
-     */
-    private addtoDataBlock(key: string, value: string) {
-        if (this.data.table.tabledatablock) {
-            let modal: CellDataEntity = <CellDataEntity>{
-                key: value,
-            };
-            this.data.table.tabledatablock.cells = modal;
-        }
-    }
-
-    /**
-     * Create new DataBlock with type, but no cells
-     */
-    private createDataBlock() {
-        let modal: DataEntity = <DataEntity>{};
-        modal.type = "Relative";
-        this.data.table.tabledatablock = modal;
-    }
 
 
     /**
