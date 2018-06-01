@@ -740,7 +740,13 @@ export class TimTableController implements IController {
      * Toggles the table's edit mode on or off.
      */
     public toggleEditMode() {
-        if (this.currentCell != undefined && typeof(this.currentCell) != "string") {
+        if (this.currentCell != undefined) {
+            if (this.editedCellInitialContent != this.editedCellContent && this.viewctrl) {
+                let parId = getParId(this.element.parents(".par"));
+                if (parId)
+                    this.saveCells(this.editedCellContent, this.viewctrl.item.id, parId, this.currentCell.row,
+                        this.currentCell.col);
+            }
             this.currentCell = undefined;
         }
         if (!this.editing) this.editSave();
@@ -799,12 +805,12 @@ timApp.component("timTable", {
     require: {
         viewctrl: "?^timView",
     },
-    template: `<div ng-class="{editable: $ctrl.editing}" ng-mouseenter="$ctrl.mouseInsideTable()"
+    template: `<div ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
      <div class="timTableContentDiv">
-    <button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.editing"
-            ng-click="$ctrl.addRow()"><span class="glyphicon glyphicon-plus"></span></button>
-    <table class="timTableTable" ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
+    <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.editing"
+            ng-click="$ctrl.addColumn()"><span class="glyphicon glyphicon-plus"></span></button>
+    <table ng-class="{editable: $ctrl.editing}" class="timTableTable" ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
              ng-style="$ctrl.stylingForColumn(c)"/>
         <tr ng-repeat="r in $ctrl.data.table.rows" ng-init="rowi = $index" id={{r.id}}
@@ -817,7 +823,7 @@ timApp.component("timTable", {
                 </td>
         </tr>
     </table>
-    <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.editing" ng-click="$ctrl.addColumn()"><span
+    <button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.editing" ng-click="$ctrl.addRow()"><span
             class="glyphicon glyphicon-plus"></span></button>
             </div>
     <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"

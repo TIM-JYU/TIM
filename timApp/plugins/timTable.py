@@ -102,32 +102,21 @@ def tim_table_save_cell_list():
     :return: The cell content as html
     """
     multi = []
-    cellContent = verify_json_params('cellContent')
-    docId = verify_json_params('docId')
-    parId = verify_json_params('parId')
-    row = verify_json_params('row')
-    col = verify_json_params('col')  # todo: put directly in below use cases
-    doc = DocEntry.find_by_id(docId[0])
+    cellContent, docId, parId, row, col = verify_json_params('cellContent', 'docId', 'parId', 'row', 'col')
+    doc = DocEntry.find_by_id(docId)
     if not doc:
         abort(404)
     verify_edit_access(doc)
-    par = doc.document_as_current_user.get_paragraph(parId[0])
+    par = doc.document_as_current_user.get_paragraph(parId)
     plug = Plugin.from_paragraph(par)
     yaml = plug.values
     if is_datablock(yaml):
-        save_cell(yaml[TABLE][DATABLOCK], row[0], col[0], cellContent[0])
+        save_cell(yaml[TABLE][DATABLOCK], row, col, cellContent)
     else:
         create_datablock(yaml[TABLE])
-        save_cell(yaml[TABLE][DATABLOCK], row[0], col[0], cellContent[0])
+        save_cell(yaml[TABLE][DATABLOCK], row, col, cellContent)
 
-    cc = str(cellContent[0])
-    '''
-    if len(cc) > 3:
-        ccTmp = cc[:3]
-        if ccTmp == 'md:':
-            cellHtml = md_to_html(cc[3:])
-            print(cellHtml)
-    '''
+    cc = str(cellContent)
     html = call_dumbo([cc], "/mdkeys")
     plug.save()
     multi.append(html[0])

@@ -151,7 +151,7 @@ p.chart-menu {
 
 tim-table {
     .timTableTable {
-        margin-left: 0px;
+        //margin-left: 0px;
         margin: 0px;
     }
 
@@ -159,22 +159,20 @@ tim-table {
         border: 2px solid red;
     }
 
-    .buttonAddCol {
-        align-self: flex-start;
+    .buttonAddRow {
+        //align-self: flex-start;
     }
 
-    .buttonAddRow {
-        align-self: flex-end;
-        position: relative;
-        top: 0.89cm;
-        left: 1.05cm;
-        float: none !important;
-
+    .buttonAddCol {
+        position: absolute;
+        right: calc(-1cm - 2px);
     }
 
     .timTableContentDiv {
-        display: flex;
-        justify-content: center;
-        padding: 1cm;
+        position: relative;
+        display: table;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 20px;
     }
 }
