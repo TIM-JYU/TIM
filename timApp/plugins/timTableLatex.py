@@ -455,6 +455,7 @@ class Table:
         # so here it tells only the highest amount of cols in the table.
         columns = "c" * self.col_count
         prefix = f"\\begin{{table}}[h]\n" \
+                  "\centering\n" \
                  f"\\begin{{tabular}}{{{columns}}}"
         postfix = "\\end{tabular}\n\\end{table}"
         resize = self.fit_to_page_width
