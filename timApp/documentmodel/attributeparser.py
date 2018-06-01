@@ -26,10 +26,15 @@ class AttributeParser:
         return self.current_pos < len(self.str)
 
     def get_attributes(self):
-        self.current_pos = 0
-        if not self.find_attr_list_start_char():
-            return {}, None
-        start_index = self.current_pos - 1
+        potential_start_indices = [i for i, x in enumerate(self.str) if x == AttributeParser.attr_list_start_char()]
+        for i in potential_start_indices:
+            tokens = self.try_get_attributes(i + 1)
+            if tokens is not None:
+                return tokens, i
+        return {}, None
+
+    def try_get_attributes(self, pos):
+        self.current_pos = pos
         tokens = {}
         end_found = False
         while self.has_chars():
@@ -57,30 +62,13 @@ class AttributeParser:
                 continue
             break
         if end_found:
-            return tokens, start_index
+            return tokens
         else:
-            return {}, None
+            return None
 
     @staticmethod
     def attr_list_start_char():
         return '{'
-
-    def find_attr_list_start_char(self):
-        self.current_pos = 0
-        found_pos = -1
-        while self.has_chars():
-            curr = self.get_char()
-            if curr == self.attr_list_start_char():
-                found_pos = self.current_pos
-                continue
-            if curr == '\\':
-                if not self.has_chars():
-                    break
-                self.get_char()
-        if found_pos < 0:
-            return False
-        self.current_pos = found_pos
-        return True
 
     def try_parse_attr_list_end_char(self):
         if self.current_char() == self.attr_list_end_char():

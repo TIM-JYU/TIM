@@ -19,7 +19,8 @@ from timApp.dbaccess import get_timdb
 from timApp.documentmodel.document import Document
 from timApp.dumboclient import call_dumbo
 from timApp.plugin import Plugin
-from timApp.pluginControl import try_load_json, find_task_ids, pluginify
+from timApp.pluginControl import find_task_ids, pluginify
+from timApp.utils import try_load_json
 from timApp.pluginexception import PluginException
 from timApp.requesthelper import verify_json_params, unpack_args, get_option
 from timApp.responsehelper import json_response, ok_response
@@ -435,10 +436,7 @@ def get_state():
                                                    'par_id',
                                                    'user_id',
                                                    'answer_id', types=[int, str, int, int])
-    plugin_params = {}
     review = get_option(request, 'review', False)
-    if review:
-        plugin_params['review'] = True
 
     answer, doc_id = verify_answer_access(answer_id, user_id)
     doc = Document(d_id)
@@ -460,7 +458,7 @@ def get_state():
                                       user,
                                       timdb,
                                       custom_answer=answer,
-                                      plugin_params=plugin_params,
+                                      review=review,
                                       wrap_in_div=False) if review else ([None], None, None, None)
 
     return json_response({'html': texts[0]['html'], 'reviewHtml': reviewhtml['html'] if review else None})

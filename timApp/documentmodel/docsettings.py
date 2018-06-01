@@ -8,7 +8,7 @@ from timApp.documentmodel.macroinfo import MacroInfo
 from timApp.documentmodel.randutils import hashfunc
 from timApp.documentmodel.specialnames import DEFAULT_PREAMBLE_DOC
 from timApp.documentmodel.yamlblock import YamlBlock
-from timApp.dumboclient import MathType
+from timApp.dumboclient import MathType, DumboOptions
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 
 
@@ -42,6 +42,7 @@ class DocSettings:
     read_expiry_key = 'read_expiry'
     add_par_button_text_key = 'add_par_button_text'
     mathtype_key = 'math_type'
+    math_preamble_key = 'math_preamble'
 
     @staticmethod
     def settings_to_string(par: DocParagraph) -> str:
@@ -240,16 +241,20 @@ class DocSettings:
         return self.__dict.get(self.add_par_button_text_key, default)
 
     def mathtype(self, default='mathjax') -> MathType:
-        try:
-            return MathType(self.__dict.get(self.mathtype_key, default))
-        except ValueError:
-            return MathType.MathJax
+        return MathType.from_string(self.__dict.get(self.mathtype_key, default))
 
     def get_hash(self):
         macroinfo = self.get_macroinfo()
         macros = macroinfo.get_macros()
         macro_delim = macroinfo.get_macro_delimiter()
         return hashfunc(f"{macros}{macro_delim}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}")
+
+    def math_preamble(self):
+        return self.__dict.get(self.math_preamble_key, '')
+
+    def get_dumbo_options(self):
+        return DumboOptions(math_type=self.mathtype(), math_preamble=self.math_preamble())
+
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
     result, _ = __resolve_final_settings_impl(pars)

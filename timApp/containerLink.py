@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 import json
 from functools import lru_cache
+from typing import List
 
 import requests
 from flask import current_app
 
 from timApp.documentmodel.timjsonencoder import TimJsonEncoder
-from timApp.dumboclient import call_dumbo, MathType
+from timApp.dumboclient import call_dumbo, DumboOptions
 from timApp.logger import log_warning
+from timApp.plugin import Plugin
 from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.pluginexception import PluginException
 from timApp.timtypes import DocumentType as Document
@@ -48,7 +50,7 @@ def get_plugins():
     return PLUGINS
 
 
-def call_plugin_generic(plugin, method, route, data=None, headers=None, params=None):
+def call_plugin_generic(plugin: str, method: str, route: str, data=None, headers=None, params=None):
     plug = get_plugin(plugin)
     try:
         read_timeout = 30
@@ -68,27 +70,18 @@ def call_plugin_generic(plugin, method, route, data=None, headers=None, params=N
         raise PluginException(f"Read timeout occurred when calling {plugin}.")
 
 
-def render_plugin(doc: Document, plugin, plugin_data, output_format: PluginOutputFormat, params=None):
-    plugin_data.update(params or {})
+def render_plugin(doc: Document, plugin: Plugin, output_format: PluginOutputFormat):
+    plugin_data = plugin.render_json()
     if doc.get_settings().plugin_md():
-        convert_md(plugin_data, mathtype=doc.get_settings().mathtype())
-    plugin_data = json.dumps(plugin_data,
-                             cls=TimJsonEncoder)
-    return call_plugin_generic(plugin,
+        convert_md([plugin_data],
+                   options=plugin.par.get_dumbo_options(base_opts=doc.get_settings().get_dumbo_options()),
+                   outtype='md' if output_format == PluginOutputFormat.HTML else 'latex')
+    return call_plugin_generic(plugin.type,
                                'post',
                                output_format.value,
-                               data=plugin_data,
-                               headers={'Content-type': 'application/json'},
-                               params=params)
-
-
-def remove_p(s):
-    if not s.startswith('<p>'):
-        return s
-    rs = s[3:]
-    if not rs.endswith('</p>'):
-        return s
-    return rs[:-4]
+                               data=json.dumps(plugin_data,
+                                               cls=TimJsonEncoder),
+                               headers={'Content-type': 'application/json'})
 
 
 def call_mock_dumbo_s(s):
@@ -139,34 +132,11 @@ def dict_to_dumbo(pm):
         pm[mkey] = v
 
 
-def convert_md_old(plugin_data):
-    # return
-    if type(plugin_data) is dict:
-        dict_to_dumbo(plugin_data)
-        return
-    for p in plugin_data:
-        pm = p["markup"]
-        dict_to_dumbo(pm)
-
-
-def convert_md(plugin_data, mathtype: MathType):
-    if isinstance(plugin_data, dict):
-        plugin_data['markup'] = call_dumbo(plugin_data['markup'], '/mdkeys', mathtype=mathtype)
-    elif isinstance(plugin_data, list):
-        markups = [p['markup'] for p in plugin_data]
-        html_markups = call_dumbo(markups, '/mdkeys')
-        for p, h in zip(plugin_data, html_markups):
-            p['markup'] = h
-
-
-def convert_tex(plugin_data, mathtype: MathType):
-    if isinstance(plugin_data, dict):
-        plugin_data['markup'] = call_dumbo(plugin_data['markup'], '/latexkeys', mathtype=mathtype)
-    elif isinstance(plugin_data, list):
-        markups = [p['markup'] for p in plugin_data]
-        html_markups = call_dumbo(markups, '/latexkeys')
-        for p, h in zip(plugin_data, html_markups):
-            p['markup'] = h
+def convert_md(plugin_data: List[dict], options: DumboOptions, outtype='md', plugin_opts: List[DumboOptions]=None):
+    markups = [p['markup'] for p in plugin_data]
+    html_markups = call_dumbo(markups, f'/{outtype}keys', options=options, data_opts=plugin_opts)
+    for p, h in zip(plugin_data, html_markups):
+        p['markup'] = h
 
 
 def convert_tex_mock(plugin_data):
@@ -178,24 +148,22 @@ def convert_tex_mock(plugin_data):
         dict_to_dumbo(pm)
 
 
-def render_plugin_multi(doc: Document, plugin, plugin_data, params=None,
+def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
                         plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML):
-    if params is not None:
-        for p in plugin_data:
-            p.update(params)
-
+    opts = doc.get_settings().get_dumbo_options()
+    plugin_dumbo_opts = [p.par.get_dumbo_options(base_opts=opts) for p in plugin_data]
+    plugin_dicts = [p.render_json() for p in plugin_data]
     if doc.get_settings().plugin_md():
-        if plugin_output_format == PluginOutputFormat.HTML:
-            convert_md(plugin_data, mathtype=doc.get_settings().mathtype())
-        else:
-            convert_tex(plugin_data, mathtype=doc.get_settings().mathtype())
+        convert_md(plugin_dicts,
+                   options=opts,
+                   plugin_opts=plugin_dumbo_opts,
+                   outtype='md' if plugin_output_format == PluginOutputFormat.HTML else 'latex')
 
     return call_plugin_generic(plugin,
                                'post',
                                ('multimd' if plugin_output_format == PluginOutputFormat.MD else 'multihtml'),
-                               data=json.dumps(plugin_data, cls=TimJsonEncoder),
-                               headers={'Content-type': 'application/json'},
-                               params=params)
+                               data=json.dumps(plugin_dicts, cls=TimJsonEncoder),
+                               headers={'Content-type': 'application/json'})
 
 
 def call_plugin_resource(plugin, filename, args=None):
@@ -225,8 +193,9 @@ def plugin_reqs(plugin):
 # Gets plugin info (host)
 def get_plugin(plugin: str):
     plugins = get_plugins()
-    if plugin in plugins:
-        return plugins[plugin]
+    plug = plugins.get(plugin)
+    if plug:
+        return plug
     raise PluginException("Plugin does not exist.")
 
 

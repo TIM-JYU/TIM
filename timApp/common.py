@@ -15,14 +15,12 @@ from timApp.markdownconverter import expand_macros, create_environment
 from timApp.pluginControl import pluginify
 from timApp.requesthelper import get_boolean
 from timApp.sessioninfo import get_session_usergroup_ids
-from timApp.timdb.docinfo import DocInfo
 from timApp.timdb.models.user import User
 from timApp.timdb.readings import get_common_readings, get_read_expiry_condition
 from timApp.timdb.tim_models import ReadParagraph
 from timApp.timdb.userutils import get_anon_group_id
 from timApp.timtiming import taketime
 from timApp.utils import getdatetime
-from timApp.documentmodel.docparagraph import DocParagraph
 
 
 # noinspection PyUnusedLocal

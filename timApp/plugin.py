@@ -1,6 +1,6 @@
 from copy import deepcopy
 from datetime import datetime, timezone
-from typing import Tuple, Optional, Union, Iterable, Dict
+from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple
 
 import yaml
 
@@ -13,8 +13,18 @@ from timApp.pluginexception import PluginException
 from timApp.rndutils import get_simple_hash_from_par_and_user
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.user import User
+from timApp.utils import try_load_json
 
 date_format = '%Y-%m-%d %H:%M:%S'
+
+
+class PluginRenderOptions(NamedTuple):
+    user: Optional[User]
+    do_lazy: bool
+    user_print: bool
+    preview: bool
+    target_format: str
+    review: bool
 
 
 def get_value(values, key, default=None):
@@ -67,6 +77,8 @@ class Plugin:
     limit_defaults = {'mmcq': 1}
 
     def __init__(self, task_id: Optional[str], values: dict, plugin_type: str, par: Optional[DocParagraph] = None):
+        self.answer = None
+        self.options: PluginRenderOptions = None
         self.task_id = task_id
         assert isinstance(values, dict)
         self.values = values
@@ -76,7 +88,11 @@ class Plugin:
 
     @property
     def full_task_id(self):
-        return f'{self.par.doc.doc_id}.{self.task_id}'
+        return f'{self.par.doc.doc_id}.{self.task_id or ""}'
+
+    @property
+    def task_id_ext(self):
+        return f'{self.full_task_id}.{self.par.get_id()}'
 
     @staticmethod
     def get_date(d):
@@ -227,6 +243,38 @@ class Plugin:
             'look_answer': look_answer,
             'valid': valid
         }
+
+    def set_render_options(self, answer, options: PluginRenderOptions):
+        self.answer = answer
+        self.options = options
+
+    def render_json(self):
+        task_id = self.full_task_id
+        options = self.options
+        if self.answer is not None:
+            state = try_load_json(self.answer['content'])
+            if isinstance(state, dict) and options.user is not None:
+                info = self.get_info([options.user], old_answers=self.answer.get('cnt'), valid=self.answer['valid'])
+            else:
+                info = None
+        else:
+            state = None
+            info = None
+        return {"markup": self.values,
+                "state": state,
+                "taskID": task_id,
+                "taskIDExt": self.task_id_ext,
+                "doLazy": options.do_lazy,
+                "userPrint": options.user_print,
+                # added preview here so that whether or not the window is in preview can be
+                # checked in python so that decisions on what data is sent can be made.
+                "preview": options.preview,
+                "anonymous": options.user is not None,
+                "info": info,
+                "user_id": options.user.name if options.user is not None else 'Anonymous',
+                "targetFormat": options.target_format,
+                "review": options.review,
+                }
 
     def is_answer_valid(self, old_answers, tim_info):
         """Determines whether the currently posted answer should be considered valid.

@@ -7,7 +7,7 @@ from jinja2 import Environment, TemplateSyntaxError
 from lxml import html, etree
 
 from timApp.documentmodel.yamlblock import YamlBlock
-from timApp.dumboclient import call_dumbo
+from timApp.dumboclient import call_dumbo, DumboOptions
 from timApp.htmlSanitize import sanitize_html
 from timApp.utils import get_error_html, title_to_id
 
@@ -207,7 +207,10 @@ def par_list_to_html_list(pars,
     # if settings.nomacros():
     #    texts = [p.get_markdown() for p in pars]
     #else:
-    texts = [p.get_expanded_markdown(macroinfo) for p in pars]
+    texts = [p.get_expanded_markdown(macroinfo) if not p.has_dumbo_options() else {
+        'content': p.get_expanded_markdown(macroinfo),
+        **p.get_dumbo_options().dict(),
+    } for p in pars]
 
     texplain = settings.is_texplain()
     if texplain:  # add pre-markers to tex paragrpahs
@@ -215,7 +218,7 @@ def par_list_to_html_list(pars,
             text = texts[i]
             if text.find('```') != 0 and text.find('#') != 0:
                 texts[i] = '```\n' + text + "\n```"
-    raw = call_dumbo(texts, mathtype=settings.mathtype())
+    raw = call_dumbo(texts, options=settings.get_dumbo_options())
 
     # Edit html after dumbo
     raw = edit_html_with_own_syntax(raw)

@@ -7,13 +7,13 @@ from typing import Optional, Dict, List, Tuple, Any
 
 import filelock
 
-from timApp import containerLink
 from timApp.documentmodel.documentparser import DocumentParser
 from timApp.documentmodel.documentparseroptions import DocumentParserOptions
 from timApp.documentmodel.documentwriter import DocumentWriter
 from timApp.documentmodel.macroinfo import MacroInfo
 from timApp.documentmodel.preloadoption import PreloadOption
 from timApp.documentmodel.randutils import random_id, hashfunc
+from timApp.dumboclient import DumboOptions, MathType
 from timApp.htmlSanitize import sanitize_html
 from timApp.markdownconverter import par_list_to_html_list, expand_macros
 from timApp.rndutils import get_rands_as_dict, get_rands_as_str
@@ -295,7 +295,7 @@ class DocParagraph:
         if preamble:
             self.__htmldata['from_preamble'] = preamble.path
         self.__htmldata['is_question'] = self.is_question()
-        # self.is_plugin() and containerLink.get_plugin_needs_browser(self.get_attr('plugin'))
+        from timApp import containerLink
         self.__htmldata['needs_browser'] = self.is_plugin()\
                                            and not self.is_question()\
                                            and containerLink.get_plugin_needs_browser(plugintype)
@@ -1072,6 +1072,12 @@ class DocParagraph:
     def is_area(self):
         return self.get_attr('area') is not None or self.get_attr('area_end') is not None
 
+    def has_dumbo_options(self):
+        return bool(self.get_attr('math_type') or self.get_attr('math_preamble'))
+
+    def get_dumbo_options(self, base_opts: DumboOptions=DumboOptions.default()):
+        return DumboOptions(math_type=MathType.from_string(self.get_attr('math_type') or base_opts.math_type),
+                            math_preamble=self.get_attr('math_preamble') or base_opts.math_preamble)
 
 def is_real_id(par_id: Optional[str]):
     """Returns whether the given paragraph id corresponds to some real paragraph

@@ -8,11 +8,8 @@
 {-#LANGUAGE DeriveFoldable #-}
 {-#LANGUAGE DeriveTraversable #-}
 module Main where
-import Data.Monoid
 import Text.Pandoc.Walk
 import GHC.Generics
-import Control.Exception
-import Data.Typeable
 import qualified Text.Pandoc as PDC
 import qualified Text.Pandoc.Options as PDC_Opt
 import System.Directory
@@ -20,38 +17,52 @@ import qualified Data.Vector as V
 import Control.Monad.Trans
 import Control.Monad
 import Data.Maybe
-import Data.Maybe
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
-import qualified Data.Set as Set
 import Control.Lens (transformM)
 import qualified Data.ByteString.Lazy as LBS
 import System.FilePath
 import Snap.Core
 import Data.Aeson
 import Data.Aeson.Types
-import Data.Aeson.Lens
+import Data.Aeson.Lens()
 import Snap.Http.Server
 import Text.Blaze.Html.Renderer.Text
-import Text.TeXMath.Readers.TeX.Macros
 import Control.Applicative
 import qualified AsciiMath
 import Tex2Svg
-import Data.Digest.Pure.SHA
 import Options.Generic
-import Debug.Trace
+import Text.LaTeX.Base.Syntax
+import Text.LaTeX.Base.Parser
+import qualified Data.Set as Set
 
-tex2SvgPass :: DumboRTC -> T.Text -> (PDC.Inline -> IO PDC.Inline)
-tex2SvgPass drtc mathPreamble = tex2svg (tex2svgRtc drtc) mathPreamble
+type WalkType = PDC.Block
 
-convertBlock :: Conversion -> (PDC.Inline -> IO PDC.Inline) -> T.Text -> IO LT.Text
-convertBlock target ms txt = do
+tex2SvgPass :: DumboRTC -> T.Text -> (WalkType -> IO WalkType)
+tex2SvgPass drtc preamble = walkM (tex2svg (tex2svgRtc drtc) preamble) . rawBlockPass
+
+rawBlockPass :: PDC.Block -> PDC.Block
+rawBlockPass b@(PDC.RawBlock "latex" s)
+ = case parseLaTeX $ T.pack s of
+  Left _ -> b
+  Right tex -> maybeMath tex
+   where maybeMath t | isMath t = PDC.Plain [PDC.Math PDC.DisplayMath s]
+         maybeMath _t = b
+         isMath (TeXEnv name _ _) = Set.member name mathEnvsSet
+         isMath (TeXSeq l1 l2) = isMath l1 || isMath l2
+         isMath _ = False
+rawBlockPass b = b
+
+convertBlock :: Conversion -> (WalkType -> IO WalkType) -> T.Text -> IO LT.Text
+convertBlock target ms txt =
     fmap (either (LT.pack . show) id) <$> PDC.runIO $
         PDC.readMarkdown readerOpts txt >>= make
  where
   make :: (PDC.PandocMonad m, MonadIO m) => PDC.Pandoc -> m LT.Text
-  make x = case target of 
-        ToHTML  -> walkM (liftIO . ms) x >>= makeHtml
+  make x = case target of
+        ToHTML  -> do
+          r <- walkM (liftIO . ms) x
+          makeHtml r
         ToLatex -> makeLatex x
   makeHtml, makeLatex :: PDC.PandocMonad m => PDC.Pandoc -> m LT.Text
   makeHtml  pdc  = fmap renderHtml (PDC.writeHtml5 htmlOpts pdc)
@@ -60,9 +71,9 @@ convertBlock target ms txt = do
 readerOpts :: PDC_Opt.ReaderOptions
 readerOpts =
   PDC.def
-  { PDC.readerExtensions 
+  { PDC.readerExtensions
      = PDC_Opt.enableExtension PDC_Opt.Ext_tex_math_dollars
-        $ PDC.pandocExtensions 
+         PDC.pandocExtensions
   }
 
 latexOpts :: PDC_Opt.WriterOptions
@@ -74,8 +85,8 @@ htmlOpts =
   { PDC.writerHTMLMathMethod =
     PDC.MathJax
       "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-  , PDC.writerExtensions = PDC_Opt.enableExtension PDC_Opt.Ext_definition_lists 
-                           . PDC_Opt.enableExtension PDC_Opt.Ext_latex_macros 
+  , PDC.writerExtensions = PDC_Opt.enableExtension PDC_Opt.Ext_definition_lists
+                           . PDC_Opt.enableExtension PDC_Opt.Ext_latex_macros
                            $ PDC.pandocExtensions
   }
 
@@ -100,9 +111,9 @@ data DumboRTC = DRTC {
                      tex2svgRtc :: Tex2SvgRuntime
                      ,portN :: Int
                      }
-                    
-a ?: b = fromMaybe a b
 
+(?:) :: a -> Maybe a -> a
+a ?: b = fromMaybe a b
 
 initialize :: DumboArgs Unwrapped -> IO DumboRTC
 initialize dargs = do
@@ -111,8 +122,8 @@ initialize dargs = do
   let cacheFN :: Integer -> String
       cacheFN i = cacheDir dargs ++ "/" ++ triep (show i)
       triep :: String -> FilePath
-      triep (a:b:c:[]) = (a:b:c:".cache")
-      triep (a:b:c:xs) = (a:b:c:'/':triep xs)
+      triep [a,b,c] = a:b:c:".cache"
+      triep (a:b:c:xs) = a:b:c:'/':triep xs
       triep xs = xs
       cacheRead :: Integer -> IO (Maybe PDC.Inline)
       cacheRead i = do
@@ -121,7 +132,7 @@ initialize dargs = do
       cacheWrite :: Integer -> PDC.Inline -> IO ()
       cacheWrite i inline = createDirectoryIfMissing True (takeDirectory (cacheFN i)) >>
                             LBS.writeFile (cacheFN i) (encode inline)
-  return $ DRTC (T2SR 
+  return $ DRTC (T2SR
                 cacheRead
                 cacheWrite
                 (tmpDir dargs)
@@ -145,22 +156,22 @@ main = do
 transformKeys rtc target = conversion (keysConvert rtc target)
 transformMD rtc target   = conversion (plainConvert rtc target)
 -- conversion :: (TIMIFace (V.Vector a0) -> a0 -> IO b0) -> m0 ()
-keysConvert :: DumboRTC -> Conversion -> TIMIFace a -> (ConversionElement Value) -> IO Value
-keysConvert rtc target timInput 
- = ((\(pass,obj) -> transformM (jsonEditing target pass) obj) . convertElement rtc (mathOption timInput) (mathPreamble timInput))
+keysConvert :: DumboRTC -> Conversion -> TIMIFace a -> ConversionElement Value -> IO Value
+keysConvert rtc target timInput
+ = (\(pass,obj) -> transformM (jsonEditing target pass) obj) . convertElement rtc (mathOption timInput) (mathPreamble timInput)
 
-plainConvert rtc target timInput 
- = (uncurry (convertBlock target) . convertElement rtc (mathOption timInput) (mathPreamble timInput))
+plainConvert rtc target timInput
+ = uncurry (convertBlock target) . convertElement rtc (mathOption timInput) (mathPreamble timInput)
 
-modifyJSON target pass str = (String . stripP . LT.toStrict) <$> (convertBlock target pass str)
+modifyJSON target pass str = String . stripP . LT.toStrict <$> convertBlock target pass str
 
-jsonEditing :: Conversion -> (PDC.Inline -> IO PDC.Inline) -> Value -> IO Value
+jsonEditing :: Conversion -> (WalkType -> IO WalkType) -> Value -> IO Value
 jsonEditing target pass (String str)
   | "md:" `T.isPrefixOf` str
     -- ^ Convert field from markdown to target
   = modifyJSON target pass (T.drop 3 str)
   | "am:" `T.isPrefixOf` str
-  = modifyJSON target (pass <=< convertAsciiMath) (T.drop 3 str)
+  = modifyJSON target (pass <=< walkM convertAsciiMath) (T.drop 3 str)
     -- ^ Convert field from md to target, but assume that math is asciiMath
 jsonEditing _ _ x = pure x
 
@@ -171,27 +182,27 @@ convertAsciiMath x = pure x
 mkErr :: String -> String -> Value
 mkErr s e = object ["error" .= e, "stage" .= s]
 
-convertElement rtc globalMath globalPreamble ce 
+convertElement rtc globalMath globalPreamble ce
   = case ce of
-        CEBare txt 
-          | (defMathOption ?: globalMath) == SVG 
+        CEBare txt
+          | (defMathOption ?: globalMath) == SVG
               -> (tex2SvgPass rtc (defPreamble ?: globalPreamble) , txt)
           | otherwise
               -> (pure ,  txt)
 
         CEWrapped obj
-          | (defMathOption ?: globalMath ?: mathOption obj) == SVG 
+          | (defMathOption ?: globalMath ?: mathOption obj) == SVG
               -> (tex2SvgPass rtc (defPreamble ?: globalPreamble ?: mathPreamble obj) , content obj)
-          | otherwise 
+          | otherwise
               -> (pure , content obj)
 
-conversion :: (MonadIO m0, ToJSON b0,FromJSON a0,MonadSnap m0) => 
+conversion :: (MonadIO m0, ToJSON b0,FromJSON a0,MonadSnap m0) =>
                 (TIMIFace (V.Vector a0) -> a0 -> IO b0) -> m0 ()
 conversion f = do
   bdy <- eitherDecode `fmap` readRequestBody 1000000000 -- Allow up to gigabyte at once..
   case bdy of
     Left  err      -> writeLBS . encode $ mkErr "Decoding input" err
-    Right timInput -> liftIO (V.mapM (f timInput) (content timInput)) >>= writeLBS . encode 
+    Right timInput -> liftIO (V.mapM (f timInput) (content timInput)) >>= writeLBS . encode
 
 data MathOption = SVG | MathJAX deriving (Eq,Show)
 
@@ -208,7 +219,7 @@ instance FromJSON MathOption where
                               _         -> fail ("Unexpected math option"++show txt)
     parseJSON invalid    = typeMismatch "MathOption" invalid
 
-data ConversionElement el = 
+data ConversionElement el =
                          CEBare el
                        | CEWrapped (TIMIFace el)
                        deriving (Eq,Show)
@@ -230,7 +241,3 @@ instance FromJSON el => FromJSON (TIMIFace el) where
                             return (TIF content mathOpt mathPre)
 
     parseJSON invalid    = typeMismatch "TIMIFace" invalid
-
-                                    
-
-

@@ -17,7 +17,7 @@ from timApp.documentmodel.document import dereference_pars, Document
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.dumboclient import call_dumbo
 from timApp.markdownconverter import expand_macros
-from timApp.plugin import Plugin
+from timApp.plugin import Plugin, PluginRenderOptions
 from timApp.pluginOutputFormat import PluginOutputFormat
 from timApp.pluginexception import PluginException
 from timApp.rndutils import get_simple_hash_from_par_and_user
@@ -61,16 +61,6 @@ def find_task_ids(blocks: List[DocParagraph]) -> Tuple[List[str], int]:
     return task_ids, plugin_count
 
 
-def try_load_json(json_str: str):
-    """"""
-    try:
-        if json_str is not None:
-            return json.loads(json_str)
-        return None
-    except ValueError:
-        return json_str
-
-
 def pluginify(doc: Document,
               pars: List[DocParagraph],
               user: Optional[User],
@@ -80,7 +70,7 @@ def pluginify(doc: Document,
               do_lazy=False,
               edit_window=False,
               load_states=True,
-              plugin_params=None,
+              review=False,
               wrap_in_div=True,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
               user_print: bool = False,
@@ -126,17 +116,23 @@ def pluginify(doc: Document,
     if custom_answer is not None:
         if len(pars) != 1:
             raise PluginException('len(blocks) must be 1 if custom state is specified')
-    plugins = {}
-    state_map = {}
+    plugins: Dict[str, Dict[int, Plugin]] = {}
     task_ids = []
 
-    global_attrs = doc.get_settings().global_plugin_attrs()
-    macroinfo = doc.get_settings().get_macroinfo(user)
+    settings = doc.get_settings()
+    global_attrs = settings.global_plugin_attrs()
+    macroinfo = settings.get_macroinfo(user)
     macros = macroinfo.get_macros()
     macro_delimiter = macroinfo.get_macro_delimiter()
 
     answer_map = {}
     # enum_pars = enumerate(pars)
+    plugin_opts = PluginRenderOptions(do_lazy=do_lazy,
+                                      user_print=user_print,
+                                      preview=edit_window,
+                                      target_format=target_format,
+                                      user=user,
+                                      review=review)
 
     if load_states and custom_answer is None and user is not None:
         for idx, block in enumerate(pars):  # find taskid's
@@ -179,8 +175,6 @@ def pluginify(doc: Document,
 
         if plugin_name:
             task_id = f"{block.get_doc_id()}.{attr_taskid or ''}"
-            info = None
-            state_ok = False
             new_seed = False
             rnd_seed = None
             answer = {}
@@ -191,9 +185,7 @@ def pluginify(doc: Document,
                 else:
                     answer = answer_map.get(task_id, None)
                 if answer is not None:
-                    state = try_load_json(answer['content'])
                     rnd_seed = answer.get('rndseed', None)
-                    state_ok = True
 
             if rnd_seed is None:
                 rnd_seed = get_simple_hash_from_par_and_user(block, user) # TODO: RND_SEED: get users seed for this plugin
@@ -216,51 +208,20 @@ def pluginify(doc: Document,
                 html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
                                                                        plugin_output_format=output_format)
                 continue
-            vals = plugin.values
             if plugin_name not in plugins:
                 plugins[plugin_name] = OrderedDict()
-            vals["user_id"] = user.name if user is not None else 'Anonymous'  # TODO: This shouldn't be inside markup.
 
-            if state_ok:
-                info = plugin.get_info([user], old_answers=answer.get('cnt'), valid=answer['valid'])
-            else:
-                if not task_id.endswith('.'):
-                    state_map[task_id] = {'plugin_name': plugin_name, 'idx': idx, 'obj': plugin}
-                state = None
-
-            plugins[plugin_name][idx] = {"markup": vals,
-                                         "state": state,
-                                         "taskID": task_id,
-                                         "taskIDExt": task_id + '.' + block.get_id(),
-                                         "doLazy": do_lazy,
-                                         "userPrint": user_print,
-                                         # added preview here so that whether or not the window is in preview can be
-                                         # checked in python so that decisions on what data is sent can be made.
-                                         "preview": edit_window,
-                                         "anonymous": user is not None,
-                                         "info": info,
-                                         "targetFormat": target_format}
+            plugin.set_render_options(answer if load_states and answer is not None else None, plugin_opts)
+            plugins[plugin_name][idx] = plugin
         else:
             if block.nocache and not is_gamified:  # get_nocache():
                 # if block.get_nocache():
                 texts = [block.get_expanded_markdown(macroinfo)]
-                htmls = call_dumbo(texts, mathtype=doc.get_settings().mathtype())
+                htmls = call_dumbo(texts, options=settings.get_dumbo_options())
                 html_pars[idx][output_format.value] = htmls[0]  # to collect all together before dumbo
 
                 # taketime("answ", "markup", len(plugins))
-    '''
-    if load_states and custom_answer is None and user is not None:
-        answers = timdb.answers.get_newest_answers(user.id, list(state_map.keys()))
-        # Close database here because we won't need it for a while
-        timdb.close()
-        for answer in answers:
-            state = try_load_json(answer['content'])
-            p = state_map[answer['task_id']]
-            plugins[p['plugin_name']][p['idx']]['state'] = state
-            plugins[p['plugin_name']][p['idx']]['info'] = p['obj'].get_info([user],
-                                                                            old_answers=answer['cnt'],
-                                                                            valid=answer['valid'])
-    '''
+
     js_paths = []
     css_paths = []
     modules = []
@@ -321,8 +282,7 @@ def pluginify(doc: Document,
                     doc,
                     plugin_name,
                     [val for _, val in plugin_block_map.items()],
-                    plugin_params,
-                    plugin_output_format=(output_format))
+                    plugin_output_format=output_format)
                 # taketime("plg e", plugin_name)
             except PluginException as e:
                 for idx in plugin_block_map.keys():
@@ -339,12 +299,12 @@ def pluginify(doc: Document,
                                          response, plugin_output_format=output_format)
                 continue
 
-            for idx, markup, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
-                html, is_lazy = make_lazy(html, markup, do_lazy)
+            for idx, plugin, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
+                html, is_lazy = make_lazy(html, plugin, do_lazy)
 
                 html_pars[idx]['needs_browser'] = needs_browser or is_lazy
                 html_pars[idx][output_format.value] = (
-                f"<div id='{markup['taskIDExt']}' data-plugin='{plugin_url}'>{html}</div>") if wrap_in_div else html
+                f"<div id='{plugin.task_id_ext}' data-plugin='{plugin_url}'>{html}</div>") if wrap_in_div else html
         else:
             for idx, val in plugin_block_map.items():
                 if md_out:
@@ -357,9 +317,7 @@ def pluginify(doc: Document,
                 else:
                     try:
                         html = render_plugin(doc=doc,
-                                             plugin=plugin_name,
-                                             plugin_data=val,
-                                             params=plugin_params,
+                                             plugin=val,
                                              output_format=output_format)
                     except PluginException as e:
                         html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
@@ -368,7 +326,7 @@ def pluginify(doc: Document,
 
                     html, is_lazy = make_lazy(html, val, do_lazy)
                     html_pars[idx]['needs_browser'] = needs_browser or is_lazy
-                    html_pars[idx]['html'] = f"<div id='{val['taskIDExt']}' data-plugin='{plugin_url}'>{html}</div>" if wrap_in_div else html
+                    html_pars[idx]['html'] = f"<div id='{val.task_id_ext}' data-plugin='{plugin_url}'>{html}</div>" if wrap_in_div else html
 
     # taketime("phtml done")
 
@@ -376,14 +334,13 @@ def pluginify(doc: Document,
 
 
 def get_markup_value(markup, key, default):
-    if key not in markup["markup"]:
-        return default
-    return markup["markup"][key]
+    return markup.get(key, default)
 
 
-def make_lazy(html, markup, do_lazy):
+def make_lazy(html: str, plugin: Plugin, do_lazy):
     if do_lazy == NEVERLAZY:
         return html, False
+    markup = plugin.values
     markup_lazy = get_markup_value(markup, "lazy", "")
     if markup_lazy == False:
         return html, False  # user do not want lazy

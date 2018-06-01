@@ -1,4 +1,5 @@
 """Utility functions."""
+import json
 import os
 import re
 import shutil
@@ -234,3 +235,13 @@ class cached_property:
             return self
         value = obj.__dict__[self.func.__name__] = self.func(obj)
         return value
+
+
+def try_load_json(json_str: str):
+    """"""
+    try:
+        if json_str is not None:
+            return json.loads(json_str)
+        return None
+    except ValueError:
+        return json_str

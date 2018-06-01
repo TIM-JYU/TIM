@@ -192,7 +192,6 @@ class PluginTest(TimRouteTest):
 
     def test_upload(self):
         self.login_test1()
-        db = self.get_db()
         doc = self.create_doc(from_file='example_docs/upload_plugin.md').document
         task_name = 'testupload'
         task_name2 = 'testupload2'
@@ -377,7 +376,6 @@ class PluginTest(TimRouteTest):
         self.login_test2()
         self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
         self.check_save_points(TEST_USER_2_ID, answer_id, 1, 403, self.permission_error)
-        timdb = self.get_db()
         grant_view_access(self.get_test_user_2_group_id(), doc.doc_id)
         self.post_answer(plugin_type, task_id, [True, False, False])
         answer_list = self.get_task_answers(task_id)

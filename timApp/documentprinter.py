@@ -347,7 +347,7 @@ class DocumentPrinter:
                                              '--top-level-division=' + top_level,
                                              '--atx-headers',
                                              # '--verbose',  # this gives non UTF8 results sometimes
-                                             '--latex-engine-opt=-interaction=nonstopmode',
+                                             '--pdf-engine-opt=-interaction=nonstopmode',
                                              '-Mtexdocid=' + str(self._doc_entry.document.doc_id),
                                              # '--latex-engine=xelatex'
                                              ],
