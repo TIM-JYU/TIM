@@ -18,7 +18,7 @@ from timApp.timdb.models.folder import Folder
 from timApp.timdb.models.notification import Notification
 from timApp.timdb.models.usergroup import UserGroup
 from timApp.timdb.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME
-from timApp.timdb.tim_models import LectureUsers
+from timApp.timdb.tim_models import LectureUsers, UserAnswer
 from timApp.timdb.tim_models import db, UserGroupMember, BlockAccess
 from timApp.timdb.userutils import grant_access, get_access_type_id, \
     create_password_hash, check_password_hash
@@ -82,10 +82,15 @@ class User(db.Model):
                              back_populates='users', lazy='joined')
     lectures = db.relationship('Lecture', secondary=LectureUsers.__table__,
                                back_populates='users', lazy='dynamic')
+    owned_lectures = db.relationship('Lecture', back_populates='owner', lazy='dynamic')
     lectureanswers = db.relationship('LectureAnswer', back_populates='user', lazy='dynamic')
     messages = db.relationship('Message', back_populates='user', lazy='dynamic')
     questionactivity = db.relationship('QuestionActivity', back_populates='user', lazy='select')
     useractivity = db.relationship('Useractivity', back_populates='user', lazy='select')
+    answers = db.relationship('Answer', secondary=UserAnswer.__table__,
+                              back_populates='users', lazy='dynamic')
+    annotations = db.relationship('Annotation', back_populates='annotator', lazy='dynamic')
+    velps = db.relationship('Velp', back_populates='creator', lazy='dynamic')
 
     @property
     def logged_in(self):

@@ -48,12 +48,16 @@ $(() => {
     // For some reason, anchor link in URL doesn't work when loading a page for the first time.
     // This is a workaround for it.
     if (location.hash && !location.hash.includes("/")) {
-        const element = $(decodeURIComponent(location.hash))[0];
-        if (element) {
-            // Both with and without setTimeout are needed to get smooth experience.
-            // Firefox and Chrome behave slightly differently.
-            element.scrollIntoView();
-            setTimeout(() => element.scrollIntoView());
+        try {
+            const element = $(decodeURIComponent(location.hash))[0];
+            if (element) {
+                // Both with and without setTimeout are needed to get smooth experience.
+                // Firefox and Chrome behave slightly differently.
+                element.scrollIntoView();
+                setTimeout(() => element.scrollIntoView());
+            }
+        } catch {
+            // location.hash may still be invalid after decoding
         }
     }
 });

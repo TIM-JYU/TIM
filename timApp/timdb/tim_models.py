@@ -17,8 +17,6 @@ from enum import Enum
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 
-from timApp.timdb.readparagraphtype import ReadParagraphType
-
 db = SQLAlchemy()
 
 
@@ -31,28 +29,6 @@ class AccessType(db.Model):
     __tablename__ = 'accesstype'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
-
-
-class Answer(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'answer'
-    id = db.Column(db.Integer, primary_key=True)
-    task_id = db.Column(db.Text, nullable=False, index=True)
-    content = db.Column(db.Text, nullable=False)
-    points = db.Column(db.Float)
-    answered_on = db.Column(db.DateTime(timezone=True), nullable=False)
-    valid = db.Column(db.Boolean, nullable=False)
-    last_points_modifier = db.Column(db.Integer, db.ForeignKey('usergroup.id'))
-
-    uploads = db.relationship('AnswerUpload', back_populates='answer', lazy='dynamic')
-
-    def __init__(self, task_id, content, points, valid, last_points_modifier=None):
-        self.task_id = task_id
-        self.content = content
-        self.points = points
-        self.valid = valid
-        self.last_points_modifier = last_points_modifier
-        self.answered_on = datetime.datetime.now(timezone.utc)
 
 
 class AnswerTag(db.Model):
@@ -175,20 +151,6 @@ class QuestionActivity(db.Model):
     user = db.relationship('User', back_populates='questionactivity', lazy='select')
 
 
-class ReadParagraph(db.Model):
-    __bind_key__ = 'tim_main'
-    __tablename__ = 'readparagraph'
-    id = db.Column(db.Integer, primary_key=True)
-    usergroup_id = db.Column(db.Integer, nullable=False)
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'))
-    par_id = db.Column(db.Text, nullable=False)
-    type = db.Column(db.Enum(ReadParagraphType), nullable=False)
-    par_hash = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
-    __table_args__ = (db.Index('readparagraph_doc_id_par_id_idx', 'doc_id', 'par_id'),
-                      db.Index('readparagraph_doc_id_usergroup_id_idx', 'doc_id', 'usergroup_id'),)
-
-
 class Showpoints(db.Model):
     __bind_key__ = 'tim_main'
     __tablename__ = 'showpoints'
@@ -256,3 +218,5 @@ class UserNotes(db.Model):
     access = db.Column(db.Text, nullable=False)
     tags = db.Column(db.Text, nullable=False)
     html = db.Column(db.Text)
+
+    usergroup = db.relationship('UserGroup', back_populates='notes')

@@ -1,4 +1,5 @@
 import json
+from json import JSONDecodeError
 from typing import Optional
 
 from timApp.timdb.tim_models import db, tim_main_execute
@@ -25,8 +26,12 @@ class LectureAnswer(db.Model):
         return LectureAnswer.query.get(ans_id)
 
     def to_json(self):
+        try:
+            ans = json.loads(self.answer)
+        except JSONDecodeError:
+            ans = []
         return {
-            'answer': json.loads(self.answer),
+            'answer': ans,
             'answer_id': self.answer_id,
             'answered_on': self.answered_on,
             'asked_question': self.asked_question,

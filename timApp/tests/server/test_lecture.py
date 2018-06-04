@@ -153,7 +153,7 @@ class LectureTest(TimRouteTest):
                                                    'Wednesday',
                                                    'Friday'],
                                                'timeLimit': 90}},
-                                       'lecture_id': 1,
+                                       'lecture_id': lecture_id,
                                        'par_id': par_id},
                                   'type': 'question'}})
         resp = self.get_updates(doc.id, msg_id, True, aid)
@@ -259,3 +259,16 @@ class LectureTest(TimRouteTest):
         d = self.create_doc()
         l = Lecture(doc_id=d.id, lecturer=self.current_user_id(), options=json.dumps({'max_students': ''}))
         self.assertIsNone(l.max_students)
+
+    def test_empty_lectureanswer(self):
+        self.login_test1()
+        d = self.create_doc()
+        l = Lecture(doc_id=d.id,
+                    lecturer=self.current_user_id(),
+                    start_time=datetime.datetime.now())
+        db.session.add(l)
+        db.session.flush()
+        aj = AskedJson(json='{}', hash='asd')
+        q = AskedQuestion(lecture=l, asked_json=aj)
+        a = LectureAnswer(lecture_id=l.lecture_id, asked_question=q, answer='')
+        self.assertEqual(a.to_json()['answer'], [])

@@ -32,7 +32,8 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.models.block import Block
 from timApp.timdb.models.docentry import DocEntry
 from timApp.timdb.models.user import User
-from timApp.timdb.tim_models import AnswerUpload, Answer, db
+from timApp.timdb.tim_models import AnswerUpload, db
+from timApp.timdb.models.answer import Answer
 
 answers = Blueprint('answers',
                     __name__,

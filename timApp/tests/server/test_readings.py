@@ -5,7 +5,7 @@ from lxml.cssselect import CSSSelector
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.readings import get_readings, get_read_expiry_condition
 from timApp.timdb.readparagraphtype import ReadParagraphType
-from timApp.timdb.tim_models import ReadParagraph
+from timApp.timdb.models.readparagraph import ReadParagraph
 
 readline_selector = CSSSelector('div.readline')
 
@@ -146,7 +146,7 @@ class ReadingsTest(TimRouteTest):
                                               {'doc_id': d.id,
                                                'type': 'read',
                                                'usergroup_id': ug_id}])
-        known_keys = {'doc_id', 'type', 'usergroup_id', 'id', 'timestamp', 'par_id', 'par_hash'}
+        known_keys = {'doc_id', 'type', 'usergroup_id', 'id', 'timestamp', 'par_id', 'par_hash', 'usergroup'}
         for r in rs:
             self.assertIsInstance(r['id'], int)
             self.assertIsInstance(r['timestamp'], str)

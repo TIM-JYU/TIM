@@ -8,7 +8,7 @@ from selenium.webdriver.support.select import Select
 from timApp.documentmodel.yamlblock import YamlBlock
 from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text, find_by_ngmodel, find_all_by_ngmodel, \
     find_by_ngclick, ignore_timeout
-from timApp.timdb.tim_models import Answer
+from timApp.timdb.models.answer import Answer
 
 ChoiceList = List[Tuple[str, str]]
 ElementList = List[WebElement]

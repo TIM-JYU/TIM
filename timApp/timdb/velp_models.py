@@ -32,6 +32,8 @@ class Annotation(db.Model):
     element_path_start = db.Column(db.Text)
     element_path_end = db.Column(db.Text)
 
+    annotator = db.relationship('User', back_populates='annotations')
+
 
 class AnnotationComment(db.Model):
     __bind_key__ = 'tim_main'
@@ -86,6 +88,8 @@ class Velp(db.Model):
     valid_until = db.Column(db.DateTime(timezone=True))
     color = db.Column(db.Text)
     visible_to = db.Column(db.Integer, nullable=False)
+
+    creator = db.relationship('User', back_populates='velps')
 
 
 class VelpContent(db.Model):

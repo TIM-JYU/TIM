@@ -1,6 +1,6 @@
 from typing import List
 
-from timApp.timdb.tim_models import ReadParagraph
+from timApp.timdb.models.readparagraph import ReadParagraph
 
 
 class ReadMarkCollection:
