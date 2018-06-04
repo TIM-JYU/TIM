@@ -316,7 +316,9 @@ export class TimTableController implements IController {
             this.currentCell.editorOpen = true;
         let parId = getParId(this.element.parents(".par"));
         if (parId === undefined || !this.viewctrl) return;
-        this.openEditor(cell, this.viewctrl.item.id, this.cellDataMatrix[rowi][coli], parId, rowi, coli)
+        this.openEditor(cell, this.viewctrl.item.id, this.cellDataMatrix[rowi][coli], parId, rowi, coli);
+        let edit = this.element.find(".editInput");
+        edit.focus();
     }
 
 
