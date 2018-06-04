@@ -195,6 +195,17 @@ class MergeListEmptyError(PdfError):
         return f"No attachments to merge found"
 
 
+class StampFormatInvalidError(PdfError):
+    """
+    Raised if stampformat (from TIM-document settings) is incorrectly formatted.
+    """
+
+    def __init__(self, stampformat: str = ""):
+        self.stampformat = stampformat
+
+    def __str__(self):
+        return f"Incorrect stamp format: {self.stampformat}"
+
 
 ##############################################################################
 # Functions:
@@ -258,6 +269,9 @@ def get_stamp_text(item: dict, text_format: str) -> str:
     # If input data wasn't a dictionary.
     except TypeError:
         raise StampDataInvalidError("wrong type", item)
+    # If text_format uses numbers.
+    except IndexError:
+        raise StampFormatInvalidError(text_format)
 
 
 def create_stamp(
@@ -411,7 +425,6 @@ def check_stamp_data_validity(stamp_data: List[dict]) -> None:
         if "text" not in item:
             keys = ["date", "attachment", "issue"]
             for key in keys:
-                print(item[key])
                 if key not in item:
                     raise StampDataMissingKeyError(key, item)
                 if not item[key]:
