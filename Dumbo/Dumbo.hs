@@ -39,19 +39,28 @@ import qualified Data.Set as Set
 type WalkType = PDC.Block
 
 tex2SvgPass :: DumboRTC -> T.Text -> (WalkType -> IO WalkType)
-tex2SvgPass drtc preamble = walkM (tex2svg (tex2svgRtc drtc) preamble) . rawBlockPass
+tex2SvgPass drtc preamble = walkM (tex2svg (tex2svgRtc drtc) preamble . rawInlinePass) . rawBlockPass
+
+latexMathPass :: (String -> a) -> String -> a -> a
+latexMathPass d s b =
+  case parseLaTeX $ T.pack s of
+   Left _ -> b
+   Right tex -> maybeMath tex
+    where maybeMath t | isMath t = d s
+          maybeMath _t = b
+
+rawInlinePass :: PDC.Inline -> PDC.Inline
+rawInlinePass b@(PDC.RawInline "tex" s) = latexMathPass (PDC.Math PDC.DisplayMath) s b
+rawInlinePass b = b
 
 rawBlockPass :: PDC.Block -> PDC.Block
-rawBlockPass b@(PDC.RawBlock "latex" s)
- = case parseLaTeX $ T.pack s of
-  Left _ -> b
-  Right tex -> maybeMath tex
-   where maybeMath t | isMath t = PDC.Plain [PDC.Math PDC.DisplayMath s]
-         maybeMath _t = b
-         isMath (TeXEnv name _ _) = Set.member name mathEnvsSet
-         isMath (TeXSeq l1 l2) = isMath l1 || isMath l2
-         isMath _ = False
+rawBlockPass b@(PDC.RawBlock "latex" tex) = latexMathPass (\s -> PDC.Plain [PDC.Math PDC.DisplayMath s]) tex b
 rawBlockPass b = b
+
+isMath :: LaTeX -> Bool
+isMath (TeXEnv name _ _) = Set.member name mathEnvsSet
+isMath (TeXSeq l1 l2) = isMath l1 || isMath l2
+isMath _ = False
 
 convertBlock :: Conversion -> (WalkType -> IO WalkType) -> T.Text -> IO LT.Text
 convertBlock target ms txt =

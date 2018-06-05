@@ -80,7 +80,9 @@ mathEnvs = [ "split"
   , "tikzpicture"
  ]
 
-mathEnvsSet = S.fromList $ map T.unpack mathEnvs
+mathEnvsWithStarred = map (<> "*") mathEnvs <> mathEnvs
+
+mathEnvsSet = S.fromList $ map T.unpack mathEnvsWithStarred
 
 parseMathEnv :: Parser MathEnv
 parseMathEnv = do
@@ -144,7 +146,8 @@ metricItem i =
 comma :: Parser ()
 comma = (skipSpace *> char ',' *> skipSpace) <?> "a comma"
 
--- width=480.311pt, height=172.12pt, depth=0pt
+-- width=480.311pt, height=172.12pt, depth=0pt
+
 metricsLine :: Parser Metrics
 metricsLine = skipSpace *> do
   width  <- metricItem "width" <* comma
@@ -154,7 +157,8 @@ metricsLine = skipSpace *> do
   endOfLine
   return $ Metrics width height (Just depth)
 
--- graphic size: 480.311pt x 172.12pt (168.81mm x 60.4932mm)
+-- graphic size: 480.311pt x 172.12pt (168.81mm x 60.4932mm)
+
 metricsLineNoDepth :: Parser Metrics
 metricsLineNoDepth = do
   skipSpace
@@ -269,9 +273,12 @@ timeoutException n exc process = do
     Nothing -> throw exc
     Just f  -> pure f
 
---doInTemporary :: (NFData a) => FilePath -> IO a -> IO a
---doInTemporary base op = evaluate . force =<<
---                            (withTempDirectory base "temp_" (\tmpDir -> evaluate . force =<< withCurrentDirectory tmpDir op))
+--doInTemporary :: (NFData a) => FilePath -> IO a -> IO a
+
+--doInTemporary base op = evaluate . force =<<
+
+--                            (withTempDirectory base "temp_" (\tmpDir -> evaluate . force =<< withCurrentDirectory tmpDir op))
+
 
 readProcessException
   :: Exception e
@@ -348,7 +355,8 @@ createSVGImg eb svg =
     <> encode svg
     <> "\" />"
  where
-  encode = LT.unpack . LT.decodeUtf8 . B64.encode -- .  ZLib.compress
+  encode = LT.unpack . LT.decodeUtf8 . B64.encode -- .  ZLib.compress
+
   tm f = ($ "em") . showFFloat (Just 5) . toEm . f . metrics $ eb
   toEm = estimatePtToEm ""
 
@@ -369,11 +377,13 @@ data Tex2SvgRuntime = T2SR {
     , dvisvgm    :: DVISVGMPath}
 
 estimatePtToEm :: T.Text -> (Double -> Double)
-estimatePtToEm _preamble = (/ 8.3645834169792) --TODO
+estimatePtToEm _preamble = (/ 8.3645834169792) --TODO
+
 
 tex2svg :: Tex2SvgRuntime -> T.Text -> Inline -> IO Inline
 tex2svg T2SR {..} preamble (Math mt math) = do
-  let cacheKey = integerDigest . sha1 . encode $ (mt, math, preamble) -- TODO: Preamble needed here
+  let cacheKey = integerDigest . sha1 . encode $ (mt, math, preamble) -- TODO: Preamble needed here
+
   cached <- readCache cacheKey
   case cached of
     Nothing -> withTempDirectory tmp "tex2svg." $ \curTmpDir -> do
