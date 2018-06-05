@@ -298,8 +298,13 @@ a .glyphicon {
             display: inline;
             max-width: inherit;
         }
-        &.display img {
-            max-width: inherit;
+        &.display {
+            margin-top: 0.7em;
+            margin-bottom: 0.6em;
+            display: block;
+            img {
+                max-width: inherit;
+            }
         }
     }
 
