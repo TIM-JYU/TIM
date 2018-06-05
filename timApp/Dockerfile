@@ -187,7 +187,7 @@ RUN chown -R agent /service
 RUN bash -c "${APT_INSTALL} curl && ${APT_CLEANUP}"
 RUN (curl -sL https://deb.nodesource.com/setup_10.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
 RUN npm i npm@latest -g
-RUN npm install -g typescript@2.9 typedoc tslint jspm typescript-formatter && npm cache clean --force
+RUN npm install -g typescript@2.8 typedoc tslint jspm typescript-formatter && npm cache clean --force
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:test' | chpasswd
