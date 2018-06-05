@@ -17,7 +17,7 @@ stamp_model_default_path = "static/tex/stamp_model.tex"
 # Default format for stamp text.
 default_stamp_format = "Kokous {date}\n\nLIITE {attachment} lista {issue}"
 # How long (seconds) subprocess can take until TimeoutExpired.
-default_subprocess_timeout = 10
+default_subprocess_timeout = 30
 pdfmerge_timeout = 300
 # Max char count for 'attachment', 'issue' and 'date' params.
 stamp_param_max_length = 40
