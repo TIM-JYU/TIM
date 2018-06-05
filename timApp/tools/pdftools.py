@@ -17,7 +17,7 @@ stamp_model_default_path = "static/tex/stamp_model.tex"
 # Default format for stamp text.
 default_stamp_format = "Kokous {date}\n\nLIITE {attachment} lista {issue}"
 # How long (seconds) subprocess can take until TimeoutExpired.
-default_subprocess_timeout = 30
+default_subprocess_timeout = 10
 pdfmerge_timeout = 300
 # Max char count for 'attachment', 'issue' and 'date' params.
 stamp_param_max_length = 40
@@ -285,7 +285,9 @@ def create_stamp(
     :param model_path: Model stamp tex-file's complete path; contains
            '%TEXT_HERE' to locate the text area.
     :param work_dir: The folder where stamp output and temp files will be.
-    :param stamp_name: Name of the stamp and temp files (no file extension).
+    :param stamp_name: Name of the stamp and temp files (no file extension needed).
+           Note: if filename contains underscores besides the addition '_stamp'
+           pdflatex may not work correctly!
     :param text: Text displayed in the stamp.
     :param remove_pdflatex_files: If true, newly created .aux, .log, .out and
            .tex files will be deleted.
@@ -310,9 +312,11 @@ def create_stamp(
         # TODO: check if failure to write a new stamp file raises proper error
         except UnicodeDecodeError:
             raise ModelStampInvalidError(model_path)
+
     args = ["pdflatex", stamp_name]
     # print(args)
 
+    # TODO: Fix the underscore problem (see stamp_name description for more).
     # Directs pdflatex text flood to the log-file pdflatex will create anyway.
     with open(os_path.join(work_dir, stamp_name + ".log"), "a") as pdflatex_log:
         try:
@@ -325,7 +329,7 @@ def create_stamp(
             ).returncode
             if rc != 0:
                 raise SubprocessError(" ".join(args))
-        except FileNotFoundError:
+        except:
             raise SubprocessError(" ".join(args))
 
     # Optional; delete the files pdflatex created, except the stamp-pdf file,
