@@ -11,7 +11,7 @@ from flask import abort
 from flask import request
 
 from timApp.containerLink import convert_md
-from timApp.dumboclient import MathType, DumboOptions
+from timApp.dumboclient import DumboOptions
 from timApp.plugin import Plugin, PluginException
 from timApp.plugin import get_num_value
 from timApp.plugin import get_value
