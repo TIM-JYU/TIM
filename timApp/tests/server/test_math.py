@@ -20,6 +20,13 @@ mathjax_html = f"""
 </div>
 """
 
+svg_html = f"""
+<div class="parContent">
+    <p>{a_plus_b_svg}
+    </p>
+</div>
+"""
+
 
 class MathTest(TimRouteTest):
 
@@ -89,3 +96,12 @@ stem: 'md: $a+b$'
         for plugin, e in zip(plugins, [a_plus_b_svg, a_plus_b_mathjax]):
             stem = json.loads(binascii.unhexlify(plugin.text.replace('xxxHEXJSONxxx', '')).decode())['stem']
             self.assert_same_html(html.fromstring(stem), e)
+
+    def test_mixed_settings(self):
+        self.login_test1()
+        d = self.create_doc(initial_par=r"""
+#- {math_preamble="\\newcommand{\\nothing}{}"}
+$a+b$""")
+        d.document.set_settings({'math_type': 'svg'})
+        t = self.get(d.url, as_tree=True)
+        self.assert_same_html(t.cssselect('.parContent')[1], svg_html)
