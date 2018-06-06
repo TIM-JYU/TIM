@@ -7,30 +7,36 @@
 module Tex2Svg (tex2svg,Tex2SvgRuntime( .. ),mathEnvsSet,findDVISVGM,findLatex,mkLatex,mkDVISVGM,LatexPath,DVISVGMPath,ConversionError(..),SetupError(..),MathType(..)) where
 import           Control.DeepSeq
 import           Control.Exception
-import           Control.Monad               (unless, void)
-import           Data.Aeson                  (encode)
-import           Data.Attoparsec.Text.Lazy   as AP
-import qualified Data.ByteString             as BS
-import qualified Data.ByteString.Base64.Lazy as B64
-import qualified Data.ByteString.Lazy        as LBS
+import           Control.Monad                   (unless, void)
+import           Data.Aeson                      (encode)
+import           Data.Attoparsec.Text.Lazy       as AP
+import qualified Data.ByteString                 as BS
+import qualified Data.ByteString.Base64.Lazy     as B64
+import qualified Data.ByteString.Lazy            as LBS
 import           Data.Digest.Pure.SHA
-import           Data.List.NonEmpty          hiding (map)
-import           Data.Maybe                  (fromMaybe)
+import           Data.List.NonEmpty              hiding (map, span)
+import           Data.Maybe                      (fromMaybe)
 import           Data.Monoid
-import qualified Data.Text                   as T
-import qualified Data.Text.Lazy              as LT
-import qualified Data.Text.Lazy.Encoding     as LT
+import qualified Data.Set                        as S
+import qualified Data.Text                       as T
+import qualified Data.Text.Lazy                  as LT
+import qualified Data.Text.Lazy.Encoding         as LT
 import           Data.Typeable
-import qualified HTMLEntities.Text           as UENC
+import qualified HTMLEntities.Text               as UENC
 import           Numeric
-import           Prelude                     hiding (head)
+import           Prelude                         hiding (head, span)
 import           System.Directory
 import           System.Exit
 import           System.IO.Temp
 import           System.Process
 import           System.Timeout
+import           Text.Blaze                      (toValue)
+import           Text.Blaze.Html.Renderer.String (renderHtml)
+import           Text.Blaze.Html5                hiding (head, map, option,
+                                                  string, style, title)
+import           Text.Blaze.Html5.Attributes     (class_, src, style,
+                                                  title)
 import           Text.Pandoc.JSON
-import qualified Data.Set as S
 
 specialCmd :: String
 specialCmd
@@ -69,7 +75,8 @@ latexTemplate preamble mt eqn env = unlines
   , "\\end{document}"
   ]
 
-mathEnvs = [ "split"
+mathEnvs =
+  [ "split"
   , "eqnarray"
   , "equation"
   , "multline"
@@ -78,7 +85,7 @@ mathEnvs = [ "split"
   , "alignat"
   , "flalign"
   , "tikzpicture"
- ]
+  ]
 
 mathEnvsWithStarred = map (<> "*") mathEnvs <> mathEnvs
 
@@ -89,11 +96,9 @@ parseMathEnv = do
   skipSpace
   _ <- string "\\begin{"
   skipSpace
-  envname <- choice $ map
-    string
-    mathEnvs
-  _ <- option "" (string "*")
-  _ <- string "}"
+  envname <- choice $ map string mathEnvs
+  _       <- option "" (string "*")
+  _       <- string "}"
   return $ MathEnv envname
 
 parseBlock :: Parser EqnOut
@@ -147,7 +152,6 @@ comma :: Parser ()
 comma = (skipSpace *> char ',' *> skipSpace) <?> "a comma"
 
 -- width=480.311pt, height=172.12pt, depth=0pt
-
 metricsLine :: Parser Metrics
 metricsLine = skipSpace *> do
   width  <- metricItem "width" <* comma
@@ -158,7 +162,6 @@ metricsLine = skipSpace *> do
   return $ Metrics width height (Just depth)
 
 -- graphic size: 480.311pt x 172.12pt (168.81mm x 60.4932mm)
-
 metricsLineNoDepth :: Parser Metrics
 metricsLineNoDepth = do
   skipSpace
@@ -223,7 +226,7 @@ doConvert curTmpDir dvisvgm latex preamble mt eqn = do
     latexFile
   eb  <- head <$> invokeDVISVGM curTmpDir dvisvgm fn mt env
   svg <- BS.readFile (curTmpDir ++ "/" ++ filename eb)
-  return . force . wrapMath mt $ createSVGImg eb (LBS.fromStrict svg)
+  return . force . wrapMath mt $ createSVGImg eb (LBS.fromStrict svg) eqn
 
 
 data ConversionError = CouldNotParseDVISVGM String String
@@ -342,32 +345,28 @@ _addStylesheet svg = LBS.append
   )
   (LBS.dropWhile (/= 10) svg)
 
-createSVGImg :: EqnOut -> LBS.ByteString -> String
-createSVGImg eb svg =
-  "<img style='"
-    <> "width:"
-    <> tm width
-    <> "; "
-    <> "vertical-align:-"
-    <> tm ((/ 1.0) . fromMaybe 0 . depth)
-    <> ";' "
-    <> "src=\"data:image/svg+xml;base64,"
-    <> encode svg
-    <> "\" />"
+createSVGImg :: EqnOut -> LBS.ByteString -> String -> Html
+createSVGImg eb svg eqn =
+  img
+    ! style
+        (toValue $ "width:" <> tm width <> "; " <> "vertical-align:-" <> tm
+          ((/ 1.0) . fromMaybe 0 . depth)
+        )
+    ! src (toValue $ "data:image/svg+xml;base64," <> encode svg)
+    ! title (toValue eqn)
  where
   encode = LT.unpack . LT.decodeUtf8 . B64.encode -- .  ZLib.compress
 
   tm f = ($ "em") . showFFloat (Just 5) . toEm . f . metrics $ eb
   toEm = estimatePtToEm ""
 
-wrapMath :: MathType -> String -> Inline
+wrapMath :: MathType -> Html -> Inline
 wrapMath mt svg =
   RawInline (Format "html")
-    $  "<span class=\"mathp "
-    ++ (if mt == InlineMath then "inline" else "display")
-    ++ "\">"
-    ++ svg
-    ++ "</span>"
+    $ renderHtml
+    $ span
+    ! class_ ("mathp " <> (if mt == InlineMath then "inline" else "display"))
+    $ svg
 
 data Tex2SvgRuntime = T2SR {
       readCache  :: Integer -> IO (Maybe Inline)
