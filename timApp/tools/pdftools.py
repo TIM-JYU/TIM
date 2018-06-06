@@ -9,6 +9,7 @@ from os import remove, path as os_path
 from typing import Union, List
 from urllib import request as url_request
 from urllib.error import HTTPError
+from re import escape as re_escape, compile as re_compile
 
 # Default parameter values:
 
@@ -21,7 +22,6 @@ default_subprocess_timeout = 30
 pdfmerge_timeout = 300
 # Max char count for 'attachment', 'issue' and 'date' params.
 stamp_param_max_length = 40
-
 
 
 ##############################################################################
@@ -210,6 +210,33 @@ class StampFormatInvalidError(PdfError):
 ##############################################################################
 # Functions:
 
+tex_escapes = {
+    '&': r'\&',
+    '%': r'\%',
+    '$': r'\$',
+    '#': r'\#',
+    '_': r'\_',
+    '{': r'\{',
+    '}': r'\}',
+    '~': r'\textasciitilde{}',
+    '^': r'\^{}',
+    '\\': r'\textbackslash{}',
+    '<': r'\textless{}',
+    '>': r'\textgreater{}',
+}
+tex_escape_re = re_compile(
+    '|'.join(re_escape(key) for key in sorted(tex_escapes.keys(), key=lambda item: - len(item))))
+
+
+def escape_tex(text: str):
+    """
+    Escapes special characters in a TeX string.
+    Idea taken from https://stackoverflow.com/a/25875504.
+    :param text: A plain text message.
+    :return: The message escaped to appear correctly in LaTeX.
+    """
+    return tex_escape_re.sub(lambda match: tex_escapes[match.group()], text)
+
 
 def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
     """
@@ -252,10 +279,10 @@ def get_stamp_text(item: dict, text_format: str) -> str:
     # Normal formatted stamp data takes precedence.
     try:
         return text_format.format(
-            file=get_base_filename(item['file']),
-            date=item['date'],
-            attachment=item['attachment'],
-            issue=item['issue'])
+            file=get_base_filename(escape_tex(item['file'])),
+            date=escape_tex(item['date']),
+            attachment=escape_tex(item['attachment']),
+            issue=escape_tex(item['issue']))
 
     # If stamp data has only a free-form text, use that.
     except KeyError:
@@ -312,11 +339,8 @@ def create_stamp(
         # TODO: check if failure to write a new stamp file raises proper error
         except UnicodeDecodeError:
             raise ModelStampInvalidError(model_path)
-
     args = ["pdflatex", stamp_name]
     # print(args)
-
-    # TODO: Fix the underscore problem (see stamp_name description for more).
     # Directs pdflatex text flood to the log-file pdflatex will create anyway.
     with open(os_path.join(work_dir, stamp_name + ".log"), "a") as pdflatex_log:
         try:

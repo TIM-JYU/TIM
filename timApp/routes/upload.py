@@ -168,12 +168,8 @@ def upload_and_stamp_attachment(file, stamp_data):
     content = file.read()
     timdb = get_timdb()
 
-    # Remove underscores, because pdflatex timeouts (for unknown reasons)
-    # if filename has them.
-    filename = str(file.filename).replace("_", "-")
-
     file_id, file_filename = timdb.files.saveFile(content,
-                                                  secure_filename(filename),
+                                                  secure_filename(file.filename),
                                                   get_current_user_group())
     grant_view_access(get_anon_group_id(), file_id)  # So far everyone can see all files.
 
