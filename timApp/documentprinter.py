@@ -781,11 +781,15 @@ def run_biber(latex_file, new_env):
 
     if not (p.returncode is None):
         raise RuntimeError(
-            'PdfLaTeX died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
+            'Biber died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
         )
 
     stdout, stderr = p.communicate(None)
     stdout = _decode_result(stdout)
     stderr = _decode_result(stderr)
+    if not (p.returncode is None):
+        raise RuntimeError(
+            'Biber died with exitcode "%s"\n stdin: %s\n stderr: %s' % (p.returncode, stdout, stderr)
+        )
     return 0
 

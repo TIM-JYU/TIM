@@ -211,6 +211,8 @@ ENV HOME /home/agent
 RUN mkdir -p /service
 RUN chown -R agent /service
 
+# Kokeile seuraavaa, saisiko sillä pois matplotlib:in cache varoituksen
+# RUN python -c "import matplotlib.pyplot"
 
 # RUN groupadd docker
 #RUN gpasswd -a agent docker

@@ -329,9 +329,9 @@ or newer one that is more familiar to write in YAML:
                             const tempdata = (template.data || null);
                             let clickfn;
                             if (tempdata)
-                                clickfn = `$ctrl.putTemplate('${tempdata}')`;
+                                clickfn = `$ctrl.putTemplate(${JSON.stringify(tempdata)})`;
                             else
-                                clickfn = `$ctrl.getTemplate('${plugin}','${template.file}', '${j}')`;
+                                clickfn = `$ctrl.getTemplate(${JSON.stringify(plugin)}, ${JSON.stringify(template.file)}, ${JSON.stringify(j)})`;
                             this.pluginButtonList[tab].push(this.createMenuButton(text, template.expl, clickfn));
                         }
                     }
@@ -341,7 +341,7 @@ or newer one that is more familiar to write in YAML:
 
         for (const key in this.pluginButtonList) {
             if (this.pluginButtonList.hasOwnProperty(key)) {
-                const clickfunction = "$ctrl.pluginClicked($event, '" + key + "')";
+                const clickfunction = `$ctrl.pluginClicked($event, ${JSON.stringify(key)})`;
                 const button = $("<button>", {
                     "class": "editorButton",
                     "text": key,
@@ -663,7 +663,7 @@ or newer one that is more familiar to write in YAML:
         for (const key in this.tables) {
             if (this.tables.hasOwnProperty(key)) {
                 const text = key.charAt(0).toUpperCase() + key.substring(1);
-                const clickfn = "$ctrl.editor.insertTemplate($ctrl.tables['" + key + "'])";
+                const clickfn = `$ctrl.editor.insertTemplate($ctrl.tables[${JSON.stringify(key)}])`;
                 buttons.push(this.createMenuButton(text, "", clickfn));
             }
         }
