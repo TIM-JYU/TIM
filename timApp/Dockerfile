@@ -47,6 +47,7 @@ cm-super \
 dvidvi \
 dvipng \
 feynmf \
+fonts-texgyre \
 fragmaster \
 latex-cjk-all \
 latexmk \
