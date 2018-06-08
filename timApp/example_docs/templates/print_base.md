@@ -21,15 +21,18 @@ texmacros:
  texmargins: 'left=20mm, right=20mm, top=20mm, bottom=20mm'
  texfootrulewidth: 0.0pt
  texfancyfooterstyle: ''
+ texbibname: ''
 
 #- {area="beforemacros" collapse="true"}
 beforemacros
 
 ``` {.latex printing_template=""}
-\documentclass[%%texside%%, %%texfontsize%%,%%texpaper%%,%%texlanguage%%,sansheading]{ %%texdocumentclass%%}
-\pdfinfoomitdate=1
-\pdftrailerid{}
+\documentclass[%%texside%%, %%texfontsize%%,%%texpaper%%,%%texlanguage%%]{ %%texdocumentclass%%}
 \usepackage{extsizes}
+{% if texbibname != "" %}
+\usepackage[backend=biber,sortcites]{biblatex}
+\addbibresource%%"{"%%%%texbibname%%.bib}
+{% endif %}
 $if(geometry)$
 \usepackage[$for(geometry)$$geometry$$sep$,$endfor$]{geometry}
 $else$
@@ -46,9 +49,10 @@ $endif$
 \usepackage{tabulary}
 \usepackage{listings}
 \usepackage{float}
+\usepackage{pmboxdraw}
+\usepackage{titlesec, blindtext, color}
 
-% \usepackage[default]{lato} % Tämä on yliopiston default leipätekstin fontti
-
+%%texfont%%
 
 $if(beamerarticle)$
 \usepackage{beamerarticle} % needs to be loaded first
@@ -56,7 +60,6 @@ $endif$
 $if(fontfamily)$
 \usepackage[$for(fontfamilyoptions)$$fontfamilyoptions$$sep$,$endfor$]{$fontfamily$}
 $else$
-\usepackage{lmodern}
 $endif$
 $if(linestretch)$
 \usepackage{setspace}
@@ -64,19 +67,19 @@ $if(linestretch)$
 $endif$
 \usepackage{amssymb,amsmath}
 \usepackage{pifont}
-\usepackage{ifxetex,ifluatex}
-% \usepackage{fixltx2e} % provides \textsubscript
-\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
-  \usepackage[$if(fontenc)$$fontenc$$else$T1$endif$]{fontenc}
-  \usepackage[utf8]{inputenc}
-  \usepackage{eurosym}
-\else % if luatex or xelatex
-  \ifxetex
-    \usepackage{mathspec}
-  \else
-    \usepackage{fontspec}
-  \fi
-  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\usepackage{unicode-math}
+\let\mathbb\relax % remove the definition by unicode-math
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\DeclareMathAlphabet{\mathbb}{U}{msb}{m}{n}
+\AtBeginDocument{
+  \renewcommand{\setminus}{\mathbin{\backslash}}%
+}
+\setmainfont
+ [ BoldFont       = texgyrepagella-bold.otf ,
+   ItalicFont     = texgyrepagella-italic.otf ,
+   BoldItalicFont = texgyrepagella-bolditalic.otf ]
+ {texgyrepagella-regular.otf}
+\setmathfont{Latin Modern Math}
 $for(fontfamilies)$
   \newfontfamily{$fontfamilies.name$}[$fontfamilies.options$]{$fontfamilies.font$}
 $endfor$
@@ -99,7 +102,6 @@ $if(CJKmainfont)$
     \usepackage{xeCJK}
     \setCJKmainfont[$for(CJKoptions)$$CJKoptions$$sep$,$endfor$]{$CJKmainfont$}
 $endif$
-\fi
 % use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 % use microtype if available
@@ -142,7 +144,7 @@ $endif$
   \usepackage[shorthands=off,main=%%texlanguage%%]{babel}
 \else
   \usepackage{polyglossia}
-  \setmainlanguage[]{ %%texlanguage%%}
+  \setmainlanguage[]%%"{"%%%%texlanguage%%}
 \fi
 $if(natbib)$
 \usepackage{natbib}
@@ -245,9 +247,10 @@ $header-includes$
 $endfor$
 
 \ifnum 11=1%%texautonumber%%
-  \ifx\chapter\undefined
-  \else
+  \ifcsname c@chapter\endcsname
+
   \setcounter{chapter}{ %%texsectionstart%%}
+  \else
   \fi
 \setcounter{section}{ %%texsectionstart%%}
 \setcounter{secnumdepth}{6}
@@ -274,19 +277,10 @@ $if(institute)$
 \institute{$for(institute)$$institute$$sep$ \and $endfor$}
 $endif$
 
-
-% Add root path for images:
-% THERE'S SOMETHING WRONG WITH THIS COMMAND
-
-% $if(graphics-root)$
-% \graphicspath{{$graphics-root$}}
-% $endif$
-
-
 \date{$date$}
 
 \usepackage{framed}
-\usepackage[most]{tcolorbox}
+\usepackage[many]{tcolorbox}
 \tcbuselibrary{breakable}
 \usepackage{color}
 
@@ -315,7 +309,7 @@ macros
    \prevdepth=\tpd}
 
 
-\DeclareUnicodeCharacter{200B}{}
+\newcommand{\verbx}{0.6em}
 \newcommand{\pluginHeader}[1]{{\large \textbf{#1}}}
 \newcommand{\plgfooter}[1]{{\begin{center}{#1}\end{center}}}
 \newcommand{\videoRunDiv}[1]{{{#1}}}
@@ -611,11 +605,8 @@ arc=0mm]
     {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
     {€}{{\euro}}1 {£}{{\pounds}}1
     {½}{{\ensuremath{\frac12}}}1
+    {₳}{A}1
 }
-
-%$if(macros)$
-%$macros$
-%$endif$
 
 ```
 
@@ -690,9 +681,7 @@ aftermacros
 \renewcommand{\thesection}{\arabic{section}}
 \fi
 
-% \renewcommand*\rmdefault{lato} % Tämä on yliopiston default leipäteksti fontti
-% \renewcommand*\rmdefault{ppl}
-
+%%beforedocument%%
 
 \begin{document}
 
@@ -824,6 +813,12 @@ $if(biblatex)$
 \printbibliography$if(biblio-title)$[title=$biblio-title$]$endif$
 
 $endif$
+
+{% if texbibname != "" %}
+\printbibliography
+{% endif %}
+
+
 $for(include-after)$
 $include-after$
 
