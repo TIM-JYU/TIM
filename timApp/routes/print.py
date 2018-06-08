@@ -16,7 +16,7 @@ from flask import request
 
 from timApp import sessioninfo
 from timApp.accesshelper import verify_logged_in, verify_view_access
-from timApp.documentprinter import DocumentPrinter, PrintingError, PDFLaTeXError
+from timApp.documentprinter import DocumentPrinter, PrintingError, LaTeXError
 from timApp.requesthelper import verify_json_params
 from timApp.responsehelper import json_response
 from timApp.timdb.docinfo import DocInfo
@@ -101,7 +101,7 @@ def print_document(doc_path):
                            temp=True,
                            plugins_user_print=plugins_user_print,
                            urlroot = 'http://localhost:5000/print/')  # request.url_root + 'print/')
-    except PDFLaTeXError as err:
+    except LaTeXError as err:
         try:
             print("Error occurred: " + str(err))
             e = err.value
@@ -196,8 +196,8 @@ def get_printed_document(doc_path):
         except PrintingError as err:
             print("Error occurred: " + str(err))
             abort(400, str(err))  # TODO: maybe there's a better error code?
-        except PDFLaTeXError as err:
-            print("PdfLaTeX error occurred: " + str(err))
+        except LaTeXError as err:
+            print("LaTeX error occurred: " + str(err))
             pdferror = err.value
         except Exception as err:
             print("Create_printed_doc error occurred: " + str(err))
@@ -223,7 +223,7 @@ def get_printed_document(doc_path):
                  '<body>\n' + \
                  '<div class="error">\n'
 
-        result += 'PDFLaTeX error: <pre>' + pdferror.get('error', '') + '</pre>' + \
+        result += 'LaTeX error: <pre>' + pdferror.get('error', '') + '</pre>' + \
                   '<p><a href="' + latex_access_url + '&line=' + line + '#L' + line + \
                   '" target="_blank">Erronous LaTeX file</a></p>' + \
                   '<p><a href="' + latex_access_url + '" target="_blank">Created LaTeX file</a></p>' + \
@@ -387,7 +387,7 @@ def create_printed_doc(doc_entry: DocEntry,
         #    return path
 
         pdferror = None
-    except PDFLaTeXError as err:
+    except LaTeXError as err:
         pdferror = err.value
     except PrintingError as err:
         raise PrintingError(str(err))
@@ -403,7 +403,7 @@ def create_printed_doc(doc_entry: DocEntry,
     db.session.commit()
 
     if pdferror:
-        raise PDFLaTeXError(pdferror)
+        raise LaTeXError(pdferror)
     return p_doc.path_to_file
 
 

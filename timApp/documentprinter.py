@@ -45,7 +45,7 @@ class PrintingError(Exception):
     pass
 
 
-class PDFLaTeXError(Exception):
+class LaTeXError(Exception):
     def __init__(self, value):
         self.value = value
 
@@ -347,9 +347,7 @@ class DocumentPrinter:
                                              '--top-level-division=' + top_level,
                                              '--atx-headers',
                                              # '--verbose',  # this gives non UTF8 results sometimes
-                                             '--pdf-engine-opt=-interaction=nonstopmode',
                                              '-Mtexdocid=' + str(self._doc_entry.document.doc_id),
-                                             # '--latex-engine=xelatex'
                                              ],
                                  filters=filters,
                                  removethis = removethis,
@@ -357,8 +355,8 @@ class DocumentPrinter:
                                  )
                 # template_file.seek(0)
                 # output_bytes = bytearray(output_file.read())
-            except PDFLaTeXError as ex:
-                raise PDFLaTeXError(ex.value)
+            except LaTeXError as ex:
+                raise LaTeXError(ex.value)
             except Exception as ex:
                 # TODO: logging of errors
                 # Might be a good idea to log these?
@@ -588,11 +586,8 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
     if is_pdf:
         latex_file = outputfile.replace('.pdf', '.latex')
 
-    has_bib = False
     for texfile in texfiles or []:
         get_file(latex_file, texfile, new_env)
-        if texfile.find('.bib'):
-            has_bib = True
 
     if from_format == 'latex':
         with open(latex_file, "w", encoding='utf-8') as f:
@@ -658,11 +653,7 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
                 f.write(line)
 
     if is_pdf:
-
-        p, stdout = run_pdflatex(outputfile, latex_file, new_env, '')
-        if has_bib:
-            run_biber(latex_file, new_env)
-            p, stdout = run_pdflatex(outputfile, latex_file, new_env, string_input)
+        p, stdout = run_latex(outputfile, latex_file, new_env, '')
 
     # if there is an outputfile, then stdout is likely empty!
     return stdout
@@ -683,11 +674,11 @@ def _decode_result(s):
     return s
 
 
-def run_pdflatex(outputfile, latex_file, new_env, string_input):
+def run_latex(outputfile, latex_file, new_env, string_input):
     try:
         filedir = os.path.dirname(outputfile)
-        args = ['pdflatex', '-output-directory', filedir,  # '-file-line-error',
-                '-interaction', 'nonstopmode', latex_file]
+        args = ['latexmk', '-f', '-pdfxe', f'-output-directory={filedir}',  # '-file-line-error',
+                '-interaction=nonstopmode', latex_file]
         p = subprocess.Popen(
             args,
             stdin=subprocess.PIPE if string_input else None,
@@ -699,13 +690,13 @@ def run_pdflatex(outputfile, latex_file, new_env, string_input):
         # something else than 'None' indicates that the process already terminated
         if not (p.returncode is None):
             raise RuntimeError(
-                'PdfLaTeX died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
+                'LaTeX died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
             )
 
         stdout, stderr = p.communicate(None)
         stdout = _decode_result(stdout)
         stderr = _decode_result(stderr)
-        # check if pdflatex returned successfully
+        # check if latex returned successfully
         if p.returncode != 0:
             # Find errors:
             i = stdout.find('\n!')  # find possible error line from normal output
@@ -723,16 +714,16 @@ def run_pdflatex(outputfile, latex_file, new_env, string_input):
                     i2 = stdout.find(' ', i)
                     if i2 >= 0:
                         line = stdout[i + 3:i2]
-            raise PDFLaTeXError(
+            raise LaTeXError(
                 {'line': line, 'latex': latex_file, 'pdf': outputfile, 'error': stdout}
-                # 'LINE: %s\nLATEX:%s\nPDF:%s\nPdfLaTeX died with exitcode "%s" during conversion: \n%s\n%s' %
+                # 'LINE: %s\nLATEX:%s\nPDF:%s\nLaTeX died with exitcode "%s" during conversion: \n%s\n%s' %
                 # (line, latex_file, outputfile, p.returncode, stdout, stderr)
             )
         return p, stdout
     except OSError as ex:
         # this is happening only on Py2.6 when pandoc dies before reading all
         # the input. We treat that the same as when we exit with an error...
-        raise RuntimeError('PdfLaTeX died with error "%s" during conversion.' % str(ex))
+        raise RuntimeError('LaTeX died with error "%s" during conversion.' % str(ex))
 
 
 def get_file(latex_file, fileurl, new_env):
@@ -765,31 +756,3 @@ def get_file(latex_file, fileurl, new_env):
          raise RuntimeError(
              'Get file %s failed: "%s": %s %s' % (fileurl, p.returncode, stdout, stderr)
          )
-
-
-
-def run_biber(latex_file, new_env):
-    filedir = os.path.dirname(latex_file)
-    latex_name = latex_file[:latex_file.rfind('.')]
-    args = ['biber', latex_name]
-    p = subprocess.Popen(
-        args,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        cwd=filedir,
-        env=new_env)
-
-    if not (p.returncode is None):
-        raise RuntimeError(
-            'Biber died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
-        )
-
-    stdout, stderr = p.communicate(None)
-    stdout = _decode_result(stdout)
-    stderr = _decode_result(stderr)
-    if not (p.returncode is None):
-        raise RuntimeError(
-            'Biber died with exitcode "%s"\n stdin: %s\n stderr: %s' % (p.returncode, stdout, stderr)
-        )
-    return 0
-
