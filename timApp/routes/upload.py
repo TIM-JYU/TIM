@@ -1,8 +1,11 @@
 import imghdr
 import io
+import json
 import mimetypes
 import os
 import posixpath
+
+from os import path as os_path
 
 import magic
 from flask import Blueprint, request, send_file
@@ -22,6 +25,8 @@ from timApp.timdb.models.block import Block
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import grant_view_access, get_anon_group_id
 from timApp.validation import validate_item_and_create, validate_uploaded_document_content
+
+import timApp.tools.pdftools
 
 upload = Blueprint('upload',
                    __name__,
@@ -58,7 +63,7 @@ def get_upload(relfilename: str):
         abort(400, 'Incorrect filename specification.')
     timdb = get_timdb()
     block = Block.query.filter((Block.description.startswith(relfilename)) & (
-        Block.type_id == blocktypes.UPLOAD)).order_by(Block.description.desc()).first()
+            Block.type_id == blocktypes.UPLOAD)).order_by(Block.description.desc()).first()
     if not block or (block.description != relfilename and not relfilename.endswith('/')):
         abort(404, 'The requested upload was not found.')
     if not verify_view_access(block, require=False):
@@ -116,7 +121,26 @@ def upload_file():
     file = request.files.get('file')
     if file is None:
         abort(400, 'Missing file')
+
+    try:
+        attachment_params = json.loads(request.form.get('attachmentParams'))
+        autostamp = attachment_params[len(attachment_params) - 1]
+    except:
+        # Just go on with normal upload if necessary conditions are not met.
+        pass
+    else:
+        if autostamp:
+            # Only go here if attachment params are valid enough and autostamping is valid and true
+            # because otherwise normal uploading may be interrupted.
+            try:
+                stamp_data = timApp.tools.pdftools.attachment_params_to_dict(attachment_params)
+                return upload_and_stamp_attachment(file, stamp_data)
+            # If attachment isn't a pdf, gives an error too (since it's in 'showPdf' plugin)
+            except timApp.tools.pdftools.PdfError as e:
+                abort(400, str(e))
+
     folder = request.form.get('folder')
+
     if folder is None:
         return upload_image_or_file(file)
     path = posixpath.join(folder, os.path.splitext(secure_filename(file.filename))[0])
@@ -127,6 +151,48 @@ def upload_file():
     doc = import_document(content, path, get_current_user_group())
     db.session.commit()
     return json_response({'id': doc.doc_id})
+
+
+def upload_and_stamp_attachment(file, stamp_data):
+    """
+    Uploads the file and makes a stamped version of it into the same folder.
+    :param file: The file to upload and stamp.
+    :param stamp_data: Stamp data (attachment and list ids and format) without the path.
+    :return: Json response containing the stamped file path.
+    """
+
+    # TODO: Get this from a global variable.
+    # Currently multiple changes in different modules are needed
+    # if the upload folder is changed.
+    attachment_folder = "/tim_files/blocks/files"
+    content = file.read()
+    timdb = get_timdb()
+
+    file_id, file_filename = timdb.files.saveFile(content,
+                                                  secure_filename(file.filename),
+                                                  get_current_user_group())
+    grant_view_access(get_anon_group_id(), file_id)  # So far everyone can see all files.
+
+    # If format not set or invalid, default format set in pdftools will be used.
+    # Additional check is done inside pdftools-module,
+    # since this may not work correctly.
+    try:
+        stamp_format = stamp_data[0]['format']
+    except:
+        stamp_format = timApp.tools.pdftools.default_stamp_format
+
+    # Add the uploaded file path (the one to stamp) to stamp data.
+    stamp_data[0]['file'] = os_path.join(attachment_folder, f"{str(file_id)}/{file_filename}")
+
+    output = timApp.tools.pdftools.stamp_pdfs(
+            stamp_data,
+            dir_path=os_path.join(attachment_folder, str(file_id) + "/"),
+            stamp_text_format=stamp_format)[0]
+
+    stamped_filename = timApp.tools.pdftools.get_base_filename(output)
+
+    # TODO: In case of raised errors give proper no-upload response?
+    return json_response({"file": f"{str(file_id)}/{stamped_filename}"})
 
 
 def try_upload_image(image_file):

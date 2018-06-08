@@ -32,10 +32,11 @@ from timApp.accesshelper import verify_admin, verify_edit_access, verify_manage_
 from timApp.cache import cache
 from timApp.containerLink import call_plugin_resource
 from timApp.dbaccess import get_timdb
-from timApp.documentmodel.create_item import do_create_item, get_templates_for_folder, create_item
+from timApp.documentmodel.create_item import get_templates_for_folder, create_or_copy_item
 from timApp.documentmodel.document import Document
 from timApp.documentmodel.documentversion import DocumentVersion
 from timApp.logger import log_info, log_error, log_debug, log_warning
+from timApp.minutes.minuteroutes import minutes_blueprint
 from timApp.pluginexception import PluginException
 from timApp.requesthelper import verify_json_params
 from timApp.responsehelper import safe_redirect, json_response, ok_response
@@ -54,6 +55,7 @@ from timApp.routes.notes import notes
 from timApp.routes.notify import notify, send_email
 from timApp.routes.print import print_blueprint
 from timApp.routes.qst import qst_plugin
+from timApp.plugins.timTable import timTable_plugin
 from timApp.routes.readings import readings
 from timApp.routes.search import search_routes
 from timApp.routes.settings import settings_page
@@ -66,7 +68,7 @@ from timApp.sessioninfo import get_current_user_object, get_other_users_as_list,
 from timApp.tim_app import app, default_secret
 from timApp.timdb.blocktypes import blocktypes
 from timApp.timdb.bookmarks import Bookmarks
-from timApp.timdb.documents import create_citation, create_translation
+from timApp.timdb.documents import create_translation
 from timApp.timdb.exceptions import TimDbException, ItemAlreadyExistsException
 from timApp.timdb.item import Item
 from timApp.timdb.models.block import copy_default_rights
@@ -78,12 +80,18 @@ from timApp.timdb.tim_models import SlideStatus
 from timApp.timdb.tim_models import db
 from timApp.timdb.userutils import NoSuchUserException
 
+# for pdf merging
+import timApp.tools.pdftools
+
+import timApp.plugin
+
 cache.init_app(app)
 
 app.register_blueprint(generateMap)
 app.register_blueprint(settings_page)
 app.register_blueprint(manage_page)
 app.register_blueprint(qst_plugin)
+app.register_blueprint(timTable_plugin)
 app.register_blueprint(edit_page)
 app.register_blueprint(view_page)
 app.register_blueprint(login_page)
@@ -102,7 +110,7 @@ app.register_blueprint(bookmarks)
 app.register_blueprint(global_notification)
 app.register_blueprint(static_blueprint)
 app.register_blueprint(print_blueprint)
-
+app.register_blueprint(minutes_blueprint)
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
@@ -194,6 +202,135 @@ Exception happened on {datetime.now(tz=timezone.utc)} at {request.url}
 @app.route('/empty')
 def empty_response_route():
     return Response('', mimetype='text/plain')
+
+
+@app.route('/mergeAttachments/<path:doc>', methods=['GET'])
+def merge_attachments(doc):
+    """
+    A route for getting merged document.
+    :param doc: Document path.
+    :return: Merged pdf-file.
+    """
+
+    # True, if merging process was incomplete.
+    merged_with_errors = False
+    try:
+        d = DocEntry.find_by_path(doc, try_translation=True)
+        if not d:
+            abort(404)
+        verify_edit_access(d)
+
+        paragraphs = d.document.get_paragraphs(d)
+        pdf_paths = []
+
+        for par in paragraphs:
+            if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
+                par_plugin = timApp.plugin.Plugin.from_paragraph(par)
+                par_data = par_plugin.values
+                par_file = par_data["file"]
+
+                # Checks if attachment is TIM-upload and adds prefix.
+                # Changes in upload folder need to be updated here as well.
+                if par_file.startswith("/files/"):
+                    par_file = "/tim_files/blocks" + par_file
+                # If attachment is url link, download it to temp folder to operate.
+                elif timApp.tools.pdftools.is_url(par_file):
+                    # print(f"Downloading {par_file}")
+                    par_file = timApp.tools.pdftools.download_file_from_url(par_file)
+                # Remove this try-block if partial merging is not desirable.
+                try:
+                    timApp.tools.pdftools.check_pdf_validity(par_file)
+                except timApp.tools.pdftools.PdfError:
+                    # If file is invalid, just don't merge it and continue.
+                    merged_with_errors = True
+                else:
+                    pdf_paths += [par_file]
+
+        # Uses document name as the base for the merged file name and tmp as folder.
+        doc_name = timApp.tools.pdftools.get_base_filename(doc)
+        merged_pdf_path = timApp.tools.pdftools.temp_folder_default_path + "/" + f"{doc_name}_merged.pdf"
+        timApp.tools.pdftools.merge_pdf(pdf_paths, merged_pdf_path)
+
+    except Exception as err:
+        message = str(err)
+        abort(404, message)
+    else:
+        if merged_with_errors:
+            # TODO: Give error message without canceling merging.
+            pass
+        return send_file(merged_pdf_path, mimetype="application/pdf")
+
+
+@app.route('/mergeAttachments/<path:doc>', methods=['POST'])
+def get_attachments(doc):
+    """
+    A route for merging all the attachments in a document.
+    :param doc: document path
+    :return: merged pdf-file
+    """
+    try:
+        d = DocEntry.find_by_path(doc, try_translation=True)
+        if not d:
+            abort(404)
+        verify_edit_access(d)
+
+    except Exception as err:
+        message = str(err)
+        abort(404, message)
+    else:
+        merge_access_url = request.url
+        return json_response({'success': True, 'url': merge_access_url}, status_code=201)
+
+
+@app.route('/processAttachments/<path:doc>')
+def process_attachments(doc):
+    """
+    A testing route for processing pdf attachments.
+    Note: possibly obsolete.
+    :param doc:
+    :return: merged & stamped pdf
+    """
+    # TODO: divide try-block a bit (use PdfError for pdftools methods)
+    try:
+        d = DocEntry.find_by_path(doc, try_translation=True)
+        if not d:
+            abort(404)
+        verify_view_access(d)
+
+        paragraphs = d.document.get_paragraphs(d)
+        pdf_stamp_data = []
+        for par in paragraphs:
+            if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
+                par_plugin = timApp.plugin.Plugin.from_paragraph(par)
+                par_data = par_plugin.values
+                par_file = par_data["file"]
+
+                # checks if attachment is TIM-upload and adds prefix
+                if par_file.startswith("/files/"):
+                    par_file = "/tim_files/blocks" + par_file
+
+                # if attachment is url link, download it to temp folder and operate the
+                # downloaded file
+                if timApp.tools.pdftools.is_url(par_file):
+                    print(f"Downloading {par_file}")
+                    par_data["file"] = timApp.tools.pdftools.download_file_from_url(par_file)
+
+                pdf_stamp_data += [par_data]
+                print(repr(par_data))
+
+        # now separate stamp and merge
+        stamped_pdfs = timApp.tools.pdftools.stamp_pdfs(pdf_stamp_data)
+        print(stamped_pdfs)
+
+        # uses document name as the base for the merged file name
+        merged_pdf_path = f"static/testpdf/{doc}_merged.pdf"
+        timApp.tools.pdftools.merge_pdf(stamped_pdfs, merged_pdf_path)
+
+    except Exception as err:
+        message = repr(err)
+        abort(404, message)
+    else:
+        return send_file(merged_pdf_path, mimetype="application/pdf")
 
 
 @app.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])
@@ -334,19 +471,13 @@ def get_templates():
 @app.route("/createItem", methods=["POST"])
 def create_item_route():
     item_path, item_type, item_title = verify_json_params('item_path', 'item_type', 'item_title')
-    cite_id, copy_id, template_name = verify_json_params('cite', 'copy', 'template', require=False)
-    if cite_id:
-        return create_citation_doc(cite_id, item_path, item_title)
+    cite_id, copy_id, template_name, use_template = verify_json_params('cite', 'copy', 'template', 'use_template',
+                                                                       require=False)
 
-    d = None
-    if copy_id:
-        d = get_doc_or_abort(copy_id)
-        verify_edit_access(d)
-        d = d.src_doc
-        vr = d.document.validate()
-        if vr.issues:
-            abort(400, f'The following errors must be fixed before copying:\n{vr}')
-    item = do_create_item(item_path, item_type, item_title, d, template_name)
+    if use_template is None:
+        use_template = True
+
+    item = create_or_copy_item(item_path, item_type, item_title, cite_id, copy_id, template_name, use_template)
     db.session.commit()
     return json_response(item)
 
@@ -404,19 +535,6 @@ def update_translation(doc_id):
     return ok_response()
 
 
-def create_citation_doc(doc_id, doc_path, doc_title):
-    d = get_doc_or_abort(doc_id)
-    verify_edit_access(d)
-
-    src_doc = d.document
-
-    def factory(path, group, title):
-        return create_citation(src_doc, group, path, title)
-    item = create_item(doc_path, 'document', doc_title, factory, get_current_user_group())
-    db.session.commit()
-    return json_response(item)
-
-
 @app.route("/getBlock/<int:doc_id>/<par_id>")
 def get_block(doc_id, par_id):
     d = get_doc_or_abort(doc_id)
@@ -463,6 +581,7 @@ def echo_request(filename):
         yield 'Request URL: ' + request.url + "\n\n"
         yield 'Headers:\n\n'
         yield from (k + ": " + v + "\n" for k, v in request.headers.items())
+
     return Response(stream_with_context(generate()), mimetype='text/plain')
 
 

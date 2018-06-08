@@ -190,6 +190,8 @@ RUN (curl -sL https://deb.nodesource.com/setup_10.x | bash -) && bash -c "${APT_
 RUN npm i npm@latest -g
 RUN npm install -g typescript@2.8 typedoc tslint jspm typescript-formatter && npm cache clean --force
 
+RUN bash -c "${APT_INSTALL} pdftk && ${APT_CLEANUP}"
+
 RUN mkdir /var/run/sshd
 RUN echo 'root:test' | chpasswd
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config

@@ -148,3 +148,31 @@ p.chart-menu {
         margin-bottom: 4px;
     }
 }
+
+tim-table {
+    .timTableTable {
+        //margin-left: 0px;
+        margin: 0px;
+    }
+
+    .editable {
+        border: 2px solid red;
+    }
+
+    .buttonAddRow {
+        //align-self: flex-start;
+    }
+
+    .buttonAddCol {
+        position: absolute;
+        right: calc(-1cm - 2px);
+    }
+
+    .timTableContentDiv {
+        position: relative;
+        display: table;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 20px;
+    }
+}

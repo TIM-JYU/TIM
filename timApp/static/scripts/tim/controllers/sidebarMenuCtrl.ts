@@ -7,6 +7,8 @@ import {ILecture, ILectureListResponse2} from "../lecturetypes";
 import {ViewCtrl} from "./view/viewctrl";
 import {showMessageDialog} from "../dialog";
 import {ITemplate, showPrintDialog} from "./printCtrl";
+import {showMergePdfDialog} from "./mergePdfCtrl";
+import angular from "angular";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -30,6 +32,8 @@ export class SidebarMenuCtrl implements IController {
     private lastTab: number;
     private vctrl?: ViewCtrl;
     private bookmarks: {};
+    private isDocumentMinutes: boolean;
+    private docSettings?: {macros?: {knro?: string}}
 
     constructor() {
         this.currentLecturesList = [];
@@ -53,7 +57,8 @@ export class SidebarMenuCtrl implements IController {
     }
 
     $onInit() {
-
+        this.isDocumentMinutes = $window.isMinutes;
+        this.docSettings = $window.docSettings;
     }
 
     updateLeftSide() {
@@ -140,6 +145,80 @@ export class SidebarMenuCtrl implements IController {
 
         // FOR DEBUGGING
         // UndoAutoPageBreak();
+    }
+
+    createMinuteExtracts() {
+        window.location.href = window.location.href.replace("/view/", "/minutes/createMinuteExtracts/" );
+    }
+
+    /**
+     * Checks whether the side menu should have a button for creating extracts from minutes in this document.
+     * @returns {boolean} Whether the button for creating extracts should be displayed.
+     */
+    enableCreateExtractsButton() : boolean {
+        if (this.docSettings == null || this.docSettings.macros == null || this.vctrl == null)
+            return false;
+
+        return this.docSettings.macros.knro != null && this.isDocumentMinutes &&
+            this.vctrl.item.rights.manage;
+    }
+
+    /**
+     * Checks whether the side menu should have a button for creating minutes in this document.
+     * @returns {boolean} Whether the button for creating minutes should be displayed.
+     */
+    enableCreateMinutesButton() : boolean {
+        if (this.docSettings == null || this.docSettings.macros == null || this.vctrl == null)
+            return false;
+
+        return this.docSettings.macros.knro != null && !this.isDocumentMinutes &&
+            this.vctrl.item.rights.manage;
+    }
+
+    /**
+     * Checks if the document is faculty council minutes or a faculty council meeting invitation.
+     * @returns {boolean} Whether the document is a faculty council meeting document.
+     */
+    isMinutesOrInvitation() : boolean {
+        if (this.docSettings == null || this.docSettings.macros == null)
+            return false;
+
+        return this.docSettings.macros.knro != null;
+    }
+
+    /**
+     * Creates minutes from a IT faculty council meeting invitation
+     */
+    createMinutes() {
+        if (!this.vctrl) {
+            void showMessageDialog("Not in a document");
+            return;
+        }
+
+        if (this.docSettings == null || this.docSettings.macros == null || this.docSettings.macros.knro == null) {
+            void showMessageDialog("The document has no 'knro' macro defined");
+            return;
+        }
+
+        $http.post<{path: string}>("/minutes/createMinutes", angular.extend({
+            item_path: this.vctrl.item.location + "/PK/PK" + this.docSettings.macros.knro,
+            item_title: "PK" + this.docSettings.macros.knro,
+            copy: this.vctrl.item.id,
+        })).then((response) => {
+            $window.location.href = "/view/" + response.data.path;
+        }, (response) => {
+            void showMessageDialog(response.data.error);
+        });
+    }
+
+    stampPdf() {
+    }
+
+    mergePdf() {
+        if (!this.vctrl) {
+            return;
+        }
+        showMergePdfDialog({document: this.vctrl.item});
     }
 }
 

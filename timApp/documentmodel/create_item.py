@@ -2,7 +2,10 @@
 
 from typing import List, Optional, Generator, Tuple
 
-from timApp.accesshelper import grant_access_to_session_users, reset_request_access_cache
+from werkzeug.exceptions import abort
+
+from timApp.accesshelper import grant_access_to_session_users, reset_request_access_cache, get_doc_or_abort, \
+    verify_edit_access
 from timApp.dbaccess import get_timdb
 from timApp.documentmodel.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_NAME
 from timApp.sessioninfo import get_current_user_object, get_current_user_group
@@ -10,6 +13,7 @@ from timApp.tim_app import app
 from timApp.timdb.blocktypes import from_str, blocktypes
 from timApp.timdb.bookmarks import Bookmarks
 from timApp.timdb.docinfo import DocInfo
+from timApp.timdb.documents import create_citation
 from timApp.timdb.item import Item
 from timApp.timdb.models.block import copy_default_rights
 from timApp.timdb.models.docentry import DocEntry, get_documents, create_document_and_block
@@ -63,7 +67,7 @@ def get_templates_for_folder(folder: Folder) -> List[DocEntry]:
     return templates
 
 
-def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInfo], template_name):
+def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInfo], template_name, use_template=True):
     item = create_item(item_path,
                        item_type,
                        item_title,
@@ -74,7 +78,7 @@ def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInf
         if copied_doc:
             for tr, new_tr in copy_document_and_enum_translations(copied_doc, item):
                 copy_default_rights(new_tr.id, blocktypes.DOCUMENT)
-        else:
+        elif use_template:
             templates = get_templates_for_folder(item.parent)
             matched_templates = None
             if template_name:
@@ -112,3 +116,33 @@ def add_tr_entry(doc_id: int, item: Item, tr: Translation) -> Translation:
     new_tr.title = tr.title
     db.session.add(new_tr)
     return new_tr
+
+
+def create_or_copy_item(item_path: str, item_type: str, item_title: str, cite_id: int = None, copy_id: int = None,
+                        template_name: str = None, use_template: bool = True):
+    if cite_id:
+        return create_citation_doc(cite_id, item_path, item_title)
+
+    d = None
+    if copy_id:
+        d = get_doc_or_abort(copy_id)
+        verify_edit_access(d)
+        d = d.src_doc
+        vr = d.document.validate()
+        if vr.issues:
+            abort(400, f'The following errors must be fixed before copying:\n{vr}')
+    item = do_create_item(item_path, item_type, item_title, d, template_name, use_template)
+    return item
+
+
+def create_citation_doc(doc_id, doc_path, doc_title):
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
+
+    src_doc = d.document
+
+    def factory(path, group, title):
+        return create_citation(src_doc, group, path, title)
+
+    item = create_item(doc_path, 'document', doc_title, factory, get_current_user_group())
+    return item

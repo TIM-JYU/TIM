@@ -37,6 +37,7 @@ def get_plugins():
             "showCode": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
             "showImage": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
             "showVideo": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
+            "showPdf": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/pdf/", "browser": False},
             "mcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
             "mmcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
             "uploader": {"host": current_app.config['UPLOADER_CONTAINER_URL']},
@@ -45,6 +46,7 @@ def get_plugins():
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/"},
+            "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/"},
             "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
         }
     return PLUGINS

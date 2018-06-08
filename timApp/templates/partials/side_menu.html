@@ -61,6 +61,14 @@
                     <br>
                     <button class="timButton btn btn-block" title="Print using Browser own printing capabilities" ng-click="$ctrl.cssPrint()">Browser print</button>
                     <br>
+                    <h5 style="display: inline-block" ng-show="$ctrl.isMinutesOrInvitation()">Memos/Minutes</h5>
+                    <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateExtractsButton()" ng-click="$ctrl.createMinuteExtracts()">Create extracts</button>
+                    <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateMinutesButton()" ng-click="$ctrl.createMinutes()">Create minutes</button>
+                    <br>
+                    <button class="timButton btn btn-block" ng-show="$ctrl.isMinutesOrInvitation()" ng-click="$ctrl.stampPdf()">Stamp attachments</button>
+                    <br>
+                    <button class="timButton btn btn-block" ng-show="$ctrl.isMinutesOrInvitation()" ng-click="$ctrl.mergePdf()">Merge attachments</button>
+                    <br>
                 </div>
 
             </uib-tab>
