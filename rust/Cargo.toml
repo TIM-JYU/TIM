@@ -1,0 +1,30 @@
+[package]
+name = "tim"
+version = "0.1.0"
+authors = ["Mika Lehtinen <mikkalle@student.jyu.fi>"]
+
+[dependencies]
+actix = "0.5"
+askama = { git = 'https://github.com/djc/askama' }
+diesel-derive-enum = { version = "0.4", features = ["postgres"] }
+failure = "0.1"
+futures-await = "0.1"
+log = "0.4"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+simple_logger = "0.5"
+yaml-rust = "0.4"
+
+[dependencies.actix-web]
+version = "0.6"
+default-features = false
+features = ["brotli", "flate2-c"]
+
+[dependencies.diesel]
+version = "1.2"
+default-features = false
+features = ["postgres", "r2d2", "32-column-tables"]
+
+[build-dependencies]
+askama = { git = 'https://github.com/djc/askama' }

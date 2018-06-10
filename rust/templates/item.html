@@ -1,0 +1,6 @@
+{% match item %}
+{% when ItemKind::Folder with (f) %}
+{{f|safe}}
+{% when ItemKind::DocEntry with (d) %}
+{{d|safe}}
+{% endmatch %}
