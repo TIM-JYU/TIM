@@ -8,6 +8,7 @@ import {ViewCtrl} from "./view/viewctrl";
 import {showMessageDialog} from "../dialog";
 import {ITemplate, showPrintDialog} from "./printCtrl";
 import {showMergePdfDialog} from "./mergePdfCtrl";
+import {showAddTagDialog} from "./tagCtrl";
 import angular from "angular";
 
 /**
@@ -219,6 +220,16 @@ export class SidebarMenuCtrl implements IController {
             return;
         }
         showMergePdfDialog({document: this.vctrl.item});
+    }
+
+    /*
+     * Opens tag adding dialog.
+     */
+    addTag() {
+        if (!this.vctrl) {
+            return;
+        }
+        showAddTagDialog(this.vctrl.item);
     }
 }
 

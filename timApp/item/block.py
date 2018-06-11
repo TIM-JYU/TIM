@@ -25,6 +25,7 @@ class Block(db.Model):
     folder = db.relationship('Folder', back_populates='_block', lazy='dynamic')
     answerupload = db.relationship('AnswerUpload', back_populates='block', lazy='dynamic')
     accesses = db.relationship('BlockAccess', back_populates='block', lazy='joined')
+    tags = db.relationship('Tag', back_populates='block', lazy='dynamic')
 
     def __json__(self):
         return ['id', 'type_id', 'description', 'created', 'modified']
