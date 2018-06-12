@@ -103,7 +103,7 @@ registerDialogComponent("timMergePdf",
         <button class="btn timButton" ng-click="$ctrl.dismiss()"><span>Cancel</span>
         </button>
         <div ng-show="$ctrl.docUrl" class="alert alert-success">
-            <span class="glyphicon glyphicon-ok"></span>Merging succeeded!
+            <span class="glyphicon glyphicon-ok"></span> Merging succeeded!
             <a href="{{$ctrl.docUrl}}"
                target="_blank">View the document.</a>
         </div>
