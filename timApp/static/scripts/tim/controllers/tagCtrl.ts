@@ -71,8 +71,8 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      * Updates the list of existing tags for the document.
      */
     private async updateTags() {
-        const docTitle = this.resolve.params.name;
-        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${docTitle}`, {}));
+        const docPath = this.resolve.params.path;
+        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${docPath}`, {}));
         if (response) {
             if (this.error) {
                 this.error = false;
@@ -86,9 +86,9 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      * Deletes the selected tag.
      */
     private async removeTag(t: ITag) {
-        const docTitle = this.resolve.params.name;
+        const docPath = this.resolve.params.path;
         const data = {tagObject: t};
-        const [err, response] = await to($http.post<IParResponse>(`/tags/remove/${docTitle}`, data));
+        const [err, response] = await to($http.post<IParResponse>(`/tags/remove/${docPath}`, data));
         if (err) {
             this.error = true;
             this.errorMessage = err.data.error;
@@ -120,9 +120,9 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         if (this.f.$invalid) {
             return;
         }
-        const docTitle = this.resolve.params.name;
+        const docPath = this.resolve.params.path;
         const data = {tag: this.tagName, expires: this.expires};
-        const [err, response] = await to($http.post<IParResponse>(`/tags/add/${docTitle}`, data));
+        const [err, response] = await to($http.post<IParResponse>(`/tags/add/${docPath}`, data));
         if (err) {
             this.error = true;
             this.errorMessage = err.data.error;
