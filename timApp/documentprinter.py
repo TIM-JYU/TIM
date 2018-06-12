@@ -787,7 +787,7 @@ def run_biber(latex_file, new_env):
     stdout, stderr = p.communicate(None)
     stdout = _decode_result(stdout)
     stderr = _decode_result(stderr)
-    if not (p.returncode is None):
+    if p.returncode != 0:
         raise RuntimeError(
             'Biber died with exitcode "%s"\n stdin: %s\n stderr: %s' % (p.returncode, stdout, stderr)
         )
