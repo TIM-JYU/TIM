@@ -326,7 +326,7 @@ invokeDVISVGM
   -> MathEnvResult
   -> IO (NonEmpty EqnOut)
 invokeDVISVGM curTmp dvisvgm fn mt env = do
-  (_, dvi) <- timeoutException 1000000 DVISVGMTimeouted $ readProcessException
+  (_, dvi) <- timeoutException 5000000 DVISVGMTimeouted $ readProcessException
     DVISVGMFailed
     curTmp
     (getDVISVGM dvisvgm)
