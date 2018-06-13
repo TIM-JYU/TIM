@@ -7,9 +7,11 @@ markAsUsed(createItem);
 
 export class StartCtrl implements IController {
     private creatingNew: boolean;
+    private docListOpen: boolean;
 
     constructor() {
         this.creatingNew = false;
+        this.docListOpen = false;
     }
 
     $onInit() {
@@ -22,6 +24,14 @@ export class StartCtrl implements IController {
 
     enableCreate() {
         this.creatingNew = true;
+    }
+
+    enableDocList() {
+        this.docListOpen = true;
+    }
+
+    disableDocList() {
+        this.docListOpen = false;
     }
 }
 

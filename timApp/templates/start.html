@@ -27,8 +27,9 @@
                             <li class="h5"><a href="/view/{{ current_user.get_personal_folder().path }}">My documents</a></li>
                             <li class="h5"><a href="/view/">All documents</a></li>
                             <li class="h5"><a ng-click="$ctrl.enableCreate()" href="#">Create a new document</a></li>
+                            <li class="h5"><a ng-click="$ctrl.enableDocList()" href="#">Available courses</a></li>
                         </ul>
-                        <bootstrap-panel show="$ctrl.creatingNew"
+                        <bootstrap-panel ng-if="$ctrl.creatingNew"
                                          title="Create a new document"
                                          show-close="true"
                                          close-fn="$ctrl.cancelCreate()">
@@ -37,6 +38,7 @@
                                          item-type="document">
                             </create-item>
                         </bootstrap-panel>
+                        <tagged-document-list ng-if="$ctrl.docListOpen"></tagged-document-list>
                     {% elif session.altlogin == "signup2" %}
                         <form method="POST" action="/altsignup2">
                             <p>

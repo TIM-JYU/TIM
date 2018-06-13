@@ -3,13 +3,15 @@ Routes related to tags.
 """
 from flask import Blueprint
 from flask import abort
+from flask import request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import UnmappedInstanceError
 
 from timApp.accesshelper import verify_edit_access, verify_view_access
 from timApp.requesthelper import verify_json_params
 from timApp.responsehelper import ok_response, json_response
-from timApp.timdb.models.docentry import DocEntry
+from timApp.sessioninfo import get_current_user_object
+from timApp.timdb.models.docentry import DocEntry, get_documents
 from timApp.timdb.models.tag import Tag
 from timApp.timdb.tim_models import db
 
@@ -77,6 +79,17 @@ def get_tags(doc):
     verify_view_access(d)
     tags = Tag.query.filter_by(block_id=d.id).all()
     return json_response(tags)
+
+
+@tags_blueprint.route('/getDocs')
+def get_tagged_documents():
+    """
+    Gets the list of Tag-entries that have a certain tag.
+    """
+    tag_name = request.args.get('tag', '')
+    docs = get_documents(filter_user=get_current_user_object(),
+                         custom_filter=DocEntry.id.in_(Tag.query.filter_by(tag=tag_name).with_entities(Tag.block_id)))
+    return json_response(docs)
 
 
 def check_special_tag_rights(tag: str):

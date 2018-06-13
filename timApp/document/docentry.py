@@ -153,7 +153,8 @@ def create_document_and_block(owner_group_id: int, desc: Optional[str]=None):
 def get_documents(include_nonpublic: bool = False,
                   filter_folder: str = None,
                   search_recursively: bool = True,
-                  filter_user: Optional[UserType]=None) -> List[DocEntry]:
+                  filter_user: Optional[UserType]=None,
+                  custom_filter = None) -> List[DocEntry]:
     """Gets all the documents in the database matching the given criteria.
 
     :param filter_user: If specified, returns only the documents that the user has view access to.
@@ -174,6 +175,8 @@ def get_documents(include_nonpublic: bool = False,
         q = q.filter(DocEntry.name.like(filter_folder + '%'))
     if not search_recursively:
         q = q.filter(DocEntry.name.notlike(filter_folder + '%/%'))
+    if custom_filter is not None:
+        q = q.filter(custom_filter)
     result = q.all()
     if not filter_user:
         return result
