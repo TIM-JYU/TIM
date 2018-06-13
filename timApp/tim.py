@@ -22,7 +22,7 @@ from timApp.admin.routes import admin_bp
 from timApp.document.routes import doc_bp
 from timApp.document.translation.routes import tr_bp
 from timApp.plugin.routes import plugin_bp
-from timApp.routes.tags import tags_blueprint
+from timApp.item.routes_tags import tags_blueprint
 from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.auth.accesshelper import verify_edit_access, verify_view_access, \
     ItemLockedException, get_doc_or_abort

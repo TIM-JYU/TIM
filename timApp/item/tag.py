@@ -3,7 +3,8 @@ A tag with associated document id, tag name and expiration date.
 """
 
 from typing import List
-from timApp.timdb.tim_models import db
+
+from timApp.timdb.sqa import db
 
 
 class Tag(db.Model):

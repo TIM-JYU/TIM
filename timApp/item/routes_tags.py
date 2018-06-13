@@ -8,13 +8,13 @@ from flask import request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import UnmappedInstanceError
 
-from timApp.accesshelper import verify_edit_access, verify_view_access
-from timApp.requesthelper import verify_json_params
-from timApp.responsehelper import ok_response, json_response
-from timApp.sessioninfo import get_current_user_object
-from timApp.timdb.models.docentry import DocEntry, get_documents
-from timApp.timdb.models.tag import Tag
-from timApp.timdb.tim_models import db
+from timApp.auth.accesshelper import verify_edit_access, verify_view_access
+from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docentry import DocEntry, get_documents
+from timApp.item.tag import Tag
+from timApp.timdb.sqa import db
+from timApp.util.flask.requesthelper import verify_json_params
+from timApp.util.flask.responsehelper import ok_response, json_response
 
 tags_blueprint = Blueprint('tags',
                            __name__,
