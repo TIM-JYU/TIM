@@ -47,7 +47,7 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
         this.loading = true;
         const postURL = "/merge" + this.resolve.params.document.path;
 
-       const  [err, response] = await to($http.get<{url: string}>(`/mergeAttachments/${this.resolve.params.document.path}`, {}));
+       const  [err, response] = await to($http.get<{url: string}>(`/minutes/mergeAttachments/${this.resolve.params.document.path}`, {}));
 
        //catch error message frin get route
         if (err) {
@@ -59,7 +59,7 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
         if (response) {
             this.loading = false;
 
-            const [err2, response2] = await to($http.post<{url: string}>(`/mergeAttachments/${this.resolve.params.document.path}`, {}));
+            const [err2, response2] = await to($http.post<{url: string}>(`/minutes/mergeAttachments/${this.resolve.params.document.path}`, {}));
 
             //catch error message from post route
             if(err2) {

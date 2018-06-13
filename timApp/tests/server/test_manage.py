@@ -1,7 +1,7 @@
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.folder import Folder
-from timApp.timdb.tim_models import db
-from timApp.timdb.userutils import grant_access
+from timApp.folder.folder import Folder
+from timApp.timdb.sqa import db
+from timApp.user.userutils import grant_access
 
 
 class ManageTest(TimRouteTest):

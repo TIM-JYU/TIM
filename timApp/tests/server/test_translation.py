@@ -1,11 +1,12 @@
 from unittest.mock import patch, Mock
 
-from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.documentmodel.docsettings import DocSettings
-from timApp.documentmodel.document import Document
-from timApp.documentmodel.yamlblock import YamlBlock
+from timApp.document.docparagraph import DocParagraph
+from timApp.document.docsettings import DocSettings
+from timApp.document.document import Document
+from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.docinfo import DocInfo
+from timApp.document.docinfo import DocInfo
+from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
 class TranslationTest(TimRouteTest):
@@ -37,7 +38,7 @@ class TranslationTest(TimRouteTest):
 
     def test_translation_content(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/multiple_mmcqs.md')
+        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/multiple_mmcqs.md')
         j = self.create_translation(doc, 'MMCQ fi', 'fi')
         tr_doc = j.document
         pars = doc.document.get_paragraphs()

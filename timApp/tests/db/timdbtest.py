@@ -5,17 +5,17 @@ from typing import Union, List
 
 import sqlalchemy.exc
 
-import timApp.dumboclient
-import timApp.initdb2
-from timApp.documentmodel.document import Document
-from timApp.filemodehelper import change_permission_and_retry
+import timApp.markdown.dumboclient
+import timApp.timdb.init
+from timApp.document.document import Document
+from timApp.util.filemodehelper import change_permission_and_retry
 from timApp.tim_app import app
-from timApp.timdb.docinfo import DocInfo
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.models.user import User
-from timApp.timdb.tim_models import db
-from timApp.timdb.timdb2 import TimDb
-from timApp.utils import del_content, remove_prefix
+from timApp.document.docinfo import DocInfo
+from timApp.document.docentry import DocEntry
+from timApp.user.user import User
+from timApp.timdb.sqa import db
+from timApp.timdb.timdb import TimDb
+from timApp.util.utils import del_content, remove_prefix
 
 
 class TimDbTest(unittest.TestCase):
@@ -46,7 +46,7 @@ class TimDbTest(unittest.TestCase):
             db.drop_all(bind='tim_main')
         except sqlalchemy.exc.OperationalError:
             pass
-        timApp.initdb2.initialize_database(create_docs=cls.create_docs)
+        timApp.timdb.init.initialize_database(create_docs=cls.create_docs)
 
     def setUp(self):
         if running_in_gitlab() and remove_prefix(self.id(), 'timApp.') in GITLAB_SKIP_TESTS:

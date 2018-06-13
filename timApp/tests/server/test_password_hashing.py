@@ -2,8 +2,8 @@
 import bcrypt
 
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.tim_models import db
-from timApp.timdb.userutils import hash_password_old
+from timApp.timdb.sqa import db
+from timApp.user.userutils import hash_password_old
 
 
 class PasswordTest(TimRouteTest):

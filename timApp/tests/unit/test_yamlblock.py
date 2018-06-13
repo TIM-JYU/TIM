@@ -3,7 +3,7 @@ import unittest
 import yaml
 from yaml import YAMLError
 
-from timApp.documentmodel.yamlblock import YamlBlock, MergeStyle, yaml_loader, BlockEndMissingError, \
+from timApp.document.yamlblock import YamlBlock, MergeStyle, yaml_loader, BlockEndMissingError, \
     DuplicateKeyMergeHintError
 
 

@@ -4,9 +4,9 @@ from lxml import html
 from lxml.cssselect import CSSSelector
 from lxml.html import HtmlElement
 
-from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.document.docparagraph import DocParagraph
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.userutils import get_anon_group_id, grant_view_access
+from timApp.user.userutils import get_anon_group_id, grant_view_access
 
 comment_selector = CSSSelector('div.notes > div.note')
 

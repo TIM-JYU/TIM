@@ -1,7 +1,7 @@
 from lxml import html
 
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.docinfo import DocInfo
+from timApp.document.docinfo import DocInfo
 
 
 class IndexTest(TimRouteTest):

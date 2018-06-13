@@ -1,6 +1,6 @@
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.tim_models import db
+from timApp.document.docentry import DocEntry
+from timApp.timdb.sqa import db
 
 
 class MinutesHandlingTest(TimRouteTest):

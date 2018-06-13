@@ -3,11 +3,11 @@ from unittest.mock import patch, Mock
 
 from lxml import html
 
-from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
-from timApp.documentmodel.yamlblock import YamlBlock
+from timApp.document.docparagraph import DocParagraph
+from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
+from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.docinfo import DocInfo
+from timApp.document.docinfo import DocInfo
 
 
 class PreambleTestBase(TimRouteTest):

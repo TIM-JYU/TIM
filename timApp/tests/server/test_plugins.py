@@ -8,14 +8,15 @@ from itertools import product
 import dateutil.parser
 from lxml import html
 
-from timApp.documentmodel.pointsumrule import PointSumRule, PointType
-from timApp.plugin import Plugin
-from timApp.sessioninfo import get_current_user_object
+from timApp.answer.pointsumrule import PointSumRule, PointType
+from timApp.plugin.plugin import Plugin
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.tim_models import db
-from timApp.timdb.userutils import grant_view_access, grant_access, get_anon_group_id, get_anon_user_id
-from timApp.timdb.velp_models import Annotation
+from timApp.timdb.sqa import db
+from timApp.user.userutils import grant_view_access, grant_access, get_anon_group_id, get_anon_user_id
+from timApp.util.utils import EXAMPLE_DOCS_PATH
+from timApp.velp.velp_models import Annotation
 
 
 class PluginTest(TimRouteTest):
@@ -23,7 +24,7 @@ class PluginTest(TimRouteTest):
 
     def test_plugin(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/mmcq_example.md').document
+        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/mmcq_example.md').document
         resp = self.get(f'/view/{doc.doc_id}')
         tree = html.fromstring(resp)
         mmcq_xpath = fr'.//div[@class="par mmcq"]/div[@class="parContent"]/div[@id="{doc.doc_id}.mmcqexample.{doc.get_paragraphs()[0].get_id()}"]'
@@ -183,7 +184,7 @@ class PluginTest(TimRouteTest):
 
     def test_idless_plugin(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/idless_plugin.md').document
+        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/idless_plugin.md').document
         resp = self.get(f'/view/{doc.doc_id}')
         tree = html.fromstring(resp)
         mmcq_xpath = fr'.//div[@class="par csPlugin"]/div[@class="parContent"]/div[@id="{doc.doc_id}..{doc.get_paragraphs()[0].get_id()}"]'
@@ -192,7 +193,7 @@ class PluginTest(TimRouteTest):
 
     def test_upload(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/upload_plugin.md').document
+        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/upload_plugin.md').document
         task_name = 'testupload'
         task_name2 = 'testupload2'
         task_id = f'{doc.doc_id}.{task_name}'
@@ -273,7 +274,7 @@ class PluginTest(TimRouteTest):
     def test_group_answering(self):
         self.login_test1()
         self.login_test2(add=True)
-        doc = self.create_doc(from_file='example_docs/upload_plugin.md').document
+        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/upload_plugin.md').document
         task_name = 'testupload'
         task_id = f'{doc.doc_id}.{task_name}'
         filename = 'test.txt'
@@ -295,7 +296,7 @@ class PluginTest(TimRouteTest):
 
     def test_all_answers(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/multiple_mmcqs.md')
+        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/multiple_mmcqs.md')
         plugin_type = 'mmcq'
         task_id = f'{doc.id}.mmcqexample'
         task_id2 = f'{doc.id}.mmcqexample2'
@@ -347,7 +348,7 @@ class PluginTest(TimRouteTest):
     def test_save_points(self):
         cannot_give_custom = {'error': 'You cannot give yourself custom points in this task.'}
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/mmcq_example.md').document
+        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/mmcq_example.md').document
         plugin_type = 'mmcq'
         task_id = f'{doc.doc_id}.mmcqexample'
         self.post_answer(plugin_type, task_id, [True, False, False])
@@ -417,7 +418,7 @@ class PluginTest(TimRouteTest):
             return pts, pts2
 
         self.login_test1()
-        d = self.create_doc(from_file='example_docs/mmcq_example.md').document
+        d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/mmcq_example.md').document
         timdb = self.get_db()
         grant_view_access(self.get_test_user_2_group_id(), d.doc_id)
         task_ids = [f'{d.doc_id}.{a}-{b}' for a, b in product(('t1', 't2', 't3'), ('a', 'b', 'c'))]
@@ -587,13 +588,13 @@ class PluginTest(TimRouteTest):
 
     def test_find_tasks(self):
         self.login_test1()
-        d = self.create_doc(from_file='example_docs/programming_examples.md').document
+        d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/programming_examples.md').document
         tasks = d.get_tasks()
         self.assertEqual(27, len(list(tasks)))
 
     def test_interval(self):
         self.login_test1()
-        d = self.create_doc(from_file='example_docs/mmcq_example.md')
+        d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/mmcq_example.md')
         p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
         p.set_value('answerLimit', None)
 

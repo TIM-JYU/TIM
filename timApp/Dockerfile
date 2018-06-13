@@ -108,7 +108,6 @@ texlive-xetex \
 RUN bash -c "${APT_INSTALL} libffi-dev && ${APT_CLEANUP}"
 ENV LD_LIBRARY_PATH /usr/local/lib
 
-# sphinxcontrib-httpdomain does not work with 1.6
 ENV PIP_INSTALL="python3 -m pip install" \
     PIP_CLEANUP="rm -r ~/.cache/pip"
 RUN bash -c "${PIP_INSTALL} \
@@ -151,8 +150,7 @@ pytz \
 recommonmark \
 responses \
 selenium==3.8.1 \
-sphinx==1.5.6 \
-sphinxcontrib-httpdomain \
+sphinx \
 sqlalchemy \
 wand \
 wheel \

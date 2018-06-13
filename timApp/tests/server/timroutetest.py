@@ -13,18 +13,18 @@ from lxml import html
 from lxml.html import HtmlElement
 
 import timApp.tim
-from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.documentmodel.document import Document
-from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
-from timApp.documentmodel.timjsonencoder import TimJsonEncoder
-from timApp.routes.login import log_in_as_anonymous
+from timApp.document.docparagraph import DocParagraph
+from timApp.document.document import Document
+from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
+from timApp.document.timjsonencoder import TimJsonEncoder
+from timApp.auth.login import log_in_as_anonymous
 from timApp.tests.db.timdbtest import TimDbTest
-from timApp.timdb.docinfo import DocInfo
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.models.translation import Translation
-from timApp.timdb.models.user import User
-from timApp.timdb.models.usergroup import UserGroup
-from timApp.utils import remove_prefix
+from timApp.document.docinfo import DocInfo
+from timApp.document.docentry import DocEntry
+from timApp.document.translation.translation import Translation
+from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
+from timApp.util.utils import remove_prefix
 
 
 def load_json(resp: Response):

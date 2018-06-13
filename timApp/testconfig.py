@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import timedelta
 
-from timApp.utils import pycharm_running
+from timApp.util.utils import pycharm_running
 
 DEBUG = True
 PROFILE = False

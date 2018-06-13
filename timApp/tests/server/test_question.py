@@ -2,12 +2,13 @@ from lxml import html
 
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tests.timliveserver import TimLiveServer
+from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
 class QuestionTest(TimLiveServer, TimRouteTest):
     def test_question_html(self):
         self.login_test1()
-        d = self.create_doc(from_file='example_docs/questions.md')
+        d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/questions.md')
         pars = d.document.get_paragraphs()
         data = self.get(d.url_relative, as_tree=True)
         first_id = pars[0].get_id()

@@ -1,10 +1,10 @@
 from datetime import datetime, timezone, timedelta
 
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.item import Item
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.models.usergroup import UserGroup
-from timApp.timdb.tim_models import db
+from timApp.item.item import Item
+from timApp.document.docentry import DocEntry
+from timApp.user.usergroup import UserGroup
+from timApp.timdb.sqa import db
 
 
 class PermissionTest(TimRouteTest):

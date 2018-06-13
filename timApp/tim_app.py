@@ -6,43 +6,50 @@ Insert only configuration-related things in this file. Do NOT define routes here
 import inspect
 import mimetypes
 import sys
-import warnings
 
 from flask import Flask
 from flask_migrate import Migrate
 from sqlalchemy.sql.ddl import CreateTable
 
-from timApp.documentmodel.timjsonencoder import TimJsonEncoder
-from timApp.filters import map_format, timdate, humanize_timedelta, humanize_datetime
+from timApp.document.timjsonencoder import TimJsonEncoder
+from timApp.util.flask.filters import map_format, timdate, humanize_timedelta, humanize_datetime
 from timApp.korppi.openid import KorppiOpenID
-from timApp.logger import setup_logging
-from timApp.timdb.gamification_models.docgamified import DocGamified
-from timApp.timdb.gamification_models.documentgamificationpoint import DocumentGamificationPoint
-from timApp.timdb.gamification_models.gamificationdocument import GamificationDocument
-from timApp.timdb.gamification_models.gamificationdocumenttype import GamificationDocumentType
-from timApp.timdb.gamification_models.gamificationpointtype import GamificationPointType
-from timApp.timdb.gamification_models.usergamification import UserGamification
-from timApp.timdb.models.askedjson import AskedJson
-from timApp.timdb.models.askedquestion import AskedQuestion
-from timApp.timdb.models.block import Block
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.models.folder import Folder
-from timApp.timdb.models.lecture import Lecture
-from timApp.timdb.models.lectureanswer import LectureAnswer
-from timApp.timdb.models.message import Message
-from timApp.timdb.models.newuser import NewUser
-from timApp.timdb.models.notification import Notification
-from timApp.timdb.models.printeddoc import PrintedDoc
-from timApp.timdb.models.translation import Translation
-from timApp.timdb.models.user import User
-from timApp.timdb.models.usergroup import UserGroup
-from timApp.timdb.runningquestion import Runningquestion
-from timApp.timdb.tim_models import db, QuestionActivity, Question, Showpoints, Useractivity, SlideStatus, AnswerTag, AnswerUpload, BlockAccess, LectureUsers, \
-    UserAnswer, UserGroupMember, UserNotes, \
-    AccessType
-from timApp.timdb.models.readparagraph import ReadParagraph
-from timApp.timdb.models.answer import Answer
-from timApp.timdb.velp_models import Velp, VelpContent, VelpGroup, VelpGroupDefaults, VelpGroupLabel, \
+from timApp.util.logger import setup_logging
+from timApp.gamification.docgamified import DocGamified
+from timApp.gamification.documentgamificationpoint import DocumentGamificationPoint
+from timApp.gamification.gamificationdocument import GamificationDocument
+from timApp.gamification.gamificationdocumenttype import GamificationDocumentType
+from timApp.gamification.gamificationpointtype import GamificationPointType
+from timApp.gamification.usergamification import UserGamification
+from timApp.lecture.askedjson import AskedJson
+from timApp.lecture.askedquestion import AskedQuestion
+from timApp.item.block import Block
+from timApp.document.docentry import DocEntry
+from timApp.folder.folder import Folder
+from timApp.lecture.lecture import Lecture
+from timApp.lecture.lectureanswer import LectureAnswer
+from timApp.lecture.message import Message
+from timApp.user.newuser import NewUser
+from timApp.notification.notification import Notification
+from timApp.printing.printeddoc import PrintedDoc
+from timApp.document.translation.translation import Translation
+from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
+from timApp.lecture.runningquestion import Runningquestion
+from timApp.timdb.sqa import db
+from timApp.lecture.question import Question
+from timApp.lecture.lectureusers import LectureUsers
+from timApp.lecture.questionactivity import QuestionActivity
+from timApp.lecture.showpoints import Showpoints
+from timApp.lecture.useractivity import Useractivity
+from timApp.slide.slidestatus import SlideStatus
+from timApp.user.usergroupmember import UserGroupMember
+from timApp.auth.auth_models import AccessType, BlockAccess
+from timApp.note.usernote import UserNote
+from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
+from timApp.readmark.readparagraph import ReadParagraph
+from timApp.answer.answer import Answer
+from timApp.velp.velp_models import Velp, VelpContent, VelpGroup, VelpGroupDefaults, VelpGroupLabel, \
     VelpGroupSelection, VelpGroupsInDocument, VelpInGroup, VelpLabel, VelpLabelContent, VelpVersion, ImportedVelpGroups, \
     LabelInVelp, LabelInVelpGroup, Annotation, AnnotationComment, Icon
 
@@ -93,7 +100,7 @@ reg_models(
     UserGamification,
     UserGroup,
     UserGroupMember,
-    UserNotes,
+    UserNote,
     Velp,
     VelpContent,
     VelpGroup,
@@ -107,7 +114,7 @@ reg_models(
     VelpVersion,
 )
 
-from timApp.utils import datestr_to_relative, date_to_relative
+from timApp.util.utils import datestr_to_relative, date_to_relative
 
 sys.setrecursionlimit(10000)
 app = Flask(__name__)

@@ -1,6 +1,6 @@
 import unittest
 
-from timApp.timdb.models.askedjson import normalize_question_json
+from timApp.lecture.askedjson import normalize_question_json
 
 
 class QuestionJsonNormalizeTest(unittest.TestCase):

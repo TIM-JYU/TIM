@@ -3,9 +3,9 @@
 import unittest
 from typing import Optional
 
-from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.documentmodel.document import Document
-from timApp.documentmodel.documentparser import DocumentParser
+from timApp.document.docparagraph import DocParagraph
+from timApp.document.document import Document
+from timApp.document.documentparser import DocumentParser
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.exceptions import TimDbException
 

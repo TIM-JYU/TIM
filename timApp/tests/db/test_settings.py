@@ -1,6 +1,6 @@
-from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.documentmodel.docsettings import DocSettings
-from timApp.documentmodel.yamlblock import YamlBlock
+from timApp.document.docparagraph import DocParagraph
+from timApp.document.docsettings import DocSettings
+from timApp.document.yamlblock import YamlBlock
 from timApp.tests.db.timdbtest import TimDbTest
 
 

@@ -1,16 +1,16 @@
 import logging
 import smtplib
-
 from email.mime.text import MIMEText
-from fileutils import *
-from funnel_thread import Updatable
-from grouping_queue import GroupingQueue
-from persistent_queue import PersistentQueue, PersistenceException
-from ratelimiter import RateLimited
 from typing import Dict, Optional, Union
 
+from funnel.fileutils import *
+from funnel.funnel_thread import Updatable
+from funnel.grouping_queue import GroupingQueue
+from funnel.persistent_queue import PersistentQueue, PersistenceException
+from funnel.ratelimiter import RateLimited
+
 MAIL_HOST = "smtp.jyu.fi"
-MAIL_DIR = "/service/mail"
+MAIL_DIR = "/service/funnel/mail"
 MAIL_SIGNATURE = "\n\n-- \nThis message was automatically sent by TIM"
 
 

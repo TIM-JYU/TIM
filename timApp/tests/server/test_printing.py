@@ -3,10 +3,10 @@ import json
 import urllib.parse
 import warnings
 
-from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
-from timApp.responsehelper import to_json_str
+from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
+from timApp.util.flask.responsehelper import to_json_str
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.utils import exclude_keys
+from timApp.util.utils import exclude_keys, EXAMPLE_DOCS_PATH
 
 
 class PrintingTest(TimRouteTest):
@@ -60,7 +60,7 @@ $body$
         result = self.get_no_warn(expected_url)
         self.assertEqual('Hello 1\n\nHello 2', result)
         t2 = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/base',
-                             from_file='example_docs/templates/print_base.md')
+                             from_file=f'{EXAMPLE_DOCS_PATH}/templates/print_base.md')
         tj2 = json.loads(to_json_str(t2))
         result = self.get(f'/print/templates/{d.path}')
         self.assert_list_of_dicts_subset(result, map(lambda x: exclude_keys(x, 'modified'), [tj, tj2]))

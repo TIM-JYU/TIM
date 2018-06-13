@@ -1,6 +1,6 @@
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.models.folder import Folder
+from timApp.document.docentry import DocEntry
+from timApp.folder.folder import Folder
 
 
 class BookmarkTest(TimRouteTest):

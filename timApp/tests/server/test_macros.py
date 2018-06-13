@@ -1,10 +1,10 @@
 """Server tests for xxx."""
-from timApp.markdownconverter import md_to_html
-from timApp.plugin import Plugin
+from timApp.markdown.markdownconverter import md_to_html
+from timApp.plugin.plugin import Plugin
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.user import User
-from timApp.timdb.userutils import grant_view_access
+from timApp.user.user import User
+from timApp.user.userutils import grant_view_access
 
 
 class MacroTest(TimRouteTest):

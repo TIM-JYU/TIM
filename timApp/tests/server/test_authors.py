@@ -1,6 +1,6 @@
 """Server tests for showing authors for paragraphs."""
 from timApp.tests.server.timroutetest import TimRouteTest, get_content
-from timApp.timdb.userutils import grant_edit_access
+from timApp.user.userutils import grant_edit_access
 
 
 class AuthorsTest(TimRouteTest):

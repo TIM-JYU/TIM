@@ -2,9 +2,9 @@ import csv
 import os
 from typing import List, Tuple
 
-from timApp.maintenance.import_accounts import import_accounts
+from timApp.admin.import_accounts import import_accounts
 from timApp.tests.db.timdbtest import TimDbTest
-from timApp.timdb.models.user import User
+from timApp.user.user import User
 
 
 class AccountImportTest(TimDbTest):

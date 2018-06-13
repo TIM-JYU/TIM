@@ -1,6 +1,6 @@
 import unittest
 
-from timApp.documentmodel.attributeparser import AttributeParser
+from timApp.document.attributeparser import AttributeParser
 
 
 class AttributeParserTest(unittest.TestCase):

@@ -1,7 +1,7 @@
 import unittest
 from shutil import rmtree
 
-from fileutils import *
+from funnel.fileutils import *
 
 
 class QueueTest(unittest.TestCase):

@@ -1,13 +1,14 @@
-from timApp.plugin import Plugin
+from timApp.plugin.plugin import Plugin
 from timApp.tests.db.timdbtest import TimDbTest, TEST_USER_1_ID, TEST_USER_2_ID
-from timApp.timdb.models.docentry import DocEntry
+from timApp.document.docentry import DocEntry
+from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
 class PluginTest(TimDbTest):
 
     def test_info(self):
         db = self.get_db()
-        d = DocEntry.create('test', self.get_test_user_1_group_id(), from_file='example_docs/mmcq_example.md')
+        d = DocEntry.create('test', self.get_test_user_1_group_id(), from_file=f'{EXAMPLE_DOCS_PATH}/mmcq_example.md')
         p = None
         for p in d.document.get_tasks():
             p = Plugin.from_paragraph(p)

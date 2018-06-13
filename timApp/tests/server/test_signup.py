@@ -1,13 +1,12 @@
 import responses
 from flask import session
 
-from timApp.routes.login import test_pws
+from timApp.auth.login import test_pws
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
-from timApp.timdb.models.newuser import NewUser
-from timApp.timdb.models.user import User
-from timApp.timdb.models.usergroup import UserGroup
-from timApp.timdb.tim_models import db
+from timApp.user.newuser import NewUser
+from timApp.user.user import User
+from timApp.timdb.sqa import db
 
 
 class TestSignUp(TimRouteTest):

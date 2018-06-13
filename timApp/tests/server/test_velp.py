@@ -12,9 +12,9 @@ Tested routes from velp.py:
   /<int:doc_id>/create_default_velp_group
 """
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.models.folder import Folder
-from timApp.timdb.tim_models import db
+from timApp.document.docentry import DocEntry
+from timApp.folder.folder import Folder
+from timApp.timdb.sqa import db
 
 
 class VelpTest(TimRouteTest):

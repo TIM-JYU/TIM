@@ -1,8 +1,8 @@
 import json
 import shutil
+from typing import Dict, Optional
 
-from fileutils import *
-from typing import Dict, Optional, Tuple
+from funnel.fileutils import *
 
 
 class PersistenceException(Exception):

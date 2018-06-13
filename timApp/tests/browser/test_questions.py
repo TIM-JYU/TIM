@@ -5,10 +5,10 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
 
-from timApp.documentmodel.yamlblock import YamlBlock
+from timApp.document.yamlblock import YamlBlock
 from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text, find_by_ngmodel, find_all_by_ngmodel, \
     find_by_ngclick, ignore_timeout
-from timApp.timdb.models.answer import Answer
+from timApp.answer.answer import Answer
 
 ChoiceList = List[Tuple[str, str]]
 ElementList = List[WebElement]
