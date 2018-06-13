@@ -14,7 +14,10 @@ import {markAsUsed, to} from "../utils";
 markAsUsed(focusMe);
 
 /*
- * Tag database attributes.
+ * Tag database attributes:
+ * block_id = tagged document's id,
+ * expires = tag expiration date and
+ * tag = tag name string.
  */
 export interface ITag {
     block_id: number;
@@ -60,7 +63,8 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     }
 
     /*
-     * Adds tag when Enter is pressed.
+     * Calls tag adding function when Enter is pressed.
+     * @param event Keyboard event.
      */
     public chatEnterPressed(event: KeyboardEvent) {
         if (event.which === 13) {
@@ -74,6 +78,14 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private async updateTags() {
         const docPath = this.resolve.params.path;
         const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${docPath}`, {}));
+        if (err) {
+            this.error = true;
+            this.errorMessage = err.data.error;
+            if (this.actionSuccessful) {
+                this.actionSuccessful = false;
+            }
+            return;
+        }
         if (response) {
             if (this.error) {
                 this.error = false;

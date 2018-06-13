@@ -1,6 +1,7 @@
 """
 Routes related to tags.
 """
+
 from flask import Blueprint
 from flask import abort
 from flask import request
@@ -27,6 +28,8 @@ special_tags = ["kurssi", "projekti", "gradu"]
 def add_tag(doc):
     """
     Adds a tag-document entry into the database.
+    :param doc The target document.
+    :returns Tag adding success response.
     """
     d = DocEntry.find_by_path(doc, try_translation=True)
     if not d:
@@ -48,6 +51,8 @@ def add_tag(doc):
 def remove_tag(doc):
     """
     Removes a tag-document entry from the database.
+    :param doc The target document.
+    :returns Removal success response.
     """
     d = DocEntry.find_by_path(doc, try_translation=True)
     if not d:
@@ -71,7 +76,9 @@ def remove_tag(doc):
 @tags_blueprint.route('/getTags/<path:doc>', methods=["GET"])
 def get_tags(doc):
     """
-    Gets the list of document's tags.
+    Gets the list of a document's tags.
+    :param doc The target document.
+    :returns The list of document's Tag-objects converted into JSON.
     """
     d = DocEntry.find_by_path(doc, try_translation=True)
     if not d:
@@ -84,7 +91,7 @@ def get_tags(doc):
 @tags_blueprint.route('/getDocs')
 def get_tagged_documents():
     """
-    Gets the list of Tag-entries that have a certain tag.
+    Gets a list of Tag-entries that have a certain tag.
     """
     tag_name = request.args.get('tag', '')
     docs = get_documents(filter_user=get_current_user_object(),

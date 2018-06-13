@@ -38,7 +38,6 @@
                                          item-type="document">
                             </create-item>
                         </bootstrap-panel>
-                        <tagged-document-list ng-if="$ctrl.docListOpen"></tagged-document-list>
                     {% elif session.altlogin == "signup2" %}
                         <form method="POST" action="/altsignup2">
                             <p>
@@ -79,7 +78,12 @@
                     {% endif %}
                 </div>
             </div>
-
+            <div class="row">
+                <div class="col-md-12">
+                    <tagged-document-list ng-if="$ctrl.docListOpen"
+                    close-fn="$ctrl.disableDocList()"></tagged-document-list>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-3 col-md-offset-3">
                     <h4>TIM</h4>
