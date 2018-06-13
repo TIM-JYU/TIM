@@ -29,7 +29,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private static $inject = ["$element", "$scope"];
     private document: IItem;
     private tagName: string;
-    private tagsList: ITag[];
+    private tagsList: ITag[]; // List of tags the document has.
     private expires: Moment;
     private actionSuccessful: boolean = false;
     private error: boolean = false;
@@ -37,6 +37,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private successMessage: string;
     private f: IFormController;
     private focusName: boolean;
+    private defaultTags = ["kurssi", "projekti", "gradu"];
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -175,7 +176,9 @@ registerDialogComponent("timEditTags",
                 <div class="col-sm-8">
                     <input required focus-me="$ctrl.focusName" tim-short-name ng-model="$ctrl.tagName" name="tagField"
                            type="text" title="Write tag name" ng-keypress="$ctrl.chatEnterPressed($event)"
-                           class="form-control" id="name" placeholder="Tag name" autocomplete="off">
+                           class="form-control" id="name" placeholder="Tag name" autocomplete="off"
+                           uib-typeahead="tag as tag for tag in $ctrl.defaultTags" typeahead-show-hint="true"
+                           typeahead-min-length="0">
                 </div>
                 <tim-error-message></tim-error-message>
             </div>
