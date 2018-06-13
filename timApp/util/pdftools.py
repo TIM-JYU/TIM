@@ -129,7 +129,7 @@ class StampDataInvalidError(PdfError):
     Raised if stamp data type is wrong.
     """
 
-    def __init__(self, reason: str = "", item = ""):
+    def __init__(self, reason = "", item=""):
         """
         :param reason: The error cause explanation.
         :param item: Item or data that caused the error.
@@ -141,21 +141,21 @@ class StampDataInvalidError(PdfError):
         return f"{self.reason}: {repr(self.item)}"
 
 
-class StampDataMissingKeyError(PdfError):
+class StampDataMissingAttributeError(PdfError):
     """
     Raised when stamp data is missing one or more required keys.
     """
 
-    def __init__(self, key: str = "", item: Union[str, dict] = ""):
+    def __init__(self, key: str = "", item: str =""):
         """
         :param key: The missing key.
-        :param item: The dict item which caused the error.
+        :param item: Item as string.
         """
         self.key = key
         self.item = item
 
     def __str__(self):
-        return f"Key {repr(self.key)} not found: {repr(self.item)}"
+        return f"Attribute {repr(self.key)} not found: {repr(self.item)}"
 
 
 class StampDataEmptyError(PdfError):
@@ -205,6 +205,37 @@ class StampFormatInvalidError(PdfError):
 
     def __str__(self):
         return f"Incorrect stamp format: {self.stampformat}"
+
+
+##############################################################################
+# Data objects:
+
+class AttachmentStampData:
+    """
+    Contains data to create stamp for one attachmnet.
+    """
+    def __init__(self, file_path: str="",
+                 date: str="",
+                 attachment: str = "",
+                 issue: Union[str, int] = "",
+                 text: str = ""):
+        """
+        Attachment data, for example: '/files/123/liite-1.pdf', '12.3.2018', 'B', '2'.
+        :param file_path: Attachment file path.
+        :param date: Meeting date.
+        :param attachment: Letter to separate attachments in same list.
+        :param issue: List/issue number.
+        :param text: Alternative for group of date, issue and attachment.
+        """
+
+        self.file = file_path
+        self.date = date
+        self.issue = str(issue).replace('"', '').replace("'", "").strip()
+        self.attachment = attachment.replace('"', '').replace("'", "").strip()
+        self.text = text
+
+    def __str__(self):
+        return [self.file, self.date, self.issue, self.attachment, self.text]
 
 
 ##############################################################################
@@ -267,7 +298,7 @@ def check_pdf_validity(pdf_path: str) -> None:
         raise AttachmentNotAPdfError(pdf_path)
 
 
-def get_stamp_text(item: dict, text_format: str) -> str:
+def get_stamp_text(item: AttachmentStampData, text_format: str) -> str:
     """
     Gives formatted stamp text; note: may not work properly with non-ascii.
     :param item: Dictionary with 'date','attachment' and 'issue' keys
@@ -279,23 +310,23 @@ def get_stamp_text(item: dict, text_format: str) -> str:
     # Normal formatted stamp data takes precedence.
     try:
         return text_format.format(
-            file=get_base_filename(escape_tex(item['file'])),
-            date=escape_tex(item['date']),
-            attachment=escape_tex(item['attachment']),
-            issue=escape_tex(item['issue']))
+            file=get_base_filename(escape_tex(item.file)),
+            date=escape_tex(item.date),
+            attachment=escape_tex(item.attachment),
+            issue=escape_tex(item.issue))
 
     # If stamp data has only a free-form text, use that.
     except KeyError:
         try:
-            return item['text']
-        # If dictionary doesn't have 'text'-key either;
+            return item.text
+        # If object doesn't have 'text'-attribute either;
         # normally this part is obsolete, since checks have been done before.
         except KeyError:
-            raise StampDataMissingKeyError('text', item)
+            raise StampDataMissingAttributeError('text', "")
 
-    # If input data wasn't a dictionary.
+    # If input data wasn't right kind of object..
     except TypeError:
-        raise StampDataInvalidError("wrong type", item)
+        raise StampDataInvalidError("wrong type", "")
     # If text_format uses numbers.
     except IndexError:
         raise StampFormatInvalidError(text_format)
@@ -430,36 +461,37 @@ def remove_temp_files(
     # return fail_list
 
 
-def check_stamp_data_validity(stamp_data: List[dict]) -> None:
+def check_stamp_data_validity(stamp_data_list: List[AttachmentStampData]) -> None:
     """
     Raises a specific error if stamp_data is invalid.
-    :param stamp_data: Dictionary list containing data of the stamps.
+    :param stamp_data_list: Object containing data of the stamps.
     :return: None, but will raise error if something invalid.
     """
-    # not a list
-    if not isinstance(stamp_data, list):
-        raise StampDataInvalidError("is not a list", stamp_data)
     # if empty
-    if not stamp_data:
+    if not stamp_data_list:
         raise StampDataEmptyError()
-    for item in stamp_data:
-        # if there are no dictionaries inside the list
-        if not isinstance(item, dict):
-            raise StampDataInvalidError("is not a dictionary", item)
+    for item in stamp_data_list:
+        # if there are no objects inside the list
+        if not isinstance(item, AttachmentStampData):
+            raise StampDataInvalidError("incorrect format", "")
         # path is always required
-        if "file" not in item:
-            raise StampDataMissingKeyError("file", item)
+        if not item.file:
+            raise StampDataMissingAttributeError("file", "")
         # text or date, attachment & issue are alternatives
-        if "text" not in item:
-            keys = ["date", "attachment", "issue"]
-            for key in keys:
-                if key not in item:
-                    raise StampDataMissingKeyError(key, item)
-                if not item[key]:
-                    raise StampDataInvalidError("missing value: " + key, item)
-                if len(item[key]) > stamp_param_max_length:
-                    raise StampDataInvalidError("param too long: " + key, item)
-        check_pdf_validity(item["file"])
+        if not item.text:
+            if not item.date:
+                raise StampDataMissingAttributeError("date", "")
+            if len(item.date) > stamp_param_max_length:
+                raise StampDataInvalidError("param too long: " + "date", "")
+            if not item.attachment:
+                raise StampDataMissingAttributeError("attachment", "")
+            if len(item.attachment) > stamp_param_max_length:
+                raise StampDataInvalidError("param too long: " + "attachment", "")
+            if not item.issue:
+                raise StampDataMissingAttributeError("issue", "")
+            if len(item.issue) > stamp_param_max_length:
+                raise StampDataInvalidError("param too long: " + "issue", "")
+        check_pdf_validity(item.file)
 
 
 def is_url(string: str) -> bool:
@@ -506,38 +538,15 @@ def get_base_filename(path: str, no_extension: bool = False) -> str:
         return os_path.basename(path)
 
 
-def attachment_params_to_dict(params: List[str]) -> List[dict]:
-    """
-    Changes list of attachment params to dictionary list that pdftools can use.
-    Sets values to right keys and cleans up extra quotes.
-    :param params: Attachment data as a partially unformatted list.
-    :return: Stamp data formatted for this module's use.
-    """
-    if params.__len__() < 6:
-        raise StampDataInvalidError("Request missing parameters", params)
-
-    date = params[0]
-    stampformat = params[1]
-    # If stampformat is empty (as it's set to be if undefined in pareditor.ts), use default.
-    if not stampformat:
-        stampformat = default_stamp_format
-    attachment = params[3].replace('"', '').replace("'", "").strip()
-    issue = params[4].replace('"', '').replace("'", "").strip()
-    if not date or not attachment or not issue:
-        raise StampDataInvalidError("Request missing parameters", params)
-    # File path isn't available yet.
-    return [{'date': date, 'format': stampformat, 'attachment': attachment, 'issue': issue}]
-
-
 def stamp_pdfs(
-        stamp_data: List[dict],
+        stamp_data: List[AttachmentStampData],
         dir_path: str = temp_folder_default_path,
         stamp_model_path: str = stamp_model_default_path,
         stamp_text_format: str = default_stamp_format) -> List[str]:
     """
     Creates new stamps and stamps the corresponding pdfs based on
     the data-item in dictionary.
-    :param stamp_data: Dict-list containing pdf-names and stamp-contents.
+    :param stamp_data: List of objects containing pdf-names and stamp-contents.
     :param dir_path: Folder for temp files.
     :param stamp_model_path: Tex-file to be used as model for stamps.
     :param stamp_text_format: Formatting for stamp text, with keys:
@@ -561,7 +570,7 @@ def stamp_pdfs(
 
     for item in stamp_data:
         # Names and paths of new files to use as params.
-        item_basename = get_base_filename(item['file'], True)
+        item_basename = get_base_filename(item.file, True)
         item_stamp_name_no_ext = item_basename + "_stamp"
         item_stamp_path = os_path.join(dir_path, item_stamp_name_no_ext + ".pdf")
         item_stamped_name = item_basename + "_stamped.pdf"
@@ -572,7 +581,7 @@ def stamp_pdfs(
                      item_stamp_name_no_ext,
                      get_stamp_text(item, stamp_text_format),
                      remove_pdflatex_files=True)
-        stamp_pdf(item['file'],
+        stamp_pdf(item.file,
                   item_stamp_path,
                   item_stamped_path,
                   remove_stamp=True)

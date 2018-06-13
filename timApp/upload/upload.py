@@ -12,21 +12,24 @@ from flask import Blueprint, request, send_file
 from flask import abort
 from werkzeug.utils import secure_filename
 
-import timApp.util.pdftools
 from timApp.auth.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
     grant_access_to_session_users, get_doc_or_abort, verify_edit_access
 from timApp.auth.accesstype import AccessType
-from timApp.auth.sessioninfo import get_current_user_group, logged_in, get_current_user_object
+from timApp.auth.sessioninfo import get_current_user_group, logged_in
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.documents import import_document
-from timApp.item.block import Block, BlockType
+from timApp.item.block import Block
+from timApp.item.block import BlockType
 from timApp.item.validation import validate_item_and_create, validate_uploaded_document_content
 from timApp.plugin.plugin import Plugin
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo
 from timApp.util.flask.responsehelper import json_response
+from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, PdfError, stamp_pdfs, \
+    get_base_filename
 
 upload = Blueprint('upload',
                    __name__,
@@ -144,11 +147,19 @@ def upload_file():
         if autostamp:
             # Only go here if attachment params are valid enough and autostamping is valid and true
             # because otherwise normal uploading may be interrupted.
+            if len(attachment_params) < 6:
+                raise StampDataInvalidError("Request missing parameters", attachment_params)
             try:
-                stamp_data = timApp.util.pdftools.attachment_params_to_dict(attachment_params)
-                return upload_and_stamp_attachment(d, file, stamp_data)
+                stampformat = attachment_params[1]
+                # If stampformat is empty (as it's set to be if undefined in pareditor.ts), use default.
+                if not stampformat:
+                    stampformat = default_stamp_format
+                stamp_data = AttachmentStampData(date=attachment_params[0],
+                                                 attachment=attachment_params[3],
+                                                 issue=attachment_params[4])
+                return upload_and_stamp_attachment(d, file, stamp_data, stampformat)
             # If attachment isn't a pdf, gives an error too (since it's in 'showPdf' plugin)
-            except timApp.util.pdftools.PdfError as e:
+            except PdfError as e:
                 abort(400, str(e))
 
 
@@ -163,15 +174,16 @@ def upload_document(folder, file):
     return json_response({'id': doc.doc_id})
 
 
-def upload_and_stamp_attachment(d: DocInfo, file, stamp_data):
+def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampData, stampformat: str):
     """
     Uploads the file and makes a stamped version of it into the same folder.
     :param file: The file to upload and stamp.
-    :param stamp_data: Stamp data (attachment and list ids and format) without the path.
+    :param stamp_data: Stamp data (attachment and list ids) without the path.
+    :param stampformat: Formatting of stamp text.
     :return: Json response containing the stamped file path.
     """
 
-    # TODO: Get this from a global variable.
+    # TODO: Get this from a global variable?
     # Currently multiple changes in different modules are needed
     # if the upload folder is changed.
     attachment_folder = "/tim_files/blocks/files"
@@ -179,23 +191,16 @@ def upload_and_stamp_attachment(d: DocInfo, file, stamp_data):
 
     f = save_file_and_grant_access(d, content, file, BlockType.File)
 
-    # If format not set or invalid, default format set in pdftools will be used.
-    # Additional check is done inside pdftools-module,
-    # since this may not work correctly.
-    try:
-        stamp_format = stamp_data[0]['format']
-    except:
-        stamp_format = timApp.util.pdftools.default_stamp_format
-
     # Add the uploaded file path (the one to stamp) to stamp data.
-    stamp_data[0]['file'] = os_path.join(attachment_folder, f"{f.id}/{f.filename}")
 
-    output = timApp.util.pdftools.stamp_pdfs(
-            stamp_data,
-            dir_path=os_path.join(attachment_folder, str(f.id) + "/"),
-            stamp_text_format=stamp_format)[0]
+    stamp_data.file = os_path.join(attachment_folder, f"{f.id}/{f.filename}")
 
-    stamped_filename = timApp.util.pdftools.get_base_filename(output)
+    output = stamp_pdfs(
+        [stamp_data],
+        dir_path=os_path.join(attachment_folder, str(f.id) + "/"),
+        stamp_text_format=stampformat)[0]
+
+    stamped_filename = get_base_filename(output)
 
     # TODO: In case of raised errors give proper no-upload response?
     return json_response({"file": f"{str(f.id)}/{stamped_filename}"})
