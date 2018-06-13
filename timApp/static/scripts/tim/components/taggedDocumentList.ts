@@ -75,9 +75,12 @@ timApp.component("taggedDocumentList", {
     <div>
     <div class="input-group">
         <input ng-model="$ctrl.tagFilter" name="filterField" ng-keypress="$ctrl.chatEnterPressed($event)"
-                           type="text" title="Search documents with a tag"
+                           type="text" title="Search other documents with a tag"
+                           placeholder="Search other documents by entering a tag"
                            class="form-control" id="tagFilterField" autocomplete="off">
-        <span class="input-group-addon btn btn-default" ng-click="$ctrl.searchClicked()">
+        <span class="input-group-addon btn btn-default"
+                            ng-click="$ctrl.searchClicked()"
+                            title="Search other documents with a tag">
             <i class="glyphicon glyphicon-search"></i>
         </span>
     </div>
