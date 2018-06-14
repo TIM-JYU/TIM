@@ -235,7 +235,7 @@ class AttachmentStampData:
         self.text = text
 
     def __str__(self):
-        return [self.file, self.date, self.issue, self.attachment, self.text]
+        return f"{{{self.file}, {self.date}, {self.issue}, {self.attachment}, {self.text}}}"
 
 
 ##############################################################################
@@ -316,7 +316,7 @@ def get_stamp_text(item: AttachmentStampData, text_format: str) -> str:
             issue=escape_tex(item.issue))
 
     # If stamp data has only a free-form text, use that.
-    # TODO: Untested, because stamping initiated from TIM doesn't use 'text'.
+    # TODO: Untested, because the stamping initiated from TIM doesn't use 'text'.
     except (AttributeError, ValueError, SyntaxError):
         try:
             return item.text
@@ -325,7 +325,7 @@ def get_stamp_text(item: AttachmentStampData, text_format: str) -> str:
         except (AttributeError, ValueError, SyntaxError):
             raise StampDataMissingAttributeError('text', "")
 
-    # If input data wasn't right kind of object..
+    # If input data wasn't right kind of object.
     except TypeError:
         raise StampDataInvalidError("wrong type", "")
     # If text_format uses numbers.
@@ -342,12 +342,10 @@ def create_stamp(
     """
     Creates a stamp pdf-file with given text into temp folder.
     :param model_path: Model stamp tex-file's complete path; contains
-           '%TEXT_HERE' to locate the text area.
+           '%TEXT_HERE' to locate the stamp text area.
     :param work_dir: The folder where stamp output and temp files will be.
     :param stamp_name: Name of the stamp and temp files (no file extension needed).
-           Note: if filename contains underscores besides the addition '_stamp'
-           pdflatex may not work correctly!
-    :param text: Text displayed in the stamp.
+    :param text: LaTeX-escaped text displayed in the stamp.
     :param remove_pdflatex_files: If true, newly created .aux, .log, .out and
            .tex files will be deleted.
     :return: Complete path of the created stamp pdf-file.
@@ -376,7 +374,7 @@ def create_stamp(
     # Directs pdflatex text flood to the log-file pdflatex will create anyway.
     with open(os_path.join(work_dir, stamp_name + ".log"), "a") as pdflatex_log:
         try:
-            # Pdflatex can't write files outside of work dir so use cwd.
+            # Pdflatex can't write files outside of the work dir so uses cwd.
             rc = subprocess_run(
                 args,
                 stdout=pdflatex_log,
@@ -388,7 +386,7 @@ def create_stamp(
         except:
             raise SubprocessError(" ".join(args))
 
-    # Optional; delete the files pdflatex created, except the stamp-pdf file,
+    # Optional; deletes the files pdflatex created, except the stamp-pdf file,
     # which is obviously needed for stamping.
     if remove_pdflatex_files:
         remove_temp_files(
@@ -465,33 +463,33 @@ def remove_temp_files(
 def check_stamp_data_validity(stamp_data_list: List[AttachmentStampData]) -> None:
     """
     Raises a specific error if stamp_data is invalid.
-    :param stamp_data_list: Object containing data of the stamps.
+    :param stamp_data_list: List of objects containing the stamp data.
     :return: None, but will raise error if something invalid.
     """
-    # if empty
+    # If empty list.
     if not stamp_data_list:
         raise StampDataEmptyError()
     for item in stamp_data_list:
-        # if there are no objects inside the list
+        # If there are no objects inside the list.
         if not isinstance(item, AttachmentStampData):
-            raise StampDataInvalidError("incorrect format", "")
-        # path is always required
+            raise StampDataInvalidError("incorrect format", str(item))
+        # Path is always required.
         if not item.file:
-            raise StampDataMissingAttributeError("file", "")
-        # text or date, attachment & issue are alternatives
+            raise StampDataMissingAttributeError("file", str(item))
+        # Text or date, attachment & issue are alternatives.
         if not item.text:
             if not item.date:
-                raise StampDataMissingAttributeError("date", "")
+                raise StampDataMissingAttributeError("date", str(item))
             if len(item.date) > stamp_param_max_length:
-                raise StampDataInvalidError("param too long: " + "date", "")
+                raise StampDataInvalidError("parameter too long: " + "date", str(item))
             if not item.attachment:
-                raise StampDataMissingAttributeError("attachment", "")
+                raise StampDataMissingAttributeError("attachment", str(item))
             if len(item.attachment) > stamp_param_max_length:
-                raise StampDataInvalidError("param too long: " + "attachment", "")
+                raise StampDataInvalidError("parameter too long: " + "attachment", str(item))
             if not item.issue:
-                raise StampDataMissingAttributeError("issue", "")
+                raise StampDataMissingAttributeError("issue", str(item))
             if len(item.issue) > stamp_param_max_length:
-                raise StampDataInvalidError("param too long: " + "issue", "")
+                raise StampDataInvalidError("parameter too long: " + "issue", str(item))
         check_pdf_validity(item.file)
 
 
@@ -547,7 +545,7 @@ def stamp_pdfs(
     """
     Creates new stamps and stamps the corresponding pdfs based on
     the data in a list of AttachmentStampData objects.
-    :param stamp_data: List of objects containing pdf-names and stamp-contents.
+    :param stamp_data: List of objects containing pdf-paths and stamp-attributes.
     :param dir_path: Folder for temp files.
     :param stamp_model_path: Tex-file to be used as model for stamps.
     :param stamp_text_format: Formatting for stamp text, with attributes:
