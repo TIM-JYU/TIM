@@ -88,6 +88,20 @@ def get_tags(doc):
     return json_response(tags)
 
 
+@tags_blueprint.route('/getAllTags', methods=["GET"])
+def get_all_tags():
+    """
+    Gets the list of all unique tags used in any document.
+    :returns The list of all unique tag names.
+    """
+    tags = Tag.query.all()
+    tags_unique = set(special_tags)
+    for tag in tags:
+        tags_unique.add(tag.tag)
+
+    return json_response(list(tags_unique))
+
+
 @tags_blueprint.route('/getDocs')
 def get_tagged_documents():
     """

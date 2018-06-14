@@ -40,7 +40,8 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private successMessage: string;
     private f: IFormController;
     private focusName: boolean;
-    private defaultTags = ["kurssi", "projekti", "gradu"];
+    private allTags: string[]; // List of all unique tags.
+    private allUnusedTags: string[]; // List of existing tags not used in the doc.
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -49,9 +50,9 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     /*
      * Show tag list when dialog loads and focus on tag-field.
      */
-    $onInit() {
+    async $onInit() {
         super.$onInit();
-        this.updateTags();
+        await this.updateTags();
         this.focusName = true;
     }
 
@@ -66,9 +67,32 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      * Calls tag adding function when Enter is pressed.
      * @param event Keyboard event.
      */
-    public chatEnterPressed(event: KeyboardEvent) {
+    async chatEnterPressed(event: KeyboardEvent) {
         if (event.which === 13) {
-            this.addTagClicked();
+            await this.addTagClicked();
+        }
+    }
+
+    /*
+     * Gets all unique tags in the database, always including special tags.
+     */
+    private async getUniqueTags() {
+        const [err, response] = await to($http.get<string[]>(`/tags/getAllTags`, {}));
+        if (err) {
+            this.error = true;
+            this.errorMessage = err.data.error;
+            if (this.actionSuccessful) {
+                this.actionSuccessful = false;
+            }
+            return;
+        }
+        if (response) {
+            if (this.error) {
+                this.error = false;
+            }
+
+            this.allTags = response.data;
+            return;
         }
     }
 
@@ -91,6 +115,16 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
                 this.error = false;
             }
             this.tagsList = response.data;
+
+            // Get all globally used tags and remove document tags from them for tag suggestion list.
+            await this.getUniqueTags();
+            let usedTags: string[];
+            this.allUnusedTags = [];
+            usedTags = [];
+            this.tagsList.forEach((tag) => usedTags.push(tag.tag));
+            // Array group difference operation a1 \ a2.
+            // For example: a1 = ['a','b','c'] and a2 = ['a','b','d'] returns ['c'].
+            this.allUnusedTags = this.allTags.filter((tag) => usedTags.indexOf(tag) < 0);
             return;
         }
     }
@@ -111,7 +145,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
                 this.actionSuccessful = false;
             }
             // Tag-list needs to be refreshed each time it has been changed.
-            this.updateTags();
+            await this.updateTags();
             return;
         }
         if (response) {
@@ -120,7 +154,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             if (this.error) {
                 this.error = false;
             }
-            this.updateTags();
+            await this.updateTags();
             return;
         }
     }
@@ -150,7 +184,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             if (this.error) {
                 this.error = false;
             }
-            this.updateTags();
+            await this.updateTags();
             this.tagName = "";
             this.f.$setPristine();
             this.focusName = true;
@@ -189,7 +223,7 @@ registerDialogComponent("timEditTags",
                     <input required focus-me="$ctrl.focusName" tim-short-name ng-model="$ctrl.tagName" name="tagField"
                            type="text" title="Write tag name" ng-keypress="$ctrl.chatEnterPressed($event)"
                            class="form-control" id="name" placeholder="Tag name" autocomplete="off"
-                           uib-typeahead="tag as tag for tag in $ctrl.defaultTags" typeahead-show-hint="true"
+                           uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue"
                            typeahead-min-length="0">
                 </div>
                 <tim-error-message></tim-error-message>
