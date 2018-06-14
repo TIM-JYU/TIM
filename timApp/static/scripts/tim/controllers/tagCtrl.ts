@@ -7,7 +7,7 @@ import {Moment} from "moment";
 import * as focusMe from "tim/directives/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IParResponse} from "../edittypes";
-import {IItem} from "../IItem";
+import {IItem, ITag} from "../IItem";
 import {$http} from "../ngimport";
 import {markAsUsed, to} from "../utils";
 
@@ -19,11 +19,6 @@ markAsUsed(focusMe);
  * expires = tag expiration date and
  * tag = tag name string.
  */
-export interface ITag {
-    block_id: number;
-    expires: Moment;
-    tag: string;
-}
 
 /*
  * Tag editing dialog's controller.

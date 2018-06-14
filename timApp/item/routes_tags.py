@@ -6,15 +6,17 @@ from flask import Blueprint
 from flask import abort
 from flask import request
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload, raiseload
 from sqlalchemy.orm.exc import UnmappedInstanceError
 
 from timApp.auth.accesshelper import verify_edit_access, verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
+from timApp.item.block import Block
 from timApp.item.tag import Tag
 from timApp.item.validation import has_special_chars
 from timApp.timdb.sqa import db
-from timApp.util.flask.requesthelper import verify_json_params
+from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import ok_response, json_response
 
 tags_blueprint = Blueprint('tags',
@@ -38,8 +40,8 @@ def add_tag(doc):
     verify_edit_access(d)
     tags, = verify_json_params('tags')
     expires, = verify_json_params('expires', require=False)
-    check_special_tag_rights(tags)
     for tag in tags:
+        check_special_tag_rights(tag)
         if has_special_chars(tag):
             abort(400, "Tags can only contain letters a-z, numbers, underscores and dashes.")
         d.block.tags.append(Tag(tag=tag, expires=expires))
@@ -109,10 +111,21 @@ def get_all_tags():
 def get_tagged_documents():
     """
     Gets a list of Tag-entries that have a certain tag.
+    Can search exact or partial words.
     """
     tag_name = request.args.get('tag', '')
-    docs = get_documents(filter_user=get_current_user_object(),
-                         custom_filter=DocEntry.id.in_(Tag.query.filter_by(tag=tag_name).with_entities(Tag.block_id)))
+    exact_search = get_option(request, 'exact_search', default=False, cast=bool)
+    if exact_search:
+        docs = get_documents(filter_user=get_current_user_object(),
+                             custom_filter=DocEntry.id.in_(Tag.query.filter_by(tag=tag_name).
+                                                           with_entities(Tag.block_id)))
+    else:
+        tag_name = f"%{tag_name}%"
+        docs = get_documents(filter_user=get_current_user_object(),
+                             custom_filter=DocEntry.id.in_(Tag.query.filter(Tag.tag.like(tag_name)).
+                                                           with_entities(Tag.block_id)),
+                             query_options=joinedload(DocEntry._block).joinedload(Block.tags))
+
     return json_response(docs)
 
 

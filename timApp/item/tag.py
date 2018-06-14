@@ -19,3 +19,6 @@ class Tag(db.Model):
     @staticmethod
     def find_by_id(block_id: int) -> List['Tag']:
         return Tag.query.filter_by(block_id=block_id).all()
+
+    def __json__(self):
+        return ['block_id', 'tag', 'expires']

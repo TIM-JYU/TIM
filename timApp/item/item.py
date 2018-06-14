@@ -2,6 +2,7 @@ from itertools import accumulate
 
 from flask import current_app
 from sqlalchemy import tuple_, func
+from sqlalchemy.orm.base import instance_state
 
 from timApp.timdb.exceptions import TimDbException
 from timApp.item.block import Block, BlockType
@@ -120,7 +121,8 @@ class Item(ItemBase):
                 'owner': self.owner,
                 'rights': self.rights,
                 'unpublished': self.block.is_unpublished() if self.block else False,
-                'public': self.public
+                'public': self.public,
+                **({'tags': self.block.tags} if self.block and 'tags' not in instance_state(self.block).unloaded else {})
                 }
 
     def get_relative_path(self, path: str):
