@@ -143,19 +143,19 @@ class StampDataInvalidError(PdfError):
 
 class StampDataMissingAttributeError(PdfError):
     """
-    Raised when stamp data is missing one or more required keys.
+    Raised when stamp data is missing one or more required attributes.
     """
 
-    def __init__(self, key: str = "", item: str =""):
+    def __init__(self, attribute: str = "", item: str = ""):
         """
-        :param key: The missing key.
+        :param attribute: The missing attribute.
         :param item: Item as string.
         """
-        self.key = key
+        self.attribute = attribute
         self.item = item
 
     def __str__(self):
-        return f"Attribute {repr(self.key)} not found: {repr(self.item)}"
+        return f"Attribute {repr(self.attribute)} not found: {repr(self.item)}"
 
 
 class StampDataEmptyError(PdfError):
@@ -301,11 +301,11 @@ def check_pdf_validity(pdf_path: str) -> None:
 def get_stamp_text(item: AttachmentStampData, text_format: str) -> str:
     """
     Gives formatted stamp text; note: may not work properly with non-ascii.
-    :param item: Dictionary with 'date','attachment' and 'issue' keys
+    :param item: AttachmentStampData with 'date','attachment' and 'issue' attributes
            or alternatively just 'text'.
     :param text_format: Formatting for filename, meeting date,
            attachment letter and issue/list number.
-    :return: Either contents of 'text' key or a formatted string.
+    :return: Either contents of 'text' attribute or a formatted string.
     """
     # Normal formatted stamp data takes precedence.
     try:
@@ -316,12 +316,13 @@ def get_stamp_text(item: AttachmentStampData, text_format: str) -> str:
             issue=escape_tex(item.issue))
 
     # If stamp data has only a free-form text, use that.
-    except KeyError:
+    # TODO: Untested, because stamping initiated from TIM doesn't use 'text'.
+    except (AttributeError, ValueError, SyntaxError):
         try:
             return item.text
         # If object doesn't have 'text'-attribute either;
         # normally this part is obsolete, since checks have been done before.
-        except KeyError:
+        except (AttributeError, ValueError, SyntaxError):
             raise StampDataMissingAttributeError('text', "")
 
     # If input data wasn't right kind of object..
@@ -367,7 +368,7 @@ def create_stamp(
                 else:
                     stamp_temp.write(line)
         # If stamp_model file is broken.
-        # TODO: check if failure to write a new stamp file raises proper error
+        # TODO: Check if failure to write a new stamp file raises proper error.
         except UnicodeDecodeError:
             raise ModelStampInvalidError(model_path)
     args = ["pdflatex", stamp_name]
@@ -545,26 +546,22 @@ def stamp_pdfs(
         stamp_text_format: str = default_stamp_format) -> List[str]:
     """
     Creates new stamps and stamps the corresponding pdfs based on
-    the data-item in dictionary.
+    the data in a list of AttachmentStampData objects.
     :param stamp_data: List of objects containing pdf-names and stamp-contents.
     :param dir_path: Folder for temp files.
     :param stamp_model_path: Tex-file to be used as model for stamps.
-    :param stamp_text_format: Formatting for stamp text, with keys:
+    :param stamp_text_format: Formatting for stamp text, with attributes:
             file, date, attachment and issue.
     :return: List of stamped pdf paths.
     """
-    # TODO: Create a new class for stamp_data.
-
     stamped_pdfs = []
 
     # Check if temp-folder exists.
     if not (os_path.isdir(dir_path) and os_path.exists(dir_path)):
         raise TempFolderNotFoundError(dir_path)
-
     # Check if model stamp exists.
     if not os_path.exists(stamp_model_path):
         raise ModelStampMissingError(stamp_model_path)
-
     # Checks multiple potential problems and raises error if invalid.
     check_stamp_data_validity(stamp_data)
 

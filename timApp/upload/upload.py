@@ -35,7 +35,6 @@ upload = Blueprint('upload',
                    __name__,
                    url_prefix='')
 
-
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -44,6 +43,9 @@ def allowed_file(filename):
 DOC_EXTENSIONS = ['txt', 'md', 'markdown']
 PIC_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
 ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
+
+# The folder for stamped and original pdf-files.
+default_attachment_folder = "/tim_files/blocks/files"
 
 
 def get_mimetype(p):
@@ -178,15 +180,12 @@ def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampDat
     """
     Uploads the file and makes a stamped version of it into the same folder.
     :param file: The file to upload and stamp.
-    :param stamp_data: Stamp data (attachment and list ids) without the path.
+    :param stamp_data: Stamp data object (attachment and list ids) without the path.
     :param stampformat: Formatting of stamp text.
     :return: Json response containing the stamped file path.
     """
 
-    # TODO: Get this from a global variable?
-    # Currently multiple changes in different modules are needed
-    # if the upload folder is changed.
-    attachment_folder = "/tim_files/blocks/files"
+    attachment_folder = default_attachment_folder
     content = file.read()
 
     f = save_file_and_grant_access(d, content, file, BlockType.File)
