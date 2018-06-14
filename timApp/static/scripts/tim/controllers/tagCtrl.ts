@@ -168,7 +168,10 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             return;
         }
         const docPath = this.resolve.params.path;
-        const data = {tag: this.tagName, expires: this.expires};
+        let input_tags: string[];
+        input_tags = [];
+        this.tagName.split(",").forEach((tag) => input_tags.push(tag.trim()));
+        const data = {tags: input_tags, expires: this.expires};
         const [err, response] = await to($http.post<IParResponse>(`/tags/add/${docPath}`, data));
         if (err) {
             this.error = true;
@@ -180,7 +183,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         }
         if (response) {
             this.actionSuccessful = true;
-            this.successMessage = "Tag '" + this.tagName + "' successfully added.";
+            this.successMessage = "'" + this.tagName + "' successfully added.";
             if (this.error) {
                 this.error = false;
             }
@@ -214,15 +217,16 @@ registerDialogComponent("timEditTags",
                 </li>
             </div>
         </ul>
-        <h4>Add new tag</h4>
+        <h4>Add new tags</h4>
         <form name="$ctrl.f" class="form-horizontal">
             <div class="form-group" tim-error-state
                  ng-class="{'has-error': !$ctrl.f.nameField.$pristine && $ctrl.f.nameField.$error.required}">
                 <label for="name" class="col-sm-4 control-label">Tag name:</label>
                 <div class="col-sm-8">
-                    <input required focus-me="$ctrl.focusName" tim-short-name ng-model="$ctrl.tagName" name="tagField"
-                           type="text" title="Write tag name" ng-keypress="$ctrl.chatEnterPressed($event)"
-                           class="form-control" id="name" placeholder="Tag name" autocomplete="off"
+                    <input required focus-me="$ctrl.focusName" ng-model="$ctrl.tagName" name="tagField"
+                           type="text" title="Write tag names separated by commas"
+                           ng-keypress="$ctrl.chatEnterPressed($event)" autocomplete="off"
+                           class="form-control" id="name" placeholder="Tag names separated by commas"
                            uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue"
                            typeahead-min-length="0">
                 </div>

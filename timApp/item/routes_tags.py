@@ -12,6 +12,7 @@ from timApp.auth.accesshelper import verify_edit_access, verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.item.tag import Tag
+from timApp.item.validation import has_special_chars
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import ok_response, json_response
@@ -35,11 +36,13 @@ def add_tag(doc):
     if not d:
         abort(404)
     verify_edit_access(d)
-    tag, = verify_json_params('tag')
+    tags, = verify_json_params('tags')
     expires, = verify_json_params('expires', require=False)
-    check_special_tag_rights(tag)
-
-    d.block.tags.append(Tag(tag=tag, expires=expires))
+    check_special_tag_rights(tags)
+    for tag in tags:
+        if has_special_chars(tag):
+            abort(400, "Tags can only contain letters a-z, numbers, underscores and dashes.")
+        d.block.tags.append(Tag(tag=tag, expires=expires))
     try:
         db.session.commit()
     except IntegrityError:
