@@ -47,6 +47,9 @@ class TaggedDocumentListCtrl implements IController {
      * If false will also search for partial matches.
      */
     private async getDocumentsByTag(tagName: string, exactMatch: boolean) {
+        // Changes tag in input field to this in case the tagName is different.
+        this.tagFilter = tagName;
+
         const response = await $http<ITaggedItem[]>({
             method: "GET",
             url: "/tags/getDocs",
@@ -106,7 +109,9 @@ timApp.component("taggedDocumentList", {
     <ul ng-switch-default>
         <li ng-repeat="doc in $ctrl.docList">
             <a href="view/{{doc.path}}">{{doc.title}}</a>
-            <span ng-repeat="tag in doc.tags" ><span class="btn-primary btn-xs">{{tag.tag}}</span>&nbsp;</span>
+            <span ng-repeat="tag in doc.tags" ><span class="btn-primary btn-xs" 
+            ng-click="$ctrl.getDocumentsByTag(tag.tag, $ctrl.exactMatch)"
+            title="Search documents with '{{tag.tag}}'">{{tag.tag}}</span>&nbsp;</span>
         </li>
     </ul>
     <span ng-switch-when="0">No documents found!</span>
