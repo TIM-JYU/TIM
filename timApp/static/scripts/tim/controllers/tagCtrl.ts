@@ -10,7 +10,9 @@ import {IParResponse} from "../edittypes";
 import {IItem, ITag} from "../IItem";
 import {$http} from "../ngimport";
 import {markAsUsed, to} from "../utils";
+import * as tagLabel from "../components/tagLabel";
 
+markAsUsed(tagLabel);
 markAsUsed(focusMe);
 
 /*
@@ -37,6 +39,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private focusName: boolean;
     private allTags: string[]; // List of all unique tags.
     private allUnusedTags: string[]; // List of existing tags not used in the doc.
+    private tagParsingSeparator = " ";
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -49,6 +52,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         super.$onInit();
         await this.updateTags();
         this.focusName = true;
+        await this.draggable.makeHeightAutomatic();
     }
 
     /*
@@ -117,9 +121,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             this.allUnusedTags = [];
             usedTags = [];
             this.tagsList.forEach((tag) => usedTags.push(tag.tag));
-            // Array group difference operation a1 \ a2.
-            // For example: a1 = ['a','b','c'] and a2 = ['a','b','d'] returns ['c'].
-            this.allUnusedTags = this.allTags.filter((tag) => usedTags.indexOf(tag) < 0);
+            this.allUnusedTags = arrayDifference(this.allTags, usedTags);
             return;
         }
     }
@@ -165,7 +167,11 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         const docPath = this.resolve.params.path;
         let input_tags: string[];
         input_tags = [];
-        this.tagName.split(",").forEach((tag) => input_tags.push(tag.trim()));
+        this.tagName.split(this.tagParsingSeparator).forEach((tag) => {
+            if (tag) {
+                input_tags.push(tag.trim());
+            }
+        });
         const data = {tags: input_tags, expires: this.expires};
         const [err, response] = await to($http.post<IParResponse>(`/tags/add/${docPath}`, data));
         if (err) {
@@ -191,6 +197,18 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     }
 }
 
+/*
+ * Array set difference operation a1 \ a2, i.e. filtering any a2 items from a1.
+ * For example: a1 = ['a','b','c'] and a2 = ['a','b','d'] returns ['c'].
+ * Idea from: https://stackoverflow.com/questions/38498258/typescript-difference-between-two-arrays.
+ * @param a1 Array to filter.
+ * @param a2 Array containing items to filter from a1.
+ * @return Array a1 without any a2 items.
+ */
+function arrayDifference(a1: any[], a2: any[]) {
+    return a1.filter((item) => a2.indexOf(item) < 0);
+}
+
 registerDialogComponent("timEditTags",
     ShowTagController,
     {
@@ -204,7 +222,8 @@ registerDialogComponent("timEditTags",
         <ul>
             <div class="tags-list" ng-repeat="x in $ctrl.tagsList">
                 <li>
-                    {{x.tag}} <span ng-if="x.expires">(Expires: {{x.expires | timdate}})</span>
+                    <tag-label tag-text="x.tag"></tag-label>
+                    <span ng-if="x.expires">(Expires: {{x.expires | timdate}})</span>
                     <a>
                         <span class="glyphicon glyphicon-remove" title="Remove tag"
                               ng-click="$ctrl.removeTag(x)"></span>
@@ -219,10 +238,10 @@ registerDialogComponent("timEditTags",
                 <label for="name" class="col-sm-4 control-label">Tag name:</label>
                 <div class="col-sm-8">
                     <input required focus-me="$ctrl.focusName" ng-model="$ctrl.tagName" name="tagField"
-                           type="text" title="Write tag names separated by commas"
+                           type="text" title="Write tag names separated by spaces"
                            ng-keypress="$ctrl.chatEnterPressed($event)" autocomplete="off"
-                           class="form-control" id="name" placeholder="Tag names separated by commas"
-                           uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue"
+                           class="form-control" id="name" placeholder="Tag names separated by spaces"
+    uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | orderBy:tag | limitTo:12"
                            typeahead-min-length="0">
                 </div>
                 <tim-error-message></tim-error-message>

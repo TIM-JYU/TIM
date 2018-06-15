@@ -1,13 +1,17 @@
 /*
  * A component that shows and filters documents based on their tags.
+ *
+ * Contains a search field with visibility and exact/partial word search.
  */
 
 import {IController} from "angular";
 import {IItem, ITaggedItem} from "../IItem";
-import {to} from "tim/utils";
+import {markAsUsed, to} from "tim/utils";
 import {timApp} from "../app";
 import {showMessageDialog} from "../dialog";
 import {$http, $window} from "../ngimport";
+import * as tagLabel from "./tagLabel";
+markAsUsed(tagLabel);
 
 class TaggedDocumentListCtrl implements IController {
     public tagFilter: string;
@@ -82,10 +86,10 @@ class TaggedDocumentListCtrl implements IController {
 
 timApp.component("taggedDocumentList", {
     bindings: {
-        doc: "<",
         closeFn: "&",
-        showSearch: "<",
+        doc: "<",
         exactMatch: "<",
+        showSearch: "<",
         tagFilter: "@",
     },
     controller: TaggedDocumentListCtrl,
@@ -95,23 +99,25 @@ timApp.component("taggedDocumentList", {
     <div>
     <div class="input-group" ng-if="$ctrl.showSearch">
         <input ng-model="$ctrl.tagFilter" name="filterField" ng-keypress="$ctrl.chatEnterPressed($event)"
-                           type="text" title="Search documents with a tag"
+                           type="text"
+                           title="Search documents by entering a tag"
                            placeholder="Search documents by entering a tag"
                            class="form-control" id="tagFilterField" autocomplete="off"
-                           uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue | limitTo:8"
+                           uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue"
                            typeahead-min-length="0">
         <span class="input-group-addon btn btn-default"
                             ng-click="$ctrl.searchClicked()"
-                            title="Search other documents with a tag">
+                            title="Search documents with tag '{{$ctrl.tagFilter}}'">
             <i class="glyphicon glyphicon-search"></i>
         </span>
     </div>
     <ul ng-switch-default>
         <li ng-repeat="doc in $ctrl.docList">
             <a href="view/{{doc.path}}">{{doc.title}}</a>
-            <span ng-repeat="tag in doc.tags" ><span class="btn-primary btn-xs" 
-            ng-click="$ctrl.getDocumentsByTag(tag.tag, $ctrl.exactMatch)"
-            title="Search documents with '{{tag.tag}}'">{{tag.tag}}</span>&nbsp;</span>
+            <span ng-repeat="tag in doc.tags">
+            <tag-label ng-click="$ctrl.getDocumentsByTag(tag.tag, $ctrl.exactMatch)"
+            title="Search documents with tag '{{tag.tag}}'"
+            tag-text="tag.tag"></tag-label> </span>
         </li>
     </ul>
     <span ng-switch-when="0">No documents found!</span>
