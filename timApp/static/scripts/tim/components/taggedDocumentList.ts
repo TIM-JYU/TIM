@@ -80,7 +80,7 @@ class TaggedDocumentListCtrl implements IController {
      * Calls tag adding function when Enter is pressed.
      * @param event Keyboard event.
      */
-    async chatEnterPressed(event: KeyboardEvent) {
+    async enterPressed(event: KeyboardEvent) {
         if (event.which === 13) {
             await this.getDocumentsByTag(this.tagFilter, this.exactMatch, this.listDocTags);
         }
@@ -114,12 +114,12 @@ timApp.component("taggedDocumentList", {
     ng-switch on="$ctrl.docList.length" close-fn="$ctrl.closeFn()">
     <div>
     <div class="input-group" ng-show="$ctrl.enableSearch">
-        <input ng-model="$ctrl.tagFilter" name="filterField" ng-keypress="$ctrl.chatEnterPressed($event)"
+        <input ng-model="$ctrl.tagFilter" name="filterField" ng-keypress="$ctrl.enterPressed($event)"
                            type="text"
                            title="Search documents by entering a tag"
                            placeholder="Search documents by entering a tag"
                            class="form-control" id="tagFilterField" autocomplete="off"
-                           uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue | limitTo:15"
+                           uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue | limitTo:25"
                            typeahead-min-length="0">
         <span class="input-group-addon btn btn-default"
                             ng-click="$ctrl.searchClicked($ctrl.tagFilter)"

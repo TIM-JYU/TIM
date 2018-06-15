@@ -67,7 +67,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      * Calls tag adding function when Enter is pressed.
      * @param event Keyboard event.
      */
-    async chatEnterPressed(event: KeyboardEvent) {
+    async enterPressed(event: KeyboardEvent) {
         if (event.which === 13) {
             await this.addTagClicked();
         }
@@ -79,18 +79,11 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private async getUniqueTags() {
         const [err, response] = await to($http.get<string[]>(`/tags/getAllTags`, {}));
         if (err) {
-            this.error = true;
             this.errorMessage = err.data.error;
-            if (this.actionSuccessful) {
-                this.actionSuccessful = false;
-            }
-            return;
+        } else {
+            this.errorMessage = "";
         }
         if (response) {
-            if (this.error) {
-                this.error = false;
-            }
-
             this.allTags = response.data;
             return;
         }
@@ -102,18 +95,13 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private async updateTags() {
         const docPath = this.resolve.params.path;
         const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${docPath}`, {}));
+
         if (err) {
-            this.error = true;
             this.errorMessage = err.data.error;
-            if (this.actionSuccessful) {
-                this.actionSuccessful = false;
-            }
-            return;
+        } else {
+            this.errorMessage = "";
         }
         if (response) {
-            if (this.error) {
-                this.error = false;
-            }
             this.tagsList = response.data;
 
             // Get all globally used tags and remove document tags from them for tag suggestion list.
@@ -134,24 +122,14 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         const docPath = this.resolve.params.path;
         const data = {tagObject: t};
         const [err, response] = await to($http.post<IParResponse>(`/tags/remove/${docPath}`, data));
+
         if (err) {
-            this.error = true;
             this.errorMessage = err.data.error;
-            // Either shows error message or success message;
-            // the other one will be hidden.
-            if (this.actionSuccessful) {
-                this.actionSuccessful = false;
-            }
-            // Tag-list needs to be refreshed each time it has been changed.
-            await this.updateTags();
-            return;
+        } else {
+            this.errorMessage = "";
         }
         if (response) {
-            this.actionSuccessful = true;
             this.successMessage = "Tag '" + t.tag + "' was removed.";
-            if (this.error) {
-                this.error = false;
-            }
             await this.updateTags();
             return;
         }
@@ -175,20 +153,14 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         });
         const data = {tags: input_tags, expires: this.expires};
         const [err, response] = await to($http.post<IParResponse>(`/tags/add/${docPath}`, data));
+
         if (err) {
-            this.error = true;
             this.errorMessage = err.data.error;
-            if (this.actionSuccessful) {
-                this.actionSuccessful = false;
-            }
-            return;
+        } else {
+            this.errorMessage = "";
         }
         if (response) {
-            this.actionSuccessful = true;
             this.successMessage = "'" + this.tagName + "' successfully added.";
-            if (this.error) {
-                this.error = false;
-            }
             await this.updateTags();
             this.tagName = "";
             this.f.$setPristine();
@@ -237,7 +209,7 @@ registerDialogComponent("timEditTags",
                 <div class="col-sm-8">
                     <input required focus-me="$ctrl.focusName" ng-model="$ctrl.tagName" name="tagField"
                            type="text" title="Write tag names separated by spaces"
-                           ng-keypress="$ctrl.chatEnterPressed($event)" autocomplete="off"
+                           ng-keypress="$ctrl.enterPressed($event)" autocomplete="off"
                            class="form-control" id="name" placeholder="Tag names separated by spaces"
     uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | orderBy:tag | limitTo:12"
                            typeahead-min-length="0">
@@ -261,10 +233,10 @@ registerDialogComponent("timEditTags",
         </form>
         <button class="btn timButton" data-ng-disabled="$ctrl.f.$invalid" ng-click="$ctrl.addTagClicked()">Add</button>
         <button class="btn timButton" ng-click="$ctrl.dismiss()"><span>Close</span></button>
-        <div ng-show="$ctrl.actionSuccessful" class="alert alert-success">
+        <div ng-show="$ctrl.successMessage" class="alert alert-success">
             <span class="glyphicon glyphicon-ok"></span> {{$ctrl.successMessage}}
         </div>
-        <div ng-show="$ctrl.error" class="alert alert-warning">
+        <div ng-show="$ctrl.errorMessage" class="alert alert-warning">
             <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
         </div>
     </dialog-body>

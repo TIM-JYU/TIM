@@ -89,7 +89,7 @@ def get_tags(doc):
     if not d:
         abort(404)
     verify_view_access(d)
-    tags = Tag.query.filter_by(block_id=d.id).all()
+    tags = d.block.tags
     return json_response(tags)
 
 

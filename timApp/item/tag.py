@@ -16,9 +16,5 @@ class Tag(db.Model):
 
     block = db.relationship('Block', back_populates='tags')
 
-    @staticmethod
-    def find_by_id(block_id: int) -> List['Tag']:
-        return Tag.query.filter_by(block_id=block_id).all()
-
     def __json__(self):
         return ['block_id', 'tag', 'expires']
