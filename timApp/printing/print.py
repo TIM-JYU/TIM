@@ -258,16 +258,15 @@ def get_printed_document(doc_path):
                  '</head>\n' + \
                  '<body>\n' + \
                  '<div class="program">\n'
-        f = open(cached, "r")
         n = 1
-        for rivi in f:
-            cl = ""
-            if str(n) == line:
-                cl = ' class="red" '
-            result += "<p" + cl + ">" + '<a name="L' + str(n) + '" >' + format(n,
-                                                                               '04d') + "</a> " + rivi.strip() + "</p>\n"
-            n += 1
-        f.close()
+        with open(cached, "r", encoding='utf8') as f:
+            for rivi in f:
+                cl = ""
+                if str(n) == line:
+                    cl = ' class="red" '
+                result += "<p" + cl + ">" + '<a name="L' + str(n) + '" >' + format(n,
+                                                                                   '04d') + "</a> " + rivi.strip() + "</p>\n"
+                n += 1
         result += "\n</div>\n</body>\n</html>"
         response = make_response(result)
 
