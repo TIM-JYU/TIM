@@ -15,6 +15,8 @@ import * as tagLabel from "../components/tagLabel";
 markAsUsed(tagLabel);
 markAsUsed(focusMe);
 
+const tagParsingSeparator = " ";
+
 /*
  * Tag database attributes:
  * block_id = tagged document's id,
@@ -39,7 +41,6 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private focusName: boolean;
     private allTags: string[]; // List of all unique tags.
     private allUnusedTags: string[]; // List of existing tags not used in the doc.
-    private tagParsingSeparator = " ";
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -167,7 +168,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         const docPath = this.resolve.params.path;
         let input_tags: string[];
         input_tags = [];
-        this.tagName.split(this.tagParsingSeparator).forEach((tag) => {
+        this.tagName.split(tagParsingSeparator).forEach((tag) => {
             if (tag) {
                 input_tags.push(tag.trim());
             }
@@ -219,18 +220,15 @@ registerDialogComponent("timEditTags",
     <dialog-body>
         <h4>Document tags</h4>
         <p ng-if="$ctrl.tagsList.length === 0">No tags</p>
-        <ul>
-            <div class="tags-list" ng-repeat="x in $ctrl.tagsList">
-                <li>
-                    <tag-label tag-text="x.tag"></tag-label>
-                    <span ng-if="x.expires">(Expires: {{x.expires | timdate}})</span>
-                    <a>
-                        <span class="glyphicon glyphicon-remove" title="Remove tag"
-                              ng-click="$ctrl.removeTag(x)"></span>
-                    </a>
-                </li>
-            </div>
-        </ul>
+        <div class="tags-list">
+            <span ng-repeat="x in $ctrl.tagsList">
+                <tag-label tag-text="x.tag"></tag-label>
+                <i ng-if="x.expires" class="glyphicon glyphicon-time"
+                uib-tooltip="Expires: {{x.expires | timdate}}"></i>
+                <a><span class="glyphicon glyphicon-remove" title="Remove tag" ng-click="$ctrl.removeTag(x)"></span></a>
+                &nbsp;
+            </span>
+        </div>
         <h4>Add new tags</h4>
         <form name="$ctrl.f" class="form-horizontal">
             <div class="form-group" tim-error-state

@@ -16,10 +16,13 @@ markAsUsed(tagLabel);
 class TaggedDocumentListCtrl implements IController {
     public tagFilter: string;
     public exactMatch: boolean; // Get only documents with exactly matching tag.
-    public showSearch: boolean;
+    public enableSearch: boolean;
     private doc: IItem;
     private docList: ITaggedItem[];
     private allUniqueTags: string[];
+    private listDocTags: boolean;
+    private tagToolTip: string;
+    private tagStyle: string;
 
     private async loadTemplate(t: IItem) {
         const [err] = await to($http.post("/update/" + this.doc.id, {
@@ -33,8 +36,14 @@ class TaggedDocumentListCtrl implements IController {
     }
 
    async $onInit() {
+        if (this.enableSearch) {
+            this.tagToolTip = "Search documents with tag ";
+            this.tagStyle = "cursor: pointer;";
+        } else {
+            this.tagToolTip = "Document has tag ";
+        }
         await this.getAllTags();
-        void this.getDocumentsByTag(this.tagFilter, this.exactMatch);
+        void this.getDocumentsByTag(this.tagFilter, this.exactMatch, this.listDocTags);
     }
 
     private async getAllTags() {
@@ -46,11 +55,12 @@ class TaggedDocumentListCtrl implements IController {
 
     /*
      * Filter documents by tag.
-     * @param tagName: Tag word to search with.
-     * @param exactMatch: Search only documents with the whole tag.
+     * @param tagName Tag word to search with.
+     * @param exactMatch Search only documents with the whole tag.
+     * @param list_doc_tags Get also tags in each document.
      * If false will also search for partial matches.
      */
-    private async getDocumentsByTag(tagName: string, exactMatch: boolean) {
+    private async getDocumentsByTag(tagName: string, exactMatch: boolean, listDocTags: boolean) {
         // Changes tag in input field to this in case the tagName is different.
         this.tagFilter = tagName;
 
@@ -59,6 +69,7 @@ class TaggedDocumentListCtrl implements IController {
             url: "/tags/getDocs",
             params: {
                 exact_search: exactMatch,
+                list_doc_tags: listDocTags,
                 tag: tagName,
             },
         });
@@ -71,7 +82,7 @@ class TaggedDocumentListCtrl implements IController {
      */
     async chatEnterPressed(event: KeyboardEvent) {
         if (event.which === 13) {
-            await this.getDocumentsByTag(this.tagFilter, this.exactMatch);
+            await this.getDocumentsByTag(this.tagFilter, this.exactMatch, this.listDocTags);
         }
     }
 
@@ -79,8 +90,12 @@ class TaggedDocumentListCtrl implements IController {
      * Calls tag adding function. Has option to searching for exactly matching
      * tags or all that containg parts of the tag.
      */
-    async searchClicked() {
-        await this.getDocumentsByTag(this.tagFilter, this.exactMatch);
+    async searchClicked(tag: string) {
+        if (!this.enableSearch) {
+            return;
+        } else {
+            await this.getDocumentsByTag(tag, this.exactMatch, this.listDocTags);
+        }
     }
 }
 
@@ -88,8 +103,9 @@ timApp.component("taggedDocumentList", {
     bindings: {
         closeFn: "&",
         doc: "<",
+        enableSearch: "<",
         exactMatch: "<",
-        showSearch: "<",
+        listDocTags: "<",
         tagFilter: "@",
     },
     controller: TaggedDocumentListCtrl,
@@ -97,27 +113,28 @@ timApp.component("taggedDocumentList", {
 <bootstrap-panel title="List of documents" show-close="true"
     ng-switch on="$ctrl.docList.length" close-fn="$ctrl.closeFn()">
     <div>
-    <div class="input-group" ng-if="$ctrl.showSearch">
+    <div class="input-group" ng-show="$ctrl.enableSearch">
         <input ng-model="$ctrl.tagFilter" name="filterField" ng-keypress="$ctrl.chatEnterPressed($event)"
                            type="text"
                            title="Search documents by entering a tag"
                            placeholder="Search documents by entering a tag"
                            class="form-control" id="tagFilterField" autocomplete="off"
-                           uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue"
+                           uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue | limitTo:15"
                            typeahead-min-length="0">
         <span class="input-group-addon btn btn-default"
-                            ng-click="$ctrl.searchClicked()"
+                            ng-click="$ctrl.searchClicked($ctrl.tagFilter)"
                             title="Search documents with tag '{{$ctrl.tagFilter}}'">
             <i class="glyphicon glyphicon-search"></i>
         </span>
     </div>
     <ul ng-switch-default>
         <li ng-repeat="doc in $ctrl.docList">
-            <a href="view/{{doc.path}}">{{doc.title}}</a>
+            <a href="view/{{doc.path}}" title="Open {{doc.title}}">{{doc.title}}</a>
             <span ng-repeat="tag in doc.tags">
-            <tag-label ng-click="$ctrl.getDocumentsByTag(tag.tag, $ctrl.exactMatch)"
-            title="Search documents with tag '{{tag.tag}}'"
-            tag-text="tag.tag"></tag-label> </span>
+                <tag-label style="{{$ctrl.tagStyle}}"
+                ng-click="$ctrl.searchClicked(tag.tag)"
+                title="{{$ctrl.tagToolTip}}'{{tag.tag}}'"
+                tag-text="tag.tag"></tag-label> </span>
         </li>
     </ul>
     <span ng-switch-when="0">No documents found!</span>
