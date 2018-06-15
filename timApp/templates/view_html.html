@@ -106,6 +106,7 @@
 {% endblock %}
 
 {% block content %}
+    <button ng-cloak ng-if="$ctrl.taggedAsCourse && !$ctrl.bookmarked" ng-click="$ctrl.addToBookmarkFolder()" class="timButton">Add to My courses</button>
     <form name="ignore_me">
         <input type="text" id="page_is_dirty" name="page_is_dirty" value="0" style="display: none;"/>
     </form>

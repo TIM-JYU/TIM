@@ -2,11 +2,13 @@ import angular, {IController, IFormController, IPromise, IRootElementService, IS
 import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
 import {markAsUsed, to} from "tim/utils";
-import {DialogController, registerDialogComponent, showDialog} from "../dialog";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
 import {IItem} from "../IItem";
 import {$http, $timeout, $window} from "../ngimport";
+import {ViewCtrl} from "../controllers/view/viewctrl";
 
 markAsUsed(focusMe);
+
 
 export interface IBookmarkGroup {
     name: string;
@@ -20,10 +22,11 @@ export interface IBookmark {
     name: string;
 }
 
-class BookmarksController implements IController {
+export class BookmarksController implements IController {
     private data: IBookmarkGroup[];
     private deleting: boolean;
     private userId: number;
+    public viewctrl?: ViewCtrl;
 
     constructor() {
         if ($window.bookmarks && !this.data) {
@@ -32,15 +35,14 @@ class BookmarksController implements IController {
         this.deleting = false;
 
         if (this.userId && !this.data) {
-            (async () => {
-                const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get/" + this.userId);
-                this.getFromServer(response.data);
-            })();
+            void this.refresh();
         }
     }
 
     $onInit() {
-
+        if (this.viewctrl) {
+            this.viewctrl.registerBookmarks(this);
+        }
     }
 
     getFromServer(response: IBookmarkGroup[], groupToKeepOpen?: IBookmarkGroup) {
@@ -149,12 +151,20 @@ class BookmarksController implements IController {
         e.preventDefault();
         this.deleting = !this.deleting;
     }
+
+    async refresh() {
+        const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get");
+        this.getFromServer(response.data);
+    }
 }
 
 timApp.component("bookmarks", {
     bindings: {
         data: "<?",
         userId: "<?",
+    },
+    require: {
+        viewctrl: "?^timView",
     },
     controller: BookmarksController,
     templateUrl: "/static/templates/bookmarks.html",

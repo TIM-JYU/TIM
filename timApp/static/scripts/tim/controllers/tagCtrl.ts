@@ -67,7 +67,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      * Calls tag adding function when Enter is pressed.
      * @param event Keyboard event.
      */
-    async enterPressed(event: KeyboardEvent) {
+    async keyPressed(event: KeyboardEvent) {
         if (event.which === 13) {
             await this.addTagClicked();
         }
@@ -209,7 +209,7 @@ registerDialogComponent("timEditTags",
                 <div class="col-sm-8">
                     <input required focus-me="$ctrl.focusName" ng-model="$ctrl.tagName" name="tagField"
                            type="text" title="Write tag names separated by spaces"
-                           ng-keypress="$ctrl.enterPressed($event)" autocomplete="off"
+                           ng-keypress="$ctrl.keyPressed($event)" autocomplete="off"
                            class="form-control" id="name" placeholder="Tag names separated by spaces"
     uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | orderBy:tag | limitTo:12"
                            typeahead-min-length="0">

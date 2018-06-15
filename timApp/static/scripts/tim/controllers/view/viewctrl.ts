@@ -14,10 +14,10 @@ import {QuestionHandler} from "tim/controllers/view/questions";
 import {initReadings} from "tim/controllers/view/readings";
 import * as popupMenu from "tim/directives/popupMenu";
 import {timLogTime} from "tim/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty} from "tim/utils";
+import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/utils";
 import {initCssPrint} from "../../cssPrint";
 import {PopupMenuController} from "../../directives/popupMenu";
-import {IItem} from "../../IItem";
+import {IItem, ITag} from "../../IItem";
 import {IUser} from "../../IUser";
 import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../../services/parCompiler";
@@ -32,6 +32,7 @@ import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
 import {PendingCollection} from "../../edittypes";
 import {TimTableController} from "../../components/timTable";
+import {BookmarksController, IBookmark, IBookmarkGroup} from "../../directives/bookmarks";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -114,6 +115,10 @@ export class ViewCtrl implements IController {
     public parmenuHandler: ParmenuHandler;
     public refpopupHandler: RefPopupHandler;
     private popupmenu?: PopupMenuController;
+    // To show a button that adds the document to bookmark folder 'My courses'.
+    private taggedAsCourse: boolean;
+    private bookmarksCtrl: BookmarksController;
+    private bookmarked: boolean;
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -337,6 +342,40 @@ export class ViewCtrl implements IController {
                 this.notification = "";
             }
         });
+        void this.checkIfTaggedAsCourse();
+        void this.checkIfBookmarked();
+    }
+
+    /*
+     * Checks if the document has been tagged as a course.
+     */
+    private async checkIfTaggedAsCourse() {
+        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`, {}));
+        this.taggedAsCourse = false;
+        if (response) {
+            response.data.forEach((tag) => {
+                if (tag.tag === "kurssi") {
+                    this.taggedAsCourse = true;
+                    return;
+                }
+            });
+        }
+    }
+
+    private async checkIfBookmarked() {
+        const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get");
+        this.bookmarked = false;
+        response.data.forEach((folder) => {
+            if (folder.name === "My courses") {
+                folder.items.forEach((bookmark) => {
+                    // Despite using IBookmark, items inside response use path instead of link.
+                    if (bookmark.path === "/view/" + this.item.path) {
+                        this.bookmarked = true;
+                        return;
+                    }
+                } );
+            }
+        });
     }
 
     /**
@@ -464,6 +503,17 @@ export class ViewCtrl implements IController {
             this.popupmenu = undefined;
             optionsWindowClosed(par);
         }
+    }
+
+    async addToBookmarkFolder() {
+        const bookmark = {group: "My courses", name: this.item.title, link: "/view/" + this.item.path};
+        const response = await $http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark);
+        this.bookmarksCtrl.refresh();
+        this.checkIfBookmarked(); // Instead of directly changing boolean check if it really was added.
+    }
+
+    registerBookmarks(bookmarksCtrl: BookmarksController) {
+        this.bookmarksCtrl = bookmarksCtrl;
     }
 }
 
