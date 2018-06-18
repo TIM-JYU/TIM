@@ -64,6 +64,9 @@ export interface IChangeDiffResult {
 
 export type DiffResult = IInsertDiffResult | IReplaceDiffResult | IDeleteDiffResult | IChangeDiffResult;
 
+// Contains tags marking document as a course main page.
+const courseTags = ["kurssi", "course"];
+
 export class ViewCtrl implements IController {
     private notification: string;
     addParagraphFunctions: MenuFunctionCollection;
@@ -354,7 +357,7 @@ export class ViewCtrl implements IController {
         this.taggedAsCourse = false;
         if (response) {
             response.data.forEach((tag) => {
-                if (tag.tag === "kurssi") {
+                if (isCourse(tag.tag)) {
                     this.taggedAsCourse = true;
                     return;
                 }
@@ -368,8 +371,7 @@ export class ViewCtrl implements IController {
         response.data.forEach((folder) => {
             if (folder.name === "My courses") {
                 folder.items.forEach((bookmark) => {
-                    // Despite using IBookmark, items inside response use path instead of link.
-                    if (bookmark.path === "/view/" + this.item.path) {
+                    if (bookmark.link === "/view/" + this.item.path) {
                         this.bookmarked = true;
                         return;
                     }
@@ -515,6 +517,21 @@ export class ViewCtrl implements IController {
     registerBookmarks(bookmarksCtrl: BookmarksController) {
         this.bookmarksCtrl = bookmarksCtrl;
     }
+}
+
+/***
+ * Compares the tag to list of course tags.
+ * @param {string} tag
+ * @returns {boolean} Whether the tag belongs to the course tag list.
+ */
+function isCourse(tag: string) {
+    let taggedAsCourse = false;
+    courseTags.forEach((courseTag) => {
+        if (tag === courseTag) {
+            taggedAsCourse = true;
+        }
+    });
+    return taggedAsCourse;
 }
 
 timApp.component("timView", {

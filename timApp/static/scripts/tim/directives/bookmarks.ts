@@ -94,13 +94,13 @@ export class BookmarksController implements IController {
         this.getFromServer(resp.data);
     }
 
-    async editItem(group: IBookmarkGroup, item: IItem, e: Event) {
+    async editItem(group: IBookmarkGroup, item: IBookmark, e: Event) {
         e.stopPropagation();
         e.preventDefault();
         const [err, bookmark] = await to(showBookmarkDialog({
             group: group.name,
             name: item.name,
-            link: item.path,
+            link: item.link,
         }));
         if (!bookmark) {
             $timeout(() => {
@@ -115,13 +115,13 @@ export class BookmarksController implements IController {
             old: {
                 group: group.name,
                 name: item.name,
-                link: item.path,
+                link: item.link,
             }, new: bookmark,
         });
         this.getFromServer(response.data, group);
     }
 
-    deleteItem(group: IBookmarkGroup, item: IItem, e: Event) {
+    deleteItem(group: IBookmarkGroup, item: IBookmark, e: Event) {
         e.stopPropagation();
         e.preventDefault();
         return $http.post<IBookmarkGroup[]>("/bookmarks/delete", {

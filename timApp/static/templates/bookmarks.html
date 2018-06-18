@@ -7,7 +7,7 @@
         role="menu"
         aria-labelledby="single-button">
         <li ng-repeat="item in group.items" role="menuitem">
-            <a ng-href="{{ item.path }}">{{ item.name }}
+            <a ng-href="{{ item.link }}">{{ item.name }}
                 <i ng-click="$ctrl.editItem(group, item, $event)" ng-show="$ctrl.deleting"
                    class="glyphicon glyphicon-pencil"></i>
                 <i ng-click="$ctrl.deleteItem(group, item, $event)" ng-show="$ctrl.deleting"
@@ -33,7 +33,7 @@
     </ul>
 </div>
 <a ng-repeat="bookmark in $ctrl.getTopLevelBookmarks()"
-   ng-href="{{ bookmark.path }}"
+   ng-href="{{ bookmark.link }}"
    ng-bind="bookmark.name"
    class="btn btn-sm btn-default"></a>
 <button ng-click="$ctrl.newBookmark(undefined, $event)" class="btn btn-sm btn-default">
