@@ -15,6 +15,8 @@
     {{ super() }}
     {% if not hide_links %}
         <div class="pull-right">
+            <button ng-cloak ng-if="$ctrl.taggedAsCourse && !$ctrl.bookmarked" ng-click="$ctrl.addToBookmarkFolder()"
+            title="Add this page to 'My courses' bookmark folder" class="timButton label">Add to My courses</button>
             {% block languages %}
             {% endblock %}
         </div>
