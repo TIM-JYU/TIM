@@ -1,0 +1,399 @@
+"""Provides functions for converting markdown-formatted text to HTML."""
+import re
+from typing import Optional, Dict
+
+from flask import g
+from jinja2 import Environment, TemplateSyntaxError
+from lxml import html, etree
+
+from timApp.document.yamlblock import YamlBlock
+from timApp.markdown.dumboclient import call_dumbo
+from timApp.markdown.htmlSanitize import sanitize_html
+from timApp.util.utils import get_error_html, title_to_id
+
+
+# noinspection PyUnusedLocal
+def has_macros(text: str, macros, macro_delimiter: Optional[str]=None):
+    return macro_delimiter and (macro_delimiter in text or '{!!!' in text or '{%' in text)
+
+
+def expand_macros_regex(text: str, macros, macro_delimiter=None):
+    if not has_macros(text, macros, macro_delimiter):
+        return text
+    return re.sub(f'{re.escape(macro_delimiter)}([a-zA-Z]+){re.escape(macro_delimiter)}',
+                  lambda match: macros.get(match.group(1), 'UNKNOWN MACRO: ' + match.group(1)),
+                  text)
+
+# ------------------------ Jinja filters -------------------------------------------------------------------
+# Ks. https://tim.jyu.fi/view/tim/ohjeita/satunnaistus#timfiltterit
+
+
+def Pz(i):
+    """
+    Returns number as a string so that from 0 comes "", postive number comes like " + 1"
+    and negative comes like " - 1"
+    :param i: number to convert
+    :return: number as a string suitable for expressions
+    """
+    if i > 0:
+        return " + " + str(i)
+    if i < 0:
+        return " - " + str(-i)
+    return ""
+
+
+def belongs(username, groupname):
+    """
+    Returns if user belongs to group
+    :param username: user to check
+    :param groupname: group to check
+    :return:
+    """
+    from timApp.timdb.dbaccess import get_timdb
+    timdb = get_timdb()
+    result = timdb.users.check_if_in_group(username, groupname)
+    return result
+
+
+def belongs_by_id(userid, groupname):
+    """
+    Returns if user belongs to group
+    :param username: user to check
+    :param groupname: group to check
+    :return:
+    """
+    from timApp.timdb.dbaccess import get_timdb
+    timdb = get_timdb()
+    result = timdb.users.check_if_in_group_by_id(userid, groupname)
+    return result
+
+
+class Belongs:
+    def __init__(self, user):
+        self.username = user.name
+        self.userid = user.id
+        self.cache = {}
+
+    def belongs_to_group(self, groupname):
+        b = self.cache.get(groupname, None)
+        if b is not None:
+            return b
+        b = belongs_by_id(self.userid, groupname)
+        self.cache[groupname] = b
+        return b
+
+# ------------------------ Jinja filters end ---------------------------------------------------------------
+
+
+def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None, env=None, ignore_errors: bool=False):
+    # return text  # comment out when want to take time if this slows things
+    if not has_macros(text, macros, macro_delimiter):
+        return text
+    if env is None:
+        try:
+            env = g.env
+        except:
+            pass
+        if env is None:
+            env = create_environment(macro_delimiter)
+    try:
+        globalmacros = None
+        try:
+            globalmacros = getattr(g, 'globalmacros', None)
+        except:
+            pass
+        if globalmacros:
+            for gmacro in globalmacros:
+                macrotext = "%%"+gmacro+"%%"
+                pos = text.find(macrotext)
+                if pos >= 0:
+                    gm = str(globalmacros.get(gmacro, ""))
+                    text = text.replace(macrotext, gm)
+            gm = str(globalmacros.get("ADDFOREVERY", ''))
+            if gm:
+                text = gm + "\n" + text
+        startstr = env.comment_start_string + "LOCAL"
+        beg = text.find(startstr)
+        if beg >= 0:
+            endstr = env.comment_end_string
+            end = text.find(endstr, beg)
+            if end >= 0:
+                local_macros_yaml = text[beg+len(startstr):end]
+                local_macros = YamlBlock.from_markdown(local_macros_yaml).values
+                macros = {**macros, **local_macros}
+        conv = env.from_string(text).render(macros)
+        return conv
+    except TemplateSyntaxError as e:
+        if not ignore_errors:
+            return get_error_html(f'Syntax error in template: {e}')
+        return text
+    except Exception as e:
+        if not ignore_errors:
+            return get_error_html(f'Syntax error in template: {e}')
+        return text
+
+
+def create_environment(macro_delimiter: str):
+    env = Environment(variable_start_string=macro_delimiter,
+                      variable_end_string=macro_delimiter,
+                      comment_start_string='{!!!',
+                      comment_end_string='!!!}',
+                      block_start_string='{%',
+                      block_end_string='%}',
+                      lstrip_blocks=True,
+                      trim_blocks=True)
+    env.filters['Pz'] = Pz
+
+    # During some markdown tests, there is no request context and therefore no g object.
+    try:
+        env.filters['belongs'] = Belongs(g.user).belongs_to_group
+        g.env = env
+    except (RuntimeError, AttributeError):
+        pass
+    return env
+
+
+expand_macros = expand_macros_jinja2
+
+
+# expand_macros = expand_macros_regex
+
+
+def md_to_html(text: str,
+               sanitize: bool = True,
+               macros: Optional[Dict[str, object]] = None,
+               macro_delimiter: Optional[str]=None) -> str:
+    """Converts the specified markdown text to HTML.
+
+    :param macros: The macros to use.
+    :param macro_delimiter: The macro delimiter.
+    :param sanitize: Whether the HTML should be sanitized. Default is True.
+    :param text: The text to be converted.
+    :return: A HTML string.
+
+    """
+
+    text = expand_macros(text, macros, macro_delimiter)
+
+    raw = call_dumbo([text])
+
+    if sanitize:
+        return sanitize_html(raw[0])
+    else:
+        return raw[0]
+
+
+def par_list_to_html_list(pars,
+                          settings,
+                          auto_macros=None
+                          ):
+    """Converts the specified list of DocParagraphs to an HTML list.
+
+    :return: A list of HTML strings.
+    :type auto_macros: list(dict)
+    :type settings: DocSettings
+    :param settings: The document settings.
+    :param auto_macros: Currently a list(dict) containing the heading information ('h': dict(int,int) of heading counts
+           and 'headings': dict(str,int) of so-far used headings and their counts).
+    :type pars: list[DocParagraph]
+    :param pars: The list of DocParagraphs to be converted.
+
+    """
+
+    macroinfo = settings.get_macroinfo()
+    # User-specific macros (such as %%username%% and %%realname%%) cannot be replaced here because the result will go
+    # to global cache. We will replace them later (in post_process_pars).
+    macroinfo.preserve_user_macros = True
+    # if settings.nomacros():
+    #    texts = [p.get_markdown() for p in pars]
+    #else:
+    dumbo_opts = settings.get_dumbo_options()
+    texts = [p.get_expanded_markdown(macroinfo) if not p.has_dumbo_options() else {
+        'content': p.get_expanded_markdown(macroinfo),
+        **p.get_dumbo_options(base_opts=dumbo_opts).dict(),
+    } for p in pars]
+
+    texplain = settings.is_texplain()
+    if texplain:  # add pre-markers to tex paragrpahs
+        for i in range(0,len(texts)):
+            text = texts[i]
+            if text.find('```') != 0 and text.find('#') != 0:
+                texts[i] = '```\n' + text + "\n```"
+    raw = call_dumbo(texts, options=dumbo_opts)
+
+    # Edit html after dumbo
+    raw = edit_html_with_own_syntax(raw)
+
+    if auto_macros:
+        processed = []
+        for pre_html, m, attrs in zip(raw, auto_macros, (p.get_attrs() for p in pars)):
+            if 'nonumber' in attrs.get('classes', {}):
+                final_html = pre_html
+            else:
+                final_html = insert_heading_numbers(pre_html, m, settings.auto_number_headings(),
+                                                    settings.heading_format())
+            processed.append(final_html)
+        raw = processed
+
+    return raw
+
+
+# Does changes to html after Dumbo and returns edited html
+def edit_html_with_own_syntax(raw: list) -> list:
+    index = 0
+    while index < len(raw):
+        html_text = raw[index]
+        raw[index] = make_slide_fragments(html_text)
+        # raw[index] = check_and_edit_html_if_surrounded_with(text, fragment_string, change_classes_to_fragment)
+        index += 1
+    return raw
+
+
+# Adds the necessary html to make slide fragments work with reveal.js
+def make_slide_fragments(html_text: str) -> str:
+    # TODO: Make algorithm work with more than 2 levels of fragments
+    # TODO: Make different styles of fragments available, possible syntax could be §§{shrink} or something
+    # TODO: Refactor to make this more reusable
+    # TODO: Make sure that this doesn't break latex conversion
+
+    # Split from fragment area start tag <§
+    fragments = html_text.split("&lt;§")
+    # If no fragment areas were found we look for fragment pieces
+    if len(fragments) < 2:
+        new_html = check_and_edit_html_if_surrounded_with(html_text, "§§", change_classes_to_fragment)
+        return new_html
+    else:
+        index = 1
+        # For every fragment area
+        while index < len(fragments):
+            # Try to find area end
+            index_of_area_end = fragments[index].find("§&gt;")
+            # If not found
+            if index_of_area_end == -1:
+                # Look for normal fragments
+                fragments[index] = check_and_edit_html_if_surrounded_with(
+                    fragments[index], "§§", change_classes_to_fragment)
+            else:
+                # Make a new fragment area if start and end found
+                fragments[index] = '</p><div class="fragment"><p>' + fragments[index]
+                fragments[index] = fragments[index].replace("§&gt;", "</p></div><p>", 1)
+                # Look for inner fragments
+                fragments[index] = check_and_edit_html_if_surrounded_with(
+                    fragments[index], "§§", change_classes_to_fragment)
+            index += 1
+        new_html = "".join(fragments)
+        return new_html
+
+
+# Checks if html element's content is surrounded with given string and edits it accordingly
+def check_and_edit_html_if_surrounded_with(html_content: str, string_delimeter: str, editing_function) -> str:
+    # List of strings after splitting html from
+    html_list = html_content.split(string_delimeter)
+    if len(html_list) < 2:
+        return html_content
+    else:
+        # Edit the list with given function
+        new_html = editing_function(html_list)
+    return new_html
+
+
+def change_classes_to_fragment(html_list: list) -> str:
+    """If found, html_list[1] will have the content that we need to make a fragment of and html_list[0] might have the
+    element tag that will have "fragment" added to it's class.
+
+    There might be multiple fragments in the html list.
+
+    """
+    # Start from 1, the previous will contain the html tag to change
+    index = 1
+    while index < len(html_list):
+        # Changes html element's class to fragment
+        new_htmls = change_class(html_list[index - 1], html_list[index], "fragment")
+        # Apply changes
+        html_list[index - 1] = new_htmls[0]
+        html_list[index] = new_htmls[1]
+        index += 2
+
+    # Join the list into a string
+    new_html = "".join(html_list)
+    return new_html
+
+
+def change_class(text_containing_html_tag: str, text_content: str, new_class: str) -> list:
+    """Find the last html tag in the list and change that element's class to new_class or add the new class to element's
+    classes or surround the new content with span element with the new class."""
+    try:
+        # Find where the html tag supposedly ends
+        index_of_tag_end = text_containing_html_tag.rfind(">")
+        # Find where the html tag starts
+        index_of_tag_start = text_containing_html_tag.rfind("<", 0, index_of_tag_end)
+        # If the previous text ends a html tag
+        if index_of_tag_end == len(text_containing_html_tag) - 1:
+            # Html tag content is between those 2 indices
+            html_tag = text_containing_html_tag[index_of_tag_start:index_of_tag_end]
+            # Check if element already has atleast one class, if it does then add new_class
+            if "class=" in html_tag:
+                # Add the new class to html element classes
+                index_of_class = html_tag.rfind("class=")
+                text_containing_html_tag = text_containing_html_tag[:(
+                    index_of_tag_start + index_of_class + 7)] + new_class + " " + text_containing_html_tag[(
+                        index_of_tag_start + index_of_class + 7):]
+            else:
+                # If there isn't class in html tag we add that and the new class
+                text_containing_html_tag = text_containing_html_tag[
+                    :index_of_tag_end] + ' class="' + new_class + '"' + text_containing_html_tag[
+                    index_of_tag_end:]
+        else:
+            text_content = '<span class="' + new_class + '">' + text_content + '</span>'
+    # If there is an error we do nothing but return the original text
+    except ValueError:
+        pass
+    return [text_containing_html_tag, text_content]
+
+
+def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bool=True, heading_format: str=''):
+    """Applies the given heading_format to the HTML if it is a heading, based on the given heading_info. Additionally
+    corrects the id attribute of the heading in case it has been used earlier.
+
+    :param heading_info: A dict containing the heading information ('h': dict(int,int) of heading counts
+           and 'headings': dict(str,int) of so-far used headings and their counts).
+    :param html_str: The HTML string to be processed.
+    :param auto_number_headings: Whether the headings should be formatted at all.
+    :param heading_format: A dict(int,str) of the heading formats to be used.
+    :return: The HTML with the formatted headings.
+
+    """
+    tree = html.fragment_fromstring(html_str, create_parent=True)
+    counts = heading_info['h']
+    used = heading_info['headings']
+    for e in tree.iterchildren():
+        is_heading = e.tag in HEADING_TAGS
+        if not is_heading:
+            continue
+        curr_id = title_to_id(e.text)
+        hcount = used.get(curr_id, 0)
+        if hcount > 0:
+            e.attrib['id'] += '-' + str(hcount)
+        if auto_number_headings:
+            level = int(e.tag[1])
+            counts[level] += 1
+            for i in range(level + 1, 7):
+                counts[i] = 0
+            for i in range(6, 0, -1):
+                if counts[i] != 0:
+                    break
+            values = {'text': e.text}
+            # noinspection PyUnboundLocalVariable
+            for i in range(1, i + 1):
+                values['h' + str(i)] = counts[i]
+            try:
+                formatted = heading_format[level].format(**values)
+            except (KeyError, ValueError, IndexError):
+                formatted = '[ERROR] ' + e.text
+
+            e.text = formatted
+    final_html = etree.tostring(tree)
+    return final_html
+
+
+HEADING_TAGS = {'h1', 'h2', 'h3', 'h4', 'h5', 'h6'}

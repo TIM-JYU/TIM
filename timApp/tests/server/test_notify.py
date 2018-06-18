@@ -1,7 +1,7 @@
-from timApp.routes.notify import sent_mails_in_testing
+from timApp.notification.notify import sent_mails_in_testing
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.tim_models import db
+from timApp.document.docentry import DocEntry
+from timApp.timdb.sqa import db
 
 
 class NotifyTest(TimRouteTest):

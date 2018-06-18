@@ -6,12 +6,13 @@ from time import sleep
 import dateutil.parser
 
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.askedjson import AskedJson
-from timApp.timdb.models.askedquestion import AskedQuestion, get_asked_question
-from timApp.timdb.models.lecture import Lecture
-from timApp.timdb.models.lectureanswer import LectureAnswer
-from timApp.timdb.tim_models import Showpoints
-from timApp.timdb.tim_models import db
+from timApp.lecture.askedjson import AskedJson
+from timApp.lecture.askedquestion import AskedQuestion, get_asked_question
+from timApp.lecture.lecture import Lecture
+from timApp.lecture.lectureanswer import LectureAnswer
+from timApp.lecture.showpoints import Showpoints
+from timApp.timdb.sqa import db
+from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
 class LectureTest(TimRouteTest):
@@ -28,7 +29,7 @@ class LectureTest(TimRouteTest):
 
     def test_lecture(self):
         self.login_test1()
-        doc = self.create_doc(from_file='example_docs/questions.md')
+        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/questions.md')
         current_time = datetime.datetime.now(tz=timezone.utc)
         start_time = (current_time - datetime.timedelta(minutes=15))
         end_time = (current_time + datetime.timedelta(hours=2))

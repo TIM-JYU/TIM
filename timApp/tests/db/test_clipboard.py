@@ -1,10 +1,10 @@
 """Unit tests for Clipboard class."""
 
-from timApp.documentmodel.clipboard import Clipboard
-from timApp.documentmodel.randutils import random_id, hashfunc
+from timApp.document.editing.clipboard import Clipboard
+from timApp.document.randutils import random_id, hashfunc
 from timApp.tests.db.timdbtest import TimDbTest
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.userutils import get_anon_group_id
+from timApp.document.docentry import DocEntry
+from timApp.user.userutils import get_anon_group_id
 
 
 class ClipboardTest(TimDbTest):

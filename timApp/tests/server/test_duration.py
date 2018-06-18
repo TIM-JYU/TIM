@@ -1,13 +1,14 @@
 from datetime import timedelta, datetime, timezone
 
-from timApp.filters import humanize_datetime
+from timApp.util.flask.filters import humanize_datetime
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.accesstype import AccessType
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.models.usergroup import UserGroup
-from timApp.timdb.tim_models import db, BlockAccess
-from timApp.timdb.userutils import get_access_type_id
-from timApp.timdb.userutils import grant_access
+from timApp.auth.accesstype import AccessType
+from timApp.document.docentry import DocEntry
+from timApp.user.usergroup import UserGroup
+from timApp.timdb.sqa import db
+from timApp.auth.auth_models import BlockAccess
+from timApp.user.userutils import get_access_type_id
+from timApp.user.userutils import grant_access
 
 
 class DurationTest(TimRouteTest):

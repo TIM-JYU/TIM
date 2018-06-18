@@ -2,12 +2,13 @@ from lxml import html
 
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tests.timliveserver import TimLiveServer
+from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
 class QuestionTest(TimLiveServer, TimRouteTest):
     def test_question_html(self):
         self.login_test1()
-        d = self.create_doc(from_file='example_docs/questions.md')
+        d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/questions.md')
         pars = d.document.get_paragraphs()
         data = self.get(d.url_relative, as_tree=True)
         first_id = pars[0].get_id()
@@ -22,7 +23,7 @@ class QuestionTest(TimLiveServer, TimRouteTest):
         <div class="parContent" id="test1">
             <div id="{d.id}.test1.{first_id}" data-plugin="/qst">
                 <qst-runner
-                        json="{{&quot;markup&quot;: {{&quot;timeLimit&quot;: 90, &quot;questionText&quot;: &quot;What day is it today?&quot;, &quot;questionType&quot;: &quot;radio-vertical&quot;, &quot;questionTitle&quot;: &quot;Today&quot;, &quot;rows&quot;: [&quot;Monday&quot;, &quot;Wednesday&quot;, &quot;Friday&quot;], &quot;headers&quot;: [], &quot;matrixType&quot;: &quot;&quot;, &quot;answerFieldType&quot;: &quot;radio&quot;, &quot;isTask&quot;: false}}, &quot;state&quot;: null, &quot;taskID&quot;: &quot;3.test1&quot;, &quot;taskIDExt&quot;: &quot;{d.id}.test1.{first_id}&quot;, &quot;doLazy&quot;: false, &quot;userPrint&quot;: false, &quot;preview&quot;: false, &quot;anonymous&quot;: true, &quot;info&quot;: null, &quot;targetFormat&quot;: &quot;latex&quot;, &quot;show_result&quot;: false}}"/>
+                        json="{{&quot;markup&quot;: {{&quot;timeLimit&quot;: 90, &quot;questionText&quot;: &quot;What day is it today?&quot;, &quot;questionType&quot;: &quot;radio-vertical&quot;, &quot;questionTitle&quot;: &quot;Today&quot;, &quot;rows&quot;: [&quot;Monday&quot;, &quot;Wednesday&quot;, &quot;Friday&quot;], &quot;headers&quot;: [], &quot;matrixType&quot;: &quot;&quot;, &quot;answerFieldType&quot;: &quot;radio&quot;, &quot;isTask&quot;: false}}, &quot;state&quot;: null, &quot;taskID&quot;: &quot;3.test1&quot;, &quot;taskIDExt&quot;: &quot;{d.id}.test1.{first_id}&quot;, &quot;doLazy&quot;: false, &quot;userPrint&quot;: false, &quot;preview&quot;: false, &quot;anonymous&quot;: true, &quot;info&quot;: null, &quot;user_id&quot;: &quot;testuser1&quot;, &quot;targetFormat&quot;: &quot;latex&quot;, &quot;review&quot;: false, &quot;show_result&quot;: false}}"/>
             </div>
         </div>
         <div class="editline" title="Click to edit this paragraph"></div>

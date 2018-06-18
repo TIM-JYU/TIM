@@ -4,8 +4,8 @@ import unittest
 from shutil import rmtree
 from typing import Optional
 
-from fileutils import *
-from mailer import Mailer
+from funnel.fileutils import *
+from funnel.mailer import Mailer
 
 
 class NoWarnings:

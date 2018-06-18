@@ -1,6 +1,4 @@
-\documentclass[oneside, 12pt,a4paper,finnish,sansheading]{ extarticle}
-\pdfinfoomitdate=1
-\pdftrailerid{}
+\documentclass[oneside, 12pt,a4paper,finnish]{ extarticle}
 \usepackage{extsizes}
 \usepackage{geometry}
  \geometry{
@@ -14,27 +12,26 @@
 \usepackage{tabulary}
 \usepackage{listings}
 \usepackage{float}
+\usepackage{pmboxdraw}
+\usepackage{titlesec, blindtext, color}
 
-% \usepackage[default]{lato} % Tämä on yliopiston default leipätekstin fontti
 
 
-\usepackage{lmodern}
 \usepackage{amssymb,amsmath}
 \usepackage{pifont}
-\usepackage{ifxetex,ifluatex}
-% \usepackage{fixltx2e} % provides \textsubscript
-\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
-  \usepackage[T1]{fontenc}
-  \usepackage[utf8]{inputenc}
-  \usepackage{eurosym}
-\else % if luatex or xelatex
-  \ifxetex
-    \usepackage{mathspec}
-  \else
-    \usepackage{fontspec}
-  \fi
-  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
-\fi
+\usepackage{unicode-math}
+\let\mathbb\relax % remove the definition by unicode-math
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\DeclareMathAlphabet{\mathbb}{U}{msb}{m}{n}
+\AtBeginDocument{
+  \renewcommand{\setminus}{\mathbin{\backslash}}%
+}
+\setmainfont
+ [ BoldFont       = texgyrepagella-bold.otf ,
+   ItalicFont     = texgyrepagella-italic.otf ,
+   BoldItalicFont = texgyrepagella-bolditalic.otf ]
+ {texgyrepagella-regular.otf}
+\setmathfont{Latin Modern Math}
 % use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 % use microtype if available
@@ -52,7 +49,7 @@
   \usepackage[shorthands=off,main=finnish]{babel}
 \else
   \usepackage{polyglossia}
-  \setmainlanguage[]{ finnish}
+  \setmainlanguage[]{finnish}
 \fi
 \IfFileExists{parskip.sty}{
 \usepackage{parskip}
@@ -81,9 +78,10 @@
 
 
 \ifnum 11=10
-  \ifx\chapter\undefined
-  \else
+  \ifcsname c@chapter\endcsname
+
   \setcounter{chapter}{ 0}
+  \else
   \fi
 \setcounter{section}{ 0}
 \setcounter{secnumdepth}{6}
@@ -96,16 +94,10 @@
 
 
 
-
-% Add root path for images:
-% THERE'S SOMETHING WRONG WITH THIS COMMAND
-
-% 
-
 \date{}
 
 \usepackage{framed}
-\usepackage[most]{tcolorbox}
+\usepackage[many]{tcolorbox}
 \tcbuselibrary{breakable}
 \usepackage{color}
 
@@ -127,7 +119,7 @@
    \prevdepth=\tpd}
 
 
-\DeclareUnicodeCharacter{200B}{}
+\newcommand{\verbx}{0.6em}
 \newcommand{\pluginHeader}[1]{{\large \textbf{#1}}}
 \newcommand{\plgfooter}[1]{{\begin{center}{#1}\end{center}}}
 \newcommand{\videoRunDiv}[1]{{{#1}}}
@@ -423,9 +415,9 @@ arc=0mm]
     {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
     {€}{{\euro}}1 {£}{{\pounds}}1
     {½}{{\ensuremath{\frac12}}}1
+    {₳}{A}1
 }
 
-%
 
 
 
@@ -480,8 +472,6 @@ arc=0mm]
 \renewcommand{\thesection}{\arabic{section}}
 \fi
 
-% \renewcommand*\rmdefault{lato} % Tämä on yliopiston default leipäteksti fontti
-% \renewcommand*\rmdefault{ppl}
 
 
 \begin{document}
@@ -544,6 +534,9 @@ arc=0mm]
 Hello 1
 
 Hello 2
+
+
+
 
 
 

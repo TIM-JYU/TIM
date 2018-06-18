@@ -293,6 +293,21 @@ a .glyphicon {
         margin: 0 auto;
     }
 
+    .mathp {
+        &.inline img {
+            display: inline;
+            max-width: inherit;
+        }
+        &.display {
+            margin-top: 0.7em;
+            margin-bottom: 0.6em;
+            display: block;
+            img {
+                max-width: inherit;
+            }
+        }
+    }
+
     blockquote {
         @extend .center-block;
         width: 90%;

@@ -1,10 +1,10 @@
 import random
 
-from timApp.documentmodel.docparagraph import DocParagraph
+from timApp.document.docparagraph import DocParagraph
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.readings import mark_read, get_readings
-from timApp.timdb.readparagraphtype import ReadParagraphType
-from timApp.timdb.tim_models import db
+from timApp.readmark.readings import mark_read, get_readings
+from timApp.readmark.readparagraphtype import ReadParagraphType
+from timApp.timdb.sqa import db
 
 
 class ClipboardTest(TimRouteTest):

@@ -1,10 +1,10 @@
 import io
 
-from timApp.documentmodel.document import Document
+from timApp.document.document import Document
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.usergroup import UserGroup
-from timApp.timdb.tim_models import db
-from timApp.timdb.userutils import grant_access
+from timApp.user.usergroup import UserGroup
+from timApp.timdb.sqa import db
+from timApp.user.userutils import grant_access
 
 
 class UploadTest(TimRouteTest):

@@ -7,8 +7,8 @@ Create Date: 2017-10-10 10:48:20.601314
 """
 
 # revision identifiers, used by Alembic.
-from timApp.timdb.models.folder import Folder
-from timApp.timdb.tim_models import db
+from timApp.folder.folder import Folder
+from timApp.timdb.sqa import db
 
 revision = 'c0d6e136511e'
 down_revision = '82c3b050ba5d'

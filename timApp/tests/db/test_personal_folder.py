@@ -1,8 +1,8 @@
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
-from timApp.timdb.models.folder import Folder
-from timApp.timdb.models.user import User
-from timApp.timdb.tim_models import db
+from timApp.folder.folder import Folder
+from timApp.user.user import User
+from timApp.timdb.sqa import db
 
 
 class PersonalFolderTest(TimRouteTest):

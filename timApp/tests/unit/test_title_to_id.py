@@ -1,6 +1,6 @@
 import unittest
 
-from timApp.utils import title_to_id
+from timApp.util.utils import title_to_id
 
 
 class TitleToIdTest(unittest.TestCase):

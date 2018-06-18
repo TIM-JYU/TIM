@@ -1,8 +1,8 @@
 from timApp.tests.db.timdbtest import TimDbTest
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.models.folder import Folder
-from timApp.timdb.models.usergroup import UserGroup
-from timApp.timdb.tim_models import db
+from timApp.document.docentry import DocEntry
+from timApp.folder.folder import Folder
+from timApp.user.usergroup import UserGroup
+from timApp.timdb.sqa import db
 
 
 class FolderRenameTest(TimDbTest):

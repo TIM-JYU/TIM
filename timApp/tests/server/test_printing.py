@@ -3,10 +3,10 @@ import json
 import urllib.parse
 import warnings
 
-from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
-from timApp.responsehelper import to_json_str
+from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
+from timApp.util.flask.responsehelper import to_json_str
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.utils import exclude_keys
+from timApp.util.utils import exclude_keys, EXAMPLE_DOCS_PATH
 
 
 class PrintingTest(TimRouteTest):
@@ -60,7 +60,7 @@ $body$
         result = self.get_no_warn(expected_url)
         self.assertEqual('Hello 1\n\nHello 2', result)
         t2 = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/base',
-                             from_file='example_docs/templates/print_base.md')
+                             from_file=f'{EXAMPLE_DOCS_PATH}/templates/print_base.md')
         tj2 = json.loads(to_json_str(t2))
         result = self.get(f'/print/templates/{d.path}')
         self.assert_list_of_dicts_subset(result, map(lambda x: exclude_keys(x, 'modified'), [tj, tj2]))
@@ -74,14 +74,11 @@ $body$
         params_url = {'file_type': 'pdf', 'template_doc_id': t2.id, 'plugins_user_code': False}
         expected_url = f'http://localhost/print/{d.path}?{urllib.parse.urlencode(params_url)}'
         result = self.get_no_warn(expected_url)
-        try:
-            with open('tests/server/expected/printing/hello_1_2.pdf', 'rb') as f:
-                self.assertEqual(result, f.read())
-        except AssertionError:
-            with open('tests/server/expected/printing/hello_1_2_actual.pdf', 'wb') as f:
-                f.write(result)
-            raise
 
+        # TODO: XeLaTeX doesn't support removing timestamps from PDF file, so we cannot do a binary compare.
+        # Just check the file size for now.
+        pdf_length = len(result)
+        self.assertTrue(2850 <= pdf_length <= 2853, msg=f'Unexpected file length: {pdf_length}')
         self.login_test2()
         self.get(expected_url, expect_status=403)
 

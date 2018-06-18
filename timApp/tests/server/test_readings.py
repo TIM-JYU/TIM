@@ -3,9 +3,9 @@ from datetime import timedelta
 from lxml.cssselect import CSSSelector
 
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.readings import get_readings, get_read_expiry_condition
-from timApp.timdb.readparagraphtype import ReadParagraphType
-from timApp.timdb.models.readparagraph import ReadParagraph
+from timApp.readmark.readings import get_readings, get_read_expiry_condition
+from timApp.readmark.readparagraphtype import ReadParagraphType
+from timApp.readmark.readparagraph import ReadParagraph
 
 readline_selector = CSSSelector('div.readline')
 

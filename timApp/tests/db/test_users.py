@@ -2,12 +2,12 @@ import unittest
 from datetime import datetime, timezone, timedelta
 
 from timApp.tests.db.timdbtest import TimDbTest, TEST_USER_1_ID
-from timApp.timdb.models.block import insert_block
-from timApp.timdb.models.user import User
-from timApp.timdb.models.usergroup import UserGroup
-from timApp.timdb.tim_models import db
-from timApp.timdb.userutils import get_anon_group_id
-from timApp.timdb.userutils import grant_access
+from timApp.item.block import insert_block
+from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
+from timApp.timdb.sqa import db
+from timApp.user.userutils import get_anon_group_id
+from timApp.user.userutils import grant_access
 
 
 class UserTest(TimDbTest):

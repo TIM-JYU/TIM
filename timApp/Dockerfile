@@ -47,6 +47,7 @@ cm-super \
 dvidvi \
 dvipng \
 feynmf \
+fonts-texgyre \
 fragmaster \
 latex-cjk-all \
 latexmk \
@@ -107,7 +108,6 @@ texlive-xetex \
 RUN bash -c "${APT_INSTALL} libffi-dev && ${APT_CLEANUP}"
 ENV LD_LIBRARY_PATH /usr/local/lib
 
-# sphinxcontrib-httpdomain does not work with 1.6
 ENV PIP_INSTALL="python3 -m pip install" \
     PIP_CLEANUP="rm -r ~/.cache/pip"
 RUN bash -c "${PIP_INSTALL} \
@@ -122,7 +122,7 @@ docformatter \
 filelock \
 flask \
 flask-assets \
-flask-cache \
+flask-caching \
 flask-compress \
 flask-migrate \
 flask-openid \
@@ -140,7 +140,7 @@ mmh3 \
 mypy \
 pandocfilters \
 pillow \
-psycopg2 \
+psycopg2-binary \
 pyaml \
 pylatex \
 pypandoc \
@@ -150,8 +150,7 @@ pytz \
 recommonmark \
 responses \
 selenium==3.8.1 \
-sphinx==1.5.6 \
-sphinxcontrib-httpdomain \
+sphinx \
 sqlalchemy \
 wand \
 wheel \
@@ -159,7 +158,20 @@ yubico-client \
 && ${PIP_INSTALL} requests --upgrade && ${PIP_CLEANUP}"
 
 # Install Pandoc document converter
-RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/1.19.2.1/pandoc-1.19.2.1-1-amd64.deb" -qO $FILE && dpkg -i $FILE && rm $FILE
+RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.1.2/pandoc-2.1.2-1-amd64.deb" -qO $FILE && dpkg -i $FILE && rm $FILE
+
+# Update dvisvgm so that it supports converting PDFs to SVGs
+RUN bash -c "${APT_INSTALL} libpotrace-dev libgs-dev libkpathsea-dev && ${APT_CLEANUP}"
+RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/2.4/dvisvgm-2.4.tar.gz" -qO $FILE && \
+ tar -xf $FILE && \
+ cd dvisvgm-2.4 && \
+ ./configure && \
+ make -j4 && \
+ make install && \
+ find . -type f -name '*.o' -delete && \
+ find . -type f -name '*.a' -delete && \
+ cd .. && \
+ rm $FILE
 
 # Set name and email for git.
 RUN git config --global user.email "agent@docker.com"
@@ -172,8 +184,11 @@ RUN useradd -M agent
 RUN chown -R agent /service
 
 RUN bash -c "${APT_INSTALL} curl && ${APT_CLEANUP}"
-RUN (curl -sL https://deb.nodesource.com/setup_8.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
-RUN npm install -g typescript@2.6 tslint jspm typescript-formatter && npm cache clean --force
+RUN (curl -sL https://deb.nodesource.com/setup_10.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN npm i npm@latest -g
+RUN npm install -g typescript@2.8 typedoc tslint jspm typescript-formatter && npm cache clean --force
+
+RUN bash -c "${APT_INSTALL} pdftk && ${APT_CLEANUP}"
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:test' | chpasswd
@@ -181,6 +196,8 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 
 # Flask-Testing does not let us configure host, so we do it here.
 RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.6/dist-packages/flask_testing/utils.py
+
+RUN wget -q http://mirrors.ctan.org/support/latexmk/latexmk.pl -O /usr/bin/latexmk
 
 WORKDIR /service
 CMD python3 launch.py

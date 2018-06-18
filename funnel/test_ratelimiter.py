@@ -1,6 +1,7 @@
 import random
 import unittest
-from ratelimiter import RateLimited
+
+from funnel.ratelimiter import RateLimited
 
 
 class TestException(Exception):

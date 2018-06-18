@@ -1,9 +1,7 @@
 from typing import Union
 
 # noinspection PyUnresolvedReferences
-import timApp.documentmodel
-# noinspection PyUnresolvedReferences
-import timApp.timdb.models
+import timApp.document
 
 UserType = 'timApp.timdb.models.user.User'
 UserGroupType = 'timApp.timdb.models.usergroup.UserGroup'

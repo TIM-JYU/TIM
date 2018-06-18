@@ -50,11 +50,17 @@ def check_key(query, key):
     return key
 
 
+def normalize_bool(value):
+    if value in ('false', 'False'):
+        return False
+    return value
+
+
 def get_param(query, key, default):
     key = check_key(query, key)
     dvalue = default
     if key in query.query:
-        dvalue = query.query[key][0]
+        dvalue = normalize_bool(query.query[key][0])
     if dvalue == 'undefined':
         dvalue = default
 
@@ -74,11 +80,7 @@ def get_param(query, key, default):
     value = query.get_query[key][0]
     if value == 'undefined':
         return dvalue
-    if value == 'False':
-        value = False
-    if value == 'false':
-        value = False
-    return value
+    return normalize_bool(value)
 
 
 def get_param_table(query, key):

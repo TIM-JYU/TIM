@@ -39,7 +39,7 @@
     "@types/ui-grid": "^0.0.35",
     "moment": "^2.18.1",
     "tslib": "^1.7.1",
-    "type-zoo": "^1.0.1"
+    "type-zoo": "^2.0.0"
   },
   "devDependencies": {
     "jspm": "^0.17.0-beta.47",

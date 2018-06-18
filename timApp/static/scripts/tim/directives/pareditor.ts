@@ -80,6 +80,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
         multiline: string,
         strokes: string,
         pipe: string,
+        timTable: string,
     };
     private uploadedFile: string;
     private storage: Storage;
@@ -87,6 +88,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private plugintab: JQuery;
     private autocomplete: boolean;
     private citeText: string;
+    private docSettings: {macros: {dates: string[], knro: number, stampformat: string}};
     private metaset = false;
 
     private getOptions() {
@@ -189,6 +191,15 @@ export class PareditorController extends DialogController<{params: IEditorParams
             "|   12  |  12  |    12   |    12  |\n" +
             "|  123  |  123 |   123   |   123  |\n" +
             "|    1  |    1 |     1   |     1  |\n",
+
+             timTable:
+             "``` {plugin=\"timTable\"} \n"+
+             "table:                   \n"+
+             "    rows:                 \n"+
+             "      - row:              \n"+
+             "        - cell: \"solu\"     \n"+
+             "                            \n"+
+             "```                        \n",
         };
 
         $(document).on("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", (event) => {
@@ -225,6 +236,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
                 this.editor.setAutoCompletion(this.autocomplete);
             }
         });
+        this.docSettings = $window.docSettings;
     }
 
     $postLink() {
@@ -574,18 +586,56 @@ or newer one that is more familiar to write in YAML:
         this.uploadedFile = "";
         this.focusEditor();
         this.file = file;
+        const editorText = this.editor.getEditorText();
+        let autostamp = false;
+        let attachmentParams = undefined;
+        let macroParams = undefined;
 
+        // To identify attachment-macro.
+        const macroStringBegin = "%%liite(";
+        const macroStringEnd = ")%%";
+
+        // If there's an attachment macro in editor, assume need to stamp.
+        // Also requires data from preamble to work correctly (dates and knro).
+        // If there's no stampFormat set in preamble, uses hard coded default format.
+        if (editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0) {
+            autostamp = true;
+            // TODO: More exact parsing needed.
+            // Giving commas inside parameters will break this.
+            //throw new Error("Unable to parse stamping parametres!");
+            try {
+                macroParams = editorText.substring(
+                    editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
+                    editorText.lastIndexOf(macroStringEnd)).split(",");
+            } catch {
+                throw new Error("Unable to parse stamping parameters!");
+            }
+            // Knro usage starts from 1 but dates starts from 0, so dummy value added to
+            // dates[0] to adjust.
+            const knro = this.docSettings.macros.knro;
+            let dates = this.docSettings.macros.dates;
+            dates = ["ERROR", ...dates];
+            const kokousDate = dates[knro];
+            // If stampFormat isn't set in preamble,
+            let stampFormat = this.docSettings.macros.stampformat;
+            if (stampFormat === undefined) {
+                stampFormat = "";
+            }
+            attachmentParams = [kokousDate, stampFormat, ...macroParams, autostamp];
+        }
         if (file) {
             this.file.progress = 0;
             this.file.error = undefined;
             const upload = $upload.upload<{image: string, file: string}>({
                 data: {
                     file,
+                    attachmentParams: JSON.stringify(attachmentParams),
                 },
                 method: "POST",
                 url: "/upload/",
             });
 
+            // TODO: Better check for cases with non-showPdf-plugin-paragraphs.
             upload.then((response) => {
                 $timeout(() => {
                     var isplugin = (this.editor.editorStartsWith("``` {"));

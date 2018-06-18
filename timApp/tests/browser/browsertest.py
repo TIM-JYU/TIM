@@ -21,7 +21,7 @@ from wand.image import Image
 from timApp.tests.db.timdbtest import TEST_USER_1_NAME, TEST_USER_2_NAME, TEST_USER_3_NAME
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tests.timliveserver import TimLiveServer
-from timApp.timdb.docinfo import DocInfo
+from timApp.document.docinfo import DocInfo
 
 PREV_ANSWER = 'answerbrowser .prevAnswer'
 

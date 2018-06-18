@@ -10,11 +10,13 @@ services:
  funnel:
   image: timimages/funnel:latest
   volumes:
-   - ./funnel:/service
+   - ./funnel:/service/funnel
    - ./tim_logs/funnel:/var/log/funnel
-  working_dir: /service
+  working_dir: /service/funnel
   command: ${FUNNEL_COMMAND}
   restart: unless-stopped
+  environment:
+   PYTHONPATH: /service
  ts-watcher:
   image: timimages/tim:${TIM_IMAGE_TAG}
   volumes:

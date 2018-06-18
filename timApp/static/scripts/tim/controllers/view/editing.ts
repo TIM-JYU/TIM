@@ -9,6 +9,7 @@ import {$compile, $http, $window} from "../../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../../services/parCompiler";
 import {empty, isMobileDevice, to} from "../../utils";
 import {getActiveDocument} from "./document";
+import {TimTable} from "../../components/timTable";
 import {onClick} from "./eventhandlers";
 import {
     canEditPar,
@@ -373,6 +374,29 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         this.toggleParEditor({type: EditType.Edit, pars: $(this.viewctrl.selection.pars)}, {area: true});
     }
 
+    /**
+     * Toggles the edit mode of a table in a given table paragraph.
+     * @param {Event} e
+     * @param {Paragraph} $par The table paragraph.
+     */
+    toggleTableEditor(e: Event, $par: Paragraph) {
+        let parId = getParId($par);
+
+        if (parId == null) {
+            void showMessageDialog("Could not find paragraph");
+            return;
+        }
+
+        const tableCtrl = this.viewctrl.getTableControllerFromParId(parId);
+
+        if (tableCtrl == null) {
+            void showMessageDialog("Could not find table controller");
+            return;
+        }
+
+        tableCtrl.toggleEditMode();
+    }
+
     handleDelete(position: EditPosition) {
         if (position.type === EditType.Edit) {
             position.pars.remove();
@@ -478,8 +502,35 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         this.viewctrl.parmenuHandler.showOptionsWindow(e, $par);
     }
 
+    /**
+     * Checks whether the given paragraph is a table paragraph and in edit mode.
+     * @param {Paragraph} $par The paragraph.
+     * @returns {boolean | undefined} True if the paragraph is a table paragraph in edit mode, false
+     * if the paragraph is a table paragraph but not in edit mode, undefined if the paragraph is not a table paragraph
+     * at all.
+     */
+    isTimTableInEditMode($par: Paragraph | undefined): boolean | undefined {
+        if ($par == null)
+            return undefined;
+
+        let parId = getParId($par);
+
+        if (parId == null) {
+            return undefined;
+        }
+
+        const tableCtrl = this.viewctrl.getTableControllerFromParId(parId);
+
+        if (tableCtrl == null) {
+            return undefined;
+        }
+
+        return tableCtrl.isInEditMode();
+    }
+
     getEditorFunctions($par?: Paragraph) {
         const parEditable = ((!$par && this.viewctrl.item.rights.editable) || ($par && canEditPar(this.viewctrl.item, $par)));
+        const timTableEditMode = this.isTimTableInEditMode($par);
         if (this.viewctrl.editing) {
             return [
                 {func: () => this.goToEditor(), desc: "Go to editor", show: true},
@@ -508,6 +559,8 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                     show: this.viewctrl.item.rights.can_comment,
                 },
                 {func: (e: Event, par: Paragraph) => this.showEditWindow(e, par), desc: "Edit", show: parEditable},
+                {func: (e: Event, par: Paragraph) => this.toggleTableEditor(e, par), desc: "Edit table", show: parEditable && timTableEditMode === false},
+                {func: (e: Event, par: Paragraph) => this.toggleTableEditor(e, par), desc: "Close table editor", show: parEditable && timTableEditMode === true},
                 {
                     func: (e: Event, par: Paragraph) => this.viewctrl.clipboardHandler.cutPar(e, par),
                     desc: "Cut paragraph",

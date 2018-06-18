@@ -2,5 +2,6 @@ flags: {}
 packages:
 - '.'
 - './AsciiMath'
-extra-deps: []
-resolver: lts-9.0
+extra-deps: 
+- html-entities-1.1.4.2
+resolver: lts-11.7

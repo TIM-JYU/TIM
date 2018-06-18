@@ -1,6 +1,6 @@
 import unittest
 
-from timApp.documentmodel.attributeparser import AttributeParser
+from timApp.document.attributeparser import AttributeParser
 
 
 class AttributeParserTest(unittest.TestCase):
@@ -54,7 +54,7 @@ class AttributeParserTest(unittest.TestCase):
     def test_broken(self):
         self.check_invalid('  { #asd     ')
         self.check_invalid('  { #asd')
-        self.check_invalid(r'\{ #asd}')
+        # self.check_invalid(r'\{ #asd}')
         self.check_invalid('   #asd     }')
         self.check_invalid('{somekey="}')
         self.check_invalid('{somekey="""}')
@@ -64,6 +64,10 @@ class AttributeParserTest(unittest.TestCase):
         self.check_invalid('{#task1 #task2}')  # Only 1 task id allowed
         self.check_invalid('\\')
         self.check_invalid('{a=b c=')
+
+    def test_brace(self):
+        self.check_valid(r'# Hey {Hey {math_type=svg math_preamble="\\usetikzlibrary{shapes}"}',
+                         {'math_type': 'svg', 'math_preamble': r'\usetikzlibrary{shapes}'}, 11)
 
 if __name__ == '__main__':
     unittest.main()

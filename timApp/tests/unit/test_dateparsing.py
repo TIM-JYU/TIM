@@ -3,7 +3,7 @@ from datetime import timezone
 
 from dateutil.tz import tzlocal
 
-from timApp.utils import getdatetime
+from timApp.util.utils import getdatetime
 
 
 class DateParseTest(unittest.TestCase):

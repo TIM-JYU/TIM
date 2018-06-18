@@ -1,6 +1,6 @@
 import types
 
-from flask.ext.testing import LiveServerTestCase
+from flask_testing import LiveServerTestCase
 
 
 class TimLiveServer(LiveServerTestCase):

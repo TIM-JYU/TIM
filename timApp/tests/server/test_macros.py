@@ -1,10 +1,10 @@
 """Server tests for xxx."""
-from timApp.markdownconverter import md_to_html
-from timApp.plugin import Plugin
+from timApp.markdown.markdownconverter import md_to_html
+from timApp.plugin.plugin import Plugin
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.user import User
-from timApp.timdb.userutils import grant_view_access
+from timApp.user.user import User
+from timApp.user.userutils import grant_view_access
 
 
 class MacroTest(TimRouteTest):
@@ -51,7 +51,7 @@ header: %%username%% and %%realname%%
                          pars[0].text_content().strip())
         self.assertEqual('Percents: %%',
                          pars[1].text_content().strip())
-        self.assertEqual("Syntax error in template: unexpected 'end of template'",
+        self.assertEqual("Syntax error in template: unexpected ‘end of template’",
                          pars[2].text_content().strip())
         p = Plugin.from_task_id(f'{d.id}.test', User.query.get(TEST_USER_1_ID))
         self.assertEqual('testuser1 and Test user 1', p.values['header'])

@@ -1,11 +1,12 @@
 from sqlalchemy import event
 
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.accesstype import AccessType
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.models.folder import Folder
-from timApp.timdb.tim_models import db, BlockAccess
-from timApp.timdb.userutils import grant_access, grant_view_access, get_anon_group_id
+from timApp.auth.accesstype import AccessType
+from timApp.document.docentry import DocEntry
+from timApp.folder.folder import Folder
+from timApp.timdb.sqa import db
+from timApp.auth.auth_models import BlockAccess
+from timApp.user.userutils import grant_access, grant_view_access, get_anon_group_id
 
 
 class FolderTest(TimRouteTest):

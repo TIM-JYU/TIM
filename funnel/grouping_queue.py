@@ -1,7 +1,7 @@
 import os
-
-from persistent_queue import PersistentQueue
 from typing import Callable, Dict, Optional
+
+from funnel.persistent_queue import PersistentQueue
 
 
 class GroupingQueue(PersistentQueue):

@@ -4,15 +4,16 @@
 import random
 import unittest
 
-from timApp.documentmodel.document import Document
-from timApp.documentmodel.documentparser import DocumentParser
-from timApp.documentmodel.documentwriter import DocumentWriter
-from timApp.documentmodel.exceptions import DocExistsError
-from timApp.documentmodel.randutils import random_paragraph
+from timApp.document.document import Document
+from timApp.document.documentparser import DocumentParser
+from timApp.document.documentwriter import DocumentWriter
+from timApp.document.exceptions import DocExistsError
+from timApp.document.randutils import random_paragraph
 from timApp.tests.db.timdbtest import TimDbTest
-from timApp.timdb.documents import delete_document, import_document_from_file
+from timApp.document.documents import delete_document, import_document_from_file
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.userutils import get_anon_group_id
+from timApp.user.userutils import get_anon_group_id
+from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
 class DocumentTest(TimDbTest):
@@ -295,7 +296,7 @@ class DocumentTest(TimDbTest):
         self.assertEqual(f'document id is {d.doc_id}', p.get_expanded_markdown())
 
     def test_import(self):
-        import_document_from_file('example_docs/mmcq_example.md',
+        import_document_from_file(f'{EXAMPLE_DOCS_PATH}/mmcq_example.md',
                                   'Multiple choice plugin example',
                                   get_anon_group_id())
 

@@ -5,10 +5,10 @@ import subprocess
 import sys
 
 import timApp.tim
-from timApp.initdb2 import initialize_database
-from timApp.logger import log_info
+from timApp.timdb.init import initialize_database
+from timApp.util.logger import log_info
 from timApp.tim_app import app
-from timApp.utils import pycharm_running
+from timApp.util.utils import pycharm_running
 
 
 # noinspection PyUnusedLocal

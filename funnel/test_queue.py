@@ -2,8 +2,8 @@ import json
 import unittest
 from shutil import rmtree
 
-from fileutils import *
-from persistent_queue import PersistentQueue
+from funnel.fileutils import *
+from funnel.persistent_queue import PersistentQueue
 
 
 class QueueTest(unittest.TestCase):

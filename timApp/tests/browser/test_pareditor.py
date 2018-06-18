@@ -5,7 +5,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 
 from timApp.tests.browser.browsertest import BrowserTest, find_element_by_text, find_button_by_text
-from timApp.timdb.tim_models import db
+from timApp.timdb.sqa import db
 
 
 def get_change_editor_button(pareditor) -> WebElement:

@@ -13,18 +13,18 @@ from lxml import html
 from lxml.html import HtmlElement
 
 import timApp.tim
-from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.documentmodel.document import Document
-from timApp.documentmodel.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
-from timApp.documentmodel.timjsonencoder import TimJsonEncoder
-from timApp.routes.login import log_in_as_anonymous
+from timApp.document.docparagraph import DocParagraph
+from timApp.document.document import Document
+from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
+from timApp.document.timjsonencoder import TimJsonEncoder
+from timApp.auth.login import log_in_as_anonymous
 from timApp.tests.db.timdbtest import TimDbTest
-from timApp.timdb.docinfo import DocInfo
-from timApp.timdb.models.docentry import DocEntry
-from timApp.timdb.models.translation import Translation
-from timApp.timdb.models.user import User
-from timApp.timdb.models.usergroup import UserGroup
-from timApp.utils import remove_prefix
+from timApp.document.docinfo import DocInfo
+from timApp.document.docentry import DocEntry
+from timApp.document.translation.translation import Translation
+from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
+from timApp.util.utils import remove_prefix
 
 
 def load_json(resp: Response):
@@ -587,11 +587,18 @@ class TimRouteTest(TimDbTest):
         return f
 
     def assert_elements_equal(self, e1, e2):
-        self.assertEqual(e1.tag, e2.tag)
-        self.assertEqual((e1.text or '').strip(), (e2.text or '').strip())
-        self.assertEqual((e1.tail or '').strip(), (e2.tail or '').strip())
-        self.assertEqual(e1.attrib, e2.attrib)
-        self.assertEqual(len(e1), len(e2), msg=html.tostring(e2, pretty_print=True).decode('utf-8'))
+        try:
+            self.assertEqual(e1.tag, e2.tag)
+            self.assertEqual((e1.text or '').strip(), (e2.text or '').strip())
+            self.assertEqual((e1.tail or '').strip(), (e2.tail or '').strip())
+            self.assertEqual(e1.attrib, e2.attrib)
+            self.assertEqual(len(e1), len(e2), msg=html.tostring(e2, pretty_print=True).decode('utf-8'))
+        except AssertionError:
+            print(html.tostring(e1).decode('utf8'))
+            print()
+            print(html.tostring(e2).decode('utf8'))
+            raise
+
         for c1, c2 in zip(e1, e2):
             self.assert_elements_equal(c1, c2)
 
@@ -648,6 +655,9 @@ class TimRouteTest(TimDbTest):
         folder = d.location
         p = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name}', **kwargs)
         return p
+
+    def assert_same_html(self, elem, expected_html: str):
+        self.assert_elements_equal(elem, html.fromstring(expected_html))
 
 
 if __name__ == '__main__':

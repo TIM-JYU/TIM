@@ -1,0 +1,7 @@
+{ route =
+    "markdown/"
+, body =
+    "{\"content\":[\"My equation: \$H_2 O\$.\"]}"
+, name =
+    "mathjax-markdown-1"
+}

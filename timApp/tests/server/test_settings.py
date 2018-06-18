@@ -1,6 +1,6 @@
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.models.usergroup import UserGroup
-from timApp.timdb.tim_models import db
+from timApp.user.usergroup import UserGroup
+from timApp.timdb.sqa import db
 
 
 class SettingsTest(TimRouteTest):

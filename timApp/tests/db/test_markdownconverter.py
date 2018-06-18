@@ -1,10 +1,10 @@
 """A test for markdownconverter module."""
 import unittest
 
-import timApp.dumboclient
-from timApp.documentmodel.docparagraph import DocParagraph
-from timApp.documentmodel.docsettings import DocSettings
-from timApp.markdownconverter import md_to_html, par_list_to_html_list
+import timApp.markdown.dumboclient
+from timApp.document.docparagraph import DocParagraph
+from timApp.document.docsettings import DocSettings
+from timApp.markdown.markdownconverter import md_to_html, par_list_to_html_list
 from timApp.tests.db.timdbtest import TimDbTest
 
 
@@ -44,11 +44,11 @@ class MarkdownConverterTest(TimDbTest):
                              'Run ./pull_all.sh to update.')
 
     def test_markup_md_conversion(self):
-        self.assertEqual({'test1': 'value1', 'test2': '<em>value2</em>'}, timApp.dumboclient.call_dumbo(
+        self.assertEqual({'test1': 'value1', 'test2': '<em>value2</em>'}, timApp.markdown.dumboclient.call_dumbo(
             {'test1': 'value1', 'test2': 'md:*value2*'}, path='/mdkeys'))
         self.assertEqual(
             [{'test1': 'value1', 'test2': '<em>value2</em>'}, {'test3': 'value3', 'test4': '<strong>value4</strong>'}],
-            timApp.dumboclient.call_dumbo(
+            timApp.markdown.dumboclient.call_dumbo(
                 [{'test1': 'value1', 'test2': 'md:*value2*'}, {'test3': 'value3', 'test4': 'md:**value4**'}],
                 path='/mdkeys'))
 

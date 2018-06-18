@@ -1,15 +1,16 @@
 {
 module Parser (parseAscii) where
-import Lexer
-import Ast
+
 import Prelude hiding (EQ, LT, GT)
+
+import Ast
+import Exception
+import Lexer
 }
 
 %name parseAscii
 %tokentype { (Token, Position) }
-%monad { Either LexicalError } { thenE } { \x -> Right x }
-%error { \x ->  let (tok, pos) = head x in
-                Left $ LexicalError (show tok) pos }
+%monad { Either AsciimathException } { thenE } { \x -> Right x }
 
 %token
   RAW         { (RAW _, _) }
@@ -22,111 +23,112 @@ import Prelude hiding (EQ, LT, GT)
   '^'         { (SUPER, _) }
   GREEK       { (GREEK _, _) }
   STDFUN      { (STDFUN _, _) }
-  SQRT        { (SQRT, _) } 
-  TEXT        { (TEXT, _) } 
-  BB          { (BB, _) } 
-  BBB         { (BBB, _) } 
-  UCC         { (UCC, _) } 
-  TT          { (TT, _) } 
-  FR          { (FR, _) } 
+  SQRT        { (SQRT, _) }
+  TEXT        { (TEXT, _) }
+  BB          { (BB, _) }
+  BBB         { (BBB, _) }
+  UCC         { (UCC, _) }
+  TT          { (TT, _) }
+  FR          { (FR, _) }
   SF          { (SF, _) }
-  FRAC        { (FRAC, _) } 
-  ROOT        { (ROOT, _) } 
+  FRAC        { (FRAC, _) }
+  ROOT        { (ROOT, _) }
   STACKREL    { (STACKREL, _) }
-  ADD         { (ADD, _) } 
-  SUB         { (SUB, _) } 
-  MUL         { (MUL, _) } 
-  MMUL        { (MMUL, _) } 
-  MMMUL       { (MMMUL, _) } 
-  SSLASH      { (SSLASH, _) } 
+  ADD         { (ADD, _) }
+  SUB         { (SUB, _) }
+  MUL         { (MUL, _) }
+  MMUL        { (MMUL, _) }
+  MMMUL       { (MMMUL, _) }
+  SSLASH      { (SSLASH, _) }
   BBSLASH     { (BBSLASH, _) }
-  TIMES       { (TIMES, _) } 
-  DIV         { (DIV, _) } 
-  COMP        { (COMP, _) } 
-  OPLUS       { (OPLUS, _) } 
-  OTIMES      { (OTIMES, _) } 
+  TIMES       { (TIMES, _) }
+  DIV         { (DIV, _) }
+  COMP        { (COMP, _) }
+  OPLUS       { (OPLUS, _) }
+  OTIMES      { (OTIMES, _) }
   ODOT        { (ODOT, _) }
-  SUM         { (SUM, _) } 
-  PROD        { (PROD, _) } 
-  WEDGE       { (WEDGE, _) } 
-  WWEDGE      { (WWEDGE, _) } 
-  VV          { (VV, _) } 
-  VVV         { (VVV, _) } 
-  NN          { (NN, _) } 
-  NNN         { (NNN, _) } 
-  UU          { (UU, _) } 
+  SUM         { (SUM, _) }
+  PROD        { (PROD, _) }
+  WEDGE       { (WEDGE, _) }
+  WWEDGE      { (WWEDGE, _) }
+  VV          { (VV, _) }
+  VVV         { (VVV, _) }
+  NN          { (NN, _) }
+  NNN         { (NNN, _) }
+  UU          { (UU, _) }
   UUU         { (UUU, _) }
-  INT         { (INT, _) } 
-  OINT        { (OINT, _) } 
-  DEL         { (DEL, _) } 
-  GRAD        { (GRAD, _) } 
-  ADDSUB      { (ADDSUB, _) } 
-  VOID        { (VOID, _) } 
-  INFTY       { (INFTY, _) } 
+  INT         { (INT, _) }
+  OINT        { (OINT, _) }
+  DEL         { (DEL, _) }
+  GRAD        { (GRAD, _) }
+  ADDSUB      { (ADDSUB, _) }
+  VOID        { (VOID, _) }
+  INFTY       { (INFTY, _) }
   ALEPH       { (ALEPH, _) }
-  ANGLE       { (ANGLE, _) } 
-  THEREFORE   { (THEREFORE, _) } 
-  ABS         { (ABS, _) } 
-  CDOTS       { (CDOTS, _) } 
-  VDOTS       { (VDOTS, _) } 
-  DDOTS       { (DDOTS, _) } 
+  ANGLE       { (ANGLE, _) }
+  THEREFORE   { (THEREFORE, _) }
+  ABS         { (ABS, _) }
+  CDOTS       { (CDOTS, _) }
+  VDOTS       { (VDOTS, _) }
+  DDOTS       { (DDOTS, _) }
   BSLASH      { (BSLASH, _) }
-  QUAD        { (QUAD, _) } 
+  QUAD        { (QUAD, _) }
   SPACE       { (SPACE, _) }
-  DIAMOND     { (DIAMOND, _) } 
-  SQUARE      { (SQUARE, _) } 
-  LFLOOR      { (LFLOOR, _) } 
-  RFLOOR      { (RFLOOR, _) } 
-  LCEIL       { (LCEIL, _) } 
+  DIAMOND     { (DIAMOND, _) }
+  SQUARE      { (SQUARE, _) }
+  LFLOOR      { (LFLOOR, _) }
+  RFLOOR      { (RFLOOR, _) }
+  LCEIL       { (LCEIL, _) }
   RCEIL       { (RCEIL, _) }
-  CC          { (CC, _) } 
-  ENSNN       { (ENSNN, _) } 
-  QQ          { (QQ, _) } 
-  RR          { (RR, _) } 
+  CC          { (CC, _) }
+  ENSNN       { (ENSNN, _) }
+  QQ          { (QQ, _) }
+  RR          { (RR, _) }
   ZZ          { (ZZ, _) }
-  EQ          { (EQ, _) } 
-  NEQ         { (NEQ, _) } 
-  LT          { (LT, _) } 
-  GT          { (GT, _) } 
-  LE          { (LE, _) } 
-  GE          { (GE, _) } 
-  PREC        { (PREC, _) } 
+  EQ          { (EQ, _) }
+  NEQ         { (NEQ, _) }
+  LT          { (LT, _) }
+  GT          { (GT, _) }
+  LE          { (LE, _) }
+  GE          { (GE, _) }
+  PREC        { (PREC, _) }
   SUCC        { (SUCC, _) }
-  IN          { (IN, _) } 
-  NOTIN       { (NOTIN, _) } 
-  SUBSET      { (SUBSET, _) } 
-  SUPSET      { (SUPSET, _) } 
-  SUBSETE     { (SUBSETE, _) } 
+  IN          { (IN, _) }
+  NOTIN       { (NOTIN, _) }
+  SUBSET      { (SUBSET, _) }
+  SUPSET      { (SUPSET, _) }
+  SUBSETE     { (SUBSETE, _) }
   SUPSETE     { (SUPSETE, _) }
-  MOD         { (MOD, _) } 
-  CONGR       { (CONGR, _) } 
-  APPROX      { (APPROX, _) } 
+  MOD         { (MOD, _) }
+  CONGR       { (CONGR, _) }
+  APPROX      { (APPROX, _) }
   PROP        { (PROP, _) }
-  AND         { (AND, _) } 
-  OR          { (OR, _) } 
-  NOT         { (NOT, _) } 
-  IMPLIES     { (IMPLIES, _) } 
-  IF          { (IF, _) } 
-  IFF         { (IFF, _) } 
-  FORALL      { (FORALL, _) } 
+  AND         { (AND, _) }
+  OR          { (OR, _) }
+  NOT         { (NOT, _) }
+  IMPLIES     { (IMPLIES, _) }
+  IF          { (IF, _) }
+  IFF         { (IFF, _) }
+  FORALL      { (FORALL, _) }
   EXISTS      { (EXISTS, _) }
-  FALSUM      { (FALSUM, _) } 
-  TAUT        { (TAUT, _) } 
-  TURNSTILE   { (TURNSTILE, _) } 
+  FALSUM      { (FALSUM, _) }
+  TAUT        { (TAUT, _) }
+  TURNSTILE   { (TURNSTILE, _) }
   TTURNSTILE  { (TTURNSTILE, _) }
-  UARR        { (UARR, _) } 
-  DARR        { (DARR, _) } 
-  LARR        { (LARR, _) } 
+  UARR        { (UARR, _) }
+  DARR        { (DARR, _) }
+  LARR        { (LARR, _) }
   TO          { (TO, _) }
-  MAPSTO      { (MAPSTO, _) } 
-  HARR        { (HARR, _) } 
-  LLARR       { (LLARR, _) } 
-  HAT         { (HAT, _) } 
-  BAR         { (BAR, _) } 
-  UL          { (UL, _) } 
-  VEC         { (VEC, _) } 
-  DOTOP       { (DOTOP, _) } 
-  DDOT        { (DDOT, _) } 
+  MAPSTO      { (MAPSTO, _) }
+  HARR        { (HARR, _) }
+  LLARR       { (LLARR, _) }
+  TILDE       { (TILDE, _) }
+  HAT         { (HAT, _) }
+  BAR         { (BAR, _) }
+  UL          { (UL, _) }
+  VEC         { (VEC, _) }
+  DOTOP       { (DOTOP, _) }
+  DDOT        { (DDOT, _) }
   COMMA       { (COMMA, _) }
   DOT         { (DOT, _) }
   SEMICOLON   { (SEMICOLON, _) }
@@ -141,7 +143,7 @@ code:
 
 expr:
     simpleExpr  { let (SimpleExpr _ pos) = $1 in Expr (Simple $1) pos }
-    | simpleExpr '/' simpleExpr 
+    | simpleExpr '/' simpleExpr
                 { let (SimpleExpr _ p1) = $1 in
                   let (SimpleExpr _ p3) = $3 in
                   Expr (Frac $1 $3) (pextr p1 p3) }
@@ -153,7 +155,7 @@ expr:
                 { let (SimpleExpr _ p1) = $1 in
                   let (SimpleExpr _ p2) = $3 in
                   Expr (Super $1 $3) (pextr p1 p2) }
-    | simpleExpr '_' simpleExpr '^' simpleExpr 
+    | simpleExpr '_' simpleExpr '^' simpleExpr
                 { let (SimpleExpr _ p1) = $1 in
                   let (SimpleExpr _ p5) = $5 in
                   Expr (SubSuper $1 $3 $5) (pextr p1 p5) }
@@ -174,7 +176,7 @@ const:
     | TIMES       { cst $1 Times }
     | DIV         { cst $1 Div }
     | COMP        { cst $1 Comp }
-    | OPLUS       { cst $1 Oplus } 
+    | OPLUS       { cst $1 Oplus }
     | OTIMES      { cst $1 Otimes }
     | ODOT        { cst $1 Odot }
     | SUM         { cst $1 Sum }
@@ -186,7 +188,7 @@ const:
     | NN          { cst $1 Nn }
     | NNN         { cst $1 Nnn }
     | UU          { cst $1 Uu }
-    | UUU         { cst $1 Uuu }    
+    | UUU         { cst $1 Uuu }
     -- Miscellaneous symbols
     | INT         { cst $1 Inte }
     | OINT        { cst $1 Oint }
@@ -199,7 +201,7 @@ const:
     | ANGLE       { cst $1 Angle }
     | THEREFORE   { cst $1 Therefore }
     | ABS         { cst $1 Abs }
-    | CDOTS       { cst $1 Cdots } 
+    | CDOTS       { cst $1 Cdots }
     | VDOTS       { cst $1 Vdots }
     | DDOTS       { cst $1 Ddots }
     | BSLASH      { cst $1 Bslash }
@@ -232,7 +234,7 @@ const:
     | SUBSETE     { cst $1 Subsete }
     | SUPSETE     { cst $1 Supsete }
     | MOD         { cst $1 Mod }
-    | CONGR       { cst $1 Congr } 
+    | CONGR       { cst $1 Congr }
     | APPROX      { cst $1 Approx }
     | PROP        { cst $1 Prop }
     -- Logical symbols
@@ -272,6 +274,7 @@ op1:
     | TT        { op1 $1 Utt }
     | FR        { op1 $1 Ufr }
     | SF        { op1 $1 Usf }
+    | TILDE     { op1 $1 Utilde }
     | HAT       { op1 $1 Uhat }
     | BAR       { op1 $1 Ubar }
     | UL        { op1 $1 Uul }
@@ -307,10 +310,13 @@ simpleExpr:
 
 {
 
-thenE :: Either LexicalError a -> (a -> Either LexicalError b) -> Either
-    LexicalError b
+thenE :: Either AsciimathException a -> (a -> Either AsciimathException b) -> Either AsciimathException b
 thenE (Left err) _ = Left err
 thenE (Right x) f = f x
+
+happyError tokens =
+  let (tok, pos) = head tokens in
+  Left $ LexicalError (show tok) pos
 
 -- Conversion
 cst :: (Token, Position) -> Constant_ -> Constant
@@ -325,7 +331,7 @@ op2 (_, p) b = BinaryOp b p
 -- builds a new position which begining is the begining of the first argument
 -- and which ending is the ending of the second argument
 pextr :: Position -> Position -> Position
-pextr (PositionElement a1 l c len1) (PositionElement a2 _ _ len2) = 
+pextr (PositionElement a1 l c len1) (PositionElement a2 _ _ len2) =
     PositionElement a1 l c (len1 + (a2 - a1 - 1) + len2)
 
 -- Conversion
@@ -343,4 +349,3 @@ ldel "{" = LBra
 ldel "(:" = LChe
 ldel "{:" = LBraCons
 }
-
