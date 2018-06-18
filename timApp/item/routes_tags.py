@@ -136,6 +136,6 @@ def get_tagged_documents():
 
 def check_special_tag_rights(tag: str):
     if tag in special_tags:
-        # TODO: Check if use belongs to a group allowed to use the tag.
+        # TODO: Check if user belongs to a group allowed to use the tag.
         # abort(403, f"Editing tag '{tag}' requires additional rights.")
         pass

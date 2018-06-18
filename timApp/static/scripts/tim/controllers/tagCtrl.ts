@@ -191,7 +191,8 @@ registerDialogComponent("timEditTags",
     </dialog-header>
     <dialog-body>
         <h4>Document tags</h4>
-        <p ng-if="$ctrl.tagsList.length === 0">No tags</p>
+        <p ng-if="$ctrl.tagsList.length > 0">The following tags were found for the document.</p>
+        <p ng-if="$ctrl.tagsList.length === 0">No tags were found for the document.</p>
         <div class="tags-list">
             <span ng-repeat="x in $ctrl.tagsList">
                 <tag-label tag-text="x.tag"></tag-label>
@@ -202,21 +203,22 @@ registerDialogComponent("timEditTags",
             </span>
         </div>
         <h4>Add new tags</h4>
+        <p>Tag the document by adding words that briefly describe and classify it.</p>
         <form name="$ctrl.f" class="form-horizontal">
-            <div class="form-group" tim-error-state
+            <div class="form-group" tim-error-state title="Write tag names separated by spaces"
                  ng-class="{'has-error': !$ctrl.f.nameField.$pristine && $ctrl.f.nameField.$error.required}">
                 <label for="name" class="col-sm-4 control-label">Tag name:</label>
                 <div class="col-sm-8">
                     <input required focus-me="$ctrl.focusName" ng-model="$ctrl.tagName" name="tagField"
-                           type="text" title="Write tag names separated by spaces"
+                           type="text"
                            ng-keypress="$ctrl.keyPressed($event)" autocomplete="off"
                            class="form-control" id="name" placeholder="Tag names separated by spaces"
-    uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | orderBy:tag | limitTo:12"
+    uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | orderBy:tag | limitTo:18"
                            typeahead-min-length="0">
                 </div>
                 <tim-error-message></tim-error-message>
             </div>
-            <div class="form-group"
+            <div class="form-group" title="Add optional expiration date to specify how long the tag is valid"
                  ng-class="{'has-error': !$ctrl.f.nameField.$pristine && $ctrl.f.nameField.$error.required}">
                 <label for="name" class="col-sm-4 control-label">Expiration date:</label>
                 <div class="col-sm-8">

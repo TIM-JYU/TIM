@@ -9,6 +9,7 @@ import {showMessageDialog} from "../dialog";
 import {ITemplate, showPrintDialog} from "./printCtrl";
 import {showMergePdfDialog} from "./mergePdfCtrl";
 import {showTagDialog} from "./tagCtrl";
+import {showTagSearchDialog} from "./tagSearchCtrl";
 import angular from "angular";
 
 /**
@@ -230,6 +231,16 @@ export class SidebarMenuCtrl implements IController {
             return;
         }
         showTagDialog(this.vctrl.item);
+    }
+
+    /*
+     * Opens tag search dialog.
+     */
+    searchWithTags() {
+        if (!this.vctrl) {
+            return;
+        }
+        showTagSearchDialog(this.vctrl.item);
     }
 }
 

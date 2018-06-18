@@ -110,8 +110,6 @@ timApp.component("taggedDocumentList", {
     },
     controller: TaggedDocumentListCtrl,
     template: `
-<bootstrap-panel title="List of documents" show-close="true"
-    ng-switch on="$ctrl.docList.length" close-fn="$ctrl.closeFn()">
     <div>
     <div class="input-group" ng-show="$ctrl.enableSearch">
         <input ng-model="$ctrl.tagFilter" name="filterField" ng-keypress="$ctrl.keyPressed($event)"
@@ -127,18 +125,17 @@ timApp.component("taggedDocumentList", {
             <i class="glyphicon glyphicon-search"></i>
         </span>
     </div>
-    <ul ng-switch-default>
-        <li ng-repeat="doc in $ctrl.docList">
-            <a href="view/{{doc.path}}" title="Open {{doc.title}}">{{doc.title}}</a>
-            <span ng-repeat="tag in doc.tags">
-                <tag-label style="{{$ctrl.tagStyle}}"
-                ng-click="$ctrl.searchClicked(tag.tag)"
-                title="{{$ctrl.tagToolTip}}'{{tag.tag}}'"
-                tag-text="tag.tag"></tag-label> </span>
-        </li>
-    </ul>
-    <span ng-switch-when="0">No documents found!</span>
+        <ul ng-if="$ctrl.docList.length > 0">
+            <li ng-repeat="doc in $ctrl.docList">
+                <a href="view/{{doc.path}}" title="Open {{doc.title}}">{{doc.title}}</a>
+                <span ng-repeat="tag in doc.tags">
+                    <tag-label style="{{$ctrl.tagStyle}}"
+                    ng-click="$ctrl.searchClicked(tag.tag)"
+                    title="{{$ctrl.tagToolTip}}'{{tag.tag}}'"
+                    tag-text="tag.tag"></tag-label> </span>
+            </li>
+        </ul>
+    <span ng-if="$ctrl.docList.length == 0">No documents found!</span>
     </div>
-</bootstrap-panel>
     `,
 });

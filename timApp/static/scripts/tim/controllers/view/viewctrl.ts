@@ -509,7 +509,7 @@ export class ViewCtrl implements IController {
         const bookmark = {group: "My courses", name: this.item.title, link: "/view/" + this.item.path};
         const response = await $http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark);
         this.bookmarksCtrl.refresh();
-        this.checkIfBookmarked(); // Instead of directly changing boolean check if it really was added.
+        this.checkIfBookmarked(); // Instead of directly changing boolean this checks if it really was added.
     }
 
     registerBookmarks(bookmarksCtrl: BookmarksController) {

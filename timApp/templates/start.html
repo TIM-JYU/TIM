@@ -80,10 +80,14 @@
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    <tagged-document-list ng-if="$ctrl.docListOpen"
-                                          enable-search="true" tag-filter="kurssi" exact-match="false"
-                                          list-doc-tags="true"
-                    close-fn="$ctrl.disableDocList()"></tagged-document-list>
+                    <bootstrap-panel title="List of available courses" show-close="true"
+                                     ng-if="$ctrl.docListOpen" close-fn="$ctrl.disableDocList()">
+                        <tagged-document-list title="Displaying all documents tagged as a course"
+                                              enable-search="false" tag-filter="kurssi" exact-match="false"
+                                              list-doc-tags="false">
+
+                        </tagged-document-list>
+                    </bootstrap-panel>
                 </div>
             </div>
             <div class="row">
