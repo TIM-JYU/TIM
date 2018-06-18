@@ -28,14 +28,14 @@ class BookmarkTest(TimRouteTest):
         self.assertListEqual([{'name': 'mygroup', 'items': [], 'editable': True}], bookmarks)
         bookmarks = self.json_post('/bookmarks/add', {'group': group_name2, 'name': item, 'link': item_path})
         self.assertListEqual([{'items': [], 'name': group_name, 'editable': True},
-                              {'items': [{'name': item, 'path': item_path}],
+                              {'items': [{'name': item, 'link': item_path}],
                                'name': group_name2, 'editable': True}], bookmarks)
 
         bookmarks = self.json_post('/bookmarks/deleteGroup', {'group': group_name})
-        self.assertListEqual([{'items': [{'name': item, 'path': item_path}],
+        self.assertListEqual([{'items': [{'name': item, 'link': item_path}],
                                'name': group_name2, 'editable': True}], bookmarks)
         bookmarks = self.json_post('/bookmarks/deleteGroup', {'group': group_name})
-        self.assertListEqual([{'items': [{'name': item, 'path': item_path}],
+        self.assertListEqual([{'items': [{'name': item, 'link': item_path}],
                                'name': group_name2, 'editable': True}], bookmarks)
 
         bookmarks = self.json_post('/bookmarks/delete', {'group': group_name2, 'name': item})
@@ -44,12 +44,12 @@ class BookmarkTest(TimRouteTest):
         self.assertListEqual([{'items': [], 'name': group_name2, 'editable': True}], bookmarks)
 
         bookmarks = self.json_post('/bookmarks/add', {'group': group_name2, 'name': item, 'link': item_path})
-        self.assertListEqual([{'items': [{'name': item, 'path': item_path}],
+        self.assertListEqual([{'items': [{'name': item, 'link': item_path}],
                                'name': group_name2, 'editable': True}], bookmarks)
         bookmarks = self.json_post('/bookmarks/edit',
                                    {'old': {'group': group_name2, 'name': item},
                                     'new': {'group': group_name2, 'name': item, 'link': 'test'}})
-        self.assertListEqual([{'items': [{'name': item, 'path': 'test'}],
+        self.assertListEqual([{'items': [{'name': item, 'link': 'test'}],
                                'name': group_name2, 'editable': True}], bookmarks)
         self.logout()
         self.get_bookmarks(expect_status=403)
@@ -59,34 +59,34 @@ class BookmarkTest(TimRouteTest):
         d = self.create_doc()
         view = '/view/'
         self.assertListEqual([{'name': 'Last edited',
-                               'items': [{'name': d.title, 'path': view + d.path}],
+                               'items': [{'name': d.title, 'link': view + d.path}],
                                'editable': False}],
                              self.get_bookmarks())
         d2 = self.create_doc()
         self.assertListEqual([{'name': 'Last edited',
-                               'items': [{'name': d2.title, 'path': view + d2.path},
-                                         {'name': d.title, 'path': view + d.path}],
+                               'items': [{'name': d2.title, 'link': view + d2.path},
+                                         {'name': d.title, 'link': view + d.path}],
                                'editable': False}],
                              self.get_bookmarks())
         d3 = self.create_doc()
         self.assertListEqual([{'name': 'Last edited',
-                               'items': [{'name': d3.title, 'path': view + d3.path},
-                                         {'name': d2.title, 'path': view + d2.path},
-                                         {'name': d.title, 'path': view + d.path}],
+                               'items': [{'name': d3.title, 'link': view + d3.path},
+                                         {'name': d2.title, 'link': view + d2.path},
+                                         {'name': d.title, 'link': view + d.path}],
                                'editable': False}],
                              self.get_bookmarks())
         self.new_par(d.document, 'test')
         self.assertListEqual([{'name': 'Last edited',
-                               'items': [{'name': d.title, 'path': view + d.path},
-                                         {'name': d3.title, 'path': view + d3.path},
-                                         {'name': d2.title, 'path': view + d2.path}],
+                               'items': [{'name': d.title, 'link': view + d.path},
+                                         {'name': d3.title, 'link': view + d3.path},
+                                         {'name': d2.title, 'link': view + d2.path}],
                                'editable': False}],
                              self.get_bookmarks())
         d4 = self.create_doc()
         # LAST_EDITED_BOOKMARK_LIMIT = 3 when testing
         self.assertListEqual([{'name': 'Last edited',
-                               'items': [{'name': d4.title, 'path': view + d4.path},
-                                         {'name': d.title, 'path': view + d.path},
-                                         {'name': d3.title, 'path': view + d3.path}],
+                               'items': [{'name': d4.title, 'link': view + d4.path},
+                                         {'name': d.title, 'link': view + d.path},
+                                         {'name': d3.title, 'link': view + d3.path}],
                                'editable': False}],
                              self.get_bookmarks())
