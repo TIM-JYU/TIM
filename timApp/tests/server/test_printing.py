@@ -1,7 +1,6 @@
 """Server tests for printing."""
 import json
 import urllib.parse
-import warnings
 
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
 from timApp.util.flask.responsehelper import to_json_str
@@ -81,9 +80,3 @@ $body$
         self.assertTrue(2850 <= pdf_length <= 2853, msg=f'Unexpected file length: {pdf_length}')
         self.login_test2()
         self.get(expected_url, expect_status=403)
-
-    def get_no_warn(self, url: str):
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            result = self.get(url)
-        return result

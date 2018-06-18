@@ -4,22 +4,6 @@ timApp.upload package
 Submodules
 ----------
 
-timApp.upload.files module
---------------------------
-
-.. automodule:: timApp.upload.files
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-timApp.upload.images module
----------------------------
-
-.. automodule:: timApp.upload.images
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 timApp.upload.upload module
 ---------------------------
 
@@ -28,10 +12,10 @@ timApp.upload.upload module
     :undoc-members:
     :show-inheritance:
 
-timApp.upload.uploads module
-----------------------------
+timApp.upload.uploadedfile module
+---------------------------------
 
-.. automodule:: timApp.upload.uploads
+.. automodule:: timApp.upload.uploadedfile
     :members:
     :undoc-members:
     :show-inheritance:

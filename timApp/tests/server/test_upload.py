@@ -51,3 +51,18 @@ class UploadTest(TimRouteTest):
                   data={'folder': fname,
                         'file': (io.BytesIO(b'test file'), 'test.md')},
                   expect_status=200)
+
+    def test_upload_file(self):
+        self.login_test1()
+        self.post('/upload/',
+                  data={'file': (io.BytesIO(b'test file'), 'test.md')}, expect_content={'file': '1/test.md'})
+        self.get_no_warn(f'/files/1/test.md', expect_content='test file')
+        self.get(f'/files/2/test.md', expect_status=404)
+        self.get(f'/files/1/testx.md', expect_status=404)
+
+    def test_upload_image(self):
+        self.login_test1()
+        j = self.post('/upload/', data={'file': (io.BytesIO(b'GIF87a'), 'test.jpg')})
+        self.get_no_warn(f'/images/{j["image"]}', expect_content='GIF87a')
+        self.get(f'/images/1{j["image"]}', expect_status=404)
+        self.get(f'/images/{j["image"]}x', expect_status=404)

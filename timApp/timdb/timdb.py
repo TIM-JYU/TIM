@@ -3,15 +3,12 @@ import os
 import time
 from time import sleep
 
-from timApp.util.logger import log_info, log_debug, log_error, log_warning
-from timApp.velp.annotations import Annotations
 from timApp.answer.answers import Answers
-from timApp.upload.files import Files
-from timApp.upload.images import Images
 from timApp.note.notes import Notes
 from timApp.timdb.sqa import db
-from timApp.upload.uploads import Uploads
 from timApp.user.users import Users
+from timApp.util.logger import log_info, log_debug, log_error, log_warning
+from timApp.velp.annotations import Annotations
 from timApp.velp.velpgroups import VelpGroups
 from timApp.velp.velps import Velps
 
@@ -59,14 +56,7 @@ class TimDb(object):
         self.notes = None
         self.readings = None
         self.users = None
-        self.images = None
-        self.uploads = None
-        self.files = None
         self.answers = None
-        self.questions = None
-        self.messages = None
-        self.lectures = None
-        self.lecture_answers = None
         self.velps = None
         self.velp_groups = None
         self.annotations = None
@@ -106,9 +96,6 @@ class TimDb(object):
         # log_info('TimDb instances/PG connections: {}/{} (constructor)'.format(TimDb.instances, num_connections))
         self.notes = Notes(self.db, self.files_root_path, 'notes', self.current_user_name, self.session)
         self.users = Users(self.db, self.files_root_path, 'users', self.current_user_name, self.session)
-        self.images = Images(self.db, self.files_root_path, 'images', self.current_user_name, self.session)
-        self.uploads = Uploads(self.db, self.files_root_path, 'uploads', self.current_user_name, self.session)
-        self.files = Files(self.db, self.files_root_path, 'files', self.current_user_name, self.session)
         self.answers = Answers(self.db, self.files_root_path, 'answers', self.current_user_name, self.session)
         self.velps = Velps(self.db, self.files_root_path, 'velps', self.current_user_name, self.session)
         self.velp_groups = VelpGroups(self.db, self.files_root_path, 'velp_groups',

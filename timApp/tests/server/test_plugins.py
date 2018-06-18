@@ -217,11 +217,10 @@ class PluginTest(TimRouteTest):
                                 expect_content={'error': f'Non-existent upload: {invalid_file}'}
                                 )
         self.assertEqual(f'/uploads/{doc.doc_id}/{task_name}/{self.current_user_name()}/1/test.txt', ur['file'])
-        self.assertEqual(file_content, self.get(ur['file']))
+        self.assertEqual(file_content, self.get_no_warn(ur['file']))
         self.get(ur['file'] + 'x', expect_status=404)
         self.assertEqual(file_content,
-                         self.get(f'/uploads/{doc.doc_id}/{task_name}/{self.current_user_name()}',
-                                  expect_status=200))
+                         self.get_no_warn(f'/uploads/{doc.doc_id}/{task_name}/{self.current_user_name()}'))
         self.get(f'/uploads/{doc.doc_id}/{task_name}', expect_status=400)
         self.get(f'/uploads/{doc.doc_id}', expect_status=400)
         self.get(f'/uploads', expect_status=404)
@@ -245,7 +244,7 @@ class PluginTest(TimRouteTest):
 
         # until the 'see answers' right is granted for the document
         grant_access(ug, doc.doc_id, 'see answers')
-        self.get(ur['file'], expect_content=file_content)
+        self.get_no_warn(ur['file'], expect_content=file_content)
 
     def do_plugin_upload(self, doc, file_content, filename, task_id, task_name, expect_version=1):
         ur = self.post(f'/pluginUpload/{doc.doc_id}/{task_name}/',
@@ -285,14 +284,14 @@ class PluginTest(TimRouteTest):
         self.assertListEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
                               {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}],
                              answer_list[0]['collaborators'])
-        self.assertEqual(file_content, self.get(ur['file']))
+        self.assertEqual(file_content, self.get_no_warn(ur['file']))
         self.login_test2()
         answer_list = self.get_task_answers(task_id)
         self.assertEqual(1, len(answer_list))
         self.assertListEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'user_id': TEST_USER_1_ID},
                               {'real_name': 'Test user 2', 'email': 'test2@example.com', 'user_id': TEST_USER_2_ID}],
                              answer_list[0]['collaborators'])
-        self.assertEqual(file_content, self.get(ur['file']))
+        self.assertEqual(file_content, self.get_no_warn(ur['file']))
 
     def test_all_answers(self):
         self.login_test1()

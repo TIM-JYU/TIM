@@ -74,7 +74,7 @@ class Block(db.Model):
                         accessible_from=datetime.now(tz=timezone.utc)))
 
 
-def insert_block(description: Optional[str], owner_group_id: Optional[int], block_type: int) -> Block:
+def insert_block(block_type: int, description: Optional[str], owner_group_id: Optional[int]=None) -> Block:
     """Inserts a block to database.
 
     :param description: The name (description) of the block.

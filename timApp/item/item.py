@@ -11,7 +11,17 @@ from timApp.auth.auth_models import BlockAccess
 from timApp.util.utils import split_location, date_to_relative
 
 
-class Item:
+class ItemBase:
+    """An item that can be assigned permissions."""
+
+    @property
+    def owner(self):
+        return self.block.owner if self.block else None
+
+    @property
+    def rights(self):
+        from timApp.auth.accesshelper import get_rights
+        return get_rights(self)
 
     @property
     def block(self):
@@ -23,6 +33,18 @@ class Item:
     @property
     def id(self):
         """Returns the item id."""
+        raise NotImplementedError
+
+    @property
+    def last_modified(self):
+        return self.block.modified if self.block else None
+
+
+class Item(ItemBase):
+    """An item that exists in the TIM directory hierarchy. Currently :class:`~.Folder` and :class:`~.DocInfo`."""
+
+    @property
+    def id(self):
         raise NotImplementedError
 
     @property
@@ -49,11 +71,6 @@ class Item:
         return folder
 
     @property
-    def rights(self):
-        from timApp.auth.accesshelper import get_rights
-        return get_rights(self)
-
-    @property
     def title(self):
         if self.block is None:
             return 'All documents'
@@ -66,17 +83,9 @@ class Item:
         self.block.description = value
 
     @property
-    def owner(self):
-        return self.block.owner if self.block else None
-
-    @property
     def short_name(self):
         parts = self.path_without_lang.rsplit('/', 1)
         return parts[len(parts) - 1]
-
-    @property
-    def last_modified(self):
-        return self.block.modified if self.block else None
 
     @property
     def parents_to_root(self):

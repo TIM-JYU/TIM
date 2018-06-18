@@ -12,7 +12,7 @@ from timApp.user.settings.theme import Theme
 from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.exceptions import TimDbException
-from timApp.item.item import Item
+from timApp.item.item import Item, ItemBase
 from timApp.item.block import Block
 from timApp.folder.folder import Folder
 from timApp.notification.notification import Notification
@@ -28,7 +28,7 @@ from timApp.user.userutils import grant_access, get_access_type_id, \
 from timApp.util.utils import remove_path_special_chars, cached_property
 from timApp.user.settings.theme_css import ThemeNotFoundException, generate_theme_scss, get_combined_css_filename
 
-ItemOrBlock = Union[Item, Block]
+ItemOrBlock = Union[ItemBase, Block]
 maxdate = datetime.max.replace(tzinfo=timezone.utc)
 
 view_access_set = {t.value for t in [
@@ -298,7 +298,7 @@ class User(db.Model):
                                accessible_from=datetime.min.replace(tzinfo=timezone.utc),
                                type=AccessType.owner.value,
                                usergroup_id=self.get_personal_group().id)
-        if isinstance(i, Item):
+        if isinstance(i, ItemBase):
             b = i.block
         else:
             b = i

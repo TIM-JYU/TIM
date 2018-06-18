@@ -3,6 +3,7 @@
 import json
 import socket
 import unittest
+import warnings
 from functools import lru_cache
 from typing import Union, Optional, List, Dict, Tuple
 
@@ -658,6 +659,12 @@ class TimRouteTest(TimDbTest):
 
     def assert_same_html(self, elem, expected_html: str):
         self.assert_elements_equal(elem, html.fromstring(expected_html))
+
+    def get_no_warn(self, url: str, **kwargs):
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', ResourceWarning)
+            result = self.get(url, **kwargs)
+        return result
 
 
 if __name__ == '__main__':

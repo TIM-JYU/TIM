@@ -14,7 +14,7 @@ from timApp.auth.sessioninfo import logged_in, get_other_users_as_list, \
 from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.exceptions import TimDbException
-from timApp.item.item import Item
+from timApp.item.item import Item, ItemBase
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.user.user import ItemOrBlock
@@ -194,7 +194,7 @@ def check_admin_access(block_id=None):
     return None
 
 
-def get_rights(d: Item):
+def get_rights(d: ItemBase):
     u = get_current_user_object()
     return {'editable': bool(u.has_edit_access(d)),
             'can_mark_as_read': bool(logged_in() and u.has_view_access(d)),

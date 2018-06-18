@@ -218,7 +218,7 @@ class Folder(db.Model, Item):
         if folder is not None:
             return folder
 
-        block_id = insert_block(title or rel_name, owner_group_id, blocktypes.FOLDER).id
+        block_id = insert_block(blocktypes.FOLDER, title or rel_name, owner_group_id).id
 
         # noinspection PyArgumentList
         f = Folder(id=block_id, name=rel_name, location=rel_path)
