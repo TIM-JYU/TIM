@@ -614,7 +614,7 @@ or newer one that is more familiar to write in YAML:
                     editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
                     editorText.lastIndexOf(macroStringEnd)).split(",");
             } catch {
-                throw new Error("Unable to parse stamping parameters!");
+                throw new Error("Unable to parse stamp parameters!");
             }
             // Knro usage starts from 1 but dates starts from 0, so dummy value added to
             // dates[0] to adjust.
@@ -642,12 +642,12 @@ or newer one that is more familiar to write in YAML:
                 url: "/upload/",
             });
 
-            // TODO: Better check for cases with non-showPdf-plugin-paragraphs.
+            // TODO: Better check for cases with non-showPdf-plugin-paragraphs in editor.
             upload.then((response) => {
                 $timeout(() => {
+                    let uploadedFile;
                     const isplugin = (this.editor.editorStartsWith("``` {"));
                     let start = "[File](";
-                    let uploadedFile;
                     if (response.data.image) {
                         uploadedFile = "/images/" + response.data.image;
                         start = "![Image](";

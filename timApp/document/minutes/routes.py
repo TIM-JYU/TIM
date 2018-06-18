@@ -11,11 +11,12 @@ import timApp.util
 from timApp.auth.accesshelper import verify_manage_access, verify_edit_access, verify_view_access
 from timApp.document.create_item import do_create_item, create_or_copy_item
 from timApp.document.docsettings import DocSettings
-from timApp.tim_app import app
 from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import safe_redirect, json_response
 from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
+import timApp.util.pdftools
+import timApp.plugin.plugin
 
 minutes_blueprint = Blueprint('minutes',
                               __name__,
@@ -198,7 +199,6 @@ def get_attachment_list(doc):
     :param doc:
     :return: List of valid attachments and whether the list is incomplete.
     """
-    attachments_with_errors = False
     try:
         d = DocEntry.find_by_path(doc, try_translation=True)
         if not d:
@@ -206,30 +206,10 @@ def get_attachment_list(doc):
         verify_edit_access(d)
 
         paragraphs = d.document.get_paragraphs(d)
-        pdf_paths = []
+        (pdf_paths, attachments_with_errors) = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs)
 
-        for par in paragraphs:
-            if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
-                par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
-                par_data = par_plugin.values
-                par_file = par_data["file"]
-
-                # Checks if attachment is TIM-upload and adds prefix.
-                # Changes in upload folder need to be updated here as well.
-                if par_file.startswith("/files/"):
-                    par_file = "/tim_files/blocks" + par_file
-                # If attachment is url link, download it to temp folder to operate.
-                elif timApp.util.pdftools.is_url(par_file):
-                    # print(f"Downloading {par_file}")
-                    par_file = timApp.util.pdftools.download_file_from_url(par_file)
-                # Remove this try-block if partial merging is not desirable.
-                try:
-                    timApp.util.pdftools.check_pdf_validity(par_file)
-                except timApp.util.pdftools.PdfError:
-                    # If file is invalid, just don't merge it and continue.
-                    attachments_with_errors = True
-                else:
-                    pdf_paths += [par_file]
+        for i in range(0, len(pdf_paths)):
+            pdf_paths[i] = timApp.util.pdftools.get_base_filename(pdf_paths[i])
 
     except Exception as err:
         message = str(err)
@@ -245,9 +225,6 @@ def merge_attachments(doc):
     :param doc: Document path.
     :return: Merged pdf-file.
     """
-
-    # True, if merging process was incomplete.
-    merged_with_errors = False
     try:
         d = DocEntry.find_by_path(doc, try_translation=True)
         if not d:
@@ -255,29 +232,7 @@ def merge_attachments(doc):
         verify_edit_access(d)
 
         paragraphs = d.document.get_paragraphs(d)
-        pdf_paths = []
-
-        for par in paragraphs:
-            if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
-                par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
-                par_data = par_plugin.values
-                par_file = par_data["file"]
-
-                # Checks if attachment is TIM-upload and adds prefix.
-                # Changes in upload folder need to be updated here as well.
-                if par_file.startswith("/files/"):
-                    par_file = "/tim_files/blocks" + par_file
-                # If attachment is url link, download it to temp folder to operate.
-                elif timApp.util.pdftools.is_url(par_file):
-                    # print(f"Downloading {par_file}")
-                    par_file = timApp.util.pdftools.download_file_from_url(par_file)
-                # Remove this try-block if partial merging is not desirable.
-                try:
-                    timApp.util.pdftools.check_pdf_validity(par_file)
-                except timApp.util.pdftools.PdfError:
-                    pass
-                else:
-                    pdf_paths += [par_file]
+        (pdf_paths, attachments_with_errors) = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs)
 
         # Uses document name as the base for the merged file name and tmp as folder.
         doc_name = timApp.util.pdftools.get_base_filename(doc)

@@ -10,6 +10,7 @@ from typing import Union, List
 from urllib import request as url_request
 from urllib.error import HTTPError
 from re import escape as re_escape, compile as re_compile
+import timApp.plugin.plugin
 
 # Default parameter values:
 
@@ -284,6 +285,39 @@ def merge_pdf(pdf_path_list: List[str], output_path: str) -> str:
     # print(args)
     call_popen(args, pdfmerge_timeout)
     return output_path
+
+
+def get_attachments_from_paragraphs(paragraphs):
+    """
+    Goes through paragraphs and gets attachments from showPdf-macros.
+    Checks file validity and gives partial error state if some are invalid.
+    :param paragraphs: Document paragraphs.
+    :return: List of pdf paths and whether the list is complete.
+    """
+    (pdf_paths, attachments_with_errors) = ([], False)
+    for par in paragraphs:
+        if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
+            par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
+            par_data = par_plugin.values
+            par_file = par_data["file"]
+
+            # Checks if attachment is TIM-upload and adds prefix.
+            # Changes in upload folder need to be updated here as well.
+            if par_file.startswith("/files/"):
+                par_file = "/tim_files/blocks" + par_file
+
+            # If attachment is an url link, mark as a partial error.
+            elif is_url(par_file):
+                attachments_with_errors = True
+                # par_file = download_file_from_url(par_file)
+            try:
+                check_pdf_validity(par_file)
+            # If file is invalid, mark it as a partial error.
+            except PdfError:
+                attachments_with_errors = True
+            else:
+                pdf_paths += [par_file]
+    return (pdf_paths, attachments_with_errors)
 
 
 def check_pdf_validity(pdf_path: str) -> None:

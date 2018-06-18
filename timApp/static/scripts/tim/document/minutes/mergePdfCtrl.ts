@@ -1,6 +1,6 @@
-/**
-Controller for merging attachments in TIM documents.
- */
+/***
+ * Controller for merging attachments in TIM documents.
+ ***/
 import {IRootElementService, IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import {IItem} from "../../item/IItem";
@@ -41,9 +41,13 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
     }
 
     public getTitle() {
-        return "Merging attachments";
+        return "Merge attachments";
     }
 
+    /***
+     * Gets a list of attachments in the documents and notes whether invalid files were found.
+     * @returns {Promise<void>}
+     */
     async listAttachments() {
         const url = `/minutes/listAttachments/${this.resolve.params.document.path}`;
         const  [err, response] = await to($http.get<IAttachmentParams>(url, {}));
@@ -64,10 +68,10 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
     async mergeClicked() {
 
         this.loading = true;
-        const postURL = "/merge" + this.resolve.params.document.path;
+        // const postURL = "/merge" + this.resolve.params.document.path;
 
-       const  [err, response] = await to($http.get<{url: string}>(`/minutes/mergeAttachments/${this.resolve.params.document.path}`, {}));
-
+        const url = `/minutes/mergeAttachments/${this.resolve.params.document.path}`;
+        const  [err, response] = await to($http.get<{url: string}>(url, {}));
         if (err) {
             showMessageDialog(err.data.error);
             this.loading = false;
@@ -77,13 +81,14 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
         if (response) {
             this.loading = false;
 
-            const [err2, response2] = await to($http.post<{url: string}>(`/minutes/mergeAttachments/${this.resolve.params.document.path}`, {}));
+            const [err2, response2] = await to($http.post<{url: string}>(url, {}));
 
             if (err2) {
                 showMessageDialog (err2.data.error);
                 this.loading = false;
                 return;
-            } else if (response2) {
+            }
+            if (response2) {
                 this.docUrl = response2.data.url;
             }
         }
@@ -96,10 +101,9 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
     }
 }
 
-/**
-HTML Template for merge dialog.
- */
-
+/***
+ * HTML Template for merge dialog.
+ ***/
 registerDialogComponent("timMergePdf",
     ShowMergePdfController,
     {
@@ -111,14 +115,15 @@ registerDialogComponent("timMergePdf",
         <p ng-show="$ctrl.attachmentList.length > 0">Following attachments were found from the current document</p>
         <div>
             <ul>
-                <li ng-repeat="x in $ctrl.attachmentList">{{x}}</li>
+                <li ng-repeat="x in $ctrl.attachmentList track by $index">{{x}}</li>
             </ul>
             <p ng-if="$ctrl.attachmentList.length == 0">No attachments found</p>
         </div>
         <div ng-show="$ctrl.warnIncompleteList" class="alert alert-warning">
             <span class="glyphicon glyphicon-exclamation-sign"></span>
-            One or more attachment may have been invalid and won't be part of the merged file.
-            Check attachment macros for broken links or non-pdf files or continue by merging the valid attachments.
+            One or more unlisted attachment may have been invalid and won't be part of the merged file.
+            Check attachment macros for broken links and non-pdf files or continue by merging
+            the listed attachments.
         </div>
 
         <p id="link">
