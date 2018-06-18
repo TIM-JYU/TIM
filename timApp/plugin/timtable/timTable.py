@@ -140,8 +140,10 @@ def tim_table_add_row():
         rows = plug.values[TABLE][ROWS]
     except KeyError:
         return abort(400)
-    # clone the previous row's data into the new row
-    rows.append({'row': copy.deepcopy(rows[-1]['row'])})
+    # clone the previous row's data into the new row but remove the cell content
+    copy_row = copy.deepcopy(rows[-1])
+    rows.append(copy_row)
+    #rows.append({'row': copy.deepcopy(rows[-1]['row'])})
     row = rows[-1]['row']
     for i in range(len(row)):
         if isinstance(row[i], str) or isinstance(row[i], int) or isinstance(row[i], bool) \
