@@ -191,10 +191,57 @@ def create_or_get_and_wipe_document(path: str, title: str):
     return d
 
 
+@minutes_blueprint.route('/listAttachments/<path:doc>', methods=['GET'])
+def get_attachment_list(doc):
+    """
+    Gets the list of valid attachments in the document and whether there was any invalid ones.
+    :param doc:
+    :return: List of valid attachments and whether the list is incomplete.
+    """
+    attachments_with_errors = False
+    try:
+        d = DocEntry.find_by_path(doc, try_translation=True)
+        if not d:
+            abort(404)
+        verify_edit_access(d)
+
+        paragraphs = d.document.get_paragraphs(d)
+        pdf_paths = []
+
+        for par in paragraphs:
+            if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
+                par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
+                par_data = par_plugin.values
+                par_file = par_data["file"]
+
+                # Checks if attachment is TIM-upload and adds prefix.
+                # Changes in upload folder need to be updated here as well.
+                if par_file.startswith("/files/"):
+                    par_file = "/tim_files/blocks" + par_file
+                # If attachment is url link, download it to temp folder to operate.
+                elif timApp.util.pdftools.is_url(par_file):
+                    # print(f"Downloading {par_file}")
+                    par_file = timApp.util.pdftools.download_file_from_url(par_file)
+                # Remove this try-block if partial merging is not desirable.
+                try:
+                    timApp.util.pdftools.check_pdf_validity(par_file)
+                except timApp.util.pdftools.PdfError:
+                    # If file is invalid, just don't merge it and continue.
+                    attachments_with_errors = True
+                else:
+                    pdf_paths += [par_file]
+
+    except Exception as err:
+        message = str(err)
+        abort(404, message)
+    else:
+        return json_response({'pdf_paths': pdf_paths, 'incomplete_list': attachments_with_errors})
+
+
 @minutes_blueprint.route('/mergeAttachments/<path:doc>', methods=['GET'])
 def merge_attachments(doc):
     """
-    A route for getting merged document.
+    A route for merging all the attachments in a document.
     :param doc: Document path.
     :return: Merged pdf-file.
     """
@@ -228,8 +275,7 @@ def merge_attachments(doc):
                 try:
                     timApp.util.pdftools.check_pdf_validity(par_file)
                 except timApp.util.pdftools.PdfError:
-                    # If file is invalid, just don't merge it and continue.
-                    merged_with_errors = True
+                    pass
                 else:
                     pdf_paths += [par_file]
 
@@ -242,16 +288,13 @@ def merge_attachments(doc):
         message = str(err)
         abort(404, message)
     else:
-        if merged_with_errors:
-            # TODO: Give error message without canceling merging.
-            pass
         return send_file(merged_pdf_path, mimetype="application/pdf")
 
 
 @minutes_blueprint.route('/mergeAttachments/<path:doc>', methods=['POST'])
 def get_attachments(doc):
     """
-    A route for merging all the attachments in a document.
+    A route for getting merged document.
     :param doc: document path
     :return: merged pdf-file
     """
@@ -267,54 +310,3 @@ def get_attachments(doc):
     else:
         merge_access_url = request.url
         return json_response({'success': True, 'url': merge_access_url}, status_code=201)
-
-
-@minutes_blueprint.route('/processAttachments/<path:doc>')
-def process_attachments(doc):
-    """
-    A testing route for processing pdf attachments.
-    Note: possibly obsolete.
-    :param doc:
-    :return: merged & stamped pdf
-    """
-    # TODO: divide try-block a bit (use PdfError for pdftools methods)
-    try:
-        d = DocEntry.find_by_path(doc, try_translation=True)
-        if not d:
-            abort(404)
-        verify_view_access(d)
-
-        paragraphs = d.document.get_paragraphs(d)
-        pdf_stamp_data = []
-        for par in paragraphs:
-            if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
-                par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
-                par_data = par_plugin.values
-                par_file = par_data["file"]
-
-                # checks if attachment is TIM-upload and adds prefix
-                if par_file.startswith("/files/"):
-                    par_file = "/tim_files/blocks" + par_file
-
-                # if attachment is url link, download it to temp folder and operate the
-                # downloaded file
-                if timApp.util.pdftools.is_url(par_file):
-                    print(f"Downloading {par_file}")
-                    par_data["file"] = timApp.util.pdftools.download_file_from_url(par_file)
-
-                pdf_stamp_data += [par_data]
-                print(repr(par_data))
-
-        # now separate stamp and merge
-        stamped_pdfs = timApp.util.pdftools.stamp_pdfs(pdf_stamp_data)
-        print(stamped_pdfs)
-
-        # uses document name as the base for the merged file name
-        merged_pdf_path = f"static/testpdf/{doc}_merged.pdf"
-        timApp.util.pdftools.merge_pdf(stamped_pdfs, merged_pdf_path)
-
-    except Exception as err:
-        message = repr(err)
-        abort(404, message)
-    else:
-        return send_file(merged_pdf_path, mimetype="application/pdf")

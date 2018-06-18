@@ -23,10 +23,18 @@ export interface IMergeParams {
     document: IItem;
 }
 
+export interface IAttachmentParams {
+    pdf_paths: string[];
+    incomplete_list: boolean;
+}
+
 export class ShowMergePdfController extends DialogController<{ params: IMergeParams }, {}, "timMergePdf"> {
     private static $inject = ["$element", "$scope"];
     private docUrl?: string;
     private loading: boolean = false;
+    private attachmentList: string[] = [];
+    private warnIncompleteList: boolean = false;
+    private errorMessage?: string;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -36,10 +44,23 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
         return "Merging attachments";
     }
 
-    /**
- * Deals with clicking "Merge" timMergePdf dialog.
- * Show error messages for users.
-     * */
+    async listAttachments() {
+        const url = `/minutes/listAttachments/${this.resolve.params.document.path}`;
+        const  [err, response] = await to($http.get<IAttachmentParams>(url, {}));
+        if (err) {
+            this.errorMessage = err.data.error;
+            return;
+        }
+        if (response) {
+            this.attachmentList = response.data.pdf_paths;
+            this.warnIncompleteList = response.data.incomplete_list;
+        }
+    }
+
+    /***
+     * Deals with clicking "Merge" timMergePdf dialog.
+     * Show error messages for users.
+     ***/
     async mergeClicked() {
 
         this.loading = true;
@@ -47,7 +68,6 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
 
        const  [err, response] = await to($http.get<{url: string}>(`/minutes/mergeAttachments/${this.resolve.params.document.path}`, {}));
 
-       // catch error message frin get route
         if (err) {
             showMessageDialog(err.data.error);
             this.loading = false;
@@ -59,7 +79,6 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
 
             const [err2, response2] = await to($http.post<{url: string}>(`/minutes/mergeAttachments/${this.resolve.params.document.path}`, {}));
 
-            // catch error message from post route
             if (err2) {
                 showMessageDialog (err2.data.error);
                 this.loading = false;
@@ -70,8 +89,9 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
         }
     }
 
-    $onInit() {
+    async $onInit() {
         super.$onInit();
+        await this.listAttachments();
         this.loading = false;
     }
 }
@@ -88,10 +108,22 @@ registerDialogComponent("timMergePdf",
     <dialog-header ng-bind-html="$ctrl.getTitle()">
     </dialog-header>
     <dialog-body>
-        <div>Merging all attachments from the current document.</div>
+        <p ng-show="$ctrl.attachmentList.length > 0">Following attachments were found from the current document</p>
+        <div>
+            <ul>
+                <li ng-repeat="x in $ctrl.attachmentList">{{x}}</li>
+            </ul>
+            <p ng-if="$ctrl.attachmentList.length == 0">No attachments found</p>
+        </div>
+        <div ng-show="$ctrl.warnIncompleteList" class="alert alert-warning">
+            <span class="glyphicon glyphicon-exclamation-sign"></span>
+            One or more attachment may have been invalid and won't be part of the merged file.
+            Check attachment macros for broken links or non-pdf files or continue by merging the valid attachments.
+        </div>
+
         <p id="link">
         </p>
-        <button class="timButton" ng-click="$ctrl.mergeClicked()">
+        <button class="timButton" ng-click="$ctrl.mergeClicked()" ng-disabled="$ctrl.attachmentList.length == 0">
                     <span ng-show="$ctrl.loading"><i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
                     Merging</span>
             <span ng-hide="$ctrl.loading">Merge</span>
