@@ -32,11 +32,12 @@ import * as ab from "tim/manageView/manageCtrl";
 import * as ac from "tim/settingsView/settingsCtrl";
 import * as af from "tim/components/timTable";
 import * as ag from "tim/components/taggedDocumentList";
+import * as ah from "tim/components/bookmarkFolderBox";
 import {markAsUsed} from "tim/utils";
 import {ParCompiler} from "./services/parCompiler";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./timTiming";
 
-markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, x, y, ab, ac, ad, ae, ag, lectureMenu, templateList, af);
+markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, x, y, ab, ac, ad, ae, ag, ah, lectureMenu, templateList, af);
 
 timLogInit(document.location.search.slice(1));
 

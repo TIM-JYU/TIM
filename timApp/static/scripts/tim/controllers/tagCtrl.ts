@@ -1,4 +1,4 @@
-/**
+/***
  * Controller and HTML template for tag dialog.
  */
 
@@ -29,12 +29,9 @@ const tagParsingSeparator = " ";
  */
 export class ShowTagController extends DialogController<{ params: IItem }, {}, "timEditTags"> {
     private static $inject = ["$element", "$scope"];
-    private document: IItem;
     private tagName: string;
     private tagsList: ITag[]; // List of tags the document has.
     private expires: Moment;
-    private actionSuccessful: boolean = false;
-    private error: boolean = false;
     private errorMessage: string;
     private successMessage: string;
     private f: IFormController;
@@ -56,24 +53,24 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         await this.draggable.makeHeightAutomatic();
     }
 
-    /*
+    /***
      * Dialog title.
      */
     public getTitle() {
         return "Edit document tags";
     }
 
-    /*
+    /***
      * Calls tag adding function when Enter is pressed.
      * @param event Keyboard event.
      */
-    async keyPressed(event: KeyboardEvent) {
+    private async keyPressed(event: KeyboardEvent) {
         if (event.which === 13) {
             await this.addTagClicked();
         }
     }
 
-    /*
+    /***
      * Gets all unique tags in the database, always including special tags.
      */
     private async getUniqueTags() {
@@ -89,7 +86,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         }
     }
 
-    /*
+    /***
      * Updates the list of existing tags for the document.
      */
     private async updateTags() {
@@ -115,8 +112,10 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         }
     }
 
-    /*
-     * Deletes the selected tag.
+    /***
+     * Deletes selected tag.
+     * @param {ITag} t Tag to delete.
+     * @returns {Promise<void>}
      */
     private async removeTag(t: ITag) {
         const docPath = this.resolve.params.path;
@@ -135,7 +134,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         }
     }
 
-    /*
+    /***
      * Sends post method with tag name and optional expiration date, and
      * saves either success or error message to be used in the dialog.
      */

@@ -15,11 +15,14 @@
         <div class="col-md-8 col-md-offset-2">
             <div class="row">
                 <div class="col-md-8">
+                    <div>
+                        <bookmark-folder-box bookmarks="{{bookmarks}}" bookmark-folder-name="My courses">
+                        </bookmark-folder-box>
+                    </div>
                     <a href="/view/tim/TIM-esittely">
                         <img class="img-responsive" src="{{ url_for('static', filename='images/responsive.jpg') }}"/>
                     </a>
                 </div>
-
                 <div class="col-md-4">
                     {% if session.user_id %}
                         <h3>Get started</h3>

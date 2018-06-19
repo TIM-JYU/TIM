@@ -101,7 +101,6 @@ class TaggedDocumentListCtrl implements IController {
 
 timApp.component("taggedDocumentList", {
     bindings: {
-        closeFn: "&",
         doc: "<",
         enableSearch: "<",
         exactMatch: "<",

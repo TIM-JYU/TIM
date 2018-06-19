@@ -1,37 +1,20 @@
-/**
+/***
  * Controller and HTML template for tag search dialog.
  */
 
-import {IFormController, IRootElementService, IScope} from "angular";
-import {Moment} from "moment";
+import {IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/directives/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
-import {IItem, ITag} from "../IItem";
+import {IItem} from "../IItem";
 import {markAsUsed} from "../utils";
-import * as tagLabel from "../components/tagLabel";
 
-markAsUsed(tagLabel);
 markAsUsed(focusMe);
-
-const tagParsingSeparator = " ";
 
 /*
  * Tag search dialog's controller.
  */
 export class ShowTagSearchController extends DialogController<{ params: IItem }, {}, "timSearchTags"> {
     private static $inject = ["$element", "$scope"];
-    private document: IItem;
-    private tagName: string;
-    private tagsList: ITag[]; // List of tags the document has.
-    private expires: Moment;
-    private actionSuccessful: boolean = false;
-    private error: boolean = false;
-    private errorMessage: string;
-    private successMessage: string;
-    private f: IFormController;
-    private focusName: boolean;
-    private allTags: string[]; // List of all unique tags.
-    private allUnusedTags: string[]; // List of existing tags not used in the doc.
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);

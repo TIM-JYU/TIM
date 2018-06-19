@@ -66,6 +66,7 @@ export type DiffResult = IInsertDiffResult | IReplaceDiffResult | IDeleteDiffRes
 
 // Contains tags marking document as a course main page.
 const courseTags = ["kurssi", "course"];
+const courseFolder = "My courses";
 
 export class ViewCtrl implements IController {
     private notification: string;
@@ -122,6 +123,7 @@ export class ViewCtrl implements IController {
     private taggedAsCourse: boolean;
     private bookmarksCtrl: BookmarksController;
     private bookmarked: boolean;
+    private bookmarks: IBookmarkGroup[];
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -349,35 +351,40 @@ export class ViewCtrl implements IController {
         void this.checkIfBookmarked();
     }
 
-    /*
+    /***
      * Checks if the document has been tagged as a course.
      */
     private async checkIfTaggedAsCourse() {
         const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`, {}));
         this.taggedAsCourse = false;
         if (response) {
-            response.data.forEach((tag) => {
+            for (const tag of response.data) {
                 if (isCourse(tag.tag)) {
                     this.taggedAsCourse = true;
                     return;
                 }
-            });
+            }
         }
     }
 
+    /***
+     * Marks page as bookmarked if it' found in course bookmark folder.
+     * @returns {Promise<void>}
+     */
     private async checkIfBookmarked() {
         const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get");
+        this.bookmarks = response.data;
         this.bookmarked = false;
-        response.data.forEach((folder) => {
-            if (folder.name === "My courses") {
-                folder.items.forEach((bookmark) => {
+        for (const folder of this.bookmarks) {
+            if (folder.name === courseFolder) {
+                for (const bookmark of folder.items) {
                     if (bookmark.link === "/view/" + this.item.path) {
                         this.bookmarked = true;
                         return;
                     }
-                } );
+                }
             }
-        });
+        }
     }
 
     /**
@@ -507,8 +514,12 @@ export class ViewCtrl implements IController {
         }
     }
 
+    /***
+     * Adds the current page to course bookmark folder.
+     * @returns {Promise<void>}
+     */
     async addToBookmarkFolder() {
-        const bookmark = {group: "My courses", name: this.item.title, link: "/view/" + this.item.path};
+        const bookmark = {group: courseFolder, name: this.item.title, link: "/view/" + this.item.path};
         const response = await $http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark);
         this.bookmarksCtrl.refresh();
         this.checkIfBookmarked(); // Instead of directly changing boolean this checks if it really was added.
@@ -525,13 +536,12 @@ export class ViewCtrl implements IController {
  * @returns {boolean} Whether the tag belongs to the course tag list.
  */
 function isCourse(tag: string) {
-    let taggedAsCourse = false;
-    courseTags.forEach((courseTag) => {
+    for (const courseTag of courseTags) {
         if (tag === courseTag) {
-            taggedAsCourse = true;
+            return true;
         }
-    });
-    return taggedAsCourse;
+    }
+    return false;
 }
 
 timApp.component("timView", {
