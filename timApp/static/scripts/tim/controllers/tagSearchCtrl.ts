@@ -15,6 +15,8 @@ markAsUsed(focusMe);
  */
 export class ShowTagSearchController extends DialogController<{ params: IItem }, {}, "timSearchTags"> {
     private static $inject = ["$element", "$scope"];
+    private enableSearch = true;
+    private header = "";
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -25,6 +27,9 @@ export class ShowTagSearchController extends DialogController<{ params: IItem },
      */
     async $onInit() {
         super.$onInit();
+        if (this.enableSearch) {
+            this.header = "Input a tag name to search documents";
+        }
     }
 
     /*
@@ -44,8 +49,8 @@ registerDialogComponent("timSearchTags",
     <dialog-header>
     </dialog-header>
     <dialog-body>
-        <h4>Input a tag name to search documents</h4>
-        <tagged-document-list enable-search="true" tag-filter="" exact-match="false"
+        <h4>{{$ctrl.header}}</h4>
+        <tagged-document-list enable-search="$ctrl.enableSearch" tag-filter="" exact-match="false"
                               list-doc-tags="true"></tagged-document-list>
         <button class="btn timButton" ng-click="$ctrl.dismiss()"><span>Close</span></button>
     </dialog-body>

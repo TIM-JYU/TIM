@@ -74,6 +74,7 @@ class TaggedDocumentListCtrl implements IController {
             },
         });
         this.docList = response.data;
+
     }
 
     /*
@@ -125,10 +126,10 @@ timApp.component("taggedDocumentList", {
         </span>
     </div>
         <ul ng-if="$ctrl.docList.length > 0">
-            <li ng-repeat="doc in $ctrl.docList">
-                <a href="{{doc.path}}" title="Open {{doc.title}}">{{doc.title}}</a>
-                <span ng-repeat="tag in doc.tags">
-                    <tag-label style="{{$ctrl.tagStyle}}"
+            <li ng-repeat="document in $ctrl.docList">
+                <a href="/view/{{document.path}}" title="Open {{doc.title}}">{{document.title}}</a>
+                <span ng-repeat="tag in document.tags">
+                    <tag-label ng-class="{'cursor-pointer':$ctrl.enableSearch}"
                     ng-click="$ctrl.searchClicked(tag.tag)"
                     title="{{$ctrl.tagToolTip}}'{{tag.tag}}'"
                     tag-text="tag.tag"></tag-label> </span>
