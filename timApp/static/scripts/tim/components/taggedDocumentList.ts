@@ -126,7 +126,7 @@ timApp.component("taggedDocumentList", {
     </div>
         <ul ng-if="$ctrl.docList.length > 0">
             <li ng-repeat="doc in $ctrl.docList">
-                <a href="view/{{doc.path}}" title="Open {{doc.title}}">{{doc.title}}</a>
+                <a href="{{doc.path}}" title="Open {{doc.title}}">{{doc.title}}</a>
                 <span ng-repeat="tag in doc.tags">
                     <tag-label style="{{$ctrl.tagStyle}}"
                     ng-click="$ctrl.searchClicked(tag.tag)"
