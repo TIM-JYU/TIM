@@ -97,7 +97,7 @@ registerDialogComponent("timCourseDialog",
     <dialog-header>
     </dialog-header>
     <dialog-body>
-        <p>Tag document as a course main page by sending its course code and subject.</p>
+        <p>Tag document as a course main page by giving its course code and subject.</p>
         <form name="$ctrl.f" class="form-horizontal">
             <div class="form-group" tim-error-state>
                 <label for="codeField" class="col-sm-4 control-label">Course code:</label>
