@@ -30,7 +30,7 @@
                             <li class="h5"><a href="/view/{{ current_user.get_personal_folder().path }}">My documents</a></li>
                             <li class="h5"><a href="/view/">All documents</a></li>
                             <li class="h5"><a ng-click="$ctrl.enableCreate()" href="#">Create a new document</a></li>
-                            <li class="h5"><a ng-click="$ctrl.courseListDialog()" href="#">Available courses</a></li>
+                            <li class="h5"><a ng-click="$ctrl.openCourseListDialog()" href="#">Available courses</a></li>
                         </ul>
                         <bootstrap-panel ng-if="$ctrl.creatingNew"
                                          title="Create a new document"

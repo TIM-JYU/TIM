@@ -32,7 +32,7 @@ export class StartCtrl implements IController {
     /***
      * Opens course list dialog.
      */
-    courseListDialog() {
+    openCourseListDialog() {
         showCourseListDialog(this.item);
     }
 }

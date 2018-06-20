@@ -19,7 +19,8 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
     private docList: ITaggedItem[];
 
     // TODO: Get this from a TIM page.
-    private subjects = ["matematiikka", "fysiikka", "psykologia", "tilastotiede"];
+    private subjects = ["biologia", "filosofia", "fysiikka", "kasvatus", "kemia", "matematiikka", "musiikki",
+        "psykologia", "tietotekniikka", "tilastotiede"];
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -60,13 +61,32 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
         this.docList = response.data;
     }
 
-    private courseCode(d: ITaggedItem) {
+    /***
+     * Checks whether the tag type is course code.
+     * @param {ITaggedItem} d
+     * @returns {string}
+     */
+    private getCourseCode(d: ITaggedItem) {
         for (const tag of d.tags) {
             if (tag.type === TagType.CourseCode) {
                 return tag.name;
             }
         }
         return "";
+    }
+
+    /***
+     *
+     */
+    private groupBySubject() {
+        let grouped = [];
+        for (const s of this.subjects) {
+            grouped.push({subject: s, doc: null});
+        }
+        for (const d of this.docList) {
+            // TODO:
+        }
+
     }
 }
 
@@ -78,12 +98,12 @@ registerDialogComponent("timCourseListDialog",
     <dialog-header>
     </dialog-header>
     <dialog-body>
-    <h5>Listing available courses.</h5>
+    <h5>Listing available courses</h5>
     </div>
         <ul ng-if="$ctrl.docList.length > 0">
-            <li class="list-unstyled" ng-repeat="d in $ctrl.docList" ng-if="$ctrl.courseCode(d)">
+            <li class="list-unstyled" ng-repeat="d in $ctrl.docList" ng-if="$ctrl.getCourseCode(d)">
                 <a href="/view/{{d.path}}" title="Open {{d.title}}">
-                <span class="btn-xs btn-primary">{{$ctrl.courseCode(d)}}</span>
+                <span class="btn-xs btn-primary">{{$ctrl.getCourseCode(d)}}</span>
                  {{d.title}}
                 </a>
             </li>

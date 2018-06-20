@@ -247,7 +247,7 @@ export class SidebarMenuCtrl implements IController {
     /*
      * Opens course registering dialog.
      */
-    courseDialog() {
+    openCourseDialog() {
         if (!this.vctrl) {
             return;
         }

@@ -169,7 +169,7 @@ def get_documents(include_nonpublic: bool = False,
 
     """
 
-    q = DocEntry.query # q = db.session.query(DocEntry, Block)
+    q = DocEntry.query
     if not include_nonpublic:
         q = q.filter_by(public=True)
     if filter_folder:

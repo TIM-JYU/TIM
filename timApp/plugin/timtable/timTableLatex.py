@@ -509,35 +509,6 @@ class Table:
         return custom_repr(self)
 
 
-class Column:
-    """
-    A class to contain column formattings.
-    """
-
-    def __init__(self, span: int=1):
-        self.span = span
-
-
-def get_column_span(item):
-    try:
-        return item["span"]
-    except:
-        return None
-
-
-def get_column_formattings(table_data):
-    columns_data = ""
-    column_list = []
-    try:
-        columns_data = table_data['columns']
-    except:
-        return None
-    for i in range(0, len(columns_data)):
-        column_data = columns_data[i]
-        span = get_column_span(column_data)
-        bacgroundColor, bacground_ = get_column_span(column_data)
-
-
 def custom_repr(obj) -> str:
     """
     Extended repr that displays all contents of the object.
@@ -878,10 +849,6 @@ def convert_table(table_json) -> Table:
     table_rows = []
     table = Table(table_rows)
     datablock = get_datablock(table_json)
-
-    columns = get_column_formattings(table_json)
-
-
 
     # TODO: Make the table size work with correct logic.
     # These may stretch the table until unreadable or outside the page.

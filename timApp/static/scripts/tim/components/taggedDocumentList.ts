@@ -23,17 +23,6 @@ class TaggedDocumentListCtrl implements IController {
     private listDocTags: boolean;
     private tagToolTip: string;
 
-    private async loadTemplate(t: IItem) {
-        const [err] = await to($http.post("/update/" + this.doc.id, {
-            template_name: t.path,
-        }));
-        if (err) {
-            await showMessageDialog(err.data.error);
-        } else {
-            $window.location.reload();
-        }
-    }
-
    async $onInit() {
         if (this.enableSearch) {
             this.tagToolTip = "Search documents with tag ";
