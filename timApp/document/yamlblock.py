@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Dict, Optional, Tuple
 
 import yaml
-from yaml import CLoader, YAMLError
+from yaml import YAMLError, CSafeLoader
 
 from timApp.util.utils import count_chars
 
@@ -28,7 +28,7 @@ class MergeStyle(Enum):
 
 YamlMergeInfo = Dict[str, MergeStyle]
 
-yaml_loader = CLoader
+yaml_loader = CSafeLoader
 
 
 class YamlBlock:
