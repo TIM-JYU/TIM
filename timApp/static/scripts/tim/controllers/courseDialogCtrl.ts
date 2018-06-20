@@ -23,7 +23,8 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     private successMessage: string;
 
     // TODO: Get this from a TIM page.
-    private subjects = ["matematiikka", "fysiikka", "psykologia", "tilastotiede"];
+    private subjects = ["biologia", "filosofia", "fysiikka", "kasvatus", "kemia", "matematiikka", "musiikki",
+        "psykologia", "tietotekniikka", "tilastotiede"];
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -92,7 +93,7 @@ registerDialogComponent("timCourseDialog",
     ShowCourseDialogController,
     {
         template:
-            `<tim-dialog>
+            `<tim-dialog class="overflow-visible">
     <dialog-header>
     </dialog-header>
     <dialog-body>
