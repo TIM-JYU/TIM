@@ -77,6 +77,6 @@ $body$
         # TODO: XeLaTeX doesn't support removing timestamps from PDF file, so we cannot do a binary compare.
         # Just check the file size for now.
         pdf_length = len(result)
-        self.assertTrue(2850 <= pdf_length <= 2853, msg=f'Unexpected file length: {pdf_length}')
+        self.assertTrue(2848 <= pdf_length <= 2853, msg=f'Unexpected file length: {pdf_length}')
         self.login_test2()
         self.get(expected_url, expect_status=403)
