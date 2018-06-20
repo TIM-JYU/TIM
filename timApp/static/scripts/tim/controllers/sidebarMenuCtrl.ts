@@ -11,6 +11,7 @@ import {showMergePdfDialog} from "./mergePdfCtrl";
 import {showTagDialog} from "./tagCtrl";
 import {showTagSearchDialog} from "./tagSearchCtrl";
 import angular from "angular";
+import {showCourseDialog} from "./courseDialogCtrl";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -241,6 +242,16 @@ export class SidebarMenuCtrl implements IController {
             return;
         }
         showTagSearchDialog(this.vctrl.item);
+    }
+
+    /*
+     * Opens course registering dialog.
+     */
+    courseDialog() {
+        if (!this.vctrl) {
+            return;
+        }
+        showCourseDialog(this.vctrl.item);
     }
 }
 

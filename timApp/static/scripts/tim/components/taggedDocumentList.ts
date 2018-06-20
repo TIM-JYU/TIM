@@ -5,7 +5,7 @@
  */
 
 import {IController} from "angular";
-import {IItem, ITaggedItem} from "../IItem";
+import {IItem, ITag, ITaggedItem, TagType} from "../IItem";
 import {markAsUsed, to} from "tim/utils";
 import {timApp} from "../app";
 import {showMessageDialog} from "../dialog";
@@ -22,7 +22,6 @@ class TaggedDocumentListCtrl implements IController {
     private allUniqueTags: string[];
     private listDocTags: boolean;
     private tagToolTip: string;
-    private tagStyle: string;
 
     private async loadTemplate(t: IItem) {
         const [err] = await to($http.post("/update/" + this.doc.id, {
@@ -38,7 +37,6 @@ class TaggedDocumentListCtrl implements IController {
    async $onInit() {
         if (this.enableSearch) {
             this.tagToolTip = "Search documents with tag ";
-            this.tagStyle = "cursor: pointer;";
         } else {
             this.tagToolTip = "Document has tag ";
         }
@@ -70,7 +68,7 @@ class TaggedDocumentListCtrl implements IController {
             params: {
                 exact_search: exactMatch,
                 list_doc_tags: listDocTags,
-                tag: tagName,
+                name: tagName,
             },
         });
         this.docList = response.data;
@@ -97,6 +95,19 @@ class TaggedDocumentListCtrl implements IController {
         } else {
             await this.getDocumentsByTag(tag, this.exactMatch, this.listDocTags);
         }
+    }
+
+    private tagStyle(tag: ITag) {
+        let style = "";
+        if (this.enableSearch) {
+            style += "cursor-pointer ";
+        }
+        if (tag.type === TagType.Regular) {
+            style += "btn-primary";
+        } else {
+            style += "btn-success";
+        }
+        return style;
     }
 }
 
@@ -126,13 +137,13 @@ timApp.component("taggedDocumentList", {
         </span>
     </div>
         <ul ng-if="$ctrl.docList.length > 0">
-            <li ng-repeat="document in $ctrl.docList">
-                <a href="/view/{{document.path}}" title="Open {{doc.title}}">{{document.title}}</a>
-                <span ng-repeat="tag in document.tags">
-                    <tag-label ng-class="{'cursor-pointer':$ctrl.enableSearch}"
-                    ng-click="$ctrl.searchClicked(tag.tag)"
-                    title="{{$ctrl.tagToolTip}}'{{tag.tag}}'"
-                    tag-text="tag.tag"></tag-label> </span>
+            <li ng-repeat="d in $ctrl.docList">
+                <a href="/view/{{d.path}}" title="Open {{doc.title}}">{{d.title}}</a>
+                <span ng-repeat="tag in d.tags">
+                    <span class="btn-xs" ng-class="$ctrl.tagStyle(tag)"
+                        ng-click="$ctrl.searchClicked(tag.name)"
+                        title="{{$ctrl.tagToolTip}}'{{tag.name}}'">{{tag.name}}</span>
+                </span>
             </li>
         </ul>
     <span ng-if="$ctrl.docList.length == 0">No documents found!</span>

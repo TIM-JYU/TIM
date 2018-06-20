@@ -2,12 +2,15 @@ import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as createItem from "tim/directives/createItem";
 import {markAsUsed} from "tim/utils";
+import {showCourseListDialog} from "./courseListDialogCtrl";
+import {$window} from "../ngimport";
 
 markAsUsed(createItem);
 
 export class StartCtrl implements IController {
     private creatingNew: boolean;
     private docListOpen: boolean;
+    private item = $window.item;
 
     constructor() {
         this.creatingNew = false;
@@ -26,12 +29,11 @@ export class StartCtrl implements IController {
         this.creatingNew = true;
     }
 
-    enableDocList() {
-        this.docListOpen = true;
-    }
-
-    disableDocList() {
-        this.docListOpen = false;
+    /***
+     * Opens course list dialog.
+     */
+    courseListDialog() {
+        showCourseListDialog(this.item);
     }
 }
 

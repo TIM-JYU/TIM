@@ -62,6 +62,7 @@
                     <h5 style="display: inline-block">Document tags</h5>
                     <button class="timButton btn btn-block" title="Add and remove document tags" ng-click="$ctrl.addTag()">Edit tags</button>
                     <button class="timButton btn btn-block" title="Search with tags" ng-click="$ctrl.searchWithTags()">Search with tags</button>
+                    <button class="timButton btn btn-block" title="Set document as a course main page" ng-click="$ctrl.courseDialog()">Set as a course</button>
                     <h5 style="display: inline-block" ng-show="$ctrl.isMinutesOrInvitation()">Memos/Minutes</h5>
                     <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateExtractsButton()" ng-click="$ctrl.createMinuteExtracts()">Create extracts</button>
                     <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateMinutesButton()" ng-click="$ctrl.createMinutes()">Create minutes</button>

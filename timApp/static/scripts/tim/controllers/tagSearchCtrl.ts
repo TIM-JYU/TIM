@@ -45,16 +45,16 @@ registerDialogComponent("timSearchTags",
     ShowTagSearchController,
     {
         template:
-            `<tim-dialog class="overflow-visible">
+            `<tim-dialog>
     <dialog-header>
     </dialog-header>
     <dialog-body>
         <h4>{{$ctrl.header}}</h4>
         <tagged-document-list enable-search="$ctrl.enableSearch" tag-filter="" exact-match="false"
                               list-doc-tags="true"></tagged-document-list>
-        <button class="btn timButton" ng-click="$ctrl.dismiss()"><span>Close</span></button>
     </dialog-body>
     <dialog-footer>
+        <button class="btn timButton" ng-click="$ctrl.dismiss()"><span>Close</span></button>
     </dialog-footer>
 </tim-dialog>
 `,

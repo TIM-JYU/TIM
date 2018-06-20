@@ -17,7 +17,7 @@ import {timLogTime} from "tim/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/utils";
 import {initCssPrint} from "../../cssPrint";
 import {PopupMenuController} from "../../directives/popupMenu";
-import {IItem, ITag} from "../../IItem";
+import {IItem, ITag, TagType} from "../../IItem";
 import {IUser} from "../../IUser";
 import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../../services/parCompiler";
@@ -64,8 +64,6 @@ export interface IChangeDiffResult {
 
 export type DiffResult = IInsertDiffResult | IReplaceDiffResult | IDeleteDiffResult | IChangeDiffResult;
 
-// Contains tags marking document as a course main page.
-const courseTags = ["kurssi", "course"];
 const courseFolder = "My courses";
 
 export class ViewCtrl implements IController {
@@ -359,7 +357,7 @@ export class ViewCtrl implements IController {
         this.taggedAsCourse = false;
         if (response) {
             for (const tag of response.data) {
-                if (isCourse(tag.tag)) {
+                if (isCourse(tag)) {
                     this.taggedAsCourse = true;
                     return;
                 }
@@ -531,17 +529,12 @@ export class ViewCtrl implements IController {
 }
 
 /***
- * Compares the tag to list of course tags.
+ * Checks if the tag
  * @param {string} tag
- * @returns {boolean} Whether the tag belongs to the course tag list.
+ * @returns {boolean} Whether the tag has course code tag.
  */
-function isCourse(tag: string) {
-    for (const courseTag of courseTags) {
-        if (tag === courseTag) {
-            return true;
-        }
-    }
-    return false;
+function isCourse(tag: ITag) {
+    return (tag.type === TagType.CourseCode);
 }
 
 timApp.component("timView", {

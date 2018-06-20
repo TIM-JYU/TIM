@@ -30,7 +30,7 @@
                             <li class="h5"><a href="/view/{{ current_user.get_personal_folder().path }}">My documents</a></li>
                             <li class="h5"><a href="/view/">All documents</a></li>
                             <li class="h5"><a ng-click="$ctrl.enableCreate()" href="#">Create a new document</a></li>
-                            <li class="h5"><a ng-click="$ctrl.enableDocList()" href="#">Available courses</a></li>
+                            <li class="h5"><a ng-click="$ctrl.courseListDialog()" href="#">Available courses</a></li>
                         </ul>
                         <bootstrap-panel ng-if="$ctrl.creatingNew"
                                          title="Create a new document"
@@ -79,18 +79,6 @@
                             <li><a href="/view/">Browse all documents</a></li>
                         </ul>
                     {% endif %}
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <bootstrap-panel title="List of available courses" show-close="true"
-                                     ng-if="$ctrl.docListOpen" close-fn="$ctrl.disableDocList()">
-                        <tagged-document-list title="Displaying all documents tagged as a course"
-                                              enable-search="false" tag-filter="kurssi" exact-match="false"
-                                              list-doc-tags="false">
-
-                        </tagged-document-list>
-                    </bootstrap-panel>
                 </div>
             </div>
             <div class="row">
