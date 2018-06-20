@@ -5,9 +5,8 @@ from typing import Optional
 from timApp.document.document import Document
 from timApp.document.documentparser import DocumentParser
 from timApp.document.yamlblock import YamlBlock
-from timApp.item.blocktypes import blocktypes
 from timApp.document.docinfo import DocInfo
-from timApp.item.block import Block
+from timApp.item.block import Block, BlockType
 from timApp.document.docentry import DocEntry, create_document_and_block
 from timApp.document.translation.translation import Translation
 from timApp.auth.auth_models import BlockAccess
@@ -72,7 +71,7 @@ def delete_document(document_id: int):
 
     DocEntry.query.filter_by(id=document_id).delete()
     BlockAccess.query.filter_by(block_id=document_id).delete()
-    Block.query.filter_by(type_id=blocktypes.DOCUMENT, id=document_id).delete()
+    Block.query.filter_by(type_id=BlockType.Document.value, id=document_id).delete()
     ReadParagraph.query.filter_by(doc_id=document_id).delete()
     UserNote.query.filter_by(doc_id=document_id).delete()
     Translation.query.filter((Translation.doc_id == document_id) | (Translation.src_docid == document_id)).delete()

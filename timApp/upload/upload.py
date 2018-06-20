@@ -18,8 +18,7 @@ from timApp.auth.accesshelper import verify_view_access, verify_seeanswers_acces
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_group, logged_in, get_current_user_object
 from timApp.document.documents import import_document
-from timApp.item.block import Block
-from timApp.item.blocktypes import blocktypes
+from timApp.item.block import Block, BlockType
 from timApp.item.validation import validate_item_and_create, validate_uploaded_document_content
 from timApp.plugin.plugin import Plugin
 from timApp.timdb.dbaccess import get_timdb
@@ -62,7 +61,7 @@ def get_upload(relfilename: str):
     if slashes == 3 and not relfilename.endswith('/'):
         abort(400, 'Incorrect filename specification.')
     block = Block.query.filter((Block.description.startswith(relfilename)) & (
-            Block.type_id == blocktypes.UPLOAD)).order_by(Block.description.desc()).first()
+            Block.type_id == BlockType.Upload.value)).order_by(Block.description.desc()).first()
     if not block or (block.description != relfilename and not relfilename.endswith('/')):
         abort(404, 'The requested upload was not found.')
     if not verify_view_access(block, require=False):
@@ -102,7 +101,7 @@ def pluginupload_file(doc_id: int, task_id: str):
     f = UploadedFile.save_new(
         content,
         file.filename,
-        blocktypes.UPLOAD,
+        BlockType.Upload,
         upload_info=PluginUploadInfo(
             task_id_name=task_id,
             user=u,
@@ -172,7 +171,7 @@ def upload_and_stamp_attachment(file, stamp_data):
     attachment_folder = "/tim_files/blocks/files"
     content = file.read()
 
-    f = save_file_and_grant_access(content, file, blocktypes.FILE)
+    f = save_file_and_grant_access(content, file, BlockType.File)
 
     # If format not set or invalid, default format set in pdftools will be used.
     # Additional check is done inside pdftools-module,
@@ -200,16 +199,16 @@ def upload_image_or_file(image_file):
     content = image_file.read()
     imgtype = imghdr.what(None, h=content)
     if imgtype is not None:
-        f = save_file_and_grant_access(content, image_file, blocktypes.IMAGE)
+        f = save_file_and_grant_access(content, image_file, BlockType.Image)
         db.session.commit()
         return json_response({"image": f'{f.id}/{f.filename}'})
     else:
-        f = save_file_and_grant_access(content, image_file, blocktypes.FILE)
+        f = save_file_and_grant_access(content, image_file, BlockType.File)
         db.session.commit()
         return json_response({"file": f'{f.id}/{f.filename}'})
 
 
-def save_file_and_grant_access(content, image_file, block_type) -> UploadedFile:
+def save_file_and_grant_access(content, image_file, block_type: BlockType) -> UploadedFile:
     f = UploadedFile.save_new(content, image_file.filename, block_type)
     f.block.set_owner(get_current_user_object().get_personal_group())
     grant_view_access(get_anon_group_id(), f.id)  # So far everyone can see all files
@@ -218,7 +217,7 @@ def save_file_and_grant_access(content, image_file, block_type) -> UploadedFile:
 
 @upload.route('/files/<int:file_id>/<file_filename>')
 def get_file(file_id, file_filename):
-    f = UploadedFile.find_by_id_and_type(file_id, blocktypes.FILE)
+    f = UploadedFile.find_by_id_and_type(file_id, BlockType.File)
     if not f:
         abort(404, 'File not found')
     verify_view_access(f)
@@ -236,7 +235,7 @@ def get_file(file_id, file_filename):
 
 @upload.route('/images/<int:image_id>/<image_filename>')
 def get_image(image_id, image_filename):
-    f = UploadedFile.find_by_id_and_type(image_id, blocktypes.IMAGE)
+    f = UploadedFile.find_by_id_and_type(image_id, BlockType.Image)
     if not f:
         abort(404, 'Image not found')
     verify_view_access(f)

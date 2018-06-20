@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timezone, timedelta
 
 from timApp.tests.db.timdbtest import TimDbTest, TEST_USER_1_ID
-from timApp.item.block import insert_block
+from timApp.item.block import insert_block, BlockType
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.timdb.sqa import db
@@ -23,9 +23,9 @@ class UserTest(TimDbTest):
         gid2 = g2.id
         user.groups.append(g)
 
-        test_block = insert_block(block_type=0, description='test', owner_group_id=gid2)
+        test_block = insert_block(block_type=BlockType.Document, description='test', owner_group_id=gid2)
         test_block_id = test_block.id
-        test_block_2 = insert_block(block_type=0, description='test', owner_group_id=gid)
+        test_block_2 = insert_block(block_type=BlockType.Document, description='test', owner_group_id=gid)
         db.session.commit()
 
         saved_user = timdb.users.get_user(user_id)
@@ -180,7 +180,7 @@ class UserTest(TimDbTest):
 
     def test_timed_permissions(self):
         db = self.get_db()
-        block = insert_block(0, 'testing', self.get_test_user_2_group_id())
+        block = insert_block(BlockType.Document, 'testing', self.get_test_user_2_group_id())
         b = block.id
         user = User.query.get(TEST_USER_1_ID)
         self.assertFalse(user.has_view_access(block))

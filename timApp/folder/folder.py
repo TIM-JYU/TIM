@@ -1,10 +1,9 @@
 from typing import List, Iterable
 from typing import Optional
 
-from timApp.item.blocktypes import blocktypes
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.item.item import Item
-from timApp.item.block import Block, insert_block, copy_default_rights
+from timApp.item.block import Block, insert_block, copy_default_rights, BlockType
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
@@ -95,7 +94,7 @@ class Folder(db.Model, Item):
         assert self.is_empty
         db.session.delete(self)
         BlockAccess.query.filter_by(block_id=self.id).delete()
-        Block.query.filter_by(type_id=blocktypes.FOLDER, id=self.id).delete()
+        Block.query.filter_by(type_id=BlockType.Folder.value, id=self.id).delete()
 
     def rename(self, new_name: str):
         assert '/' not in new_name
@@ -218,7 +217,7 @@ class Folder(db.Model, Item):
         if folder is not None:
             return folder
 
-        block_id = insert_block(blocktypes.FOLDER, title or rel_name, owner_group_id).id
+        block_id = insert_block(BlockType.Folder, title or rel_name, owner_group_id).id
 
         # noinspection PyArgumentList
         f = Folder(id=block_id, name=rel_name, location=rel_path)
@@ -228,7 +227,7 @@ class Folder(db.Model, Item):
         Folder.create(rel_path, owner_group_id)
 
         if apply_default_rights:
-            copy_default_rights(f.id, blocktypes.FOLDER)
+            copy_default_rights(f.id, BlockType.Folder)
 
         return f
 

@@ -1,11 +1,10 @@
 from typing import Optional, Union, List
 
 from timApp.document.document import Document
-from timApp.item.blocktypes import blocktypes
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.gamification.gamificationdocument import GamificationDocument
-from timApp.item.block import insert_block
+from timApp.item.block import insert_block, BlockType
 from timApp.document.translation.translation import Translation
 from timApp.timdb.sqa import db
 from timApp.timtypes import UserType
@@ -145,7 +144,7 @@ class DocEntry(db.Model, DocInfo):
 
 
 def create_document_and_block(owner_group_id: int, desc: Optional[str]=None):
-    document_id = insert_block(blocktypes.DOCUMENT, desc, owner_group_id).id
+    document_id = insert_block(BlockType.Document, desc, owner_group_id).id
     document = Document(document_id, modifier_group_id=owner_group_id)
     document.create()
     return document

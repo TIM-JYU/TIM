@@ -7,17 +7,16 @@ from werkzeug.utils import secure_filename
 
 from timApp.answer.answer_models import AnswerUpload
 from timApp.document.docinfo import DocInfo
-from timApp.item.block import insert_block, Block
-from timApp.item.blocktypes import blocktypes
+from timApp.item.block import insert_block, Block, BlockType
 from timApp.item.item import ItemBase
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 
 DIR_MAPPING = {
-    blocktypes.FILE: 'files',
-    blocktypes.IMAGE: 'images',
-    blocktypes.UPLOAD: 'uploads',
+    BlockType.File: 'files',
+    BlockType.Image: 'images',
+    BlockType.Upload: 'uploads',
 }
 
 
@@ -28,7 +27,7 @@ class PluginUploadInfo(NamedTuple):
     user: User
 
 
-def get_storage_path(block_type):
+def get_storage_path(block_type: BlockType):
     """Gets the storage path for the given block type.
 
     :param block_type: The block type.
@@ -47,8 +46,8 @@ class UploadedFile(ItemBase):
         self._block = b
 
     @staticmethod
-    def find_by_id_and_type(block_id: int, block_type: int) -> Optional['UploadedFile']:
-        b = Block.query.filter_by(id=block_id, type_id=block_type).first()
+    def find_by_id_and_type(block_id: int, block_type: BlockType) -> Optional['UploadedFile']:
+        b = Block.query.filter_by(id=block_id, type_id=block_type.value).first()
         if not b:
             return None
         return CLASS_MAPPING[block_type](b)
@@ -59,7 +58,7 @@ class UploadedFile(ItemBase):
 
     @property
     def block_type(self):
-        return self.block.type_id
+        return BlockType(self.block.type_id)
 
     @property
     def relative_filesystem_path(self):
@@ -83,12 +82,12 @@ class UploadedFile(ItemBase):
             return f.read()
 
     @classmethod
-    def save_new(cls, file_data: bytes, file_filename: str, block_type: int,
+    def save_new(cls, file_data: bytes, file_filename: str, block_type: BlockType,
                  upload_info: PluginUploadInfo = None) -> 'UploadedFile':
         if block_type not in DIR_MAPPING:
             raise TimDbException(f'Invalid block type given: {block_type}')
         secured_name = secure_filename(file_filename)
-        if block_type == blocktypes.UPLOAD:
+        if block_type == BlockType.Upload:
             assert upload_info
             base_path = get_storage_path(block_type)
             path = (base_path
@@ -128,7 +127,7 @@ class PluginUpload(UploadedFile):
 
 
 CLASS_MAPPING = {
-    blocktypes.FILE: UploadedFile,
-    blocktypes.IMAGE: UploadedFile,
-    blocktypes.UPLOAD: PluginUpload,
+    BlockType.File: UploadedFile,
+    BlockType.Image: UploadedFile,
+    BlockType.Upload: PluginUpload,
 }

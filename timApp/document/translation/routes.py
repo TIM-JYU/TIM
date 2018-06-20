@@ -7,8 +7,7 @@ from timApp.auth.accesshelper import get_doc_or_abort, verify_view_access, verif
 from timApp.auth.sessioninfo import get_current_user_group
 from timApp.document.documents import create_translation
 from timApp.document.translation.translation import Translation
-from timApp.item.block import copy_default_rights
-from timApp.item.blocktypes import blocktypes
+from timApp.item.block import copy_default_rights, BlockType
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params
@@ -43,7 +42,7 @@ def create_translation_route(tr_doc_id, language):
     tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
     db.session.add(tr)
-    copy_default_rights(cite_doc.doc_id, blocktypes.DOCUMENT)
+    copy_default_rights(cite_doc.doc_id, BlockType.Document)
     db.session.commit()
     return json_response(tr)
 

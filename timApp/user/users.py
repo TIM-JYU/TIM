@@ -1,8 +1,7 @@
 from typing import Optional
 
-from timApp.item.blocktypes import BlockType
 from timApp.timdb.exceptions import TimDbException
-from timApp.item.block import Block
+from timApp.item.block import Block, BlockType
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, \

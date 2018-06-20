@@ -13,13 +13,13 @@ from isodate import parse_duration
 
 from timApp.auth.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
     verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort
+from timApp.item.block import BlockType
 from timApp.timdb.dbaccess import get_timdb
 from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.auth.sessioninfo import get_current_user_group
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.item.blocktypes import from_str
 from timApp.document.documents import delete_document
 from timApp.item.item import Item, copy_rights
 from timApp.document.docentry import DocEntry
@@ -275,7 +275,7 @@ def get_default_document_permissions(folder_id, object_type):
     timdb = get_timdb()
     f = get_folder_or_abort(folder_id)
     verify_manage_access(f)
-    grouprights = timdb.users.get_default_rights_holders(folder_id, from_str(object_type))
+    grouprights = timdb.users.get_default_rights_holders(folder_id, BlockType.from_str(object_type))
     return json_response({'grouprights': grouprights})
 
 
@@ -285,7 +285,7 @@ def add_default_doc_permission(folder_id, group_name, perm_type, object_type):
     grant_default_access(group_ids,
                          folder_id,
                          perm_type,
-                         from_str(object_type),
+                         BlockType.from_str(object_type),
                          accessible_from=acc_from,
                          accessible_to=acc_to,
                          duration_from=dur_from,
@@ -300,7 +300,7 @@ def remove_default_doc_permission(folder_id, group_id, perm_type, object_type):
     f = get_folder_or_abort(folder_id)
     verify_manage_access(f)
     timdb = get_timdb()
-    timdb.users.remove_default_access(group_id, folder_id, perm_type, from_str(object_type))
+    timdb.users.remove_default_access(group_id, folder_id, perm_type, BlockType.from_str(object_type))
     db.session.commit()
     return ok_response()
 

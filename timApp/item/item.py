@@ -3,9 +3,8 @@ from itertools import accumulate
 from flask import current_app
 from sqlalchemy import tuple_, func
 
-from timApp.item.blocktypes import blocktypes
 from timApp.timdb.exceptions import TimDbException
-from timApp.item.block import Block
+from timApp.item.block import Block, BlockType
 from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
 from timApp.util.utils import split_location, date_to_relative
@@ -137,10 +136,10 @@ class Item(ItemBase):
     def find_by_id(item_id):
         b = Block.query.get(item_id)
         if b:
-            if b.type_id == blocktypes.DOCUMENT:
+            if b.type_id == BlockType.Document.value:
                 from timApp.document.docentry import DocEntry
                 return DocEntry.find_by_id(item_id, try_translation=True)
-            elif b.type_id == blocktypes.FOLDER:
+            elif b.type_id == BlockType.Folder.value:
                 from timApp.folder.folder import Folder
                 return Folder.get_by_id(item_id)
             else:

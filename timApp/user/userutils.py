@@ -5,7 +5,7 @@ from typing import Optional, List
 import bcrypt
 
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
-from timApp.item.blocktypes import BlockType, blocktypes
+from timApp.item.block import BlockType
 from timApp.timdb.exceptions import TimDbException
 from timApp.folder.folder import Folder
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, \
@@ -24,8 +24,8 @@ FOLDER_DEFAULT_RIGHT_NAME = 'DefaultFolderRights'
 
 access_type_map = {}
 
-default_right_paths = {blocktypes.DOCUMENT: f'{TEMPLATE_FOLDER_NAME}/{DOC_DEFAULT_RIGHT_NAME}',
-                       blocktypes.FOLDER: f'{TEMPLATE_FOLDER_NAME}/{FOLDER_DEFAULT_RIGHT_NAME}'}
+default_right_paths = {BlockType.Document: f'{TEMPLATE_FOLDER_NAME}/{DOC_DEFAULT_RIGHT_NAME}',
+                       BlockType.Folder: f'{TEMPLATE_FOLDER_NAME}/{FOLDER_DEFAULT_RIGHT_NAME}'}
 
 
 class NoSuchUserException(TimDbException):

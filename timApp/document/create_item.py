@@ -10,11 +10,10 @@ from timApp.timdb.dbaccess import get_timdb
 from timApp.document.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_NAME
 from timApp.auth.sessioninfo import get_current_user_object, get_current_user_group
 from timApp.tim_app import app
-from timApp.item.blocktypes import from_str, blocktypes
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.document.docinfo import DocInfo
 from timApp.document.documents import create_citation
-from timApp.item.block import copy_default_rights
+from timApp.item.block import copy_default_rights, BlockType
 from timApp.document.docentry import DocEntry, get_documents, create_document_and_block
 from timApp.folder.folder import Folder
 from timApp.document.translation.translation import Translation, add_tr_entry
@@ -31,8 +30,8 @@ def create_item(item_path, item_type_str, item_title, create_function, owner_gro
     item = create_function(item_path, owner_group_id, item_title)
     timdb = get_timdb()
     grant_access_to_session_users(timdb, item.id)
-    item_type = from_str(item_type_str)
-    if item_type == blocktypes.DOCUMENT:
+    item_type = BlockType.from_str(item_type_str)
+    if item_type == BlockType.Document:
         bms = Bookmarks(get_current_user_object())
         bms.add_bookmark('Last edited',
                          item.title,
@@ -75,7 +74,7 @@ def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInf
     if isinstance(item, DocInfo):
         if copied_doc:
             for tr, new_tr in copy_document_and_enum_translations(copied_doc, item):
-                copy_default_rights(new_tr.id, blocktypes.DOCUMENT)
+                copy_default_rights(new_tr.id, BlockType.Document)
         elif use_template:
             templates = get_templates_for_folder(item.parent)
             matched_templates = None

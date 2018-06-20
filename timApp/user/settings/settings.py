@@ -11,8 +11,7 @@ from timApp.util.flask.responsehelper import json_response
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.user.settings.theme import get_available_themes
 from timApp.auth.accesstype import AccessType
-from timApp.item.blocktypes import blocktypes
-from timApp.item.block import Block
+from timApp.item.block import Block, BlockType
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.user.user import User
@@ -59,9 +58,9 @@ def get_user_info(u: User, include_doc_content=False):
         BlockAccess.block_id)
     docs = DocEntry.query.filter(DocEntry.id.in_(block_query)).all()
     folders = Folder.query.filter(Folder.id.in_(block_query)).all()
-    images = Block.query.filter(Block.id.in_(block_query) & (Block.type_id == blocktypes.IMAGE)).all()
-    files = Block.query.filter(Block.id.in_(block_query) & (Block.type_id == blocktypes.FILE)).all()
-    velpgroups = Block.query.filter(Block.id.in_(block_query) & (Block.type_id == blocktypes.VELPGROUP)).all()
+    images = Block.query.filter(Block.id.in_(block_query) & (Block.type_id == BlockType.Image.value)).all()
+    files = Block.query.filter(Block.id.in_(block_query) & (Block.type_id == BlockType.File.value)).all()
+    velpgroups = Block.query.filter(Block.id.in_(block_query) & (Block.type_id == BlockType.Velpgroup.value)).all()
     answers = u.answers.all()
     answer_uploads = AnswerUpload.query.filter(AnswerUpload.answer_id.in_([a.id for a in answers])).all()
     for d in docs:

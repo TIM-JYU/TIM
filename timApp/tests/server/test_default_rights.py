@@ -3,7 +3,7 @@ from operator import itemgetter
 from dateutil import parser
 
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.item.blocktypes import from_str, blocktypes
+from timApp.item.block import BlockType
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.user.usergroup import UserGroup
@@ -23,15 +23,15 @@ class DefaultRightTest(TimRouteTest):
         korppi_id = UserGroup.get_korppi_group().id
         users_folder = Folder.find_by_path('users')
         grant_default_access([korppi_id], users_folder.id, 'view',
-                             blocktypes.DOCUMENT)
+                             BlockType.Document)
 
         # Make sure an exception won't be thrown if trying to add a right again
         acs = grant_default_access([korppi_id], users_folder.id, 'view',
-                                   blocktypes.DOCUMENT)
+                                   BlockType.Document)
         db.session.commit()
         anon_id = UserGroup.get_anonymous_group().id
         for obj_type_str in ('document', 'folder'):
-            obj_type = from_str(obj_type_str)
+            obj_type = BlockType.from_str(obj_type_str)
             def_rights = timdb.users.get_default_rights_holders(folder.id, obj_type)
             self.assertListEqual([], def_rights)
 
@@ -75,7 +75,7 @@ class DefaultRightTest(TimRouteTest):
             rights_doc = folder.get_document(default_right_paths[obj_type])
             self.assertIsNotNone(rights_doc)
 
-            if obj_type == blocktypes.DOCUMENT:
+            if obj_type == BlockType.Document:
                 new_doc = self.create_doc().document
                 new_item_rights = timdb.users.get_rights_holders(new_doc.doc_id)
                 expected_default_rights.append(
@@ -90,7 +90,7 @@ class DefaultRightTest(TimRouteTest):
                      'duration_from': None,
                      'duration_to': None
                      })
-            elif obj_type == blocktypes.FOLDER:
+            elif obj_type == BlockType.Folder:
                 f = self.create_folder(self.current_user.get_personal_folder().path + '/asd', 'folder')
                 new_item_rights = timdb.users.get_rights_holders(f['id'])
             else:

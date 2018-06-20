@@ -27,9 +27,8 @@ from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.auth.sessioninfo import get_current_user_id, logged_in
 from timApp.auth.sessioninfo import get_current_user_object, get_session_users, get_current_user_group
 from timApp.auth.accesstype import AccessType
-from timApp.item.blocktypes import blocktypes
 from timApp.timdb.exceptions import TimDbException
-from timApp.item.block import Block
+from timApp.item.block import Block, BlockType
 from timApp.document.docentry import DocEntry
 from timApp.user.user import User
 from timApp.timdb.sqa import db
@@ -144,7 +143,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             # what the browser is saying. Additionally, we'll associate the answer with the uploaded file later
             # in this route.
             block = Block.query.filter((Block.description == trimmed_file) &
-                                       (Block.type_id == blocktypes.UPLOAD)).first()
+                                       (Block.type_id == BlockType.Upload.value)).first()
             if block is None:
                 abort(400, f'Non-existent upload: {trimmed_file}')
             verify_view_access(block, message="You don't have permission to touch this file.")

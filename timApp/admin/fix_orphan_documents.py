@@ -4,8 +4,7 @@ from os.path import isfile
 from typing import List
 
 from timApp.tim_app import app
-from timApp.item.blocktypes import blocktypes
-from timApp.item.block import Block
+from timApp.item.block import Block, BlockType
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.document.translation.translation import Translation
@@ -40,7 +39,7 @@ def move_docs_without_block():
         docs_folder = os.path.join(files_root, 'docs')
         pars_folder = os.path.join(files_root, 'pars')
         doc_folders = [f for f in os.listdir(docs_folder) if not isfile(f)]
-        existing_blocks = set(str(i) for i, in Block.query.filter_by(type_id=blocktypes.DOCUMENT).with_entities(Block.id).all())
+        existing_blocks = set(str(i) for i, in Block.query.filter_by(type_id=BlockType.Document.value).with_entities(Block.id).all())
         docs_orphans = os.path.join(files_root, 'orphans', 'docs')
         pars_orphans = os.path.join(files_root, 'orphans', 'pars')
         os.makedirs(docs_orphans, exist_ok=True)

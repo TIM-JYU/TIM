@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Optional
 
 from sqlalchemy import func
 
 from timApp.auth.accesstype import AccessType
-from timApp.item.blocktypes import blocktypes, BlockType
 from timApp.user.usergroup import UserGroup
 from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
@@ -38,10 +38,10 @@ class Block(db.Model):
 
     @property
     def parent(self) -> FolderType:
-        if self.type_id == blocktypes.DOCUMENT:
+        if self.type_id == BlockType.Document.value:
             from timApp.document.docentry import DocEntry
             return DocEntry.find_by_id(self.id, try_translation=True).parent
-        elif self.type_id == blocktypes.FOLDER:
+        elif self.type_id == BlockType.Folder.value:
             from timApp.folder.folder import Folder
             folder = Folder.get_by_id(self.id)
             return folder.parent
@@ -74,7 +74,25 @@ class Block(db.Model):
                         accessible_from=datetime.now(tz=timezone.utc)))
 
 
-def insert_block(block_type: int, description: Optional[str], owner_group_id: Optional[int]=None) -> Block:
+class BlockType(Enum):
+    Document = 0
+    Comment = 1
+    Note = 2
+    Answer = 3
+    Image = 4
+    Reading = 5
+    Folder = 6
+    File = 7
+    Upload = 8
+    Velpgroup = 9
+    Annotation = 10
+
+    @staticmethod
+    def from_str(type_name: str) -> 'BlockType':
+        return BlockType[type_name.title()]
+
+
+def insert_block(block_type: BlockType, description: Optional[str], owner_group_id: Optional[int]=None) -> Block:
     """Inserts a block to database.
 
     :param description: The name (description) of the block.
@@ -83,7 +101,7 @@ def insert_block(block_type: int, description: Optional[str], owner_group_id: Op
     :returns: The id of the block.
 
     """
-    b = Block(description=description, type_id=block_type)
+    b = Block(description=description, type_id=block_type.value)
     if owner_group_id is not None:
         access = BlockAccess(block=b,
                              usergroup_id=owner_group_id,
