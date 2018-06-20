@@ -17,7 +17,14 @@ export interface IItem {
 export interface ITag {
     block_id: number;
     expires: Moment;
-    tag: string;
+    type: TagType;
+    name: string;
+}
+
+export enum TagType {
+    Regular = 1,
+    CourseCode = 2,
+    Subject = 3,
 }
 
 export interface ITaggedItem extends IItem {

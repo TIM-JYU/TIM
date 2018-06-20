@@ -7,7 +7,7 @@ import {Moment} from "moment";
 import * as focusMe from "tim/directives/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IParResponse} from "../edittypes";
-import {IItem, ITag} from "../IItem";
+import {IItem, ITag, TagType} from "../IItem";
 import {$http} from "../ngimport";
 import {markAsUsed, to} from "../utils";
 import * as tagLabel from "../components/tagLabel";
@@ -15,14 +15,7 @@ import * as tagLabel from "../components/tagLabel";
 markAsUsed(tagLabel);
 markAsUsed(focusMe);
 
-const tagParsingSeparator = " ";
-
-/*
- * Tag database attributes:
- * block_id = tagged document's id,
- * expires = tag expiration date and
- * tag = tag name string.
- */
+const tagParsingSeparator = ",";
 
 /*
  * Tag editing dialog's controller.
@@ -36,8 +29,8 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private successMessage: string;
     private f: IFormController;
     private focusName: boolean;
-    private allTags: string[]; // List of all unique tags.
-    private allUnusedTags: string[]; // List of existing tags not used in the doc.
+    private allTags: ITag[]; // List of all unique tags.
+    private allUnusedTags: ITag[]; // List of existing tags not used in the doc.
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -71,12 +64,13 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     }
 
     /***
-     * Gets all unique tags in the database, always including special tags.
+     * Gets all unique tags in the database.
      */
     private async getUniqueTags() {
-        const [err, response] = await to($http.get<string[]>(`/tags/getAllTags`, {}));
+        const [err, response] = await to($http.get<ITag[]>(`/tags/getAllTags`, {}));
         if (err) {
             this.errorMessage = err.data.error;
+            this.successMessage = "";
         } else {
             this.errorMessage = "";
         }
@@ -95,18 +89,18 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
 
         if (err) {
             this.errorMessage = err.data.error;
+            this.successMessage = "";
         } else {
             this.errorMessage = "";
         }
         if (response) {
             this.tagsList = response.data;
-
             // Get all globally used tags and remove document tags from them for tag suggestion list.
             await this.getUniqueTags();
-            let usedTags: string[];
+            let usedTags: ITag[];
             this.allUnusedTags = [];
             usedTags = [];
-            this.tagsList.forEach((tag) => usedTags.push(tag.tag));
+            this.tagsList.forEach((tag) => usedTags.push(tag));
             this.allUnusedTags = arrayDifference(this.allTags, usedTags);
             return;
         }
@@ -119,16 +113,20 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      */
     private async removeTag(t: ITag) {
         const docPath = this.resolve.params.path;
+
+        // TODO: Check if listed in known special tags.
+
         const data = {tagObject: t};
         const [err, response] = await to($http.post<IParResponse>(`/tags/remove/${docPath}`, data));
 
         if (err) {
             this.errorMessage = err.data.error;
+            this.successMessage = "";
         } else {
             this.errorMessage = "";
         }
         if (response) {
-            this.successMessage = "Tag '" + t.tag + "' was removed.";
+            this.successMessage = "Tag '" + t.name + "' was removed.";
             await this.updateTags();
             return;
         }
@@ -143,18 +141,26 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             return;
         }
         const docPath = this.resolve.params.path;
-        let input_tags: string[];
-        input_tags = [];
+        let tagObjects: ITag[];
+        tagObjects = [];
         this.tagName.split(tagParsingSeparator).forEach((tag) => {
             if (tag) {
-                input_tags.push(tag.trim());
+                tagObjects.push(
+                    {
+                        block_id: this.resolve.params.id,
+                        expires: this.expires,
+                        name: tag.trim(),
+                        type: TagType.Regular,
+                    });
+
             }
         });
-        const data = {tags: input_tags, expires: this.expires};
+        const data = {tags: tagObjects};
         const [err, response] = await to($http.post<IParResponse>(`/tags/add/${docPath}`, data));
 
         if (err) {
             this.errorMessage = err.data.error;
+            this.successMessage = "";
         } else {
             this.errorMessage = "";
         }
@@ -165,6 +171,14 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             this.f.$setPristine();
             this.focusName = true;
             return;
+        }
+    }
+
+    private tagStyle(tag: ITag) {
+        if (tag.type === TagType.Regular) {
+            return "btn-primary";
+        } else {
+            return "btn-success";
         }
     }
 }
@@ -194,31 +208,31 @@ registerDialogComponent("timEditTags",
         <p ng-if="$ctrl.tagsList.length === 0">No tags were found for the document.</p>
         <div class="tags-list">
             <span ng-repeat="x in $ctrl.tagsList">
-                <tag-label tag-text="x.tag"></tag-label>
+                <span class="btn-xs"
+                ng-class="$ctrl.tagStyle(x)">{{x.name}}</span>
                 <i ng-if="x.expires" class="glyphicon glyphicon-time"
                 uib-tooltip="Expires: {{x.expires | timdate}}"></i>
                 <a><span class="glyphicon glyphicon-remove" title="Remove tag" ng-click="$ctrl.removeTag(x)"></span></a>
-                &nbsp;
+                <span style="opacity: 0">,</span>
             </span>
         </div>
         <h4>Add new tags</h4>
         <p>Tag the document by adding words that briefly describe and classify it.</p>
         <form name="$ctrl.f" class="form-horizontal">
-            <div class="form-group" tim-error-state title="Write tag names separated by spaces"
-                 ng-class="{'has-error': !$ctrl.f.nameField.$pristine && $ctrl.f.nameField.$error.required}">
-                <label for="name" class="col-sm-4 control-label">Tag name:</label>
+            <div class="form-group" tim-error-state title="Write tag names separated by commas"
+                 ng-class="{'has-error': !$ctrl.f.tagField.$pristine && $ctrl.f.tagField.$error.required}">
+                <label for="tagField" class="col-sm-4 control-label">Tag name:</label>
                 <div class="col-sm-8">
                     <input required focus-me="$ctrl.focusName" ng-model="$ctrl.tagName" name="tagField"
                            type="text"
                            ng-keypress="$ctrl.keyPressed($event)" autocomplete="off"
-                           class="form-control" id="name" placeholder="Tag names separated by spaces"
+                           class="form-control" id="name" placeholder="Tag names separated by commas"
     uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | orderBy:tag | limitTo:18"
-                           typeahead-min-length="0">
+                           typeahead-min-length="1">
                 </div>
                 <tim-error-message></tim-error-message>
             </div>
-            <div class="form-group" title="Add optional expiration date to specify how long the tag is valid"
-                 ng-class="{'has-error': !$ctrl.f.nameField.$pristine && $ctrl.f.nameField.$error.required}">
+            <div class="form-group" title="Add optional expiration date to specify how long the tag is valid">
                 <label for="name" class="col-sm-4 control-label">Expiration date:</label>
                 <div class="col-sm-8">
                     <div class="input-group date" datetimepicker ng-model="$ctrl.expires"
