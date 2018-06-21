@@ -395,5 +395,6 @@ class User(db.Model):
     def to_json(self, full=False):
         return {**self.basic_info_dict,
                 'group': self.get_personal_group(),
+                'groups': self.groups,
                 'folder': self.get_personal_folder()
                 } if full else self.basic_info_dict

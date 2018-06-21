@@ -8,7 +8,7 @@ import {IItem, ITag, ITaggedItem, TagType} from "../IItem";
 import {to} from "../utils";
 import {$http} from "../ngimport";
 import {IParResponse} from "../edittypes";
-import {Moment} from "moment";
+import {default as moment, Moment} from "moment";
 
 /*
  * Tag search dialog's controller.
@@ -62,14 +62,16 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
     }
 
     /***
-     * Checks whether the tag type is course code.
+     * Returns course code if it exists for the item and and the code hasn't expired.
      * @param {ITaggedItem} d
      * @returns {string}
      */
     private getCourseCode(d: ITaggedItem) {
         for (const tag of d.tags) {
             if (tag.type === TagType.CourseCode) {
-                return tag.name;
+                if (!tag.expires || tag.expires.diff(moment.now()) > 0) {
+                    return tag.name;
+                }
             }
         }
         return "";

@@ -11,6 +11,7 @@ import {IItem, ITag, TagType} from "../IItem";
 import {$http} from "../ngimport";
 import {markAsUsed, to} from "../utils";
 import * as tagLabel from "../components/tagLabel";
+import {Users} from "../services/userService";
 
 markAsUsed(tagLabel);
 markAsUsed(focusMe);
@@ -112,9 +113,13 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      * @returns {Promise<void>}
      */
     private async removeTag(t: ITag) {
-        const docPath = this.resolve.params.path;
+        if (!Users.belongsToGroup("teachers")) {
+            this.errorMessage = "Editing this tag is only allowed to 'teachers' group!"
+            this.successMessage = "";
+            return;
+        }
 
-        // TODO: Check if listed in known special tags.
+        const docPath = this.resolve.params.path;
 
         const data = {tagObject: t};
         const [err, response] = await to($http.post<IParResponse>(`/tags/remove/${docPath}`, data));

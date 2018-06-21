@@ -253,6 +253,14 @@ export class SidebarMenuCtrl implements IController {
         }
         showCourseDialog(this.vctrl.item);
     }
+
+    /***
+     * Checks whether user belongs to teachers group.
+     * @returns {boolean}
+     */
+    userBelongsToTeachers() {
+        return Users.belongsToGroup("teachers");
+    }
 }
 
 timApp.component("timSidebarMenu", {

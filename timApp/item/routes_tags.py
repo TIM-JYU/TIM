@@ -1,6 +1,7 @@
 """
 Routes related to tags.
 """
+from datetime import datetime, timedelta
 
 from flask import Blueprint
 from flask import abort
@@ -22,6 +23,8 @@ from timApp.util.flask.responsehelper import ok_response, json_response
 tags_blueprint = Blueprint('tags',
                            __name__,
                            url_prefix='/tags')
+
+now = datetime.now().astimezone()
 
 
 @tags_blueprint.route('/add/<path:doc>', methods=["POST"])
@@ -73,8 +76,23 @@ def check_tag_access(tag_type, group):
             abort(400, f"Managing this tag requires {group} rights.")
 
 
-def has_tag_special_chars(item_path: str):
-    return set(item_path.lower()) - set('abcdefghijklmnopqrstuvwxyzåäö0123456789/- _')
+def has_tag_special_chars(string: str):
+    """
+    Checks whether the string has letters (lower or upper case) a-ö,
+    numbers 0-9, slashes, underscores or spaces.
+    characters.
+    :param string:
+    :return: Non-empty set if list has characters other than allowed ones.
+    """
+    return set(string.lower()) - set('abcdefghijklmnopqrstuvwxyzåäö0123456789/- _')
+
+
+def is_expired(tag: Tag) -> bool:
+    if tag.expires:
+        print(tag.expires, now, tag.expires < now)
+        return tag.expires < now
+    else:
+        return False
 
 
 @tags_blueprint.route('/remove/<path:doc>', methods=["POST"])
@@ -120,18 +138,21 @@ def get_tags(doc):
         abort(404)
     verify_view_access(d)
     tags = d.block.tags
+    # print(tags)
+    # tags[:] = [tag for tag in tags if not is_expired(tag)]
+    # print(tags)
     return json_response(tags)
 
 
 @tags_blueprint.route('/getAllTags', methods=["GET"])
 def get_all_tags():
     """
-    Gets the list of all unique tags used in any document.
+    Gets the list of all unique tags used in any document, regardless
+    of expiration.
     :returns The list of all unique tag names.
     """
     tags = Tag.query.all()
 
-    # TODO: Check if necessary to add subject-type tags here.
     tags_unique = set()
     for tag in tags:
         tags_unique.add(tag.name)
@@ -154,7 +175,10 @@ def get_tagged_documents():
         custom_filter = DocEntry.id.in_(Tag.query.filter_by(name=tag_name).with_entities(Tag.block_id))
     else:
         tag_name = f"%{tag_name}%"
-        custom_filter = DocEntry.id.in_(Tag.query.filter(Tag.name.like(tag_name)).with_entities(Tag.block_id))
+        custom_filter = DocEntry.id.in_(Tag.query.filter(Tag.name.like(tag_name) &
+                                                         ((Tag.expires > datetime.now()) | (Tag.expires == None))).
+                                        with_entities(Tag.block_id))
+
     if list_doc_tags:
         query_options = joinedload(DocEntry._block).joinedload(Block.tags)
     else:

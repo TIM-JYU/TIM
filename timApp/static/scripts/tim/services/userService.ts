@@ -1,11 +1,11 @@
 import {$http, $httpParamSerializer, $window} from "../ngimport";
-import {IUser} from "../IUser";
+import {IFullUser, IUser} from "../IUser";
 
 export class UserService {
-    private current: IUser; // currently logged in user
+    private current: IFullUser; // currently logged in user
     private group: IUser[]; // any additional users that have been added in the session - this does not include the main user
 
-    constructor(current: IUser, group: IUser[]) {
+    constructor(current: IFullUser, group: IUser[]) {
         this.current = current;
         this.group = group;
     }
@@ -23,7 +23,7 @@ export class UserService {
     }
 
     public logout(user: IUser, logoutFromKorppi = false) {
-        $http.post<{other_users: IUser[], current_user: IUser}>("/logout", {user_id: user.id}).then((response) => {
+        $http.post<{other_users: IUser[], current_user: IFullUser}>("/logout", {user_id: user.id}).then((response) => {
             this.group = response.data.other_users;
             this.current = response.data.current_user;
             if (!this.isLoggedIn()) {
@@ -63,6 +63,18 @@ export class UserService {
         }
     }
 
+    /***
+     * Checks whether user belongs to a group.
+     */
+    public belongsToGroup(groupName: string) {
+        for (const group of this.current.groups) {
+            if (group.name === groupName) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public korppiLogout(redirectFn: () => any) {
         $http(
             {
@@ -77,7 +89,7 @@ export class UserService {
     }
 
     public loginWithEmail(email: string, password: string, addUser: boolean, successFn: () => void) {
-        $http<{other_users: IUser[], current_user: IUser}>(
+        $http<{other_users: IUser[], current_user: IFullUser}>(
             {
                 method: "POST",
                 url: "/altlogin",

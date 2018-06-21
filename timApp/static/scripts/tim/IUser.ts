@@ -6,6 +6,10 @@ export interface IUser {
     velped_task_count: number; // TODO needs a separate type
 }
 
+export interface IFullUser extends IUser {
+    groups: IGroup[];
+}
+
 export interface IGroup {
     id: number;
     name: string;
