@@ -278,7 +278,7 @@ export class TextAreaParEditor extends BaseParEditor {
     @focusAfter
     headerClicked(head: string) {
         const selection = this.selectLine(true);
-        const tempEnd = selection.end;
+        const end = selection.end;
         let line = this.editor.getSelection().text;
         let original = 0;
         while (line.charAt(0) === "#") {
@@ -286,8 +286,10 @@ export class TextAreaParEditor extends BaseParEditor {
             line = line.substr(1);
         }
         line = line.trim();
-        this.editor.replaceSelectedText(head + " " + line);
-        this.editor.setSelection(tempEnd + (head.length - original), tempEnd + (head.length - original));
+        const headAndSpace = head + " ";
+        this.editor.replaceSelectedText(headAndSpace + line);
+        const n = (headAndSpace.length - original);
+        this.editor.setSelection(end + n, end + n);
     }
 
     selectWord() {
