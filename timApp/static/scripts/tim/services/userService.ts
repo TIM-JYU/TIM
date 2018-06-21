@@ -64,7 +64,7 @@ export class UserService {
     }
 
     /***
-     * Checks whether user belongs to a group.
+     * Checks whether the user belongs to a group.
      */
     public belongsToGroup(groupName: string) {
         for (const group of this.current.groups) {

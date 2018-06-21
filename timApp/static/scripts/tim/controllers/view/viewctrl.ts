@@ -351,6 +351,9 @@ export class ViewCtrl implements IController {
 
     /***
      * Checks if the document has been tagged as a course.
+     *
+     * In case expiration matters, add this:
+     * if (!tag.expires || tag.expires.diff(moment.now()) > 0)
      */
     private async checkIfTaggedAsCourse() {
         const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`, {}));

@@ -64,10 +64,10 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
             this.successMessage = "";
             return;
         }
-
+        const codeName = this.courseCode.trim().toUpperCase();
         const codeTag = {
             block_id: this.resolve.params.id, expires: this.expires,
-            name: this.courseCode.trim(), type: TagType.CourseCode,
+            name: codeName, type: TagType.CourseCode,
         };
         const subjectTag = {
             block_id: this.resolve.params.id, expires: this.expires,
@@ -82,7 +82,7 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
             return;
         }
         if (response) {
-            this.successMessage = "'" + this.courseCode + "' successfully added as a '"
+            this.successMessage = "'" + codeName + "' successfully added as a '"
                     + this.courseSubject + "' course.";
             return;
         }
@@ -142,8 +142,8 @@ registerDialogComponent("timCourseDialog",
     </dialog-body>
     <dialog-footer>
         <button class="btn timButton" data-ng-disabled="$ctrl.f.$invalid" ng-click="$ctrl.registerCourse()"
-        title="Send course meta data">
-            <span>Send</span>
+        title="Save course meta data">
+            <span>Save</span>
         </button>
         <button class="btn timButton" ng-click="$ctrl.dismiss()"><span>Close</span></button>
     </dialog-footer>

@@ -244,6 +244,13 @@ export class SidebarMenuCtrl implements IController {
         showTagSearchDialog(this.vctrl.item);
     }
 
+    /***
+     * Start page specific version of the search opening.
+     */
+    searchWithTagsStart() {
+        showTagSearchDialog($window.item);
+    }
+
     /*
      * Opens course registering dialog.
      */

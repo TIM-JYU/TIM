@@ -86,7 +86,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
             grouped.push({subject: s, doc: null});
         }
         for (const d of this.docList) {
-            // TODO:
+            // TODO: Finish.
         }
 
     }
