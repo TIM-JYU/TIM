@@ -5,6 +5,7 @@ from typing import Optional
 from sqlalchemy import func
 
 from timApp.auth.accesstype import AccessType
+from timApp.item.blockassociation import BlockAssociation
 from timApp.user.usergroup import UserGroup
 from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
@@ -26,6 +27,16 @@ class Block(db.Model):
     answerupload = db.relationship('AnswerUpload', back_populates='block', lazy='dynamic')
     accesses = db.relationship('BlockAccess', back_populates='block', lazy='joined')
     tags = db.relationship('Tag', back_populates='block', lazy='select')
+    children = db.relationship('Block',
+                               secondary=BlockAssociation.__table__,
+                               primaryjoin=id == BlockAssociation.__table__.c.parent,
+                               secondaryjoin=id == BlockAssociation.__table__.c.child,
+                               lazy='select')
+    parents = db.relationship('Block',
+                              secondary=BlockAssociation.__table__,
+                              primaryjoin=id == BlockAssociation.__table__.c.child,
+                              secondaryjoin=id == BlockAssociation.__table__.c.parent,
+                              lazy='select')
 
     def __json__(self):
         return ['id', 'type_id', 'description', 'created', 'modified']

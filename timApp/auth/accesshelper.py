@@ -6,23 +6,23 @@ from flask import request, g
 from sqlalchemy import inspect
 from werkzeug.exceptions import abort
 
-from timApp.document.docparagraph import DocParagraph
-from timApp.document.document import Document, dereference_pars
-from timApp.util.flask.requesthelper import get_option
+from timApp.auth.accesstype import AccessType
+from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import logged_in, get_other_users_as_list, \
     get_current_user_group, get_current_user_object
-from timApp.auth.accesstype import AccessType
-from timApp.document.docinfo import DocInfo
-from timApp.timdb.exceptions import TimDbException
-from timApp.item.item import Item, ItemBase
 from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph
+from timApp.document.document import Document, dereference_pars
 from timApp.folder.folder import Folder
+from timApp.item.item import Item, ItemBase
+from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.sqa import db
+from timApp.timdb.timdb import TimDb
 from timApp.user.user import ItemOrBlock
 from timApp.user.usergroup import UserGroup
-from timApp.timdb.sqa import db
-from timApp.auth.auth_models import BlockAccess
-from timApp.timdb.timdb import TimDb
 from timApp.user.userutils import get_access_type_id, grant_access
+from timApp.util.flask.requesthelper import get_option
 
 
 def get_doc_or_abort(doc_id: int):
@@ -78,9 +78,13 @@ def verify_access(b: ItemOrBlock, access_type: AccessType, require: bool = True,
     abort(400, 'Bad request - unknown access type')
 
 
-def verify_view_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
+def verify_view_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
     u = get_current_user_object()
-    return abort_if_not_access_and_required(u.has_view_access(b), b.id, 'view', require, message, check_duration)
+    has_access = u.has_view_access(b)
+    if not has_access and check_parents:
+        # Only uploaded files and images have a parent so far.
+        has_access = any(u.has_view_access(p) for p in b.parents)
+    return abort_if_not_access_and_required(has_access, b.id, 'view', require, message, check_duration)
 
 
 def verify_teacher_access(b: ItemOrBlock, require=True, message=None, check_duration=False):

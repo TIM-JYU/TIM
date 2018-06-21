@@ -1,5 +1,6 @@
 import io
 
+from timApp.document.docentry import DocEntry
 from timApp.document.document import Document
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.usergroup import UserGroup
@@ -54,15 +55,52 @@ class UploadTest(TimRouteTest):
 
     def test_upload_file(self):
         self.login_test1()
-        self.post('/upload/',
-                  data={'file': (io.BytesIO(b'test file'), 'test.md')}, expect_content={'file': '1/test.md'})
-        self.get_no_warn(f'/files/1/test.md', expect_content='test file')
-        self.get(f'/files/2/test.md', expect_status=404)
-        self.get(f'/files/1/testx.md', expect_status=404)
+        d = self.create_doc()
+        d_id = d.id
+        j = self.post('/upload/',
+                      data={'doc_id': str(d.id), 'file': (io.BytesIO(b'test file'), 'test.md')})
+        d = DocEntry.find_by_id(d_id)
+        up_id = d.block.children[0].id
+        self.assertEqual(f'{up_id}/test.md', j['file'])
+        self.get_no_warn(f'/files/{j["file"]}', expect_content='test file')
+        self.get(f'/files/1{j["file"]}', expect_status=404)
+        self.get(f'/files/{j["file"]}x', expect_status=404)
+
+        self.login_test2()
+        self.get(f'/files/{j["file"]}', expect_status=403)
+        grant_access(self.get_test_user_2_group_id(), d_id, 'view')
+        self.get_no_warn(f'/files/{j["file"]}', expect_content='test file')
 
     def test_upload_image(self):
         self.login_test1()
-        j = self.post('/upload/', data={'file': (io.BytesIO(b'GIF87a'), 'test.jpg')})
-        self.get_no_warn(f'/images/{j["image"]}', expect_content='GIF87a')
-        self.get(f'/images/1{j["image"]}', expect_status=404)
-        self.get(f'/images/{j["image"]}x', expect_status=404)
+        d_id, j = self.create_doc_with_image()
+        self.get_no_warn(f'/images/{j}', expect_content='GIF87a')
+        self.get(f'/images/1{j}', expect_status=404)
+        self.get(f'/images/{j}x', expect_status=404)
+
+        self.login_test2()
+        self.get(f'/images/{j}', expect_status=403)
+        grant_access(self.get_test_user_2_group_id(), d_id, 'view')
+        self.get_no_warn(f'/images/{j}', expect_content='GIF87a')
+
+    def test_upload_copy_doc(self):
+        self.login_test1()
+        d_id, j = self.create_doc_with_image()
+        d = self.create_doc(copy_from=d_id)
+        copy_id = d.id
+        grant_access(self.get_test_user_2_group_id(), d.id, 'view')
+        self.login_test2()
+        self.get_no_warn(f'/images/{j}', expect_content='GIF87a')
+        grant_access(self.get_test_user_2_group_id(), d_id, 'view')
+        self.test_user_2.remove_access(copy_id, 'view')
+        db.session.commit()
+        self.get_no_warn(f'/images/{j}', expect_content='GIF87a')
+        self.test_user_2.remove_access(d_id, 'view')
+        db.session.commit()
+        self.get(f'/images/{j}', expect_status=403)
+
+    def create_doc_with_image(self):
+        d = self.create_doc()
+        d_id = d.id
+        j = self.post('/upload/', data={'doc_id': str(d.id), 'file': (io.BytesIO(b'GIF87a'), 'test.jpg')})
+        return d_id, j['image']

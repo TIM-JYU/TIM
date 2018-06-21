@@ -628,6 +628,7 @@ or newer one that is more familiar to write in YAML:
             this.file.error = undefined;
             const upload = $upload.upload<{image: string, file: string}>({
                 data: {
+                    doc_id: this.getExtraData().docId.toString(),
                     file,
                     attachmentParams: JSON.stringify(attachmentParams),
                 },

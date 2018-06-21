@@ -90,6 +90,7 @@ def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInf
 
 
 def copy_document_and_enum_translations(source: DocInfo, target: DocInfo) -> Generator[Tuple[DocInfo, DocInfo], None, None]:
+    target.children.extend(source.children)  # required to retain rights to uploaded files
     target.document.update(source.document.export_markdown(),
                            target.document.export_markdown(),
                            strict_validation=False)

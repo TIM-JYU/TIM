@@ -39,6 +39,14 @@ class ItemBase:
     def last_modified(self):
         return self.block.modified if self.block else None
 
+    @property
+    def parents(self):
+        return self.block.parents
+
+    @property
+    def children(self):
+        return self.block.children
+
 
 class Item(ItemBase):
     """An item that exists in the TIM directory hierarchy. Currently :class:`~.Folder` and :class:`~.DocInfo`."""
@@ -102,7 +110,7 @@ class Item(ItemBase):
         return crumbs
 
     @property
-    def parent(self):
+    def parent(self):  # TODO rename this to parent_folder to distinguish better from "parents" attribute
         folder = self.location
         from timApp.folder.folder import Folder
         return Folder.find_by_path(folder) if folder else Folder.get_root()

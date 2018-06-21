@@ -14,9 +14,11 @@ from werkzeug.utils import secure_filename
 
 import timApp.util.pdftools
 from timApp.auth.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
-    grant_access_to_session_users, get_doc_or_abort
+    grant_access_to_session_users, get_doc_or_abort, verify_edit_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_group, logged_in, get_current_user_object
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.document.documents import import_document
 from timApp.item.block import Block, BlockType
 from timApp.item.validation import validate_item_and_create, validate_uploaded_document_content
@@ -24,7 +26,6 @@ from timApp.plugin.plugin import Plugin
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo
-from timApp.user.userutils import grant_view_access, get_anon_group_id
 from timApp.util.flask.responsehelper import json_response
 
 upload = Blueprint('upload',
@@ -125,28 +126,33 @@ def upload_file():
     file = request.files.get('file')
     if file is None:
         abort(400, 'Missing file')
-
+    folder = request.form.get('folder')
+    if folder is not None:
+        return upload_document(folder, file)
+    doc_id = request.form.get('doc_id')
+    if not doc_id:
+        abort(400, 'Missing doc_id')
+    d = DocEntry.find_by_id(int(doc_id), try_translation=True)
+    verify_edit_access(d)
     try:
         attachment_params = json.loads(request.form.get('attachmentParams'))
         autostamp = attachment_params[len(attachment_params) - 1]
     except:
         # Just go on with normal upload if necessary conditions are not met.
-        pass
+        return upload_image_or_file(d, file)
     else:
         if autostamp:
             # Only go here if attachment params are valid enough and autostamping is valid and true
             # because otherwise normal uploading may be interrupted.
             try:
                 stamp_data = timApp.util.pdftools.attachment_params_to_dict(attachment_params)
-                return upload_and_stamp_attachment(file, stamp_data)
+                return upload_and_stamp_attachment(d, file, stamp_data)
             # If attachment isn't a pdf, gives an error too (since it's in 'showPdf' plugin)
             except timApp.util.pdftools.PdfError as e:
                 abort(400, str(e))
 
-    folder = request.form.get('folder')
 
-    if folder is None:
-        return upload_image_or_file(file)
+def upload_document(folder, file):
     path = posixpath.join(folder, os.path.splitext(secure_filename(file.filename))[0])
 
     content = validate_uploaded_document_content(file)
@@ -157,7 +163,7 @@ def upload_file():
     return json_response({'id': doc.doc_id})
 
 
-def upload_and_stamp_attachment(file, stamp_data):
+def upload_and_stamp_attachment(d: DocInfo, file, stamp_data):
     """
     Uploads the file and makes a stamped version of it into the same folder.
     :param file: The file to upload and stamp.
@@ -171,7 +177,7 @@ def upload_and_stamp_attachment(file, stamp_data):
     attachment_folder = "/tim_files/blocks/files"
     content = file.read()
 
-    f = save_file_and_grant_access(content, file, BlockType.File)
+    f = save_file_and_grant_access(d, content, file, BlockType.File)
 
     # If format not set or invalid, default format set in pdftools will be used.
     # Additional check is done inside pdftools-module,
@@ -195,23 +201,19 @@ def upload_and_stamp_attachment(file, stamp_data):
     return json_response({"file": f"{str(f.id)}/{stamped_filename}"})
 
 
-def upload_image_or_file(image_file):
-    content = image_file.read()
+def upload_image_or_file(d: DocInfo, file):
+    content = file.read()
     imgtype = imghdr.what(None, h=content)
-    if imgtype is not None:
-        f = save_file_and_grant_access(content, image_file, BlockType.Image)
-        db.session.commit()
-        return json_response({"image": f'{f.id}/{f.filename}'})
-    else:
-        f = save_file_and_grant_access(content, image_file, BlockType.File)
-        db.session.commit()
-        return json_response({"file": f'{f.id}/{f.filename}'})
+    type_str = 'image' if imgtype else 'file'
+    f = save_file_and_grant_access(d, content, file, BlockType.from_str(type_str))
+    db.session.commit()
+    return json_response({type_str: f'{f.id}/{f.filename}'})
 
 
-def save_file_and_grant_access(content, image_file, block_type: BlockType) -> UploadedFile:
-    f = UploadedFile.save_new(content, image_file.filename, block_type)
+def save_file_and_grant_access(d: DocInfo, content, file, block_type: BlockType) -> UploadedFile:
+    f = UploadedFile.save_new(content, file.filename, block_type)
     f.block.set_owner(get_current_user_object().get_personal_group())
-    grant_view_access(get_anon_group_id(), f.id)  # So far everyone can see all files
+    d.block.children.append(f.block)
     return f
 
 
@@ -220,7 +222,7 @@ def get_file(file_id, file_filename):
     f = UploadedFile.find_by_id_and_type(file_id, BlockType.File)
     if not f:
         abort(404, 'File not found')
-    verify_view_access(f)
+    verify_view_access(f, check_parents=True)
     mime = magic.Magic(mime=True)
     file_path = f.filesystem_path.as_posix()
     if file_filename != f.filename:
@@ -238,7 +240,7 @@ def get_image(image_id, image_filename):
     f = UploadedFile.find_by_id_and_type(image_id, BlockType.Image)
     if not f:
         abort(404, 'Image not found')
-    verify_view_access(f)
+    verify_view_access(f, check_parents=True)
     if image_filename != f.filename:
         abort(404, 'Image not found')
     img_data = f.data
