@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import UnmappedInstanceError, FlushError
 
-from timApp.auth.accesshelper import verify_view_access, verify_manage_access
+from timApp.auth.accesshelper import verify_view_access, verify_manage_access, check_admin_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.item.block import Block
@@ -68,12 +68,13 @@ def check_tag_access(tag_type, group):
     """
     Checks whether the user is allowed to make changes to the tag type.
     :param tag_type:
+    :param group:
     :return:
     """
     if tag_type != TagType.Regular:
         ug = UserGroup.get_by_name(group)
-        if ug not in get_current_user_object().groups:
-            abort(400, f"Managing this tag requires {group} rights.")
+        if ug not in get_current_user_object().groups and not check_admin_access():
+            abort(400, f"Managing this tag requires admin or {group} rights.")
 
 
 def has_tag_special_chars(string: str):
@@ -103,10 +104,8 @@ def remove_tag(doc):
 
     tag_type = TagType(int(tag_dict["type"]))
     check_tag_access(tag_type, TEACHERS_GROUPNAME)
-
     tag_name = tag_dict["name"]
-    tag_block_id = tag_dict["block_id"]
-    tag_obj = Tag.query.filter_by(block_id=tag_block_id, name=tag_name, type=tag_type).first()
+    tag_obj = Tag.query.filter_by(block_id=d.id, name=tag_name, type=tag_type).first()
 
     if not tag_obj:
         abort(400, "Tag not found.")
@@ -145,7 +144,7 @@ def get_all_tags():
     tags_unique = set()
     for tag in tags:
         tags_unique.add(tag.name)
-    return json_response(list(tags_unique))
+    return json_response(sorted(list(tags_unique)))
 
 
 @tags_blueprint.route('/getDocs')

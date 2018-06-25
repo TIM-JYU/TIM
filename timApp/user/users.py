@@ -6,7 +6,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, \
     LOGGED_IN_GROUPNAME, \
-    LOGGED_IN_USERNAME, ADMIN_GROUPNAME
+    LOGGED_IN_USERNAME, ADMIN_GROUPNAME, TEACHERS_GROUPNAME
 from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
 from timApp.timdb.timdbbase import TimDbBase
@@ -27,12 +27,14 @@ class Users(TimDbBase):
         logged_group = UserGroup(id=0, name=LOGGED_IN_GROUPNAME)
         korppi_group = UserGroup(name=KORPPI_GROUPNAME)
         admin_group = UserGroup(name=ADMIN_GROUPNAME)
+        teachers_group = UserGroup(name=TEACHERS_GROUPNAME)
         anon.groups.append(anon_group)
         logged.groups.append(logged_group)
         self.session.add(anon)
         self.session.add(logged)
         self.session.add(korppi_group)
         self.session.add(admin_group)
+        self.session.add(teachers_group)
 
     def create_anonymous_user(self, name: str, real_name: str, commit: bool = True) -> User:
         """Creates a new anonymous user.
