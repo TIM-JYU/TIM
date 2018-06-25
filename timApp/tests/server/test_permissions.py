@@ -79,7 +79,7 @@ class PermissionTest(TimRouteTest):
                                'duration_from': None,
                                'duration_to': None,
                                'fullname': 'Test user 1',
-                               'gid': 6,
+                               'gid': 7,
                                'name': 'testuser1'},
                               {'access_name': 'view',
                                'access_type': 1,
@@ -90,7 +90,7 @@ class PermissionTest(TimRouteTest):
                                'duration_from': None,
                                'duration_to': None,
                                'fullname': 'Test user 2',
-                               'gid': 7,
+                               'gid': 8,
                                'name': 'testuser2'}, ])
 
     def test_logged_in_right(self):

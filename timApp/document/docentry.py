@@ -1,11 +1,12 @@
 from typing import Optional, Union, List
 
-from timApp.document.document import Document
 from timApp.document.docinfo import DocInfo
-from timApp.timdb.exceptions import ItemAlreadyExistsException
-from timApp.gamification.gamificationdocument import GamificationDocument
-from timApp.item.block import insert_block, BlockType
+from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
+from timApp.gamification.gamificationdocument import GamificationDocument
+from timApp.item.block import BlockType
+from timApp.item.block import insert_block
+from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
 from timApp.timtypes import UserType
 from timApp.util.utils import split_location
@@ -153,13 +154,17 @@ def create_document_and_block(owner_group_id: int, desc: Optional[str]=None):
 def get_documents(include_nonpublic: bool = False,
                   filter_folder: str = None,
                   search_recursively: bool = True,
-                  filter_user: Optional[UserType]=None) -> List[DocEntry]:
+                  filter_user: Optional[UserType]=None,
+                  custom_filter = None,
+                  query_options = None) -> List[DocEntry]:
     """Gets all the documents in the database matching the given criteria.
 
     :param filter_user: If specified, returns only the documents that the user has view access to.
     :param search_recursively: Whether to search recursively.
     :param filter_folder: Optionally restricts the search to a specific folder.
     :param include_nonpublic: Whether to include non-public document names or not.
+    :param custom_filter:
+    :param query_options:
     :returns: A list of DocEntry objects.
 
     """
@@ -174,6 +179,10 @@ def get_documents(include_nonpublic: bool = False,
         q = q.filter(DocEntry.name.like(filter_folder + '%'))
     if not search_recursively:
         q = q.filter(DocEntry.name.notlike(filter_folder + '%/%'))
+    if custom_filter is not None:
+        q = q.filter(custom_filter)
+    if query_options is not None:
+        q = q.options(query_options)
     result = q.all()
     if not filter_user:
         return result

@@ -14,10 +14,10 @@ import {QuestionHandler} from "tim/controllers/view/questions";
 import {initReadings} from "tim/controllers/view/readings";
 import * as popupMenu from "tim/directives/popupMenu";
 import {timLogTime} from "tim/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty} from "tim/utils";
+import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/utils";
 import {initCssPrint} from "../../cssPrint";
 import {PopupMenuController} from "../../directives/popupMenu";
-import {IItem} from "../../IItem";
+import {IItem, ITag, TagType} from "../../IItem";
 import {IUser} from "../../IUser";
 import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../../ngimport";
 import {IPluginInfoResponse, ParCompiler} from "../../services/parCompiler";
@@ -32,6 +32,8 @@ import {RefPopupHandler} from "./refpopup";
 import {MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
 import {PendingCollection} from "../../edittypes";
 import {TimTableController} from "../../components/timTable";
+import {BookmarksController, IBookmark, IBookmarkGroup} from "../../directives/bookmarks";
+import {default as moment} from "moment";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -62,6 +64,8 @@ export interface IChangeDiffResult {
 }
 
 export type DiffResult = IInsertDiffResult | IReplaceDiffResult | IDeleteDiffResult | IChangeDiffResult;
+
+const courseFolder = "My courses";
 
 export class ViewCtrl implements IController {
     private notification: string;
@@ -114,6 +118,11 @@ export class ViewCtrl implements IController {
     public parmenuHandler: ParmenuHandler;
     public refpopupHandler: RefPopupHandler;
     private popupmenu?: PopupMenuController;
+    // To show a button that adds the document to bookmark folder 'My courses'.
+    private taggedAsCourse: boolean;
+    private bookmarksCtrl: BookmarksController;
+    private bookmarked: boolean;
+    private bookmarks: IBookmarkGroup[];
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -337,6 +346,51 @@ export class ViewCtrl implements IController {
                 this.notification = "";
             }
         });
+        void this.checkIfTaggedAsCourse();
+        void this.checkIfBookmarked();
+    }
+
+    /**
+     * Checks if the document has been tagged as a course.
+     *
+     * In case expiration matters, add this:
+     * if (!tag.expires || tag.expires.diff(moment.now()) > 0)
+     */
+    private async checkIfTaggedAsCourse() {
+        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`));
+        this.taggedAsCourse = false;
+        if (response) {
+            for (const tag of response.data) {
+                if (isCourse(tag)) {
+                    if (isExpired(tag)) {
+                        return;
+                    } else {
+                        this.taggedAsCourse = true;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Marks page as bookmarked if it' found in course bookmark folder.
+     * @returns {Promise<void>}
+     */
+    private async checkIfBookmarked() {
+        const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get");
+        this.bookmarks = response.data;
+        this.bookmarked = false;
+        for (const folder of this.bookmarks) {
+            if (folder.name === courseFolder) {
+                for (const bookmark of folder.items) {
+                    if (bookmark.link === "/view/" + this.item.path) {
+                        this.bookmarked = true;
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -464,6 +518,45 @@ export class ViewCtrl implements IController {
             this.popupmenu = undefined;
             optionsWindowClosed(par);
         }
+    }
+
+    /**
+     * Adds the current page to course bookmark folder.
+     * @returns {Promise<void>}
+     */
+    async addToBookmarkFolder() {
+        const bookmark = {group: courseFolder, name: this.item.title, link: "/view/" + this.item.path};
+        const response = await $http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark);
+        this.bookmarksCtrl.refresh();
+        this.checkIfBookmarked(); // Instead of directly changing boolean this checks if it really was added.
+    }
+
+    registerBookmarks(bookmarksCtrl: BookmarksController) {
+        this.bookmarksCtrl = bookmarksCtrl;
+    }
+}
+
+/**
+ * Checks if the tag type is course code.
+ * @param {string} tag
+ * @returns {boolean} Whether the tag has course code tag.
+ */
+function isCourse(tag: ITag) {
+    return (tag.type === TagType.CourseCode);
+}
+
+/**
+ * Checks if the tag has expired.
+ * @param {string} tag
+ * @returns {boolean} False if the tag has no expiration or hasn't yet expired.
+ */
+function isExpired(tag: ITag) {
+    if (tag.expires) {
+        if (tag.expires.diff(moment.now()) < 0) {
+            return true;
+        }
+    } else {
+        return false;
     }
 }
 

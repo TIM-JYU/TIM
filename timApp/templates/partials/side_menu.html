@@ -21,8 +21,14 @@
                 </uib-tab-heading>
                 <h5>Customize</h5>
                 <a href="/settings">Customize TIM</a>
+                <div ng-show="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder)">
+                    <h5>Search</h5>
+                    <button class="timButton btn btn-block"
+                        title="Search with tags" ng-click="$ctrl.searchWithTagsStart()">Search with tags</button>
+                </div>
+
                 {% if route and item.rights.manage %}
-                <h5>Document settings</h5>
+               <h5>Document settings</h5>
                 <button class="timButton btn btn-block" ng-click="$ctrl.vctrl.editingHandler.editSettingsPars()">Edit settings</button>
                 {% else %}
                     <br />
@@ -58,15 +64,14 @@
                         <span class="glyphicon glyphicon-question-sign"></span>
                     </a>
                     <button class="timButton btn btn-block"  title="Print using LaTeX => best quality" ng-click="$ctrl.printDocument()">Print document</button>
-                    <br>
                     <button class="timButton btn btn-block" title="Print using Browser own printing capabilities" ng-click="$ctrl.cssPrint()">Browser print</button>
-                    <br>
+                    <h5 style="display: inline-block">Document tags</h5>
+                    <button class="timButton btn btn-block" ng-show="$ctrl.vctrl.item.rights.manage" title="Add and remove document tags" ng-click="$ctrl.addTag()">Edit tags</button>
+                    <button class="timButton btn btn-block" title="Search with tags" ng-click="$ctrl.searchWithTags()">Search with tags</button>
+                    <button class="timButton btn btn-block" ng-show="$ctrl.userBelongsToTeachersOrIsAdmin()" title="Set document as a course main page" ng-click="$ctrl.openCourseDialog()">Set as a course</button>
                     <h5 style="display: inline-block" ng-show="$ctrl.isMinutesOrInvitation()">Memos/Minutes</h5>
                     <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateExtractsButton()" ng-click="$ctrl.createMinuteExtracts()">Create extracts</button>
                     <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateMinutesButton()" ng-click="$ctrl.createMinutes()">Create minutes</button>
-                    <br>
-                    <button class="timButton btn btn-block" ng-show="$ctrl.isMinutesOrInvitation()" ng-click="$ctrl.stampPdf()">Stamp attachments</button>
-                    <br>
                     <button class="timButton btn btn-block" ng-show="$ctrl.isMinutesOrInvitation()" ng-click="$ctrl.mergePdf()">Merge attachments</button>
                     <br>
                 </div>

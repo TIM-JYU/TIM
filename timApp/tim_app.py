@@ -12,6 +12,7 @@ from flask_migrate import Migrate
 from sqlalchemy.sql.ddl import CreateTable
 
 from timApp.document.timjsonencoder import TimJsonEncoder
+from timApp.item.tag import Tag
 from timApp.util.flask.filters import map_format, timdate, humanize_timedelta, humanize_datetime
 from timApp.korppi.openid import KorppiOpenID
 from timApp.util.logger import setup_logging
@@ -93,6 +94,7 @@ reg_models(
     Runningquestion,
     Showpoints,
     SlideStatus,
+    Tag,
     Translation,
     User,
     Useractivity,

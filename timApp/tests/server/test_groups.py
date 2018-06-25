@@ -32,7 +32,7 @@ class GroupTest(TimRouteTest):
         self.get(f'/groups/addmember/testgroup1/{t1},{t2}',
                  expect_content={'already_belongs': [t1, t2], 'added': [], 'not_exist': []})
         self.get(f'/groups/usergroups/{t1}',
-                 expect_content=[{'id': 9, 'name': 't1'}, {'id': 13, 'name': 'testgroup1'}])
+                 expect_content=[{'id': 10, 'name': 't1'}, {'id': 14, 'name': 'testgroup1'}])
         self.get(f'/groups/belongs/{t1}/testgroup1',
                  expect_content={'status': True})
 

@@ -15,11 +15,12 @@
         <div class="col-md-8 col-md-offset-2">
             <div class="row">
                 <div class="col-md-8">
+                    <bookmark-folder-box bookmarks="{{bookmarks}}" bookmark-folder-name="My courses">
+                    </bookmark-folder-box>
                     <a href="/view/tim/TIM-esittely">
                         <img class="img-responsive" src="{{ url_for('static', filename='images/responsive.jpg') }}"/>
                     </a>
                 </div>
-
                 <div class="col-md-4">
                     {% if session.user_id %}
                         <h3>Get started</h3>
@@ -27,8 +28,9 @@
                             <li class="h5"><a href="/view/{{ current_user.get_personal_folder().path }}">My documents</a></li>
                             <li class="h5"><a href="/view/">All documents</a></li>
                             <li class="h5"><a ng-click="$ctrl.enableCreate()" href="#">Create a new document</a></li>
+                            <li class="h5"><a ng-click="$ctrl.openCourseListDialog()" href="#">Available courses</a></li>
                         </ul>
-                        <bootstrap-panel show="$ctrl.creatingNew"
+                        <bootstrap-panel ng-if="$ctrl.creatingNew"
                                          title="Create a new document"
                                          show-close="true"
                                          close-fn="$ctrl.cancelCreate()">
@@ -77,7 +79,6 @@
                     {% endif %}
                 </div>
             </div>
-
             <div class="row">
                 <div class="col-md-3 col-md-offset-3">
                     <h4>TIM</h4>
