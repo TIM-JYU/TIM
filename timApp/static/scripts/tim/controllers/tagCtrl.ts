@@ -11,7 +11,7 @@ import {$http} from "../ngimport";
 import {markAsUsed, to} from "../utils";
 import * as tagLabel from "../components/tagLabel";
 import {Users} from "../services/userService";
-import {TEACHERS_GROUPNAME} from "../IUser";
+import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../IUser";
 
 markAsUsed(tagLabel);
 markAsUsed(focusMe);
@@ -120,8 +120,8 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      */
     private async removeTag(t: ITag) {
         if (t.type !== TagType.Regular) {
-            if (!Users.belongsToGroup(TEACHERS_GROUPNAME)) {
-                this.errorMessage = `Editing this tag is only allowed for ${TEACHERS_GROUPNAME} group!`;
+            if (!userBelongsToTeachersOrIsAdmin) {
+                this.errorMessage = `Editing this tag is only allowed for admins or ${TEACHERS_GROUPNAME} group!`;
                 this.successMessage = "";
                 return;
             }
@@ -276,4 +276,18 @@ registerDialogComponent("timEditTags",
 
 export async function showTagDialog(d: IItem) {
     return await showDialog<ShowTagController>("timEditTags", {params: () => d}).result;
+}
+
+/**
+ * Checks whether user belongs to teachers group.
+ * @returns {boolean}
+ */
+function userBelongsToTeachersOrIsAdmin() {
+    if (Users.belongsToGroup(ADMIN_GROUPNAME)) {
+        return true;
+    }
+    if (Users.belongsToGroup(TEACHERS_GROUPNAME)) {
+        return true;
+    }
+    return false;
 }
