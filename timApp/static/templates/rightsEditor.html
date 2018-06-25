@@ -97,7 +97,7 @@
                     <div class="form-group" ng-show="$ctrl.timeOpt.type == 'range'">
                         <div class="col-md-12">
                             <div class="input-group date" datetimepicker ng-model="$ctrl.timeOpt.from"
-                                 data-options="datePickerOptionsFrom">
+                                 data-options="$ctrl.datePickerOptionsFrom">
                                 <input type="text"
                                        class="form-control"
                                        placeholder="Leave blank for no restriction"/>
@@ -107,7 +107,7 @@
                             </div>
                             to
                             <div class="input-group date" datetimepicker ng-model="$ctrl.timeOpt.to"
-                                 data-options="datePickerOptionsTo">
+                                 data-options="$ctrl.datePickerOptionsTo">
                                 <input type="text"
                                        class="form-control"
                                        placeholder="Leave blank for no restriction"/>
