@@ -54,7 +54,7 @@ registerDialogComponent("timSearchTags",
                               list-doc-tags="true"></tagged-document-list>
     </dialog-body>
     <dialog-footer>
-        <button class="btn timButton" ng-click="$ctrl.dismiss()"><span>Close</span></button>
+        <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
     </dialog-footer>
 </tim-dialog>
 `,

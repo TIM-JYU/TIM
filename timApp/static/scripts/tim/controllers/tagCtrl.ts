@@ -6,7 +6,6 @@ import {IFormController, IRootElementService, IScope} from "angular";
 import {Moment} from "moment";
 import * as focusMe from "tim/directives/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
-import {IParResponse} from "../edittypes";
 import {IItem, ITag, TagType} from "../IItem";
 import {$http} from "../ngimport";
 import {markAsUsed, to} from "../utils";
@@ -33,6 +32,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private focusName: boolean;
     private allTags: ITag[]; // List of all unique tags.
     private allUnusedTags: ITag[]; // List of existing tag names not used in the doc.
+    private datePickerOptions: EonasdanBootstrapDatetimepicker.SetOptions;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -46,6 +46,11 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         await this.updateTags();
         this.focusName = true;
         await this.draggable.makeHeightAutomatic();
+        this.datePickerOptions = {
+            format: "D.M.YYYY HH:mm:ss",
+            defaultDate: "",
+            showTodayButton: true,
+        };
     }
 
     /**
@@ -228,35 +233,34 @@ registerDialogComponent("timEditTags",
         <h4>Add new tags</h4>
         <p>Tag the document by adding words that briefly describe and classify it.</p>
         <form name="$ctrl.f" class="form-horizontal">
-            <div class="form-group" tim-error-state title="Write tag names separated by commas"
-                 ng-class="{'has-error': !$ctrl.f.tagField.$pristine && $ctrl.f.tagField.$error.required}">
-                <label for="tagField" class="col-sm-4 control-label">Tag name:</label>
+            <div class="form-group" tim-error-state title="Write tag names separated by commas">
+                <label for="tag-field" class="col-sm-4 control-label">Tag name:</label>
                 <div class="col-sm-8">
-                    <input required focus-me="$ctrl.focusName" ng-model="$ctrl.tagName" name="tagField"
+                    <input required focus-me="$ctrl.focusName" ng-model="$ctrl.tagName" name="tag-field"
                            type="text"
                            ng-keypress="$ctrl.keyPressed($event)" autocomplete="off"
-                           class="form-control" id="name" placeholder="Tag names separated by commas"
+                           class="form-control" id="tag-field" placeholder="Tag names separated by commas"
     uib-typeahead="tag.name as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | orderBy:tag | limitTo:15 | orderBy:'name'"
                            typeahead-min-length="1">
                 </div>
                 <tim-error-message></tim-error-message>
             </div>
             <div class="form-group" title="Add optional expiration date to specify how long the tag is valid">
-                <label for="name" class="col-sm-4 control-label">Expiration date:</label>
+                <label for="expiration-selector" class="col-sm-4 control-label">Expiration date:</label>
                 <div class="col-sm-8">
                     <div class="input-group date" datetimepicker ng-model="$ctrl.expires"
-                         data-options="datePickerOptionsFrom">
-                        <input type="text" class="form-control"
+                         data-options="$ctrl.datePickerOptions">
+                        <input type="text" class="form-control" id="expiration-selector" name="expiration-selector"
                                placeholder="Leave blank for indefinite period of validity"/>
                         <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-calendar"></span>
-                </span>
+                            <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
                     </div>
                 </div>
             </div>
         </form>
-        <button class="btn timButton" data-ng-disabled="$ctrl.f.$invalid" ng-click="$ctrl.addTagClicked()">Add</button>
-        <button class="btn timButton" ng-click="$ctrl.dismiss()"><span>Close</span></button>
+        <button class="timButton" data-ng-disabled="$ctrl.f.$invalid" ng-click="$ctrl.addTagClicked()">Add</button>
+        <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
         <div ng-show="$ctrl.successMessage" class="alert alert-success">
             <span class="glyphicon glyphicon-ok"></span> {{$ctrl.successMessage}}
         </div>

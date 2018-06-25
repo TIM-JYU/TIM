@@ -4,7 +4,7 @@
 
 import {IRootElementService, IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
-import {IItem, ITaggedItem, TagType} from "../IItem";
+import {IItem, ITag, ITaggedItem, TagType} from "../IItem";
 import {$http} from "../ngimport";
 import {default as moment} from "moment";
 
@@ -66,7 +66,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
     private getCourseCode(d: ITaggedItem) {
         for (const tag of d.tags) {
             if (tag.type === TagType.CourseCode) {
-                if (!tag.expires || tag.expires.diff(moment.now()) > 0) {
+                if (!isExpired(tag)) {
                     return tag.name;
                 }
             }
@@ -111,7 +111,7 @@ registerDialogComponent("timCourseListDialog",
     </div>
     </dialog-body>
     <dialog-footer>
-        <button class="btn timButton" ng-click="$ctrl.dismiss()"><span>Close</span></button>
+        <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
     </dialog-footer>
 </tim-dialog>
 `,
@@ -119,4 +119,19 @@ registerDialogComponent("timCourseListDialog",
 
 export async function showCourseListDialog(d: IItem) {
     return await showDialog<ShowCourseListDialogController>("timCourseListDialog", {params: () => d}).result;
+}
+
+/**
+ * Checks if the tag has expired.
+ * @param {string} tag
+ * @returns {boolean} False if the tag has no expiration or hasn't yet expired.
+ */
+function isExpired(tag: ITag) {
+    if (tag.expires) {
+        if (tag.expires.diff(moment.now()) < 0) {
+            return true;
+        }
+    } else {
+        return false;
+    }
 }

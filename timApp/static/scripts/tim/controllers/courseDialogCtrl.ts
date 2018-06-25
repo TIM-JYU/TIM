@@ -4,10 +4,9 @@
 
 import {IFormController, IRootElementService, IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
-import {IItem, ITag, TagType} from "../IItem";
+import {IItem, TagType} from "../IItem";
 import {to} from "../utils";
 import {$http} from "../ngimport";
-import {IParResponse} from "../edittypes";
 import {Moment} from "moment";
 
 /**
@@ -22,6 +21,7 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     private errorMessage: string;
     private successMessage: string;
     private subjects: string[];
+    private datePickerOptions: EonasdanBootstrapDatetimepicker.SetOptions;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -33,6 +33,11 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     async $onInit() {
         super.$onInit();
         this.getSubjects();
+        this.datePickerOptions = {
+            format: "D.M.YYYY HH:mm:ss",
+            defaultDate: "",
+            showTodayButton: true,
+        };
     }
 
     /**
@@ -107,31 +112,31 @@ registerDialogComponent("timCourseDialog",
         <p>Tag document as a course main page by giving its course code and subject.</p>
         <form name="$ctrl.f" class="form-horizontal">
             <div class="form-group" tim-error-state>
-                <label for="codeField" class="col-sm-4 control-label">Course code:</label>
+                <label for="course-code-field" class="col-sm-4 control-label">Course code:</label>
                 <div class="col-sm-8">
-                    <input required focus-me="$ctrl.focusName" ng-model="$ctrl.courseCode" name="codeField"
+                    <input required focus-me="$ctrl.focusName" ng-model="$ctrl.courseCode" name="course-code-field"
                            type="text" title="" autocomplete="off"
-                           class="form-control" id="codeField"
+                           class="form-control" id="course-code-field"
                            placeholder="Input the course code using capital letters">
                 </div>
                 <tim-error-message></tim-error-message>
             </div>
 
             <div class="form-group">
-                <label for="courseSelect" class="col-sm-4 control-label">Subject:</label>
+                <label for="course-selector" class="col-sm-4 control-label">Subject:</label>
                 <div class="col-sm-8">
-                    <select required class="form-control" id="courseSelect" ng-model="$ctrl.courseSubject"
-                        title="Select the subject of the course." name="courseSelect">
+                    <select required class="form-control" id="course-selector" ng-model="$ctrl.courseSubject"
+                        title="Select the subject of the course." name="course-selector">
                         <option ng-repeat="subject in $ctrl.subjects | orderBy:subject">{{subject}}</option>
                     </select>
                 </div>
             </div>
             <div class="form-group" title="Add optional expiration date to specify how long the course is valid">
-                <label for="name" class="col-sm-4 control-label">Expiration date:</label>
+                <label for="expiration-selector" class="col-sm-4 control-label">Expiration date:</label>
                 <div class="col-sm-8">
                     <div class="input-group date" datetimepicker ng-model="$ctrl.expires"
-                         data-options="datePickerOptionsFrom">
-                        <input type="text" class="form-control"
+                         data-options="$ctrl.datePickerOptions">
+                        <input type="text" class="form-control" id="expiration-selector"
                                placeholder="Leave blank for indefinite period of validity"/>
                         <span class="input-group-addon">
                             <span class="glyphicon glyphicon-calendar"></span>
@@ -148,11 +153,9 @@ registerDialogComponent("timCourseDialog",
         </div>
     </dialog-body>
     <dialog-footer>
-        <button class="btn timButton" data-ng-disabled="$ctrl.f.$invalid" ng-click="$ctrl.registerCourse()"
-        title="Save course meta data">
-            <span>Save</span>
-        </button>
-        <button class="btn timButton" ng-click="$ctrl.dismiss()"><span>Close</span></button>
+        <button class="timButton" data-ng-disabled="$ctrl.f.$invalid" ng-click="$ctrl.registerCourse()"
+        title="Save course meta data">Save</button>
+        <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
     </dialog-footer>
 </tim-dialog>
 `,

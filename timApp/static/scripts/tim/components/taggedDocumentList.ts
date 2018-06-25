@@ -114,11 +114,9 @@ timApp.component("taggedDocumentList", {
                            class="form-control" id="tagFilterField" autocomplete="off"
      uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue | limitTo:15 | orderBy:'name'"
                            typeahead-min-length="1">
-        <span class="input-group-addon btn btn-default"
-                            ng-click="$ctrl.searchClicked($ctrl.tagFilter)"
-                            title="Search documents with tag '{{$ctrl.tagFilter}}'">
-            <i class="glyphicon glyphicon-search"></i>
-        </span>
+            <i class="input-group-addon btn btn-default glyphicon glyphicon-search"
+                ng-click="$ctrl.searchClicked($ctrl.tagFilter)"
+                title="Search documents with tag '{{$ctrl.tagFilter}}'"></i>
     </div>
         <ul ng-if="$ctrl.docList.length > 0">
             <li ng-repeat="d in $ctrl.docList | orderBy:'title'">

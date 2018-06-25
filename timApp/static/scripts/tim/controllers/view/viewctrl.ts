@@ -33,6 +33,7 @@ import {MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
 import {PendingCollection} from "../../edittypes";
 import {TimTableController} from "../../components/timTable";
 import {BookmarksController, IBookmark, IBookmarkGroup} from "../../directives/bookmarks";
+import {default as moment} from "moment";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -361,8 +362,12 @@ export class ViewCtrl implements IController {
         if (response) {
             for (const tag of response.data) {
                 if (isCourse(tag)) {
-                    this.taggedAsCourse = true;
-                    return;
+                    if (isExpired(tag)) {
+                        return;
+                    } else {
+                        this.taggedAsCourse = true;
+                        return;
+                    }
                 }
             }
         }
@@ -532,12 +537,27 @@ export class ViewCtrl implements IController {
 }
 
 /**
- * Checks if the tag
+ * Checks if the tag type is course code.
  * @param {string} tag
  * @returns {boolean} Whether the tag has course code tag.
  */
 function isCourse(tag: ITag) {
     return (tag.type === TagType.CourseCode);
+}
+
+/**
+ * Checks if the tag has expired.
+ * @param {string} tag
+ * @returns {boolean} False if the tag has no expiration or hasn't yet expired.
+ */
+function isExpired(tag: ITag) {
+    if (tag.expires) {
+        if (tag.expires.diff(moment.now()) < 0) {
+            return true;
+        }
+    } else {
+        return false;
+    }
 }
 
 timApp.component("timView", {
