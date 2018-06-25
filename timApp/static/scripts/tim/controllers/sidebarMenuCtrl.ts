@@ -12,7 +12,7 @@ import {showTagDialog} from "./tagCtrl";
 import {showTagSearchDialog} from "./tagSearchCtrl";
 import angular from "angular";
 import {showCourseDialog} from "./courseDialogCtrl";
-import {TEACHERS_GROUPNAME} from "../IUser";
+import {TEACHERS_GROUPNAME, ADMIN_GROUPNAME} from "../IUser";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -266,8 +266,14 @@ export class SidebarMenuCtrl implements IController {
      * Checks whether user belongs to teachers group.
      * @returns {boolean}
      */
-    userBelongsToTeachers() {
-        return Users.belongsToGroup(TEACHERS_GROUPNAME);
+    userBelongsToTeachersOrIsAdmin() {
+        if (Users.belongsToGroup(ADMIN_GROUPNAME)) {
+            return true;
+        }
+        if (Users.belongsToGroup(TEACHERS_GROUPNAME)) {
+            return true;
+        }
+        return false;
     }
 }
 
