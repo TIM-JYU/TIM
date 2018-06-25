@@ -1,4 +1,4 @@
-/***
+/**
  * Controller and HTML template for tag search dialog.
  */
 

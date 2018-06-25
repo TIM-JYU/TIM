@@ -1,4 +1,4 @@
-/***
+/**
  * Controller and HTML template for tag dialog.
  */
 
@@ -12,6 +12,7 @@ import {$http} from "../ngimport";
 import {markAsUsed, to} from "../utils";
 import * as tagLabel from "../components/tagLabel";
 import {Users} from "../services/userService";
+import {TEACHERS_GROUPNAME} from "../IUser";
 
 markAsUsed(tagLabel);
 markAsUsed(focusMe);
@@ -31,7 +32,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private f: IFormController;
     private focusName: boolean;
     private allTags: ITag[]; // List of all unique tags.
-    private allUnusedTags: ITag[]; // List of existing tags not used in the doc.
+    private allUnusedTags: ITag[]; // List of existing tag names not used in the doc.
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -47,14 +48,14 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         await this.draggable.makeHeightAutomatic();
     }
 
-    /***
+    /**
      * Dialog title.
      */
     public getTitle() {
         return "Edit document tags";
     }
 
-    /***
+    /**
      * Calls tag adding function when Enter is pressed.
      * @param event Keyboard event.
      */
@@ -64,11 +65,11 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         }
     }
 
-    /***
+    /**
      * Gets all unique tags in the database.
      */
     private async getUniqueTags() {
-        const [err, response] = await to($http.get<ITag[]>(`/tags/getAllTags`, {}));
+        const [err, response] = await to($http.get<ITag[]>(`/tags/getAllTags`));
         if (err) {
             this.errorMessage = err.data.error;
             this.successMessage = "";
@@ -81,12 +82,12 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         }
     }
 
-    /***
+    /**
      * Updates the list of existing tags for the document.
      */
     private async updateTags() {
         const docPath = this.resolve.params.path;
-        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${docPath}`, {}));
+        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${docPath}`));
 
         if (err) {
             this.errorMessage = err.data.error;
@@ -96,33 +97,36 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         }
         if (response) {
             this.tagsList = response.data;
-            // Get all globally used tags and remove document tags from them for tag suggestion list.
+            // Get all globally used tags and remove document's tags from them for tag suggestion list.
             await this.getUniqueTags();
-            let usedTags: ITag[];
-            this.allUnusedTags = [];
-            usedTags = [];
-            this.tagsList.forEach((tag) => usedTags.push(tag));
-            this.allUnusedTags = arrayDifference(this.allTags, usedTags);
+            const tagsListStrings = [];
+            for (const tag of this.tagsList) {
+                tagsListStrings.push(tag.name);
+            }
+            this.allUnusedTags = arrayDifference(this.allTags, Object.assign([], tagsListStrings));
             return;
         }
     }
 
-    /***
+    /**
      * Deletes selected tag.
      * @param {ITag} t Tag to delete.
      * @returns {Promise<void>}
      */
     private async removeTag(t: ITag) {
-        if (!Users.belongsToGroup("teachers")) {
-            this.errorMessage = "Editing this tag is only allowed to 'teachers' group!"
-            this.successMessage = "";
-            return;
+        if (t.type !== TagType.Regular) {
+            if (!Users.belongsToGroup(TEACHERS_GROUPNAME)) {
+                this.errorMessage = `Editing this tag is only allowed for ${TEACHERS_GROUPNAME} group!`;
+                this.successMessage = "";
+                return;
+            }
+
         }
 
         const docPath = this.resolve.params.path;
 
         const data = {tagObject: t};
-        const [err, response] = await to($http.post<IParResponse>(`/tags/remove/${docPath}`, data));
+        const [err, response] = await to($http.post(`/tags/remove/${docPath}`, data));
 
         if (err) {
             this.errorMessage = err.data.error;
@@ -131,13 +135,13 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             this.errorMessage = "";
         }
         if (response) {
-            this.successMessage = "Tag '" + t.name + "' was removed.";
+            this.successMessage = `'${t.name}' was removed.`;
             await this.updateTags();
             return;
         }
     }
 
-    /***
+    /**
      * Sends post method with tag name and optional expiration date, and
      * saves either success or error message to be used in the dialog.
      */
@@ -161,7 +165,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             }
         });
         const data = {tags: tagObjects};
-        const [err, response] = await to($http.post<IParResponse>(`/tags/add/${docPath}`, data));
+        const [err, response] = await to($http.post(`/tags/add/${docPath}`, data));
 
         if (err) {
             this.errorMessage = err.data.error;
@@ -170,7 +174,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             this.errorMessage = "";
         }
         if (response) {
-            this.successMessage = "'" + this.tagName + "' successfully added.";
+            this.successMessage = `'${this.tagName}' successfully added.`;
             await this.updateTags();
             this.tagName = "";
             this.f.$setPristine();
@@ -232,7 +236,7 @@ registerDialogComponent("timEditTags",
                            type="text"
                            ng-keypress="$ctrl.keyPressed($event)" autocomplete="off"
                            class="form-control" id="name" placeholder="Tag names separated by commas"
-    uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | orderBy:tag | limitTo:18"
+    uib-typeahead="tag.name as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | orderBy:tag | limitTo:15 | orderBy:'name'"
                            typeahead-min-length="1">
                 </div>
                 <tim-error-message></tim-error-message>

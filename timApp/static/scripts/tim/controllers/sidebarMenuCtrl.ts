@@ -12,6 +12,7 @@ import {showTagDialog} from "./tagCtrl";
 import {showTagSearchDialog} from "./tagSearchCtrl";
 import angular from "angular";
 import {showCourseDialog} from "./courseDialogCtrl";
+import {TEACHERS_GROUPNAME} from "../IUser";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -224,7 +225,7 @@ export class SidebarMenuCtrl implements IController {
         showMergePdfDialog({document: this.vctrl.item});
     }
 
-    /*
+    /**
      * Opens tag adding dialog.
      */
     addTag() {
@@ -234,7 +235,7 @@ export class SidebarMenuCtrl implements IController {
         showTagDialog(this.vctrl.item);
     }
 
-    /*
+    /**
      * Opens tag search dialog.
      */
     searchWithTags() {
@@ -244,14 +245,14 @@ export class SidebarMenuCtrl implements IController {
         showTagSearchDialog(this.vctrl.item);
     }
 
-    /***
+    /**
      * Start page specific version of the search opening.
      */
     searchWithTagsStart() {
         showTagSearchDialog($window.item);
     }
 
-    /*
+    /**
      * Opens course registering dialog.
      */
     openCourseDialog() {
@@ -261,12 +262,12 @@ export class SidebarMenuCtrl implements IController {
         showCourseDialog(this.vctrl.item);
     }
 
-    /***
+    /**
      * Checks whether user belongs to teachers group.
      * @returns {boolean}
      */
     userBelongsToTeachers() {
-        return Users.belongsToGroup("teachers");
+        return Users.belongsToGroup(TEACHERS_GROUPNAME);
     }
 }
 

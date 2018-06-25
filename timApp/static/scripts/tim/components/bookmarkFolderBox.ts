@@ -1,6 +1,6 @@
-/***
+/**
  * A component that shows contents of bookmark folder.
- ***/
+ **/
 
 import {IController} from "angular";
 import {timApp} from "../app";
@@ -15,7 +15,7 @@ class BookmarkFolderBoxCtrl implements IController {
         await this.getBookmarkFolder(this.bookmarkFolderName);
     }
 
-    /***
+    /**
      * Gets specified bookmark folder.
      * @param {string} folderName
      * @returns {Promise<void>}

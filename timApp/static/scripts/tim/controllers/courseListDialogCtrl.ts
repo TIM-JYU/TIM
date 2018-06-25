@@ -1,21 +1,18 @@
-/***
+/**
  * Dialog for tagging course meta data including course code and subject.
  */
 
-import {IFormController, IRootElementService, IScope} from "angular";
+import {IRootElementService, IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
-import {IItem, ITag, ITaggedItem, TagType} from "../IItem";
-import {to} from "../utils";
+import {IItem, ITaggedItem, TagType} from "../IItem";
 import {$http} from "../ngimport";
-import {IParResponse} from "../edittypes";
-import {default as moment, Moment} from "moment";
+import {default as moment} from "moment";
 
-/*
+/**
  * Tag search dialog's controller.
  */
 export class ShowCourseListDialogController extends DialogController<{ params: IItem }, {}, "timCourseListDialog"> {
     private static $inject = ["$element", "$scope"];
-    private doc: IItem;
     private docList: ITaggedItem[];
 
     // TODO: Get this from a TIM page.
@@ -26,7 +23,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
         super(element, scope);
     }
 
-    /*
+    /**
      * Show tag list when dialog loads and focus on tag-field.
      */
     async $onInit() {
@@ -34,14 +31,14 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
         await this.getDocumentsByTag("", false, true);
     }
 
-    /*
+    /**
      * Dialog title.
      */
     public getTitle() {
         return "Available courses";
     }
 
-    /***
+    /**
      * Filter documents by tag.
      * @param tagName Tag word to search with.
      * @param exactMatch Search only documents with the whole tag.
@@ -61,7 +58,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
         this.docList = response.data;
     }
 
-    /***
+    /**
      * Returns course code if it exists for the item and and the code hasn't expired.
      * @param {ITaggedItem} d
      * @returns {string}
@@ -77,7 +74,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
         return "";
     }
 
-    /***
+    /**
      *
      */
     private groupBySubject() {

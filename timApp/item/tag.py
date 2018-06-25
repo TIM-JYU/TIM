@@ -4,6 +4,7 @@ A tag with associated document id, tag name, type and expiration date.
 
 from enum import Enum, unique
 from timApp.timdb.sqa import db
+from datetime import datetime
 
 
 @unique
@@ -28,3 +29,15 @@ class Tag(db.Model):
 
     def __json__(self):
         return ['block_id', 'name', 'type', 'expires']
+
+    @property
+    def has_tag_special_chars(self):
+        """
+        Checks whether the tag name has characters other than (lower or upper case) a-ö,
+        numbers 0-9, slashes, underscores or spaces.
+        characters.
+        :return:
+        """
+        return set(self.name.lower()) - set('abcdefghijklmnopqrstuvwxyzåäö0123456789/- _')
+
+

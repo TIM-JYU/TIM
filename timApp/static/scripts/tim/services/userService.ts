@@ -63,7 +63,7 @@ export class UserService {
         }
     }
 
-    /***
+    /**
      * Checks whether the user belongs to a group.
      */
     public belongsToGroup(groupName: string) {

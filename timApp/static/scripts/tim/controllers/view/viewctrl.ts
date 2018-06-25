@@ -349,14 +349,14 @@ export class ViewCtrl implements IController {
         void this.checkIfBookmarked();
     }
 
-    /***
+    /**
      * Checks if the document has been tagged as a course.
      *
      * In case expiration matters, add this:
      * if (!tag.expires || tag.expires.diff(moment.now()) > 0)
      */
     private async checkIfTaggedAsCourse() {
-        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`, {}));
+        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`));
         this.taggedAsCourse = false;
         if (response) {
             for (const tag of response.data) {
@@ -368,7 +368,7 @@ export class ViewCtrl implements IController {
         }
     }
 
-    /***
+    /**
      * Marks page as bookmarked if it' found in course bookmark folder.
      * @returns {Promise<void>}
      */
@@ -515,7 +515,7 @@ export class ViewCtrl implements IController {
         }
     }
 
-    /***
+    /**
      * Adds the current page to course bookmark folder.
      * @returns {Promise<void>}
      */
@@ -531,7 +531,7 @@ export class ViewCtrl implements IController {
     }
 }
 
-/***
+/**
  * Checks if the tag
  * @param {string} tag
  * @returns {boolean} Whether the tag has course code tag.

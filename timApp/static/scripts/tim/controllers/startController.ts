@@ -29,7 +29,7 @@ export class StartCtrl implements IController {
         this.creatingNew = true;
     }
 
-    /***
+    /**
      * Opens course list dialog.
      */
     openCourseListDialog() {

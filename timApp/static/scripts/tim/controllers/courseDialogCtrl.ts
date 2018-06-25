@@ -1,4 +1,4 @@
-/***
+/**
  * Dialog for tagging course meta data including course code and subject.
  */
 
@@ -10,7 +10,7 @@ import {$http} from "../ngimport";
 import {IParResponse} from "../edittypes";
 import {Moment} from "moment";
 
-/*
+/**
  * Tag search dialog's controller.
  */
 export class ShowCourseDialogController extends DialogController<{ params: IItem }, {}, "timCourseDialog"> {
@@ -21,30 +21,28 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     private expires: Moment;
     private errorMessage: string;
     private successMessage: string;
-
-    // TODO: Get this from a TIM page.
-    private subjects = ["biologia", "filosofia", "fysiikka", "kasvatus", "kemia", "matematiikka", "musiikki",
-        "psykologia", "tietotekniikka", "tilastotiede"];
+    private subjects: string[];
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
     }
 
-    /*
+    /**
      * Show tag list when dialog loads and focus on tag-field.
      */
     async $onInit() {
         super.$onInit();
+        this.getSubjects();
     }
 
-    /*
+    /**
      * Dialog title.
      */
     public getTitle() {
         return "Set as a course";
     }
 
-    /***
+    /**
      * Creates course special tags and adds them to database.
      * @returns {Promise<void>}
      */
@@ -66,15 +64,13 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
         }
         const codeName = this.courseCode.trim().toUpperCase();
         const codeTag = {
-            block_id: this.resolve.params.id, expires: this.expires,
-            name: codeName, type: TagType.CourseCode,
+            expires: this.expires, name: codeName, type: TagType.CourseCode,
         };
         const subjectTag = {
-            block_id: this.resolve.params.id, expires: this.expires,
-            name: this.courseSubject.trim(), type: TagType.Subject,
+            expires: this.expires,  name: this.courseSubject.trim(), type: TagType.Subject,
         };
         const data = {tags: [codeTag, subjectTag]};
-        const [err, response] = await to($http.post<IParResponse>(`/tags/add/${docPath}`, data));
+        const [err, response] = await to($http.post(`/tags/add/${docPath}`, data));
 
         if (err) {
             this.errorMessage = err.data.error;
@@ -82,10 +78,21 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
             return;
         }
         if (response) {
-            this.successMessage = "'" + codeName + "' successfully added as a '"
-                    + this.courseSubject + "' course.";
+            this.successMessage = `'${codeName}' successfully added as a '${this.courseSubject}' course.`;
             return;
         }
+    }
+
+    /**
+     *
+     */
+    private getSubjects() {
+        // TODO: Get this from a TIM page.
+        let subjects = ["biologia", "yhteiskuntatiede", "filosofia", "fysiikka",
+            "kasvatus", "kemia", "matematiikka", "musiikki",
+            "psykologia", "tietotekniikka", "tilastotiede"];
+
+        this.subjects = subjects;
     }
 }
 
@@ -115,7 +122,7 @@ registerDialogComponent("timCourseDialog",
                 <div class="col-sm-8">
                     <select required class="form-control" id="courseSelect" ng-model="$ctrl.courseSubject"
                         title="Select the subject of the course." name="courseSelect">
-                        <option ng-repeat="subject in $ctrl.subjects">{{subject}}</option>
+                        <option ng-repeat="subject in $ctrl.subjects | orderBy:subject">{{subject}}</option>
                     </select>
                 </div>
             </div>

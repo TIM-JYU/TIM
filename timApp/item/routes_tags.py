@@ -1,7 +1,7 @@
 """
 Routes related to tags.
 """
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from flask import Blueprint
 from flask import abort
@@ -16,6 +16,7 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType
 from timApp.timdb.sqa import db
+from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import ok_response, json_response
@@ -23,8 +24,6 @@ from timApp.util.flask.responsehelper import ok_response, json_response
 tags_blueprint = Blueprint('tags',
                            __name__,
                            url_prefix='/tags')
-
-now = datetime.now().astimezone()
 
 
 @tags_blueprint.route('/add/<path:doc>', methods=["POST"])
@@ -45,12 +44,13 @@ def add_tag(doc):
     tags = []
     for tag_dict in tag_dict_list:
         tag_type = TagType(int(tag_dict["type"]))
-        check_tag_access(tag_type, "teachers")
+        check_tag_access(tag_type, TEACHERS_GROUPNAME)
         tag_name = tag_dict["name"]
-        if has_tag_special_chars(tag_name):
-            abort(400, "Tags can only contain letters a-z, numbers, underscores, spaces and dashes.")
         tag_expire = tag_dict.get("expires")
-        tags.append(Tag(name=tag_name, expires=tag_expire, type=tag_type))
+        tag = Tag(name=tag_name, expires=tag_expire, type=tag_type)
+        if tag.has_tag_special_chars:
+            abort(400, "Tags can only contain letters a-z, numbers, underscores, spaces and dashes.")
+        tags.append(tag)
 
     if not tags:
         abort(400, "Tags not found.")
@@ -72,7 +72,7 @@ def check_tag_access(tag_type, group):
     """
     if tag_type != TagType.Regular:
         ug = UserGroup.get_by_name(group)
-        if ug in get_current_user_object().groups:
+        if ug not in get_current_user_object().groups:
             abort(400, f"Managing this tag requires {group} rights.")
 
 
@@ -85,14 +85,6 @@ def has_tag_special_chars(string: str):
     :return: Non-empty set if list has characters other than allowed ones.
     """
     return set(string.lower()) - set('abcdefghijklmnopqrstuvwxyzåäö0123456789/- _')
-
-
-def is_expired(tag: Tag) -> bool:
-    if tag.expires:
-        print(tag.expires, now, tag.expires < now)
-        return tag.expires < now
-    else:
-        return False
 
 
 @tags_blueprint.route('/remove/<path:doc>', methods=["POST"])
@@ -110,7 +102,7 @@ def remove_tag(doc):
     tag_dict, = verify_json_params('tagObject')
 
     tag_type = TagType(int(tag_dict["type"]))
-    check_tag_access(tag_type, "teachers")
+    check_tag_access(tag_type, TEACHERS_GROUPNAME)
 
     tag_name = tag_dict["name"]
     tag_block_id = tag_dict["block_id"]
@@ -138,9 +130,6 @@ def get_tags(doc):
         abort(404)
     verify_view_access(d)
     tags = d.block.tags
-    # print(tags)
-    # tags[:] = [tag for tag in tags if not is_expired(tag)]
-    # print(tags)
     return json_response(tags)
 
 
@@ -149,7 +138,7 @@ def get_all_tags():
     """
     Gets the list of all unique tags used in any document, regardless
     of expiration.
-    :returns The list of all unique tag names.
+    :returns The list of all unique tag names as list of strings.
     """
     tags = Tag.query.all()
 

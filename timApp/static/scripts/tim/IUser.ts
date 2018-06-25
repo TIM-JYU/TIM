@@ -1,3 +1,4 @@
+export const TEACHERS_GROUPNAME = "teachers";
 
 export interface IUser {
     id: number;
