@@ -36,7 +36,7 @@ export class StartCtrl implements IController {
      * Opens 'Available courses' dialog.
      */
     async openCourseListDialog() {
-        const [err, response] = await to($http.get<ICourseSettings>(`/courses/getCourseSettings`));
+        const [err, response] = await to($http.get<ICourseSettings>(`/courses/settings`));
         if (response) {
             void showCourseListDialog({item: this.item, settings: response.data});
         }

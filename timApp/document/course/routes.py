@@ -11,7 +11,7 @@ course_blueprint = Blueprint('course',
                              url_prefix='/courses')
 
 
-@course_blueprint.route("/getCourseSettings")
+@course_blueprint.route("/settings")
 def get_course_settings():
     """
     Get course settings from the designated settings document.

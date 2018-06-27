@@ -14,13 +14,13 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     private f: IFormController;
     private courseSubject: string;
     private courseCode: string;
-    private expires: Moment | null;
+    private expires: Moment | undefined;
     private errorMessage: string;
     private successMessage: string;
     private subjects: ISubjectList;
     private datePickerOptions: EonasdanBootstrapDatetimepicker.SetOptions;
-    private currentCode: ITag | null;
-    private currentSubject: ITag | null;
+    private currentCode: ITag | undefined;
+    private currentSubject: ITag | undefined;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -89,8 +89,8 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
             this.successMessage = "";
             return;
         }
-        this.currentSubject = null;
-        this.currentCode = null;
+        this.currentSubject = undefined;
+        this.currentCode = undefined;
     }
 
     /**
@@ -104,7 +104,7 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
         } else {
             this.courseSubject = "";
             this.courseCode = "";
-            this.expires = null;
+            this.expires = undefined;
         }
     }
 
@@ -171,7 +171,7 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
      * Gets the subjects list from the designated course settings document.
      */
     private async getSubjects() {
-        const [err, response] = await to($http.get<ICourseSettings>(`/courses/getCourseSettings`));
+        const [err, response] = await to($http.get<ICourseSettings>(`/courses/settings`));
         if (response) {
             this.subjects = response.data.course_subjects;
         }
