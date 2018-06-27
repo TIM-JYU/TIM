@@ -288,8 +288,8 @@ class Document:
             self.__exists = Document.doc_exists(self.doc_id, self.files_root)
         return self.__exists
 
-    def export_markdown(self, export_hashes: bool = False) -> str:
-        return DocumentWriter([par.dict() for par in self], export_hashes=export_hashes).get_text()
+    def export_markdown(self, export_hashes: bool = False, export_ids=True) -> str:
+        return DocumentWriter([par.dict() for par in self], export_hashes=export_hashes, export_ids=export_ids).get_text()
 
     def export_section(self, par_id_start: Optional[str], par_id_end: Optional[str], export_hashes=False) -> str:
         return DocumentWriter([par.dict() for par in self.get_section(par_id_start, par_id_end)],

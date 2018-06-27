@@ -1,23 +1,36 @@
 import re
 from typing import NamedTuple, Generator, Match
 
+import attr
+
 from timApp.admin.util import enum_pars, create_argparser, process_items, get_url_for_match, \
     BasicArguments
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 
 
-class SearchArguments(BasicArguments):
-    def __init__(self):
-        super().__init__()
-        self.term = ''
-        self.onlyfirst = False
-        self.docsonly = False
-        self.regex = False
-        self.format = ''
+@attr.s
+class SearchArgumentsBasic:
+    term: str = attr.ib()
+    onlyfirst: bool = attr.ib()
+    regex: bool = attr.ib()
+    format: str = attr.ib()
+
+
+@attr.s
+class SearchArgumentsBase(BasicArguments, SearchArgumentsBasic):
+    pass
+
+
+@attr.s
+class SearchArgumentsCLI(SearchArgumentsBase):
+    """Command-line arguments for a search operation."""
+    docsonly: bool = attr.ib()
+    exported: bool = attr.ib()
 
 
 class SearchResult(NamedTuple):
+    """A single search result."""
     doc: DocInfo
     par: DocParagraph
     match: Match[str]
@@ -25,21 +38,32 @@ class SearchResult(NamedTuple):
     num_pars: int
     num_pars_found: int
 
-    def format_match(self, args: SearchArguments):
+    def format_match(self, args: SearchArgumentsBase) -> str:
         m = self.match
         gps = tuple((m.group(0), *m.groups()))
-        return args.format.format(*gps, doc_id=self.doc.id, par_id=self.par.get_id(),
-                                  url=get_url_for_match(args, self.doc, self.par))
+        r = self
+        return args.format.format(
+            *gps,
+            doc_id=r.doc.id,
+            par_id=r.par.get_id(),
+            url=get_url_for_match(args, r.doc, r.par),
+        )
 
 
-def search(d: DocInfo, args: SearchArguments) -> Generator[SearchResult, None, None]:
+def search(d: DocInfo, args: SearchArgumentsBasic, use_exported: bool) -> Generator[SearchResult, None, None]:
+    """Performs a search operation for the specified document, yielding SearchResults.
+
+    :param args: The search arguments.
+    :param d: The document to process.
+    :param use_exported: Whether to search in the exported form of paragraphs.
+    """
     results_found = 0
     pars_processed = 0
     pars_found = 0
     regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL)
     for d, p in enum_pars(d):
         pars_processed += 1
-        md = p.get_exported_markdown(skip_tr=True)
+        md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
         matches = list(regex.finditer(md))
         if matches:
             pars_found += 1
@@ -57,9 +81,10 @@ def search(d: DocInfo, args: SearchArguments) -> Generator[SearchResult, None, N
             break
 
 
-def search_and_print(d: DocInfo, args: SearchArguments):
+def search_and_print(d: DocInfo, args: SearchArgumentsCLI):
+    """Same as :func:`search`, but prints the matches according to the provided format."""
     found = 0
-    for result in search(d, args):
+    for result in search(d, args, use_exported=args.exported):
         found = result.num_pars_found
         if args.docsonly:
             print(d.url)
@@ -76,16 +101,30 @@ def search_and_print(d: DocInfo, args: SearchArguments):
     return found
 
 
-if __name__ == '__main__':
-    parser = create_argparser('Searches in documents', readonly=True)
+def create_basic_search_argparser(desc: str, is_readonly=True):
+    parser = create_argparser(desc, readonly=is_readonly)
     parser.add_argument('--term', required=True, help='search term')
     parser.add_argument('--only-first', help='search only first x paragraphs in each document', dest='onlyfirst',
                         type=int)
-    parser.add_argument('--docs-only', help='print found documents only, not individual paragraphs', dest='docsonly',
-                        action='store_true')
+    to_param = '' if is_readonly else ', to'
+    format_default = '{url}: {0}' if is_readonly else '{url}: {0} -> {to}'
     parser.add_argument('--format',
                         help='format string to print regular expression matches, '
                              'e.g. "{doc_id}#{par_id}: {0}". Available variables: '
-                             'indices 0 through number of subgroups in the regex, doc_id, par_id, url.')
+                             f'indices 0 through number of subgroups in the regex, doc_id, par_id, url{to_param}.',
+                        default=format_default)
     parser.add_argument('--regex', help='interpret search term as a regular expression', action='store_true')
+    return parser
+
+
+def main():
+    parser = create_basic_search_argparser('Searches in documents')
+
+    parser.add_argument('--exported', help='use the exported form of markdown when searching', action='store_true')
+    parser.add_argument('--docs-only', help='print found documents only, not individual paragraphs', dest='docsonly',
+                        action='store_true')
     process_items(search_and_print, parser)
+
+
+if __name__ == '__main__':
+    main()

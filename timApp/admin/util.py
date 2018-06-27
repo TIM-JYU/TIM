@@ -2,29 +2,35 @@ import sys
 from argparse import ArgumentParser
 from typing import Generator, Tuple, Optional, Callable, Union
 
+import attr
+import sre_constants
 from flask import current_app
 
-from timApp.document.docparagraph import DocParagraph
-from timApp.tim_app import app
-from timApp.document.docinfo import DocInfo
-from timApp.timdb.exceptions import TimDbException
 from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph
 from timApp.folder.folder import Folder
+from timApp.tim_app import app
+from timApp.timdb.exceptions import TimDbException
 from timApp.user.usergroup import UserGroup
 
 
+@attr.s
 class BasicArguments:
-    def __init__(self):
-        self.urlpath = None
-        self.progress = False
-        self.doc = ''
-        self.folder = ''
+    urlpath: Optional[str] = attr.ib()
+    progress: bool = attr.ib()
+    doc: str = attr.ib()
+    folder: str = attr.ib()
 
 
-class DryrunnableArguments(BasicArguments):
-    def __init__(self):
-        super().__init__()
-        self.dryrun = False
+@attr.s
+class DryrunnableOnly:
+    dryrun: bool = attr.ib()
+
+
+@attr.s
+class DryrunnableArguments(BasicArguments, DryrunnableOnly):
+    pass
 
 
 def enum_docs(folder: Optional[Folder] = None) -> Generator[DocInfo, None, None]:
@@ -47,7 +53,7 @@ def iterate_pars_skip_exceptions(d: DocInfo):
         try:
             yield next(i)
         except StopIteration:
-            raise
+            return
         except TimDbException as e:
             print(e)
 
@@ -64,7 +70,7 @@ def enum_pars(item: Union[Folder, DocInfo, None] = None) -> Generator[Tuple[DocI
 
 
 def process_items(func: Callable[[DocInfo, BasicArguments], int], parser: ArgumentParser):
-    opts: BasicArguments = parser.parse_args()
+    opts: Union[BasicArguments, DryrunnableArguments] = parser.parse_args()
     with app.app_context():
         doc_to_fix = DocEntry.find_by_path(opts.doc, fallback_to_id=True,
                                            try_translation=True) if opts.doc is not None else None
@@ -85,13 +91,18 @@ def process_items(func: Callable[[DocInfo, BasicArguments], int], parser: Argume
             docs = enum_docs(folder=folder_to_fix)
         else:
             assert False
-        for d in docs:
-            if opts.progress:
-                print(f'Processing document {d.path}')
-            pars = func(d, opts)
-            total_pars += pars
-            if pars > 0:
-                total_docs += 1
+        try:
+            if getattr(opts, 'dryrun', False):
+                print('Dry run mode enabled - the following only shows what WOULD be done.')
+            for d in docs:
+                if opts.progress:
+                    print(f'Processing document {d.path}')
+                pars = func(d, opts)
+                total_pars += pars
+                if pars > 0:
+                    total_docs += 1
+        except sre_constants.error as e:
+            print(f'Invalid regular expression: {e}')
         if hasattr(opts, 'dryrun'):
             print(f'Total paragraphs that {"would be" if opts.dryrun else "were"} affected: {total_pars}')
         else:
