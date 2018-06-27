@@ -82,6 +82,7 @@ def perform_replace(d: DocInfo, args: ReplaceArguments):
             if old_md == new_md:
                 continue
             r.par.set_markdown(new_md)
+            r.par.clear_cache()
             r.par.save()
 
 

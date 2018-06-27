@@ -82,6 +82,8 @@ class ReplaceTest(TimRouteTest):
 #pragma omp parallel
 ```
         """)
+        t = self.get(d.url, as_tree=True)
+        self.assertEqual(1, len(t.cssselect('h1')))
         args = ReplaceArguments(
             dryrun=False,
             format='',
@@ -113,6 +115,8 @@ class ReplaceTest(TimRouteTest):
 #pragma omp parallel
 ```
 """.lstrip(), d.document.export_markdown(export_ids=False))
+        t = self.get(d.url, as_tree=True)
+        self.assertEqual(2, len(t.cssselect('h1')))
 
     def test_replace_no_regex(self):
         self.login_test1()

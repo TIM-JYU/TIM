@@ -871,6 +871,10 @@ class DocParagraph:
                                    attrs=self.get_attrs(),
                                    files_root=self.files_root)
 
+    def clear_cache(self):
+        """Clears the HTML cache of this paragraph."""
+        self.__data.pop('h', None)
+
     def save(self, add=False):
         """Performs a save operation for this paragraph.
 
