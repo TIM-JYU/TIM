@@ -111,7 +111,7 @@ ENV LD_LIBRARY_PATH /usr/local/lib
 ENV PIP_INSTALL="python3 -m pip install" \
     PIP_CLEANUP="rm -r ~/.cache/pip"
 RUN bash -c "${PIP_INSTALL} \
-ansi2html \
+attrs \
 autopep8 \
 beautifulsoup4 \
 bcrypt \
@@ -129,7 +129,6 @@ flask-openid \
 flask-sqlalchemy \
 flask-testing \
 gevent \
-git+git://github.com/dadadel/pyment.git@baaccc191db74e88c13f0cc27951a46938249a08 \
 git+git://github.com/miracle2k/webassets.git \
 gunicorn \
 humanize \
