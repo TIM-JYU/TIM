@@ -8,7 +8,8 @@ import {IController} from "angular";
 import {ITag, ITaggedItem, TagType} from "../IItem";
 import {to} from "tim/utils";
 import {timApp} from "../app";
-import {$http} from "../ngimport";
+import {$http, $localStorage} from "../ngimport";
+import {ngStorage} from "ngstorage";
 
 class TaggedDocumentListCtrl implements IController {
     public tagFilter: string;
@@ -18,6 +19,7 @@ class TaggedDocumentListCtrl implements IController {
     private allUniqueTags: string[];
     private listDocTags: boolean;
     private tagToolTip: string;
+    private storage: ngStorage.StorageService & {tagFilterStorage: null | string};
 
    async $onInit() {
         if (this.enableSearch) {
@@ -25,8 +27,20 @@ class TaggedDocumentListCtrl implements IController {
         } else {
             this.tagToolTip = "Document has tag ";
         }
+        this.storage = $localStorage.$default({
+            tagFilterStorage: null,
+        });
+        if (this.enableSearch && this.storage.tagFilterStorage) {
+            this.tagFilter = this.storage.tagFilterStorage;
+        } else {
+            this.tagFilter = "";
+        }
         await this.getAllTags();
         void this.getDocumentsByTag(this.tagFilter, this.exactMatch, this.listDocTags);
+    }
+
+    $onDestroy() {
+        this.storage.tagFilterStorage = this.tagFilter;
     }
 
     private async getAllTags() {
@@ -107,7 +121,7 @@ timApp.component("taggedDocumentList", {
         enableSearch: "<",
         exactMatch: "<",
         listDocTags: "<",
-        tagFilter: "@",
+        tagFilter: "<",
     },
     controller: TaggedDocumentListCtrl,
     template: `
