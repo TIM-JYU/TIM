@@ -6,7 +6,7 @@ import {IRootElementService, IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {ICourseSettings, IItem, ISubjectList, ITag, ITaggedItem, TagType} from "../IItem";
 import {$http, $localStorage} from "../ngimport";
-// import {ngStorage} from "ngstorage";
+import {ngStorage} from "ngstorage";
 import moment from "moment";
 
 export interface ICourseListParams {
@@ -29,7 +29,8 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
     private docList: ITaggedItem[];
     private subjects: ISubjectList | undefined;
     private grouped: IGroupedCourses[];
-    // private storage: ngStorage.StorageService & {subjectsStorage: null | IGroupedCourses[]};
+    private closedSubjects: boolean[];
+    private storage: ngStorage.StorageService & {subjectsStorage: null | boolean[]};
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -42,19 +43,43 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
         super.$onInit();
         await this.getDocumentsByTag("", false, true);
         this.subjects = this.resolve.params.settings.course_subjects;
+        this.storage = $localStorage.$default({
+            subjectsStorage: null,
+        });
+        if (this.storage.subjectsStorage) {
+            this.closedSubjects = this.storage.subjectsStorage;
+        }
         this.grouped = [];
         this.groupBySubject();
-        // NOTE: Using local storage breaks some expiration dates!
-        // this.storage = $localStorage.$default({
-        //    subjectsStorage: null,
-        // });
-        // if (this.storage.subjectsStorage) {
-        //     this.grouped = this.storage.subjectsStorage;
-        // }
+        this.loadCollapseStates();
     }
 
     $onDestroy() {
-        // this.storage.subjectsStorage = this.grouped;
+        this.saveCollapseStates();
+    }
+
+    /**
+     * Loads subjects collapse states.
+     */
+    private loadCollapseStates() {
+        if (this.grouped && this.closedSubjects && this.closedSubjects.length === this.grouped.length) {
+            for (const {subject, i} of this.grouped.map((subject, i) => ({ subject, i }))) {
+                subject.closed = this.closedSubjects[i];
+            }
+        }
+    }
+
+    /**
+     * Saves subject collapse states (whether the subject list is closed or not) into local storage.
+     */
+    private saveCollapseStates() {
+        this.closedSubjects = [];
+        if (this.grouped) {
+            for (const {subject, i} of this.grouped.map((subject, i) => ({ subject, i }))) {
+                this.closedSubjects.push(subject.closed);
+            }
+        }
+        this.storage.subjectsStorage = this.closedSubjects;
     }
 
     /**
@@ -110,7 +135,6 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
             return;
         }
         for (const s of this.subjects) {
-
             let documents = [];
             if (typeof s === "string") {
                 for (const d of this.docList) {
@@ -188,7 +212,6 @@ export async function showCourseListDialog(d: ICourseListParams) {
  * @returns {boolean} False if the tag has no expiration or hasn't yet expired.
  */
 function isExpired(tag: ITag) {
-    // console.log(tag.name + " " + tag.expires + " " + moment.now());
     if (tag.expires) {
         if (tag.expires.diff(moment.now()) < 0) {
             return true;
