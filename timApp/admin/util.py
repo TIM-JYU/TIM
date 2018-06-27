@@ -104,7 +104,8 @@ def process_items(func: Callable[[DocInfo, BasicArguments], int], parser: Argume
         except sre_constants.error as e:
             print(f'Invalid regular expression: {e}')
         if hasattr(opts, 'dryrun'):
-            print(f'Total paragraphs that {"would be" if opts.dryrun else "were"} affected: {total_pars}')
+            print(f'Total paragraphs that {"would be" if opts.dryrun else "were"} '
+                  f'affected: {total_pars} in {total_docs} documents')
         else:
             print(f'Total paragraphs found: {total_pars} in {total_docs} documents')
 
