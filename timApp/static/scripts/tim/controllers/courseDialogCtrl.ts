@@ -4,7 +4,7 @@
 
 import {IFormController, IRootElementService, IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
-import {ICourseSettings, IItem, ISubjectList, TagType} from "../IItem";
+import {ICourseSettings, IItem, ISubjectList, ITag, TagType} from "../IItem";
 import {to} from "../utils";
 import {$http} from "../ngimport";
 import {Moment} from "moment";
@@ -14,18 +14,19 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     private f: IFormController;
     private courseSubject: string;
     private courseCode: string;
-    private expires: Moment;
+    private expires: Moment | null;
     private errorMessage: string;
     private successMessage: string;
     private subjects: ISubjectList;
     private datePickerOptions: EonasdanBootstrapDatetimepicker.SetOptions;
+    private currentCode: ITag | null;
+    private currentSubject: ITag | null;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
     }
 
-    // TODO: Display and allow editing current code and subject in the dialog.
-    // TODO: Support multiple subjects.
+    // TODO: Support multiple subjects/codes.
 
     /**
      * Show tag list when dialog loads and focus on tag-field.
@@ -34,10 +35,12 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
         super.$onInit();
         await this.getSubjects();
         this.datePickerOptions = {
-            format: "D.M.YYYY HH:mm:ss",
             defaultDate: "",
+            format: "D.M.YYYY HH:mm:ss",
             showTodayButton: true,
         };
+        await this.getCurrentSpecialTags();
+        this.updateFields();
     }
 
     /**
@@ -48,10 +51,79 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     }
 
     /**
+     * Fetches the course special tags, if they exist.
+     */
+    private async getCurrentSpecialTags() {
+        const docPath = this.resolve.params.path;
+        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${docPath}`));
+        if (response) {
+            const tags = response.data;
+            for (const tag of tags) {
+                if (tag.type === TagType.CourseCode) {
+                    this.currentCode = tag;
+                }
+                if (tag.type === TagType.Subject) {
+                    this.currentSubject = tag;
+                }
+            }
+        }
+    }
+
+    /**
+     * Removes current code and subject tags so they can be replaced.
+     * @returns {Promise<void>}
+     */
+    private async removeCurrentSpecialTags() {
+        const docPath = this.resolve.params.path;
+        const data = {tagObject: this.currentSubject};
+        const [err, response] = await to($http.post(`/tags/remove/${docPath}`, data));
+        if (err) {
+            this.errorMessage = err.data.error;
+            this.successMessage = "";
+            return;
+        }
+        const data2 = {tagObject: this.currentCode};
+        const [err2, response2] = await to($http.post(`/tags/remove/${docPath}`, data2));
+        if (err2) {
+            this.errorMessage = err2.data.error;
+            this.successMessage = "";
+            return;
+        }
+        this.currentSubject = null;
+        this.currentCode = null;
+    }
+
+    /**
+     * Displays current subject, code and expiration in the input fields.
+     */
+    private updateFields() {
+        if (this.currentSubject && this.currentCode) {
+            this.courseSubject = this.currentSubject.name;
+            this.courseCode = this.currentCode.name;
+            this.expires = this.currentSubject.expires;
+        } else {
+            this.courseSubject = "";
+            this.courseCode = "";
+            this.expires = null;
+        }
+    }
+
+    /**
+     * Removes course code and subject from teh database.
+     * @returns {Promise<void>}
+     */
+    private async unregisterCourse() {
+        await this.removeCurrentSpecialTags();
+        this.updateFields();
+        this.errorMessage = "";
+        this.successMessage = "Course code and subject successfully removed";
+    }
+
+    /**
      * Creates course special tags and adds them to database.
      * @returns {Promise<void>}
      */
-    async registerCourse() {
+    private async registerCourse() {
         if (this.f.$invalid) {
             return;
         }
@@ -66,6 +138,12 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
             this.successMessage = "";
             return;
         }
+
+        // If the course had existing special tags, remove them first.
+        if (this.currentSubject && this.currentCode) {
+            await this.removeCurrentSpecialTags();
+        }
+
         const codeName = this.courseCode.trim().toUpperCase();
         const codeTag = {
             expires: this.expires, name: codeName, type: TagType.CourseCode,
@@ -82,7 +160,9 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
             return;
         }
         if (response) {
+            this.errorMessage = "";
             this.successMessage = `'${codeName}' successfully added as a '${this.courseSubject}' course.`;
+            await this.getCurrentSpecialTags();
             return;
         }
     }
@@ -156,8 +236,10 @@ registerDialogComponent("timCourseDialog",
     </dialog-body>
     <dialog-footer>
         <button class="timButton" data-ng-disabled="$ctrl.f.$invalid" ng-click="$ctrl.registerCourse()"
-        title="Save course meta data">Save</button>
-        <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
+        title="Save course meta data">Set</button>
+        <button class="timButton" data-ng-disabled="$ctrl.f.$invalid" ng-click="$ctrl.unregisterCourse()"
+        title="Delete course meta data">Unset</button>
+        <button class="timButton" ng-click="$ctrl.dismiss()" title="Leave without saving unsaved changes">Close</button>
     </dialog-footer>
 </tim-dialog>
 `,
