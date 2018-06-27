@@ -33,7 +33,7 @@ import {MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
 import {PendingCollection} from "../../edittypes";
 import {TimTableController} from "../../components/timTable";
 import {BookmarksController, IBookmark, IBookmarkGroup} from "../../directives/bookmarks";
-import {default as moment} from "moment";
+import moment from "moment";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -118,6 +118,7 @@ export class ViewCtrl implements IController {
     public parmenuHandler: ParmenuHandler;
     public refpopupHandler: RefPopupHandler;
     private popupmenu?: PopupMenuController;
+
     // To show a button that adds the document to bookmark folder 'My courses'.
     private taggedAsCourse: boolean;
     private bookmarksCtrl: BookmarksController;
@@ -351,10 +352,7 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * Checks if the document has been tagged as a course.
-     *
-     * In case expiration matters, add this:
-     * if (!tag.expires || tag.expires.diff(moment.now()) > 0)
+     * Checks if the document has been tagged as a course and the tag hasn't expired.
      */
     private async checkIfTaggedAsCourse() {
         const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`));
@@ -374,7 +372,7 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * Marks page as bookmarked if it' found in course bookmark folder.
+     * Marks page as bookmarked if it's in the course bookmark folder.
      * @returns {Promise<void>}
      */
     private async checkIfBookmarked() {

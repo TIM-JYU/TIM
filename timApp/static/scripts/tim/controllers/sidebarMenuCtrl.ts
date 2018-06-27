@@ -226,13 +226,13 @@ export class SidebarMenuCtrl implements IController {
     }
 
     /**
-     * Opens tag adding dialog.
+     * Opens tag editing dialog.
      */
     addTag() {
         if (!this.vctrl) {
             return;
         }
-        showTagDialog(this.vctrl.item);
+        void showTagDialog(this.vctrl.item);
     }
 
     /**
@@ -242,28 +242,28 @@ export class SidebarMenuCtrl implements IController {
         if (!this.vctrl) {
             return;
         }
-        showTagSearchDialog(this.vctrl.item);
+        void showTagSearchDialog(this.vctrl.item);
     }
 
     /**
-     * Start page specific version of the search opening.
+     * Start page specific version of the tag search opening.
      */
     searchWithTagsStart() {
-        showTagSearchDialog($window.item);
+        void showTagSearchDialog($window.item);
     }
 
     /**
-     * Opens course registering dialog.
+     * Opens 'Set as a course' -dialog.
      */
     openCourseDialog() {
         if (!this.vctrl) {
             return;
         }
-        showCourseDialog(this.vctrl.item);
+        void showCourseDialog(this.vctrl.item);
     }
 
     /**
-     * Checks whether user belongs to teachers group.
+     * Checks whether user belongs to teachers or admins group.
      * @returns {boolean}
      */
     userBelongsToTeachersOrIsAdmin() {

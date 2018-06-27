@@ -19,6 +19,7 @@ from markupsafe import Markup
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
 from timApp.admin.routes import admin_bp
+from timApp.document.course.routes import course_blueprint
 from timApp.document.routes import doc_bp
 from timApp.document.translation.routes import tr_bp
 from timApp.plugin.routes import plugin_bp
@@ -97,6 +98,7 @@ app.register_blueprint(doc_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(plugin_bp)
 app.register_blueprint(tags_blueprint)
+app.register_blueprint(course_blueprint)
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 

@@ -4,14 +4,11 @@
 
 import {IFormController, IRootElementService, IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
-import {IItem, TagType} from "../IItem";
+import {ICourseSettings, IItem, ISubjectList, TagType} from "../IItem";
 import {to} from "../utils";
 import {$http} from "../ngimport";
 import {Moment} from "moment";
 
-/**
- * Tag search dialog's controller.
- */
 export class ShowCourseDialogController extends DialogController<{ params: IItem }, {}, "timCourseDialog"> {
     private static $inject = ["$element", "$scope"];
     private f: IFormController;
@@ -20,19 +17,22 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     private expires: Moment;
     private errorMessage: string;
     private successMessage: string;
-    private subjects: string[];
+    private subjects: ISubjectList;
     private datePickerOptions: EonasdanBootstrapDatetimepicker.SetOptions;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
     }
 
+    // TODO: Display and allow editing current code and subject in the dialog.
+    // TODO: Support multiple subjects.
+
     /**
      * Show tag list when dialog loads and focus on tag-field.
      */
     async $onInit() {
         super.$onInit();
-        this.getSubjects();
+        await this.getSubjects();
         this.datePickerOptions = {
             format: "D.M.YYYY HH:mm:ss",
             defaultDate: "",
@@ -56,7 +56,6 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
             return;
         }
         const docPath = this.resolve.params.path;
-
         if (!this.courseCode) {
             this.errorMessage = "Course code required!";
             this.successMessage = "";
@@ -89,15 +88,18 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     }
 
     /**
-     *
+     * Gets the subjects list from the designated course settings document.
      */
-    private getSubjects() {
-        // TODO: Get this from a TIM page.
-        let subjects = ["biologia", "yhteiskuntatiede", "filosofia", "fysiikka",
-            "kasvatus", "kemia", "matematiikka", "musiikki",
-            "psykologia", "tietotekniikka", "tilastotiede"];
-
-        this.subjects = subjects;
+    private async getSubjects() {
+        const [err, response] = await to($http.get<ICourseSettings>(`/courses/getCourseSettings`));
+        if (response) {
+            this.subjects = response.data.course_subjects;
+        }
+        if (err) {
+            this.errorMessage = err.data.error;
+            this.successMessage = "";
+            return;
+        }
     }
 }
 

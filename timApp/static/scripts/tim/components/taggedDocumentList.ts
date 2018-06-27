@@ -82,6 +82,12 @@ class TaggedDocumentListCtrl implements IController {
         }
     }
 
+    /**
+     * Changes tag css style depending on whether search is enabled and
+     * if it's regular or special tag.
+     * @param {ITag} tag
+     * @returns {string}
+     */
     private tagStyle(tag: ITag) {
         let style = "";
         if (this.enableSearch) {
@@ -105,7 +111,6 @@ timApp.component("taggedDocumentList", {
     },
     controller: TaggedDocumentListCtrl,
     template: `
-    <div>
     <div class="input-group" ng-show="$ctrl.enableSearch">
         <input ng-model="$ctrl.tagFilter" name="filterField" ng-keypress="$ctrl.keyPressed($event)"
                            type="text"
@@ -114,9 +119,11 @@ timApp.component("taggedDocumentList", {
                            class="form-control" id="tagFilterField" autocomplete="off"
      uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue | limitTo:15 | orderBy:'name'"
                            typeahead-min-length="1">
-            <i class="input-group-addon btn btn-default glyphicon glyphicon-search"
+            <span class="input-group-addon btn">
+                <span class="glyphicon glyphicon-search"
                 ng-click="$ctrl.searchClicked($ctrl.tagFilter)"
-                title="Search documents with tag '{{$ctrl.tagFilter}}'"></i>
+                title="Search documents with tag '{{$ctrl.tagFilter}}'"></span>
+            </span>
     </div>
         <ul ng-if="$ctrl.docList.length > 0">
             <li ng-repeat="d in $ctrl.docList | orderBy:'title'">
@@ -129,6 +136,5 @@ timApp.component("taggedDocumentList", {
             </li>
         </ul>
     <span ng-if="$ctrl.docList.length == 0">No documents found!</span>
-    </div>
     `,
 });

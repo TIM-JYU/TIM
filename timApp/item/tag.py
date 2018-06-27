@@ -4,7 +4,6 @@ A tag with associated document id, tag name, type and expiration date.
 
 from enum import Enum, unique
 from timApp.timdb.sqa import db
-from datetime import datetime
 
 
 @unique
