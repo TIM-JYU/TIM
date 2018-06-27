@@ -8,7 +8,8 @@ import {IController} from "angular";
 import {ITag, ITaggedItem, TagType} from "../IItem";
 import {to} from "tim/utils";
 import {timApp} from "../app";
-import {$http} from "../ngimport";
+import {$http, $localStorage} from "../ngimport";
+import {ngStorage} from "ngstorage";
 
 class TaggedDocumentListCtrl implements IController {
     public tagFilter: string;
@@ -18,6 +19,7 @@ class TaggedDocumentListCtrl implements IController {
     private allUniqueTags: string[];
     private listDocTags: boolean;
     private tagToolTip: string;
+    private storage: ngStorage.StorageService & {tagFilterStorage: null | string};
 
    async $onInit() {
         if (this.enableSearch) {
@@ -25,8 +27,20 @@ class TaggedDocumentListCtrl implements IController {
         } else {
             this.tagToolTip = "Document has tag ";
         }
+        this.storage = $localStorage.$default({
+            tagFilterStorage: null,
+        });
+        if (this.enableSearch && this.storage.tagFilterStorage) {
+            this.tagFilter = this.storage.tagFilterStorage;
+        } else {
+            this.tagFilter = "";
+        }
         await this.getAllTags();
         void this.getDocumentsByTag(this.tagFilter, this.exactMatch, this.listDocTags);
+    }
+
+    $onDestroy() {
+        this.storage.tagFilterStorage = this.tagFilter;
     }
 
     private async getAllTags() {
@@ -82,6 +96,12 @@ class TaggedDocumentListCtrl implements IController {
         }
     }
 
+    /**
+     * Changes tag css style depending on whether search is enabled and
+     * if it's regular or special tag.
+     * @param {ITag} tag
+     * @returns {string}
+     */
     private tagStyle(tag: ITag) {
         let style = "";
         if (this.enableSearch) {
@@ -101,11 +121,10 @@ timApp.component("taggedDocumentList", {
         enableSearch: "<",
         exactMatch: "<",
         listDocTags: "<",
-        tagFilter: "@",
+        tagFilter: "<",
     },
     controller: TaggedDocumentListCtrl,
     template: `
-    <div>
     <div class="input-group" ng-show="$ctrl.enableSearch">
         <input ng-model="$ctrl.tagFilter" name="filterField" ng-keypress="$ctrl.keyPressed($event)"
                            type="text"
@@ -114,9 +133,11 @@ timApp.component("taggedDocumentList", {
                            class="form-control" id="tagFilterField" autocomplete="off"
      uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue | limitTo:15 | orderBy:'name'"
                            typeahead-min-length="1">
-            <i class="input-group-addon btn btn-default glyphicon glyphicon-search"
+            <span class="input-group-addon btn">
+                <span class="glyphicon glyphicon-search"
                 ng-click="$ctrl.searchClicked($ctrl.tagFilter)"
-                title="Search documents with tag '{{$ctrl.tagFilter}}'"></i>
+                title="Search documents with tag '{{$ctrl.tagFilter}}'"></span>
+            </span>
     </div>
         <ul ng-if="$ctrl.docList.length > 0">
             <li ng-repeat="d in $ctrl.docList | orderBy:'title'">
@@ -129,6 +150,5 @@ timApp.component("taggedDocumentList", {
             </li>
         </ul>
     <span ng-if="$ctrl.docList.length == 0">No documents found!</span>
-    </div>
     `,
 });

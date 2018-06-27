@@ -71,7 +71,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     }
 
     /**
-     * Gets all unique tags in the database.
+     * Gets all unique tags in the database as an ITag list.
      */
     private async getUniqueTags() {
         const [err, response] = await to($http.get<ITag[]>(`/tags/getAllTags`));
@@ -88,7 +88,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     }
 
     /**
-     * Updates the list of existing tags for the document.
+     * Updates the list of existing tags for the document as a string list.
      */
     private async updateTags() {
         const docPath = this.resolve.params.path;
@@ -114,7 +114,8 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     }
 
     /**
-     * Deletes selected tag.
+     * Removes the selected tag from the database. Checks admin/teachers rights if
+     * tag to remove is not of regular type.
      * @param {ITag} t Tag to delete.
      * @returns {Promise<void>}
      */
@@ -147,8 +148,9 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     }
 
     /**
-     * Sends post method with tag name and optional expiration date, and
+     * Sends post method with tag data including tag names and expiration dates from the dialog form and
      * saves either success or error message to be used in the dialog.
+     * Note that all tags saved with this will be of regular type.
      */
     private async addTagClicked() {
         if (this.f.$invalid) {
@@ -188,6 +190,12 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         }
     }
 
+    /**
+     * Changes tag css style depending on the tag type. Currently normal tags are light blue-green
+     * and special tags green.
+     * @param {ITag} tag
+     * @returns {string}
+     */
     private tagStyle(tag: ITag) {
         if (tag.type === TagType.Regular) {
             return "btn-primary";
@@ -200,7 +208,8 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
 /*
  * Array set difference operation a1 \ a2, i.e. filtering any a2 items from a1.
  * For example: a1 = ['a','b','c'] and a2 = ['a','b','d'] returns ['c'].
- * Idea from: https://stackoverflow.com/questions/38498258/typescript-difference-between-two-arrays.
+ *
+ * Idea adapted from: https://stackoverflow.com/questions/38498258/typescript-difference-between-two-arrays.
  * @param a1 Array to filter.
  * @param a2 Array containing items to filter from a1.
  * @return Array a1 without any a2 items.
@@ -279,7 +288,7 @@ export async function showTagDialog(d: IItem) {
 }
 
 /**
- * Checks whether user belongs to teachers group.
+ * Checks whether user belongs to teachers or admins group.
  * @returns {boolean}
  */
 function userBelongsToTeachersOrIsAdmin() {

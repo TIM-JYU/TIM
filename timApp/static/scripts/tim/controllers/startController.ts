@@ -1,16 +1,19 @@
 import {IController} from "angular";
-import {timApp} from "tim/app";
 import * as createItem from "tim/directives/createItem";
 import {markAsUsed} from "tim/utils";
 import {showCourseListDialog} from "./courseListDialogCtrl";
-import {$window} from "../ngimport";
+import {$http, $window} from "../ngimport";
+import {ICourseSettings, IItem} from "../IItem";
+import {to} from "../utils";
+import {timApp} from "../app";
+import {showMessageDialog} from "../dialog";
 
 markAsUsed(createItem);
 
 export class StartCtrl implements IController {
     private creatingNew: boolean;
     private docListOpen: boolean;
-    private item = $window.item;
+    private item: IItem = $window.item;
 
     constructor() {
         this.creatingNew = false;
@@ -30,10 +33,16 @@ export class StartCtrl implements IController {
     }
 
     /**
-     * Opens course list dialog.
+     * Opens 'Available courses' dialog.
      */
-    openCourseListDialog() {
-        showCourseListDialog(this.item);
+    async openCourseListDialog() {
+        const [err, response] = await to($http.get<ICourseSettings>(`/courses/settings`));
+        if (response) {
+            void showCourseListDialog({item: this.item, settings: response.data});
+        }
+        if (err) {
+            void showMessageDialog(`Course settings not found: ${err.data.error}`);
+        }
     }
 }
 

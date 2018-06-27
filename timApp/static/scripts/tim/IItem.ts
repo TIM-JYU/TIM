@@ -27,6 +27,13 @@ export enum TagType {
     Subject = 3,
 }
 
+export interface ICourseSettings {
+    course_subjects: ISubjectList;
+}
+
+// A list of course subjects. May contain lists within lists.
+export type ISubjectList = string | { [subject: string]: ISubjectList[] };
+
 export interface ITaggedItem extends IItem {
     tags: ITag[];
 }
