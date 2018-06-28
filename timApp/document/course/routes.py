@@ -45,8 +45,7 @@ def get_documents_from_bookmark_folder(foldername):
         for bookmark in folder['items']:
             paths.append(bookmark['link'].replace("/view/", "", 1))
     else:
-        return json_response({})
-
+        return json_response([])
     docs = get_documents(filter_user=get_current_user_object(),
                          custom_filter=DocEntry.name.in_(paths),
                          query_options=joinedload(DocEntry._block).joinedload(Block.tags))
