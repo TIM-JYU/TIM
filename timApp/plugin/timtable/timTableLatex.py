@@ -509,6 +509,28 @@ class Table:
         return custom_repr(self)
 
 
+def get_column_span(item):
+    try:
+        return int(item["span"])
+    except:
+        return 1
+
+
+def get_column_color_list(key, table_data):
+    l = []
+    try:
+        columns_data = table_data['columns']
+    except:
+        return [(None, None)]*max_col_count
+    for i in range(0, len(columns_data)):
+        span = get_column_span(columns_data[i])
+        for j in range(0, span):
+            l.append(get_color(columns_data[i], key))
+    for k in range(0, max_col_count):
+        l.append((None, None))
+    return l
+
+
 def custom_repr(obj) -> str:
     """
     Extended repr that displays all contents of the object.
@@ -536,7 +558,7 @@ def get_content(content: str) -> str:
     return text
 
 
-def get_color(item, key: str, default_color: str, default_color_html: bool) -> (str, bool):
+def get_color(item, key: str, default_color=None, default_color_html=None) -> (str, bool):
     """
     Parses color-data into LaTeX-format.
     :param item:
@@ -838,6 +860,14 @@ def get_table_resize(table_data, table_col_count) -> bool:
     return resize
 
 
+def decide_format_tuple(format_levels):
+    final_format = (None, None)
+    for level in format_levels:
+        if level[0] and level[1]:
+            final_format = level
+    return final_format
+
+
 def convert_table(table_json) -> Table:
     """
     Converts TimTable-json into LaTeX-compatible object.
@@ -863,6 +893,8 @@ def convert_table(table_json) -> Table:
     # table.height = table_height
 
     # Table settings will be used as defaults, if set.
+    # Each level's format is saved in a variable, which will be empty, if
+    # that level doesn't have any formattings.
     (table_default_bg_color, table_default_bg_color_html) = \
         get_color(table_json,
                   "backgroundColor",
@@ -873,26 +905,27 @@ def convert_table(table_json) -> Table:
                   "color",
                   default_text_color,
                   False)
+
     table_default_font_family = get_font_family(table_json, default_font_family)
     table_default_borders = get_borders(table_json, CellBorders())
     table_default_font_size = get_font_size(table_json, default_font_size)
     table_default_h_align = get_text_horizontal_align(table_json, default_text_h_align)
 
+    # Get column formattings:
+    column_bg_color_list = get_column_color_list("backgroundColor", table_json)
+    column_text_color_list = get_column_color_list("color", table_json)
+
     max_cells = 0
     max_colspan = 1
     for i in range(0, len(table_json['rows'])):
         table_row = table.get_or_create_row(i)
-
-        # If row settings found, use them as default values for cells of the row.
-        # Otherwise uses global defaults.
         row_data = table_json['rows'][i]
+
         (row_default_bg_color, row_default_bg_color_html) = \
-            get_color(row_data, "backgroundColor",
-                      table_default_bg_color,
-                      table_default_bg_color_html)
+            get_color(row_data, "backgroundColor")
         (row_default_text_color, row_default_text_color_html) = \
-            get_color(row_data, "color", table_default_text_color,
-                      table_default_text_color_html)
+            get_color(row_data, "color")
+
         (row_default_width, row_default_height) = \
             get_size(row_data, default_width, default_height)
         row_default_font_family = \
@@ -915,14 +948,11 @@ def convert_table(table_json) -> Table:
                 # Set cell attributes:
                 (bg_color, bg_color_html) = get_color(
                     cell_data,
-                    'backgroundColor',
-                    row_default_bg_color,
-                    row_default_bg_color_html)
+                    'backgroundColor')
                 (text_color, text_color_html) = get_color(
                     cell_data,
-                    'color',
-                    row_default_text_color,
-                    row_default_text_color_html)
+                    'color')
+
                 (colspan, rowspan) = get_span(cell_data)
                 (width, height) = \
                     get_size(cell_data, row_default_width, row_default_height)
@@ -933,6 +963,20 @@ def convert_table(table_json) -> Table:
 
                 # For estimating column count:
                 max_colspan = max(max_colspan, colspan)
+
+                (bg_color, bg_color_html) = decide_format_tuple([
+                    (table_default_bg_color, table_default_bg_color_html),
+                    column_bg_color_list[j],
+                    (row_default_bg_color, row_default_bg_color_html),
+                    (bg_color, bg_color_html),
+                ])
+                (text_color, text_color_html) = decide_format_tuple([
+                    (table_default_text_color, table_default_text_color_html),
+                    column_text_color_list[j],
+                    (row_default_text_color, row_default_text_color_html),
+                    (text_color, text_color_html),
+                ])
+
 
                 c = Cell(
                     content=content,
