@@ -69,7 +69,7 @@ timApp.component("bookmarkFolderBox", {
         <div ng-cloak ng-if="$ctrl.documents.length > 0">
         <h3>{{$ctrl.bookmarkFolder.name}}</h3>
         <ul class="list-unstyled">
-            <li class="h5 list-unstyled" ng-repeat="d in $ctrl.documents">
+            <li class="h5 list-unstyled" ng-repeat="d in $ctrl.documents | orderBy:'$ctrl.getCourseCode(d)'">
                 <span class="btn-xs btn-primary">{{$ctrl.getCourseCode(d)}}</span>
                 <a href="/view/{{d.path}}">{{d.title}}</a>
             </li>

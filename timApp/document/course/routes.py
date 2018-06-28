@@ -39,19 +39,17 @@ def get_documents_from_bookmark_folder(foldername):
     """
     folder = {}
     paths = []
-    docs = []
     bookmark_folders = Bookmarks(get_current_user_object())
     for bookmark_folder in bookmark_folders.as_dict():
         if bookmark_folder['name'] == foldername:
             folder = bookmark_folder
     if folder:
         for bookmark in folder['items']:
-            paths.append(bookmark['link'].replace("/view/", ""))
+            paths.append(bookmark['link'].replace("/view/", "", 1))
     else:
-        # return abort(404, f"Folder {foldername} not found")
         return json_response({})
 
     docs = get_documents(filter_user=get_current_user_object(),
-                         custom_filter=DocEntry.name.like(any_(paths)),
+                         custom_filter=DocEntry.name.in_(paths),
                          query_options=joinedload(DocEntry._block).joinedload(Block.tags))
     return json_response(docs)
