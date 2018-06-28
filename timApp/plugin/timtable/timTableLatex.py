@@ -18,7 +18,11 @@ default_font_size = 12
 default_width = "*"  # * = auto-width
 default_height = "0"  # Won't cut the first line of text even at 0pt.
 default_text_h_align = "l"
-default_font_family = "cmr"
+
+# TODO: Fonts don't work inside the table if XeLaTeX is used!
+default_font_family = "qpl"
+
+
 # Color "none" isn't supported by LaTeX; if this value is used,
 # the setting won't be added at all, making the color transparent.
 default_transparent_color = "none"
@@ -553,7 +557,7 @@ def get_content(content: str) -> str:
     for i in range(0, len(replace_pairs)):
         text = text.replace(replace_pairs[i][0], replace_pairs[i][1])
     """
-    # In case any are left, HTML-formattings and line breadks will be removed.
+    # In case any are left, HTML-formattings and line breaks will be removed.
     text = re.sub(r'<.+?>', '', text).replace('\r', '').replace('\n', '')
     return text
 
@@ -863,7 +867,7 @@ def get_table_resize(table_data, table_col_count) -> bool:
 def decide_format_tuple(format_levels):
     final_format = (None, None)
     for level in format_levels:
-        if level[0] and level[1]:
+        if level[0]:
             final_format = level
     return final_format
 
