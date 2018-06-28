@@ -122,7 +122,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
                 }
             }
         }
-        return "";
+        return undefined;
     }
 
     /**

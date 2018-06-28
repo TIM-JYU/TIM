@@ -2,14 +2,12 @@
 Contains course related routes.
 """
 
-from flask import Blueprint, abort
-from sqlalchemy import any_
+from flask import Blueprint
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.document.docentry import DocEntry, get_documents
-
 from timApp.item.block import Block
 from timApp.util.flask.responsehelper import json_response
 
@@ -37,7 +35,7 @@ def get_documents_from_bookmark_folder(foldername):
     :param foldername:
     :return:
     """
-    folder = {}
+    folder = None
     paths = []
     bookmark_folders = Bookmarks(get_current_user_object())
     for bookmark_folder in bookmark_folders.as_dict():

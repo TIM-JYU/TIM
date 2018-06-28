@@ -45,9 +45,9 @@ class BookmarkFolderBoxCtrl implements IController {
     }
 
     /**
-     * Returns course code if it exists for the item and and the code hasn't expired.
+     * Returns course code if it exists for the item.
      * @param {ITaggedItem} d Document and its tags.
-     * @returns {string} Course code or empty strring, if none were found.
+     * @returns {string} Course code or empty string, if none were found.
      */
     private getCourseCode(d: ITaggedItem) {
         for (const tag of d.tags) {
@@ -55,7 +55,7 @@ class BookmarkFolderBoxCtrl implements IController {
                 return tag.name;
             }
         }
-        return "";
+        return undefined;
     }
 }
 
@@ -69,7 +69,7 @@ timApp.component("bookmarkFolderBox", {
         <div ng-cloak ng-if="$ctrl.documents.length > 0">
         <h3>{{$ctrl.bookmarkFolder.name}}</h3>
         <ul class="list-unstyled">
-            <li class="h5 list-unstyled" ng-repeat="d in $ctrl.documents | orderBy:'$ctrl.getCourseCode(d)'">
+            <li class="h5 list-unstyled" ng-repeat="d in $ctrl.documents | orderBy:$ctrl.getCourseCode">
                 <span class="btn-xs btn-primary">{{$ctrl.getCourseCode(d)}}</span>
                 <a href="/view/{{d.path}}">{{d.title}}</a>
             </li>
