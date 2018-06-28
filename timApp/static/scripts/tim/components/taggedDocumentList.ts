@@ -75,11 +75,10 @@ class TaggedDocumentListCtrl implements IController {
             },
         });
         this.docList = response.data;
-
     }
 
     /*
-     * Calls tag adding function when Enter is pressed.
+     * Calls tag search function when Enter is pressed.
      * @param event Keyboard event.
      */
     async keyPressed(event: KeyboardEvent) {
@@ -89,7 +88,7 @@ class TaggedDocumentListCtrl implements IController {
     }
 
     /*
-     * Calls tag adding function. Has option to searching for exactly matching
+     * Calls tag search function. Has option to searching for exactly matching
      * tags or all that containg parts of the tag.
      */
     async searchClicked(tag: string) {

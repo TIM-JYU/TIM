@@ -150,10 +150,10 @@ def get_all_tags():
 @tags_blueprint.route('/getDocs')
 def get_tagged_documents():
     """
-    Gets a list of Tag-entries that have a certain tag.
+    Gets a list of documents that have a certain tag.
     Options:
     - Search exact or partial words.
-    - Get all other tags in the document as well or don't.
+    - Get all other tags in the document as well or don't fetch them.
     """
     tag_name = request.args.get('name', '')
     exact_search = get_option(request, 'exact_search', default=False, cast=bool)
