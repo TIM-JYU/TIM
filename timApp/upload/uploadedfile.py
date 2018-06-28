@@ -113,6 +113,13 @@ class UploadedFile(ItemBase):
         return f
 
 
+class StampedPDF(UploadedFile):
+
+    @property
+    def filename(self):
+        return Path(self.block.description).stem + '_stamped.pdf'
+
+
 class PluginUpload(UploadedFile):
     """A file that is associated with an :class:`~.Answer`.
     """

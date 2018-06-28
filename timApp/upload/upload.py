@@ -26,7 +26,7 @@ from timApp.item.validation import validate_item_and_create, validate_uploaded_d
 from timApp.plugin.plugin import Plugin
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.sqa import db
-from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo
+from timApp.upload.uploadedfile import UploadedFile, PluginUpload, PluginUploadInfo, StampedPDF
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, PdfError, stamp_pdfs, \
     get_base_filename
@@ -228,9 +228,15 @@ def get_file(file_id, file_filename):
         abort(404, 'File not found')
     verify_view_access(f, check_parents=True)
     mime = magic.Magic(mime=True)
-    file_path = f.filesystem_path.as_posix()
     if file_filename != f.filename:
-        abort(404, 'File not found')
+        # try to find stamped PDF file
+        s = StampedPDF(f.block)
+        if file_filename != s.filename:
+            abort(404, 'File not found')
+        if not s.filesystem_path.exists():
+            abort(404, 'File not found')
+        f = s
+    file_path = f.filesystem_path.as_posix()
     mt = mime.from_file(file_path)
     if mt == 'image/svg':
         mt += '+xml'
