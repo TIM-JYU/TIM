@@ -70,8 +70,10 @@ timApp.component("bookmarkFolderBox", {
             <h3>{{$ctrl.bookmarkFolder.name}}</h3>
             <ul class="list-unstyled">
                 <li class="h5 list-unstyled" ng-repeat="d in $ctrl.documents | orderBy:$ctrl.getCourseCode">
-                    <span class="btn-xs btn-primary">{{$ctrl.getCourseCode(d)}}</span>
-                    <a href="/view/{{d.path}}">{{d.title}}</a>
+                    <a href="/view/{{d.path}}">
+                        <span>{{$ctrl.getCourseCode(d)}} - </span>
+                         {{d.title}}
+                    </a>
                 </li>
             </ul>
         </div>

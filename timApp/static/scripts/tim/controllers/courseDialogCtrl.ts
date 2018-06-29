@@ -205,7 +205,10 @@ registerDialogComponent("timCourseDialog",
             </div>
 
             <div class="form-group">
-                <label for="course-selector" class="col-sm-4 control-label">Subject:</label>
+                <label for="course-selector" class="col-sm-4 control-label">Subject:
+                <a href="#help"><span class="glyphicon glyphicon-question-sign"
+                    uib-tooltip="If a subject is missing from the list, click this to open the help page."></span>
+                </a></label>
                 <div class="col-sm-8">
                     <select required class="form-control" id="course-selector" ng-model="$ctrl.courseSubject"
                         title="Select the subject of the course." name="course-selector">
