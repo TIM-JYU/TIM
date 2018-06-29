@@ -23,13 +23,7 @@ def result_as_dict_list(cursor):
 
 
 class TimDbBase:
-    """Base class for TimDb classes (e.g. Users, Notes).
-
-    :type db: connection
-    :type files_root_path: str
-    :type current_user_name: str
-    :type blocks_path: str
-
+    """DEPRECATED CLASS, DO NOT ADD NEW CODE AND DO NOT INHERIT THIS CLASS!
     """
 
     def __init__(self, db: connection, files_root_path: str, type_name: str, current_user_name: str, session: scoped_session):

@@ -22,9 +22,11 @@ DB_PART_NAMES = {'notes', 'readings', 'users', 'images', 'uploads', 'files', 'do
 
 
 class TimDb:
-    instances = 0
-    """Handles saving and retrieving information from TIM database.
+    """DEPRECATED CLASS, DO NOT ADD NEW CODE!
+
+    Handles saving and retrieving information from TIM database.
     """
+    instances = 0
 
     def __init__(self, files_root_path: str,
                  current_user_name: str = 'Anonymous',

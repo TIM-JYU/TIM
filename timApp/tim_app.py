@@ -11,55 +11,57 @@ from flask import Flask
 from flask_migrate import Migrate
 from sqlalchemy.sql.ddl import CreateTable
 
+from timApp.answer.answer import Answer
+from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
+from timApp.auth.auth_models import AccessType, BlockAccess
+from timApp.document.docentry import DocEntry
 from timApp.document.timjsonencoder import TimJsonEncoder
-from timApp.item.blockassociation import BlockAssociation
-from timApp.item.tag import Tag
-from timApp.util.flask.filters import map_format, timdate, humanize_timedelta, humanize_datetime
-from timApp.korppi.openid import KorppiOpenID
-from timApp.util.logger import setup_logging
+from timApp.document.translation.translation import Translation
+from timApp.folder.folder import Folder
 from timApp.gamification.docgamified import DocGamified
 from timApp.gamification.documentgamificationpoint import DocumentGamificationPoint
 from timApp.gamification.gamificationdocument import GamificationDocument
 from timApp.gamification.gamificationdocumenttype import GamificationDocumentType
 from timApp.gamification.gamificationpointtype import GamificationPointType
 from timApp.gamification.usergamification import UserGamification
+from timApp.item.block import Block
+from timApp.item.blockassociation import BlockAssociation
+from timApp.item.tag import Tag
+from timApp.korppi.openid import KorppiOpenID
 from timApp.lecture.askedjson import AskedJson
 from timApp.lecture.askedquestion import AskedQuestion
-from timApp.item.block import Block
-from timApp.document.docentry import DocEntry
-from timApp.folder.folder import Folder
 from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer
-from timApp.lecture.message import Message
-from timApp.user.newuser import NewUser
-from timApp.notification.notification import Notification
-from timApp.printing.printeddoc import PrintedDoc
-from timApp.document.translation.translation import Translation
-from timApp.user.user import User
-from timApp.user.usergroup import UserGroup
-from timApp.lecture.runningquestion import Runningquestion
-from timApp.timdb.sqa import db
-from timApp.lecture.question import Question
 from timApp.lecture.lectureusers import LectureUsers
+from timApp.lecture.message import Message
+from timApp.lecture.question import Question
 from timApp.lecture.questionactivity import QuestionActivity
+from timApp.lecture.runningquestion import Runningquestion
 from timApp.lecture.showpoints import Showpoints
 from timApp.lecture.useractivity import Useractivity
-from timApp.slide.slidestatus import SlideStatus
-from timApp.user.usergroupmember import UserGroupMember
-from timApp.auth.auth_models import AccessType, BlockAccess
 from timApp.note.usernote import UserNote
-from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
+from timApp.notification.notification import Notification
+from timApp.printing.printeddoc import PrintedDoc
 from timApp.readmark.readparagraph import ReadParagraph
-from timApp.answer.answer import Answer
+from timApp.slide.slidestatus import SlideStatus
+from timApp.timdb.sqa import db
+from timApp.user.newuser import NewUser
+from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
+from timApp.util.flask.filters import map_format, timdate, humanize_timedelta, humanize_datetime
+from timApp.util.logger import setup_logging
+from timApp.util.utils import datestr_to_relative, date_to_relative
 from timApp.velp.velp_models import Velp, VelpContent, VelpGroup, VelpGroupDefaults, VelpGroupLabel, \
-    VelpGroupSelection, VelpGroupsInDocument, VelpInGroup, VelpLabel, VelpLabelContent, VelpVersion, ImportedVelpGroups, \
-    LabelInVelp, LabelInVelpGroup, Annotation, AnnotationComment, Icon
+    VelpGroupSelection, VelpGroupsInDocument, VelpInGroup, VelpLabel, VelpLabelContent, VelpVersion, \
+    ImportedVelpGroups, LabelInVelp, LabelInVelpGroup, Annotation, AnnotationComment, Icon
 
 
 def reg_models(*_):
     pass
 
 
+# All SQLAlchemy models must be imported in this module. To avoid "unused import" warnings, we pass them to a function.
 reg_models(
     AccessType,
     Annotation,
@@ -117,8 +119,6 @@ reg_models(
     VelpLabelContent,
     VelpVersion,
 )
-
-from timApp.util.utils import datestr_to_relative, date_to_relative
 
 sys.setrecursionlimit(10000)
 app = Flask(__name__)
