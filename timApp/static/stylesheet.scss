@@ -139,6 +139,11 @@ a .glyphicon {
             @include h1-base();
         }
 
+        figcaption {
+            text-align: center;
+            margin: 0.5em;
+        }
+
         @mixin heading-base($outdent) {
             text-align: left;
             margin-left: $outdent;
