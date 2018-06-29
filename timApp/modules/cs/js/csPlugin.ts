@@ -2020,7 +2020,7 @@ csApp.Controller = function($scope,$transclude) {
         var printArray = function(array) {
             $.each(array, function(i, item) {
               println('    ' + JSON.stringify(item) +
-                  (i as number + 1 < array.length? ',' : '') );
+                  (i as string + 1 < array.length? ',' : '') );
             });
         };
         println('{');
