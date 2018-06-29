@@ -126,11 +126,42 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
     }
 
     /**
+     * True if all course categories are closed, false if one or more are open
+     * or the courses variable is undefined.
+     * @param {IGroupedCourses[]} courses
+     * @returns {boolean}
+     */
+    private allClosed(courses: IGroupedCourses[]) {
+        if (courses === undefined) {
+            return false;
+        }
+        for (const course of courses) {
+            if (course !== undefined && !course.closed) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Changes course count text to plural if there are more than one.
+     * @param {number} count
+     * @returns {string}
+     */
+    private courseCount(count: number) {
+        if (count === 1) {
+            return `${count} course`;
+        } else {
+            return `${count} courses`;
+        }
+    }
+
+    /**
      * Groups courses by their subject tags. Leaves out expired courses and subjects
      * with no non-expired courses.
      */
     private groupBySubject() {
-        let close = false;
+        let close = true;
         if (!this.subjects) {
             return;
         }
@@ -174,13 +205,21 @@ registerDialogComponent("timCourseListDialog",
     <dialog-body>
     <h5>Listing available courses</h5>
     <div>
+        <p>
+            <span>
+                <span ng-if="$ctrl.allClosed($ctrl.grouped)">
+                    Press the plus signs to view available courses on different subjects
+                </span>
+                &nbsp;
+            </span>
+        </p>
         <ul class="list-unstyled" ng-if="$ctrl.grouped.length > 0" id="courses" aria-multiselectable="true">
             <li ng-repeat="subject in $ctrl.grouped" ng-if="subject.docs.length > 0">
                 <span class="cursor-pointer" ng-click="subject.closed = !subject.closed"
                 data-toggle="collapse" data-parent="#courses" href="#{{subject.subject}}" aria-expanded="false"
                 aria-controls="{{subject.subject}}">
                     <i class="glyphicon" ng-class="subject.closed ? 'glyphicon-plus-sign' : 'glyphicon-minus-sign'"></i>
-                    {{subject.subject}}
+                    {{subject.subject}} ({{$ctrl.courseCount(subject.docs.length)}})
                 </span>
                 <ul class="list-unstyled well well-sm" uib-collapse="subject.closed">
                     <li ng-repeat="course in subject.docs" ng-if="$ctrl.getCourseCode(course)">
