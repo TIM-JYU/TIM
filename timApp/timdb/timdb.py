@@ -21,7 +21,7 @@ DB_PART_NAMES = {'notes', 'readings', 'users', 'images', 'uploads', 'files', 'do
                  'messages', 'lectures', 'folders', 'lecture_answers', 'velps', 'velp_groups', 'annotations', 'session'}
 
 
-class TimDb(object):
+class TimDb:
     instances = 0
     """Handles saving and retrieving information from TIM database.
     """

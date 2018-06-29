@@ -22,7 +22,7 @@ def result_as_dict_list(cursor):
     return results
 
 
-class TimDbBase(object):
+class TimDbBase:
     """Base class for TimDb classes (e.g. Users, Notes).
 
     :type db: connection
