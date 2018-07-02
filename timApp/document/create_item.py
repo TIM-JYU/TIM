@@ -6,6 +6,7 @@ from werkzeug.exceptions import abort
 
 from timApp.auth.accesshelper import grant_access_to_session_users, reset_request_access_cache, get_doc_or_abort, \
     verify_edit_access
+from timApp.item.tag import TagType, Tag
 from timApp.timdb.dbaccess import get_timdb
 from timApp.document.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_NAME
 from timApp.auth.sessioninfo import get_current_user_object, get_current_user_group
@@ -91,6 +92,12 @@ def do_create_item(item_path, item_type, item_title, copied_doc: Optional[DocInf
 
 def copy_document_and_enum_translations(source: DocInfo, target: DocInfo) -> Generator[Tuple[DocInfo, DocInfo], None, None]:
     target.children.extend(source.children)  # required to retain rights to uploaded files
+
+    # Copy tags except course code and subject.
+    for tag in source.block.tags:
+        if tag.type == TagType.Regular:
+            target.block.tags.append(Tag(name=tag.name, type=tag.type))
+
     target.document.update(source.document.export_markdown(),
                            target.document.export_markdown(),
                            strict_validation=False)
