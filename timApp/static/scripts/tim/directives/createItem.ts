@@ -3,24 +3,24 @@ import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as formErrorMessage from "tim/directives/formErrorMessage";
 import * as shortNameValidator from "tim/directives/shortNameValidator";
-import {getURLParameter, markAsUsed} from "tim/utils";
+import {Binding, getURLParameter, markAsUsed} from "tim/utils";
 import {$http, $window} from "../ngimport";
 import {slugify} from "../services/slugify";
 
 markAsUsed(formErrorMessage, shortNameValidator);
 
 class CreateItemController implements IController {
-    private fullPath: string;
+    private fullPath?: Binding<string, "@?">;
     private automaticShortName: boolean;
-    private itemLocation: string | undefined;
-    private itemTitle: string | undefined;
-    private itemName: string | undefined;
+    private itemLocation?: Binding<string, "@?">;
+    private itemTitle?: Binding<string, "@?">;
+    private itemName?: Binding<string, "@">;
     private alerts: {}[];
-    private itemType: string;
-    private params: {template?: string};
-    private force: boolean;
-    private creating: boolean;
-    private template: string;
+    private itemType!: Binding<string, "@">;
+    private params?: Binding<{template?: string}, "=?">;
+    private force?: Binding<boolean, "<?">;
+    private creating: boolean = false;
+    private template?: Binding<string, "@?">;
 
     constructor() {
         this.automaticShortName = !this.force;
@@ -86,7 +86,7 @@ timApp.component("createItem", {
         itemLocation: "@?",
         fullPath: "@?",
         params: "=?", // any additional parameters to be sent to server
-        force: "=?",
+        force: "<?",
         template: "@?",
     },
     controller: CreateItemController,

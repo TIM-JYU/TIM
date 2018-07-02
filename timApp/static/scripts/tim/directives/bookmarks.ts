@@ -1,14 +1,12 @@
 import angular, {IController, IFormController, IPromise, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
-import {markAsUsed, to} from "tim/utils";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../dialog";
-import {IItem} from "../IItem";
-import {$http, $timeout, $window} from "../ngimport";
+import {Binding, markAsUsed, to} from "tim/utils";
 import {ViewCtrl} from "../controllers/view/viewctrl";
+import {DialogController, registerDialogComponent, showDialog} from "../dialog";
+import {$http, $timeout, $window} from "../ngimport";
 
 markAsUsed(focusMe);
-
 
 export interface IBookmarkGroup {
     name: string;
@@ -23,9 +21,9 @@ export interface IBookmark {
 }
 
 export class BookmarksController implements IController {
-    private data: IBookmarkGroup[];
+    private data?: Binding<IBookmarkGroup[], "<">;
     private deleting: boolean;
-    private userId: number;
+    private userId?: Binding<number, "<">;
     public viewctrl?: ViewCtrl;
 
     constructor() {
@@ -51,7 +49,7 @@ export class BookmarksController implements IController {
     }
 
     keepGroupOpen(groupToKeepOpen?: IBookmarkGroup) {
-        if (!groupToKeepOpen) {
+        if (!groupToKeepOpen || !this.data) {
             return;
         }
         for (let i = 0; i < this.data.length; ++i) {
@@ -172,14 +170,14 @@ timApp.component("bookmarks", {
 
 class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark, "timBookmarksDialog"> {
     private static $inject = ["$element", "$scope"];
-    private f: IFormController;
-    private focusName: boolean;
-    private focusGroup: boolean;
-    private showParamsCheckbox: boolean;
-    private showHashCheckbox: boolean;
-    private bookmark: IBookmark;
-    private includeParams: boolean;
-    private includeHash: boolean;
+    private f!: IFormController; // initialized in the template
+    private focusName?: boolean;
+    private focusGroup?: boolean;
+    private showParamsCheckbox?: boolean;
+    private showHashCheckbox?: boolean;
+    private bookmark!: IBookmark; // $onInit
+    private includeParams?: boolean;
+    private includeHash?: boolean;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);

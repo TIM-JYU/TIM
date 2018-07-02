@@ -9,7 +9,7 @@ import {EditPosition, EditType} from "./editing";
 
 export class QuestionHandler {
     public sc: IScope;
-    public noQuestionAutoNumbering: boolean;
+    public noQuestionAutoNumbering: boolean = false;
     public viewctrl: ViewCtrl;
 
     constructor(sc: IScope, view: ViewCtrl) {

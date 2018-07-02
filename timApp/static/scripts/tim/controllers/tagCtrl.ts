@@ -5,13 +5,13 @@
 import {IFormController, IRootElementService, IScope} from "angular";
 import {Moment} from "moment";
 import * as focusMe from "tim/directives/focusMe";
+import * as tagLabel from "../components/tagLabel";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IItem, ITag, TagType} from "../IItem";
-import {$http} from "../ngimport";
-import {markAsUsed, to} from "../utils";
-import * as tagLabel from "../components/tagLabel";
-import {Users} from "../services/userService";
 import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../IUser";
+import {$http} from "../ngimport";
+import {Users} from "../services/userService";
+import {markAsUsed, to} from "../utils";
 
 markAsUsed(tagLabel);
 markAsUsed(focusMe);
@@ -23,19 +23,24 @@ const tagParsingSeparator = ",";
  */
 export class ShowTagController extends DialogController<{ params: IItem }, {}, "timEditTags"> {
     private static $inject = ["$element", "$scope"];
-    private tagName: string;
-    private tagsList: ITag[]; // List of tags the document has.
-    private expires: Moment;
-    private errorMessage: string;
-    private successMessage: string;
-    private f: IFormController;
-    private focusName: boolean;
-    private allTags: ITag[]; // List of all unique tags.
-    private allUnusedTags: ITag[]; // List of existing tag names not used in the doc.
+    private tagName: string = "";
+    private tagsList: ITag[] = []; // List of tags the document has.
+    private expires?: Moment;
+    private errorMessage?: string;
+    private successMessage?: string;
+    private f!: IFormController; // initialized in the template
+    private focusName?: boolean;
+    private allTags?: ITag[]; // List of all unique tags.
+    private allUnusedTags?: ITag[]; // List of existing tag names not used in the doc.
     private datePickerOptions: EonasdanBootstrapDatetimepicker.SetOptions;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
+        this.datePickerOptions = {
+            format: "D.M.YYYY HH:mm:ss",
+            defaultDate: "",
+            showTodayButton: true,
+        };
     }
 
     /*
@@ -46,11 +51,6 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         await this.updateTags();
         this.focusName = true;
         await this.draggable.makeHeightAutomatic();
-        this.datePickerOptions = {
-            format: "D.M.YYYY HH:mm:ss",
-            defaultDate: "",
-            showTodayButton: true,
-        };
     }
 
     /**
@@ -73,17 +73,18 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     /**
      * Gets all unique tags in the database as an ITag list.
      */
-    private async getUniqueTags() {
+    private async getUniqueTags(): Promise<ITag[] | undefined> {
         const [err, response] = await to($http.get<ITag[]>(`/tags/getAllTags`));
         if (err) {
             this.errorMessage = err.data.error;
-            this.successMessage = "";
+            this.successMessage = undefined;
+            return;
         } else {
-            this.errorMessage = "";
+            this.errorMessage = undefined;
         }
         if (response) {
             this.allTags = response.data;
-            return;
+            return this.allTags;
         }
     }
 
@@ -96,19 +97,22 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
 
         if (err) {
             this.errorMessage = err.data.error;
-            this.successMessage = "";
+            this.successMessage = undefined;
         } else {
-            this.errorMessage = "";
+            this.errorMessage = undefined;
         }
         if (response) {
             this.tagsList = response.data;
             // Get all globally used tags and remove document's tags from them for tag suggestion list.
-            await this.getUniqueTags();
+            const allTags = await this.getUniqueTags();
             const tagsListStrings = [];
             for (const tag of this.tagsList) {
                 tagsListStrings.push(tag.name);
             }
-            this.allUnusedTags = arrayDifference(this.allTags, Object.assign([], tagsListStrings));
+            if (!allTags) {
+                return;
+            }
+            this.allUnusedTags = arrayDifference(allTags, Object.assign([], tagsListStrings));
             return;
         }
     }
@@ -123,7 +127,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         if (t.type !== TagType.Regular) {
             if (!userBelongsToTeachersOrIsAdmin) {
                 this.errorMessage = `Editing this tag is only allowed for admins or ${TEACHERS_GROUPNAME} group!`;
-                this.successMessage = "";
+                this.successMessage = undefined;
                 return;
             }
 
@@ -136,9 +140,9 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
 
         if (err) {
             this.errorMessage = err.data.error;
-            this.successMessage = "";
+            this.successMessage = undefined;
         } else {
-            this.errorMessage = "";
+            this.errorMessage = undefined;
         }
         if (response) {
             this.successMessage = `'${t.name}' was removed.`;
@@ -176,9 +180,9 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
 
         if (err) {
             this.errorMessage = err.data.error;
-            this.successMessage = "";
+            this.successMessage = undefined;
         } else {
-            this.errorMessage = "";
+            this.errorMessage = undefined;
         }
         if (response) {
             this.successMessage = `'${this.tagName}' successfully added.`;

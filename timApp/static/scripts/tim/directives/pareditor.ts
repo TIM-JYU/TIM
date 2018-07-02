@@ -61,18 +61,18 @@ export type IEditorResult = {type: "save", text: string} | {type: "delete"} | {t
 
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult, "pareditor"> {
     private static $inject = ["$scope", "$element"];
-    private deleting: boolean;
-    private editor: TextAreaParEditor | AceParEditor;
-    private file: File & {progress?: number, error?: string};
-    private isIE: boolean;
-    private oldmeta: HTMLMetaElement;
+    private deleting = false;
+    private editor!: TextAreaParEditor | AceParEditor; // $onInit
+    private file?: File & {progress?: number, error?: string};
+    private isIE: boolean = false;
+    private oldmeta?: HTMLMetaElement;
     private wrap: {n: number};
     private outofdate: boolean;
     private parCount: number;
     private pluginButtonList: {[tabName: string]: JQuery[]};
     private proeditor: boolean;
-    private saving: boolean;
-    private scrollPos: number;
+    private saving: boolean = false;
+    private scrollPos?: number;
     private tables: {
         normal: string,
         example: string,
@@ -82,13 +82,12 @@ export class PareditorController extends DialogController<{params: IEditorParams
         pipe: string,
         timTable: string,
     };
-    private uploadedFile: string;
     private storage: Storage;
     private touchDevice: boolean;
-    private plugintab: JQuery;
+    private plugintab?: JQuery;
     private autocomplete: boolean;
     private citeText: string;
-    private docSettings: {macros: {dates: string[], knro: number, stampformat: string}};
+    private docSettings?: {macros: {dates: string[], knro: number, stampformat: string}};
     private metaset = false;
 
     private getOptions() {
@@ -351,6 +350,10 @@ or newer one that is more familiar to write in YAML:
             }
         }
 
+        if (!this.plugintab) {
+            throw new Error("Plugin tab was not initialized");
+        }
+
         for (const key in this.pluginButtonList) {
             if (this.pluginButtonList.hasOwnProperty(key)) {
                 const clickfunction = `$ctrl.pluginClicked($event, ${JSON.stringify(key)})`;
@@ -406,7 +409,9 @@ or newer one that is more familiar to write in YAML:
                 newOffset.left = 0;
             }
             $editor.offset(newOffset);
-            $previewContent.scrollTop(this.scrollPos);
+            if (this.scrollPos) {
+                $previewContent.scrollTop(this.scrollPos);
+            }
         }, 25);
 
     }
@@ -473,7 +478,7 @@ or newer one that is more familiar to write in YAML:
         const s = $(window).scrollTop();
         this.editor.focus();
         await $timeout();
-        $(window).scrollTop(s || this.scrollPos);
+        $(window).scrollTop(s || this.scrollPos || 0);
     }
 
     changeMeta() {
@@ -583,7 +588,6 @@ or newer one that is more familiar to write in YAML:
     }
 
     onFileSelect(file: File) {
-        this.uploadedFile = "";
         this.focusEditor();
         this.file = file;
         const editorText = this.editor.getEditorText();
@@ -598,7 +602,7 @@ or newer one that is more familiar to write in YAML:
         // If there's an attachment macro in editor, assume need to stamp.
         // Also requires data from preamble to work correctly (dates and knro).
         // If there's no stampFormat set in preamble, uses hard coded default format.
-        if (editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0) {
+        if (editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0 && this.docSettings) {
             autostamp = true;
             // TODO: More exact parsing needed.
             // Giving commas inside parameters will break this.
@@ -641,25 +645,28 @@ or newer one that is more familiar to write in YAML:
                 $timeout(() => {
                     var isplugin = (this.editor.editorStartsWith("``` {"));
                     var start = "[File](";
+                    let uploadedFile;
                     if (response.data.image) {
-                        this.uploadedFile = "/images/" + response.data.image;
+                        uploadedFile = "/images/" + response.data.image;
                         start = "![Image](";
                     } else {
-                        this.uploadedFile = "/files/" + response.data.file;
+                        uploadedFile = "/files/" + response.data.file;
                     }
                     if (isplugin) {
-                        this.editor.insertTemplate(this.uploadedFile);
+                        this.editor.insertTemplate(uploadedFile);
                     } else {
-                        this.editor.insertTemplate(start + this.uploadedFile + ")");
+                        this.editor.insertTemplate(start + uploadedFile + ")");
                     }
                 });
             }, (response) => {
-                if (response.status > 0) {
+                if (response.status > 0 && this.file) {
                     this.file.error = response.data.error;
                 }
             }, (evt) => {
-                this.file.progress = Math.min(100, Math.floor(100.0 *
-                    evt.loaded / evt.total));
+                if (this.file) {
+                    this.file.progress = Math.min(100, Math.floor(100.0 *
+                        evt.loaded / evt.total));
+                }
             });
 
             upload.finally(() => {

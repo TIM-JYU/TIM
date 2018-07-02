@@ -3,7 +3,7 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import * as velpSummary from "tim/directives/velpSummary";
 import {colorPalette, VelpWindowController} from "tim/directives/velpWindow";
-import {markAsUsed} from "tim/utils";
+import {Binding, markAsUsed, Require} from "tim/utils";
 import {ReviewController} from "../controllers/reviewController";
 import {$http, $log, $q, $window} from "../ngimport";
 import {
@@ -56,20 +56,20 @@ export class VelpSelectionController implements IController {
     private groupAttachment: {target_type: number; id: number | null};
     private groupSelections: IVelpGroupCollection;
     private groupDefaults: IVelpGroupCollection;
-    private docId: number;
-    private order: string;
-    private selectedLabels: number[];
-    private advancedOn: boolean;
-    private velpOrderingKey: string;
-    private velpLabelsKey: string;
-    private advancedOnKey: string;
+    private docId!: Binding<number, "<">;
+    private order!: string; // $onInit
+    private selectedLabels: number[] = [];
+    private advancedOn: boolean = false;
+    private velpOrderingKey!: string; // $onInit
+    private velpLabelsKey!: string; // $onInit
+    private advancedOnKey!: string; // $onInit
     private default_velp_group: IVelpGroupUI;
-    private labelAdded: boolean;
-    private rctrl: ReviewController;
+    private labelAdded: boolean = false;
+    private rctrl!: Require<ReviewController>;
     private default_personal_velp_group: IVelpGroup;
-    private previewReleased: boolean;
-    private teacherRight: boolean;
-    private onInit: (params: {$API: VelpSelectionController}) => void;
+    private previewReleased: boolean = false;
+    private teacherRight!: Binding<boolean, "<">;
+    private onInit!: Binding<(params: {$API: VelpSelectionController}) => void, "&">;
 
     // Data
     constructor() {
@@ -116,11 +116,6 @@ export class VelpSelectionController implements IController {
 
         this.groupSelections = {};
         this.groupDefaults = {};
-    }
-
-    $onInit() {
-        // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
-        const doc_id = this.docId;
         this.default_velp_group = {
             id: -1,
             name: "No access to default group",
@@ -131,7 +126,11 @@ export class VelpSelectionController implements IController {
             target_type: null,
         }; // TODO Use route to add this information
         this.default_personal_velp_group = {id: -2, name: "Personal-default", target_type: null, default: true};
+    }
 
+    $onInit() {
+        // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
+        const doc_id = this.docId;
         this.velpOrderingKey = "velpOrdering_" + doc_id;
         this.velpLabelsKey = "velpLabels_" + doc_id;
         this.advancedOnKey = "advancedOn"; // TODO: should this be document specific?
@@ -1120,8 +1119,9 @@ export class VelpSelectionController implements IController {
      */
 
     releaseClicked() {
+        // TODO: delete this method and just use draggable directive
         const div = $("#selectVelpsDiv");
-        this.previewReleased = !(this.previewReleased);
+        this.previewReleased = !this.previewReleased;
         const offset = div.offset() || {top: 0, left: 0};
         const top = offset.top;
         const left = offset.left - 270;

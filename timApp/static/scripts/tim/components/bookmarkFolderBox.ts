@@ -5,11 +5,12 @@
 import {IController} from "angular";
 import {timApp} from "../app";
 import {IBookmarkGroup} from "../directives/bookmarks";
+import {Binding} from "../utils";
 
 class BookmarkFolderBoxCtrl implements IController {
-    private bookmarkFolder: IBookmarkGroup;
-    private bookmarkFolderName: string;
-    private bookmarks: IBookmarkGroup[];
+    private bookmarkFolder: IBookmarkGroup | undefined;
+    private bookmarkFolderName!: Binding<string, "@">;
+    private bookmarks!: Binding<IBookmarkGroup[], "<">;
 
     async $onInit() {
         await this.getBookmarkFolder(this.bookmarkFolderName);

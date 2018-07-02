@@ -1,4 +1,4 @@
-import angular from "angular";
+import angular, {IRootElementService, IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IItem} from "../IItem";
@@ -26,12 +26,25 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
     private showPaths: boolean;
     private pluginsUserCode: boolean;
     private selectedTemplate?: ITemplate;
-    private templates: ITemplate[];
+    private templates?: ITemplate[];
     private createdUrl?: string;
-    private document: IItem;
+    private document!: IItem; // $onInit
     private selected: {name: string};
-    private forceRefresh: boolean;
-    private removeOldImages: boolean;
+    private forceRefresh: boolean = false;
+    private removeOldImages: boolean = false;
+
+    constructor(protected element: IRootElementService, protected scope: IScope) {
+        super(element, scope);
+        this.storage = $localStorage.$default({
+            timPrintingTemplateId: null,
+        });
+        this.loading = false;
+        this.showPaths = false;
+        this.pluginsUserCode = false;
+        this.selected = {
+            name: "PDF",
+        };
+    }
 
     public getTitle() {
         return "Printing document";
@@ -39,21 +52,9 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
 
     $onInit() {
         super.$onInit();
-        this.storage = $localStorage.$default({
-            timPrintingTemplateId: null,
-        });
-
         this.document = this.resolve.params.document;
         this.templates = this.resolve.params.templates;
-        this.loading = false;
-        this.showPaths = false;
-        this.pluginsUserCode = false;
-
         this.selectedTemplate = this.initTemplate();
-
-        this.selected = {
-            name: "PDF",
-        };
     }
 
     private initTemplate() {
@@ -67,7 +68,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
                 }
             });
 
-        } else {
+        } else if (this.templates) {
             t = this.templates.find((tmpl) => tmpl.name !== "empty");
         }
 

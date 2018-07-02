@@ -12,14 +12,14 @@
  * @copyright 2016 Timber project members
  */
 
-import angular from "angular";
 import {IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
 import {ReviewController} from "../controllers/reviewController";
+import {showMessageDialog} from "../dialog";
 import {IUser} from "../IUser";
 import {$http, $window} from "../ngimport";
-import {IAnnotation, IAnnotationCoordless} from "./velptypes";
-import {showMessageDialog} from "../dialog";
+import {Binding, Require} from "../utils";
+import {IAnnotationCoordless} from "./velptypes";
 
 const UNDEFINED = "undefined";
 
@@ -27,20 +27,19 @@ export class AnnotationController implements IController {
     private static $inject = ["$scope", "$element"];
     private ctrlKey: number;
     private ctrlDown: boolean;
-    private visible_options: {
+    private visible_options!: {
         type: string; value: number; title: string;
         values: [number, number, number, number];
         names: [string, string, string, string]
-    };
+    }; // $onInit
     private newcomment: string;
-    private marginonly: boolean;
     private isvalid: {points: {value: boolean; msg: string}};
     private element: IRootElementService;
-    private velpElement: HTMLElement;
+    private velpElement!: HTMLElement; // $postLink
     private showHidden: boolean;
-    public show: boolean;
-    private showStr: string;
-    private original: {
+    public show: boolean = false;
+    private showStr!: Binding<string, "@">;
+    private original!: {
         points: number | null;
         velp: {};
         color: string | null;
@@ -49,12 +48,12 @@ export class AnnotationController implements IController {
         aid: number,
         annotation_id: number | null,
         doc_id: number | null
-    };
-    private velp: {};
-    private rctrl: ReviewController;
+    }; // $onInit
+    private velp!: Binding<string, "@">;
+    private rctrl!: Require<ReviewController>;
     private scope: IScope;
-    private annotationdata: string;
-    private annotation: IAnnotationCoordless;
+    private annotationdata!: Binding<string, "@">;
+    private annotation!: IAnnotationCoordless; // $onInit
 
     constructor(scope: IScope, element: IRootElementService) {
         this.scope = scope;
@@ -63,6 +62,9 @@ export class AnnotationController implements IController {
         this.ctrlKey = 17;
         this.newcomment = "";
         this.showHidden = false;
+        this.isvalid = {
+            points: {value: true, msg: ""},
+        };
     }
 
     $onInit() {
@@ -76,15 +78,10 @@ export class AnnotationController implements IController {
             names: ["Just me", "Document owner", "Teachers", "Everyone"],
         };
         this.annotation.newannotation = false;
-        this.marginonly = false;
 
         if (this.annotation.default_comment != null) {
             this.newcomment = this.annotation.default_comment;
         }
-
-        this.isvalid = {
-            points: {value: true, msg: ""},
-        };
 
         // Original visibility, or visibility in session
         // TODO: origin visibility
@@ -366,7 +363,6 @@ export class AnnotationController implements IController {
 timApp.component("annotation", {
     bindings: {
         annotationdata: "@",
-        newcomment: "@",
         showStr: "@",
         velp: "@",
     },

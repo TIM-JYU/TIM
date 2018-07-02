@@ -13,6 +13,7 @@ import {showTagSearchDialog} from "./tagSearchCtrl";
 import angular from "angular";
 import {showCourseDialog} from "./courseDialogCtrl";
 import {TEACHERS_GROUPNAME, ADMIN_GROUPNAME} from "../IUser";
+import {Require} from "../utils";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -34,10 +35,10 @@ export class SidebarMenuCtrl implements IController {
     private leftSide: JQuery;
     private active: number;
     private lastTab: number;
-    private vctrl?: ViewCtrl;
+    private vctrl?: Require<ViewCtrl>;
     private bookmarks: {};
-    private isDocumentMinutes: boolean;
-    private docSettings?: {macros?: {knro?: string}}
+    private isDocumentMinutes: boolean = false;
+    private docSettings?: {macros?: {knro?: string}};
 
     constructor() {
         this.currentLecturesList = [];

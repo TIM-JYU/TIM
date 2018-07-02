@@ -35,8 +35,8 @@ export interface INote {
 export class NotesHandler {
     public sc: IScope;
     public viewctrl: ViewCtrl;
-    public noteBadgePar: JQuery;
-    public noteBadge: HTMLElement;
+    public noteBadgePar: JQuery | undefined;
+    public noteBadge: HTMLElement | undefined;
 
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
@@ -192,15 +192,18 @@ export class NotesHandler {
         // btn.setAttribute("ng-click", "addNote()");
         btn.onclick = ($event) => {
             $event.stopPropagation();
-            this.toggleNoteEditor(this.noteBadgePar);
+            this.toggleNoteEditor($par);
         };
         $compile(btn)(this.sc);
         return btn;
     }
 
     addNote() {
-        // sc.clearNoteBadge(null);
-        this.toggleNoteEditor(this.noteBadgePar);
+        if (this.noteBadgePar) {
+            this.toggleNoteEditor(this.noteBadgePar);
+        } else {
+            showMessageDialog("There is no note badge attached.");
+        }
     }
 
     setNotePadge($event: Event) {

@@ -32,9 +32,9 @@ export class LectureInfoController implements IController {
     private inLecture: boolean;
     private isLecturer: boolean;
     private answerers: IUser[];
-    private answers: IQuestionAnswer[];
-    private questions: IAskedQuestion[];
-    private selectedUser: IUser;
+    private answers: IQuestionAnswer[] = [];
+    private questions: IAskedQuestion[] = [];
+    private selectedUser: IUser | undefined;
     private showAll = false;
     private answerMap: {[index: number]: IQuestionAnswer[]} = {};
     private messages: ILectureMessage[] = [];
@@ -93,7 +93,7 @@ export class LectureInfoController implements IController {
     private getAnswers(question: IAskedQuestion) {
         return this.answers.filter((q) =>
             q.asked_question.asked_id === question.asked_id &&
-            (this.showAll || this.selectedUser.id === q.user.id));
+            (this.showAll || !this.selectedUser || this.selectedUser.id === q.user.id));
     }
 
     /**

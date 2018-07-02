@@ -17,8 +17,8 @@ export interface IRefPopupAttrs {
 export class RefPopupHandler {
     public sc: IScope;
     public viewctrl: ViewCtrl;
-    public overReflink: boolean;
-    public overPopup: boolean;
+    public overReflink: boolean = false;
+    public overPopup: boolean = false;
     private popupElement?: JQLite;
 
     constructor(sc: IScope, view: ViewCtrl) {

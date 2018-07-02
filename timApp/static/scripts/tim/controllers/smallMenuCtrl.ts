@@ -5,6 +5,7 @@ import {ILecture, ILectureListResponse2} from "../lecturetypes";
 import {$http, $window} from "../ngimport";
 import {LectureController} from "./lectureController";
 import {ViewCtrl} from "./view/viewctrl";
+import {Require} from "../utils";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -23,8 +24,8 @@ export class SmallMenuCtrl implements IController {
     private futureLecturesList: ILecture[];
     private showCurrentList: boolean;
     private showFutureList: boolean;
-    private readonly lctrl: LectureController;
-    private readonly viewctrl?: ViewCtrl;
+    private readonly lctrl!: Require<LectureController>;
+    private readonly viewctrl?: Require<ViewCtrl>;
 
     constructor() {
         this.currentLecturesList = [];

@@ -1,35 +1,31 @@
 import {IController, IRootElementService, IScope} from "angular";
+import {getParId} from "tim/controllers/view/parhelpers";
 import {timApp} from "../app";
 import {ViewCtrl} from "../controllers/view/viewctrl";
-import {$http, $timeout} from "../ngimport";
-import {getParId} from 'tim/controllers/view/parhelpers';
 import {openEditorSimple} from "../directives/pareditor";
+import {$http, $timeout} from "../ngimport";
 import {ParCompiler} from "../services/parCompiler";
-
-export const EDITOR_CLASS = "editorArea";
-export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
+import {Binding} from "../utils";
 
 const styleToHtml: { [index: string]: string } =
     {
-        textAlign: "text-align",
         backgroundColor: "background-color",
-        horizontalAlign: "horizontal-align",
-        verticalAlign: "vertical-align",
         border: "border",
-        borderTop: "border-top",
         borderBottom: "border-bottom",
         borderLeft: "border-left",
         borderRight: "border-right",
-        width: "width",
-        height: "height",
+        borderTop: "border-top",
         color: "color",
-        fontSize: "font-size",
         fontFamily: "font-family",
+        fontSize: "font-size",
         fontWeight: "font-weight",
-        visibility: "visibility"
-
+        height: "height",
+        horizontalAlign: "horizontal-align",
+        textAlign: "text-align",
+        verticalAlign: "vertical-align",
+        visibility: "visibility",
+        width: "width",
     };
-
 
 export interface TimTable {
     table: ITable;
@@ -146,12 +142,11 @@ function isPrimitiveCell(cell: CellEntity): cell is CellType {
 export class TimTableController implements IController {
     private static $inject = ["$scope", "$element"];
     public viewctrl?: ViewCtrl;
-    public sc: IScope;
-    public cellDataMatrix: string[][];
-    private data: TimTable;
-    private editing: boolean;
-    private editedCellContent: string;
-    private editedCellInitialContent: string;
+    public cellDataMatrix: string[][] = [];
+    private data!: Binding<TimTable, "<">;
+    private editing: boolean = false;
+    private editedCellContent: string | undefined;
+    private editedCellInitialContent: string | undefined;
     private currentCell?: { row: number, col: number, editorOpen: boolean };
     private mouseInTable?: boolean;
 
@@ -261,7 +256,6 @@ export class TimTableController implements IController {
      * @returns {Promise<string>}
      */
     async getCellData(cell: CellEntity, docId: number, parId: string, row: number, col: number) {
-        let ctrl = this;
         const response = await $http<CellType[]>({
             url: "/timTable/getCellData",
             method: "GET",
@@ -270,8 +264,8 @@ export class TimTableController implements IController {
 
         const data = response.data;
         let value = this.cellToString(data[0]);
-        ctrl.editedCellContent = value;
-        ctrl.editedCellInitialContent = value;
+        this.editedCellContent = value;
+        this.editedCellInitialContent = value;
         return data[0];
     }
 
@@ -287,15 +281,16 @@ export class TimTableController implements IController {
      * @returns {Promise<void>}
      */
     async openEditor(cell: CellEntity, docId: number, value: string, parId: string, row: number, col: number) {
-
-        let ctrl = this;
-        if (ctrl.currentCell) ctrl.currentCell.editorOpen = true;
-        const result = await openEditorSimple(docId, ctrl.editedCellContent);
-        if (ctrl.currentCell) ctrl.currentCell.editorOpen = false;
-        if (result.type == "save" && result.text != ctrl.editedCellInitialContent) {
-            ctrl.saveCells(result.text, docId, parId, row, col);
+        if (this.currentCell) this.currentCell.editorOpen = true;
+        if (this.editedCellContent == undefined) {
+            return;
+        }
+        const result = await openEditorSimple(docId, this.editedCellContent);
+        if (this.currentCell) this.currentCell.editorOpen = false;
+        if (result.type == "save" && result.text != this.editedCellInitialContent) {
+            this.saveCells(result.text, docId, parId, row, col);
             //ctrl.cellDataMatrix[row][col] = result.text
-            ctrl.editedCellContent = result.text;
+            this.editedCellContent = result.text;
         }
         if (result.type == "cancel") {
             this.currentCell = undefined;
@@ -326,29 +321,30 @@ export class TimTableController implements IController {
      * Opens advanced editor
      */
     private openBigEditor() {
-
-        var modal: CellEntity = {
-            cell: this.editedCellContent,
+        if (this.editedCellContent == undefined) {
+            return;
         }
+
+        const modal: CellEntity = {
+            cell: this.editedCellContent,
+        };
         if (this.currentCell != undefined) this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
     }
-
 
     /**
      * Initialize celldatamatrix with the values from yaml and yaml only
      * @constructor
      */
     private InitializeCellDataMatrix() {
-        let ctrl = this;
         this.cellDataMatrix = [];
-        if (ctrl.data.table.rows)
-            ctrl.data.table.rows.forEach((item, index) => {
-                ctrl.cellDataMatrix[index] = [];
+        if (this.data.table.rows)
+            this.data.table.rows.forEach((item, index) => {
+                this.cellDataMatrix[index] = [];
                 if (item.row)
                     item.row.forEach((item2, index2) => {
                         if (item.row) {
                             let itemInRow = item.row[index2];
-                            if (isPrimitiveCell(itemInRow)) ctrl.cellDataMatrix[index][index2] = this.cellToString(itemInRow);
+                            if (isPrimitiveCell(itemInRow)) this.cellDataMatrix[index][index2] = this.cellToString(itemInRow);
                             else this.cellDataMatrix[index][index2] = this.cellToString(itemInRow.cell);
                         }
                     });
@@ -750,7 +746,7 @@ export class TimTableController implements IController {
      * Toggles the table's edit mode on or off.
      */
     public toggleEditMode() {
-        if (this.currentCell != undefined) {
+        if (this.currentCell != undefined && this.editedCellContent != undefined) {
             if (this.editedCellInitialContent != this.editedCellContent && this.viewctrl) {
                 let parId = getParId(this.element.parents(".par"));
                 if (parId)

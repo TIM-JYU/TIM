@@ -21,11 +21,11 @@ export interface IAllAnswersParams {
 
 export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}, {}, "timAllAnswers"> {
     private static $inject = ["$element", "$scope"];
-    private showSort: boolean;
-    private options: IOptions;
-    private $storage: ngStorage.StorageService & {allAnswersOptions: IOptions};
-    private datePickerOptionsFrom: EonasdanBootstrapDatetimepicker.SetOptions;
-    private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
+    private showSort: boolean = false;
+    private options!: IOptions; // $onInit
+    private $storage!: ngStorage.StorageService & {allAnswersOptions: IOptions}; // $onInit
+    private datePickerOptionsFrom!: EonasdanBootstrapDatetimepicker.SetOptions; // $onInit
+    private datePickerOptionsTo!: EonasdanBootstrapDatetimepicker.SetOptions; // $onInit
     private lastFetch: any;
 
     protected getTitle() {
@@ -47,10 +47,6 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
             periodFrom: null,
             periodTo: null,
         };
-        this.options.age = "max";
-        this.options.valid = "1";
-        this.options.name = "both";
-        this.options.sort = "username";
         this.$storage = $localStorage.$default({
             allAnswersOptions: this.options,
         });

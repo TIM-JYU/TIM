@@ -7,9 +7,15 @@ export type MenuFunctionEntry = {func: MenuFunction; desc: string; show: boolean
 export type MenuFunctionCollection = MenuFunctionEntry[];
 export const viewCtrlDot = nameofFactoryCtrl<ViewCtrl>();
 export const parMenuDot = nameofFactoryCtrl2<ViewCtrl, "parmenuHandler">("parmenuHandler");
-export const editingDot = nameofFactoryCtrl2<ViewCtrl, "editingHandler">("editingHandler");
-export const notesDot = nameofFactoryCtrl2<ViewCtrl, "notesHandler">("notesHandler");
 
 export function getEmptyCoords() {
     return {left: 0, top: 0};
+}
+
+export function createPopupMenuAttrs() {
+    return {
+        actions: viewCtrlDot("editorFunctions"),
+        save: true,
+        onclose: parMenuDot("optionsWindowClosed"),
+    };
 }

@@ -25,10 +25,8 @@ export interface IMergeParams {
 
 export class ShowMergePdfController extends DialogController<{ params: IMergeParams }, {}, "timMergePdf"> {
     private static $inject = ["$element", "$scope"];
-    private storage: ngStorage.StorageService & { timPrintingTemplateId: null | number };
     private docUrl?: string;
-    private loading: boolean;
-    private document: IItem;
+    private loading: boolean = false;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);

@@ -34,8 +34,8 @@ function isLecture(item: any): item is ILecture {
 export class CreateLectureCtrl extends DialogController<{params: ILectureFormParams}, ILecture, "timCreateLecture"> {
     private static $inject = ["$element", "$scope"];
     private useDate: boolean;
-    private durationAmount: number;
-    private durationType: DurationChoice;
+    private durationAmount: number = 2;
+    private durationType: DurationChoice = "hours";
     private lectureId?: number;
     private lectureCode: string;
     private password: string;
@@ -46,7 +46,7 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
     private endTime: moment.Moment | undefined;
     private item?: IItem;
     private options: ILectureOptions;
-    private form: IFormController;
+    private form!: IFormController; // initialized in the template
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);

@@ -888,6 +888,8 @@ class Tile {
         // Current position on the tileset image
         let currentY = 0;
         let currentX = 0;
+        this.sourceX = 0;
+        this.sourceY = 0;
 
         // Find the correct position on the tileset image
         for (let j = this.tileset.firstgid; j < this.imageIndex + 1; j++) {

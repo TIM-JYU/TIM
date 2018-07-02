@@ -7,7 +7,7 @@ class LoginMenuController implements IController {
     private loggingout: boolean;
     private form: {email: string, password: string};
     private addingToSession: boolean;
-    private korppiLoading: boolean;
+    private korppiLoading: boolean = false;
 
     constructor() {
         this.form = {email: "", password: ""};

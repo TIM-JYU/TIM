@@ -12,10 +12,10 @@ class IndexCtrl implements IController {
     private parentfolder: string;
     private itemList: IItem[];
     private item: any;
-    private showUpload: boolean;
+    private showUpload: boolean = false;
     private file: any;
     private canCreate: boolean;
-    private uploadInProgress: boolean;
+    private uploadInProgress: boolean = false;
 
     constructor() {
         this.user = $window.current_user;

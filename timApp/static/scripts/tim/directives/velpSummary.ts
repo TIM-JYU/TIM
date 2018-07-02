@@ -12,12 +12,13 @@
 import angular from "angular";
 import {IController} from "angular";
 import {timApp} from "tim/app";
+import {Binding} from "../utils";
 import {IAnnotation, IUIFields} from "./velptypes";
 
 export class VelpSummaryController implements IController {
     private settings: {selectedAll: boolean};
-    private annotations: (IAnnotation & IUIFields)[];
-    private toggleAnnotation: (params: {$ANNOTATION: IAnnotation, $SCROLL: boolean}) => void;
+    private annotations!: Binding<(IAnnotation & IUIFields)[], "<">;
+    private toggleAnnotation!: Binding<(params: {$ANNOTATION: IAnnotation, $SCROLL: boolean}) => void, "&">;
 
     constructor() {
         this.settings = {selectedAll: false};

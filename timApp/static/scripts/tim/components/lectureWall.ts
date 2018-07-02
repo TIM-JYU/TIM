@@ -4,13 +4,12 @@ import {DialogController, IModalInstance, registerDialogComponent, showDialog, s
 import {ILectureMessage} from "../lecturetypes";
 import {$http, $timeout} from "../ngimport";
 
-class LectureWallController extends DialogController<{params: {lectureId: number, messages: ILectureMessage[]}}, {}, "timLectureWall"> {
+class LectureWallController extends DialogController<{params: {messages: ILectureMessage[]}}, {}, "timLectureWall"> {
     private static $inject = ["$element", "$scope"];
     private messageName = true;
     private messageTime = true;
-    private newMsg: string;
-    private messages: ILectureMessage[];
-    private lectureId: number;
+    private newMsg: string = "";
+    private messages: ILectureMessage[] = [];
     private modalBody: HTMLElement | undefined;
     private msgCount = 0;
 
@@ -20,7 +19,6 @@ class LectureWallController extends DialogController<{params: {lectureId: number
 
     public $onInit() {
         super.$onInit();
-        this.lectureId = this.resolve.params.lectureId;
         this.messages = this.resolve.params.messages;
     }
 
@@ -148,8 +146,8 @@ registerDialogComponent(
         `,
     });
 
-export function showLectureWall(lid: number, messages: ILectureMessage[]): IModalInstance<{}> {
+export function showLectureWall(messages: ILectureMessage[]): IModalInstance<{}> {
     return showDialog<LectureWallController>("timLectureWall",
-        {params: () => ({lectureId: lid, messages})},
+        {params: () => ({messages})},
         {size: "sm"});
 }

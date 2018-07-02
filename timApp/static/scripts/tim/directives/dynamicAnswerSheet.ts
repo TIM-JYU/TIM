@@ -12,6 +12,7 @@ import {
     IUnprocessedHeaders,
 } from "../lecturetypes";
 import {ParCompiler} from "../services/parCompiler";
+import {Binding} from "../utils";
 
 /**
  * Created by localadmin on 25.5.2015.
@@ -234,15 +235,15 @@ type MatrixElement = string | number;
 class AnswerSheetController implements IController {
     private static $inject = ["$element"];
     private element: IRootElementService;
-    private questiondata?: IPreviewParams;
-    private json: IAskedJsonJson;
-    private processed: IProcessedHeaders;
-    private answerMatrix: MatrixElement[][];
+    private questiondata?: Binding<IPreviewParams, "<">;
+    private json!: IAskedJsonJson; // TODO decide if undefined should be valid
+    private processed!: IProcessedHeaders; // TODO decide if undefined should be valid
+    private answerMatrix: MatrixElement[][] = [];
     private expl?: IExplCollection;
-    private pointsTable: Array<{[p: string]: string}>;
+    private pointsTable: Array<{[p: string]: string}> = [];
     private userpoints?: number;
-    private disabled: boolean;
-    private onAnswerChange: () => (at: AnswerTable) => void;
+    private disabled?: boolean;
+    private onAnswerChange!: Binding<() => (at: AnswerTable) => void, "&">;
 
     constructor(element: IRootElementService) {
         this.element = element;

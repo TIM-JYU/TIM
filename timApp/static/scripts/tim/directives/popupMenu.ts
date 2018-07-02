@@ -5,6 +5,7 @@ import {watchEditMode} from "tim/editmode";
 import {ViewCtrl} from "../controllers/view/viewctrl";
 import {MenuFunctionCollection, MenuFunctionEntry} from "../controllers/view/viewutils";
 import {$http, $window} from "../ngimport";
+import {Binding, Require} from "../utils";
 import {DraggableController} from "./draggable";
 
 export type EditMode = "par" | "area";
@@ -13,38 +14,34 @@ export class PopupMenuController implements IController {
     private static $inject = ["$scope", "$element"];
     private model: {editState: EditMode | null};
     public element: IRootElementService;
-    private contenturl: string;
-    private srcid: string;
-    private $pars: JQuery;
-    private editcontext: string | null;
-    private editbutton: boolean;
+    private contenturl!: Binding<string, "@">;
+    private srcid!: Binding<string, "@">;
+    private $pars!: JQuery; // $onInit
+    private editcontext?: Binding<string, "@">;
+    private editbutton?: Binding<boolean, "@">;
     private areaEditButton: boolean;
-    private onClose: (pars: JQuery) => void;
-    private colClass: string;
-    private halfColClass: string;
-    private vctrl: ViewCtrl;
-    private save: boolean;
+    private onClose!: Binding<(pars: JQuery) => void, "&">;
+    private colClass?: string;
+    private halfColClass?: string;
+    private vctrl!: Require<ViewCtrl>;
+    private save?: Binding<boolean, "<">;
     private scope: IScope;
-    private actions: MenuFunctionCollection;
-    private draggable: DraggableController | undefined;
+    private actions?: Binding<MenuFunctionCollection, "<">;
+    private draggable: Require<DraggableController | undefined>;
 
     constructor(scope: IScope, element: IRootElementService) {
         this.element = element;
         this.scope = scope;
+        this.model = {editState: $window.editMode};
+        this.areaEditButton = false;
     }
 
     $onInit() {
         this.vctrl.registerPopupMenu(this);
         this.$pars = $(this.srcid);
-        this.editbutton = false;
-        this.areaEditButton = false;
-
         this.getContent(this.contenturl);
         this.colClass = this.save ? "col-xs-10" : "col-xs-12";
         this.halfColClass = this.save ? "col-xs-5" : "col-xs-6";
-
-        this.model = {editState: $window.editMode};
-
         this.scope.$watch(() => this.model.editState, watchEditMode);
         this.scope.$watch(() => this.model.editState, (newEditMode, oldEditMode) => this.watchEditMode(newEditMode, oldEditMode));
     }
@@ -83,7 +80,7 @@ export class PopupMenuController implements IController {
             return;
         }
         if (this.vctrl.defaultAction && this.vctrl.defaultAction.desc === f.desc) {
-            this.vctrl.defaultAction = null;
+            this.vctrl.defaultAction = undefined;
             this.vctrl.$storage.defaultAction = null;
         } else {
             this.vctrl.defaultAction = f;
@@ -123,8 +120,8 @@ timApp.component("popupMenu", {
         actions: "=",
         areaEditButton: "<",
         contenturl: "@",
-        editbutton: "@",
-        editcontext: "@",
+        editbutton: "<?",
+        editcontext: "@?",
         onClose: "&",
         save: "<?",
         srcid: "@",

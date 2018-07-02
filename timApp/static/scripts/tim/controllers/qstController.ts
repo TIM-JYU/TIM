@@ -11,6 +11,7 @@ import {$http} from "../ngimport";
 import {LectureController} from "./lectureController";
 import {showQuestionAskDialog} from "./questionAskController";
 import {getParId} from "./view/parhelpers";
+import {Binding} from "../utils";
 
 export interface IQstAttributes {
     markup: IQuestionMarkup;
@@ -28,28 +29,31 @@ export interface IQstAttributes {
 
 class QstController implements IController {
     private static $inject = ["$element"];
-    private error: string;
-    private isRunning: boolean;
-    private result: string;
+    private error?: string;
+    private isRunning: boolean = false;
+    private result?: string;
     private taskId?: string;
     private errors: string[];
     private lctrl?: LectureController;
-    private isLecturer: boolean;
+    private isLecturer: boolean = false;
     private preclass: string;
     private plugin?: string;
-    private json: string;
+    private json!: Binding<string, "@">;
     private cursor: string;
     private element: IRootElementService;
-    private attrs: IQstAttributes;
-    private preview: IPreviewParams;
-    private button: string;
-    private resetText: string;
-    private stem: string;
-    private newAnswer: AnswerTable;
+    private attrs!: IQstAttributes; // $onInit
+    private preview!: IPreviewParams; // $onInit
+    private button: string = "";
+    private resetText: string = "";
+    private stem: string = "";
+    private newAnswer: AnswerTable = [];
 
     constructor($element: IRootElementService) {
         this.element = $element;
         this.updateAnswer = this.updateAnswer.bind(this);
+        this.errors = [];
+        this.preclass = "qst";
+        this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
     }
 
     public $onInit() {
@@ -57,9 +61,7 @@ class QstController implements IController {
         this.attrs = JSON.parse(this.json);
         // console.log(this.attrs);
         this.preview = makePreview(this.attrs.markup, {answerTable: this.attrs.state || [], enabled: !this.attrs.markup.invalid});
-        this.errors = [];
         this.result = "";
-        this.preclass = "qst";
         this.button = this.attrs.markup.button || "Save";
         this.resetText = this.attrs.markup.resetText || "Reset";
         this.stem = this.attrs.markup.stem || "";
@@ -67,7 +69,6 @@ class QstController implements IController {
     }
 
     public $postLink() {
-        this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
         this.plugin = this.element.parent().attr("data-plugin");
         this.taskId = this.element.parent().attr("id");
     }

@@ -141,12 +141,11 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private rows: IExtendedRow[];
     private columns: Array<{}>;
     private columnHeaders: IHeader[];
-    private titleChanged: boolean;
+    private titleChanged: boolean = false;
     private oldMarkupJson: string;
-    private oldHeaders: string[];
-    private answer: string;
+    private oldHeaders?: string[];
     private previewParams: IPreviewParams;
-    private customError: string | null;
+    private customError: string | undefined;
     private f?: IFormController;
     private qst = false;
 
@@ -643,7 +642,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         this.setTime();
 
         this.rows = [];
-        this.answer = "";
         this.columnHeaders = [];
     }
 
@@ -749,7 +747,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         if (this.question.questionTitle == "") {
             this.question.questionTitle = "Untitled";
         }
-        this.customError = null;
+        this.customError = undefined;
         if (this.rows.length > 0) {
             if ((this.question.questionType === "radio-vertical" /*|| this.question.type === "checkbox-vertical"*/) && this.rows.length < 2) {
                 this.customError = "You must have at least two choices.";

@@ -12,7 +12,7 @@ import {IUser} from "../IUser";
 import {$compile, $filter, $http, $timeout, $window} from "../ngimport";
 import {ParCompiler} from "../services/parCompiler";
 import {Users} from "../services/userService";
-import {markAsUsed} from "../utils";
+import {Binding, markAsUsed, Require} from "../utils";
 
 markAsUsed(allanswersctrl);
 
@@ -56,8 +56,8 @@ export class AnswerBrowserLazyController implements IController {
     private static $inject = ["$element", "$scope"];
     private compiled: boolean;
     private element: IRootElementService;
-    private viewctrl: ViewCtrl;
-    private taskId: string;
+    private viewctrl!: Require<ViewCtrl>;
+    private taskId!: Binding<string, "@">;
     private scope: IScope;
 
     constructor($element: IRootElementService, scope: IScope) {
@@ -124,26 +124,26 @@ interface ITaskInfo {
 export class AnswerBrowserController implements IController {
     private static $inject = ["$scope", "$element"];
     private element: JQuery;
-    private taskId: string;
+    private taskId!: Binding<string, "@">;
     private loading: number;
-    private viewctrl: ViewCtrl;
-    private rctrl: ReviewController;
+    private viewctrl!: Require<ViewCtrl>;
+    private rctrl!: Require<ReviewController>;
     private parContent: JQuery;
     private user: IUser | undefined;
     private fetchedUser: IUser | undefined;
-    private firstLoad: boolean;
-    private shouldUpdateHtml: boolean;
-    private saveTeacher: boolean;
-    private users: IUser[] | null;
-    private answers: IAnswer[];
-    private filteredAnswers: IAnswer[];
-    private onlyValid: boolean;
+    private firstLoad: boolean = true;
+    private shouldUpdateHtml?: boolean;
+    private saveTeacher: boolean = false;
+    private users: IUser[] | undefined;
+    private answers: IAnswer[] = [];
+    private filteredAnswers: IAnswer[] = [];
+    private onlyValid: boolean = true;
     public selectedAnswer: IAnswer | undefined;
-    private anyInvalid: boolean;
-    private giveCustomPoints: boolean;
-    private review: boolean;
-    private shouldFocus: boolean;
-    private alerts: {}[];
+    private anyInvalid: boolean = false;
+    private giveCustomPoints: boolean = false;
+    private review: boolean = false;
+    private shouldFocus: boolean = false;
+    private alerts: {}[] = [];
     private taskInfo: ITaskInfo | undefined;
     private points: number | undefined;
     private scope: IScope;
@@ -203,7 +203,7 @@ export class AnswerBrowserController implements IController {
             this.dimPlugin();
         }
         this.saveTeacher = false;
-        this.users = null;
+        this.users = undefined;
         this.answers = [];
         this.filteredAnswers = [];
         this.onlyValid = true;

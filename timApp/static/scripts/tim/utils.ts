@@ -201,6 +201,21 @@ export interface IBounds {
     bottom: number;
 }
 
+export interface ISize {
+    width: number;
+    height: number;
+}
+
+export type OptionalBinding = "<?" | "@?" | "=?";
+
+export type MandatoryBinding = "<" | "@" | "=" | "&";
+
+export type BindingType = MandatoryBinding | OptionalBinding;
+
+export type Binding<T, Type extends BindingType> = T;
+
+export type Require<T> = Binding<T, "<">;
+
 export function getOutOffsetFully(el: Element): IBounds {
     const rect = el.getBoundingClientRect();
     const bounds = {left: 0, top: 0, right: 0, bottom: 0};

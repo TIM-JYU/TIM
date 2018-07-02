@@ -289,8 +289,8 @@ export class ClipboardHandler {
                 $window.alert(e.data.error);
                 return;
             }
-            this.viewctrl.selection.start = null;
-            this.viewctrl.selection.end = null;
+            this.viewctrl.selection.start = undefined;
+            this.viewctrl.selection.end = undefined;
 
             if (docId === this.viewctrl.docId) {
                 const doc_ver = response.data.doc_ver;
@@ -318,8 +318,8 @@ export class ClipboardHandler {
                 $window.alert(e.data.error);
                 return;
             }
-            this.viewctrl.selection.start = null;
-            this.viewctrl.selection.end = null;
+            this.viewctrl.selection.start = undefined;
+            this.viewctrl.selection.end = undefined;
             this.viewctrl.allowPasteContent = true;
             this.viewctrl.allowPasteRef = true;
         }

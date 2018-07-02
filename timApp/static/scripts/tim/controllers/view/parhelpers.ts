@@ -13,7 +13,7 @@ export function createNewPar(): Paragraph {
         .append($("<div>", {class: "parContent"}).html("New paragraph"));
 }
 
-export function getParId($par: Paragraph | null): string | undefined {
+export function getParId($par: Paragraph | null | undefined): string | undefined {
     if ($par == null || $par.length === 0 || !$par.hasClass("par")) {
         return;
     }

@@ -1,7 +1,7 @@
 import {IController, IFormController} from "angular";
 import {timApp} from "tim/app";
 import {$http} from "../ngimport";
-import {clone} from "../utils";
+import {Binding, clone, Require} from "../utils";
 import {VelpSelectionController} from "./velpSelection";
 import {ILabel, ILabelUI, INewLabel, IVelp, IVelpGroup, IVelpGroupUI, IVelpUI} from "./velptypes";
 
@@ -25,21 +25,21 @@ export let colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "corn
  * @lends module:velpWindow
  */
 export class VelpWindowController implements IController {
-    private onVelpSelect: (params: {$VELP: IVelp}) => void;
+    private onVelpSelect!: Binding<(params: {$VELP: IVelp}) => void, "&">;
     private velpLocal: IVelp;
-    private velp: IVelpUI;
+    private velp!: Binding<IVelpUI, "<">;
     private newLabel: INewLabel;
     private labelToEdit: INewLabel;
     private visible_options: {type: string; title: string; values: [number, number, number, number]; names: [string, string, string, string]};
     private settings: {teacherRightsError: string; labelContentError: string; velpGroupError: string; velpGroupWarning: string; velpContentError: string};
     private submitted: boolean;
     private hasEditAccess: boolean;
-    private new: boolean;
-    private velpGroups: IVelpGroupUI[];
-    private velpSelection: VelpSelectionController;
-    private labels: ILabelUI[];
-    private docId: number;
-    private teacherRight: boolean;
+    private new!: Binding<boolean, "<">;
+    private velpGroups!: Binding<IVelpGroupUI[], "<">;
+    private velpSelection!: Require<VelpSelectionController>;
+    private labels!: Binding<ILabelUI[], "<">;
+    private docId!: Binding<number, "<">;
+    private teacherRight!: Binding<boolean, "<">;
 
     constructor() {
         this.velpLocal = JSON.parse(JSON.stringify(this.velp)); // clone object

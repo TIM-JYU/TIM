@@ -21,7 +21,7 @@ function selectArea(areaName: string, className: string, selected: boolean) {
 }
 
 export class AreaHandler {
-    public selectedAreaName: string;
+    public selectedAreaName: string | undefined;
     public sc: IScope;
     public viewctrl: ViewCtrl;
 
@@ -147,8 +147,8 @@ export class AreaHandler {
     }
 
     cancelArea() {
-        this.viewctrl.selection.start = null;
-        this.viewctrl.selection.end = null;
+        this.viewctrl.selection.start = undefined;
+        this.viewctrl.selection.end = undefined;
     }
 
     async removeAreaMarking(e: Event, $pars: Paragraph) {

@@ -9,7 +9,7 @@ interface ISettings {
 }
 
 export class SettingsCtrl implements IController {
-    private saving: boolean;
+    private saving: boolean = false;
     private style: HTMLElementTagNameMap["style"];
     private settings: ISettings;
 

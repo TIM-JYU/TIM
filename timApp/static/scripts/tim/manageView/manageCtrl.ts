@@ -6,6 +6,7 @@ import {IItem} from "../IItem";
 import {$http, $log, $timeout, $upload, $window} from "../ngimport";
 import {markAsUsed, to} from "../utils";
 import * as copyFolder from "./copyFolder";
+import {showMessageDialog} from "../dialog";
 
 markAsUsed(copyFolder);
 
@@ -29,44 +30,46 @@ export class PermCtrl implements IController {
     private wikiRoot: string;
     private newTitle: string;
     private newFolderName: string;
-    private hasMoreChangelog: boolean;
-    private translations: (IItem & {old_title: string})[];
+    private hasMoreChangelog?: boolean;
+    private translations: (IItem & {old_title: string})[] = [];
     private newTranslation: {language: string, title: string};
     private accessTypes: {}[];
     private item: IItem;
-    private newName: string;
-    private oldFolderName: string;
-    private oldName: string;
-    private fulltext: string;
-    private changelogLoading: boolean;
+    private newName?: string;
+    private oldFolderName?: string;
+    private oldName?: string;
+    private fulltext?: string;
+    private changelogLoading: boolean = false;
     private newAlias: {location: string};
     private copyParams: {copy: number};
     private citeParams: {cite: number};
-    private aliases: IItem[];
-    private old_title: string;
-    private fileUploadError: string | null;
-    private tracWikiText: string;
-    private saving: boolean;
-    private readUpdating: boolean;
+    private aliases: IItem[] = [];
+    private old_title?: string;
+    private fileUploadError: string | undefined;
+    private tracWikiText: string = "";
+    private saving: boolean = false;
+    private readUpdating: boolean = false;
     private file: any;
-    private newAliasForm: IFormController;
-    private notifySettings: {};
+    private newAliasForm!: IFormController; // initialized in the template
+    private notifySettings: {} = {};
     private objName: string;
 
-    $onInit() {
-        this.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
+    constructor() {
+        this.newTranslation = {language: "", title: ""};
         this.accessTypes = $window.accessTypes;
         this.item = $window.item;
         this.objName = $window.objName;
-        this.hasMoreChangelog = true;
         this.newFolderName = this.item.location;
-        this.newTitle = this.item.title;
         this.newAlias = {location: this.newFolderName};
+        this.wikiRoot = "https://trac.cc.jyu.fi/projects/ohj2/wiki/"; // Todo: replace something remembers users last choice
+        this.hasMoreChangelog = true;
+        this.newTitle = this.item.title;
         this.copyParams = {copy: this.item.id};
         this.citeParams = {cite: this.item.id};
         this.translations = [];
-        this.newTranslation = {language: "", title: ""};
+    }
 
+    async $onInit() {
         if (this.item.isFolder) {
             this.newName = this.item.name;
             this.newFolderName = this.item.location;
@@ -77,7 +80,7 @@ export class PermCtrl implements IController {
             this.item.fulltext = this.item.fulltext.trim();
             this.fulltext = this.item.fulltext;
             if (this.item.rights.manage) {
-                this.aliases = this.getAliases();
+                await this.getAliases();
             }
             if (this.item.rights.manage) {
                 this.translations = this.getTranslations();
@@ -98,25 +101,20 @@ export class PermCtrl implements IController {
         });
     }
 
-    getAliases() {
-        $http.get<IItem[]>("/alias/" + this.item.id, {}).then((response) => {
-            const data = response.data;
-            if (this.aliases.length > 0 &&
-                data.length > 0 &&
-                data[0].path !== this.aliases[0].path) {
-                // The first name has changed, reload to update the links
-                $window.location.replace("/manage/" + data[0].path);
-            } else {
-                this.aliases = data;
-            }
-            // mark the form pristine; otherwise it will complain about required field unnecessarily
-            this.newAliasForm.$setPristine();
-            this.newAlias = {location: this.item.location};
-        }, (response) => {
-            $window.alert("Error loading aliases: " + response.data.error);
-        });
-
-        return [];
+    async getAliases() {
+        const response = await $http.get<IItem[]>("/alias/" + this.item.id, {});
+        const data = response.data;
+        if (this.aliases && this.aliases.length > 0 &&
+            data.length > 0 &&
+            data[0].path !== this.aliases[0].path) {
+            // The first name has changed, reload to update the links
+            $window.location.replace("/manage/" + data[0].path);
+        } else {
+            this.aliases = data;
+        }
+        // mark the form pristine; otherwise it will complain about required field unnecessarily
+        this.newAliasForm.$setPristine();
+        this.newAlias = {location: this.item.location};
     }
 
     getTranslations() {
@@ -177,14 +175,15 @@ export class PermCtrl implements IController {
         }
     }
 
-    changeTitle() {
-        $http.put("/changeTitle/" + this.item.id, {
+    async changeTitle() {
+        if (!this.newTitle) {
+            showMessageDialog("Title not provided.");
+            return;
+        }
+        await $http.put("/changeTitle/" + this.item.id, {
             new_title: this.newTitle,
-        }).then((response) => {
-            this.syncTitle(this.newTitle);
-        }, (response) => {
-            $window.alert(response.data.error);
         });
+        this.syncTitle(this.newTitle);
     }
 
     renameFolder(newName: string) {
@@ -226,18 +225,18 @@ export class PermCtrl implements IController {
     addAlias(newAlias: IAlias) {
         $http.put("/alias/" + this.item.id + "/" + $window.encodeURIComponent(this.combine(newAlias.location || "", newAlias.name)), {
             public: Boolean(newAlias.public),
-        }).then((response) => {
+        }).then(async (response) => {
             const data = response.data;
-            this.getAliases();
+            await this.getAliases();
         }, (response) => {
             $window.alert(response.data.error);
         });
     }
 
     removeAlias(alias: IAlias) {
-        $http.delete("/alias/" + $window.encodeURIComponent(alias.path), {}).then((response) => {
+        $http.delete("/alias/" + $window.encodeURIComponent(alias.path), {}).then(async (response) => {
             const data = response.data;
-            this.getAliases();
+            await this.getAliases();
         }, (response) => {
             $window.alert(response.data.error);
         });
@@ -248,11 +247,11 @@ export class PermCtrl implements IController {
         $http.post("/alias/" + $window.encodeURIComponent(alias.path), {
             public: Boolean(alias.public),
             new_name: new_alias,
-        }).then((response) => {
+        }).then(async (response) => {
             const data = response.data;
 
             if (!first || new_alias === alias.path) {
-                this.getAliases();
+                await this.getAliases();
             } else {
                 location.replace("/manage/" + new_alias);
             }
@@ -288,7 +287,7 @@ export class PermCtrl implements IController {
 
     updateDocument(file: any) {
         this.file = file;
-        this.fileUploadError = null;
+        this.fileUploadError = undefined;
         if (file) {
             this.file.progress = 0;
             file.upload = $upload.upload({
@@ -323,6 +322,10 @@ export class PermCtrl implements IController {
     }
 
     convertDocument(doc: string) {
+        if (!this.wikiRoot) {
+            showMessageDialog("Wiki root missing.");
+            return;
+        }
         let text = this.tracWikiText;
         const wikiSource = this.wikiRoot.replace("wiki", "browser");
         //var text = this.fulltext;

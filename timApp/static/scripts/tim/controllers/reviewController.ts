@@ -2,6 +2,7 @@ import angular, {IController, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {showMessageDialog} from "../dialog";
+import {AnnotationController} from "../directives/annotation";
 import {AnswerBrowserController, AnswerBrowserLazyController} from "../directives/answerbrowser3";
 import {VelpSelectionController} from "../directives/velpSelection";
 import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVelp} from "../directives/velptypes";
@@ -10,16 +11,15 @@ import {IItem} from "../IItem";
 import {$compile, $http, $timeout, $window} from "../ngimport";
 import {
     angularWait,
-    assertIsText,
+    assertIsText, Binding,
     checkIfElement,
     getElementParent,
-    isInViewport,
+    isInViewport, Require,
     scrollToElement,
-    stringOrNull
+    stringOrNull,
 } from "../utils";
 import {addElementToParagraphMargin} from "./view/parhelpers";
 import {ViewCtrl} from "./view/viewctrl";
-import {AnnotationController} from "../directives/annotation";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
@@ -51,11 +51,11 @@ export class ReviewController implements IController {
     public zIndex: number;
     public docId: number;
     private scope: IScope;
-    private velpBadge: HTMLElementTagNameMap["input"];
-    private velpBadgePar: string;
-    private vctrl: ViewCtrl;
-    private velpSelection: VelpSelectionController;
-    private onInit: (params: {$SCOPE: IScope}) => void;
+    private velpBadge?: HTMLElementTagNameMap["input"];
+    private velpBadgePar?: string;
+    private vctrl!: Require<ViewCtrl>;
+    private velpSelection!: VelpSelectionController; // initialized through onInit
+    private onInit!: Binding<(params: {$SCOPE: IScope}) => void, "&">;
     private velpMode: boolean;
 
     constructor(scope: IScope) {

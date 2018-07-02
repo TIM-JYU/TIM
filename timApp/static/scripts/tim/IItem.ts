@@ -16,7 +16,7 @@ export interface IItem {
 
 export interface ITag {
     block_id: number;
-    expires: Moment;
+    expires?: Moment;
     type: TagType;
     name: string;
 }

@@ -3,27 +3,32 @@
  */
 
 import {IFormController, IRootElementService, IScope} from "angular";
+import {Moment} from "moment";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {ICourseSettings, IItem, ISubjectList, ITag, TagType} from "../IItem";
-import {to} from "../utils";
 import {$http} from "../ngimport";
-import {Moment} from "moment";
+import {to} from "../utils";
 
 export class ShowCourseDialogController extends DialogController<{ params: IItem }, {}, "timCourseDialog"> {
     private static $inject = ["$element", "$scope"];
-    private f: IFormController;
-    private courseSubject: string;
-    private courseCode: string;
+    private f!: IFormController; // initialized in the template
+    private courseSubject: string = "";
+    private courseCode: string = "";
     private expires: Moment | undefined;
-    private errorMessage: string;
-    private successMessage: string;
-    private subjects: ISubjectList;
+    private errorMessage?: string;
+    private successMessage?: string;
+    private subjects?: ISubjectList;
     private datePickerOptions: EonasdanBootstrapDatetimepicker.SetOptions;
     private currentCode: ITag | undefined;
     private currentSubject: ITag | undefined;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
+        this.datePickerOptions = {
+            defaultDate: "",
+            format: "D.M.YYYY HH:mm:ss",
+            showTodayButton: true,
+        };
     }
 
     // TODO: Support multiple subjects/codes.
@@ -34,11 +39,6 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     async $onInit() {
         super.$onInit();
         await this.getSubjects();
-        this.datePickerOptions = {
-            defaultDate: "",
-            format: "D.M.YYYY HH:mm:ss",
-            showTodayButton: true,
-        };
         await this.getCurrentSpecialTags();
         this.updateFields();
     }
@@ -79,14 +79,14 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
         const [err, response] = await to($http.post(`/tags/remove/${docPath}`, data));
         if (err) {
             this.errorMessage = err.data.error;
-            this.successMessage = "";
+            this.successMessage = undefined;
             return;
         }
         const data2 = {tagObject: this.currentCode};
         const [err2, response2] = await to($http.post(`/tags/remove/${docPath}`, data2));
         if (err2) {
             this.errorMessage = err2.data.error;
-            this.successMessage = "";
+            this.successMessage = undefined;
             return;
         }
         this.currentSubject = undefined;
@@ -115,7 +115,7 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     private async unregisterCourse() {
         await this.removeCurrentSpecialTags();
         this.updateFields();
-        this.errorMessage = "";
+        this.errorMessage = undefined;
         this.successMessage = "Course code and subject successfully removed";
     }
 
@@ -130,12 +130,12 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
         const docPath = this.resolve.params.path;
         if (!this.courseCode) {
             this.errorMessage = "Course code required!";
-            this.successMessage = "";
+            this.successMessage = undefined;
             return;
         }
         if (!this.courseSubject) {
             this.errorMessage = "Course subject required!";
-            this.successMessage = "";
+            this.successMessage = undefined;
             return;
         }
 
@@ -156,11 +156,11 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
 
         if (err) {
             this.errorMessage = err.data.error;
-            this.successMessage = "";
+            this.successMessage = undefined;
             return;
         }
         if (response) {
-            this.errorMessage = "";
+            this.errorMessage = undefined;
             this.successMessage = `'${codeName}' successfully added as a '${this.courseSubject}' course.`;
             await this.getCurrentSpecialTags();
             return;
@@ -177,7 +177,7 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
         }
         if (err) {
             this.errorMessage = err.data.error;
-            this.successMessage = "";
+            this.successMessage = undefined;
             return;
         }
     }

@@ -1,10 +1,11 @@
 import {IController, IScope} from "angular";
-import moment, {Moment, Duration} from "moment";
+import moment, {Duration, Moment} from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/directives/focusMe";
-import {markAsUsed} from "tim/utils";
-import {$http, $window} from "../ngimport";
+import {Binding, markAsUsed} from "tim/utils";
 import {durationTypes} from "../components/durationPicker";
+import {showMessageDialog} from "../dialog";
+import {$http, $window} from "../ngimport";
 
 markAsUsed(focusMe);
 
@@ -45,14 +46,14 @@ class RightsEditorController implements IController {
     private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsDurationFrom: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsDurationTo: EonasdanBootstrapDatetimepicker.SetOptions;
-    private accessTypes: IAccessType[];
-    private accessType: IAccessType;
-    private addingRight: boolean;
-    private focusEditor: boolean;
-    private urlRoot: string;
-    private itemId: number;
-    private listMode: boolean;
-    private groupName: string;
+    private accessTypes: Binding<IAccessType[] | undefined, "<">;
+    private accessType: IAccessType | undefined;
+    private addingRight: boolean = false;
+    private focusEditor: boolean = false;
+    private urlRoot: Binding<string | undefined, "<">;
+    private itemId: Binding<number | undefined, "<">;
+    private listMode: boolean = false;
+    private groupName: string | undefined;
     private scope: IScope;
 
     constructor(scope: IScope) {
@@ -79,12 +80,12 @@ class RightsEditorController implements IController {
             format: "D.M.YYYY HH:mm:ss",
             showTodayButton: true,
         };
-        if (this.accessTypes) {
-            this.accessType = this.accessTypes[0];
-        }
     }
 
     $onInit() {
+        if (this.accessTypes) {
+            this.accessType = this.accessTypes[0];
+        }
         this.getPermissions();
 
         // TODO make duration editor its own component
@@ -210,6 +211,10 @@ class RightsEditorController implements IController {
     }
 
     expireRight(group: IRight) {
+        if (!this.accessType) {
+            void showMessageDialog("Access type not selected.");
+            return;
+        }
         this.editRight(group);
         this.timeOpt.to = moment();
         this.timeOpt.type = "range";

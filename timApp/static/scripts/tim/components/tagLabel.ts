@@ -4,9 +4,10 @@
 
 import {IController} from "angular";
 import {timApp} from "../app";
+import {Binding} from "../utils";
 
 class TagLabelCtrl implements IController {
-    public tagText: string;
+    public tagText!: Binding<string, "<">;
 }
 
 timApp.component("tagLabel", {

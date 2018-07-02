@@ -2,9 +2,10 @@ import {IController} from "angular";
 import {timApp} from "../app";
 import {LectureController} from "../controllers/lectureController";
 import {getItem, IItem} from "../IItem";
+import {Require} from "../utils";
 
 class LectureMenuController implements IController {
-    private lctrl: LectureController;
+    private lctrl!: Require<LectureController>;
     private item: IItem | undefined;
 
     async $onInit() {

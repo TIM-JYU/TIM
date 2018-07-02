@@ -1,17 +1,18 @@
 import {IController, IRootElementService} from "angular";
 import {timApp} from "tim/app";
 import {$http} from "../ngimport";
+import {Binding} from "../utils";
 
 class RefPopupController implements IController {
     private static $inject = ["$element"];
     private loaded: boolean;
-    private ref_loaded: boolean;
-    private docid: string;
-    private parid: string;
-    private error: string;
-    private doc_name: string;
-    private doc_author: string;
-    private par_name: string;
+    private ref_loaded: boolean = false;
+    private docid!: Binding<string, "@">;
+    private parid!: Binding<string, "@">;
+    private error?: string;
+    private doc_name?: string;
+    private doc_author?: string;
+    private par_name?: string;
     private element: IRootElementService;
 
     constructor(element: IRootElementService) {

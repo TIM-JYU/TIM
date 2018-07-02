@@ -39,20 +39,20 @@ export let currentQuestion: AnswerToQuestionController | undefined;
 
 export class AnswerToQuestionController extends DialogController<{params: IAnswerQuestionParams}, IAnswerQuestionResult, "timAnswerQuestion"> {
     private static $inject = ["$element", "$scope"];
-    private barFilled: number;
-    private progressText: string;
+    private barFilled?: number;
+    private progressText?: string;
     private isLecturer = false;
-    private askedTime: Moment;
+    private askedTime?: Moment;
     private endTime?: Moment;
-    private progressMax: number;
+    private progressMax?: number;
     private answered = false;
-    private buttonText: string;
-    private result: boolean;
-    private question: IAskedQuestion;
+    private buttonText: string = "Answer";
+    private result?: boolean;
+    private question!: IAskedQuestion; // $onInit
     private clockOffset = moment.duration(0, "milliseconds");
-    private preview: IPreviewParams;
-    private questionEnded: boolean;
-    private answer: AnswerTable;
+    private preview!: IPreviewParams; // $onInit
+    private questionEnded: boolean = false;
+    private answer?: AnswerTable;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -205,7 +205,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
      */
     private async updateBar(updateInterval: number) {
         // TODO: Problem with inactive tab.
-        if (!this.endTime) {
+        if (!this.endTime || !this.progressMax) {
             return;
         }
         while (true) {
@@ -269,7 +269,6 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
             this.endTime = this.askedTime.clone().add(this.question.json.json.timeLimit, "seconds").subtract(this.clockOffset);
         }
         this.isLecturer = this.resolve.params.isLecturer;
-        this.buttonText = "Answer"; // TODO: Make configurable
 
         if (!this.result) {
             this.barFilled = 0;

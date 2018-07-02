@@ -5,7 +5,7 @@ import uiGrid from "ui-grid";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {IUser} from "../IUser";
 import {$timeout} from "../ngimport";
-import {markAsUsed} from "../utils";
+import {Binding, markAsUsed, Require} from "../utils";
 import {showAllAnswers} from "./allAnswersController";
 import {ViewCtrl} from "./view/viewctrl";
 
@@ -19,13 +19,13 @@ export interface IExportOptions {
 
 export class UserListController implements IController {
     private static $inject = ["$scope", "$element"];
-    private gridOptions: uiGrid.IGridOptions & {gridMenuCustomItems: any};
+    private gridOptions?: uiGrid.IGridOptions & {gridMenuCustomItems: any};
     private scope: IScope;
-    private gridApi: uiGrid.IGridApiOf<IUser>;
-    private instantUpdate: boolean;
-    private columns: Array<uiGrid.IColumnDefOf<IUser>>;
-    private onUserChange: (params: {$USER: IUser, $UPDATEALL: boolean}) => void;
-    private viewctrl: ViewCtrl;
+    private gridApi?: uiGrid.IGridApiOf<IUser>;
+    private instantUpdate: boolean = false;
+    private columns!: Array<uiGrid.IColumnDefOf<IUser>>; // $onInit
+    private onUserChange!: Binding<(params: {$USER: IUser, $UPDATEALL: boolean}) => void, "&">;
+    private viewctrl!: Require<ViewCtrl>;
     private element: IRootElementService;
 
     constructor(scope: IScope, element: IRootElementService) {
@@ -104,12 +104,12 @@ export class UserListController implements IController {
                 gridApi.selection.on.rowSelectionChanged(this.scope, (row) => {
                     this.fireUserChange(row, this.instantUpdate);
                 });
-                if (this.gridOptions.data) {
+                if (this.gridOptions && this.gridOptions.data) {
                     gridApi.grid.modifyRows(this.gridOptions.data as any[]);
                     gridApi.selection.selectRow(this.gridOptions.data[0]);
                 }
                 gridApi.cellNav.on.navigate(this.scope, (newRowCol, oldRowCol) => {
-                    this.gridApi.selection.selectRow(newRowCol.row.entity);
+                    gridApi.selection.selectRow(newRowCol.row.entity);
                 });
             },
             gridMenuCustomItems: [
@@ -169,6 +169,9 @@ export class UserListController implements IController {
         if (!options.taskPointField && !options.velpPointField && !options.totalPointField) {
             return;
         }
+        if (!this.gridApi) {
+            throw new Error("gridApi was not initialized");
+        }
         const data = this.gridApi.core.getVisibleRows(this.gridApi.grid);
         let dataKorppi = "";
 
@@ -215,7 +218,7 @@ export class UserListController implements IController {
 timApp.component("timUserList", {
     bindings: {
         onUserChange: "&",
-        users: "<",
+        users: "<", // unused?
     },
     controller: UserListController,
     require: {
@@ -237,7 +240,7 @@ timApp.component("timUserList", {
 
 export class KorppiExportCtrl extends DialogController<{}, IExportOptions, "timKorppiExport"> {
     private static $inject = ["$element", "$scope"];
-    private options: IExportOptions;
+    private options: IExportOptions = {totalPointField: "", velpPointField: "", taskPointField: ""};
 
     protected getTitle() {
         return "Export to Korppi";

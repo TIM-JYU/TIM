@@ -63,8 +63,8 @@ timApp.component("timErrorMessage", {
         errState: "?^timErrorState",
     },
     controller: class implements IController {
-        private for: INgModelController;
-        private errState: ErrorStateCtrl;
+        private for: INgModelController | undefined;
+        private errState: ErrorStateCtrl | undefined;
 
         async $onInit() {
             if (!this.for) {
@@ -105,7 +105,7 @@ timApp.component("timAlert", {
         severity: "@?",
     },
     controller: class {
-        private severity: string;
+        private severity: string | undefined;
 
         $onInit() {
             if (!this.severity) {

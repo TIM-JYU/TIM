@@ -1,13 +1,13 @@
 import {IController} from "angular";
-import {to} from "tim/utils";
+import {Binding, to} from "tim/utils";
 import {timApp} from "../app";
 import {showMessageDialog} from "../dialog";
 import {IItem} from "../IItem";
 import {$http, $window} from "../ngimport";
 
 class TemplateListCtrl implements IController {
-    private doc: IItem;
-    private templateList: IItem[];
+    private doc!: Binding<IItem, "<">;
+    private templateList: IItem[] = [];
 
     private async loadTemplate(t: IItem) {
         const [err] = await to($http.post("/update/" + this.doc.id, {

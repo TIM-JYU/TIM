@@ -126,7 +126,7 @@ export class EditingHandler {
         this.viewctrl.editing = false;
         this.viewctrl.addParagraphFunctions = this.getAddParagraphFunctions();
 
-        this.viewctrl.selection = {start: null, end: null, pars: null};
+        this.viewctrl.selection = {};
 
         sc.$watchGroup([
             () => this.viewctrl.selection.start,
@@ -439,6 +439,9 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
             // when replacing
             const $endpar = position.pars.last();
             $par.nextUntil($endpar).add($endpar).remove();
+        }
+        if (!this.viewctrl.reviewCtrlScope) {
+            throw new Error("reviewCtrlScope was undefined");
         }
         const $newPars = $($compile(data.texts)(this.viewctrl.reviewCtrlScope, undefined,
             {

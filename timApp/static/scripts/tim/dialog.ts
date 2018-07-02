@@ -5,17 +5,17 @@ import {timApp} from "./app";
 import * as dg from "./directives/draggable";
 import {DraggableController} from "./directives/draggable";
 import {$rootScope, $templateCache, $uibModal, $window} from "./ngimport";
-import {markAsUsed} from "./utils";
+import {Binding, markAsUsed, Require} from "./utils";
 
 markAsUsed(dg);
 
 export abstract class DialogController<T, Ret, ComponentName extends string> implements IController {
-    public readonly component: ComponentName;
-    public readonly ret: Ret;
-    public readonly resolve: T;
+    public readonly component!: ComponentName; // only used for typing
+    public readonly ret!: Ret; // only used for typing
+    public readonly resolve!: Binding<T, "<">;
     protected closed = false;
-    protected readonly draggable: DraggableController;
-    private readonly modalInstance: IModalInstanceService;
+    protected readonly draggable!: Require<DraggableController>;
+    private readonly modalInstance!: Binding<IModalInstanceService, "<">;
 
     protected abstract getTitle(): string;
 

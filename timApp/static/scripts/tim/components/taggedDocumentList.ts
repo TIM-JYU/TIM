@@ -5,31 +5,35 @@
  */
 
 import {IController} from "angular";
-import {ITag, ITaggedItem, TagType} from "../IItem";
-import {to} from "tim/utils";
-import {timApp} from "../app";
-import {$http, $localStorage} from "../ngimport";
 import {ngStorage} from "ngstorage";
+import {Binding, to} from "tim/utils";
+import {timApp} from "../app";
+import {ITag, ITaggedItem, TagType} from "../IItem";
+import {$http, $localStorage} from "../ngimport";
 
 class TaggedDocumentListCtrl implements IController {
-    public tagFilter: string;
-    public exactMatch: boolean; // Get only documents with exactly matching tag.
-    public enableSearch: boolean;
-    private docList: ITaggedItem[];
-    private allUniqueTags: string[];
-    private listDocTags: boolean;
-    private tagToolTip: string;
+    public tagFilter!: Binding<string, "<">;
+    public exactMatch!: Binding<boolean, "<">; // Get only documents with exactly matching tag.
+    public enableSearch!: Binding<boolean, "<">;
+    private docList: ITaggedItem[] = [];
+    private allUniqueTags: string[] = [];
+    private listDocTags!: Binding<boolean, "<">;
+    private tagToolTip: string = "";
     private storage: ngStorage.StorageService & {tagFilterStorage: null | string};
 
-   async $onInit() {
+    constructor() {
+        this.storage = $localStorage.$default({
+            tagFilterStorage: null,
+        });
+    }
+
+    async $onInit() {
         if (this.enableSearch) {
             this.tagToolTip = "Search documents with tag ";
         } else {
             this.tagToolTip = "Document has tag ";
         }
-        this.storage = $localStorage.$default({
-            tagFilterStorage: null,
-        });
+
         if (this.enableSearch && this.storage.tagFilterStorage) {
             this.tagFilter = this.storage.tagFilterStorage;
         } else {

@@ -1,27 +1,29 @@
 import {IController, IScope} from "angular";
 import {timApp} from "../app";
+import {IItem} from "../IItem";
 import {$http, $window} from "../ngimport";
+import {Binding} from "../utils";
 
 type PreviewList = Array<{from: string, to: string}>;
 
 class CopyFolderCtrl implements IController {
     private static $inject = ["$scope"];
     private copyingFolder: "notcopying" | "copying" | "finished";
-    private item: any;
-    private copyPreviewList: PreviewList | null;
+    private item!: Binding<IItem, "<">;
+    private copyPreviewList: PreviewList | undefined;
     private scope: IScope;
-    private copyFolderPath: string;
+    private copyFolderPath: string | undefined;
     private copyFolderExclude: string;
     private newFolder: any;
 
     constructor(scope: IScope) {
         this.scope = scope;
+        this.copyingFolder = "notcopying";
+        this.copyFolderExclude = "";
     }
 
     $onInit() {
         this.copyFolderPath = this.item.path;
-        this.copyingFolder = "notcopying";
-        this.copyFolderExclude = "";
     }
 
     async copyFolderPreview(path: string, exclude: string) {
@@ -42,7 +44,7 @@ class CopyFolderCtrl implements IController {
         try {
             const result = await $http.post(`/copy/${this.item.id}`, {destination: path, exclude: exclude});
             this.copyingFolder = "finished";
-            this.copyPreviewList = null;
+            this.copyPreviewList = undefined;
             this.newFolder = result.data;
         } catch (e) {
             this.copyingFolder = "notcopying";
@@ -51,7 +53,7 @@ class CopyFolderCtrl implements IController {
     }
 
     copyParamChanged() {
-        this.copyPreviewList = null;
+        this.copyPreviewList = undefined;
     }
 }
 

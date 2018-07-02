@@ -29,7 +29,7 @@ import {EditingHandler} from "./editing";
 import {onClick} from "./eventhandlers";
 import {IPopupMenuAttrs, optionsWindowClosed} from "./parmenu";
 import {RefPopupHandler} from "./refpopup";
-import {MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
+import {createPopupMenuAttrs, MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
 import {PendingCollection} from "../../edittypes";
 import {TimTableController} from "../../components/timTable";
 import {BookmarksController, IBookmark, IBookmarkGroup} from "../../directives/bookmarks";
@@ -68,14 +68,14 @@ export type DiffResult = IInsertDiffResult | IReplaceDiffResult | IDeleteDiffRes
 const courseFolder = "My courses";
 
 export class ViewCtrl implements IController {
-    private notification: string;
-    addParagraphFunctions: MenuFunctionCollection;
-    pasteFunctions: MenuFunctionCollection;
-    allowPasteRef: boolean;
-    allowPasteContent: boolean;
-    popupMenuAttrs: IPopupMenuAttrs;
-    selection: {pars: JQuery | null; start: Paragraph | null; end: Paragraph | null};
-    public par: JQuery;
+    private notification: string = "";
+    addParagraphFunctions: MenuFunctionCollection = [];
+    pasteFunctions: MenuFunctionCollection = [];
+    allowPasteRef: boolean = false;
+    allowPasteContent: boolean = false;
+    popupMenuAttrs: IPopupMenuAttrs = createPopupMenuAttrs();
+    selection: {pars?: JQuery; start?: Paragraph; end?: Paragraph} = {};
+    public par: JQuery | undefined;
 
     private static $inject = ["$scope"];
 
@@ -84,7 +84,6 @@ export class ViewCtrl implements IController {
     public item: IItem;
     public docId: number;
 
-    public sc: IScope;
     private hidePending: boolean;
     public group: any;
     private scope: IScope;
@@ -102,13 +101,13 @@ export class ViewCtrl implements IController {
     private document: Document;
     private showRefresh: boolean;
     public selectedUser: IUser;
-    public editing: boolean;
+    public editing: boolean = false;
     public $storage: ngStorage.StorageService & {defaultAction: string | null; noteAccess: string};
     private liveUpdates: number;
     private oldWidth: number;
-    public editorFunctions: MenuFunctionCollection;
-    public defaultAction: MenuFunctionEntry | null;
-    public reviewCtrlScope: IScope & {$ctrl: ReviewController};
+    public editorFunctions: MenuFunctionCollection = [];
+    public defaultAction: MenuFunctionEntry | undefined;
+    public reviewCtrlScope?: IScope & {$ctrl: ReviewController};
     public lectureCtrl?: LectureController;
     public questionHandler: QuestionHandler;
     public areaHandler: AreaHandler;
@@ -120,10 +119,10 @@ export class ViewCtrl implements IController {
     private popupmenu?: PopupMenuController;
 
     // To show a button that adds the document to bookmark folder 'My courses'.
-    private taggedAsCourse: boolean;
-    private bookmarksCtrl: BookmarksController;
-    private bookmarked: boolean;
-    private bookmarks: IBookmarkGroup[];
+    private taggedAsCourse: boolean = false;
+    private bookmarksCtrl: BookmarksController | undefined;
+    private bookmarked: boolean = false;
+    private bookmarks: IBookmarkGroup[] = [];
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -523,6 +522,9 @@ export class ViewCtrl implements IController {
      * @returns {Promise<void>}
      */
     async addToBookmarkFolder() {
+        if (!this.bookmarksCtrl) {
+            throw new Error("Bookmarkscontroller not registered");
+        }
         const bookmark = {group: courseFolder, name: this.item.title, link: "/view/" + this.item.path};
         const response = await $http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark);
         this.bookmarksCtrl.refresh();

@@ -16,7 +16,7 @@ import $ from "jquery";
 import moment from "moment";
 import {timApp} from "tim/app";
 import sessionsettings from "tim/session";
-import {clone, getURLParameter, markAsUsed, setSetting, to} from "tim/utils";
+import {clone, getURLParameter, markAsUsed, Require, setSetting, to} from "tim/utils";
 import {showLectureEnding} from "../components/lectureEnding";
 import * as wall from "../components/lectureWall";
 import {showLectureWall} from "../components/lectureWall";
@@ -79,7 +79,6 @@ export class LectureController implements IController {
     private futureLecture: ILecture | undefined;
     private futureLectures: ILecture[];
     private gettingAnswers: boolean;
-    private lectureAnswer: ILectureResponse;
     private lectureEnded: boolean;
     private lecturerTable: ILecturePerson[];
     private newMessagesAmount: number;
@@ -91,7 +90,7 @@ export class LectureController implements IController {
     private showPoll: boolean;
     private studentTable: ILecturePerson[];
     private timeout: any;
-    viewctrl: ViewCtrl | undefined;
+    viewctrl: Require<ViewCtrl | undefined>;
     private wallMessages: ILectureMessage[];
     private wallName: string;
     private wallInstance: IModalInstance<{}> | undefined;
@@ -163,7 +162,7 @@ export class LectureController implements IController {
             return;
         }
         if (this.lectureSettings.useWall && !this.wallInstance) {
-            this.wallInstance = showLectureWall(this.lecture.lecture_id, this.wallMessages);
+            this.wallInstance = showLectureWall(this.wallMessages);
         } else if (!this.lectureSettings.useWall && this.wallInstance) {
             this.wallInstance.close({});
             this.wallInstance = undefined;
@@ -314,16 +313,9 @@ export class LectureController implements IController {
             this.lecturerTable = [];
             input.removeClass("errorBorder");
             input.attr("placeholder", "Access code");
-            if (this.isLecturer) {
-                this.showLectureView(answer);
-                this.lectureSettings.useWall = true;
-                this.lectureSettings.useQuestions = true;
-            } else {
-                this.lectureAnswer = answer;
-                this.showLectureView(this.lectureAnswer);
-                this.lectureSettings.useWall = true;
-                this.lectureSettings.useQuestions = true;
-            }
+            this.showLectureView(answer);
+            this.lectureSettings.useWall = true;
+            this.lectureSettings.useQuestions = true;
             return true;
         }
     }
@@ -367,19 +359,6 @@ export class LectureController implements IController {
      */
     clearChange() {
         this.passwordGuess = "";
-    }
-
-    /**
-     * Puts chosen lecture options to use.
-     * @param useQuestions Whether or not to display questions?
-     * @param useWall Whether or not to display the wall?
-     */
-    // TODO: Change showLectureView so that it doesn't set useWall and useQuestions if they are set in
-    // lectureOptions dialog
-    useOptions(useQuestions: boolean, useWall: boolean) {
-        this.showLectureView(this.lectureAnswer);
-        this.lectureSettings.useWall = useWall;
-        this.lectureSettings.useQuestions = useQuestions;
     }
 
     /**

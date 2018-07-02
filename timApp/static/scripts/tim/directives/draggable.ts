@@ -3,7 +3,7 @@ import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/timTiming";
 import {$compile, $document, $timeout} from "../ngimport";
-import {getOutOffsetFully, getOutOffsetVisible, getPageXYnull, IBounds, isMobileDevice} from "../utils";
+import {Binding, getOutOffsetFully, getOutOffsetVisible, getPageXYnull, IBounds, ISize, isMobileDevice} from "../utils";
 
 function setStorage(key: string, value: any) {
     value = JSON.stringify(value);
@@ -71,6 +71,13 @@ timApp.directive("timDraggableFixed", [() => {
 
 type Pos = {X: number, Y: number};
 
+interface IResizeStates {
+    up: boolean;
+    down: boolean;
+    left: boolean;
+    right: boolean;
+}
+
 export class DraggableController implements IController {
     private static $inject = ["$scope", "$element"];
 
@@ -82,31 +89,25 @@ export class DraggableController implements IController {
     private setRight: boolean = false;
     private setBottom: boolean = false;
     private setTop: boolean = true;
-    private prevTop: number;
-    private prevLeft: number;
-    private prevBottom: number;
-    private prevRight: number;
-    private prevHeight: number;
-    private prevWidth: number;
-    private upResize: boolean;
-    private rightResize: boolean;
-    private downResize: boolean;
-    private leftResize: boolean;
-    private lastPos: Pos;
-    private pos: Pos;
-    private delta: Pos;
+    private prev: IBounds = {left: 0, right: 0, bottom: 0, top: 0};
+    private prevSize: ISize = {width: 0, height: 0};
+    private resizeStates: IResizeStates = {up: false, down: false, right: false, left: false};
+    private lastPos: Pos = {X: 0, Y: 0};
+    private pos?: Pos;
+    private delta?: Pos;
     private lastPageXYPos = {X: 0, Y: 0};
-    private handle: JQuery;
+    private handle?: JQuery;
     private closeFn?: () => void;
-    private caption?: string;
-    private click?: boolean;
-    private resize?: boolean;
-    private save?: string;
+    private caption?: Binding<string, "<">;
+    private click?: Binding<boolean, "<">;
+    private detachable?: Binding<boolean, "<">;
+    private resize?: Binding<boolean, "<">;
+    private save?: Binding<string, "<">;
     private dragClick?: () => void;
-    private autoHeight: boolean;
-    private absolute?: boolean;
+    private autoHeight?: boolean;
+    private absolute?: Binding<boolean, "<">;
     private parentDraggable?: DraggableController;
-    private forceMaximized?: boolean;
+    private forceMaximized?: Binding<boolean, "<">;
     private modal?: IModalInstanceService;
 
     constructor(private scope: IScope, private element: IRootElementService) {
@@ -196,10 +197,12 @@ export class DraggableController implements IController {
         this.handle = this.element.children(".draghandle");
 
         this.handle.on("mousedown pointerdown touchstart", (e: JQueryEventObject) => {
-            this.upResize = false;
-            this.rightResize = false;
-            this.downResize = false;
-            this.leftResize = false;
+            this.resizeStates = {
+                up: false,
+                down: false,
+                left: false,
+                right: false,
+            };
             $document.off("mouseup pointerup touchend", this.release);
             $document.off("mousemove pointermove touchmove", this.move);
             this.lastPos = this.getPageXY(e);
@@ -346,21 +349,22 @@ export class DraggableController implements IController {
         const botSet = this.element.css("bottom") != "auto";
         this.setTop = (!topSet && !botSet) || topSet;
         this.setBottom = botSet;
-        this.prevHeight = this.getHeight();
-        this.prevWidth = this.getWidth();
+        this.prevSize = {
+            height: this.getHeight(),
+            width: this.getWidth(),
+        };
 
-        this.prevTop = getPixels(this.element.css("top"));
-        this.prevLeft = getPixels(this.element.css("left"));
-        this.prevBottom = getPixels(this.element.css("bottom"));
-        this.prevRight = getPixels(this.element.css("right"));
+        this.prev = {
+            top: getPixels(this.element.css("top")),
+            left: getPixels(this.element.css("left")),
+            bottom: getPixels(this.element.css("bottom")),
+            right: getPixels(this.element.css("right")),
+        };
         timLogTime("set:" + this.setLeft + "," + this.setTop, "drag");
     }
 
     private resizeElement(e: JQueryEventObject, up: boolean, right: boolean, down: boolean, left: boolean) {
-        this.upResize = up;
-        this.rightResize = right;
-        this.downResize = down;
-        this.leftResize = left;
+        this.resizeStates = {up, down, left, right};
         $document.off("mouseup pointerup touchend", this.release);
         $document.off("mousemove pointermove touchmove", this.moveResize);
         this.lastPos = this.getPageXY(e);
@@ -497,18 +501,18 @@ export class DraggableController implements IController {
         };
 
         if (this.setTop) {
-            this.element.css("top", this.prevTop + this.delta.Y);
+            this.element.css("top", this.prev.top + this.delta.Y);
         }
         if (this.setLeft) {
-            this.element.css("left", this.prevLeft + this.delta.X);
+            this.element.css("left", this.prev.left + this.delta.X);
         }
         if (this.setBottom) {
             this.element.css("bottom",
-                this.prevBottom - this.delta.Y);
+                this.prev.bottom - this.delta.Y);
         }
         if (this.setRight) {
             this.element.css("right"
-                , this.prevRight - this.delta.X);
+                , this.prev.right - this.delta.X);
         }
 
         e.preventDefault();
@@ -522,32 +526,32 @@ export class DraggableController implements IController {
             this.lastPos.Y,
         };
 
-        if (this.upResize) {
+        if (this.resizeStates.up) {
             this.element.css("height",
-                this.prevHeight - this.delta.Y);
+                this.prevSize.height - this.delta.Y);
             if (this.setTop) {
-                this.element.css("top", this.prevTop + this.delta.Y);
+                this.element.css("top", this.prev.top + this.delta.Y);
             }
         }
-        if (this.leftResize) {
+        if (this.resizeStates.left) {
             this.element.css(
-                "width", this.prevWidth - this.delta.X);
+                "width", this.prevSize.width - this.delta.X);
             if (this.setLeft) {
-                this.element.css("left", this.prevLeft + this.delta.X);
+                this.element.css("left", this.prev.left + this.delta.X);
             }
         }
-        if (this.downResize) {
-            this.element.css("height", this.prevHeight + this.delta.Y);
+        if (this.resizeStates.down) {
+            this.element.css("height", this.prevSize.height + this.delta.Y);
             if (this.setBottom) {
-                this.element.css("bottom", this.prevBottom - this.delta.Y);
+                this.element.css("bottom", this.prev.bottom - this.delta.Y);
             }
         }
-        if (this.rightResize) {
-            this.element.css("width", this.prevWidth + this.delta.X);
+        if (this.resizeStates.right) {
+            this.element.css("width", this.prevSize.width + this.delta.X);
 
             if (this.setRight && this.delta.X >= 0) {
                 this.element.css(
-                    "right", this.prevRight - this.delta.X);
+                    "right", this.prev.right - this.delta.X);
             }
         }
 

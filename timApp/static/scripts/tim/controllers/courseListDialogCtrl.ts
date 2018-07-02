@@ -3,11 +3,11 @@
  */
 
 import {IRootElementService, IScope} from "angular";
+import moment from "moment";
+import {ngStorage} from "ngstorage";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
 import {ICourseSettings, IItem, ISubjectList, ITag, ITaggedItem, TagType} from "../IItem";
 import {$http, $localStorage} from "../ngimport";
-import {ngStorage} from "ngstorage";
-import moment from "moment";
 
 export interface ICourseListParams {
     item: IItem;
@@ -26,14 +26,18 @@ export interface IGroupedCourses {
  */
 export class ShowCourseListDialogController extends DialogController<{ params: ICourseListParams }, {}, "timCourseListDialog"> {
     private static $inject = ["$element", "$scope"];
-    private docList: ITaggedItem[];
+    private docList: ITaggedItem[] = [];
     private subjects: ISubjectList | undefined;
     private grouped: IGroupedCourses[];
-    private closedSubjects: boolean[];
+    private closedSubjects: boolean[] = [];
     private storage: ngStorage.StorageService & {subjectsStorage: null | boolean[]};
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
+        this.storage = $localStorage.$default({
+            subjectsStorage: null,
+        });
+        this.grouped = [];
     }
 
     /**
@@ -43,13 +47,9 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
         super.$onInit();
         await this.getDocumentsByTag("", false, true);
         this.subjects = this.resolve.params.settings.course_subjects;
-        this.storage = $localStorage.$default({
-            subjectsStorage: null,
-        });
         if (this.storage.subjectsStorage) {
             this.closedSubjects = this.storage.subjectsStorage;
         }
-        this.grouped = [];
         this.groupBySubject();
         this.loadCollapseStates();
     }

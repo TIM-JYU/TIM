@@ -6,7 +6,7 @@ import {Coords, dist, getPageXYnull, isInViewport} from "../../utils";
 import {onClick} from "./eventhandlers";
 import {getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
-import {getEmptyCoords, parMenuDot, viewCtrlDot} from "./viewutils";
+import {createPopupMenuAttrs, getEmptyCoords, parMenuDot, viewCtrlDot} from "./viewutils";
 
 export function optionsWindowClosed($parOrArea?: JQuery) {
     const $editline = $(".menuopen");
@@ -28,8 +28,8 @@ export interface IPopupMenuAttrs {
 export class ParmenuHandler {
     public sc: IScope;
     public viewctrl: ViewCtrl;
-    public lastclicktime: number;
-    public lastclickplace: Coords;
+    public lastclicktime: number | undefined;
+    public lastclickplace: Coords | undefined;
 
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
@@ -101,11 +101,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
             return false;
         }, true);
 
-        this.viewctrl.popupMenuAttrs = {
-            actions: viewCtrlDot("editorFunctions"),
-            save: true,
-            onclose: parMenuDot("optionsWindowClosed"),
-        };
+        this.viewctrl.popupMenuAttrs = createPopupMenuAttrs();
         this.updatePopupMenu();
     }
 
@@ -156,7 +152,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
             return;
         }
 
-        if (toggle2) {
+        if (toggle2 && this.lastclickplace && this.lastclicktime) {
             // Clicked twice successively
             const clicktime = new Date().getTime() - this.lastclicktime;
             const clickdelta = dist(coords, this.lastclickplace);

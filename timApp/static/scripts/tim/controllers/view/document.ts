@@ -11,7 +11,7 @@ export class Document {
         return this._id;
     }
 
-    private _sections: {[name: string]: JQuery[]};
+    private _sections: {[name: string]: JQuery[]} = {};
     private _id: number;
 
     constructor(id: number) {
