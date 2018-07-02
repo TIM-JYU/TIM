@@ -143,17 +143,17 @@ timApp.component("bookmarkFolderBox", {
     controller: BookmarkFolderBoxCtrl,
     template: `
         <div ng-cloak ng-if="$ctrl.documents.length > 0">
-            <h3>{{$ctrl.bookmarkFolder.name}}
-            <a><i class="glyphicon glyphicon-pencil" ng-click="$ctrl.editOn = !$ctrl.editOn"></i></a></h3>
+            <span><h3></h3><h3 class="display-inline">{{$ctrl.bookmarkFolder.name}}</h3>
+            <a><i class="glyphicon glyphicon-pencil" title="Open editing {{$ctrl.bookmarkFolder.name}}"
+            ng-click="$ctrl.editOn = !$ctrl.editOn"></i></a></span>
             <ul class="list-unstyled">
                 <li class="h5 list-unstyled" ng-repeat="d in $ctrl.documents | orderBy:$ctrl.getCourseCode">
                     <a href="/view/{{d.doc.path}}">
                         <span>{{$ctrl.getLinkText(d)}}
-                        <a ng-if="$ctrl.editOn">
-                        <i class="glyphicon glyphicon-pencil" title="Edit bookmark"
-                        ng-click="$ctrl.renameFromList(d)"></i>
-                        <i class="glyphicon glyphicon-remove" title="Remove bookmark"
-                        ng-click="$ctrl.removeFromList(d)"></i>
+                        <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-pencil" title="Edit bookmark"
+                        ng-click="$ctrl.renameFromList(d)"></i></a>
+                         <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-remove"
+                        title="Remove bookmark" ng-click="$ctrl.removeFromList(d)"></i>
                         </a>
                         </span>
                     </a>
