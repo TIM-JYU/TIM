@@ -282,6 +282,6 @@ registerDialogComponent("timBookmarksDialog", CreateBookmarkCtrl,
     `,
     });
 
-function showBookmarkDialog(bookmark: IBookmark): IPromise<IBookmark> {
+export function showBookmarkDialog(bookmark: IBookmark): IPromise<IBookmark> {
     return showDialog<CreateBookmarkCtrl>("timBookmarksDialog", {params: () => bookmark}).result;
 }

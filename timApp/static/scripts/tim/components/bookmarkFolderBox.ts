@@ -4,16 +4,22 @@
 
 import {IController} from "angular";
 import {timApp} from "../app";
-import {IBookmarkGroup} from "../directives/bookmarks";
+import {IBookmark, IBookmarkGroup, showBookmarkDialog} from "../directives/bookmarks";
 import {ITaggedItem, TagType} from "../IItem";
-import {$http} from "../ngimport";
-import {Binding} from "../utils";
+import {$http, $timeout, $window} from "../ngimport";
+import {Binding, to} from "../utils";
+
+export interface ITaggedBookmarkedItem {
+    doc: ITaggedItem;
+    bookmark: IBookmark;
+}
 
 class BookmarkFolderBoxCtrl implements IController {
     private bookmarkFolder: IBookmarkGroup | undefined;
     private bookmarkFolderName!: Binding<string, "@">;
     private bookmarks!: Binding<IBookmarkGroup[], "<">;
-    private documents?: ITaggedItem[];
+    private documents?: ITaggedBookmarkedItem[];
+    private editOn: boolean = false;
 
     async $onInit() {
         await this.getBookmarkFolder(this.bookmarkFolderName);
@@ -42,8 +48,15 @@ class BookmarkFolderBoxCtrl implements IController {
             method: "GET",
             url: `/courses/documents/${this.bookmarkFolderName}`,
         });
-        if (response) {
-            this.documents = response.data;
+        if (response && this.bookmarkFolder) {
+            this.documents = [];
+            for (const responseItem of response.data) {
+                for (const b of this.bookmarkFolder.items) {
+                    if ("/view/" + responseItem.path === b.link) {
+                        this.documents.push({doc: responseItem, bookmark: b});
+                    }
+                }
+            }
         }
     }
 
@@ -52,12 +65,58 @@ class BookmarkFolderBoxCtrl implements IController {
      * @param {ITaggedItem} d
      * @returns {string}
      */
-    private getLinkText(d: ITaggedItem) {
+    private getLinkText(d: ITaggedBookmarkedItem) {
         const cc = this.getCourseCode(d);
         if (!cc) {
-            return d.title;
+            return d.bookmark.name;
         } else {
-            return `${cc} - ${d.title}`;
+            return `${cc} - ${d.bookmark.name}`;
+        }
+    }
+
+    private async removeFromList(d: ITaggedBookmarkedItem) {
+        const response = await $http.post<IBookmarkGroup[]>("/bookmarks/delete", {
+            group: this.bookmarkFolderName,
+            name: d.bookmark.name,
+        });
+        if (response) {
+            await this.updateBookmarks();
+            await this.getBookmarkFolder(this.bookmarkFolderName);
+            await this.getDocumentData();
+        }
+    }
+
+    private async renameFromList(d: ITaggedBookmarkedItem) {
+        const [err, bookmark] = await to(showBookmarkDialog({
+            group: this.bookmarkFolderName,
+            link: d.bookmark.link,
+            name: d.bookmark.name,
+        }));
+        if (!bookmark || !bookmark.name) {
+            return;
+        }
+        const response = await $http.post<IBookmarkGroup[]>("/bookmarks/edit", {
+            old: {
+            group: this.bookmarkFolderName,
+            link: d.bookmark.link,
+            name: d.bookmark.name,
+            }, new: bookmark,
+        });
+        if (response) {
+            await this.updateBookmarks();
+            await this.getBookmarkFolder(this.bookmarkFolderName);
+            await this.getDocumentData();
+        }
+    }
+
+    /**
+     * Gets changed bookmarks from the database.
+     * @returns {Promise<void>}
+     */
+    private async updateBookmarks() {
+        const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get");
+        if (response) {
+            this.bookmarks = response.data;
         }
     }
 
@@ -66,8 +125,8 @@ class BookmarkFolderBoxCtrl implements IController {
      * @param {ITaggedItem} d Document and its tags.
      * @returns {string} Course code or empty string, if none were found.
      */
-    private getCourseCode(d: ITaggedItem) {
-        for (const tag of d.tags) {
+    private getCourseCode(d: ITaggedBookmarkedItem) {
+        for (const tag of d.doc.tags) {
             if (tag.type === TagType.CourseCode) {
                 return tag.name;
             }
@@ -84,11 +143,19 @@ timApp.component("bookmarkFolderBox", {
     controller: BookmarkFolderBoxCtrl,
     template: `
         <div ng-cloak ng-if="$ctrl.documents.length > 0">
-            <h3>{{$ctrl.bookmarkFolder.name}}</h3>
+            <h3>{{$ctrl.bookmarkFolder.name}}
+            <a><i class="glyphicon glyphicon-pencil" ng-click="$ctrl.editOn = !$ctrl.editOn"></i></a></h3>
             <ul class="list-unstyled">
                 <li class="h5 list-unstyled" ng-repeat="d in $ctrl.documents | orderBy:$ctrl.getCourseCode">
-                    <a href="/view/{{d.path}}">
-                        <span>{{$ctrl.getLinkText(d)}}</span>
+                    <a href="/view/{{d.doc.path}}">
+                        <span>{{$ctrl.getLinkText(d)}}
+                        <a ng-if="$ctrl.editOn">
+                        <i class="glyphicon glyphicon-pencil" title="Edit bookmark"
+                        ng-click="$ctrl.renameFromList(d)"></i>
+                        <i class="glyphicon glyphicon-remove" title="Remove bookmark"
+                        ng-click="$ctrl.removeFromList(d)"></i>
+                        </a>
+                        </span>
                     </a>
                 </li>
             </ul>
