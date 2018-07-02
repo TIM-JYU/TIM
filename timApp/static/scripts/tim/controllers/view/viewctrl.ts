@@ -34,6 +34,7 @@ import {PendingCollection} from "../../edittypes";
 import {TimTableController} from "../../components/timTable";
 import {BookmarksController, IBookmark, IBookmarkGroup} from "../../directives/bookmarks";
 import moment from "moment";
+import {showMessageDialog} from "../../dialog";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -354,8 +355,8 @@ export class ViewCtrl implements IController {
      * Checks if the document has been tagged as a course and the tag hasn't expired.
      */
     private async checkIfTaggedAsCourse() {
-        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`));
         this.taggedAsCourse = false;
+        const [err, response] = await to($http.get<ITag[]>(`/tags/getTags/${this.item.path}`));
         if (response) {
             for (const tag of response.data) {
                 if (isCourse(tag)) {
@@ -375,9 +376,12 @@ export class ViewCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async checkIfBookmarked() {
+        this.bookmarked = false;
+        if (!Users.isLoggedIn()) {
+            return;
+        }
         const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get");
         this.bookmarks = response.data;
-        this.bookmarked = false;
         for (const folder of this.bookmarks) {
             if (folder.name === courseFolder) {
                 for (const bookmark of folder.items) {
@@ -522,6 +526,10 @@ export class ViewCtrl implements IController {
      * @returns {Promise<void>}
      */
     async addToBookmarkFolder() {
+        if (!Users.isLoggedIn()) {
+            showMessageDialog("Log in to bookmark this course");
+            return;
+        }
         if (!this.bookmarksCtrl) {
             throw new Error("Bookmarkscontroller not registered");
         }
@@ -531,6 +539,10 @@ export class ViewCtrl implements IController {
         this.checkIfBookmarked(); // Instead of directly changing boolean this checks if it really was added.
     }
 
+    /**
+     * Add bookmark controller.
+     * @param {BookmarksController} bookmarksCtrl
+     */
     registerBookmarks(bookmarksCtrl: BookmarksController) {
         this.bookmarksCtrl = bookmarksCtrl;
     }
