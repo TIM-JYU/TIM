@@ -29,7 +29,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private errorMessage?: string;
     private successMessage?: string;
     private f!: IFormController; // initialized in the template
-    private focusName?: boolean;
+    private focusName: boolean = true;
     private allTags?: ITag[]; // List of all unique tags.
     private allUnusedTags?: ITag[]; // List of existing tag names not used in the doc.
     private datePickerOptions: EonasdanBootstrapDatetimepicker.SetOptions;
@@ -253,7 +253,7 @@ registerDialogComponent("timEditTags",
                            type="text"
                            ng-keypress="$ctrl.keyPressed($event)" autocomplete="off"
                            class="form-control" id="tag-field" placeholder="Tag names separated by commas"
-    uib-typeahead="tag.name as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | orderBy:tag | limitTo:15 | orderBy:'name'"
+                           uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | limitTo:15 | orderBy:'name'"
                            typeahead-min-length="1">
                 </div>
                 <tim-error-message></tim-error-message>

@@ -134,7 +134,7 @@ timApp.component("taggedDocumentList", {
                            title="Search documents by entering a tag"
                            placeholder="Search documents by entering a tag"
                            class="form-control" id="tagFilterField" autocomplete="off"
-     uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue | limitTo:15 | orderBy:'name'"
+                           uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue | limitTo:15 | orderBy:'name'"
                            typeahead-min-length="1">
             <span class="input-group-addon btn">
                 <span class="glyphicon glyphicon-search"
