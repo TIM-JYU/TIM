@@ -26,6 +26,9 @@ class BookmarkFolderBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async getBookmarkFolder(folderName: string) {
+        if (!this.bookmarks) {
+            return;
+        }
         for (const folder of this.bookmarks) {
             if (folder.name === folderName) {
                 this.bookmarkFolder = folder;
