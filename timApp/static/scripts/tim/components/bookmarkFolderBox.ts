@@ -43,6 +43,10 @@ class BookmarkFolderBoxCtrl implements IController {
         }
     }
 
+    /**
+     * Gets entries of documents corresponding bookmark items and rejoins them with the bookmarks.
+     * @returns {Promise<void>}
+     */
     private async getDocumentData() {
         const response = await $http<ITaggedItem[]>({
             method: "GET",
@@ -74,6 +78,11 @@ class BookmarkFolderBoxCtrl implements IController {
         }
     }
 
+    /**
+     * Deletes the bookmark and updates list.
+     * @param {ITaggedBookmarkedItem} d
+     * @returns {Promise<void>}
+     */
     private async removeFromList(d: ITaggedBookmarkedItem) {
         const response = await $http.post<IBookmarkGroup[]>("/bookmarks/delete", {
             group: this.bookmarkFolderName,
@@ -86,6 +95,11 @@ class BookmarkFolderBoxCtrl implements IController {
         }
     }
 
+    /**
+     * Opens editing dialog for the bookmark and updates list if changes were made.
+     * @param {ITaggedBookmarkedItem} d
+     * @returns {Promise<void>}
+     */
     private async renameFromList(d: ITaggedBookmarkedItem) {
         const [err, bookmark] = await to(showBookmarkDialog({
             group: this.bookmarkFolderName,
@@ -134,6 +148,9 @@ class BookmarkFolderBoxCtrl implements IController {
         return undefined;
     }
 }
+
+// Note: the compicated structure with empty headers and elements inside elements is to display edit icon
+// on the same line as the header without changing its size.
 
 timApp.component("bookmarkFolderBox", {
     bindings: {

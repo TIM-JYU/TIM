@@ -150,6 +150,10 @@ export class BookmarksController implements IController {
         this.deleting = !this.deleting;
     }
 
+    /**
+     * Updates bookmarks.
+     * @returns {Promise<void>}
+     */
     async refresh() {
         const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get");
         this.getFromServer(response.data);
