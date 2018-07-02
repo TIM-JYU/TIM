@@ -48,6 +48,20 @@ class BookmarkFolderBoxCtrl implements IController {
     }
 
     /**
+     * Forms the link text with or without course code.
+     * @param {ITaggedItem} d
+     * @returns {string}
+     */
+    private getLinkText(d: ITaggedItem) {
+        const cc = this.getCourseCode(d);
+        if (!cc) {
+            return d.title;
+        } else {
+            return `${cc} - ${d.title}`;
+        }
+    }
+
+    /**
      * Returns course code if it exists for the item.
      * @param {ITaggedItem} d Document and its tags.
      * @returns {string} Course code or empty string, if none were found.
@@ -74,8 +88,7 @@ timApp.component("bookmarkFolderBox", {
             <ul class="list-unstyled">
                 <li class="h5 list-unstyled" ng-repeat="d in $ctrl.documents | orderBy:$ctrl.getCourseCode">
                     <a href="/view/{{d.path}}">
-                        <span>{{$ctrl.getCourseCode(d)}} - </span>
-                         {{d.title}}
+                        <span>{{$ctrl.getLinkText(d)}}</span>
                     </a>
                 </li>
             </ul>
