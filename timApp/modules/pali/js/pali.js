@@ -1,4 +1,4 @@
-define(["require", "exports", "angular", "tim/timHelper"], function (require, exports, angular, timHelper) {
+define(["require", "exports", "angular", "tim/util/timHelper"], function (require, exports, angular, timHelper) {
 
 "use strict";
 var paliApp = angular.module('paliApp', ['ngSanitize']);

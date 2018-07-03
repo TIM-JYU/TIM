@@ -30,7 +30,8 @@
       ]
     },
     "typeRoots": [
-      "../../../static/scripts/node_modules/@types"
+      "../../../static/scripts/node_modules/@types",
+      "../../../static/scripts/tim/util"
     ]
   },
   "exclude": [

@@ -124,7 +124,7 @@ class ImagexServer(tim_server.TimServer):
         #print("--templates--" + str(templs))
         # ret = {"js": ["/static/scripts/timHelper.js", "/static/scripts/imagexTunne.js", "angular-bootstrap-colorpicker"], "angularModule": ["imagexApp", "colorpicker.module"],
         #      "css": ["static/css/imagex.css", "/static/scripts/jspm_packages/npm/angular-bootstrap-colorpicker@3.0.26/css/colorpicker.min.css"], "multihtml": True}
-        ret = {"js": ["tim/imagex", "angular-bootstrap-colorpicker"], "angularModule": ["imagexApp", "colorpicker.module"],
+        ret = {"js": ["tim/plugin/imagex", "angular-bootstrap-colorpicker"], "angularModule": ["imagexApp", "colorpicker.module"],
                "css": ["static/css/imagex.css", "/static/scripts/jspm_packages/npm/angular-bootstrap-colorpicker@3.0.26/css/colorpicker.min.css"], "multihtml": True}
         # Add templates to reqs.
         ret.update(templs)

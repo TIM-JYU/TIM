@@ -151,14 +151,14 @@ SystemJS.config({
   },
   bundles: {
     "build/ace.js": [
-      "tim/ace.ts",
+      "tim/editor/ace.ts",
       "github:ajaxorg/ace-builds@1.2.6/ext-language_tools.js"
     ],
     "build/slide.js": [
-      "tim/slide.ts"
+      "tim/document/slide.ts"
     ],
     "build/imagex.js": [
-      "tim/imagex.ts"
+      "tim/plugin/imagex.ts"
     ],
     "build/mathjax.js": [
       "mathjax"

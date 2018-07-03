@@ -1,0 +1,113 @@
+import {IScope} from "angular";
+import $ from "jquery";
+import {showMessageDialog} from "../../ui/dialog";
+import {$window} from "../../util/ngimport";
+import {fetchAndEditQuestion, showQuestionEditDialog} from "./questionController";
+import {getParId, Paragraph} from "../parhelpers";
+import {ViewCtrl} from "../viewctrl";
+import {EditPosition, EditType} from "../editing/editing";
+
+export class QuestionHandler {
+    public sc: IScope;
+    public noQuestionAutoNumbering: boolean = false;
+    public viewctrl: ViewCtrl;
+
+    constructor(sc: IScope, view: ViewCtrl) {
+        this.sc = sc;
+        this.viewctrl = view;
+        if (view.lectureMode) {
+            this.noQuestionAutoNumbering = $window.noQuestionAutoNumbering;
+        }
+    }
+
+    // Opens pop-up window to create question.
+    async addQuestionQst(e: Event, $par: Paragraph) {
+        const parNextId = getParId($par);
+        if (!parNextId) {
+            showMessageDialog("Not a valid paragraph.");
+            return;
+        }
+        const result = await showQuestionEditDialog({par_id_next: parNextId, qst: true, docId: this.viewctrl.docId});
+        if (result.type === "points") {
+            throw new Error("unexpected result type from dialog");
+        }
+        this.viewctrl.editingHandler.addSavedParToDom(result.data, {type: EditType.AddAbove, par: $par});
+    }
+
+    async editQst(e: Event, $par: Paragraph) {
+        const parId = getParId($par);
+        if (!parId) {
+            showMessageDialog("Not a valid paragraph.");
+            return;
+        }
+        const result = await fetchAndEditQuestion(this.viewctrl.docId, parId);
+        if (result.type === "points") {
+            throw new Error("unexpected result type from dialog");
+        }
+        const position: EditPosition = {type: EditType.Edit, pars: $par};
+        if (result.deleted) {
+            this.viewctrl.editingHandler.handleDelete(position);
+        } else {
+            this.viewctrl.editingHandler.addSavedParToDom(result.data, position);
+        }
+    }
+
+    // Event handler for "Add question below"
+    // Opens pop-up window to create question.
+    async addQuestion(e: Event, $par: Paragraph) {
+        const parNextId = getParId($par.next());
+        if (!parNextId) {
+            showMessageDialog("Not a valid paragraph.");
+            return;
+        }
+        const result = await showQuestionEditDialog({par_id_next: parNextId, qst: false, docId: this.viewctrl.docId});
+        if (result.type === "points") {
+            throw new Error("unexpected result type from dialog");
+        }
+        this.viewctrl.editingHandler.addSavedParToDom(result.data, {type: EditType.AddBelow, par: $par});
+    }
+
+    processQuestions() {
+        const questions = $(".questionPar");
+        let n = 1;
+        let separator = ")";
+        if (this.showQuestions()) {
+            for (let i = 0; i < questions.length; i++) {
+                const $par = questions.eq(i);
+                const questionChildren = $par.children();
+                const questionNumber = questionChildren.find(".questionNumber");
+                // var questionTitle = getParAttributes($par).question;
+                let questionTitle = questionNumber[0].innerHTML;
+                if (questionTitle.length > 10) {
+                    questionTitle = questionTitle.substr(0, 10) + "\r\n...";
+                }
+                const nt = parseInt(questionTitle);
+                let nr = "";
+                if (isNaN(nt)) {
+                    nr = (n) + "" + separator + "\r\n";
+                } else {
+                    n = nt;
+                    const nrt = "" + n;
+                    if (questionTitle.length > nrt.length) {
+                        separator = questionTitle[nrt.length];
+                    }
+                }
+                if (questionNumber[0] && questionNumber[0].innerHTML) {
+                    if (this.noQuestionAutoNumbering) {
+                        questionNumber[0].innerHTML = questionTitle;
+                    } else {
+                        questionNumber[0].innerHTML = nr + questionTitle;
+                        n++;
+                    }
+                }
+            }
+        } else {
+            questions.hide();
+        }
+    }
+
+    showQuestions() {
+        return (this.viewctrl.item.rights.teacher && (this.viewctrl.lectureMode || this.viewctrl.inLecture)) ||
+            ($window.editMode && this.viewctrl.item.rights.editable);
+    }
+}

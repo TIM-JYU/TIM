@@ -1,43 +1,16 @@
-import angular from "angular";
+import angular, {IHttpService, IModule, INgModelController, ITimeoutService, ITranscludeFunction} from "angular";
 import $ from "jquery";
-import {IHttpService, IModule, INgModelController, ITimeoutService, ITranscludeFunction} from "angular";
-import {$http, $sanitize, $timeout, $interval, $compile, $window, $sce, $upload} from "tim/ngimport";
-import {ParCompiler} from "tim/services/parCompiler";
-import {lazyLoad, lazyLoadMany, lazyLoadTS} from "tim/lazyLoad";
-import {IAce, IAceEditor} from "tim/ace-types";
+import {$compile, $http, $interval, $sanitize, $sce, $timeout, $upload, $window} from "tim/util/ngimport";
 import * as csparsons from "./cs-parsons/csparsons";
-import * as acemodule from "tim/ace";
+import {IAce, IAceEditor} from "tim/editor/ace-types";
+import {lazyLoadMany, lazyLoadTS} from "tim/util/lazyLoad";
+import {ParCompiler} from "tim/editor/parCompiler";
 
 interface Simcir {
     setupSimcir(element: JQuery, data: {});
     controller(element: JQuery);
 }
 
-interface CellInfo {
-    array: CellInfo[];
-    hide: string[];
-    defaultLanguage: string;
-    linked: boolean;
-    outputLocation: string;
-    inputLocation: string;
-    mode: string;
-    submit(event);
-    code: string;
-    evalButtonText: string;
-    editor: any;
-    collapse: any;
-    session: any;
-    interacts: any[];
-}
-
-interface Sagecell {
-    allLanguages: string[];
-    templates: { [name: string]: { editor: string, hide: string[] } };
-    makeSagecell(args): CellInfo;
-    deleteSagecell(cellInfo: CellInfo);
-    moveInputForm(cellInfo: CellInfo);
-    restoreInputForm(cellInfo: CellInfo);
-}
 
 interface GlowScriptWindow extends Window {
     runJavaScript?(text: string, args: string, input: string, wantsConsole: boolean): string;
@@ -1238,7 +1211,7 @@ async function alustaSage(scope,firstTime) {
 // TODO: kielien valinnan tallentaminen
 // TODO: kielien valinta kunnolla float.  
 // ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst  
-    let sagecell = await lazyLoad<Sagecell>("sagecell");
+    let sagecell = await import("sagecell");
     if ( scope.sagecellInfo ) {
         scope.sagecellInfo.editor = "textarea";
         //scope.sagecellInfo.inputLocation = null;
@@ -2518,7 +2491,7 @@ csApp.Controller = function($scope,$transclude) {
         // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
         // $scope.aceEnabled = eindex == 1;
         if ( eindex == 1 ) {
-            const ace = (await lazyLoad<typeof acemodule>("tim/ace")).ace;
+            const ace = (await import("tim/editor/ace")).ace;
             editorDiv.empty().append($scope.edit);
             var editor = ace.edit(editorDiv.find('.csAceEditor')[0]);
 

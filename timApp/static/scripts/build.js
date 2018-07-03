@@ -4,7 +4,7 @@ var builder = new Builder('.', 'jspm.config.js');
 
 var bundles = [
     {
-        modules: 'tim/main + tim/slide - [tim/**/*] - reveal + jquery + tslib', // all non-lazy external dependencies
+        modules: 'tim/main + tim/document/slide - [tim/**/*] - reveal + jquery + tslib', // all non-lazy external dependencies
         file: 'build/deps.js'
     },
     {
@@ -20,15 +20,15 @@ var bundles = [
         file: 'build/mathjax.js'
     },
     {
-        modules: 'tim/main + tim/slide - (tim/main + tim/slide - [tim/**/*])', // all TIM scripts without external dependencies
+        modules: 'tim/main + tim/document/slide - (tim/main + tim/document/slide - [tim/**/*])', // all TIM scripts without external dependencies
         file: 'build/tim.js'
     },
     {
-        modules: 'tim/ace', // preconfigured Ace editor, lazily loaded
+        modules: 'tim/editor/ace', // preconfigured Ace editor, lazily loaded
         file: 'build/ace.js'
     },
     {
-        modules: 'tim/imagex - tim/main', // ImageX plugin
+        modules: 'tim/plugin/imagex - tim/main', // ImageX plugin
         file: 'build/imagex.js'
     }
 ];

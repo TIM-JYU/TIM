@@ -22,6 +22,7 @@
     "noEmit": false,
     "declarationDir": "decls",
     "declaration": true,
+    "emitDeclarationOnly": true,
     "importHelpers": true
   },
   "exclude": [
@@ -31,6 +32,6 @@
     "build",
     "build-ide",
     "decls",
-    "tim/imagex.ts"
+    "tim/plugin/imagex.ts"
   ]
 }
