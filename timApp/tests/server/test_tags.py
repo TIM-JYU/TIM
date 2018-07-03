@@ -58,12 +58,8 @@ class TagTest(TimRouteTest):
     def test_special_tag_adding_with_admin_rights(self):
         self.login_test1()
         d = self.create_doc()
-
         u = self.test_user_2
-        admin_group = UserGroup.get_admin_group()
-        if u not in admin_group.users:
-            u.groups.append(admin_group)
-            db.session.commit()
+        self.make_admin(u)
         d_path = d.path
         self.login_test2()
         self.json_post(f'/tags/add/{d_path}',

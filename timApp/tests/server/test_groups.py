@@ -53,10 +53,7 @@ class GroupTest(TimRouteTest):
 
     def init_admin(self):
         u = User.get_by_name('testuser3')
-        admin_group = UserGroup.get_admin_group()
-        if u not in admin_group.users:
-            u.groups.append(admin_group)
-            db.session.commit()
+        self.make_admin(u)
         self.login_test3()
 
     def test_invalid_groups(self):

@@ -26,6 +26,7 @@ from timApp.document.translation.translation import Translation
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import remove_prefix
+from timApp.timdb.sqa import db
 
 
 def load_json(resp: Response):
@@ -665,6 +666,12 @@ class TimRouteTest(TimDbTest):
             warnings.simplefilter('ignore', ResourceWarning)
             result = self.get(url, **kwargs)
         return result
+
+    def make_admin(self, u):
+        admin_group = UserGroup.get_admin_group()
+        if u not in admin_group.users:
+            u.groups.append(admin_group)
+            db.session.commit()
 
 
 if __name__ == '__main__':

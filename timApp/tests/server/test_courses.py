@@ -1,6 +1,5 @@
 from timApp.item.tag import TagType
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.usergroup import UserGroup
 from timApp.timdb.sqa import db
 
@@ -13,10 +12,7 @@ class CoursesTest(TimRouteTest):
 
     def test_get_course_settings_find_doc(self):
         u = self.test_user_2
-        admin_group = UserGroup.get_admin_group()
-        if u not in admin_group.users:
-            u.groups.append(admin_group)
-            db.session.commit()
+        self.make_admin(u)
         self.login_test2()
         d = self.create_doc(path="settings/courses",
                             settings={'course_subjects': ['testing subject 1', 'testing subject 1']})
@@ -30,10 +26,7 @@ class CoursesTest(TimRouteTest):
 
     def test_get_documents_from_bookmark_folder_folder_found(self):
         u = self.test_user_2
-        admin_group = UserGroup.get_admin_group()
-        if u not in admin_group.users:
-            u.groups.append(admin_group)
-            db.session.commit()
+        self.make_admin(u)
         self.login_test2()
         d = self.create_doc(path="some/path/test")
         self.json_post(f'/tags/add/{d.path}',
@@ -58,10 +51,11 @@ class CoursesTest(TimRouteTest):
                                                                                    'see_answers': True,
                                                                                    'teacher': True},
                                                                         'tags': [{'block_id': d.id, 'expires': None,
-                                                                                  'name': 'TEST123', 'type': 2},
+                                                                                  'name': 'TEST123',
+                                                                                  'type': TagType.CourseCode.value},
                                                                                  {'block_id': d.id,
                                                                                   'expires': None,
                                                                                   'name': 'testing subject',
-                                                                                  'type': 3}],
+                                                                                  'type': TagType.Subject.value}],
                                                                         'title': d.title,
                                                                         'unpublished': True}])
