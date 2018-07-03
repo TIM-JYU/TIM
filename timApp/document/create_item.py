@@ -96,7 +96,7 @@ def copy_document_and_enum_translations(source: DocInfo, target: DocInfo) -> Gen
     # Copy tags except course code and subject.
     for tag in source.block.tags:
         if tag.type == TagType.Regular:
-            target.block.tags.append(Tag(name=tag.name, type=tag.type))
+            target.block.tags.append(Tag(name=tag.name, type=tag.type, expires=tag.expires))
 
     target.document.update(source.document.export_markdown(),
                            target.document.export_markdown(),
