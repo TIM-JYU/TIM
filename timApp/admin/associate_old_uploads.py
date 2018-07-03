@@ -15,7 +15,7 @@ def associate_old_uploads():
         format='',
         onlyfirst=False,
         regex=True,
-        term=r'\[[^\[\]]+\]\(/(files|images)/(\d+)/([^()]+)\)'
+        term=r'\[[^\[\]]*\]\(/(files|images)/(\d+)/([^()]+)\)'
     )
     string_search = SearchArgumentsBasic(
         format='',
