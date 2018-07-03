@@ -1,6 +1,8 @@
 import {Moment} from "moment";
+import moment from "moment";
 import {IRights} from "./IRights";
 import {$http} from "./ngimport";
+import {ITaggedBookmarkedItem} from "./components/bookmarkFolderBox";
 
 export interface IItem {
     id: number;
@@ -40,4 +42,37 @@ export interface ITaggedItem extends IItem {
 
 export async function getItem(itemId: number) {
     return (await $http.get<IItem>(`/items/${itemId}`)).data;
+}
+
+/**
+ * Returns course code if it exists for the item.
+ * @param {ITag[]} tags A list of tags.
+ * @param {boolean} checkExpiration If true, expired courses will be return as undefined.
+ * @returns {string} The course code as a string or undefined if none was found.
+ */
+export function getCourseCode(tags: ITag[], checkExpiration: boolean = false) {
+    for (const tag of tags) {
+        if (tag.type === TagType.CourseCode) {
+            if (checkExpiration && tagIsExpired(tag)) {
+                    return undefined;
+            }
+            return tag.name;
+        }
+    }
+    return undefined;
+}
+
+/**
+ * Checks if the tag has expired.
+ * @param {ITag} tag
+ * @returns {boolean} False if the tag has no expiration or hasn't yet expired.
+ */
+export function tagIsExpired(tag: ITag) {
+    if (tag.expires) {
+        if (tag.expires.diff(moment.now()) < 0) {
+            return true;
+        }
+    } else {
+        return false;
+    }
 }

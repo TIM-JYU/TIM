@@ -3,10 +3,9 @@
  */
 
 import {IRootElementService, IScope} from "angular";
-import moment from "moment";
 import {ngStorage} from "ngstorage";
 import {DialogController, registerDialogComponent, showDialog} from "../dialog";
-import {ICourseSettings, IItem, ISubjectList, ITag, ITaggedItem, TagType} from "../IItem";
+import {ICourseSettings, IItem, ISubjectList, ITag, ITaggedItem, tagIsExpired, getCourseCode, TagType} from "../IItem";
 import {$http, $localStorage} from "../ngimport";
 
 export interface ICourseListParams {
@@ -110,33 +109,13 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
     }
 
     /**
-     * Returns course code if it exists for the item and and the code hasn't expired.
-     * @param {ITaggedItem} d Document and its tags.
-     * @returns {string} Course code or empty strring, if none were found.
-     */
-    private getCourseCode(d: ITaggedItem) {
-        for (const tag of d.tags) {
-            if (tag.type === TagType.CourseCode) {
-                if (!isExpired(tag)) {
-                    return tag.name;
-                }
-            }
-        }
-        return undefined;
-    }
-
-    /**
-     * True if all course categories are closed, false if one or more are open
-     * or the courses variable is undefined.
+     * True if all course categories are closed, false if one or more are open.
      * @param {IGroupedCourses[]} courses
      * @returns {boolean}
      */
     private allClosed(courses: IGroupedCourses[]) {
-        if (courses === undefined) {
-            return false;
-        }
         for (const course of courses) {
-            if (course !== undefined && !course.closed) {
+            if (!course.closed) {
                 return false;
             }
         }
@@ -175,7 +154,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
                         if (tag.type === TagType.Subject && tag.name === s) {
                             isSameSubject = true;
                         }
-                        if (tag.type === TagType.CourseCode && !isExpired(tag)) {
+                        if (tag.type === TagType.CourseCode && !tagIsExpired(tag)) {
                             isNonExpiredCourse = true;
                         }
                     }
@@ -192,6 +171,15 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
                 // TODO: Subsubjects.
             }
         }
+    }
+
+    /**
+     * Gets course code of an unexpired course.
+     * @param {ITaggedItem} d
+     * @returns {string}
+     */
+    private courseCode(d: ITaggedItem) {
+        return getCourseCode(d.tags, true);
     }
 }
 
@@ -219,12 +207,13 @@ registerDialogComponent("timCourseListDialog",
                 data-toggle="collapse" data-parent="#courses" href="#{{subject.subject}}" aria-expanded="false"
                 aria-controls="{{subject.subject}}">
                     <i class="glyphicon" ng-class="subject.closed ? 'glyphicon-plus-sign' : 'glyphicon-minus-sign'"></i>
-                    {{subject.subject}} ({{$ctrl.courseCount(subject.docs.length)}})
+                    {{subject.subject}} ({{subject.docs.length}} <ng-pluralize count="subject.docs.length"
+                    when="{'1': 'course', 'other': 'courses'}"></ng-pluralize>)
                 </span>
                 <ul class="list-unstyled well well-sm" uib-collapse="subject.closed">
-                    <li ng-repeat="course in subject.docs" ng-if="$ctrl.getCourseCode(course)">
+                    <li ng-repeat="course in subject.docs" ng-if="$ctrl.courseCode(course)">
                         <a href="/view/{{course.path}}" title="Open {{course.title}}">
-                        <span class="btn-xs btn-primary">{{$ctrl.getCourseCode(course)}}</span>
+                        <span class="btn-xs btn-primary">{{$ctrl.courseCode(course)}}</span>
                          {{course.title}}
                         </a>
                     </li>
@@ -243,19 +232,4 @@ registerDialogComponent("timCourseListDialog",
 
 export async function showCourseListDialog(d: ICourseListParams) {
     return await showDialog<ShowCourseListDialogController>("timCourseListDialog", {params: () => d}).result;
-}
-
-/**
- * Checks if the tag has expired.
- * @param {ITag} tag
- * @returns {boolean} False if the tag has no expiration or hasn't yet expired.
- */
-function isExpired(tag: ITag) {
-    if (tag.expires) {
-        if (tag.expires.diff(moment.now()) < 0) {
-            return true;
-        }
-    } else {
-        return false;
-    }
 }
