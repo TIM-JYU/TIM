@@ -66,6 +66,9 @@
                     <button class="timButton btn btn-block"  title="Print using LaTeX => best quality" ng-click="$ctrl.printDocument()">Print document</button>
                     <button class="timButton btn btn-block" title="Print using Browser own printing capabilities" ng-click="$ctrl.cssPrint()">Browser print</button>
                     <h5 style="display: inline-block">Document tags</h5>
+                    <a style="display: inline-block" href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
+                        <span class="glyphicon glyphicon-question-sign"></span>
+                    </a>
                     <button class="timButton btn btn-block" ng-show="$ctrl.vctrl.item.rights.manage" title="Add and remove document tags" ng-click="$ctrl.addTag()">Edit tags</button>
                     <button class="timButton btn btn-block" title="Search with tags" ng-click="$ctrl.searchWithTags()">Search with tags</button>
                     <button class="timButton btn btn-block" ng-show="$ctrl.userBelongsToTeachersOrIsAdmin()" title="Set document as a course main page" ng-click="$ctrl.openCourseDialog()">Set as a course</button>
