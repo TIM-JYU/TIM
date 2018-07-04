@@ -15,7 +15,7 @@ class CreateItemController implements IController {
     private itemLocation?: Binding<string, "@?">;
     private itemTitle?: Binding<string, "@?">;
     private itemName?: Binding<string, "@">;
-    private alerts: {}[];
+    private alerts: Array<{}>;
     private itemType!: Binding<string, "@">;
     private params?: Binding<{template?: string}, "=?">;
     private force?: Binding<boolean, "<?">;

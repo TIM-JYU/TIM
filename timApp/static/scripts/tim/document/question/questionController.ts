@@ -10,9 +10,7 @@ import {
 } from "tim/document/question/dynamicAnswerSheet";
 import {timelimit} from "tim/session";
 import {markAsUsed, setSetting} from "tim/util/utils";
-import {QuestionMatrixController} from "./questionMatrix";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
-import {IParResponse} from "../editing/edittypes";
+import {ParCompiler} from "../../editor/parCompiler";
 import {
     IAskedJsonJson,
     IAskedQuestion,
@@ -25,8 +23,10 @@ import {
     MatrixType,
     QuestionType,
 } from "../../lecture/lecturetypes";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
 import {$http, $timeout, $window} from "../../util/ngimport";
-import {ParCompiler} from "../../editor/parCompiler";
+import {IParResponse} from "../editing/edittypes";
+import {QuestionMatrixController} from "./questionMatrix";
 
 markAsUsed(QuestionMatrixController);
 

@@ -1,18 +1,18 @@
 import {IController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
-import {timApp} from "tim/app";
 import * as allanswersctrl from "tim/answer/allAnswersController";
+import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
-import {showAllAnswers} from "./allAnswersController";
-import {ReviewController} from "../velp/reviewController";
 import {dereferencePar, getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
-import {IAnswer} from "./IAnswer";
-import {IUser} from "../user/IUser";
-import {$compile, $filter, $http, $timeout, $window} from "../util/ngimport";
 import {ParCompiler} from "../editor/parCompiler";
+import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
+import {$compile, $filter, $http, $timeout, $window} from "../util/ngimport";
 import {Binding, markAsUsed, Require} from "../util/utils";
+import {ReviewController} from "../velp/reviewController";
+import {showAllAnswers} from "./allAnswersController";
+import {IAnswer} from "./IAnswer";
 
 markAsUsed(allanswersctrl);
 
@@ -27,7 +27,7 @@ const RLAZYEND = new RegExp(LAZYEND, "g");
 function makeNotLazy(html: string) {
     let s = html.replace(RLAZYSTART, "");
     const i = s.lastIndexOf(LAZYEND);
-    if (i >= 0) s = s.substring(0, i);
+    if (i >= 0) { s = s.substring(0, i); }
     s = s.replace(RLAZYEND, "");
     s = s.replace(/-LAZY->/g, "-->");
     s = s.replace(/<!-LAZY-/g, "<!--");
@@ -89,7 +89,7 @@ export class AnswerBrowserLazyController implements IController {
             return;
         }
         const par: JQuery = this.element.parents(".par");
-        let plugin = par.find(".parContent");
+        const plugin = par.find(".parContent");
         this.compiled = true;
         if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId)) {
             const newHtml = '<answerbrowser task-id="' + this.taskId + '"></answerbrowser>';
@@ -143,7 +143,7 @@ export class AnswerBrowserController implements IController {
     private giveCustomPoints: boolean = false;
     private review: boolean = false;
     private shouldFocus: boolean = false;
-    private alerts: {}[] = [];
+    private alerts: Array<{}> = [];
     private taskInfo: ITaskInfo | undefined;
     private points: number | undefined;
     private scope: IScope;
@@ -400,7 +400,7 @@ export class AnswerBrowserController implements IController {
     }
 
     changeStudent(dir: 1 | -1) {
-        let newIndex = this.findSelectedUserIndex() + dir;
+        const newIndex = this.findSelectedUserIndex() + dir;
         this.changeStudentToIndex(newIndex);
     }
 
@@ -408,7 +408,7 @@ export class AnswerBrowserController implements IController {
         if (!this.users) {
             return;
         }
-        let newIndex = Math.floor(Math.random() * this.users.length);
+        const newIndex = Math.floor(Math.random() * this.users.length);
         this.changeStudentToIndex(newIndex);
     }
 

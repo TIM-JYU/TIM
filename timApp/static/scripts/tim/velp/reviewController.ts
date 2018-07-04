@@ -1,13 +1,12 @@
 import angular, {IController, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {showMessageDialog} from "../ui/dialog";
-import {AnnotationController} from "./annotation";
 import {AnswerBrowserController, AnswerBrowserLazyController} from "../answer/answerbrowser3";
-import {VelpSelectionController} from "./velpSelection";
-import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVelp} from "./velptypes";
 import {IAnswer} from "../answer/IAnswer";
+import {addElementToParagraphMargin} from "../document/parhelpers";
+import {ViewCtrl} from "../document/viewctrl";
 import {IItem} from "../item/IItem";
+import {showMessageDialog} from "../ui/dialog";
 import {$compile, $http, $timeout, $window} from "../util/ngimport";
 import {
     angularWait,
@@ -18,8 +17,9 @@ import {
     scrollToElement,
     stringOrNull,
 } from "../util/utils";
-import {addElementToParagraphMargin} from "../document/parhelpers";
-import {ViewCtrl} from "../document/viewctrl";
+import {AnnotationController} from "./annotation";
+import {VelpSelectionController} from "./velpSelection";
+import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVelp} from "./velptypes";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
@@ -163,7 +163,7 @@ export class ReviewController implements IController {
          */
         const children = [];
         for (let i = 0; i < element.childNodes.length; i++) {
-            let childNode = element.childNodes[i];
+            const childNode = element.childNodes[i];
             if (checkIfElement(childNode)) {
                 children.push(childNode);
             }
@@ -354,7 +354,7 @@ export class ReviewController implements IController {
     createVelpBadge(par: string): HTMLElementTagNameMap["input"] {
         this.velpBadgePar = par;
         if (this.velpBadge) {
-            //$compile(this.velpBadge)(this);
+            // $compile(this.velpBadge)(this);
             return this.velpBadge;
         }
         const btn = document.createElement("input");
@@ -366,8 +366,8 @@ export class ReviewController implements IController {
         btn.onclick = (e) => {
             this.clearVelpBadge(e);
         };
-        //btn.setAttribute("ng-click", "clearVelpBadge($event)");
-        //$compile(btn)(this);
+        // btn.setAttribute("ng-click", "clearVelpBadge($event)");
+        // $compile(btn)(this);
         this.velpBadge = btn;
         return btn;
     }
@@ -481,7 +481,7 @@ export class ReviewController implements IController {
                         node.removeChild(annotationElement[1]);
                     }
                     this.addAnnotationToElement(par[0], this.annotations[a], false, "Added also margin annotation");
-                    //addAnnotationToElement(this.annotations[a], false, "Added also margin annotation");
+                    // addAnnotationToElement(this.annotations[a], false, "Added also margin annotation");
                 }
             }
 
@@ -597,7 +597,7 @@ export class ReviewController implements IController {
                 this.selectedArea = undefined;
             }
         } catch (err) {
-            //return;
+            // return;
         }
 
         if (this.selectedArea != null) {
@@ -710,10 +710,11 @@ export class ReviewController implements IController {
 
         const children = element.childNodes;
 
-        for (let i = 0; i < children.length; i++)
+        for (let i = 0; i < children.length; i++) {
             if (this.hasElementChildrenAnnotation(children[i])) {
                 return true;
             }
+        }
 
         return false;
     }
@@ -1216,11 +1217,12 @@ export class ReviewController implements IController {
         if (isolateScope) {
             const actrl: AnnotationController | undefined = isolateScope.actrl;
             if (actrl && (annotation.coord.start == null || actrl.show || !annotation.user_id)) {
-                if (actrl.show) scrollToWindow = false;
+                if (actrl.show) { scrollToWindow = false; }
                 actrl.toggleAnnotationShow();
-                if (scrollToWindow && !isInViewport(annotationElement))
+                if (scrollToWindow && !isInViewport(annotationElement)) {
                     scrollToElement(annotationElement);
-                //addAnnotationToElement(par, annotation, false, "Added also margin annotation");
+                }
+                // addAnnotationToElement(par, annotation, false, "Added also margin annotation");
                 return;
             }
         }
@@ -1246,15 +1248,14 @@ export class ReviewController implements IController {
         }
 
         let abtimeout = 300;
-        if (ab) abtimeout = 1;
+        if (ab) { abtimeout = 1; }
 
         await $timeout(abtimeout);
 
         ab = angular.element(parent.getElementsByTagName("ANSWERBROWSER")[0]);
         const abscope = ab.isolateScope().$ctrl;
         let abscopetimeout = 500;
-        if (abscope.review && abscope.selectedAnswer && abscope.selectedAnswer.id === annotation.answer_id) abscopetimeout = 1;
-        else abscope.setAnswerById(annotation.answer_id);
+        if (abscope.review && abscope.selectedAnswer && abscope.selectedAnswer.id === annotation.answer_id) { abscopetimeout = 1; } else { abscope.setAnswerById(annotation.answer_id); }
         abscope.review = true;
 
         await $timeout(abscopetimeout);
@@ -1265,7 +1266,7 @@ export class ReviewController implements IController {
         // TODO: tutki ylimääräinen show ja miten saadaan toggleksi.
         ae.showAnnotation();
         // if ( abscopetimeout > 1 && scrollToWindow) scrollToElement(annotationElement);
-        if (scrollToWindow && !isInViewport(annotationElement)) scrollToElement(annotationElement);
+        if (scrollToWindow && !isInViewport(annotationElement)) { scrollToElement(annotationElement); }
     }
 }
 
@@ -1283,10 +1284,10 @@ timApp.component("timReview", {
  ng-if="$ctrl.velpMode || $ctrl.vctrl.teacherMode"
  id="velpMenu"
  teacher-right="$ctrl.vctrl.item.rights.teacher"
- on-init="$ctrl.initVelpSelection($API)" 
+ on-init="$ctrl.initVelpSelection($API)"
  doc-id="$ctrl.docId"
  >
- 
+
 </velp-selection>
 `,
     transclude: true,

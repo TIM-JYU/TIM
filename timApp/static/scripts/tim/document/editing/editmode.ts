@@ -50,5 +50,5 @@ function showHidden(showParam: string | null) {
     $(".mdcontent").css("display", displayValue);
 
     // css hide/show page break for edit mode
-    $('#CSSpagebreak > p').css('display', displayValue);
+    $("#CSSpagebreak > p").css("display", displayValue);
 }

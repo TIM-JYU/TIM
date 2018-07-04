@@ -3,8 +3,8 @@ import moment, {Duration, Moment} from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
 import {Binding, markAsUsed} from "tim/util/utils";
-import {durationTypes} from "../ui/durationPicker";
 import {showMessageDialog} from "../ui/dialog";
+import {durationTypes} from "../ui/durationPicker";
 import {$http, $window} from "../util/ngimport";
 
 markAsUsed(focusMe);

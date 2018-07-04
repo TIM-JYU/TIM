@@ -1,8 +1,8 @@
 import {IController} from "angular";
 import {timApp} from "../app";
-import {LectureController} from "./lectureController";
 import {getItem, IItem} from "../item/IItem";
 import {Require} from "../util/utils";
+import {LectureController} from "./lectureController";
 
 class LectureMenuController implements IController {
     private lctrl!: Require<LectureController>;

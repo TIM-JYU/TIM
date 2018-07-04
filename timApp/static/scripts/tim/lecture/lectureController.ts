@@ -17,10 +17,13 @@ import moment from "moment";
 import {timApp} from "tim/app";
 import sessionsettings from "tim/session";
 import {clone, getURLParameter, markAsUsed, Require, setSetting, to} from "tim/util/utils";
-import {showLectureEnding} from "./lectureEnding";
-import * as wall from "./lectureWall";
-import {showLectureWall} from "./lectureWall";
+import {ViewCtrl} from "../document/viewctrl";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
+import {Users} from "../user/userService";
+import {$http, $log, $timeout, $window} from "../util/ngimport";
+import {currentQuestion, IAnswerQuestionResult, showQuestionAnswerDialog} from "./answerToQuestionController";
+import {showLectureDialog} from "./createLectureCtrl";
+import {showLectureEnding} from "./lectureEnding";
 import {
     alreadyAnswered,
     endTimeChanged,
@@ -47,13 +50,10 @@ import {
     questionAsked,
     questionHasAnswer,
 } from "./lecturetypes";
-import {$http, $log, $timeout, $window} from "../util/ngimport";
-import {Users} from "../user/userService";
-import {currentQuestion, IAnswerQuestionResult, showQuestionAnswerDialog} from "./answerToQuestionController";
-import {showLectureDialog} from "./createLectureCtrl";
+import {showLectureWall} from "./lectureWall";
+import * as wall from "./lectureWall";
 import {askQuestion} from "./questionAskController";
 import {showStatisticsDialog} from "./showStatisticsToQuestionController";
-import {ViewCtrl} from "../document/viewctrl";
 
 markAsUsed(wall);
 
@@ -504,7 +504,7 @@ export class LectureController implements IController {
      * Gets lectureInfo and shows editLecture dialog
      */
     async editLecture(lectureId: string) {
-        let params = {lecture_id: lectureId};
+        const params = {lecture_id: lectureId};
         const response = await $http<ILecture>({
             url: "/showLectureInfoGivenName",
             method: "GET",

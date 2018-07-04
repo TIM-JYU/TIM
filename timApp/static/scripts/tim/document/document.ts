@@ -41,7 +41,7 @@ export class Document {
                 const unreadCount = readlines.not(".read-modified").not(".read").length;
                 if (modifiedCount + unreadCount > 0) {
                     sectionPars[sectionPars.length - 1].append($("<div>", {
-                        "class": "readsection",
+                        class: "readsection",
                         title: "Mark preceding section as read (" +
                         sectionPars.length + " paragraphs - " + unreadCount +
                         " unread, " + modifiedCount + " modified)",

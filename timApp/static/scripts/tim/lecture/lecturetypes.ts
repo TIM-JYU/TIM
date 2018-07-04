@@ -1,7 +1,7 @@
 import moment, {Moment} from "moment";
+import {IItem} from "../item/IItem";
 import {DurationChoice} from "../ui/durationPicker";
 import {IUser} from "../user/IUser";
-import {IItem} from "../item/IItem";
 
 export interface IExplCollection {
     [idString: string]: string;
@@ -73,8 +73,8 @@ export interface IRow extends IHeader {
 }
 
 export interface IUnprocessedHeaders {
-    headers: (IHeader | string)[];
-    rows: (IRow | string)[];
+    headers: Array<IHeader | string>;
+    rows: Array<IRow | string>;
 }
 
 export interface IProcessedHeaders {

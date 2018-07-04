@@ -1,15 +1,13 @@
 import {IScope} from "angular";
 import $ from "jquery";
-import {Coords, markPageDirty} from "tim/util/utils";
-import {isManageResponse, showRenameDialog} from "./pluginRenameForm";
-import {showMessageDialog} from "../../ui/dialog";
-import {openEditor, PareditorController} from "../../editor/pareditor";
-import {IExtraData, IParResponse} from "./edittypes";
-import {$compile, $http, $window} from "../../util/ngimport";
-import {IPluginInfoResponse, ParCompiler} from "../../editor/parCompiler";
-import {empty, isMobileDevice, to} from "../../util/utils";
 import {getActiveDocument} from "tim/document/document";
+import {Coords, markPageDirty} from "tim/util/utils";
+import {IPluginInfoResponse, ParCompiler} from "../../editor/parCompiler";
+import {openEditor, PareditorController} from "../../editor/pareditor";
 import {TimTable} from "../../plugin/timTable";
+import {showMessageDialog} from "../../ui/dialog";
+import {$compile, $http, $window} from "../../util/ngimport";
+import {empty, isMobileDevice, to} from "../../util/utils";
 import {onClick} from "../eventhandlers";
 import {
     canEditPar,
@@ -30,6 +28,8 @@ import {
 } from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
 import {viewCtrlDot} from "../viewutils";
+import {IExtraData, IParResponse} from "./edittypes";
+import {isManageResponse, showRenameDialog} from "./pluginRenameForm";
 
 export enum EditType {
     Edit,
@@ -60,8 +60,8 @@ function prepareOptions($this: Element, saveTag: string): [JQuery, IParEditorOpt
     // var $par = $('.par').last();
     // return sc.showAddParagraphBelow(e, $par);
     // return sc.showAddParagraphAbove(e, sc.$pars);
-    const par = $($this).closest('.par');
-    const text = par.find('pre').text();
+    const par = $($this).closest(".par");
+    const text = par.find("pre").text();
     // text = text.replace('⁞', '');  // TODO: set cursor to | position
     let forcedClasses: string[] = [];
     const forceAttr = getParAttributes(par).forceclass;
@@ -69,11 +69,11 @@ function prepareOptions($this: Element, saveTag: string): [JQuery, IParEditorOpt
         forcedClasses = forceAttr.split(" ");
     }
     const options = {
-        'localSaveTag': saveTag,
-        'texts': {
-            'beforeText': "alkuun",
-            'initialText': text,
-            'afterText': "loppuun",
+        localSaveTag: saveTag,
+        texts: {
+            beforeText: "alkuun",
+            initialText: text,
+            afterText: "loppuun",
         },
         forcedClasses: forcedClasses,
     };
@@ -82,19 +82,19 @@ function prepareOptions($this: Element, saveTag: string): [JQuery, IParEditorOpt
 
 // Wrap given text to max n chars length lines spliting from space
 export function wrapText(s: string, n: number) {
-    var lines = s.split("\n");
-    var needJoin = false;
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
+    const lines = s.split("\n");
+    let needJoin = false;
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
         // lines[i] = "";
-        var sep = "";
+        let sep = "";
         if (line.length > n) {
             lines[i] = "";
             while (true) {
-                var p = -1;
+                let p = -1;
                 if (line.length > n) {
                     p = line.lastIndexOf(" ", n);
-                    if (p < 0) p = line.indexOf(" "); // long line
+                    if (p < 0) { p = line.indexOf(" "); } // long line
                 }
                 if (p < 0) {
                     lines[i] += sep + line;
@@ -112,7 +112,7 @@ export function wrapText(s: string, n: number) {
             }
         }
     }
-    if (needJoin) return {modified: true, s: lines.join("\n")};
+    if (needJoin) { return {modified: true, s: lines.join("\n")}; }
     return {modified: false, s: s};
 }
 
@@ -380,7 +380,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
      * @param {Paragraph} $par The table paragraph.
      */
     toggleTableEditor(e: Event, $par: Paragraph) {
-        let parId = getParId($par);
+        const parId = getParId($par);
 
         if (parId == null) {
             void showMessageDialog("Could not find paragraph");
@@ -513,10 +513,11 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
      * at all.
      */
     isTimTableInEditMode($par: Paragraph | undefined): boolean | undefined {
-        if ($par == null)
+        if ($par == null) {
             return undefined;
+        }
 
-        let parId = getParId($par);
+        const parId = getParId($par);
 
         if (parId == null) {
             return undefined;
@@ -574,8 +575,8 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                     desc: "Copy paragraph",
                     show: $window.editMode !== "area",
                 },
-                //{func: (e, par) => this.cutArea(e, par), desc: 'Cut area', show: $window.editMode === 'area'},
-                //{func: (e, par) => this.copyArea(e, par), desc: 'Copy area', show: $window.editMode === 'area'},
+                // {func: (e, par) => this.cutArea(e, par), desc: 'Cut area', show: $window.editMode === 'area'},
+                // {func: (e, par) => this.copyArea(e, par), desc: 'Copy area', show: $window.editMode === 'area'},
                 {
                     func: (e: JQueryEventObject, par: Paragraph) => this.viewctrl.clipboardHandler.showPasteMenu(e, par),
                     desc: "Paste...",

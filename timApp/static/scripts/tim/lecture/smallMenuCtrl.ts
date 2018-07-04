@@ -1,11 +1,11 @@
 import angular from "angular";
 import {IController} from "angular";
 import {timApp} from "tim/app";
-import {ILecture, ILectureListResponse2} from "./lecturetypes";
-import {$http, $window} from "../util/ngimport";
-import {LectureController} from "./lectureController";
 import {ViewCtrl} from "../document/viewctrl";
+import {$http, $window} from "../util/ngimport";
 import {Require} from "../util/utils";
+import {LectureController} from "./lectureController";
+import {ILecture, ILectureListResponse2} from "./lecturetypes";
 
 /**
  * FILL WITH SUITABLE TEXT

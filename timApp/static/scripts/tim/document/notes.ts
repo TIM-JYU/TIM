@@ -1,14 +1,14 @@
 import {IScope} from "angular";
 import $ from "jquery";
 import {Moment} from "moment";
-import {showMessageDialog} from "../ui/dialog";
-import {openEditor} from "../editor/pareditor";
-import {IExtraData, IParResponse} from "./editing/edittypes";
-import {$compile, $http, $window} from "../util/ngimport";
-import {IPluginInfoResponse} from "../editor/parCompiler";
-import {getElementParent, isMobileDevice, to} from "../util/utils";
 import {getActiveDocument} from "tim/document/document";
+import {IPluginInfoResponse} from "../editor/parCompiler";
+import {openEditor} from "../editor/pareditor";
+import {showMessageDialog} from "../ui/dialog";
+import {$compile, $http, $window} from "../util/ngimport";
+import {getElementParent, isMobileDevice, to} from "../util/utils";
 import {EditPosition, EditType} from "./editing/editing";
+import {IExtraData, IParResponse} from "./editing/edittypes";
 import {onClick} from "./eventhandlers";
 import {addElementToParagraphMargin, getFirstParId, isActionablePar, Paragraph, ParOrArea} from "./parhelpers";
 import {markParRead, readingTypes} from "./readings";
@@ -174,16 +174,17 @@ export class NotesHandler {
     createNoteBadge($par: Paragraph) {
         this.noteBadgePar = $par;
         if (this.noteBadge) {
-            //var parent = getElementParent(sc.noteBadge);
-            //if ( !parent ) $compile(sc.noteBadge)(sc);
+            // var parent = getElementParent(sc.noteBadge);
+            // if ( !parent ) $compile(sc.noteBadge)(sc);
             return this.noteBadge;
         }
 
         const btn = document.createElement("input");
         btn.type = "button";
         btn.classList.add("note-badge");
-        if ($window.velpMode)
+        if ($window.velpMode) {
             btn.classList.add("note-badge-with-velp");
+        }
         btn.classList.add("timButton");
         btn.value = "C";
         btn.title = "Add comment/note";
@@ -212,7 +213,7 @@ export class NotesHandler {
         }
         $event.stopPropagation();
         let $par = $($event.target);
-        if (!$par.hasClass("par")) $par = $par.parents(".par");
+        if (!$par.hasClass("par")) { $par = $par.parents(".par"); }
         this.updateNoteBadge($par);
     }
 
@@ -222,7 +223,7 @@ export class NotesHandler {
      * @param $par - Element where the badge needs to be attached
      */
     updateNoteBadge($par: Paragraph) {
-        if (!$par) return;
+        if (!$par) { return; }
         if (!isActionablePar($par)) {
             return;
         }
@@ -231,7 +232,7 @@ export class NotesHandler {
         }
         markParRead($par, readingTypes.clickPar);
         const newElement = $par[0];
-        if (!newElement) return;
+        if (!newElement) { return; }
         addElementToParagraphMargin(newElement, this.createNoteBadge($par));
     }
 
@@ -243,7 +244,7 @@ export class NotesHandler {
         const btn = this.noteBadge;
         if (btn) {
             const parent = getElementParent(btn);
-            if (parent) parent.removeChild(btn);
+            if (parent) { parent.removeChild(btn); }
         }
 
         if (e != null) {

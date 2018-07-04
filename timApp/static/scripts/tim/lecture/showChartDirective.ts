@@ -4,8 +4,8 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {fixQuestionJson} from "tim/document/question/dynamicAnswerSheet";
 import {Overwrite} from "type-zoo";
-import {IAskedQuestion, IQuestionAnswer} from "./lecturetypes";
 import {assertNotNull, clone} from "../util/utils";
+import {IAskedQuestion, IQuestionAnswer} from "./lecturetypes";
 
 /**
  * Created by hajoviin on 13.5.2015.
@@ -391,7 +391,7 @@ class ShowChartController implements IController {
         this.isText = false;
         const showLegend = data.headers.length > 1;
 
-        const labels: (string | string[])[] = [];
+        const labels: Array<string | string[]> = [];
         const emptyData: number[] = [];
         for (const row of data.rows) {
             const text = qstShortText(row.text);
@@ -435,7 +435,7 @@ class ShowChartController implements IController {
 
         this.chartConfig = {
             type: "horizontalBar",
-            //type: 'bar',
+            // type: 'bar',
             // type: 'pie',
             data: {
                 labels: labels,
@@ -456,7 +456,7 @@ class ShowChartController implements IController {
                 },
                 scales: {
                     xAxes: [{
-                        //stacked: true,
+                        // stacked: true,
                         ticks: {
                             min: 0,
                             // beginAtZero: true,
@@ -470,7 +470,7 @@ class ShowChartController implements IController {
                         },
                     }],
                     yAxes: [{
-                        //stacked: true
+                        // stacked: true
                         ticks: {
                             min: 0,
                             // beginAtZero: true,

@@ -2,8 +2,8 @@ import {IScope} from "angular";
 import $ from "jquery";
 import * as nameArea from "tim/document/editing/nameArea";
 import {Coords, markAsUsed} from "tim/util/utils";
-import {INameAreaOptions, showNameAreaDialog} from "./editing/nameArea";
 import {$http, $timeout, $window} from "../util/ngimport";
+import {INameAreaOptions, showNameAreaDialog} from "./editing/nameArea";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {Area, getArea, getFirstParId, getLastParId, Paragraph, Paragraphs} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
@@ -137,9 +137,9 @@ export class AreaHandler {
                 area_end: getLastParId($area.last()),
                 options,
             });
-            //$area.children().wrapAll('<div class="areaContent">');
-            //$area.append('<div class="areaeditline1">');
-            //if (options.collapsible)
+            // $area.children().wrapAll('<div class="areaContent">');
+            // $area.append('<div class="areaeditline1">');
+            // if (options.collapsible)
             this.viewctrl.reload();
         } catch (e) {
             $window.alert(e.data.error);

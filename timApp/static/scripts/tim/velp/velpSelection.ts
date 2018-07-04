@@ -1,11 +1,11 @@
 import angular, {IController, IFormController, IHttpPromise} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
+import {Binding, markAsUsed, Require} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velpSummary";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
-import {Binding, markAsUsed, Require} from "tim/util/utils";
-import {ReviewController} from "./reviewController";
 import {$http, $log, $q, $window} from "../util/ngimport";
+import {ReviewController} from "./reviewController";
 import {
     ILabel,
     ILabelUI,
@@ -141,7 +141,7 @@ export class VelpSelectionController implements IController {
         this.advancedOn = JSON.parse(this.getValuesFromLocalStorage(this.advancedOnKey, "false"));
 
         // Get velpgroup data
-        const promises: IHttpPromise<any>[] = [];
+        const promises: Array<IHttpPromise<any>> = [];
         promises.push();
         const p1 = $http.get<IVelpGroup[]>("/{0}/get_velp_groups".replace("{0}", doc_id.toString()));
         promises.push(p1);
@@ -299,7 +299,7 @@ export class VelpSelectionController implements IController {
                         }
                     }
                 });
-                //this.updateVelpList();
+                // this.updateVelpList();
 
             });
 
@@ -319,7 +319,7 @@ export class VelpSelectionController implements IController {
                         }
                     }
                 });
-                //this.updateVelpList();
+                // this.updateVelpList();
 
             });
 
@@ -486,10 +486,10 @@ export class VelpSelectionController implements IController {
         ).isolateScope<any>().$ctrl;
         velp.toggleVelpToEdit();
 
-        //if (this.getVelpUnderEdit().id !== this.newVelp.id)
+        // if (this.getVelpUnderEdit().id !== this.newVelp.id)
         //    this.resetEditVelp();
 
-        //this.resetEditVelp = this.resetNewVelp;
+        // this.resetEditVelp = this.resetNewVelp;
 
         /*
          if (velp.id === this.velpToEdit.id && velp.edit) {

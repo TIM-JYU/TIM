@@ -138,7 +138,7 @@ export class BookmarksController implements IController {
         e.preventDefault();
         if ($window.confirm("Are you sure you want to delete this bookmark group?")) {
             $http.post<IBookmarkGroup[]>("/bookmarks/deleteGroup", {group: group.name})
-                .then((resp) => this.getFromServer(resp.data), response => {
+                .then((resp) => this.getFromServer(resp.data), (response) => {
                     $window.alert("Could not delete bookmark group.");
                 });
         }

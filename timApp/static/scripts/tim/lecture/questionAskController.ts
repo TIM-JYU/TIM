@@ -1,14 +1,14 @@
 import {IRootElementService, IScope} from "angular";
 import * as answerSheet from "tim/document/question/dynamicAnswerSheet";
 import {markAsUsed} from "tim/util/utils";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
-import {IAskedQuestion, IUniqueParId} from "./lecturetypes";
-import {$http} from "../util/ngimport";
 import {
     deleteQuestionWithConfirm, fetchAndEditQuestion, fetchAskedQuestion, fetchQuestion,
     showQuestionEditDialog,
 } from "../document/question/questionController";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
+import {$http} from "../util/ngimport";
+import {IAskedQuestion, IUniqueParId} from "./lecturetypes";
 
 markAsUsed(answerSheet);
 

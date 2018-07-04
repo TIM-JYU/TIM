@@ -1,12 +1,12 @@
 import {IController} from "angular";
 import * as createItem from "tim/item/createItem";
 import {markAsUsed} from "tim/util/utils";
-import {showCourseListDialog} from "../document/course/courseListDialogCtrl";
-import {$http, $window} from "../util/ngimport";
-import {ICourseSettings, IItem} from "../item/IItem";
-import {to} from "../util/utils";
 import {timApp} from "../app";
+import {showCourseListDialog} from "../document/course/courseListDialogCtrl";
+import {ICourseSettings, IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
+import {$http, $window} from "../util/ngimport";
+import {to} from "../util/utils";
 
 markAsUsed(createItem);
 

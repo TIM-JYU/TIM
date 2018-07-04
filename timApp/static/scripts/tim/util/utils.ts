@@ -108,7 +108,7 @@ export function getElementParent(element: Node): Element | null {
     return getElementParent(parent);
 }
 
-export type Coords = {left: number, top: number};
+export interface Coords {left: number; top: number; }
 
 export function dist(coords1: Coords, coords2: Coords) {
     return Math.sqrt(Math.pow(coords2.left - coords1.left, 2) + Math.pow(coords2.top - coords1.top, 2));
@@ -235,7 +235,6 @@ export function getOutOffsetFully(el: Element): IBounds {
     }
     return bounds;
 }
-
 
 export function getOutOffsetVisible(el: Element) {
     const limit = 20;

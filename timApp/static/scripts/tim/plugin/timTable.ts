@@ -2,13 +2,12 @@ import {IController, IRootElementService, IScope} from "angular";
 import {getParId} from "tim/document/parhelpers";
 import {timApp} from "../app";
 import {ViewCtrl} from "../document/viewctrl";
+import {ParCompiler} from "../editor/parCompiler";
 import {openEditorSimple} from "../editor/pareditor";
 import {$http, $timeout} from "../util/ngimport";
-import {ParCompiler} from "../editor/parCompiler";
 import {Binding} from "../util/utils";
 
-const styleToHtml: { [index: string]: string } =
-    {
+const styleToHtml: { [index: string]: string } = {
         backgroundColor: "background-color",
         border: "border",
         borderBottom: "border-bottom",
@@ -33,8 +32,8 @@ export interface TimTable {
 }
 
 export interface ITable extends ITableStyles {
-    rows?: (IRow)[];
-    columns?: (IColumn)[];
+    rows?: IRow[];
+    columns?: IColumn[];
     tabledatablock?: DataEntity;
 }
 
@@ -61,7 +60,6 @@ export interface DataEntity {
     cells: CellDataEntity;
 }
 
-
 export interface CellDataEntity {
     [key: string]: string;
 }
@@ -70,7 +68,7 @@ export type CellType = string | number | boolean | null;
 export type CellEntity = ICell | CellType;
 
 export interface IRow extends IRowStyles {
-    row?: (CellEntity)[];
+    row?: CellEntity[];
     id?: string;
 }
 
@@ -138,7 +136,6 @@ function isPrimitiveCell(cell: CellEntity): cell is CellType {
     return cell == null || (cell as ICell).cell === undefined;
 }
 
-
 export class TimTableController implements IController {
     private static $inject = ["$scope", "$element"];
     public viewctrl?: ViewCtrl;
@@ -162,17 +159,17 @@ export class TimTableController implements IController {
         this.InitializeCellDataMatrix();
         this.readDataBlockAndSetValuesToDataCellMatrix();
 
-        if (this.viewctrl == null)
+        if (this.viewctrl == null) {
             return;
-        else {
-            let parId = getParId(this.element.parents(".par"));
-            if (parId == null)
+        } else {
+            const parId = getParId(this.element.parents(".par"));
+            if (parId == null) {
                 return;
+            }
             this.viewctrl.addTable(this, parId);
         }
         document.addEventListener("keyup", this.keyDownPressedTable);
     }
-
 
     /**
      * Removes listener and cleans up
@@ -181,14 +178,14 @@ export class TimTableController implements IController {
         document.removeEventListener("keyup", this.keyDownPressedTable);
     }
 
-
     /**
      * Checks whether the table is in edit mode.
      * @returns {boolean} True if the table is in edit mode, otherwise false.
      */
     public isInEditMode() {
-        if (!this.editing)
+        if (!this.editing) {
             return false;
+        }
         return this.editing;
     }
 
@@ -197,9 +194,8 @@ export class TimTableController implements IController {
      */
     public editSave() {
         this.editing = false;
-        if (this.currentCell) this.currentCell = undefined;
+        if (this.currentCell) { this.currentCell = undefined; }
     }
-
 
     /**
      * Returns true if currentcell is not undefined
@@ -223,7 +219,6 @@ export class TimTableController implements IController {
         this.mouseInTable = false;
     }
 
-
     /**
      * Saves cell content
      * @param {string} cellContent Saved value
@@ -238,13 +233,12 @@ export class TimTableController implements IController {
             docId,
             parId,
             row,
-            col
+            col,
         });
         const cellHtml = response.data[0];
         this.cellDataMatrix[row][col] = cellHtml;
         ParCompiler.processAllMathDelayed(this.element);
     }
-
 
     /**
      * Get cell data
@@ -263,12 +257,11 @@ export class TimTableController implements IController {
         });
 
         const data = response.data;
-        let value = this.cellToString(data[0]);
+        const value = this.cellToString(data[0]);
         this.editedCellContent = value;
         this.editedCellInitialContent = value;
         return data[0];
     }
-
 
     /**
      * Opens editor
@@ -281,23 +274,22 @@ export class TimTableController implements IController {
      * @returns {Promise<void>}
      */
     async openEditor(cell: CellEntity, docId: number, value: string, parId: string, row: number, col: number) {
-        if (this.currentCell) this.currentCell.editorOpen = true;
+        if (this.currentCell) { this.currentCell.editorOpen = true; }
         if (this.editedCellContent == undefined) {
             return;
         }
         const result = await openEditorSimple(docId, this.editedCellContent);
-        if (this.currentCell) this.currentCell.editorOpen = false;
+        if (this.currentCell) { this.currentCell.editorOpen = false; }
         if (result.type == "save" && result.text != this.editedCellInitialContent) {
             this.saveCells(result.text, docId, parId, row, col);
-            //ctrl.cellDataMatrix[row][col] = result.text
+            // ctrl.cellDataMatrix[row][col] = result.text
             this.editedCellContent = result.text;
         }
         if (result.type == "cancel") {
             this.currentCell = undefined;
         }
         if (isPrimitiveCell(cell)) {
-        }
-        else cell.editorOpen = false;
+        } else { cell.editorOpen = false; }
     }
 
     /**
@@ -307,15 +299,15 @@ export class TimTableController implements IController {
      * @param {number} coli Column ndex
      */
     private editorOpen(cell: CellEntity, rowi: number, coli: number) {
-        if (this.currentCell)
+        if (this.currentCell) {
             this.currentCell.editorOpen = true;
-        let parId = getParId(this.element.parents(".par"));
-        if (parId === undefined || !this.viewctrl) return;
+        }
+        const parId = getParId(this.element.parents(".par"));
+        if (parId === undefined || !this.viewctrl) { return; }
         this.openEditor(cell, this.viewctrl.item.id, this.cellDataMatrix[rowi][coli], parId, rowi, coli);
-        let edit = this.element.find(".editInput");
+        const edit = this.element.find(".editInput");
         edit.focus();
     }
-
 
     /**
      * Opens advanced editor
@@ -328,7 +320,7 @@ export class TimTableController implements IController {
         const modal: CellEntity = {
             cell: this.editedCellContent,
         };
-        if (this.currentCell != undefined) this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
+        if (this.currentCell != undefined) { this.editorOpen(modal, this.currentCell.row, this.currentCell.col); }
     }
 
     /**
@@ -337,20 +329,20 @@ export class TimTableController implements IController {
      */
     private InitializeCellDataMatrix() {
         this.cellDataMatrix = [];
-        if (this.data.table.rows)
+        if (this.data.table.rows) {
             this.data.table.rows.forEach((item, index) => {
                 this.cellDataMatrix[index] = [];
-                if (item.row)
+                if (item.row) {
                     item.row.forEach((item2, index2) => {
                         if (item.row) {
-                            let itemInRow = item.row[index2];
-                            if (isPrimitiveCell(itemInRow)) this.cellDataMatrix[index][index2] = this.cellToString(itemInRow);
-                            else this.cellDataMatrix[index][index2] = this.cellToString(itemInRow.cell);
+                            const itemInRow = item.row[index2];
+                            if (isPrimitiveCell(itemInRow)) { this.cellDataMatrix[index][index2] = this.cellToString(itemInRow); } else { this.cellDataMatrix[index][index2] = this.cellToString(itemInRow.cell); }
                         }
                     });
+                }
             });
+        }
     }
-
 
     /**
      * Transforms cell to string
@@ -358,7 +350,7 @@ export class TimTableController implements IController {
      * @returns {string}
      */
     private cellToString(cell: CellType) {
-        if (cell == null) return "";
+        if (cell == null) { return ""; }
         return cell.toString();
     }
 
@@ -366,20 +358,22 @@ export class TimTableController implements IController {
      * Reads DataBlock and sets all values to DataCellMatrix
      */
     private readDataBlockAndSetValuesToDataCellMatrix() {
-        if (this.data.table.tabledatablock)   // reads tabledatablock and sets all values to datacellmatrix
-            for (let item in this.data.table.tabledatablock.cells) {
+        if (this.data.table.tabledatablock) {   // reads tabledatablock and sets all values to datacellmatrix
+            for (const item in this.data.table.tabledatablock.cells) {
 
-                const alphaRegExp = new RegExp('([A-Z]*)');
-                let alpha = alphaRegExp.exec(item);
-                let value = this.data.table.tabledatablock.cells[item];
+                const alphaRegExp = new RegExp("([A-Z]*)");
+                const alpha = alphaRegExp.exec(item);
+                const value = this.data.table.tabledatablock.cells[item];
 
-                if (alpha == null) continue;
-                let numberPlace = item.substring(alpha[0].length);
+                if (alpha == null) { continue; }
+                const numberPlace = item.substring(alpha[0].length);
 
-                let address = this.getAddress(alpha[0], numberPlace);
-                if (this.checkThatAddIsValid(address))
+                const address = this.getAddress(alpha[0], numberPlace);
+                if (this.checkThatAddIsValid(address)) {
                     this.setValueToMatrix(address.col, address.row, value.toString());
+                }
             }
+        }
     }
 
     /**
@@ -388,7 +382,7 @@ export class TimTableController implements IController {
      * @returns {boolean} true if valid
      */
     private checkThatAddIsValid(address: { col: number, row: number }) {
-        if (address.col >= 0 && address.row >= 0) return true;
+        if (address.col >= 0 && address.row >= 0) { return true; }
     }
 
     /**
@@ -404,24 +398,23 @@ export class TimTableController implements IController {
         let reversedCharacterPlaceInString = 0;
         let columnIndex = 0;
         for (let charIndex = colValue.length - 1; charIndex >= 0; charIndex--) {
-            columnIndex += (colValue.charCodeAt(charIndex) - charCodeOfA + 1) * Math.pow(asciiCharCount, reversedCharacterPlaceInString)
+            columnIndex += (colValue.charCodeAt(charIndex) - charCodeOfA + 1) * Math.pow(asciiCharCount, reversedCharacterPlaceInString);
             reversedCharacterPlaceInString++;
         }
         columnIndex = columnIndex - 1;
-        let rowIndex: number = parseInt(rowValue) - 1;
-        return {col: columnIndex, row: rowIndex}
+        const rowIndex: number = parseInt(rowValue) - 1;
+        return {col: columnIndex, row: rowIndex};
     }
-
 
     /**
      * Deals with key events
      * @param {KeyboardEvent} ev Pressed key event
      */
     private keyUpPressedInSmallEditor(ev: KeyboardEvent) {
-        if (ev.ctrlKey && (ev.keyCode == 40 || ev.keyCode == 39 || ev.keyCode == 38 || ev.keyCode == 37))
+        if (ev.ctrlKey && (ev.keyCode == 40 || ev.keyCode == 39 || ev.keyCode == 38 || ev.keyCode == 37)) {
             this.handleArrowMovement(ev);
+        }
     }
-
 
     /**
      * Deals with keyevents inside div
@@ -430,36 +423,36 @@ export class TimTableController implements IController {
     private keyDownPressedTable(ev: KeyboardEvent) {
         if (this.mouseInTable) {
             if (ev.keyCode == 113) {
-                var modal: CellEntity = {
+                const modal: CellEntity = {
                     cell: "",
-                }
-                if (this.currentCell != undefined) this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
+                };
+                if (this.currentCell != undefined) { this.editorOpen(modal, this.currentCell.row, this.currentCell.col); }
             }
             if (ev.keyCode == 13 || ev.keyCode === 9) { // enter or tab
-                let parId = getParId(this.element.parents(".par"));
-                if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
+                const parId = getParId(this.element.parents(".par"));
+                if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
                 if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
-                    let value = this.editedCellContent;
+                    const value = this.editedCellContent;
                     if (typeof value == "string" && this.editedCellInitialContent != value) {
                         this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
                     }
                 }
                 if (ev.keyCode === 13) {
-                    if (this.currentCell)
+                    if (this.currentCell) {
                         this.openCellNextRowOrColumn(this.currentCell.row + 1, this.currentCell.col);
+                    }
                 }
                 if (ev.keyCode === 9) {
-                    if (this.currentCell)
+                    if (this.currentCell) {
                         this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
+                    }
                 }
 
-
             }
-            if (ev.keyCode === 27) { //esc
+            if (ev.keyCode === 27) { // esc
                 this.currentCell = undefined;
                 this.scope.$apply();
             }
-
 
         }
     }
@@ -469,37 +462,41 @@ export class TimTableController implements IController {
      * @param {KeyboardEvent} ev Keyboardevent
      */
     private handleArrowMovement(ev: KeyboardEvent) {
-        var modal: CellEntity = {
+        const modal: CellEntity = {
             cell: "",
-        }
+        };
 
-        let parId = getParId(this.element.parents(".par"));
-        if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
+        const parId = getParId(this.element.parents(".par"));
+        if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
         if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
-            //let value = this.element.find(".editInput").val();
-            let value = this.editedCellContent;
+            // let value = this.element.find(".editInput").val();
+            const value = this.editedCellContent;
             if (typeof value == "string" && this.editedCellInitialContent != value) {
                 this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
             }
         }
         if (ev.keyCode == 40) { // down arrow
-            if (this.currentCell)
+            if (this.currentCell) {
                 this.openCell(this.currentCell.row + 1, this.currentCell.col);
+            }
             return;
         }
         if (ev.keyCode == 39) {
-            if (this.currentCell)
+            if (this.currentCell) {
                 this.openCell(this.currentCell.row, this.currentCell.col + 1);
+            }
             return;
         }
         if (ev.keyCode == 37) {
-            if (this.currentCell)
+            if (this.currentCell) {
                 this.openCell(this.currentCell.row, this.currentCell.col - 1);
+            }
             return;
         }
         if (ev.keyCode == 38) {
-            if (this.currentCell)
+            if (this.currentCell) {
                 this.openCell(this.currentCell.row - 1, this.currentCell.col);
+            }
         }
     }
 
@@ -509,24 +506,23 @@ export class TimTableController implements IController {
      * @param {number} coli Column index
      */
     private openCell(rowi: number, coli: number) {
-        var modal: CellEntity = {
+        const modal: CellEntity = {
             cell: "",
-        }
+        };
         if (this.data.table.rows) {
-            if (rowi >= this.data.table.rows.length) rowi = 0; // if bigger then 0
-            if (rowi < 0) rowi = this.data.table.rows.length - 1;
+            if (rowi >= this.data.table.rows.length) { rowi = 0; } // if bigger then 0
+            if (rowi < 0) { rowi = this.data.table.rows.length - 1; }
         }
 
         if (this.data.table.rows && this.data.table.rows[rowi].row) {
-            let rowrow = this.data.table.rows[rowi].row;
+            const rowrow = this.data.table.rows[rowi].row;
             if (rowrow) {
-                if (coli >= rowrow.length) coli = 0;
-                if (coli < 0) coli = rowrow.length - 1;
+                if (coli >= rowrow.length) { coli = 0; }
+                if (coli < 0) { coli = rowrow.length - 1; }
             }
         }
         this.cellClicked(modal, rowi, coli);
     }
-
 
     /**
      * Clicks given or hops opposite side of the table
@@ -534,23 +530,22 @@ export class TimTableController implements IController {
      * @param {number} coli Column index
      */
     private openCellNextRowOrColumn(rowi: number, coli: number) {
-        var modal: CellEntity = {
+        const modal: CellEntity = {
             cell: "",
-        }
+        };
         if (this.data.table.rows) {
-            if (rowi >= this.data.table.rows.length) rowi = 0; // if bigger then 0
-            if (rowi < 0) rowi = this.data.table.rows.length - 1;
+            if (rowi >= this.data.table.rows.length) { rowi = 0; } // if bigger then 0
+            if (rowi < 0) { rowi = this.data.table.rows.length - 1; }
         }
 
         if (this.data.table.rows && this.data.table.rows[rowi].row) {
-            let rowrow = this.data.table.rows[rowi].row;
+            const rowrow = this.data.table.rows[rowi].row;
             if (rowrow) {
                 if (coli >= rowrow.length) {
                     coli = 0;
-                    if (rowi + 1 >= this.data.table.rows.length) rowi = 0;
-                    else rowi += 1;
+                    if (rowi + 1 >= this.data.table.rows.length) { rowi = 0; } else { rowi += 1; }
                 }
-                if (coli < 0) coli = rowrow.length - 1;
+                if (coli < 0) { coli = rowrow.length - 1; }
             }
         }
         this.cellClicked(modal, rowi, coli);
@@ -565,9 +560,8 @@ export class TimTableController implements IController {
     private setValueToMatrix(row: number, col: number, value: string) {
         try {
             this.cellDataMatrix[col][row] = value;
-        }
-        catch (e) {
-            console.log("datacellMatrix is not big enough");//this.updateCellDataMatrix(col, row);
+        } catch (e) {
+            console.log("datacellMatrix is not big enough"); // this.updateCellDataMatrix(col, row);
         }
     }
 
@@ -579,18 +573,18 @@ export class TimTableController implements IController {
      * @param {MouseEvent} event If mouse was clikced
      */
     private async cellClicked(cell: CellEntity, rowi: number, coli: number, event?: MouseEvent) {
-        let parId = getParId(this.element.parents(".par"));
-        if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) return;
+        const parId = getParId(this.element.parents(".par"));
+        if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
 
-        if (this.currentCell)
-            if (this.currentCell.row == rowi && this.currentCell.col == coli)  // if same as previous cell
-            {
+        if (this.currentCell) {
+            if (this.currentCell.row == rowi && this.currentCell.col == coli) {
                 return;
             }
+        }
 
         this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
         if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
-            let value = this.editedCellContent;
+            const value = this.editedCellContent;
 
             if (typeof value === "string" && this.editedCellInitialContent != value) {
                 this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
@@ -601,7 +595,6 @@ export class TimTableController implements IController {
         this.calculateElementPlaces(rowi, coli, event);
     }
 
-
     /**
      * Calculates new places for plus-icons, input element and pen icon
      * @param {number} rowi Row Index
@@ -611,46 +604,43 @@ export class TimTableController implements IController {
      */
     private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent) {
         await $timeout();
-        let table = this.element.find(".timTableTable").first();
-        let tablecell = table.children('tbody').children('tr').eq(rowi).children('td').eq(coli);
-        let off = undefined;
+        const table = this.element.find(".timTableTable").first();
+        const tablecell = table.children("tbody").children("tr").eq(rowi).children("td").eq(coli);
+        let off;
         if (event && event.target) {
             let obj = $(event.target);
-            if (obj.prop('tagName') !== "TD") {
-                obj = obj.parents('td').last();
+            if (obj.prop("tagName") !== "TD") {
+                obj = obj.parents("td").last();
             }
             off = obj.offset();
-            if (!off) return;
-        }
-        else {
+            if (!off) { return; }
+        } else {
             off = tablecell.offset();
-            if (!off) return;
+            if (!off) { return; }
         }
         if (off) {
             this.element.find(".editInput").offset(off);
             await $timeout();
-            let edit = this.element.find(".editInput");
+            const edit = this.element.find(".editInput");
             edit.focus();
-            let editOffset = edit.offset();
-            let editOuterHeight = edit.outerHeight();
-            let tablecellOffset = tablecell.offset();
-            let editOuterWidth = edit.outerWidth();
+            const editOffset = edit.offset();
+            const editOuterHeight = edit.outerHeight();
+            const tablecellOffset = tablecell.offset();
+            const editOuterWidth = edit.outerWidth();
             if (editOffset && editOuterHeight && tablecellOffset && editOuterWidth) {
                 this.element.find(".buttonOpenBigEditor").offset({
                     top: editOffset.top + editOuterHeight,
-                    left: tablecellOffset.left
+                    left: tablecellOffset.left,
                 });
 
                 this.element.find(".buttonCloseSmallEditor").offset({
                     top: editOffset.top,
-                    left: tablecellOffset.left + editOuterWidth
+                    left: tablecellOffset.left + editOuterWidth,
                 });
 
             }
         }
     }
-
-
 
     /**
      * Set styles fo cells
@@ -677,7 +667,6 @@ export class TimTableController implements IController {
         return styles;
     }
 
-
     /**
      * Set attributes for columns
      * @param {IColumn} col Column that need styling
@@ -698,7 +687,6 @@ export class TimTableController implements IController {
         }
         return styles;
     }
-
 
     /**
      * Set attributes for rows
@@ -748,27 +736,28 @@ export class TimTableController implements IController {
     public toggleEditMode() {
         if (this.currentCell != undefined && this.editedCellContent != undefined) {
             if (this.editedCellInitialContent != this.editedCellContent && this.viewctrl) {
-                let parId = getParId(this.element.parents(".par"));
-                if (parId)
+                const parId = getParId(this.element.parents(".par"));
+                if (parId) {
                     this.saveCells(this.editedCellContent, this.viewctrl.item.id, parId, this.currentCell.row,
                         this.currentCell.col);
+                }
             }
             this.currentCell = undefined;
         }
-        if (!this.editing) this.editSave();
+        if (!this.editing) { this.editSave(); }
         this.editing = !this.editing;
     }
-
 
     /**
      * Tells the server to add a new row into this table.
      */
     async addRow() {
-        if (this.viewctrl == null)
+        if (this.viewctrl == null) {
             return;
+        }
 
-        let parId = this.getOwnParId();
-        let docId = this.viewctrl.item.id;
+        const parId = this.getOwnParId();
+        const docId = this.viewctrl.item.id;
         const response = await $http.post<TimTable>("/timTable/addRow",
             {docId, parId});
         this.data = response.data;
@@ -776,16 +765,16 @@ export class TimTableController implements IController {
         this.readDataBlockAndSetValuesToDataCellMatrix();
     }
 
-
     /**
      * Tells the server to add a new column into this table.
      */
     async addColumn() {
-        if (this.viewctrl == null)
+        if (this.viewctrl == null) {
             return;
+        }
 
-        let parId = this.getOwnParId();
-        let docId = this.viewctrl.item.id;
+        const parId = this.getOwnParId();
+        const docId = this.viewctrl.item.id;
         const response = await $http.post<TimTable>("/timTable/addColumn",
             {docId, parId});
         this.data = response.data;
@@ -804,7 +793,6 @@ export class TimTableController implements IController {
         this.currentCell = undefined;
     }
 }
-
 
 timApp.component("timTable", {
     controller: TimTableController,
@@ -845,5 +833,5 @@ timApp.component("timTable", {
                     ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
             </button>
 </div>
-`
+`,
 });

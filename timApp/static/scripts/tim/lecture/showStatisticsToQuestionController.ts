@@ -3,8 +3,8 @@ import moment from "moment";
 import * as chart from "tim/lecture/showChartDirective";
 import {markAsUsed, to} from "tim/util/utils";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {IAskedQuestion, IQuestionAnswer} from "./lecturetypes";
 import {$http, $timeout} from "../util/ngimport";
+import {IAskedQuestion, IQuestionAnswer} from "./lecturetypes";
 
 markAsUsed(chart);
 

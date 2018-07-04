@@ -1,18 +1,18 @@
 import {IController} from "angular";
+import angular from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {Users, UserService} from "../user/userService";
-import {$http, $uibModal, $window} from "../util/ngimport";
-import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
-import {ViewCtrl} from "../document/viewctrl";
-import {showMessageDialog} from "../ui/dialog";
-import {ITemplate, showPrintDialog} from "../printing/printCtrl";
+import {showCourseDialog} from "../document/course/courseDialogCtrl";
 import {showMergePdfDialog} from "../document/minutes/mergePdfCtrl";
+import {ViewCtrl} from "../document/viewctrl";
 import {showTagDialog} from "../item/tagCtrl";
 import {showTagSearchDialog} from "../item/tagSearchCtrl";
-import angular from "angular";
-import {showCourseDialog} from "../document/course/courseDialogCtrl";
-import {TEACHERS_GROUPNAME, ADMIN_GROUPNAME} from "../user/IUser";
+import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
+import {ITemplate, showPrintDialog} from "../printing/printCtrl";
+import {showMessageDialog} from "../ui/dialog";
+import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
+import {Users, UserService} from "../user/userService";
+import {$http, $uibModal, $window} from "../util/ngimport";
 import {Require} from "../util/utils";
 
 /**
@@ -133,7 +133,7 @@ export class SidebarMenuCtrl implements IController {
      * @param settings_data : print settings
      */
     printDocument(settings_data: {}) {
-        var api_address_for_templates = '/print/templates/' + $window.item.path;
+        const api_address_for_templates = "/print/templates/" + $window.item.path;
         $http.get<ITemplate[]>(api_address_for_templates)
             .then((response) => {
                 showPrintDialog({templates: response.data, document: $window.item});
@@ -160,9 +160,10 @@ export class SidebarMenuCtrl implements IController {
      * Checks whether the side menu should have a button for creating extracts from minutes in this document.
      * @returns {boolean} Whether the button for creating extracts should be displayed.
      */
-    enableCreateExtractsButton() : boolean {
-        if (this.docSettings == null || this.docSettings.macros == null || this.vctrl == null)
+    enableCreateExtractsButton(): boolean {
+        if (this.docSettings == null || this.docSettings.macros == null || this.vctrl == null) {
             return false;
+        }
 
         return this.docSettings.macros.knro != null && this.isDocumentMinutes &&
             this.vctrl.item.rights.manage;
@@ -172,9 +173,10 @@ export class SidebarMenuCtrl implements IController {
      * Checks whether the side menu should have a button for creating minutes in this document.
      * @returns {boolean} Whether the button for creating minutes should be displayed.
      */
-    enableCreateMinutesButton() : boolean {
-        if (this.docSettings == null || this.docSettings.macros == null || this.vctrl == null)
+    enableCreateMinutesButton(): boolean {
+        if (this.docSettings == null || this.docSettings.macros == null || this.vctrl == null) {
             return false;
+        }
 
         return this.docSettings.macros.knro != null && !this.isDocumentMinutes &&
             this.vctrl.item.rights.manage;
@@ -184,9 +186,10 @@ export class SidebarMenuCtrl implements IController {
      * Checks if the document is faculty council minutes or a faculty council meeting invitation.
      * @returns {boolean} Whether the document is a faculty council meeting document.
      */
-    isMinutesOrInvitation() : boolean {
-        if (this.docSettings == null || this.docSettings.macros == null)
+    isMinutesOrInvitation(): boolean {
+        if (this.docSettings == null || this.docSettings.macros == null) {
             return false;
+        }
 
         return this.docSettings.macros.knro != null;
     }

@@ -5,8 +5,8 @@
 import {IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {IItem} from "./IItem";
 import {markAsUsed} from "../util/utils";
+import {IItem} from "./IItem";
 
 markAsUsed(focusMe);
 

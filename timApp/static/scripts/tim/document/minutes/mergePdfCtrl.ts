@@ -3,8 +3,8 @@ Controller for merging attachments in TIM documents.
  */
 import {IRootElementService, IScope} from "angular";
 import {ngStorage} from "ngstorage";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
 import {IItem} from "../../item/IItem";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
 import {$http} from "../../util/ngimport";
 import {to} from "../../util/utils";
 
@@ -47,7 +47,7 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
 
        const  [err, response] = await to($http.get<{url: string}>(`/minutes/mergeAttachments/${this.resolve.params.document.path}`, {}));
 
-       //catch error message frin get route
+       // catch error message frin get route
         if (err) {
             showMessageDialog(err.data.error);
             this.loading = false;
@@ -59,14 +59,12 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
 
             const [err2, response2] = await to($http.post<{url: string}>(`/minutes/mergeAttachments/${this.resolve.params.document.path}`, {}));
 
-            //catch error message from post route
-            if(err2) {
+            // catch error message from post route
+            if (err2) {
                 showMessageDialog (err2.data.error);
                 this.loading = false;
                 return;
-            }
-
-            else if (response2) {
+            } else if (response2) {
                 this.docUrl = response2.data.url;
             }
         }

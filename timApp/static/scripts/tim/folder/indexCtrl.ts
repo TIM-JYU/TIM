@@ -1,8 +1,8 @@
 import {IController} from "angular";
 import {timApp} from "tim/app";
-import {$http, $timeout, $upload, $window} from "../util/ngimport";
-import {Users} from "../user/userService";
 import {IItem} from "../item/IItem";
+import {Users} from "../user/userService";
+import {$http, $timeout, $upload, $window} from "../util/ngimport";
 
 // Controller used in document index and folders
 
@@ -74,8 +74,9 @@ class IndexCtrl implements IController {
                     this.getItems();
                 });
             }, (response: any) => {
-                if (response.status > 0)
+                if (response.status > 0) {
                     this.file.progress = "Error occurred: " + response.data.error;
+                }
             }, (evt: any) => {
                 this.file.progress = Math.min(100, Math.floor(100.0 *
                     evt.loaded / evt.total));

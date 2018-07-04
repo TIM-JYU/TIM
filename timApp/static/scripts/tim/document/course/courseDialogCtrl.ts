@@ -4,8 +4,8 @@
 
 import {IFormController, IRootElementService, IScope} from "angular";
 import {Moment} from "moment";
-import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
 import {ICourseSettings, IItem, ISubjectList, ITag, TagType} from "../../item/IItem";
+import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
 import {$http} from "../../util/ngimport";
 import {to} from "../../util/utils";
 

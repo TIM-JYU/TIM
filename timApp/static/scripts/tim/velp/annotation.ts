@@ -14,11 +14,11 @@
 
 import {IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
-import {ReviewController} from "./reviewController";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {$http, $window} from "../util/ngimport";
 import {Binding, Require} from "../util/utils";
+import {ReviewController} from "./reviewController";
 import {IAnnotationCoordless} from "./velptypes";
 
 const UNDEFINED = "undefined";
@@ -92,7 +92,7 @@ export class AnnotationController implements IController {
             velp: this.velp,
             color: this.annotation.color,
             visible_to: this.annotation.visible_to,
-            comment: "", //this.newcomment,
+            comment: "", // this.newcomment,
             aid: this.annotation.id,
         };
     }

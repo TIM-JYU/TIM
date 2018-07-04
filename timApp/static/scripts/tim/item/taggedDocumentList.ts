@@ -8,8 +8,8 @@ import {IController} from "angular";
 import {ngStorage} from "ngstorage";
 import {Binding, to} from "tim/util/utils";
 import {timApp} from "../app";
-import {ITag, ITaggedItem, TagType} from "./IItem";
 import {$http, $localStorage} from "../util/ngimport";
+import {ITag, ITaggedItem, TagType} from "./IItem";
 
 class TaggedDocumentListCtrl implements IController {
     public tagFilter!: Binding<string, "<">;

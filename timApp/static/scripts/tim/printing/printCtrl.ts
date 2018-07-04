@@ -1,7 +1,7 @@
 import angular, {IRootElementService, IScope} from "angular";
 import {ngStorage} from "ngstorage";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {IItem} from "../item/IItem";
+import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http, $localStorage, $window} from "../util/ngimport";
 import {to} from "../util/utils";
 
@@ -121,7 +121,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}, "tim
                 templateDocId: chosenTemplateId,
                 printPluginsUserCode: pluginsUserCode,
                 removeOldImages,
-                force
+                force,
             }));
             if (response) {
                 // console.log(response);

@@ -2,10 +2,10 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {showMessageDialog} from "../../ui/dialog";
 import {$window} from "../../util/ngimport";
-import {fetchAndEditQuestion, showQuestionEditDialog} from "./questionController";
+import {EditPosition, EditType} from "../editing/editing";
 import {getParId, Paragraph} from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
-import {EditPosition, EditType} from "../editing/editing";
+import {fetchAndEditQuestion, showQuestionEditDialog} from "./questionController";
 
 export class QuestionHandler {
     public sc: IScope;

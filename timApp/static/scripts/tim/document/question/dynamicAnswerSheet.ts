@@ -1,6 +1,7 @@
 import {IChangesObject, IController, IOnChangesObject, IRootElementService} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
+import {ParCompiler} from "../../editor/parCompiler";
 import {
     AnswerFieldType,
     AnswerTable,
@@ -11,7 +12,6 @@ import {
     IRow,
     IUnprocessedHeaders,
 } from "../../lecture/lecturetypes";
-import {ParCompiler} from "../../editor/parCompiler";
 import {Binding} from "../../util/utils";
 
 /**
@@ -130,11 +130,11 @@ export function minimizeJson(json: IProcessedHeaders): IUnprocessedHeaders {
 
 function fixLineBreaks(s: string) {
     // var result = s.replace(" < "," &lt; ");
-    //result = result.replace(" > "," &gt; ");
+    // result = result.replace(" > "," &gt; ");
     const parts = s.split("!!");
     const result = parts[0];
     return result;
-    //return s.replace("\n","<br />");
+    // return s.replace("\n","<br />");
 }
 
 export function fixQuestionJson(json: IUnprocessedHeaders): IProcessedHeaders {

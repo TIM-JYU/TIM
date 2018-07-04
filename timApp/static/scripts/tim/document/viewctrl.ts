@@ -1,8 +1,10 @@
 import angular, {IController, IPromise, IScope} from "angular";
 import $ from "jquery";
+import moment from "moment";
 import ngs, {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
 import {AreaHandler} from "tim/document/areas";
+import {Document, setActiveDocument} from "tim/document/document";
 import {ClipboardHandler} from "tim/document/editing/clipboard";
 //noinspection TypeScriptPreferShortImport
 import {initIndex} from "tim/document/index";
@@ -10,31 +12,29 @@ import * as interceptor from "tim/document/interceptor";
 import {NotesHandler} from "tim/document/notes";
 import {getElementByParId, Paragraph} from "tim/document/parhelpers";
 import {ParmenuHandler} from "tim/document/parmenu";
+import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
-import * as popupMenu from "tim/document/popupMenu";
 import {timLogTime} from "tim/util/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
-import {initCssPrint} from "../printing/cssPrint";
-import {PopupMenuController} from "./popupMenu";
-import {IItem, ITag, TagType} from "../item/IItem";
-import {IUser} from "../user/IUser";
-import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../util/ngimport";
+import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
-import {Users} from "../user/userService";
+import {IItem, ITag, TagType} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
+import {TimTableController} from "../plugin/timTable";
+import {initCssPrint} from "../printing/cssPrint";
+import {showMessageDialog} from "../ui/dialog";
+import {IUser} from "../user/IUser";
+import {Users} from "../user/userService";
+import {$compile, $filter, $http, $interval, $localStorage, $timeout, $window} from "../util/ngimport";
 import {ReviewController} from "../velp/reviewController";
-import {Document, setActiveDocument} from "tim/document/document";
 import {EditingHandler} from "./editing/editing";
+import {PendingCollection} from "./editing/edittypes";
 import {onClick} from "./eventhandlers";
 import {IPopupMenuAttrs, optionsWindowClosed} from "./parmenu";
+import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {createPopupMenuAttrs, MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
-import {PendingCollection} from "./editing/edittypes";
-import {TimTableController} from "../plugin/timTable";
-import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
-import moment from "moment";
-import {showMessageDialog} from "../ui/dialog";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -264,9 +264,9 @@ export class ViewCtrl implements IController {
     }
 
     startLiveUpdates() {
-        let sc = this.scope;
-        let origLiveUpdates = this.liveUpdates;
-        if (!origLiveUpdates) return;
+        const sc = this.scope;
+        const origLiveUpdates = this.liveUpdates;
+        if (!origLiveUpdates) { return; }
         let stop: IPromise<any> | undefined;
         stop = $interval(async () => {
             const response = await $http.get<{version: [number, number], diff: DiffResult[], live: number}>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]);

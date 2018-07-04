@@ -1,10 +1,10 @@
 import angular, {IFormController, IRootElementService, IScope} from "angular";
 import moment from "moment";
-import {DurationChoice} from "../ui/durationPicker";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {getItem, IItem} from "../item/IItem";
-import {ILecture, ILectureFormParams, ILectureOptions} from "./lecturetypes";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
+import {DurationChoice} from "../ui/durationPicker";
 import {$http} from "../util/ngimport";
+import {ILecture, ILectureFormParams, ILectureOptions} from "./lecturetypes";
 
 /**
  * Lecture creation controller which is used to handle and validate the form data.

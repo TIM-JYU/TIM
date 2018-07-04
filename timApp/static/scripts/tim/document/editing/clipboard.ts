@@ -1,7 +1,6 @@
 import {IScope} from "angular";
-import {IParResponse} from "./edittypes";
-import {$http, $window} from "../../util/ngimport";
 import {Users} from "../../user/userService";
+import {$http, $window} from "../../util/ngimport";
 import {Coords, empty} from "../../util/utils";
 import {
     createNewPar,
@@ -16,7 +15,8 @@ import {
 } from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
 import {getEmptyCoords, viewCtrlDot} from "../viewutils";
-import {EditType} from './editing';
+import {EditType} from "./editing";
+import {IParResponse} from "./edittypes";
 
 export class ClipboardHandler {
     public sc: IScope;
@@ -36,7 +36,7 @@ export class ClipboardHandler {
         this.viewctrl.parmenuHandler.showPopupMenu(e, $parOrArea, {
             actions: viewCtrlDot("pasteFunctions"),
             contenturl: "/clipboard",
-            save: false
+            save: false,
         });
     }
 
@@ -45,7 +45,7 @@ export class ClipboardHandler {
         this.viewctrl.parmenuHandler.showPopupMenu(e, $parOrArea, {
             actions: viewCtrlDot("pasteFunctions"),
             contenturl: "/clipboard",
-            save: false
+            save: false,
         });
     }
 
@@ -183,22 +183,22 @@ export class ClipboardHandler {
             {
                 func: (e: Event, $par: Paragraph) => this.pasteRefAbove(e, $par),
                 desc: "Above, as a reference",
-                show: this.viewctrl.allowPasteRef
+                show: this.viewctrl.allowPasteRef,
             },
             {
                 func: (e: Event, $par: Paragraph) => this.pasteContentAbove(e, $par),
                 desc: "Above, as content",
-                show: this.viewctrl.allowPasteContent
+                show: this.viewctrl.allowPasteContent,
             },
             {
                 func: (e: Event, $par: Paragraph) => this.pasteRefBelow(e, $par),
                 desc: "Below, as a reference",
-                show: this.viewctrl.allowPasteRef
+                show: this.viewctrl.allowPasteRef,
             },
             {
                 func: (e: Event, $par: Paragraph) => this.pasteContentBelow(e, $par),
                 desc: "Below, as content",
-                show: this.viewctrl.allowPasteContent
+                show: this.viewctrl.allowPasteContent,
             },
             {func: (e: Event, $par: Paragraph) => {}, desc: "Cancel", show: true},
         ];
@@ -209,12 +209,12 @@ export class ClipboardHandler {
             {
                 func: (e: Event, $par: Paragraph) => this.moveAbove(e, $par),
                 desc: "Above",
-                show: this.viewctrl.allowPasteContent
+                show: this.viewctrl.allowPasteContent,
             },
             {
                 func: (e: Event, $par: Paragraph) => this.moveBelow(e, $par),
                 desc: "Below",
-                show: this.viewctrl.allowPasteContent
+                show: this.viewctrl.allowPasteContent,
             },
             {func: empty, desc: "Cancel", show: true},
         ];

@@ -10,7 +10,7 @@ export interface IItem {
     isFolder: boolean;
     fulltext: string;
     rights: IRights;
-    versions: {}[];
+    versions: Array<{}>;
     path: string;
 }
 

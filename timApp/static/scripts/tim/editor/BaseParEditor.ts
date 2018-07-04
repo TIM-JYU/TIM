@@ -1,7 +1,7 @@
-import {IAceEditor} from "./ace-types";
 import {$timeout} from "../util/ngimport";
-import {TextAreaParEditor} from "./TextAreaParEditor";
+import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
+import {TextAreaParEditor} from "./TextAreaParEditor";
 
 export function focusAfter(target: TextAreaParEditor | AceParEditor, key: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
@@ -51,7 +51,7 @@ export abstract class BaseParEditor {
     }
 
     checkWrap() {
-        if (this.getWrapValue() <= 0) return;
+        if (this.getWrapValue() <= 0) { return; }
         $timeout(() => { // time to let new char happend
             this.forceWrap(false);
         });

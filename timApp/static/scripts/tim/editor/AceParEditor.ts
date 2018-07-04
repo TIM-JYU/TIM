@@ -1,7 +1,7 @@
-import {IAceEditor} from "./ace-types";
-import {$log, $timeout} from "../util/ngimport";
-import {BaseParEditor, focusAfter, IEditorCallbacks} from "./BaseParEditor";
 import {wrapText} from "../document/editing/editing";
+import {$log, $timeout} from "../util/ngimport";
+import {IAceEditor} from "./ace-types";
+import {BaseParEditor, focusAfter, IEditorCallbacks} from "./BaseParEditor";
 
 const CURSOR = "⁞";
 
@@ -203,19 +203,19 @@ export class AceParEditor extends BaseParEditor {
 
     @focusAfter
     pageBreakClicked() {
-        var cursor = this.editor.getCursorPosition();
-        var line = this.editor.session.getLine(cursor.row);
-        var range = this.editor.getSelection().getRange();
+        const cursor = this.editor.getCursorPosition();
+        const line = this.editor.session.getLine(cursor.row);
+        const range = this.editor.getSelection().getRange();
         range.start.column = 0;
         range.end.column = line.length;
 
-        var toKeepInLine;
+        let toKeepInLine;
         if (line.length > 0) {
             toKeepInLine = line.substring(0, cursor.column) + "\n";
         } else {
             toKeepInLine = "";
         }
-        var toNextLine;
+        let toNextLine;
         if ((line.length - cursor.column) > 0) {
             toNextLine = line.substring(cursor.column, line.length);
         } else {
@@ -223,7 +223,7 @@ export class AceParEditor extends BaseParEditor {
         }
         toNextLine = toNextLine.trim();
 
-        var breakline = '\n#-{print="false"}\n<div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>\n#-\n';
+        const breakline = '\n#-{print="false"}\n<div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>\n#-\n';
 
         this.editor.selection.setRange(range, false);
         this.editor.insert(toKeepInLine + breakline + "\n" + toNextLine);
@@ -295,8 +295,8 @@ export class AceParEditor extends BaseParEditor {
         this.editor.setOverwrite(!this.editor.getOverwrite());
     }
 
-    //Navigation
-    //Style
+    // Navigation
+    // Style
     @focusAfter
     indentClicked() {
         this.editor.indent();
@@ -367,8 +367,8 @@ export class AceParEditor extends BaseParEditor {
         this.editor.insert(head + " " + line);
     }
 
-    //Style
-    //Insert
+    // Style
+    // Insert
     /**
      * @param descDefault Placeholder for description
      * @param styleDefault Placeholder for link address
@@ -441,7 +441,7 @@ export class AceParEditor extends BaseParEditor {
     @focusAfter
     insertTemplate(text: string) {
         const ci = text.indexOf(CURSOR);
-        if (ci >= 0) text = text.slice(0, ci) + text.slice(ci + 1);
+        if (ci >= 0) { text = text.slice(0, ci) + text.slice(ci + 1); }
         const range = this.editor.getSelectionRange();
         const start = range.start;
         this.snippetManager.insertSnippet(this.editor, text);
@@ -466,7 +466,6 @@ export class AceParEditor extends BaseParEditor {
     editorStartsWith(text: string) {
         return this.editor.session.getLine(0).startsWith(text);
     }
-
 
     editorGetRow(i: number) {
         return this.editor.session.getLine(i);
@@ -536,8 +535,8 @@ export class AceParEditor extends BaseParEditor {
         this.editor.insert(character);
     }
 
-    //Special characters
-    //TEX
+    // Special characters
+    // TEX
     @focusAfter
     texClicked() {
         this.snippetManager.insertSnippet(this.editor, "$${0:$SELECTION}$");
@@ -572,26 +571,26 @@ export class AceParEditor extends BaseParEditor {
     }
 
     setPosition(pos: number) {
-        var range = this.editor.session.doc.indexToPosition(pos, 0);
+        const range = this.editor.session.doc.indexToPosition(pos, 0);
         this.editor.moveCursorTo(range.row, range.column); // TODO: find a way to move to postion
         this.gotoCursor();
     }
 
     forceWrap(force: boolean) {
-        var n = this.getWrapValue();
-        if (!n) return;
-        if (n < 0) n = -n;
-        var text = this.getEditorText();
+        let n = this.getWrapValue();
+        if (!n) { return; }
+        if (n < 0) { n = -n; }
+        const text = this.getEditorText();
         if (!force) {
-            if (text.indexOf("```") >= 0) return;
-            if (text.indexOf("|") >= 0) return;
+            if (text.indexOf("```") >= 0) { return; }
+            if (text.indexOf("|") >= 0) { return; }
         }
-        var r = wrapText(text, n);
-        if (!r.modified) return;
-        let editor = this.editor;
-        var cursor = editor.selection.getCursor();
-        var index = editor.session.doc.positionToIndex(cursor, 0);
-        var range = editor.getSelection().getRange(); // new Range(0,0, 10000,1000);// $scope.editor.session.doc.indexToPosition(100000);
+        const r = wrapText(text, n);
+        if (!r.modified) { return; }
+        const editor = this.editor;
+        let cursor = editor.selection.getCursor();
+        const index = editor.session.doc.positionToIndex(cursor, 0);
+        const range = editor.getSelection().getRange(); // new Range(0,0, 10000,1000);// $scope.editor.session.doc.indexToPosition(100000);
         range.start.row = 0; // TODO: easier way to find full range
         range.end.row = 1000;
         range.start.column = 0;

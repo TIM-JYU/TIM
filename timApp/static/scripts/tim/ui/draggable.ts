@@ -69,7 +69,7 @@ timApp.directive("timDraggableFixed", [() => {
     };
 }]);
 
-type Pos = {X: number, Y: number};
+interface Pos {X: number; Y: number; }
 
 interface IResizeStates {
     up: boolean;
@@ -210,8 +210,8 @@ export class DraggableController implements IController {
             // to keep the element dimensions (X).
             // Prefer left over right.
             this.getSetDirs();
-            //prevTop = this.element.position().top;
-            //prevLeft = this.element.position().left;
+            // prevTop = this.element.position().top;
+            // prevLeft = this.element.position().left;
 
             $document.on("mouseup pointerup touchend", this.release);
             $document.on("mousemove pointermove touchmove", this.move);
@@ -371,8 +371,8 @@ export class DraggableController implements IController {
 
         this.getSetDirs();
 
-        //prevTop = this.element.position().top;
-        //prevLeft = this.element.position().left;
+        // prevTop = this.element.position().top;
+        // prevLeft = this.element.position().left;
 
         $document.on("mouseup pointerup touchend", this.release);
         $document.on("mousemove pointermove touchmove", this.moveResize);

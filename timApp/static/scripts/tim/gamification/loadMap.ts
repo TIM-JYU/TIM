@@ -44,7 +44,7 @@ interface ILayer {
     y: number;
 }
 
-type LayerData = {[index: string]: number};
+interface LayerData {[index: string]: number; }
 
 interface IMapResponse {
     width: number;
@@ -299,7 +299,7 @@ export async function loadMap() {
                     tileFrameSet.tilewidth * scale, tileFrameSet.tileheight * scale);
                 // If clicked on a bulding with one floor, draw two frame tiles and a roof frame
             } else if (tile.tileset.properties != null &&
-                tile.tileset.properties.buildingProperty === 1 && //&& json.layers[tile.layerNo + 1] &&
+                tile.tileset.properties.buildingProperty === 1 && // && json.layers[tile.layerNo + 1] &&
 
                 !hasOwnProperty(json, tile, 1, -json.width) &&
                 hasOwnProperty(json, tile, -1, 0)) {

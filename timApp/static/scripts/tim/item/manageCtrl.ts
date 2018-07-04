@@ -1,12 +1,12 @@
 import {IController, IFormController} from "angular";
 import {timApp} from "tim/app";
-import {isManageResponse, showRenameDialog} from "../document/editing/pluginRenameForm";
 import {IChangelogEntry, IManageResponse} from "../document/editing/edittypes";
-import {IItem} from "./IItem";
-import {$http, $log, $timeout, $upload, $window} from "../util/ngimport";
-import {markAsUsed, to} from "../util/utils";
+import {isManageResponse, showRenameDialog} from "../document/editing/pluginRenameForm";
 import * as copyFolder from "../folder/copyFolder";
 import {showMessageDialog} from "../ui/dialog";
+import {$http, $log, $timeout, $upload, $window} from "../util/ngimport";
+import {markAsUsed, to} from "../util/utils";
+import {IItem} from "./IItem";
 
 markAsUsed(copyFolder);
 
@@ -31,9 +31,9 @@ export class PermCtrl implements IController {
     private newTitle: string;
     private newFolderName: string;
     private hasMoreChangelog?: boolean;
-    private translations: (IItem & {old_title: string})[] = [];
+    private translations: Array<IItem & {old_title: string}> = [];
     private newTranslation: {language: string, title: string};
-    private accessTypes: {}[];
+    private accessTypes: Array<{}>;
     private item: IItem;
     private newName?: string;
     private oldFolderName?: string;
@@ -328,7 +328,7 @@ export class PermCtrl implements IController {
         }
         let text = this.tracWikiText;
         const wikiSource = this.wikiRoot.replace("wiki", "browser");
-        //var text = this.fulltext;
+        // var text = this.fulltext;
         text = text.replace(/\[\[PageOutline\]\].*\n/g, "");  // remove contents
         text = text.replace(/ !([a-zA-Z])/g, " $1");                   // remove cat !IsBig
         text = text.replace(/\r\n/g, "\n");                   // change windows nl's
@@ -383,7 +383,7 @@ export class PermCtrl implements IController {
          a.append(line)
          text = '\n'.join(a)
          */
-        //this.tracWikiText = text;
+        // this.tracWikiText = text;
         this.fulltext = text;
     }
 

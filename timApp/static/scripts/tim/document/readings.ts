@@ -1,10 +1,10 @@
 import {IPromise} from "angular";
 import $ from "jquery";
 import moment from "moment";
-import {$http, $log, $timeout, $window} from "../util/ngimport";
-import {Users} from "../user/userService";
-import {isInViewport, markPageDirty} from "../util/utils";
 import {getActiveDocument} from "tim/document/document";
+import {Users} from "../user/userService";
+import {$http, $log, $timeout, $window} from "../util/ngimport";
+import {isInViewport, markPageDirty} from "../util/utils";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {getArea, getParId, getRefAttrs, isReference} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
@@ -54,7 +54,7 @@ export async function markParRead($par: JQuery, readingType: readingTypes) {
     if (isReference($par)) {
         data = getRefAttrs($par);
     }
-    if (!Users.isLoggedIn()) return;
+    if (!Users.isLoggedIn()) { return; }
     try {
         await $http.put(`/read/${getActiveDocument().id}/${parId}/${readingType}`, data);
     } catch (e) {

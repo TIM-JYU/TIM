@@ -93,5 +93,5 @@ export type IVelpUI = IVelp & IUIFields;
 export type IVelpGroupUI = IVelpGroup & IUIFields;
 
 export interface IVelpGroupCollection {
-    [index: string]: { id: number, selected?: boolean }[];
+    [index: string]: Array<{ id: number, selected?: boolean }>;
 }

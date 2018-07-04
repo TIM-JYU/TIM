@@ -1,8 +1,8 @@
 import {IRootElementService, IScope} from "angular";
 import {timApp} from "../app";
 import {DialogController, IModalInstance, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
-import {ILectureMessage} from "./lecturetypes";
 import {$http, $timeout} from "../util/ngimport";
+import {ILectureMessage} from "./lecturetypes";
 
 class LectureWallController extends DialogController<{params: {messages: ILectureMessage[]}}, {}, "timLectureWall"> {
     private static $inject = ["$element", "$scope"];

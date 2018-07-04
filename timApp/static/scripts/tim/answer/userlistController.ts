@@ -1,13 +1,13 @@
 import {IAngularEvent, IController, IRootElementService, IScope} from "angular";
-import {timApp} from "tim/app";
 import * as allanswersctrl from "tim/answer/allAnswersController";
+import {timApp} from "tim/app";
 import uiGrid from "ui-grid";
+import {ViewCtrl} from "../document/viewctrl";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {$timeout} from "../util/ngimport";
 import {Binding, markAsUsed, Require} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
-import {ViewCtrl} from "../document/viewctrl";
 
 markAsUsed(allanswersctrl);
 

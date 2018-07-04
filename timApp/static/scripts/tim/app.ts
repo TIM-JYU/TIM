@@ -18,8 +18,8 @@ import extramodules from "tim/extramodules";
 import plugins from "tim/plugins";
 import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
 import {loadMap} from "./gamification/loadMap";
-import {injectProviders, injectServices} from "./util/ngimport";
 import {initUserService} from "./user/userService";
+import {injectProviders, injectServices} from "./util/ngimport";
 
 markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize,
     uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, oclazyload);

@@ -1,7 +1,7 @@
 import {IPromise} from "angular";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
-import {Duplicate, IExtraData, IManageResponse, IParResponse} from "./edittypes";
 import {$http} from "../../util/ngimport";
+import {Duplicate, IExtraData, IManageResponse, IParResponse} from "./edittypes";
 
 export interface IManageRenameParams {
     duplicates: Duplicate[];

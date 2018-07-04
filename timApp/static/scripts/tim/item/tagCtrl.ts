@@ -5,13 +5,13 @@
 import {IFormController, IRootElementService, IScope} from "angular";
 import {Moment} from "moment";
 import * as focusMe from "tim/ui/focusMe";
-import * as tagLabel from "./tagLabel";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {IItem, ITag, TagType} from "./IItem";
 import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
-import {$http} from "../util/ngimport";
 import {Users} from "../user/userService";
+import {$http} from "../util/ngimport";
 import {markAsUsed, to} from "../util/utils";
+import {IItem, ITag, TagType} from "./IItem";
+import * as tagLabel from "./tagLabel";
 
 markAsUsed(tagLabel);
 markAsUsed(focusMe);

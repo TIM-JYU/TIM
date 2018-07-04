@@ -1,7 +1,7 @@
+import {IAngularEvent} from "angular";
+import {wrapText} from "../document/editing/editing";
 import {$log, $timeout} from "../util/ngimport";
 import {BaseParEditor, focusAfter, IEditorCallbacks} from "./BaseParEditor";
-import {wrapText} from "../document/editing/editing";
-import {IAngularEvent} from 'angular';
 
 const CURSOR = "⁞";
 
@@ -65,7 +65,7 @@ export class TextAreaParEditor extends BaseParEditor {
         });
     }
 
-    //Navigation
+    // Navigation
     @focusAfter
     undoClicked() {
         document.execCommand("undo", false, null);
@@ -240,8 +240,8 @@ export class TextAreaParEditor extends BaseParEditor {
         }
     }
 
-    //Navigation
-    //Style
+    // Navigation
+    // Style
     @focusAfter
     indentClicked() {
         this.indent();
@@ -328,8 +328,8 @@ export class TextAreaParEditor extends BaseParEditor {
         return (word.indexOf(before) === 0 && word.lastIndexOf(after) === (word.length - after.length));
     }
 
-    //Style
-    //Insert
+    // Style
+    // Insert
     /**
      * @param descDefault Placeholder for description
      * @param linkDefault Placeholder for link address
@@ -375,7 +375,7 @@ export class TextAreaParEditor extends BaseParEditor {
     @focusAfter
     insertTemplate(text: string) {
         const ci = text.indexOf(CURSOR);
-        if ( ci >= 0 ) text = text.slice(0, ci) + text.slice(ci + 1);
+        if ( ci >= 0 ) { text = text.slice(0, ci) + text.slice(ci + 1); }
         const pluginnamehere = "PLUGINNAMEHERE";
         const searchEndIndex = this.editor.getSelection().start;
         this.editor.replaceSelectedText(text);
@@ -486,21 +486,21 @@ export class TextAreaParEditor extends BaseParEditor {
 
     @focusAfter
     pageBreakClicked() {
-        var editor = this.editorElement;
-        var selection = this.editor.getSelection();
-        var value = this.getEditorText();
-        var cursor = selection.start;
+        const editor = this.editorElement;
+        const selection = this.editor.getSelection();
+        const value = this.getEditorText();
+        const cursor = selection.start;
         this.selectLine(true);
 
-        var lineToBreak = this.editor.getSelection().text;
-        var toKeepInLine;
+        const lineToBreak = this.editor.getSelection().text;
+        let toKeepInLine;
 
         if (lineToBreak.length > 0) {
             toKeepInLine = value.substring(editor.selectionStart, cursor) + "\n";
         } else {
             toKeepInLine = "";
         }
-        var toNextLine;
+        let toNextLine;
         if ((editor.selectionEnd - cursor) > 0) {
             toNextLine = value.substring(cursor, editor.selectionEnd);
         } else {
@@ -508,13 +508,13 @@ export class TextAreaParEditor extends BaseParEditor {
         }
         toNextLine = toNextLine.trim();
 
-        var breakline = '\n#-{print="false"}\n<div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>\n#-\n';
+        const breakline = '\n#-{print="false"}\n<div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>\n#-\n';
 
         this.editor.replaceSelectedText(toKeepInLine + breakline + "\n" + toNextLine);
     }
 
-    //Insert
-    //Special characters
+    // Insert
+    // Special characters
     @focusAfter
     charClicked($event: Event, char: string | undefined) {
         if (!$event.target) {
@@ -529,8 +529,8 @@ export class TextAreaParEditor extends BaseParEditor {
     }
 
     @focusAfter
-    //Special characters
-    //TEX
+    // Special characters
+    // TEX
     indexClicked() {
         this.editor.surroundSelectedText("_{", "}", "select");
     }
@@ -560,18 +560,18 @@ export class TextAreaParEditor extends BaseParEditor {
     }
 
     forceWrap(force: boolean) {
-        var n = this.getWrapValue();
-        if (!n) return;
-        if (n < 0) n = -n;
-        var text = this.getEditorText();
+        let n = this.getWrapValue();
+        if (!n) { return; }
+        if (n < 0) { n = -n; }
+        const text = this.getEditorText();
         if (!force) {
-            if (text.indexOf("```") >= 0) return;
-            if (text.indexOf("|") >= 0) return;
+            if (text.indexOf("```") >= 0) { return; }
+            if (text.indexOf("|") >= 0) { return; }
         }
-        var r = wrapText(text, n);
-        if (!r.modified) return;
-        let editor = this.editorElement;
-        var start = editor.selectionStart;
+        const r = wrapText(text, n);
+        if (!r.modified) { return; }
+        const editor = this.editorElement;
+        const start = editor.selectionStart;
 
         // $scope.setEditorText(r.s);
 

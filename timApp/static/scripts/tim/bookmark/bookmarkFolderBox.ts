@@ -5,10 +5,10 @@
 
 import {IController} from "angular";
 import {timApp} from "../app";
-import {IBookmark, IBookmarkGroup, showBookmarkDialog} from "./bookmarks";
 import {getCourseCode, ITaggedItem} from "../item/IItem";
-import {Binding, to} from "../util/utils";
 import {$http} from "../util/ngimport";
+import {Binding, to} from "../util/utils";
+import {IBookmark, IBookmarkGroup, showBookmarkDialog} from "./bookmarks";
 
 export interface ITaggedBookmarkedItem {
     doc: ITaggedItem;

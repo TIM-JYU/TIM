@@ -122,12 +122,12 @@ $(() => {
     if (getURLParameter("controls") == null && is_owner) {
         pollTimeout = setTimeout(refresh, pollInterval);
     }
-    document.onkeyup = function (evt) {
+    document.onkeyup = function(evt) {
         if (evt.keyCode == 82) {
             pollTimeout = setTimeout(refresh, pollInterval);
         }
     };
-    setTimeout(function () {
+    setTimeout(function() {
         initReveal();
         Reveal.slide();
     }, 1000);

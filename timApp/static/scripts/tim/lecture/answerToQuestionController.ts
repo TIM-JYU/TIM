@@ -1,13 +1,13 @@
 import {IRootElementService, IScope} from "angular";
 import moment, {Moment} from "moment";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
+import {fetchAskedQuestion, showQuestionEditDialog} from "../document/question/questionController";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
+import {$http, $timeout} from "../util/ngimport";
 import {
     AnswerTable, IAskedQuestion, IGetNewQuestionResponse, IQuestionAnswer, isAskedQuestion,
     questionAnswerReceived, questionAsked,
 } from "./lecturetypes";
-import {$http, $timeout} from "../util/ngimport";
-import {fetchAskedQuestion, showQuestionEditDialog} from "../document/question/questionController";
 import {showStatisticsDialog} from "./showStatisticsToQuestionController";
 
 /**

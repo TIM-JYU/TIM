@@ -61,8 +61,8 @@ export function onClick(className: string, func: (obj: JQuery, e: JQueryEventObj
     $document.on(eventName, className, function(e) {
         if (downEvent != null) {
             if (func($(this), downEvent)) {
-                //e.preventDefault();
-                //e.stopPropagation();
+                // e.preventDefault();
+                // e.stopPropagation();
             }
             downEvent = null;
         }

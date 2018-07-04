@@ -2,11 +2,11 @@ import {IController, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {watchEditMode} from "tim/document/editing/editmode";
-import {ViewCtrl} from "./viewctrl";
-import {MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
+import {DraggableController} from "../ui/draggable";
 import {$http, $window} from "../util/ngimport";
 import {Binding, Require} from "../util/utils";
-import {DraggableController} from "../ui/draggable";
+import {ViewCtrl} from "./viewctrl";
+import {MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
 
 export type EditMode = "par" | "area";
 

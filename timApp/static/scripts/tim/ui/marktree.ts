@@ -33,34 +33,35 @@ const press = [47, 45, 42, 43];
 const keys = [38, 37, 40, 39];
 
 function is_exp(n: Element | null) {
-    if (n == null) return false;
+    if (n == null) { return false; }
     return ((n.className == "exp") || (n.className == "exp_active"));
 }
 
 function is_col(n: Element | null) {
-    if (n == null) return false;
+    if (n == null) { return false; }
     return ((n.className == "col") || (n.className == "col_active"));
 }
 
 function is_basic(n: Element | null) {
-    if (n == null) return false;
+    if (n == null) { return false; }
     return ((n.className == "basic") || (n.className == "basic_active"));
 }
 
 function is_list_node(n: Element | null) {
-    if (n == null) return false;
-    if (n.className == null) return false;
+    if (n == null) { return false; }
+    if (n.className == null) { return false; }
     if ((is_exp(n)) ||
         (is_col(n)) ||
-        (is_basic(n)))
-        return true; else return false;
+        (is_basic(n))) {
+        return true;
+    } else { return false; }
 }
 
 function set_lastnode(n: Element) {
     /*var d = new Date();
      var t_mil = d.getMilliseconds();*/
     // testattu nopeuksia explorerilla, ei merkittäviä eroja
-    if (lastnode == n) return;
+    if (lastnode == n) { return; }
     /*  deactivate(lastnode)
      lastnode=n;
      activate(lastnode);*/
@@ -78,19 +79,21 @@ function set_lastnode(n: Element) {
 }
 
 function getsub(li: Element) {
-    if (li.children.length == 0) return null;
-    for (let c = 0; c < li.children.length; c++)
-        if ((li.children[c].className == "sub") || (li.children[c].className == "subexp"))
+    if (li.children.length == 0) { return null; }
+    for (let c = 0; c < li.children.length; c++) {
+        if ((li.children[c].className == "sub") || (li.children[c].className == "subexp")) {
             return li.children[c];
+    }
+        }
 }
 
 function find_listnode_recursive(li: Element): Element | null {
-    if (is_list_node(li)) return li;
-    if (li.children.length == 0) return null;
+    if (is_list_node(li)) { return li; }
+    if (li.children.length == 0) { return null; }
     let result = null;
     for (let c = 0; c < li.children.length; c++) {
         result = find_listnode_recursive(li.children[c]);
-        if (result != null) return result;
+        if (result != null) { return result; }
     }
     return null;
 }
@@ -102,19 +105,19 @@ function next_child_listnode(li: Element | null) {
     let result = null;
     for (let i = 0; i < li.children.length; i++) {
         result = find_listnode_recursive(li.children[i]);
-        if (result != null) return result;
+        if (result != null) { return result; }
     }
     return null;
 }
 
 function parent_listnode_rec(li: Element, recursive: number): Element | null {
     // added 12.7.2004 to prevent IE error when readonly mode==true
-    if (li == null) return null;
+    if (li == null) { return null; }
     let n: Element | null = li;
     while (recursive > 0) {
         n = n.parentElement;
-        if (n == null) return null;
-        if (is_list_node(n)) return n;
+        if (n == null) { return null; }
+        if (is_list_node(n)) { return n; }
         recursive--;
     }
     return null;
@@ -124,11 +127,10 @@ function onClickHandler(evt: MouseEvent) {
     // cross-browser way to detect right click.
     // from: http://www.quirksmode.org/js/events_properties.html
     // this is actually needed only in Gecko-based browsers
-    let e: MouseEvent = evt;
+    const e: MouseEvent = evt;
     let rightclick;
-    if (e.which) rightclick = (e.which == 3);
-    else if (e.button) rightclick = (e.button == 2);
-    if (rightclick) return true;
+    if (e.which) { rightclick = (e.which == 3); } else if (e.button) { rightclick = (e.button == 2); }
+    if (rightclick) { return true; }
 
     let temp;
     if (lastnode == null) {
@@ -139,10 +141,10 @@ function onClickHandler(evt: MouseEvent) {
 
     // event.srcElement is needed for explorer
     let target = evt.target as Element;
-    if ((target.nodeName.toLowerCase() == "a") || (target.nodeName.toLowerCase() == "ul")) return true;
+    if ((target.nodeName.toLowerCase() == "a") || (target.nodeName.toLowerCase() == "ul")) { return true; }
     if (!is_list_node(target)) {
-        let ptarget = parent_listnode_rec(target, 1);
-        if (ptarget == null) return true;
+        const ptarget = parent_listnode_rec(target, 1);
+        if (ptarget == null) { return true; }
         target = ptarget;
     }
 
@@ -162,21 +164,20 @@ function onClickHandler(evt: MouseEvent) {
 
 function setSubClass(node: Element, name: string) {
     const sub = getsub(node);
-    if (sub == null) return;
+    if (sub == null) { return; }
 
     // to prevent bug in ie when expanding empty list
-    if ((name == "subexp") && (next_child_listnode(node) == null)) return;
+    if ((name == "subexp") && (next_child_listnode(node) == null)) { return; }
 
     sub.className = name;
 }
 
 function toggle(target: Element) {
-    if (!is_list_node(target)) return;
+    if (!is_list_node(target)) { return; }
     if (is_col(target)) {
         target.className = "exp";
         setSubClass(target, "sub");
-    }
-    else if (is_exp(target)) {
+    } else if (is_exp(target)) {
         target.className = "col";
         setSubClass(target, "subexp");
     }

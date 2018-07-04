@@ -3,7 +3,7 @@ import {Paragraph} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
 
 export type MenuFunction = ((e: JQueryEventObject, $par: Paragraph, coords?: Coords) => any);
-export type MenuFunctionEntry = {func: MenuFunction; desc: string; show: boolean};
+export interface MenuFunctionEntry {func: MenuFunction; desc: string; show: boolean; }
 export type MenuFunctionCollection = MenuFunctionEntry[];
 export const viewCtrlDot = nameofFactoryCtrl<ViewCtrl>();
 export const parMenuDot = nameofFactoryCtrl2<ViewCtrl, "parmenuHandler">("parmenuHandler");

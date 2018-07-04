@@ -4,13 +4,13 @@
 import {IController, IRootElementService} from "angular";
 import * as timHelper from "tim/util/timHelper";
 import {timApp as qstApp} from "../app";
-import {showMessageDialog} from "../ui/dialog";
-import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
-import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
-import {$http} from "../util/ngimport";
-import {LectureController} from "../lecture/lectureController";
-import {showQuestionAskDialog} from "../lecture/questionAskController";
 import {getParId} from "../document/parhelpers";
+import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
+import {LectureController} from "../lecture/lectureController";
+import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
+import {showQuestionAskDialog} from "../lecture/questionAskController";
+import {showMessageDialog} from "../ui/dialog";
+import {$http} from "../util/ngimport";
 import {Binding} from "../util/utils";
 
 export interface IQstAttributes {

@@ -17,7 +17,7 @@ export interface IParResponse {
 
 export interface IManageResponse {
     duplicates: Duplicate[];
-    versions: {}[]; // TODO
+    versions: Array<{}>; // TODO
     fulltext: string;
 }
 

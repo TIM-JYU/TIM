@@ -11,7 +11,7 @@ import {
     ISubjectList,
     ITaggedItem,
     tagIsExpired,
-    TagType
+    TagType,
 } from "../../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
 import {$http, $localStorage} from "../../util/ngimport";
@@ -153,7 +153,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
             return;
         }
         for (const s of this.subjects) {
-            let documents = [];
+            const documents = [];
             if (typeof s === "string") {
                 for (const d of this.docList) {
                     let isSameSubject = false;

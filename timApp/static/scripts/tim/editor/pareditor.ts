@@ -6,12 +6,12 @@ import rangyinputs from "rangyinputs";
 import {setEditorScope} from "tim/editor/editorScope";
 import sessionsettings from "tim/session";
 import {markAsUsed, setSetting} from "tim/util/utils";
-import {IAceEditor} from "./ace-types";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {IExtraData} from "../document/editing/edittypes";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$compile, $http, $localStorage, $log, $timeout, $upload, $window} from "../util/ngimport";
-import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
+import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
+import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {TextAreaParEditor} from "./TextAreaParEditor";
 
 markAsUsed(rangyinputs);
@@ -32,7 +32,7 @@ export interface ITag {
 export interface IChoice {
     desc: string;
     name: string;
-    opts: {desc: string, value: string}[];
+    opts: Array<{desc: string, value: string}>;
 }
 
 export interface IEditorParams {
@@ -192,12 +192,12 @@ export class PareditorController extends DialogController<{params: IEditorParams
             "|    1  |    1 |     1   |     1  |\n",
 
              timTable:
-             "``` {plugin=\"timTable\"} \n"+
-             "table:                   \n"+
-             "    rows:                 \n"+
-             "      - row:              \n"+
-             "        - cell: \"solu\"     \n"+
-             "                            \n"+
+             "``` {plugin=\"timTable\"} \n" +
+             "table:                   \n" +
+             "    rows:                 \n" +
+             "      - row:              \n" +
+             "        - cell: \"solu\"     \n" +
+             "                            \n" +
              "```                        \n",
         };
 
@@ -318,7 +318,7 @@ or newer one that is more familiar to write in YAML:
                 if (data.templates) {
                     const isobj = !(data.templates instanceof Array);
                     let tabs = data.text || [plugin];
-                    if (isobj) tabs = Object.keys(data.templates);
+                    if (isobj) { tabs = Object.keys(data.templates); }
                     const len = tabs.length;
                     for (let j = 0; j < len; j++) {
                         const tab = tabs[j];
@@ -328,21 +328,23 @@ or newer one that is more familiar to write in YAML:
                         } else {
                             templs = data.templates[j];
                         }
-                        if (!(templs instanceof Array)) templs = [templs];
+                        if (!(templs instanceof Array)) { templs = [templs]; }
                         if (!this.pluginButtonList[tab]) {
                             this.pluginButtonList[tab] = [];
                         }
                         for (let k = 0; k < templs.length; k++) {
                             let template = templs[k];
-                            if (!(template instanceof Object))
+                            if (!(template instanceof Object)) {
                                 template = {text: template, data: template};
+                            }
                             const text = (template.text || template.file || template.data);
                             const tempdata = (template.data || null);
                             let clickfn;
-                            if (tempdata)
+                            if (tempdata) {
                                 clickfn = `$ctrl.putTemplate(${JSON.stringify(tempdata)})`;
-                            else
+                            } else {
                                 clickfn = `$ctrl.getTemplate(${JSON.stringify(plugin)}, ${JSON.stringify(template.file)}, ${JSON.stringify(j)})`;
+                            }
                             this.pluginButtonList[tab].push(this.createMenuButton(text, template.expl, clickfn));
                         }
                     }
@@ -368,10 +370,10 @@ or newer one that is more familiar to write in YAML:
         }
 
         const help = $("<a>", {
-            "class": "helpButton",
-            "text": "[?]",
-            "title": "Help for plugin attributes",
-            "onclick": "window.open('https://tim.jyu.fi/view/tim/ohjeita/csPlugin', '_blank')"
+            class: "helpButton",
+            text: "[?]",
+            title: "Help for plugin attributes",
+            onclick: "window.open('https://tim.jyu.fi/view/tim/ohjeita/csPlugin', '_blank')",
         });
         this.plugintab.append($compile(help)(this.scope));
     }
@@ -384,11 +386,11 @@ or newer one that is more familiar to write in YAML:
         let initialText = this.getInitialText();
         if (initialText) {
             const pos = initialText.indexOf(CURSOR);
-            if (pos >= 0) initialText = initialText.replace(CURSOR, ""); // cursor pos
+            if (pos >= 0) { initialText = initialText.replace(CURSOR, ""); } // cursor pos
             this.editor.setEditorText(initialText);
             this.editorChanged();
             await $timeout(10);
-            if (pos >= 0) this.editor.setPosition(pos);
+            if (pos >= 0) { this.editor.setPosition(pos); }
         }
     }
 
@@ -592,8 +594,8 @@ or newer one that is more familiar to write in YAML:
         this.file = file;
         const editorText = this.editor.getEditorText();
         let autostamp = false;
-        let attachmentParams = undefined;
-        let macroParams = undefined;
+        let attachmentParams;
+        let macroParams;
 
         // To identify attachment-macro.
         const macroStringBegin = "%%liite(";
@@ -606,7 +608,7 @@ or newer one that is more familiar to write in YAML:
             autostamp = true;
             // TODO: More exact parsing needed.
             // Giving commas inside parameters will break this.
-            //throw new Error("Unable to parse stamping parametres!");
+            // throw new Error("Unable to parse stamping parametres!");
             try {
                 macroParams = editorText.substring(
                     editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
@@ -643,8 +645,8 @@ or newer one that is more familiar to write in YAML:
             // TODO: Better check for cases with non-showPdf-plugin-paragraphs.
             upload.then((response) => {
                 $timeout(() => {
-                    var isplugin = (this.editor.editorStartsWith("``` {"));
-                    var start = "[File](";
+                    const isplugin = (this.editor.editorStartsWith("``` {"));
+                    let start = "[File](";
                     let uploadedFile;
                     if (response.data.image) {
                         uploadedFile = "/images/" + response.data.image;

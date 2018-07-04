@@ -102,7 +102,7 @@ export function setk<T extends ISettable, K extends keyof T>(scope: T, sname: K,
     if (scope[sname] == "None") {
         scope[sname] = "";
     }
-    if (scope[sname] === "False") scope[sname] = false;
+    if (scope[sname] === "False") { scope[sname] = false; }
     return scope[sname];
 }
 

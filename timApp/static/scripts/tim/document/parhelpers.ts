@@ -1,7 +1,7 @@
 import angular from "angular";
 import $ from "jquery";
-import {IItem} from "../item/IItem";
 import {getActiveDocument} from "tim/document/document";
+import {IItem} from "../item/IItem";
 
 export type Paragraph = JQuery;
 export type Paragraphs = JQuery;
@@ -142,7 +142,7 @@ export function getParIndex($par: Paragraph) {
         }
 
         if (getParId($node) === parId) {
-            //$log.info('getParIndex(' + parId + ') = ' + realIndex);
+            // $log.info('getParIndex(' + parId + ') = ' + realIndex);
             return realIndex;
         }
 

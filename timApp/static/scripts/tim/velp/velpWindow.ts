@@ -97,7 +97,7 @@ export class VelpWindowController implements IController {
         const lastEdited = this.velpSelection.getVelpUnderEdit();
 
         if (lastEdited.edit && lastEdited.id !== this.velp.id) {
-            //if (this.new === "true") this.$parent.resetNewVelp();
+            // if (this.new === "true") this.$parent.resetNewVelp();
             this.velpSelection.resetEditVelp();
         }
 
@@ -122,7 +122,7 @@ export class VelpWindowController implements IController {
             return;
         }
         form.$setPristine();
-        //this.submitted = true;
+        // this.submitted = true;
 
         if (this.new) { // add new velp
             this.addVelp();
@@ -291,7 +291,7 @@ export class VelpWindowController implements IController {
         };
         this.resetNewLabel();
         this.labels.push(labelToAdd);
-        //this.labelAdded = false;
+        // this.labelAdded = false;
         this.velp.labels.push(labelToAdd.id);
     }
 
@@ -419,8 +419,7 @@ export class VelpWindowController implements IController {
      */
     async addNewVelpToDatabase() {
 
-
-        //this.velp.edit = false;
+        // this.velp.edit = false;
         const data = {
             labels: this.velp.labels,
             used: 0,
@@ -448,8 +447,8 @@ export class VelpWindowController implements IController {
         this.toggleVelpToEdit();
         this.velpSelection.updateVelpList();
 
-        //this.velp =  JSON.parse(JSON.stringify(this.velpLocal));
-        //this.velpLocal = JSON.parse(JSON.stringify(this.velp));
+        // this.velp =  JSON.parse(JSON.stringify(this.velpLocal));
+        // this.velpLocal = JSON.parse(JSON.stringify(this.velp));
         /*
          velpToAdd.id = parseInt(json.data);
 
