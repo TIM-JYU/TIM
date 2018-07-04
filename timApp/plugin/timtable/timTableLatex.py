@@ -32,7 +32,7 @@ default_minipage_width = "4cm"
 # Maximum number of columns in table; overtly large count will crash LaTeX-conversion.
 max_col_count = 250
 # Number of columns after which the table will be resized to fit page.
-resizing_threshold = 6
+resizing_threshold = 3
 
 # Mappings:
 # TODO: Add missing pairs.
@@ -189,12 +189,12 @@ class Cell:
         content = self.content
         if "\[" in content:
             minipage_width = self.cell_width
-            if "*" in minipage_width:
+            if "*" in str(minipage_width):
                 minipage_width = default_minipage_width
             content = fr"\begin{{minipage}}{{{minipage_width}}}{content}\end{{minipage}}"
 
         cell_width = self.cell_width
-        if "*" not in cell_width:
+        if "*" not in str(cell_width):
             cell_width = f"{cell_width}pt"
 
         return fr"\multicolumn{{{self.colspan}}}{{{v_border_and_align}}}{{" \
@@ -333,6 +333,10 @@ class HorizontalBorder:
         """
         output = ""
 
+        # TODO: Use cells to determine borders.
+        # More specifically, this doesn't know the source cell of the border, and therefore may draw border
+        # into wrong places when there's colspan.
+
         # Get cell-count from the rows.
         try:
             above_count = self.row_above.get_colspan()
@@ -399,10 +403,6 @@ class HorizontalBorder:
 
             colspan = max(i_upper_colspan, i_lower_colspan)
 
-            # TODO: Something wrong with the logic here.
-            # After multirow-multicolumn cell, following cell borders won't show correctly:
-            # instead there's too many border slots added.
-
             # Draws the line only if either cell above or below wants one.
             if not i_upper and not i_lower:
                 output += colspan * "~"
@@ -416,7 +416,7 @@ class HorizontalBorder:
                 else:
                     color, html_color = color_above
                 # If no color, don't draw the line.
-                if color == default_transparent_color:
+                if color == default_transparent_color or not color:
                     output += colspan * "~"
                 # Multicolumn cell counts as one cell but require multiple borderlines.
                 else:
@@ -521,10 +521,17 @@ def get_column_span(item):
 
 
 def get_column_color_list(key, table_data):
+    """
+    Reads all the columns of the table and makes a list of their color formattings.
+    :param key:
+    :param table_data:
+    :return:
+    """
     l = []
     try:
         columns_data = table_data['columns']
     except:
+        # Add empty entries as a quick fix for index out of bounds error.
         return [(None, None)]*max_col_count
     for i in range(0, len(columns_data)):
         span = get_column_span(columns_data[i])
@@ -534,6 +541,28 @@ def get_column_color_list(key, table_data):
         l.append((None, None))
     return l
 
+
+def get_column_width_list(table_data):
+    """
+    Forms a list of column widths from the columns data.
+    :param table_data:
+    :return:
+    """
+    l = []
+    try:
+        columns_data = table_data['columns']
+    except:
+        return [None]*max_col_count
+    for i in range(0, len(columns_data)):
+        span = get_column_span(columns_data[i])
+        for j in range(0, span):
+            try:
+                l.append(get_size(columns_data[i], "width"))
+            except:
+                l.append(None)
+    for k in range(0, max_col_count):
+        l.append(None)
+    return l
 
 def custom_repr(obj) -> str:
     """
@@ -606,25 +635,18 @@ def get_span(item) -> (int, int):
     return colspan, rowspan
 
 
-def get_size(item, default_width, default_height) -> (str, str):
+def get_size(item, key: str, default=None) -> str:
     """
-    Parse width and height into LaTeX-supported format.
+    Parse width or height into LaTeX-supported format.
     :param item: Cell data.
-    :param default_width: Value to be used if no width-key.
-    :param default_height: Value to be used if no height-key.
-    :return: Cell width and height in a tuple.
+    :param key: Width or heigth.
+    :param default: Value to be used if key wasn't found.
+    :return: Cell width or height.
     """
-    # TODO: Cases with more than just a number?
     try:
-        # TimTable uses measurements that are roughly thrice as large as LaTeX pts.
-        width = parse_size_attribute(item['width'])
+        return parse_size_attribute(item[key])
     except:
-        width = default_width
-    try:
-        height = parse_size_attribute(item['height'])
-    except:
-        height = default_height
-    return width, height
+        return default
 
 
 def get_font_family(item, default: str = default_font_family) -> str:
@@ -865,11 +887,50 @@ def get_table_resize(table_data, table_col_count) -> bool:
 
 
 def decide_format_tuple(format_levels):
+    """
+    Goes through a list of formats and returns the last non-empty one.
+    The idea is to stack table, column, row and cell formats and take the
+    topmost format.
+    :param format_levels:
+    :return:
+    """
     final_format = (None, None)
     for level in format_levels:
         if level[0]:
             final_format = level
     return final_format
+
+
+def decide_format_width(format_levels):
+    """
+    Decides which width (column, row, cell) to use by taking the widest one.
+    :param format_levels:
+    :return:
+    """
+    final_width = 0
+    for level in format_levels:
+        if level and default_width not in level:
+            width = float(parse_size_attribute(level))
+            if width > final_width:
+                final_width = width
+    if is_close(final_width, 0):
+        return default_width
+    else:
+        return final_width
+
+
+def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
+    """
+    Compares floats and returns true if they are almost same.
+    Source: https://stackoverflow.com/questions/5595425/
+    what-is-the-best-way-to-compare-floats-for-almost-equality-in-python
+    :param a: Number a.
+    :param b: Number b.
+    :param rel_tol:
+    :param abs_tol:
+    :return:
+    """
+    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
 def convert_table(table_json) -> Table:
@@ -918,6 +979,7 @@ def convert_table(table_json) -> Table:
     # Get column formattings:
     column_bg_color_list = get_column_color_list("backgroundColor", table_json)
     column_text_color_list = get_column_color_list("color", table_json)
+    column_width_list = get_column_width_list(table_json)
 
     max_cells = 0
     max_colspan = 1
@@ -930,8 +992,9 @@ def convert_table(table_json) -> Table:
         (row_default_text_color, row_default_text_color_html) = \
             get_color(row_data, "color")
 
-        (row_default_width, row_default_height) = \
-            get_size(row_data, default_width, default_height)
+        row_default_width = get_size(row_data, key="width", default=default_width)
+        row_default_height = get_size(row_data, key="height", default=default_height)
+
         row_default_font_family = \
             get_font_family(row_data, table_default_font_family)
         row_default_font_size = get_font_size(row_data, table_default_font_size)
@@ -956,10 +1019,11 @@ def convert_table(table_json) -> Table:
                 (text_color, text_color_html) = get_color(
                     cell_data,
                     'color')
+                cell_height = get_size(cell_data, key="height", default=row_default_height)
+                cell_width = get_size(cell_data, key="width")
 
                 (colspan, rowspan) = get_span(cell_data)
-                (width, height) = \
-                    get_size(cell_data, row_default_width, row_default_height)
+
                 borders = get_borders(cell_data, row_default_borders)
                 text_h_align = get_text_horizontal_align(cell_data, row_default_h_align)
                 font_family = get_font_family(cell_data, row_default_font_family)
@@ -980,6 +1044,8 @@ def convert_table(table_json) -> Table:
                     (row_default_text_color, row_default_text_color_html),
                     (text_color, text_color_html),
                 ])
+                height = cell_height
+                width = decide_format_width([row_default_width, column_width_list[j], cell_width])
 
 
                 c = Cell(
