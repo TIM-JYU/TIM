@@ -49,6 +49,7 @@ yubi.key
 /tim_logs/
 *.printing_whitelist.*
 temp
+Thumbs.db
 /timApp/Output.txt
 /timApp/modules/cs/mathcheck/mc.exe
 /timApp/pluginControlOrig.py
