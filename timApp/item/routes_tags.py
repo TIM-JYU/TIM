@@ -175,3 +175,16 @@ def get_tagged_documents():
     docs = get_documents(filter_user=get_current_user_object(), custom_filter=custom_filter,
                          query_options=query_options)
     return json_response(docs)
+
+
+@tags_blueprint.route("/getDoc/<int:doc_id>")
+def get_documents_by_id(doc_id):
+    """
+    Gets document and its tags by id.
+    :param doc_id:
+    :return:
+    """
+    docs = get_documents(filter_user=get_current_user_object(),
+                         custom_filter=DocEntry.id.in_([doc_id]),
+                         query_options=joinedload(DocEntry._block).joinedload(Block.tags))
+    return json_response(docs[0])

@@ -6,6 +6,8 @@ import * as shortNameValidator from "tim/ui/shortNameValidator";
 import {Binding, getURLParameter, markAsUsed} from "tim/util/utils";
 import {$http, $window} from "../util/ngimport";
 import {slugify} from "../util/slugify";
+import {ITag, ITaggedItem, TagType} from "./IItem";
+import {to} from "../util/utils";
 
 markAsUsed(formErrorMessage, shortNameValidator);
 
@@ -17,10 +19,11 @@ class CreateItemController implements IController {
     private itemName?: Binding<string, "@">;
     private alerts: Array<{}>;
     private itemType!: Binding<string, "@">;
-    private params?: Binding<{template?: string}, "=?">;
+    private params?: Binding<{template?: string, copy?: number}, "=?">;
     private force?: Binding<boolean, "<?">;
     private creating: boolean = false;
     private template?: Binding<string, "@?">;
+    private tagsWithExpirations: boolean = false;
 
     constructor() {
         this.automaticShortName = !this.force;
@@ -41,8 +44,28 @@ class CreateItemController implements IController {
         this.alerts = [];
     }
 
-    $onInit() {
+    async $onInit() {
+        await this.checkExpiredTags();
+    }
 
+    /**
+     * Checks whether the document to copy has regular tags (special tags aren't copied) with expiration dates.
+     * @returns {Promise<void>}
+     */
+    private async checkExpiredTags() {
+        if (this.params && this.params.copy) {
+            const [err, response] = await to($http.get<ITaggedItem>(`/tags/getDoc/${this.params.copy}`));
+            if (response) {
+                const tags = response.data.tags;
+                for (const tag of tags) {
+                    if (tag.expires && tag.type === TagType.Regular) {
+                        this.tagsWithExpirations = true;
+                        return;
+                    }
+                }
+            }
+        }
+        this.tagsWithExpirations = false;
     }
 
     createItem() {
