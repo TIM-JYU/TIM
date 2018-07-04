@@ -195,17 +195,19 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     }
 
     /**
-     * Changes tag css style depending on the tag type. Currently normal tags are light blue-green
+     * Changes tag css style class depending on the tag type. Currently normal tags are light blue-green
      * and special tags green.
      * @param {ITag} tag
      * @returns {string}
      */
-    private tagStyle(tag: ITag) {
+    private tagStyleClass(tag: ITag) {
+        let classes = "";
         if (tag.type === TagType.Regular) {
-            return "btn-primary";
+            classes += "btn-primary";
         } else {
-            return "btn-success";
+            classes += "btn-success";
         }
+        return classes;
     }
 }
 
@@ -236,7 +238,7 @@ registerDialogComponent("timEditTags",
         <div class="tags-list">
             <span ng-repeat="x in $ctrl.tagsList">
                 <span class="btn-xs"
-                ng-class="$ctrl.tagStyle(x)">{{x.name}}</span>
+                ng-class="$ctrl.tagStyleClass(x)">{{x.name}}</span>
                 <i ng-if="x.expires" class="glyphicon glyphicon-time"
                 uib-tooltip="Expires: {{x.expires | timdate}}"></i>
                 <a><span class="glyphicon glyphicon-remove" title="Remove tag" ng-click="$ctrl.removeTag(x)"></span></a>
