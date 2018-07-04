@@ -11,11 +11,13 @@ _build/
 dist/
 bower_components/
 MIRToolbox/
+pg_backup
 pg_backup/
 .stack-work/
 /Dumbo/**/*.iml
 /Dumbo/cache/
 /Dumbo/out/
+/funnel/mail/
 /variables.sh
 /timApp/docs/_build/
 /timApp/static/gen/
