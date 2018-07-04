@@ -219,7 +219,7 @@ registerDialogComponent("timCourseListDialog",
                     when="{'1': 'course', 'other': 'courses'}"></ng-pluralize>)
                 </span>
                 <ul class="list-unstyled well well-sm" uib-collapse="subject.closed">
-                    <li ng-repeat="course in subject.docs" ng-if="$ctrl.courseCode(course)">
+                    <li ng-repeat="course in subject.docs | orderBy:$ctrl.courseCode" ng-if="$ctrl.courseCode(course)">
                         <a href="/view/{{course.path}}" title="Open {{course.title}}">
                         <span class="btn-xs btn-primary">{{$ctrl.courseCode(course)}}</span>
                          {{course.title}}
