@@ -45,7 +45,7 @@
     "jspm": "^0.17.0-beta.47",
     "replace-in-file": "^2.5.0",
     "systemjs-builder": "^0.16.12",
-    "tslint": "^5.0.0",
+    "tslint": "^5.10.0",
     "typescript": "^2.7.1"
   },
   "jspm": {
