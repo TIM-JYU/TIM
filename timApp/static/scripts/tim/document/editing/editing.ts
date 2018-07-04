@@ -1,10 +1,9 @@
 import {IScope} from "angular";
 import $ from "jquery";
 import {getActiveDocument} from "tim/document/document";
-import {Coords, markPageDirty} from "tim/util/utils";
+import {markPageDirty} from "tim/util/utils";
 import {IPluginInfoResponse, ParCompiler} from "../../editor/parCompiler";
 import {openEditor, PareditorController} from "../../editor/pareditor";
-import {TimTable} from "../../plugin/timTable";
 import {showMessageDialog} from "../../ui/dialog";
 import {$compile, $http, $window} from "../../util/ngimport";
 import {empty, isMobileDevice, to} from "../../util/utils";
@@ -335,15 +334,17 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
             if (parNext === "HELP_PAR") {
                 parNext = undefined;
             }
-            try {
-                var response = await
-                    $http.post<IParResponse>("/newParagraph/", {
-                        text: '``` {settings=""}\nexample:\n```',
-                        docId: this.viewctrl.docId,
-                        par_next: parNext,
-                    });
-            } catch (e) {
-                $window.alert(e.data.error);
+
+            const [err, response] = await
+                to($http.post<IParResponse>("/newParagraph/", {
+                    text: '``` {settings=""}\nexample:\n```',
+                    docId: this.viewctrl.docId,
+                    par_next: parNext,
+                }));
+            if (!response) {
+                if (err) {
+                    await showMessageDialog(err.data.error);
+                }
                 return;
             }
             this.addSavedParToDom(response.data, {type: EditType.AddBottom});

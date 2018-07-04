@@ -11,7 +11,7 @@ import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
 import {showQuestionAskDialog} from "../lecture/questionAskController";
 import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
-import {Binding} from "../util/utils";
+import {Binding, to} from "../util/utils";
 
 export interface IQstAttributes {
     markup: IQuestionMarkup;
@@ -168,26 +168,28 @@ class QstController implements IController {
             this.error = "plugin or taskId missing";
             return;
         }
-        try {
-            var response = await $http<{
-                web: {
-                    result: string,
-                    show_result: boolean,
-                    state: AnswerTable,
-                    markup: IQuestionMarkup,
-                },
-            }>({
-                    method: "PUT",
-                    url,
-                    data: params,
-                    headers: {"Content-Type": "application/json"},
-                    timeout: 20000,
-                },
-            );
-        } catch (e) {
-            this.isRunning = false;
-            this.errors.push(e.status);
-            this.error = "Ikuinen silmukka tai jokin muu vika?";
+
+        const [err, response] = await to($http<{
+            web: {
+                result: string,
+                show_result: boolean,
+                state: AnswerTable,
+                markup: IQuestionMarkup,
+            },
+        }>({
+                method: "PUT",
+                url,
+                data: params,
+                headers: {"Content-Type": "application/json"},
+                timeout: 20000,
+            },
+        ));
+        if (!response) {
+            if (err) {
+                this.isRunning = false;
+                this.errors.push(err.data.error);
+                this.error = "Ikuinen silmukka tai jokin muu vika?";
+            }
             return;
         }
         const data = response.data;
