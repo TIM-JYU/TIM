@@ -1,1 +1,1 @@
-./docker-compose.sh run tim /bin/bash
+./docker-compose.sh run --rm tim /bin/bash
