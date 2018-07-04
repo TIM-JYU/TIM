@@ -6,11 +6,11 @@ import {IFormController, IRootElementService, IScope} from "angular";
 import {Moment} from "moment";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {IItem, ITag, tagIsExpired, TagType} from "./IItem";
 import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
 import {Users} from "../user/userService";
 import {$http} from "../util/ngimport";
 import {markAsUsed, to} from "../util/utils";
-import {IItem, ITag, TagType} from "./IItem";
 import * as tagLabel from "./tagLabel";
 
 markAsUsed(tagLabel);
@@ -202,6 +202,9 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      */
     private tagStyleClass(tag: ITag) {
         let classes = "";
+        if (tagIsExpired(tag)) {
+            classes += "less-opacity ";
+        }
         if (tag.type === TagType.Regular) {
             classes += "btn-primary";
         } else {

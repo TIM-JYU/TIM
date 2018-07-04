@@ -1213,6 +1213,10 @@ body > .footer {
     display: inline;
 }
 
+.less-opacity {
+    opacity: 0.66;
+}
+
 @media (max-width: $screen-xs-max) {
     .container-fluid {
         padding: 0;
