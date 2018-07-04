@@ -22,5 +22,5 @@ services:
   volumes:
    - .:/service
   working_dir: /service/timApp/static/scripts
-  command: jspm bundle tim/main + tim/slide - "(tim/main + tim/slide - [tim/**/*])" build/tim.js -wm
+  command: jspm bundle tim/main + tim/document/slide - "(tim/main + tim/document/slide - [tim/**/*])" build/tim.js -wm
   restart: unless-stopped
