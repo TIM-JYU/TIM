@@ -1,3 +1,8 @@
 {
-  "extends": "tslint:recommended"
+  "extends": "tslint:recommended",
+  "rules": {
+    "align": false,
+    "member-access": false,
+    "object-literal-shorthand": false
+  }
 }
