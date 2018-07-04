@@ -142,3 +142,33 @@ class TagTest(TimRouteTest):
         self.json_post(f'/tags/remove/{d.path}',
                        {'tagObject': {'name': 'TEST123', 'expires': None, 'type': TagType.CourseCode}},
                        expect_status=403)
+
+    def test_get_document_by_id(self):
+        u = self.test_user_1
+        self.login_test1()
+        d = self.create_doc()
+        self.json_post(f'/tags/add/{d.path}', {'tags': [{'name': 'test', 'expires': None, 'type': TagType.Regular},
+                                                        {'name': 'test2', 'expires': None, 'type': TagType.Regular}]})
+
+        self.get(f'/tags/getDoc/{d.id}', expect_content={'id': d.id,
+                                                         'isFolder': False,
+                                                         'location': d.location,
+                                                         'modified': 'just now',
+                                                         'name': 'doc5',
+                                                         'owner': {'id': self.get_test_user_1_group_id(), 'name': u.name},
+                                                         'path': d.path,
+                                                         'public': True,
+                                                         'rights': {'browse_own_answers': True,
+                                                                    'can_comment': True,
+                                                                    'can_mark_as_read': True,
+                                                                    'editable': True,
+                                                                    'manage': True,
+                                                                    'owner': True,
+                                                                    'see_answers': True,
+                                                                    'teacher': True},
+                                                         'tags': [{'block_id': d.id, 'expires': None, 'name': 'test',
+                                                                   'type': TagType.Regular.value},
+                                                                  {'block_id': d.id, 'expires': None, 'name': 'test2',
+                                                                   'type': TagType.Regular.value}],
+                                                         'title': d.title,
+                                                         'unpublished': True})
