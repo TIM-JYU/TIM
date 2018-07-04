@@ -66,7 +66,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         return process_areas(html_pars, macros, delimiter, env), js_paths, css_paths, modules
 
     if doc.get_settings().show_authors():
-        authors = doc.get_changelog().get_authorinfo(pars)
+        authors = doc.get_changelog(-1).get_authorinfo(pars)
         for p in html_pars:
             p['authorinfo'] = authors.get(p['id'])
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
