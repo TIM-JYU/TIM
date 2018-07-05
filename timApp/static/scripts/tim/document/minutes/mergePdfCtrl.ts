@@ -1,6 +1,6 @@
-/***
+/**
  * Controller for merging attachments in TIM documents.
- ***/
+ */
 import {IRootElementService, IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import {IItem} from "../../item/IItem";
@@ -40,11 +40,15 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
         super(element, scope);
     }
 
+    /**
+     * Dialog title.
+     * @returns {string}
+     */
     public getTitle() {
         return "Merge attachments";
     }
 
-    /***
+    /**
      * Gets a list of attachments in the documents and notes whether invalid files were found.
      * @returns {Promise<void>}
      */
@@ -61,30 +65,27 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
         }
     }
 
-    /***
+    /**
      * Deals with clicking "Merge" timMergePdf dialog.
      * Show error messages for users.
-     ***/
+     */
     async mergeClicked() {
 
         this.loading = true;
-        // const postURL = "/merge" + this.resolve.params.document.path;
-
         const url = `/minutes/mergeAttachments/${this.resolve.params.document.path}`;
         const  [err, response] = await to($http.get<{url: string}>(url, {}));
         if (err) {
-            showMessageDialog(err.data.error);
+            void showMessageDialog(err.data.error);
             this.loading = false;
             return;
         }
 
         if (response) {
             this.loading = false;
-
             const [err2, response2] = await to($http.post<{url: string}>(url, {}));
 
             if (err2) {
-                showMessageDialog (err2.data.error);
+                void showMessageDialog (err2.data.error);
                 this.loading = false;
                 return;
             }
@@ -101,9 +102,9 @@ export class ShowMergePdfController extends DialogController<{ params: IMergePar
     }
 }
 
-/***
+/**
  * HTML Template for merge dialog.
- ***/
+ */
 registerDialogComponent("timMergePdf",
     ShowMergePdfController,
     {

@@ -179,6 +179,7 @@ def upload_document(folder, file):
 def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampData, stampformat: str):
     """
     Uploads the file and makes a stamped version of it into the same folder.
+    :param d: Document info.
     :param file: The file to upload and stamp.
     :param stamp_data: Stamp data object (attachment and list ids) without the path.
     :param stampformat: Formatting of stamp text.
@@ -200,8 +201,8 @@ def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampDat
         stamp_text_format=stampformat)[0]
 
     stamped_filename = get_base_filename(output)
-
     db.session.commit()
+    
     # TODO: In case of raised errors give proper no-upload response?
     return json_response({"file": f"{str(f.id)}/{stamped_filename}"})
 

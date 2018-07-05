@@ -607,22 +607,24 @@ or newer one that is more familiar to write in YAML:
         // If there's no stampFormat set in preamble, uses hard coded default format.
         if (editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0 && this.docSettings) {
             autostamp = true;
-            // TODO: More exact parsing needed.
-            // Giving commas inside parameters will break this.
-            // throw new Error("Unable to parse stamping parametres!");
+
+            // TODO: Better parsing needed.
+            // Giving commas inside parameters will break this without giving an error.
             try {
                 macroParams = editorText.substring(
                     editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
                     editorText.lastIndexOf(macroStringEnd)).split(",");
             } catch {
-                throw new Error("Unable to parse stamp parameters!");
+                throw new Error("Parsing stamp parameters failed");
             }
-            // Knro usage starts from 1 but dates starts from 0, so dummy value added to
-            // dates[0] to adjust.
+
+            // Knro usage starts from 1 but dates starts from 0, so dummy value was added to
+            // dates[0] to adjust the indices.
             const knro = this.docSettings.macros.knro;
             let dates = this.docSettings.macros.dates;
             dates = ["ERROR", ...dates];
             const kokousDate = dates[knro];
+
             // If stampFormat isn't set in preamble,
             let stampFormat = this.docSettings.macros.stampformat;
             if (stampFormat === undefined) {
@@ -635,15 +637,16 @@ or newer one that is more familiar to write in YAML:
             this.file.error = undefined;
             const upload = $upload.upload<{image: string, file: string}>({
                 data: {
+                    attachmentParams: JSON.stringify(attachmentParams),
                     doc_id: this.getExtraData().docId.toString(),
                     file,
-                    attachmentParams: JSON.stringify(attachmentParams),
                 },
                 method: "POST",
                 url: "/upload/",
             });
 
-            // TODO: Better check for cases with non-showPdf-plugin-paragraphs in editor.
+            // TODO: Better plugin check.
+            // May fail when there are non-plugin-paragraphs before a plugin-paragraph in editor.
             upload.then((response) => {
                 $timeout(() => {
                     const isplugin = (this.editor.editorStartsWith("``` {"));
