@@ -1,5 +1,5 @@
 import re
-from typing import NamedTuple, Generator, Match
+from typing import NamedTuple, Generator, Match, Optional
 
 import attr
 
@@ -11,10 +11,19 @@ from timApp.document.docparagraph import DocParagraph
 
 @attr.s
 class SearchArgumentsBasic:
+    """Arguments for a search operation."""
+
     term: str = attr.ib()
-    onlyfirst: bool = attr.ib()
+    """The search term."""
+
+    onlyfirst: Optional[int] = attr.ib()
+    """If given, only search the first x paragraphs from each document."""
+
     regex: bool = attr.ib()
+    """If true, interpret term as a regular expression."""
+
     format: str = attr.ib()
+    """Format string to print matches."""
 
 
 @attr.s
@@ -31,12 +40,24 @@ class SearchArgumentsCLI(SearchArgumentsBase):
 
 class SearchResult(NamedTuple):
     """A single search result."""
+
     doc: DocInfo
+    """The document where the match occurred."""
+
     par: DocParagraph
+    """The paragraph where the match occurred."""
+
     match: Match[str]
+    """The match object."""
+
     num_results: int
+    """The number of found results so far."""
+
     num_pars: int
+    """The number of paragraphs processed so far."""
+
     num_pars_found: int
+    """The number of paragraphs found so far."""
 
     def format_match(self, args: SearchArgumentsBase) -> str:
         m = self.match

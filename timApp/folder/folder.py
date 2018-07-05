@@ -13,11 +13,19 @@ ROOT_FOLDER_ID = -1
 
 
 class Folder(db.Model, Item):
+    """Represents a folder in the directory hierarchy."""
     __bind_key__ = 'tim_main'
     __tablename__ = 'folder'
+
     id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
+    """Folder identifier."""
+
     name = db.Column(db.Text, nullable=False)
+    """Folder name (last part of path)."""
+
     location = db.Column(db.Text, nullable=False)
+    """Folder location (first parts of the path)."""
+
     __table_args__ = (db.UniqueConstraint('name', 'location', name='folder_uc'),)
 
     _block = db.relationship('Block', back_populates='folder', lazy='joined')
@@ -73,7 +81,7 @@ class Folder(db.Model, Item):
         return None
 
     @staticmethod
-    def get_all_in_path(root_path: str = '', filter_ids: Optional[Iterable[int]]=None) -> List['Folder']:
+    def get_all_in_path(root_path: str = '', filter_ids: Optional[Iterable[int]] = None) -> List['Folder']:
         """Gets all the folders under a path.
 
         :param root_path: Restricts the search to a specific folder.
@@ -169,7 +177,7 @@ class Folder(db.Model, Item):
         return join_location(self.location, self.name)
 
     def get_document(self, relative_path: str, create_if_not_exist=False, creator_group_id: int = None) -> Optional[
-            DocEntry]:
+        DocEntry]:
         doc = DocEntry.query.filter_by(name=join_location(self.get_full_path(), relative_path)).first()
         if doc is not None:
             return doc
@@ -191,7 +199,7 @@ class Folder(db.Model, Item):
         return Folder.get_all_in_path(self.path)
 
     @staticmethod
-    def create(path: str, owner_group_id: Optional[int]=None, title=None, apply_default_rights=False) -> 'Folder':
+    def create(path: str, owner_group_id: Optional[int] = None, title=None, apply_default_rights=False) -> 'Folder':
         """Creates a new folder with the specified name. If the folder already exists, it is returned.
 
         :param title: The folder title.

@@ -130,6 +130,7 @@ class Item(ItemBase):
                 'rights': self.rights,
                 'unpublished': self.block.is_unpublished() if self.block else False,
                 'public': self.public,
+                # We only add tags if they've already been loaded.
                 **({'tags': self.block.tags} if self.block and 'tags' not in instance_state(self.block).unloaded else {})
                 }
 

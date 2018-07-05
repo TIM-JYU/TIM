@@ -30,6 +30,7 @@ def make_cache_key(*args, **kwargs):
     return (str(get_current_user_id()) + path + str(request.query_string)).encode('utf-8')
 
 
+# TODO: Use the classes and functions from search_in_documents.py
 class SearchResult:
     def __init__(self, document: DocInfo, par: DocParagraph):
         self.document = document

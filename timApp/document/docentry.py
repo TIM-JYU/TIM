@@ -1,4 +1,4 @@
-from typing import Optional, Union, List
+from typing import Optional, List
 
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
@@ -13,11 +13,25 @@ from timApp.util.utils import split_location
 
 
 class DocEntry(db.Model, DocInfo):
+    """Represents a TIM document in the directory hierarchy.
+
+    A document can have several aliases, which is why the primary key is "name" column and not "id".
+
+    Most of the time you should use DocInfo class instead of this.
+    """
     __bind_key__ = 'tim_main'
     __tablename__ = 'docentry'
     name = db.Column(db.Text, primary_key=True)
+    """Full path of the document.
+    
+    TODO: Improve the name.
+    """
+
     id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
+    """Document identifier."""
+
     public = db.Column(db.Boolean, nullable=False, default=True)
+    """Whether the document is visible in directory listing."""
 
     _block = db.relationship('Block', back_populates='docentries', lazy='joined')
 
@@ -67,6 +81,10 @@ class DocEntry(db.Model, DocInfo):
 
     @staticmethod
     def find_by_id(doc_id: int, try_translation=False) -> Optional['DocInfo']:
+        """Finds a DocInfo by id.
+
+        TODO: This method doesn't really belong in DocEntry class.
+        """
         d = DocEntry.query.filter_by(id=doc_id).first()
         if d:
             return d
@@ -75,7 +93,12 @@ class DocEntry(db.Model, DocInfo):
         return d
 
     @staticmethod
-    def find_by_path(path: str, fallback_to_id=False, try_translation=False) -> Union['DocEntry', 'Translation', None]:
+    def find_by_path(path: str, fallback_to_id=False, try_translation=False) -> Optional['DocInfo']:
+        """Finds a DocInfo by id.
+
+        TODO: This method doesn't really belong in DocEntry class.
+        TODO: Try translation should probably be True by default.
+        """
         d = DocEntry.query.get(path)
         if d:
             return d
@@ -101,9 +124,14 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry(id=-1, name=title)
 
     @staticmethod
-    def create(path: str, owner_group_id: Optional[int] = None, title: Optional[str] = None, from_file=None, initial_par=None,
-               settings=None, is_gamified: bool = False) -> 'DocEntry':
-        """Creates a new document with the specified name.
+    def create(path: str,
+               owner_group_id: Optional[int] = None,
+               title: Optional[str] = None,
+               from_file=None,
+               initial_par=None,
+               settings=None,
+               is_gamified: bool = False) -> 'DocEntry':
+        """Creates a new document with the specified properties.
 
         :param from_file: If provided, loads the document content from a file.
         :param initial_par: The initial paragraph for the document.
@@ -144,7 +172,7 @@ class DocEntry(db.Model, DocInfo):
         return docentry
 
 
-def create_document_and_block(owner_group_id: int, desc: Optional[str]=None):
+def create_document_and_block(owner_group_id: int, desc: Optional[str] = None):
     document_id = insert_block(BlockType.Document, desc, owner_group_id).id
     document = Document(document_id, modifier_group_id=owner_group_id)
     document.create()
@@ -154,17 +182,17 @@ def create_document_and_block(owner_group_id: int, desc: Optional[str]=None):
 def get_documents(include_nonpublic: bool = False,
                   filter_folder: str = None,
                   search_recursively: bool = True,
-                  filter_user: Optional[UserType]=None,
-                  custom_filter = None,
-                  query_options = None) -> List[DocEntry]:
+                  filter_user: Optional[UserType] = None,
+                  custom_filter=None,
+                  query_options=None) -> List[DocEntry]:
     """Gets all the documents in the database matching the given criteria.
 
     :param filter_user: If specified, returns only the documents that the user has view access to.
     :param search_recursively: Whether to search recursively.
     :param filter_folder: Optionally restricts the search to a specific folder.
     :param include_nonpublic: Whether to include non-public document names or not.
-    :param custom_filter:
-    :param query_options:
+    :param custom_filter: Any custom filter to use.
+    :param query_options: Any additional options for the query.
     :returns: A list of DocEntry objects.
 
     """
@@ -195,7 +223,7 @@ def get_documents_in_folder(folder_pathname: str,
 
     :param folder_pathname: path to be searched for documents without ending '/'
     :param include_nonpublic: Whether to include non-public document names or not.
-    :returns: A list of dictionaries of the form {'id': <doc_id>, 'name': 'document_name'}
+    :returns: A list of DocEntry objects.
 
     """
     return get_documents(include_nonpublic=include_nonpublic,

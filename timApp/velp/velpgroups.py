@@ -151,22 +151,6 @@ class VelpGroups(TimDbBase):
                            )
         self.db.commit()
 
-    def remove_velp_from_group(self, velp_id: int, velp_group_id: int):
-        """Removes a velp from a specific group.
-
-        :param velp_id: Velp id
-        :param velp_group_id: Velp group id
-
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      DELETE
-                      FROM VelpInGroup
-                      WHERE velp_id = %s AND velp_group_id = %s
-                      """, [velp_id, velp_group_id]
-                       )
-        self.db.commit()
-
     def remove_velp_from_groups(self, velp_id: int, velp_group_ids: [int]):
         """Removes a velp from specific groups.
 
@@ -183,18 +167,6 @@ class VelpGroups(TimDbBase):
                           """, [velp_id, velp_group]
                            )
         self.db.commit()
-
-    def get_velp_group_name(self, velp_group_id: int) -> str:
-        """Gets velp group's name.
-
-        :param velp_group_id: velp group ID
-        :return: velp group's name as a string.
-
-        """
-        cursor = self.db.cursor()
-        cursor.execute('SELECT name FROM VelpGroup WHERE id = %s', [velp_group_id])
-        result = cursor.fetchone()
-        return result[0] if result is not None else None
 
     def get_groups_for_velp(self, velp_id):
         """Gets velp group's of the velp.
@@ -220,32 +192,10 @@ class VelpGroups(TimDbBase):
         result = cursor.fetchone()
         return True if result is not None else False
 
-    def add_group_to_imported_table(self, user_group: int, doc_id: int, target_type: int, target_id: int,
-                                    velp_group_id: int):
-        """Adds velp groups to ImportedVelpGroups table for specific document / user group combo.
-
-        :param user_group: ID of user group
-        :param doc_id: Id of document
-        :param target_type: Which kind of area group targets to (0 doc, 1 paragraph, 2 area)
-        :param target_id:  ID of target (0 for documents)
-        :param velp_group_id: ID of velp group
-        :return: void
-
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      ImportedVelpGroups(user_group, doc_id, target_type, target_id, velp_group_id)
-                      VALUES (%s, %s, %s, %s, %s)
-                      ON CONFLICT DO NOTHING
-                      """, [user_group, doc_id, target_type, target_id, velp_group_id]
-                       )
-        self.db.commit()
-
-        return
-
     def get_groups_from_imported_table(self, user_groups: [int], doc_id: int):
         """Gets velp groups from ImportedVelpGroups table for specific document / user group IDs combo.
+
+        TODO: The table ImportedVelpGroups is always empty.
 
         :param user_groups: List of user group IDs
         :param doc_id: ID of document
@@ -589,63 +539,4 @@ class VelpGroups(TimDbBase):
                       WHERE user_id = %s AND doc_id = %s
                       """, [user_id, doc_id]
                        )
-        self.db.commit()
-
-    # Unused methods
-
-    def update_velp_group(self, velp_group_id: int, name: str, valid_until: Optional[str]):
-        """Updates name and/or valid until time of velp group.
-
-        :param velp_group_id: Velp group id
-        :param name: Name of velp group
-        :param valid_until: How long velp group is valid
-
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      UPDATE VelpGroup
-                      SET name = %s AND  valid_until = %s
-                      WHERE id = %s
-                      """, [name, valid_until, velp_group_id]
-                       )
-        self.db.commit()
-
-    def delete_velp_group(self, velp_group_id: int):
-        """Deletes velp group. Doesn't delete velps belonging to group, only their links to deleted group.
-
-        :param velp_group_id: Velp group id
-
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      DELETE
-                      FROM VelpGroup
-                      WHERE  id = %s;
-                      DELETE
-                      FROM VelpInGroup
-                      WHERE velp_group_id = %s
-                      """, [velp_group_id, velp_group_id]
-                       )
-
-    # TODO: Unused
-    def add_groups_to_default_table(self, velp_groups: dict, doc_id: int):
-        """Adds velp groups to VelpGroupDefaults table.
-
-        :param velp_groups: Velp groups as dictionaries
-        :param doc_id: ID of document
-
-        """
-        cursor = self.db.cursor()
-        for velp_group in velp_groups:
-            target_type = 0
-            target_id = 0
-            selected = True
-            velp_group_id = velp_group['id']
-            cursor.execute("""
-                          INSERT INTO
-                          VelpGroupDefaults(doc_id, target_type, target_id, selected, velp_group_id)
-                          VALUES (%s, %s, %s, %s, %s)
-                          ON CONFLICT DO NOTHING
-                          """, [doc_id, target_type, target_id, selected, velp_group_id]
-                           )
         self.db.commit()

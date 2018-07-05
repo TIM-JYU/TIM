@@ -8,6 +8,14 @@ from timApp.timdb.sqa import db
 
 
 class Translation(db.Model, DocInfo):
+    """A translated document.
+
+    Translation objects may be created in two scenarios:
+
+    - An existing non-translated document is assigned a language.
+    - A new translated document is created (via manage view).
+
+    """
     __bind_key__ = 'tim_main'
     __tablename__ = 'translation'
     doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)

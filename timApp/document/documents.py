@@ -92,6 +92,7 @@ def import_document_from_file(document_file: str,
                               title: Optional[str] = None) -> Document:
     """Imports the specified document in the database.
 
+    :param title: Title for the document.
     :param document_file: The file path of the document to import.
     :param path: The path for the document.
     :param owner_group_id: The owner group of the document.

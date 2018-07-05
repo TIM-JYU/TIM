@@ -13,14 +13,28 @@ from timApp.timtypes import FolderType
 
 
 class Block(db.Model):
+    """The "base class" for all database objects that are part of the permission system."""
     __bind_key__ = 'tim_main'
     __tablename__ = 'block'
     id = db.Column(db.Integer, primary_key=True)
+    """A unique identifier for the Block."""
+
     latest_revision_id = db.Column(db.Integer)
+    """Old field that is not used anymore."""
+
     type_id = db.Column(db.Integer, nullable=False)
+    """Type of the Block, see BlockType enum for possible types."""
+
     description = db.Column(db.Text)
+    """Additional information about the Block. This is used for different purposes by different BlockTypes,
+    so it isn't merely a "description".
+    """
+
     created = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
+    """When this Block was created."""
+
     modified = db.Column(db.DateTime(timezone=True), default=func.now())
+    """When this Block was last modified."""
 
     docentries = db.relationship('DocEntry', back_populates='_block', lazy='dynamic')
     folder = db.relationship('Folder', back_populates='_block', lazy='dynamic')
@@ -62,7 +76,7 @@ class Block(db.Model):
         from timApp.auth.sessioninfo import get_current_user_object
         u = get_current_user_object()
         return u.has_ownership(self) is not None and (
-        not self.owner or not self.owner.is_large()) and len(self.accesses) <= 1
+                not self.owner or not self.owner.is_large()) and len(self.accesses) <= 1
 
     @property
     def owner_access(self):
@@ -104,7 +118,7 @@ class BlockType(Enum):
         return BlockType[type_name.title()]
 
 
-def insert_block(block_type: BlockType, description: Optional[str], owner_group_id: Optional[int]=None) -> Block:
+def insert_block(block_type: BlockType, description: Optional[str], owner_group_id: Optional[int] = None) -> Block:
     """Inserts a block to database.
 
     :param description: The name (description) of the block.

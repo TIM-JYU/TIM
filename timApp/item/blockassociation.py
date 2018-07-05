@@ -7,4 +7,7 @@ class BlockAssociation(db.Model):
     __tablename__ = 'blockassociation'
 
     parent = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
+    """The parent Block."""
+
     child = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
+    """The child Block."""

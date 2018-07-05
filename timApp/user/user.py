@@ -70,15 +70,32 @@ seeanswers_access_set = {t.value for t in [
 
 
 class User(db.Model):
+    """A user account.
+
+    A special user 'Anonymous user' denotes a user that is not logged in. Its id is 0.
+    """
     __bind_key__ = 'tim_main'
     __tablename__ = 'useraccount'
     id = db.Column(db.Integer, primary_key=True)
+    """User identifier."""
+
     name = db.Column(db.Text, nullable=False, unique=True)
+    """User name (not full name)."""
+
     real_name = db.Column(db.Text)
+    """Real name. This may be in the form "Lastname Firstname" or "Firstname Lastname"."""
+
     email = db.Column(db.Text)
+    """Email address."""
+
     prefs = db.Column(db.Text)
+    """Preferences as a JSON string."""
+
     pass_ = db.Column('pass', db.Text)
+    """Password hashed with bcrypt."""
+
     yubikey = db.Column(db.Text)
+    """Yubikey."""
 
     notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
     groups = db.relationship('UserGroup', secondary=UserGroupMember.__table__,

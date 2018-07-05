@@ -2,6 +2,10 @@ from timApp.timdb.sqa import db
 
 
 class AnswerTag(db.Model):
+    """Tags for an Answer.
+
+    TODO: Answer should be a Block and the tags would then come from the tag table.
+    """
     __bind_key__ = 'tim_main'
     __tablename__ = 'answertag'
     id = db.Column(db.Integer, primary_key=True)
@@ -10,6 +14,7 @@ class AnswerTag(db.Model):
 
 
 class AnswerUpload(db.Model):
+    """Associates uploaded files (Block with type BlockType.AnswerUpload) with Answers."""
     __bind_key__ = 'tim_main'
     __tablename__ = 'answerupload'
     upload_block_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
@@ -24,6 +29,7 @@ class AnswerUpload(db.Model):
 
 
 class UserAnswer(db.Model):
+    """Associates Users with Answers."""
     __bind_key__ = 'tim_main'
     __tablename__ = 'useranswer'
     id = db.Column(db.Integer, primary_key=True)

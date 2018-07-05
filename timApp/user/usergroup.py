@@ -7,10 +7,24 @@ from timApp.user.usergroupmember import UserGroupMember
 
 
 class UserGroup(db.Model):
+    """A usergroup. Each User should belong to a personal UserGroup that has the same name as the User name. No one
+    else should belong to a personal UserGroup.
+
+    A User can additionally belong to any number of other UserGroups.
+
+    Two special groups named 'Logged-in users' and 'Anonymous users' denote the set of all logged-in users and all
+    users including anonymous (not logged-in) ones, respectively.
+
+    In database, the User 'Anonymous user' belongs to 'Anonymous users' group. Other than that,
+    the two groups are empty from the database's point of view.
+    """
     __bind_key__ = 'tim_main'
     __tablename__ = 'usergroup'
     id = db.Column(db.Integer, primary_key=True)
+    """Usergroup identifier."""
+
     name = db.Column(db.Text, nullable=False, unique=True)
+    """Usergroup name."""
 
     users = db.relationship('User', secondary=UserGroupMember.__table__,
                             back_populates='groups', lazy='dynamic')

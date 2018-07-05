@@ -5,13 +5,18 @@ from timApp.timdb.sqa import db
 
 
 class AccessType(db.Model):
+    """A kind of access that a UserGroup may have to a Block."""
     __bind_key__ = 'tim_main'
     __tablename__ = 'accesstype'
     id = db.Column(db.Integer, primary_key=True)
+    """Access type identifier."""
+
     name = db.Column(db.Text, nullable=False)
+    """Access type name, such as 'view', 'edit', 'manage', etc."""
 
 
 class BlockAccess(db.Model):
+    """A single permission. Relates a UserGroup with a Block along with an AccessType."""
     __bind_key__ = 'tim_main'
     __tablename__ = 'blockaccess'
     block_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
