@@ -130,7 +130,7 @@ class StampDataInvalidError(PdfError):
     Raised if stamp data type is wrong.
     """
 
-    def __init__(self, reason = "", item=""):
+    def __init__(self, reason="", item=""):
         """
         :param reason: The error cause explanation.
         :param item: Item or data that caused the error.
@@ -213,10 +213,11 @@ class StampFormatInvalidError(PdfError):
 
 class AttachmentStampData:
     """
-    Contains data to create stamp for one attachmnet.
+    Contains data to create stamp for one attachment.
     """
-    def __init__(self, file_path: str="",
-                 date: str="",
+
+    def __init__(self, file_path: str = "",
+                 date: str = "",
                  attachment: str = "",
                  issue: Union[str, int] = "",
                  text: str = ""):
@@ -236,7 +237,30 @@ class AttachmentStampData:
         self.text = text
 
     def __str__(self):
-        return f"{{{self.file}, {self.date}, {self.issue}, {self.attachment}, {self.text}}}"
+        return f"{{file:'{self.file}', date:'{self.date}', issue:'{self.issue}', " \
+               f"attachment:'{self.attachment}', text:'{self.text}'}}"
+
+    def validate(self):
+        """
+        Checks stamp data parameters and attachment file validity.
+        :return: None.
+        """
+        # Path is always required.
+        if not self.file:
+            raise StampDataMissingAttributeError("file", str(self))
+        # Text or date, attachment & issue are alternatives.
+        if not self.text:
+            if len(self.date) > stamp_param_max_length or \
+                    len(self.issue) > stamp_param_max_length or \
+                    len(self.attachment) > stamp_param_max_length:
+                raise StampDataInvalidError("too long parameter", str(self))
+            if not self.date:
+                raise StampDataMissingAttributeError("date", str(self))
+            if not self.attachment:
+                raise StampDataMissingAttributeError("attachment", str(self))
+            if not self.issue:
+                raise StampDataMissingAttributeError("issue", str(self))
+        check_pdf_validity(self.file)
 
 
 ##############################################################################
@@ -317,7 +341,7 @@ def get_attachments_from_paragraphs(paragraphs):
                 attachments_with_errors = True
             else:
                 pdf_paths += [par_file]
-    return (pdf_paths, attachments_with_errors)
+    return pdf_paths, attachments_with_errors
 
 
 def check_pdf_validity(pdf_path: str) -> None:
@@ -504,27 +528,7 @@ def check_stamp_data_validity(stamp_data_list: List[AttachmentStampData]) -> Non
     if not stamp_data_list:
         raise StampDataEmptyError()
     for item in stamp_data_list:
-        # If there are no objects inside the list.
-        if not isinstance(item, AttachmentStampData):
-            raise StampDataInvalidError("incorrect format", str(item))
-        # Path is always required.
-        if not item.file:
-            raise StampDataMissingAttributeError("file", str(item))
-        # Text or date, attachment & issue are alternatives.
-        if not item.text:
-            if not item.date:
-                raise StampDataMissingAttributeError("date", str(item))
-            if len(item.date) > stamp_param_max_length:
-                raise StampDataInvalidError("parameter too long: " + "date", str(item))
-            if not item.attachment:
-                raise StampDataMissingAttributeError("attachment", str(item))
-            if len(item.attachment) > stamp_param_max_length:
-                raise StampDataInvalidError("parameter too long: " + "attachment", str(item))
-            if not item.issue:
-                raise StampDataMissingAttributeError("issue", str(item))
-            if len(item.issue) > stamp_param_max_length:
-                raise StampDataInvalidError("parameter too long: " + "issue", str(item))
-        check_pdf_validity(item.file)
+        item.validate()
 
 
 def is_url(string: str) -> bool:
