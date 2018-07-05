@@ -76,6 +76,8 @@
                     <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateExtractsButton()" ng-click="$ctrl.createMinuteExtracts()">Create extracts</button>
                     <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateMinutesButton()" ng-click="$ctrl.createMinutes()">Create minutes</button>
                     <button class="timButton btn btn-block" ng-show="$ctrl.isMinutesOrInvitation()" ng-click="$ctrl.mergePdf()">Merge attachments</button>
+                    <h5 style="display: inline-block">Other</h5>
+                    <button class="timButton btn btn-block" ng-click="$ctrl.markAllAsRead()" title="Mark all paragraphs of the document as read">Mark document as read</button>
                 </div>
 
             </uib-tab>

@@ -279,6 +279,23 @@ export class SidebarMenuCtrl implements IController {
         }
         return false;
     }
+
+    /**
+     * Marks all paragraphs of the document as read.
+     * Note: copied from readings.ts' function of the same name.
+     * @returns {Promise<void>}
+     */
+    private async markAllAsRead() {
+        try {
+            if (this.vctrl) {
+                await $http.put("/read/" + this.vctrl.item.id, {});
+            }
+        } catch (e) {
+            $window.alert("Could not mark the document as read.");
+            return;
+        }
+        $(".readline").attr("class", "readline read");
+    }
 }
 
 timApp.component("timSidebarMenu", {
