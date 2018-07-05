@@ -14,6 +14,7 @@ import {ITag, ITaggedItem, TagType} from "./IItem";
 class TaggedDocumentListCtrl implements IController {
     public tagFilter!: Binding<string, "<">;
     public exactMatch!: Binding<boolean, "<">; // Get only documents with exactly matching tag.
+    public caseSensitive!: Binding<boolean, "<">;
     public enableSearch!: Binding<boolean, "<">;
     private docList: ITaggedItem[] = [];
     private allUniqueTags: string[] = [];
@@ -40,7 +41,7 @@ class TaggedDocumentListCtrl implements IController {
             this.tagFilter = "";
         }
         await this.getAllTags();
-        void this.getDocumentsByTag(this.tagFilter, this.exactMatch, this.listDocTags);
+        void this.getDocumentsByTag(this.tagFilter);
     }
 
     $onDestroy() {
@@ -61,7 +62,7 @@ class TaggedDocumentListCtrl implements IController {
      * @param list_doc_tags Get also tags in each document.
      * If false will also search for partial matches.
      */
-    private async getDocumentsByTag(tagName: string, exactMatch: boolean, listDocTags: boolean) {
+    private async getDocumentsByTag(tagName: string) {
         // Changes tag in input field to this in case the tagName is different.
         this.tagFilter = tagName;
 
@@ -69,8 +70,9 @@ class TaggedDocumentListCtrl implements IController {
             method: "GET",
             url: "/tags/getDocs",
             params: {
-                exact_search: exactMatch,
-                list_doc_tags: listDocTags,
+                case_sensitive: this.caseSensitive,
+                exact_search: this.exactMatch,
+                list_doc_tags: this.listDocTags,
                 name: tagName,
             },
         });
@@ -83,7 +85,7 @@ class TaggedDocumentListCtrl implements IController {
      */
     async keyPressed(event: KeyboardEvent) {
         if (event.which === 13) {
-            await this.getDocumentsByTag(this.tagFilter, this.exactMatch, this.listDocTags);
+            await this.getDocumentsByTag(this.tagFilter);
         }
     }
 
@@ -91,11 +93,11 @@ class TaggedDocumentListCtrl implements IController {
      * Calls tag search function. Has option to searching for exactly matching
      * tags or all that containg parts of the tag.
      */
-    async searchClicked(tag: string) {
+    async searchClicked(tagName: string) {
         if (!this.enableSearch) {
             return;
         } else {
-            await this.getDocumentsByTag(tag, this.exactMatch, this.listDocTags);
+            await this.getDocumentsByTag(tagName);
         }
     }
 
@@ -121,6 +123,7 @@ class TaggedDocumentListCtrl implements IController {
 
 timApp.component("taggedDocumentList", {
     bindings: {
+        caseSensitive: "<",
         enableSearch: "<",
         exactMatch: "<",
         listDocTags: "<",

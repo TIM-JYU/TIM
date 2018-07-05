@@ -158,14 +158,20 @@ def get_tagged_documents():
     tag_name = request.args.get('name', '')
     exact_search = get_option(request, 'exact_search', default=False, cast=bool)
     list_doc_tags = get_option(request, 'list_doc_tags', default=False, cast=bool)
+    case_sensitive = get_option(request, 'case_sensitive', default=False, cast=bool)
 
     if exact_search:
         custom_filter = DocEntry.id.in_(Tag.query.filter_by(name=tag_name).with_entities(Tag.block_id))
     else:
         tag_name = f"%{tag_name}%"
-        custom_filter = DocEntry.id.in_(Tag.query.filter(Tag.name.like(tag_name) &
-                                                         ((Tag.expires > datetime.now()) | (Tag.expires == None))).
-                                        with_entities(Tag.block_id))
+        if case_sensitive:
+            custom_filter = DocEntry.id.in_(Tag.query.filter(Tag.name.like(tag_name) &
+                                                             ((Tag.expires > datetime.now()) | (Tag.expires == None))).
+                                            with_entities(Tag.block_id))
+        else:
+            custom_filter = DocEntry.id.in_(Tag.query.filter(Tag.name.ilike(tag_name) &
+                                                             ((Tag.expires > datetime.now()) | (Tag.expires == None))).
+                                            with_entities(Tag.block_id))
 
     if list_doc_tags:
         query_options = joinedload(DocEntry._block).joinedload(Block.tags)

@@ -51,7 +51,7 @@ registerDialogComponent("timSearchTags",
     <dialog-body>
         <h4>{{$ctrl.header}}</h4>
         <tagged-document-list enable-search="$ctrl.enableSearch" tag-filter="" exact-match="false"
-                              list-doc-tags="true"></tagged-document-list>
+                              list-doc-tags="true" case-sensitive="false"></tagged-document-list>
     </dialog-body>
     <dialog-footer>
         <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
