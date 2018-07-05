@@ -201,6 +201,7 @@ def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampDat
 
     stamped_filename = get_base_filename(output)
 
+    db.session.commit()
     # TODO: In case of raised errors give proper no-upload response?
     return json_response({"file": f"{str(f.id)}/{stamped_filename}"})
 
