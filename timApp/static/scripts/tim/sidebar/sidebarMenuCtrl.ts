@@ -14,6 +14,7 @@ import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
 import {Users, UserService} from "../user/userService";
 import {$http, $uibModal, $window} from "../util/ngimport";
 import {Require} from "../util/utils";
+import {getActiveDocument} from "../document/document";
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -295,6 +296,7 @@ export class SidebarMenuCtrl implements IController {
             return;
         }
         $(".readline").attr("class", "readline read");
+        getActiveDocument().refreshSectionReadMarks();
     }
 }
 
