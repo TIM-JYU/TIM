@@ -89,6 +89,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private citeText: string;
     private docSettings?: {macros: {dates: string[], knro: number, stampformat: string}};
     private metaset = false;
+    private uploadedFile?: string;
 
     private getOptions() {
         return this.resolve.params.options;
@@ -645,19 +646,18 @@ or newer one that is more familiar to write in YAML:
             // TODO: Better check for cases with non-showPdf-plugin-paragraphs in editor.
             upload.then((response) => {
                 $timeout(() => {
-                    let uploadedFile;
                     const isplugin = (this.editor.editorStartsWith("``` {"));
                     let start = "[File](";
                     if (response.data.image) {
-                        uploadedFile = "/images/" + response.data.image;
+                        this.uploadedFile = "/images/" + response.data.image;
                         start = "![Image](";
                     } else {
-                        uploadedFile = "/files/" + response.data.file;
+                        this.uploadedFile = "/files/" + response.data.file;
                     }
                     if (isplugin) {
-                        this.editor.insertTemplate(uploadedFile);
+                        this.editor.insertTemplate(this.uploadedFile);
                     } else {
-                        this.editor.insertTemplate(start + uploadedFile + ")");
+                        this.editor.insertTemplate(start + this.uploadedFile + ")");
                     }
                 });
             }, (response) => {
