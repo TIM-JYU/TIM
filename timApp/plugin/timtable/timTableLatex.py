@@ -22,7 +22,6 @@ default_text_h_align = "l"
 # TODO: Fonts don't work inside the table if XeLaTeX is used!
 default_font_family = "qpl"
 
-
 # Color "none" isn't supported by LaTeX; if this value is used,
 # the setting won't be added at all, making the color transparent.
 default_transparent_color = "none"
@@ -216,7 +215,7 @@ def use_default_if_none(value, default):
     :param default:
     :return:
     """
-    if not value:
+    if value is None:
         return default
     else:
         return value
@@ -472,7 +471,7 @@ class Table:
         # so here it tells only the highest amount of cols in the table.
         columns = "c" * self.col_count
         prefix = f"\\begin{{table}}[h]\n" \
-                  "\centering\n" \
+                 "\centering\n" \
                  f"\\begin{{tabular}}{{{columns}}}"
         postfix = "\\end{tabular}\n\\end{table}"
         resize = self.fit_to_page_width
@@ -545,7 +544,7 @@ def get_column_color_list(key, table_data):
         columns_data = table_data['columns']
     except:
         # Add empty entries as a quick fix for index out of bounds error.
-        return [(None, None)]*max_col_count
+        return [(None, None)] * max_col_count
     for i in range(0, len(columns_data)):
         span = get_column_span(columns_data[i])
         for j in range(0, span):
@@ -565,7 +564,7 @@ def get_column_width_list(table_data):
     try:
         columns_data = table_data['columns']
     except:
-        return [None]*max_col_count
+        return [None] * max_col_count
     for i in range(0, len(columns_data)):
         span = get_column_span(columns_data[i])
         for j in range(0, span):
@@ -576,6 +575,7 @@ def get_column_width_list(table_data):
     for k in range(0, max_col_count):
         l.append(None)
     return l
+
 
 def custom_repr(obj) -> str:
     """
@@ -943,7 +943,7 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     :param abs_tol:
     :return:
     """
-    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
 def convert_table(table_json) -> Table:
