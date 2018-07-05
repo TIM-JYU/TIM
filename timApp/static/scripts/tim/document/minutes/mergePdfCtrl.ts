@@ -122,7 +122,7 @@ registerDialogComponent("timMergePdf",
         </div>
         <div ng-show="$ctrl.warnIncompleteList" class="alert alert-warning">
             <span class="glyphicon glyphicon-exclamation-sign"></span>
-            One or more unlisted attachment may have been invalid and won't be part of the merged file.
+            One or more unlisted attachments may have been invalid and won't be part of the merged file.
             Check attachment macros for broken links and non-pdf files or continue by merging
             the listed attachments.
         </div>

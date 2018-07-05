@@ -206,7 +206,7 @@ def get_attachment_list(doc):
         verify_edit_access(d)
 
         paragraphs = d.document.get_paragraphs(d)
-        (pdf_paths, attachments_with_errors) = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs)
+        pdf_paths, attachments_with_errors = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs)
 
         for i in range(0, len(pdf_paths)):
             pdf_paths[i] = timApp.util.pdftools.get_base_filename(pdf_paths[i])
@@ -232,7 +232,7 @@ def merge_attachments(doc):
         verify_edit_access(d)
 
         paragraphs = d.document.get_paragraphs(d)
-        (pdf_paths, attachments_with_errors) = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs)
+        pdf_paths, attachments_with_errors = timApp.util.pdftools.get_attachments_from_paragraphs(paragraphs)
 
         # Uses document name as the base for the merged file name and tmp as folder.
         doc_name = timApp.util.pdftools.get_base_filename(doc)
