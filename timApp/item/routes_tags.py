@@ -6,6 +6,7 @@ from datetime import datetime
 from flask import Blueprint
 from flask import abort
 from flask import request
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import UnmappedInstanceError, FlushError
@@ -161,7 +162,12 @@ def get_tagged_documents():
     case_sensitive = get_option(request, 'case_sensitive', default=False, cast=bool)
 
     if exact_search:
-        custom_filter = DocEntry.id.in_(Tag.query.filter_by(name=tag_name).with_entities(Tag.block_id))
+        if case_sensitive:
+            custom_filter = DocEntry.id.in_(Tag.query.filter_by(name=tag_name).with_entities(Tag.block_id))
+        else:
+            custom_filter = DocEntry.id.in_(
+                Tag.query.filter(func.lower(Tag.name) == func.lower(tag_name)).with_entities(Tag.block_id))
+
     else:
         tag_name = f"%{tag_name}%"
         if case_sensitive:
