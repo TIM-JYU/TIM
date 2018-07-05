@@ -150,12 +150,12 @@ class Cell:
         self.content = content
         self.colspan = colspan
         self.rowspan = rowspan
-        self.text_color = text_color
-        self.text_color_html = text_color_html
-        self.bg_color = bg_color
-        self.bg_color_html = bg_color_html
+        self.text_color = use_default_if_none(text_color, default_text_color)
+        self.text_color_html = use_default_if_none(text_color_html, False)
+        self.bg_color = use_default_if_none(bg_color, default_transparent_color)
+        self.bg_color_html = use_default_if_none(bg_color_html, False)
         self.h_align = h_align
-        self.cell_width = cell_width
+        self.cell_width = use_default_if_none(cell_width, default_width)
         self.cell_height = cell_height
         self.font_size = font_size
         self.line_space = line_space
@@ -207,6 +207,19 @@ class Cell:
 
     def __repr__(self) -> str:
         return custom_repr(self)
+
+
+def use_default_if_none(value, default):
+    """
+    Checks whether the value is None and uses default if it is.
+    :param value:
+    :param default:
+    :return:
+    """
+    if not value:
+        return default
+    else:
+        return value
 
 
 def format_color(color: str, html_color: bool) -> str:
@@ -976,7 +989,9 @@ def convert_table(table_json) -> Table:
     table_default_font_size = get_font_size(table_json, default_font_size)
     table_default_h_align = get_text_horizontal_align(table_json, default_text_h_align)
 
-    # Get column formattings:
+    # Get column formattings.
+    # Note: TimTable doesn't recognize most of the other formattings, so
+    # extending this isn't necessary.
     column_bg_color_list = get_column_color_list("backgroundColor", table_json)
     column_text_color_list = get_column_color_list("color", table_json)
     column_width_list = get_column_width_list(table_json)
@@ -1046,7 +1061,6 @@ def convert_table(table_json) -> Table:
                 ])
                 height = cell_height
                 width = decide_format_width([row_default_width, column_width_list[j], cell_width])
-
 
                 c = Cell(
                     content=content,
