@@ -87,9 +87,6 @@ def print_document(doc_path):
     if existing_doc is not None and not plugins_user_print:  # never cache user print
         return json_response({'success': True, 'url': print_access_url}, status_code=200)
 
-    if os.environ.get('TIM_HOST', None) != request.url_root:
-        os.environ['TIM_HOST'] = request.url_root
-
     if template_doc is None:
         abort(400, "The template doc was not found.")
 
@@ -193,20 +190,19 @@ def get_printed_document(doc_path):
                                plugins_user_print=plugins_user_print,
                                urlroot='http://localhost:5000/print/')  # request.url_root+'print/')
         except PrintingError as err:
-            print("Error occurred: " + str(err))
-            abort(400, str(err))  # TODO: maybe there's a better error code?
+            return abort(400, str(err))
         except LaTeXError as err:
-            print("LaTeX error occurred: " + str(err))
             pdferror = err.value
         except Exception as err:
-            print("Create_printed_doc error occurred: " + str(err))
-            abort(400, str(err))  # TODO: maybe there's a better error code?
+            return abort(400, str(err))
 
     cached = check_print_cache(doc_entry=doc,
                                template=template_doc,
                                file_type=print_type,
                                plugins_user_print=plugins_user_print)
-    if pdferror and showerror:
+    if (pdferror and showerror) or not cached:
+        if not pdferror:
+            pdferror = {'error': 'Unknown error (LaTeX did not return an error but still no PDF was generated.)'}
         rurl = request.url
         i = rurl.find('?')
         rurl = rurl[:i]

@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 from typing import Optional, List
 
+from flask import current_app
 from pypandoc import _as_unicode, _validate_formats
 from pypandoc.py3compat import string_types, cast_bytes
 
@@ -581,6 +582,7 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
     files_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "files")
     new_env["PATH"] = new_env.get("PATH", "") + os.pathsep + files_path
     string_input = input_type == 'string'
+    new_env['TIM_HOST'] = current_app.config['TIM_HOST']
 
     if is_pdf:
         latex_file = outputfile.replace('.pdf', '.latex')
@@ -676,7 +678,7 @@ def _decode_result(s):
 def run_latex(outputfile, latex_file, new_env, string_input):
     try:
         filedir = os.path.dirname(outputfile)
-        args = ['latexmk', '-f', '-pdfxe', f'-output-directory={filedir}',  # '-file-line-error',
+        args = ['latexmk', '-g', '-f', '-pdfxe', f'-output-directory={filedir}',  # '-file-line-error',
                 '-interaction=nonstopmode', latex_file]
         p = subprocess.Popen(
             args,
