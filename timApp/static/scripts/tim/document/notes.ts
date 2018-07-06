@@ -193,7 +193,7 @@ export class NotesHandler {
         // btn.setAttribute("ng-click", "addNote()");
         btn.onclick = ($event) => {
             $event.stopPropagation();
-            this.toggleNoteEditor($par);
+            this.addNote();
         };
         $compile(btn)(this.sc);
         return btn;
