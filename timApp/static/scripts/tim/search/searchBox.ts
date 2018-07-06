@@ -7,6 +7,8 @@ import {timApp} from "../app";
 import {$http} from "../util/ngimport";
 import {Paragraph} from "../document/parhelpers";
 import {IItem} from "../item/IItem";
+import {to} from "../util/utils";
+import {showSearchResultDialog} from "./searchResultsCtrl";
 
 export interface ISearchResult {
     doc: IItem;
@@ -24,6 +26,9 @@ class SearchBoxCtrl implements IController {
     private folder: string = "";
     private regex: boolean = false;
     private results: ISearchResult[] = [];
+    private errorMessage: string = "";
+    private beginning = true; // When search hasn't been used yet.
+    private onlyfirst = 100; // # first results returned.
 
     $onInit() {
     }
@@ -36,16 +41,30 @@ class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     async search() {
-        const response = await $http<ISearchResult[]>({
+        this.beginning = false;
+        const [err, response] = await to($http<ISearchResult[]>({
             method: "GET",
             params: {
                 folder: this.folder,
+                onlyfirst: this.onlyfirst,
                 query: this.query,
                 regex: this.regex,
             },
             url: "/search",
+        }));
+        if (err) {
+            this.errorMessage = err.data.error;
+            this.results = [];
+        }
+        if (response) {
+            this.errorMessage = "";
+            this.results = response.data;
+        }
+        void showSearchResultDialog({
+            errorMessage: this.errorMessage,
+            results: this.results,
+            searchWord: this.query,
         });
-        this.results = response.data;
     }
 
     /*
@@ -64,15 +83,15 @@ timApp.component("searchBox", {
     },
     controller: SearchBoxCtrl,
     template: `<div class="input-group">
-    <input ng-model="$ctrl.query" name="searchField" ng-keypress="$ctrl.keyPressed($event)"
-           type="text"
-           title="Search documents by entering  key words"
-           placeholder="Search documents by entering key words"
-           class="form-control" id="tagFilterField" autocomplete="on">
-    <span class="input-group-addon btn" ng-click="$ctrl.search()">
-            <span class="glyphicon glyphicon-search"
-                  title="Search with {{$ctrl.query}}"></span>
-        </span>
-</div>
+        <input ng-model="$ctrl.query" name="searchField" ng-keypress="$ctrl.keyPressed($event)"
+               type="text"
+               title="Search documents with key word"
+               placeholder="Search"
+               class="form-control" autocomplete="on">
+        <span class="input-group-addon btn" ng-click="$ctrl.search()">
+                <span class="glyphicon glyphicon-search"
+                      title="Search with {{$ctrl.query}}"></span>
+       </span>
+   </div>
 `,
 });
