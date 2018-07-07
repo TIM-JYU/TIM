@@ -5,7 +5,7 @@ authors = ["Mika Lehtinen <mikkalle@student.jyu.fi>"]
 
 [dependencies]
 actix = "0.5"
-askama = { git = 'https://github.com/djc/askama' }
+askama = "0.7"
 diesel-derive-enum = { version = "0.4", features = ["postgres"] }
 failure = "0.1"
 futures-await = "0.1"
@@ -22,9 +22,9 @@ default-features = false
 features = ["brotli", "flate2-c"]
 
 [dependencies.diesel]
-version = "1.2"
+version = "1.3"
 default-features = false
 features = ["postgres", "r2d2", "32-column-tables"]
 
 [build-dependencies]
-askama = { git = 'https://github.com/djc/askama' }
+askama = "0.7"
