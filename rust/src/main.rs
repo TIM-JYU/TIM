@@ -41,7 +41,7 @@ use diesel::r2d2::{ConnectionManager, Pool};
 use document::Document;
 use failure::Fail;
 use failure::ResultExt;
-use futures::prelude::*;
+use futures::prelude::{async, await};
 use models::Item;
 use models::ItemKind;
 use models::ItemList;
