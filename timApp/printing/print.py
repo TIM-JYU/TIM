@@ -244,7 +244,8 @@ def get_printed_document(doc_path):
         response = make_response(send_file(filename_or_fp=cached, mimetype=mime))
     else:  # show LaTeX with line numbers
         styles = "p.red { color: red; }\n"
-        styles += ".program {font-family: monospace; line-height: 0.5; }\n"
+        styles += ".program {font-family: monospace; line-height: 1.0; }\n" + \
+                  ".program p { -webkit-margin-before: 0em; -webkit-margin-after: 0.2em;}\n"
         result = '<!DOCTYPE html>\n' + \
                  '<html>' + \
                  '<head>\n' + \
