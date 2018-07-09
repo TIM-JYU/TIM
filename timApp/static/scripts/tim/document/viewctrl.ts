@@ -125,7 +125,9 @@ export class ViewCtrl implements IController {
     private bookmarked: boolean = false;
     private bookmarks: IBookmarkGroup[] = [];
 
+    // For search box.
     private displaySearch = false;
+    private searchFolder = "";
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -351,6 +353,7 @@ export class ViewCtrl implements IController {
         });
         void this.checkIfTaggedAsCourse();
         void this.checkIfBookmarked();
+        this.decideSearchFolder();
     }
 
     /**
@@ -547,6 +550,14 @@ export class ViewCtrl implements IController {
      */
     registerBookmarks(bookmarksCtrl: BookmarksController) {
         this.bookmarksCtrl = bookmarksCtrl;
+    }
+
+    /**
+     * Decide the default search folder.
+     * @returns {string}
+     */
+    private decideSearchFolder() {
+        this.searchFolder = this.item.location;
     }
 }
 

@@ -7,7 +7,7 @@ import {timApp} from "../app";
 import {$http} from "../util/ngimport";
 import {Paragraph} from "../document/parhelpers";
 import {IItem} from "../item/IItem";
-import {to} from "../util/utils";
+import {Binding, to} from "../util/utils";
 import {showSearchResultDialog} from "./searchResultsCtrl";
 
 export interface ISearchResult {
@@ -23,14 +23,14 @@ export interface ISearchResult {
 
 class SearchBoxCtrl implements IController {
     private query: string = "";
-    private folder: string = "";
+    private folder!: Binding<string, "<">;
     private regex: boolean = false;
     private results: ISearchResult[] = [];
     private errorMessage: string = "";
     private beginning = true; // When search hasn't been used yet.
     private onlyfirst = 100; // # first results returned.
     private advancedSearch = false;
-    //private caseSensitive = false;
+    private caseSensitive = false;
 
     $onInit() {
     }
@@ -43,6 +43,10 @@ class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     async search() {
+        if (this.query.trim().length < 3) {
+            alert("Search text must be at least 3 characters long with whitespace stripped.");
+            return;
+        }
         this.beginning = false;
         const [err, response] = await to($http<ISearchResult[]>({
             method: "GET",
@@ -82,6 +86,7 @@ class SearchBoxCtrl implements IController {
 
 timApp.component("searchBox", {
     bindings: {
+        folder: "<",
     },
     controller: SearchBoxCtrl,
     template: `<div class="input-group">
@@ -93,7 +98,16 @@ timApp.component("searchBox", {
         <span class="input-group-addon btn" ng-click="$ctrl.search()">
                 <span class="glyphicon glyphicon-search" title="Search with {{$ctrl.query}}"></span>
         </span>
-        
+        <span class="input-group-addon btn" ng-click="$ctrl.advancedSearch = !$ctrl.advancedSearch">
+                <span class="glyphicon glyphicon-menu-hamburger" title="Toggle advanced search"></span>
+        </span>
    </div>
+   <bootstrap-panel ng-if="$ctrl.advancedSearch" title="Advanced search options">
+       <input class="form-control col-sm-10" ng-model="$ctrl.folder" name="folder-selector" id="folder-selector"
+               type="text" placeholder="Input search folder"
+               title="Search folder">
+            <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.regex"
+                class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
+    </bootstrap-panel>
 `,
 });
