@@ -125,6 +125,8 @@ export class ViewCtrl implements IController {
     private bookmarked: boolean = false;
     private bookmarks: IBookmarkGroup[] = [];
 
+    private displaySearch = false;
+
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
 

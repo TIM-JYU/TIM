@@ -29,6 +29,8 @@ class SearchBoxCtrl implements IController {
     private errorMessage: string = "";
     private beginning = true; // When search hasn't been used yet.
     private onlyfirst = 100; // # first results returned.
+    private advancedSearch = false;
+    //private caseSensitive = false;
 
     $onInit() {
     }
@@ -89,9 +91,9 @@ timApp.component("searchBox", {
                placeholder="Search"
                class="form-control" autocomplete="on">
         <span class="input-group-addon btn" ng-click="$ctrl.search()">
-                <span class="glyphicon glyphicon-search"
-                      title="Search with {{$ctrl.query}}"></span>
-       </span>
+                <span class="glyphicon glyphicon-search" title="Search with {{$ctrl.query}}"></span>
+        </span>
+        
    </div>
 `,
 });
