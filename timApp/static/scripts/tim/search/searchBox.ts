@@ -4,11 +4,12 @@
 
 import {IController} from "angular";
 import {timApp} from "../app";
-import {$http} from "../util/ngimport";
+import {$http, $localStorage} from "../util/ngimport";
 import {Paragraph} from "../document/parhelpers";
 import {IItem} from "../item/IItem";
 import {Binding, to} from "../util/utils";
 import {showSearchResultDialog} from "./searchResultsCtrl";
+import {ngStorage} from "ngstorage";
 
 export interface ISearchResult {
     doc: IItem;
@@ -30,12 +31,36 @@ class SearchBoxCtrl implements IController {
     private beginning = true; // When search hasn't been used yet.
     private onlyfirst = 100; // # first results returned.
     private advancedSearch = false;
-    private caseSensitive = false;
+    private openByDefault = false;
+    private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
+
+    constructor() {
+        this.storage = $localStorage.$default({
+            optionsStorage: null,
+            searchWordStorage: null,
+        });
+    }
 
     $onInit() {
+        if (this.storage.searchWordStorage) {
+            this.query = this.storage.searchWordStorage;
+        }
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length >= 2) {
+            this.openByDefault = this.storage.optionsStorage[0];
+            this.regex = this.storage.optionsStorage[1];
+        }
+        if (this.openByDefault) {
+            this.advancedSearch = true;
+        }
     }
 
     $onDestroy() {
+        if (this.query.trim().length > 3) {
+            this.storage.searchWordStorage = this.query;
+        }
+        this.storage.optionsStorage = [];
+        this.storage.optionsStorage.push(this.openByDefault);
+        this.storage.optionsStorage.push(this.regex);
     }
 
     /**
@@ -93,21 +118,33 @@ timApp.component("searchBox", {
         <input ng-model="$ctrl.query" name="searchField" ng-keypress="$ctrl.keyPressed($event)"
                type="text"
                title="Search documents with key word"
-               placeholder="Search"
+               placeholder="Input a search word"
                class="form-control" autocomplete="on">
         <span class="input-group-addon btn" ng-click="$ctrl.search()">
-                <span class="glyphicon glyphicon-search" title="Search with {{$ctrl.query}}"></span>
+                <span class="glyphicon glyphicon-search" title="Search with word '{{$ctrl.query}}'"></span>
         </span>
-        <span class="input-group-addon btn" ng-click="$ctrl.advancedSearch = !$ctrl.advancedSearch">
-                <span class="glyphicon glyphicon-menu-hamburger" title="Toggle advanced search"></span>
+        <span class="input-group-addon btn" ng-click="$ctrl.advancedSearch = !$ctrl.advancedSearch"
+            title="Toggle advanced search">
+                <span class="glyphicon glyphicon-menu-hamburger"></span>
         </span>
    </div>
-   <bootstrap-panel ng-if="$ctrl.advancedSearch" title="Advanced search options">
-       <input class="form-control col-sm-10" ng-model="$ctrl.folder" name="folder-selector" id="folder-selector"
-               type="text" placeholder="Input search folder"
-               title="Search folder">
-            <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.regex"
+   <div ng-if="$ctrl.advancedSearch" title="Advanced search options">
+      <h5>Advanced search options</h5>
+      <form class="form-horizontal">
+           <div class="form-group" title="Write folder path to search from">
+                <label for="folder-selector" class="col-sm-2 control-label">Folder:</label>
+                <div class="col-sm-10">
+                    <input ng-model="$ctrl.folder" name="folder-selector"
+                           type="text" class="form-control" id="folder-selector" placeholder="Input a folder to search">
+                </div>
+            </div>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.regex"
                 class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
-    </bootstrap-panel>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.openByDefault"
+                title="Always open search with advanced options visible"
+                class="ng-pristine ng-untouched ng-valid ng-not-empty"> Always open in advanced</label>
+      </div>
+      </form>
+    </div>
 `,
 });

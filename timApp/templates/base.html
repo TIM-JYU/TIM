@@ -123,17 +123,20 @@
                                  src="{{ url_for('static', filename='images/tim-logo.svg') }}"
                                  title="TIM"/>
                         {% endif %}
-                        <div style="padding-top:4px;" ng-if="!$ctrl.displaySearch" class="pull-right">
-                        <span class="timButton" ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
-                              title="Display search">
-                            <i class="glyphicon glyphicon-search"></i>
-                        </span>
+                        <div style="padding-top:4px;" class="pull-right">
+                            <span class="timButton" ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
+                                  title="Display search">
+                                <i class="glyphicon glyphicon-search"></i>
+                            </span>
                         </div>
-                        <search-box ng-cloak class="pull-right col-sm-4" style="padding:0px; padding-top:4px;"
-                            ng-if="$ctrl.displaySearch" folder="$ctrl.searchFolder"></search-box>
                         <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
                              src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
                         <div class="text-center text-nowrap">
+                            <bootstrap-panel ng-cloak ng-if="$ctrl.displaySearch" show-close="true" class="col-sm-6"
+                                     close-fn="$ctrl.displaySearch = !$ctrl.displaySearch"
+                                     style="position:absolute; z-index:99999;" title="TIM document search">
+                                <search-box folder="$ctrl.searchFolder"></search-box>
+                            </bootstrap-panel>
                             <login-menu></login-menu>
                         </div>
                     </div>
