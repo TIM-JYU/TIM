@@ -10,10 +10,11 @@ import {IItem} from "../item/IItem";
 import {Binding, to} from "../util/utils";
 import {showSearchResultDialog} from "./searchResultsCtrl";
 import {ngStorage} from "ngstorage";
+import {IExtraData} from "../document/editing/edittypes";
 
 export interface ISearchResult {
     doc: IItem;
-    par: Paragraph;
+    par: IExtraData;
     match_start_index: number;
     match_end_index: number;
     match_word: string;
