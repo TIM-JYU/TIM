@@ -32,6 +32,7 @@ class SearchBoxCtrl implements IController {
     private onlyfirst = 100; // # first results returned.
     private advancedSearch = false;
     private openByDefault = false;
+    private focusMe = true;
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
 
     constructor() {
@@ -116,7 +117,7 @@ timApp.component("searchBox", {
     controller: SearchBoxCtrl,
     template: `<div class="input-group">
         <input ng-model="$ctrl.query" name="searchField" ng-keypress="$ctrl.keyPressed($event)"
-               type="text"
+               type="text" focus-me="$ctrl.focusMe"
                title="Search documents with key word"
                placeholder="Input a search word"
                class="form-control" autocomplete="on">
