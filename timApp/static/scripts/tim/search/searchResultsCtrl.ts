@@ -43,15 +43,41 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
      * Dialog title.
      */
     public getTitle() {
-        return "Displaying search results";
+        return "Search results";
     }
 
+    /**
+     * Filters duplicate paragraphs (those with more than one match) from the results.
+     */
     private filterResults() {
         for (const {item, index} of this.results.map((item, index) => ({ item, index }))) {
             if (item && (index === 0 || item.par.id !== this.results[index - 1].par.id)) {
                 this.filteredResults.push(item);
             }
         }
+    }
+
+    /**
+     * Forms a preview of the paragraph around indices the match was found.
+     * @param {ISearchResult} r
+     * @returns {string}
+     */
+    private previewPar(r: ISearchResult) {
+        const text = r.par.md;
+        let start = r.match_start_index - 30;
+        let end = r.match_end_index + 30;
+        let prefix = "...";
+        let postfix = "...";
+        if (start < 0) {
+            start = 0;
+            prefix = "";
+        }
+
+        if (end > text.length) {
+            end = text.length;
+            postfix = "";
+        }
+        return prefix + text.substring(start, end).trim() + postfix;
     }
 }
 
@@ -70,11 +96,16 @@ registerDialogComponent("timSearchResults",
         <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents</h5>
     </div>
     <div ng-if="$ctrl.results.length > 0">
-        <h5>Your search <i>{{$ctrl.searchWord}}</i> was found in {{$ctrl.filteredResults.length}} paragraphs</h5>
+        <h5>Your search <i>{{$ctrl.searchWord}}</i> was found in {{$ctrl.filteredResults.length}}
+        <ng-pluralize count="$ctrl.filteredResults.length"
+                 when="{'1': 'paragraph',
+                     'other': 'paragraphs'}">
+        </ng-pluralize></h5>
         <ul>
             <li ng-repeat="r in $ctrl.filteredResults">
-                <a href="/view/{{r.doc.path}}" title="Open {{r.doc.title}}">{{r.doc.title}}</a> <i>({{r.doc.path}})</i>
-                <a href="/view/{{r.doc.path}}#{{r.par.id}}" title="Open paragraph">{{r.par.id}}</a>
+                <a href="/view/{{r.doc.path}}#{{r.par.id}}" title="Open {{r.doc.title}}">{{r.doc.title}}</a>
+                <i>({{r.doc.path}})</i>
+                <p>{{$ctrl.previewPar(r)}}</p>
             </li>
         </ul>
     </div>
