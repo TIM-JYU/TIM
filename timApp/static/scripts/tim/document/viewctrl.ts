@@ -128,6 +128,7 @@ export class ViewCtrl implements IController {
     // For search box.
     private displaySearch = false;
     private searchFolder = "";
+    private searchClass = "";
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -557,8 +558,16 @@ export class ViewCtrl implements IController {
      * @returns {string}
      */
     private decideSearchFolder() {
+        this.searchClass = "";
+        // console.log("test: " + $window.window.innerWidth);
+        // if ($window.window.innerWidth < 600) {
+        //    this.searchClass = "";
+        // } else {
+        //    this.searchClass = "";
+        // }
         this.searchFolder = this.item.location;
     }
+
 }
 
 /**

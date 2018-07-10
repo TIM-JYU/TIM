@@ -49,7 +49,7 @@ registerDialogComponent("timSearchResults",
     ShowSearchResultController,
     {
         template:
-            `<tim-dialog>
+            `<tim-dialog style="z-index:3;">
     <dialog-header>
     </dialog-header>
     <dialog-body>
@@ -60,10 +60,10 @@ registerDialogComponent("timSearchResults",
         <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents</h5>
     </div>
     <div ng-if="$ctrl.results.length > 0">
-        <h5>Your search <i>{{$ctrl.searchWord}}</i> was found in following instances</h5>
+        <h5>Your search <i>{{$ctrl.searchWord}}</i> was found in {{$ctrl.results.length}} instances</h5>
         <ul>
             <li ng-repeat="r in $ctrl.results">
-                <a href="/view/{{r.doc.path}}" title="Open {{r.doc.title}}">{{r.doc.title}}</a>
+                <a href="/view/{{r.doc.path}}" title="Open {{r.doc.title}}">{{r.doc.path}}</a>
                  paragraph
                 <a href="/view/{{r.doc.path}}#{{r.par.id}}" title="Open paragraph">{{r.par.id}}</a>
             </li>

@@ -31,7 +31,6 @@ class SearchBoxCtrl implements IController {
     private beginning = true; // When search hasn't been used yet.
     private onlyfirst = 100; // # first results returned.
     private advancedSearch = false;
-    private openByDefault = false;
     private focusMe = true;
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
 
@@ -47,11 +46,8 @@ class SearchBoxCtrl implements IController {
             this.query = this.storage.searchWordStorage;
         }
         if (this.storage.optionsStorage && this.storage.optionsStorage.length >= 2) {
-            this.openByDefault = this.storage.optionsStorage[0];
+            this.advancedSearch = this.storage.optionsStorage[0];
             this.regex = this.storage.optionsStorage[1];
-        }
-        if (this.openByDefault) {
-            this.advancedSearch = true;
         }
     }
 
@@ -60,7 +56,7 @@ class SearchBoxCtrl implements IController {
             this.storage.searchWordStorage = this.query;
         }
         this.storage.optionsStorage = [];
-        this.storage.optionsStorage.push(this.openByDefault);
+        this.storage.optionsStorage.push(this.advancedSearch);
         this.storage.optionsStorage.push(this.regex);
     }
 
@@ -141,9 +137,6 @@ timApp.component("searchBox", {
             </div>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.regex"
                 class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.openByDefault"
-                title="Always open search with advanced options visible"
-                class="ng-pristine ng-untouched ng-valid ng-not-empty"> Always open in advanced</label>
       </div>
       </form>
     </div>
