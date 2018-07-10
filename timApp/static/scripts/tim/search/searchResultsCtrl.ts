@@ -59,7 +59,7 @@ registerDialogComponent("timSearchResults",
     ShowSearchResultController,
     {
         template:
-            `<tim-dialog style="z-index:6;">
+            `<tim-dialog class="search-result-dialog">
     <dialog-header>
     </dialog-header>
     <dialog-body>

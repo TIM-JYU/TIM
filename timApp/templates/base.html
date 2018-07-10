@@ -125,7 +125,7 @@
                         {% endif %}
                         <div style="padding-top:4px;" class="pull-right">
                             <span class="timButton" ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
-                                  title="Display search">
+                                  title="Display search panel">
                                 <i class="glyphicon glyphicon-search"></i>
                             </span>
                         </div>
@@ -133,9 +133,8 @@
                              src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
                         <div>
                             <bootstrap-panel ng-cloak ng-if="$ctrl.displaySearch" show-close="true"
-                                                 ng-class="$ctrl.searchClass"
-                                         close-fn="$ctrl.displaySearch = !$ctrl.displaySearch"
-                                         style="position:absolute; z-index:5; right:0;" title="TIM document search">
+                                             class="search-panel" title="TIM document search"
+                                         close-fn="$ctrl.displaySearch = !$ctrl.displaySearch">
                                     <search-box folder="$ctrl.searchFolder"></search-box>
                             </bootstrap-panel>
                         </div>

@@ -1226,3 +1226,15 @@ body > .footer {
         padding: 0;
     }
 }
+.search-panel {
+    position:absolute;
+    z-index:5;
+    right:0;
+    left:auto;
+    max-width:500px;
+}
+
+.search-result-dialog {
+    z-index:6;
+    width:auto;
+}
