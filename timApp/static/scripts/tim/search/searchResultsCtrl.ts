@@ -50,11 +50,15 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
      * Filters duplicate paragraphs (those with more than one match) from the results.
      */
     private filterResults() {
+        const docs: string[] = [];
         for (const {item, index} of this.results.map((item, index) => ({ item, index }))) {
             if (item && (index === 0 || item.par.id !== this.results[index - 1].par.id)) {
                 this.filteredResults.push(item);
+                docs.push(item.doc.path);
             }
         }
+
+        this.docCount = removeDuplicates(docs).length;
     }
 
     /**
@@ -81,6 +85,22 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     }
 }
 
+/**
+ * Returns copy of a string array where duplicates have been removed.
+ * Adapted from: https://codehandbook.org/how-to-remove-duplicates-from-javascript-array/
+ * @param {string[]} array
+ * @returns {string[]}
+ */
+function removeDuplicates(array: string[]) {
+    const set: string[] = [];
+    for (const item of array) {
+        if (set.indexOf(item) === -1) {
+            set.push(item);
+        }
+    }
+    return set;
+}
+
 registerDialogComponent("timSearchResults",
     ShowSearchResultController,
     {
@@ -95,11 +115,14 @@ registerDialogComponent("timSearchResults",
     <div ng-if="!$ctrl.beginning && $ctrl.filteredResults.length <= 0 && !$ctrl.errorMessage">
         <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents</h5>
     </div>
-    <div ng-if="$ctrl.results.length > 0">
-        <h5>Your search <i>{{$ctrl.searchWord}}</i> was found in {{$ctrl.filteredResults.length}}
+    <div ng-if="$ctrl.filteredResults.length > 0">
+        <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.results.length}}
         <ng-pluralize count="$ctrl.filteredResults.length"
-                 when="{'1': 'paragraph',
-                     'other': 'paragraphs'}">
+                 when="{'1': 'time',
+                     'other': 'times'}"></ng-pluralize> in {{$ctrl.docCount}}
+        <ng-pluralize count="$ctrl.filteredResults.length"
+                 when="{'1': 'document',
+                     'other': 'documents'}">
         </ng-pluralize></h5>
         <ul>
             <li ng-repeat="r in $ctrl.filteredResults">

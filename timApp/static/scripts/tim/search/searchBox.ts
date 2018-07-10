@@ -5,7 +5,6 @@
 import {IController} from "angular";
 import {timApp} from "../app";
 import {$http, $localStorage} from "../util/ngimport";
-import {Paragraph} from "../document/parhelpers";
 import {IItem} from "../item/IItem";
 import {Binding, to} from "../util/utils";
 import {showSearchResultDialog} from "./searchResultsCtrl";
