@@ -131,13 +131,15 @@
                         </div>
                         <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
                              src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
-                        <div class="text-center text-nowrap">
+                        <div>
                             <bootstrap-panel ng-cloak ng-if="$ctrl.displaySearch" show-close="true"
-                                             ng-class="$ctrl.searchClass"
-                                     close-fn="$ctrl.displaySearch = !$ctrl.displaySearch"
-                                     style="position:absolute; z-index:2;" title="TIM document search">
-                                <search-box folder="$ctrl.searchFolder"></search-box>
+                                                 ng-class="$ctrl.searchClass"
+                                         close-fn="$ctrl.displaySearch = !$ctrl.displaySearch"
+                                         style="position:absolute; z-index:5; right:0;" title="TIM document search">
+                                    <search-box folder="$ctrl.searchFolder"></search-box>
                             </bootstrap-panel>
+                        </div>
+                        <div class="text-center text-nowrap">
                             <login-menu></login-menu>
                         </div>
                     </div>
