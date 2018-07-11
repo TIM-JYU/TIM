@@ -52,7 +52,7 @@ def search():
     # TODO: Regex in these doesn't work.
     ignore_list = ['%templates/%', '%/preamble%']
 
-    docs = get_documents(filter_user=current_user, filter_folder=folder,
+    docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True,
                          custom_filter=DocEntry.name.notin_(ignore_list))
     results = []
 
