@@ -82,14 +82,9 @@ def search():
                       'num_pars_found': r.num_pars_found}
 
             # Don't return results within plugins if no edit access to the document.
-            if is_plugin_or_setting(r.par):
+            if r.par.is_setting() or r.par.is_plugin():
                 if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
                     results.append(result)
             else:
                 results.append(result)
     return json_response(results)
-
-
-def is_plugin_or_setting(par):
-    md = par.get_markdown()
-    return md.startswith("```") and md.endswith("```")
