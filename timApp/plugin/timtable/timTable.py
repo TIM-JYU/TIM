@@ -36,6 +36,7 @@ COL = 'col'
 ASCII_OF_A = 65
 ASCII_CHAR_COUNT = 26
 MARKUP = 'markup'
+DUMBO_PARAMS = '/mdkeys'
 
 
 @timTable_plugin.route("reqs/")
@@ -63,9 +64,21 @@ def tim_table_multihtml():
     """
     jsondata = request.get_json()
     multi = []
-    for jso in jsondata:
+    prepare_multi_for_dumbo(jsondata)
+    html = call_dumbo(jsondata, DUMBO_PARAMS)
+    for jso in html:
         multi.append(tim_table_get_html(jso, is_review(request)))
     return json_response(multi)
+
+
+def prepare_multi_for_dumbo(list):
+    """
+    Prepares multiple TimTables (given in a request) for Dumbo.
+    :param list:
+    :return:
+    """
+    for i in range(0, len(list)):
+        prepare_for_dumbo(list[i][MARKUP])
 
 
 def tim_table_get_html(jso, review):
@@ -76,8 +89,7 @@ def tim_table_get_html(jso, review):
     :return:
     """
     values = jso[MARKUP]
-    html_values = prepare_for_and_call_dumbo(values)
-    attrs = json.dumps(html_values)
+    attrs = json.dumps(values)
     runner = 'tim-table'
     s = f'<{runner} data={quoteattr(attrs)}></{runner}>'
     return s
@@ -137,7 +149,7 @@ def tim_table_save_cell_list():
     cc = str(cell_content)
     if is_auto_md_enabled(plug.values) and not cc.startswith('md:'):
         cc = 'md: ' + cc
-    html = call_dumbo([cc], '/mdkeys')
+    html = call_dumbo([cc], DUMBO_PARAMS)
     plug.save()
     multi.append(html[0])
     return json_response(multi)
@@ -330,16 +342,6 @@ def is_review(request):
     return result
 
 
-def prepare_for_and_call_dumbo(values):
-    """
-    Prepares the table's markdown for Dumbo conversion and
-    runs it through Dumbo.
-    :param values: The plugin paragraph's markdown.
-    :return: The conversion result from Dumbo.
-    """
-    return call_dumbo(prepare_for_dumbo(values), '/mdkeys')
-
-
 def is_auto_md_enabled(values):
     """
     Checks whether auto-md logic is enabled for a table.
@@ -353,6 +355,16 @@ def is_auto_md_enabled(values):
         return auto_md
     except (ValueError, KeyError):
         return False
+
+
+def prepare_for_and_call_dumbo(values):
+    """
+    Prepares the table's markdown for Dumbo conversion and
+    runs it through Dumbo.
+    :param values: The plugin paragraph's markdown.
+    :return: The conversion result from Dumbo.
+    """
+    return call_dumbo(prepare_for_dumbo(values), DUMBO_PARAMS)
 
 
 def prepare_for_dumbo(values):
@@ -393,7 +405,7 @@ def prepare_for_dumbo(values):
 
         if data_block is not None:
             for key, value in data_block.items():
-                if isinstance(value, str) and value.startswith('md:'):
+                if isinstance(value, str) and not value.startswith('md:'):
                     data_block[key] = 'md: ' + value
 
     return values
