@@ -211,13 +211,13 @@ registerDialogComponent("timCourseListDialog",
         </p>
         <ul class="list-unstyled" ng-if="$ctrl.grouped.length > 0" id="courses" aria-multiselectable="true">
             <li ng-repeat="subject in $ctrl.grouped" ng-if="subject.docs.length > 0">
-                <span class="cursor-pointer" ng-click="subject.closed = !subject.closed"
+                <a class="cursor-pointer" ng-click="subject.closed = !subject.closed"
                 data-toggle="collapse" data-parent="#courses" href="#{{subject.subject}}" aria-expanded="false"
                 aria-controls="{{subject.subject}}">
-                    <i class="glyphicon" ng-class="subject.closed ? 'glyphicon-plus-sign' : 'glyphicon-minus-sign'"></i>
+                    <i class="glyphicon" ng-class="subject.closed ? 'glyphicon-plus' : 'glyphicon-minus'"></i>
                     {{subject.subject}} ({{subject.docs.length}} <ng-pluralize count="subject.docs.length"
                     when="{'1': 'course', 'other': 'courses'}"></ng-pluralize>)
-                </span>
+                </a>
                 <ul class="list-unstyled well well-sm" uib-collapse="subject.closed">
                     <li ng-repeat="course in subject.docs | orderBy:$ctrl.courseCode" ng-if="$ctrl.courseCode(course)">
                         <a href="/view/{{course.path}}" title="Open {{course.title}}">
