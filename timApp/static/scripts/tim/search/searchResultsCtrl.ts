@@ -21,6 +21,7 @@ export interface ISearchResultParams {
 export interface ISearchResultParamsDoc {
     doc: IItem;
     pars: ISearchResultParamsPar[];
+    closed: boolean;
 }
 
 export interface ISearchResultParamsPar {
@@ -38,7 +39,6 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private results: ISearchResult[] = [];
     private filteredResults: ISearchResult[] = [];
     private searchWord: string = "";
-    private docCount: number = 0;
     private docResults: ISearchResultParamsDoc[] = [];
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
@@ -86,7 +86,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
             if (docIndex >= 0) {
                 this.docResults[docIndex].pars.push(newParResult);
             } else {
-                const newDocResult = {doc: r.doc, pars: [newParResult]};
+                const newDocResult = {closed: true, doc: r.doc, pars: [newParResult]};
                 this.docResults.push(newDocResult);
             }
         }
@@ -157,12 +157,14 @@ registerDialogComponent("timSearchResults",
                  when="{'1': 'document',
                      'other': 'documents'}">
         </ng-pluralize></h5>
-        <ul>
+        <ul class="list-unstyled">
             <li ng-repeat="r in $ctrl.docResults">
+                <a class="cursor-pointer" ng-click="r.closed = !r.closed"><i class="glyphicon"
+                ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'" title="Toggle paragraph preview"></i></a>
                 <a href="/view/{{r.doc.path}}" title="Open {{r.doc.title}}">{{r.doc.title}}</a>
                 <i>({{r.doc.path}})</i>
                 <ul>
-                    <li ng-repeat="p in r.pars">
+                    <li ng-repeat="p in r.pars" ng-if="!r.closed">
                         <a href="/view/{{r.doc.path}}#{{p.par.id}}" title="Open paragraph">{{p.preview}}</a>
                     </li>
                 </ul>
