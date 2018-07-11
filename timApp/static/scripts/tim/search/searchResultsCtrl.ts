@@ -81,7 +81,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                 match_end_index: r.match_end_index,
                 match_start_index: r.match_start_index,
                 par: r.par,
-                preview: this.previewPar(r),
+                preview: this.previewPar(r, 80),
             };
             if (docIndex >= 0) {
                 this.docResults[docIndex].pars.push(newParResult);
@@ -95,12 +95,16 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     /**
      * Forms a preview of the paragraph around indices the match was found.
      * @param {ISearchResult} r
+     * @param {number} snippetLength Maximum number of chars around the search word.
      * @returns {string}
      */
-    private previewPar(r: ISearchResult) {
+    private previewPar(r: ISearchResult, snippetLength: number) {
         const text = r.par.md;
-        let start = r.match_start_index - 30;
-        let end = r.match_end_index + 30;
+        let start = r.match_start_index - snippetLength / 2;
+
+        // Regex searches may have a very long span between begin and end indices,
+        // so search word length is used to avoid that.
+        let end = r.match_start_index + this.searchWord.length + snippetLength / 2;
         let prefix = "...";
         let postfix = "...";
         if (start < 0) {
