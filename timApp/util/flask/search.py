@@ -1,25 +1,18 @@
 """Routes for searching."""
-from typing import Set
 
-from flask import Blueprint, render_template
+from flask import Blueprint
 from flask import abort
 from flask import request
 
 from timApp.admin import search_in_documents
 from timApp.admin.search_in_documents import SearchArgumentsBasic
 from timApp.auth.accesshelper import verify_logged_in
-from timApp.util.flask.cache import cache
-from timApp.document.post_process import post_process_pars
-from timApp.document.docparagraph import DocParagraph
-from timApp.document.docsettings import DocSettings
-from timApp.document.document import Document
-from timApp.plugin.pluginControl import get_all_reqs
-from timApp.util.flask.requesthelper import get_option
-from timApp.auth.sessioninfo import get_current_user_object, get_current_user_id, logged_in, get_current_user_group, \
-    get_user_settings
-from timApp.document.docinfo import DocInfo
+from timApp.auth.sessioninfo import get_current_user_object, get_current_user_id
 from timApp.document.docentry import DocEntry, get_documents
-from timApp.auth.auth_models import BlockAccess
+from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph
+from timApp.util.flask.cache import cache
+from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
 
 search_routes = Blueprint('search',
@@ -43,7 +36,7 @@ class SearchResult:
 @search_routes.route("")
 @cache.cached(key_prefix=make_cache_key)
 def search():
-    # verify_logged_in()
+    verify_logged_in()
 
     query = request.args.get('query', '')
     if len(query.strip()) < 3:
@@ -59,7 +52,8 @@ def search():
     # TODO: Regex in these doesn't work.
     ignore_list = ['%templates/%', '%/preamble%']
 
-    docs = get_documents(filter_user=current_user, filter_folder=folder, custom_filter=DocEntry.name.notin_(ignore_list))
+    docs = get_documents(filter_user=current_user, filter_folder=folder,
+                         custom_filter=DocEntry.name.notin_(ignore_list))
     results = []
 
     args = SearchArgumentsBasic(

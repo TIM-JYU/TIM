@@ -57,6 +57,7 @@ class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     async search() {
+        // Server side has separate 3 character minimum check as well.
         if (this.query.trim().length < this.queryMinLength) {
             this.errorMessage = (`Search text must be at least ${this.queryMinLength} characters
              long with whitespace stripped.`);
@@ -109,6 +110,7 @@ class SearchBoxCtrl implements IController {
             this.storage.searchWordStorage = this.query;
         }
         this.storage.optionsStorage = [];
+        // Alphabetical order.
         this.storage.optionsStorage.push(this.advancedSearch);
         this.storage.optionsStorage.push(this.caseSensitive);
         this.storage.optionsStorage.push(this.ignorePluginsSettings);

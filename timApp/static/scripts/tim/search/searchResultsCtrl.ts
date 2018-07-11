@@ -1,5 +1,5 @@
 /**
- * Controller and HTML template for tag search dialog.
+ * Controller and HTML template for search results dialog.
  */
 
 import {IRootElementService, IScope} from "angular";
@@ -21,14 +21,14 @@ export interface ISearchResultParams {
 export interface ISearchResultParamsDoc {
     doc: IItem;
     pars: ISearchResultParamsPar[];
-    closed: boolean;
+    closed: boolean; // Whether this is shown collapsed or not.
 }
 
 export interface ISearchResultParamsPar {
     par: IExtraData;
-    preview: string;
+    preview: string; // Short snippet from the paragraph.
     match_start_index: number;
-    match_end_index: number;
+    match_end_index: number; // Regex searches may make match very long, so this isn't always reliable.
 }
 
 /*
