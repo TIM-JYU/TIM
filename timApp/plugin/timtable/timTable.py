@@ -349,9 +349,9 @@ def is_auto_md_enabled(values):
     try:
         auto_md = values[TABLE][AUTOMD]
         if not isinstance(auto_md, bool):
-            abort(400)
+            return False
         return auto_md
-    except ValueError:
+    except (ValueError, KeyError):
         return False
 
 
@@ -369,11 +369,12 @@ def prepare_for_dumbo(values):
         return values
 
     if auto_md:
+        # regular row data
         for row in rows:
             rowdata = row[ROW]
             for i in range(len(rowdata)):
                 cell = rowdata[i]
-                if isinstance(cell, int) or isinstance(cell, bool) or isinstance(cell, float):
+                if is_of_unconvertible_type(cell):
                         continue
 
                 if isinstance(cell, str):
@@ -383,5 +384,20 @@ def prepare_for_dumbo(values):
                 else:
                     cell[CELL] = 'md: ' + cell[CELL]
 
+        # datablock
+        data_block = None
+        try:
+            data_block = values[TABLE][DATABLOCK][CELLS]
+        except KeyError:
+            pass
+
+        if data_block is not None:
+            for key, value in data_block.items():
+                if isinstance(value, str) and value.startswith('md:'):
+                    data_block[key] = 'md: ' + value
+
     return values
 
+
+def is_of_unconvertible_type(value):
+    return isinstance(value, int) or isinstance(value, bool) or isinstance(value, float)
