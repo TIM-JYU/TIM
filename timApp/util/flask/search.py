@@ -51,14 +51,19 @@ def search():
 
     folder = request.args.get('folder', '')
     regex = get_option(request, 'regex', default=False, cast=bool)
+    case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
     onlyfirst = get_option(request, 'onlyfirst', default=999, cast=int)
     current_user = get_current_user_object()
     docs = get_documents(filter_user=current_user, filter_folder=folder)
     results = []
-
+    args = SearchArgumentsBasic(
+        term=query,
+        regex=regex,
+        onlyfirst=onlyfirst,
+        case_sensitive=case_sensitive,
+        format="")
     for d in docs:
         doc_info = d.document.docinfo
-        args = SearchArgumentsBasic(term=query, regex=regex, onlyfirst=onlyfirst, format="")
         for r in search_in_documents.search(d=doc_info, args=args, use_exported=False):
             result = {'doc': r.doc,
                       'par': r.par,

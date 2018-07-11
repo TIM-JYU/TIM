@@ -26,12 +26,14 @@ class SearchBoxCtrl implements IController {
     private query: string = "";
     private folder!: Binding<string, "<">;
     private regex: boolean = false;
+    private caseSensitive: boolean = false;
     private results: ISearchResult[] = [];
     private errorMessage: string = "";
-    private beginning = true; // When search hasn't been used yet.
-    private onlyfirst = 100; // # first results returned.
-    private advancedSearch = false;
-    private focusMe = true;
+    private beginning: boolean = true; // When search hasn't been used yet.
+    private onlyfirst: number = 100; // # first results returned.
+    private queryMinLength: number = 3;
+    private advancedSearch: boolean = false;
+    private focusMe: boolean = true;
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
 
     constructor() {
@@ -42,22 +44,11 @@ class SearchBoxCtrl implements IController {
     }
 
     $onInit() {
-        if (this.storage.searchWordStorage) {
-            this.query = this.storage.searchWordStorage;
-        }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length >= 2) {
-            this.advancedSearch = this.storage.optionsStorage[0];
-            this.regex = this.storage.optionsStorage[1];
-        }
+        this.loadLocalStorage();
     }
 
     $onDestroy() {
-        if (this.query.trim().length > 3) {
-            this.storage.searchWordStorage = this.query;
-        }
-        this.storage.optionsStorage = [];
-        this.storage.optionsStorage.push(this.advancedSearch);
-        this.storage.optionsStorage.push(this.regex);
+        this.updateLocalStorage();
     }
 
     /**
@@ -73,6 +64,7 @@ class SearchBoxCtrl implements IController {
         const [err, response] = await to($http<ISearchResult[]>({
             method: "GET",
             params: {
+                caseSensitive: this.caseSensitive,
                 folder: this.folder,
                 onlyfirst: this.onlyfirst,
                 query: this.query,
@@ -102,6 +94,33 @@ class SearchBoxCtrl implements IController {
     async keyPressed(event: KeyboardEvent) {
         if (event.which === 13) {
             await this.search();
+        }
+    }
+
+    /**
+     * Saves options and search word to local storage.
+     */
+    private updateLocalStorage() {
+        if (this.query.trim().length > this.queryMinLength) {
+            this.storage.searchWordStorage = this.query;
+        }
+        this.storage.optionsStorage = [];
+        this.storage.optionsStorage.push(this.advancedSearch);
+        this.storage.optionsStorage.push(this.caseSensitive);
+        this.storage.optionsStorage.push(this.regex);
+    }
+
+    /**
+     * Fetches options and search word from local storage, if existent.
+     */
+    private loadLocalStorage() {
+        if (this.storage.searchWordStorage) {
+            this.query = this.storage.searchWordStorage;
+        }
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length >= 3) {
+            this.advancedSearch = this.storage.optionsStorage[0];
+            this.caseSensitive = this.storage.optionsStorage[1];
+            this.regex = this.storage.optionsStorage[2];
         }
     }
 }
@@ -137,6 +156,8 @@ timApp.component("searchBox", {
             </div>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.regex"
                 class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.caseSensitive"
+        class="ng-pristine ng-untouched ng-valid ng-not-empty"> Case sensitive</label>
       </div>
       </form>
     </div>

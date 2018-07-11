@@ -25,6 +25,9 @@ class SearchArgumentsBasic:
     format: str = attr.ib()
     """Format string to print matches."""
 
+    case_sensitive: bool = attr.ib()
+    """Differentiate between lower and upper case letters."""
+
 
 @attr.s
 class SearchArgumentsBase(BasicArguments, SearchArgumentsBasic):
@@ -81,7 +84,11 @@ def search(d: DocInfo, args: SearchArgumentsBasic, use_exported: bool) -> Genera
     results_found = 0
     pars_processed = 0
     pars_found = 0
-    regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL)
+
+    if args.case_sensitive:
+        regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL)
+    else:
+        regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL | re.IGNORECASE)
     for d, p in enum_pars(d):
         pars_processed += 1
         md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()

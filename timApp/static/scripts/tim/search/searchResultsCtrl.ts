@@ -24,6 +24,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private results: ISearchResult[] = [];
     private filteredResults: ISearchResult[] = [];
     private searchWord: string = "";
+    private docCount: number = 0;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
