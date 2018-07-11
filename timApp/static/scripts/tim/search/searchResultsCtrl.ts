@@ -118,7 +118,7 @@ registerDialogComponent("timSearchResults",
     </div>
     <div ng-if="$ctrl.filteredResults.length > 0">
         <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.results.length}}
-        <ng-pluralize count="$ctrl.filteredResults.length"
+        <ng-pluralize count="$ctrl.results.length"
                  when="{'1': 'time',
                      'other': 'times'}"></ng-pluralize> in {{$ctrl.docCount}}
         <ng-pluralize count="$ctrl.filteredResults.length"

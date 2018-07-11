@@ -57,10 +57,12 @@ class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     async search() {
-        if (this.query.trim().length < 3) {
-            alert("Search text must be at least 3 characters long with whitespace stripped.");
+        if (this.query.trim().length < this.queryMinLength) {
+            this.errorMessage = (`Search text must be at least ${this.queryMinLength} characters
+             long with whitespace stripped.`);
             return;
         }
+        this.errorMessage = "";
         this.beginning = false;
         const [err, response] = await to($http<ISearchResult[]>({
             method: "GET",
@@ -147,6 +149,9 @@ timApp.component("searchBox", {
             title="Toggle advanced search">
                 <span class="glyphicon glyphicon-menu-hamburger"></span>
         </span>
+   </div>
+   <div ng-cloak ng-show="$ctrl.errorMessage" class="alert alert-warning">
+    <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
    </div>
    <div ng-if="$ctrl.advancedSearch" title="Advanced search options">
       <h5>Advanced search options</h5>
