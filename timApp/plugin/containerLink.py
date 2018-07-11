@@ -151,11 +151,12 @@ def convert_tex_mock(plugin_data):
 
 
 def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
-                        plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML):
+                        plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML,
+                        convert_plugin_md: bool = True):
     opts = doc.get_settings().get_dumbo_options()
     plugin_dumbo_opts = [p.par.get_dumbo_options(base_opts=opts) for p in plugin_data]
     plugin_dicts = [p.render_json() for p in plugin_data]
-    if doc.get_settings().plugin_md():
+    if doc.get_settings().plugin_md() and convert_plugin_md:
         convert_md(plugin_dicts,
                    options=opts,
                    plugin_opts=plugin_dumbo_opts,
