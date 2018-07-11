@@ -33,6 +33,7 @@ class SearchBoxCtrl implements IController {
     private onlyfirst: number = 100; // # first results returned.
     private queryMinLength: number = 3;
     private advancedSearch: boolean = false;
+    private ignorePluginsSettings: boolean = false;
     private focusMe: boolean = true;
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
 
@@ -66,6 +67,7 @@ class SearchBoxCtrl implements IController {
             params: {
                 caseSensitive: this.caseSensitive,
                 folder: this.folder,
+                ignorePluginsSettings: this.ignorePluginsSettings,
                 onlyfirst: this.onlyfirst,
                 query: this.query,
                 regex: this.regex,
@@ -107,6 +109,7 @@ class SearchBoxCtrl implements IController {
         this.storage.optionsStorage = [];
         this.storage.optionsStorage.push(this.advancedSearch);
         this.storage.optionsStorage.push(this.caseSensitive);
+        this.storage.optionsStorage.push(this.ignorePluginsSettings);
         this.storage.optionsStorage.push(this.regex);
     }
 
@@ -117,10 +120,11 @@ class SearchBoxCtrl implements IController {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
         }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length >= 3) {
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length >= 4) {
             this.advancedSearch = this.storage.optionsStorage[0];
             this.caseSensitive = this.storage.optionsStorage[1];
-            this.regex = this.storage.optionsStorage[2];
+            this.ignorePluginsSettings = this.storage.optionsStorage[2];
+            this.regex = this.storage.optionsStorage[3];
         }
     }
 }
@@ -154,10 +158,15 @@ timApp.component("searchBox", {
                            type="text" class="form-control" id="folder-selector" placeholder="Input a folder to search">
                 </div>
             </div>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.regex"
-                class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.caseSensitive"
-        class="ng-pristine ng-untouched ng-valid ng-not-empty"> Case sensitive</label>
+            title="Distinguishing between upper- and lower-case letters"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Case sensitive</label>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.ignorePluginsSettings"
+            title="Leave plugins and settings out of the results"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins</label>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.regex"
+            title="Regular expressions"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
       </div>
       </form>
     </div>

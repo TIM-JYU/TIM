@@ -43,7 +43,7 @@ class SearchResult:
 @search_routes.route("")
 @cache.cached(key_prefix=make_cache_key)
 def search():
-    verify_logged_in()
+    # verify_logged_in()
 
     query = request.args.get('query', '')
     if len(query.strip()) < 3:
@@ -53,15 +53,22 @@ def search():
     regex = get_option(request, 'regex', default=False, cast=bool)
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
     onlyfirst = get_option(request, 'onlyfirst', default=999, cast=int)
+    ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
     current_user = get_current_user_object()
-    docs = get_documents(filter_user=current_user, filter_folder=folder)
+
+    # TODO: Regex in these doesn't work.
+    ignore_list = ['%templates/%', '%/preamble%']
+
+    docs = get_documents(filter_user=current_user, filter_folder=folder, custom_filter=DocEntry.name.notin_(ignore_list))
     results = []
+
     args = SearchArgumentsBasic(
         term=query,
         regex=regex,
         onlyfirst=onlyfirst,
         case_sensitive=case_sensitive,
         format="")
+
     for d in docs:
         doc_info = d.document.docinfo
         for r in search_in_documents.search(d=doc_info, args=args, use_exported=False):
@@ -71,6 +78,18 @@ def search():
                       'match_start_index': r.match.span()[0],
                       'match_end_index': r.match.span()[1],
                       'num_results': r.num_results,
-                      'num_pars': r.num_pars, 'num_pars_found': r.num_pars_found}
-            results.append(result)
+                      'num_pars': r.num_pars,
+                      'num_pars_found': r.num_pars_found}
+
+            # Don't return results within plugins if no edit access to the document.
+            if is_plugin_or_setting(r.par):
+                if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
+                    results.append(result)
+            else:
+                results.append(result)
     return json_response(results)
+
+
+def is_plugin_or_setting(par):
+    md = par.get_markdown()
+    return md.startswith("```") and md.endswith("```")
