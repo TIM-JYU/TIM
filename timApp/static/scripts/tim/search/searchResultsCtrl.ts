@@ -7,6 +7,8 @@ import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {markAsUsed} from "../util/utils";
 import {ISearchResult} from "./searchBox";
+import {IItem} from "../item/IItem";
+import {IExtraData} from "../document/editing/edittypes";
 
 markAsUsed(focusMe);
 
@@ -14,6 +16,18 @@ export interface ISearchResultParams {
     results: ISearchResult[];
     searchWord: string;
     errorMessage: string;
+}
+
+export interface ISearchResultParamsDoc {
+    doc: IItem;
+    pars: ISearchResultParamsPar[];
+}
+
+export interface ISearchResultParamsPar {
+    par: IExtraData;
+    preview: string;
+    match_start_index: number;
+    match_end_index: number;
 }
 
 /*
@@ -25,6 +39,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private filteredResults: ISearchResult[] = [];
     private searchWord: string = "";
     private docCount: number = 0;
+    private docResults: ISearchResultParamsDoc[] = [];
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -48,18 +63,33 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     }
 
     /**
-     * Filters duplicate paragraphs (those with more than one match) from the results.
+     * Filters duplicate paragraphs (those with more than one match) from the results and groups
+     * paragraphs under documents.
      */
     private filterResults() {
-        const docs: string[] = [];
+        // Remove matches in same paragraphs.
         for (const {item, index} of this.results.map((item, index) => ({ item, index }))) {
             if (item && (index === 0 || item.par.id !== this.results[index - 1].par.id)) {
                 this.filteredResults.push(item);
-                docs.push(item.doc.path);
             }
         }
 
-        this.docCount = removeDuplicates(docs).length;
+        // Group paragraphs under documents.
+        for (const r of this.filteredResults) {
+            const docIndex = this.docIndexInResults(r.doc);
+            const newParResult = {
+                match_end_index: r.match_end_index,
+                match_start_index: r.match_start_index,
+                par: r.par,
+                preview: this.previewPar(r),
+            };
+            if (docIndex >= 0) {
+                this.docResults[docIndex].pars.push(newParResult);
+            } else {
+                const newDocResult = {doc: r.doc, pars: [newParResult]};
+                this.docResults.push(newDocResult);
+            }
+        }
     }
 
     /**
@@ -84,22 +114,20 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         }
         return prefix + text.substring(start, end).trim() + postfix;
     }
-}
 
-/**
- * Returns copy of a string array where duplicates have been removed.
- * Adapted from: https://codehandbook.org/how-to-remove-duplicates-from-javascript-array/
- * @param {string[]} array
- * @returns {string[]}
- */
-function removeDuplicates(array: string[]) {
-    const set: string[] = [];
-    for (const item of array) {
-        if (set.indexOf(item) === -1) {
-            set.push(item);
+    /**
+     * Gets index of document in document results.
+     * @param {IItem} doc
+     * @returns {any}
+     */
+    private docIndexInResults(doc: IItem) {
+        for (const {item, index} of this.docResults.map((item, index) => ({ item, index }))) {
+            if (item.doc.id === doc.id) {
+                return index;
+            }
         }
+        return -1;
     }
-    return set;
 }
 
 registerDialogComponent("timSearchResults",
@@ -116,20 +144,24 @@ registerDialogComponent("timSearchResults",
     <div ng-if="!$ctrl.beginning && $ctrl.filteredResults.length <= 0 && !$ctrl.errorMessage">
         <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents</h5>
     </div>
-    <div ng-if="$ctrl.filteredResults.length > 0">
+    <div ng-if="$ctrl.docResults.length > 0">
         <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.results.length}}
         <ng-pluralize count="$ctrl.results.length"
                  when="{'1': 'time',
-                     'other': 'times'}"></ng-pluralize> in {{$ctrl.docCount}}
+                     'other': 'times'}"></ng-pluralize> in {{$ctrl.docResults.length}}
         <ng-pluralize count="$ctrl.filteredResults.length"
                  when="{'1': 'document',
                      'other': 'documents'}">
         </ng-pluralize></h5>
         <ul>
-            <li ng-repeat="r in $ctrl.filteredResults">
-                <a href="/view/{{r.doc.path}}#{{r.par.id}}" title="Open {{r.doc.title}}">{{r.doc.title}}</a>
+            <li ng-repeat="r in $ctrl.docResults">
+                <a href="/view/{{r.doc.path}}" title="Open {{r.doc.title}}">{{r.doc.title}}</a>
                 <i>({{r.doc.path}})</i>
-                <p>{{$ctrl.previewPar(r)}}</p>
+                <ul>
+                    <li ng-repeat="p in r.pars">
+                        <a href="/view/{{r.doc.path}}#{{p.par.id}}" title="Open paragraph">{{p.preview}}</a>
+                    </li>
+                </ul>
             </li>
         </ul>
     </div>
