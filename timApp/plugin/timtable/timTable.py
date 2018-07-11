@@ -2,6 +2,7 @@ import copy
 import json
 from typing import Optional
 from xml.sax.saxutils import quoteattr
+from distutils import util;
 from flask import Blueprint
 from flask import abort
 from flask import request
@@ -19,6 +20,7 @@ timTable_plugin = Blueprint('timTable_plugin',
 
 # Reserved words in the TimTable format and other needed constants
 TABLE = 'table'
+AUTOMD = 'automd'
 ROWS = 'rows'
 ROW = 'row'
 COLUMNS = 'columns'
@@ -47,7 +49,8 @@ def timTable_reqs():
         ],
         "angularModule": [],
         "multihtml": True,
-        "multimd": True
+        "multimd": True,
+        "auto_convert_md": False
     }
     return json_response(reqs)
 
@@ -55,7 +58,7 @@ def timTable_reqs():
 @timTable_plugin.route("multihtml/", methods=["POST"])
 def tim_table_multihtml():
     """
-    Route for getting the html of TimTable.
+    Route for getting the HTML of all TimTable plugins in a document.
     :return:
     """
     jsondata = request.get_json()
@@ -63,6 +66,21 @@ def tim_table_multihtml():
     for jso in jsondata:
         multi.append(tim_table_get_html(jso, is_review(request)))
     return json_response(multi)
+
+
+def tim_table_get_html(jso, review):
+    """
+    Returns the HTML of a single TimTable paragraph.
+    :param jso:
+    :param review:
+    :return:
+    """
+    values = jso[MARKUP]
+    html_values = prepare_for_and_call_dumbo(values)
+    attrs = json.dumps(html_values)
+    runner = 'tim-table'
+    s = f'<{runner} data={quoteattr(attrs)}></{runner}>'
+    return s
 
 
 @timTable_plugin.route("getCellData", methods=["GET"])
@@ -86,7 +104,7 @@ def tim_table_get_cell_data():
     cell_cnt = None
     if is_datablock(yaml):
         cell_cnt = find_cell_from_datablock(yaml[TABLE][DATABLOCK][CELLS], int(args[ROW]), int(args[COL]))
-    if cell_cnt != None:
+    if cell_cnt is not None:
         multi.append(cell_cnt)
     else:
         rows = yaml[TABLE][ROWS]
@@ -102,22 +120,24 @@ def tim_table_save_cell_list():
     :return: The cell content as html
     """
     multi = []
-    cellContent, docId, parId, row, col = verify_json_params('cellContent', 'docId', 'parId', 'row', 'col')
-    doc = DocEntry.find_by_id(docId)
+    cell_content, docid, parid, row, col = verify_json_params('cellContent', 'docId', 'parId', 'row', 'col')
+    doc = DocEntry.find_by_id(docid)
     if not doc:
         abort(404)
     verify_edit_access(doc)
-    par = doc.document_as_current_user.get_paragraph(parId)
+    par = doc.document_as_current_user.get_paragraph(parid)
     plug = Plugin.from_paragraph(par)
     yaml = plug.values
     if is_datablock(yaml):
-        save_cell(yaml[TABLE][DATABLOCK], row, col, cellContent)
+        save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
     else:
         create_datablock(yaml[TABLE])
-        save_cell(yaml[TABLE][DATABLOCK], row, col, cellContent)
+        save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
 
-    cc = str(cellContent)
-    html = call_dumbo([cc], "/mdkeys")
+    cc = str(cell_content)
+    if is_auto_md_enabled(plug.values) and not cc.startswith('md:'):
+        cc = 'md: ' + cc
+    html = call_dumbo([cc], '/mdkeys')
     plug.save()
     multi.append(html[0])
     return json_response(multi)
@@ -143,7 +163,7 @@ def tim_table_add_row():
     # clone the previous row's data into the new row but remove the cell content
     copy_row = copy.deepcopy(rows[-1])
     rows.append(copy_row)
-    #rows.append({'row': copy.deepcopy(rows[-1]['row'])})
+    # rows.append({'row': copy.deepcopy(rows[-1]['row'])})
     row = rows[-1]['row']
     for i in range(len(row)):
         if isinstance(row[i], str) or isinstance(row[i], int) or isinstance(row[i], bool) \
@@ -152,7 +172,7 @@ def tim_table_add_row():
         else:
             row[i][CELL] = ''
     plug.save()
-    return json_response(call_dumbo(plug.values, '/mdkeys'))
+    return json_response(prepare_for_and_call_dumbo(plug.values))
 
 
 @timTable_plugin.route("addColumn", methods=["POST"])
@@ -189,12 +209,13 @@ def tim_table_add_column():
             current_row.append(new_cell)
         
     plug.save()
-    return json_response(call_dumbo(plug.values, '/mdkeys'))
+    return json_response(prepare_for_and_call_dumbo(plug.values))
+
 
 @timTable_plugin.route("multimd/", methods=["POST"])
 def tim_table_multimd():
     """
-    Handles lates printing.
+    Handles latex printing.
     :return: Table as latex.
     """
     jsondata = request.get_json()
@@ -285,7 +306,7 @@ def colnum_to_letters(column_index: int) -> str:
     """
     Transforms column index to letter
     :param column_index: ex. 2
-    :return: solumn index as letter
+    :return: column index as letter
     """
     last_char = chr(ASCII_OF_A + (column_index % ASCII_CHAR_COUNT))
     remainder = column_index // ASCII_CHAR_COUNT
@@ -308,18 +329,59 @@ def is_review(request):
     result = request.full_path.find("review=") >= 0
     return result
 
-def tim_table_get_html(jso, review):
+
+def prepare_for_and_call_dumbo(values):
     """
-    Returns html
-    :param jso:
-    :param review:
-    :return:
+    Prepares the table's markdown for Dumbo conversion and
+    runs it through Dumbo.
+    :param values: The plugin paragraph's markdown.
+    :return: The conversion result from Dumbo.
     """
-    attrs = json.dumps(jso['markup'])
-    runner = 'tim-table'
-    s = f'<{runner} data={quoteattr(attrs)}></{runner}>'
-    return s
+    return call_dumbo(prepare_for_dumbo(values), '/mdkeys')
 
 
+def is_auto_md_enabled(values):
+    """
+    Checks whether auto-md logic is enabled for a table.
+    :param values: The plugin values as a list or dict.
+    :return: True if auto-md is enabled, otherwise false.
+    """
+    try:
+        auto_md = values[TABLE][AUTOMD]
+        if not isinstance(auto_md, bool):
+            abort(400)
+        return auto_md
+    except ValueError:
+        return False
 
+
+def prepare_for_dumbo(values):
+    """
+    Prepares the table's markdown for Dumbo conversion.
+    :param values: The plugin paragraph's markdown.
+    :return: The table's markdown, prepared for dumbo conversion.
+    """
+    auto_md = is_auto_md_enabled(values)
+
+    try:
+        rows = values[TABLE][ROWS]
+    except KeyError:
+        return values
+
+    if auto_md:
+        for row in rows:
+            rowdata = row[ROW]
+            for i in range(len(rowdata)):
+                cell = rowdata[i]
+                if isinstance(cell, int) or isinstance(cell, bool) or isinstance(cell, float):
+                        continue
+
+                if isinstance(cell, str):
+                    if cell.startswith('md:'):
+                        continue
+                    rowdata[i] = 'md: ' + cell
+                else:
+                    cell[CELL] = 'md: ' + cell[CELL]
+
+    return values
 

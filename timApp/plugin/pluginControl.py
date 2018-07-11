@@ -276,13 +276,15 @@ def pluginify(doc: Document,
         needs_browser = get_plugin_needs_browser(plugin_name)
         if (html_out and 'multihtml' in reqs and reqs['multihtml']) or \
                 (md_out and 'multimd' in reqs and reqs['multimd']):
+            convert_plugin_md = not ('auto_convert_md' in reqs and not reqs['auto_convert_md'])
             try:
                 # taketime("plg m", plugin_name)
                 response = render_plugin_multi(
                     doc,
                     plugin_name,
                     [val for _, val in plugin_block_map.items()],
-                    plugin_output_format=output_format)
+                    plugin_output_format=output_format,
+                    convert_plugin_md=convert_plugin_md)
                 # taketime("plg e", plugin_name)
             except PluginException as e:
                 for idx in plugin_block_map.keys():
