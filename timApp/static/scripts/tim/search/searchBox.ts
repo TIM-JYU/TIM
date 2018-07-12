@@ -30,7 +30,7 @@ class SearchBoxCtrl implements IController {
     private results: ISearchResult[] = [];
     private errorMessage: string = "";
     private beginning: boolean = true; // When search hasn't been used yet.
-    private onlyfirst: number = 100; // # first results returned.
+    private onlyfirst: number = 9999; // # first results returned.
     private queryMinLength: number = 3;
     private advancedSearch: boolean = false;
     private ignorePluginsSettings: boolean = false;
@@ -147,15 +147,23 @@ class SearchBoxCtrl implements IController {
     private defaultFolder() {
         if (!this.folder) {
             this.folder = "kurssit";
+            return;
         }
-        // In users/username/something* search from users/username.
+        // users/username/something* -> users/username
         const path = this.folder.split("/");
         if (path[0] === "users" && path.length > 2) {
             this.folder = `${path[0]}/${path[1]}`;
+            return;
         }
-        // In kurssit/faculty/course/something* search from kurssit/faculty/course.
+        // kurssit/faculty/course/something* -> kurssit/faculty/course
         if (path[0] === "kurssit" && path.length > 3) {
             this.folder = `${path[0]}/${path[1]}/${path[2]}`;
+            return;
+        }
+        // folder/something* -> folder
+        if (path.length > 1) {
+            this.folder = `${path[0]}`;
+            return;
         }
     }
 }

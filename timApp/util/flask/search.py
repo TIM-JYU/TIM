@@ -45,10 +45,11 @@ def search():
     folder = request.args.get('folder', '')
     regex = get_option(request, 'regex', default=False, cast=bool)
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-    onlyfirst = get_option(request, 'onlyfirst', default=999, cast=int)
+    onlyfirst = get_option(request, 'onlyfirst', default=9999, cast=int)
     ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
     current_user = get_current_user_object()
 
+    # Won't search subfolders if search_recursively isn't true.
     docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)
     results = []
 
