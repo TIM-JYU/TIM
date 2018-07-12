@@ -4,7 +4,7 @@
 
 import {IController} from "angular";
 import {timApp} from "../app";
-import {$http, $localStorage} from "../util/ngimport";
+import {$http, $localStorage, $window} from "../util/ngimport";
 import {IItem} from "../item/IItem";
 import {Binding, to} from "../util/utils";
 import {showSearchResultDialog} from "./searchResultsCtrl";
@@ -94,6 +94,7 @@ class SearchBoxCtrl implements IController {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
             return;
         }
+        this.updateLocalStorage();
         void showSearchResultDialog({
             errorMessage: this.errorMessage,
             results: this.results,
@@ -146,8 +147,16 @@ class SearchBoxCtrl implements IController {
      */
     private defaultFolder() {
         if (!this.folder) {
-            this.folder = "kurssit";
-            return;
+            const item: IItem = $window.item;
+            if (item.isFolder) {
+                this.folder = item.path;
+            } else {
+                this.folder = item.location;
+            }
+            // root -> kurssit
+            if (!this.folder) {
+                this.folder = "kurssit";
+            }
         }
         // users/username/something* -> users/username
         const path = this.folder.split("/");
