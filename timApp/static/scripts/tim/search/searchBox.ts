@@ -46,6 +46,7 @@ class SearchBoxCtrl implements IController {
 
     $onInit() {
         this.loadLocalStorage();
+        this.defaultFolder();
     }
 
     $onDestroy() {
@@ -61,6 +62,10 @@ class SearchBoxCtrl implements IController {
         if (this.query.trim().length < this.queryMinLength) {
             this.errorMessage = (`Search text must be at least ${this.queryMinLength} characters
              long with whitespace stripped.`);
+            return;
+        }
+        if (!this.folder.trim()) {
+            this.errorMessage = (`Root directory searches are not allowed.`);
             return;
         }
         this.errorMessage = "";
@@ -84,6 +89,10 @@ class SearchBoxCtrl implements IController {
         if (response) {
             this.errorMessage = "";
             this.results = response.data;
+        }
+        if (this.results.length === 0) {
+            this.errorMessage = `Your search '${this.query}' did not match any documents.`;
+            return;
         }
         void showSearchResultDialog({
             errorMessage: this.errorMessage,
@@ -129,6 +138,24 @@ class SearchBoxCtrl implements IController {
             this.caseSensitive = this.storage.optionsStorage[1];
             this.ignorePluginsSettings = this.storage.optionsStorage[2];
             this.regex = this.storage.optionsStorage[3];
+        }
+    }
+
+    /**
+     * Decide default folder for the search.
+     */
+    private defaultFolder() {
+        if (!this.folder) {
+            this.folder = "kurssit";
+        }
+        // In users/username/something* search from users/username.
+        const path = this.folder.split("/");
+        if (path[0] === "users" && path.length > 2) {
+            this.folder = `${path[0]}/${path[1]}`;
+        }
+        // In kurssit/faculty/course/something* search from kurssit/faculty/course.
+        if (path[0] === "kurssit" && path.length > 3) {
+            this.folder = `${path[0]}/${path[1]}/${path[2]}`;
         }
     }
 }
