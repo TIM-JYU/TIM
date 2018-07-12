@@ -296,6 +296,12 @@ class Plugin:
         return True, 'ok'
 
 
+    def is_automd_enabled(self):
+        if 'automd' in self.values and self.values['automd']:
+            return True
+        return False
+
+
 def parse_plugin_values_macros(par: DocParagraph,
                                global_attrs: Dict[str, str],
                                macros: Dict[str, object],
