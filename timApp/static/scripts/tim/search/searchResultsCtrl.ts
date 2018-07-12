@@ -72,7 +72,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         }
         // Group paragraphs under documents.
         for (const r of this.filteredResults) {
-            const docIndex = this.docIndexInResults(r.doc, this.filteredResults);
+            const docIndex = this.docIndexInResults(r.doc, this.docResults);
             const newParResult = {
                 match_end_index: r.match_end_index,
                 match_start_index: r.match_start_index,
@@ -122,7 +122,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
      * @param {ISearchResultParamsDoc} docs
      * @returns {any}
      */
-    private docIndexInResults(doc: IItem, docs: ISearchResult[]) {
+    private docIndexInResults(doc: IItem, docs: ISearchResultParamsDoc[]) {
         for (const {item, index} of docs.map((item, index) => ({ item, index }))) {
             if (item.doc.id === doc.id) {
                 return index;
