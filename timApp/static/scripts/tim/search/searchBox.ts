@@ -28,6 +28,7 @@ export interface ISearchResult {
     num_results: number;
     num_pars: number;
     num_pars_found: number;
+    in_title: boolean;
 }
 
 class SearchBoxCtrl implements IController {
@@ -37,11 +38,11 @@ class SearchBoxCtrl implements IController {
     private caseSensitive: boolean = false;
     private results: ISearchResult[] = [];
     private errorMessage: string = "";
-    private beginning: boolean = true; // When search hasn't been used yet.
     private onlyfirst: number = 999; // # first paragraphs searched from the document
     private queryMinLength: number = 3;
     private advancedSearch: boolean = false;
     private ignorePluginsSettings: boolean = false;
+    private searchDocNames: boolean = false;
     private focusMe: boolean = true;
     private item: IItem = $window.item;
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
@@ -78,7 +79,6 @@ class SearchBoxCtrl implements IController {
             return;
         }
         this.errorMessage = "";
-        this.beginning = false;
         const [err, response] = await to($http<ISearchResult[]>({
             method: "GET",
             params: {
@@ -88,12 +88,14 @@ class SearchBoxCtrl implements IController {
                 onlyfirst: this.onlyfirst,
                 query: this.query,
                 regex: this.regex,
+                searchDocNames: this.searchDocNames,
             },
             url: "/search",
         }));
         if (err) {
             this.errorMessage = err.data.error;
             this.results = [];
+            return;
         }
         if (response) {
             this.errorMessage = "";
@@ -107,6 +109,7 @@ class SearchBoxCtrl implements IController {
         void showSearchResultDialog({
             errorMessage: this.errorMessage,
             results: this.results,
+            searchDocNames: this.searchDocNames,
             searchWord: this.query,
         });
     }
@@ -134,6 +137,7 @@ class SearchBoxCtrl implements IController {
         this.storage.optionsStorage.push(this.caseSensitive);
         this.storage.optionsStorage.push(this.ignorePluginsSettings);
         this.storage.optionsStorage.push(this.regex);
+        this.storage.optionsStorage.push(this.searchDocNames);
     }
 
     /**
@@ -143,11 +147,12 @@ class SearchBoxCtrl implements IController {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
         }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length >= 4) {
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 4) {
             this.advancedSearch = this.storage.optionsStorage[0];
             this.caseSensitive = this.storage.optionsStorage[1];
             this.ignorePluginsSettings = this.storage.optionsStorage[2];
             this.regex = this.storage.optionsStorage[3];
+            this.searchDocNames = this.storage.optionsStorage[4];
         }
     }
 
@@ -229,6 +234,9 @@ timApp.component("searchBox", {
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.regex"
             title="Regular expressions"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchDocNames"
+            title="Toggle document title search"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search document titles</label>
       </div>
       </form>
     </div>

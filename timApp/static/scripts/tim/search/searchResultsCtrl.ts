@@ -16,10 +16,12 @@ export interface ISearchResultParams {
     results: ISearchResult[];
     searchWord: string;
     errorMessage: string;
+    searchDocNames: boolean;
 }
 
 export interface ISearchResultParamsDoc {
     doc: IItem;
+    in_title: boolean;
     pars: ISearchResultParamsPar[];
     closed: boolean; // Whether this is shown collapsed or not.
 }
@@ -40,12 +42,14 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private filteredResults: ISearchResult[] = [];
     private searchWord: string = "";
     private docResults: ISearchResultParamsDoc[] = [];
+    private searchDocNames: boolean = false;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
     }
 
     async $onInit() {
+        this.searchDocNames = this.resolve.params.searchDocNames;
         this.results = this.resolve.params.results;
         this.filterResults();
         this.searchWord = this.resolve.params.searchWord;
@@ -65,25 +69,39 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
      */
     private filterResults() {
         // Remove matches in same paragraphs.
-        for (const {item, index} of this.results.map((item, index) => ({ item, index }))) {
-            if (item && (index === 0 || item.par.id !== this.results[index - 1].par.id)) {
+        for (const {item, index} of this.results.map((item, index) => ({item, index}))) {
+            if (item && item.in_title) {
                 this.filteredResults.push(item);
+            }
+            if (item && !item.in_title) {
+                if (!this.results[index - 1] || !this.results[index - 1].par) {
+                    this.filteredResults.push(item);
+                } else {
+                    if (index === 0 || item.par.id !== this.results[index - 1].par.id) {
+                        this.filteredResults.push(item);
+                    }
+                }
             }
         }
         // Group paragraphs under documents.
         for (const r of this.filteredResults) {
-            const docIndex = this.docIndexInResults(r.doc, this.docResults);
-            const newParResult = {
-                match_end_index: r.match_end_index,
-                match_start_index: r.match_start_index,
-                par: r.par,
-                preview: this.previewPar(r, 80),
-            };
-            if (docIndex >= 0) {
-                this.docResults[docIndex].pars.push(newParResult);
-            } else {
-                const newDocResult = {closed: true, doc: r.doc, pars: [newParResult]};
+            if (r.in_title) {
+                const newDocResult = {closed: true, in_title: true, doc: r.doc, pars: []};
                 this.docResults.push(newDocResult);
+            } else {
+                const docIndex = this.docIndexInResults(r.doc, this.docResults);
+                const newParResult = {
+                    match_end_index: r.match_end_index,
+                    match_start_index: r.match_start_index,
+                    par: r.par,
+                    preview: this.previewPar(r, 80),
+                };
+                if (docIndex >= 0) {
+                    this.docResults[docIndex].pars.push(newParResult);
+                } else {
+                    const newDocResult = {closed: true, in_title: false, doc: r.doc, pars: [newParResult]};
+                    this.docResults.push(newDocResult);
+                }
             }
         }
     }
@@ -95,6 +113,9 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
      * @returns {string}
      */
     private previewPar(r: ISearchResult, snippetLength: number) {
+        if (r.in_title) {
+            return "";
+        }
         const text = r.par.md;
         let start = r.match_start_index - snippetLength / 2;
 
@@ -143,25 +164,23 @@ registerDialogComponent("timSearchResults",
     <div ng-show="$ctrl.errorMessage" class="alert alert-warning">
         <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
     </div>
-    <div ng-if="!$ctrl.beginning && $ctrl.filteredResults.length <= 0 && !$ctrl.errorMessage">
+    <div ng-if="$ctrl.docResults.length <= 0 && !$ctrl.errorMessage">
         <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents</h5>
     </div>
     <div ng-if="$ctrl.docResults.length > 0">
         <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.results.length}}
-        <ng-pluralize count="$ctrl.results.length"
-                 when="{'1': 'time',
-                     'other': 'times'}"></ng-pluralize> in {{$ctrl.docResults.length}}
-        <ng-pluralize count="$ctrl.docResults.length"
-                 when="{'1': 'document',
-                     'other': 'documents'}">
-        </ng-pluralize></h5>
+            <ng-pluralize count="$ctrl.results.length" when="{'1': 'time', 'other': 'times'}"></ng-pluralize>
+            in {{$ctrl.docResults.length}} <ng-pluralize count="$ctrl.docResults.length"
+            when="{'1': 'document', 'other': 'documents'}"></ng-pluralize>
+        </h5>
         <ul class="list-unstyled">
             <li ng-repeat="r in $ctrl.docResults">
-                <a class="cursor-pointer" ng-click="r.closed = !r.closed"><i class="glyphicon"
-                ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'" title="Toggle paragraph preview"></i></a>
+                <a class="cursor-pointer" ng-click="r.closed = !r.closed">
+                <i ng-if="!r.in_title" class="glyphicon" ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
+                title="Toggle paragraph preview"></i></a>
                 <a href="/view/{{r.doc.path}}" title="Open {{r.doc.title}}">{{r.doc.title}}</a>
                 <i>({{r.doc.path}})</i>
-                <ul>
+                <ul ng-if="!r.in_title">
                     <li ng-repeat="p in r.pars" ng-if="!r.closed">
                         <a href="/view/{{r.doc.path}}#{{p.par.id}}" title="Open paragraph">{{p.preview}}</a>
                     </li>
