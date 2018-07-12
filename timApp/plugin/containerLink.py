@@ -179,9 +179,9 @@ def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
                    plugin_opts=plugin_dumbo_opts,
                    outtype='md' if plugin_output_format == PluginOutputFormat.HTML else 'latex')
 
-    if inner:
+    if inner and plugin_output_format == PluginOutputFormat.HTML:
         return plugin_instance.multihtml_direct_call(plugin_dicts)
-    
+
     return call_plugin_generic(plugin,
                                 'post',
                                 ('multimd' if plugin_output_format == PluginOutputFormat.MD else 'multihtml'),
