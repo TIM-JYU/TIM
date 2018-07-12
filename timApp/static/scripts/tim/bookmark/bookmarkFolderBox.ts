@@ -21,7 +21,7 @@ class BookmarkFolderBoxCtrl implements IController {
     private bookmarks!: Binding<IBookmarkGroup[], "<">;
     private documents?: ITaggedBookmarkedItem[]; // Documents of the bookmark folder.
     private editOn: boolean = false; // Show bookmark edit and removal icons.
-    private orphanBookmarks: IBookmark[] = [];
+    private orphanBookmarks: IBookmark[] = []; // Bookmarks that aren't pointing to any TIM-document.
 
     async $onInit() {
         await this.getBookmarkFolder(this.bookmarkFolderName);
@@ -66,6 +66,7 @@ class BookmarkFolderBoxCtrl implements IController {
                 }
             }
         }
+        // Make a list of bookmarks without documents.
         this.updateOrphanBookmarks();
     }
 
@@ -86,7 +87,7 @@ class BookmarkFolderBoxCtrl implements IController {
 
     /**
      * Deletes the bookmark and updates document list.
-     * @param {IBookmark} d Bookmark.
+     * @param {IBookmark} d Bookmark to delete.
      * @returns {Promise<void>}
      */
     private async removeFromList(d: IBookmark) {
@@ -103,7 +104,7 @@ class BookmarkFolderBoxCtrl implements IController {
 
     /**
      * Opens editing dialog for the bookmark and updates list if changes were made.
-     * @param {IBookmark} d Bookmark.
+     * @param {IBookmark} d Bookmark to edit.
      * @returns {Promise<void>}
      */
     private async editFromList(d: IBookmark) {
@@ -138,6 +139,9 @@ class BookmarkFolderBoxCtrl implements IController {
         return getCourseCode(d.doc.tags);
     }
 
+    /**
+     * Makes a list of bookmarks that aren't in the tagged-bookmarked documents list.
+     */
     private updateOrphanBookmarks() {
         this.orphanBookmarks = [];
         if (this.bookmarkFolder) {
@@ -150,7 +154,7 @@ class BookmarkFolderBoxCtrl implements IController {
     }
 
     /**
-     * Returns the index of bookmark in bookmarked document list.
+     * Returns the index of bookmark in the tagged-bookmarked documents list.
      * @param {IBookmark} bookmark
      * @returns {any}
      */
