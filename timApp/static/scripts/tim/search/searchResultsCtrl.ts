@@ -45,9 +45,6 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         super(element, scope);
     }
 
-    /*
-     * Show tag list when dialog loads and focus on tag-field.
-     */
     async $onInit() {
         this.results = this.resolve.params.results;
         this.filterResults();
@@ -73,10 +70,9 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                 this.filteredResults.push(item);
             }
         }
-
         // Group paragraphs under documents.
         for (const r of this.filteredResults) {
-            const docIndex = this.docIndexInResults(r.doc);
+            const docIndex = this.docIndexInResults(r.doc, this.filteredResults);
             const newParResult = {
                 match_end_index: r.match_end_index,
                 match_start_index: r.match_start_index,
@@ -121,11 +117,13 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
 
     /**
      * Gets index of document in document results.
+     * If documents isn't yet in the list return -1.
      * @param {IItem} doc
+     * @param {ISearchResultParamsDoc} docs
      * @returns {any}
      */
-    private docIndexInResults(doc: IItem) {
-        for (const {item, index} of this.docResults.map((item, index) => ({ item, index }))) {
+    private docIndexInResults(doc: IItem, docs: ISearchResult[]) {
+        for (const {item, index} of docs.map((item, index) => ({ item, index }))) {
             if (item.doc.id === doc.id) {
                 return index;
             }

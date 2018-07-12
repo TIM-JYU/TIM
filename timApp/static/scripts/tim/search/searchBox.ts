@@ -1,5 +1,13 @@
 /**
  * A search box component.
+ *
+ * Search options:
+ *
+ * caseSensitive: distinguish between upper and lower case letters
+ * ignorePluginsSettings: leave plugin and setting paragraphs out of the results.
+ * folder: limit search to a folder and its subfolders
+ * onlyFirst: search only X first paragraphs from each document
+ * regex: regular expressions
  */
 
 import {IController} from "angular";
@@ -30,7 +38,7 @@ class SearchBoxCtrl implements IController {
     private results: ISearchResult[] = [];
     private errorMessage: string = "";
     private beginning: boolean = true; // When search hasn't been used yet.
-    private onlyfirst: number = 9999; // # first results returned.
+    private onlyfirst: number = 999; // # first paragraphs searched from the document
     private queryMinLength: number = 3;
     private advancedSearch: boolean = false;
     private ignorePluginsSettings: boolean = false;
@@ -104,7 +112,7 @@ class SearchBoxCtrl implements IController {
     }
 
     /*
-     * Calls tag search function when Enter is pressed.
+     * Calls search function when Enter is pressed.
      * @param event Keyboard event.
      */
     async keyPressed(event: KeyboardEvent) {
@@ -144,7 +152,14 @@ class SearchBoxCtrl implements IController {
     }
 
     /**
-     * Decide default folder for the search.
+     * If the component doesn't get a default folder as parameter, decides it here.
+     *
+     * Rules:
+     *
+     * root -> kurssit
+     * users/username/somesubfolders -> users/username
+     * kurssit/faculty/course/somesubfolders -> kurssit/faculty/course
+     * somefolder/somesubfolders -> somefolder
      */
     private defaultFolder() {
         if (!this.folder) {
@@ -153,23 +168,18 @@ class SearchBoxCtrl implements IController {
             } else {
                 this.folder = this.item.location;
             }
-            // root -> kurssit
             if (!this.folder) {
                 this.folder = "kurssit";
             }
             const path = this.folder.split("/");
-
-            // users/username/something* -> users/username
             if (path[0] === "users" && path.length >= 2) {
                 this.folder = `${path[0]}/${path[1]}`;
                 return;
             }
-            // kurssit/faculty/course/something* -> kurssit/faculty/course
             if (path[0] === "kurssit" && path.length >= 3) {
                 this.folder = `${path[0]}/${path[1]}/${path[2]}`;
                 return;
             }
-            // folder/something* -> folder
             if (path.length > 1) {
                 this.folder = `${path[0]}`;
                 return;
