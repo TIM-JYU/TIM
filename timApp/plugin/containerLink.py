@@ -14,6 +14,9 @@ from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.timtypes import DocumentType as Document
 
+from timApp.plugin.timtable import timTable
+
+
 TIM_URL = ""
 
 CSPLUGIN_NAME = 'csplugin'
@@ -21,7 +24,8 @@ SVNPLUGIN_NAME = 'showfile'
 HASKELLPLUGIN_NAME = 'haskellplugins'
 PALIPLUGIN_NAME = 'pali'
 IMAGEXPLUGIN_NAME = 'imagex'
-
+MARKUP = 'markup'
+AUTOMD = 'automd'
 
 PLUGINS = None
 
@@ -46,7 +50,7 @@ def get_plugins():
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/"},
-            "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/"},
+            "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "is_local": True, "instance": timTable.TimTable()},
             "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
         }
     return PLUGINS
@@ -151,22 +155,58 @@ def convert_tex_mock(plugin_data):
 
 
 def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
-                        plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML,
-                        convert_plugin_md: bool = True):
+                        plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML):
     opts = doc.get_settings().get_dumbo_options()
     plugin_dumbo_opts = [p.par.get_dumbo_options(base_opts=opts) for p in plugin_data]
     plugin_dicts = [p.render_json() for p in plugin_data]
-    if doc.get_settings().plugin_md() and convert_plugin_md:
+
+    inner = is_inner_plugin(plugin)
+    if inner:
+        plugin_instance = get_plugin(plugin).get("instance")
+
+    for plug_dict in plugin_dicts:
+        if has_auto_md(plug_dict[MARKUP]):
+            # TODO implement attribute list as an alternative to calling the plugin
+            if inner:
+                plugin_instance.prepare_for_dumbo(plug_dict)
+            else:
+                raise PluginException("Dumbo preparation for non-inner plugins not implemented yet") # TODO implement
+
+
+    if doc.get_settings().plugin_md():
         convert_md(plugin_dicts,
                    options=opts,
                    plugin_opts=plugin_dumbo_opts,
                    outtype='md' if plugin_output_format == PluginOutputFormat.HTML else 'latex')
 
+    if inner:
+        return plugin_instance.multihtml_direct_call(plugin_dicts)
+    
     return call_plugin_generic(plugin,
-                               'post',
-                               ('multimd' if plugin_output_format == PluginOutputFormat.MD else 'multihtml'),
-                               data=json.dumps(plugin_dicts, cls=TimJsonEncoder),
-                               headers={'Content-type': 'application/json'})
+                                'post',
+                                ('multimd' if plugin_output_format == PluginOutputFormat.MD else 'multihtml'),
+                                data=json.dumps(plugin_dicts, cls=TimJsonEncoder),
+                                headers={'Content-type': 'application/json'})
+
+
+def is_inner_plugin(plugin: str):
+    """
+    Checks whether a plugin is an inner plugin.
+    An inner plugin runs in the same container with TIM itself.
+    :param plugin: The name of the plugin.
+    :return: True if the plugin is an inner plugin, otherwise false.
+    """
+    is_local = get_plugin(plugin).get("is_local")
+    if is_local is None:
+        return False
+
+    return is_local
+
+
+def has_auto_md(data):
+    if AUTOMD in data and data[AUTOMD]:
+        return True
+    return False
 
 
 def call_plugin_resource(plugin, filename, args=None):

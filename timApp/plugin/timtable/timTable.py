@@ -39,9 +39,25 @@ MARKUP = 'markup'
 DUMBO_PARAMS = '/mdkeys'
 
 
+# class to enable direct calls from TIM container
+class TimTable:
+    def __init__(self):
+        pass
+
+
+    @staticmethod
+    def prepare_for_dumbo(values):
+        return prepare_for_dumbo(values[MARKUP])
+
+
+    @staticmethod
+    def multihtml_direct_call(jsondata):
+        return tim_table_multihtml_direct(jsondata)
+
+
 @timTable_plugin.route("reqs/")
 @timTable_plugin.route("reqs")
-def timTable_reqs():
+def tim_table_reqs():
     reqs = {
         "type": "embedded",
         "js": [
@@ -51,9 +67,21 @@ def timTable_reqs():
         "angularModule": [],
         "multihtml": True,
         "multimd": True,
-        "auto_convert_md": False
+        "needs_dumbo_preparation": True
     }
     return json_response(reqs)
+
+
+def tim_table_multihtml_direct(jsondata):
+    """
+    Directly callable method for getting the HTML of all TimTable plugins.
+    :param jsondata: The data of the plugins.
+    :return: The data of the plugins converted to HTML.
+    """
+    multi = []
+    for jso in jsondata:
+        multi.append(tim_table_get_html(jso, is_review(request)))
+    return json.dumps(multi)
 
 
 @timTable_plugin.route("multihtml/", methods=["POST"])
@@ -64,9 +92,7 @@ def tim_table_multihtml():
     """
     jsondata = request.get_json()
     multi = []
-    prepare_multi_for_dumbo(jsondata)
-    html = call_dumbo(jsondata, DUMBO_PARAMS)
-    for jso in html:
+    for jso in jsondata:
         multi.append(tim_table_get_html(jso, is_review(request)))
     return json_response(multi)
 
@@ -147,7 +173,7 @@ def tim_table_save_cell_list():
         save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
 
     cc = str(cell_content)
-    if is_auto_md_enabled(plug.values) and not cc.startswith('md:'):
+    if plug.is_automd_enabled() and not cc.startswith('md:'):
         cc = 'md: ' + cc
     html = call_dumbo([cc], DUMBO_PARAMS)
     plug.save()
@@ -343,21 +369,6 @@ def is_review(request):
     return result
 
 
-def is_auto_md_enabled(values):
-    """
-    Checks whether auto-md logic is enabled for a table.
-    :param values: The plugin values as a list or dict.
-    :return: True if auto-md is enabled, otherwise false.
-    """
-    try:
-        auto_md = values[TABLE][AUTOMD]
-        if not isinstance(auto_md, bool):
-            return False
-        return auto_md
-    except (ValueError, KeyError):
-        return False
-
-
 def prepare_for_and_call_dumbo(values):
     """
     Prepares the table's markdown for Dumbo conversion and
@@ -370,44 +381,42 @@ def prepare_for_and_call_dumbo(values):
 
 def prepare_for_dumbo(values):
     """
-    Prepares the table's markdown for Dumbo conversion.
+    Prepares the table's markdown for Dumbo conversion when automd is enabled.
     :param values: The plugin paragraph's markdown.
     :return: The table's markdown, prepared for dumbo conversion.
     """
-    auto_md = is_auto_md_enabled(values)
 
     try:
         rows = values[TABLE][ROWS]
     except KeyError:
         return values
 
-    if auto_md:
-        # regular row data
-        for row in rows:
-            rowdata = row[ROW]
-            for i in range(len(rowdata)):
-                cell = rowdata[i]
-                if is_of_unconvertible_type(cell):
-                        continue
+    # regular row data
+    for row in rows:
+        rowdata = row[ROW]
+        for i in range(len(rowdata)):
+            cell = rowdata[i]
+            if is_of_unconvertible_type(cell):
+                    continue
 
-                if isinstance(cell, str):
-                    if cell.startswith('md:'):
-                        continue
-                    rowdata[i] = 'md: ' + cell
-                else:
-                    cell[CELL] = 'md: ' + cell[CELL]
+            if isinstance(cell, str):
+                if cell.startswith('md:'):
+                    continue
+                rowdata[i] = 'md: ' + cell
+            else:
+                cell[CELL] = 'md: ' + cell[CELL]
 
-        # datablock
-        data_block = None
-        try:
-            data_block = values[TABLE][DATABLOCK][CELLS]
-        except KeyError:
-            pass
+    # datablock
+    data_block = None
+    try:
+        data_block = values[TABLE][DATABLOCK][CELLS]
+    except KeyError:
+        pass
 
-        if data_block is not None:
-            for key, value in data_block.items():
-                if isinstance(value, str) and not value.startswith('md:'):
-                    data_block[key] = 'md: ' + value
+    if data_block is not None:
+        for key, value in data_block.items():
+            if isinstance(value, str) and not value.startswith('md:'):
+                data_block[key] = 'md: ' + value
 
     return values
 
