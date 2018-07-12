@@ -21,6 +21,7 @@ class BookmarkFolderBoxCtrl implements IController {
     private bookmarks!: Binding<IBookmarkGroup[], "<">;
     private documents?: ITaggedBookmarkedItem[]; // Documents of the bookmark folder.
     private editOn: boolean = false; // Show bookmark edit and removal icons.
+    private orphanBookmarks: IBookmark[] = [];
 
     async $onInit() {
         await this.getBookmarkFolder(this.bookmarkFolderName);
@@ -65,6 +66,7 @@ class BookmarkFolderBoxCtrl implements IController {
                 }
             }
         }
+        this.updateOrphanBookmarks();
     }
 
     /**
@@ -84,13 +86,13 @@ class BookmarkFolderBoxCtrl implements IController {
 
     /**
      * Deletes the bookmark and updates document list.
-     * @param {ITaggedBookmarkedItem} d The document data including its bookmark.
+     * @param {IBookmark} d Bookmark.
      * @returns {Promise<void>}
      */
-    private async removeFromList(d: ITaggedBookmarkedItem) {
+    private async removeFromList(d: IBookmark) {
         const response = await $http.post<IBookmarkGroup[]>("/bookmarks/delete", {
             group: this.bookmarkFolderName,
-            name: d.bookmark.name,
+            name: d.name,
         });
         if (response) {
             this.bookmarks = response.data;
@@ -101,14 +103,14 @@ class BookmarkFolderBoxCtrl implements IController {
 
     /**
      * Opens editing dialog for the bookmark and updates list if changes were made.
-     * @param {ITaggedBookmarkedItem} d The document data including its bookmark.
+     * @param {IBookmark} d Bookmark.
      * @returns {Promise<void>}
      */
-    private async editFromList(d: ITaggedBookmarkedItem) {
+    private async editFromList(d: IBookmark) {
         const [err, bookmark] = await to(showBookmarkDialog({
             group: this.bookmarkFolderName,
-            link: d.bookmark.link,
-            name: d.bookmark.name,
+            link: d.link,
+            name: d.name,
         }));
         if (!bookmark || !bookmark.name) {
             return;
@@ -116,8 +118,8 @@ class BookmarkFolderBoxCtrl implements IController {
         const response = await $http.post<IBookmarkGroup[]>("/bookmarks/edit", {
             old: {
             group: this.bookmarkFolderName,
-            link: d.bookmark.link,
-            name: d.bookmark.name,
+            link: d.link,
+            name: d.name,
             }, new: bookmark,
         });
         if (response) {
@@ -134,6 +136,33 @@ class BookmarkFolderBoxCtrl implements IController {
      */
     private courseCode(d: ITaggedBookmarkedItem) {
         return getCourseCode(d.doc.tags);
+    }
+
+    private updateOrphanBookmarks() {
+        this.orphanBookmarks = [];
+        if (this.bookmarkFolder) {
+            for (const bookmark of this.bookmarkFolder.items) {
+                if (this.bookmarkIndexOf(bookmark) < 0) {
+                    this.orphanBookmarks.push(bookmark);
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns the index of bookmark in bookmarked document list.
+     * @param {IBookmark} bookmark
+     * @returns {any}
+     */
+    private bookmarkIndexOf(bookmark: IBookmark) {
+        if (this.documents) {
+            for (const {item, index} of this.documents.map((item, index) => ({ item, index }))) {
+                if (bookmark.link === item.bookmark.link) {
+                    return index;
+                }
+            }
+        }
+        return -1;
     }
 }
 
@@ -153,9 +182,20 @@ timApp.component("bookmarkFolderBox", {
                     <a href="/view/{{d.doc.path}}">
                         <span>{{$ctrl.getLinkText(d)}}
                         <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-pencil" title="Edit bookmark"
-                        ng-click="$ctrl.editFromList(d)"></i></a>
+                        ng-click="$ctrl.editFromList(d.bookmark)"></i></a>
                          <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-remove"
-                        title="Remove bookmark" ng-click="$ctrl.removeFromList(d)"></i>
+                        title="Remove bookmark" ng-click="$ctrl.removeFromList(d.bookmark)"></i>
+                        </a>
+                        </span>
+                    </a>
+                </li>
+                <li class="h5 list-unstyled" ng-repeat="b in $ctrl.orphanBookmarks">
+                    <a href="{{b.link}}">
+                        <span>{{b.name}}
+                        <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-pencil" title="Edit bookmark"
+                        ng-click="$ctrl.editFromList(b)"></i></a>
+                         <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-remove"
+                        title="Remove bookmark" ng-click="$ctrl.removeFromList(b)"></i>
                         </a>
                         </span>
                     </a>
