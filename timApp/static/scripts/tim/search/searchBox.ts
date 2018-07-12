@@ -35,6 +35,7 @@ class SearchBoxCtrl implements IController {
     private advancedSearch: boolean = false;
     private ignorePluginsSettings: boolean = false;
     private focusMe: boolean = true;
+    private item: IItem = $window.item;
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
 
     constructor() {
@@ -147,32 +148,32 @@ class SearchBoxCtrl implements IController {
      */
     private defaultFolder() {
         if (!this.folder) {
-            const item: IItem = $window.item;
-            if (item.isFolder) {
-                this.folder = item.path;
+            if (this.item.isFolder) {
+                this.folder = this.item.path;
             } else {
-                this.folder = item.location;
+                this.folder = this.item.location;
             }
             // root -> kurssit
             if (!this.folder) {
                 this.folder = "kurssit";
             }
-        }
-        // users/username/something* -> users/username
-        const path = this.folder.split("/");
-        if (path[0] === "users" && path.length > 2) {
-            this.folder = `${path[0]}/${path[1]}`;
-            return;
-        }
-        // kurssit/faculty/course/something* -> kurssit/faculty/course
-        if (path[0] === "kurssit" && path.length > 3) {
-            this.folder = `${path[0]}/${path[1]}/${path[2]}`;
-            return;
-        }
-        // folder/something* -> folder
-        if (path.length > 1) {
-            this.folder = `${path[0]}`;
-            return;
+            const path = this.folder.split("/");
+
+            // users/username/something* -> users/username
+            if (path[0] === "users" && path.length >= 2) {
+                this.folder = `${path[0]}/${path[1]}`;
+                return;
+            }
+            // kurssit/faculty/course/something* -> kurssit/faculty/course
+            if (path[0] === "kurssit" && path.length >= 3) {
+                this.folder = `${path[0]}/${path[1]}/${path[2]}`;
+                return;
+            }
+            // folder/something* -> folder
+            if (path.length > 1) {
+                this.folder = `${path[0]}`;
+                return;
+            }
         }
     }
 }
