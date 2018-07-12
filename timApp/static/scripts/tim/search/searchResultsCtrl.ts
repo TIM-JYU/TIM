@@ -151,7 +151,7 @@ registerDialogComponent("timSearchResults",
         <ng-pluralize count="$ctrl.results.length"
                  when="{'1': 'time',
                      'other': 'times'}"></ng-pluralize> in {{$ctrl.docResults.length}}
-        <ng-pluralize count="$ctrl.filteredResults.length"
+        <ng-pluralize count="$ctrl.docResults.length"
                  when="{'1': 'document',
                      'other': 'documents'}">
         </ng-pluralize></h5>
