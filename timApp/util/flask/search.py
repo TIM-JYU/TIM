@@ -49,11 +49,7 @@ def search():
     ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
     current_user = get_current_user_object()
 
-    # TODO: Regex in these doesn't work.
-    ignore_list = ['%templates/%', '%/preamble%']
-
-    docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True,
-                         custom_filter=DocEntry.name.notin_(ignore_list))
+    docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)
     results = []
 
     args = SearchArgumentsBasic(
