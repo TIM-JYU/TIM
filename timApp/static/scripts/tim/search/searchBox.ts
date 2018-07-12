@@ -168,6 +168,10 @@ class SearchBoxCtrl implements IController {
      */
     private defaultFolder() {
         if (!this.folder) {
+            if (!this.item) {
+                this.folder = "kurssit";
+                return;
+            }
             if (this.item.isFolder) {
                 this.folder = this.item.path;
             } else {
