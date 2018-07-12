@@ -257,7 +257,6 @@ def tim_table_multimd():
     :return: Table as latex.
     """
     jsondata = request.get_json()
-    prepare_multi_for_dumbo(jsondata)
     multi = []
     for jso in jsondata:
         tbl = jso[MARKUP][TABLE]
