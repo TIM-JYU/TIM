@@ -85,11 +85,8 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         }
         // Group paragraphs under documents.
         for (const r of this.filteredResults) {
-            if (r.in_title) {
-                const newDocResult = {closed: true, in_title: true, doc: r.doc, pars: []};
-                this.docResults.push(newDocResult);
-            } else {
-                const docIndex = this.docIndexInResults(r.doc, this.docResults);
+            const docIndex = this.docIndexInResults(r.doc, this.docResults);
+            if (r.par) {
                 const newParResult = {
                     match_end_index: r.match_end_index,
                     match_start_index: r.match_start_index,
@@ -99,10 +96,14 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                 if (docIndex >= 0) {
                     this.docResults[docIndex].pars.push(newParResult);
                 } else {
-                    const newDocResult = {closed: true, in_title: false, doc: r.doc, pars: [newParResult]};
+                    const newDocResult = {closed: true, in_title: r.in_title, doc: r.doc, pars: [newParResult]};
                     this.docResults.push(newDocResult);
                 }
+            } else {
+                const newDocResult = {closed: true, in_title: r.in_title, doc: r.doc, pars: []};
+                this.docResults.push(newDocResult);
             }
+
         }
     }
 
@@ -175,12 +176,12 @@ registerDialogComponent("timSearchResults",
         </h5>
         <ul class="list-unstyled">
             <li ng-repeat="r in $ctrl.docResults">
-                <a class="cursor-pointer" ng-click="r.closed = !r.closed">
-                <i ng-if="!r.in_title" class="glyphicon" ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
-                title="Toggle paragraph preview"></i></a>
+                <a ng-if="r.pars.length > 0" class="cursor-pointer" ng-click="r.closed = !r.closed">
+                    <i class="glyphicon" ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
+                    title="Toggle paragraph preview" ng-if="r.pars.length > 0"></i></a>
                 <a href="/view/{{r.doc.path}}" title="Open {{r.doc.title}}">{{r.doc.title}}</a>
                 <i>({{r.doc.path}})</i>
-                <ul ng-if="!r.in_title">
+                <ul>
                     <li ng-repeat="p in r.pars" ng-if="!r.closed">
                         <a href="/view/{{r.doc.path}}#{{p.par.id}}" title="Open paragraph">{{p.preview}}</a>
                     </li>

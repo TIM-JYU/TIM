@@ -103,7 +103,6 @@ def search():
                 else:
                     results.append(result)
     except sre_constants.error as e:
-        print(e)
         abort(400, "Invalid regex")
     else:
         return json_response(results)
