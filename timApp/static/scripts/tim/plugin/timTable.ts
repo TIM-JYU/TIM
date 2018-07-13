@@ -354,6 +354,19 @@ export class TimTableController implements IController {
         return cell.toString();
     }
 
+
+    /**
+     * Returns a cell's content as a string.
+     * @param {CellEntity} cell The cell.
+     * @returns {string | string}
+     */
+    private getCellContentString(cell: CellEntity) {
+        if (isPrimitiveCell(cell)) { return this.cellToString(cell); }
+
+        return this.cellToString(cell.cell);
+    }
+
+
     /**
      * Reads DataBlock and sets all values to DataCellMatrix
      */
@@ -647,11 +660,17 @@ export class TimTableController implements IController {
      * @param {CellEntity} cell Styled cell
      */
     private stylingForCell(cell: CellEntity) {
+        const styles: { [index: string]: string } = {};
+        if (this.getCellContentString(cell) === "") {
+            styles["height"] = "2em";
+            styles["width"] = "4em";
+        }
 
         if (isPrimitiveCell(cell)) {
-            return {};
+
+            return styles;
         }
-        const styles: { [index: string]: string } = {};
+
         for (const key of Object.keys(cell)) {
             const keyofCell = key as keyof ICell;
             const property: string = styleToHtml[keyofCell];
