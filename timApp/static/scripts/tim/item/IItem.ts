@@ -1,6 +1,7 @@
 import moment, {Moment} from "moment";
 import {IRights} from "../user/IRights";
 import {$http} from "../util/ngimport";
+import {IUser} from "../user/IUser";
 
 export interface IItem {
     id: number;
@@ -19,6 +20,20 @@ export interface ITag {
     expires?: Moment;
     type: TagType;
     name: string;
+}
+
+export interface IFolder {
+    name: string;
+    path: string;
+    title: string;
+    location: string;
+    id: number;
+    modified: string;
+    owner: IUser;
+    rights: IRights;
+    unpublished: boolean;
+    public: boolean;
+    isFolder: boolean;
 }
 
 export enum TagType {

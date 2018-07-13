@@ -229,7 +229,7 @@ registerDialogComponent("timSearchResults",
                 <a class="cursor-pointer" ng-click="r.closed = !r.closed"
                 ng-if="r.pars.length > 0 || r.tags.length > 0">
                     <i class="glyphicon" ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
-                    title="Toggle paragraph preview"></i></a>
+                    title="Toggle preview"></i></a>
                 <a href="/view/{{r.doc.path}}" title="Open {{r.doc.title}}">{{r.doc.title}}</a>
                 <i>({{r.doc.path}})</i>
                 <ul>

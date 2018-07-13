@@ -1,6 +1,7 @@
 """Routes for searching."""
 import re
 import sre_constants
+from typing import List, Set
 
 from flask import Blueprint
 from flask import abort
@@ -13,13 +14,17 @@ from timApp.auth.sessioninfo import get_current_user_object, get_current_user_id
 from timApp.document.docentry import get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
+from timApp.folder.folder import Folder
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
 
+folder_set = set()
+
 search_routes = Blueprint('search',
                           __name__,
                           url_prefix='/search')
+
 
 
 # noinspection PyUnusedLocal
@@ -33,6 +38,23 @@ class SearchResult:
     def __init__(self, document: DocInfo, par: DocParagraph):
         self.document = document
         self.par = par
+
+
+@search_routes.route('/getFolders')
+def get_subfolders():
+    verify_logged_in()
+    get_folders_recursive(request.args.get('folder', ''))
+    global folder_set
+    return json_response(list(folder_set))
+
+
+def get_folders_recursive(starting_path: str):
+    folders = Folder.get_all_in_path(starting_path)
+    global folder_set
+    if folders:
+        for folder in folders:
+            folder_set.add(folder)
+            get_folders_recursive(folder.path)
 
 
 @search_routes.route("")

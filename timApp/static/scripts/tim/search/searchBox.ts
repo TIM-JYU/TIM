@@ -13,7 +13,7 @@
 import {IController} from "angular";
 import {timApp} from "../app";
 import {$http, $localStorage, $window} from "../util/ngimport";
-import {IItem, ITag, ITaggedItem} from "../item/IItem";
+import {IFolder, IItem, ITag, ITaggedItem} from "../item/IItem";
 import {Binding, to} from "../util/utils";
 import {showSearchResultDialog} from "./searchResultsCtrl";
 import {ngStorage} from "ngstorage";
@@ -49,6 +49,7 @@ class SearchBoxCtrl implements IController {
     private item: IItem = $window.item;
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
     private tagResults: ITaggedItem[] = [];
+    private folderSuggestions: string[] = [];
 
     constructor() {
         this.storage = $localStorage.$default({
@@ -60,6 +61,7 @@ class SearchBoxCtrl implements IController {
     $onInit() {
         this.loadLocalStorage();
         this.defaultFolder();
+        void this.loadFolderSuggestions();
     }
 
     $onDestroy() {
@@ -273,6 +275,21 @@ class SearchBoxCtrl implements IController {
                 }
             }
     }
+
+    private async loadFolderSuggestions() {
+        const response = await $http<IFolder[]>({
+            method: "GET",
+            params: {
+                folder: "",
+            },
+            url: "/search/getFolders",
+        });
+        if (response) {
+            for (const f of response.data) {
+                this.folderSuggestions.push(f.path);
+            }
+        }
+    }
 }
 
 timApp.component("searchBox", {
@@ -304,7 +321,9 @@ timApp.component("searchBox", {
                 <label for="folder-selector" class="col-sm-2 control-label">Folder:</label>
                 <div class="col-sm-10">
                     <input ng-model="$ctrl.folder" name="folder-selector"
-                           type="text" class="form-control" id="folder-selector" placeholder="Input a folder to search">
+                           type="text" class="form-control" id="folder-selector" placeholder="Input a folder to search"
+                           uib-typeahead="f as f for f in $ctrl.folderSuggestions | filter:$viewValue | limitTo:15"
+                           typeahead-min-length="1">
                 </div>
             </div>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.caseSensitive"
