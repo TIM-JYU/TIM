@@ -50,6 +50,7 @@ def search():
     onlyfirst = get_option(request, 'onlyfirst', default=9999, cast=int)
     ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
     search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
+    search_words = get_option(request, 'searchWords', default=True, cast=bool)
     current_user = get_current_user_object()
 
     # Won't search subfolders if search_recursively isn't true.
@@ -83,25 +84,25 @@ def search():
                               'num_pars_found': 0,
                               'in_title': True}
                     results.append(result)
-
-        for d in docs:
-            doc_info = d.document.docinfo
-            for r in search_in_documents.search(d=doc_info, args=args, use_exported=False):
-                result = {'doc': r.doc,
-                          'par': r.par,
-                          'match_word': r.match.group(0),
-                          'match_start_index': r.match.span()[0],
-                          'match_end_index': r.match.span()[1],
-                          'num_results': r.num_results,
-                          'num_pars': r.num_pars,
-                          'num_pars_found': r.num_pars_found,
-                          'in_title': False}
-                # Don't return results within plugins if no edit access to the document.
-                if r.par.is_setting() or r.par.is_plugin():
-                    if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
+        if search_words:
+            for d in docs:
+                doc_info = d.document.docinfo
+                for r in search_in_documents.search(d=doc_info, args=args, use_exported=False):
+                    result = {'doc': r.doc,
+                              'par': r.par,
+                              'match_word': r.match.group(0),
+                              'match_start_index': r.match.span()[0],
+                              'match_end_index': r.match.span()[1],
+                              'num_results': r.num_results,
+                              'num_pars': r.num_pars,
+                              'num_pars_found': r.num_pars_found,
+                              'in_title': False}
+                    # Don't return results within plugins if no edit access to the document.
+                    if r.par.is_setting() or r.par.is_plugin():
+                        if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
+                            results.append(result)
+                    else:
                         results.append(result)
-                else:
-                    results.append(result)
     except sre_constants.error as e:
         abort(400, "Invalid regex")
     else:
