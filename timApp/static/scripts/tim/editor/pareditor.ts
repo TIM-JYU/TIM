@@ -962,7 +962,7 @@ export function openEditorSimple(docId: number, text: string, onDismiss?: () => 
             choices: undefined,
             localSaveTag: "",
             showDelete: false,
-            showImageUpload: false,
+            showImageUpload: true,
             showPlugins: false,
             showSettings: false,
             tags: [],
