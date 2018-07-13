@@ -13,7 +13,7 @@
 import {IController} from "angular";
 import {timApp} from "../app";
 import {$http, $localStorage, $window} from "../util/ngimport";
-import {IItem} from "../item/IItem";
+import {IItem, ITag, ITaggedItem} from "../item/IItem";
 import {Binding, to} from "../util/utils";
 import {showSearchResultDialog} from "./searchResultsCtrl";
 import {ngStorage} from "ngstorage";
@@ -43,9 +43,11 @@ class SearchBoxCtrl implements IController {
     private advancedSearch: boolean = false;
     private ignorePluginsSettings: boolean = false;
     private searchDocNames: boolean = false;
+    private searchTags: boolean = false;
     private focusMe: boolean = true;
     private item: IItem = $window.item;
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
+    private tagResults: ITaggedItem[] = [];
 
     constructor() {
         this.storage = $localStorage.$default({
@@ -68,6 +70,8 @@ class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     async search() {
+        this.tagResults = [];
+        this.results = [];
         // Server side has separate 3 character minimum check as well.
         if (this.query.trim().length < this.queryMinLength) {
             this.errorMessage = (`Search text must be at least ${this.queryMinLength} characters
@@ -77,6 +81,50 @@ class SearchBoxCtrl implements IController {
         if (!this.folder.trim()) {
             this.errorMessage = (`Root directory searches are not allowed.`);
             return;
+        }
+        if (this.searchTags) {
+            const tagResponse = await $http<ITaggedItem[]>({
+                method: "GET",
+                url: "/tags/getDocs",
+                params: {
+                    case_sensitive: this.caseSensitive,
+                    exact_search: false,
+                    list_doc_tags: true,
+                    name: this.query,
+                },
+            });
+            const taggedDocList = tagResponse.data;
+            for (const doc of taggedDocList) {
+                if (doc.path.startsWith(this.folder)) {
+                    const filteredTags: ITag[] = [];
+                    for (const tag of doc.tags) {
+                        if (this.caseSensitive) {
+                            if (tag.name.indexOf(this.query) > -1) {
+                                filteredTags.push(tag);
+                            }
+                        } else {
+                            if (tag.name.toLowerCase().indexOf(this.query.toLowerCase()) > -1) {
+                                filteredTags.push(tag);
+                            }
+                        }
+                    }
+                    if (filteredTags.length > 0) {
+                        const filteredDoc = {
+                            id: doc.id,
+                            name: doc.name,
+                            location: doc.location,
+                            title: doc.title,
+                            isFolder: doc.isFolder,
+                            fulltext: doc.fulltext,
+                            rights: doc.rights,
+                            versions: doc.versions,
+                            path: doc.path,
+                            tags: filteredTags,
+                        };
+                        this.tagResults.push(filteredDoc);
+                    }
+                }
+            }
         }
         this.errorMessage = "";
         const [err, response] = await to($http<ISearchResult[]>({
@@ -101,7 +149,7 @@ class SearchBoxCtrl implements IController {
             this.errorMessage = "";
             this.results = response.data;
         }
-        if (this.results.length === 0) {
+        if (this.results.length === 0 && this.tagResults.length === 0) {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
             return;
         }
@@ -111,6 +159,7 @@ class SearchBoxCtrl implements IController {
             results: this.results,
             searchDocNames: this.searchDocNames,
             searchWord: this.query,
+            tagResults: this.tagResults,
         });
     }
 
@@ -138,6 +187,7 @@ class SearchBoxCtrl implements IController {
         this.storage.optionsStorage.push(this.ignorePluginsSettings);
         this.storage.optionsStorage.push(this.regex);
         this.storage.optionsStorage.push(this.searchDocNames);
+        this.storage.optionsStorage.push(this.searchTags);
     }
 
     /**
@@ -147,12 +197,13 @@ class SearchBoxCtrl implements IController {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
         }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 4) {
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 5) {
             this.advancedSearch = this.storage.optionsStorage[0];
             this.caseSensitive = this.storage.optionsStorage[1];
             this.ignorePluginsSettings = this.storage.optionsStorage[2];
             this.regex = this.storage.optionsStorage[3];
             this.searchDocNames = this.storage.optionsStorage[4];
+            this.searchTags = this.storage.optionsStorage[5];
         }
     }
 
@@ -241,6 +292,9 @@ timApp.component("searchBox", {
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchDocNames"
             title="Toggle document title search"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search document titles</label>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchTags"
+            title="Toggle document tag search"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search tags</label>
       </div>
       </form>
     </div>

@@ -7,7 +7,7 @@ import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {markAsUsed} from "../util/utils";
 import {ISearchResult} from "./searchBox";
-import {IItem} from "../item/IItem";
+import {IItem, ITag, ITaggedItem, TagType} from "../item/IItem";
 import {IExtraData} from "../document/editing/edittypes";
 
 markAsUsed(focusMe);
@@ -17,6 +17,7 @@ export interface ISearchResultParams {
     searchWord: string;
     errorMessage: string;
     searchDocNames: boolean;
+    tagResults: ITaggedItem[];
 }
 
 export interface ISearchResultParamsDoc {
@@ -24,6 +25,7 @@ export interface ISearchResultParamsDoc {
     in_title: boolean;
     pars: ISearchResultParamsPar[];
     closed: boolean; // Whether this is shown collapsed or not.
+    tags: ITag[];
 }
 
 export interface ISearchResultParamsPar {
@@ -43,6 +45,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private searchWord: string = "";
     private docResults: ISearchResultParamsDoc[] = [];
     private searchDocNames: boolean = false;
+    private tagResults: ITaggedItem[] = [];
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -51,6 +54,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     async $onInit() {
         this.searchDocNames = this.resolve.params.searchDocNames;
         this.results = this.resolve.params.results;
+        this.tagResults = this.resolve.params.tagResults;
         this.filterResults();
         this.searchWord = this.resolve.params.searchWord;
         super.$onInit();
@@ -96,14 +100,44 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                 if (docIndex >= 0) {
                     this.docResults[docIndex].pars.push(newParResult);
                 } else {
-                    const newDocResult = {closed: true, in_title: r.in_title, doc: r.doc, pars: [newParResult]};
+                    const newDocResult = {
+                        closed: true,
+                        doc: r.doc,
+                        in_title: r.in_title,
+                        pars: [newParResult],
+                        tags: [],
+                    };
                     this.docResults.push(newDocResult);
                 }
             } else {
-                const newDocResult = {closed: true, in_title: r.in_title, doc: r.doc, pars: []};
+                const newDocResult = {
+                    closed: true,
+                    doc: r.doc,
+                    in_title: r.in_title,
+                    pars: [],
+                    tags: [],
+                };
                 this.docResults.push(newDocResult);
             }
-
+        }
+        for (const tagResult of this.tagResults) {
+            let found = false;
+            for (const docResult of this.docResults) {
+                if (tagResult.path === docResult.doc.path) {
+                    docResult.tags = tagResult.tags;
+                    found = true;
+                }
+            }
+            if (!found) {
+                const newDocResult = {
+                    closed: true,
+                    doc: tagResult,
+                    in_title: false,
+                    pars: [],
+                    tags: tagResult.tags,
+                };
+                this.docResults.push(newDocResult);
+            }
         }
     }
 
@@ -152,6 +186,22 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         }
         return -1;
     }
+
+    /**
+     * Changes tag css style depending on whether search is enabled and
+     * if it's regular or special tag.
+     * @param {ITag} tag
+     * @returns {string}
+     */
+    private tagStyle(tag: ITag) {
+        let style = "";
+        if (tag.type === TagType.Regular) {
+            style += "btn-primary";
+        } else {
+            style += "btn-success";
+        }
+        return style;
+    }
 }
 
 registerDialogComponent("timSearchResults",
@@ -169,22 +219,26 @@ registerDialogComponent("timSearchResults",
         <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents</h5>
     </div>
     <div ng-if="$ctrl.docResults.length > 0">
-        <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.results.length}}
+        <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.results.length + $ctrl.tagResults.length}}
             <ng-pluralize count="$ctrl.results.length" when="{'1': 'time', 'other': 'times'}"></ng-pluralize>
             in {{$ctrl.docResults.length}} <ng-pluralize count="$ctrl.docResults.length"
             when="{'1': 'document', 'other': 'documents'}"></ng-pluralize>
         </h5>
         <ul class="list-unstyled">
             <li ng-repeat="r in $ctrl.docResults">
-                <a ng-if="r.pars.length > 0" class="cursor-pointer" ng-click="r.closed = !r.closed">
+                <a class="cursor-pointer" ng-click="r.closed = !r.closed"
+                ng-if="r.pars.length > 0 || r.tags.length > 0">
                     <i class="glyphicon" ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
-                    title="Toggle paragraph preview" ng-if="r.pars.length > 0"></i></a>
+                    title="Toggle paragraph preview"></i></a>
                 <a href="/view/{{r.doc.path}}" title="Open {{r.doc.title}}">{{r.doc.title}}</a>
                 <i>({{r.doc.path}})</i>
                 <ul>
                     <li ng-repeat="p in r.pars" ng-if="!r.closed">
                         <a href="/view/{{r.doc.path}}#{{p.par.id}}" title="Open paragraph">{{p.preview}}</a>
                     </li>
+                    <span ng-repeat="tag in r.tags" ng-if="!r.closed">
+                        <span class="btn-xs" ng-class="$ctrl.tagStyle(tag)">{{tag.name}}</span>
+                    </span>
                 </ul>
             </li>
         </ul>
