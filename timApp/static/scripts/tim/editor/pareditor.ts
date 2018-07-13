@@ -80,7 +80,8 @@ export class PareditorController extends DialogController<{params: IEditorParams
         multiline: string,
         strokes: string,
         pipe: string,
-        timTable: string,
+        timTableSimple: string,
+        timTableAdvanced: string
     };
     private storage: Storage;
     private touchDevice: boolean;
@@ -192,14 +193,31 @@ export class PareditorController extends DialogController<{params: IEditorParams
             "|  123  |  123 |   123   |   123  |\n" +
             "|    1  |    1 |     1   |     1  |\n",
 
-             timTable:
+             timTableSimple:
              "``` {plugin=\"timTable\"} \n" +
+             "automd: true              \n" +
              "table:                   \n" +
              "    rows:                 \n" +
              "      - row:              \n" +
              "        - cell: \"solu\"     \n" +
              "                            \n" +
              "```                        \n",
+
+            timTableAdvanced:
+            "``` {plugin=\"timTable\"}\n" +
+            "automd: true             \n" +
+            "table:                   \n" +
+            "    rows:                \n" +
+            "      - row:             \n" +
+            "        - cell: 'Ekan sarakkeen otsikko' \n" +
+            "        - cell: 'Tokan sarakkeen otsikko'\n" +
+            "        backgroundColor: lightgray       \n" +
+            "        fontWeight: bold                 \n" +
+            "      - row:                             \n" +
+            "        - cell: '1. solun sisältö'       \n" +
+            "        - cell: '2. solun sisältö'       \n" +
+            "                                         \n" +
+            "```\n",
         };
 
         $(document).on("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", (event) => {
