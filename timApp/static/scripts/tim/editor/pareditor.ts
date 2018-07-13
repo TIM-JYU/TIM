@@ -55,6 +55,7 @@ export interface IEditorParams {
     saveCb: (text: string, data: IExtraData) => Promise<{error?: string}>;
     deleteCb: () => Promise<{error?: string}>;
     unreadCb: () => Promise<void>;
+    funcOnDismiss: () => void;
 }
 
 export type IEditorResult = {type: "save", text: string} | {type: "delete"} | {type: "markunread"} | {type: "cancel"};
@@ -546,6 +547,7 @@ or newer one that is more familiar to write in YAML:
     }
 
     dismiss() {
+        this.resolve.params.funcOnDismiss();
         this.saveOptions();
         super.dismiss();
     }
@@ -949,7 +951,7 @@ export function openEditor(p: IEditorParams): IPromise<IEditorResult> {
         {saveKey: p.options.localSaveTag, absolute: true, size: p.defaultSize, forceMaximized: true}).result;
 }
 
-export function openEditorSimple(docId: number, text: string) {
+export function openEditorSimple(docId: number, text: string, onDismiss?: () => void) {
     return openEditor({
         initialText: text,
         defaultSize: "lg",
@@ -976,5 +978,8 @@ export function openEditorSimple(docId: number, text: string) {
         unreadCb: async () => {
 
         },
+        funcOnDismiss: () => {
+            if (onDismiss !== undefined) { onDismiss(); }
+        }
     });
 }
