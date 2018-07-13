@@ -146,6 +146,7 @@ export class TimTableController implements IController {
     private editedCellInitialContent: string | undefined;
     private currentCell?: { row: number, col: number, editorOpen: boolean };
     private mouseInTable?: boolean;
+    private bigEditorOpen: boolean = false;
 
     constructor(private scope: IScope, private element: IRootElementService) {
         this.keyDownPressedTable = this.keyDownPressedTable.bind(this);
@@ -278,7 +279,10 @@ export class TimTableController implements IController {
         if (this.editedCellContent == undefined) {
             return;
         }
-        const result = await openEditorSimple(docId, this.editedCellContent);
+        this.bigEditorOpen = true;
+        const result = await openEditorSimple(docId, this.editedCellContent,
+            () => {this.bigEditorOpen = false; console.log("asdsd"); });
+        this.bigEditorOpen = false;
         if (this.currentCell) { this.currentCell.editorOpen = false; }
         if (result.type == "save" && result.text != this.editedCellInitialContent) {
             this.saveCells(result.text, docId, parId, row, col);
@@ -313,7 +317,7 @@ export class TimTableController implements IController {
      * Opens advanced editor
      */
     private openBigEditor() {
-        if (this.editedCellContent == undefined) {
+        if (this.editedCellContent == undefined || this.bigEditorOpen) {
             return;
         }
 
