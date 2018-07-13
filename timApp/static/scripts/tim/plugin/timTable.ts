@@ -281,7 +281,7 @@ export class TimTableController implements IController {
         }
         this.bigEditorOpen = true;
         const result = await openEditorSimple(docId, this.editedCellContent,
-            () => {this.bigEditorOpen = false; console.log("asdsd"); });
+            () => { this.bigEditorOpen = false; });
         this.bigEditorOpen = false;
         if (this.currentCell) { this.currentCell.editorOpen = false; }
         if (result.type == "save" && result.text != this.editedCellInitialContent) {
