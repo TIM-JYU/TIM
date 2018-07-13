@@ -71,23 +71,27 @@ class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     async search() {
+        if (!this.searchDocNames && !this.searchTags && !this.searchWords) {
+            this.errorMessage = (`All search options are unchecked.`);
+            return;
+        }
         this.tagResults = [];
         this.results = [];
         this.errorMessage = "";
-        // Server side has separate 3 character minimum check as well.
-        if (this.query.trim().length < this.queryMinLength) {
-            this.errorMessage = (`Search text must be at least ${this.queryMinLength} characters
-             long with whitespace stripped.`);
-            return;
-        }
-        if (!this.folder.trim()) {
-            this.errorMessage = (`Root directory searches are not allowed.`);
-            return;
-        }
         if (this.searchTags) {
             await this.tagSearch();
         }
         if (this.searchWords || this.searchDocNames) {
+            // Server side has separate 3 character minimum check as well.
+            if (this.query.trim().length < this.queryMinLength) {
+                this.errorMessage = (`Search word must be at least ${this.queryMinLength} characters
+                 long with whitespace stripped.`);
+                return;
+            }
+            if (!this.folder.trim()) {
+                this.errorMessage = (`Word and title searches on root directory are not allowed.`);
+                return;
+            }
             await this.wordSearch();
         }
         if (this.results.length === 0 && this.tagResults.length === 0) {
@@ -220,6 +224,10 @@ class SearchBoxCtrl implements IController {
         }
     }
 
+    /**
+     * Search document tags.
+     * @returns {Promise<void>}
+     */
     private async tagSearch() {
         const tagResponse = await $http<ITaggedItem[]>({
                 method: "GET",
@@ -229,6 +237,7 @@ class SearchBoxCtrl implements IController {
                     exact_search: false,
                     list_doc_tags: true,
                     name: this.query,
+                    regex: this.regex,
                 },
             });
             const taggedDocList = tagResponse.data;
