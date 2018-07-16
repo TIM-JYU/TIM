@@ -29,6 +29,7 @@ const styleToHtml: { [index: string]: string } = {
 export interface TimTable {
     table: ITable;
     id?: string;
+    addRowButtonText?: string;
 }
 
 export interface ITable extends ITableStyles {
@@ -148,6 +149,8 @@ export class TimTableController implements IController {
     private mouseInTable?: boolean;
     private bigEditorOpen: boolean = false;
 
+    private addRowButtonText: string = "";
+
     constructor(private scope: IScope, private element: IRootElementService) {
         this.keyDownPressedTable = this.keyDownPressedTable.bind(this);
     }
@@ -167,6 +170,10 @@ export class TimTableController implements IController {
             if (parId == null) {
                 return;
             }
+            if (this.data.addRowButtonText) {
+                this.addRowButtonText = this.data.addRowButtonText;
+            }
+
             this.viewctrl.addTable(this, parId);
         }
         document.addEventListener("keyup", this.keyDownPressedTable);
@@ -845,7 +852,7 @@ timApp.component("timTable", {
         </tr>
     </table>
     <button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.editing" ng-click="$ctrl.addRow()"><span
-            class="glyphicon glyphicon-plus"></span></button>
+            class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
             </div>
     <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
