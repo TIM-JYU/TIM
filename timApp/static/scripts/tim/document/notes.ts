@@ -158,6 +158,7 @@ export class NotesHandler {
                 params.pars.first().find(".readline").removeClass("read read-modified");
                 getActiveDocument().refreshSectionReadMarks();
             },
+            funcOnDismiss: () => { },
         }));
         this.viewctrl.editing = false;
     }
