@@ -18,6 +18,9 @@ export interface ISearchResultParams {
     errorMessage: string;
     searchDocNames: boolean;
     tagResults: ITaggedItem[];
+    wordMatchCount: number;
+    tagMatchCount: number;
+    titleMatchCount: number;
 }
 
 export interface ISearchResultParamsDoc {
@@ -68,15 +71,24 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     }
 
     /**
-     * Filters duplicate paragraphs (those with more than one match) from the results and groups
-     * paragraphs under documents.
+     * Filters duplicate paragraph and title matches (i.e. those with more than one match) from the results
+     * and groups paragraphs and tags under documents.
      */
     private filterResults() {
-        // Remove matches in same paragraphs.
         for (const {item, index} of this.results.map((item, index) => ({item, index}))) {
+            // Remove matches from the same title.
             if (item && item.in_title) {
-                this.filteredResults.push(item);
+                 if (!this.results[index - 1]) {
+                    this.filteredResults.push(item);
+                 } else {
+                     if (this.results[index - 1].doc.path === item.doc.path) {
+                         //
+                     } else {
+                         this.filteredResults.push(item);
+                     }
+                 }
             }
+            // Remove matches from the same paragraph.
             if (item && !item.in_title) {
                 if (!this.results[index - 1] || !this.results[index - 1].par) {
                     this.filteredResults.push(item);
@@ -123,11 +135,13 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         for (const tagResult of this.tagResults) {
             let found = false;
             for (const docResult of this.docResults) {
+                // Add tags to corresponding document's tags-list.
                 if (tagResult.path === docResult.doc.path) {
                     docResult.tags = tagResult.tags;
                     found = true;
                 }
             }
+            // Add documents found only with the tag to results list.
             if (!found) {
                 const newDocResult = {
                     closed: true,
@@ -219,7 +233,8 @@ registerDialogComponent("timSearchResults",
         <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents</h5>
     </div>
     <div ng-if="$ctrl.docResults.length > 0">
-        <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.results.length + $ctrl.tagResults.length}}
+        <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.resolve.params.titleMatchCount +
+        $ctrl.resolve.params.tagMatchCount + $ctrl.resolve.params.wordMatchCount}}
             <ng-pluralize count="$ctrl.results.length" when="{'1': 'time', 'other': 'times'}"></ng-pluralize>
             in {{$ctrl.docResults.length}} <ng-pluralize count="$ctrl.docResults.length"
             when="{'1': 'document', 'other': 'documents'}"></ng-pluralize>

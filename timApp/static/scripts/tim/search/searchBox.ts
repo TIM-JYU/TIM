@@ -40,12 +40,16 @@ class SearchBoxCtrl implements IController {
     private errorMessage: string = "";
     private onlyfirst: number = 999; // # first paragraphs searched from the document
     private queryMinLength: number = 3;
+    private tagMatchCount: number = 0;
+    private wordMatchCount: number = 0;
+    private titleMatchCount: number = 0;
     private advancedSearch: boolean = false;
     private ignorePluginsSettings: boolean = false;
     private searchDocNames: boolean = false;
     private searchTags: boolean = false;
     private searchWords: boolean = true;
     private focusMe: boolean = true;
+    private loading: boolean = false;
     private item: IItem = $window.item;
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
     private tagResults: ITaggedItem[] = [];
@@ -77,6 +81,7 @@ class SearchBoxCtrl implements IController {
             this.errorMessage = (`All search options are unchecked.`);
             return;
         }
+        this.loading = true;
         this.tagResults = [];
         this.results = [];
         this.errorMessage = "";
@@ -88,16 +93,19 @@ class SearchBoxCtrl implements IController {
             if (this.query.trim().length < this.queryMinLength) {
                 this.errorMessage = (`Search word must be at least ${this.queryMinLength} characters
                  long with whitespace stripped.`);
+                this.loading = false;
                 return;
             }
             if (!this.folder.trim()) {
                 this.errorMessage = (`Word and title searches on root directory are not allowed.`);
+                this.loading = false;
                 return;
             }
             await this.wordSearch();
         }
         if (this.results.length === 0 && this.tagResults.length === 0) {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
+            this.loading = false;
             return;
         }
         this.updateLocalStorage();
@@ -107,7 +115,11 @@ class SearchBoxCtrl implements IController {
             searchDocNames: this.searchDocNames,
             searchWord: this.query,
             tagResults: this.tagResults,
+            wordMatchCount: this.wordMatchCount,
+            tagMatchCount: this.tagMatchCount,
+            titleMatchCount: this.titleMatchCount,
         });
+        this.loading = false;
     }
 
     /*
@@ -223,6 +235,7 @@ class SearchBoxCtrl implements IController {
         if (response) {
             this.errorMessage = "";
             this.results = response.data;
+            this.countResults();
         }
     }
 
@@ -250,10 +263,12 @@ class SearchBoxCtrl implements IController {
                         if (this.caseSensitive) {
                             if (tag.name.indexOf(this.query) > -1) {
                                 filteredTags.push(tag);
+                                this.tagMatchCount++;
                             }
                         } else {
                             if (tag.name.toLowerCase().indexOf(this.query.toLowerCase()) > -1) {
                                 filteredTags.push(tag);
+                                this.tagMatchCount++;
                             }
                         }
                     }
@@ -276,6 +291,10 @@ class SearchBoxCtrl implements IController {
             }
     }
 
+    /**
+     * Make a list of all folder paths.
+     * @returns {Promise<void>}
+     */
     private async loadFolderSuggestions() {
         const response = await $http<IFolder[]>({
             method: "GET",
@@ -289,6 +308,23 @@ class SearchBoxCtrl implements IController {
                 this.folderSuggestions.push(f.path);
             }
         }
+    }
+
+    /**
+     * Count types of results from search-route.
+     */
+    private countResults() {
+        let wordTemp = 0;
+        let titleTemp = 0;
+        for (const r of this.results) {
+            if (r.in_title) {
+                titleTemp++;
+            } else {
+                wordTemp++;
+            }
+        }
+        this.wordMatchCount = wordTemp;
+        this.titleMatchCount = titleTemp;
     }
 }
 
@@ -304,7 +340,9 @@ timApp.component("searchBox", {
                placeholder="Input a search word"
                class="form-control" autocomplete="on">
         <span class="input-group-addon btn" ng-click="$ctrl.search()">
-                <span class="glyphicon glyphicon-search" title="Search with word '{{$ctrl.query}}'"></span>
+                <span ng-show="$ctrl.loading" class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
+                <span ng-hide="$ctrl.loading" class="glyphicon glyphicon-search"
+                title="Search with word '{{$ctrl.query}}'"></span>
         </span>
         <span class="input-group-addon btn" ng-click="$ctrl.advancedSearch = !$ctrl.advancedSearch"
             title="Toggle advanced search">

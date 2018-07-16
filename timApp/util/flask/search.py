@@ -96,16 +96,17 @@ def search():
                     regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL | re.IGNORECASE)
                 matches = list(regex.finditer(d_title))
                 if matches:
-                    result = {'doc': d.document.docinfo,
-                              'par': None,
-                              'match_word': matches[0].group(0),
-                              'match_start_index': matches[0].start(),
-                              'match_end_index': matches[0].end(),
-                              'num_results': len(matches),
-                              'num_pars': 0,
-                              'num_pars_found': 0,
-                              'in_title': True}
-                    results.append(result)
+                    for m in matches:
+                        result = {'doc': d.document.docinfo,
+                                  'par': None,
+                                  'match_word': m.group(0),
+                                  'match_start_index': m.start(),
+                                  'match_end_index': m.end(),
+                                  'num_results': len(matches),
+                                  'num_pars': 0,
+                                  'num_pars_found': 0,
+                                  'in_title': True}
+                        results.append(result)
         if search_words:
             for d in docs:
                 doc_info = d.document.docinfo
