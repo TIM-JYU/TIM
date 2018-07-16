@@ -100,11 +100,14 @@ def search_tags():
         for tag in d.block.tags:
             matches = list(regex.finditer(tag.name))
             if matches:
+                match_count = len(matches)
+                if not query:
+                    match_count = 1
+                m_num += match_count
                 m_tags.append(tag)
-                m_num += len(matches)
+
         if m_num > 0:
             results.append({'doc': d, 'matching_tags': m_tags, 'num_results': m_num})
-
     return json_response(results)
 
 

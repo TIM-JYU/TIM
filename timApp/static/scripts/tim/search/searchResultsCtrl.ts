@@ -252,7 +252,7 @@ registerDialogComponent("timSearchResults",
         <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.resolve.params.titleMatchCount +
         $ctrl.resolve.params.tagMatchCount + $ctrl.resolve.params.wordMatchCount}}
             <ng-pluralize count="$ctrl.results.length" when="{'1': 'time', 'other': 'times'}"></ng-pluralize>
-            in <i>{{$ctrl.folder}}</i>
+            in <i ng-if="$ctrl.folder">{{$ctrl.folder}}</i><i ng-if="!$ctrl.folder">root</i>
         </h5>
         <ul class="list-unstyled">
             <li ng-repeat="r in $ctrl.docResults | orderBy:$ctrl.relevance">
