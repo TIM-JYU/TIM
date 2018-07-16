@@ -81,13 +81,10 @@ class SearchBoxCtrl implements IController {
             this.errorMessage = (`All search options are unchecked.`);
             return;
         }
-        this.loading = true;
         this.tagResults = [];
         this.results = [];
         this.errorMessage = "";
-        if (this.searchTags) {
-            await this.tagSearch();
-        }
+        this.loading = true;
         if (this.searchWords || this.searchDocNames) {
             // Server side has separate 3 character minimum check as well.
             if (this.query.trim().length < this.queryMinLength) {
@@ -96,8 +93,8 @@ class SearchBoxCtrl implements IController {
                 this.loading = false;
                 return;
             }
-            if (!this.folder.trim()) {
-                this.errorMessage = (`Word and title searches on root directory are not allowed.`);
+            if (!this.folder.trim() && this.searchWords) {
+                this.errorMessage = (`Word searches on root directory are not allowed.`);
                 this.loading = false;
                 return;
             }
@@ -107,6 +104,9 @@ class SearchBoxCtrl implements IController {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
             this.loading = false;
             return;
+        }
+        if (this.searchTags) {
+            await this.tagSearch();
         }
         this.updateLocalStorage();
         void showSearchResultDialog({
