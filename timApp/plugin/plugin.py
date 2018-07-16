@@ -215,11 +215,14 @@ class Plugin:
 
     def to_paragraph(self) -> DocParagraph:
         text = '```\n' + yaml.dump(self.values, default_flow_style=False) + '\n```'
+        attrs = {}
+        if self.par:
+            attrs = self.par.attrs
         if self.task_id:
-            return DocParagraph.create(self.par.doc, par_id=self.par.get_id(),
-                                       md=text, attrs={'taskId': self.task_id, 'plugin': self.type})
-        else:
-            return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs={'plugin': self.type})
+            attrs['task_id'] = self.task_id
+        attrs['plugin'] = self.type
+
+        return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs=attrs)
 
     def set_value(self, key: str, value):
         self.values[key] = value
