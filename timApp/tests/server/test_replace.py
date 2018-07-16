@@ -21,6 +21,7 @@ class ReplaceTest(TimRouteTest):
             dryrun=False,
             format='',
             onlyfirst=False,
+            case_sensitive=True,
             regex=True,
             term=r'[a-zA-Z]',
             to=r'xy',
@@ -87,6 +88,7 @@ class ReplaceTest(TimRouteTest):
         args = ReplaceArguments(
             dryrun=False,
             format='',
+            case_sensitive = True,
             onlyfirst=False,
             regex=True,
             term=r'(^|\n)(#+)([A-ZÖÄÅ][a-zöäå][^\n]+)',
@@ -124,6 +126,7 @@ class ReplaceTest(TimRouteTest):
         args = ReplaceArguments(
             dryrun=False,
             format='',
+            case_sensitive=True,
             onlyfirst=False,
             regex=False,
             term=r'[[',
