@@ -31,6 +31,12 @@ export interface ISearchResult {
     in_title: boolean;
 }
 
+export interface ITagSearchResult{
+    doc: ITaggedItem;
+    num_results: number;
+    matching_tags: ITag[];
+}
+
 class SearchBoxCtrl implements IController {
     private query: string = "";
     private folder!: Binding<string, "<">;
@@ -83,6 +89,9 @@ class SearchBoxCtrl implements IController {
         }
         this.resetAttributes();
         this.loading = true;
+        if (this.searchTags) {
+            await this.tagSearch();
+        }
         if (this.searchWords || this.searchDocNames) {
             // Server side has separate 3 character minimum check as well.
             if (this.query.trim().length < this.queryMinLength) {
@@ -102,9 +111,6 @@ class SearchBoxCtrl implements IController {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
             this.loading = false;
             return;
-        }
-        if (this.searchTags) {
-            await this.tagSearch();
         }
         this.updateLocalStorage();
         void showSearchResultDialog({
@@ -242,51 +248,35 @@ class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async tagSearch() {
-        const tagResponse = await $http<ITaggedItem[]>({
+        const tagResponse = await $http<ITagSearchResult[]>({
                 method: "GET",
-                url: "/tags/getDocs",
+                url: "/search/tags",
                 params: {
                     case_sensitive: this.caseSensitive,
-                    exact_search: false,
-                    list_doc_tags: true,
-                    name: this.query,
+                    folder: this.folder,
+                    query: this.query,
                     regex: this.regex,
                 },
-            });
-            const taggedDocList = tagResponse.data;
-            for (const doc of taggedDocList) {
-                if (doc.path.startsWith(this.folder)) {
-                    const filteredTags: ITag[] = [];
-                    for (const tag of doc.tags) {
-                        if (this.caseSensitive) {
-                            if (tag.name.indexOf(this.query) > -1) {
-                                filteredTags.push(tag);
-                                this.tagMatchCount++;
-                            }
-                        } else {
-                            if (tag.name.toLowerCase().indexOf(this.query.toLowerCase()) > -1) {
-                                filteredTags.push(tag);
-                                this.tagMatchCount++;
-                            }
-                        }
-                    }
-                    if (filteredTags.length > 0) {
-                        const filteredDoc = {
-                            id: doc.id,
-                            name: doc.name,
-                            location: doc.location,
-                            title: doc.title,
-                            isFolder: doc.isFolder,
-                            fulltext: doc.fulltext,
-                            rights: doc.rights,
-                            versions: doc.versions,
-                            path: doc.path,
-                            tags: filteredTags,
-                        };
-                        this.tagResults.push(filteredDoc);
-                    }
-                }
+        });
+        const taggedDocList = tagResponse.data;
+        for (const result of taggedDocList) {
+            if (result.num_results > 0) {
+                this.tagMatchCount += result.num_results;
+                const filteredDoc = {
+                    id: result.doc.id,
+                    name: result.doc.name,
+                    location: result.doc.location,
+                    title: result.doc.title,
+                    isFolder: result.doc.isFolder,
+                    fulltext: result.doc.fulltext,
+                    rights: result.doc.rights,
+                    versions: result.doc.versions,
+                    path: result.doc.path,
+                    tags: result.matching_tags,
+                };
+                this.tagResults.push(filteredDoc);
             }
+        }
     }
 
     /**

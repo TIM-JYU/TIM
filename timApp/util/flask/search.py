@@ -1,20 +1,24 @@
 """Routes for searching."""
 import re
 import sre_constants
-from typing import List, Set
+from datetime import datetime
 
 from flask import Blueprint
 from flask import abort
 from flask import request
+from sqlalchemy.orm import joinedload
 
 from timApp.admin import search_in_documents
 from timApp.admin.search_in_documents import SearchArgumentsBasic
 from timApp.auth.accesshelper import verify_logged_in
-from timApp.auth.sessioninfo import get_current_user_object, get_current_user_id
-from timApp.document.docentry import get_documents
+from timApp.auth.sessioninfo import get_current_user_id
+from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.folder.folder import Folder
+from timApp.item.block import Block
+from timApp.item.tag import Tag
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
@@ -24,7 +28,6 @@ folder_set = set()
 search_routes = Blueprint('search',
                           __name__,
                           url_prefix='/search')
-
 
 
 # noinspection PyUnusedLocal
@@ -42,6 +45,10 @@ class SearchResult:
 
 @search_routes.route('/getFolders')
 def get_subfolders():
+    """
+    Returns all subfolders and their subfolders.
+    :return:
+    """
     verify_logged_in()
     get_folders_recursive(request.args.get('folder', ''))
     global folder_set
@@ -57,6 +64,43 @@ def get_folders_recursive(starting_path: str):
             get_folders_recursive(folder.path)
 
 
+@search_routes.route('/tags')
+def search_tags():
+    """
+    Gets a list of documents with matching tag in a folder and its subfolders.
+    """
+    query = request.args.get('query', '')
+    case_sensitive = get_option(request, 'case_sensitive', default=False, cast=bool)
+    folder = request.args.get('folder', '')
+    regex_option = get_option(request, 'regex', default=False, cast=bool)
+    results = []
+
+    any_tag = "%%"
+    custom_filter = DocEntry.id.in_(Tag.query.filter(Tag.name.ilike(any_tag) &
+                                                     ((Tag.expires > datetime.now()) | (Tag.expires == None))).
+                                    with_entities(Tag.block_id))
+    query_options = joinedload(DocEntry._block).joinedload(Block.tags)
+    docs = get_documents(filter_user=get_current_user_object(), filter_folder=folder,
+                         search_recursively=True, custom_filter=custom_filter,
+                         query_options=query_options)
+    if case_sensitive:
+        regex = re.compile(query if regex_option else re.escape(query), re.DOTALL)
+    else:
+        regex = re.compile(query if regex_option else re.escape(query), re.DOTALL | re.IGNORECASE)
+    for d in docs:
+        m_tags = []
+        m_num = 0
+        for tag in d.block.tags:
+            matches = list(regex.finditer(tag.name))
+            if matches:
+                m_tags.append(tag)
+                m_num += len(matches)
+        if m_num > 0:
+            results.append({'doc': d, 'matching_tags': m_tags, 'num_results': m_num})
+
+    return json_response(results)
+
+
 @search_routes.route("")
 @cache.cached(key_prefix=make_cache_key)
 def search():
@@ -67,7 +111,7 @@ def search():
         abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
 
     folder = request.args.get('folder', '')
-    regex = get_option(request, 'regex', default=False, cast=bool)
+    regex_option = get_option(request, 'regex', default=False, cast=bool)
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
     onlyfirst = get_option(request, 'onlyfirst', default=9999, cast=int)
     ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
@@ -80,7 +124,7 @@ def search():
     results = []
     args = SearchArgumentsBasic(
         term=query,
-        regex=regex,
+        regex=regex_option,
         onlyfirst=onlyfirst,
         case_sensitive=case_sensitive,
         format="")
@@ -88,12 +132,12 @@ def search():
     try:
         # TODO: regex doesn't work consistently (ki*a can't find some things kis*a does)?
         if search_doc_names:
+            if args.case_sensitive:
+                regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL)
+            else:
+                regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL | re.IGNORECASE)
             for d in docs:
                 d_title = d.document.docinfo.title
-                if args.case_sensitive:
-                    regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL)
-                else:
-                    regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL | re.IGNORECASE)
                 matches = list(regex.finditer(d_title))
                 if matches:
                     for m in matches:
@@ -105,7 +149,8 @@ def search():
                                   'num_results': len(matches),
                                   'num_pars': 0,
                                   'num_pars_found': 0,
-                                  'in_title': True}
+                                  'in_title': True,
+                                  'in_tag': False}
                         results.append(result)
         if search_words:
             for d in docs:
@@ -119,14 +164,15 @@ def search():
                               'num_results': r.num_results,
                               'num_pars': r.num_pars,
                               'num_pars_found': r.num_pars_found,
-                              'in_title': False}
+                              'in_title': False,
+                              'in_tag': False}
                     # Don't return results within plugins if no edit access to the document.
                     if r.par.is_setting() or r.par.is_plugin():
                         if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
                             results.append(result)
                     else:
                         results.append(result)
-    except sre_constants.error as e:
+    except sre_constants.error:
         abort(400, "Invalid regex")
     else:
         return json_response(results)
