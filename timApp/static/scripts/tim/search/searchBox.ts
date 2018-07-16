@@ -81,9 +81,7 @@ class SearchBoxCtrl implements IController {
             this.errorMessage = (`All search options are unchecked.`);
             return;
         }
-        this.tagResults = [];
-        this.results = [];
-        this.errorMessage = "";
+        this.resetAttributes();
         this.loading = true;
         if (this.searchWords || this.searchDocNames) {
             // Server side has separate 3 character minimum check as well.
@@ -325,6 +323,18 @@ class SearchBoxCtrl implements IController {
         }
         this.wordMatchCount = wordTemp;
         this.titleMatchCount = titleTemp;
+    }
+
+    /**
+     * Reset all search specific attributes to avoid some carrying over to following searches.
+     */
+    private resetAttributes() {
+        this.tagMatchCount = 0;
+        this.wordMatchCount = 0;
+        this.titleMatchCount = 0;
+        this.tagResults = [];
+        this.results = [];
+        this.errorMessage = "";
     }
 }
 
