@@ -8,6 +8,9 @@
  * folder: limit search to a folder and its subfolders
  * onlyFirst: search only X first paragraphs from each document
  * regex: regular expressions
+ * searchWords: basic word search
+ * searchTags: tag search
+ * searchDocNames: search document titles
  */
 
 import {IController} from "angular";
@@ -22,8 +25,8 @@ import {IExtraData} from "../document/editing/edittypes";
 export interface ISearchResult {
     doc: IItem;
     par: IExtraData;
-    match_start_index: number;
-    match_end_index: number;
+    match_start_index: number; // Index where the query match begins in the paragraph / title.
+    match_end_index: number; // Index where the query match ends in the paragraph / title.
     match_word: string;
     num_results: number;
     num_pars: number;
@@ -33,8 +36,10 @@ export interface ISearchResult {
 
 export interface ITagSearchResult{
     doc: ITaggedItem;
+    // Number of matches in the document's tags (not matching_tags length, because same tag may contain match
+    // more than once.)
     num_results: number;
-    matching_tags: ITag[];
+    matching_tags: ITag[]; // List of tags that matched the query.
 }
 
 class SearchBoxCtrl implements IController {
@@ -55,11 +60,11 @@ class SearchBoxCtrl implements IController {
     private searchTags: boolean = false;
     private searchWords: boolean = true;
     private focusMe: boolean = true;
-    private loading: boolean = false;
+    private loading: boolean = false; // Display loading icon.
     private item: IItem = $window.item;
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
-    private tagResults: ITaggedItem[] = [];
-    private folderSuggestions: string[] = [];
+    private tagResults: ITaggedItem[] = []; // List of documents with matching tags. Non-matching tags are left out.
+    private folderSuggestions: string[] = []; // List of seach folder paths to suggest.
 
     constructor() {
         this.storage = $localStorage.$default({
@@ -116,7 +121,6 @@ class SearchBoxCtrl implements IController {
         void showSearchResultDialog({
             errorMessage: this.errorMessage,
             results: this.results,
-            searchDocNames: this.searchDocNames,
             searchWord: this.query,
             tagResults: this.tagResults,
             wordMatchCount: this.wordMatchCount,

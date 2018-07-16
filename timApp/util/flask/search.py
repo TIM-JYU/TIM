@@ -56,6 +56,11 @@ def get_subfolders():
 
 
 def get_folders_recursive(starting_path: str):
+    """
+    Recursive function for get_subfolders.
+    :param starting_path:
+    :return:
+    """
     folders = Folder.get_all_in_path(starting_path)
     global folder_set
     if folders:
@@ -67,7 +72,7 @@ def get_folders_recursive(starting_path: str):
 @search_routes.route('/tags')
 def search_tags():
     """
-    Gets a list of documents with matching tag in a folder and its subfolders.
+    Route for document tag search. Returns a list of documents with matching tag in a folder and its subfolders.
     """
     query = request.args.get('query', '')
     case_sensitive = get_option(request, 'case_sensitive', default=False, cast=bool)
@@ -75,6 +80,8 @@ def search_tags():
     regex_option = get_option(request, 'regex', default=False, cast=bool)
     results = []
 
+    # PostgreSQL doesn't support regex directly, so as workaround get all tags below the search folder
+    # from the database and then apply regex search on them.
     any_tag = "%%"
     custom_filter = DocEntry.id.in_(Tag.query.filter(Tag.name.ilike(any_tag) &
                                                      ((Tag.expires > datetime.now()) | (Tag.expires == None))).
@@ -104,6 +111,11 @@ def search_tags():
 @search_routes.route("")
 @cache.cached(key_prefix=make_cache_key)
 def search():
+    """
+    Route for document word and title searches.
+    :return:
+    """
+
     verify_logged_in()
 
     query = request.args.get('query', '')
@@ -129,19 +141,19 @@ def search():
         case_sensitive=case_sensitive,
         format="")
 
+    # TODO: regex doesn't work consistently (ki*a can't find some things kis*a does)?
     try:
-        # TODO: regex doesn't work consistently (ki*a can't find some things kis*a does)?
-        if search_doc_names:
-            if args.case_sensitive:
-                regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL)
-            else:
-                regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL | re.IGNORECASE)
-            for d in docs:
-                d_title = d.document.docinfo.title
+        regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL | re.IGNORECASE)
+        if args.case_sensitive:
+            regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL)
+        for d in docs:
+            doc_info = d.document.docinfo
+            if search_doc_names:
+                d_title = doc_info.title
                 matches = list(regex.finditer(d_title))
                 if matches:
                     for m in matches:
-                        result = {'doc': d.document.docinfo,
+                        result = {'doc': doc_info,
                                   'par': None,
                                   'match_word': m.group(0),
                                   'match_start_index': m.start(),
@@ -152,9 +164,7 @@ def search():
                                   'in_title': True,
                                   'in_tag': False}
                         results.append(result)
-        if search_words:
-            for d in docs:
-                doc_info = d.document.docinfo
+            if search_words:
                 for r in search_in_documents.search(d=doc_info, args=args, use_exported=False):
                     result = {'doc': r.doc,
                               'par': r.par,

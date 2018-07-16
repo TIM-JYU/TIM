@@ -16,7 +16,6 @@ export interface ISearchResultParams {
     results: ISearchResult[];
     searchWord: string;
     errorMessage: string;
-    searchDocNames: boolean;
     tagResults: ITaggedItem[];
     wordMatchCount: number;
     tagMatchCount: number;
@@ -47,7 +46,6 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private filteredResults: ISearchResult[] = [];
     private searchWord: string = "";
     private docResults: ISearchResultParamsDoc[] = [];
-    private searchDocNames: boolean = false;
     private tagResults: ITaggedItem[] = [];
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
@@ -55,7 +53,6 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     }
 
     async $onInit() {
-        this.searchDocNames = this.resolve.params.searchDocNames;
         this.results = this.resolve.params.results;
         this.tagResults = this.resolve.params.tagResults;
         this.filterResults();
@@ -75,6 +72,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
      * and groups paragraphs and tags under documents.
      */
     private filterResults() {
+        // TODO: Optimize and possibly move to searchBox.
         for (const {item, index} of this.results.map((item, index) => ({item, index}))) {
             // Remove matches from the same title.
             if (item && item.in_title) {
@@ -165,6 +163,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         if (r.in_title) {
             return "";
         }
+        // TODO: Use correct interface for paragraphs.
         const text = r.par.md;
         let start = r.match_start_index - snippetLength / 2;
 
@@ -188,9 +187,9 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     /**
      * Gets index of document in document results.
      * If documents isn't yet in the list return -1.
-     * @param {IItem} doc
-     * @param {ISearchResultParamsDoc} docs
-     * @returns {any}
+     * @param {IItem} doc The document.
+     * @param {ISearchResultParamsDoc} docs Search results as a document list.
+     * @returns {any} The index of first instance of doc in docs or -1.
      */
     private docIndexInResults(doc: IItem, docs: ISearchResultParamsDoc[]) {
         for (const {item, index} of docs.map((item, index) => ({ item, index }))) {
