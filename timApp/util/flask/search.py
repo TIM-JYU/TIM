@@ -119,8 +119,8 @@ def search():
     verify_logged_in()
 
     query = request.args.get('query', '')
-    if len(query.strip()) < 3:
-        abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
+    if len(query.strip()) < 2:
+        abort(400, 'Search text must be at least 2 characters long with whitespace stripped.')
 
     folder = request.args.get('folder', '')
     regex_option = get_option(request, 'regex', default=False, cast=bool)
@@ -161,8 +161,7 @@ def search():
                                   'num_results': len(matches),
                                   'num_pars': 0,
                                   'num_pars_found': 0,
-                                  'in_title': True,
-                                  'in_tag': False}
+                                  'in_title': True}
                         results.append(result)
             if search_words:
                 for r in search_in_documents.search(d=doc_info, args=args, use_exported=False):
@@ -174,8 +173,7 @@ def search():
                               'num_results': r.num_results,
                               'num_pars': r.num_pars,
                               'num_pars_found': r.num_pars_found,
-                              'in_title': False,
-                              'in_tag': False}
+                              'in_title': False}
                     # Don't return results within plugins if no edit access to the document.
                     if r.par.is_setting() or r.par.is_plugin():
                         if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:

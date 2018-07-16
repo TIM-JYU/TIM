@@ -50,7 +50,7 @@ class SearchTest(TimRouteTest):
         url = f'search?caseSensitive=false&folder=&ignorePluginsSettings=false&onlyfirst=999' \
               f'&query={text_to_search}&regex=false&searchDocNames=false&searchWords=true'
         self.get(url, expect_status=400,
-                 expect_content={'error': 'Search text must be at least 3 characters long with whitespace stripped.'})
+                 expect_content={'error': 'Search text must be at least 2 characters long with whitespace stripped.'})
 
     def test_not_found_search(self):
         self.login_test1()

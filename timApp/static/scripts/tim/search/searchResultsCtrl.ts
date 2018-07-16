@@ -221,6 +221,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
 
     /**
      * Estimation of the document's relevance in search.
+     * Doesn't take multiple matches in same title/paragraph into account.
      * @param {ISearchResultParamsDoc} r
      * @returns {number}
      */

@@ -50,7 +50,7 @@ class SearchBoxCtrl implements IController {
     private results: ISearchResult[] = [];
     private errorMessage: string = "";
     private onlyfirst: number = 999; // # first paragraphs searched from the document
-    private queryMinLength: number = 3;
+    private queryMinLength: number = 2;
     private tagMatchCount: number = 0;
     private wordMatchCount: number = 0;
     private titleMatchCount: number = 0;
@@ -102,7 +102,7 @@ class SearchBoxCtrl implements IController {
             await this.tagSearch();
         }
         if (this.searchWords || this.searchDocNames) {
-            // Server side has separate 3 character minimum check as well.
+            // Server side has separate 2 character minimum check as well.
             if (this.query.trim().length < this.queryMinLength) {
                 this.errorMessage = (`Search word must be at least ${this.queryMinLength} characters
                  long with whitespace stripped.`);
@@ -373,7 +373,7 @@ timApp.component("searchBox", {
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.ignorePluginsSettings"
             title="Leave plugins and settings out of the results"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins</label>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.createNewWindow"
+        <label ng-if="false" class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.createNewWindow"
             title="Show result of each search in new window"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Open new window for each search</label>
         <h5 class="font-weight-normal">Search scope:</h5>
