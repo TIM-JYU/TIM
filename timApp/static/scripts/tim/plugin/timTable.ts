@@ -599,7 +599,7 @@ export class TimTableController implements IController {
             }
         }
 
-        this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
+        await this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
         if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
             const value = this.editedCellContent;
 
