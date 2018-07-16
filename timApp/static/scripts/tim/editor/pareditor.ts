@@ -953,12 +953,12 @@ export function openEditor(p: IEditorParams): IPromise<IEditorResult> {
         {saveKey: p.options.localSaveTag, absolute: true, size: p.defaultSize, forceMaximized: true}).result;
 }
 
-export function openEditorSimple(docId: number, text: string, onDismiss?: () => void) {
+export function openEditorSimple(docId: number, text: string, caption: string, onDismiss?: () => void) {
     return openEditor({
         initialText: text,
         defaultSize: "lg",
         extraData: {docId, tags: {markread: false}, par: "nothing"}, options: {
-            caption: "",
+            caption: caption,
             choices: undefined,
             localSaveTag: "",
             showDelete: false,
