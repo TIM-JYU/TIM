@@ -550,7 +550,9 @@ or newer one that is more familiar to write in YAML:
     }
 
     dismiss() {
-        this.resolve.params.funcOnDismiss();
+        if (this.resolve.params.funcOnDismiss != undefined) {
+            this.resolve.params.funcOnDismiss();
+        }
         this.saveOptions();
         super.dismiss();
     }
