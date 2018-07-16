@@ -6,8 +6,8 @@ import {IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {markAsUsed} from "../util/utils";
-import {ISearchResult} from "./searchBox";
-import {IItem, ITag, ITaggedItem, TagType} from "../item/IItem";
+import {ISearchResult, ITagSearchResult} from "./searchBox";
+import {IItem, ITag, TagType} from "../item/IItem";
 import {IExtraData} from "../document/editing/edittypes";
 
 markAsUsed(focusMe);
@@ -16,10 +16,11 @@ export interface ISearchResultParams {
     results: ISearchResult[];
     searchWord: string;
     errorMessage: string;
-    tagResults: ITaggedItem[];
+    tagResults: ITagSearchResult[];
     wordMatchCount: number;
     tagMatchCount: number;
     titleMatchCount: number;
+    folder: string;
 }
 
 export interface ISearchResultParamsDoc {
@@ -46,7 +47,8 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private filteredResults: ISearchResult[] = [];
     private searchWord: string = "";
     private docResults: ISearchResultParamsDoc[] = [];
-    private tagResults: ITaggedItem[] = [];
+    private tagResults: ITagSearchResult[] = [];
+    private folder: string = "";
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -55,6 +57,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     async $onInit() {
         this.results = this.resolve.params.results;
         this.tagResults = this.resolve.params.tagResults;
+        this.folder = this.resolve.params.folder;
         this.filterResults();
         this.searchWord = this.resolve.params.searchWord;
         super.$onInit();
@@ -134,8 +137,8 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
             let found = false;
             for (const docResult of this.docResults) {
                 // Add tags to corresponding document's tags-list.
-                if (tagResult.path === docResult.doc.path) {
-                    docResult.tags = tagResult.tags;
+                if (tagResult.doc.path === docResult.doc.path) {
+                    docResult.tags = tagResult.matching_tags;
                     found = true;
                 }
             }
@@ -143,10 +146,10 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
             if (!found) {
                 const newDocResult = {
                     closed: true,
-                    doc: tagResult,
+                    doc: tagResult.doc,
                     in_title: false,
                     pars: [],
-                    tags: tagResult.tags,
+                    tags: tagResult.matching_tags,
                 };
                 this.docResults.push(newDocResult);
             }
@@ -215,6 +218,19 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         }
         return style;
     }
+
+    /**
+     * Estimation of the document's relevance in search.
+     * @param {ISearchResultParamsDoc} r
+     * @returns {number}
+     */
+    private relevance(r: ISearchResultParamsDoc) {
+        let titleMatch = 0;
+        if (r.in_title) {
+            titleMatch = 1;
+        }
+        return - (r.pars.length + r.tags.length + titleMatch);
+    }
 }
 
 registerDialogComponent("timSearchResults",
@@ -229,17 +245,16 @@ registerDialogComponent("timSearchResults",
         <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
     </div>
     <div ng-if="$ctrl.docResults.length <= 0 && !$ctrl.errorMessage">
-        <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents</h5>
+        <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents in <i>{{$ctrl.folder}}</i></h5>
     </div>
     <div ng-if="$ctrl.docResults.length > 0">
         <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.resolve.params.titleMatchCount +
         $ctrl.resolve.params.tagMatchCount + $ctrl.resolve.params.wordMatchCount}}
             <ng-pluralize count="$ctrl.results.length" when="{'1': 'time', 'other': 'times'}"></ng-pluralize>
-            in {{$ctrl.docResults.length}} <ng-pluralize count="$ctrl.docResults.length"
-            when="{'1': 'document', 'other': 'documents'}"></ng-pluralize>
+            in <i>{{$ctrl.folder}}</i>
         </h5>
         <ul class="list-unstyled">
-            <li ng-repeat="r in $ctrl.docResults">
+            <li ng-repeat="r in $ctrl.docResults | orderBy:$ctrl.relevance">
                 <a class="cursor-pointer" ng-click="r.closed = !r.closed"
                 ng-if="r.pars.length > 0 || r.tags.length > 0">
                     <i class="glyphicon" ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"

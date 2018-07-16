@@ -55,6 +55,7 @@ class SearchBoxCtrl implements IController {
     private wordMatchCount: number = 0;
     private titleMatchCount: number = 0;
     private advancedSearch: boolean = false;
+    private createNewWindow: boolean = false;
     private ignorePluginsSettings: boolean = false;
     private searchDocNames: boolean = false;
     private searchTags: boolean = false;
@@ -63,8 +64,11 @@ class SearchBoxCtrl implements IController {
     private loading: boolean = false; // Display loading icon.
     private item: IItem = $window.item;
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
-    private tagResults: ITaggedItem[] = []; // List of documents with matching tags. Non-matching tags are left out.
-    private folderSuggestions: string[] = []; // List of seach folder paths to suggest.
+    private tagResults: ITagSearchResult[] = []; // List of documents with matching tags. Other tags are left out.
+    private folderSuggestions: string[] = [];
+    private resultsDialog: Promise<{}> | null = null;
+
+    // List of seach folder paths to suggest.
 
     constructor() {
         this.storage = $localStorage.$default({
@@ -89,7 +93,7 @@ class SearchBoxCtrl implements IController {
      */
     async search() {
         if (!this.searchDocNames && !this.searchTags && !this.searchWords) {
-            this.errorMessage = (`All search options are unchecked.`);
+            this.errorMessage = (`All search scope options are unchecked.`);
             return;
         }
         this.resetAttributes();
@@ -106,7 +110,7 @@ class SearchBoxCtrl implements IController {
                 return;
             }
             if (!this.folder.trim() && this.searchWords) {
-                this.errorMessage = (`Word searches on root directory are not allowed.`);
+                this.errorMessage = (`Content searches on root directory are not allowed.`);
                 this.loading = false;
                 return;
             }
@@ -118,8 +122,11 @@ class SearchBoxCtrl implements IController {
             return;
         }
         this.updateLocalStorage();
+        this.countResults();
+
         void showSearchResultDialog({
             errorMessage: this.errorMessage,
+            folder: this.folder,
             results: this.results,
             searchWord: this.query,
             tagResults: this.tagResults,
@@ -127,6 +134,7 @@ class SearchBoxCtrl implements IController {
             tagMatchCount: this.tagMatchCount,
             titleMatchCount: this.titleMatchCount,
         });
+
         this.loading = false;
     }
 
@@ -151,6 +159,7 @@ class SearchBoxCtrl implements IController {
         // Alphabetical order.
         this.storage.optionsStorage.push(this.advancedSearch);
         this.storage.optionsStorage.push(this.caseSensitive);
+        this.storage.optionsStorage.push(this.createNewWindow);
         this.storage.optionsStorage.push(this.ignorePluginsSettings);
         this.storage.optionsStorage.push(this.regex);
         this.storage.optionsStorage.push(this.searchDocNames);
@@ -165,14 +174,15 @@ class SearchBoxCtrl implements IController {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
         }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 6) {
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 7) {
             this.advancedSearch = this.storage.optionsStorage[0];
             this.caseSensitive = this.storage.optionsStorage[1];
-            this.ignorePluginsSettings = this.storage.optionsStorage[2];
-            this.regex = this.storage.optionsStorage[3];
-            this.searchDocNames = this.storage.optionsStorage[4];
-            this.searchTags = this.storage.optionsStorage[5];
-            this.searchWords = this.storage.optionsStorage[6];
+            this.createNewWindow = this.storage.optionsStorage[2];
+            this.ignorePluginsSettings = this.storage.optionsStorage[3];
+            this.regex = this.storage.optionsStorage[4];
+            this.searchDocNames = this.storage.optionsStorage[5];
+            this.searchTags = this.storage.optionsStorage[6];
+            this.searchWords = this.storage.optionsStorage[7];
         }
     }
 
@@ -243,7 +253,6 @@ class SearchBoxCtrl implements IController {
         if (response) {
             this.errorMessage = "";
             this.results = response.data;
-            this.countResults();
         }
     }
 
@@ -262,25 +271,7 @@ class SearchBoxCtrl implements IController {
                     regex: this.regex,
                 },
         });
-        const taggedDocList = tagResponse.data;
-        for (const result of taggedDocList) {
-            if (result.num_results > 0) {
-                this.tagMatchCount += result.num_results;
-                const filteredDoc = {
-                    id: result.doc.id,
-                    name: result.doc.name,
-                    location: result.doc.location,
-                    title: result.doc.title,
-                    isFolder: result.doc.isFolder,
-                    fulltext: result.doc.fulltext,
-                    rights: result.doc.rights,
-                    versions: result.doc.versions,
-                    path: result.doc.path,
-                    tags: result.matching_tags,
-                };
-                this.tagResults.push(filteredDoc);
-            }
-        }
+        this.tagResults = tagResponse.data;
     }
 
     /**
@@ -303,11 +294,12 @@ class SearchBoxCtrl implements IController {
     }
 
     /**
-     * Count types of results from search-route.
+     * Counts the types of results from all search types.
      */
     private countResults() {
         let wordTemp = 0;
         let titleTemp = 0;
+        let tagTemp = 0;
         for (const r of this.results) {
             if (r.in_title) {
                 titleTemp++;
@@ -315,12 +307,16 @@ class SearchBoxCtrl implements IController {
                 wordTemp++;
             }
         }
+        for (const t of this.tagResults) {
+            tagTemp += t.num_results;
+        }
         this.wordMatchCount = wordTemp;
         this.titleMatchCount = titleTemp;
+        this.tagMatchCount = tagTemp;
     }
 
     /**
-     * Reset all search specific attributes to avoid some carrying over to following searches.
+     * Reset all search specific attributes to avoid them carrying over to following searches.
      */
     private resetAttributes() {
         this.tagMatchCount = 0;
@@ -360,7 +356,7 @@ timApp.component("searchBox", {
       <h5>Advanced search options</h5>
       <form class="form-horizontal">
            <div class="form-group" title="Write folder path to search from">
-                <label for="folder-selector" class="col-sm-2 control-label">Folder:</label>
+                <label for="folder-selector" class="col-sm-2 control-label font-weight-normal">Folder:</label>
                 <div class="col-sm-10">
                     <input ng-model="$ctrl.folder" name="folder-selector"
                            type="text" class="form-control" id="folder-selector" placeholder="Input a folder to search"
@@ -371,21 +367,25 @@ timApp.component("searchBox", {
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.caseSensitive"
             title="Distinguishing between upper- and lower-case letters"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Case sensitive</label>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.ignorePluginsSettings"
-            title="Leave plugins and settings out of the results"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins</label>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.regex"
             title="Regular expressions"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.ignorePluginsSettings"
+            title="Leave plugins and settings out of the results"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins</label>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.createNewWindow"
+            title="Show result of each search in new window"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Open new window for each search</label>
+        <h5 class="font-weight-normal">Search scope:</h5>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchDocNames"
-            title="Toggle document title search"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Document title search</label>
+            title="Toggle searching document titles"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Title search</label>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchTags"
             title="Toggle document tag search"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Tag search</label>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchWords"
             title="Toggle document word search"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Word search</label>
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Content search</label>
       </div>
       </form>
     </div>
