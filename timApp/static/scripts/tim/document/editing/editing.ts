@@ -310,6 +310,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 params.pars.first().find(".readline").removeClass("read read-modified");
                 getActiveDocument().refreshSectionReadMarks();
             },
+            funcOnDismiss: () => { },
         }));
         this.viewctrl.editing = false;
     }
