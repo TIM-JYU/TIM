@@ -148,7 +148,6 @@ def search():
         term=query,
         regex=regex_option,
         onlyfirst=onlyfirst,
-        case_sensitive=case_sensitive,
         format="")
 
     try:
@@ -161,7 +160,7 @@ def search():
         else:
             term = re.escape(args.term)
         if search_exact_words:
-            term = fr"\b{args.term}\b"
+            term = fr"(?:^|\W)({args.term})(?:$|\W)"
         regex = re.compile(term, flags)
         for d in docs:
             doc_info = d.document.docinfo
