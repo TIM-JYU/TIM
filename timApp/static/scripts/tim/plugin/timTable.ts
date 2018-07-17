@@ -492,13 +492,9 @@ export class TimTableController implements IController {
 
         const parId = getParId(this.element.parents(".par"));
         if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
-        if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
-            // let value = this.element.find(".editInput").val();
-            const value = this.editedCellContent;
-            if (typeof value == "string" && this.editedCellInitialContent != value) {
-                this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
-            }
-        }
+
+        this.saveCurrentCell();
+
         if (ev.keyCode == 40) { // down arrow
             if (this.currentCell) {
                 this.openCell(this.currentCell.row + 1, this.currentCell.col);
@@ -607,6 +603,16 @@ export class TimTableController implements IController {
         }
 
         await this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
+        this.saveCurrentCell();
+        this.currentCell = {row: rowi, col: coli, editorOpen: false};
+        this.calculateElementPlaces(rowi, coli, event);
+    }
+
+    /**
+     * Saves the possible currently edited cell.
+     */
+    private saveCurrentCell() {
+        const parId = getParId(this.element.parents(".par"));
         if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
             const value = this.editedCellContent;
 
@@ -615,8 +621,6 @@ export class TimTableController implements IController {
                 this.currentCell = undefined;
             }
         }
-        this.currentCell = {row: rowi, col: coli, editorOpen: false};
-        this.calculateElementPlaces(rowi, coli, event);
     }
 
     /**
@@ -649,19 +653,28 @@ export class TimTableController implements IController {
             edit.focus();
             const editOffset = edit.offset();
             const editOuterHeight = edit.outerHeight();
-            const tablecellOffset = tablecell.offset();
+            const tableCellOffset = tablecell.offset();
             const editOuterWidth = edit.outerWidth();
-            if (editOffset && editOuterHeight && tablecellOffset && editOuterWidth) {
+            if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
                 this.element.find(".buttonOpenBigEditor").offset({
+                    left: tableCellOffset.left,
                     top: editOffset.top + editOuterHeight,
-                    left: tablecellOffset.left,
                 });
 
-                this.element.find(".buttonCloseSmallEditor").offset({
+                const buttonAcceptEdit = this.element.find(".buttonAcceptEdit");
+
+                if (!buttonAcceptEdit)
+                    return;
+
+                buttonAcceptEdit.offset({
+                    left: tableCellOffset.left + editOuterWidth,
                     top: editOffset.top,
-                    left: tablecellOffset.left + editOuterWidth,
                 });
-
+// aa
+                this.element.find(".buttonCloseSmallEditor").offset({
+                     left: buttonAcceptEdit.offset().left + buttonAcceptEdit.outerWidth(),
+                     top: editOffset.top,
+                });
             }
         }
     }
@@ -819,7 +832,18 @@ export class TimTableController implements IController {
         return getParId(this.element.parents(".par"));
     }
 
+    /**
+     * Closes the simple cell content editor.
+     */
     private closeSmallEditor() {
+        this.currentCell = undefined;
+    }
+
+    /**
+     * Saves the currently edited cell and closes the simple cell content editor.
+     */
+    private saveAndCloseSmallEditor() {
+        this.saveCurrentCell();
         this.currentCell = undefined;
     }
 }
@@ -859,7 +883,9 @@ timApp.component("timTable", {
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent">
              <button class="timButton buttonCloseSmallEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
                     ng-click="$ctrl.closeSmallEditor()" class="timButton"><span class="glyphicon glyphicon-remove"></span>
-            <button class="timButton buttonOpenBigEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
+             <button class="timButton buttonAcceptEdit" ng-show="$ctrl.isSomeCellBeingEdited()"
+                    ng-click="$ctrl.saveAndCloseSmallEditor()" class="timButton"><span class="glyphicon glyphicon-check"></span>
+             <button class="timButton buttonOpenBigEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
                     ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
             </button>
 </div>
