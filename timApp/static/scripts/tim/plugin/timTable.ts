@@ -690,7 +690,7 @@ export class TimTableController implements IController {
                     left: tableCellOffset.left + editOuterWidth,
                     top: editOffset.top,
                 });
-// aa
+
                 this.element.find(".buttonCloseSmallEditor").offset({
                      left: buttonAcceptEdit.offset().left + buttonAcceptEdit.outerWidth(),
                      top: editOffset.top,
@@ -724,7 +724,7 @@ export class TimTableController implements IController {
             }
             const c = (cell as ICellStyles)[keyofCell as keyof ICellStyles];
             if (!c) {
-                continue; // a
+                continue;
             }
             styles[property] = c;
         }
