@@ -1,6 +1,7 @@
 """Routes for searching."""
 import re
 import sre_constants
+import time
 from datetime import datetime
 from typing import Generator
 
@@ -9,7 +10,6 @@ from flask import abort
 from flask import request
 from sqlalchemy.orm import joinedload
 
-from timApp.admin import search_in_documents
 from timApp.admin.search_in_documents import SearchArgumentsBasic, SearchResult
 from timApp.admin.util import enum_pars
 from timApp.auth.accesshelper import verify_logged_in
@@ -17,14 +17,12 @@ from timApp.auth.sessioninfo import get_current_user_id
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
-from timApp.document.docparagraph import DocParagraph
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.tag import Tag
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
-
 
 search_routes = Blueprint('search',
                           __name__,
@@ -128,7 +126,7 @@ def search():
     folder = request.args.get('folder', '')
     regex_option = get_option(request, 'regex', default=False, cast=bool)
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-    onlyfirst = get_option(request, 'onlyfirst', default=9999, cast=int)
+    onlyfirst = get_option(request, 'onlyfirst', default=999, cast=int)
     ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
     search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
@@ -140,7 +138,6 @@ def search():
     if len(query.strip()) < 1 and search_exact_words:
         abort(400, 'Search text must be at least 1 character long with whitespace stripped.')
 
-
     # Won't search subfolders if search_recursively isn't true.
     docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)
     results = []
@@ -150,59 +147,75 @@ def search():
         onlyfirst=onlyfirst,
         format="")
 
-    try:
-        if case_sensitive:
-            flags = re.DOTALL
-        else:
-            flags = re.DOTALL | re.IGNORECASE
-        if args.regex:
-            term = args.term
-        else:
-            term = re.escape(args.term)
-        if search_exact_words:
-            term = fr"(?:^|\W)({args.term})(?:$|\W)"
-        regex = re.compile(term, flags)
-        for d in docs:
-            doc_info = d.document.docinfo
-            if search_doc_names:
-                d_title = doc_info.title
-                matches = list(regex.finditer(d_title))
-                if matches:
-                    for m in matches:
-                        result = {'doc': doc_info,
-                                  'par': None,
-                                  'match_word': m.group(0),
-                                  'match_start_index': m.start(),
-                                  'match_end_index': m.end(),
-                                  'num_results': len(matches),
-                                  'num_pars': 0,
-                                  'num_pars_found': 0,
-                                  'in_title': True}
-                        results.append(result)
-            if search_words:
-                for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
-                    result = {'doc': r.doc,
-                              'par': r.par,
-                              'match_word': r.match.group(0),
-                              'match_start_index': r.match.span()[0],
-                              'match_end_index': r.match.span()[1],
-                              'num_results': r.num_results,
-                              'num_pars': r.num_pars,
-                              'num_pars_found': r.num_pars_found,
-                              'in_title': False}
-                    # Don't return results within plugins if no edit access to the document.
-                    if r.par.is_setting() or r.par.is_plugin():
-                        if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
-                            results.append(result)
-                    else:
-                        results.append(result)
-    except sre_constants.error:
-        abort(400, "Invalid regex")
+    if case_sensitive:
+        flags = re.DOTALL
     else:
-        return json_response(results)
+        flags = re.DOTALL | re.IGNORECASE
+    if args.regex:
+        term = args.term
+    else:
+        term = re.escape(args.term)
+    if search_exact_words:
+        term = fr"(?:^|\W)({args.term})(?:$|\W)"
+    regex = re.compile(term, flags)
+    starting_time = time.clock()
+    try:
+        try:
+            for d in docs:
+                doc_info = d.document.docinfo
+                print(time.clock() - starting_time)
+                if (time.clock() - starting_time) > 7:
+                    print("time passed")
+                    break
+                if len(results) > 25000:
+                    print("too many results")
+                    break
+                if search_doc_names:
+                    d_title = doc_info.title
+                    matches = list(regex.finditer(d_title))
+                    if matches:
+                        for m in matches:
+                            result = {'doc': doc_info,
+                                      'par': None,
+                                      'match_word': m.group(0),
+                                      'match_start_index': m.start(),
+                                      'match_end_index': m.end(),
+                                      'num_results': len(matches),
+                                      'num_pars': 0,
+                                      'num_pars_found': 0,
+                                      'in_title': True}
+                            results.append(result)
+                if search_words:
+                    for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
+                        result = {'doc': r.doc,
+                                  'par': r.par,
+                                  'match_word': r.match.group(0),
+                                  'match_start_index': r.match.span()[0],
+                                  'match_end_index': r.match.span()[1],
+                                  'num_results': r.num_results,
+                                  'num_pars': r.num_pars,
+                                  'num_pars_found': r.num_pars_found,
+                                  'in_title': False}
+                        # Don't return results within plugins if no edit access to the document.
+                        if r.par.is_setting() or r.par.is_plugin():
+                            if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
+                                results.append(result)
+                        else:
+                            results.append(result)
+        except sre_constants.error:
+            abort(400, "Invalid regex")
+        else:
+            return json_response(results)
+    except MemoryError:
+        abort(400, f"MemoryError: results too long")
+    except TypeError as e:
+        abort(400, f"TypeError: {str(e.args[0])}")
+    except Exception as e:
+        abort(400, f"Error: {str(e.args[0])}")
 
 
-def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool) -> Generator[SearchResult, None, None]:
+def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool) -> Generator[
+    SearchResult, None, None]:
     """Performs a search operation for the specified document, yielding SearchResults.
 
     :param args: The search arguments.
@@ -213,13 +226,13 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
     results_found = 0
     pars_processed = 0
     pars_found = 0
-
     for d, p in enum_pars(d):
         pars_processed += 1
         md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
         matches = set(regex.finditer(md))
         if matches:
             pars_found += 1
+            # TODO: limit matches per document in case of overt numbers.
             for m in matches:
                 results_found += 1
                 yield SearchResult(

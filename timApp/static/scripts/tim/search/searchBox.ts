@@ -16,7 +16,7 @@
 import {IController} from "angular";
 import {timApp} from "../app";
 import {$http, $localStorage, $window} from "../util/ngimport";
-import {IFolder, IItem, ITag, ITaggedItem} from "../item/IItem";
+import {IItem, ITag, ITaggedItem} from "../item/IItem";
 import {Binding, to} from "../util/utils";
 import {showSearchResultDialog} from "./searchResultsCtrl";
 import {ngStorage} from "ngstorage";
@@ -49,7 +49,7 @@ class SearchBoxCtrl implements IController {
     private caseSensitive: boolean = false;
     private results: ISearchResult[] = [];
     private errorMessage: string = "";
-    private onlyfirst: number = 999; // # first paragraphs searched from the document
+    private onlyfirst: number = 250; // # first paragraphs searched from the document
     private queryMinLength: number = 2;
     private queryMinLengthExactWords: number = 1; // Shorter words are allowed in exact words search.
     private tagMatchCount: number = 0;
@@ -68,7 +68,6 @@ class SearchBoxCtrl implements IController {
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
     private tagResults: ITagSearchResult[] = []; // List of documents with matching tags. Other tags are left out.
     private folderSuggestions: string[] = [];
-    private resultsDialog: Promise<{}> | null = null;
 
     // List of seach folder paths to suggest.
 
@@ -94,12 +93,16 @@ class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     async search() {
-        if (!this.searchDocNames && !this.searchTags && !this.searchWords) {
-            this.errorMessage = (`All search scope options are unchecked.`);
+        if (this.loading) {
             return;
         }
         this.resetAttributes();
         this.loading = true;
+        if (!this.searchDocNames && !this.searchTags && !this.searchWords) {
+            this.errorMessage = (`All search scope options are unchecked.`);
+            this.loading = false;
+            return;
+        }
         if (this.searchTags) {
             await this.tagSearch();
         }
@@ -126,6 +129,10 @@ class SearchBoxCtrl implements IController {
         }
         if (this.results.length === 0 && this.tagResults.length === 0) {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
+            this.loading = false;
+            return;
+        }
+        if (this.errorMessage) {
             this.loading = false;
             return;
         }
@@ -257,7 +264,11 @@ class SearchBoxCtrl implements IController {
             url: "/search",
         }));
         if (err) {
-            this.errorMessage = err.data.error;
+            if (err.data.error) {
+                this.errorMessage = err.data.error.toString();
+            } else {
+                this.errorMessage = "Undefined error";
+            }
             this.results = [];
             return;
         }

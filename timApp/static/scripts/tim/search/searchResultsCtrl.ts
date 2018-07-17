@@ -49,6 +49,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private docResults: ISearchResultParamsDoc[] = [];
     private tagResults: ITagSearchResult[] = [];
     private folder: string = "";
+    private totalResults: number = 0;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -57,6 +58,9 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     async $onInit() {
         this.results = this.resolve.params.results;
         this.tagResults = this.resolve.params.tagResults;
+        this.totalResults = this.resolve.params.titleMatchCount +
+            this.resolve.params.tagMatchCount +
+            this.resolve.params.wordMatchCount;
         this.folder = this.resolve.params.folder;
         this.filterResults();
         this.searchWord = this.resolve.params.searchWord;
@@ -249,9 +253,8 @@ registerDialogComponent("timSearchResults",
         <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents in <i>{{$ctrl.folder}}</i></h5>
     </div>
     <div ng-if="$ctrl.docResults.length > 0">
-        <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.resolve.params.titleMatchCount +
-        $ctrl.resolve.params.tagMatchCount + $ctrl.resolve.params.wordMatchCount}}
-            <ng-pluralize count="$ctrl.results.length" when="{'1': 'time', 'other': 'times'}"></ng-pluralize>
+        <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.totalResults}} <ng-pluralize
+        count="$ctrl.totalResults" when="{'1': 'time', 'other': 'times'}"></ng-pluralize>
             in <i ng-if="$ctrl.folder">{{$ctrl.folder}}</i><i ng-if="!$ctrl.folder">root</i>
         </h5>
         <ul class="list-unstyled">
