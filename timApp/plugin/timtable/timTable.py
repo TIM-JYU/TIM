@@ -67,7 +67,7 @@ def tim_table_reqs():
         "angularModule": [],
         "multihtml": True,
         "multimd": True,
-        "needs_dumbo_preparation": True
+        "default_automd": True,
     }
     return json_response(reqs)
 
