@@ -23,7 +23,6 @@ from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
 
-folder_set = set()
 
 search_routes = Blueprint('search',
                           __name__,
@@ -50,23 +49,23 @@ def get_subfolders():
     :return:
     """
     verify_logged_in()
-    get_folders_recursive(request.args.get('folder', ''))
-    global folder_set
+    folder_set = set()
+    get_folders_recursive(request.args.get('folder', ''), folder_set)
     return json_response(list(folder_set))
 
 
-def get_folders_recursive(starting_path: str):
+def get_folders_recursive(starting_path: str, folder_set):
     """
     Recursive function for get_subfolders.
     :param starting_path:
+    :param folder_set:
     :return:
     """
     folders = Folder.get_all_in_path(starting_path)
-    global folder_set
     if folders:
         for folder in folders:
-            folder_set.add(folder)
-            get_folders_recursive(folder.path)
+            folder_set.add(folder.path)
+            get_folders_recursive(folder.path, folder_set)
 
 
 @search_routes.route('/tags')

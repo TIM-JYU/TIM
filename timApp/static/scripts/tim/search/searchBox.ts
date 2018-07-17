@@ -279,7 +279,7 @@ class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async loadFolderSuggestions() {
-        const response = await $http<IFolder[]>({
+        const response = await $http<string[]>({
             method: "GET",
             params: {
                 folder: "",
@@ -287,9 +287,7 @@ class SearchBoxCtrl implements IController {
             url: "/search/getFolders",
         });
         if (response) {
-            for (const f of response.data) {
-                this.folderSuggestions.push(f.path);
-            }
+            this.folderSuggestions = response.data;
         }
     }
 
