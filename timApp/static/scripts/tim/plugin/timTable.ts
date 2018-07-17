@@ -633,7 +633,8 @@ export class TimTableController implements IController {
      */
     private saveCurrentCell() {
         const parId = getParId(this.element.parents(".par"));
-        if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
+
+        if (this.viewctrl && parId && this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
             const value = this.editedCellContent;
 
             if (typeof value === "string" && this.editedCellInitialContent != value) {
@@ -683,24 +684,27 @@ export class TimTableController implements IController {
 
                 const buttonAcceptEdit = this.element.find(".buttonAcceptEdit");
 
-                if (!buttonAcceptEdit)
-                    return;
-
                 buttonAcceptEdit.offset({
                     left: tableCellOffset.left + editOuterWidth,
                     top: editOffset.top,
                 });
 
-                this.element.find(".buttonCloseSmallEditor").offset({
-                     left: buttonAcceptEdit.offset().left + buttonAcceptEdit.outerWidth(),
+                const buttonAcceptEditOffset = buttonAcceptEdit.offset();
+                const buttonAcceptEditWidth = buttonAcceptEdit.outerWidth();
+
+                if (buttonAcceptEditOffset && buttonAcceptEditWidth) {
+                     this.element.find(".buttonCloseSmallEditor").offset({
+                     left: buttonAcceptEditOffset.left + buttonAcceptEditWidth,
                      top: editOffset.top,
                 });
+                }
+
             }
         }
     }
 
     /**
-     * Set styles for cells
+     * Sets style attributes for cells
      * @param {CellEntity} cell Styled cell
      * @param {number] coli Table column index
      */
@@ -732,8 +736,8 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Parses individual cell style attributes for a column
-     * @param {number} coli The column index
+     * Parses cell style attributes for a column
+     * @param {number} coli The index of the column
      */
     private stylingForCellOfColumn(coli: number) {
         const styles: { [index: string]: string } = {};
@@ -759,7 +763,7 @@ export class TimTableController implements IController {
             }
 
             const property: string = styleToHtml[key];
-            if (property === undefined) {
+            if (!property) {
                 continue;
             }
 
@@ -769,8 +773,8 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Set attributes for columns
-     * @param {IColumn} col Column that need styling
+     * Sets style attributes for columns
+     * @param {IColumn} col The column to be styled
      */
     private stylingForColumn(col: IColumn) {
         const styles: { [index: string]: string } = {};
@@ -790,8 +794,8 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Set attributes for rows
-     * @param {IRow} row Styled row
+     * Sets style attributes for rows
+     * @param {IRow} row The row to be styled
      */
     private stylingForRow(row: IRow) {
         const styles: { [index: string]: string } = {};
@@ -811,7 +815,7 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Sets style for table
+     * Sets style attributes for the whole table
      * @returns {{[p: string]: string}}
      */
     private stylingForTable(tab: ITable) {
