@@ -133,6 +133,26 @@ export interface IColumnStyles {
     borderRight?: string;
 }
 
+const columnCellStyles: Set<string> = new Set<string>(
+    [
+            "fontSize",
+            "verticalAlign",
+            "textAlign",
+            "fontFamily",
+            "color",
+            "fontWeight",
+            ]);
+
+/** Using this for property validating failed
+export interface IColumnCellStyles {
+    verticalAlign: string;
+    fontSize: string;
+    textAlign: string;
+    fontFamily: string;
+    color: string;
+    fontWeight: string;
+} */
+
 function isPrimitiveCell(cell: CellEntity): cell is CellType {
     return cell == null || (cell as ICell).cell === undefined;
 }
@@ -680,18 +700,19 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Set styles fo cells
+     * Set styles for cells
      * @param {CellEntity} cell Styled cell
+     * @param {number] coli Table column index
      */
-    private stylingForCell(cell: CellEntity) {
-        const styles: { [index: string]: string } = {};
+    private stylingForCell(cell: CellEntity, coli: number) {
+        const styles = this.stylingForCellOfColumn(coli);
+
         if (this.getCellContentString(cell) === "") {
             styles["height"] = "2em";
             styles["width"] = "4em";
         }
 
         if (isPrimitiveCell(cell)) {
-
             return styles;
         }
 
@@ -703,9 +724,46 @@ export class TimTableController implements IController {
             }
             const c = (cell as ICellStyles)[keyofCell as keyof ICellStyles];
             if (!c) {
-                continue;
+                continue; // a
             }
             styles[property] = c;
+        }
+        return styles;
+    }
+
+    /**
+     * Parses individual cell style attributes for a column
+     * @param {number} coli The column index
+     */
+    private stylingForCellOfColumn(coli: number) {
+        const styles: { [index: string]: string } = {};
+        const table = this.data.table;
+
+        if (!table.columns) {
+            return styles;
+        }
+
+        if (table.columns.length <= coli) {
+            return styles;
+        }
+
+        const col = table.columns[coli];
+
+        if (!col) {
+            return styles;
+        }
+
+        for (const key of Object.keys(col)) {
+            if (!columnCellStyles.has(key)) {
+                continue;
+            }
+
+            const property: string = styleToHtml[key];
+            if (property === undefined) {
+                continue;
+            }
+
+            styles[property] = col[key];
         }
         return styles;
     }
@@ -862,14 +920,15 @@ timApp.component("timTable", {
      <div class="timTableContentDiv">
     <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.editing"
             ng-click="$ctrl.addColumn()"><span class="glyphicon glyphicon-plus"></span></button>
-    <table ng-class="{editable: $ctrl.editing}" class="timTableTable" ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
+    <table ng-class="{editable: $ctrl.editing}" class="timTableTable"
+     ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
              ng-style="$ctrl.stylingForColumn(c)"/>
         <tr ng-repeat="r in $ctrl.data.table.rows" ng-init="rowi = $index" id={{r.id}}
             ng-style="$ctrl.stylingForRow(r)">
                 <td ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
                     id={{td.id}}"
-                    ng-style="$ctrl.stylingForCell(td)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
+                    ng-style="$ctrl.stylingForCell(td, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
                     </div>
                 </td>
@@ -882,9 +941,11 @@ timApp.component("timTable", {
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent">
              <button class="timButton buttonCloseSmallEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
-                    ng-click="$ctrl.closeSmallEditor()" class="timButton"><span class="glyphicon glyphicon-remove"></span>
+                    ng-click="$ctrl.closeSmallEditor()"
+                    class="timButton"><span class="glyphicon glyphicon-remove"></span>
              <button class="timButton buttonAcceptEdit" ng-show="$ctrl.isSomeCellBeingEdited()"
-                    ng-click="$ctrl.saveAndCloseSmallEditor()" class="timButton"><span class="glyphicon glyphicon-check"></span>
+                    ng-click="$ctrl.saveAndCloseSmallEditor()"
+                     class="timButton"><span class="glyphicon glyphicon-check"></span>
              <button class="timButton buttonOpenBigEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
                     ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
             </button>
