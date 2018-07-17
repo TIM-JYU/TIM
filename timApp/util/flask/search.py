@@ -125,9 +125,6 @@ def search():
     verify_logged_in()
 
     query = request.args.get('query', '')
-    if len(query.strip()) < 2:
-        abort(400, 'Search text must be at least 2 characters long with whitespace stripped.')
-
     folder = request.args.get('folder', '')
     regex_option = get_option(request, 'regex', default=False, cast=bool)
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
@@ -137,6 +134,12 @@ def search():
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
     search_words = get_option(request, 'searchWords', default=True, cast=bool)
     current_user = get_current_user_object()
+
+    if len(query.strip()) < 2 and not search_exact_words:
+        abort(400, 'Search text must be at least 2 characters long with whitespace stripped.')
+    if len(query.strip()) < 1 and search_exact_words:
+        abort(400, 'Search text must be at least 1 character long with whitespace stripped.')
+
 
     # Won't search subfolders if search_recursively isn't true.
     docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)
