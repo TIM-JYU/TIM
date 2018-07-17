@@ -50,7 +50,7 @@ def get_plugins():
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/"},
-            "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "is_local": True, "instance": timTable.TimTable()},
+            "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "instance": timTable.TimTable()},
             "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
         }
     return PLUGINS
@@ -155,17 +155,17 @@ def convert_tex_mock(plugin_data):
 
 
 def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
-                        plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML):
+                        plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML,
+                        default_auto_md: bool = False):
     opts = doc.get_settings().get_dumbo_options()
     plugin_dumbo_opts = [p.par.get_dumbo_options(base_opts=opts) for p in plugin_data]
     plugin_dicts = [p.render_json() for p in plugin_data]
 
-    inner = is_inner_plugin(plugin)
-    if inner:
-        plugin_instance = get_plugin(plugin).get("instance")
+    plugin_instance = get_inner_plugin_instance(plugin)
+    inner = plugin_instance is not None
 
     for plug_dict in plugin_dicts:
-        if has_auto_md(plug_dict[MARKUP]):
+        if has_auto_md(plug_dict[MARKUP], default_auto_md):
             # TODO implement attribute list as an alternative to calling the plugin
             if inner:
                 plugin_instance.prepare_for_dumbo(plug_dict)
@@ -189,24 +189,22 @@ def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
                                 headers={'Content-type': 'application/json'})
 
 
-def is_inner_plugin(plugin: str):
+def get_inner_plugin_instance(plugin: str):
     """
-    Checks whether a plugin is an inner plugin.
+    Gets the instance of an inner plugin.
     An inner plugin runs in the same container with TIM itself.
+    If the plugin is not an inner plugin, returns None.
     :param plugin: The name of the plugin.
-    :return: True if the plugin is an inner plugin, otherwise false.
+    :return: The instance of the plugin if it's an inner plugin, otherwise None.
     """
-    is_local = get_plugin(plugin).get("is_local")
-    if is_local is None:
-        return False
-
-    return is_local
+    instance = get_plugin(plugin).get("instance")
+    return instance
 
 
-def has_auto_md(data):
-    if AUTOMD in data and data[AUTOMD]:
-        return True
-    return False
+def has_auto_md(data, default: bool):
+    if AUTOMD in data:
+        return data[AUTOMD]
+    return default
 
 
 def call_plugin_resource(plugin, filename, args=None):

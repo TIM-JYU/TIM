@@ -272,6 +272,10 @@ def pluginify(doc: Document,
         css_paths = list(OrderedDict.fromkeys(css_paths))
         modules = list(OrderedDict.fromkeys(modules))
 
+        default_auto_md = False
+        if 'default_automd' in reqs and reqs['default_automd']:
+            default_auto_md = True
+
         plugin_url = get_plugin_tim_url(plugin_name)
         needs_browser = get_plugin_needs_browser(plugin_name)
         if (html_out and 'multihtml' in reqs and reqs['multihtml']) or \
@@ -282,7 +286,8 @@ def pluginify(doc: Document,
                     doc,
                     plugin_name,
                     [val for _, val in plugin_block_map.items()],
-                    plugin_output_format=output_format)
+                    plugin_output_format=output_format,
+                    default_auto_md=default_auto_md)
                 # taketime("plg e", plugin_name)
             except PluginException as e:
                 for idx in plugin_block_map.keys():
