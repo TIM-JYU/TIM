@@ -2,6 +2,7 @@
 import re
 import sre_constants
 from datetime import datetime
+from typing import Generator
 
 from flask import Blueprint
 from flask import abort
@@ -9,7 +10,8 @@ from flask import request
 from sqlalchemy.orm import joinedload
 
 from timApp.admin import search_in_documents
-from timApp.admin.search_in_documents import SearchArgumentsBasic
+from timApp.admin.search_in_documents import SearchArgumentsBasic, SearchResult
+from timApp.admin.util import enum_pars
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_id
 from timApp.auth.sessioninfo import get_current_user_object
@@ -33,13 +35,6 @@ search_routes = Blueprint('search',
 def make_cache_key(*args, **kwargs):
     path = request.path
     return (str(get_current_user_id()) + path + str(request.query_string)).encode('utf-8')
-
-
-# TODO: Use the classes and functions from search_in_documents.py
-class SearchResult:
-    def __init__(self, document: DocInfo, par: DocParagraph):
-        self.document = document
-        self.par = par
 
 
 @search_routes.route('/getFolders')
@@ -74,9 +69,10 @@ def search_tags():
     Route for document tag search. Returns a list of documents with matching tag in a folder and its subfolders.
     """
     query = request.args.get('query', '')
-    case_sensitive = get_option(request, 'case_sensitive', default=False, cast=bool)
+    case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
     folder = request.args.get('folder', '')
     regex_option = get_option(request, 'regex', default=False, cast=bool)
+    search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
     results = []
 
     # PostgreSQL doesn't support regex directly, so as workaround get all tags below the search folder
@@ -89,10 +85,18 @@ def search_tags():
     docs = get_documents(filter_user=get_current_user_object(), filter_folder=folder,
                          search_recursively=True, custom_filter=custom_filter,
                          query_options=query_options)
+
     if case_sensitive:
-        regex = re.compile(query if regex_option else re.escape(query), re.DOTALL)
+        flags = re.DOTALL
     else:
-        regex = re.compile(query if regex_option else re.escape(query), re.DOTALL | re.IGNORECASE)
+        flags = re.DOTALL | re.IGNORECASE
+    if regex_option:
+        term = query
+    else:
+        term = re.escape(query)
+    if search_exact_words:
+        term = fr"\b{term}\b"
+    regex = re.compile(term, flags)
     for d in docs:
         m_tags = []
         m_num = 0
@@ -130,6 +134,7 @@ def search():
     onlyfirst = get_option(request, 'onlyfirst', default=9999, cast=int)
     ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
     search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
+    search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
     search_words = get_option(request, 'searchWords', default=True, cast=bool)
     current_user = get_current_user_object()
 
@@ -143,11 +148,18 @@ def search():
         case_sensitive=case_sensitive,
         format="")
 
-    # TODO: regex doesn't work consistently (ki*a can't find some things kis*a does)?
     try:
-        regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL | re.IGNORECASE)
-        if args.case_sensitive:
-            regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL)
+        if case_sensitive:
+            flags = re.DOTALL
+        else:
+            flags = re.DOTALL | re.IGNORECASE
+        if args.regex:
+            term = args.term
+        else:
+            term = re.escape(args.term)
+        if search_exact_words:
+            term = fr"\b{args.term}\b"
+        regex = re.compile(term, flags)
         for d in docs:
             doc_info = d.document.docinfo
             if search_doc_names:
@@ -166,7 +178,7 @@ def search():
                                   'in_title': True}
                         results.append(result)
             if search_words:
-                for r in search_in_documents.search(d=doc_info, args=args, use_exported=False):
+                for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
                     result = {'doc': r.doc,
                               'par': r.par,
                               'match_word': r.match.group(0),
@@ -186,3 +198,35 @@ def search():
         abort(400, "Invalid regex")
     else:
         return json_response(results)
+
+
+def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool) -> Generator[SearchResult, None, None]:
+    """Performs a search operation for the specified document, yielding SearchResults.
+
+    :param args: The search arguments.
+    :param d: The document to process.
+    :param regex: Regex formatted before calling.
+    :param use_exported: Whether to search in the exported form of paragraphs.
+    """
+    results_found = 0
+    pars_processed = 0
+    pars_found = 0
+
+    for d, p in enum_pars(d):
+        pars_processed += 1
+        md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
+        matches = set(regex.finditer(md))
+        if matches:
+            pars_found += 1
+            for m in matches:
+                results_found += 1
+                yield SearchResult(
+                    doc=d,
+                    par=p,
+                    num_results=results_found,
+                    num_pars=pars_processed,
+                    num_pars_found=pars_found,
+                    match=m,
+                )
+        if args.onlyfirst and pars_processed >= args.onlyfirst:
+            break

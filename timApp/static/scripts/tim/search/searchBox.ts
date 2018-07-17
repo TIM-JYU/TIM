@@ -60,6 +60,7 @@ class SearchBoxCtrl implements IController {
     private searchDocNames: boolean = false;
     private searchTags: boolean = false;
     private searchWords: boolean = true;
+    private searchExactWords: boolean = false;
     private focusMe: boolean = true;
     private loading: boolean = false; // Display loading icon.
     private item: IItem = $window.item;
@@ -163,6 +164,7 @@ class SearchBoxCtrl implements IController {
         this.storage.optionsStorage.push(this.ignorePluginsSettings);
         this.storage.optionsStorage.push(this.regex);
         this.storage.optionsStorage.push(this.searchDocNames);
+        this.storage.optionsStorage.push(this.searchExactWords);
         this.storage.optionsStorage.push(this.searchTags);
         this.storage.optionsStorage.push(this.searchWords);
     }
@@ -174,15 +176,16 @@ class SearchBoxCtrl implements IController {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
         }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 7) {
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 8) {
             this.advancedSearch = this.storage.optionsStorage[0];
             this.caseSensitive = this.storage.optionsStorage[1];
             this.createNewWindow = this.storage.optionsStorage[2];
             this.ignorePluginsSettings = this.storage.optionsStorage[3];
             this.regex = this.storage.optionsStorage[4];
             this.searchDocNames = this.storage.optionsStorage[5];
-            this.searchTags = this.storage.optionsStorage[6];
-            this.searchWords = this.storage.optionsStorage[7];
+            this.searchExactWords = this.storage.optionsStorage[6];
+            this.searchTags = this.storage.optionsStorage[7];
+            this.searchWords = this.storage.optionsStorage[8];
         }
     }
 
@@ -241,6 +244,7 @@ class SearchBoxCtrl implements IController {
                 query: this.query,
                 regex: this.regex,
                 searchDocNames: this.searchDocNames,
+                searchExactWords: this.searchExactWords,
                 searchWords: this.searchWords,
             },
             url: "/search",
@@ -265,10 +269,11 @@ class SearchBoxCtrl implements IController {
                 method: "GET",
                 url: "/search/tags",
                 params: {
-                    case_sensitive: this.caseSensitive,
+                    caseSensitive: this.caseSensitive,
                     folder: this.folder,
                     query: this.query,
                     regex: this.regex,
+                    searchExactWords: this.searchExactWords,
                 },
         });
         this.tagResults = tagResponse.data;
@@ -371,6 +376,9 @@ timApp.component("searchBox", {
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.ignorePluginsSettings"
             title="Leave plugins and settings out of the results"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins</label>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchExactWords"
+            title="Only search whole words"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search whole words</label>
         <label ng-if="false" class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.createNewWindow"
             title="Show result of each search in new window"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Open new window for each search</label>

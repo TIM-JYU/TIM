@@ -86,9 +86,10 @@ def search(d: DocInfo, args: SearchArgumentsBasic, use_exported: bool) -> Genera
     pars_found = 0
 
     if args.case_sensitive:
-        regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL)
+        flags = re.DOTALL
     else:
-        regex = re.compile(args.term if args.regex else re.escape(args.term), re.DOTALL | re.IGNORECASE)
+        flags = re.DOTALL | re.IGNORECASE
+    regex = re.compile(args.term if args.regex else re.escape(args.term), flags)
     for d, p in enum_pars(d):
         pars_processed += 1
         md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
