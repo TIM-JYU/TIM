@@ -22,6 +22,11 @@ import {showSearchResultDialog} from "./searchResultsCtrl";
 import {ngStorage} from "ngstorage";
 import {IExtraData} from "../document/editing/edittypes";
 
+export interface ISearchResultsInfo {
+    results: ISearchResult[];
+    complete: boolean; // Whether the search was completely finished in the folder.
+}
+
 export interface ISearchResult {
     doc: IItem;
     par: IExtraData;
@@ -68,6 +73,7 @@ class SearchBoxCtrl implements IController {
     private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
     private tagResults: ITagSearchResult[] = []; // List of documents with matching tags. Other tags are left out.
     private folderSuggestions: string[] = [];
+    private completeSearch: boolean = false;
 
     // List of seach folder paths to suggest.
 
@@ -138,9 +144,12 @@ class SearchBoxCtrl implements IController {
         }
         this.updateLocalStorage();
         this.countResults();
-
+        let tempError = this.errorMessage;
+        if (!this.completeSearch) {
+            tempError = "Search was incomplete due to time or data constraints";
+        }
         void showSearchResultDialog({
-            errorMessage: this.errorMessage,
+            errorMessage: tempError,
             folder: this.folder,
             results: this.results,
             searchWord: this.query,
@@ -248,7 +257,7 @@ class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async wordSearch() {
-        const [err, response] = await to($http<ISearchResult[]>({
+        const [err, response] = await to($http<ISearchResultsInfo>({
             method: "GET",
             params: {
                 caseSensitive: this.caseSensitive,
@@ -274,7 +283,8 @@ class SearchBoxCtrl implements IController {
         }
         if (response) {
             this.errorMessage = "";
-            this.results = response.data;
+            this.results = response.data.results;
+            this.completeSearch = response.data.complete;
         }
     }
 

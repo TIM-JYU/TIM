@@ -246,8 +246,8 @@ registerDialogComponent("timSearchResults",
     <dialog-header>
     </dialog-header>
     <dialog-body>
-    <div ng-show="$ctrl.errorMessage" class="alert alert-warning">
-        <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
+    <div ng-show="$ctrl.resolve.params.errorMessage" class="alert alert-warning">
+        <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.resolve.params.errorMessage}}
     </div>
     <div ng-if="$ctrl.docResults.length <= 0 && !$ctrl.errorMessage">
         <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents in <i>{{$ctrl.folder}}</i></h5>

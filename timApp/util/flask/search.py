@@ -132,6 +132,7 @@ def search():
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
     search_words = get_option(request, 'searchWords', default=True, cast=bool)
     current_user = get_current_user_object()
+    complete = True
 
     if len(query.strip()) < 2 and not search_exact_words:
         abort(400, 'Search text must be at least 2 characters long with whitespace stripped.')
@@ -163,12 +164,12 @@ def search():
         try:
             for d in docs:
                 doc_info = d.document.docinfo
-                print(time.clock() - starting_time)
-                if (time.clock() - starting_time) > 7:
-                    print("time passed")
+                # print(time.clock() - starting_time)
+                if (time.clock() - starting_time) > 15:
+                    complete = False
                     break
                 if len(results) > 25000:
-                    print("too many results")
+                    complete = False
                     break
                 if search_doc_names:
                     d_title = doc_info.title
@@ -205,7 +206,7 @@ def search():
         except sre_constants.error:
             abort(400, "Invalid regex")
         else:
-            return json_response(results)
+            return json_response({'results': results, 'complete': complete})
     except MemoryError:
         abort(400, f"MemoryError: results too long")
     except TypeError as e:
