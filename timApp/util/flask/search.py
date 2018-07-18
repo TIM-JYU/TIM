@@ -66,6 +66,8 @@ def search_tags():
     """
     Route for document tag search. Returns a list of documents with matching tag in a folder and its subfolders.
     """
+    verify_logged_in()
+
     query = request.args.get('query', '')
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
     folder = request.args.get('folder', '')
@@ -119,7 +121,6 @@ def search():
     Route for document word and title searches.
     :return:
     """
-
     verify_logged_in()
 
     query = request.args.get('query', '')
@@ -134,8 +135,8 @@ def search():
     current_user = get_current_user_object()
     complete = True
 
-    if len(query.strip()) < 2 and not search_exact_words:
-        abort(400, 'Search text must be at least 2 characters long with whitespace stripped.')
+    if len(query.strip()) < 3 and not search_exact_words:
+        abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
     if len(query.strip()) < 1 and search_exact_words:
         abort(400, 'Search text must be at least 1 character long with whitespace stripped.')
 

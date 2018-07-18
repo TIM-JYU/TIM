@@ -123,12 +123,14 @@
                                  src="{{ url_for('static', filename='images/tim-logo.svg') }}"
                                  title="TIM"/>
                         {% endif %}
+                        {% if session.user_id %}
                         <div style="padding-top:4px;" class="pull-right">
                             <span class="timButton" ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
                                   title="Display search panel">
                                 <i class="glyphicon glyphicon-search"></i>
                             </span>
                         </div>
+                        {% endif %}
                         <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
                              src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
                         <div>

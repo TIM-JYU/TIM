@@ -55,7 +55,7 @@ class SearchBoxCtrl implements IController {
     private results: ISearchResult[] = [];
     private errorMessage: string = "";
     private onlyfirst: number = 250; // # first paragraphs searched from the document
-    private queryMinLength: number = 2;
+    private queryMinLength: number = 3;
     private queryMinLengthExactWords: number = 1; // Shorter words are allowed in exact words search.
     private tagMatchCount: number = 0;
     private wordMatchCount: number = 0;
@@ -113,7 +113,7 @@ class SearchBoxCtrl implements IController {
             await this.tagSearch();
         }
         if (this.searchWords || this.searchDocNames) {
-            // Server side has separate 2 character minimum check as well.
+            // Server side has separate 3 character minimum check as well.
             if (!this.searchExactWords && this.query.trim().length < this.queryMinLength) {
                 this.errorMessage = (`Search word must be at least ${this.queryMinLength} characters
                  long with whitespace stripped.`);
