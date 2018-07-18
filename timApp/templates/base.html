@@ -130,6 +130,13 @@
                                 <i class="glyphicon glyphicon-search"></i>
                             </span>
                         </div>
+                        {% else %}
+                        <div style="padding-top:4px;" class="pull-right">
+                            <span class="timButton disabled"
+                                  title="Log in to search TIM">
+                                <i class="glyphicon glyphicon-search"></i>
+                            </span>
+                        </div>
                         {% endif %}
                         <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
                              src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
