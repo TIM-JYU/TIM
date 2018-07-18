@@ -43,8 +43,30 @@ def get_subfolders():
     """
     verify_logged_in()
     folder_set = set()
-    get_folders_recursive(request.args.get('folder', ''), folder_set)
+    # get_folders_recursive(request.args.get('folder', ''), folder_set)
+    get_folders_three_levels(request.args.get('folder', ''), folder_set)
+    print(list(folder_set))
     return json_response(list(folder_set))
+
+
+def get_folders_three_levels(starting_path: str, folder_set):
+    """
+    Limited folder search with depth of three steps from the root:
+    root/level_1/level_2/level_3
+    :param starting_path:
+    :param folder_set:
+    :return:
+    """
+    folders = Folder.get_all_in_path(starting_path)
+    for folder_l1 in folders:
+            folder_l1_path = folder_l1.path
+            folder_set.add(folder_l1_path)
+            for folder_l2 in Folder.get_all_in_path(folder_l1_path):
+                folder_l2_path = folder_l2.path
+                folder_set.add(folder_l2_path)
+                for folder_l3 in Folder.get_all_in_path(folder_l2_path):
+                    folder_l3_path = folder_l3.path
+                    folder_set.add(folder_l3_path)
 
 
 def get_folders_recursive(starting_path: str, folder_set):
@@ -85,7 +107,7 @@ def search_tags():
     docs = get_documents(filter_user=get_current_user_object(), filter_folder=folder,
                          search_recursively=True, custom_filter=custom_filter,
                          query_options=query_options)
-
+    tag_result_count = 0
     if case_sensitive:
         flags = re.DOTALL
     else:
@@ -107,11 +129,12 @@ def search_tags():
                 if not query:
                     match_count = 1
                 m_num += match_count
+                tag_result_count += match_count
                 m_tags.append(tag)
 
         if m_num > 0:
             results.append({'doc': d, 'matching_tags': m_tags, 'num_results': m_num})
-    return json_response(results)
+    return json_response({'results': results, 'complete': True, 'tagResultCount': tag_result_count})
 
 
 @search_routes.route("")
@@ -161,15 +184,17 @@ def search():
         term = fr"(?:^|\W)({args.term})(?:$|\W)"
     regex = re.compile(term, flags)
     starting_time = time.clock()
+    title_result_count = 0
+    word_result_count = 0
     try:
         try:
             for d in docs:
                 doc_info = d.document.docinfo
-                # print(time.clock() - starting_time)
-                if (time.clock() - starting_time) > 15:
+                print(time.clock() - starting_time)
+                if (time.clock() - starting_time) > 10:
                     complete = False
                     break
-                if len(results) > 25000:
+                if len(results) > 100000:
                     complete = False
                     break
                 if search_doc_names:
@@ -177,6 +202,7 @@ def search():
                     matches = list(regex.finditer(d_title))
                     if matches:
                         for m in matches:
+                            title_result_count += 1
                             result = {'doc': doc_info,
                                       'par': None,
                                       'match_word': m.group(0),
@@ -189,6 +215,7 @@ def search():
                             results.append(result)
                 if search_words:
                     for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
+                        word_result_count += 1
                         result = {'doc': r.doc,
                                   'par': r.par,
                                   'match_word': r.match.group(0),
@@ -207,7 +234,8 @@ def search():
         except sre_constants.error:
             abort(400, "Invalid regex")
         else:
-            return json_response({'results': results, 'complete': complete})
+            return json_response({'results': results, 'complete': complete, 'titleResultCount': title_result_count,
+                                  'wordResultCount': word_result_count})
     except MemoryError:
         abort(400, f"MemoryError: results too long")
     except TypeError as e:

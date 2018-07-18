@@ -25,6 +25,14 @@ import {IExtraData} from "../document/editing/edittypes";
 export interface ISearchResultsInfo {
     results: ISearchResult[];
     complete: boolean; // Whether the search was completely finished in the folder.
+    wordResultCount: number;
+    titleResultCount: number;
+}
+
+export interface ITagSearchResultsInfo {
+    results: ITagSearchResult[];
+    complete: boolean;
+    tagResultCount: number;
 }
 
 export interface ISearchResult {
@@ -143,7 +151,6 @@ class SearchBoxCtrl implements IController {
             return;
         }
         this.updateLocalStorage();
-        this.countResults();
         let tempError = this.errorMessage;
         if (!this.completeSearch) {
             tempError = "Search was incomplete due to time or data constraints";
@@ -245,6 +252,9 @@ class SearchBoxCtrl implements IController {
                 this.folder = `${path[0]}/${path[1]}/${path[2]}`;
                 return;
             }
+            if (path[0] === "kurssit" && path.length >= 2) {
+                return;
+            }
             if (path.length > 1) {
                 this.folder = `${path[0]}`;
                 return;
@@ -285,6 +295,8 @@ class SearchBoxCtrl implements IController {
             this.errorMessage = "";
             this.results = response.data.results;
             this.completeSearch = response.data.complete;
+            this.wordMatchCount = response.data.wordResultCount;
+            this.titleMatchCount = response.data.titleResultCount;
         }
     }
 
@@ -293,7 +305,7 @@ class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async tagSearch() {
-        const tagResponse = await $http<ITagSearchResult[]>({
+        const tagResponse = await $http<ITagSearchResultsInfo>({
                 method: "GET",
                 url: "/search/tags",
                 params: {
@@ -304,7 +316,11 @@ class SearchBoxCtrl implements IController {
                     searchExactWords: this.searchExactWords,
                 },
         });
-        this.tagResults = tagResponse.data;
+        if (tagResponse) {
+            this.tagResults = tagResponse.data.results;
+            this.tagMatchCount = tagResponse.data.tagResultCount;
+        }
+
     }
 
     /**
@@ -322,28 +338,6 @@ class SearchBoxCtrl implements IController {
         if (response) {
             this.folderSuggestions = response.data;
         }
-    }
-
-    /**
-     * Counts the types of results from all search types.
-     */
-    private countResults() {
-        let wordTemp = 0;
-        let titleTemp = 0;
-        let tagTemp = 0;
-        for (const r of this.results) {
-            if (r.in_title) {
-                titleTemp++;
-            } else {
-                wordTemp++;
-            }
-        }
-        for (const t of this.tagResults) {
-            tagTemp += t.num_results;
-        }
-        this.wordMatchCount = wordTemp;
-        this.titleMatchCount = titleTemp;
-        this.tagMatchCount = tagTemp;
     }
 
     /**
@@ -396,29 +390,29 @@ timApp.component("searchBox", {
                 </div>
             </div>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.caseSensitive"
-            title="Distinguishing between upper- and lower-case letters"
+            title="Distinguish between upper and lower case letters"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Case sensitive</label>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.regex"
-            title="Regular expressions"
+            title="Allow regular expressions"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.ignorePluginsSettings"
             title="Leave plugins and settings out of the results"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins</label>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchExactWords"
-            title="Only search whole words"
+            title="Search only whole words with one or more character"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search whole words</label>
         <label ng-if="false" class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.createNewWindow"
             title="Show result of each search in new window"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Open new window for each search</label>
         <h5 class="font-weight-normal">Search scope:</h5>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchDocNames"
-            title="Toggle searching document titles"
+            title="Search document titles"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Title search</label>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchTags"
-            title="Toggle document tag search"
+            title="Search document tags"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Tag search</label>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchWords"
-            title="Toggle document word search"
+            title="Search document content"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Content search</label>
       </div>
       </form>
