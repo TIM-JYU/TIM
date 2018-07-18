@@ -310,6 +310,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 params.pars.first().find(".readline").removeClass("read read-modified");
                 getActiveDocument().refreshSectionReadMarks();
             },
+            funcOnDismiss: () => { },
         }));
         this.viewctrl.editing = false;
     }
@@ -510,7 +511,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
      * @param {Paragraph} $par The paragraph.
      * @returns {boolean | undefined} True if the paragraph is a table paragraph in edit mode, false
      * if the paragraph is a table paragraph but not in edit mode, undefined if the paragraph is not a table paragraph
-     * at all.
+     * at all or the table has forced edit mode.
      */
     isTimTableInEditMode($par: Paragraph | undefined): boolean | undefined {
         if ($par == null) {
@@ -526,6 +527,10 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         const tableCtrl = this.viewctrl.getTableControllerFromParId(parId);
 
         if (tableCtrl == null) {
+            return undefined;
+        }
+
+        if (tableCtrl.isInForcedEditMode()) {
             return undefined;
         }
 
