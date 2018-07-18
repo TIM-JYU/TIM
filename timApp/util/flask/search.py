@@ -188,9 +188,12 @@ def search():
     starting_time = time.clock()
     title_result_count = 0
     word_result_count = 0
+    current_doc = "before first doc"
+    current_par = "before first par"
     try:
         try:
             for d in docs:
+                current_doc = d.path
                 try:
                     doc_info = d.document.docinfo
                     # print(time.clock() - starting_time)
@@ -221,6 +224,7 @@ def search():
                         d_words_count = 0
                         for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
                             # Limit matches / document to get diverse document results faster.
+                            current_par = str(r.par.get_markdown())
                             if d_words_count > max_results_doc:
                                 complete = False
                                 continue
@@ -241,10 +245,9 @@ def search():
                                     results.append(result)
                             else:
                                 results.append(result)
-                except TypeError:
-                    abort(400, f"TypeError in {d.name}")
                 except:
-                    abort(400, f"Unknown error in {d.name}")
+                    # Don't stop search if error in a document.
+                    continue
         except sre_constants.error:
             abort(400, "Invalid regex")
         else:
@@ -256,7 +259,7 @@ def search():
     except MemoryError:
         abort(400, f"MemoryError: results too long")
     except TypeError as e:
-        abort(400, f"TypeError")
+        abort(400, f"TypeError {current_doc}, {current_par}")
     except Exception as e:
         abort(400, f"Error")
 
