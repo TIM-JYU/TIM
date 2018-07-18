@@ -525,8 +525,6 @@ export class TimTableController implements IController {
         const parId = getParId(this.element.parents(".par"));
         if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
 
-
-
         this.saveCurrentCell();
 
         if (ev.keyCode == 40) { // down arrow
