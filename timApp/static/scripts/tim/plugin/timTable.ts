@@ -320,16 +320,20 @@ export class TimTableController implements IController {
         }
         this.bigEditorOpen = true;
         const result = await openEditorSimple(docId, this.editedCellContent, "Edit table cell",
-            () => { this.bigEditorOpen = false; });
+            () => { this.bigEditorOpen = false; this.closeSmallEditor(); });
         this.bigEditorOpen = false;
         if (this.currentCell) { this.currentCell.editorOpen = false; }
         if (result.type == "save" && result.text != this.editedCellInitialContent) {
             this.saveCells(result.text, docId, parId, row, col);
             // ctrl.cellDataMatrix[row][col] = result.text
             this.editedCellContent = result.text;
+            this.closeSmallEditor();
         }
         if (result.type == "cancel") {
-            this.currentCell = undefined;
+            // this code path seems to be unused, because the result type is never cancel?
+            // when the user clicks 'cancel' in the paragraph editor, the dialog is just dismissed
+            // and no code after "await openEditorSimple" is executed here
+            this.closeSmallEditor();
         }
         if (isPrimitiveCell(cell)) {
         } else { cell.editorOpen = false; }
