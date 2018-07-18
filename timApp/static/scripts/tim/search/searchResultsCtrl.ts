@@ -52,6 +52,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private totalResults: number = 0;
     private limitedDisplay: boolean = false; // If there's large number of results, optimize shown results.
     private limitedDisplayTreshold: number = 1500;
+    private errorMessage: string = "";
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -64,6 +65,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
             this.resolve.params.tagMatchCount +
             this.resolve.params.wordMatchCount;
         this.folder = this.resolve.params.folder;
+        this.errorMessage = this.resolve.params.errorMessage;
         this.filterResults();
         this.searchWord = this.resolve.params.searchWord;
         super.$onInit();
@@ -86,95 +88,110 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         }
         for (const {item, index} of this.results.map((item, index) => ({item, index}))) {
             // Remove matches from the same title.
-            if (item && item.in_title) {
-                 if (!this.results[index - 1]) {
-                    this.filteredResults.push(item);
-                 } else {
-                     if (this.results[index - 1].doc.path === item.doc.path) {
-                         //
-                     } else {
-                         this.filteredResults.push(item);
-                     }
-                 }
-            }
-            // Remove matches from the same paragraph.
-            if (item && !item.in_title) {
-                if (!this.results[index - 1] || !this.results[index - 1].par) {
-                    this.filteredResults.push(item);
-                } else {
-                    if (index === 0 || item.par.id !== this.results[index - 1].par.id) {
+            try {
+                if (item && item.in_title) {
+                     if (!this.results[index - 1]) {
                         this.filteredResults.push(item);
+                     } else {
+                         if (this.results[index - 1].doc.path === item.doc.path) {
+                             //
+                         } else {
+                             this.filteredResults.push(item);
+                         }
+                     }
+                }
+                // Remove matches from the same paragraph.
+                if (item && !item.in_title) {
+                    if (!this.results[index - 1] || !this.results[index - 1].par) {
+                        this.filteredResults.push(item);
+                    } else {
+                        if (index === 0 || item.par.id !== this.results[index - 1].par.id) {
+                            this.filteredResults.push(item);
+                        }
                     }
                 }
+            } catch (e) {
+                this.errorMessage = e.getMessage().toString();
+                console.log(e);
             }
         }
         // Group paragraphs under documents.
         for (const r of this.filteredResults) {
-            const docIndex = this.docIndexInResults(r.doc, this.docResults);
-            if (!this.limitedDisplay) {
-                if (r.par) {
-                    const newParResult = {
-                        match_end_index: r.match_end_index,
-                        match_start_index: r.match_start_index,
-                        par: r.par,
-                        preview: this.previewPar(r, 80),
-                    };
-                    if (docIndex >= 0) {
-                        this.docResults[docIndex].pars.push(newParResult);
+            try {
+                const docIndex = this.docIndexInResults(r.doc, this.docResults);
+                if (!this.limitedDisplay) {
+                    if (r.par) {
+                        const newParResult = {
+                            match_end_index: r.match_end_index,
+                            match_start_index: r.match_start_index,
+                            par: r.par,
+                            preview: this.previewPar(r, 80),
+                        };
+                        if (docIndex >= 0) {
+                            this.docResults[docIndex].pars.push(newParResult);
+                        } else {
+                            const newDocResult = {
+                                closed: true,
+                                doc: r.doc,
+                                in_title: r.in_title,
+                                pars: [newParResult],
+                                tags: [],
+                            };
+                            this.docResults.push(newDocResult);
+                        }
                     } else {
                         const newDocResult = {
                             closed: true,
                             doc: r.doc,
                             in_title: r.in_title,
-                            pars: [newParResult],
+                            pars: [],
                             tags: [],
                         };
                         this.docResults.push(newDocResult);
                     }
                 } else {
-                    const newDocResult = {
-                        closed: true,
-                        doc: r.doc,
-                        in_title: r.in_title,
-                        pars: [],
-                        tags: [],
-                    };
-                    this.docResults.push(newDocResult);
+                    // If there's lots of results, don't add pars.
+                    if (docIndex < 0) {
+                        const newDocResult = {
+                            closed: true,
+                            doc: r.doc,
+                            in_title: r.in_title,
+                            pars: [],
+                            tags: [],
+                        };
+                        this.docResults.push(newDocResult);
+                    }
                 }
-            } else {
-                // If there's lots of results, don't add pars.
-                if (docIndex < 0) {
-                    const newDocResult = {
-                        closed: true,
-                        doc: r.doc,
-                        in_title: r.in_title,
-                        pars: [],
-                        tags: [],
-                    };
-                    this.docResults.push(newDocResult);
-                }
+            } catch (e) {
+                this.errorMessage = e.getMessage().toString();
+                console.log(e);
             }
         }
 
         for (const tagResult of this.tagResults) {
-            let found = false;
-            for (const docResult of this.docResults) {
-                // Add tags to corresponding document's tags-list.
-                if (tagResult.doc.path === docResult.doc.path) {
-                    docResult.tags = tagResult.matching_tags;
-                    found = true;
+            try {
+                let found = false;
+                for (const docResult of this.docResults) {
+                    // Add tags to corresponding document's tags-list.
+                    if (tagResult.doc.path === docResult.doc.path) {
+                        docResult.tags = tagResult.matching_tags;
+                        found = true;
+                    }
                 }
-            }
-            // Add documents found only with the tag to results list.
-            if (!found) {
-                const newDocResult = {
-                    closed: true,
-                    doc: tagResult.doc,
-                    in_title: false,
-                    pars: [],
-                    tags: tagResult.matching_tags,
-                };
-                this.docResults.push(newDocResult);
+                // Add documents found only with the tag to results list.
+                if (!found) {
+                    const newDocResult = {
+                        closed: true,
+                        doc: tagResult.doc,
+                        in_title: false,
+                        pars: [],
+                        tags: tagResult.matching_tags,
+                    };
+                    this.docResults.push(newDocResult);
+                }
+            } catch (e) {
+                this.errorMessage = e.getMessage().toString();
+                console.log(e);
             }
         }
     }
@@ -266,7 +283,7 @@ registerDialogComponent("timSearchResults",
     </dialog-header>
     <dialog-body>
     <div ng-show="$ctrl.resolve.params.errorMessage" class="alert alert-warning">
-        <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.resolve.params.errorMessage}}
+        <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
     </div>
     <div ng-if="$ctrl.docResults.length <= 0 && !$ctrl.errorMessage">
         <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents in <i>{{$ctrl.folder}}</i></h5>
