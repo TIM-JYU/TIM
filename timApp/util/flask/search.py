@@ -187,12 +187,9 @@ def search():
     starting_time = time.clock()
     title_result_count = 0
     word_result_count = 0
-    current_doc = "before first doc"
-    current_par = "before first par"
     try:
         regex = re.compile(term, flags)
         for d in docs:
-            current_doc = d.path
             try:
                 doc_info = d.document.docinfo
                 # print(time.clock() - starting_time)
@@ -222,7 +219,6 @@ def search():
                 if search_words:
                     d_words_count = 0
                     for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
-                        current_par = str(r.par.get_markdown())
                         # Limit matches / document to get diverse document results faster.
                         if d_words_count > max_results_doc:
                             complete = False
@@ -244,19 +240,17 @@ def search():
                                 results.append(result)
                         else:
                             results.append(result)
-            except:
-                abort(400, f"Error: {str(e)} in doc: {current_doc}, par: {current_par}")
+            except Exception as e:
+                raise Exception(e)
         else:
             return json_response({'results': results, 'complete': complete, 'titleResultCount': title_result_count,
                                   'wordResultCount': word_result_count})
     except MemoryError:
         abort(400, f"MemoryError: results too long")
-    except TypeError:
-        abort(400, f"TypeError: doc: {current_doc}, par_md: {current_par}")
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
-    except:
-        abort(400, f"Unknown error: doc: {current_doc}, par_md: {current_par}")
+    except Exception as e:
+        abort(400, f"Error: {e}")
 
 
 def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool) -> Generator[
@@ -271,8 +265,8 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
     results_found = 0
     pars_processed = 0
     pars_found = 0
-    try:
-        for d, p in enum_pars(d):
+    for d, p in enum_pars(d):
+        try:
             pars_processed += 1
             md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
             matches = set(regex.finditer(md))
@@ -290,5 +284,8 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
                     )
             if args.onlyfirst and pars_processed >= args.onlyfirst:
                 break
-    except Exception as e:
-        abort(400, f"Error: {str(e)} in doc: {current_doc}, par: {current_par}")
+        except Exception as e:
+            if d.path and p.get_markdown():
+                raise Exception(f"{e}: {{doc: {d.path}, par: {p.get_markdown()}}}")
+            else:
+                raise Exception(e)
