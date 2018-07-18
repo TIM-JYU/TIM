@@ -29,6 +29,10 @@ search_routes = Blueprint('search',
                           url_prefix='/search')
 
 
+class ParSearchError(Exception):
+    """Error raised when document paragraph search fails."""
+
+
 # noinspection PyUnusedLocal
 def make_cache_key(*args, **kwargs):
     path = request.path
@@ -144,55 +148,51 @@ def search():
     :return:
     """
     verify_logged_in()
-    try:
-        query = request.args.get('query', '')
-        folder = request.args.get('folder', '')
-        regex_option = get_option(request, 'regex', default=False, cast=bool)
-        case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-        onlyfirst = get_option(request, 'onlyfirst', default=999, cast=int)
-        max_results_total = get_option(request, 'maxTotalResults', default=100000, cast=int)
-        max_time = get_option(request, 'maxTime', default=10, cast=int)
-        max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
-        ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
-        search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
-        search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
-        search_words = get_option(request, 'searchWords', default=True, cast=bool)
-        current_user = get_current_user_object()
-        complete = True
+    query = request.args.get('query', '')
+    folder = request.args.get('folder', '')
+    regex_option = get_option(request, 'regex', default=False, cast=bool)
+    case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
+    onlyfirst = get_option(request, 'onlyfirst', default=999, cast=int)
+    max_results_total = get_option(request, 'maxTotalResults', default=100000, cast=int)
+    max_time = get_option(request, 'maxTime', default=10, cast=int)
+    max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
+    ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
+    search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
+    search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
+    search_words = get_option(request, 'searchWords', default=True, cast=bool)
+    current_user = get_current_user_object()
 
-        if len(query.strip()) < 3 and not search_exact_words:
-            abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
-        if len(query.strip()) < 1 and search_exact_words:
-            abort(400, 'Search text must be at least 1 character long with whitespace stripped.')
+    if len(query.strip()) < 3 and not search_exact_words:
+        abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
+    if len(query.strip()) < 1 and search_exact_words:
+        abort(400, 'Search text must be at least 1 character long with whitespace stripped.')
 
-        # Won't search subfolders if search_recursively isn't true.
-        docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)
-        results = []
-        args = SearchArgumentsBasic(
-            term=query,
-            regex=regex_option,
-            onlyfirst=onlyfirst,
-            format="")
+    # Won't search subfolders if search_recursively isn't true.
+    docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)
+    results = []
+    args = SearchArgumentsBasic(
+        term=query,
+        regex=regex_option,
+        onlyfirst=onlyfirst,
+        format="")
 
-        if case_sensitive:
-            flags = re.DOTALL
-        else:
-            flags = re.DOTALL | re.IGNORECASE
-        if args.regex:
-            term = args.term
-        else:
-            term = re.escape(args.term)
-        if search_exact_words:
-            term = fr"(?:^|\W)({args.term})(?:$|\W)"
-        starting_time = time.clock()
-        title_result_count = 0
-        word_result_count = 0
-        current_doc = "before first"
-        current_par = "before first"
-    except Exception as e:
-        abort(400, f"Initializing the search failed: {str(e)}")
-    except:
-        abort(400, f"Initializing the search failed")
+    if case_sensitive:
+        flags = re.DOTALL
+    else:
+        flags = re.DOTALL | re.IGNORECASE
+    if args.regex:
+        term = args.term
+    else:
+        term = re.escape(args.term)
+    if search_exact_words:
+        term = fr"(?:^|\W)({args.term})(?:$|\W)"
+
+    starting_time = time.clock()
+    current_doc = "before first"
+    complete = True
+    title_result_count = 0
+    word_result_count = 0
+
     try:
         regex = re.compile(term, flags)
         for d in docs:
@@ -224,12 +224,12 @@ def search():
                         results.append(result)
             if search_words:
                 d_words_count = 0
-                for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
+                for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False,
+                                       ignore_plugins=ignore_plugins_settings):
                     # Limit matches / document to get diverse document results faster.
                     if d_words_count > max_results_doc:
                         complete = False
                         continue
-                    current_par = str(r.par.get_markdown())
                     d_words_count += 1
                     word_result_count += 1
                     result = {'doc': r.doc,
@@ -249,15 +249,18 @@ def search():
                         results.append(result)
         return json_response({'results': results, 'complete': complete, 'titleResultCount': title_result_count,
                               'wordResultCount': word_result_count})
+    except ParSearchError as par:
+        abort(400, f"Error searching doc: {current_doc}, par: {par}")
     except MemoryError:
         abort(400, f"MemoryError: results too long")
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
-    except:
-        abort(400, f"Error in doc: {current_doc}, par: {current_par}")
+    except Exception as e:
+        abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
 
 
-def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool) -> Generator[
+def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool,
+                  ignore_plugins: bool=False) -> Generator[
     SearchResult, None, None]:
     """Performs a search operation for the specified document, yielding SearchResults.
 
@@ -269,21 +272,28 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
     results_found = 0
     pars_processed = 0
     pars_found = 0
-    for d, p in enum_pars(d):
-        pars_processed += 1
-        md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
-        matches = set(regex.finditer(md))
-        if matches:
-            pars_found += 1
-            for m in matches:
-                results_found += 1
-                yield SearchResult(
-                    doc=d,
-                    par=p,
-                    num_results=results_found,
-                    num_pars=pars_processed,
-                    num_pars_found=pars_found,
-                    match=m,
-                )
-        if args.onlyfirst and pars_processed >= args.onlyfirst:
-            break
+    current_par = "before first"
+    try:
+        for d, p in enum_pars(d):
+            if ignore_plugins and (p.is_setting() or p.is_plugin()):
+                continue
+            current_par = str(p.get_markdown())
+            pars_processed += 1
+            md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
+            matches = set(regex.finditer(md))
+            if matches:
+                pars_found += 1
+                for m in matches:
+                    results_found += 1
+                    yield SearchResult(
+                        doc=d,
+                        par=p,
+                        num_results=results_found,
+                        num_pars=pars_processed,
+                        num_pars_found=pars_found,
+                        match=m,
+                    )
+            if args.onlyfirst and pars_processed >= args.onlyfirst:
+                break
+    except:
+        raise ParSearchError(current_par)
