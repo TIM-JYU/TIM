@@ -33,6 +33,10 @@ class ParSearchError(Exception):
     """Error raised when document paragraph search fails."""
 
 
+class JSONResponseError(Exception):
+    """Error raised when forming JSON response fails."""
+
+
 # noinspection PyUnusedLocal
 def make_cache_key(*args, **kwargs):
     path = request.path
@@ -188,7 +192,7 @@ def search():
         term = fr"(?:^|\W)({args.term})(?:$|\W)"
 
     starting_time = time.clock()
-    current_doc = "before first"
+    current_doc = "before search"
     complete = True
     title_result_count = 0
     word_result_count = 0
@@ -247,8 +251,12 @@ def search():
                             results.append(result)
                     else:
                         results.append(result)
-        return json_response({'results': results, 'complete': complete, 'titleResultCount': title_result_count,
-                              'wordResultCount': word_result_count})
+        current_doc = "search over"
+        try:
+            return json_response({'results': results, 'complete': complete, 'titleResultCount': title_result_count,
+                                  'wordResultCount': word_result_count})
+        except:
+            raise JSONResponseError(f"Error forming JSON response for search results: {results}")
     except ParSearchError as par:
         abort(400, f"Error searching doc: {current_doc}, par: {par}")
     except MemoryError:
@@ -260,7 +268,7 @@ def search():
 
 
 def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool,
-                  ignore_plugins: bool=False) -> Generator[
+                  ignore_plugins: bool = False) -> Generator[
     SearchResult, None, None]:
     """Performs a search operation for the specified document, yielding SearchResults.
 
