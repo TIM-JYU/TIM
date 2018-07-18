@@ -30,6 +30,7 @@ export interface TimTable {
     table: ITable;
     id?: string;
     addRowButtonText?: string;
+    forcedEditMode?: boolean;
 }
 
 export interface ITable extends ITableStyles {
@@ -163,6 +164,7 @@ export class TimTableController implements IController {
     public cellDataMatrix: string[][] = [];
     private data!: Binding<TimTable, "<">;
     private editing: boolean = false;
+    private forcedEditMode: boolean = false;
     private editedCellContent: string | undefined;
     private editedCellInitialContent: string | undefined;
     private currentCell?: { row: number, col: number, editorOpen: boolean };
@@ -191,7 +193,11 @@ export class TimTableController implements IController {
                 return;
             }
             if (this.data.addRowButtonText) {
-                this.addRowButtonText = this.data.addRowButtonText;
+                this.addRowButtonText = " " + this.data.addRowButtonText;
+            }
+            if (this.data.forcedEditMode) {
+                this.forcedEditMode = this.data.forcedEditMode && this.viewctrl.item.rights.editable;
+                this.editing = this.forcedEditMode;
             }
 
             this.viewctrl.addTable(this, parId);
@@ -207,14 +213,20 @@ export class TimTableController implements IController {
     }
 
     /**
+     * Checks whether the table is set to be always in edit mode
+     * (assuming the user has edit rights).
+     * @returns {boolean} True if the table is always in edit mode, otherwise false.
+     */
+    public isInForcedEditMode() {
+        return this.forcedEditMode;
+    }
+
+    /**
      * Checks whether the table is in edit mode.
      * @returns {boolean} True if the table is in edit mode, otherwise false.
      */
     public isInEditMode() {
-        if (!this.editing) {
-            return false;
-        }
-        return this.editing;
+        return this.editing || this.forcedEditMode;
     }
 
     /**
@@ -614,7 +626,7 @@ export class TimTableController implements IController {
      */
     private async cellClicked(cell: CellEntity, rowi: number, coli: number, event?: MouseEvent) {
         const parId = getParId(this.element.parents(".par"));
-        if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
+        if (!this.isInEditMode() || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
 
         if (this.currentCell) {
             if (this.currentCell.row == rowi && this.currentCell.col == coli) {
@@ -922,9 +934,9 @@ timApp.component("timTable", {
     template: `<div ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
      <div class="timTableContentDiv">
-    <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.editing"
+    <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
             ng-click="$ctrl.addColumn()"><span class="glyphicon glyphicon-plus"></span></button>
-    <table ng-class="{editable: $ctrl.editing}" class="timTableTable"
+    <table ng-class="{editable: $ctrl.isInEditMode() && !$ctrl.isInForcedEditMode(), forcedEditable: $ctrl.isInForcedEditMode()}" class="timTableTable"
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
              ng-style="$ctrl.stylingForColumn(c)"/>
@@ -938,7 +950,7 @@ timApp.component("timTable", {
                 </td>
         </tr>
     </table>
-    <button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.editing" ng-click="$ctrl.addRow()"><span
+    <button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.addRow()"><span
             class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
             </div>
     <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"
