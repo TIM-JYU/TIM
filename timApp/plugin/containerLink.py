@@ -158,13 +158,6 @@ def convert_md(plugin_data: List[dict], options: DumboOptions, outtype='md', plu
         p['markup'] = h
 
 
-def prepare_for_dumbo_attr_list(plugin: str, plugins_data: List[dict]):
-    regex_obj = get_plugin_regex_obj(plugin)
-    for p in plugins_data:
-        prepare_for_dumbo_attr_list_recursive(regex_obj, p)
-    return
-
-
 def prepare_for_dumbo_attr_list_recursive(regex_obj, plugin_data: dict):
     for key, value in plugin_data.items():
         if isinstance(value, dict):
@@ -211,8 +204,9 @@ def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
         if has_auto_md(plug_dict[MARKUP], default_auto_md):
             regexattrs = get_plugin(plugin).get(REGEXATTRS)
             if regexattrs is not None:
+                regex_obj = get_plugin_regex_obj(plugin)
                 # use attribute list instead of calling the plugin
-                prepare_for_dumbo_attr_list(plugin, plugin_dicts)
+                prepare_for_dumbo_attr_list_recursive(regex_obj, plug_dict)
             elif inner:
                 plugin_instance.prepare_for_dumbo(plug_dict)
             else:
