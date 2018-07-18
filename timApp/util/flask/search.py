@@ -187,10 +187,12 @@ def search():
     starting_time = time.clock()
     title_result_count = 0
     word_result_count = 0
+    current_doc = "before first"
     try:
         regex = re.compile(term, flags)
         for d in docs:
             try:
+                current_doc = d.path
                 doc_info = d.document.docinfo
                 # print(time.clock() - starting_time)
                 if (time.clock() - starting_time) > max_time:
@@ -241,7 +243,7 @@ def search():
                         else:
                             results.append(result)
             except Exception as e:
-                raise Exception(e)
+                raise Exception(f"{str(e)}, doc: {current_doc}")
         else:
             return json_response({'results': results, 'complete': complete, 'titleResultCount': title_result_count,
                                   'wordResultCount': word_result_count})
@@ -250,7 +252,7 @@ def search():
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
     except Exception as e:
-        abort(400, f"Error: {e}")
+        abort(400, f"Error: {str(e)}")
 
 
 def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool) -> Generator[
@@ -265,8 +267,10 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
     results_found = 0
     pars_processed = 0
     pars_found = 0
+    current_par = "before first"
     for d, p in enum_pars(d):
         try:
+            current_par = str(p.get_markdown())
             pars_processed += 1
             md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
             matches = set(regex.finditer(md))
@@ -285,7 +289,6 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
             if args.onlyfirst and pars_processed >= args.onlyfirst:
                 break
         except Exception as e:
-            if d.path and p.get_markdown():
-                raise Exception(f"{e}: {{doc: {d.path}, par: {p.get_markdown()}}}")
-            else:
-                raise Exception(e)
+            raise Exception(f"{str(e)}: par: {current_par}")
+        except:
+            raise Exception(f"par: {current_par}")
