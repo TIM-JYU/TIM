@@ -58,14 +58,14 @@ def get_folders_three_levels(starting_path: str, folder_set):
     """
     folders = Folder.get_all_in_path(starting_path)
     for folder_l1 in folders:
-            folder_l1_path = folder_l1.path
-            folder_set.add(folder_l1_path)
-            for folder_l2 in Folder.get_all_in_path(folder_l1_path):
-                folder_l2_path = folder_l2.path
-                folder_set.add(folder_l2_path)
-                for folder_l3 in Folder.get_all_in_path(folder_l2_path):
-                    folder_l3_path = folder_l3.path
-                    folder_set.add(folder_l3_path)
+        folder_l1_path = folder_l1.path
+        folder_set.add(folder_l1_path)
+        for folder_l2 in Folder.get_all_in_path(folder_l1_path):
+            folder_l2_path = folder_l2.path
+            folder_set.add(folder_l2_path)
+            for folder_l3 in Folder.get_all_in_path(folder_l2_path):
+                folder_l3_path = folder_l3.path
+                folder_set.add(folder_l3_path)
 
 
 def get_folders_recursive(starting_path: str, folder_set):
@@ -144,115 +144,117 @@ def search():
     :return:
     """
     verify_logged_in()
+    try:
+        query = request.args.get('query', '')
+        folder = request.args.get('folder', '')
+        regex_option = get_option(request, 'regex', default=False, cast=bool)
+        case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
+        onlyfirst = get_option(request, 'onlyfirst', default=999, cast=int)
+        max_results_total = get_option(request, 'maxTotalResults', default=100000, cast=int)
+        max_time = get_option(request, 'maxTime', default=10, cast=int)
+        max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
+        ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
+        search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
+        search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
+        search_words = get_option(request, 'searchWords', default=True, cast=bool)
+        current_user = get_current_user_object()
+        complete = True
 
-    query = request.args.get('query', '')
-    folder = request.args.get('folder', '')
-    regex_option = get_option(request, 'regex', default=False, cast=bool)
-    case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-    onlyfirst = get_option(request, 'onlyfirst', default=999, cast=int)
-    max_results_total = get_option(request, 'maxTotalResults', default=100000, cast=int)
-    max_time = get_option(request, 'maxTime', default=10, cast=int)
-    max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
-    ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
-    search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
-    search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
-    search_words = get_option(request, 'searchWords', default=True, cast=bool)
-    current_user = get_current_user_object()
-    complete = True
+        if len(query.strip()) < 3 and not search_exact_words:
+            abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
+        if len(query.strip()) < 1 and search_exact_words:
+            abort(400, 'Search text must be at least 1 character long with whitespace stripped.')
 
-    if len(query.strip()) < 3 and not search_exact_words:
-        abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
-    if len(query.strip()) < 1 and search_exact_words:
-        abort(400, 'Search text must be at least 1 character long with whitespace stripped.')
+        # Won't search subfolders if search_recursively isn't true.
+        docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)
+        results = []
+        args = SearchArgumentsBasic(
+            term=query,
+            regex=regex_option,
+            onlyfirst=onlyfirst,
+            format="")
 
-    # Won't search subfolders if search_recursively isn't true.
-    docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)
-    results = []
-    args = SearchArgumentsBasic(
-        term=query,
-        regex=regex_option,
-        onlyfirst=onlyfirst,
-        format="")
-
-    if case_sensitive:
-        flags = re.DOTALL
-    else:
-        flags = re.DOTALL | re.IGNORECASE
-    if args.regex:
-        term = args.term
-    else:
-        term = re.escape(args.term)
-    if search_exact_words:
-        term = fr"(?:^|\W)({args.term})(?:$|\W)"
-    starting_time = time.clock()
-    title_result_count = 0
-    word_result_count = 0
-    current_doc = "before first"
+        if case_sensitive:
+            flags = re.DOTALL
+        else:
+            flags = re.DOTALL | re.IGNORECASE
+        if args.regex:
+            term = args.term
+        else:
+            term = re.escape(args.term)
+        if search_exact_words:
+            term = fr"(?:^|\W)({args.term})(?:$|\W)"
+        starting_time = time.clock()
+        title_result_count = 0
+        word_result_count = 0
+        current_doc = "before first"
+        current_par = "before first"
+    except Exception as e:
+        abort(400, f"Initializing the search failed: {str(e)}")
+    except:
+        abort(400, f"Initializing the search failed")
     try:
         regex = re.compile(term, flags)
         for d in docs:
-            try:
-                current_doc = d.path
-                doc_info = d.document.docinfo
-                # print(time.clock() - starting_time)
-                if (time.clock() - starting_time) > max_time:
-                    complete = False
-                    break
-                # If results are too large, MemoryError occurs.
-                if len(results) > max_results_total:
-                    complete = False
-                    break
-                if search_doc_names:
-                    d_title = doc_info.title
-                    matches = list(regex.finditer(d_title))
-                    if matches:
-                        for m in matches:
-                            title_result_count += 1
-                            result = {'doc': doc_info,
-                                      'par': None,
-                                      'match_word': m.group(0),
-                                      'match_start_index': m.start(),
-                                      'match_end_index': m.end(),
-                                      'num_results': len(matches),
-                                      'num_pars': 0,
-                                      'num_pars_found': 0,
-                                      'in_title': True}
+            current_doc = d.path
+            doc_info = d.document.docinfo
+            # print(time.clock() - starting_time)
+            if (time.clock() - starting_time) > max_time:
+                complete = False
+                break
+            # If results are too large, MemoryError occurs.
+            if len(results) > max_results_total:
+                complete = False
+                break
+            if search_doc_names:
+                d_title = doc_info.title
+                matches = list(regex.finditer(d_title))
+                if matches:
+                    for m in matches:
+                        title_result_count += 1
+                        result = {'doc': doc_info,
+                                  'par': None,
+                                  'match_word': m.group(0),
+                                  'match_start_index': m.start(),
+                                  'match_end_index': m.end(),
+                                  'num_results': len(matches),
+                                  'num_pars': 0,
+                                  'num_pars_found': 0,
+                                  'in_title': True}
+                        results.append(result)
+            if search_words:
+                d_words_count = 0
+                for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
+                    # Limit matches / document to get diverse document results faster.
+                    if d_words_count > max_results_doc:
+                        complete = False
+                        continue
+                    current_par = str(r.par.get_markdown())
+                    d_words_count += 1
+                    word_result_count += 1
+                    result = {'doc': r.doc,
+                              'par': r.par,
+                              'match_word': r.match.group(0),
+                              'match_start_index': r.match.span()[0],
+                              'match_end_index': r.match.span()[1],
+                              'num_results': r.num_results,
+                              'num_pars': r.num_pars,
+                              'num_pars_found': r.num_pars_found,
+                              'in_title': False}
+                    # Don't return results within plugins if no edit access to the document.
+                    if r.par.is_setting() or r.par.is_plugin():
+                        if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
                             results.append(result)
-                if search_words:
-                    d_words_count = 0
-                    for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
-                        # Limit matches / document to get diverse document results faster.
-                        if d_words_count > max_results_doc:
-                            complete = False
-                            continue
-                        d_words_count += 1
-                        word_result_count += 1
-                        result = {'doc': r.doc,
-                                  'par': r.par,
-                                  'match_word': r.match.group(0),
-                                  'match_start_index': r.match.span()[0],
-                                  'match_end_index': r.match.span()[1],
-                                  'num_results': r.num_results,
-                                  'num_pars': r.num_pars,
-                                  'num_pars_found': r.num_pars_found,
-                                  'in_title': False}
-                        # Don't return results within plugins if no edit access to the document.
-                        if r.par.is_setting() or r.par.is_plugin():
-                            if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
-                                results.append(result)
-                        else:
-                            results.append(result)
-            except Exception as e:
-                raise Exception(f"{str(e)}, doc: {current_doc}")
-        else:
-            return json_response({'results': results, 'complete': complete, 'titleResultCount': title_result_count,
-                                  'wordResultCount': word_result_count})
+                    else:
+                        results.append(result)
+        return json_response({'results': results, 'complete': complete, 'titleResultCount': title_result_count,
+                              'wordResultCount': word_result_count})
     except MemoryError:
         abort(400, f"MemoryError: results too long")
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
-    except Exception as e:
-        abort(400, f"Error: {str(e)}")
+    except:
+        abort(400, f"Error in doc: {current_doc}, par: {current_par}")
 
 
 def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool) -> Generator[
@@ -267,28 +269,21 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
     results_found = 0
     pars_processed = 0
     pars_found = 0
-    current_par = "before first"
     for d, p in enum_pars(d):
-        try:
-            current_par = str(p.get_markdown())
-            pars_processed += 1
-            md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
-            matches = set(regex.finditer(md))
-            if matches:
-                pars_found += 1
-                for m in matches:
-                    results_found += 1
-                    yield SearchResult(
-                        doc=d,
-                        par=p,
-                        num_results=results_found,
-                        num_pars=pars_processed,
-                        num_pars_found=pars_found,
-                        match=m,
-                    )
-            if args.onlyfirst and pars_processed >= args.onlyfirst:
-                break
-        except Exception as e:
-            raise Exception(f"{str(e)}: par: {current_par}")
-        except:
-            raise Exception(f"par: {current_par}")
+        pars_processed += 1
+        md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
+        matches = set(regex.finditer(md))
+        if matches:
+            pars_found += 1
+            for m in matches:
+                results_found += 1
+                yield SearchResult(
+                    doc=d,
+                    par=p,
+                    num_results=results_found,
+                    num_pars=pars_processed,
+                    num_pars_found=pars_found,
+                    match=m,
+                )
+        if args.onlyfirst and pars_processed >= args.onlyfirst:
+            break
