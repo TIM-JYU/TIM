@@ -50,6 +50,8 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private tagResults: ITagSearchResult[] = [];
     private folder: string = "";
     private totalResults: number = 0;
+    private limitedDisplay: boolean = false; // If there's large number of results, optimize shown results.
+    private limitedDisplayTreshold: number = 1500;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -79,7 +81,9 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
      * and groups paragraphs and tags under documents.
      */
     private filterResults() {
-        // TODO: Optimize and possibly move to searchBox.
+        if (this.totalResults > this.limitedDisplayTreshold) {
+            this.limitedDisplay = true;
+        }
         for (const {item, index} of this.results.map((item, index) => ({item, index}))) {
             // Remove matches from the same title.
             if (item && item.in_title) {
@@ -107,36 +111,51 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         // Group paragraphs under documents.
         for (const r of this.filteredResults) {
             const docIndex = this.docIndexInResults(r.doc, this.docResults);
-            if (r.par) {
-                const newParResult = {
-                    match_end_index: r.match_end_index,
-                    match_start_index: r.match_start_index,
-                    par: r.par,
-                    preview: this.previewPar(r, 80),
-                };
-                if (docIndex >= 0) {
-                    this.docResults[docIndex].pars.push(newParResult);
+            if (!this.limitedDisplay) {
+                if (r.par) {
+                    const newParResult = {
+                        match_end_index: r.match_end_index,
+                        match_start_index: r.match_start_index,
+                        par: r.par,
+                        preview: this.previewPar(r, 80),
+                    };
+                    if (docIndex >= 0) {
+                        this.docResults[docIndex].pars.push(newParResult);
+                    } else {
+                        const newDocResult = {
+                            closed: true,
+                            doc: r.doc,
+                            in_title: r.in_title,
+                            pars: [newParResult],
+                            tags: [],
+                        };
+                        this.docResults.push(newDocResult);
+                    }
                 } else {
                     const newDocResult = {
                         closed: true,
                         doc: r.doc,
                         in_title: r.in_title,
-                        pars: [newParResult],
+                        pars: [],
                         tags: [],
                     };
                     this.docResults.push(newDocResult);
                 }
             } else {
-                const newDocResult = {
-                    closed: true,
-                    doc: r.doc,
-                    in_title: r.in_title,
-                    pars: [],
-                    tags: [],
-                };
-                this.docResults.push(newDocResult);
+                // If there's lots of results, don't add pars.
+                if (docIndex < 0) {
+                    const newDocResult = {
+                        closed: true,
+                        doc: r.doc,
+                        in_title: r.in_title,
+                        pars: [],
+                        tags: [],
+                    };
+                    this.docResults.push(newDocResult);
+                }
             }
         }
+
         for (const tagResult of this.tagResults) {
             let found = false;
             for (const docResult of this.docResults) {
@@ -258,7 +277,7 @@ registerDialogComponent("timSearchResults",
             in <i ng-if="$ctrl.folder">{{$ctrl.folder}}</i><i ng-if="!$ctrl.folder">root</i>
         </h5>
         <ul class="list-unstyled">
-            <li ng-repeat="r in $ctrl.docResults | orderBy:$ctrl.relevance">
+            <li ng-repeat="r in $ctrl.docResults | orderBy:'doc.path'">
                 <a class="cursor-pointer" ng-click="r.closed = !r.closed"
                 ng-if="r.pars.length > 0 || r.tags.length > 0">
                     <i class="glyphicon" ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
@@ -266,7 +285,7 @@ registerDialogComponent("timSearchResults",
                 <a href="/view/{{r.doc.path}}" title="Open {{r.doc.title}}">{{r.doc.title}}</a>
                 <i>({{r.doc.path}})</i>
                 <ul>
-                    <li ng-repeat="p in r.pars" ng-if="!r.closed">
+                    <li ng-repeat="p in r.pars" ng-if="!r.closed && !$ctrl.limitedDisplay">
                         <a href="/view/{{r.doc.path}}#{{p.par.id}}" title="Open paragraph">{{p.preview}}</a>
                     </li>
                     <span ng-repeat="tag in r.tags" ng-if="!r.closed">

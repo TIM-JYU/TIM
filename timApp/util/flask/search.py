@@ -45,7 +45,6 @@ def get_subfolders():
     folder_set = set()
     # get_folders_recursive(request.args.get('folder', ''), folder_set)
     get_folders_three_levels(request.args.get('folder', ''), folder_set)
-    print(list(folder_set))
     return json_response(list(folder_set))
 
 
@@ -190,11 +189,12 @@ def search():
         try:
             for d in docs:
                 doc_info = d.document.docinfo
-                print(time.clock() - starting_time)
+                # print(time.clock() - starting_time)
                 if (time.clock() - starting_time) > 10:
                     complete = False
                     break
-                if len(results) > 100000:
+                # If results are too large, MemoryError occurs.
+                if len(results) > 500000:
                     complete = False
                     break
                 if search_doc_names:
@@ -214,7 +214,13 @@ def search():
                                       'in_title': True}
                             results.append(result)
                 if search_words:
+                    d_words_count = 0
                     for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
+                        # Limit matches / document to get diverse document results faster.
+                        if d_words_count > 100:
+                            complete = False
+                            continue
+                        d_words_count += 1
                         word_result_count += 1
                         result = {'doc': r.doc,
                                   'par': r.par,
@@ -262,7 +268,6 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
         matches = set(regex.finditer(md))
         if matches:
             pars_found += 1
-            # TODO: limit matches per document in case of overt numbers.
             for m in matches:
                 results_found += 1
                 yield SearchResult(

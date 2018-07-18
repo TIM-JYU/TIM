@@ -62,7 +62,7 @@ class SearchBoxCtrl implements IController {
     private caseSensitive: boolean = false;
     private results: ISearchResult[] = [];
     private errorMessage: string = "";
-    private onlyfirst: number = 250; // # first paragraphs searched from the document
+    private onlyfirst: number = 999; // # first paragraphs searched from the document
     private queryMinLength: number = 3;
     private queryMinLengthExactWords: number = 1; // Shorter words are allowed in exact words search.
     private tagMatchCount: number = 0;
@@ -153,7 +153,8 @@ class SearchBoxCtrl implements IController {
         this.updateLocalStorage();
         let tempError = this.errorMessage;
         if (!this.completeSearch) {
-            tempError = "Search was incomplete due to time or data constraints";
+            tempError = "Search was incomplete due to time or data constraints. " +
+                "For better results choose a more specific search folder in advanced search options.";
         }
         void showSearchResultDialog({
             errorMessage: tempError,
