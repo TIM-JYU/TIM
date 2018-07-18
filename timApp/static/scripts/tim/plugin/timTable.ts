@@ -400,13 +400,12 @@ export class TimTableController implements IController {
 
     /**
      * Returns a cell's content as a string.
-     * @param {CellEntity} cell The cell.
+     * @param {number} rowi: Table row index
+     * @param {number} coli: Table column index
      * @returns {string | string}
      */
-    private getCellContentString(cell: CellEntity) {
-        if (isPrimitiveCell(cell)) { return this.cellToString(cell); }
-
-        return this.cellToString(cell.cell);
+    private getCellContentString(rowi: number, coli: number) {
+        return this.cellDataMatrix[rowi][coli];
     }
 
 
@@ -717,12 +716,13 @@ export class TimTableController implements IController {
     /**
      * Sets style attributes for cells
      * @param {CellEntity} cell Styled cell
+     * @param {number} rowi Table row index
      * @param {number] coli Table column index
      */
-    private stylingForCell(cell: CellEntity, coli: number) {
+    private stylingForCell(cell: CellEntity, rowi: number, coli: number) {
         const styles = this.stylingForCellOfColumn(coli);
 
-        if (this.getCellContentString(cell) === "") {
+        if (this.getCellContentString(rowi, coli) === "") {
             styles["height"] = "2em";
             styles["width"] = "4em";
         }
@@ -943,7 +943,7 @@ timApp.component("timTable", {
             ng-style="$ctrl.stylingForRow(r)">
                 <td ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
                     id={{td.id}}"
-                    ng-style="$ctrl.stylingForCell(td, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
+                    ng-style="$ctrl.stylingForCell(td, rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
                     </div>
                 </td>
