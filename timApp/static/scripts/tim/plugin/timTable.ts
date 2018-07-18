@@ -525,6 +525,8 @@ export class TimTableController implements IController {
         const parId = getParId(this.element.parents(".par"));
         if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
 
+
+
         this.saveCurrentCell();
 
         if (ev.keyCode == 40) { // down arrow
@@ -651,7 +653,6 @@ export class TimTableController implements IController {
 
             if (typeof value === "string" && this.editedCellInitialContent != value) {
                 this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
-                this.currentCell = undefined;
             }
         }
     }
@@ -918,7 +919,7 @@ export class TimTableController implements IController {
      */
     private saveAndCloseSmallEditor() {
         this.saveCurrentCell();
-        this.currentCell = undefined;
+        this.closeSmallEditor();
     }
 }
 
