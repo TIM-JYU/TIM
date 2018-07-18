@@ -286,7 +286,6 @@ class SearchBoxCtrl implements IController {
             url: "/search",
         }));
         if (err) {
-            console.log(err);
             if (err.data.error) {
                 this.errorMessage = err.data.error.toString();
             } else {

@@ -244,20 +244,19 @@ def search():
                                 results.append(result)
                         else:
                             results.append(result)
-            except Exception:
-                # Don't stop search if there's an error in a document.
-                continue
+            except:
+                abort(400, f"Error: {str(e)} in doc: {current_doc}, par: {current_par}")
         else:
             return json_response({'results': results, 'complete': complete, 'titleResultCount': title_result_count,
                                   'wordResultCount': word_result_count})
     except MemoryError:
         abort(400, f"MemoryError: results too long")
-    except TypeError as e:
+    except TypeError:
         abort(400, f"TypeError: doc: {current_doc}, par_md: {current_par}")
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
-    except Exception as e:
-        abort(400, f"Error: {str(e)}")
+    except:
+        abort(400, f"Unknown error: doc: {current_doc}, par_md: {current_par}")
 
 
 def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool) -> Generator[
@@ -291,5 +290,5 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
                     )
             if args.onlyfirst and pars_processed >= args.onlyfirst:
                 break
-    except:
-        pass
+    except Exception as e:
+        abort(400, f"Error: {str(e)} in doc: {current_doc}, par: {current_par}")
