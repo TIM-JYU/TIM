@@ -184,84 +184,80 @@ def search():
         term = re.escape(args.term)
     if search_exact_words:
         term = fr"(?:^|\W)({args.term})(?:$|\W)"
-    regex = re.compile(term, flags)
     starting_time = time.clock()
     title_result_count = 0
     word_result_count = 0
     current_doc = "before first doc"
     current_par = "before first par"
     try:
-        try:
-            for d in docs:
-                current_doc = d.path
-                try:
-                    doc_info = d.document.docinfo
-                    # print(time.clock() - starting_time)
-                    if (time.clock() - starting_time) > max_time:
-                        complete = False
-                        break
-                    # If results are too large, MemoryError occurs.
-                    if len(results) > max_results_total:
-                        complete = False
-                        break
-                    if search_doc_names:
-                        d_title = doc_info.title
-                        matches = list(regex.finditer(d_title))
-                        if matches:
-                            for m in matches:
-                                title_result_count += 1
-                                result = {'doc': doc_info,
-                                          'par': None,
-                                          'match_word': m.group(0),
-                                          'match_start_index': m.start(),
-                                          'match_end_index': m.end(),
-                                          'num_results': len(matches),
-                                          'num_pars': 0,
-                                          'num_pars_found': 0,
-                                          'in_title': True}
+        regex = re.compile(term, flags)
+        for d in docs:
+            current_doc = d.path
+            try:
+                doc_info = d.document.docinfo
+                # print(time.clock() - starting_time)
+                if (time.clock() - starting_time) > max_time:
+                    complete = False
+                    break
+                # If results are too large, MemoryError occurs.
+                if len(results) > max_results_total:
+                    complete = False
+                    break
+                if search_doc_names:
+                    d_title = doc_info.title
+                    matches = list(regex.finditer(d_title))
+                    if matches:
+                        for m in matches:
+                            title_result_count += 1
+                            result = {'doc': doc_info,
+                                      'par': None,
+                                      'match_word': m.group(0),
+                                      'match_start_index': m.start(),
+                                      'match_end_index': m.end(),
+                                      'num_results': len(matches),
+                                      'num_pars': 0,
+                                      'num_pars_found': 0,
+                                      'in_title': True}
+                            results.append(result)
+                if search_words:
+                    d_words_count = 0
+                    for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
+                        current_par = str(r.par.get_markdown())
+                        # Limit matches / document to get diverse document results faster.
+                        if d_words_count > max_results_doc:
+                            complete = False
+                            continue
+                        d_words_count += 1
+                        word_result_count += 1
+                        result = {'doc': r.doc,
+                                  'par': r.par,
+                                  'match_word': r.match.group(0),
+                                  'match_start_index': r.match.span()[0],
+                                  'match_end_index': r.match.span()[1],
+                                  'num_results': r.num_results,
+                                  'num_pars': r.num_pars,
+                                  'num_pars_found': r.num_pars_found,
+                                  'in_title': False}
+                        # Don't return results within plugins if no edit access to the document.
+                        if r.par.is_setting() or r.par.is_plugin():
+                            if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
                                 results.append(result)
-                    if search_words:
-                        d_words_count = 0
-                        for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
-                            # Limit matches / document to get diverse document results faster.
-                            current_par = str(r.par.get_markdown())
-                            if d_words_count > max_results_doc:
-                                complete = False
-                                continue
-                            d_words_count += 1
-                            word_result_count += 1
-                            result = {'doc': r.doc,
-                                      'par': r.par,
-                                      'match_word': r.match.group(0),
-                                      'match_start_index': r.match.span()[0],
-                                      'match_end_index': r.match.span()[1],
-                                      'num_results': r.num_results,
-                                      'num_pars': r.num_pars,
-                                      'num_pars_found': r.num_pars_found,
-                                      'in_title': False}
-                            # Don't return results within plugins if no edit access to the document.
-                            if r.par.is_setting() or r.par.is_plugin():
-                                if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
-                                    results.append(result)
-                            else:
-                                results.append(result)
-                except:
-                    # Don't stop search if error in a document.
-                    continue
-        except sre_constants.error:
-            abort(400, "Invalid regex")
+                        else:
+                            results.append(result)
+            except Exception:
+                # Don't stop search if there's an error in a document.
+                continue
         else:
-            if results:
-                return json_response({'results': results, 'complete': complete, 'titleResultCount': title_result_count,
+            return json_response({'results': results, 'complete': complete, 'titleResultCount': title_result_count,
                                   'wordResultCount': word_result_count})
-            else:
-                abort(400, f"No matches found")
     except MemoryError:
         abort(400, f"MemoryError: results too long")
     except TypeError as e:
-        abort(400, f"TypeError {current_doc}, {current_par}")
+        abort(400, f"TypeError: doc: {current_doc}, par_md: {current_par}")
+    except sre_constants.error as e:
+        abort(400, f"Invalid regex: {str(e)}")
     except Exception as e:
-        abort(400, f"Error")
+        abort(400, f"Error: {str(e)}")
 
 
 def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool) -> Generator[
@@ -276,21 +272,24 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
     results_found = 0
     pars_processed = 0
     pars_found = 0
-    for d, p in enum_pars(d):
-        pars_processed += 1
-        md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
-        matches = set(regex.finditer(md))
-        if matches:
-            pars_found += 1
-            for m in matches:
-                results_found += 1
-                yield SearchResult(
-                    doc=d,
-                    par=p,
-                    num_results=results_found,
-                    num_pars=pars_processed,
-                    num_pars_found=pars_found,
-                    match=m,
-                )
-        if args.onlyfirst and pars_processed >= args.onlyfirst:
-            break
+    try:
+        for d, p in enum_pars(d):
+            pars_processed += 1
+            md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
+            matches = set(regex.finditer(md))
+            if matches:
+                pars_found += 1
+                for m in matches:
+                    results_found += 1
+                    yield SearchResult(
+                        doc=d,
+                        par=p,
+                        num_results=results_found,
+                        num_pars=pars_processed,
+                        num_pars_found=pars_found,
+                        match=m,
+                    )
+            if args.onlyfirst and pars_processed >= args.onlyfirst:
+                break
+    except:
+        pass

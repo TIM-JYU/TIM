@@ -140,7 +140,7 @@ class SearchBoxCtrl implements IController {
             }
             await this.wordSearch();
         }
-        if (this.results.length === 0 && this.tagResults.length === 0) {
+        if (this.results.length === 0 && this.tagResults.length === 0 && !this.errorMessage) {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
             this.loading = false;
             return;
@@ -286,6 +286,7 @@ class SearchBoxCtrl implements IController {
             url: "/search",
         }));
         if (err) {
+            console.log(err);
             if (err.data.error) {
                 this.errorMessage = err.data.error.toString();
             } else {
