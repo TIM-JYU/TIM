@@ -634,8 +634,8 @@ export class TimTableController implements IController {
             }
         }
 
-        await this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
         this.saveCurrentCell();
+        await this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
         this.currentCell = {row: rowi, col: coli, editorOpen: false};
         this.calculateElementPlaces(rowi, coli, event);
     }
