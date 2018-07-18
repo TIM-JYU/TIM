@@ -150,6 +150,9 @@ def search():
     regex_option = get_option(request, 'regex', default=False, cast=bool)
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
     onlyfirst = get_option(request, 'onlyfirst', default=999, cast=int)
+    max_results_total = get_option(request, 'maxTotalResults', default=100000, cast=int)
+    max_time = get_option(request, 'maxTime', default=10, cast=int)
+    max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
     ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
     search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
@@ -190,11 +193,11 @@ def search():
             for d in docs:
                 doc_info = d.document.docinfo
                 # print(time.clock() - starting_time)
-                if (time.clock() - starting_time) > 10:
+                if (time.clock() - starting_time) > max_time:
                     complete = False
                     break
                 # If results are too large, MemoryError occurs.
-                if len(results) > 500000:
+                if len(results) > max_results_total:
                     complete = False
                     break
                 if search_doc_names:
@@ -217,7 +220,7 @@ def search():
                     d_words_count = 0
                     for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False):
                         # Limit matches / document to get diverse document results faster.
-                        if d_words_count > 100:
+                        if d_words_count > max_results_doc:
                             complete = False
                             continue
                         d_words_count += 1

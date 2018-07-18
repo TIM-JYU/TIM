@@ -62,7 +62,6 @@ class SearchBoxCtrl implements IController {
     private caseSensitive: boolean = false;
     private results: ISearchResult[] = [];
     private errorMessage: string = "";
-    private onlyfirst: number = 999; // # first paragraphs searched from the document
     private queryMinLength: number = 3;
     private queryMinLengthExactWords: number = 1; // Shorter words are allowed in exact words search.
     private tagMatchCount: number = 0;
@@ -274,7 +273,10 @@ class SearchBoxCtrl implements IController {
                 caseSensitive: this.caseSensitive,
                 folder: this.folder,
                 ignorePluginsSettings: this.ignorePluginsSettings,
-                onlyfirst: this.onlyfirst,
+                maxDocResults: 100,
+                maxTime: 10,
+                maxTotalResults: 10000,
+                onlyfirst: 1000,
                 query: this.query,
                 regex: this.regex,
                 searchDocNames: this.searchDocNames,
