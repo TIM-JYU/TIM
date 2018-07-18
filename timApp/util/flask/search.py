@@ -241,8 +241,9 @@ def search():
                                     results.append(result)
                             else:
                                 results.append(result)
-                except TypeError:
-                    continue
+                except:
+                    # If one document causes error, don't end whole search.
+                    complete = False
         except sre_constants.error:
             abort(400, "Invalid regex")
         else:
