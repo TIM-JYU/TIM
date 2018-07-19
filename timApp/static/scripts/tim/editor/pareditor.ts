@@ -18,6 +18,7 @@ markAsUsed(rangyinputs);
 
 const MENU_BUTTON_CLASS = "menuButtons";
 const MENU_BUTTON_CLASS_DOT = "." + MENU_BUTTON_CLASS;
+const TIM_TABLE_CELL = "timTableCell";
 
 export interface IPreviewResult {
     html: string;
@@ -82,7 +83,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
         strokes: string,
         pipe: string,
         timTableSimple: string,
-        timTableAdvanced: string
+        timTableAdvanced: string,
     };
     private storage: Storage;
     private touchDevice: boolean;
@@ -128,7 +129,9 @@ export class PareditorController extends DialogController<{params: IEditorParams
 
         this.wrap = {n: n};
 
-        this.proeditor = this.getLocalBool("proeditor", this.getSaveTag() === "par");
+        const saveTag = this.getSaveTag();
+        this.proeditor = this.getLocalBool("proeditor",
+            saveTag === "par" || saveTag === TIM_TABLE_CELL);
         this.autocomplete = this.getLocalBool("autocomplete", false);
 
         this.pluginButtonList = {};
@@ -953,14 +956,15 @@ export function openEditor(p: IEditorParams): IPromise<IEditorResult> {
         {saveKey: p.options.localSaveTag, absolute: true, size: p.defaultSize, forceMaximized: true}).result;
 }
 
-export function openEditorSimple(docId: number, text: string, caption: string, onDismiss?: () => void) {
+export function openEditorSimple(docId: number, text: string, caption: string,
+                                 localSaveTag: string, onDismiss?: () => void) {
     return openEditor({
-        initialText: text,
         defaultSize: "lg",
+        initialText: text,
         extraData: {docId, tags: {markread: false}, par: "nothing"}, options: {
             caption: caption,
             choices: undefined,
-            localSaveTag: "",
+            localSaveTag: localSaveTag,
             showDelete: false,
             showImageUpload: true,
             showPlugins: false,
