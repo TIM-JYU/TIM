@@ -189,11 +189,12 @@ def search():
     else:
         term = re.escape(args.term)
     if search_exact_words:
+        # Picks the term if it's a whole word, the only word or separated by comma etc.
         term = fr"(?:^|\W)({args.term})(?:$|\W)"
 
     starting_time = time.clock()
     current_doc = "before search"
-    complete = True
+    complete = True  # Whether the search was complete or ended without searching everything.
     title_result_count = 0
     word_result_count = 0
 
@@ -230,7 +231,7 @@ def search():
                 d_words_count = 0
                 for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False,
                                        ignore_plugins=ignore_plugins_settings):
-                    # Limit matches / document to get diverse document results faster.
+                    # Limit matches per document to get diverse document results faster.
                     if d_words_count > max_results_doc:
                         complete = False
                         continue
@@ -268,19 +269,20 @@ def search():
 
 
 def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool,
-                  ignore_plugins: bool = False) -> Generator[
-    SearchResult, None, None]:
-    """Performs a search operation for the specified document, yielding SearchResults.
+                  ignore_plugins: bool = False) -> Generator[SearchResult, None, None]:
+    """
+    Performs a search operation for the specified document, yielding SearchResults.
 
     :param args: The search arguments.
     :param d: The document to process.
     :param regex: Regex formatted before calling.
     :param use_exported: Whether to search in the exported form of paragraphs.
+    :param ignore_plugins: Whether to search paragraphs marked as plugin or setting.
     """
     results_found = 0
     pars_processed = 0
     pars_found = 0
-    current_par = "before first"
+    current_par = "before first par"
     try:
         for d, p in enum_pars(d):
             if ignore_plugins and (p.is_setting() or p.is_plugin()):

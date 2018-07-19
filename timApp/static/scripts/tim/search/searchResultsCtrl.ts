@@ -38,9 +38,6 @@ export interface ISearchResultParamsPar {
     match_end_index: number; // Regex searches may make match very long, so this isn't always reliable.
 }
 
-/*
- * Tag search dialog's controller.
- */
 export class ShowSearchResultController extends DialogController<{ params: ISearchResultParams }, {}, "timSearchResults"> {
     private static $inject = ["$element", "$scope"];
     private results: ISearchResult[] = [];
@@ -84,6 +81,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
      * and groups paragraphs and tags under documents.
      */
     private filterResults() {
+        // If result count is over the treshold, skip paragraph grouping and previews.
         if (this.totalResults > this.limitedDisplayTreshold) {
             this.limitedDisplay = true;
         }
@@ -166,7 +164,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                 this.errorMessage = e.getMessage().toString();
             }
         }
-
+        // Tag results use different interface and need to be handled separately.
         for (const tagResult of this.tagResults) {
             try {
                 let found = false;
@@ -258,9 +256,11 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     }
 
     /**
+     * Pick how to order the results. All information needs to be passed as parameters and processed
+     * in inner functions due to AngularJS' limitations in orderBy functions.
      *
-     * @param {number} orderByOption
-     * @returns {any}
+     * @param {number} orderByOption A number corresponding to different order rules.
+     * @returns {any} Search result order for AngularJS elements.
      */
     private resultOrder(orderByOption: string) {
         if (orderByOption.toString() === "2") {
@@ -281,7 +281,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                 return r.doc.path;
             };
         }
-        }
+    }
 }
 
 registerDialogComponent("timSearchResults",

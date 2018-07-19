@@ -153,7 +153,7 @@ class SearchBoxCtrl implements IController {
         let tempError = this.errorMessage;
         if (!this.completeSearch) {
             tempError = "Search was incomplete due to time or data constraints. " +
-                "For better results choose a more specific search folder in advanced search options.";
+                "For better results choose more specific search options.";
         }
         void showSearchResultDialog({
             errorMessage: tempError,
@@ -174,6 +174,7 @@ class SearchBoxCtrl implements IController {
      * @param event Keyboard event.
      */
     async keyPressed(event: KeyboardEvent) {
+        // TODO: Causes "$digest already in progress" errors.
         if (event.which === 13) {
             await this.search();
         }
