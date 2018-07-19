@@ -89,7 +89,22 @@ export interface IRowStyles {
     fontWeight?: string;
 }
 
-export interface ICellStyles {
+const cellStyles: Set<string> = new Set<string>([
+    "verticalAlign",
+    "fontSize",
+    "border",
+    "borderTop",
+    "borderBottom",
+    "borderLeft",
+    "borderRight",
+    "backgroundColor",
+    "textAlign",
+    "fontFamily",
+    "color",
+    "fontWeight"
+    ]);
+
+/*export interface ICellStyles {
     verticalAlign?: string;
     fontSize?: string;
     border?: string;
@@ -102,9 +117,9 @@ export interface ICellStyles {
     fontFamily?: string;
     color?: string;
     fontWeight?: string;
-}
+} */
 
-export interface ICell extends ICellStyles {
+export interface ICell { // extends ICellStyles
     cell: CellType;
     editing?: boolean;
     editorOpen?: boolean;
@@ -118,13 +133,23 @@ export interface ICell extends ICellStyles {
     inputScope?: boolean | undefined;
 }
 
-export interface IColumn extends IColumnStyles {
+export interface IColumn { // extends IColumnStyles
     id?: string;
     span?: number;
     formula?: string;
 }
 
-export interface IColumnStyles {
+const columnStyles: Set<string> = new Set<string>([
+        "width",
+        "backgroundColor",
+        "border",
+        "borderTop",
+        "borderBottom",
+        "borderLeft",
+        "borderRight",
+    ]);
+
+/*export interface IColumnStyles {
     width?: string;
     backgroundColor?: string;
     border?: string;
@@ -132,7 +157,7 @@ export interface IColumnStyles {
     borderBottom?: string;
     borderLeft?: string;
     borderRight?: string;
-}
+} */
 
 const columnCellStyles: Set<string> = new Set<string>(
     [
@@ -702,8 +727,9 @@ export class TimTableController implements IController {
     private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent) {
         await $timeout();
         const table = this.element.find(".timTableTable").first();
-        const tablecell = table.children("tbody").children("tr").eq(rowi).children("td").eq(coli);
-        let off;
+        const tablecell = table.children("tbody").last().children("tr").eq(rowi).children("td").eq(coli);
+        const off = tablecell.offset();
+        /*let off;
         if (event && event.target) {
             let obj = $(event.target);
             if (obj.prop("tagName") !== "TD") {
@@ -714,7 +740,7 @@ export class TimTableController implements IController {
         } else {
             off = tablecell.offset();
             if (!off) { return; }
-        }
+        }*/
         if (off) {
             this.element.find(".editInput").offset(off);
             await $timeout();
@@ -769,18 +795,7 @@ export class TimTableController implements IController {
             return styles;
         }
 
-        for (const key of Object.keys(cell)) {
-            const keyofCell = key as keyof ICell;
-            const property: string = styleToHtml[keyofCell];
-            if (property === undefined) {
-                continue;
-            }
-            const c = (cell as ICellStyles)[keyofCell as keyof ICellStyles];
-            if (!c) {
-                continue;
-            }
-            styles[property] = c;
-        }
+        this.applyStyle(styles, cell, cellStyles);
         return styles;
     }
 
@@ -806,18 +821,7 @@ export class TimTableController implements IController {
             return styles;
         }
 
-        for (const key of Object.keys(col)) {
-            if (!columnCellStyles.has(key)) {
-                continue;
-            }
-
-            const property: string = styleToHtml[key];
-            if (!property) {
-                continue;
-            }
-
-            styles[property] = col[key];
-        }
+        this.applyStyle(styles, col, columnCellStyles);
         return styles;
     }
 
@@ -828,17 +832,7 @@ export class TimTableController implements IController {
     private stylingForColumn(col: IColumn) {
         const styles: { [index: string]: string } = {};
 
-        for (const key of Object.keys(col)) {
-            const property: string = styleToHtml[key];
-            if (property === undefined) {
-                continue;
-            }
-            const c = col[key as keyof IColumnStyles];
-            if (!c) {
-                continue;
-            }
-            styles[property] = c;
-        }
+        this.applyStyle(styles, col, columnStyles);
         return styles;
     }
 
@@ -849,6 +843,7 @@ export class TimTableController implements IController {
     private stylingForRow(row: IRow) {
         const styles: { [index: string]: string } = {};
 
+        // TODO decide what to do with this old implementation
         for (const key of Object.keys(row)) {
             const property: string = styleToHtml[key];
             if (property === undefined) {
@@ -882,6 +877,29 @@ export class TimTableController implements IController {
             styles[property] = c;
         }
         return styles;
+    }
+
+    /**
+     * Generic function for setting style attributes.
+     * Verifies that given style attributes are valid and applies them.
+     * Non-valid style attributes are not applied.
+     * @param {{[p: string]: string}} styles The dictionary that will contain the final object styles
+     * @param object The object that contains the user-given style attributes
+     * @param {Set<string>} validAttrs A set that contains the accepted style attributes
+     */
+    private applyStyle(styles: { [index: string]: string }, object, validAttrs: Set<string>) {
+        for (const key of Object.keys(object)) {
+            if (!columnCellStyles.has(key)) {
+                continue;
+            }
+
+            const property: string = styleToHtml[key];
+            if (!property) {
+                continue;
+            }
+
+            styles[property] = object[key];
+        }
     }
 
     /**
