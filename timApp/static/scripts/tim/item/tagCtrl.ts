@@ -11,9 +11,7 @@ import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
 import {Users} from "../user/userService";
 import {$http} from "../util/ngimport";
 import {markAsUsed, to} from "../util/utils";
-import * as tagLabel from "./tagLabel";
 
-markAsUsed(tagLabel);
 markAsUsed(focusMe);
 
 const tagParsingSeparator = ",";
