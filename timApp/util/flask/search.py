@@ -29,14 +29,6 @@ search_routes = Blueprint('search',
                           url_prefix='/search')
 
 
-class ParSearchError(Exception):
-    """Error raised when document paragraph search fails."""
-
-
-class JSONResponseError(Exception):
-    """Error raised when forming JSON response fails."""
-
-
 # noinspection PyUnusedLocal
 def make_cache_key(*args, **kwargs):
     path = request.path
@@ -273,16 +265,17 @@ def search():
     else:
         try:
             clean_results = []
+            # Remove results that would break JSON-formatting.
             for r in results:
                 try:
                     json_response(r)
                 except TypeError as e:
+                    # Report the offending paragraph.
                     try:
                         path = r['doc'].path
                     except:
                         path = ""
                     try:
-                        print(r['par'])
                         id = r['par'].dict()['id']
                     except:
                         id = ""
