@@ -320,7 +320,7 @@ export class TimTableController implements IController {
         }
         this.bigEditorOpen = true;
         const result = await openEditorSimple(docId, this.editedCellContent, "Edit table cell",
-            "TimTableCell",
+            "timTableCell",
             () => { this.bigEditorOpen = false; this.closeSmallEditor(); });
         this.bigEditorOpen = false;
         if (this.currentCell) { this.currentCell.editorOpen = false; }
