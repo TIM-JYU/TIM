@@ -53,6 +53,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private limitedDisplay: boolean = false; // If there's large number of results, optimize shown results.
     private limitedDisplayTreshold: number = 1500;
     private errorMessage: string = "";
+    private orderByOption = "1";
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -112,7 +113,6 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                 }
             } catch (e) {
                 this.errorMessage = e.getMessage().toString();
-                console.log(e);
             }
         }
         // Group paragraphs under documents.
@@ -164,7 +164,6 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                 }
             } catch (e) {
                 this.errorMessage = e.getMessage().toString();
-                console.log(e);
             }
         }
 
@@ -191,7 +190,6 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                 }
             } catch (e) {
                 this.errorMessage = e.getMessage().toString();
-                console.log(e);
             }
         }
     }
@@ -260,18 +258,30 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     }
 
     /**
-     * Estimation of the document's relevance in search.
-     * Doesn't take multiple matches in same title/paragraph into account.
-     * @param {ISearchResultParamsDoc} r
-     * @returns {number}
+     *
+     * @param {number} orderByOption
+     * @returns {any}
      */
-    private relevance(r: ISearchResultParamsDoc) {
-        let titleMatch = 0;
-        if (r.in_title) {
-            titleMatch = 1;
+    private resultOrder(orderByOption: string) {
+        if (orderByOption.toString() === "2") {
+            return function(r: ISearchResultParamsDoc) {
+                return r.doc.title;
+            };
         }
-        return - (r.pars.length + r.tags.length + titleMatch);
-    }
+        if (orderByOption.toString() === "3") {
+            return function(r: ISearchResultParamsDoc) {
+                let titleMatch = 0;
+                if (r.in_title) {
+                    titleMatch = 1;
+                }
+                return - (r.pars.length + r.tags.length + titleMatch);
+            };
+        } else {
+            return function(r: ISearchResultParamsDoc) {
+                return r.doc.path;
+            };
+        }
+        }
 }
 
 registerDialogComponent("timSearchResults",
@@ -294,7 +304,7 @@ registerDialogComponent("timSearchResults",
             in <i ng-if="$ctrl.folder">{{$ctrl.folder}}</i><i ng-if="!$ctrl.folder">root</i>
         </h5>
         <ul class="list-unstyled">
-            <li ng-repeat="r in $ctrl.docResults | orderBy:'doc.path'">
+            <li ng-repeat="r in $ctrl.docResults | orderBy:$ctrl.resultOrder($ctrl.orderByOption)">
                 <a class="cursor-pointer" ng-click="r.closed = !r.closed"
                 ng-if="r.pars.length > 0 || r.tags.length > 0">
                     <i class="glyphicon" ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
@@ -314,6 +324,14 @@ registerDialogComponent("timSearchResults",
     </div>
     </dialog-body>
     <dialog-footer>
+        <div class="float-left" id="order-selector-box">
+            <select id="order-selector" ng-model="$ctrl.orderByOption"
+                title="Select the result order." name="order-selector">
+                <option selected value="1">Order by path</option>
+                <option value="2">Order by title</option>
+                <option value="3">Order by relevance</option>
+            </select>
+        </div>
         <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
     </dialog-footer>
 </tim-dialog>
