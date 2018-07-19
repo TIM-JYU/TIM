@@ -168,6 +168,7 @@ export class TimTableController implements IController {
     private editedCellContent: string | undefined;
     private editedCellInitialContent: string | undefined;
     private currentCell?: { row: number, col: number, editorOpen: boolean };
+    private lastEditedCell?: {row: number, col: number};
     private mouseInTable?: boolean;
     private bigEditorOpen: boolean = false;
 
@@ -471,6 +472,7 @@ export class TimTableController implements IController {
      * @param {KeyboardEvent} ev Pressed key event
      */
     private keyUpPressedInSmallEditor(ev: KeyboardEvent) {
+        // Arrow keys
         if (ev.ctrlKey && (ev.keyCode == 40 || ev.keyCode == 39 || ev.keyCode == 38 || ev.keyCode == 37)) {
             this.handleArrowMovement(ev);
         }
@@ -482,18 +484,28 @@ export class TimTableController implements IController {
      */
     private keyDownPressedTable(ev: KeyboardEvent) {
         if (this.mouseInTable) {
-            if (ev.keyCode == 113) {
+            if (ev.keyCode === 113) { // F2
                 const modal: CellEntity = {
                     cell: "",
                 };
-                if (this.currentCell != undefined) { this.editorOpen(modal, this.currentCell.row, this.currentCell.col); }
+                if (this.currentCell != undefined) {
+                    this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
+                    return;
+                }
+
+                // if no cell is being edited, open the last-edited cell for editing
+                if (this.lastEditedCell != undefined) {
+                    this.openCell(this.lastEditedCell.row, this.lastEditedCell.col);
+                    return;
+                }
             }
-            if (ev.keyCode == 13 || ev.keyCode === 9) { // enter or tab
+
+            if (ev.keyCode === 13 || ev.keyCode === 9) { // enter or tab
                 const parId = getParId(this.element.parents(".par"));
                 if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
-                if (this.currentCell != undefined && this.currentCell.row != undefined && this.currentCell.col != undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
+                if (this.currentCell !== undefined && this.currentCell.row !== undefined && this.currentCell.col !== undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
                     const value = this.editedCellContent;
-                    if (typeof value == "string" && this.editedCellInitialContent != value) {
+                    if (typeof value === "string" && this.editedCellInitialContent !== value) {
                         this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
                     }
                 }
@@ -508,12 +520,19 @@ export class TimTableController implements IController {
                     }
                 }
 
+                return;
             }
+
             if (ev.keyCode === 27) { // esc
                 this.currentCell = undefined;
                 this.scope.$apply();
+                return;
             }
 
+            // Arrow keys
+            if (!this.currentCell && ev.ctrlKey && (ev.keyCode === 40 || ev.keyCode === 39 || ev.keyCode === 38 || ev.keyCode === 37)) {
+                this.handleArrowMovement(ev);
+            }
         }
     }
 
@@ -531,28 +550,38 @@ export class TimTableController implements IController {
 
         this.saveCurrentCell();
 
-        if (ev.keyCode == 40) { // down arrow
-            if (this.currentCell) {
-                this.openCell(this.currentCell.row + 1, this.currentCell.col);
-            }
+        if (ev.keyCode === 40) { // down arrow
+            this.doCellMovement(0, 1);
             return;
         }
-        if (ev.keyCode == 39) {
-            if (this.currentCell) {
-                this.openCell(this.currentCell.row, this.currentCell.col + 1);
-            }
+        if (ev.keyCode === 39) {
+            this.doCellMovement(1, 0);
             return;
         }
-        if (ev.keyCode == 37) {
-            if (this.currentCell) {
-                this.openCell(this.currentCell.row, this.currentCell.col - 1);
-            }
+        if (ev.keyCode === 37) {
+            this.doCellMovement(-1, 0);
             return;
         }
-        if (ev.keyCode == 38) {
-            if (this.currentCell) {
-                this.openCell(this.currentCell.row - 1, this.currentCell.col);
-            }
+        if (ev.keyCode === 38) {
+            this.doCellMovement(0, -1);
+            return;
+        }
+    }
+
+    /**
+     * Switches the edit mode to another cell relative to either the current
+     * or last edited cell.
+     * @param {number} x
+     * @param {number} y
+     */
+    private doCellMovement(x: number, y: number) {
+        if (this.currentCell) {
+            this.openCell(this.currentCell.row + y, this.currentCell.col + x);
+            return;
+        }
+
+        if (this.lastEditedCell) {
+            this.openCell(this.lastEditedCell.row + y, this.lastEditedCell.col + x);
         }
     }
 
@@ -633,13 +662,17 @@ export class TimTableController implements IController {
         if (!this.isInEditMode() || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
 
         if (this.currentCell) {
-            if (this.currentCell.row == rowi && this.currentCell.col == coli) {
+            if (this.currentCell.row === rowi && this.currentCell.col === coli) {
                 return;
             }
         }
 
         this.saveCurrentCell();
-        await this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
+        const cellData = this.cellDataMatrix[rowi][coli];
+        this.editedCellContent = cellData;
+        this.editedCellInitialContent = cellData;
+        this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
+        this.lastEditedCell = {row: rowi, col: coli};
         this.currentCell = {row: rowi, col: coli, editorOpen: false};
         this.calculateElementPlaces(rowi, coli, event);
     }
