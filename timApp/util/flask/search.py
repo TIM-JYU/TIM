@@ -153,142 +153,140 @@ def search():
     """
     verify_logged_in()
     error_list = []  # List of errors during search.
+
+    query = request.args.get('query', '')
+    folder = request.args.get('folder', '')
+    regex_option = get_option(request, 'regex', default=False, cast=bool)
+    case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
+    onlyfirst = get_option(request, 'onlyfirst', default=999, cast=int)
+    max_results_total = get_option(request, 'maxTotalResults', default=100000, cast=int)
+    max_time = get_option(request, 'maxTime', default=10, cast=int)
+    max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
+    ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
+    search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
+    search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
+    search_words = get_option(request, 'searchWords', default=True, cast=bool)
+    current_user = get_current_user_object()
+
+    if len(query.strip()) < 3 and not search_exact_words:
+        abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
+    if len(query.strip()) < 1 and search_exact_words:
+        abort(400, 'Search text must be at least 1 character long with whitespace stripped.')
+
+    # Won't search subfolders if search_recursively isn't true.
+    docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)
+    results = []
+    args = SearchArgumentsBasic(
+        term=query,
+        regex=regex_option,
+        onlyfirst=onlyfirst,
+        format="")
+
+    if case_sensitive:
+        flags = re.DOTALL
+    else:
+        flags = re.DOTALL | re.IGNORECASE
+    if args.regex:
+        term = args.term
+    else:
+        term = re.escape(args.term)
+    if search_exact_words:
+        # Picks the term if it's a whole word, the only word or separated by comma etc.
+        term = fr"(?:^|\W)({args.term})(?:$|\W)"
+
+    starting_time = time.clock()
+    current_doc = "before search"
+    current_par = "before search"
+    complete = True  # Whether the search was complete or ended without searching everything.
+    title_result_count = 0
+    word_result_count = 0
     try:
-        query = request.args.get('query', '')
-        folder = request.args.get('folder', '')
-        regex_option = get_option(request, 'regex', default=False, cast=bool)
-        case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-        onlyfirst = get_option(request, 'onlyfirst', default=999, cast=int)
-        max_results_total = get_option(request, 'maxTotalResults', default=100000, cast=int)
-        max_time = get_option(request, 'maxTime', default=10, cast=int)
-        max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
-        ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
-        search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
-        search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
-        search_words = get_option(request, 'searchWords', default=True, cast=bool)
-        current_user = get_current_user_object()
-
-        if len(query.strip()) < 3 and not search_exact_words:
-            abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
-        if len(query.strip()) < 1 and search_exact_words:
-            abort(400, 'Search text must be at least 1 character long with whitespace stripped.')
-
-        # Won't search subfolders if search_recursively isn't true.
-        docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)
-        results = []
-        args = SearchArgumentsBasic(
-            term=query,
-            regex=regex_option,
-            onlyfirst=onlyfirst,
-            format="")
-
-        if case_sensitive:
-            flags = re.DOTALL
-        else:
-            flags = re.DOTALL | re.IGNORECASE
-        if args.regex:
-            term = args.term
-        else:
-            term = re.escape(args.term)
-        if search_exact_words:
-            # Picks the term if it's a whole word, the only word or separated by comma etc.
-            term = fr"(?:^|\W)({args.term})(?:$|\W)"
-
-        starting_time = time.clock()
-        current_doc = "before search"
-        current_par = "before search"
-        complete = True  # Whether the search was complete or ended without searching everything.
-        title_result_count = 0
-        word_result_count = 0
-        try:
-            regex = re.compile(term, flags)
-            for d in docs:
+        regex = re.compile(term, flags)
+        for d in docs:
+            try:
+                current_doc = d.path
+                doc_info = d.document.docinfo
+                # print(time.clock() - starting_time)
+                if (time.clock() - starting_time) > max_time:
+                    complete = False
+                    break
+                # If results are too large, MemoryError occurs.
+                if len(results) > max_results_total:
+                    complete = False
+                    break
+                if search_doc_names:
+                    d_title = doc_info.title
+                    matches = list(regex.finditer(d_title))
+                    if matches:
+                        for m in matches:
+                            title_result_count += 1
+                            result = {'doc': doc_info,
+                                      'par': None,
+                                      'match_word': m.group(0),
+                                      'match_start_index': m.start(),
+                                      'match_end_index': m.end(),
+                                      'num_results': len(matches),
+                                      'num_pars': 0,
+                                      'num_pars_found': 0,
+                                      'in_title': True}
+                            results.append(result)
+                if search_words:
+                    d_words_count = 0
+                    for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False,
+                                           ignore_plugins=ignore_plugins_settings):
+                        current_par = r.par.dict()['id']
+                        # Limit matches per document to get diverse document results faster.
+                        if d_words_count > max_results_doc:
+                            complete = False
+                            continue
+                        d_words_count += 1
+                        word_result_count += 1
+                        result = {'doc': r.doc,
+                                  'par': r.par,
+                                  'match_word': r.match.group(0),
+                                  'match_start_index': r.match.span()[0],
+                                  'match_end_index': r.match.span()[1],
+                                  'num_results': r.num_results,
+                                  'num_pars': r.num_pars,
+                                  'num_pars_found': r.num_pars_found,
+                                  'in_title': False}
+                        # Don't return results within plugins if no edit access to the document.
+                        if r.par.is_setting() or r.par.is_plugin():
+                            if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
+                                results.append(result)
+                        else:
+                            results.append(result)
+            # If error happens inside loop, report and continue.
+            except Exception as e:
                 try:
-                    current_doc = d.path
-                    doc_info = d.document.docinfo
-                    # print(time.clock() - starting_time)
-                    if (time.clock() - starting_time) > max_time:
-                        complete = False
-                        break
-                    # If results are too large, MemoryError occurs.
-                    if len(results) > max_results_total:
-                        complete = False
-                        break
-                    if search_doc_names:
-                        d_title = doc_info.title
-                        matches = list(regex.finditer(d_title))
-                        if matches:
-                            for m in matches:
-                                title_result_count += 1
-                                result = {'doc': doc_info,
-                                          'par': None,
-                                          'match_word': m.group(0),
-                                          'match_start_index': m.start(),
-                                          'match_end_index': m.end(),
-                                          'num_results': len(matches),
-                                          'num_pars': 0,
-                                          'num_pars_found': 0,
-                                          'in_title': True}
-                                results.append(result)
-                    if search_words:
-                        d_words_count = 0
-                        for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False,
-                                               ignore_plugins=ignore_plugins_settings):
-                            current_par = r.par.dict()['id']
-
-                            # Limit matches per document to get diverse document results faster.
-                            if d_words_count > max_results_doc:
-                                complete = False
-                                continue
-                            d_words_count += 1
-                            word_result_count += 1
-                            result = {'doc': r.doc,
-                                      'par': r.par,
-                                      'match_word': r.match.group(0),
-                                      'match_start_index': r.match.span()[0],
-                                      'match_end_index': r.match.span()[1],
-                                      'num_results': r.num_results,
-                                      'num_pars': r.num_pars,
-                                      'num_pars_found': r.num_pars_found,
-                                      'in_title': False}
-                            # Don't return results within plugins if no edit access to the document.
-                            if r.par.is_setting() or r.par.is_plugin():
-                                if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
-                                    results.append(result)
-                            else:
-                                results.append(result)
-                # If error happens inside loop, report and continue.
-                except Exception as e:
-                    try:
-                        error_list.append({'error': str(e), 'doc_path': current_doc, 'par_id': current_par})
-                    except:
-                        error_list.append({'error': "Unknown error", 'doc_path': current_doc, 'par_id': current_par})
-            current_doc = "search over"
-            current_par = "search over"
-        except sre_constants.error as e:
-            abort(400, f"Invalid regex: {str(e)}")
-        except Exception as e:
-            abort(400, f"{str(e.__class__.__name__)}: {str(e)} in doc: {current_doc}, par: {current_par}")
-        except:
-            abort(400, f"Unknown error in doc: {current_doc}, par: {current_par}")
-        else:
-            try:
-                return json_response({'results': results, 'complete': complete, 'titleResultCount': title_result_count,
-                                      'wordResultCount': word_result_count, 'errors': error_list})
-            except MemoryError:
-                abort(400, f"MemoryError: results too long")
-            except:
-                raise JSONResponseError(f"Error forming JSON response for search results: {results}")
+                    error_list.append({'error': str(e), 'doc_path': current_doc, 'par_id': current_par})
+                except:
+                    error_list.append({'error': "Unknown error", 'doc_path': current_doc, 'par_id': current_par})
+        current_doc = "search over"
+        current_par = "search over"
+    except sre_constants.error as e:
+        abort(400, f"Invalid regex: {str(e)}")
     except Exception as e:
+        abort(400, f"{str(e.__class__.__name__)}: {str(e)} in doc: {current_doc}, par: {current_par}")
+    else:
         try:
-            abort(400, f"{str(e)}, {error_list}")
-        except:
-            try:
-                abort(400, f"Unknown error, {error_list}")
-            except:
-                abort(400, "Unknown error, unable to report")
-    except:
-        abort(400, "Non-standard error")
+            clean_results = []
+            for r in results:
+                try:
+                    json_response(r)
+                except TypeError as e:
+                    error_list.append({'error': str(e), 'doc_path': "", 'par_id': ""})
+                else:
+                    clean_results.append(r)
+            return json_response({'results': clean_results, 'complete': complete, 'titleResultCount': title_result_count,
+                                  'wordResultCount': word_result_count, 'errors': error_list})
+        except MemoryError:
+            abort(400, f"MemoryError: results too long")
+        except TypeError as e:
+            abort(400, f"Error forming JSON response: {e}")
+        except Exception as e:
+            abort(400, f"Error forming JSON response: {e}")
+
 
 
 def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool,

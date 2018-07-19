@@ -308,7 +308,10 @@ class SearchBoxCtrl implements IController {
             this.completeSearch = response.data.complete;
             this.wordMatchCount = response.data.wordResultCount;
             this.titleMatchCount = response.data.titleResultCount;
-            console.log(response.data.errors);
+            if (response.data.errors) {
+                console.log("Errors during search:");
+                console.log(response.data.errors);
+            }
         }
     }
 
