@@ -152,6 +152,7 @@ def search():
     :return:
     """
     verify_logged_in()
+    error_list = []  # List of errors during search.
     try:
         query = request.args.get('query', '')
         folder = request.args.get('folder', '')
@@ -199,7 +200,6 @@ def search():
         complete = True  # Whether the search was complete or ended without searching everything.
         title_result_count = 0
         word_result_count = 0
-        error_list = []  # List of errors during search.
         try:
             regex = re.compile(term, flags)
             for d in docs:
@@ -259,9 +259,10 @@ def search():
                                 results.append(result)
                 # If error happens inside loop, report and continue.
                 except Exception as e:
-                    error_list.append({'error': str(e), 'doc_path': current_doc, 'par_id': current_par})
-                except:
-                    error_list.append({'error': "Unknown error", 'doc_path': current_doc, 'par_id': current_par})
+                    try:
+                        error_list.append({'error': str(e), 'doc_path': current_doc, 'par_id': current_par})
+                    except:
+                        error_list.append({'error': "Unknown error", 'doc_path': current_doc, 'par_id': current_par})
             current_doc = "search over"
             current_par = "search over"
         except sre_constants.error as e:
@@ -280,11 +281,15 @@ def search():
                 raise JSONResponseError(f"Error forming JSON response for search results: {results}")
     except Exception as e:
         try:
-            abort(400, str(e))
+            abort(400, f"{str(e)}, {error_list}")
         except:
-            abort(400, "Error in reporting errors")
+            try:
+                abort(400, f"Unknown error, {error_list}")
+            except:
+                abort(400, "Unknown error, unable to report")
     except:
-        abort(400, "Unknown error encountered during the seach")
+        abort(400, "Non-standard error")
+
 
 def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool,
                   ignore_plugins: bool = False) -> Generator[SearchResult, None, None]:
@@ -300,26 +305,23 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
     results_found = 0
     pars_processed = 0
     pars_found = 0
-    try:
-        for d, p in enum_pars(d):
-            if ignore_plugins and (p.is_setting() or p.is_plugin()):
-                continue
-            pars_processed += 1
-            md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
-            matches = set(regex.finditer(md))
-            if matches:
-                pars_found += 1
-                for m in matches:
-                    results_found += 1
-                    yield SearchResult(
-                        doc=d,
-                        par=p,
-                        num_results=results_found,
-                        num_pars=pars_processed,
-                        num_pars_found=pars_found,
-                        match=m,
-                    )
-            if args.onlyfirst and pars_processed >= args.onlyfirst:
-                break
-    except Exception as e:
-        raise ParSearchError(str(e))
+    for d, p in enum_pars(d):
+        if ignore_plugins and (p.is_setting() or p.is_plugin()):
+            continue
+        pars_processed += 1
+        md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
+        matches = set(regex.finditer(md))
+        if matches:
+            pars_found += 1
+            for m in matches:
+                results_found += 1
+                yield SearchResult(
+                    doc=d,
+                    par=p,
+                    num_results=results_found,
+                    num_pars=pars_processed,
+                    num_pars_found=pars_found,
+                    match=m,
+                )
+        if args.onlyfirst and pars_processed >= args.onlyfirst:
+            break
