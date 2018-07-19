@@ -27,6 +27,13 @@ export interface ISearchResultsInfo {
     complete: boolean; // Whether the search was completely finished in the folder.
     wordResultCount: number;
     titleResultCount: number;
+    errors: ISearchError[];
+}
+
+export interface ISearchError {
+    error: string;
+    doc_path: string;
+    par_id: string;
 }
 
 export interface ITagSearchResultsInfo {
@@ -301,6 +308,7 @@ class SearchBoxCtrl implements IController {
             this.completeSearch = response.data.complete;
             this.wordMatchCount = response.data.wordResultCount;
             this.titleMatchCount = response.data.titleResultCount;
+            console.log(response.data.errors);
         }
     }
 
