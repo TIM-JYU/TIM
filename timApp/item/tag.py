@@ -36,8 +36,8 @@ class Tag(db.Model):
     def has_tag_special_chars(self):
         """
         Checks whether the tag name has characters other than (lower or upper case) a-ö,
-        numbers 0-9, slashes, underscores or spaces.
+        numbers 0-9, slashes, underscores, spaces or other allowed characters.
         characters.
         :return:
         """
-        return set(self.name.lower()) - set('abcdefghijklmnopqrstuvwxyzåäö0123456789/- _')
+        return set(self.name.lower()) - set('abcdefghijklmnopqrstuvwxyzåäöü0123456789$€£#+*!@%&().:;/- _')
