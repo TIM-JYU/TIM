@@ -49,8 +49,8 @@ def add_tag(doc):
         tag_name = tag_dict["name"]
         tag_expire = tag_dict.get("expires")
         tag = Tag(name=tag_name, expires=tag_expire, type=tag_type)
-        if tag.has_tag_special_chars:
-            abort(400, "Tags can only contain letters a-z, numbers, underscores, spaces and dashes.")
+        # if tag.has_tag_special_chars:
+        #    abort(400, "Tags can only contain letters a-z, numbers, underscores, spaces and dashes.")
         tags.append(tag)
 
     if not tags:
@@ -76,17 +76,6 @@ def check_tag_access(tag_type, group):
         ug = UserGroup.get_by_name(group)
         if ug not in get_current_user_object().groups and not check_admin_access():
             abort(400, f"Managing this tag requires admin or {group} rights.")
-
-
-def has_tag_special_chars(string: str):
-    """
-    Checks whether the string has letters (lower or upper case) a-ö,
-    numbers 0-9, slashes, underscores or spaces.
-    characters.
-    :param string:
-    :return: Non-empty set if list has characters other than allowed ones.
-    """
-    return set(string.lower()) - set('abcdefghijklmnopqrstuvwxyzåäö0123456789/- _')
 
 
 @tags_blueprint.route('/remove/<path:doc>', methods=["POST"])
