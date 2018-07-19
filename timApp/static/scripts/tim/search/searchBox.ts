@@ -4,10 +4,13 @@
  * Search options:
  *
  * caseSensitive: distinguish between upper and lower case letters
- * ignorePluginsSettings: leave plugin and setting paragraphs out of the results.
  * folder: limit search to a folder and its subfolders
- * onlyFirst: search only X first paragraphs from each document
+ * ignorePluginsSettings: leave plugin and setting paragraphs out of the results.
+ * maxDocPars: search only X first paragraphs from each document
+ * maxTime: end search after X seconds
+ * maxTotalResults: end search after getting X results
  * regex: regular expressions
+ * searchExactWords: search whole words
  * searchWords: basic word search
  * searchTags: tag search
  * searchDocNames: search document titles
@@ -233,6 +236,7 @@ class SearchBoxCtrl implements IController {
      * root -> kurssit
      * users/username/somesubfolders -> users/username
      * kurssit/faculty/course/somesubfolders -> kurssit/faculty/course
+     * kurssit/faculty/course -> kurssit/faculty/course
      * somefolder/somesubfolders -> somefolder
      */
     private defaultFolder() {
@@ -279,10 +283,10 @@ class SearchBoxCtrl implements IController {
                 caseSensitive: this.caseSensitive,
                 folder: this.folder,
                 ignorePluginsSettings: this.ignorePluginsSettings,
+                maxDocPars: 1000,
                 maxDocResults: this.maxDocResults,
                 maxTime: 10,
                 maxTotalResults: 10000,
-                onlyfirst: 1000,
                 query: this.query,
                 regex: this.regex,
                 searchDocNames: this.searchDocNames,
@@ -337,7 +341,7 @@ class SearchBoxCtrl implements IController {
     }
 
     /**
-     * Make a list of all folder paths.
+     * Make a list of folder paths. Currently goes only three levels deep to save time.
      * @returns {Promise<void>}
      */
     private async loadFolderSuggestions() {
@@ -402,7 +406,7 @@ timApp.component("searchBox", {
                            typeahead-min-length="1">
                 </div>
            </div>
-            <div class="form-group" title="Give maximum number of results to give from a single document">
+            <div class="form-group" title="Input maximum number of results to give from a single document">
                 <label for="max-doc-results-selector" class="col-sm-4 control-label font-weight-normal">
                 Max results / document:</label>
                 <div class="col-sm-8">

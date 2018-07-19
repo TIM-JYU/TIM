@@ -144,21 +144,29 @@ def search():
     :return:
     """
     verify_logged_in()
+    current_user = get_current_user_object()
     error_list = []  # List of errors during search.
 
     query = request.args.get('query', '')
     folder = request.args.get('folder', '')
     regex_option = get_option(request, 'regex', default=False, cast=bool)
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-    onlyfirst = get_option(request, 'onlyfirst', default=999, cast=int)
+
+    # Limit how many pars are searched from any document. The rest are skipped.
+    max_doc_pars = get_option(request, 'maxDocPars', default=1000, cast=int)
+    # Limit number of found search results after which the search will end.
     max_results_total = get_option(request, 'maxTotalResults', default=100000, cast=int)
+    # Time limit for the searching process.
     max_time = get_option(request, 'maxTime', default=10, cast=int)
+    # Limit the number of results per document.
     max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
+    # Don't search paragraphs that are marked as plugin or setting.
     ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
+
     search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
     search_words = get_option(request, 'searchWords', default=True, cast=bool)
-    current_user = get_current_user_object()
+
 
     if len(query.strip()) < 3 and not search_exact_words:
         abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
@@ -171,7 +179,7 @@ def search():
     args = SearchArgumentsBasic(
         term=query,
         regex=regex_option,
-        onlyfirst=onlyfirst,
+        onlyfirst=max_doc_pars,
         format="")
 
     if case_sensitive:
