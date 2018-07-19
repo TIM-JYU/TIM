@@ -303,5 +303,5 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
                     )
             if args.onlyfirst and pars_processed >= args.onlyfirst:
                 break
-    except:
-        raise ParSearchError(current_par)
+    except Exception as e:
+        raise ParSearchError(e, current_par)
