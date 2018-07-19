@@ -48,9 +48,6 @@ export interface ISearchResult {
     match_start_index: number; // Index where the query match begins in the paragraph / title.
     match_end_index: number; // Index where the query match ends in the paragraph / title.
     match_word: string;
-    num_results: number;
-    num_pars: number;
-    num_pars_found: number;
     in_title: boolean;
 }
 
@@ -88,6 +85,7 @@ class SearchBoxCtrl implements IController {
     private tagResults: ITagSearchResult[] = []; // List of documents with matching tags. Other tags are left out.
     private folderSuggestions: string[] = [];
     private completeSearch: boolean = false;
+    private maxDocResults: number = 100;
 
     // List of seach folder paths to suggest.
 
@@ -281,7 +279,7 @@ class SearchBoxCtrl implements IController {
                 caseSensitive: this.caseSensitive,
                 folder: this.folder,
                 ignorePluginsSettings: this.ignorePluginsSettings,
-                maxDocResults: 100,
+                maxDocResults: this.maxDocResults,
                 maxTime: 10,
                 maxTotalResults: 10000,
                 onlyfirst: 1000,
@@ -308,7 +306,7 @@ class SearchBoxCtrl implements IController {
             this.completeSearch = response.data.complete;
             this.wordMatchCount = response.data.wordResultCount;
             this.titleMatchCount = response.data.titleResultCount;
-            if (response.data.errors) {
+            if (response.data.errors.length > 0) {
                 console.log("Errors during search:");
                 console.log(response.data.errors);
             }
@@ -376,7 +374,7 @@ timApp.component("searchBox", {
     template: `<div class="input-group">
         <input ng-model="$ctrl.query" name="searchField" ng-keypress="$ctrl.keyPressed($event)"
                type="text" focus-me="$ctrl.focusMe"
-               title="Search documents with key word"
+               title="Search documents with a key word"
                placeholder="Input a search word"
                class="form-control" autocomplete="on">
         <span class="input-group-addon btn" ng-click="$ctrl.search()">
@@ -396,12 +394,21 @@ timApp.component("searchBox", {
       <h5>Advanced search options</h5>
       <form class="form-horizontal">
            <div class="form-group" title="Write folder path to search from">
-                <label for="folder-selector" class="col-sm-2 control-label font-weight-normal">Folder:</label>
-                <div class="col-sm-10">
+                <label for="folder-selector" class="col-sm-4 control-label font-weight-normal">Search folder:</label>
+                <div class="col-sm-8">
                     <input ng-model="$ctrl.folder" name="folder-selector"
                            type="text" class="form-control" id="folder-selector" placeholder="Input a folder to search"
                            uib-typeahead="f as f for f in $ctrl.folderSuggestions | filter:$viewValue | limitTo:15"
                            typeahead-min-length="1">
+                </div>
+           </div>
+            <div class="form-group" title="Give maximum number of results to give from a single document">
+                <label for="max-doc-results-selector" class="col-sm-4 control-label font-weight-normal">
+                Max results / document:</label>
+                <div class="col-sm-8">
+                    <input ng-model="$ctrl.maxDocResults" name="max-doc-results-selector"
+                           type="number" class="form-control" id="folder-selector"
+                           placeholder="Input max # of results per document">
                 </div>
             </div>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.caseSensitive"

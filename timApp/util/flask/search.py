@@ -225,9 +225,6 @@ def search():
                                       'match_word': m.group(0),
                                       'match_start_index': m.start(),
                                       'match_end_index': m.end(),
-                                      'num_results': len(matches),
-                                      'num_pars': 0,
-                                      'num_pars_found': 0,
                                       'in_title': True}
                             results.append(result)
                 if search_words:
@@ -236,7 +233,7 @@ def search():
                                            ignore_plugins=ignore_plugins_settings):
                         current_par = r.par.dict()['id']
                         # Limit matches per document to get diverse document results faster.
-                        if d_words_count > max_results_doc:
+                        if d_words_count >= max_results_doc:
                             complete = False
                             continue
                         d_words_count += 1
@@ -246,9 +243,6 @@ def search():
                                   'match_word': r.match.group(0),
                                   'match_start_index': r.match.span()[0],
                                   'match_end_index': r.match.span()[1],
-                                  'num_results': r.num_results,
-                                  'num_pars': r.num_pars,
-                                  'num_pars_found': r.num_pars_found,
                                   'in_title': False}
                         # Don't return results within plugins if no edit access to the document.
                         if r.par.is_setting() or r.par.is_plugin():
@@ -259,9 +253,17 @@ def search():
             # If error happens inside loop, report and continue.
             except Exception as e:
                 try:
-                    error_list.append({'error': str(e), 'doc_path': current_doc, 'par_id': current_par})
+                    error_list.append({
+                        'error': f"{str(e.__class__.__name__)}: {str(e)}",
+                        'doc_path': current_doc,
+                        'par_id': current_par
+                    })
                 except:
-                    error_list.append({'error': "Unknown error", 'doc_path': current_doc, 'par_id': current_par})
+                    error_list.append({
+                        'error': "Unknown error",
+                        'doc_path': current_doc,
+                        'par_id': current_par
+                    })
         current_doc = "search over"
         current_par = "search over"
     except sre_constants.error as e:
@@ -275,18 +277,33 @@ def search():
                 try:
                     json_response(r)
                 except TypeError as e:
-                    error_list.append({'error': str(e), 'doc_path': "", 'par_id': ""})
+                    try:
+                        path = r['doc'].path
+                    except:
+                        path = ""
+                    try:
+                        print(r['par'])
+                        id = r['par'].dict()['id']
+                    except:
+                        id = ""
+                    error_list.append({
+                        'error': f"Formatting JSON-response for a search result failed: {e}",
+                        'doc_path': path,
+                        'par_id': id
+                    })
                 else:
                     clean_results.append(r)
-            return json_response({'results': clean_results, 'complete': complete, 'titleResultCount': title_result_count,
-                                  'wordResultCount': word_result_count, 'errors': error_list})
+            return json_response({
+                'results': clean_results,
+                'complete': complete,
+                'titleResultCount': title_result_count,
+                'wordResultCount': word_result_count,
+                'errors': error_list
+            })
         except MemoryError:
-            abort(400, f"MemoryError: results too long")
-        except TypeError as e:
-            abort(400, f"Error forming JSON response: {e}")
+            abort(400, f"MemoryError: results too large")
         except Exception as e:
-            abort(400, f"Error forming JSON response: {e}")
-
+            abort(400, f"Error encountered while formatting JSON-response: {e}")
 
 
 def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool,
