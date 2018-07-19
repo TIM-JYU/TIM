@@ -975,6 +975,30 @@ export class TimTableController implements IController {
         this.saveCurrentCell();
         this.closeSmallEditor();
     }
+
+    /**
+     * Checks whether a cell is the currently active cell of the table.
+     * The active cell is the cell that is being edited, or if no cell is being edited,
+     * the cell that was edited last.
+     * @param {number} rowi Table row index.
+     * @param {number} coli Table column index.
+     * @returns {boolean} True if the cell is active, otherwise false.
+     */
+    private isActiveCell(rowi: number, coli: number) {
+        if (!this.isInEditMode()) {
+            return false;
+        }
+
+        if (this.currentCell) {
+            return this.currentCell.row === rowi && this.currentCell.col === coli;
+        }
+
+        if (this.lastEditedCell) {
+            return this.lastEditedCell.row === rowi && this.lastEditedCell.col === coli;
+        }
+
+        return false;
+    }
 }
 
 timApp.component("timTable", {
@@ -997,8 +1021,8 @@ timApp.component("timTable", {
              ng-style="$ctrl.stylingForColumn(c)"/>
         <tr ng-repeat="r in $ctrl.data.table.rows" ng-init="rowi = $index" id={{r.id}}
             ng-style="$ctrl.stylingForRow(r)">
-                <td ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
-                    id={{td.id}}"
+                <td ng-class="{activeCell: $ctrl.isActiveCell(rowi, coli)}"
+                 ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}" id={{td.id}}"
                     ng-style="$ctrl.stylingForCell(td, rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
                     </div>

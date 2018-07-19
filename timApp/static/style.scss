@@ -169,6 +169,10 @@ tim-table {
         border: 2px dotted red;
     }
 
+    .ng-scope.activeCell {
+        border: 2px dotted #33cccc;
+    }
+
     .buttonAddRow {
         //align-self: flex-start;
     }
