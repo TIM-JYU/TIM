@@ -51,6 +51,8 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private limitedDisplayTreshold: number = 1500;
     private errorMessage: string = "";
     private orderByOption = "1";
+    private allClosed = true;
+    private toggleCollapseEnabled = false;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -66,6 +68,9 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         this.errorMessage = this.resolve.params.errorMessage;
         this.filterResults();
         this.searchWord = this.resolve.params.searchWord;
+        if (!this.limitedDisplay && (this.resolve.params.tagMatchCount > 0 || this.resolve.params.wordMatchCount > 0)) {
+            this.toggleCollapseEnabled = true;
+        }
         super.$onInit();
     }
 
@@ -255,6 +260,13 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         return style;
     }
 
+    private toggleCollapseAll() {
+        this.allClosed = !this.allClosed;
+        for (const r of this.docResults) {
+            r.closed = this.allClosed;
+        }
+    }
+
     /**
      * Pick how to order the results. All information needs to be passed as parameters and processed
      * in inner functions due to AngularJS' limitations in orderBy functions.
@@ -302,6 +314,11 @@ registerDialogComponent("timSearchResults",
         <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.totalResults}} <ng-pluralize
         count="$ctrl.totalResults" when="{'1': 'time', 'other': 'times'}"></ng-pluralize>
             in <i ng-if="$ctrl.folder">{{$ctrl.folder}}</i><i ng-if="!$ctrl.folder">root</i>
+            <a ng-if="$ctrl.toggleCollapseEnabled" title="Toggle results collapse"
+                ng-click="$ctrl.toggleCollapseAll()">
+                <i ng-if="$ctrl.allClosed" class="glyphicon glyphicon-plus-sign"></i>
+                <i ng-if="!$ctrl.allClosed" class="glyphicon glyphicon-minus-sign"></i>
+            </a>
         </h5>
         <ul class="list-unstyled">
             <li ng-repeat="r in $ctrl.docResults | orderBy:$ctrl.resultOrder($ctrl.orderByOption)">
