@@ -29,9 +29,9 @@ search_routes = Blueprint('search',
                           __name__,
                           url_prefix='/search')
 
-WHITE_LIST = ["c#"]
-MIN_QUERY_LENGTH = 3
-MIN_EXACT_WORDS_QUERY_LENGTH = 1
+WHITE_LIST = ["c#"]  # Ignore query length limitations
+MIN_QUERY_LENGTH = 3  # For word and title search. Tags have no limitations.
+MIN_EXACT_WORDS_QUERY_LENGTH = 1  # For whole word search.
 
 
 # noinspection PyUnusedLocal
@@ -43,13 +43,19 @@ def make_cache_key(*args, **kwargs):
 @search_routes.route('/getFolders')
 def get_subfolders():
     """
-    Returns all subfolders and their subfolders.
+    Returns subfolders of the starting folder.
+    Options:
+    folder = Starting folder.
+    recursive = Search every subfolder's subfolder; otherwise only to three steps depth.
     :return:
     """
     verify_logged_in()
+    recursive = get_option(request, 'recursive', default=False, cast=bool)
     folder_set = set()
-    # get_folders_recursive(request.args.get('folder', ''), folder_set)
-    get_folders_three_levels(request.args.get('folder', ''), folder_set)
+    if recursive:
+        get_folders_recursive(request.args.get('folder', ''), folder_set)
+    else:
+        get_folders_three_levels(request.args.get('folder', ''), folder_set)
     return json_response(list(folder_set))
 
 
@@ -75,7 +81,7 @@ def get_folders_three_levels(starting_path: str, folder_set):
 
 def get_folders_recursive(starting_path: str, folder_set):
     """
-    Recursive function for get_subfolders.
+    Recursive function for get_subfolders. Note: very slow in large and deep directories.
     :param starting_path:
     :param folder_set:
     :return:
@@ -90,7 +96,7 @@ def get_folders_recursive(starting_path: str, folder_set):
 @search_routes.route('/tags')
 def search_tags():
     """
-    Route for document tag search. Returns a list of documents with matching tag in a folder and its subfolders.
+    A route for document tag search.
     """
     verify_logged_in()
 
@@ -170,7 +176,16 @@ def search_tags():
             abort(400, f"Error encountered while formatting JSON-response: {e}")
 
 
-def log_search_error(error, query, path, tag="", par=""):
+def log_search_error(error: str, query: str, path: str, tag: str = "", par: str = "") -> None:
+    """
+    Forms an error report and sends it to timLog.
+    :param error: The error's message
+    :param query: Search word.
+    :param path: Document path.
+    :param tag: Tag name.
+    :param par: Par id.
+    :return: None.
+    """
     if not error:
         error = "Unknown error"
     common_part = f"'{error}' while searching '{query}' in document {path}"

@@ -71,8 +71,6 @@ class SearchBoxCtrl implements IController {
     private caseSensitive: boolean = false;
     private results: ISearchResult[] = [];
     private errorMessage: string = "";
-    private queryMinLength: number = 3;
-    private queryMinLengthExactWords: number = 1; // Shorter words are allowed in exact words search.
     private tagMatchCount: number = 0;
     private wordMatchCount: number = 0;
     private titleMatchCount: number = 0;
@@ -80,23 +78,24 @@ class SearchBoxCtrl implements IController {
     private createNewWindow: boolean = false;
     private ignorePluginsSettings: boolean = false;
     private searchDocNames: boolean = false;
-    private searchTags: boolean = false;
+    private searchTags: boolean = true; // Tag and word search are on by default.
     private searchWords: boolean = true;
     private searchExactWords: boolean = false;
     private focusMe: boolean = true;
     private loading: boolean = false; // Display loading icon.
     private item: IItem = $window.item;
-    private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[], limitValueStorage: null | number[]};
-    private tagResults: ITagSearchResult[] = []; // List of documents with matching tags. Other tags are left out.
-    private folderSuggestions: string[] = [];
+    private storage: ngStorage.StorageService & {
+        searchWordStorage: null | string,
+        optionsStorage: null | boolean[],
+        optionsValueStorage: null | number[]};
+    private tagResults: ITagSearchResult[] = [];
+    private folderSuggestions: string[] = []; // A list of folder path suggestions.
     private completeSearch: boolean = false;
     private maxDocResults: number = 100;
 
-    // List of seach folder paths to suggest.
-
     constructor() {
         this.storage = $localStorage.$default({
-            limitValueStorage: null,
+            optionsValueStorage: null,
             optionsStorage: null,
             searchWordStorage: null,
         });
@@ -182,11 +181,11 @@ class SearchBoxCtrl implements IController {
      * Saves options and search word to local storage.
      */
     private updateLocalStorage() {
-        if (this.query.trim().length > this.queryMinLength) {
+        if (this.query.trim().length > 0) {
             this.storage.searchWordStorage = this.query;
         }
-        this.storage.limitValueStorage = [];
-        this.storage.limitValueStorage.push(this.maxDocResults);
+        this.storage.optionsValueStorage = [];
+        this.storage.optionsValueStorage.push(this.maxDocResults);
 
         this.storage.optionsStorage = [];
         // Alphabetical order.
@@ -208,8 +207,8 @@ class SearchBoxCtrl implements IController {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
         }
-        if (this.storage.limitValueStorage && this.storage.limitValueStorage.length > 0) {
-            this.maxDocResults = this.storage.limitValueStorage[0];
+        if (this.storage.optionsValueStorage && this.storage.optionsValueStorage.length > 0) {
+            this.maxDocResults = this.storage.optionsValueStorage[0];
         }
         if (this.storage.optionsStorage && this.storage.optionsStorage.length > 8) {
             this.advancedSearch = this.storage.optionsStorage[0];
@@ -301,8 +300,8 @@ class SearchBoxCtrl implements IController {
             if (err.data && tempError.length < 1) {
                 tempError = removeHtmlTags(err.data.toString());
                 if (tempError.indexOf("Proxy Error") > -1) {
-                    tempError = tempError.replace("Proxy ErrorProxy Error", "Proxy Error: ").
-                    replace(".R", ". R").replace("&nbsp;", " ");
+                    tempError = tempError.replace("Proxy Error Proxy Error", "Proxy Error:").
+                    replace("&nbsp;", " ");
                 }
             }
             if (tempError.length < 1) {
@@ -371,10 +370,12 @@ class SearchBoxCtrl implements IController {
     }
 
     /**
-     * Make a list of folder paths. Currently goes only three levels deep to save time.
+     * Make a list of folder paths.
      * @returns {Promise<void>}
      */
     private async loadFolderSuggestions() {
+        // TODO: Load from an index to get all folders faster?
+        // Currently goes only three levels deep to save time.
         const response = await $http<string[]>({
             method: "GET",
             params: {
@@ -421,8 +422,8 @@ class SearchBoxCtrl implements IController {
  * @returns {string}
  */
 function removeHtmlTags(str: string) {
-    return str.replace(/<{1}[^<>]{1,}>{1}/g, "").
-        replace(/(\r\n\t|\n|\r\t)/gm, "").
+    return str.replace(/<{1}[^<>]{1,}>{1}/g, " ").
+        replace(/(\r\n\t|\n|\r\t)/gm, " ").
         replace(/\s+/g, " ").trim();
 }
 
