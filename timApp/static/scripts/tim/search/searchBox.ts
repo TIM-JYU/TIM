@@ -289,7 +289,8 @@ class SearchBoxCtrl implements IController {
             if (err.data.error) {
                 tempError = err.data.error.toString();
             } else {
-                tempError = err.toString();
+                console.log(err);
+                tempError = "Unknown error";
             }
             this.errorMessage = tempError;
             this.results = [];
@@ -336,13 +337,10 @@ class SearchBoxCtrl implements IController {
             if (err.data.error) {
                 tempError = err.data.error.toString();
             } else {
-                tempError = err.toString();
+                console.log(err);
+                tempError = "Unknown error";
             }
-            if (this.errorMessage.length > 0) {
-                this.errorMessage += " " + tempError;
-            } else {
-                this.errorMessage = tempError;
-            }
+            this.errorMessage = tempError;
             this.tagResults = [];
             return;
         }
@@ -407,7 +405,8 @@ timApp.component("searchBox", {
       <h5>Advanced search options</h5>
       <form class="form-horizontal">
            <div class="form-group" title="Write folder path to search from">
-                <label for="folder-selector" class="col-sm-4 control-label font-weight-normal">Search folder:</label>
+                <label for="folder-selector" class="col-sm-4 control-label font-weight-normal"
+                style="text-align:left;">Search folder:</label>
                 <div class="col-sm-8">
                     <input ng-model="$ctrl.folder" name="folder-selector"
                            type="text" class="form-control" id="folder-selector" placeholder="Input a folder to search"
@@ -416,9 +415,9 @@ timApp.component("searchBox", {
                 </div>
            </div>
             <div class="form-group" title="Input maximum number of results to give from a single document">
-                <label for="max-doc-results-selector" class="col-sm-4 control-label font-weight-normal">
-                Max results / document:</label>
-                <div class="col-sm-8">
+                <label for="max-doc-results-selector" class="col-sm-5 control-label font-weight-normal"
+                style="text-align:left;">Max results / document:</label>
+                <div class="col-sm-7">
                     <input ng-model="$ctrl.maxDocResults" name="max-doc-results-selector"
                            type="number" class="form-control" id="folder-selector"
                            placeholder="Input max # of results per document">
