@@ -130,19 +130,7 @@ class SearchBoxCtrl implements IController {
             await this.tagSearch();
         }
         if (this.searchWords || this.searchDocNames) {
-            // Server side has separate 3 character minimum check as well.
-            if (!this.searchExactWords && this.query.trim().length < this.queryMinLength) {
-                this.errorMessage = (`Search word must be at least ${this.queryMinLength} characters
-                 long with whitespace stripped.`);
-                this.loading = false;
-                return;
-            }
-            if (this.searchExactWords && this.query.trim().length < this.queryMinLengthExactWords) {
-                this.errorMessage = (`Search word must be at least ${this.queryMinLengthExactWords} character
-                 long with whitespace stripped.`);
-                this.loading = false;
-                return;
-            }
+            // Server side has a 3 character minimum check.
             if (!this.folder.trim() && this.searchWords) {
                 this.errorMessage = (`Content searches on root directory are not allowed.`);
                 this.loading = false;

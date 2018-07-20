@@ -28,6 +28,10 @@ search_routes = Blueprint('search',
                           __name__,
                           url_prefix='/search')
 
+WHITE_LIST = ["c#"]
+MIN_QUERY_LENGTH = 3
+MIN_EXACT_WORDS_QUERY_LENGTH = 1
+
 
 # noinspection PyUnusedLocal
 def make_cache_key(*args, **kwargs):
@@ -162,6 +166,7 @@ def search_tags():
         except Exception as e:
             abort(400, f"Error encountered while formatting JSON-response: {e}")
 
+
 @search_routes.route("")
 @cache.cached(key_prefix=make_cache_key)
 def search():
@@ -193,11 +198,12 @@ def search():
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
     search_words = get_option(request, 'searchWords', default=True, cast=bool)
 
-
-    if len(query.strip()) < 3 and not search_exact_words:
-        abort(400, 'Search text must be at least 3 characters long with whitespace stripped.')
-    if len(query.strip()) < 1 and search_exact_words:
-        abort(400, 'Search text must be at least 1 character long with whitespace stripped.')
+    if len(query.strip()) < MIN_QUERY_LENGTH and not search_exact_words:
+        if query.strip().lower() not in WHITE_LIST:
+            abort(400, f'Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped.')
+    if len(query.strip()) < MIN_EXACT_WORDS_QUERY_LENGTH and search_exact_words:
+        abort(400, f'Whole word search text must be at least {MIN_EXACT_WORDS_QUERY_LENGTH} character(s) '
+                   f'long with whitespace stripped.')
 
     # Won't search subfolders if search_recursively isn't true.
     docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)
@@ -218,7 +224,7 @@ def search():
         term = re.escape(args.term)
     if search_exact_words:
         # Picks the term if it's a whole word, the only word or separated by comma etc.
-        term = fr"(?:^|\W)({args.term})(?:$|\W)"
+        term = fr"(?:^|\W)({term})(?:$|\W)"
 
     starting_time = time.clock()
     current_doc = "before search"
