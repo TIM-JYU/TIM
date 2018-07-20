@@ -290,7 +290,8 @@ class SearchBoxCtrl implements IController {
                 tempError = err.data.error.toString();
             }
             if (err.data && tempError.length < 1) {
-                tempError = err.data.toString();
+                tempError = removeHtmlTags(err.data.toString());
+                tempError.replace("Proxy Error Proxy Error", "Proxy Error");
             }
             if (tempError.length < 1) {
                 tempError = "Unknown error";
@@ -341,7 +342,8 @@ class SearchBoxCtrl implements IController {
                 tempError = err.data.error.toString();
             }
             if (err.data && tempError.length < 1) {
-                tempError = err.data.toString();
+                tempError = removeHtmlTags(err.data.toString());
+                tempError.replace("Proxy Error Proxy Error", "Proxy Error");
             }
             if (tempError.length < 1) {
                 tempError = "Unknown error";
@@ -396,6 +398,12 @@ class SearchBoxCtrl implements IController {
             return `Search with '${this.query}'`;
         }
     }
+}
+
+function removeHtmlTags(str: string) {
+    return str.replace(/<{1}[^<>]{1,}>{1}/g, "").
+        replace(/(\r\n\t|\n|\r\t)/gm, "").
+    replace(/\s+/g, " ").trim();
 }
 
 timApp.component("searchBox", {
