@@ -86,7 +86,7 @@ class SearchBoxCtrl implements IController {
     private focusMe: boolean = true;
     private loading: boolean = false; // Display loading icon.
     private item: IItem = $window.item;
-    private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[]};
+    private storage: ngStorage.StorageService & {searchWordStorage: null | string, optionsStorage: null | boolean[], limitValueStorage: null | number[]};
     private tagResults: ITagSearchResult[] = []; // List of documents with matching tags. Other tags are left out.
     private folderSuggestions: string[] = [];
     private completeSearch: boolean = false;
@@ -96,6 +96,7 @@ class SearchBoxCtrl implements IController {
 
     constructor() {
         this.storage = $localStorage.$default({
+            limitValueStorage: null,
             optionsStorage: null,
             searchWordStorage: null,
         });
@@ -184,6 +185,9 @@ class SearchBoxCtrl implements IController {
         if (this.query.trim().length > this.queryMinLength) {
             this.storage.searchWordStorage = this.query;
         }
+        this.storage.limitValueStorage = [];
+        this.storage.limitValueStorage.push(this.maxDocResults);
+
         this.storage.optionsStorage = [];
         // Alphabetical order.
         this.storage.optionsStorage.push(this.advancedSearch);
@@ -203,6 +207,9 @@ class SearchBoxCtrl implements IController {
     private loadLocalStorage() {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
+        }
+        if (this.storage.limitValueStorage && this.storage.limitValueStorage.length > 0) {
+            this.maxDocResults = this.storage.limitValueStorage[0];
         }
         if (this.storage.optionsStorage && this.storage.optionsStorage.length > 8) {
             this.advancedSearch = this.storage.optionsStorage[0];
@@ -286,12 +293,17 @@ class SearchBoxCtrl implements IController {
         }));
         if (err) {
             let tempError = "";
+            // Basic error message from server.
             if (err.data.error) {
                 tempError = err.data.error.toString();
             }
+            // Some errors don't have err.data.error and are in raw HTML.
             if (err.data && tempError.length < 1) {
                 tempError = removeHtmlTags(err.data.toString());
-                tempError.replace("Proxy Error Proxy Error", "Proxy Error");
+                if (tempError.indexOf("Proxy Error") > -1) {
+                    tempError = tempError.replace("Proxy ErrorProxy Error", "Proxy Error ").
+                    replace(".R", ". R").replace("&nbsp;", " ");
+                }
             }
             if (tempError.length < 1) {
                 tempError = "Unknown error";
@@ -343,7 +355,10 @@ class SearchBoxCtrl implements IController {
             }
             if (err.data && tempError.length < 1) {
                 tempError = removeHtmlTags(err.data.toString());
-                tempError.replace("Proxy Error Proxy Error", "Proxy Error");
+                if (tempError.indexOf("Proxy Error") > -1) {
+                    tempError = tempError.replace("Proxy ErrorProxy Error", "Proxy Error ").
+                    replace(".R", ". R").replace("&nbsp;", " ");
+                }
             }
             if (tempError.length < 1) {
                 tempError = "Unknown error";
@@ -400,10 +415,15 @@ class SearchBoxCtrl implements IController {
     }
 }
 
+/**
+ * Removes HTML tags, linebreaks and extra white spaces.
+ * @param {string} str
+ * @returns {string}
+ */
 function removeHtmlTags(str: string) {
     return str.replace(/<{1}[^<>]{1,}>{1}/g, "").
         replace(/(\r\n\t|\n|\r\t)/gm, "").
-    replace(/\s+/g, " ").trim();
+        replace(/\s+/g, " ").trim();
 }
 
 timApp.component("searchBox", {
