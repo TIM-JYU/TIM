@@ -948,6 +948,9 @@ export class TimTableController implements IController {
         const docId = this.viewctrl.item.id;
         const parId = this.getOwnParId();
         const rowId = this.data.table.rows.length - 1;
+
+        if (rowId < 1) { return; }
+
         const response = await $http.post<TimTable>("/timTable/removeRow",
             {docId, parId, rowId});
         this.data = response.data;
@@ -970,6 +973,48 @@ export class TimTableController implements IController {
         this.data = response.data;
         this.initializeCellDataMatrix();
         this.readDataBlockAndSetValuesToDataCellMatrix();
+    }
+
+    /**
+     * Tells the server to remove a column from this table.
+     */
+    async removeColumn() {
+        if (this.viewctrl == null) {
+            return;
+        }
+
+        const parId = this.getOwnParId();
+        const docId = this.viewctrl.item.id;
+        const colId = this.getColumnCount() - 1;
+
+        if (colId < 1) { return; }
+
+        const response = await $http.post<TimTable>("/timTable/removeColumn",
+            {docId, parId, colId});
+        this.data = response.data;
+        this.initializeCellDataMatrix();
+        this.readDataBlockAndSetValuesToDataCellMatrix();
+    }
+
+    /**
+     * Calculates and returns the number of columns in the table.
+     */
+    private getColumnCount() {
+        if (this.viewctrl == null || !this.data.table.rows) {
+            return 0;
+        }
+
+        let highestCellCount = 0;
+
+        this.data.table.rows.forEach((row) => {
+            if (row.row) {
+                if (row.row.length > highestCellCount) {
+                    highestCellCount = row.row.length;
+                }
+            }
+        });
+
+        return highestCellCount;
     }
 
     /**
@@ -1033,6 +1078,8 @@ timApp.component("timTable", {
      <div class="timTableContentDiv">
     <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
             ng-click="$ctrl.addColumn()"><span class="glyphicon glyphicon-plus"></span></button>
+    <button class="timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.isInEditMode()"
+            ng-click="$ctrl.removeColumn()"><span class="glyphicon glyphicon-minus"></span></button>
     <table ng-class="{editable: $ctrl.isInEditMode() && !$ctrl.isInForcedEditMode(), forcedEditable: $ctrl.isInForcedEditMode()}" class="timTableTable"
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}}

@@ -294,6 +294,47 @@ def tim_table_remove_row():
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
+@timTable_plugin.route("removeColumn", methods=["POST"])
+def tim_table_remove_column():
+    """
+    Removes a column from the table.
+    :return: The entire table's data after the column has been removed.
+    """
+    doc_id, par_id, col_id = verify_json_params('docId', 'parId', 'colId')
+    d, plug = get_plugin_from_paragraph(doc_id, par_id)
+    verify_edit_access(d)
+    try:
+        rows = plug.values[TABLE][ROWS]
+    except KeyError:
+        return abort(400)
+
+    for row in rows:
+        try:
+            current_row = row[ROW]
+        except KeyError:
+            return abort(400)
+        if len(current_row) <= col_id:
+            continue # continue instead of erroring out, some rows might have colspan in
+                     # their cells while we can still remove the column from other rows
+
+        current_row.pop(col_id)
+
+    if is_datablock(plug.values):
+        datablock_entries = construct_datablock_entry_list_from_yaml(plug)
+        new_datablock_entries = []
+        for entry in datablock_entries:
+            if entry.column == col_id:
+                continue
+
+            if entry.column > col_id:
+                entry.column -= 1
+            new_datablock_entries.append(entry)
+        plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(new_datablock_entries)
+
+    plug.save()
+    return json_response(prepare_for_and_call_dumbo(plug))
+
+
 def get_plugin_from_paragraph(doc_id, par_id):
     d = DocEntry.find_by_id(doc_id)
     if not d:
