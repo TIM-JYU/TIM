@@ -23,6 +23,7 @@ from timApp.item.tag import Tag
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
+from timApp.util.logger import log_error
 
 search_routes = Blueprint('search',
                           __name__,
@@ -145,11 +146,13 @@ def search_tags():
                 if m_num > 0:
                     results.append({'doc': d, 'matching_tags': m_tags, 'num_results': m_num})
             except Exception as e:
+                error = f"{str(e.__class__.__name__)}: {str(e)}"
                 error_list.append({
-                    'error': f"{str(e.__class__.__name__)}: {str(e)}",
+                    'error': error,
                     'doc_path': current_doc,
                     'tag_name': current_tag
                 })
+                log_search_error(error, query, current_doc, tag=current_tag)
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
     except Exception as e:
@@ -165,6 +168,19 @@ def search_tags():
             abort(400, "MemoryError: results too large")
         except Exception as e:
             abort(400, f"Error encountered while formatting JSON-response: {e}")
+
+
+def log_search_error(error, query, path, tag="", par=""):
+    if not error:
+        error = "Unknown error"
+    common_part = f"'{error}' while searching '{query}' in document {path}"
+    tag_part = ""
+    par_part = ""
+    if tag:
+        tag_part = f" tag {tag}"
+    if par:
+        par_part = f" paragraph {par}"
+    log_error(common_part + tag_part + par_part)
 
 
 @search_routes.route("")
@@ -284,18 +300,18 @@ def search():
                             results.append(result)
             # If error happens inside loop, report and continue.
             except Exception as e:
+                error = "Unknown error"
                 try:
-                    error_list.append({
-                        'error': f"{str(e.__class__.__name__)}: {str(e)}",
-                        'doc_path': current_doc,
-                        'par_id': current_par
-                    })
+                    error = f"{str(e.__class__.__name__)}: {str(e)}"
                 except:
+                    pass
+                finally:
                     error_list.append({
-                        'error': "Unknown error",
+                        'error': f"{error}",
                         'doc_path': current_doc,
                         'par_id': current_par
                     })
+                    log_search_error(error, query, current_doc, par=current_par)
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
     except Exception as e:
@@ -309,6 +325,7 @@ def search():
                     json_response(r)
                 except TypeError as e:
                     # Report the offending paragraph.
+                    error = f"Formatting JSON-response for a result failed: {e}"
                     try:
                         path = r['doc'].path
                     except:
@@ -318,10 +335,11 @@ def search():
                     except:
                         id = ""
                     error_list.append({
-                        'error': f"Formatting JSON-response for a search result failed: {e}",
+                        'error': error,
                         'doc_path': path,
                         'par_id': id
                     })
+                    log_search_error(error, query, path, par=id)
                 else:
                     clean_results.append(r)
             return json_response({

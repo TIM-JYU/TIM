@@ -301,7 +301,7 @@ class SearchBoxCtrl implements IController {
             if (err.data && tempError.length < 1) {
                 tempError = removeHtmlTags(err.data.toString());
                 if (tempError.indexOf("Proxy Error") > -1) {
-                    tempError = tempError.replace("Proxy ErrorProxy Error", "Proxy Error ").
+                    tempError = tempError.replace("Proxy ErrorProxy Error", "Proxy Error: ").
                     replace(".R", ". R").replace("&nbsp;", " ");
                 }
             }
@@ -317,10 +317,10 @@ class SearchBoxCtrl implements IController {
             this.completeSearch = response.data.complete;
             this.wordMatchCount = response.data.wordResultCount;
             this.titleMatchCount = response.data.titleResultCount;
-            if (response.data.errors.length > 0) {
-                console.log("Errors were encountered during search:");
-                console.log(response.data.errors);
-            }
+            // if (response.data.errors.length > 0) {
+            //     console.log("Errors were encountered during search:");
+            //     console.log(response.data.errors);
+            // }
         }
     }
 
@@ -341,10 +341,10 @@ class SearchBoxCtrl implements IController {
                 },
         }));
         if (response) {
-            if (response.data.errors.length > 0) {
-                console.log("Errors were encountered during tag search:");
-                console.log(response.data.errors);
-            }
+            // if (response.data.errors.length > 0) {
+            //     console.log("Errors were encountered during tag search:");
+            //     console.log(response.data.errors);
+            // }
             this.tagResults = response.data.results;
             this.tagMatchCount = response.data.tagResultCount;
         }
