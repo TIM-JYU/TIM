@@ -33,6 +33,7 @@ NUMBER = 'number'
 DATABLOCK = 'tabledatablock'
 CELLS = 'cells'
 COL = 'col'
+RELATIVE = 'relative'
 ASCII_OF_A = 65
 ASCII_CHAR_COUNT = 26
 MARKUP = 'markup'
@@ -54,6 +55,12 @@ class TimTable:
     def multihtml_direct_call(jsondata):
         return tim_table_multihtml_direct(jsondata)
 
+
+class RelativeDataBlockValue:
+    def __init__(self, row: int, column: int, data: str):
+        self.row = row
+        self.column = column
+        self.data = data
 
 @timTable_plugin.route("reqs/")
 @timTable_plugin.route("reqs")
@@ -121,6 +128,21 @@ def tim_table_get_html(jso, review):
     return s
 
 
+@timTable_plugin.route("multimd/", methods=["POST"])
+def tim_table_multimd():
+    """
+    Handles latex printing.
+    :return: Table as latex.
+    """
+    jsondata = request.get_json()
+    multi = []
+    for jso in jsondata:
+        tbl = jso[MARKUP][TABLE]
+        latexTable = str(convert_table(tbl))
+        multi.append(latexTable)
+    return json_response(multi)
+
+
 @timTable_plugin.route("getCellData", methods=["GET"])
 def tim_table_get_cell_data():
     """
@@ -159,12 +181,8 @@ def tim_table_save_cell_list():
     """
     multi = []
     cell_content, docid, parid, row, col = verify_json_params('cellContent', 'docId', 'parId', 'row', 'col')
-    doc = DocEntry.find_by_id(docid)
-    if not doc:
-        abort(404)
-    verify_edit_access(doc)
-    par = doc.document_as_current_user.get_paragraph(parid)
-    plug = Plugin.from_paragraph(par)
+    d, plug = get_plugin_from_paragraph(docid, parid)
+    verify_edit_access(d)
     yaml = plug.values
     if is_datablock(yaml):
         save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
@@ -185,15 +203,11 @@ def tim_table_save_cell_list():
 def tim_table_add_row():
     """
     Adds a row into the table.
-    :return:
+    :return: The entire table's data after the row has been added.
     """
     doc_id, par_id = verify_json_params('docId', 'parId')
-    d = DocEntry.find_by_id(doc_id)
-    if not d:
-        abort(404)
+    d, plug = get_plugin_from_paragraph(doc_id, par_id)
     verify_edit_access(d)
-    par = d.document_as_current_user.get_paragraph(par_id)
-    plug = Plugin.from_paragraph(par)
     try:
         rows = plug.values[TABLE][ROWS]
     except KeyError:
@@ -210,7 +224,7 @@ def tim_table_add_row():
         else:
             row[i][CELL] = ''
     plug.save()
-    return json_response(prepare_for_and_call_dumbo(plug.values))
+    return json_response(prepare_for_and_call_dumbo(plug))
 
 
 @timTable_plugin.route("addColumn", methods=["POST"])
@@ -218,15 +232,11 @@ def tim_table_add_column():
     """
     Adds a new cell into each row on the table.
     In other words, adds a column into the table.
-    :return:
+    :return: The entire table's data after the column has been added.
     """
     doc_id, par_id = verify_json_params('docId', 'parId')
-    d = DocEntry.find_by_id(doc_id)
-    if not d:
-        abort(404)
+    d, plug = get_plugin_from_paragraph(doc_id, par_id)
     verify_edit_access(d)
-    par = d.document_as_current_user.get_paragraph(par_id)
-    plug = Plugin.from_paragraph(par)
     try:
         rows = plug.values[TABLE][ROWS]
     except KeyError:
@@ -247,22 +257,50 @@ def tim_table_add_column():
             current_row.append(new_cell)
         
     plug.save()
-    return json_response(prepare_for_and_call_dumbo(plug.values))
+    return json_response(prepare_for_and_call_dumbo(plug))
 
 
-@timTable_plugin.route("multimd/", methods=["POST"])
-def tim_table_multimd():
+@timTable_plugin.route("removeRow", methods=["POST"])
+def tim_table_remove_row():
     """
-    Handles latex printing.
-    :return: Table as latex.
+    Removes a row from the table.
+    :return: The entire table's data after the row has been removed.
     """
-    jsondata = request.get_json()
-    multi = []
-    for jso in jsondata:
-        tbl = jso[MARKUP][TABLE]
-        latexTable = str(convert_table(tbl))
-        multi.append(latexTable)
-    return json_response(multi)
+    doc_id, par_id, row_id = verify_json_params('docId', 'parId', 'rowId')
+    d, plug = get_plugin_from_paragraph(doc_id, par_id)
+    verify_edit_access(d)
+    try:
+        rows = plug.values[TABLE][ROWS]
+    except KeyError:
+        return abort(400)
+
+    if len(rows) <= row_id:
+        return abort(400)
+    rows.pop(row_id)
+
+    if is_datablock(plug.values):
+        datablock_entries = construct_datablock_entry_list_from_yaml(plug)
+        new_datablock_entries = []
+        for entry in datablock_entries:
+            if entry.row == row_id:
+                continue
+
+            if entry.row > row_id:
+                entry.row -= 1
+            new_datablock_entries.append(entry)
+        plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(new_datablock_entries)
+
+    plug.save()
+    return json_response(prepare_for_and_call_dumbo(plug))
+
+
+def get_plugin_from_paragraph(doc_id, par_id):
+    d = DocEntry.find_by_id(doc_id)
+    if not d:
+        abort(404)
+    verify_edit_access(d)
+    par = d.document_as_current_user.get_paragraph(par_id)
+    return d, Plugin.from_paragraph(par)
 
 
 def is_datablock(yaml: dict) -> bool:
@@ -286,9 +324,9 @@ def create_datablock(table: dict):
     :param table:
     :return:
     """
-    table['tabledatablock'] = {}
-    table['tabledatablock']['type'] = 'relative'
-    table['tabledatablock']['cells'] = {}
+    table[DATABLOCK] = {}
+    table[DATABLOCK][TYPE] = 'relative'
+    table[DATABLOCK][CELLS] = {}
 
 
 def save_cell(datablock: dict, row: int, col: int, cell_content: str):
@@ -335,7 +373,7 @@ def find_cell_from_datablock(cells: dict, row: int, col: int) -> Optional[str]:
     try:
         value = cells[coordinate]
         ret = value
-    except:
+    except KeyError:
         pass
     return ret
 
@@ -358,6 +396,33 @@ def colnum_to_letters(column_index: int) -> str:
     return colnum_to_letters(remainder - 1) + last_char
 
 
+def datablock_key_to_indexes(datablock_key: str) -> (int, int):
+    """
+    Gets the column and row indexes from a single relative datablock entry.
+    :param datablock_key: The entry in the relative datablock.
+    :return: Column and row indexes in a tuple.
+    """
+
+    # get the letter part from the datablock key, for example AB12 -> AB
+    columnstring = ""
+    for c in datablock_key:
+        if c.isalpha():
+            columnstring += c
+        else:
+            break
+
+    rowstring = datablock_key[len(columnstring):]
+    row_index = int(rowstring)
+
+    chr_index = len(columnstring) - 1
+    column_index = 0
+    for c in columnstring.encode('ascii'):
+        # ascii encoding returns a list of bytes, so we can use c directly
+        addition = ((ASCII_CHAR_COUNT**chr_index) * (c - ASCII_OF_A)) + 1
+        column_index += addition
+    return column_index - 1, row_index - 1
+
+
 def is_review(request):
     """
     Check if request is review
@@ -368,14 +433,17 @@ def is_review(request):
     return result
 
 
-def prepare_for_and_call_dumbo(values):
+def prepare_for_and_call_dumbo(plug: Plugin):
     """
     Prepares the table's markdown for Dumbo conversion and
     runs it through Dumbo.
     :param values: The plugin paragraph's markdown.
     :return: The conversion result from Dumbo.
     """
-    return call_dumbo(prepare_for_dumbo(values), DUMBO_PARAMS)
+    if plug.is_automd_enabled():
+        return call_dumbo(prepare_for_dumbo(plug.values), DUMBO_PARAMS)
+
+    return call_dumbo(plug.values, DUMBO_PARAMS)
 
 
 def prepare_for_dumbo(values):
@@ -422,3 +490,40 @@ def prepare_for_dumbo(values):
 
 def is_of_unconvertible_type(value):
     return isinstance(value, int) or isinstance(value, bool) or isinstance(value, float)
+
+
+def construct_datablock_entry_list_from_yaml(plug: Plugin) -> list:
+    """
+    Parses a relative datablock and returns its data as a list of
+    RelativeDataBlockValue instances.
+    :param plug: The plugin instance.
+    :return: A list of RelativeDataBlockValues.
+    """
+    try:
+        values = plug.values[TABLE][DATABLOCK][CELLS]
+    except KeyError:
+        return []
+
+    final_list = []
+    for key, value in values.items():
+        column_index, row_index = datablock_key_to_indexes(key)
+        final_list.append(RelativeDataBlockValue(row_index, column_index, value))
+    return final_list
+
+
+def create_datablock_from_entry_list(relative_data_block_values: list) -> dict:
+    """
+    Creates the datablock from a list of RelativeDataBlockValues.
+    :param relative_data_block_values: The list of RelativeDataBlockValues.
+    :return: The datablock as a dict.
+    """
+    cells = {}
+
+    for entry in relative_data_block_values:
+        key = colnum_to_letters(entry.column) + str(entry.row + 1)
+        cells[key] = entry.data
+
+    datablock = {}
+    datablock[CELLS] = cells
+    datablock[TYPE] = RELATIVE
+    return datablock

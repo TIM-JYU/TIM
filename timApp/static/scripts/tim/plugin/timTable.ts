@@ -208,7 +208,7 @@ export class TimTableController implements IController {
      */
     $onInit() {
 
-        this.InitializeCellDataMatrix();
+        this.initializeCellDataMatrix();
         this.readDataBlockAndSetValuesToDataCellMatrix();
 
         if (this.viewctrl == null) {
@@ -401,7 +401,7 @@ export class TimTableController implements IController {
      * Initialize celldatamatrix with the values from yaml and yaml only
      * @constructor
      */
-    private InitializeCellDataMatrix() {
+    private initializeCellDataMatrix() {
         this.cellDataMatrix = [];
         if (this.data.table.rows) {
             this.data.table.rows.forEach((item, index) => {
@@ -933,7 +933,25 @@ export class TimTableController implements IController {
         const response = await $http.post<TimTable>("/timTable/addRow",
             {docId, parId});
         this.data = response.data;
-        this.InitializeCellDataMatrix();
+        this.initializeCellDataMatrix();
+        this.readDataBlockAndSetValuesToDataCellMatrix();
+    }
+
+    /**
+     * Tells the server to remove a row from this table.
+     */
+    async removeRow() {
+        if (this.viewctrl == null) {
+            return;
+        }
+
+        const docId = this.viewctrl.item.id;
+        const parId = this.getOwnParId();
+        const rowId = this.data.table.rows.length - 1;
+        const response = await $http.post<TimTable>("/timTable/removeRow",
+            {docId, parId, rowId});
+        this.data = response.data;
+        this.initializeCellDataMatrix();
         this.readDataBlockAndSetValuesToDataCellMatrix();
     }
 
@@ -950,7 +968,7 @@ export class TimTableController implements IController {
         const response = await $http.post<TimTable>("/timTable/addColumn",
             {docId, parId});
         this.data = response.data;
-        this.InitializeCellDataMatrix();
+        this.initializeCellDataMatrix();
         this.readDataBlockAndSetValuesToDataCellMatrix();
     }
 
@@ -1031,7 +1049,9 @@ timApp.component("timTable", {
     </table>
     <button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.addRow()"><span
             class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
-            </div>
+    <button class="timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.removeRow()"><span
+            class="glyphicon glyphicon-minus"></span></button>            
+    </div>
     <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent">
