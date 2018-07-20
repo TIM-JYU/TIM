@@ -326,10 +326,10 @@ registerDialogComponent("timSearchResults",
     <dialog-footer>
         <div class="float-left" id="order-selector-box">
             <select id="order-selector" ng-model="$ctrl.orderByOption"
-                title="Select the result order" name="order-selector">
-                <option selected value="1">Order by path</option>
-                <option value="2">Order by title</option>
-                <option value="3">Order by relevance</option>
+                title="Select the result sorting order" name="order-selector">
+                <option selected value="1">Sort by path</option>
+                <option value="2">Sort by title</option>
+                <option value="3">Sort by relevance</option>
             </select>
         </div>
         <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>

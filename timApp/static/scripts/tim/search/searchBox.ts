@@ -37,12 +37,14 @@ export interface ISearchError {
     error: string;
     doc_path: string;
     par_id: string;
+    tag_name: string;
 }
 
 export interface ITagSearchResultsInfo {
     results: ITagSearchResult[];
     complete: boolean;
     tagResultCount: number;
+    errors: ISearchError[];
 }
 
 export interface ISearchResult {
@@ -173,7 +175,6 @@ class SearchBoxCtrl implements IController {
             tagMatchCount: this.tagMatchCount,
             titleMatchCount: this.titleMatchCount,
         });
-
         this.loading = false;
     }
 
@@ -296,22 +297,23 @@ class SearchBoxCtrl implements IController {
             url: "/search",
         }));
         if (err) {
+            let tempError = "";
             if (err.data.error) {
-                this.errorMessage = err.data.error.toString();
+                tempError = err.data.error.toString();
             } else {
-                this.errorMessage = "Undefined error";
+                tempError = err.toString();
             }
+            this.errorMessage = tempError;
             this.results = [];
             return;
         }
         if (response) {
-            this.errorMessage = "";
             this.results = response.data.results;
             this.completeSearch = response.data.complete;
             this.wordMatchCount = response.data.wordResultCount;
             this.titleMatchCount = response.data.titleResultCount;
             if (response.data.errors.length > 0) {
-                console.log("Errors during search:");
+                console.log("Errors were encountered during search:");
                 console.log(response.data.errors);
             }
         }
@@ -322,7 +324,7 @@ class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async tagSearch() {
-        const tagResponse = await $http<ITagSearchResultsInfo>({
+        const [err, response] = await to($http<ITagSearchResultsInfo>({
                 method: "GET",
                 url: "/search/tags",
                 params: {
@@ -332,10 +334,29 @@ class SearchBoxCtrl implements IController {
                     regex: this.regex,
                     searchExactWords: this.searchExactWords,
                 },
-        });
-        if (tagResponse) {
-            this.tagResults = tagResponse.data.results;
-            this.tagMatchCount = tagResponse.data.tagResultCount;
+        }));
+        if (response) {
+            if (response.data.errors.length > 0) {
+                console.log("Errors were encountered during tag search:");
+                console.log(response.data.errors);
+            }
+            this.tagResults = response.data.results;
+            this.tagMatchCount = response.data.tagResultCount;
+        }
+        if (err) {
+            let tempError = "";
+            if (err.data.error) {
+                tempError = err.data.error.toString();
+            } else {
+                tempError = err.toString();
+            }
+            if (this.errorMessage.length > 0) {
+                this.errorMessage += " " + tempError;
+            } else {
+                this.errorMessage = tempError;
+            }
+            this.tagResults = [];
+            return;
         }
 
     }

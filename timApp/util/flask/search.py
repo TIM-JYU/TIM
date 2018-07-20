@@ -107,6 +107,9 @@ def search_tags():
                          search_recursively=True, custom_filter=custom_filter,
                          query_options=query_options)
     tag_result_count = 0
+    error_list = []
+    current_doc = "before search"
+    current_tag = "before search"
     if case_sensitive:
         flags = re.DOTALL
     else:
@@ -117,24 +120,47 @@ def search_tags():
         term = re.escape(query)
     if search_exact_words:
         term = fr"\b{term}\b"
-    regex = re.compile(term, flags)
-    for d in docs:
-        m_tags = []
-        m_num = 0
-        for tag in d.block.tags:
-            matches = list(regex.finditer(tag.name))
-            if matches:
-                match_count = len(matches)
-                if not query:
-                    match_count = 1
-                m_num += match_count
-                tag_result_count += match_count
-                m_tags.append(tag)
+    try:
+        regex = re.compile(term, flags)
+        for d in docs:
+            try:
+                current_doc = d.path
+                m_tags = []
+                m_num = 0
+                for tag in d.block.tags:
+                    current_tag = tag.name
+                    matches = list(regex.finditer(tag.name))
+                    if matches:
+                        match_count = len(matches)
+                        if not query:
+                            match_count = 1
+                        m_num += match_count
+                        tag_result_count += match_count
+                        m_tags.append(tag)
 
-        if m_num > 0:
-            results.append({'doc': d, 'matching_tags': m_tags, 'num_results': m_num})
-    return json_response({'results': results, 'complete': True, 'tagResultCount': tag_result_count})
-
+                if m_num > 0:
+                    results.append({'doc': d, 'matching_tags': m_tags, 'num_results': m_num})
+            except Exception as e:
+                error_list.append({
+                    'error': f"{str(e.__class__.__name__)}: {str(e)}",
+                    'doc_path': current_doc,
+                    'tag_name': current_tag
+                })
+    except sre_constants.error as e:
+        abort(400, f"Invalid regex: {str(e)}")
+    except Exception as e:
+        abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
+    else:
+        try:
+            return json_response({'results': results,
+                                  'complete': True,
+                                  'tagResultCount': tag_result_count,
+                                  'errors': error_list
+                                  })
+        except MemoryError:
+            abort(400, "MemoryError: results too large")
+        except Exception as e:
+            abort(400, f"Error encountered while formatting JSON-response: {e}")
 
 @search_routes.route("")
 @cache.cached(key_prefix=make_cache_key)
@@ -264,12 +290,10 @@ def search():
                         'doc_path': current_doc,
                         'par_id': current_par
                     })
-        current_doc = "search over"
-        current_par = "search over"
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
     except Exception as e:
-        abort(400, f"{str(e.__class__.__name__)}: {str(e)} in doc: {current_doc}, par: {current_par}")
+        abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
     else:
         try:
             clean_results = []
