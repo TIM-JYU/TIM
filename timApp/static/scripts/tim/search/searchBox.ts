@@ -289,8 +289,7 @@ class SearchBoxCtrl implements IController {
             if (err.data.error) {
                 tempError = err.data.error.toString();
             } else {
-                console.log(err);
-                tempError = "Unknown error";
+                tempError = "Non-standard error: " + JSON.stringify(err);
             }
             this.errorMessage = tempError;
             this.results = [];
@@ -337,8 +336,7 @@ class SearchBoxCtrl implements IController {
             if (err.data.error) {
                 tempError = err.data.error.toString();
             } else {
-                console.log(err);
-                tempError = "Unknown error";
+                tempError = "Non-standard error: " + JSON.stringify(err);
             }
             this.errorMessage = tempError;
             this.tagResults = [];
@@ -375,6 +373,21 @@ class SearchBoxCtrl implements IController {
         this.results = [];
         this.errorMessage = "";
     }
+
+    /**
+     * Format search button tooltip based on the situation.
+     * @returns {string}
+     */
+    private searchButtonTooltip() {
+        if (this.query.length < 1) {
+            return "Input a search word to search";
+        }
+        if (this.loading) {
+            return `Please wait, searching '${this.query}'`;
+        } else {
+            return `Search with '${this.query}'`;
+        }
+    }
 }
 
 timApp.component("searchBox", {
@@ -388,10 +401,10 @@ timApp.component("searchBox", {
                title="Search documents with a key word"
                placeholder="Input a search word"
                class="form-control" autocomplete="on">
-        <span class="input-group-addon btn" ng-click="$ctrl.search()">
-                <span ng-show="$ctrl.loading" class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
-                <span ng-hide="$ctrl.loading" class="glyphicon glyphicon-search"
-                title="Search with word '{{$ctrl.query}}'"></span>
+        <span class="input-group-addon btn" ng-click="$ctrl.search()" title="{{$ctrl.searchButtonTooltip()}}">
+                <span ng-show="$ctrl.loading" class="glyphicon glyphicon-refresh glyphicon-refresh-animate">
+                </span>
+                <span ng-hide="$ctrl.loading" class="glyphicon glyphicon-search"></span>
         </span>
         <span class="input-group-addon btn" ng-click="$ctrl.advancedSearch = !$ctrl.advancedSearch"
             title="Toggle advanced search">
