@@ -941,7 +941,7 @@ export class TimTableController implements IController {
      * Tells the server to remove a row from this table.
      */
     async removeRow() {
-        if (this.viewctrl == null) {
+        if (this.viewctrl == null || !this.data.table.rows) {
             return;
         }
 
