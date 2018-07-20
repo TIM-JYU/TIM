@@ -288,8 +288,12 @@ class SearchBoxCtrl implements IController {
             let tempError = "";
             if (err.data.error) {
                 tempError = err.data.error.toString();
-            } else {
-                tempError = "Non-standard error: " + JSON.stringify(err);
+            }
+            if (err.data && tempError.length < 1) {
+                tempError = err.data.toString();
+            }
+            if (tempError.length < 1) {
+                tempError = "Unknown error";
             }
             this.errorMessage = tempError;
             this.results = [];
@@ -335,8 +339,12 @@ class SearchBoxCtrl implements IController {
             let tempError = "";
             if (err.data.error) {
                 tempError = err.data.error.toString();
-            } else {
-                tempError = "Non-standard error: " + JSON.stringify(err);
+            }
+            if (err.data && tempError.length < 1) {
+                tempError = err.data.toString();
+            }
+            if (tempError.length < 1) {
+                tempError = "Unknown error";
             }
             this.errorMessage = tempError;
             this.tagResults = [];
