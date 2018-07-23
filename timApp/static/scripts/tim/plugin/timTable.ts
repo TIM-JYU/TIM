@@ -193,7 +193,7 @@ export class TimTableController implements IController {
     private editedCellContent: string | undefined;
     private editedCellInitialContent: string | undefined;
     private currentCell?: { row: number, col: number, editorOpen: boolean };
-    private lastEditedCell?: {row: number, col: number};
+    private lastEditedCell: {row: number, col: number};
     private mouseInTable?: boolean;
     private bigEditorOpen: boolean = false;
 
@@ -557,6 +557,7 @@ export class TimTableController implements IController {
             // Arrow keys
             if (!this.currentCell && ev.ctrlKey && (ev.keyCode === 40 || ev.keyCode === 39 || ev.keyCode === 38 || ev.keyCode === 37)) {
                 this.handleArrowMovement(ev);
+                this.scope.$apply();
             }
         }
     }
@@ -606,7 +607,9 @@ export class TimTableController implements IController {
         }
 
         if (this.lastEditedCell) {
-            this.openCell(this.lastEditedCell.row + y, this.lastEditedCell.col + x);
+            const newRow = this.constrainRowIndex(this.lastEditedCell.row + y);
+            const newColumn = this.constrainColumnIndex(newRow, this.lastEditedCell.col + x);
+            this.lastEditedCell = {row: newRow, col: newColumn};
         }
     }
 
@@ -619,19 +622,32 @@ export class TimTableController implements IController {
         const modal: CellEntity = {
             cell: "",
         };
+
+        rowi = this.constrainRowIndex(rowi);
+        coli = this.constrainColumnIndex(rowi, coli);
+
+        this.cellClicked(modal, rowi, coli);
+    }
+
+    private constrainRowIndex(rowIndex: number) {
         if (this.data.table.rows) {
-            if (rowi >= this.data.table.rows.length) { rowi = 0; } // if bigger then 0
-            if (rowi < 0) { rowi = this.data.table.rows.length - 1; }
+            if (rowIndex >= this.data.table.rows.length) { return 0; }
+            if (rowIndex < 0) { return this.data.table.rows.length - 1; }
         }
 
-        if (this.data.table.rows && this.data.table.rows[rowi].row) {
-            const rowrow = this.data.table.rows[rowi].row;
+        return rowIndex;
+    }
+
+    private constrainColumnIndex(rowIndex: number, columnIndex: number) {
+        if (this.data.table.rows && this.data.table.rows[rowIndex]) {
+            const rowrow = this.data.table.rows[rowIndex].row;
             if (rowrow) {
-                if (coli >= rowrow.length) { coli = 0; }
-                if (coli < 0) { coli = rowrow.length - 1; }
+                if (columnIndex >= rowrow.length) { return 0; }
+                if (columnIndex < 0) { return rowrow.length - 1; }
             }
         }
-        this.cellClicked(modal, rowi, coli);
+
+        return columnIndex;
     }
 
     /**
@@ -1052,9 +1068,9 @@ export class TimTableController implements IController {
             return false;
         }
 
-        if (this.currentCell) {
+        /*if (this.currentCell && this.currentCell.editorOpen) {
             return this.currentCell.row === rowi && this.currentCell.col === coli;
-        }
+        }*/
 
         if (this.lastEditedCell) {
             return this.lastEditedCell.row === rowi && this.lastEditedCell.col === coli;
@@ -1075,7 +1091,7 @@ timApp.component("timTable", {
     },
     template: `<div ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
-     <div class="timTableContentDiv">
+    <div class="timTableContentDiv">
     <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
             ng-click="$ctrl.addColumn()"><span class="glyphicon glyphicon-plus"></span></button>
     <button class="timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.isInEditMode()"
@@ -1086,7 +1102,7 @@ timApp.component("timTable", {
              ng-style="$ctrl.stylingForColumn(c)"/>
         <tr ng-repeat="r in $ctrl.data.table.rows" ng-init="rowi = $index" id={{r.id}}
             ng-style="$ctrl.stylingForRow(r)">
-                <td ng-class="{activeCell: $ctrl.isActiveCell(rowi, coli)}"
+                <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
                  ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}" id={{td.id}}"
                     ng-style="$ctrl.stylingForCell(td, rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
