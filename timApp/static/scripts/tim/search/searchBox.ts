@@ -21,9 +21,10 @@ import {timApp} from "../app";
 import {$http, $localStorage, $window} from "../util/ngimport";
 import {IItem, ITag, ITaggedItem} from "../item/IItem";
 import {Binding, to} from "../util/utils";
-import {showSearchResultDialog} from "./searchResultsCtrl";
+import {ISearchResultParams, ShowSearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
 import {ngStorage} from "ngstorage";
 import {IExtraData} from "../document/editing/edittypes";
+import {BookmarksController} from "../bookmark/bookmarks";
 
 export interface ISearchResultsInfo {
     results: ISearchResult[];
@@ -64,7 +65,9 @@ export interface ITagSearchResult{
     matching_tags: ITag[]; // List of tags that matched the query.
 }
 
-class SearchBoxCtrl implements IController {
+// export let searchResults: ISearchResultParams;
+
+export class SearchBoxCtrl implements IController {
     private query: string = "";
     private folder!: Binding<string, "<">;
     private regex: boolean = false;
@@ -92,6 +95,7 @@ class SearchBoxCtrl implements IController {
     private folderSuggestions: string[] = []; // A list of folder path suggestions.
     private completeSearch: boolean = false;
     private maxDocResults: number = 100;
+    private resultsDialog: ShowSearchResultController | null = null;
 
     constructor() {
         this.storage = $localStorage.$default({
@@ -153,17 +157,35 @@ class SearchBoxCtrl implements IController {
             tempError = "Search was incomplete due to time or data constraints. " +
                 "For better results choose more specific search options.";
         }
-        void showSearchResultDialog({
+        const resultParams = {
             errorMessage: tempError,
             folder: this.folder,
             results: this.results,
+            searchComponent: this,
             searchWord: this.query,
-            tagResults: this.tagResults,
-            wordMatchCount: this.wordMatchCount,
             tagMatchCount: this.tagMatchCount,
+            tagResults: this.tagResults,
             titleMatchCount: this.titleMatchCount,
-        });
+            wordMatchCount: this.wordMatchCount,
+        };
+        if (this.createNewWindow) {
+            void showSearchResultDialog(resultParams);
+        } else {
+            if (!this.resultsDialog) {
+                void showSearchResultDialog(resultParams);
+            } else {
+                this.resultsDialog.updateAttributes(resultParams);
+            }
+        }
         this.loading = false;
+    }
+
+    /**
+     * Sets a search result controller.
+     * @param {ShowSearchResultController} resultsDialog
+     */
+    registerResultsDialog(resultsDialog: ShowSearchResultController) {
+        this.resultsDialog = resultsDialog;
     }
 
     /*
@@ -485,7 +507,7 @@ timApp.component("searchBox", {
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchExactWords"
             title="Search only whole words with one or more character"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search whole words</label>
-        <label ng-if="false" class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.createNewWindow"
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.createNewWindow"
             title="Show result of each search in new window"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Open new window for each search</label>
         <h5 class="font-weight-normal">Search scope:</h5>

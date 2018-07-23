@@ -6,13 +6,14 @@ import {IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {markAsUsed} from "../util/utils";
-import {ISearchResult, ITagSearchResult} from "./searchBox";
+import {ISearchResult, ITagSearchResult, SearchBoxCtrl} from "./searchBox";
 import {IItem, ITag, TagType} from "../item/IItem";
 import {IExtraData} from "../document/editing/edittypes";
 
 markAsUsed(focusMe);
 
 export interface ISearchResultParams {
+    searchComponent: SearchBoxCtrl;
     results: ISearchResult[];
     searchWord: string;
     errorMessage: string;
@@ -52,26 +53,39 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     private errorMessage: string = "";
     private orderByOption = "1";
     private allClosed = true;
-    private toggleCollapseEnabled = false;
+    private collapsables = false; // True if there are any collapsable results.
+    private searchComponent: null | SearchBoxCtrl = null;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
     }
 
     async $onInit() {
-        this.results = this.resolve.params.results;
-        this.tagResults = this.resolve.params.tagResults;
-        this.totalResults = this.resolve.params.titleMatchCount +
-            this.resolve.params.tagMatchCount +
-            this.resolve.params.wordMatchCount;
-        this.folder = this.resolve.params.folder;
-        this.errorMessage = this.resolve.params.errorMessage;
-        this.filterResults();
-        this.searchWord = this.resolve.params.searchWord;
-        if (!this.limitedDisplay && (this.resolve.params.tagMatchCount > 0 || this.resolve.params.wordMatchCount > 0)) {
-            this.toggleCollapseEnabled = true;
+        this.updateAttributes(this.resolve.params);
+        if (this.searchComponent) {
+            this.searchComponent.registerResultsDialog(this);
         }
         super.$onInit();
+    }
+
+    /**
+     * Set all result data from a results parameters interface.
+     * @param {ISearchResultParams} params
+     */
+    public updateAttributes(params: ISearchResultParams) {
+        this.searchComponent = params.searchComponent;
+        this.results = params.results;
+        this.tagResults = params.tagResults;
+        this.totalResults = params.titleMatchCount + params.tagMatchCount + params.wordMatchCount;
+        this.folder = params.folder;
+        this.errorMessage = params.errorMessage;
+        this.searchWord = params.searchWord;
+        const tagMatchCount = params.tagMatchCount;
+        const wordMatchCount = params.wordMatchCount;
+        this.filterResults();
+        if (!this.limitedDisplay && (tagMatchCount > 0 || wordMatchCount > 0)) {
+            this.collapsables = true;
+        }
     }
 
     /*
@@ -314,7 +328,7 @@ registerDialogComponent("timSearchResults",
         <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.totalResults}} <ng-pluralize
         count="$ctrl.totalResults" when="{'1': 'time', 'other': 'times'}"></ng-pluralize>
             in <i ng-if="$ctrl.folder">{{$ctrl.folder}}</i><i ng-if="!$ctrl.folder">root</i>
-            <a ng-if="$ctrl.toggleCollapseEnabled" title="Toggle results collapse"
+            <a ng-if="$ctrl.collapsables" title="Toggle results collapse"
                 ng-click="$ctrl.toggleCollapseAll()">
                 <i ng-if="$ctrl.allClosed" class="glyphicon glyphicon-plus-sign"></i>
                 <i ng-if="!$ctrl.allClosed" class="glyphicon glyphicon-minus-sign"></i>
@@ -346,7 +360,7 @@ registerDialogComponent("timSearchResults",
                 title="Select the result sorting order" name="order-selector">
                 <option selected value="1">Sort by path</option>
                 <option value="2">Sort by title</option>
-                <option value="3">Sort by relevance</option>
+                <option ng-if="$ctrl.collapsables" value="3">Sort by relevance</option>
             </select>
         </div>
         <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
