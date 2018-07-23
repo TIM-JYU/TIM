@@ -259,9 +259,9 @@ def search():
     # Limit how many pars are searched from any document. The rest are skipped.
     max_doc_pars = get_option(request, 'maxDocPars', default=1000, cast=int)
     # Limit number of found search results after which the search will end.
-    max_results_total = get_option(request, 'maxTotalResults', default=100000, cast=int)
+    max_results_total = get_option(request, 'maxTotalResults', default=15000, cast=int)
     # Time limit for the searching process.
-    max_time = get_option(request, 'maxTime', default=25, cast=int)
+    max_time = get_option(request, 'maxTime', default=15, cast=int)
     # Limit the number of results per document.
     max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
     # Don't search paragraphs that are marked as plugin or setting.
