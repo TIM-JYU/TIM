@@ -512,7 +512,7 @@ export class TimTableController implements IController {
                 const modal: CellEntity = {
                     cell: "",
                 };
-                if (this.currentCell != undefined) {
+                if (this.currentCell != undefined && !this.bigEditorOpen) {
                     this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
                     return;
                 }
@@ -524,24 +524,45 @@ export class TimTableController implements IController {
                 }
             }
 
-            if (ev.keyCode === 13 || ev.keyCode === 9) { // enter or tab
+            if (ev.keyCode === 13) { // Enter
+                if (!this.isInEditMode() || !this.viewctrl) {
+                    return;
+                }
+
                 const parId = getParId(this.element.parents(".par"));
-                if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) { return; }
+
+                if (this.currentCell !== undefined && this.currentCell.row !== undefined && this.currentCell.col !== undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
+                    const value = this.editedCellContent;
+                    if (typeof value === "string" && this.editedCellInitialContent !== value) {
+                        this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
+                    }
+                    if (this.data.table.rows && this.currentCell.row === this.data.table.rows.length - 1) {
+                        this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
+                    } else {
+                        this.openCellNextRowOrColumn(this.currentCell.row + 1, this.currentCell.col);
+                    }
+                    return;
+                }
+
+                if (this.lastEditedCell) {
+                    this.openCell(this.lastEditedCell.row, this.lastEditedCell.col);
+                }
+            }
+
+            if (ev.keyCode === 9) { // Tab
+                const parId = getParId(this.element.parents(".par"));
+                if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
+                    return;
+                }
                 if (this.currentCell !== undefined && this.currentCell.row !== undefined && this.currentCell.col !== undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
                     const value = this.editedCellContent;
                     if (typeof value === "string" && this.editedCellInitialContent !== value) {
                         this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
                     }
                 }
-                if (ev.keyCode === 13) {
-                    if (this.currentCell) {
-                        this.openCellNextRowOrColumn(this.currentCell.row + 1, this.currentCell.col);
-                    }
-                }
-                if (ev.keyCode === 9) {
-                    if (this.currentCell) {
-                        this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
-                    }
+
+                if (this.currentCell) {
+                    this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
                 }
 
                 return;
