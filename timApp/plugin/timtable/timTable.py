@@ -191,7 +191,7 @@ def tim_table_save_cell_list():
         save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
 
     cc = str(cell_content)
-    if plug.is_automd_enabled() and not cc.startswith('md:'):
+    if plug.is_automd_enabled(True) and not cc.startswith('md:'):
         cc = 'md: ' + cc
     html = call_dumbo([cc], DUMBO_PARAMS)
     plug.save()

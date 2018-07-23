@@ -299,10 +299,13 @@ class Plugin:
         return True, 'ok'
 
 
-    def is_automd_enabled(self):
-        if 'automd' in self.values and self.values['automd']:
-            return True
-        return False
+    def is_automd_enabled(self, default = False):
+        if 'automd' in self.values:
+            if self.values['automd']:
+                return True
+            else:
+                return False
+        return default
 
 
 def parse_plugin_values_macros(par: DocParagraph,

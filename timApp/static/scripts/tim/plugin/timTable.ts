@@ -303,7 +303,6 @@ export class TimTableController implements IController {
         });
         const cellHtml = response.data[0];
         this.cellDataMatrix[row][col] = cellHtml;
-        ParCompiler.processAllMathDelayed(this.element);
     }
 
     /**
@@ -731,6 +730,8 @@ export class TimTableController implements IController {
                 this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
             }
         }
+
+        ParCompiler.processAllMathDelayed(this.element);
     }
 
     /**
@@ -949,8 +950,7 @@ export class TimTableController implements IController {
         const response = await $http.post<TimTable>("/timTable/addRow",
             {docId, parId});
         this.data = response.data;
-        this.initializeCellDataMatrix();
-        this.readDataBlockAndSetValuesToDataCellMatrix();
+        this.reInitialize();
     }
 
     /**
@@ -970,8 +970,7 @@ export class TimTableController implements IController {
         const response = await $http.post<TimTable>("/timTable/removeRow",
             {docId, parId, rowId});
         this.data = response.data;
-        this.initializeCellDataMatrix();
-        this.readDataBlockAndSetValuesToDataCellMatrix();
+        this.reInitialize();
     }
 
     /**
@@ -987,8 +986,7 @@ export class TimTableController implements IController {
         const response = await $http.post<TimTable>("/timTable/addColumn",
             {docId, parId});
         this.data = response.data;
-        this.initializeCellDataMatrix();
-        this.readDataBlockAndSetValuesToDataCellMatrix();
+        this.reInitialize();
     }
 
     /**
@@ -1008,8 +1006,18 @@ export class TimTableController implements IController {
         const response = await $http.post<TimTable>("/timTable/removeColumn",
             {docId, parId, colId});
         this.data = response.data;
+        this.reInitialize();
+    }
+
+    /**
+     * Initializes the cell data matrix, reads the data block and sets its values
+     * to the cell data matrix and processes all math.
+     * Call this when the whole table's content is refreshed.
+     */
+    private reInitialize() {
         this.initializeCellDataMatrix();
         this.readDataBlockAndSetValuesToDataCellMatrix();
+        ParCompiler.processAllMathDelayed(this.element);
     }
 
     /**
