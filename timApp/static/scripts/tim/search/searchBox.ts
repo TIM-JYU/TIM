@@ -21,10 +21,9 @@ import {timApp} from "../app";
 import {$http, $localStorage, $window} from "../util/ngimport";
 import {IItem, ITag, ITaggedItem} from "../item/IItem";
 import {Binding, to} from "../util/utils";
-import {ISearchResultParams, ShowSearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
+import {ShowSearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
 import {ngStorage} from "ngstorage";
 import {IExtraData} from "../document/editing/edittypes";
-import {BookmarksController} from "../bookmark/bookmarks";
 
 export interface ISearchResultsInfo {
     results: ISearchResult[];
@@ -93,6 +92,8 @@ export class SearchBoxCtrl implements IController {
     private folderSuggestions: string[] = []; // A list of folder path suggestions.
     private completeSearch: boolean = false;
     private maxDocResults: number = 100;
+    private searchOwned: boolean = false; // Limit search to docs owned by the user.
+
     private resultsDialog: ShowSearchResultController | null = null;
 
     constructor() {
@@ -298,14 +299,15 @@ export class SearchBoxCtrl implements IController {
                 caseSensitive: this.caseSensitive,
                 folder: this.folder,
                 ignorePluginsSettings: this.ignorePluginsSettings,
-                maxDocPars: 1000,
+                // maxDocPars: 1000,
                 maxDocResults: this.maxDocResults,
-                maxTime: 10,
-                maxTotalResults: 10000,
+                // maxTime: 10,
+                // maxTotalResults: 10000,
                 query: this.query,
                 regex: this.regex,
                 searchDocNames: this.searchDocNames,
                 searchExactWords: this.searchExactWords,
+                searchOwned: this.searchOwned,
                 searchWords: this.searchWords,
             },
             url: "/search",
@@ -518,7 +520,9 @@ timApp.component("searchBox", {
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchWords"
             title="Search document content"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Content search</label>
-      </div>
+        <label class="font-weight-normal dropdown-item"><input type="checkbox" ng-model="$ctrl.searchOwned"
+            title="Search documents you own"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search owned documents</label>
       </form>
     </div>
 `,

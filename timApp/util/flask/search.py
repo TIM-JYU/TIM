@@ -18,8 +18,11 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
-from timApp.item.block import Block
+from timApp.item.block import Block, BlockType
 from timApp.item.tag import Tag
+from timApp.user.settings.settings import get_user_info
+from timApp.auth.accesstype import AccessType
+from timApp.auth.auth_models import BlockAccess
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
@@ -198,6 +201,18 @@ def log_search_error(error: str, query: str, path: str, tag: str = "", par: str 
     log_error(common_part + tag_part + par_part)
 
 
+def get_documents_by_access_type(access: AccessType):
+    """
+    Return all documents that user has certain access type to.
+    :param access:
+    :return:
+    """
+    block_query = get_current_user_object().get_personal_group().accesses.filter_by(type=access.value).with_entities(
+        BlockAccess.block_id)
+    docs = DocEntry.query.filter(DocEntry.id.in_(block_query)).all()
+    return docs
+
+
 @search_routes.route("")
 @cache.cached(key_prefix=make_cache_key)
 def search():
@@ -225,6 +240,8 @@ def search():
     # Don't search paragraphs that are marked as plugin or setting.
     ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
 
+    search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
+
     search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
     search_words = get_option(request, 'searchWords', default=True, cast=bool)
@@ -236,8 +253,9 @@ def search():
         abort(400, f'Whole word search text must be at least {MIN_EXACT_WORDS_QUERY_LENGTH} character(s) '
                    f'long with whitespace stripped.')
 
-    # Won't search subfolders if search_recursively isn't true.
-    docs = get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)
+    docs = list(set(get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)))
+    if search_owned_docs:
+        docs = list(set(docs) - (set(docs) - set(get_documents_by_access_type(AccessType.owner))))
     results = []
     args = SearchArgumentsBasic(
         term=query,

@@ -110,6 +110,8 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         if (this.totalResults > this.limitedDisplayTreshold) {
             this.limitedDisplay = true;
         }
+        this.filteredResults = [];
+        this.docResults = [];
         for (const {item, index} of this.results.map((item, index) => ({item, index}))) {
             // Remove matches from the same title.
             try {
