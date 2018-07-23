@@ -65,8 +65,6 @@ export interface ITagSearchResult{
     matching_tags: ITag[]; // List of tags that matched the query.
 }
 
-// export let searchResults: ISearchResultParams;
-
 export class SearchBoxCtrl implements IController {
     private query: string = "";
     private folder!: Binding<string, "<">;
@@ -184,7 +182,7 @@ export class SearchBoxCtrl implements IController {
      * Sets a search result controller.
      * @param {ShowSearchResultController} resultsDialog
      */
-    registerResultsDialog(resultsDialog: ShowSearchResultController) {
+    registerResultsDialog(resultsDialog: ShowSearchResultController | null) {
         this.resultsDialog = resultsDialog;
     }
 

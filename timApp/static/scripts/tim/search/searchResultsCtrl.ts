@@ -68,6 +68,12 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         super.$onInit();
     }
 
+    $onDestroy() {
+        if (this.searchComponent) {
+            this.searchComponent.registerResultsDialog(null);
+        }
+    }
+
     /**
      * Set all result data from a results parameters interface.
      * @param {ISearchResultParams} params
