@@ -4,10 +4,10 @@
 
 import {IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
+import {IItem, ITag, TagType} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {markAsUsed} from "../util/utils";
 import {ISearchResult, ITagSearchResult, SearchBoxCtrl} from "./searchBox";
-import {IItem, ITag, TagType} from "../item/IItem";
 
 markAsUsed(focusMe);
 
@@ -68,16 +68,19 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     }
 
     $onDestroy() {
+        // Unregister the dialog when closing.
         if (this.searchComponent) {
             this.searchComponent.registerResultsDialog(null);
         }
     }
 
     /**
-     * Set all result data from a results parameters interface.
+     * (Re)set all result data from a result parameter interface object.
      * @param {ISearchResultParams} params
      */
     public updateAttributes(params: ISearchResultParams) {
+        this.collapsables = false;
+        this.limitedDisplay = false;
         this.searchComponent = params.searchComponent;
         this.results = params.results;
         this.tagResults = params.tagResults;
@@ -87,10 +90,14 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         this.searchWord = params.searchWord;
         const tagMatchCount = params.tagMatchCount;
         const wordMatchCount = params.wordMatchCount;
-        this.filterResults();
+        // If result count is over the treshold, skip paragraph grouping and previews.
+        if (this.totalResults > this.limitedDisplayTreshold) {
+            this.limitedDisplay = true;
+        }
         if (!this.limitedDisplay && (tagMatchCount > 0 || wordMatchCount > 0)) {
             this.collapsables = true;
         }
+        this.filterResults();
     }
 
     /*
@@ -105,15 +112,11 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
      * and groups paragraphs and tags under documents.
      */
     private filterResults() {
-        // If result count is over the treshold, skip paragraph grouping and previews.
-        if (this.totalResults > this.limitedDisplayTreshold) {
-            this.limitedDisplay = true;
-        }
         this.filteredResults = [];
         this.docResults = [];
         for (const {item, index} of this.results.map((item, index) => ({item, index}))) {
-            // Remove matches from the same title.
             try {
+                // Remove matches from the same title.
                 if (item && item.in_title) {
                      if (!this.results[index - 1]) {
                         this.filteredResults.push(item);
@@ -136,6 +139,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                     }
                 }
             } catch (e) {
+                // In case of index errors etc.
                 this.errorMessage = e.getMessage().toString();
             }
         }
@@ -250,6 +254,9 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
         return style;
     }
 
+    /**
+     * Set all document content views to either collapsed or closed state.
+     */
     private toggleCollapseAll() {
         this.allClosed = !this.allClosed;
         for (const r of this.docResults) {

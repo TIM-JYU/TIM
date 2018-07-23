@@ -49,7 +49,7 @@ def get_subfolders():
     Options:
     folder = Starting folder.
     recursive = Search every subfolder's subfolder; otherwise only to three steps depth.
-    :return:
+    :return: A list of subfolder paths.
     """
     verify_logged_in()
     recursive = get_option(request, 'recursive', default=False, cast=bool)
@@ -61,13 +61,13 @@ def get_subfolders():
     return json_response(list(folder_set))
 
 
-def get_folders_three_levels(starting_path: str, folder_set):
+def get_folders_three_levels(starting_path: str, folder_set) -> None:
     """
     Limited folder search with depth of three steps from the root:
     root/level_1/level_2/level_3
-    :param starting_path:
-    :param folder_set:
-    :return:
+    :param starting_path: The search root folder path.
+    :param folder_set: A string set where the results are saved.
+    :return: None.
     """
     folders = Folder.get_all_in_path(starting_path)
     for folder_l1 in folders:
@@ -81,12 +81,12 @@ def get_folders_three_levels(starting_path: str, folder_set):
                 folder_set.add(folder_l3_path)
 
 
-def get_folders_recursive(starting_path: str, folder_set):
+def get_folders_recursive(starting_path: str, folder_set) -> None:
     """
     Recursive function for get_subfolders. Note: very slow in large and deep directories.
-    :param starting_path:
-    :param folder_set:
-    :return:
+    :param starting_path: The search root folder path.
+    :param folder_set: A string set where the results are saved.
+    :return: None.
     """
     folders = Folder.get_all_in_path(starting_path)
     if folders:
@@ -206,8 +206,8 @@ def log_search_error(error: str, query: str, path: str, tag: str = "", par: str 
 def get_documents_by_access_type(access: AccessType):
     """
     Return all documents that user has certain access type to.
-    :param access:
-    :return:
+    :param access: Access type, for example: AccessType.owner or AccessType.view.
+    :return: List of documents the user has the set type of access to.
     """
     block_query = get_current_user_object().get_personal_group().accesses.filter_by(type=access.value).with_entities(
         BlockAccess.block_id)
@@ -215,20 +215,22 @@ def get_documents_by_access_type(access: AccessType):
     return docs
 
 
-def preview(par, query, m: Match[str], snippet_lenght=40):
+def preview(par, query, m: Match[str], snippet_length=40, max_length=150):
     """
     Forms preview of the match paragraph.
-    :param par:
-    :param query:
-    :param m:
-    :param snippet_lenght:
-    :return:
+    :param par: Paragraph to preview.
+    :param query: Search word.
+    :param m: Match object.
+    :param snippet_length: The lenght of preview before and after search word.
+    :param max_length: The maximum allowed length of the preview.
+    :return: Preview with set amount of characters around search word.
     """
     text = par.get_markdown()
-    start_index = m.start() - snippet_lenght
-    end_index = m.end() + snippet_lenght
-    if end_index - start_index > 100:
-        end_index = m.start() + len(query) + snippet_lenght
+    start_index = m.start() - snippet_length
+    end_index = m.end() + snippet_length
+    # If the match is longer than given treshold, limit its size.
+    if end_index - start_index > max_length:
+        end_index = m.start() + len(query) + snippet_length
     prefix = "..."
     postfix = "..."
     if start_index < 0:
@@ -259,6 +261,7 @@ def search():
     # Limit how many pars are searched from any document. The rest are skipped.
     max_doc_pars = get_option(request, 'maxDocPars', default=1000, cast=int)
     # Limit number of found search results after which the search will end.
+    # If number of results is very high, just showing them will crash the search.
     max_results_total = get_option(request, 'maxTotalResults', default=15000, cast=int)
     # Time limit for the searching process.
     max_time = get_option(request, 'maxTime', default=15, cast=int)
@@ -299,7 +302,7 @@ def search():
     else:
         term = re.escape(args.term)
     if search_exact_words:
-        # Picks the term if it's a whole word, the only word or separated by comma etc.
+        # Picks the term if it's a whole word, only word or separated by comma etc.
         term = fr"(?:^|\W)({term})(?:$|\W)"
 
     starting_time = time.clock()
@@ -421,6 +424,8 @@ def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: b
                   ignore_plugins: bool = False) -> Generator[SearchResult, None, None]:
     """
     Performs a search operation for the specified document, yielding SearchResults.
+    Copied and edited from a search_in_documents function, including an option to skip
+    plugin/setting paragraphs before search.
 
     :param args: The search arguments.
     :param d: The document to process.

@@ -18,12 +18,12 @@
  */
 
 import {IController} from "angular";
+import {ngStorage} from "ngstorage";
 import {timApp} from "../app";
-import {$http, $localStorage, $window} from "../util/ngimport";
 import {IItem, ITag, ITaggedItem} from "../item/IItem";
+import {$http, $localStorage, $window} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 import {ShowSearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
-import {ngStorage} from "ngstorage";
 
 export interface ISearchResultsInfo {
     results: ISearchResult[];
@@ -94,8 +94,7 @@ export class SearchBoxCtrl implements IController {
     private completeSearch: boolean = false;
     private maxDocResults: number = 100;
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
-
-    private resultsDialog: ShowSearchResultController | null = null;
+    private resultsDialog: ShowSearchResultController | null = null; // The most recent search result dialog.
 
     constructor() {
         this.storage = $localStorage.$default({
@@ -135,7 +134,7 @@ export class SearchBoxCtrl implements IController {
         }
         if (this.searchWords || this.searchDocNames) {
             // Server side has also a minimum length check for the query.
-            if (!this.folder.trim() && this.searchWords) {
+            if (!this.folder.trim() && this.searchWords && !this.searchOwned) {
                 this.errorMessage = (`Content searches on root directory are not allowed.`);
                 this.loading = false;
                 return;
@@ -380,6 +379,7 @@ export class SearchBoxCtrl implements IController {
                 tempError = err.data.error.toString();
             }
             if (err.data && tempError.length < 1) {
+                // Proxy error data is in raw HTML format, so this is to make it more readable.
                 tempError = removeHtmlTags(err.data.toString());
                 if (tempError.indexOf("Proxy Error") > -1) {
                     tempError = tempError.replace("Proxy ErrorProxy Error", "Proxy Error ").
