@@ -193,7 +193,7 @@ export class TimTableController implements IController {
     private editedCellContent: string | undefined;
     private editedCellInitialContent: string | undefined;
     private currentCell?: { row: number, col: number, editorOpen: boolean };
-    private lastEditedCell: {row: number, col: number};
+    private lastEditedCell?: {row: number, col: number};
     private mouseInTable?: boolean;
     private bigEditorOpen: boolean = false;
 
