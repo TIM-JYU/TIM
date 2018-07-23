@@ -18,9 +18,8 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
-from timApp.item.block import Block, BlockType
+from timApp.item.block import Block
 from timApp.item.tag import Tag
-from timApp.user.settings.settings import get_user_info
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.util.flask.cache import cache
@@ -107,6 +106,7 @@ def search_tags():
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
     folder = request.args.get('folder', '')
     regex_option = get_option(request, 'regex', default=False, cast=bool)
+    search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
     results = []
 
@@ -120,6 +120,8 @@ def search_tags():
     docs = get_documents(filter_user=get_current_user_object(), filter_folder=folder,
                          search_recursively=True, custom_filter=custom_filter,
                          query_options=query_options)
+    if search_owned_docs:
+        docs = list(set(docs) - (set(docs) - set(get_documents_by_access_type(AccessType.owner))))
     tag_result_count = 0
     error_list = []
     current_doc = "before search"
@@ -235,8 +237,6 @@ def preview(par, query, m: Match[str], snippet_lenght=40):
     if end_index > len(text):
         end_index = len(text)
         postfix = "..."
-    print(start_index)
-    print(end_index)
     return prefix + text[start_index:end_index] + postfix
 
 
@@ -266,7 +266,7 @@ def search():
     max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
     # Don't search paragraphs that are marked as plugin or setting.
     ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
-
+    # Only search documents that have current user as owner.
     search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
 
     search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
@@ -383,7 +383,6 @@ def search():
             clean_results = []
             # Remove results that would break JSON-formatting.
             for r in results:
-                print(r)
                 try:
                     json_response(r)
                 except TypeError as e:

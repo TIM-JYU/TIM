@@ -294,7 +294,7 @@ registerDialogComponent("timSearchResults",
     <dialog-header>
     </dialog-header>
     <dialog-body>
-    <div ng-show="$ctrl.resolve.params.errorMessage" class="alert alert-warning">
+    <div ng-show="$ctrl.errorMessage" class="alert alert-warning">
         <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
     </div>
     <div ng-if="$ctrl.docResults.length <= 0 && !$ctrl.errorMessage">
@@ -320,7 +320,7 @@ registerDialogComponent("timSearchResults",
                 <i>({{r.doc.path}})</i>
                 <ul>
                     <li ng-repeat="p in r.pars" ng-if="!r.closed && !$ctrl.limitedDisplay">
-                        <a href="/view/{{r.doc.path}}#{{p.par.id}}" title="Open paragraph">{{p.preview}}</a>
+                        <a href="/view/{{r.doc.path}}#{{p.par_id}}" title="Open paragraph">{{p.preview}}</a>
                     </li>
                     <span ng-repeat="tag in r.tags" ng-if="!r.closed">
                         <span class="btn-xs" ng-class="$ctrl.tagStyle(tag)">{{tag.name}}</span>

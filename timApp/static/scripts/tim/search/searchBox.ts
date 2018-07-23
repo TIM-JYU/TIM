@@ -14,6 +14,7 @@
  * searchWords: basic word search
  * searchTags: tag search
  * searchDocNames: search document titles
+ * searchOwned: only search document the user owns
  */
 
 import {IController} from "angular";
@@ -23,7 +24,6 @@ import {IItem, ITag, ITaggedItem} from "../item/IItem";
 import {Binding, to} from "../util/utils";
 import {ShowSearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
 import {ngStorage} from "ngstorage";
-import {IExtraData} from "../document/editing/edittypes";
 
 export interface ISearchResultsInfo {
     results: ISearchResult[];
@@ -360,6 +360,7 @@ export class SearchBoxCtrl implements IController {
                     query: this.query,
                     regex: this.regex,
                     searchExactWords: this.searchExactWords,
+                    searchOwned: this.searchOwned,
                 },
         }));
         if (response) {
@@ -369,6 +370,7 @@ export class SearchBoxCtrl implements IController {
             // }
             this.tagResults = response.data.results;
             this.tagMatchCount = response.data.tagResultCount;
+            this.completeSearch = response.data.complete;
         }
         if (err) {
             let tempError = "";
