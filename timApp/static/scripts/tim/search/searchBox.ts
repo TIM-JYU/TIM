@@ -135,11 +135,11 @@ export class SearchBoxCtrl implements IController {
         }
         if (this.searchWords || this.searchDocNames) {
             // Server side has a 3 character minimum check.
-            if (!this.folder.trim() && this.searchWords) {
-                this.errorMessage = (`Content searches on root directory are not allowed.`);
-                this.loading = false;
-                return;
-            }
+            // if (!this.folder.trim() && this.searchWords) {
+            //     this.errorMessage = (`Content searches on root directory are not allowed.`);
+            //     this.loading = false;
+            //     return;
+            // }
             await this.wordSearch();
         }
         if (this.results.length === 0 && this.tagResults.length === 0 && !this.errorMessage) {
@@ -159,10 +159,10 @@ export class SearchBoxCtrl implements IController {
         }
         const resultParams = {
             errorMessage: tempError,
-            folder: this.folder,
+            folder: this.folder.trim(),
             results: this.results,
             searchComponent: this,
-            searchWord: this.query,
+            searchWord: this.query.trim(),
             tagMatchCount: this.tagMatchCount,
             tagResults: this.tagResults,
             titleMatchCount: this.titleMatchCount,
@@ -219,6 +219,7 @@ export class SearchBoxCtrl implements IController {
         this.storage.optionsStorage.push(this.searchDocNames);
         this.storage.optionsStorage.push(this.searchExactWords);
         this.storage.optionsStorage.push(this.searchTags);
+        this.storage.optionsStorage.push(this.searchOwned);
         this.storage.optionsStorage.push(this.searchWords);
     }
 
@@ -232,7 +233,7 @@ export class SearchBoxCtrl implements IController {
         if (this.storage.optionsValueStorage && this.storage.optionsValueStorage.length > 0) {
             this.maxDocResults = this.storage.optionsValueStorage[0];
         }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 8) {
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 9) {
             this.advancedSearch = this.storage.optionsStorage[0];
             this.caseSensitive = this.storage.optionsStorage[1];
             this.createNewWindow = this.storage.optionsStorage[2];
@@ -241,7 +242,8 @@ export class SearchBoxCtrl implements IController {
             this.searchDocNames = this.storage.optionsStorage[5];
             this.searchExactWords = this.storage.optionsStorage[6];
             this.searchTags = this.storage.optionsStorage[7];
-            this.searchWords = this.storage.optionsStorage[8];
+            this.searchOwned = this.storage.optionsStorage[8];
+            this.searchWords = this.storage.optionsStorage[9];
         }
     }
 
