@@ -531,7 +531,7 @@ export class TimTableController implements IController {
 
                 const parId = getParId(this.element.parents(".par"));
 
-                if (this.currentCell !== undefined && this.currentCell.row !== undefined && this.currentCell.col !== undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
+                if (parId && this.currentCell !== undefined && this.currentCell.row !== undefined && this.currentCell.col !== undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
                     const value = this.editedCellContent;
                     if (typeof value === "string" && this.editedCellInitialContent !== value) {
                         this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
