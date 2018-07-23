@@ -3,7 +3,7 @@ import re
 import sre_constants
 import time
 from datetime import datetime
-from typing import Generator
+from typing import Generator, Match
 
 from flask import Blueprint
 from flask import abort
@@ -213,6 +213,33 @@ def get_documents_by_access_type(access: AccessType):
     return docs
 
 
+def preview(par, query, m: Match[str], snippet_lenght=40):
+    """
+    Forms preview of the match paragraph.
+    :param par:
+    :param query:
+    :param m:
+    :param snippet_lenght:
+    :return:
+    """
+    text = par.get_markdown()
+    start_index = m.start() - snippet_lenght
+    end_index = m.end() + snippet_lenght
+    if end_index - start_index > 100:
+        end_index = m.start() + len(query) + snippet_lenght
+    prefix = "..."
+    postfix = "..."
+    if start_index < 0:
+        start_index = 0
+        prefix = ""
+    if end_index > len(text):
+        end_index = len(text)
+        postfix = "..."
+    print(start_index)
+    print(end_index)
+    return prefix + text[start_index:end_index] + postfix
+
+
 @search_routes.route("")
 @cache.cached(key_prefix=make_cache_key)
 def search():
@@ -302,7 +329,8 @@ def search():
                         for m in matches:
                             title_result_count += 1
                             result = {'doc': doc_info,
-                                      'par': None,
+                                      'par_id': None,
+                                      'preview': None,
                                       'match_word': m.group(0),
                                       'match_start_index': m.start(),
                                       'match_end_index': m.end(),
@@ -320,7 +348,8 @@ def search():
                         d_words_count += 1
                         word_result_count += 1
                         result = {'doc': r.doc,
-                                  'par': r.par,
+                                  'par_id': r.par.dict()['id'],
+                                  'preview': preview(r.par, query, r.match),
                                   'match_word': r.match.group(0),
                                   'match_start_index': r.match.span()[0],
                                   'match_end_index': r.match.span()[1],
@@ -354,6 +383,7 @@ def search():
             clean_results = []
             # Remove results that would break JSON-formatting.
             for r in results:
+                print(r)
                 try:
                     json_response(r)
                 except TypeError as e:

@@ -49,7 +49,8 @@ export interface ITagSearchResultsInfo {
 
 export interface ISearchResult {
     doc: IItem;
-    par: IExtraData;
+    par_id: string;
+    preview: string;
     match_start_index: number; // Index where the query match begins in the paragraph / title.
     match_end_index: number; // Index where the query match ends in the paragraph / title.
     match_word: string;
@@ -495,33 +496,33 @@ timApp.component("searchBox", {
                            placeholder="Input max # of results per document">
                 </div>
             </div>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.caseSensitive"
-            title="Distinguish between upper and lower case letters"
+        <label class="font-weight-normal" title="Distinguish between upper and lower case letters">
+            <input type="checkbox" ng-model="$ctrl.caseSensitive"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Case sensitive</label>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.regex"
-            title="Allow regular expressions"
+        <label class="font-weight-normal" title="Allow regular expressions">
+            <input type="checkbox" ng-model="$ctrl.regex"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.ignorePluginsSettings"
-            title="Leave plugins and settings out of the results"
+        <label class="font-weight-normal" title="Leave plugins and settings out of the results">
+            <input type="checkbox" ng-model="$ctrl.ignorePluginsSettings"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins</label>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchExactWords"
-            title="Search only whole words with one or more character"
+        <label class="font-weight-normal" title="Search only whole words with one or more character">
+            <input type="checkbox" ng-model="$ctrl.searchExactWords"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search whole words</label>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.createNewWindow"
-            title="Show result of each search in new window"
+        <label class="font-weight-normal" title="Show result of each search in new window">
+            <input type="checkbox" ng-model="$ctrl.createNewWindow"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Open new window for each search</label>
         <h5 class="font-weight-normal">Search scope:</h5>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchDocNames"
-            title="Search document titles"
+        <label class="font-weight-normal" title="Search document titles">
+            <input type="checkbox" ng-model="$ctrl.searchDocNames"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Title search</label>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchTags"
-            title="Search document tags"
+        <label class="font-weight-normal" title="Search document tags">
+            <input type="checkbox" ng-model="$ctrl.searchTags"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Tag search</label>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.searchWords"
-            title="Search document content"
+        <label class="font-weight-normal" title="Search document content">
+            <input type="checkbox" ng-model="$ctrl.searchWords"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Content search</label>
-        <label class="font-weight-normal dropdown-item"><input type="checkbox" ng-model="$ctrl.searchOwned"
-            title="Search documents you own"
+        <label class="font-weight-normal dropdown-item" title="Search documents you own">
+            <input type="checkbox" ng-model="$ctrl.searchOwned"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search owned documents</label>
       </form>
     </div>

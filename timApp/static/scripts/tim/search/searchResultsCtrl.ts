@@ -8,7 +8,6 @@ import {DialogController, registerDialogComponent, showDialog} from "../ui/dialo
 import {markAsUsed} from "../util/utils";
 import {ISearchResult, ITagSearchResult, SearchBoxCtrl} from "./searchBox";
 import {IItem, ITag, TagType} from "../item/IItem";
-import {IExtraData} from "../document/editing/edittypes";
 
 markAsUsed(focusMe);
 
@@ -33,7 +32,7 @@ export interface ISearchResultParamsDoc {
 }
 
 export interface ISearchResultParamsPar {
-    par: IExtraData;
+    par_id: string;
     preview: string; // Short snippet from the paragraph.
     match_start_index: number;
     match_end_index: number; // Regex searches may make match very long, so this isn't always reliable.
@@ -128,10 +127,10 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                 }
                 // Remove matches from the same paragraph.
                 if (item && !item.in_title) {
-                    if (!this.results[index - 1] || !this.results[index - 1].par) {
+                    if (!this.results[index - 1] || !this.results[index - 1].par_id) {
                         this.filteredResults.push(item);
                     } else {
-                        if (index === 0 || item.par.id !== this.results[index - 1].par.id) {
+                        if (index === 0 || item.par_id !== this.results[index - 1].par_id) {
                             this.filteredResults.push(item);
                         }
                     }
@@ -145,12 +144,12 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
             try {
                 const docIndex = this.docIndexInResults(r.doc, this.docResults);
                 if (!this.limitedDisplay) {
-                    if (r.par) {
+                    if (r.par_id && r.preview) {
                         const newParResult = {
                             match_end_index: r.match_end_index,
                             match_start_index: r.match_start_index,
-                            par: r.par,
-                            preview: this.previewPar(r, 80),
+                            par_id: r.par_id,
+                            preview: r.preview,
                         };
                         if (docIndex >= 0) {
                             this.docResults[docIndex].pars.push(newParResult);
@@ -217,37 +216,6 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                 this.errorMessage = e.getMessage().toString();
             }
         }
-    }
-
-    /**
-     * Forms a preview of the paragraph around indices the match was found.
-     * @param {ISearchResult} r
-     * @param {number} snippetLength Maximum number of chars around the search word.
-     * @returns {string}
-     */
-    private previewPar(r: ISearchResult, snippetLength: number) {
-        if (r.in_title) {
-            return "";
-        }
-        // TODO: Use correct interface for paragraphs.
-        const text = r.par.md;
-        let start = r.match_start_index - snippetLength / 2;
-
-        // Regex searches may have a very long span between begin and end indices,
-        // so search word length is used to avoid that.
-        let end = r.match_start_index + this.searchWord.length + snippetLength / 2;
-        let prefix = "...";
-        let postfix = "...";
-        if (start < 0) {
-            start = 0;
-            prefix = "";
-        }
-
-        if (end > text.length) {
-            end = text.length;
-            postfix = "";
-        }
-        return prefix + text.substring(start, end).trim() + postfix;
     }
 
     /**
