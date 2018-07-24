@@ -533,24 +533,27 @@ def search():
 
                 if search_words:
                     current_par = ""
-                    for r in search_in_doc(d=doc_info, term_regex=term_regex, args=args, use_exported=False):
+                    for r in search_in_doc(d=doc_info, term_regex=term_regex, args=args, use_exported=False,
+                                           ignore_plugins_settings=ignore_plugins_settings):
                         current_par = r.par.dict()['id']
-                        # If results per document limit is reached, move on to next doc.
+
+                        # If results per document limit is reached, move on to the next doc.
                         if d_words_count >= max_results_doc:
                             complete = False
                             break
                         d_words_count += 1
+
                         word_result = WordResult(match_word=r.match.group(0),
                                                  match_start=r.match.start(),
                                                  match_end=r.match.end())
 
                         # Don't return results within plugins if user has no edit access to the document.
                         if (r.par.is_setting() or r.par.is_plugin()) and \
-                                (not (get_current_user_object().has_edit_access(d)) or ignore_plugins_settings):
+                                (not get_current_user_object().has_edit_access(d)):
                             break
                         else:
-                            previous_par_result = doc_result.latest_par_result()
                             # If previous search result was in same par, add this result to its object.
+                            previous_par_result = doc_result.latest_par_result()
                             if previous_par_result and previous_par_result.par_id is current_par:
                                 previous_par_result.add_result(word_result)
                             # Otherwise create a new entry to store the result.
@@ -611,22 +614,27 @@ def search():
             abort(400, f"Error encountered while formatting JSON-response: {e}")
 
 
-def search_in_doc(d: DocInfo, term_regex, args: SearchArgumentsBasic, use_exported: bool) \
-        -> Generator[SearchResult, None, None]:
+def search_in_doc(d: DocInfo, term_regex, args: SearchArgumentsBasic, use_exported: bool,
+                  ignore_plugins_settings=False) -> Generator[SearchResult, None, None]:
     """
     Performs a search operation for the specified document, yielding SearchResults.
-    Copied and edited from a search_in_documents function since regex is formed outside of the function.
+    Copied and edited from a search_in_documents function with following changes:
+     - term_regex formed outside of the function
+     - ignore plugins and settings option added
 
     :param args: The search arguments.
     :param d: The document to process.
     :param term_regex: Regex formatted before calling.
     :param use_exported: Whether to search in the exported form of paragraphs.
+    :param ignore_plugins_settings: Skip plugin and setting pars.
     """
     results_found = 0
     pars_processed = 0
     pars_found = 0
     for d, p in enum_pars(d):
         pars_processed += 1
+        if ignore_plugins_settings and (p.is_setting() or p.is_plugin()):
+            continue
         md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
         matches = set(term_regex.finditer(md))
         if matches:
