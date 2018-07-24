@@ -371,16 +371,16 @@ export class SearchBoxCtrl implements IController {
      */
     private async tagSearch() {
         const [err, response] = await to($http<ITagSearchResultsInfo>({
-                method: "GET",
-                url: "/search/tags",
-                params: {
-                    caseSensitive: this.caseSensitive,
-                    folder: this.folder,
-                    query: this.query,
-                    regex: this.regex,
-                    searchExactWords: this.searchExactWords,
-                    searchOwned: this.searchOwned,
-                },
+            method: "GET",
+            params: {
+                caseSensitive: this.caseSensitive,
+                folder: this.folder,
+                query: this.query,
+                regex: this.regex,
+                searchExactWords: this.searchExactWords,
+                searchOwned: this.searchOwned,
+            },
+            url: "/search/tags",
         }));
         if (response) {
             // if (response.data.errors.length > 0) {

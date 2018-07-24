@@ -4,10 +4,10 @@
 
 import {IRootElementService, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
-import {IItem, ITag, TagType} from "../item/IItem";
+import {ITag, TagType} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {markAsUsed} from "../util/utils";
-import {IDocSearchResult, IParSearchResult, ITagSearchResult, ITitleSearchResult, SearchBoxCtrl} from "./searchBox";
+import {IDocSearchResult, ITagSearchResult, SearchBoxCtrl} from "./searchBox";
 
 markAsUsed(focusMe);
 
@@ -27,7 +27,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     private folder: string = "";
     private totalResults: number = 0;
     private limitedDisplay: boolean = false; // If there's large number of results, optimize shown results.
-    private limitedDisplayTreshold: number = 1500;
+    private limitedDisplayTreshold: number = 5000;
     private errorMessage: string = "";
     private orderByOption = "1";
     private allClosed = true;
@@ -237,7 +237,7 @@ registerDialogComponent("timSearchResults",
                 title="Select the result sorting order" name="order-selector">
                 <option selected value="1">Sort by path</option>
                 <option value="2">Sort by title</option>
-                <option ng-if="$ctrl.collapsables" value="3">Sort by relevance</option>
+                <option value="3">Sort by relevance</option>
             </select>
         </div>
         <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>

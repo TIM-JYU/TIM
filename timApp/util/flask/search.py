@@ -248,6 +248,7 @@ class WordResult:
     """
     One match word with location and match word.
     """
+
     def __init__(self, match_word: str, match_start: int, match_end: int):
         self.match_word = match_word
         self.match_start = match_start
@@ -264,6 +265,7 @@ class ParResult:
     """
     Paragraph search results.
     """
+
     def __init__(self, par_id: str = "", preview: str = "", word_results=None):
         if word_results is None:
             word_results = []
@@ -305,6 +307,7 @@ class TitleResult:
     """
     Title search result containing a list of match data.
     """
+
     def __init__(self, word_results=None):
         if word_results is None:
             word_results = []
@@ -349,6 +352,7 @@ class DocResult:
     """
     Contains one document's title and word search information.
     """
+
     def __init__(self, doc_info: DocInfo, par_results=None, title_results=None):
         if par_results is None:
             par_results = []
@@ -597,6 +601,7 @@ def search():
                     json_response(clean_r)
                 except TypeError as e:
                     # Report the offending paragraph.
+                    print("help")
                     error = f"Formatting JSON-response for a result failed: {e}"
                     log_search_error(error, query, r.doc_info.path, par="")
                 else:
