@@ -477,8 +477,12 @@ def search():
                    f'long with whitespace stripped.')
 
     docs = list(set(get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)))
+    if not docs:
+        abort(400, f"Folder '{folder}' not found or not accessible")
     if search_owned_docs:
         docs = list(set(docs) - (set(docs) - set(get_documents_by_access_type(AccessType.owner))))
+        if not docs:
+            abort(400, f"No owned documents found in '{folder}'")
     results = []
     args = SearchArgumentsBasic(
         term=query,

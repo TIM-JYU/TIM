@@ -108,9 +108,9 @@ export class SearchBoxCtrl implements IController {
     private advancedSearch: boolean = false; // Toggle advanced options panel.
     private createNewWindow: boolean = false; // Open new dialog for each search.
     private ignorePluginsSettings: boolean = false; // Leave plugins and settings out of the results.
-    private searchDocNames: boolean = false; // Doc title search.
-    private searchTags: boolean = true; // Tag and word search are on by default.
-    private searchWords: boolean = true; // Content search.
+    private searchDocNames: boolean = true; // Doc title search. On by default.
+    private searchTags: boolean = true; // Tag search. On by default.
+    private searchWords: boolean = true; // Content search. On by default.
     private searchExactWords: boolean = false; // Whole word search.
     private maxDocResults: number = 100; // Limit for searched results per doc.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
@@ -419,7 +419,7 @@ export class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async loadFolderSuggestions() {
-        // TODO: Load from an index to get all folders faster?
+        // TODO: Load from an index / partition load to get all folders faster?
         // Currently goes only three levels deep to save time.
         const response = await $http<string[]>({
             method: "GET",
