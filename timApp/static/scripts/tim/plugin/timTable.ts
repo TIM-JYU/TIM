@@ -689,7 +689,8 @@ export class TimTableController implements IController {
             if (rowrow) {
                 if (coli >= rowrow.length) {
                     coli = 0;
-                    if (rowi + 1 >= this.data.table.rows.length) { rowi = 0; } else { rowi += 1; }
+                    // if (rowi + 1 >= this.data.table.rows.length) { rowi = 0; } else { rowi += 1; }
+                    if (rowi + 1 < this.data.table.rows.length) { rowi++; }
                 }
                 if (coli < 0) { coli = rowrow.length - 1; }
             }
