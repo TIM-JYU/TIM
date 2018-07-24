@@ -3,11 +3,12 @@ import re
 import sre_constants
 import time
 from datetime import datetime
-from typing import Generator, Match
+from typing import Generator, Match, List, Dict
 
 from flask import Blueprint
 from flask import abort
 from flask import request
+from sqlalchemy.dialects.postgresql import json
 from sqlalchemy.orm import joinedload
 
 from timApp.admin.search_in_documents import SearchArgumentsBasic, SearchResult
@@ -34,6 +35,8 @@ search_routes = Blueprint('search',
 WHITE_LIST = ["c#"]  # Ignore query length limitations
 MIN_QUERY_LENGTH = 3  # For word and title search. Tags have no limitations.
 MIN_EXACT_WORDS_QUERY_LENGTH = 1  # For whole word search.
+PREVIEW_LENGTH = 40  # Before and after the search word separately.
+PREVIEW_MAX_LENGTH = 160
 
 
 # noinspection PyUnusedLocal
@@ -215,7 +218,7 @@ def get_documents_by_access_type(access: AccessType):
     return docs
 
 
-def preview(par, query, m: Match[str], snippet_length=40, max_length=150):
+def preview(par, query, m: Match[str], snippet_length=PREVIEW_LENGTH, max_length=PREVIEW_MAX_LENGTH):
     """
     Forms preview of the match paragraph.
     :param par: Paragraph to preview.
@@ -242,6 +245,129 @@ def preview(par, query, m: Match[str], snippet_length=40, max_length=150):
     return prefix + text[start_index:end_index] + postfix
 
 
+class WordResult:
+    def __init__(self, match_word: str, match_start: int, match_end: int):
+        self.match_word = match_word
+        self.match_start = match_start
+        self.match_end = match_end
+
+    def __repr__(self):
+        return f"match_word: {self.match_word}, match_start: {self.match_start}, match_end: {self.match_end},"
+
+    def to_dict(self):
+        return {'match_word': self.match_word, 'match_start': self.match_start, 'match_end': self.match_end}
+
+
+class ParResult:
+    def __init__(self, par_id: str = "", preview: str = "", word_results=None):
+        if word_results is None:
+            word_results = []
+        self.par_id = par_id
+        self.preview = preview
+        self.word_results = word_results
+
+    def add_result(self, result: WordResult):
+        self.word_results.append(result)
+
+    def has_results(self) -> bool:
+        return len(self.word_results) > 0
+
+    def __repr__(self):
+        temp_preview = self.preview.replace('\n', ' ').replace('\r', '')
+        temp_preview = ""
+        return f"par_id: {self.par_id}, preview: {temp_preview}, word_results: {repr(self.word_results)}"
+
+    def to_dict(self):
+        results_dicts = []
+        for r in self.word_results:
+            results_dicts.append(r.to_dict())
+        return {'par_id': self.par_id,
+                'preview': self.preview,
+                'results': results_dicts, 'num_results': self.get_match_count()}
+
+    def get_match_count(self):
+        return len(self.word_results)
+
+
+class TitleResult:
+    def __init__(self, word_results=None):
+        if word_results is None:
+            word_results = []
+        self.word_results = word_results
+
+    def add_result(self, result: WordResult):
+        self.word_results.append(result)
+
+    def has_results(self) -> bool:
+        return len(self.word_results) > 0
+
+    def __repr__(self):
+        return f"word_results: {repr(self.word_results)}"
+
+    def to_dict(self):
+        results_dicts = []
+        for r in self.word_results:
+            results_dicts.append(r.to_dict())
+        return {'results': results_dicts, 'num_results': self.get_match_count()}
+
+    def get_match_count(self):
+        return len(self.word_results)
+
+
+class DocResult:
+    def __init__(self, doc_info: DocInfo, par_results=None, title_results=None):
+        if par_results is None:
+            par_results = []
+        if title_results is None:
+            title_results = []
+        self.doc_info = doc_info
+        self.par_results = par_results
+        self.title_results = title_results
+
+    def add_par_result(self, result: ParResult):
+        self.par_results.append(result)
+
+    def add_title_result(self, result: TitleResult):
+        self.title_results.append(result)
+
+    def has_results(self) -> bool:
+        return len(self.par_results) > 0 or len(self.title_results) > 0
+
+    def __repr__(self):
+        return f"doc_info: {repr(self.doc_info)}, par_results: {repr(self.par_results)}, " \
+               f"title_results: {repr(self.title_results)}"
+
+    def to_dict(self):
+        par_result_dicts = []
+        for r in self.par_results:
+            par_result_dicts.append(r.to_dict())
+        title_result_dicts = []
+        for r in self.title_results:
+            title_result_dicts.append(r.to_dict())
+        return {
+            'doc': self.doc_info,
+            'title_results': title_result_dicts, 'num_title_results': self.get_title_match_count(),
+            'par_results': par_result_dicts, 'num_par_results': self.get_par_match_count()}
+
+    def latest_par_result(self):
+        try:
+            return self.par_results[len(self.par_results)-1]
+        except IndexError:
+            return None
+
+    def get_par_match_count(self):
+        count = 0
+        for p in self.par_results:
+            count += p.get_match_count()
+        return count
+
+    def get_title_match_count(self):
+        count = 0
+        for p in self.title_results:
+            count += p.get_match_count()
+        return count
+
+
 @search_routes.route("")
 @cache.cached(key_prefix=make_cache_key)
 def search():
@@ -259,10 +385,10 @@ def search():
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
 
     # Limit how many pars are searched from any document. The rest are skipped.
-    max_doc_pars = get_option(request, 'maxDocPars', default=1000, cast=int)
+    max_doc_pars = get_option(request, 'maxDocPars', default=100, cast=int)
     # Limit number of found search results after which the search will end.
     # If number of results is very high, just showing them will crash the search.
-    max_results_total = get_option(request, 'maxTotalResults', default=15000, cast=int)
+    max_results_total = get_option(request, 'maxTotalResults', default=10000, cast=int)
     # Time limit for the searching process.
     max_time = get_option(request, 'maxTime', default=15, cast=int)
     # Limit the number of results per document.
@@ -311,12 +437,15 @@ def search():
     complete = True  # Whether the search was complete or ended without searching everything.
     title_result_count = 0
     word_result_count = 0
+
     try:
-        regex = re.compile(term, flags)
+        term_regex = re.compile(term, flags)
+
         for d in docs:
             try:
                 current_doc = d.path
                 doc_info = d.document.docinfo
+                doc_result = DocResult(doc_info)
                 # print(time.clock() - starting_time)
                 if (time.clock() - starting_time) > max_time:
                     complete = False
@@ -325,44 +454,51 @@ def search():
                 if len(results) > max_results_total:
                     complete = False
                     break
+
                 if search_doc_names:
+                    title_result = TitleResult()
                     d_title = doc_info.title
-                    matches = list(regex.finditer(d_title))
+                    matches = list(term_regex.finditer(d_title))
                     if matches:
                         for m in matches:
                             title_result_count += 1
-                            result = {'doc': doc_info,
-                                      'par_id': None,
-                                      'preview': None,
-                                      'match_word': m.group(0),
-                                      'match_start_index': m.start(),
-                                      'match_end_index': m.end(),
-                                      'in_title': True}
-                            results.append(result)
+                            result = WordResult(match_word=m.group(0),
+                                                match_start=m.start(),
+                                                match_end=m.end())
+                            title_result.add_result(result)
+                    if title_result.has_results():
+                        doc_result.add_title_result(title_result)
+
                 if search_words:
                     d_words_count = 0
-                    for r in search_in_doc(d=doc_info, regex=regex, args=args, use_exported=False,
-                                           ignore_plugins=ignore_plugins_settings):
+                    current_par = ""
+
+                    for r in search_in_doc(d=doc_info, term_regex=term_regex, args=args, use_exported=False):
                         current_par = r.par.dict()['id']
+                        d_words_count += 1
+                        word_result_count += 1
                         # Limit matches per document to get diverse document results faster.
                         if d_words_count >= max_results_doc:
                             complete = False
-                            continue
-                        d_words_count += 1
-                        word_result_count += 1
-                        result = {'doc': r.doc,
-                                  'par_id': r.par.dict()['id'],
-                                  'preview': preview(r.par, query, r.match),
-                                  'match_word': r.match.group(0),
-                                  'match_start_index': r.match.span()[0],
-                                  'match_end_index': r.match.span()[1],
-                                  'in_title': False}
+                            break
+
+                        word_result = WordResult(match_word=r.match.group(0),
+                                                 match_start=r.match.start(),
+                                                 match_end=r.match.end())
+
                         # Don't return results within plugins if no edit access to the document.
-                        if r.par.is_setting() or r.par.is_plugin():
-                            if get_current_user_object().has_edit_access(d) and not ignore_plugins_settings:
-                                results.append(result)
+                        if (r.par.is_setting() or r.par.is_plugin()) and \
+                                (not (get_current_user_object().has_edit_access(d)) or ignore_plugins_settings):
+                            break
                         else:
-                            results.append(result)
+                            previous_par_result = doc_result.latest_par_result()
+                            if previous_par_result and previous_par_result.par_id is current_par:
+                                previous_par_result.add_result(word_result)
+                            else:
+                                par_result = ParResult(par_id=current_par, preview=preview(r.par, query, r.match))
+                                par_result.add_result(word_result)
+                                doc_result.add_par_result(par_result)
+
             # If error happens inside loop, report and continue.
             except Exception as e:
                 error = "Unknown error"
@@ -377,6 +513,9 @@ def search():
                         'par_id': current_par
                     })
                     log_search_error(error, query, current_doc, par=current_par)
+            else:
+                if doc_result.has_results():
+                    results.append(doc_result)
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
     except Exception as e:
@@ -387,26 +526,14 @@ def search():
             # Remove results that would break JSON-formatting.
             for r in results:
                 try:
-                    json_response(r)
+                    clean_r = r.to_dict()
+                    json_response(clean_r)
                 except TypeError as e:
                     # Report the offending paragraph.
                     error = f"Formatting JSON-response for a result failed: {e}"
-                    try:
-                        path = r['doc'].path
-                    except:
-                        path = ""
-                    try:
-                        id = r['par'].dict()['id']
-                    except:
-                        id = ""
-                    error_list.append({
-                        'error': error,
-                        'doc_path': path,
-                        'par_id': id
-                    })
-                    log_search_error(error, query, path, par=id)
+                    log_search_error(error, query, "", par="")
                 else:
-                    clean_results.append(r)
+                    clean_results.append(clean_r)
             return json_response({
                 'results': clean_results,
                 'complete': complete,
@@ -420,28 +547,24 @@ def search():
             abort(400, f"Error encountered while formatting JSON-response: {e}")
 
 
-def search_in_doc(d: DocInfo, regex, args: SearchArgumentsBasic, use_exported: bool,
-                  ignore_plugins: bool = False) -> Generator[SearchResult, None, None]:
+def search_in_doc(d: DocInfo, term_regex, args: SearchArgumentsBasic, use_exported: bool)\
+        -> Generator[SearchResult, None, None]:
     """
     Performs a search operation for the specified document, yielding SearchResults.
-    Copied and edited from a search_in_documents function, including an option to skip
-    plugin/setting paragraphs before search.
+    Copied and edited from a search_in_documents function since regex is formed outside of the function.
 
     :param args: The search arguments.
     :param d: The document to process.
-    :param regex: Regex formatted before calling.
+    :param term_regex: Regex formatted before calling.
     :param use_exported: Whether to search in the exported form of paragraphs.
-    :param ignore_plugins: Whether to search paragraphs marked as plugin or setting.
     """
     results_found = 0
     pars_processed = 0
     pars_found = 0
     for d, p in enum_pars(d):
-        if ignore_plugins and (p.is_setting() or p.is_plugin()):
-            continue
         pars_processed += 1
         md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
-        matches = set(regex.finditer(md))
+        matches = set(term_regex.finditer(md))
         if matches:
             pars_found += 1
             for m in matches:

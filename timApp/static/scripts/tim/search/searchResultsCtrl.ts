@@ -7,43 +7,22 @@ import * as focusMe from "tim/ui/focusMe";
 import {IItem, ITag, TagType} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {markAsUsed} from "../util/utils";
-import {ISearchResult, ITagSearchResult, SearchBoxCtrl} from "./searchBox";
+import {IDocSearchResult, IParSearchResult, ITagSearchResult, ITitleSearchResult, SearchBoxCtrl} from "./searchBox";
 
 markAsUsed(focusMe);
 
-export interface ISearchResultParams {
-    searchComponent: SearchBoxCtrl;
-    results: ISearchResult[];
-    searchWord: string;
-    errorMessage: string;
-    tagResults: ITagSearchResult[];
-    wordMatchCount: number;
-    tagMatchCount: number;
-    titleMatchCount: number;
-    folder: string;
-}
-
-export interface ISearchResultParamsDoc {
-    doc: IItem;
-    in_title: boolean;
-    pars: ISearchResultParamsPar[];
+export interface ISearchResultDisplay {
+    result: IDocSearchResult;
     closed: boolean; // Whether this is shown collapsed or not.
     tags: ITag[];
+    num_tag_results: number; // Same tag may contain the search word more than once.
 }
 
-export interface ISearchResultParamsPar {
-    par_id: string;
-    preview: string; // Short snippet from the paragraph.
-    match_start_index: number;
-    match_end_index: number; // Regex searches may make match very long, so this isn't always reliable.
-}
-
-export class ShowSearchResultController extends DialogController<{ params: ISearchResultParams }, {}, "timSearchResults"> {
+export class ShowSearchResultController extends DialogController<{ ctrl: SearchBoxCtrl }, {}, "timSearchResults"> {
     private static $inject = ["$element", "$scope"];
-    private results: ISearchResult[] = [];
-    private filteredResults: ISearchResult[] = [];
+    private results: IDocSearchResult[] = [];
     private searchWord: string = "";
-    private docResults: ISearchResultParamsDoc[] = [];
+    private displayResults: ISearchResultDisplay[] = [];
     private tagResults: ITagSearchResult[] = [];
     private folder: string = "";
     private totalResults: number = 0;
@@ -60,7 +39,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     }
 
     async $onInit() {
-        this.updateAttributes(this.resolve.params);
+        this.updateAttributes(this.resolve.ctrl);
         if (this.searchComponent) {
             this.searchComponent.registerResultsDialog(this);
         }
@@ -75,26 +54,24 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     }
 
     /**
-     * (Re)set all result data from a result parameter interface object.
-     * @param {ISearchResultParams} params
+     * Get all data from the search controller.
+     * @param {SearchBoxCtrl} ctrl
      */
-    public updateAttributes(params: ISearchResultParams) {
+    public updateAttributes(ctrl: SearchBoxCtrl) {
         this.collapsables = false;
         this.limitedDisplay = false;
-        this.searchComponent = params.searchComponent;
-        this.results = params.results;
-        this.tagResults = params.tagResults;
-        this.totalResults = params.titleMatchCount + params.tagMatchCount + params.wordMatchCount;
-        this.folder = params.folder;
-        this.errorMessage = params.errorMessage;
-        this.searchWord = params.searchWord;
-        const tagMatchCount = params.tagMatchCount;
-        const wordMatchCount = params.wordMatchCount;
+        this.searchComponent = ctrl;
+        this.results = ctrl.results;
+        this.tagResults = ctrl.tagResults;
+        this.totalResults = ctrl.titleMatchCount + ctrl.tagMatchCount + ctrl.wordMatchCount;
+        this.folder = ctrl.folder;
+        this.errorMessage = ctrl.resultErrorMessage;
+        this.searchWord = ctrl.query;
         // If result count is over the treshold, skip paragraph grouping and previews.
         if (this.totalResults > this.limitedDisplayTreshold) {
             this.limitedDisplay = true;
         }
-        if (!this.limitedDisplay && (tagMatchCount > 0 || wordMatchCount > 0)) {
+        if (!this.limitedDisplay && (ctrl.tagMatchCount > 0 || ctrl.wordMatchCount > 0)) {
             this.collapsables = true;
         }
         this.filterResults();
@@ -108,100 +85,29 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
     }
 
     /**
-     * Filters duplicate paragraph and title matches (i.e. those with more than one match) from the results
-     * and groups paragraphs and tags under documents.
      */
     private filterResults() {
-        this.filteredResults = [];
-        this.docResults = [];
-        for (const {item, index} of this.results.map((item, index) => ({item, index}))) {
-            try {
-                // Remove matches from the same title.
-                if (item && item.in_title) {
-                     if (!this.results[index - 1]) {
-                        this.filteredResults.push(item);
-                     } else {
-                         if (this.results[index - 1].doc.path === item.doc.path) {
-                             //
-                         } else {
-                             this.filteredResults.push(item);
-                         }
-                     }
+        this.displayResults = [];
+        const tagResultsFoundHome: ITagSearchResult[] = [];
+        for (const r of this.results) {
+            const newDisplayResult: ISearchResultDisplay = {result: r, closed: true, tags: [], num_tag_results: 0};
+            for (const t of this.tagResults) {
+                if (t.doc.id === r.doc.id) {
+                    newDisplayResult.tags = t.matching_tags;
                 }
-                // Remove matches from the same paragraph.
-                if (item && !item.in_title) {
-                    if (!this.results[index - 1] || !this.results[index - 1].par_id) {
-                        this.filteredResults.push(item);
-                    } else {
-                        if (index === 0 || item.par_id !== this.results[index - 1].par_id) {
-                            this.filteredResults.push(item);
-                        }
-                    }
-                }
-            } catch (e) {
-                // In case of index errors etc.
-                this.errorMessage = e.getMessage().toString();
             }
+            this.displayResults.push(newDisplayResult);
         }
-        // Group paragraphs under documents.
-        for (const r of this.filteredResults) {
-            try {
-                const docIndex = this.docIndexInResults(r.doc, this.docResults);
-                if (!this.limitedDisplay) {
-                    if (r.par_id && r.preview) {
-                        const newParResult = {
-                            match_end_index: r.match_end_index,
-                            match_start_index: r.match_start_index,
-                            par_id: r.par_id,
-                            preview: r.preview,
-                        };
-                        if (docIndex >= 0) {
-                            this.docResults[docIndex].pars.push(newParResult);
-                        } else {
-                            const newDocResult = {
-                                closed: true,
-                                doc: r.doc,
-                                in_title: r.in_title,
-                                pars: [newParResult],
-                                tags: [],
-                            };
-                            this.docResults.push(newDocResult);
-                        }
-                    } else {
-                        const newDocResult = {
-                            closed: true,
-                            doc: r.doc,
-                            in_title: r.in_title,
-                            pars: [],
-                            tags: [],
-                        };
-                        this.docResults.push(newDocResult);
-                    }
-                } else {
-                    // If there's lots of results, don't add pars.
-                    if (docIndex < 0) {
-                        const newDocResult = {
-                            closed: true,
-                            doc: r.doc,
-                            in_title: r.in_title,
-                            pars: [],
-                            tags: [],
-                        };
-                        this.docResults.push(newDocResult);
-                    }
-                }
-            } catch (e) {
-                this.errorMessage = e.getMessage().toString();
-            }
-        }
+
         // Tag results use different interface and need to be handled separately.
-        for (const tagResult of this.tagResults) {
+        for (const t of this.tagResults) {
             try {
                 let found = false;
-                for (const docResult of this.docResults) {
+                for (const r of this.displayResults) {
                     // Add tags to corresponding document's tags-list.
-                    if (tagResult.doc.path === docResult.doc.path) {
-                        docResult.tags = tagResult.matching_tags;
+                    if (t.doc.path === r.result.doc.path) {
+                        r.tags = t.matching_tags;
+                        r.num_tag_results = t.num_results;
                         found = true;
                     }
                 }
@@ -209,33 +115,22 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
                 if (!found) {
                     const newDocResult = {
                         closed: true,
-                        doc: tagResult.doc,
-                        in_title: false,
-                        pars: [],
-                        tags: tagResult.matching_tags,
+                        num_tag_results: t.num_results,
+                        result: {
+                            doc: t.doc,
+                            num_par_results: 0,
+                            num_title_results: 0,
+                            par_results: [],
+                            title_results: [],
+                        },
+                        tags: t.matching_tags,
                     };
-                    this.docResults.push(newDocResult);
+                    this.displayResults.push(newDocResult);
                 }
             } catch (e) {
                 this.errorMessage = e.getMessage().toString();
             }
         }
-    }
-
-    /**
-     * Gets index of document in document results.
-     * If documents isn't yet in the list return -1.
-     * @param {IItem} doc The document.
-     * @param {ISearchResultParamsDoc} docs Search results as a document list.
-     * @returns {any} The index of first instance of doc in docs or -1.
-     */
-    private docIndexInResults(doc: IItem, docs: ISearchResultParamsDoc[]) {
-        for (const {item, index} of docs.map((item, index) => ({ item, index }))) {
-            if (item.doc.id === doc.id) {
-                return index;
-            }
-        }
-        return -1;
     }
 
     /**
@@ -259,7 +154,7 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
      */
     private toggleCollapseAll() {
         this.allClosed = !this.allClosed;
-        for (const r of this.docResults) {
+        for (const r of this.displayResults) {
             r.closed = this.allClosed;
         }
     }
@@ -273,21 +168,17 @@ export class ShowSearchResultController extends DialogController<{ params: ISear
      */
     private resultOrder(orderByOption: string) {
         if (orderByOption.toString() === "2") {
-            return function(r: ISearchResultParamsDoc) {
-                return r.doc.title;
+            return function(r: ISearchResultDisplay) {
+                return r.result.doc.title;
             };
         }
         if (orderByOption.toString() === "3") {
-            return function(r: ISearchResultParamsDoc) {
-                let titleMatch = 0;
-                if (r.in_title) {
-                    titleMatch = 1;
-                }
-                return - (r.pars.length + r.tags.length + titleMatch);
+            return function(r: ISearchResultDisplay) {
+                return - (r.result.num_par_results + r.num_tag_results + r.result.num_title_results);
             };
         } else {
-            return function(r: ISearchResultParamsDoc) {
-                return r.doc.path;
+            return function(r: ISearchResultDisplay) {
+                return r.result.doc.path;
             };
         }
     }
@@ -307,27 +198,30 @@ registerDialogComponent("timSearchResults",
     <div ng-if="$ctrl.docResults.length <= 0 && !$ctrl.errorMessage">
         <h5>Your search <i>{{$ctrl.searchWord}}</i> did not match any documents in <i>{{$ctrl.folder}}</i></h5>
     </div>
-    <div ng-if="$ctrl.docResults.length > 0">
+    <div ng-if="$ctrl.displayResults.length > 0">
         <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.totalResults}} <ng-pluralize
         count="$ctrl.totalResults" when="{'1': 'time', 'other': 'times'}"></ng-pluralize>
             in <i ng-if="$ctrl.folder">{{$ctrl.folder}}</i><i ng-if="!$ctrl.folder">root</i>
-            <a ng-if="$ctrl.collapsables" title="Toggle results collapse"
+            <a ng-if="$ctrl.collapsables && !$ctrl.limitedDisplay" title="Toggle results collapse"
                 ng-click="$ctrl.toggleCollapseAll()">
                 <i ng-if="$ctrl.allClosed" class="glyphicon glyphicon-plus-sign"></i>
                 <i ng-if="!$ctrl.allClosed" class="glyphicon glyphicon-minus-sign"></i>
             </a>
         </h5>
         <ul class="list-unstyled">
-            <li ng-repeat="r in $ctrl.docResults | orderBy:$ctrl.resultOrder($ctrl.orderByOption)">
+            <li ng-repeat="r in $ctrl.displayResults | orderBy:$ctrl.resultOrder($ctrl.orderByOption)">
                 <a class="cursor-pointer" ng-click="r.closed = !r.closed"
-                ng-if="r.pars.length > 0 || r.tags.length > 0">
+                ng-if="$ctrl.collapsables && !$ctrl.limitedDisplay">
                     <i class="glyphicon" ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
                     title="Toggle preview"></i></a>
-                <a href="/view/{{r.doc.path}}" title="Open {{r.doc.title}}">{{r.doc.title}}</a>
-                <i>({{r.doc.path}})</i>
-                <ul>
-                    <li ng-repeat="p in r.pars" ng-if="!r.closed && !$ctrl.limitedDisplay">
-                        <a href="/view/{{r.doc.path}}#{{p.par_id}}" title="Open paragraph">{{p.preview}}</a>
+                <a href="/view/{{r.result.doc.path}}" title="Open {{r.result.doc.title}}">{{r.result.doc.title}}</a>
+                <i>{{r.result.doc.path}}</i>
+                 ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}} <ng-pluralize
+                count="r.result.num_par_results + r.result.num_title_results + r.num_tag_results"
+                when="{'1': 'match', 'other': 'matches'}"></ng-pluralize>)
+                <ul ng-if="!r.closed">
+                    <li ng-repeat="p in r.result.par_results">
+                        <a href="/view/{{r.result.doc.path}}#{{p.par_id}}" title="Open paragraph">{{p.preview}}</a>
                     </li>
                     <span ng-repeat="tag in r.tags" ng-if="!r.closed">
                         <span class="btn-xs" ng-class="$ctrl.tagStyle(tag)">{{tag.name}}</span>
@@ -343,7 +237,7 @@ registerDialogComponent("timSearchResults",
                 title="Select the result sorting order" name="order-selector">
                 <option selected value="1">Sort by path</option>
                 <option value="2">Sort by title</option>
-                <option ng-if="$ctrl.collapsables" value="3">Sort by relevance</option>
+                <option ng-if="$ctrl.collapsables  && !$ctrl.limitedDisplay" value="3">Sort by relevance</option>
             </select>
         </div>
         <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
@@ -352,6 +246,6 @@ registerDialogComponent("timSearchResults",
 `,
     });
 
-export async function showSearchResultDialog(r: ISearchResultParams) {
-    return await showDialog<ShowSearchResultController>("timSearchResults", {params: () => r}).result;
+export async function showSearchResultDialog(r: SearchBoxCtrl) {
+    return await showDialog<ShowSearchResultController>("timSearchResults", {ctrl: () => r}).result;
 }

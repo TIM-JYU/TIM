@@ -26,7 +26,7 @@ import {Binding, to} from "../util/utils";
 import {ShowSearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
 
 export interface ISearchResultsInfo {
-    results: ISearchResult[];
+    results: IDocSearchResult[];
     complete: boolean; // Whether the search was completely finished in the folder.
     wordResultCount: number;
     titleResultCount: number;
@@ -47,17 +47,43 @@ export interface ITagSearchResultsInfo {
     errors: ISearchError[];
 }
 
-export interface ISearchResult {
+// export interface ISearchResult {
+//     doc: IItem;
+//     par_id: string;
+//     preview: string;
+//     match_start_index: number; // Index where the query match begins in the paragraph / title.
+//     match_end_index: number; // Index where the query match ends in the paragraph / title.
+//     match_word: string;
+//     in_title: boolean;
+// }
+
+export interface IDocSearchResult {
     doc: IItem;
-    par_id: string;
-    preview: string;
-    match_start_index: number; // Index where the query match begins in the paragraph / title.
-    match_end_index: number; // Index where the query match ends in the paragraph / title.
-    match_word: string;
-    in_title: boolean;
+    par_results: IParSearchResult[];
+    title_results: ITitleSearchResult[];
+    num_par_results: number;
+    num_title_results: number;
 }
 
-export interface ITagSearchResult{
+export interface IParSearchResult {
+    par_id: string;
+    preview: string;
+    results: IWordSearchResult[];
+    num_results: number;
+}
+
+export interface ITitleSearchResult {
+    results: IWordSearchResult[];
+    num_results: number;
+}
+
+export interface IWordSearchResult {
+    match_word: string;
+    match_start: number;
+    match_end: number;
+}
+
+export interface ITagSearchResult {
     doc: ITaggedItem;
     // Number of matches in the document's tags (not matching_tags length, because same tag may contain match
     // more than once.)
@@ -66,15 +92,18 @@ export interface ITagSearchResult{
 }
 
 export class SearchBoxCtrl implements IController {
-    private query: string = "";
-    private folder!: Binding<string, "<">;
+    public results: IDocSearchResult[] = [];
+    public resultErrorMessage: string = "";
+    public tagMatchCount: number = 0;
+    public wordMatchCount: number = 0;
+    public titleMatchCount: number = 0;
+    public tagResults: ITagSearchResult[] = [];
+    public completeSearch: boolean = false;
+    public query: string = "";
+    public folder!: Binding<string, "<">;
+
     private regex: boolean = false;
     private caseSensitive: boolean = false;
-    private results: ISearchResult[] = [];
-    private errorMessage: string = "";
-    private tagMatchCount: number = 0;
-    private wordMatchCount: number = 0;
-    private titleMatchCount: number = 0;
     private advancedSearch: boolean = false;
     private createNewWindow: boolean = false;
     private ignorePluginsSettings: boolean = false;
@@ -82,6 +111,10 @@ export class SearchBoxCtrl implements IController {
     private searchTags: boolean = true; // Tag and word search are on by default.
     private searchWords: boolean = true;
     private searchExactWords: boolean = false;
+    private maxDocResults: number = 100;
+    private searchOwned: boolean = false; // Limit search to docs owned by the user.
+
+    private errorMessage: string = "";
     private focusMe: boolean = true;
     private loading: boolean = false; // Display loading icon.
     private item: IItem = $window.item;
@@ -89,17 +122,13 @@ export class SearchBoxCtrl implements IController {
         searchWordStorage: null | string,
         optionsStorage: null | boolean[],
         optionsValueStorage: null | number[]};
-    private tagResults: ITagSearchResult[] = [];
     private folderSuggestions: string[] = []; // A list of folder path suggestions.
-    private completeSearch: boolean = false;
-    private maxDocResults: number = 100;
-    private searchOwned: boolean = false; // Limit search to docs owned by the user.
     private resultsDialog: ShowSearchResultController | null = null; // The most recent search result dialog.
 
     constructor() {
         this.storage = $localStorage.$default({
-            optionsValueStorage: null,
             optionsStorage: null,
+            optionsValueStorage: null,
             searchWordStorage: null,
         });
     }
@@ -151,29 +180,17 @@ export class SearchBoxCtrl implements IController {
             return;
         }
         this.updateLocalStorage();
-        let tempError = this.errorMessage;
         if (!this.completeSearch) {
-            tempError = "Search was incomplete due to time or data constraints. " +
+            this.resultErrorMessage = "Search was incomplete due to time or data constraints. " +
                 "For better results choose more specific search options.";
         }
-        const resultParams = {
-            errorMessage: tempError,
-            folder: this.folder.trim(),
-            results: this.results,
-            searchComponent: this,
-            searchWord: this.query.trim(),
-            tagMatchCount: this.tagMatchCount,
-            tagResults: this.tagResults,
-            titleMatchCount: this.titleMatchCount,
-            wordMatchCount: this.wordMatchCount,
-        };
         if (this.createNewWindow) {
-            void showSearchResultDialog(resultParams);
+            void showSearchResultDialog(this);
         } else {
             if (!this.resultsDialog) {
-                void showSearchResultDialog(resultParams);
+                void showSearchResultDialog(this);
             } else {
-                this.resultsDialog.updateAttributes(resultParams);
+                this.resultsDialog.updateAttributes(this);
             }
         }
         this.loading = false;
@@ -301,10 +318,10 @@ export class SearchBoxCtrl implements IController {
                 caseSensitive: this.caseSensitive,
                 folder: this.folder,
                 ignorePluginsSettings: this.ignorePluginsSettings,
-                // maxDocPars: 1000,
+                maxDocPars: 100,
                 maxDocResults: this.maxDocResults,
-                // maxTime: 10,
-                // maxTotalResults: 10000,
+                maxTime: 15,
+                maxTotalResults: 10000,
                 query: this.query,
                 regex: this.regex,
                 searchDocNames: this.searchDocNames,
@@ -425,6 +442,7 @@ export class SearchBoxCtrl implements IController {
         this.tagResults = [];
         this.results = [];
         this.errorMessage = "";
+        this.resultErrorMessage = "";
     }
 
     /**
