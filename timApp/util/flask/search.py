@@ -173,7 +173,7 @@ def search_tags():
     else:
         try:
             return json_response({'results': results,
-                                  'complete': True,
+                                  'incomplete_search_reason': "",
                                   'tagResultCount': tag_result_count,
                                   'errors': error_list
                                   })
@@ -445,6 +445,7 @@ def search():
     verify_logged_in()
     current_user = get_current_user_object()
     error_list = []  # List of errors during search.
+    incomplete_search_reason = ""  # Tells why some results were left out.
 
     query = request.args.get('query', '')
     folder = request.args.get('folder', '')
@@ -505,7 +506,6 @@ def search():
     starting_time = time.clock()
     current_doc = "before search"
     current_par = "before search"
-    complete = True  # Whether the search was complete or ended without searching everything.
 
     try:
         term_regex = re.compile(term, flags)
@@ -519,11 +519,11 @@ def search():
                 # print(time.clock() - starting_time)
                 # Cut search before timeout.
                 if (time.clock() - starting_time) > max_time:
-                    complete = False
+                    incomplete_search_reason = f"search timeout after {max_time} seconds"
                     break
                 # If results are too large, MemoryError occurs.
                 if len(results) > max_results_total:
-                    complete = False
+                    incomplete_search_reason = f"maximum of {max_results_total} total results reached"
                     break
 
                 if search_doc_names:
@@ -547,7 +547,8 @@ def search():
 
                         # If results per document limit is reached, move on to the next doc.
                         if d_words_count >= max_results_doc:
-                            complete = False
+                            incomplete_search_reason = f"document '{d.path}' has more than the maximum of " \
+                                                       f"{max_results_doc} results"
                             break
                         d_words_count += 1
 
@@ -608,11 +609,12 @@ def search():
                     print("help")
                     error = f"Formatting JSON-response for a result failed: {e}"
                     log_search_error(error, query, r.doc_info.path, par="")
+                    incomplete_search_reason = f"error in formatting JSON-response in document '{r.doc_info.path}'"
                 else:
                     clean_results.append(clean_r)
             return json_response({
                 'results': clean_results,
-                'complete': complete,
+                'incomplete_search_reason': incomplete_search_reason,
                 'titleResultCount': title_result_count,
                 'wordResultCount': word_result_count,
                 'errors': error_list

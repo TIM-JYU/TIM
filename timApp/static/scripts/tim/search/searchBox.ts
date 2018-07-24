@@ -15,7 +15,7 @@ import {ShowSearchResultController, showSearchResultDialog} from "./searchResult
  */
 export interface ISearchResultsInfo {
     results: IDocSearchResult[];
-    complete: boolean; // Whether the search was completely finished in the folder.
+    incomplete_search_reason: string; // Tells the reason why when the search is incomplete.
     wordResultCount: number;
     titleResultCount: number;
     errors: ISearchError[];
@@ -36,7 +36,7 @@ export interface ISearchError {
  */
 export interface ITagSearchResultsInfo {
     results: ITagSearchResult[];
-    complete: boolean;
+    incomplete_search_reason: string;
     tagResultCount: number;
     errors: ISearchError[];
 }
@@ -98,7 +98,7 @@ export class SearchBoxCtrl implements IController {
     public wordMatchCount: number = 0;
     public titleMatchCount: number = 0;
     public tagResults: ITagSearchResult[] = [];
-    public completeSearch: boolean = false;
+    public incompleteSearchReason: string = "";
     public query: string = "";
     public folder!: Binding<string, "<">;
 
@@ -181,9 +181,9 @@ export class SearchBoxCtrl implements IController {
             return;
         }
         this.updateLocalStorage();
-        if (!this.completeSearch) {
-            this.resultErrorMessage = "Search was incomplete due to time or data constraints. " +
-                "For better results choose more specific search options.";
+        if (this.incompleteSearchReason.length > 0) {
+            this.resultErrorMessage = `Search was incomplete due to reason: ${this.incompleteSearchReason}.` +
+                ` For better results choose more specific search options.`;
         }
         if (this.createNewWindow) {
             void showSearchResultDialog(this);
@@ -354,8 +354,9 @@ export class SearchBoxCtrl implements IController {
             return;
         }
         if (response) {
+            console.log(response);
             this.results = response.data.results;
-            this.completeSearch = response.data.complete;
+            this.incompleteSearchReason = response.data.incomplete_search_reason;
             this.wordMatchCount = response.data.wordResultCount;
             this.titleMatchCount = response.data.titleResultCount;
             // if (response.data.errors.length > 0) {
@@ -389,7 +390,7 @@ export class SearchBoxCtrl implements IController {
             // }
             this.tagResults = response.data.results;
             this.tagMatchCount = response.data.tagResultCount;
-            this.completeSearch = response.data.complete;
+            this.incompleteSearchReason = response.data.incomplete_search_reason;
         }
         if (err) {
             let tempError = "";
