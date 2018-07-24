@@ -211,7 +211,7 @@ registerDialogComponent("timSearchResults",
         <ul class="list-unstyled">
             <li ng-repeat="r in $ctrl.displayResults | orderBy:$ctrl.resultOrder($ctrl.orderByOption)">
                 <a class="cursor-pointer" ng-click="r.closed = !r.closed"
-                ng-if="$ctrl.collapsables && !$ctrl.limitedDisplay">
+             ng-if="$ctrl.collapsables && !$ctrl.limitedDisplay && (r.result.num_par_results + r.num_tag_results) > 0">
                     <i class="glyphicon" ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
                     title="Toggle preview"></i></a>
                 <a href="/view/{{r.result.doc.path}}" title="Open {{r.result.doc.title}}">{{r.result.doc.title}}</a>

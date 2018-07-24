@@ -3,17 +3,18 @@ import re
 import sre_constants
 import time
 from datetime import datetime
-from typing import Generator, Match, List, Dict
+from typing import Generator, Match
 
 from flask import Blueprint
 from flask import abort
 from flask import request
-from sqlalchemy.dialects.postgresql import json
 from sqlalchemy.orm import joinedload
 
 from timApp.admin.search_in_documents import SearchArgumentsBasic, SearchResult
 from timApp.admin.util import enum_pars
 from timApp.auth.accesshelper import verify_logged_in
+from timApp.auth.accesstype import AccessType
+from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_id
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
@@ -21,8 +22,6 @@ from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.tag import Tag
-from timApp.auth.accesstype import AccessType
-from timApp.auth.auth_models import BlockAccess
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
@@ -351,7 +350,7 @@ class DocResult:
 
     def latest_par_result(self):
         try:
-            return self.par_results[len(self.par_results)-1]
+            return self.par_results[len(self.par_results) - 1]
         except IndexError:
             return None
 
@@ -435,8 +434,6 @@ def search():
     current_doc = "before search"
     current_par = "before search"
     complete = True  # Whether the search was complete or ended without searching everything.
-    title_result_count = 0
-    word_result_count = 0
 
     try:
         term_regex = re.compile(term, flags)
@@ -461,7 +458,6 @@ def search():
                     matches = list(term_regex.finditer(d_title))
                     if matches:
                         for m in matches:
-                            title_result_count += 1
                             result = WordResult(match_word=m.group(0),
                                                 match_start=m.start(),
                                                 match_end=m.end())
@@ -476,11 +472,10 @@ def search():
                     for r in search_in_doc(d=doc_info, term_regex=term_regex, args=args, use_exported=False):
                         current_par = r.par.dict()['id']
                         d_words_count += 1
-                        word_result_count += 1
                         # Limit matches per document to get diverse document results faster.
                         if d_words_count >= max_results_doc:
                             complete = False
-                            break
+                            continue
 
                         word_result = WordResult(match_word=r.match.group(0),
                                                  match_start=r.match.start(),
@@ -524,7 +519,11 @@ def search():
         try:
             clean_results = []
             # Remove results that would break JSON-formatting.
+            title_result_count = 0
+            word_result_count = 0
             for r in results:
+                title_result_count += r.get_title_match_count()
+                word_result_count += r.get_par_match_count()
                 try:
                     clean_r = r.to_dict()
                     json_response(clean_r)
@@ -547,7 +546,7 @@ def search():
             abort(400, f"Error encountered while formatting JSON-response: {e}")
 
 
-def search_in_doc(d: DocInfo, term_regex, args: SearchArgumentsBasic, use_exported: bool)\
+def search_in_doc(d: DocInfo, term_regex, args: SearchArgumentsBasic, use_exported: bool) \
         -> Generator[SearchResult, None, None]:
     """
     Performs a search operation for the specified document, yielding SearchResults.
