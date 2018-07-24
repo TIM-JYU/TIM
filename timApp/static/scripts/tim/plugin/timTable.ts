@@ -1041,7 +1041,7 @@ export class TimTableController implements IController {
         this.readDataBlockAndSetValuesToDataCellMatrix();
         ParCompiler.processAllMathDelayed(this.element);
 
-        if (this.isSomeCellBeingEdited()) {
+        if (this.currentCell) {
             this.calculateElementPlaces(this.currentCell.row, this.currentCell.col);
         }
     }
