@@ -85,6 +85,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     }
 
     /**
+     * Merge results and tag results and add open/close state variable.
      */
     private filterResults() {
         this.displayResults = [];
@@ -134,8 +135,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     }
 
     /**
-     * Changes tag css style depending on whether search is enabled and
-     * if it's regular or special tag.
+     * Changes tag css style depending on whether it's regular or special tag.
      * @param {ITag} tag
      * @returns {string}
      */
@@ -237,7 +237,7 @@ registerDialogComponent("timSearchResults",
                 title="Select the result sorting order" name="order-selector">
                 <option selected value="1">Sort by path</option>
                 <option value="2">Sort by title</option>
-                <option ng-if="$ctrl.collapsables  && !$ctrl.limitedDisplay" value="3">Sort by relevance</option>
+                <option ng-if="$ctrl.collapsables" value="3">Sort by relevance</option>
             </select>
         </div>
         <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>

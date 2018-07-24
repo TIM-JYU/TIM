@@ -1,20 +1,5 @@
 /**
  * A search box component.
- *
- * Search options:
- *
- * caseSensitive: distinguish between upper and lower case letters
- * folder: limit search to a folder and its subfolders
- * ignorePluginsSettings: leave plugin and setting paragraphs out of the results.
- * maxDocPars: search only X first paragraphs from each document
- * maxTime: end search after X seconds
- * maxTotalResults: end search after getting X results
- * regex: regular expressions
- * searchExactWords: search whole words
- * searchWords: basic word search
- * searchTags: tag search
- * searchDocNames: search document titles
- * searchOwned: only search document the user owns
  */
 
 import {IController} from "angular";
@@ -25,6 +10,9 @@ import {$http, $localStorage, $window} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 import {ShowSearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
 
+/**
+ * All data title/word search route returns.
+ */
 export interface ISearchResultsInfo {
     results: IDocSearchResult[];
     complete: boolean; // Whether the search was completely finished in the folder.
@@ -33,6 +21,9 @@ export interface ISearchResultsInfo {
     errors: ISearchError[];
 }
 
+/**
+ * Search error info for tag, word or title searches.
+ */
 export interface ISearchError {
     error: string;
     doc_path: string;
@@ -40,6 +31,9 @@ export interface ISearchError {
     tag_name: string;
 }
 
+/**
+ * All data tag search route returns.
+ */
 export interface ITagSearchResultsInfo {
     results: ITagSearchResult[];
     complete: boolean;
@@ -47,16 +41,9 @@ export interface ITagSearchResultsInfo {
     errors: ISearchError[];
 }
 
-// export interface ISearchResult {
-//     doc: IItem;
-//     par_id: string;
-//     preview: string;
-//     match_start_index: number; // Index where the query match begins in the paragraph / title.
-//     match_end_index: number; // Index where the query match ends in the paragraph / title.
-//     match_word: string;
-//     in_title: boolean;
-// }
-
+/**
+ * One document's search results.
+ */
 export interface IDocSearchResult {
     doc: IItem;
     par_results: IParSearchResult[];
@@ -65,6 +52,9 @@ export interface IDocSearchResult {
     num_title_results: number;
 }
 
+/**
+ * A paragraph's search results.
+ */
 export interface IParSearchResult {
     par_id: string;
     preview: string;
@@ -72,17 +62,26 @@ export interface IParSearchResult {
     num_results: number;
 }
 
+/**
+ * Title search results including list of word matches in the title.
+ */
 export interface ITitleSearchResult {
     results: IWordSearchResult[];
     num_results: number;
 }
 
+/**
+ * One match info with matched word and its location in par or title.
+ */
 export interface IWordSearchResult {
     match_word: string;
     match_start: number;
     match_end: number;
 }
 
+/**
+ * One document's tag search results.
+ */
 export interface ITagSearchResult {
     doc: ITaggedItem;
     // Number of matches in the document's tags (not matching_tags length, because same tag may contain match
@@ -92,8 +91,9 @@ export interface ITagSearchResult {
 }
 
 export class SearchBoxCtrl implements IController {
+    // Results and variables search results dialog needs to know.
     public results: IDocSearchResult[] = [];
-    public resultErrorMessage: string = "";
+    public resultErrorMessage: string = ""; // Message displayed only in results dialog.
     public tagMatchCount: number = 0;
     public wordMatchCount: number = 0;
     public titleMatchCount: number = 0;
@@ -102,19 +102,20 @@ export class SearchBoxCtrl implements IController {
     public query: string = "";
     public folder!: Binding<string, "<">;
 
-    private regex: boolean = false;
-    private caseSensitive: boolean = false;
-    private advancedSearch: boolean = false;
-    private createNewWindow: boolean = false;
-    private ignorePluginsSettings: boolean = false;
-    private searchDocNames: boolean = false;
+    // Settings:
+    private regex: boolean = false; // Regular expressions.
+    private caseSensitive: boolean = false; // Take upper/lower case in account.
+    private advancedSearch: boolean = false; // Toggle advanced options panel.
+    private createNewWindow: boolean = false; // Open new dialog for each search.
+    private ignorePluginsSettings: boolean = false; // Leave plugins and settings out of the results.
+    private searchDocNames: boolean = false; // Doc title search.
     private searchTags: boolean = true; // Tag and word search are on by default.
-    private searchWords: boolean = true;
-    private searchExactWords: boolean = false;
-    private maxDocResults: number = 100;
+    private searchWords: boolean = true; // Content search.
+    private searchExactWords: boolean = false; // Whole word search.
+    private maxDocResults: number = 100; // Limit for searched results per doc.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
 
-    private errorMessage: string = "";
+    private errorMessage: string = ""; // Message displayed only in search panel.
     private focusMe: boolean = true;
     private loading: boolean = false; // Display loading icon.
     private item: IItem = $window.item;
@@ -509,10 +510,10 @@ timApp.component("searchBox", {
                            typeahead-min-length="1">
                 </div>
            </div>
-            <div class="form-group" title="Input maximum number of results to give from a single document">
-                <label for="max-doc-results-selector" class="col-sm-5 control-label font-weight-normal"
-                style="text-align:left;">Max results / document:</label>
-                <div class="col-sm-7">
+            <div class="form-group" title="Input maximum number of searched content matches per a document">
+                <label for="max-doc-results-selector" class="col-sm-7 control-label font-weight-normal"
+                style="text-align:left;">Max content results / document:</label>
+                <div class="col-sm-5">
                     <input ng-model="$ctrl.maxDocResults" name="max-doc-results-selector"
                            type="number" class="form-control" id="folder-selector"
                            placeholder="Input max # of results per document">
@@ -526,13 +527,16 @@ timApp.component("searchBox", {
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
         <label class="font-weight-normal" title="Leave plugins and settings out of the results">
             <input type="checkbox" ng-model="$ctrl.ignorePluginsSettings"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins</label>
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins and settings</label>
         <label class="font-weight-normal" title="Search only whole words with one or more character">
             <input type="checkbox" ng-model="$ctrl.searchExactWords"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search whole words</label>
         <label class="font-weight-normal" title="Show result of each search in new window">
             <input type="checkbox" ng-model="$ctrl.createNewWindow"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Open new window for each search</label>
+        <label class="font-weight-normal dropdown-item" title="Search documents you own">
+            <input type="checkbox" ng-model="$ctrl.searchOwned"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search owned documents</label>
         <h5 class="font-weight-normal">Search scope:</h5>
         <label class="font-weight-normal" title="Search document titles">
             <input type="checkbox" ng-model="$ctrl.searchDocNames"
@@ -543,9 +547,6 @@ timApp.component("searchBox", {
         <label class="font-weight-normal" title="Search document content">
             <input type="checkbox" ng-model="$ctrl.searchWords"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Content search</label>
-        <label class="font-weight-normal dropdown-item" title="Search documents you own">
-            <input type="checkbox" ng-model="$ctrl.searchOwned"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search owned documents</label>
       </form>
     </div>
 `,
