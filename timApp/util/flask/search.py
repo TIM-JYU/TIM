@@ -245,6 +245,9 @@ def preview(par, query, m: Match[str], snippet_length=PREVIEW_LENGTH, max_length
 
 
 class WordResult:
+    """
+    One match word with location and match word.
+    """
     def __init__(self, match_word: str, match_start: int, match_end: int):
         self.match_word = match_word
         self.match_start = match_start
@@ -258,6 +261,9 @@ class WordResult:
 
 
 class ParResult:
+    """
+    Paragraph search results.
+    """
     def __init__(self, par_id: str = "", preview: str = "", word_results=None):
         if word_results is None:
             word_results = []
@@ -277,6 +283,10 @@ class ParResult:
         return f"par_id: {self.par_id}, preview: {temp_preview}, word_results: {repr(self.word_results)}"
 
     def to_dict(self):
+        """
+        Form a dictionary from the attributes and derived attributes.
+        :return:
+        """
         results_dicts = []
         for r in self.word_results:
             results_dicts.append(r.to_dict())
@@ -285,35 +295,60 @@ class ParResult:
                 'results': results_dicts, 'num_results': self.get_match_count()}
 
     def get_match_count(self):
+        """
+        :return: How many matches there are in this paragraph.
+        """
         return len(self.word_results)
 
 
 class TitleResult:
+    """
+    Title search result containing a list of match data.
+    """
     def __init__(self, word_results=None):
         if word_results is None:
             word_results = []
         self.word_results = word_results
 
     def add_result(self, result: WordResult):
+        """
+        Add new result to the list.
+        :param result:
+        :return:
+        """
         self.word_results.append(result)
 
     def has_results(self) -> bool:
+        """
+        :return: Whether the object contains any results.
+        """
         return len(self.word_results) > 0
 
     def __repr__(self):
         return f"word_results: {repr(self.word_results)}"
 
     def to_dict(self):
+        """
+        Form a dictionary from the attributes and derived attributes.
+        :return:
+        """
         results_dicts = []
         for r in self.word_results:
             results_dicts.append(r.to_dict())
         return {'results': results_dicts, 'num_results': self.get_match_count()}
 
     def get_match_count(self):
+        """
+        How many match words the paragraph has.
+        :return:
+        """
         return len(self.word_results)
 
 
 class DocResult:
+    """
+    Contains one document's title and word search information.
+    """
     def __init__(self, doc_info: DocInfo, par_results=None, title_results=None):
         if par_results is None:
             par_results = []
@@ -324,12 +359,25 @@ class DocResult:
         self.title_results = title_results
 
     def add_par_result(self, result: ParResult):
+        """
+        Add new paragraph search result to the list.
+        :param result:
+        :return: None.
+        """
         self.par_results.append(result)
 
     def add_title_result(self, result: TitleResult):
+        """
+        Add new title search result to the list.
+        :param result:
+        :return: None.
+        """
         self.title_results.append(result)
 
     def has_results(self) -> bool:
+        """
+        :return: Whether the document has any results in it.
+        """
         return len(self.par_results) > 0 or len(self.title_results) > 0
 
     def __repr__(self):
@@ -337,6 +385,10 @@ class DocResult:
                f"title_results: {repr(self.title_results)}"
 
     def to_dict(self):
+        """
+        Form a dictionary suitable for JSON.
+        :return:
+        """
         par_result_dicts = []
         for r in self.par_results:
             par_result_dicts.append(r.to_dict())
@@ -349,18 +401,30 @@ class DocResult:
             'par_results': par_result_dicts, 'num_par_results': self.get_par_match_count()}
 
     def latest_par_result(self):
+        """
+        Return the previously added par result.
+        :return:
+        """
         try:
             return self.par_results[len(self.par_results) - 1]
         except IndexError:
             return None
 
     def get_par_match_count(self):
+        """
+        Total document count for word matches.
+        :return:
+        """
         count = 0
         for p in self.par_results:
             count += p.get_match_count()
         return count
 
     def get_title_match_count(self):
+        """
+        Total document count for title matches.
+        :return:
+        """
         count = 0
         for p in self.title_results:
             count += p.get_match_count()
@@ -389,7 +453,7 @@ def search():
     # If number of results is very high, just showing them will crash the search.
     max_results_total = get_option(request, 'maxTotalResults', default=10000, cast=int)
     # Time limit for the searching process.
-    max_time = get_option(request, 'maxTime', default=15, cast=int)
+    max_time = get_option(request, 'maxTime', default=25, cast=int)
     # Limit the number of results per document.
     max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
     # Don't search paragraphs that are marked as plugin or setting.
@@ -440,10 +504,12 @@ def search():
 
         for d in docs:
             try:
+                d_words_count = 0
                 current_doc = d.path
                 doc_info = d.document.docinfo
                 doc_result = DocResult(doc_info)
                 # print(time.clock() - starting_time)
+                # Cut search before timeout.
                 if (time.clock() - starting_time) > max_time:
                     complete = False
                     break
@@ -466,29 +532,28 @@ def search():
                         doc_result.add_title_result(title_result)
 
                 if search_words:
-                    d_words_count = 0
                     current_par = ""
-
                     for r in search_in_doc(d=doc_info, term_regex=term_regex, args=args, use_exported=False):
                         current_par = r.par.dict()['id']
-                        d_words_count += 1
-                        # Limit matches per document to get diverse document results faster.
+                        # If results per document limit is reached, move on to next doc.
                         if d_words_count >= max_results_doc:
                             complete = False
-                            continue
-
+                            break
+                        d_words_count += 1
                         word_result = WordResult(match_word=r.match.group(0),
                                                  match_start=r.match.start(),
                                                  match_end=r.match.end())
 
-                        # Don't return results within plugins if no edit access to the document.
+                        # Don't return results within plugins if user has no edit access to the document.
                         if (r.par.is_setting() or r.par.is_plugin()) and \
                                 (not (get_current_user_object().has_edit_access(d)) or ignore_plugins_settings):
                             break
                         else:
                             previous_par_result = doc_result.latest_par_result()
+                            # If previous search result was in same par, add this result to its object.
                             if previous_par_result and previous_par_result.par_id is current_par:
                                 previous_par_result.add_result(word_result)
+                            # Otherwise create a new entry to store the result.
                             else:
                                 par_result = ParResult(par_id=current_par, preview=preview(r.par, query, r.match))
                                 par_result.add_result(word_result)
@@ -530,7 +595,7 @@ def search():
                 except TypeError as e:
                     # Report the offending paragraph.
                     error = f"Formatting JSON-response for a result failed: {e}"
-                    log_search_error(error, query, "", par="")
+                    log_search_error(error, query, r.doc_info.path, par="")
                 else:
                     clean_results.append(clean_r)
             return json_response({
