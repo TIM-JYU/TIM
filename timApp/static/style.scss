@@ -182,6 +182,13 @@ tim-table {
         right: calc(-1cm - 2px);
     }
 
+    .buttonRemoveCol {
+        position: absolute;
+        //right: calc(-2cm - 4px); next to buttonAddCol instead of below it
+        right: calc(-1cm - 2px);
+        top: calc(1cm - 5px);
+    }
+
     .timTableContentDiv {
         position: relative;
         display: table;
@@ -196,3 +203,4 @@ tim-alert {
         max-height: 50vh;
     }
 }
+
