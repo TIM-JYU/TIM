@@ -2,17 +2,20 @@ import copy
 import json
 from typing import Optional
 from xml.sax.saxutils import quoteattr
-from distutils import util;
+from distutils import util
 from flask import Blueprint
 from flask import abort
 from flask import request
 from timApp.auth.accesshelper import verify_edit_access
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.plugin.plugin import Plugin
+from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response
 from timApp.document.docentry import DocEntry
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.timtable.timTableLatex import convert_table
+from timApp.timdb.sqa import db
 
 timTable_plugin = Blueprint('timTable_plugin',
                             __name__,
@@ -34,6 +37,9 @@ DATABLOCK = 'tabledatablock'
 CELLS = 'cells'
 COL = 'col'
 RELATIVE = 'relative'
+UNIQUE_ROW_COUNT = 'uniqueRowCount'
+GLOBAL_APPEND_MODE = 'globalAppendMode'
+ID = 'id'
 ASCII_OF_A = 65
 ASCII_CHAR_COUNT = 26
 MARKUP = 'markup'
@@ -182,8 +188,17 @@ def tim_table_save_cell_list():
     multi = []
     cell_content, docid, parid, row, col = verify_json_params('cellContent', 'docId', 'parId', 'row', 'col')
     d, plug = get_plugin_from_paragraph(docid, parid)
-    verify_edit_access(d)
     yaml = plug.values
+    # verify_edit_access(d)
+    if is_in_global_append_mode(plug):
+        raise NotImplementedError
+        user = get_current_user_object()
+        q = RowOwnerInfo.query
+        # TODO figure out filter
+        # q.filter()
+    else:
+        verify_edit_access(d)
+
     if is_datablock(yaml):
         save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
     else:
@@ -208,6 +223,36 @@ def tim_table_add_row():
     doc_id, par_id = verify_json_params('docId', 'parId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     verify_edit_access(d)
+    add_row(plug)
+    return json_response(prepare_for_and_call_dumbo(plug))
+
+
+@timTable_plugin.route("addUserSpecificRow", methods=["POST"])
+def tim_table_add_user_specific_row():
+    """
+    Adds an user-specific row into the table.
+    :return: The entire table's data after the row has been added.
+    """
+    doc_id, par_id = verify_json_params('docId', 'parId')
+    d, plug = get_plugin_from_paragraph(doc_id, par_id)
+    unique_id = add_row(plug)
+    # todo database stuff
+    user = get_current_user_object()
+    owner_info = RowOwnerInfo(doc_id=doc_id, par_id=par_id,
+                              unique_row_id=unique_id,
+                              usergroup_id=user.get_personal_group().id)
+    db.session.add(owner_info)
+    # db.session.flush()
+    db.session.commit()
+    return json_response(prepare_for_and_call_dumbo(plug))
+
+
+def add_row(plug: Plugin):
+    """
+    Generic function for adding a row.
+    :param plug: The plugin.
+    :return: The unique ID of the row, or None if it has no ID.
+    """
     try:
         rows = plug.values[TABLE][ROWS]
     except KeyError:
@@ -217,6 +262,10 @@ def tim_table_add_row():
     rows.append(copy_row)
     # rows.append({'row': copy.deepcopy(rows[-1]['row'])})
     row = rows[-1]['row']
+    unique_id = None
+    if is_in_global_append_mode(plug):
+        unique_id = pop_unique_row_id(plug)
+        rows[-1][ID] = unique_id
     for i in range(len(row)):
         if isinstance(row[i], str) or isinstance(row[i], int) or isinstance(row[i], bool) \
                 or isinstance(row[i], float):
@@ -224,7 +273,24 @@ def tim_table_add_row():
         else:
             row[i][CELL] = ''
     plug.save()
-    return json_response(prepare_for_and_call_dumbo(plug))
+    return unique_id
+
+
+def pop_unique_row_id(plug: Plugin) -> int:
+    """
+    Returns an unique ID for a new row.
+    :param plug: The plugin instance.
+    :return:
+    """
+    try:
+        unique_row_count = int(plug.values[UNIQUE_ROW_COUNT])
+    except KeyError:
+        unique_row_count = 0
+
+    unique_row_str = str(unique_row_count + 1)
+    plug.values[UNIQUE_ROW_COUNT] = unique_row_str
+
+    return unique_row_count
 
 
 @timTable_plugin.route("addColumn", methods=["POST"])
@@ -335,7 +401,13 @@ def tim_table_remove_column():
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
-def get_plugin_from_paragraph(doc_id, par_id):
+def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
+    """
+    Returns the DocEntry and the plugin instance from a document and paragraph ID.
+    :param doc_id: The document ID
+    :param par_id: The paragraph ID
+    :return: Tuple of a DocEntry and the plugin instance.
+    """
     d = DocEntry.find_by_id(doc_id)
     if not d:
         abort(404)
@@ -464,6 +536,19 @@ def datablock_key_to_indexes(datablock_key: str) -> (int, int):
     return column_index - 1, row_index - 1
 
 
+def is_in_global_append_mode(plug: Plugin):
+    """
+    Checks whether global append mode is enabled.
+    In global append mode even users without edit rights can add rows,
+    but they can only edit the content of rows that they've added.
+    :param plug: The plugin instance.
+    :return: True if global append mode is enabled, otherwise false.
+    """
+    if GLOBAL_APPEND_MODE in plug.values and plug.values[GLOBAL_APPEND_MODE]:
+        return True
+    return False
+
+
 def is_review(request):
     """
     Check if request is review
@@ -478,7 +563,7 @@ def prepare_for_and_call_dumbo(plug: Plugin):
     """
     Prepares the table's markdown for Dumbo conversion and
     runs it through Dumbo.
-    :param values: The plugin paragraph's markdown.
+    :param plug: The plugin instance.
     :return: The conversion result from Dumbo.
     """
     if plug.is_automd_enabled():

@@ -31,6 +31,7 @@ export interface TimTable {
     id?: string;
     addRowButtonText?: string;
     forcedEditMode?: boolean;
+    globalAppendMode?: boolean;
 }
 
 export interface ITable extends ITableStyles {
@@ -507,78 +508,80 @@ export class TimTableController implements IController {
      * @param {KeyboardEvent} ev KeyboardEvent
      */
     private keyDownPressedTable(ev: KeyboardEvent) {
-        if (this.mouseInTable) {
-            if (ev.keyCode === 113) { // F2
-                const modal: CellEntity = {
-                    cell: "",
-                };
-                if (this.currentCell != undefined && !this.bigEditorOpen) {
-                    this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
-                    return;
-                }
+        if (!this.mouseInTable) {
+            return;
+        }
 
-                // if no cell is being edited, open the last-edited cell for editing
-                if (this.lastEditedCell != undefined) {
-                    this.openCell(this.lastEditedCell.row, this.lastEditedCell.col);
-                    return;
-                }
+        if (ev.keyCode === 113) { // F2
+            const modal: CellEntity = {
+                cell: "",
+            };
+            if (this.currentCell != undefined && !this.bigEditorOpen) {
+                this.editorOpen(modal, this.currentCell.row, this.currentCell.col);
+                return;
             }
 
-            if (ev.keyCode === 13) { // Enter
-                if (!this.isInEditMode() || !this.viewctrl) {
-                    return;
-                }
+            // if no cell is being edited, open the last-edited cell for editing
+            if (this.lastEditedCell != undefined) {
+                this.openCell(this.lastEditedCell.row, this.lastEditedCell.col);
+                return;
+            }
+        }
 
-                const parId = getParId(this.element.parents(".par"));
-
-                if (parId && this.currentCell !== undefined && this.currentCell.row !== undefined && this.currentCell.col !== undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
-                    const value = this.editedCellContent;
-                    if (typeof value === "string" && this.editedCellInitialContent !== value) {
-                        this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
-                    }
-                    if (this.data.table.rows && this.currentCell.row === this.data.table.rows.length - 1) {
-                        this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
-                    } else {
-                        this.openCellNextRowOrColumn(this.currentCell.row + 1, this.currentCell.col);
-                    }
-                    return;
-                }
-
-                if (this.lastEditedCell) {
-                    this.openCell(this.lastEditedCell.row, this.lastEditedCell.col);
-                }
+        if (ev.keyCode === 13) { // Enter
+            if (!this.isInEditMode() || !this.viewctrl) {
+                return;
             }
 
-            if (ev.keyCode === 9) { // Tab
-                const parId = getParId(this.element.parents(".par"));
-                if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
-                    return;
-                }
-                if (this.currentCell !== undefined && this.currentCell.row !== undefined && this.currentCell.col !== undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
-                    const value = this.editedCellContent;
-                    if (typeof value === "string" && this.editedCellInitialContent !== value) {
-                        this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
-                    }
-                }
+            const parId = getParId(this.element.parents(".par"));
 
-                if (this.currentCell) {
+            if (parId && this.currentCell !== undefined && this.currentCell.row !== undefined && this.currentCell.col !== undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
+                const value = this.editedCellContent;
+                if (typeof value === "string" && this.editedCellInitialContent !== value) {
+                    this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
+                }
+                if (this.data.table.rows && this.currentCell.row === this.data.table.rows.length - 1) {
                     this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
+                } else {
+                    this.openCellNextRowOrColumn(this.currentCell.row + 1, this.currentCell.col);
                 }
-
                 return;
             }
 
-            if (ev.keyCode === 27) { // esc
-                this.currentCell = undefined;
-                this.scope.$apply();
+            if (this.lastEditedCell) {
+                this.openCell(this.lastEditedCell.row, this.lastEditedCell.col);
+            }
+        }
+
+        if (ev.keyCode === 9) { // Tab
+            const parId = getParId(this.element.parents(".par"));
+            if (!this.editing || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
                 return;
             }
-
-            // Arrow keys
-            if (!this.currentCell && ev.ctrlKey && (ev.keyCode === 40 || ev.keyCode === 39 || ev.keyCode === 38 || ev.keyCode === 37)) {
-                this.handleArrowMovement(ev);
-                this.scope.$apply();
+            if (this.currentCell !== undefined && this.currentCell.row !== undefined && this.currentCell.col !== undefined) { // if != undefined is missing, then returns some number if true, if the number is 0 then statement is false
+                const value = this.editedCellContent;
+                if (typeof value === "string" && this.editedCellInitialContent !== value) {
+                    this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
+                }
             }
+
+            if (this.currentCell) {
+                this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
+            }
+
+            return;
+        }
+
+        if (ev.keyCode === 27) { // esc
+            this.currentCell = undefined;
+            this.scope.$apply();
+            return;
+        }
+
+        // Arrow keys
+        if (!this.currentCell && ev.ctrlKey && (ev.keyCode === 40 || ev.keyCode === 39 || ev.keyCode === 38 || ev.keyCode === 37)) {
+            this.handleArrowMovement(ev);
+            this.scope.$apply();
         }
     }
 
@@ -969,8 +972,16 @@ export class TimTableController implements IController {
 
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
-        const response = await $http.post<TimTable>("/timTable/addRow",
-            {docId, parId});
+        let response;
+
+        if (this.isInGlobalAppendMode()) {
+            response = await $http.post<TimTable>("/timTable/addUserSpecificRow",
+                {docId, parId});
+        } else {
+            response = await $http.post<TimTable>("/timTable/addRow",
+                {docId, parId});
+        }
+
         this.data = response.data;
         this.reInitialize();
     }
@@ -1065,6 +1076,18 @@ export class TimTableController implements IController {
         });
 
         return highestCellCount;
+    }
+
+    /**
+     * Checks whether the table is in global append mode.
+     * @returns {boolean} True if the table is in global append mode, otherwise false.
+     */
+    private isInGlobalAppendMode() {
+        if (this.data.globalAppendMode) {
+            return this.data.globalAppendMode;
+        }
+
+        return false;
     }
 
     /**
