@@ -455,7 +455,7 @@ export class TimTableController implements IController {
                 const numberPlace = item.substring(alpha[0].length);
 
                 const address = this.getAddress(alpha[0], numberPlace);
-                if (this.checkThatAddIsValid(address)) {
+                if (this.checkThatAddIsValid(address) && value != null) {
                     this.setValueToMatrix(address.col, address.row, value.toString());
                 }
             }
@@ -732,6 +732,7 @@ export class TimTableController implements IController {
             }
         }
 
+        this.calculateElementPlaces(rowi, coli, event);
         this.saveCurrentCell();
         const cellData = this.cellDataMatrix[rowi][coli];
         this.editedCellContent = cellData;
@@ -739,7 +740,6 @@ export class TimTableController implements IController {
         this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
         this.lastEditedCell = {row: rowi, col: coli};
         this.currentCell = {row: rowi, col: coli, editorOpen: false};
-        this.calculateElementPlaces(rowi, coli, event);
     }
 
     /**
