@@ -766,14 +766,14 @@ export class TimTableController implements IController {
             }
         }
 
-        this.calculateElementPlaces(rowi, coli, event);
         this.saveCurrentCell();
-        const cellData = this.cellToString(this.cellDataMatrix[rowi][coli].cell);
+        const cellData = this.getCellContentString(rowi, coli);
         this.editedCellContent = cellData;
         this.editedCellInitialContent = cellData;
         this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
         this.lastEditedCell = {row: rowi, col: coli};
         this.currentCell = {row: rowi, col: coli, editorOpen: false};
+        this.calculateElementPlaces(rowi, coli, event);
     }
 
     /**
