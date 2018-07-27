@@ -1,6 +1,6 @@
 import copy
 import json
-from typing import Optional
+from typing import Optional, Union
 from xml.sax.saxutils import quoteattr
 from distutils import util
 from flask import Blueprint
@@ -63,7 +63,7 @@ class TimTable:
 
 
 class RelativeDataBlockValue:
-    def __init__(self, row: int, column: int, data: str):
+    def __init__(self, row: int, column: int, data: Union[str, dict]):
         self.row = row
         self.column = column
         self.data = data
@@ -438,11 +438,11 @@ def create_datablock(table: dict):
     :return:
     """
     table[DATABLOCK] = {}
-    table[DATABLOCK][TYPE] = 'relative'
+    table[DATABLOCK][TYPE] = RELATIVE
     table[DATABLOCK][CELLS] = {}
 
 
-def save_cell(datablock: dict, row: int, col: int, cell_content: str):
+def save_cell(datablock: dict, row: int, col: int, cell_content: Union[str, dict]):
     """
     Updates datablock with the content and the coordinate of a cell.
     :param datablock:
@@ -453,7 +453,7 @@ def save_cell(datablock: dict, row: int, col: int, cell_content: str):
     """
     coordinate = colnum_to_letters(col) + str(row+1)
     try:
-        datablock['cells'].update({coordinate: cell_content})
+        datablock[CELLS].update({coordinate: cell_content})
     except:
         pass
 
@@ -608,8 +608,13 @@ def prepare_for_dumbo(values):
 
     if data_block is not None:
         for key, value in data_block.items():
-            if isinstance(value, str) and not value.startswith('md:'):
-                data_block[key] = 'md: ' + value
+            if isinstance(value, str):
+                if not value.startswith('md:'):
+                    data_block[key] = 'md: ' + value
+            elif isinstance(value, dict):
+                for subkey, subvalue in value.items():
+                    if isinstance(subvalue, str) and not subvalue.startswith('md:'):
+                        data_block[key][subkey] = 'md: ' + subvalue
 
     return values
 

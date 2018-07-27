@@ -64,7 +64,7 @@ export interface DataEntity {
 }
 
 export interface CellDataEntity {
-    [key: string]: string;
+    [key: string]: CellEntity;
 }
 
 export type CellType = string | number | boolean | null;
@@ -132,6 +132,7 @@ export interface ICell { // extends ICellStyles
     row?: number;
     col?: number;
     inputScope?: boolean | undefined;
+    [key: string]: any;
 }
 
 export interface IColumn { // extends IColumnStyles
@@ -187,7 +188,7 @@ function isPrimitiveCell(cell: CellEntity): cell is CellType {
 export class TimTableController implements IController {
     private static $inject = ["$scope", "$element"];
     public viewctrl?: ViewCtrl;
-    public cellDataMatrix: string[][] = [];
+    public cellDataMatrix: ICell[][] = [];
     private data!: Binding<TimTable, "<">;
     private editing: boolean = false;
     private forcedEditMode: boolean = false;
@@ -303,7 +304,7 @@ export class TimTableController implements IController {
             col,
         });
         const cellHtml = response.data[0];
-        this.cellDataMatrix[row][col] = cellHtml;
+        this.cellDataMatrix[row][col].cell = cellHtml;
     }
 
     /**
@@ -410,12 +411,43 @@ export class TimTableController implements IController {
                     item.row.forEach((item2, index2) => {
                         if (item.row) {
                             const itemInRow = item.row[index2];
-                            if (isPrimitiveCell(itemInRow)) { this.cellDataMatrix[index][index2] = this.cellToString(itemInRow); } else { this.cellDataMatrix[index][index2] = this.cellToString(itemInRow.cell); }
+                            // this.cellDataMatrix[index][index2] = this.cellEntityToString(itemInRow);
+                            this.cellDataMatrix[index][index2] = {cell: ""};
+                            this.applyCellEntityAttributesToICell(itemInRow, this.cellDataMatrix[index][index2]);
                         }
                     });
                 }
             });
         }
+    }
+
+    /**
+     * Applies a cell entity's possible attributes to an ICell instance.
+     * @param {CellEntity} sourceCell The source CellEntity from which the attributes are taken.
+     * @param {ICell} targetCell The ICell instance to which the attributes are applied to.
+     */
+    private applyCellEntityAttributesToICell(sourceCell: CellEntity, targetCell: ICell) {
+        if (isPrimitiveCell(sourceCell)) {
+            targetCell.cell = this.cellToString(sourceCell);
+            return;
+        }
+
+        for (const key of Object.keys(sourceCell)) {
+            targetCell[key] = sourceCell[key];
+        }
+    }
+
+    /**
+     * Returns a cell's content as a string.
+     * @param {CellEntity} cell The cell.
+     * @returns {string | string} The cell's content.
+     */
+    private cellEntityToString(cell: CellEntity) {
+        if (isPrimitiveCell(cell)) {
+            return this.cellToString(cell);
+        }
+
+        return this.cellToString(cell.cell);
     }
 
     /**
@@ -430,13 +462,13 @@ export class TimTableController implements IController {
 
 
     /**
-     * Returns a cell's content as a string.
+     * Returns a cell's content from the datablock.
      * @param {number} rowi: Table row index
      * @param {number} coli: Table column index
      * @returns {string | string}
      */
     private getCellContentString(rowi: number, coli: number) {
-        return this.cellDataMatrix[rowi][coli];
+        return this.cellToString(this.cellDataMatrix[rowi][coli].cell);
     }
 
 
@@ -455,11 +487,13 @@ export class TimTableController implements IController {
                 const numberPlace = item.substring(alpha[0].length);
 
                 const address = this.getAddress(alpha[0], numberPlace);
-                if (this.checkThatAddIsValid(address) && value != null) {
-                    this.setValueToMatrix(address.col, address.row, value.toString());
+                if (this.checkThatAddIsValid(address) && value) {
+                    this.setValueToMatrix(address.row, address.col, value);
                 }
             }
         }
+
+        const cdm = this.cellDataMatrix;
     }
 
     /**
@@ -488,8 +522,22 @@ export class TimTableController implements IController {
             reversedCharacterPlaceInString++;
         }
         columnIndex = columnIndex - 1;
-        const rowIndex: number = parseInt(rowValue) - 1;
+        const rowIndex: number = parseInt(rowValue) - 1; /////a
         return {col: columnIndex, row: rowIndex};
+    }
+
+    /**
+     * Sets a value to specific index in cellDataMatrix
+     * @param {number} row Row index
+     * @param {number} col Column index
+     * @param {string} value Stored value
+     */
+    private setValueToMatrix(row: number, col: number, value: CellEntity) {
+        try {
+            this.applyCellEntityAttributesToICell(value, this.cellDataMatrix[row][col]);
+        } catch (e) {
+            console.log("datacellMatrix is not big enough"); // this.updateCellDataMatrix(col, row);
+        }
     }
 
     /**
@@ -702,20 +750,6 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Sets a value to specific index in cellDataMatrix
-     * @param {number} row Row index
-     * @param {number} col Column index
-     * @param {string} value Stored value
-     */
-    private setValueToMatrix(row: number, col: number, value: string) {
-        try {
-            this.cellDataMatrix[col][row] = value;
-        } catch (e) {
-            console.log("datacellMatrix is not big enough"); // this.updateCellDataMatrix(col, row);
-        }
-    }
-
-    /**
      * Deals with cell clicking
      * @param {CellEntity} cell Cell that was clicked
      * @param {number} rowi Row index
@@ -734,7 +768,7 @@ export class TimTableController implements IController {
 
         this.calculateElementPlaces(rowi, coli, event);
         this.saveCurrentCell();
-        const cellData = this.cellDataMatrix[rowi][coli];
+        const cellData = this.cellToString(this.cellDataMatrix[rowi][coli].cell);
         this.editedCellContent = cellData;
         this.editedCellInitialContent = cellData;
         this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
@@ -825,7 +859,7 @@ export class TimTableController implements IController {
      * @param {number} rowi Table row index
      * @param {number] coli Table column index
      */
-    private stylingForCell(cell: CellEntity, rowi: number, coli: number) {
+    private stylingForCell(rowi: number, coli: number) {
         const styles = this.stylingForCellOfColumn(coli);
 
         if (this.getCellContentString(rowi, coli) === "") {
@@ -833,11 +867,12 @@ export class TimTableController implements IController {
             styles["width"] = "4em";
         }
 
-        if (isPrimitiveCell(cell)) {
-            return styles;
+        const cell = this.cellDataMatrix[rowi][coli];
+
+        if (!isPrimitiveCell(cell)) {
+            this.applyStyle(styles, cell, cellStyles);
         }
 
-        this.applyStyle(styles, cell, cellStyles);
         return styles;
     }
 
@@ -931,7 +966,7 @@ export class TimTableController implements IController {
      */
     private applyStyle(styles: { [index: string]: string }, object, validAttrs: Set<string>) {
         for (const key of Object.keys(object)) {
-            if (!columnCellStyles.has(key)) {
+            if (!validAttrs.has(key)) {
                 continue;
             }
 
@@ -1161,8 +1196,8 @@ timApp.component("timTable", {
             ng-style="$ctrl.stylingForRow(r)">
                 <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
                  ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}" id={{td.id}}"
-                    ng-style="$ctrl.stylingForCell(td, rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
-                    <div ng-bind-html="$ctrl.cellDataMatrix[rowi][coli]">
+                    ng-style="$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
+                    <div ng-bind-html="$ctrl.cellDataMatrix[rowi][coli].cell">
                     </div>
                 </td>
         </tr>
