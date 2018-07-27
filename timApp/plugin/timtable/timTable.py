@@ -171,46 +171,14 @@ def tim_table_get_cell_data():
     if is_datablock(yaml):
         cell_cnt = find_cell_from_datablock(yaml[TABLE][DATABLOCK][CELLS], int(args[ROW]), int(args[COL]))
     if cell_cnt is not None:
-        multi.append(cell_cnt)
+        if isinstance(cell_cnt, dict):
+            multi.append(cell_cnt[CELL])
+        else:
+            multi.append(cell_cnt)
     else:
         rows = yaml[TABLE][ROWS]
         cell_content = find_cell(rows,int(args['row']),int(args['col']))
         multi.append(cell_content)
-    return json_response(multi)
-
-
-@timTable_plugin.route("saveCell", methods=["POST"])
-def tim_table_save_cell_list():
-    """
-    Saves cell content
-    :return: The cell content as html
-    """
-    multi = []
-    cell_content, docid, parid, row, col = verify_json_params('cellContent', 'docId', 'parId', 'row', 'col')
-    d, plug = get_plugin_from_paragraph(docid, parid)
-    yaml = plug.values
-    # verify_edit_access(d)
-    if is_in_global_append_mode(plug):
-        raise NotImplementedError
-        user = get_current_user_object()
-        q = RowOwnerInfo.query
-        # TODO figure out filter
-        # q.filter()
-    else:
-        verify_edit_access(d)
-
-    if is_datablock(yaml):
-        save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
-    else:
-        create_datablock(yaml[TABLE])
-        save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
-
-    cc = str(cell_content)
-    if plug.is_automd_enabled(True) and not cc.startswith('md:'):
-        cc = 'md: ' + cc
-    html = call_dumbo([cc], DUMBO_PARAMS)
-    plug.save()
-    multi.append(html[0])
     return json_response(multi)
 
 
@@ -442,6 +410,41 @@ def create_datablock(table: dict):
     table[DATABLOCK][CELLS] = {}
 
 
+@timTable_plugin.route("saveCell", methods=["POST"])
+def tim_table_save_cell_list():
+    """
+    Saves cell content
+    :return: The cell content as html
+    """
+    multi = []
+    cell_content, docid, parid, row, col = verify_json_params('cellContent', 'docId', 'parId', 'row', 'col')
+    d, plug = get_plugin_from_paragraph(docid, parid)
+    yaml = plug.values
+    # verify_edit_access(d)
+    if is_in_global_append_mode(plug):
+        raise NotImplementedError
+        user = get_current_user_object()
+        q = RowOwnerInfo.query
+        # TODO figure out filter
+        # q.filter()
+    else:
+        verify_edit_access(d)
+
+    if is_datablock(yaml):
+        save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
+    else:
+        create_datablock(yaml[TABLE])
+        save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
+
+    cc = str(cell_content)
+    if plug.is_automd_enabled(True) and not cc.startswith('md:'):
+        cc = 'md: ' + cc
+    html = call_dumbo([cc], DUMBO_PARAMS)
+    plug.save()
+    multi.append(html[0])
+    return json_response(multi)
+
+
 def save_cell(datablock: dict, row: int, col: int, cell_content: Union[str, dict]):
     """
     Updates datablock with the content and the coordinate of a cell.
@@ -453,6 +456,13 @@ def save_cell(datablock: dict, row: int, col: int, cell_content: Union[str, dict
     """
     coordinate = colnum_to_letters(col) + str(row+1)
     try:
+        cells = datablock[CELLS]
+        if coordinate in cells:
+            existing_value = cells[coordinate]
+            if isinstance(existing_value, dict):
+                existing_value[CELL] = cell_content
+                return
+
         datablock[CELLS].update({coordinate: cell_content})
     except:
         pass
