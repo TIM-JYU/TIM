@@ -864,7 +864,7 @@ export class TimTableController implements IController {
 
         if (this.getCellContentString(rowi, coli) === "") {
             styles["height"] = "2em";
-            styles["width"] = "4em";
+            styles["width"] = "2em";
         }
 
         const cell = this.cellDataMatrix[rowi][coli];
