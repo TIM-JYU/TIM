@@ -467,7 +467,7 @@ def search():
     # Only search documents that have current user as owner.
     search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
     # Don't create more than # previews per document.
-    max_previews = get_option(request, 'maxPreviews', default=10, cast=int)
+    max_previews = get_option(request, 'maxPreviews', default=max_results_doc, cast=int)
 
     search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)

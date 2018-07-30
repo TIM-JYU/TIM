@@ -322,7 +322,6 @@ export class SearchBoxCtrl implements IController {
                 ignorePluginsSettings: this.ignorePluginsSettings,
                 maxDocPars: 1000,
                 maxDocResults: this.maxDocResults,
-                maxPreviews: 10,
                 maxTime: 15,
                 maxTotalResults: 10000,
                 query: this.query,
