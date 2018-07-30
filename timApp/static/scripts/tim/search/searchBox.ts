@@ -114,6 +114,7 @@ export class SearchBoxCtrl implements IController {
     private searchWords: boolean = true; // Content search. On by default.
     private searchExactWords: boolean = false; // Whole word search.
     private maxDocResults: number = 100; // Limit for searched results per doc.
+    private maxDocPars: number = 250; // Limit number of searched paragraphs / doc.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
 
     private errorMessage: string = ""; // Message displayed only in search panel.
@@ -125,7 +126,9 @@ export class SearchBoxCtrl implements IController {
         optionsStorage: null | boolean[],
         optionsValueStorage: null | number[]};
     private folderSuggestions: string[] = []; // A list of folder path suggestions.
-    private resultsDialog: ShowSearchResultController | null = null; // The most recent search result dialog.
+    private resultsDialog: ShowSearchResultController | null = null;
+
+    // The most recent search result dialog.
 
     constructor() {
         this.storage = $localStorage.$default({
@@ -226,6 +229,7 @@ export class SearchBoxCtrl implements IController {
         }
         this.storage.optionsValueStorage = [];
         this.storage.optionsValueStorage.push(this.maxDocResults);
+        this.storage.optionsValueStorage.push(this.maxDocPars);
 
         this.storage.optionsStorage = [];
         // Alphabetical order.
@@ -248,8 +252,9 @@ export class SearchBoxCtrl implements IController {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
         }
-        if (this.storage.optionsValueStorage && this.storage.optionsValueStorage.length > 0) {
+        if (this.storage.optionsValueStorage && this.storage.optionsValueStorage.length > 1) {
             this.maxDocResults = this.storage.optionsValueStorage[0];
+            this.maxDocPars = this.storage.optionsValueStorage[1];
         }
         if (this.storage.optionsStorage && this.storage.optionsStorage.length > 9) {
             this.advancedSearch = this.storage.optionsStorage[0];
@@ -320,7 +325,7 @@ export class SearchBoxCtrl implements IController {
                 caseSensitive: this.caseSensitive,
                 folder: this.folder,
                 ignorePluginsSettings: this.ignorePluginsSettings,
-                maxDocPars: 150,
+                maxDocPars: this.maxDocPars,
                 maxDocResults: this.maxDocResults,
                 maxTime: 15,
                 maxTotalResults: 10000,
@@ -512,12 +517,21 @@ timApp.component("searchBox", {
                 </div>
            </div>
             <div class="form-group" title="Input maximum number of searched content matches per a document">
-                <label for="max-doc-results-selector" class="col-sm-7 control-label font-weight-normal"
-                style="text-align:left;">Max content results / document:</label>
-                <div class="col-sm-5">
+                <label for="max-doc-results-selector" class="col-sm-8 control-label font-weight-normal"
+                style="text-align:left;">Max content results per document:</label>
+                <div class="col-sm-4">
                     <input ng-model="$ctrl.maxDocResults" name="max-doc-results-selector"
-                           type="number" class="form-control" id="folder-selector"
+                           type="number" class="form-control" id="max-doc-results-selector"
                            placeholder="Input max # of results per document">
+                </div>
+            </div>
+            <div class="form-group" title="Input maximum number of searched paragraphs per a document">
+                <label for="max-par-selector" class="col-sm-8 control-label font-weight-normal"
+                style="text-align:left;">Max searched paragraphs per document:</label>
+                <div class="col-sm-4">
+                    <input ng-model="$ctrl.maxDocPars" name="max-par-selector"
+                           type="number" class="form-control" id="max-par-selector""
+                           placeholder="Input max # of searched paragraphs per document">
                 </div>
             </div>
         <label class="font-weight-normal" title="Distinguish between upper and lower case letters">

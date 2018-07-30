@@ -454,7 +454,7 @@ def search():
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
 
     # Limit how many pars are searched from any document. The rest are skipped.
-    max_doc_pars = get_option(request, 'maxDocPars', default=1000, cast=int)
+    max_doc_pars = get_option(request, 'maxDocPars', default=10000, cast=int)
     # Limit number of found search results after which the search will end.
     # If number of results is very high, just showing them will crash the search.
     max_results_total = get_option(request, 'maxTotalResults', default=10000, cast=int)
