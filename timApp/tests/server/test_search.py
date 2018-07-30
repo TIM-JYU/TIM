@@ -12,7 +12,7 @@ class SearchTest(TimRouteTest):
         d = self.create_doc(initial_par=text_in_document)
         url = f'search?caseSensitive=false&folder=&ignorePluginsSettings=false&maxDocPars=999' \
               f'&query={text_to_search}&regex=false&searchDocNames=false&searchWords=true'
-        self.get(url, expect_status=200, expect_content={'complete': True,
+        self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
                                                          'errors': [],
                                                          'results': [{'doc': {'id': d.id,
                                                                               'isFolder': False,
@@ -34,6 +34,7 @@ class SearchTest(TimRouteTest):
                                                                                          'teacher': True},
                                                                               'title': d.title,
                                                                               'unpublished': True},
+                                                                      'incomplete': False,
                                                                       'num_par_results': 1,
                                                                       'num_title_results': 0,
                                                                       'par_results': [{'num_results': 1,
@@ -60,7 +61,7 @@ class SearchTest(TimRouteTest):
         text_to_search = 'Another text to search'
         url = f'search?caseSensitive=false&folder=&ignorePluginsSettings=false&maxDocPars=999' \
               f'&query={text_to_search}&regex=false&searchDocNames=false&searchWords=true'
-        self.get(url, expect_status=200, expect_content={'complete': True,
+        self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
                                                          'errors': [],
                                                          'results': [],
                                                          'titleResultCount': 0,
@@ -74,7 +75,7 @@ class SearchTest(TimRouteTest):
         text_to_search_upper = 'TEXT TO SEARCH'
         url = f'search?caseSensitive={case_sensitive}&folder=&ignorePluginsSettings=false&maxDocPars=999' \
               f'&query={text_to_search_upper}&regex=false&searchDocNames=false&searchWords=true'
-        self.get(url, expect_status=200, expect_content={'complete': True,
+        self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
                                                          'errors': [],
                                                          'results': [],
                                                          'titleResultCount': 0,
@@ -90,8 +91,8 @@ class SearchTest(TimRouteTest):
         url = f'search?caseSensitive=false&folder=&ignorePluginsSettings=false&maxDocPars=999&' \
               f'query={text_to_search}&searchExactWords={whole_words}&regex=false&searchDocNames=false&' \
               f'searchWords=true'
-        self.get(url, expect_status=200, expect_content={'complete': True,
-                                                         'errors': [],
+        self.get(url, expect_status=200, expect_content={'errors': [],
+                                                         'incomplete_search_reason': '',
                                                          'results': [{'doc': {'id': d.id,
                                                                               'isFolder': False,
                                                                               'location': d.location,
@@ -112,6 +113,7 @@ class SearchTest(TimRouteTest):
                                                                                          'teacher': True},
                                                                               'title': d.title,
                                                                               'unpublished': True},
+                                                                      'incomplete': False,
                                                                       'num_par_results': 1,
                                                                       'num_title_results': 0,
                                                                       'par_results': [{'num_results': 1,
@@ -134,7 +136,7 @@ class SearchTest(TimRouteTest):
         text_to_search = d.title
         url = f'search?caseSensitive=false&folder=&ignorePluginsSettings=false&maxDocPars=1000' \
               f'&query={text_to_search}&regex=false&searchDocNames={search_titles}&searchWords=false'
-        self.get(url, expect_status=200, expect_content={'complete': True,
+        self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
                                                          'errors': [],
                                                          'results': [{'doc': {'id': d.id,
                                                                               'isFolder': False,
@@ -156,6 +158,7 @@ class SearchTest(TimRouteTest):
                                                                                          'teacher': True},
                                                                               'title': d.title,
                                                                               'unpublished': True},
+                                                                      'incomplete': False,
                                                                       'num_par_results': 0,
                                                                       'num_title_results': 1,
                                                                       'par_results': [],
@@ -178,8 +181,8 @@ class SearchTest(TimRouteTest):
 
         tag_to_search = 'dog'
         url = f'search/tags?caseSensitive=true&folder=&query={tag_to_search}&regex=false'
-        self.get(url, expect_status=200, expect_content={'complete': True,
-                                                         'errors': [],
+        self.get(url, expect_status=200, expect_content={'errors': [],
+                                                         'incomplete_search_reason': '',
                                                          'results': [{'doc': {'id': d.id,
                                                                               'isFolder': False,
                                                                               'location': d.location,
