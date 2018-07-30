@@ -353,7 +353,7 @@ class DocResult:
     Contains one document's title and word search information.
     """
 
-    def __init__(self, doc_info: DocInfo, par_results=None, title_results=None):
+    def __init__(self, doc_info: DocInfo, par_results=None, title_results=None, incomplete=False):
         if par_results is None:
             par_results = []
         if title_results is None:
@@ -361,6 +361,7 @@ class DocResult:
         self.doc_info = doc_info
         self.par_results = par_results
         self.title_results = title_results
+        self.incomplete = incomplete
 
     def add_par_result(self, result: ParResult):
         """
@@ -400,7 +401,7 @@ class DocResult:
         for r in self.title_results:
             title_result_dicts.append(r.to_dict())
         return {
-            'doc': self.doc_info,
+            'doc': self.doc_info, 'incomplete': self.incomplete,
             'title_results': title_result_dicts, 'num_title_results': self.get_title_match_count(),
             'par_results': par_result_dicts, 'num_par_results': self.get_par_match_count()}
 
@@ -509,7 +510,6 @@ def search():
 
     try:
         term_regex = re.compile(term, flags)
-
         for d in docs:
             try:
                 d_words_count = 0
@@ -547,8 +547,9 @@ def search():
 
                         # If results per document limit is reached, move on to the next doc.
                         if d_words_count >= max_results_doc:
-                            incomplete_search_reason = f"document '{d.path}' has more than the maximum of " \
+                            incomplete_search_reason = f"one or more documents have more than the maximum of " \
                                                        f"{max_results_doc} results"
+                            doc_result.incomplete = True
                             break
                         d_words_count += 1
 
@@ -606,7 +607,6 @@ def search():
                     json_response(clean_r)
                 except TypeError as e:
                     # Report the offending paragraph.
-                    print("help")
                     error = f"Formatting JSON-response for a result failed: {e}"
                     log_search_error(error, query, r.doc_info.path, par="")
                     incomplete_search_reason = f"error in formatting JSON-response in document '{r.doc_info.path}'"

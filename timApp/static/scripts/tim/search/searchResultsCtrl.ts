@@ -91,7 +91,12 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
         this.displayResults = [];
         const tagResultsFoundHome: ITagSearchResult[] = [];
         for (const r of this.results) {
-            const newDisplayResult: ISearchResultDisplay = {result: r, closed: true, tags: [], num_tag_results: 0};
+            const newDisplayResult: ISearchResultDisplay = {
+                closed: true,
+                num_tag_results: 0,
+                result: r,
+                tags: [],
+                };
             for (const t of this.tagResults) {
                 if (t.doc.id === r.doc.id) {
                     newDisplayResult.tags = t.matching_tags;
@@ -119,6 +124,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
                         num_tag_results: t.num_results,
                         result: {
                             doc: t.doc,
+                            incomplete: false,
                             num_par_results: 0,
                             num_title_results: 0,
                             par_results: [],
@@ -216,9 +222,11 @@ registerDialogComponent("timSearchResults",
                     title="Toggle preview"></i></a>
                 <a href="/view/{{r.result.doc.path}}" title="Open {{r.result.doc.title}}">{{r.result.doc.title}}</a>
                 <i>{{r.result.doc.path}}</i>
-                 ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}} <ng-pluralize
+                 ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}} <span
+                ng-if="r.result.incomplete">or more matches)</span>
+                <ng-pluralize ng-if="!r.result.incomplete"
                 count="r.result.num_par_results + r.result.num_title_results + r.num_tag_results"
-                when="{'1': 'match', 'other': 'matches'}"></ng-pluralize>)
+                when="{'1': 'match)', 'other': 'matches)'}"></ng-pluralize>
                 <ul ng-if="!r.closed">
                     <li ng-repeat="p in r.result.par_results">
                         <a href="/view/{{r.result.doc.path}}#{{p.par_id}}" title="Open paragraph">{{p.preview}}</a>

@@ -50,6 +50,7 @@ export interface IDocSearchResult {
     title_results: ITitleSearchResult[];
     num_par_results: number;
     num_title_results: number;
+    incomplete: boolean;
 }
 
 /**
