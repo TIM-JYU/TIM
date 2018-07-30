@@ -459,7 +459,7 @@ def search():
     # If number of results is very high, just showing them will crash the search.
     max_results_total = get_option(request, 'maxTotalResults', default=10000, cast=int)
     # Time limit for the searching process.
-    max_time = get_option(request, 'maxTime', default=25, cast=int)
+    max_time = get_option(request, 'maxTime', default=15, cast=int)
     # Limit the number of results per document.
     max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
     # Don't search paragraphs that are marked as plugin or setting.
@@ -507,16 +507,14 @@ def search():
     starting_time = time.clock()
     current_doc = "before search"
     current_par = "before search"
-
     try:
         term_regex = re.compile(term, flags)
         for d in docs:
+            d_words_count = 0
+            current_doc = d.path
+            doc_info = d.document.docinfo
+            doc_result = DocResult(doc_info)
             try:
-                d_words_count = 0
-                current_doc = d.path
-                doc_info = d.document.docinfo
-                doc_result = DocResult(doc_info)
-                # print(time.clock() - starting_time)
                 # Cut search before timeout.
                 if (time.clock() - starting_time) > max_time:
                     incomplete_search_reason = f"search timeout after {max_time} seconds"
@@ -552,7 +550,6 @@ def search():
                             doc_result.incomplete = True
                             break
                         d_words_count += 1
-
                         word_result = WordResult(match_word=r.match.group(0),
                                                  match_start=r.match.start(),
                                                  match_end=r.match.end())
@@ -577,6 +574,11 @@ def search():
                 error = "Unknown error"
                 try:
                     error = f"{str(e.__class__.__name__)}: {str(e)}"
+                    doc_result.incomplete = True
+                    incomplete_search_reason = error
+                    # Try adding the result despite error.
+                    if doc_result.has_results():
+                        results.append(doc_result)
                 except:
                     pass
                 finally:

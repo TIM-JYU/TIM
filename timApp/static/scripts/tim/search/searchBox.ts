@@ -183,7 +183,7 @@ export class SearchBoxCtrl implements IController {
         }
         this.updateLocalStorage();
         if (this.incompleteSearchReason.length > 0) {
-            this.resultErrorMessage = `Search was incomplete due to reason: ${this.incompleteSearchReason}.` +
+            this.resultErrorMessage = `Incomplete search: ${this.incompleteSearchReason}.` +
                 ` For better results choose more specific search options.`;
         }
         if (this.createNewWindow) {
@@ -355,7 +355,6 @@ export class SearchBoxCtrl implements IController {
             return;
         }
         if (response) {
-            console.log(response);
             this.results = response.data.results;
             this.incompleteSearchReason = response.data.incomplete_search_reason;
             this.wordMatchCount = response.data.wordResultCount;

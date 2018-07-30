@@ -180,7 +180,12 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
         }
         if (orderByOption.toString() === "3") {
             return function(r: ISearchResultDisplay) {
-                return - (r.result.num_par_results + r.num_tag_results + r.result.num_title_results);
+                let matches =  - (r.result.num_par_results + r.num_tag_results + r.result.num_title_results);
+                // Show "x or more matches" before "x matches".
+                if (r.result.incomplete) {
+                    matches -= 1;
+                }
+                return matches;
             };
         } else {
             return function(r: ISearchResultDisplay) {
