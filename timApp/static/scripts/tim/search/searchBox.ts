@@ -320,7 +320,7 @@ export class SearchBoxCtrl implements IController {
                 caseSensitive: this.caseSensitive,
                 folder: this.folder,
                 ignorePluginsSettings: this.ignorePluginsSettings,
-                maxDocPars: 1000,
+                maxDocPars: 150,
                 maxDocResults: this.maxDocResults,
                 maxTime: 15,
                 maxTotalResults: 10000,
