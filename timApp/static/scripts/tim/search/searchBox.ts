@@ -168,11 +168,11 @@ export class SearchBoxCtrl implements IController {
         }
         if (this.searchWords || this.searchDocNames) {
             // Server side has also a minimum length check for the query.
-            if (!this.folder.trim() && this.searchWords && !this.searchOwned) {
-                this.errorMessage = (`Content searches on root directory are not allowed.`);
-                this.loading = false;
-                return;
-            }
+            // if (!this.folder.trim() && this.searchWords && !this.searchOwned) {
+            //  //    this.errorMessage = (`Content searches on root directory are not allowed.`);
+            //     this.loading = false;
+            //     return;
+            // }
             await this.wordSearch();
         }
         if (this.results.length === 0 && this.tagResults.length === 0 && !this.errorMessage) {

@@ -1,8 +1,11 @@
 """Routes for searching."""
+import os
 import re
 import sre_constants
+import subprocess
 import time
 from datetime import datetime
+from subprocess import PIPE
 from typing import Generator, Match
 
 from flask import Blueprint
@@ -22,10 +25,12 @@ from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.tag import Tag
+from timApp.util import pdftools
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_error
+from timApp.util.pdftools import SubprocessError
 
 search_routes = Blueprint('search',
                           __name__,
@@ -436,6 +441,30 @@ class DocResult:
         return count
 
 
+def get_docs_with_word(query):
+    """
+    Gets ids of all documents containing the query word.
+    :param query:
+    :return:
+    """
+    dir = '/tim_files/pars/'
+    s = subprocess.Popen(f'find {dir} -type f -print0 | xargs -0 grep -li {query}',
+                         stdout=subprocess.PIPE,
+                         shell=True)
+    output = str(s.communicate()[0]).split(r"\n")
+    docs = set()
+    for line in output:
+        try:
+            if len(line) < 15:
+                continue
+            temp = line.replace(dir, "").replace('"', "").replace("'", "").replace("b", "")
+            temp = temp.split("/", 2)[0]
+            docs.add(int(temp))
+        except:
+            pass
+    return list(docs)
+
+
 @search_routes.route("")
 @cache.cached(key_prefix=make_cache_key)
 def search():
@@ -480,7 +509,13 @@ def search():
         abort(400, f'Whole word search text must be at least {MIN_EXACT_WORDS_QUERY_LENGTH} character(s) '
                    f'long with whitespace stripped.')
 
-    docs = list(set(get_documents(filter_user=current_user, filter_folder=folder, search_recursively=True)))
+    doc_ids = get_docs_with_word(query)
+    custom_filter = DocEntry.id.in_(doc_ids)
+    docs = list(set(get_documents(
+        filter_user=current_user,
+        custom_filter=custom_filter,
+        filter_folder=folder,
+        search_recursively=True)))
     if not docs:
         abort(400, f"Folder '{folder}' not found or not accessible")
     if search_owned_docs:
@@ -509,6 +544,7 @@ def search():
     starting_time = time.clock()
     current_doc = "before search"
     current_par = "before search"
+
     try:
         term_regex = re.compile(term, flags)
         for d in docs:
@@ -526,6 +562,7 @@ def search():
                     incomplete_search_reason = f"maximum of {max_results_total} total results reached"
                     break
 
+                # TODO: currently documents with only title match are filtered out before search.
                 if search_doc_names:
                     title_result = TitleResult()
                     d_title = doc_info.title
