@@ -233,7 +233,7 @@ registerDialogComponent("timSearchResults",
                 count="r.result.num_par_results + r.result.num_title_results + r.num_tag_results"
                 when="{'1': 'match)', 'other': 'matches)'}"></ng-pluralize>
                 <ul ng-if="!r.closed">
-                    <li ng-repeat="p in r.result.par_results">
+                    <li ng-repeat="p in r.result.par_results" ng-if="p.preview">
                         <a href="/view/{{r.result.doc.path}}#{{p.par_id}}" title="Open paragraph">{{p.preview}}</a>
                     </li>
                     <span ng-repeat="tag in r.tags" ng-if="!r.closed">

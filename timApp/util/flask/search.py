@@ -454,7 +454,7 @@ def search():
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
 
     # Limit how many pars are searched from any document. The rest are skipped.
-    max_doc_pars = get_option(request, 'maxDocPars', default=100, cast=int)
+    max_doc_pars = get_option(request, 'maxDocPars', default=1000, cast=int)
     # Limit number of found search results after which the search will end.
     # If number of results is very high, just showing them will crash the search.
     max_results_total = get_option(request, 'maxTotalResults', default=10000, cast=int)
@@ -466,6 +466,8 @@ def search():
     ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
     # Only search documents that have current user as owner.
     search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
+    # Don't create more than # previews per document.
+    max_previews = get_option(request, 'maxPreviews', default=10, cast=int)
 
     search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
@@ -549,6 +551,7 @@ def search():
                                                        f"{max_results_doc} results"
                             doc_result.incomplete = True
                             break
+
                         d_words_count += 1
                         word_result = WordResult(match_word=r.match.group(0),
                                                  match_start=r.match.start(),
@@ -565,7 +568,11 @@ def search():
                                 previous_par_result.add_result(word_result)
                             # Otherwise create a new entry to store the result.
                             else:
-                                par_result = ParResult(par_id=current_par, preview=preview(r.par, query, r.match))
+                                if len(doc_result.par_results) > max_previews:
+                                    par_preview = ""
+                                else:
+                                    par_preview = preview(r.par, query, r.match)
+                                par_result = ParResult(par_id=current_par, preview=par_preview)
                                 par_result.add_result(word_result)
                                 doc_result.add_par_result(par_result)
 
@@ -615,11 +622,11 @@ def search():
                 else:
                     clean_results.append(clean_r)
             return json_response({
-                'results': clean_results,
-                'incomplete_search_reason': incomplete_search_reason,
                 'titleResultCount': title_result_count,
                 'wordResultCount': word_result_count,
-                'errors': error_list
+                'errors': error_list,
+                'incomplete_search_reason': incomplete_search_reason,
+                'results': clean_results,
             })
         except MemoryError:
             abort(400, f"MemoryError: results too large")
