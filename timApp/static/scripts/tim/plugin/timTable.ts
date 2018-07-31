@@ -412,7 +412,7 @@ export class TimTableController implements IController {
                         if (item.row) {
                             const itemInRow = item.row[index2];
                             // this.cellDataMatrix[index][index2] = this.cellEntityToString(itemInRow);
-                            this.cellDataMatrix[index][index2] = {cell: ""};
+                            this.cellDataMatrix[index][index2] = this.createDummyCell();
                             this.applyCellEntityAttributesToICell(itemInRow, this.cellDataMatrix[index][index2]);
                         }
                     });
@@ -522,7 +522,7 @@ export class TimTableController implements IController {
             reversedCharacterPlaceInString++;
         }
         columnIndex = columnIndex - 1;
-        const rowIndex: number = parseInt(rowValue) - 1; /////a
+        const rowIndex: number = parseInt(rowValue) - 1;
         return {col: columnIndex, row: rowIndex};
     }
 
@@ -533,11 +533,44 @@ export class TimTableController implements IController {
      * @param {string} value Stored value
      */
     private setValueToMatrix(row: number, col: number, value: CellEntity) {
-        try {
-            this.applyCellEntityAttributesToICell(value, this.cellDataMatrix[row][col]);
-        } catch (e) {
-            console.log("datacellMatrix is not big enough"); // this.updateCellDataMatrix(col, row);
+        if (row >= this.cellDataMatrix.length) {
+            this.resizeCellDataMatrixHeight(row + 1);
         }
+        if (col >= this.cellDataMatrix[row].length) {
+            this.resizeRowWidth(row, col + 1);
+        }
+
+        this.applyCellEntityAttributesToICell(value, this.cellDataMatrix[row][col]);
+    }
+
+    /**
+     * Increases the height of the cell data matrix to the specified number.
+     * @param {number} length The new height of the cell data matrix.
+     */
+    private resizeCellDataMatrixHeight(length: number) {
+        for (let i = this.cellDataMatrix.length; i < length; i++) {
+            this.cellDataMatrix[i] = [];
+        }
+    }
+
+    /**
+     * Increases the width of a row in the cell data matrix.
+     * @param {number} rowIndex The index of the row to expand.
+     * @param {number} width The new width of the row.
+     */
+    private resizeRowWidth(rowIndex: number, width: number) {
+        const row = this.cellDataMatrix[rowIndex];
+        for (let i = row.length; i < width; i++) {
+            row[i] = this.createDummyCell();
+        }
+    }
+
+    /**
+     * Creates and returns an "empty" ICell with no content.
+     * @returns {{cell: string}}
+     */
+    private createDummyCell() {
+        return {cell: ""};
     }
 
     /**
@@ -825,7 +858,20 @@ export class TimTableController implements IController {
             const editOffset = edit.offset();
             const editOuterHeight = edit.outerHeight();
             const tableCellOffset = tablecell.offset();
+            const tableCellWidth = tablecell.outerWidth();
+
             const editOuterWidth = edit.outerWidth();
+
+            /*let editOuterWidth;
+            if (tableCellWidth) {
+                editOuterWidth = Math.max(200, tableCellWidth);
+            } else {
+                editOuterWidth = 200;
+            }
+
+            edit.width(editOuterWidth);*/
+
+
             if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
                 this.element.find(".buttonOpenBigEditor").offset({
                     left: tableCellOffset.left,
@@ -917,8 +963,14 @@ export class TimTableController implements IController {
      * Sets style attributes for rows
      * @param {IRow} row The row to be styled
      */
-    private stylingForRow(row: IRow) {
+    private stylingForRow(rowi: number) {
         const styles: { [index: string]: string } = {};
+
+        if (rowi >= this.data.table.rows.length) {
+            return styles;
+        }
+
+        const row = this.data.table.rows[rowi];
 
         // TODO decide what to do with this old implementation
         for (const key of Object.keys(row)) {
@@ -1170,6 +1222,26 @@ export class TimTableController implements IController {
 
         return false;
     }
+
+    private getColspan(rowi: number, coli: number) {
+        if (rowi >= this.data.table.rows.length ||
+            !this.data.table.rows[rowi].row || coli >= this.data.table.rows[rowi].row.length ||
+            !this.data.table.rows[rowi].row[coli].colspan) {
+            return 1;
+        }
+
+        return this.data.table.rows[rowi].row[coli].colspan;
+    }
+
+    private getRowspan(rowi: number, coli: number) {
+        if (rowi >= this.data.table.rows.length ||
+            !this.data.table.rows[rowi].row || coli >= this.data.table.rows[rowi].row.length ||
+            !this.data.table.rows[rowi].row[coli].rowspan) {
+            return 1;
+        }
+
+        return this.data.table.rows[rowi].row[coli].rowspan;
+    }
 }
 
 timApp.component("timTable", {
@@ -1192,10 +1264,10 @@ timApp.component("timTable", {
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
              ng-style="$ctrl.stylingForColumn(c)"/>
-        <tr ng-repeat="r in $ctrl.data.table.rows" ng-init="rowi = $index" id={{r.id}}
-            ng-style="$ctrl.stylingForRow(r)">
+        <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
+            ng-style="$ctrl.stylingForRow(rowi)">
                 <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
-                 ng-repeat="td in r.row" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}" id={{td.id}}"
+                 ng-repeat="td in r" ng-init="coli = $index" colspan="$ctrl.getColspan(rowi, coli)" rowspan="$ctrl.getRowspan(rowi, coli)"
                     ng-style="$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.cellDataMatrix[rowi][coli].cell">
                     </div>
