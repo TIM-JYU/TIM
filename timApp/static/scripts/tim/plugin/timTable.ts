@@ -487,7 +487,7 @@ export class TimTableController implements IController {
                 const numberPlace = item.substring(alpha[0].length);
 
                 const address = this.getAddress(alpha[0], numberPlace);
-                if (this.checkThatAddIsValid(address) && value) {
+                if (this.checkThatAddIsValid(address)) {
                     this.setValueToMatrix(address.row, address.col, value);
                 }
             }
