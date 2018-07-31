@@ -734,22 +734,15 @@ export class TimTableController implements IController {
     }
 
     private constrainRowIndex(rowIndex: number) {
-        if (this.data.table.rows) {
-            if (rowIndex >= this.data.table.rows.length) { return 0; }
-            if (rowIndex < 0) { return this.data.table.rows.length - 1; }
-        }
-
+        if (rowIndex >= this.cellDataMatrix.length) { return 0; }
+        if (rowIndex < 0) { return this.cellDataMatrix.length - 1; }
         return rowIndex;
     }
 
     private constrainColumnIndex(rowIndex: number, columnIndex: number) {
-        if (this.data.table.rows && this.data.table.rows[rowIndex]) {
-            const rowrow = this.data.table.rows[rowIndex].row;
-            if (rowrow) {
-                if (columnIndex >= rowrow.length) { return 0; }
-                if (columnIndex < 0) { return rowrow.length - 1; }
-            }
-        }
+        const row = this.cellDataMatrix[rowIndex];
+        if (columnIndex >= row.length) { return 0; }
+        if (columnIndex < 0) { return row.length - 1; }
 
         return columnIndex;
     }
