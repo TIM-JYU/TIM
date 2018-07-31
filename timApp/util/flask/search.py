@@ -436,14 +436,31 @@ class DocResult:
         return count
 
 
-def get_docs_with_word(query):
+def search_with_grep(query, case_sensitive: bool, regex: bool, search_exact_words: bool):
     """
     Gets ids of all documents and paragraphs containing the query word.
     :param query:
     :return:
     """
     dir = '/tim_files/pars/'
-    s = subprocess.Popen(f'grep {query} all.log',
+    grep_flags = ""
+    if case_sensitive:
+        flags = re.DOTALL
+    else:
+        grep_flags += "-i "
+        flags = re.DOTALL | re.IGNORECASE
+    if regex:
+        term = query
+    else:
+        grep_flags += "-F "
+        term = re.escape(query)
+    if search_exact_words:
+        # Picks the term if it's a whole word, only word or separated by comma etc.
+        grep_flags += "-sw "
+        term = fr"(?:^|\W)({term})(?:$|\W)"
+    term_regex = re.compile(term, flags)
+
+    s = subprocess.Popen(f'grep {grep_flags}{query} all.log',
                          cwd=dir,
                          stdout=subprocess.PIPE,
                          shell=True)
@@ -451,9 +468,6 @@ def get_docs_with_word(query):
     output = output_str[2:].split(r"./")
     results = []
     doc_result = None
-
-    flags = re.DOTALL | re.IGNORECASE
-    term_regex = re.compile(query, flags)
 
     for line in output:
         try:
@@ -508,7 +522,7 @@ def get_docs_with_word(query):
 def create_search_file():
     dir = '/tim_files/pars/'
     file = 'all.log'
-    s = subprocess.Popen(f'grep -R "." --include="current" . > all.log 2>&1',
+    s = subprocess.Popen(f'grep -R "" --include="current" . > all.log 2>&1',
                          cwd=dir,
                          shell=True)
     s.communicate()
@@ -559,10 +573,14 @@ def search():
         abort(400, f'Whole word search text must be at least {MIN_EXACT_WORDS_QUERY_LENGTH} character(s) '
                    f'long with whitespace stripped.')
 
-    # TODO: Filter out documents without user access.
     # TODO: Filter out documents not in the search folder.
 
-    results = get_docs_with_word(query)
+    results = search_with_grep(
+        query,
+        case_sensitive=case_sensitive,
+        regex=regex_option,
+        search_exact_words=search_exact_words)
+
     results_dicts = []
     title_result_count = 0
     word_result_count = 0
