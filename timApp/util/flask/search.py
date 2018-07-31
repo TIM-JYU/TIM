@@ -183,19 +183,19 @@ def tag_search():
             abort(400, f"Error encountered while formatting JSON-response: {e}")
 
 
-def log_search_error(error: str, query: str, path: str, tag: str = "", par: str = "") -> None:
+def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str = "") -> None:
     """
     Forms an error report and sends it to timLog.
     :param error: The error's message
     :param query: Search word.
-    :param path: Document path.
+    :param doc: Document identifier.
     :param tag: Tag name.
     :param par: Par id.
     :return: None.
     """
     if not error:
         error = "Unknown error"
-    common_part = f"'{error}' while searching '{query}' in document {path}"
+    common_part = f"'{error}' while searching '{query}' in document {doc}"
     tag_part = ""
     par_part = ""
     if tag:
@@ -472,15 +472,22 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                          stdout=subprocess.PIPE,
                          shell=True)
     output_str = str(s.communicate()[0])
-    output = output_str[2:].split(r"./")
+    output_str = output_str[2:len(output_str) - 3]
+    output = output_str.split(r"}}\n")
     results = []
     doc_result = None
+    current_doc = ""
+    current_par = ""
 
     for line in output:
         try:
             if line or len(line) > 10:
-                temp = line[0:line.index("/current:")].split("/")
+                temp = line[2:line.index('{"id":')].split("/")
                 doc_id = int(temp[0])
+                par_id = temp[1]
+                current_doc = doc_id
+                current_par = par_id
+
                 doc_info = DocEntry.find_by_id(doc_id).document.get_docinfo()
 
                 # If not allowed to view, continue to the next one.
@@ -491,9 +498,8 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                 if not doc_info.path.startswith(folder):
                     continue
 
-                par_id = temp[1]
                 par_result = ParResult(par_id)
-                md = line[line.index('"md": "') + 7:line.index('", "t":')]. \
+                md = line[line.index('", "md": "') + 9:line.index('", "t": "')]. \
                     replace(r"\\u00e4", "ä").replace(r"\\u00f6", "ö").replace(r"\\n", " ")
 
                 matches = list(term_regex.finditer(md))
@@ -518,7 +524,7 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                 doc_result.add_par_result(par_result)
 
         except Exception as e:
-            print(e)
+            log_search_error(f"{str(e.__class__.__name__)}: {str(e)}", query, current_doc, par=current_par)
 
     # TODO: Check the logic here.
     # Since the loop ends before saving the last one, add it.
@@ -529,6 +535,10 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
 
 @search_routes.route("combinePars")
 def create_search_file():
+    """
+    Combines all TIM-paragraphs into one file.
+    :return:
+    """
     dir = '/tim_files/pars/'
     file = 'all.log'
     s = subprocess.Popen(f'grep -R "" --include="current" . > all.log 2>&1',
@@ -572,20 +582,24 @@ def title_search():
         abort(400, f"Invalid regex: {str(e)}")
     if term_regex:
         for d in docs:
-            title_result = TitleResult()
-            d_title = d.document.docinfo.title
-            matches = list(term_regex.finditer(d_title))
-            if matches:
-                for m in matches:
-                    result = WordResult(match_word=m.group(0),
-                                        match_start=m.start(),
-                                        match_end=m.end())
-                    title_result.add_result(result)
-            if title_result.has_results():
-                r = DocResult(d.document.docinfo)
-                r.add_title_result(title_result)
-                results_dicts.append(r.to_dict())
-                title_result_count += r.get_title_match_count()
+            current_doc = d.path
+            try:
+                title_result = TitleResult()
+                d_title = d.document.docinfo.title
+                matches = list(term_regex.finditer(d_title))
+                if matches:
+                    for m in matches:
+                        result = WordResult(match_word=m.group(0),
+                                            match_start=m.start(),
+                                            match_end=m.end())
+                        title_result.add_result(result)
+                if title_result.has_results():
+                    r = DocResult(d.document.docinfo)
+                    r.add_title_result(title_result)
+                    results_dicts.append(r.to_dict())
+                    title_result_count += r.get_title_match_count()
+            except Exception as e:
+                log_search_error(f"{str(e.__class__.__name__)}: {str(e)}", query, current_doc, par="")
 
     return json_response({
         'titleResultCount': title_result_count,
