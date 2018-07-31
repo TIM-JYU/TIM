@@ -1,11 +1,9 @@
 """Routes for searching."""
-import os
 import re
 import sre_constants
 import subprocess
 import time
 from datetime import datetime
-from subprocess import PIPE
 from typing import Generator, Match
 
 from flask import Blueprint
@@ -25,12 +23,10 @@ from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.tag import Tag
-from timApp.util import pdftools
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_error
-from timApp.util.pdftools import SubprocessError
 
 search_routes = Blueprint('search',
                           __name__,
@@ -222,7 +218,7 @@ def get_documents_by_access_type(access: AccessType):
     return docs
 
 
-def preview(par, query, m: Match[str], snippet_length=PREVIEW_LENGTH, max_length=PREVIEW_MAX_LENGTH):
+def preview(md: str, query, m: Match[str], snippet_length=PREVIEW_LENGTH, max_length=PREVIEW_MAX_LENGTH):
     """
     Forms preview of the match paragraph.
     :param par: Paragraph to preview.
@@ -232,7 +228,6 @@ def preview(par, query, m: Match[str], snippet_length=PREVIEW_LENGTH, max_length
     :param max_length: The maximum allowed length of the preview.
     :return: Preview with set amount of characters around search word.
     """
-    text = par.get_markdown()
     start_index = m.start() - snippet_length
     end_index = m.end() + snippet_length
     # If the match is longer than given treshold, limit its size.
@@ -243,10 +238,10 @@ def preview(par, query, m: Match[str], snippet_length=PREVIEW_LENGTH, max_length
     if start_index < 0:
         start_index = 0
         prefix = ""
-    if end_index > len(text):
-        end_index = len(text)
+    if end_index > len(md):
+        end_index = len(md)
         postfix = "..."
-    return prefix + text[start_index:end_index] + postfix
+    return prefix + md[start_index:end_index] + postfix
 
 
 class WordResult:
@@ -443,26 +438,76 @@ class DocResult:
 
 def get_docs_with_word(query):
     """
-    Gets ids of all documents containing the query word.
+    Gets ids of all documents and paragraphs containing the query word.
     :param query:
     :return:
     """
     dir = '/tim_files/pars/'
-    s = subprocess.Popen(f'find {dir} -type f -print0 | xargs -0 grep -li {query}',
+    s = subprocess.Popen(f'grep {query} all.log',
+                         cwd=dir,
                          stdout=subprocess.PIPE,
                          shell=True)
-    output = str(s.communicate()[0]).split(r"\n")
-    docs = set()
+    output_str = str(s.communicate()[0])
+    output = output_str[2:].split(r"./")
+    results = []
+    doc_result = None
+
+    flags = re.DOTALL | re.IGNORECASE
+    term_regex = re.compile(query, flags)
+
     for line in output:
         try:
-            if len(line) < 15:
-                continue
-            temp = line.replace(dir, "").replace('"', "").replace("'", "").replace("b", "")
-            temp = temp.split("/", 2)[0]
-            docs.add(int(temp))
-        except:
-            pass
-    return list(docs)
+            if line or len(line) > 10:
+                temp = line[0:line.index("/current:")].split("/")
+                doc_id = int(temp[0])
+                par_id = temp[1]
+                par_result = ParResult(par_id)
+                md = line[line.index('"md": "')+7:line.index('", "t":')].\
+                    replace(r"\\u00e4", "ä").replace(r"\\u00f6", "ö").replace(r"\\n", " ")
+                matches = list(term_regex.finditer(md))
+                if matches:
+                    for m in matches:
+                        result = WordResult(match_word=m.group(0),
+                                            match_start=m.start(),
+                                            match_end=m.end())
+                        par_result.add_result(result)
+                    par_result.preview = preview(md, query, matches[0])
+
+                if doc_result:
+                    pass
+
+                # Create new doc result if first.
+                if not doc_result:
+                    doc_result = DocResult(DocEntry.find_by_id(doc_id).document.docinfo)
+
+                # If not the same doc as previous result line, save previous result object and create new.
+                elif doc_result.doc_info.id != doc_id:
+                    print(doc_result.doc_info.id, doc_id)
+                    results.append(doc_result)
+                    doc_result = DocResult(DocEntry.find_by_id(doc_id).document.docinfo)
+
+                # Add the paragraph results to the most recent doc.
+                doc_result.add_par_result(par_result)
+
+        except Exception as e:
+            print(e)
+
+    # TODO: Check the logic here.
+    # Since the loop ends before saving the last one, add it.
+    if doc_result:
+        results.append(doc_result)
+    return results
+
+
+@search_routes.route("combinePars")
+def create_search_file():
+    dir = '/tim_files/pars/'
+    file = 'all.log'
+    s = subprocess.Popen(f'grep -R "." --include="current" . > all.log 2>&1',
+                         cwd=dir,
+                         shell=True)
+    s.communicate()
+    return json_response(f"File created to {dir}{file}")
 
 
 @search_routes.route("")
@@ -509,8 +554,25 @@ def search():
         abort(400, f'Whole word search text must be at least {MIN_EXACT_WORDS_QUERY_LENGTH} character(s) '
                    f'long with whitespace stripped.')
 
-    doc_ids = get_docs_with_word(query)
-    custom_filter = DocEntry.id.in_(doc_ids)
+    # TODO: Filter out documents without user access.
+    # TODO: Filter out documents not in the search folder.
+
+    results = get_docs_with_word(query)
+    results_dicts = []
+    title_result_count = 0
+    word_result_count = 0
+    for r in results:
+        title_result_count += r.get_title_match_count()
+        word_result_count += r.get_par_match_count()
+        results_dicts.append(r.to_dict())
+    return json_response({
+        'titleResultCount': title_result_count,
+        'wordResultCount': word_result_count,
+        'errors': [],
+        'incomplete_search_reason': "",
+        'results': results_dicts,
+    })
+
     docs = list(set(get_documents(
         filter_user=current_user,
         custom_filter=custom_filter,
@@ -608,7 +670,7 @@ def search():
                                 if len(doc_result.par_results) > max_previews:
                                     par_preview = ""
                                 else:
-                                    par_preview = preview(r.par, query, r.match)
+                                    par_preview = preview(r.par.get_markdown(), query, r.match)
                                 par_result = ParResult(par_id=current_par, preview=par_preview)
                                 par_result.add_result(word_result)
                                 doc_result.add_par_result(par_result)
