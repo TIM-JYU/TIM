@@ -82,8 +82,8 @@ export class PareditorController extends DialogController<{params: IEditorParams
         multiline: string,
         strokes: string,
         pipe: string,
-        timTableSimple: string,
-        timTableAdvanced: string,
+        timTable1x1: string,
+        timTable2x2: string,
     };
     private storage: Storage;
     private touchDevice: boolean;
@@ -197,7 +197,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
             "|  123  |  123 |   123   |   123  |\n" +
             "|    1  |    1 |     1   |     1  |\n",
 
-             timTableSimple:
+             timTable1x1:
              "``` {plugin=\"timTable\"} \n" +
              "automd: true              \n" +
              "table:                   \n" +
@@ -207,7 +207,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
              "                            \n" +
              "```                        \n",
 
-            timTableAdvanced:
+            timTable2x2:
             "``` {plugin=\"timTable\"}\n" +
             "automd: true             \n" +
             "table:                   \n" +
