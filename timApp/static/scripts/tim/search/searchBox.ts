@@ -99,6 +99,7 @@ export class SearchBoxCtrl implements IController {
     public wordMatchCount: number = 0;
     public titleMatchCount: number = 0;
     public tagResults: ITagSearchResult[] = [];
+    public titleResults: IDocSearchResult[] = [];
     public incompleteSearchReason: string = "";
     public query: string = "";
     public folder!: Binding<string, "<">;
@@ -166,16 +167,14 @@ export class SearchBoxCtrl implements IController {
         if (this.searchTags) {
             await this.tagSearch();
         }
-        if (this.searchWords || this.searchDocNames) {
-            // Server side has also a minimum length check for the query.
-            // if (!this.folder.trim() && this.searchWords && !this.searchOwned) {
-            //  //    this.errorMessage = (`Content searches on root directory are not allowed.`);
-            //     this.loading = false;
-            //     return;
-            // }
+        if (this.searchWords) {
             await this.wordSearch();
         }
-        if (this.results.length === 0 && this.tagResults.length === 0 && !this.errorMessage) {
+        if (this.searchDocNames) {
+            await this.titleSearch();
+        }
+        if (this.results.length === 0 && this.tagResults.length === 0 &&
+                this.titleResults.length === 0 && !this.errorMessage) {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
             this.loading = false;
             return;
@@ -315,7 +314,53 @@ export class SearchBoxCtrl implements IController {
     }
 
     /**
-     * Document word and title search.
+     * Document title search.
+     * @returns {Promise<void>}
+     */
+    private async titleSearch() {
+        const [err, response] = await to($http<ISearchResultsInfo>({
+            method: "GET",
+            params: {
+                query: this.query,
+                folder: this.folder,
+                caseSensitive: this.caseSensitive,
+                ignorePluginsSettings: this.ignorePluginsSettings,
+                regex: this.regex,
+                searchExactWords: this.searchExactWords,
+                searchOwned: this.searchOwned,
+            },
+            url: "/search/titles",
+        }));
+        if (err) {
+            let tempError = "";
+            // Basic error message from server.
+            if (err.data.error) {
+                tempError = err.data.error.toString();
+            }
+            // Some errors don't have err.data.error and are in raw HTML.
+            if (err.data && tempError.length < 1) {
+                tempError = removeHtmlTags(err.data.toString());
+                if (tempError.indexOf("Proxy Error") > -1) {
+                    tempError = tempError.replace("Proxy Error Proxy Error", "Proxy Error:").
+                    replace("&nbsp;", " ");
+                }
+            }
+            if (tempError.length < 1) {
+                tempError = "Unknown error";
+            }
+            this.errorMessage = tempError;
+            this.results = [];
+            return;
+        }
+        if (response) {
+            this.titleResults = response.data.results;
+            this.incompleteSearchReason = response.data.incomplete_search_reason;
+            this.titleMatchCount = response.data.titleResultCount;
+        }
+    }
+
+    /**
+     * Document word search.
      * @returns {Promise<void>}
      */
     private async wordSearch() {
@@ -331,15 +376,15 @@ export class SearchBoxCtrl implements IController {
                 // maxTime: 15,
                 // maxTotalResults: 10000,
                 regex: this.regex,
-                searchDocNames: this.searchDocNames,
+                // searchDocNames: this.searchDocNames,
                 searchExactWords: this.searchExactWords,
                 searchOwned: this.searchOwned,
-                searchWords: this.searchWords,
+                // searchWords: this.searchWords,
             },
             url: "/search",
         }));
         if (err) {
-            let tempError = "";s
+            let tempError = "";
             // Basic error message from server.
             if (err.data.error) {
                 tempError = err.data.error.toString();
@@ -363,11 +408,6 @@ export class SearchBoxCtrl implements IController {
             this.results = response.data.results;
             this.incompleteSearchReason = response.data.incomplete_search_reason;
             this.wordMatchCount = response.data.wordResultCount;
-            this.titleMatchCount = response.data.titleResultCount;
-            // if (response.data.errors.length > 0) {
-            //     console.log("Errors were encountered during search:");
-            //     console.log(response.data.errors);
-            // }
         }
     }
 

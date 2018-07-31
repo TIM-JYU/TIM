@@ -2,7 +2,6 @@
 import re
 import sre_constants
 import subprocess
-import time
 from datetime import datetime
 from typing import Generator, Match
 
@@ -99,7 +98,7 @@ def get_folders_recursive(starting_path: str, folder_set) -> None:
 
 
 @search_routes.route('/tags')
-def search_tags():
+def tag_search():
     """
     A route for document tag search.
     """
@@ -221,7 +220,7 @@ def get_documents_by_access_type(access: AccessType):
 def preview(md: str, query, m: Match[str], snippet_length=PREVIEW_LENGTH, max_length=PREVIEW_MAX_LENGTH):
     """
     Forms preview of the match paragraph.
-    :param par: Paragraph to preview.
+    :param md: Paragraph markdown to preview.
     :param query: Search word.
     :param m: Match object.
     :param snippet_length: The lenght of preview before and after search word.
@@ -448,6 +447,7 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
     """
     dir = '/tim_files/pars/'
     grep_flags = ""
+    term_regex = None
     if case_sensitive:
         flags = re.DOTALL
     else:
@@ -462,9 +462,12 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
         # Picks the term if it's a whole word, only word or separated by comma etc.
         grep_flags += "-sw "
         term = fr"(?:^|\W)({term})(?:$|\W)"
-    term_regex = re.compile(term, flags)
+    try:
+        term_regex = re.compile(term, flags)
+    except sre_constants.error as e:
+        abort(400, f"Invalid regex: {str(e)}")
 
-    s = subprocess.Popen(f'grep {grep_flags}{query} all.log',
+    s = subprocess.Popen(f'grep {grep_flags}"{query}" all.log',
                          cwd=dir,
                          stdout=subprocess.PIPE,
                          shell=True)
@@ -535,100 +538,39 @@ def create_search_file():
     return json_response(f"File created to {dir}{file}")
 
 
-@search_routes.route("")
-@cache.cached(key_prefix=make_cache_key)
-def search():
-    """
-    Route for document word and title searches.
-    :return:
-    """
-    # verify_logged_in()
-    error_list = []  # List of errors during search.
-    incomplete_search_reason = ""  # Tells why some results were left out.
-
+@search_routes.route("/titles")
+def title_search():
     query = request.args.get('query', '')
     folder = request.args.get('folder', '')
     regex_option = get_option(request, 'regex', default=False, cast=bool)
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-
-    # Limit how many pars are searched from any document. The rest are skipped.
-    max_doc_pars = get_option(request, 'maxDocPars', default=10000, cast=int)
-    # Limit number of found search results after which the search will end.
-    # If number of results is very high, just showing them will crash the search.
-    max_results_total = get_option(request, 'maxTotalResults', default=10000, cast=int)
-    # Time limit for the searching process.
-    max_time = get_option(request, 'maxTime', default=15, cast=int)
-    # Limit the number of results per document.
-    max_results_doc = get_option(request, 'maxDocResults', default=100, cast=int)
-    # Don't search paragraphs that are marked as plugin or setting.
-    ignore_plugins_settings = get_option(request, 'ignorePluginsSettings', default=False, cast=bool)
-    # Only search documents that have current user as owner.
-    search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
-    # Don't create more than # previews per document.
-    max_previews = get_option(request, 'maxPreviews', default=max_results_doc, cast=int)
-
-    search_doc_names = get_option(request, 'searchDocNames', default=False, cast=bool)
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
-    search_words = get_option(request, 'searchWords', default=True, cast=bool)
-
-    if len(query.strip()) < MIN_QUERY_LENGTH and not search_exact_words:
-        if query.strip().lower() not in WHITE_LIST:
-            abort(400, f'Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped.')
-    if len(query.strip()) < MIN_EXACT_WORDS_QUERY_LENGTH and search_exact_words:
-        abort(400, f'Whole word search text must be at least {MIN_EXACT_WORDS_QUERY_LENGTH} character(s) '
-                   f'long with whitespace stripped.')
-    results = []
-    docs = []
-    term_regex = None
-    if search_doc_names:
-        docs = list(set(get_documents(
-            filter_user=get_current_user_object(),
-            filter_folder=folder,
-            search_recursively=True)))
-        if case_sensitive:
-            flags = re.DOTALL
-        else:
-            flags = re.DOTALL | re.IGNORECASE
-        if regex_option:
-            term = query
-        else:
-            term = re.escape(query)
-        if search_exact_words:
-            # Picks the term if it's a whole word, only word or separated by comma etc.
-            term = fr"(?:^|\W)({term})(?:$|\W)"
-        term_regex = re.compile(term, flags)
-
-    if search_words:
-        results = search_with_grep(
-            query,
-            folder,
-            case_sensitive=case_sensitive,
-            regex=regex_option,
-            search_exact_words=search_exact_words)
-
     results_dicts = []
-    title_result_count = 0
     word_result_count = 0
-    for r in results:
-        if search_doc_names and term_regex:
-            docentry = DocEntry.find_by_id(r.doc_info.id)
-            if docentry:
-                docs.remove(docentry)
-            title_result = TitleResult()
-            d_title = r.doc_info.title
-            matches = list(term_regex.finditer(d_title))
-            if matches:
-                for m in matches:
-                    result = WordResult(match_word=m.group(0),
-                                        match_start=m.start(),
-                                        match_end=m.end())
-                    title_result.add_result(result)
-            if title_result.has_results():
-                r.add_title_result(title_result)
-        title_result_count += r.get_title_match_count()
-        word_result_count += r.get_par_match_count()
-        results_dicts.append(r.to_dict())
-    if search_doc_names and term_regex:
+    title_result_count = 0
+    term_regex = None
+
+    docs = list(set(get_documents(
+        filter_user=get_current_user_object(),
+        filter_folder=folder,
+        search_recursively=True)))
+
+    if case_sensitive:
+        flags = re.DOTALL
+    else:
+        flags = re.DOTALL | re.IGNORECASE
+    if regex_option:
+        term = query
+    else:
+        term = re.escape(query)
+    if search_exact_words:
+        # Picks the term if it's a whole word, only word or separated by comma etc.
+        term = fr"(?:^|\W)({term})(?:$|\W)"
+    try:
+        term_regex = re.compile(term, flags)
+    except sre_constants.error as e:
+        abort(400, f"Invalid regex: {str(e)}")
+    if term_regex:
         for d in docs:
             title_result = TitleResult()
             d_title = d.document.docinfo.title
@@ -644,6 +586,50 @@ def search():
                 r.add_title_result(title_result)
                 results_dicts.append(r.to_dict())
                 title_result_count += r.get_title_match_count()
+
+    return json_response({
+        'titleResultCount': title_result_count,
+        'wordResultCount': word_result_count,
+        'errors': [],
+        'incomplete_search_reason': "",
+        'results': results_dicts,
+    })
+
+
+@search_routes.route("")
+@cache.cached(key_prefix=make_cache_key)
+def search():
+    """
+    Route for document word searches.
+    :return:
+    """
+
+    query = request.args.get('query', '')
+    folder = request.args.get('folder', '')
+    regex_option = get_option(request, 'regex', default=False, cast=bool)
+    case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
+    search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
+
+    if len(query.strip()) < MIN_QUERY_LENGTH and not search_exact_words:
+        if query.strip().lower() not in WHITE_LIST:
+            abort(400, f'Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped.')
+    if len(query.strip()) < MIN_EXACT_WORDS_QUERY_LENGTH and search_exact_words:
+        abort(400, f'Whole word search text must be at least {MIN_EXACT_WORDS_QUERY_LENGTH} character(s) '
+                   f'long with whitespace stripped.')
+
+    results = search_with_grep(
+        query,
+        folder,
+        case_sensitive=case_sensitive,
+        regex=regex_option,
+        search_exact_words=search_exact_words)
+
+    results_dicts = []
+    title_result_count = 0
+    word_result_count = 0
+    for r in results:
+        word_result_count += r.get_par_match_count()
+        results_dicts.append(r.to_dict())
 
     return json_response({
         'titleResultCount': title_result_count,

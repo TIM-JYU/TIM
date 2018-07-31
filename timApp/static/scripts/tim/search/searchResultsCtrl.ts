@@ -24,6 +24,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     private searchWord: string = "";
     private displayResults: ISearchResultDisplay[] = [];
     private tagResults: ITagSearchResult[] = [];
+    private titleResults: IDocSearchResult[] = [];
     private folder: string = "";
     private totalResults: number = 0;
     private limitedDisplay: boolean = false; // If there's large number of results, optimize shown results.
@@ -63,6 +64,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
         this.searchComponent = ctrl;
         this.results = ctrl.results;
         this.tagResults = ctrl.tagResults;
+        this.titleResults = ctrl.titleResults;
         this.totalResults = ctrl.titleMatchCount + ctrl.tagMatchCount + ctrl.wordMatchCount;
         this.folder = ctrl.folder;
         this.errorMessage = ctrl.resultErrorMessage;
@@ -89,7 +91,6 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
      */
     private filterResults() {
         this.displayResults = [];
-        const tagResultsFoundHome: ITagSearchResult[] = [];
         for (const r of this.results) {
             const newDisplayResult: ISearchResultDisplay = {
                 closed: true,
@@ -97,23 +98,60 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
                 result: r,
                 tags: [],
                 };
+            // Add tags to existing word search result objects.
             for (const t of this.tagResults) {
                 if (t.doc.id === r.doc.id) {
                     newDisplayResult.tags = t.matching_tags;
+                    newDisplayResult.num_tag_results = t.num_results;
+                }
+            }
+            // Add titlemathces to existing word search result objects.
+            for (const t of this.titleResults) {
+                if (t.doc.id === r.doc.id) {
+                    newDisplayResult.result.title_results = t.title_results;
+                    newDisplayResult.result.num_title_results = t.num_title_results;
                 }
             }
             this.displayResults.push(newDisplayResult);
         }
 
-        // Tag results use different interface and need to be handled separately.
+        for (const t of this.titleResults) {
+            try {
+                let found = false;
+                for (const r of this.displayResults) {
+                    if (t.doc.id === r.result.doc.id) {
+                        found = true;
+                    }
+                }
+                // Add documents found only with the title to results list.
+                if (!found) {
+                    const newDocResult = {
+                        closed: true,
+                        num_tag_results: 0,
+                        result: {
+                            doc: t.doc,
+                            incomplete: false,
+                            num_par_results: 0,
+                            num_title_results: t.num_title_results,
+                            par_results: [],
+                            title_results: t.title_results,
+                        },
+                        tags: [],
+                    };
+                    this.displayResults.push(newDocResult);
+                }
+            } catch (e) {
+                this.errorMessage = e.getMessage().toString();
+            }
+        }
+
         for (const t of this.tagResults) {
             try {
                 let found = false;
                 for (const r of this.displayResults) {
-                    // Add tags to corresponding document's tags-list.
                     if (t.doc.path === r.result.doc.path) {
-                        r.tags = t.matching_tags;
-                        r.num_tag_results = t.num_results;
+                        // r.tags = t.matching_tags;
+                        // r.num_tag_results = t.num_results;
                         found = true;
                     }
                 }
