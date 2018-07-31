@@ -966,7 +966,7 @@ export class TimTableController implements IController {
     private stylingForRow(rowi: number) {
         const styles: { [index: string]: string } = {};
 
-        if (rowi >= this.data.table.rows.length) {
+        if (!this.data.table.rows || rowi >= this.data.table.rows.length) {
             return styles;
         }
 
@@ -1016,7 +1016,7 @@ export class TimTableController implements IController {
      * @param object The object that contains the user-given style attributes
      * @param {Set<string>} validAttrs A set that contains the accepted style attributes
      */
-    private applyStyle(styles: { [index: string]: string }, object, validAttrs: Set<string>) {
+    private applyStyle(styles: { [index: string]: string }, object: any, validAttrs: Set<string>) {
         for (const key of Object.keys(object)) {
             if (!validAttrs.has(key)) {
                 continue;
@@ -1224,23 +1224,31 @@ export class TimTableController implements IController {
     }
 
     private getColspan(rowi: number, coli: number) {
-        if (rowi >= this.data.table.rows.length ||
-            !this.data.table.rows[rowi].row || coli >= this.data.table.rows[rowi].row.length ||
-            !this.data.table.rows[rowi].row[coli].colspan) {
+        const rows = this.data.table.rows;
+
+        if (!rows ||
+            rowi >= rows.length ||
+            !rows[rowi].row ||
+            coli >= rows[rowi].row.length ||
+            !rows[rowi].row[coli].colspan) {
             return 1;
         }
 
-        return this.data.table.rows[rowi].row[coli].colspan;
+        return rows[rowi].row[coli].colspan;
     }
 
     private getRowspan(rowi: number, coli: number) {
-        if (rowi >= this.data.table.rows.length ||
-            !this.data.table.rows[rowi].row || coli >= this.data.table.rows[rowi].row.length ||
-            !this.data.table.rows[rowi].row[coli].rowspan) {
+        const rows = this.data.table.rows;
+
+        if (!rows ||
+            rowi >= rows.length ||
+            !rows[rowi].row ||
+            coli >= rows[rowi].row.length ||
+            !rows[rowi].row[coli].rowspan) {
             return 1;
         }
 
-        return this.data.table.rows[rowi].row[coli].rowspan;
+        return rows[rowi].row[coli].rowspan;
     }
 }
 
