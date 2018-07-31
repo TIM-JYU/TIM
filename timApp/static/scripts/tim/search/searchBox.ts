@@ -114,8 +114,6 @@ export class SearchBoxCtrl implements IController {
     private searchTags: boolean = true; // Tag search. On by default.
     private searchWords: boolean = true; // Content search. On by default.
     private searchExactWords: boolean = false; // Whole word search.
-    private maxDocResults: number = 100; // Limit for searched results per doc.
-    private maxDocPars: number = 250; // Limit number of searched paragraphs / doc.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
 
     private errorMessage: string = ""; // Message displayed only in search panel.
@@ -556,24 +554,6 @@ timApp.component("searchBox", {
                            typeahead-min-length="1">
                 </div>
            </div>
-            <div class="form-group" title="Input maximum number of searched content matches per a document">
-                <label for="max-doc-results-selector" class="col-sm-8 control-label font-weight-normal"
-                style="text-align:left;">Max content results per document:</label>
-                <div class="col-sm-4">
-                    <input ng-model="$ctrl.maxDocResults" name="max-doc-results-selector"
-                           type="number" class="form-control" id="max-doc-results-selector"
-                           placeholder="Input max # of results per document">
-                </div>
-            </div>
-            <div class="form-group" title="Input maximum number of searched paragraphs per a document">
-                <label for="max-par-selector" class="col-sm-8 control-label font-weight-normal"
-                style="text-align:left;">Max searched paragraphs per document:</label>
-                <div class="col-sm-4">
-                    <input ng-model="$ctrl.maxDocPars" name="max-par-selector"
-                           type="number" class="form-control" id="max-par-selector""
-                           placeholder="Input max # of searched paragraphs per document">
-                </div>
-            </div>
         <label class="font-weight-normal" title="Distinguish between upper and lower case letters">
             <input type="checkbox" ng-model="$ctrl.caseSensitive"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Case sensitive</label>

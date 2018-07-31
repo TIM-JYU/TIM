@@ -77,6 +77,8 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
             this.collapsables = true;
         }
         this.filterResults();
+        console.log(this.searchComponent);
+        console.log(this.displayResults);
     }
 
     /*
