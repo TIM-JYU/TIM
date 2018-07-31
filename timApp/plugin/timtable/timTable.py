@@ -261,6 +261,18 @@ def pop_unique_row_id(plug: Plugin) -> int:
     return unique_row_count
 
 
+@timTable_plugin.route("addDatablockRow", methods=["POST"])
+def tim_table_add_datablock_row():
+    """
+    Adds a row into the table's datablock.
+    Doesn't affect the table's regular YAML.
+    :return:
+    """
+    doc_id, par_id, row_id = verify_json_params('docId', 'parId')
+    d, plug = get_plugin_from_paragraph(doc_id, par_id)
+    # TODO implement
+
+
 @timTable_plugin.route("addColumn", methods=["POST"])
 def tim_table_add_column():
     """
@@ -470,13 +482,17 @@ def save_cell(datablock: dict, row: int, col: int, cell_content: Union[str, dict
 
 def find_cell(rows: list, row: int, col: int) -> str:
     """
-    Get cell from index place if exists
+    Gets cell from index place if it exists, otherwise returns an empty string
     :param rows: List of cells
     :param row: Row index
     :param col: Column index
     :return: Cell from specified index
     """
+    if row >= len(rows):
+        return ''
     right_row = rows[row][ROW]
+    if col >= len(right_row):
+        return ''
     right_cell = right_row[col]
     if isinstance(right_cell, str) or isinstance(right_cell, int) or isinstance(right_cell, float):
        return right_cell
