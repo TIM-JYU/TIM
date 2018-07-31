@@ -436,10 +436,14 @@ class DocResult:
         return count
 
 
-def search_with_grep(query, case_sensitive: bool, regex: bool, search_exact_words: bool):
+def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool, search_exact_words: bool):
     """
-    Gets ids of all documents and paragraphs containing the query word.
+
     :param query:
+    :param folder:
+    :param case_sensitive:
+    :param regex:
+    :param search_exact_words:
     :return:
     """
     dir = '/tim_files/pars/'
@@ -480,10 +484,15 @@ def search_with_grep(query, case_sensitive: bool, regex: bool, search_exact_word
                 if not has_view_access(doc_info):
                     continue
 
+                # If doc isn't in the search path, continue to the next one.
+                if not doc_info.path.startswith(folder):
+                    continue
+
                 par_id = temp[1]
                 par_result = ParResult(par_id)
                 md = line[line.index('"md": "') + 7:line.index('", "t":')]. \
                     replace(r"\\u00e4", "ä").replace(r"\\u00f6", "ö").replace(r"\\n", " ")
+
                 matches = list(term_regex.finditer(md))
                 if matches:
                     for m in matches:
@@ -492,9 +501,6 @@ def search_with_grep(query, case_sensitive: bool, regex: bool, search_exact_word
                                             match_end=m.end())
                         par_result.add_result(result)
                     par_result.preview = preview(md, query, matches[0])
-
-                if doc_result:
-                    pass
 
                 # Create new doc result if first.
                 if not doc_result:
@@ -537,7 +543,6 @@ def search():
     :return:
     """
     # verify_logged_in()
-    current_user = get_current_user_object()
     error_list = []  # List of errors during search.
     incomplete_search_reason = ""  # Tells why some results were left out.
 
@@ -572,22 +577,74 @@ def search():
     if len(query.strip()) < MIN_EXACT_WORDS_QUERY_LENGTH and search_exact_words:
         abort(400, f'Whole word search text must be at least {MIN_EXACT_WORDS_QUERY_LENGTH} character(s) '
                    f'long with whitespace stripped.')
+    results = []
+    docs = []
+    term_regex = None
+    if search_doc_names:
+        docs = list(set(get_documents(
+            filter_user=get_current_user_object(),
+            filter_folder=folder,
+            search_recursively=True)))
+        if case_sensitive:
+            flags = re.DOTALL
+        else:
+            flags = re.DOTALL | re.IGNORECASE
+        if regex_option:
+            term = query
+        else:
+            term = re.escape(query)
+        if search_exact_words:
+            # Picks the term if it's a whole word, only word or separated by comma etc.
+            term = fr"(?:^|\W)({term})(?:$|\W)"
+        term_regex = re.compile(term, flags)
 
-    # TODO: Filter out documents not in the search folder.
-
-    results = search_with_grep(
-        query,
-        case_sensitive=case_sensitive,
-        regex=regex_option,
-        search_exact_words=search_exact_words)
+    if search_words:
+        results = search_with_grep(
+            query,
+            folder,
+            case_sensitive=case_sensitive,
+            regex=regex_option,
+            search_exact_words=search_exact_words)
 
     results_dicts = []
     title_result_count = 0
     word_result_count = 0
     for r in results:
+        if search_doc_names and term_regex:
+            docentry = DocEntry.find_by_id(r.doc_info.id)
+            if docentry:
+                docs.remove(docentry)
+            title_result = TitleResult()
+            d_title = r.doc_info.title
+            matches = list(term_regex.finditer(d_title))
+            if matches:
+                for m in matches:
+                    result = WordResult(match_word=m.group(0),
+                                        match_start=m.start(),
+                                        match_end=m.end())
+                    title_result.add_result(result)
+            if title_result.has_results():
+                r.add_title_result(title_result)
         title_result_count += r.get_title_match_count()
         word_result_count += r.get_par_match_count()
         results_dicts.append(r.to_dict())
+    if search_doc_names and term_regex:
+        for d in docs:
+            title_result = TitleResult()
+            d_title = d.document.docinfo.title
+            matches = list(term_regex.finditer(d_title))
+            if matches:
+                for m in matches:
+                    result = WordResult(match_word=m.group(0),
+                                        match_start=m.start(),
+                                        match_end=m.end())
+                    title_result.add_result(result)
+            if title_result.has_results():
+                r = DocResult(d.document.docinfo)
+                r.add_title_result(title_result)
+                results_dicts.append(r.to_dict())
+                title_result_count += r.get_title_match_count()
+
     return json_response({
         'titleResultCount': title_result_count,
         'wordResultCount': word_result_count,
@@ -595,165 +652,6 @@ def search():
         'incomplete_search_reason': "",
         'results': results_dicts,
     })
-
-    docs = list(set(get_documents(
-        filter_user=current_user,
-        custom_filter=custom_filter,
-        filter_folder=folder,
-        search_recursively=True)))
-    if not docs:
-        abort(400, f"Folder '{folder}' not found or not accessible")
-    if search_owned_docs:
-        docs = list(set(docs) - (set(docs) - set(get_documents_by_access_type(AccessType.owner))))
-        if not docs:
-            abort(400, f"No owned documents found in '{folder}'")
-    results = []
-    args = SearchArgumentsBasic(
-        term=query,
-        regex=regex_option,
-        onlyfirst=max_doc_pars,
-        format="")
-
-    if case_sensitive:
-        flags = re.DOTALL
-    else:
-        flags = re.DOTALL | re.IGNORECASE
-    if args.regex:
-        term = args.term
-    else:
-        term = re.escape(args.term)
-    if search_exact_words:
-        # Picks the term if it's a whole word, only word or separated by comma etc.
-        term = fr"(?:^|\W)({term})(?:$|\W)"
-
-    starting_time = time.clock()
-    current_doc = "before search"
-    current_par = "before search"
-
-    try:
-        term_regex = re.compile(term, flags)
-        for d in docs:
-            d_words_count = 0
-            current_doc = d.path
-            doc_info = d.document.docinfo
-            doc_result = DocResult(doc_info)
-            try:
-                # Cut search before timeout.
-                if (time.clock() - starting_time) > max_time:
-                    incomplete_search_reason = f"search timeout after {max_time} seconds"
-                    break
-                # If results are too large, MemoryError occurs.
-                if len(results) > max_results_total:
-                    incomplete_search_reason = f"maximum of {max_results_total} total results reached"
-                    break
-
-                # TODO: currently documents with only title match are filtered out before search.
-                if search_doc_names:
-                    title_result = TitleResult()
-                    d_title = doc_info.title
-                    matches = list(term_regex.finditer(d_title))
-                    if matches:
-                        for m in matches:
-                            result = WordResult(match_word=m.group(0),
-                                                match_start=m.start(),
-                                                match_end=m.end())
-                            title_result.add_result(result)
-                    if title_result.has_results():
-                        doc_result.add_title_result(title_result)
-
-                if search_words:
-                    current_par = ""
-                    for r in search_in_doc(d=doc_info, term_regex=term_regex, args=args, use_exported=False,
-                                           ignore_plugins_settings=ignore_plugins_settings):
-                        current_par = r.par.dict()['id']
-
-                        # If results per document limit is reached, move on to the next doc.
-                        if d_words_count >= max_results_doc:
-                            incomplete_search_reason = f"one or more documents have more than the maximum of " \
-                                                       f"{max_results_doc} results"
-                            doc_result.incomplete = True
-                            break
-
-                        d_words_count += 1
-                        word_result = WordResult(match_word=r.match.group(0),
-                                                 match_start=r.match.start(),
-                                                 match_end=r.match.end())
-
-                        # Don't return results within plugins if user has no edit access to the document.
-                        if (r.par.is_setting() or r.par.is_plugin()) and \
-                                (not get_current_user_object().has_edit_access(d)):
-                            break
-                        else:
-                            # If previous search result was in same par, add this result to its object.
-                            previous_par_result = doc_result.latest_par_result()
-                            if previous_par_result and previous_par_result.par_id is current_par:
-                                previous_par_result.add_result(word_result)
-                            # Otherwise create a new entry to store the result.
-                            else:
-                                if len(doc_result.par_results) > max_previews:
-                                    par_preview = ""
-                                else:
-                                    par_preview = preview(r.par.get_markdown(), query, r.match)
-                                par_result = ParResult(par_id=current_par, preview=par_preview)
-                                par_result.add_result(word_result)
-                                doc_result.add_par_result(par_result)
-
-            # If error happens inside loop, report and continue.
-            except Exception as e:
-                error = "Unknown error"
-                try:
-                    error = f"{str(e.__class__.__name__)}: {str(e)}"
-                    doc_result.incomplete = True
-                    incomplete_search_reason = error
-                    # Try adding the result despite error.
-                    if doc_result.has_results():
-                        results.append(doc_result)
-                except:
-                    pass
-                finally:
-                    error_list.append({
-                        'error': f"{error}",
-                        'doc_path': current_doc,
-                        'par_id': current_par
-                    })
-                    log_search_error(error, query, current_doc, par=current_par)
-            else:
-                if doc_result.has_results():
-                    results.append(doc_result)
-    except sre_constants.error as e:
-        abort(400, f"Invalid regex: {str(e)}")
-    except Exception as e:
-        abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
-    else:
-        try:
-            clean_results = []
-            # Remove results that would break JSON-formatting.
-            title_result_count = 0
-            word_result_count = 0
-            for r in results:
-                title_result_count += r.get_title_match_count()
-                word_result_count += r.get_par_match_count()
-                try:
-                    clean_r = r.to_dict()
-                    json_response(clean_r)
-                except TypeError as e:
-                    # Report the offending paragraph.
-                    error = f"Formatting JSON-response for a result failed: {e}"
-                    log_search_error(error, query, r.doc_info.path, par="")
-                    incomplete_search_reason = f"error in formatting JSON-response in document '{r.doc_info.path}'"
-                else:
-                    clean_results.append(clean_r)
-            return json_response({
-                'titleResultCount': title_result_count,
-                'wordResultCount': word_result_count,
-                'errors': error_list,
-                'incomplete_search_reason': incomplete_search_reason,
-                'results': clean_results,
-            })
-        except MemoryError:
-            abort(400, f"MemoryError: results too large")
-        except Exception as e:
-            abort(400, f"Error encountered while formatting JSON-response: {e}")
 
 
 def search_in_doc(d: DocInfo, term_regex, args: SearchArgumentsBasic, use_exported: bool,

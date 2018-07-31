@@ -212,7 +212,8 @@ registerDialogComponent("timSearchResults",
     <div ng-if="$ctrl.displayResults.length > 0">
         <h5>Your search <i>{{$ctrl.searchWord}}</i> was found {{$ctrl.totalResults}} <ng-pluralize
         count="$ctrl.totalResults" when="{'1': 'time', 'other': 'times'}"></ng-pluralize>
-            in <i ng-if="$ctrl.folder">{{$ctrl.folder}}</i><i ng-if="!$ctrl.folder">root</i>
+            from {{$ctrl.displayResults.length}} documents in <i ng-if="$ctrl.folder">{{$ctrl.folder}}</i>
+            <i ng-if="!$ctrl.folder">root</i>
             <a ng-if="$ctrl.collapsables && !$ctrl.limitedDisplay" title="Toggle results collapse"
                 ng-click="$ctrl.toggleCollapseAll()">
                 <i ng-if="$ctrl.allClosed" class="glyphicon glyphicon-plus-sign"></i>

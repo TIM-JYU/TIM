@@ -284,7 +284,7 @@ export class SearchBoxCtrl implements IController {
     private defaultFolder() {
         if (!this.folder) {
             if (!this.item) {
-                this.folder = "kurssit";
+                this.folder = "";
                 return;
             }
             if (this.item.isFolder) {
@@ -293,7 +293,7 @@ export class SearchBoxCtrl implements IController {
                 this.folder = this.item.location;
             }
             if (!this.folder) {
-                this.folder = "kurssit";
+                this.folder = "";
             }
             const path = this.folder.split("/");
             if (path[0] === "users" && path.length >= 2) {
@@ -322,14 +322,14 @@ export class SearchBoxCtrl implements IController {
         const [err, response] = await to($http<ISearchResultsInfo>({
             method: "GET",
             params: {
-                caseSensitive: this.caseSensitive,
-                folder: this.folder,
-                ignorePluginsSettings: this.ignorePluginsSettings,
-                maxDocPars: this.maxDocPars,
-                maxDocResults: this.maxDocResults,
-                maxTime: 15,
-                maxTotalResults: 10000,
                 query: this.query,
+                folder: this.folder,
+                caseSensitive: this.caseSensitive,
+                ignorePluginsSettings: this.ignorePluginsSettings,
+                // maxDocPars: this.maxDocPars,
+                // maxDocResults: this.maxDocResults,
+                // maxTime: 15,
+                // maxTotalResults: 10000,
                 regex: this.regex,
                 searchDocNames: this.searchDocNames,
                 searchExactWords: this.searchExactWords,
@@ -339,7 +339,7 @@ export class SearchBoxCtrl implements IController {
             url: "/search",
         }));
         if (err) {
-            let tempError = "";
+            let tempError = "";s
             // Basic error message from server.
             if (err.data.error) {
                 tempError = err.data.error.toString();
