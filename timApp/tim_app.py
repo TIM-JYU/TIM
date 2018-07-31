@@ -42,6 +42,7 @@ from timApp.lecture.useractivity import Useractivity
 from timApp.note.usernote import UserNote
 from timApp.notification.notification import Notification
 from timApp.printing.printeddoc import PrintedDoc
+from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.slide.slidestatus import SlideStatus
 from timApp.timdb.sqa import db
@@ -95,6 +96,7 @@ reg_models(
     Question,
     QuestionActivity,
     ReadParagraph,
+    RowOwnerInfo,
     Runningquestion,
     Showpoints,
     SlideStatus,
