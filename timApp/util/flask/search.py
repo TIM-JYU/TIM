@@ -5,7 +5,7 @@ import subprocess
 from datetime import datetime
 from typing import Generator, Match
 
-from flask import Blueprint
+from flask import Blueprint, json
 from flask import abort
 from flask import request
 from sqlalchemy.orm import joinedload
@@ -476,9 +476,8 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                          cwd=dir,
                          stdout=subprocess.PIPE,
                          shell=True)
-    output_str = str(s.communicate()[0])
-    output_str = output_str[2:]
-    output = output_str.split(r"}}\n")
+    output_str = s.communicate()[0].decode('utf-8').strip()
+    output = output_str.splitlines()
     results = []
     doc_result = None
     current_doc = ""
@@ -494,6 +493,7 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                 current_par = par_id
 
                 doc_info = DocEntry.find_by_id(doc_id).document.get_docinfo()
+                current_doc = doc_info.path
 
                 # If not allowed to view, continue to the next one.
                 if not has_view_access(doc_info):
@@ -503,11 +503,11 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                 if not doc_info.path.startswith(folder):
                     continue
 
-                par = doc_info.document.get_paragraph(par_id)
-                md = par.get_markdown()
+                # par = doc_info.document.get_paragraph(par_id)
+                # md = par.get_markdown()
                 par_result = ParResult(par_id)
-                # info = json.loads(rest.replace("current:", "", 1).replace(r'\\"', r'\"'))
-                # md = info['md']
+                par_info = json.loads(temp[2].replace("current:", "", 1))
+                md = par_info['md']
                 matches = list(term_regex.finditer(md))
                 if matches:
                     for m in matches:
