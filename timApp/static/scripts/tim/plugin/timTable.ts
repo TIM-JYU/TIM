@@ -32,6 +32,7 @@ export interface TimTable {
     addRowButtonText?: string;
     forcedEditMode?: boolean;
     globalAppendMode?: boolean;
+    dataInput?: boolean;
 }
 
 export interface ITable extends ITableStyles {
@@ -1043,9 +1044,21 @@ export class TimTableController implements IController {
     }
 
     /**
+     * Handles the user's click on the "add row" button.
+     * @returns {Promise<void>}
+     */
+    async addRowButtonClick() {
+        if (this.isInDataInputMode()) {
+            this.addDatablockRow();
+        } else {
+            this.addRegularRow();
+        }
+    }
+
+    /**
      * Tells the server to add a new row into this table.
      */
-    async addRow() {
+    async addRegularRow() {
         if (this.viewctrl == null) {
             return;
         }
@@ -1061,6 +1074,24 @@ export class TimTableController implements IController {
             response = await $http.post<TimTable>("/timTable/addRow",
                 {docId, parId});
         }
+
+        this.data = response.data;
+        this.reInitialize();
+    }
+
+    /**
+     * Tells the server to add a new datablock-only row into this table.
+     */
+    async addDatablockRow() {
+        if (this.viewctrl == null) {
+            return;
+        }
+
+        const parId = this.getOwnParId();
+        const docId = this.viewctrl.item.id;
+        const rowId = this.cellDataMatrix.length;
+        const response = await $http.post<TimTable>("/timTable/addDatablockRow",
+            {docId, parId, rowId});
 
         this.data = response.data;
         this.reInitialize();
@@ -1171,6 +1202,14 @@ export class TimTableController implements IController {
     }
 
     /**
+     * Checks whether the table is in data input mode.
+     * In data input mode, new rows are added to the datablock instead of the regular YAML.
+     */
+    private isInDataInputMode() {
+        return this.data.dataInput;
+    }
+
+    /**
      * Returns the ID of the paragraph related to the current table instance.
      */
     private getOwnParId() {
@@ -1275,7 +1314,7 @@ timApp.component("timTable", {
                 </td>
         </tr>
     </table>
-    <button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.addRow()"><span
+    <button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.addRowButtonClick()"><span
             class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
     <button class="timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.removeRow()"><span
             class="glyphicon glyphicon-minus"></span></button>            

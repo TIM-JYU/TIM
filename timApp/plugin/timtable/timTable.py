@@ -266,11 +266,34 @@ def tim_table_add_datablock_row():
     """
     Adds a row into the table's datablock.
     Doesn't affect the table's regular YAML.
-    :return:
+    :return: The entire table's data after the row has been added.
     """
-    doc_id, par_id, row_id = verify_json_params('docId', 'parId')
+    doc_id, par_id, row_id = verify_json_params('docId', 'parId', 'rowId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    # TODO implement
+
+    if not is_datablock(plug.values):
+        return abort(400)
+
+    datablock_entries = construct_datablock_entry_list_from_yaml(plug)
+
+    highest_row_index = 0
+
+    new_datablock_entries = []
+    for entry in datablock_entries:
+        if entry.row == row_id - 1:
+            new_datablock_entries.append(RelativeDataBlockValue(row_id, entry.column, ''))
+        elif entry.row >= row_id:
+            entry.row += 1
+
+        if entry.row > highest_row_index:
+            highest_row_index = entry.row
+
+        new_datablock_entries.append(entry)
+
+    plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(new_datablock_entries)
+    plug.save()
+
+    return json_response(prepare_for_and_call_dumbo(plug))
 
 
 @timTable_plugin.route("addColumn", methods=["POST"])
