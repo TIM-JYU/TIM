@@ -5,7 +5,7 @@ import subprocess
 from datetime import datetime
 from typing import Generator, Match
 
-from flask import Blueprint
+from flask import Blueprint, json
 from flask import abort
 from flask import request
 from sqlalchemy.orm import joinedload
@@ -472,7 +472,7 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                          stdout=subprocess.PIPE,
                          shell=True)
     output_str = str(s.communicate()[0])
-    output_str = output_str[2:len(output_str) - 3]
+    output_str = output_str[2:]
     output = output_str.split(r"}}\n")
     results = []
     doc_result = None
@@ -481,10 +481,11 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
 
     for line in output:
         try:
-            if line or len(line) > 10:
-                temp = line[2:line.index('{"id":')].split("/")
+            if line and len(line) > 10:
+                temp = line[2:].split("/", 2)
                 doc_id = int(temp[0])
                 par_id = temp[1]
+                rest = temp[2]+"}}"
                 current_doc = doc_id
                 current_par = par_id
 
@@ -499,9 +500,8 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                     continue
 
                 par_result = ParResult(par_id)
-                md = line[line.index('", "md": "') + 9:line.index('", "t": "')]. \
-                    replace(r"\\u00e4", "ä").replace(r"\\u00f6", "ö").replace(r"\\n", " ")
-
+                info = json.loads(rest.replace("current:", "", 1).replace(r'\\"', r'\"'))
+                md = info['md']
                 matches = list(term_regex.finditer(md))
                 if matches:
                     for m in matches:
