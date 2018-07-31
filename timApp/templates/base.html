@@ -132,8 +132,8 @@
                         </div>
                         {% else %}
                         <div style="padding-top:4px;" class="pull-right">
-                            <span class="timButton disabled"
-                                  title="Log in to search TIM">
+                            <span class="timButton" ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
+                                  title="Display search panel">
                                 <i class="glyphicon glyphicon-search"></i>
                             </span>
                         </div>

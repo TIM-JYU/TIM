@@ -13,7 +13,7 @@ from sqlalchemy.orm import joinedload
 
 from timApp.admin.search_in_documents import SearchArgumentsBasic, SearchResult
 from timApp.admin.util import enum_pars
-from timApp.auth.accesshelper import verify_logged_in
+from timApp.auth.accesshelper import verify_logged_in, has_view_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_id
@@ -103,7 +103,7 @@ def search_tags():
     """
     A route for document tag search.
     """
-    verify_logged_in()
+    # verify_logged_in()
 
     query = request.args.get('query', '')
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
@@ -460,9 +460,15 @@ def get_docs_with_word(query):
             if line or len(line) > 10:
                 temp = line[0:line.index("/current:")].split("/")
                 doc_id = int(temp[0])
+                doc_info = DocEntry.find_by_id(doc_id).document.get_docinfo()
+
+                # If not allowed to view, continue to the next one.
+                if not has_view_access(doc_info):
+                    continue
+
                 par_id = temp[1]
                 par_result = ParResult(par_id)
-                md = line[line.index('"md": "')+7:line.index('", "t":')].\
+                md = line[line.index('"md": "') + 7:line.index('", "t":')]. \
                     replace(r"\\u00e4", "ä").replace(r"\\u00f6", "ö").replace(r"\\n", " ")
                 matches = list(term_regex.finditer(md))
                 if matches:
@@ -478,13 +484,12 @@ def get_docs_with_word(query):
 
                 # Create new doc result if first.
                 if not doc_result:
-                    doc_result = DocResult(DocEntry.find_by_id(doc_id).document.docinfo)
+                    doc_result = DocResult(doc_info)
 
                 # If not the same doc as previous result line, save previous result object and create new.
                 elif doc_result.doc_info.id != doc_id:
-                    print(doc_result.doc_info.id, doc_id)
                     results.append(doc_result)
-                    doc_result = DocResult(DocEntry.find_by_id(doc_id).document.docinfo)
+                    doc_result = DocResult(doc_info)
 
                 # Add the paragraph results to the most recent doc.
                 doc_result.add_par_result(par_result)
@@ -517,7 +522,7 @@ def search():
     Route for document word and title searches.
     :return:
     """
-    verify_logged_in()
+    # verify_logged_in()
     current_user = get_current_user_object()
     error_list = []  # List of errors during search.
     incomplete_search_reason = ""  # Tells why some results were left out.
