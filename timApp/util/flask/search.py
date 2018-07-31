@@ -5,7 +5,7 @@ import subprocess
 from datetime import datetime
 from typing import Generator, Match
 
-from flask import Blueprint, json
+from flask import Blueprint
 from flask import abort
 from flask import request
 from sqlalchemy.orm import joinedload
@@ -122,6 +122,11 @@ def tag_search():
     docs = get_documents(filter_user=get_current_user_object(), filter_folder=folder,
                          search_recursively=True, custom_filter=custom_filter,
                          query_options=query_options)
+    if not docs:
+        if not folder:
+            folder = "root"
+        abort(400, f"Folder '{folder}' not found or not accessible")
+
     if search_owned_docs:
         docs = list(set(docs) - (set(docs) - set(get_documents_by_access_type(AccessType.owner))))
     tag_result_count = 0
@@ -485,7 +490,6 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                 temp = line[2:].split("/", 2)
                 doc_id = int(temp[0])
                 par_id = temp[1]
-                rest = temp[2]+"}}"
                 current_doc = doc_id
                 current_par = par_id
 
@@ -499,9 +503,11 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                 if not doc_info.path.startswith(folder):
                     continue
 
+                par = doc_info.document.get_paragraph(par_id)
+                md = par.get_markdown()
                 par_result = ParResult(par_id)
-                info = json.loads(rest.replace("current:", "", 1).replace(r'\\"', r'\"'))
-                md = info['md']
+                # info = json.loads(rest.replace("current:", "", 1).replace(r'\\"', r'\"'))
+                # md = info['md']
                 matches = list(term_regex.finditer(md))
                 if matches:
                     for m in matches:
@@ -564,6 +570,11 @@ def title_search():
         filter_user=get_current_user_object(),
         filter_folder=folder,
         search_recursively=True)))
+
+    if not docs:
+        if not folder:
+            folder = "root"
+        abort(400, f"Folder '{folder}' not found or not accessible")
 
     if case_sensitive:
         flags = re.DOTALL

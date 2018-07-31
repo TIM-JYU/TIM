@@ -122,8 +122,7 @@ export class SearchBoxCtrl implements IController {
     private item: IItem = $window.item;
     private storage: ngStorage.StorageService & {
         searchWordStorage: null | string,
-        optionsStorage: null | boolean[],
-        optionsValueStorage: null | number[]};
+        optionsStorage: null | boolean[]};
     private folderSuggestions: string[] = []; // A list of folder path suggestions.
     private resultsDialog: ShowSearchResultController | null = null;
 
@@ -224,10 +223,6 @@ export class SearchBoxCtrl implements IController {
         if (this.query.trim().length > 0) {
             this.storage.searchWordStorage = this.query;
         }
-        this.storage.optionsValueStorage = [];
-        this.storage.optionsValueStorage.push(this.maxDocResults);
-        this.storage.optionsValueStorage.push(this.maxDocPars);
-
         this.storage.optionsStorage = [];
         // Alphabetical order.
         this.storage.optionsStorage.push(this.advancedSearch);
@@ -248,10 +243,6 @@ export class SearchBoxCtrl implements IController {
     private loadLocalStorage() {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
-        }
-        if (this.storage.optionsValueStorage && this.storage.optionsValueStorage.length > 1) {
-            this.maxDocResults = this.storage.optionsValueStorage[0];
-            this.maxDocPars = this.storage.optionsValueStorage[1];
         }
         if (this.storage.optionsStorage && this.storage.optionsStorage.length > 9) {
             this.advancedSearch = this.storage.optionsStorage[0];
