@@ -3,15 +3,13 @@ import re
 import sre_constants
 import subprocess
 from datetime import datetime
-from typing import Generator, Match
+from typing import Match, List
 
 from flask import Blueprint, json
 from flask import abort
 from flask import request
 from sqlalchemy.orm import joinedload
 
-from timApp.admin.search_in_documents import SearchArgumentsBasic, SearchResult
-from timApp.admin.util import enum_pars
 from timApp.auth.accesshelper import verify_logged_in, has_view_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -26,6 +24,7 @@ from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_error
+from timApp.util.pdftools import SubprocessError
 
 search_routes = Blueprint('search',
                           __name__,
@@ -440,14 +439,32 @@ class DocResult:
         return count
 
 
-def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool, search_exact_words: bool):
+def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = True):
     """
 
+    :param doc_info: Document to search from the list.
+    :param docs: List of documents.
+    :param shorten_list: Remove found documents from the list.
+    :return: Whether the document is in list.
+    """
+    for d in docs:
+        if doc_info.id is d.id:
+            if shorten_list:
+                docs.remove(d)
+            return True
+    return False
+
+
+def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool, search_exact_words: bool,
+                     search_owned_docs: bool):
+    """
+    Perform search on combined par file with grep and parse and group the results.
     :param query:
     :param folder:
     :param case_sensitive:
     :param regex:
     :param search_exact_words:
+    :param search_owned_docs:
     :return:
     """
     dir = '/tim_files/pars/'
@@ -472,16 +489,27 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
 
-    s = subprocess.Popen(f'grep {grep_flags}"{query}" all.log',
-                         cwd=dir,
-                         stdout=subprocess.PIPE,
-                         shell=True)
-    output_str = s.communicate()[0].decode('utf-8').strip()
-    output = output_str.splitlines()
+    owned_docs = []
     results = []
     doc_result = None
     current_doc = ""
     current_par = ""
+    output = []
+
+    if search_owned_docs:
+        owned_docs = get_documents_by_access_type(AccessType.owner)
+        if not owned_docs:
+            abort(400, f"No owned documents found")
+
+    try:
+        s = subprocess.Popen(f'greep {grep_flags}"{query}" all.log',
+                             cwd=dir,
+                             stdout=subprocess.PIPE,
+                             shell=True)
+        output_str = s.communicate()[0].decode('utf-8').strip()
+        output = output_str.splitlines()
+    except Exception as e:
+        abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
 
     for line in output:
         try:
@@ -492,6 +520,9 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                 current_doc = doc_id
                 current_par = par_id
 
+                doc = DocEntry.find_by_id(doc_id)
+                if not doc:
+                    raise Exception(f"Unable to find document with id: {doc_id}")
                 doc_info = DocEntry.find_by_id(doc_id).document.get_docinfo()
                 current_doc = doc_info.path
 
@@ -502,6 +533,10 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                 # If doc isn't in the search path, continue to the next one.
                 if not doc_info.path.startswith(folder):
                     continue
+
+                if search_owned_docs:
+                    if not in_doc_list(doc_info, owned_docs):
+                        continue
 
                 # par = doc_info.document.get_paragraph(par_id)
                 # md = par.get_markdown()
@@ -521,20 +556,22 @@ def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool,
                 if not doc_result:
                     doc_result = DocResult(doc_info)
 
-                # If not the same doc as previous result line, save previous result object and create new.
+                # If not the same doc as previous result line, save non-empty previous result object and create new.
                 elif doc_result.doc_info.id != doc_id:
-                    results.append(doc_result)
+                    if doc_result.has_results():
+                        results.append(doc_result)
                     doc_result = DocResult(doc_info)
 
-                # Add the paragraph results to the most recent doc.
-                doc_result.add_par_result(par_result)
+                # Add the paragraph results to the most recent doc, unless empty.
+                if par_result.has_results():
+                    doc_result.add_par_result(par_result)
 
         except Exception as e:
             log_search_error(f"{str(e.__class__.__name__)}: {str(e)}", query, current_doc, par=current_par)
 
     # TODO: Check the logic here.
     # Since the loop ends before saving the last one, add it.
-    if doc_result:
+    if doc_result and doc_result.has_results():
         results.append(doc_result)
     return results
 
@@ -556,15 +593,23 @@ def create_search_file():
 
 @search_routes.route("/titles")
 def title_search():
+    """
+    Performs search on document titles.
+    :return:
+    """
     query = request.args.get('query', '')
     folder = request.args.get('folder', '')
     regex_option = get_option(request, 'regex', default=False, cast=bool)
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
+    search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
+
     results_dicts = []
     word_result_count = 0
     title_result_count = 0
     term_regex = None
+
+    validate_query(query, search_exact_words)
 
     docs = list(set(get_documents(
         filter_user=get_current_user_object(),
@@ -575,6 +620,10 @@ def title_search():
         if not folder:
             folder = "root"
         abort(400, f"Folder '{folder}' not found or not accessible")
+    if search_owned_docs:
+        docs = list(set(docs) - (set(docs) - set(get_documents_by_access_type(AccessType.owner))))
+        if not docs:
+            abort(400, f"No owned documents found in '{folder}'")
 
     if case_sensitive:
         flags = re.DOTALL
@@ -621,11 +670,26 @@ def title_search():
     })
 
 
+def validate_query(query, search_exact_words):
+    """
+    Abort if query is too short.
+    :param query:
+    :param search_exact_words:
+    :return:
+    """
+    if len(query.strip()) < MIN_QUERY_LENGTH and not search_exact_words:
+        if query.strip().lower() not in WHITE_LIST:
+            abort(400, f'Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped.')
+    if len(query.strip()) < MIN_EXACT_WORDS_QUERY_LENGTH and search_exact_words:
+        abort(400, f'Whole word search text must be at least {MIN_EXACT_WORDS_QUERY_LENGTH} character(s) '
+                   f'long with whitespace stripped.')
+
+
 @search_routes.route("")
 @cache.cached(key_prefix=make_cache_key)
 def search():
     """
-    Route for document word searches.
+    Perform document word search with a combined par file and grep.
     :return:
     """
 
@@ -634,24 +698,121 @@ def search():
     regex_option = get_option(request, 'regex', default=False, cast=bool)
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
+    search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
 
-    if len(query.strip()) < MIN_QUERY_LENGTH and not search_exact_words:
-        if query.strip().lower() not in WHITE_LIST:
-            abort(400, f'Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped.')
-    if len(query.strip()) < MIN_EXACT_WORDS_QUERY_LENGTH and search_exact_words:
-        abort(400, f'Whole word search text must be at least {MIN_EXACT_WORDS_QUERY_LENGTH} character(s) '
-                   f'long with whitespace stripped.')
+    validate_query(query, search_exact_words)
 
-    results = search_with_grep(
-        query,
-        folder,
-        case_sensitive=case_sensitive,
-        regex=regex_option,
-        search_exact_words=search_exact_words)
-
+    dir = '/tim_files/pars/'
+    grep_flags = ""
+    term_regex = None
+    owned_docs = []
+    results = []
+    doc_result = None
+    current_doc = ""
+    current_par = ""
+    output = []
     results_dicts = []
     title_result_count = 0
     word_result_count = 0
+
+    if case_sensitive:
+        flags = re.DOTALL
+    else:
+        grep_flags += "-i "
+        flags = re.DOTALL | re.IGNORECASE
+    if regex_option:
+        term = query
+    else:
+        grep_flags += "-F "
+        term = re.escape(query)
+    if search_exact_words:
+        # Picks the term if it's a whole word, only word or separated by comma etc.
+        grep_flags += "-sw "
+        term = fr"(?:^|\W)({term})(?:$|\W)"
+    try:
+        term_regex = re.compile(term, flags)
+    except sre_constants.error as e:
+        abort(400, f"Invalid regex: {str(e)}")
+
+    if search_owned_docs:
+        owned_docs = get_documents_by_access_type(AccessType.owner)
+        if not owned_docs:
+            abort(400, f"No owned documents found")
+
+    try:
+        cmd = f'grep {grep_flags}"{query}" all.log'
+        s = subprocess.Popen(cmd,
+                             cwd=dir,
+                             stdout=subprocess.PIPE,
+                             shell=True)
+        output_str = s.communicate()[0].decode('utf-8').strip()
+        output = output_str.splitlines()
+    except Exception as e:
+        abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
+
+    for line in output:
+        try:
+            if line and len(line) > 10:
+                temp = line[2:].split("/", 2)
+                doc_id = int(temp[0])
+                par_id = temp[1]
+                current_doc = doc_id
+                current_par = par_id
+
+                doc = DocEntry.find_by_id(doc_id)
+                if not doc:
+                    raise Exception(f"Unable to find document with id: {doc_id}")
+                doc_info = DocEntry.find_by_id(doc_id).document.get_docinfo()
+                current_doc = doc_info.path
+
+                # If not allowed to view, continue to the next one.
+                if not has_view_access(doc_info):
+                    continue
+
+                # If doc isn't in the search path, continue to the next one.
+                if not doc_info.path.startswith(folder):
+                    continue
+
+                if search_owned_docs:
+                    if not in_doc_list(doc_info, owned_docs):
+                        continue
+
+                # par = doc_info.document.get_paragraph(par_id)
+                # md = par.get_markdown()
+                par_result = ParResult(par_id)
+                par_info = json.loads(temp[2].replace("current:", "", 1))
+                md = par_info['md']
+                matches = list(term_regex.finditer(md))
+                if matches:
+                    for m in matches:
+                        result = WordResult(match_word=m.group(0),
+                                            match_start=m.start(),
+                                            match_end=m.end())
+                        par_result.add_result(result)
+                    par_result.preview = preview(md, query, matches[0])
+
+                # Create new doc result if first.
+                if not doc_result:
+                    doc_result = DocResult(doc_info)
+
+                # If not the same doc as previous result line, save non-empty previous result object and create new.
+                elif doc_result.doc_info.id != doc_id:
+                    if doc_result.has_results():
+                        results.append(doc_result)
+                    doc_result = DocResult(doc_info)
+
+                # Add the paragraph results to the most recent doc, unless empty.
+                if par_result.has_results():
+                    doc_result.add_par_result(par_result)
+
+        except Exception as e:
+            log_search_error(f"{str(e.__class__.__name__)}: {str(e)}", query, current_doc, par=current_par)
+
+    # TODO: Check the logic here.
+    # Since the loop ends before saving the last one, add it.
+    if doc_result and doc_result.has_results():
+        results.append(doc_result)
+
     for r in results:
         word_result_count += r.get_par_match_count()
         results_dicts.append(r.to_dict())
@@ -663,42 +824,3 @@ def search():
         'incomplete_search_reason': "",
         'results': results_dicts,
     })
-
-
-def search_in_doc(d: DocInfo, term_regex, args: SearchArgumentsBasic, use_exported: bool,
-                  ignore_plugins_settings=False) -> Generator[SearchResult, None, None]:
-    """
-    Performs a search operation for the specified document, yielding SearchResults.
-    Copied and edited from a search_in_documents function with following changes:
-     - term_regex formed outside of the function
-     - ignore plugins and settings option added
-
-    :param args: The search arguments.
-    :param d: The document to process.
-    :param term_regex: Regex formatted before calling.
-    :param use_exported: Whether to search in the exported form of paragraphs.
-    :param ignore_plugins_settings: Skip plugin and setting pars.
-    """
-    results_found = 0
-    pars_processed = 0
-    pars_found = 0
-    for d, p in enum_pars(d):
-        pars_processed += 1
-        if ignore_plugins_settings and (p.is_setting() or p.is_plugin()):
-            continue
-        md = p.get_exported_markdown(skip_tr=True) if use_exported else p.get_markdown()
-        matches = set(term_regex.finditer(md))
-        if matches:
-            pars_found += 1
-            for m in matches:
-                results_found += 1
-                yield SearchResult(
-                    doc=d,
-                    par=p,
-                    num_results=results_found,
-                    num_pars=pars_processed,
-                    num_pars_found=pars_found,
-                    match=m,
-                )
-        if args.onlyfirst and pars_processed >= args.onlyfirst:
-            break

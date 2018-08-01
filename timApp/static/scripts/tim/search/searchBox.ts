@@ -476,6 +476,7 @@ export class SearchBoxCtrl implements IController {
         this.wordMatchCount = 0;
         this.titleMatchCount = 0;
         this.tagResults = [];
+        this.titleResults = [];
         this.results = [];
         this.errorMessage = "";
         this.resultErrorMessage = "";
@@ -551,7 +552,7 @@ timApp.component("searchBox", {
         <label class="font-weight-normal" title="Allow regular expressions">
             <input type="checkbox" ng-model="$ctrl.regex"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
-        <label class="font-weight-normal" title="Leave plugins and settings out of the results">
+        <label ng-if="false" class="font-weight-normal" title="Leave plugins and settings out of the results">
             <input type="checkbox" ng-model="$ctrl.ignorePluginsSettings"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins and settings</label>
         <label class="font-weight-normal" title="Search only whole words with one or more character">
