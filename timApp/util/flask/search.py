@@ -485,7 +485,7 @@ def create_search_file():
     file_name = 'all_processed.log'
     raw_file = None
 
-    s = subprocess.Popen(f'grep -R "" --include="current" . > {file_name} 2>&1',
+    s = subprocess.Popen(f'grep -R "" --include="current" . > {raw_file_name} 2>&1',
                          cwd=dir_path,
                          shell=True)
     s.communicate()
