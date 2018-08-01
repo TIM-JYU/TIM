@@ -75,18 +75,18 @@ def get_subfolders():
     :return: A list of subfolder paths.
     """
     # TODO: Make this faster.
-    file_path = "static/folders.log"
+    # file_path = "static/folders.log"
     folder_set = set()
-    try:
-        with open(file_path) as file:
-            folder_id_list = file.read().replace('\n', '').split(",")
-            for id in folder_id_list:
-                folder = Folder.get_by_id(id)
-                if not has_view_access(folder):
-                    continue
-                folder_set.add(folder.path)
-    except:
-        get_folders_three_levels(request.args.get('folder', ''), folder_set)
+    # try:
+    #     with open(file_path) as file:
+    #         folder_id_list = file.read().replace('\n', '').split(",")
+    #         for id in folder_id_list:
+    #             folder = Folder.get_by_id(id)
+    #             if not has_view_access(folder):
+    #                 continue
+    #             folder_set.add(folder.path)
+    # except:
+    get_folders_three_levels(request.args.get('folder', ''), folder_set)
     return json_response(list(folder_set))
 
 

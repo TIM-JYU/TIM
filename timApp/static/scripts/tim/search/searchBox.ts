@@ -459,12 +459,11 @@ export class SearchBoxCtrl implements IController {
      * @returns {Promise<void>}
      */
     private async loadFolderSuggestions() {
-        // TODO: Load from an index / partition load to get all folders faster?
         // Currently goes only three levels deep to save time.
         const response = await $http<string[]>({
             method: "GET",
             params: {
-                folder: "",
+                folder: this.folder,
             },
             url: "/search/getFolders",
         });
