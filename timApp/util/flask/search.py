@@ -10,7 +10,7 @@ from flask import abort
 from flask import request
 from sqlalchemy.orm import joinedload
 
-from timApp.auth.accesshelper import verify_logged_in, has_view_access
+from timApp.auth.accesshelper import has_view_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_id
@@ -42,7 +42,26 @@ def make_cache_key(*args, **kwargs):
     return (str(get_current_user_id()) + path + str(request.query_string)).encode('utf-8')
 
 
-@search_routes.route('/getFolders')
+@search_routes.route('folderList')
+def create_folder_id_list():
+    """
+    Creates a list of folder ids.
+    """
+    file_path = "static/folders.log"
+    try:
+        folder_set = set()
+        get_folders_recursive(request.args.get('folder', ''), folder_set)
+        with open(file_path, "w+", encoding='utf-8') as folder_list_file:
+            for folder in folder_set:
+                if folder:
+                    folder_list_file.write(str(folder.id) + "\n")
+    except Exception as e:
+        abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
+    else:
+        return json_response(200, f"List of folders created to {file_path}")
+
+
+@search_routes.route('getFolders')
 def get_subfolders():
     """
     Returns subfolders of the starting folder.
@@ -51,15 +70,17 @@ def get_subfolders():
     recursive = Search every subfolder's subfolder; otherwise only to three steps depth.
     :return: A list of subfolder paths.
     """
-    # TODO: Only load folders that user has view access to.
-    # TODO: Load folder list from a file to save time.
 
-    verify_logged_in()
-    recursive = get_option(request, 'recursive', default=False, cast=bool)
+    file_path = "static/folders.log"
     folder_set = set()
-    if recursive:
-        get_folders_recursive(request.args.get('folder', ''), folder_set)
-    else:
+    try:
+        folder_id_list = open(file_path)
+        for id in folder_id_list:
+            folder = Folder.get_by_id(id)
+            if not has_view_access(folder):
+                continue
+            folder_set.add(folder.path)
+    except:
         get_folders_three_levels(request.args.get('folder', ''), folder_set)
     return json_response(list(folder_set))
 
@@ -74,27 +95,30 @@ def get_folders_three_levels(starting_path: str, folder_set) -> None:
     """
     folders = Folder.get_all_in_path(starting_path)
     for folder_l1 in folders:
-        folder_l1_path = folder_l1.path
-        folder_set.add(folder_l1_path)
-        for folder_l2 in Folder.get_all_in_path(folder_l1_path):
-            folder_l2_path = folder_l2.path
-            folder_set.add(folder_l2_path)
-            for folder_l3 in Folder.get_all_in_path(folder_l2_path):
-                folder_l3_path = folder_l3.path
-                folder_set.add(folder_l3_path)
+        if not has_view_access(folder_l1):
+            continue
+        folder_set.add(folder_l1.path)
+        for folder_l2 in Folder.get_all_in_path(folder_l1.path):
+            if not has_view_access(folder_l2):
+                continue
+            folder_set.add(folder_l2.path)
+            for folder_l3 in Folder.get_all_in_path(folder_l2.path):
+                if not has_view_access(folder_l3):
+                    continue
+                folder_set.add(folder_l3.path)
 
 
 def get_folders_recursive(starting_path: str, folder_set) -> None:
     """
-    Recursive function for get_subfolders. Note: very slow in large and deep directories.
+    Recursive function to get all subfolders. Note: very slow in large and deep directories.
     :param starting_path: The search root folder path.
-    :param folder_set: A string set where the results are saved.
+    :param folder_set: A set where the results are saved.
     :return: None.
     """
     folders = Folder.get_all_in_path(starting_path)
     if folders:
         for folder in folders:
-            folder_set.add(folder.path)
+            folder_set.add(folder)
             get_folders_recursive(folder.path, folder_set)
 
 
@@ -103,7 +127,6 @@ def tag_search():
     """
     A route for document tag search.
     """
-    # verify_logged_in()
 
     query = request.args.get('query', '')
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
@@ -454,6 +477,12 @@ def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = Tr
 
 
 def add_doc_info_line(doc_id, par_data):
+    """
+    Forms a JSON-compatible string with doc_id and paragraph info list.
+    :param doc_id: Document id.
+    :param par_data: List of paragraph dictionaries.
+    :return: String with paragraph data grouped under a document.
+    """
     if not par_data:
         return None
     par_json = ""
@@ -463,12 +492,17 @@ def add_doc_info_line(doc_id, par_data):
 
 
 def get_doc_par_id(line) -> (int, str, str):
+    """
+    Takes doc id, par id and par data from one grep search result line.
+    :param line: Tim pars grep search result line.
+    :return: Triple containing ids and par data.
+    """
     if line and len(line) > 10:
         temp = line[2:].split("/", 2)
         doc_id = int(temp[0])
         par_id = temp[1]
         par_data = temp[2].replace("current:", "", 1)
-        par_data = par_data[1:len(par_data)-2]
+        par_data = par_data[1:len(par_data) - 2]
         return doc_id, par_id, par_data
     else:
         return None
@@ -496,6 +530,7 @@ def create_search_file():
         pass
     with raw_file, open(dir_path + file_name,
                         "w+", encoding='utf-8') as file:
+        # Carry document id with par-list to ensure they won't be saved to wrong document.
         par_data = [-1, []]
         first = True
         for line in raw_file:
@@ -509,15 +544,15 @@ def create_search_file():
             if par_data[0] == doc_id:
                 par_data[1].append(par)
                 continue
+            # Otherwise save the previous one and empty par data.
             else:
-                # Save the previous one and empty par data.
                 new_line = add_doc_info_line(par_data[0], par_data[1])
                 if new_line:
                     file.write(new_line)
                 par_data[0] = doc_id
                 par_data[1].clear()
                 par_data[1].append(par)
-        # Write the last line separately, because the loop end leaves it unsaved.
+        # Write the last line separately, because loop leaves it unsaved.
         if par_data:
             new_line = add_doc_info_line(par_data[0], par_data[1])
             if new_line:
@@ -744,7 +779,6 @@ def search():
 
         except Exception as e:
             log_search_error(f"{str(e.__class__.__name__)}: {str(e)}", query, current_doc, par=current_par)
-
 
     return json_response({
         'titleResultCount': title_result_count,
