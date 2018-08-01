@@ -51,6 +51,9 @@ def get_subfolders():
     recursive = Search every subfolder's subfolder; otherwise only to three steps depth.
     :return: A list of subfolder paths.
     """
+    # TODO: Only load folders that user has view access to.
+    # TODO: Load folder list from a file to save time.
+
     verify_logged_in()
     recursive = get_option(request, 'recursive', default=False, cast=bool)
     folder_set = set()
@@ -120,11 +123,6 @@ def tag_search():
     docs = get_documents(filter_user=get_current_user_object(), filter_folder=folder,
                          search_recursively=True, custom_filter=custom_filter,
                          query_options=query_options)
-    if not docs:
-        temp = folder
-        if not folder:
-            temp = "root"
-        abort(400, f"Folder '{temp}' not found or not accessible")
 
     if search_owned_docs:
         docs = list(set(docs) - (set(docs) - set(get_documents_by_access_type(AccessType.owner))))
@@ -697,12 +695,7 @@ def search():
     # TODO: Check the logic here.
     # Since the loop ends before saving the last one, add it.
     if doc_result and doc_result.has_results():
-        # results.append(doc_result)
         results_dicts.append(doc_result.to_dict())
-
-    # for r in results:
-    #     word_result_count += r.get_par_match_count()
-    #     results_dicts.append(r.to_dict())
 
     return json_response({
         'titleResultCount': title_result_count,
