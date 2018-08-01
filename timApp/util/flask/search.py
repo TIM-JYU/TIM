@@ -121,9 +121,10 @@ def tag_search():
                          search_recursively=True, custom_filter=custom_filter,
                          query_options=query_options)
     if not docs:
+        temp = folder
         if not folder:
-            folder = "root"
-        abort(400, f"Folder '{folder}' not found or not accessible")
+            temp = "root"
+        abort(400, f"Folder '{temp}' not found or not accessible")
 
     if search_owned_docs:
         docs = list(set(docs) - (set(docs) - set(get_documents_by_access_type(AccessType.owner))))

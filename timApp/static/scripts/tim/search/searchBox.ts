@@ -113,7 +113,7 @@ export class SearchBoxCtrl implements IController {
     private searchDocNames: boolean = true; // Doc title search. On by default.
     private searchTags: boolean = true; // Tag search. On by default.
     private searchWords: boolean = true; // Content search. On by default.
-    private searchExactWords: boolean = false; // Whole word search.
+    private searchExactWords: boolean = true; // Whole word search.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
 
     private errorMessage: string = ""; // Message displayed only in search panel.
@@ -481,6 +481,7 @@ export class SearchBoxCtrl implements IController {
         this.tagMatchCount = 0;
         this.wordMatchCount = 0;
         this.titleMatchCount = 0;
+        this.incompleteSearchReason = "";
         this.tagResults = [];
         this.titleResults = [];
         this.results = [];
