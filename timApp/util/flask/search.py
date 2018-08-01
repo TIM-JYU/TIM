@@ -3,14 +3,14 @@ import re
 import sre_constants
 import subprocess
 from datetime import datetime
-from typing import Match, List
+from typing import Match, List, Set
 
 from flask import Blueprint, json
 from flask import abort
 from flask import request
 from sqlalchemy.orm import joinedload
 
-from timApp.auth.accesshelper import has_view_access
+from timApp.auth.accesshelper import has_view_access, verify_admin
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_id
@@ -47,7 +47,7 @@ def create_folder_id_list():
     """
     Creates a list of folder ids.
     """
-
+    verify_admin()
     file_path = "static/folders.log"
     try:
         folder_set = set()
@@ -86,30 +86,30 @@ def get_subfolders():
     return json_response(list(folder_set))
 
 
-def get_folders_three_levels(starting_path: str, folder_set) -> None:
+def get_folders_three_levels(starting_path: str, folder_set: Set[Folder]) -> None:
     """
     Limited folder search with depth of three steps from the root:
     root/level_1/level_2/level_3
     :param starting_path: The search root folder path.
-    :param folder_set: A string set where the results are saved.
+    :param folder_set: A folder object set where the results are saved.
     :return: None.
     """
     folders = Folder.get_all_in_path(starting_path)
     for folder_l1 in folders:
         if not has_view_access(folder_l1):
             continue
-        folder_set.add(folder_l1.path)
+        folder_set.add(folder_l1)
         for folder_l2 in Folder.get_all_in_path(folder_l1.path):
             if not has_view_access(folder_l2):
                 continue
-            folder_set.add(folder_l2.path)
+            folder_set.add(folder_l2)
             for folder_l3 in Folder.get_all_in_path(folder_l2.path):
                 if not has_view_access(folder_l3):
                     continue
-                folder_set.add(folder_l3.path)
+                folder_set.add(folder_l3)
 
 
-def get_folders_recursive(starting_path: str, folder_set) -> None:
+def get_folders_recursive(starting_path: str, folder_set: Set[Folder]) -> None:
     """
     Recursive function to get all subfolders. Note: very slow in large and deep directories.
     :param starting_path: The search root folder path.
@@ -515,6 +515,8 @@ def create_search_file():
     Combines all TIM-paragraphs into one file.
     :return:
     """
+    verify_admin()
+    
     dir_path = '/tim_files/pars/'
     raw_file_name = 'all.log'
     file_name = 'all_processed.log'
