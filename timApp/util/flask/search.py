@@ -453,19 +453,72 @@ def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = Tr
     return False
 
 
+def add_doc_info_line(doc_id, par_data):
+    if not par_data:
+        return None
+    par_json = ""
+    for par in par_data:
+        par_json += f"{{{par}}}, "
+    return f'{{"doc_id": "{doc_id}", "pars": [{par_json[:len(par_json)-2]}]}}\n'
+
+
+def get_doc_par_id(line) -> (int, str, str):
+    if line and len(line) > 10:
+        temp = line[2:].split("/", 2)
+        doc_id = int(temp[0])
+        par_id = temp[1]
+        par_data = temp[2].replace("current:", "", 1)
+        par_data = par_data[1:len(par_data)-2]
+        return doc_id, par_id, par_data
+    else:
+        return None
+
+
 @search_routes.route("combinePars")
 def create_search_file():
     """
     Combines all TIM-paragraphs into one file.
     :return:
     """
-    dir = '/tim_files/pars/'
-    file = 'all.log'
-    s = subprocess.Popen(f'grep -R "" --include="current" . > all.log 2>&1',
-                         cwd=dir,
+    dir_path = '/tim_files/pars/'
+    raw_file_name = 'all.log'
+    file_name = 'all_processed.log'
+    raw_file = None
+
+    s = subprocess.Popen(f'grep -R "" --include="current" . > {file_name} 2>&1',
+                         cwd=dir_path,
                          shell=True)
     s.communicate()
-    return json_response(f"File created to {dir}{file}")
+
+    try:
+        raw_file = open(dir_path + raw_file_name, "r")
+    except FileNotFoundError:
+        pass
+    with raw_file, open(dir_path + file_name,
+                        "w+", encoding='utf-8') as file:
+        previous_doc_id = -1
+        par_data = []
+        first = True
+        for line in raw_file:
+            doc_id, par_id, par = get_doc_par_id(line)
+            if not doc_id:
+                continue
+            # If same doc as previous line or the first, just add par data to list.
+            if previous_doc_id == doc_id or first:
+                first = False
+                par_data.append(par)
+                previous_doc_id = doc_id
+                continue
+            else:
+                # Save the previous one and empty par data.
+                new_line = add_doc_info_line(doc_id, par_data)
+                if new_line:
+                    file.write(new_line)
+                par_data = []
+                par_data.append(par)
+                previous_doc_id = doc_id
+
+    return json_response(f"File created to {dir_path}{file_name}")
 
 
 @search_routes.route("/titles")
@@ -619,7 +672,7 @@ def search():
             abort(400, f"No owned documents found")
 
     try:
-        cmd = f'grep {grep_flags}"{query}" all.log'
+        cmd = f'grep {grep_flags}"{query}" all_processed.log'
         s = subprocess.Popen(cmd,
                              cwd=dir,
                              stdout=subprocess.PIPE,
@@ -632,59 +685,44 @@ def search():
     for line in output:
         try:
             if line and len(line) > 10:
-                temp = line[2:].split("/", 2)
-                doc_id = int(temp[0])
-                par_id = temp[1]
-                current_doc = doc_id
-                current_par = par_id
+                line_info = json.loads(line)
 
-                doc = DocEntry.find_by_id(doc_id)
-                if not doc:
-                    raise Exception(f"Unable to find document with id: {doc_id}")
-                doc_info = DocEntry.find_by_id(doc_id).document.get_docinfo()
-                current_doc = doc_info.path
-
-                # If not allowed to view, continue to the next one.
-                if not has_view_access(doc_info):
-                    continue
+                doc_id = line_info['doc_id']
+                doc_info = DocEntry.find_by_id(doc_id)
+                pars = line_info['pars']
 
                 # If doc isn't in the search path, continue to the next one.
                 if not doc_info.path.startswith(folder):
                     continue
 
+                # If not allowed to view, continue to the next one.
+                if not has_view_access(doc_info):
+                    continue
+
+                # Skip if searching only owned and it's not owned.
                 if search_owned_docs:
                     if not in_doc_list(doc_info, owned_docs):
                         continue
 
-                # par = doc_info.document.get_paragraph(par_id)
-                # md = par.get_markdown()
-                par_result = ParResult(par_id)
-                par_info = json.loads(temp[2].replace("current:", "", 1))
-                md = par_info['md']
-                matches = list(term_regex.finditer(md))
-                if matches:
-                    for m in matches:
-                        result = WordResult(match_word=m.group(0),
-                                            match_start=m.start(),
-                                            match_end=m.end())
-                        par_result.add_result(result)
-                    par_result.preview = preview(md, query, matches[0])
+                doc_result = DocResult(doc_info)
 
-                # Create new doc result if first.
-                if not doc_result:
-                    doc_result = DocResult(doc_info)
-
-                # If not the same doc as previous result line, save non-empty previous result object and create new.
-                elif doc_result.doc_info.id != doc_id:
-                    if doc_result.has_results():
-                        # results.append(doc_result)
-                        word_result_count += doc_result.get_par_match_count()
-                        results_dicts.append(doc_result.to_dict())  # Save directly as dict to save time.
-                    doc_result = DocResult(doc_info)
-
-                # Add the paragraph results to the most recent doc, unless empty.
-                if par_result.has_results():
-                    doc_result.add_par_result(par_result)
+                for par in pars:
+                    id = par['id']
+                    md = par['md']
+                    par_result = ParResult(id)
+                    matches = list(term_regex.finditer(md))
+                    if matches:
+                        for m in matches:
+                            result = WordResult(match_word=m.group(0),
+                                                match_start=m.start(),
+                                                match_end=m.end())
+                            par_result.add_result(result)
+                        par_result.preview = preview(md, query, matches[0])
+                    if par_result.has_results():
+                        doc_result.add_par_result(par_result)
+                if doc_result.has_results():
+                    word_result_count += doc_result.get_par_match_count()
+                    results_dicts.append(doc_result.to_dict())  # Save directly as dict to save time.
                 if word_result_count > max_results:
                     incomplete_search_reason = f"more than maximum of {max_results} results"
                     break
@@ -692,10 +730,6 @@ def search():
         except Exception as e:
             log_search_error(f"{str(e.__class__.__name__)}: {str(e)}", query, current_doc, par=current_par)
 
-    # TODO: Check the logic here.
-    # Since the loop ends before saving the last one, add it.
-    if doc_result and doc_result.has_results():
-        results_dicts.append(doc_result.to_dict())
 
     return json_response({
         'titleResultCount': title_result_count,

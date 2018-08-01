@@ -183,7 +183,7 @@ export class SearchBoxCtrl implements IController {
             return;
         }
         this.updateLocalStorage();
-        if (((new Date().getTime() - start) / 1000) > 15) {
+        if (((new Date().getTime() - start) / 1000) > 20) {
             this.resultErrorMessage = "The search took a long time. " +
                 "Use more specific search settings for a faster search.";
         }
@@ -401,7 +401,6 @@ export class SearchBoxCtrl implements IController {
             }
             this.wordMatchCount = response.data.wordResultCount;
         }
-        console.log(this.results);
     }
 
     /**
