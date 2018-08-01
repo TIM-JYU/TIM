@@ -161,6 +161,8 @@ export class SearchBoxCtrl implements IController {
             this.loading = false;
             return;
         }
+
+        const start = new Date().getTime();
         if (this.searchTags) {
             await this.tagSearch();
         }
@@ -181,6 +183,10 @@ export class SearchBoxCtrl implements IController {
             return;
         }
         this.updateLocalStorage();
+        if (((new Date().getTime() - start) / 1000) > 15) {
+            this.resultErrorMessage = "The search took a long time. " +
+                "Use more specific search settings for a faster search.";
+        }
         if (this.incompleteSearchReason.length > 0) {
             this.resultErrorMessage = `Incomplete search: ${this.incompleteSearchReason}.` +
                 ` For better results choose more specific search options.`;
@@ -313,7 +319,6 @@ export class SearchBoxCtrl implements IController {
                 query: this.query,
                 folder: this.folder,
                 caseSensitive: this.caseSensitive,
-                ignorePluginsSettings: this.ignorePluginsSettings,
                 regex: this.regex,
                 searchExactWords: this.searchExactWords,
                 searchOwned: this.searchOwned,
@@ -343,7 +348,9 @@ export class SearchBoxCtrl implements IController {
         }
         if (response) {
             this.titleResults = response.data.results;
-            this.incompleteSearchReason = response.data.incomplete_search_reason;
+            if (response.data.incomplete_search_reason) {
+                this.incompleteSearchReason = response.data.incomplete_search_reason;
+            }
             this.titleMatchCount = response.data.titleResultCount;
         }
     }
@@ -359,16 +366,10 @@ export class SearchBoxCtrl implements IController {
                 query: this.query,
                 folder: this.folder,
                 caseSensitive: this.caseSensitive,
-                ignorePluginsSettings: this.ignorePluginsSettings,
-                // maxDocPars: this.maxDocPars,
-                // maxDocResults: this.maxDocResults,
-                // maxTime: 15,
-                // maxTotalResults: 10000,
                 regex: this.regex,
-                // searchDocNames: this.searchDocNames,
+                maxResults: 10000,
                 searchExactWords: this.searchExactWords,
                 searchOwned: this.searchOwned,
-                // searchWords: this.searchWords,
             },
             url: "/search",
         }));
@@ -395,9 +396,12 @@ export class SearchBoxCtrl implements IController {
         }
         if (response) {
             this.results = response.data.results;
-            this.incompleteSearchReason = response.data.incomplete_search_reason;
+            if (response.data.incomplete_search_reason) {
+                this.incompleteSearchReason = response.data.incomplete_search_reason;
+            }
             this.wordMatchCount = response.data.wordResultCount;
         }
+        console.log(this.results);
     }
 
     /**
@@ -424,7 +428,9 @@ export class SearchBoxCtrl implements IController {
             // }
             this.tagResults = response.data.results;
             this.tagMatchCount = response.data.tagResultCount;
-            this.incompleteSearchReason = response.data.incomplete_search_reason;
+            if (response.data.incomplete_search_reason) {
+                this.incompleteSearchReason = response.data.incomplete_search_reason;
+            }
         }
         if (err) {
             let tempError = "";

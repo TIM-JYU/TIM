@@ -24,7 +24,6 @@ from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_error
-from timApp.util.pdftools import SubprocessError
 
 search_routes = Blueprint('search',
                           __name__,
@@ -441,7 +440,7 @@ class DocResult:
 
 def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = True):
     """
-
+    Check whether a document is in document entry list.
     :param doc_info: Document to search from the list.
     :param docs: List of documents.
     :param shorten_list: Remove found documents from the list.
@@ -453,127 +452,6 @@ def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = Tr
                 docs.remove(d)
             return True
     return False
-
-
-def search_with_grep(query: str, folder: str, case_sensitive: bool, regex: bool, search_exact_words: bool,
-                     search_owned_docs: bool):
-    """
-    Perform search on combined par file with grep and parse and group the results.
-    :param query:
-    :param folder:
-    :param case_sensitive:
-    :param regex:
-    :param search_exact_words:
-    :param search_owned_docs:
-    :return:
-    """
-    dir = '/tim_files/pars/'
-    grep_flags = ""
-    term_regex = None
-    if case_sensitive:
-        flags = re.DOTALL
-    else:
-        grep_flags += "-i "
-        flags = re.DOTALL | re.IGNORECASE
-    if regex:
-        term = query
-    else:
-        grep_flags += "-F "
-        term = re.escape(query)
-    if search_exact_words:
-        # Picks the term if it's a whole word, only word or separated by comma etc.
-        grep_flags += "-sw "
-        term = fr"(?:^|\W)({term})(?:$|\W)"
-    try:
-        term_regex = re.compile(term, flags)
-    except sre_constants.error as e:
-        abort(400, f"Invalid regex: {str(e)}")
-
-    owned_docs = []
-    results = []
-    doc_result = None
-    current_doc = ""
-    current_par = ""
-    output = []
-
-    if search_owned_docs:
-        owned_docs = get_documents_by_access_type(AccessType.owner)
-        if not owned_docs:
-            abort(400, f"No owned documents found")
-
-    try:
-        s = subprocess.Popen(f'greep {grep_flags}"{query}" all.log',
-                             cwd=dir,
-                             stdout=subprocess.PIPE,
-                             shell=True)
-        output_str = s.communicate()[0].decode('utf-8').strip()
-        output = output_str.splitlines()
-    except Exception as e:
-        abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
-
-    for line in output:
-        try:
-            if line and len(line) > 10:
-                temp = line[2:].split("/", 2)
-                doc_id = int(temp[0])
-                par_id = temp[1]
-                current_doc = doc_id
-                current_par = par_id
-
-                doc = DocEntry.find_by_id(doc_id)
-                if not doc:
-                    raise Exception(f"Unable to find document with id: {doc_id}")
-                doc_info = DocEntry.find_by_id(doc_id).document.get_docinfo()
-                current_doc = doc_info.path
-
-                # If not allowed to view, continue to the next one.
-                if not has_view_access(doc_info):
-                    continue
-
-                # If doc isn't in the search path, continue to the next one.
-                if not doc_info.path.startswith(folder):
-                    continue
-
-                if search_owned_docs:
-                    if not in_doc_list(doc_info, owned_docs):
-                        continue
-
-                # par = doc_info.document.get_paragraph(par_id)
-                # md = par.get_markdown()
-                par_result = ParResult(par_id)
-                par_info = json.loads(temp[2].replace("current:", "", 1))
-                md = par_info['md']
-                matches = list(term_regex.finditer(md))
-                if matches:
-                    for m in matches:
-                        result = WordResult(match_word=m.group(0),
-                                            match_start=m.start(),
-                                            match_end=m.end())
-                        par_result.add_result(result)
-                    par_result.preview = preview(md, query, matches[0])
-
-                # Create new doc result if first.
-                if not doc_result:
-                    doc_result = DocResult(doc_info)
-
-                # If not the same doc as previous result line, save non-empty previous result object and create new.
-                elif doc_result.doc_info.id != doc_id:
-                    if doc_result.has_results():
-                        results.append(doc_result)
-                    doc_result = DocResult(doc_info)
-
-                # Add the paragraph results to the most recent doc, unless empty.
-                if par_result.has_results():
-                    doc_result.add_par_result(par_result)
-
-        except Exception as e:
-            log_search_error(f"{str(e.__class__.__name__)}: {str(e)}", query, current_doc, par=current_par)
-
-    # TODO: Check the logic here.
-    # Since the loop ends before saving the last one, add it.
-    if doc_result and doc_result.has_results():
-        results.append(doc_result)
-    return results
 
 
 @search_routes.route("combinePars")
@@ -699,6 +577,7 @@ def search():
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
     search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
+    max_results = get_option(request, 'maxResults', default=100000, cast=int)
 
     validate_query(query, search_exact_words)
 
@@ -706,7 +585,8 @@ def search():
     grep_flags = ""
     term_regex = None
     owned_docs = []
-    results = []
+    # results = []
+    incomplete_search_reason = ""
     doc_result = None
     current_doc = ""
     current_par = ""
@@ -798,12 +678,17 @@ def search():
                 # If not the same doc as previous result line, save non-empty previous result object and create new.
                 elif doc_result.doc_info.id != doc_id:
                     if doc_result.has_results():
-                        results.append(doc_result)
+                        # results.append(doc_result)
+                        word_result_count += doc_result.get_par_match_count()
+                        results_dicts.append(doc_result.to_dict())  # Save directly as dict to save time.
                     doc_result = DocResult(doc_info)
 
                 # Add the paragraph results to the most recent doc, unless empty.
                 if par_result.has_results():
                     doc_result.add_par_result(par_result)
+                if word_result_count > max_results:
+                    incomplete_search_reason = f"more than maximum of {max_results} results"
+                    break
 
         except Exception as e:
             log_search_error(f"{str(e.__class__.__name__)}: {str(e)}", query, current_doc, par=current_par)
@@ -811,16 +696,17 @@ def search():
     # TODO: Check the logic here.
     # Since the loop ends before saving the last one, add it.
     if doc_result and doc_result.has_results():
-        results.append(doc_result)
+        # results.append(doc_result)
+        results_dicts.append(doc_result.to_dict())
 
-    for r in results:
-        word_result_count += r.get_par_match_count()
-        results_dicts.append(r.to_dict())
+    # for r in results:
+    #     word_result_count += r.get_par_match_count()
+    #     results_dicts.append(r.to_dict())
 
     return json_response({
         'titleResultCount': title_result_count,
         'wordResultCount': word_result_count,
         'errors': [],
-        'incomplete_search_reason': "",
+        'incomplete_search_reason': incomplete_search_reason,
         'results': results_dicts,
     })
