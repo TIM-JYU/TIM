@@ -42,15 +42,16 @@ def make_cache_key(*args, **kwargs):
     return (str(get_current_user_id()) + path + str(request.query_string)).encode('utf-8')
 
 
-@search_routes.route('folderList')
+@search_routes.route('listFolders')
 def create_folder_id_list():
     """
     Creates a list of folder ids.
     """
+
     file_path = "static/folders.log"
     try:
         folder_set = set()
-        get_folders_recursive(request.args.get('folder', ''), folder_set)
+        get_folders_three_levels(request.args.get('folder', ''), folder_set)
         with open(file_path, "w+", encoding='utf-8') as folder_list_file:
             for folder in folder_set:
                 if folder:
@@ -58,7 +59,7 @@ def create_folder_id_list():
     except Exception as e:
         abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
     else:
-        return json_response(200, f"List of folders created to {file_path}")
+        return json_response(f"List of folders created to {file_path}")
 
 
 @search_routes.route('getFolders')
@@ -70,7 +71,7 @@ def get_subfolders():
     recursive = Search every subfolder's subfolder; otherwise only to three steps depth.
     :return: A list of subfolder paths.
     """
-
+    # TODO: Make this faster.
     file_path = "static/folders.log"
     folder_set = set()
     try:
