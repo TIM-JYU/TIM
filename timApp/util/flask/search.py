@@ -53,13 +53,16 @@ def create_folder_id_list():
         folder_set = set()
         get_folders_three_levels(request.args.get('folder', ''), folder_set)
         with open(file_path, "w+", encoding='utf-8') as folder_list_file:
+            file_string = ""
             for folder in folder_set:
                 if folder:
-                    folder_list_file.write(str(folder.id) + "\n")
+                    file_string += str(folder.id) + ", "
+            file_string = file_string[:len(file_string)-2]
+            folder_list_file.write(file_string)
     except Exception as e:
         abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
     else:
-        return json_response(f"List of folders created to {file_path}")
+        return json_response(f"List of folder ids created to {file_path} with contents: {file_string}")
 
 
 @search_routes.route('getFolders')
@@ -75,12 +78,13 @@ def get_subfolders():
     file_path = "static/folders.log"
     folder_set = set()
     try:
-        folder_id_list = open(file_path)
-        for id in folder_id_list:
-            folder = Folder.get_by_id(id)
-            if not has_view_access(folder):
-                continue
-            folder_set.add(folder.path)
+        with open(file_path) as file:
+            folder_id_list = file.read().replace('\n', '').split(",")
+            for id in folder_id_list:
+                folder = Folder.get_by_id(id)
+                if not has_view_access(folder):
+                    continue
+                folder_set.add(folder.path)
     except:
         get_folders_three_levels(request.args.get('folder', ''), folder_set)
     return json_response(list(folder_set))
@@ -477,6 +481,16 @@ def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = Tr
     return False
 
 
+def decode_scandinavians(s: str):
+    """
+    Replace unicode codes with å, ä & ö.
+    :param s:
+    :return:
+    """
+    return s.replace(r"\u00e5", "å").replace(r"\u00e4", "ä").replace(r"\u00f6", "ö").\
+        replace(r"\u00c5", "Å").replace(r"\u00c4", "Ä").replace(r"\u00d6", "Ö")
+
+
 def add_doc_info_line(doc_id, par_data):
     """
     Forms a JSON-compatible string with doc_id and paragraph info list.
@@ -489,6 +503,7 @@ def add_doc_info_line(doc_id, par_data):
     par_json = ""
     for par in par_data:
         par_json += f"{{{par}}}, "
+    par_json = decode_scandinavians(par_json)
     return f'{{"doc_id": "{doc_id}", "pars": [{par_json[:len(par_json)-2]}]}}\n'
 
 
@@ -516,7 +531,7 @@ def create_search_file():
     :return:
     """
     verify_admin()
-    
+
     dir_path = '/tim_files/pars/'
     raw_file_name = 'all.log'
     file_name = 'all_processed.log'
