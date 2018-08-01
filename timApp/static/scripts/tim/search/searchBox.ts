@@ -367,7 +367,7 @@ export class SearchBoxCtrl implements IController {
                 folder: this.folder,
                 caseSensitive: this.caseSensitive,
                 regex: this.regex,
-                maxResults: 10000,
+                // maxResults: 100000,
                 searchExactWords: this.searchExactWords,
                 searchOwned: this.searchOwned,
             },

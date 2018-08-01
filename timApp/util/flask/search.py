@@ -496,27 +496,32 @@ def create_search_file():
         pass
     with raw_file, open(dir_path + file_name,
                         "w+", encoding='utf-8') as file:
-        previous_doc_id = -1
-        par_data = []
+        par_data = [-1, []]
         first = True
         for line in raw_file:
             doc_id, par_id, par = get_doc_par_id(line)
             if not doc_id:
                 continue
-            # If same doc as previous line or the first, just add par data to list.
-            if previous_doc_id == doc_id or first:
+            if first:
+                par_data[0] = doc_id
                 first = False
-                par_data.append(par)
-                previous_doc_id = doc_id
+            # If same doc as previous line or the first, just add par data to list.
+            if par_data[0] == doc_id:
+                par_data[1].append(par)
                 continue
             else:
                 # Save the previous one and empty par data.
-                new_line = add_doc_info_line(doc_id, par_data)
+                new_line = add_doc_info_line(par_data[0], par_data[1])
                 if new_line:
                     file.write(new_line)
-                par_data = []
-                par_data.append(par)
-                previous_doc_id = doc_id
+                par_data[0] = doc_id
+                par_data[1].clear()
+                par_data[1].append(par)
+        # Write the last line separately, because the loop end leaves it unsaved.
+        if par_data:
+            new_line = add_doc_info_line(par_data[0], par_data[1])
+            if new_line:
+                file.write(new_line)
 
     return json_response(f"File created to {dir_path}{file_name}")
 
@@ -619,7 +624,7 @@ def validate_query(query, search_exact_words):
 @cache.cached(key_prefix=make_cache_key)
 def search():
     """
-    Perform document word search with a combined par file and grep.
+    Perform document word search on a combined and grouped par file using grep.
     :return:
     """
 
@@ -629,7 +634,7 @@ def search():
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
     search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
     search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
-    max_results = get_option(request, 'maxResults', default=100000, cast=int)
+    max_results = get_option(request, 'maxResults', default=1000000, cast=int)
 
     validate_query(query, search_exact_words)
 
@@ -671,6 +676,7 @@ def search():
         if not owned_docs:
             abort(400, f"No owned documents found")
 
+    # TODO: Error cases in subprocess may not show, slips through as empty search result instead.
     try:
         cmd = f'grep {grep_flags}"{query}" all_processed.log'
         s = subprocess.Popen(cmd,
@@ -685,11 +691,12 @@ def search():
     for line in output:
         try:
             if line and len(line) > 10:
+
+                # The file is supposed to contain doc_id and pars in a list for each document.
                 line_info = json.loads(line)
 
                 doc_id = line_info['doc_id']
                 doc_info = DocEntry.find_by_id(doc_id)
-                pars = line_info['pars']
 
                 # If doc isn't in the search path, continue to the next one.
                 if not doc_info.path.startswith(folder):
@@ -704,6 +711,7 @@ def search():
                     if not in_doc_list(doc_info, owned_docs):
                         continue
 
+                pars = line_info['pars']
                 doc_result = DocResult(doc_info)
 
                 for par in pars:
@@ -711,6 +719,7 @@ def search():
                     md = par['md']
                     par_result = ParResult(id)
                     matches = list(term_regex.finditer(md))
+
                     if matches:
                         for m in matches:
                             result = WordResult(match_word=m.group(0),
@@ -718,11 +727,17 @@ def search():
                                                 match_end=m.end())
                             par_result.add_result(result)
                         par_result.preview = preview(md, query, matches[0])
+
+                    # Don't add empty par result (in error cases).
                     if par_result.has_results():
                         doc_result.add_par_result(par_result)
+
+                # If no valid paragraph results, skip document.
                 if doc_result.has_results():
                     word_result_count += doc_result.get_par_match_count()
                     results_dicts.append(doc_result.to_dict())  # Save directly as dict to save time.
+
+                # End search if the limit is reached.
                 if word_result_count > max_results:
                     incomplete_search_reason = f"more than maximum of {max_results} results"
                     break
