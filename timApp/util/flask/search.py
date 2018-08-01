@@ -102,15 +102,15 @@ def get_folders_three_levels(starting_path: str, folder_set: Set[Folder]) -> Non
     for folder_l1 in folders:
         if not has_view_access(folder_l1):
             continue
-        folder_set.add(folder_l1)
+        folder_set.add(folder_l1.path)
         for folder_l2 in Folder.get_all_in_path(folder_l1.path):
             if not has_view_access(folder_l2):
                 continue
-            folder_set.add(folder_l2)
+            folder_set.add(folder_l2.path)
             for folder_l3 in Folder.get_all_in_path(folder_l2.path):
                 if not has_view_access(folder_l3):
                     continue
-                folder_set.add(folder_l3)
+                folder_set.add(folder_l3.path)
 
 
 def get_folders_recursive(starting_path: str, folder_set: Set[Folder]) -> None:
@@ -283,9 +283,6 @@ class WordResult:
         self.match_start = match_start
         self.match_end = match_end
 
-    def __repr__(self):
-        return f"match_word: {self.match_word}, match_start: {self.match_start}, match_end: {self.match_end},"
-
     def to_dict(self):
         return {'match_word': self.match_word, 'match_start': self.match_start, 'match_end': self.match_end}
 
@@ -307,11 +304,6 @@ class ParResult:
 
     def has_results(self) -> bool:
         return len(self.word_results) > 0
-
-    def __repr__(self):
-        temp_preview = self.preview.replace('\n', ' ').replace('\r', '')
-        temp_preview = ""
-        return f"par_id: {self.par_id}, preview: {temp_preview}, word_results: {repr(self.word_results)}"
 
     def to_dict(self):
         """
@@ -355,9 +347,6 @@ class TitleResult:
         :return: Whether the object contains any results.
         """
         return len(self.word_results) > 0
-
-    def __repr__(self):
-        return f"word_results: {repr(self.word_results)}"
 
     def to_dict(self):
         """
@@ -413,10 +402,6 @@ class DocResult:
         :return: Whether the document has any results in it.
         """
         return len(self.par_results) > 0 or len(self.title_results) > 0
-
-    def __repr__(self):
-        return f"doc_info: {repr(self.doc_info)}, par_results: {repr(self.par_results)}, " \
-               f"title_results: {repr(self.title_results)}"
 
     def to_dict(self):
         """
@@ -484,8 +469,8 @@ def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = Tr
 def decode_scandinavians(s: str):
     """
     Replace unicode codes with å, ä & ö.
-    :param s:
-    :return:
+    :param s: A string with encoded characters like '\u00e4'.
+    :return: Plain text (except for other chars).
     """
     return s.replace(r"\u00e5", "å").replace(r"\u00e4", "ä").replace(r"\u00f6", "ö").\
         replace(r"\u00c5", "Å").replace(r"\u00c4", "Ä").replace(r"\u00d6", "Ö")
@@ -503,6 +488,7 @@ def add_doc_info_line(doc_id, par_data):
     par_json = ""
     for par in par_data:
         par_json += f"{{{par}}}, "
+    # TODO: Use some module to do this.
     par_json = decode_scandinavians(par_json)
     return f'{{"doc_id": "{doc_id}", "pars": [{par_json[:len(par_json)-2]}]}}\n'
 
@@ -527,7 +513,8 @@ def get_doc_par_id(line) -> (int, str, str):
 @search_routes.route("combinePars")
 def create_search_file():
     """
-    Combines all TIM-paragraphs into one file.
+    Grouped all TIM-paragraphs under documents and combines them into a single file.
+    Creates also a raw file without grouping.
     :return:
     """
     verify_admin()
