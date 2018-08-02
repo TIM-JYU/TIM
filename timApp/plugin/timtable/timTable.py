@@ -275,20 +275,26 @@ def tim_table_add_datablock_row():
         return abort(400)
 
     datablock_entries = construct_datablock_entry_list_from_yaml(plug)
-
-    highest_row_index = 0
-
     new_datablock_entries = []
-    for entry in datablock_entries:
-        if entry.row == row_id - 1:
-            new_datablock_entries.append(RelativeDataBlockValue(row_id, entry.column, ''))
-        elif entry.row >= row_id:
-            entry.row += 1
 
-        if entry.row > highest_row_index:
-            highest_row_index = entry.row
+    if datablock_entries:
+        for entry in datablock_entries:
+            if entry.row == row_id - 1:
+                new_datablock_entries.append(RelativeDataBlockValue(row_id, entry.column, ''))
+            elif entry.row >= row_id:
+                entry.row += 1
 
-        new_datablock_entries.append(entry)
+            new_datablock_entries.append(entry)
+    else:
+        try:
+            rows = plug.values[TABLE][ROWS]
+        except KeyError:
+            return abort(400)
+        if not rows:
+            return abort(400)
+        row = rows[-1][ROW]
+        for i in range(0, len(row)):
+            new_datablock_entries.append(RelativeDataBlockValue(len(rows), i, ''))
 
     plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(new_datablock_entries)
     plug.save()
@@ -329,6 +335,44 @@ def tim_table_add_column():
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
+@timTable_plugin.route("addDatablockColumn", methods=["POST"])
+def tim_table_add_datablock_column():
+    """
+    Adds a column into the table's datablock.
+    Doesn't affect the table's regular YAML.
+    :return: The entire table's data after the column has been added.
+    """
+    doc_id, par_id = verify_json_params('docId', 'parId')
+    d, plug = get_plugin_from_paragraph(doc_id, par_id)
+    verify_edit_access(d)
+    column_counts = {}
+    try:
+        rows = plug.values[TABLE][ROWS]
+    except KeyError:
+        return abort(400)
+    for i in range(0, len(rows)):
+        try:
+            current_row = rows[i][ROW]
+        except KeyError:
+            return abort(400)
+        column_counts[i] = len(current_row)
+
+    if not is_datablock(plug.values):
+        create_datablock(plug.values[TABLE])
+
+    datablock_entries = construct_datablock_entry_list_from_yaml(plug)
+    for entry in datablock_entries:
+        if not entry.row in column_counts or column_counts[entry.row] <= entry.column:
+            column_counts[entry.row] = entry.column + 1
+
+    for row_index, column_count in column_counts.items():
+        datablock_entries.append(RelativeDataBlockValue(row_index, column_count, ''))
+
+    plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(datablock_entries)
+    plug.save()
+    return json_response(prepare_for_and_call_dumbo(plug))
+
+
 @timTable_plugin.route("removeRow", methods=["POST"])
 def tim_table_remove_row():
     """
@@ -358,6 +402,7 @@ def tim_table_remove_row():
             if entry.row > row_id:
                 entry.row -= 1
             new_datablock_entries.append(entry)
+
         plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(new_datablock_entries)
 
     plug.save()
@@ -616,7 +661,7 @@ def prepare_for_and_call_dumbo(plug: Plugin):
     :param plug: The plugin instance.
     :return: The conversion result from Dumbo.
     """
-    if plug.is_automd_enabled():
+    if plug.is_automd_enabled(default = True):
         return call_dumbo(prepare_for_dumbo(plug.values), DUMBO_PARAMS)
 
     return call_dumbo(plug.values, DUMBO_PARAMS)
@@ -683,6 +728,9 @@ def construct_datablock_entry_list_from_yaml(plug: Plugin) -> list:
     try:
         values = plug.values[TABLE][DATABLOCK][CELLS]
     except KeyError:
+        return []
+
+    if not values:
         return []
 
     final_list = []

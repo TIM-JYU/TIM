@@ -1049,7 +1049,6 @@ export class TimTableController implements IController {
 
     /**
      * Handles the user's click on the "add row" button.
-     * @returns {Promise<void>}
      */
     async addRowButtonClick() {
         if (this.isInDataInputMode()) {
@@ -1132,16 +1131,27 @@ export class TimTableController implements IController {
     }
 
     /**
+     * Handles the user's click on the "add column" button.
+     */
+    async addColumnButtonClick() {
+        if (this.isInDataInputMode()) {
+            this.addColumn("/timTable/addDatablockColumn");
+        } else {
+            this.addColumn("/timTable/addColumn");
+        }
+    }
+
+    /**
      * Tells the server to add a new column into this table.
      */
-    async addColumn() {
+    async addColumn(route: string) {
         if (this.viewctrl == null) {
             return;
         }
 
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
-        const response = await $http.post<TimTable>("/timTable/addColumn",
+        const response = await $http.post<TimTable>(route,
             {docId, parId});
         this.data = response.data;
         this.reInitialize();
@@ -1311,7 +1321,7 @@ timApp.component("timTable", {
      ng-mouseleave="$ctrl.mouseOutTable()">
     <div class="timTableContentDiv">
     <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
-            ng-click="$ctrl.addColumn()"><span class="glyphicon glyphicon-plus"></span></button>
+            ng-click="$ctrl.addColumnButtonClick()"><span class="glyphicon glyphicon-plus"></span></button>
     <button class="timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.isInEditMode()"
             ng-click="$ctrl.removeColumn()"><span class="glyphicon glyphicon-minus"></span></button>
     <table ng-class="{editable: $ctrl.isInEditMode() && !$ctrl.isInForcedEditMode(), forcedEditable: $ctrl.isInForcedEditMode()}" class="timTableTable"
