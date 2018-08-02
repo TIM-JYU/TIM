@@ -3,7 +3,7 @@ import re
 import sre_constants
 import subprocess
 from datetime import datetime
-from typing import Match, List, Set
+from typing import Match, List
 
 from flask import Blueprint, json
 from flask import abort
@@ -42,91 +42,21 @@ def make_cache_key(*args, **kwargs):
     return (str(get_current_user_id()) + path + str(request.query_string)).encode('utf-8')
 
 
-@search_routes.route('listFolders')
-def create_folder_id_list():
-    """
-    Creates a list of folder ids.
-    """
-    verify_admin()
-    file_path = "static/folders.log"
-    try:
-        folder_set = set()
-        get_folders_three_levels(request.args.get('folder', ''), folder_set)
-        with open(file_path, "w+", encoding='utf-8') as folder_list_file:
-            file_string = ""
-            for folder in folder_set:
-                if folder:
-                    file_string += str(folder.id) + ", "
-            file_string = file_string[:len(file_string) - 2]
-            folder_list_file.write(file_string)
-    except Exception as e:
-        abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
-    else:
-        return json_response(f"List of folder ids created to {file_path} with contents: {file_string}")
-
-
 @search_routes.route('getFolders')
 def get_subfolders():
     """
     Returns subfolders of the starting folder.
     Options:
     folder = Starting folder.
-    recursive = Search every subfolder's subfolder; otherwise only to three steps depth.
     :return: A list of subfolder paths.
     """
-    # TODO: Make this faster.
-    # file_path = "static/folders.log"
-    folder_set = set()
-    # try:
-    #     with open(file_path) as file:
-    #         folder_id_list = file.read().replace('\n', '').split(",")
-    #         for id in folder_id_list:
-    #             folder = Folder.get_by_id(id)
-    #             if not has_view_access(folder):
-    #                 continue
-    #             folder_set.add(folder.path)
-    # except:
-    get_folders_three_levels(request.args.get('folder', ''), folder_set)
-    return json_response(list(folder_set))
-
-
-def get_folders_three_levels(starting_path: str, folder_set: Set[str]) -> None:
-    """
-    Limited folder search with depth of three steps from the root:
-    root/level_1/level_2/level_3
-    :param starting_path: The search root folder path.
-    :param folder_set: A path string set where the results are saved.
-    :return: None.
-    """
-    if starting_path:
-        folder_set.add(starting_path)
-    folders = Folder.get_all_in_path(starting_path)
-    for folder_l1 in folders:
-        if not has_view_access(folder_l1):
-            continue
-        folder_set.add(folder_l1.path)
-        for folder_l2 in Folder.get_all_in_path(folder_l1.path):
-            if not has_view_access(folder_l2):
-                continue
-            folder_set.add(folder_l2.path)
-            for folder_l3 in Folder.get_all_in_path(folder_l2.path):
-                if not has_view_access(folder_l3):
-                    continue
-                folder_set.add(folder_l3.path)
-
-
-def get_folders_recursive(starting_path: str, folder_set: Set[Folder]) -> None:
-    """
-    Recursive function to get all subfolders. Note: very slow in large and deep directories.
-    :param starting_path: The search root folder path.
-    :param folder_set: A set where the results are saved.
-    :return: None.
-    """
-    folders = Folder.get_all_in_path(starting_path)
-    if folders:
-        for folder in folders:
-            folder_set.add(folder)
-            get_folders_recursive(folder.path, folder_set)
+    root_path = request.args.get('folder', '')
+    folders = Folder.query.filter(Folder.location.like(root_path + '%'))
+    folders_viewable = [root_path]
+    for folder in folders:
+        if has_view_access(folder):
+            folders_viewable.append(folder.path)
+    return json_response(folders_viewable)
 
 
 @search_routes.route('/tags')
