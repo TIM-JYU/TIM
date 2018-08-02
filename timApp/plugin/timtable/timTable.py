@@ -272,7 +272,7 @@ def tim_table_add_datablock_row():
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
 
     if not is_datablock(plug.values):
-        return abort(400)
+        create_datablock(plug.values[TABLE])
 
     datablock_entries = construct_datablock_entry_list_from_yaml(plug)
     new_datablock_entries = []
