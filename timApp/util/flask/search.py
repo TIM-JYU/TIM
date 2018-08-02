@@ -419,7 +419,10 @@ def add_doc_info_line(doc_id, par_data):
         return None
     par_json = ""
     for par in par_data:
-        par_json += f"{{{par}}}, "
+        par_dict = json.loads(f"{{{par}}}")
+        par_id = par_dict['id']
+        par_md = decode_scandinavians(par_dict['md'].replace("\r", " ").replace("\n", " "))
+        par_json += json.dumps({'id': par_dict['id'], 'md': par_md}) + ", "
     # TODO: Use some module to do this.
     par_json = decode_scandinavians(par_json)
     return f'{{"doc_id": "{doc_id}", "pars": [{par_json[:len(par_json)-2]}]}}\n'
@@ -492,7 +495,7 @@ def create_search_file():
         # Write the last line separately, because loop leaves it unsaved.
         if par_data:
             new_line = add_doc_info_line(par_data[0], par_data[1])
-            if new_line:
+            if new_line and len(new_line) >= 30:
                 file.write(new_line)
 
     return json_response(f"File created to {dir_path}{file_name}")
