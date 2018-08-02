@@ -854,16 +854,18 @@ export class TimTableController implements IController {
             const tableCellOffset = tablecell.offset();
             const tableCellWidth = tablecell.outerWidth();
 
-            const editOuterWidth = edit.outerWidth();
+            // const editOuterWidth = edit.outerWidth();
 
-            /*let editOuterWidth;
+            const minEditWidth = 200;
+
+            let editOuterWidth;
             if (tableCellWidth) {
-                editOuterWidth = Math.max(200, tableCellWidth);
+                editOuterWidth = Math.max(minEditWidth, tableCellWidth);
             } else {
-                editOuterWidth = 200;
+                editOuterWidth = minEditWidth;
             }
 
-            edit.width(editOuterWidth);*/
+            edit.width(editOuterWidth);
 
 
             if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
