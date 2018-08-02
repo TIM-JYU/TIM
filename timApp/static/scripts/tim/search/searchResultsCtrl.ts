@@ -28,7 +28,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     private folder: string = "";
     private totalResults: number = 0;
     private limitedDisplay: boolean = false; // If there's large number of results, optimize shown results.
-    //private limitedDisplayTreshold: number = 5000;
+    private limitedDisplayThreshold: number = 100000;
     private errorMessage: string = "";
     private orderByOption = "1";
     private allClosed = true;
@@ -69,10 +69,11 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
         this.folder = ctrl.folder;
         this.errorMessage = ctrl.resultErrorMessage;
         this.searchWord = ctrl.query;
-        // Unused: If result count is over the treshold, skip paragraph grouping and previews.
-        // if (this.totalResults > this.limitedDisplayTreshold) {
-        //     this.limitedDisplay = true;
-        // }
+        // If result count is over the treshold, skip paragraph grouping and previews.
+        // Without some limit massive results can crash browser.
+        if (this.totalResults > this.limitedDisplayThreshold) {
+            this.limitedDisplay = true;
+        }
         if (!this.limitedDisplay && (ctrl.tagMatchCount > 0 || ctrl.wordMatchCount > 0)) {
             this.collapsables = true;
         }

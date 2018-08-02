@@ -421,10 +421,6 @@ export class SearchBoxCtrl implements IController {
             url: "/search/tags",
         }));
         if (response) {
-            // if (response.data.errors.length > 0) {
-            //     console.log("Errors were encountered during tag search:");
-            //     console.log(response.data.errors);
-            // }
             this.tagResults = response.data.results;
             this.tagMatchCount = response.data.tagResultCount;
             if (response.data.incomplete_search_reason) {
