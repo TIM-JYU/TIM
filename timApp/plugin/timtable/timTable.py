@@ -335,17 +335,18 @@ def tim_table_remove_row():
     Removes a row from the table.
     :return: The entire table's data after the row has been removed.
     """
-    doc_id, par_id, row_id = verify_json_params('docId', 'parId', 'rowId')
+    doc_id, par_id, row_id, datablock_only = verify_json_params('docId', 'parId', 'rowId', 'datablockOnly')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     verify_edit_access(d)
-    try:
-        rows = plug.values[TABLE][ROWS]
-    except KeyError:
-        return abort(400)
+    if not datablock_only:
+        try:
+            rows = plug.values[TABLE][ROWS]
+        except KeyError:
+            return abort(400)
 
-    if len(rows) <= row_id:
-        return abort(400)
-    rows.pop(row_id)
+        if len(rows) <= row_id:
+            return abort(400)
+        rows.pop(row_id)
 
     if is_datablock(plug.values):
         datablock_entries = construct_datablock_entry_list_from_yaml(plug)

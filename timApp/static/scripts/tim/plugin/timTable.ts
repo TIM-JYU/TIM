@@ -1105,14 +1105,24 @@ export class TimTableController implements IController {
             return;
         }
 
+        let datablockOnly;
+        let rowId;
+
+        if (this.isInDataInputMode()) {
+            datablockOnly = true;
+            rowId = this.cellDataMatrix.length - 1;
+        } else {
+            datablockOnly = false;
+            rowId = this.data.table.rows.length - 1;
+        }
+
         const docId = this.viewctrl.item.id;
         const parId = this.getOwnParId();
-        const rowId = this.data.table.rows.length - 1;
 
         if (rowId < 1) { return; }
 
         const response = await $http.post<TimTable>("/timTable/removeRow",
-            {docId, parId, rowId});
+            {docId, parId, rowId, datablockOnly});
         this.data = response.data;
         this.reInitialize();
     }
