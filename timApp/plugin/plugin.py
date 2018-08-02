@@ -214,7 +214,7 @@ class Plugin:
         return points
 
     def to_paragraph(self) -> DocParagraph:
-        text = '```\n' + yaml.dump(self.values, default_flow_style=False) + '\n```'
+        text = '```\n' + yaml.dump(self.values, allow_unicode=True, default_flow_style=False) + '\n```'
         attrs = {}
         if self.par:
             attrs = self.par.attrs
