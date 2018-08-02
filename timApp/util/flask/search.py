@@ -10,7 +10,7 @@ from flask import abort
 from flask import request
 from sqlalchemy.orm import joinedload
 
-from timApp.auth.accesshelper import has_view_access, verify_admin
+from timApp.auth.accesshelper import has_view_access, verify_admin, has_edit_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_id
@@ -18,7 +18,7 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
-from timApp.item.block import Block, BlockType
+from timApp.item.block import Block
 from timApp.item.tag import Tag
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
@@ -422,12 +422,8 @@ def add_doc_info_line(doc_id, par_data):
         # Cherry pick attributes, because others are unnecessary for the search.
         par_dict = json.loads(f"{{{par}}}")
         par_md = decode_scandinavians(par_dict['md'].replace("\r", " ").replace("\n", " "))
-        par_plugin = ""
-        try:
-            par_plugin = par_dict['attrs']['plugin']
-        except:
-            pass
-        par_json += json.dumps({'id': par_dict['id'], 'plugin': par_plugin, 'md': par_md}) + ", "
+        par_attrs = par_dict['attrs']
+        par_json += json.dumps({'id': par_dict['id'], 'attrs': par_attrs, 'md': par_md}) + ", "
     # TODO: Use some module to do this.
     # Do this here because json.dumps changes characters back to code form.
     par_json = decode_scandinavians(par_json)
@@ -466,46 +462,54 @@ def create_search_file():
     file_name = 'all_processed.log'
     raw_file = None
 
-    s = subprocess.Popen(f'grep -R "" --include="current" . > {raw_file_name} 2>&1',
+    try:
+        subprocess.Popen(f'grep -R "" --include="current" . > {raw_file_name} 2>&1',
                          cwd=dir_path,
-                         shell=True)
-    s.communicate()
-
+                         shell=True).communicate()
+    except Exception as e:
+        abort(400,
+              f"Failed to create preliminary file {dir_path}{raw_file_name}: {str(e.__class__.__name__)}: {str(e)}")
     try:
         raw_file = open(dir_path + raw_file_name, "r", encoding='utf-8')
     except FileNotFoundError:
         abort(400, f"Failed to open preliminary file {dir_path}{raw_file_name}")
-    with raw_file, open(dir_path + file_name,
-                        "w+", encoding='utf-8') as file:
-        # Carry document id with par-list to ensure they won't be saved to wrong document.
-        par_data = [-1, []]
-        first = True
-        for line in raw_file:
-            doc_id, par_id, par = get_doc_par_id(line)
-            if not doc_id:
-                continue
-            if first:
-                par_data[0] = doc_id
-                first = False
-            # If same doc as previous line or the first, just add par data to list.
-            if par_data[0] == doc_id:
-                par_data[1].append(par)
-                continue
-            # Otherwise save the previous one and empty par data.
-            else:
+    try:
+        with raw_file, open(dir_path + file_name,
+                            "w+", encoding='utf-8') as file:
+            # Carry document id with par-list to ensure they won't be saved to wrong document.
+            par_data = [-1, []]
+            first = True
+            for line in raw_file:
+                try:
+                    # TODO: Check paragraph existences and leave out those that have been deleted.
+                    doc_id, par_id, par = get_doc_par_id(line)
+                    if not doc_id:
+                        continue
+                    if first:
+                        par_data[0] = doc_id
+                        first = False
+                    # If same doc as previous line or the first, just add par data to list.
+                    if par_data[0] == doc_id:
+                        par_data[1].append(par)
+                        continue
+                    # Otherwise save the previous one and empty par data.
+                    else:
+                        new_line = add_doc_info_line(par_data[0], par_data[1])
+                        if new_line and len(new_line) >= 30:
+                            file.write(new_line)
+                        par_data[0] = doc_id
+                        par_data[1].clear()
+                        par_data[1].append(par)
+                except Exception as e:
+                    log_error(f"'{str(e.__class__.__name__)}: {str(e)}' while writing search file line '{line}''")
+            # Write the last line separately, because loop leaves it unsaved.
+            if par_data:
                 new_line = add_doc_info_line(par_data[0], par_data[1])
                 if new_line and len(new_line) >= 30:
                     file.write(new_line)
-                par_data[0] = doc_id
-                par_data[1].clear()
-                par_data[1].append(par)
-        # Write the last line separately, because loop leaves it unsaved.
-        if par_data:
-            new_line = add_doc_info_line(par_data[0], par_data[1])
-            if new_line and len(new_line) >= 30:
-                file.write(new_line)
-
-    return json_response(f"File created to {dir_path}{file_name}")
+        return json_response(f"File created to {dir_path}{file_name}")
+    except Exception as e:
+        abort(400, f"Failed to create search file {dir_path}{file_name}: {str(e.__class__.__name__)}: {str(e)}")
 
 
 @search_routes.route("/titles")
@@ -656,6 +660,7 @@ def search():
         abort(400, f"Invalid regex: {str(e)}")
 
     # TODO: Error cases in subprocess may not show, slips through as empty search result instead.
+    # TODO: Output has all paragraphs even though only one or more have matches.
     try:
         cmd = f'grep {grep_flags}"{query}" all_processed.log'
         s = subprocess.Popen(cmd,
@@ -705,14 +710,27 @@ def search():
 
                 pars = line_info['pars']
                 doc_result = DocResult(doc_info)
+                edit_access = has_edit_access(doc_info)
 
                 for par in pars:
                     id = par['id']
                     md = par['md']
 
-                    if ignore_plugins:
-                        if par['plugin']:
+                    # Tries to get plugin and settings key values from dict;
+                    # if par isn't either, gives KeyError and does nothing.
+                    try:
+                        plugin = par['attrs']['plugin']
+                        # If ignore_plugins or no edit access, leave out plugin and setting results.
+                        if ignore_plugins or not edit_access:
                             continue
+                    except KeyError:
+                        pass
+                    try:
+                        settings = par['attrs']['settings']
+                        if ignore_plugins or not edit_access:
+                            continue
+                    except KeyError:
+                        pass
 
                     par_result = ParResult(id)
                     matches = list(term_regex.finditer(md))

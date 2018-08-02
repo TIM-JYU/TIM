@@ -554,9 +554,9 @@ timApp.component("searchBox", {
         <label class="font-weight-normal" title="Allow regular expressions">
             <input type="checkbox" ng-model="$ctrl.regex"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
-        <label class="font-weight-normal" title="Leave plugin contents out of the results">
+        <label class="font-weight-normal" title="Leave plugin and setting contents out of the results">
             <input type="checkbox" ng-model="$ctrl.ignorePlugins"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins</label>
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins and settings</label>
         <label class="font-weight-normal" title="Search only whole words with one or more character">
             <input type="checkbox" ng-model="$ctrl.searchWholeWords"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search whole words</label>
