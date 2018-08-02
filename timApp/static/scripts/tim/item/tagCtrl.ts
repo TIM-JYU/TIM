@@ -25,6 +25,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private tagsList: ITag[] = []; // List of tags the document has.
     private expires?: Moment;
     private errorMessage?: string;
+    private selected: ITag | null = null;
     private successMessage?: string;
     private f!: IFormController; // initialized in the template
     private focusName: boolean = true;
@@ -199,16 +200,28 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      * @returns {string}
      */
     private tagStyleClass(tag: ITag) {
-        let classes = "";
+        let opacity = "";
+        let highlight = "";
+        let color = "btn-success";
         if (tagIsExpired(tag)) {
-            classes += "less-opacity ";
+            opacity = "less-opacity";
         }
         if (tag.type === TagType.Regular) {
-            classes += "btn-primary";
-        } else {
-            classes += "btn-success";
+            color = "btn-primary";
         }
-        return classes;
+        if (tag === this.selected) {
+            color = "btn-danger";
+            highlight = "selected-tag";
+        }
+        return color + " " + opacity + " " + highlight;
+    }
+
+    private selectTag(tag: ITag) {
+        if (this.selected === tag) {
+            this.selected = null;
+        } else {
+            this.selected = tag;
+        }
     }
 }
 
@@ -234,11 +247,12 @@ registerDialogComponent("timEditTags",
     </dialog-header>
     <dialog-body>
         <h4>Document tags</h4>
-        <p ng-if="$ctrl.tagsList.length > 0">The following tags were found for the document.</p>
+        <p ng-if="$ctrl.tagsList.length > 0">The following tags were found for the document. Select a tag to edit
+         or input new tags.</p>
         <p ng-if="$ctrl.tagsList.length === 0">No tags were found for the document.</p>
         <div class="tags-list">
             <span ng-repeat="x in $ctrl.tagsList">
-                <span class="btn-xs"
+                <span class="btn-xs cursor-pointer" ng-click="$ctrl.selectTag(x)" title="Toggle selected tag"
                 ng-class="$ctrl.tagStyleClass(x)">{{x.name}}</span>
                 <i ng-if="x.expires" class="glyphicon glyphicon-time"
                 uib-tooltip="Expires: {{x.expires | timdate}}"></i>
@@ -246,7 +260,8 @@ registerDialogComponent("timEditTags",
                 <span style="opacity: 0">,</span>
             </span>
         </div>
-        <h4>Add new tags</h4>
+        <h4 ng-if="!$ctrl.selected">Add new tags</h4>
+        <h4 ng-if="$ctrl.selected">Edit '{{$ctrl.selected.name}}'</h4>
         <p>Tag the document by adding words that briefly describe and classify it.</p>
         <form name="$ctrl.f" class="form-horizontal">
             <div class="form-group" tim-error-state title="Write tag names separated by commas">
@@ -256,7 +271,7 @@ registerDialogComponent("timEditTags",
                            type="text"
                            ng-keypress="$ctrl.keyPressed($event)" autocomplete="off"
                            class="form-control" id="tag-field" placeholder="Tag names separated by commas"
-                           uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | limitTo:15 | orderBy:'name'"
+            uib-typeahead="tag as tag for tag in $ctrl.allUnusedTags | filter:$viewValue | limitTo:15 | orderBy:'name'"
                            typeahead-min-length="1">
                 </div>
                 <tim-error-message></tim-error-message>
@@ -275,7 +290,12 @@ registerDialogComponent("timEditTags",
                 </div>
             </div>
         </form>
-        <button class="timButton" data-ng-disabled="$ctrl.f.$invalid" ng-click="$ctrl.addTagClicked()">Add</button>
+        <button ng-if="!$ctrl.selected" class="timButton" data-ng-disabled="$ctrl.f.$invalid"
+        ng-click="$ctrl.addTagClicked()">Save new tags</button>
+        <button ng-if="$ctrl.selected" class="timButton" data-ng-disabled="$ctrl.f.$invalid"
+        ng-click="$ctrl.editTagClicked()">Save changes</button>
+        <button class="timButton" data-ng-disabled="!$ctrl.selected" title="Return to adding new tags"
+        ng-click="$ctrl.selected = null">Unselect</button>
         <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
         <div ng-show="$ctrl.successMessage" class="alert alert-success">
             <span class="glyphicon glyphicon-ok"></span> {{$ctrl.successMessage}}

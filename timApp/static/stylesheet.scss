@@ -1217,6 +1217,10 @@ body > .footer {
     opacity: 0.66;
 }
 
+.selected-tag {
+    border: 2px solid gray;
+}
+
 @media (max-width: $screen-xs-max) {
     .container-fluid {
         padding: 0;
