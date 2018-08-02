@@ -103,7 +103,9 @@ const cellStyles: Set<string> = new Set<string>([
     "textAlign",
     "fontFamily",
     "color",
-    "fontWeight"
+    "fontWeight",
+    "width",
+    "height",
     ]);
 
 /*export interface ICellStyles {
