@@ -109,11 +109,11 @@ export class SearchBoxCtrl implements IController {
     private caseSensitive: boolean = false; // Take upper/lower case in account.
     private advancedSearch: boolean = false; // Toggle advanced options panel.
     private createNewWindow: boolean = false; // Open new dialog for each search.
-    private ignorePluginsSettings: boolean = false; // Leave plugins and settings out of the results.
+    private ignorePlugins: boolean = false; // Leave plugins out of the results.
     private searchDocNames: boolean = true; // Doc title search. On by default.
     private searchTags: boolean = true; // Tag search. On by default.
     private searchWords: boolean = true; // Content search. On by default.
-    private searchExactWords: boolean = true; // Whole word search.
+    private searchWholeWords: boolean = false; // Whole word search.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
 
     private errorMessage: string = ""; // Message displayed only in search panel.
@@ -234,10 +234,10 @@ export class SearchBoxCtrl implements IController {
         this.storage.optionsStorage.push(this.advancedSearch);
         this.storage.optionsStorage.push(this.caseSensitive);
         this.storage.optionsStorage.push(this.createNewWindow);
-        this.storage.optionsStorage.push(this.ignorePluginsSettings);
+        this.storage.optionsStorage.push(this.ignorePlugins);
         this.storage.optionsStorage.push(this.regex);
         this.storage.optionsStorage.push(this.searchDocNames);
-        this.storage.optionsStorage.push(this.searchExactWords);
+        this.storage.optionsStorage.push(this.searchWholeWords);
         this.storage.optionsStorage.push(this.searchTags);
         this.storage.optionsStorage.push(this.searchOwned);
         this.storage.optionsStorage.push(this.searchWords);
@@ -254,10 +254,10 @@ export class SearchBoxCtrl implements IController {
             this.advancedSearch = this.storage.optionsStorage[0];
             this.caseSensitive = this.storage.optionsStorage[1];
             this.createNewWindow = this.storage.optionsStorage[2];
-            this.ignorePluginsSettings = this.storage.optionsStorage[3];
+            this.ignorePlugins = this.storage.optionsStorage[3];
             this.regex = this.storage.optionsStorage[4];
             this.searchDocNames = this.storage.optionsStorage[5];
-            this.searchExactWords = this.storage.optionsStorage[6];
+            this.searchWholeWords = this.storage.optionsStorage[6];
             this.searchTags = this.storage.optionsStorage[7];
             this.searchOwned = this.storage.optionsStorage[8];
             this.searchWords = this.storage.optionsStorage[9];
@@ -320,7 +320,7 @@ export class SearchBoxCtrl implements IController {
                 folder: this.folder,
                 caseSensitive: this.caseSensitive,
                 regex: this.regex,
-                searchExactWords: this.searchExactWords,
+                searchWholeWords: this.searchWholeWords,
                 searchOwned: this.searchOwned,
             },
             url: "/search/titles",
@@ -367,8 +367,9 @@ export class SearchBoxCtrl implements IController {
                 folder: this.folder,
                 caseSensitive: this.caseSensitive,
                 regex: this.regex,
+                ignorePlugins: this.ignorePlugins,
                 // maxResults: 100000,
-                searchExactWords: this.searchExactWords,
+                searchWholeWords: this.searchWholeWords,
                 searchOwned: this.searchOwned,
             },
             url: "/search",
@@ -415,7 +416,7 @@ export class SearchBoxCtrl implements IController {
                 folder: this.folder,
                 query: this.query,
                 regex: this.regex,
-                searchExactWords: this.searchExactWords,
+                searchWholeWords: this.searchWholeWords,
                 searchOwned: this.searchOwned,
             },
             url: "/search/tags",
@@ -553,18 +554,18 @@ timApp.component("searchBox", {
         <label class="font-weight-normal" title="Allow regular expressions">
             <input type="checkbox" ng-model="$ctrl.regex"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
-        <label ng-if="false" class="font-weight-normal" title="Leave plugins and settings out of the results">
-            <input type="checkbox" ng-model="$ctrl.ignorePluginsSettings"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins and settings</label>
+        <label class="font-weight-normal" title="Leave plugin contents out of the results">
+            <input type="checkbox" ng-model="$ctrl.ignorePlugins"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins</label>
         <label class="font-weight-normal" title="Search only whole words with one or more character">
-            <input type="checkbox" ng-model="$ctrl.searchExactWords"
+            <input type="checkbox" ng-model="$ctrl.searchWholeWords"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search whole words</label>
+        <label class="font-weight-normal dropdown-item" title="Search from documents you own">
+            <input type="checkbox" ng-model="$ctrl.searchOwned"
+            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search owned documents</label>
         <label class="font-weight-normal" title="Show result of each search in new window">
             <input type="checkbox" ng-model="$ctrl.createNewWindow"
             class="ng-pristine ng-untouched ng-valid ng-not-empty"> Open new window for each search</label>
-        <label class="font-weight-normal dropdown-item" title="Search documents you own">
-            <input type="checkbox" ng-model="$ctrl.searchOwned"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search owned documents</label>
         <h5 class="font-weight-normal">Search scope:</h5>
         <label class="font-weight-normal" title="Search document titles">
             <input type="checkbox" ng-model="$ctrl.searchDocNames"

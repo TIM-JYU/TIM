@@ -18,7 +18,7 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
-from timApp.item.block import Block
+from timApp.item.block import Block, BlockType
 from timApp.item.tag import Tag
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
@@ -31,7 +31,7 @@ search_routes = Blueprint('search',
 
 WHITE_LIST = ["c#"]  # Ignore query length limitations
 MIN_QUERY_LENGTH = 3  # For word and title search. Tags have no limitations.
-MIN_EXACT_WORDS_QUERY_LENGTH = 1  # For whole word search.
+MIN_WHOLE_WORDS_QUERY_LENGTH = 1  # For whole word search.
 PREVIEW_LENGTH = 40  # Before and after the search word separately.
 PREVIEW_MAX_LENGTH = 160
 
@@ -70,7 +70,7 @@ def tag_search():
     folder = request.args.get('folder', '')
     regex_option = get_option(request, 'regex', default=False, cast=bool)
     search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
-    search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
+    search_whole_words = get_option(request, 'searchWholeWords', default=False, cast=bool)
     results = []
 
     # PostgreSQL doesn't support regex directly, so as workaround get all tags below the search folder
@@ -98,7 +98,7 @@ def tag_search():
         term = query
     else:
         term = re.escape(query)
-    if search_exact_words:
+    if search_whole_words:
         term = fr"\b{term}\b"
     try:
         regex = re.compile(term, flags)
@@ -201,7 +201,7 @@ def preview(md: str, query, m: Match[str], snippet_length=PREVIEW_LENGTH, max_le
         prefix = ""
     if end_index > len(md):
         end_index = len(md)
-        postfix = "..."
+        postfix = ""
     return prefix + md[start_index:end_index] + postfix
 
 
@@ -410,7 +410,7 @@ def decode_scandinavians(s: str):
 
 def add_doc_info_line(doc_id, par_data):
     """
-    Forms a JSON-compatible string with doc_id and paragraph info list.
+    Forms a JSON-compatible string with doc_id and list of parargraph data with id and md attributes.
     :param doc_id: Document id.
     :param par_data: List of paragraph dictionaries.
     :return: String with paragraph data grouped under a document.
@@ -419,12 +419,19 @@ def add_doc_info_line(doc_id, par_data):
         return None
     par_json = ""
     for par in par_data:
+        # Cherry pick attributes, because others are unnecessary for the search.
         par_dict = json.loads(f"{{{par}}}")
-        par_id = par_dict['id']
         par_md = decode_scandinavians(par_dict['md'].replace("\r", " ").replace("\n", " "))
-        par_json += json.dumps({'id': par_dict['id'], 'md': par_md}) + ", "
+        par_plugin = ""
+        try:
+            par_plugin = par_dict['attrs']['plugin']
+        except:
+            pass
+        par_json += json.dumps({'id': par_dict['id'], 'plugin': par_plugin, 'md': par_md}) + ", "
     # TODO: Use some module to do this.
+    # Do this here because json.dumps changes characters back to code form.
     par_json = decode_scandinavians(par_json)
+    # [:len(par_json)-2] slices off the last ", " left by ending loop.
     return f'{{"doc_id": "{doc_id}", "pars": [{par_json[:len(par_json)-2]}]}}\n'
 
 
@@ -465,9 +472,9 @@ def create_search_file():
     s.communicate()
 
     try:
-        raw_file = open(dir_path + raw_file_name, "r")
+        raw_file = open(dir_path + raw_file_name, "r", encoding='utf-8')
     except FileNotFoundError:
-        pass
+        abort(400, f"Failed to open preliminary file {dir_path}{raw_file_name}")
     with raw_file, open(dir_path + file_name,
                         "w+", encoding='utf-8') as file:
         # Carry document id with par-list to ensure they won't be saved to wrong document.
@@ -487,7 +494,7 @@ def create_search_file():
             # Otherwise save the previous one and empty par data.
             else:
                 new_line = add_doc_info_line(par_data[0], par_data[1])
-                if new_line:
+                if new_line and len(new_line) >= 30:
                     file.write(new_line)
                 par_data[0] = doc_id
                 par_data[1].clear()
@@ -511,7 +518,7 @@ def title_search():
     folder = request.args.get('folder', '')
     regex_option = get_option(request, 'regex', default=False, cast=bool)
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-    search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
+    search_whole_words = get_option(request, 'searchWholeWords', default=False, cast=bool)
     search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
 
     results_dicts = []
@@ -519,7 +526,7 @@ def title_search():
     title_result_count = 0
     term_regex = None
 
-    validate_query(query, search_exact_words)
+    validate_query(query, search_whole_words)
 
     docs = list(set(get_documents(
         filter_user=get_current_user_object(),
@@ -543,7 +550,7 @@ def title_search():
         term = query
     else:
         term = re.escape(query)
-    if search_exact_words:
+    if search_whole_words:
         # Picks the term if it's a whole word, only word or separated by comma etc.
         term = fr"(?:^|\W)({term})(?:$|\W)"
     try:
@@ -590,8 +597,8 @@ def validate_query(query, search_exact_words):
     if len(query.strip()) < MIN_QUERY_LENGTH and not search_exact_words:
         if query.strip().lower() not in WHITE_LIST:
             abort(400, f'Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped.')
-    if len(query.strip()) < MIN_EXACT_WORDS_QUERY_LENGTH and search_exact_words:
-        abort(400, f'Whole word search text must be at least {MIN_EXACT_WORDS_QUERY_LENGTH} character(s) '
+    if len(query.strip()) < MIN_WHOLE_WORDS_QUERY_LENGTH and search_exact_words:
+        abort(400, f'Whole word search text must be at least {MIN_WHOLE_WORDS_QUERY_LENGTH} character(s) '
                    f'long with whitespace stripped.')
 
 
@@ -607,11 +614,12 @@ def search():
     folder = request.args.get('folder', '')
     regex_option = get_option(request, 'regex', default=False, cast=bool)
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-    search_exact_words = get_option(request, 'searchExactWords', default=False, cast=bool)
+    search_whole_words = get_option(request, 'searchWholeWords', default=False, cast=bool)
     search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
     max_results = get_option(request, 'maxResults', default=1000000, cast=int)
+    ignore_plugins = get_option(request, 'ignorePlugins', default=False, cast=bool)
 
-    validate_query(query, search_exact_words)
+    validate_query(query, search_whole_words)
 
     dir = '/tim_files/pars/'
     grep_flags = ""
@@ -638,7 +646,7 @@ def search():
     else:
         grep_flags += "-F "
         term = re.escape(query)
-    if search_exact_words:
+    if search_whole_words:
         # Picks the term if it's a whole word, only word or separated by comma etc.
         grep_flags += "-sw "
         term = fr"(?:^|\W)({term})(?:$|\W)"
@@ -701,6 +709,11 @@ def search():
                 for par in pars:
                     id = par['id']
                     md = par['md']
+
+                    if ignore_plugins:
+                        if par['plugin']:
+                            continue
+
                     par_result = ParResult(id)
                     matches = list(term_regex.finditer(md))
 
