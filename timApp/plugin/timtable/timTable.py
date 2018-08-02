@@ -345,6 +345,27 @@ def tim_table_add_datablock_column():
     doc_id, par_id = verify_json_params('docId', 'parId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     verify_edit_access(d)
+
+    if not is_datablock(plug.values):
+        create_datablock(plug.values[TABLE])
+
+    column_counts, datablock_entries = get_column_counts(plug)
+
+    for row_index, column_count in column_counts.items():
+        datablock_entries.append(RelativeDataBlockValue(row_index, column_count, ''))
+
+    plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(datablock_entries)
+    plug.save()
+    return json_response(prepare_for_and_call_dumbo(plug))
+
+
+def get_column_counts(plug: Plugin) -> (dict, list):
+    """
+    Returns the number of columns for each row.
+    Takes both the regular table structure and the datablock into account.
+    :return: A dict with row indexes as keys and respective column counts as values,
+    and also a list of datablock entries.
+    """
     column_counts = {}
     try:
         rows = plug.values[TABLE][ROWS]
@@ -357,18 +378,35 @@ def tim_table_add_datablock_column():
             return abort(400)
         column_counts[i] = len(current_row)
 
-    if not is_datablock(plug.values):
-        create_datablock(plug.values[TABLE])
+    datablock_entries = []
+    if is_datablock(plug.values):
+        datablock_entries = construct_datablock_entry_list_from_yaml(plug)
+        for entry in datablock_entries:
+            if not entry.row in column_counts or column_counts[entry.row] <= entry.column:
+                column_counts[entry.row] = entry.column + 1
 
-    datablock_entries = construct_datablock_entry_list_from_yaml(plug)
+    return column_counts, datablock_entries
+
+
+@timTable_plugin.route("removeDatablockColumn", methods=["POST"])
+def tim_table_remove_datablock_column():
+    """
+    Removes a column from the table's datablock.
+    Doesn't affect the regular table structure.
+    :return: The entire table's data after the column has been removed.
+    """
+    doc_id, par_id = verify_json_params('docId', 'parId')
+    d, plug = get_plugin_from_paragraph(doc_id, par_id)
+    verify_edit_access(d)
+
+    column_counts, datablock_entries = get_column_counts(plug)
+
+    new_datablock_entries = []
     for entry in datablock_entries:
-        if not entry.row in column_counts or column_counts[entry.row] <= entry.column:
-            column_counts[entry.row] = entry.column + 1
+        if entry.column < column_counts[entry.row] - 1:
+            new_datablock_entries.append(entry)
 
-    for row_index, column_count in column_counts.items():
-        datablock_entries.append(RelativeDataBlockValue(row_index, column_count, ''))
-
-    plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(datablock_entries)
+    plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(new_datablock_entries)
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
 

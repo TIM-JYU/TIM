@@ -1158,6 +1158,33 @@ export class TimTableController implements IController {
     }
 
     /**
+     * Handles clicks on the "remove column" button.
+     */
+    async removeColumnButtonClick() {
+        if (this.isInDataInputMode()) {
+            this.removeDatablockColumn();
+        } else {
+            this.removeColumn();
+        }
+    }
+
+    /**
+     * Tells the server to remove a datablock column from this table.
+     */
+    async removeDatablockColumn() {
+        if (this.viewctrl == null) {
+            return;
+        }
+
+        const parId = this.getOwnParId();
+        const docId = this.viewctrl.item.id;
+        const response = await $http.post<TimTable>("/timTable/removeDatablockColumn",
+            {docId, parId});
+        this.data = response.data;
+        this.reInitialize();
+    }
+
+    /**
      * Tells the server to remove a column from this table.
      */
     async removeColumn() {
@@ -1167,7 +1194,7 @@ export class TimTableController implements IController {
 
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
-        const colId = this.getColumnCount() - 1;
+        let colId = this.getColumnCount() - 1;
 
         if (colId < 1) { return; }
 
@@ -1323,7 +1350,7 @@ timApp.component("timTable", {
     <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
             ng-click="$ctrl.addColumnButtonClick()"><span class="glyphicon glyphicon-plus"></span></button>
     <button class="timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.isInEditMode()"
-            ng-click="$ctrl.removeColumn()"><span class="glyphicon glyphicon-minus"></span></button>
+            ng-click="$ctrl.removeColumnButtonClick()"><span class="glyphicon glyphicon-minus"></span></button>
     <table ng-class="{editable: $ctrl.isInEditMode() && !$ctrl.isInForcedEditMode(), forcedEditable: $ctrl.isInForcedEditMode()}" class="timTableTable"
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
