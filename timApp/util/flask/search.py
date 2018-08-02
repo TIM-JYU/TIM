@@ -57,7 +57,7 @@ def create_folder_id_list():
             for folder in folder_set:
                 if folder:
                     file_string += str(folder.id) + ", "
-            file_string = file_string[:len(file_string)-2]
+            file_string = file_string[:len(file_string) - 2]
             folder_list_file.write(file_string)
     except Exception as e:
         abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
@@ -90,14 +90,16 @@ def get_subfolders():
     return json_response(list(folder_set))
 
 
-def get_folders_three_levels(starting_path: str, folder_set: Set[Folder]) -> None:
+def get_folders_three_levels(starting_path: str, folder_set: Set[str]) -> None:
     """
     Limited folder search with depth of three steps from the root:
     root/level_1/level_2/level_3
     :param starting_path: The search root folder path.
-    :param folder_set: A folder object set where the results are saved.
+    :param folder_set: A path string set where the results are saved.
     :return: None.
     """
+    if starting_path:
+        folder_set.add(starting_path)
     folders = Folder.get_all_in_path(starting_path)
     for folder_l1 in folders:
         if not has_view_access(folder_l1):
@@ -472,7 +474,7 @@ def decode_scandinavians(s: str):
     :param s: A string with encoded characters like '\u00e4'.
     :return: Plain text (except for other chars).
     """
-    return s.replace(r"\u00e5", "å").replace(r"\u00e4", "ä").replace(r"\u00f6", "ö").\
+    return s.replace(r"\u00e5", "å").replace(r"\u00e4", "ä").replace(r"\u00f6", "ö"). \
         replace(r"\u00c5", "Å").replace(r"\u00c4", "Ä").replace(r"\u00d6", "Ö")
 
 
@@ -698,6 +700,7 @@ def search():
         grep_flags += "-i "
         flags = re.DOTALL | re.IGNORECASE
     if regex_option:
+        grep_flags += "-E "
         term = query
     else:
         grep_flags += "-F "
@@ -711,11 +714,6 @@ def search():
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
 
-    if search_owned_docs:
-        owned_docs = get_documents_by_access_type(AccessType.owner)
-        if not owned_docs:
-            abort(400, f"No owned documents found")
-
     # TODO: Error cases in subprocess may not show, slips through as empty search result instead.
     try:
         cmd = f'grep {grep_flags}"{query}" all_processed.log'
@@ -727,6 +725,19 @@ def search():
         output = output_str.splitlines()
     except Exception as e:
         abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
+    if not output:
+        return json_response({
+            'titleResultCount': 0,
+            'wordResultCount': 0,
+            'errors': [],
+            'incomplete_search_reason': "",
+            'results': [],
+        })
+
+    if search_owned_docs:
+        owned_docs = get_documents_by_access_type(AccessType.owner)
+        if not owned_docs:
+            abort(400, f"No owned documents found")
 
     for line in output:
         try:

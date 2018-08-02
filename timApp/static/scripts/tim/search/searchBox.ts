@@ -189,7 +189,7 @@ export class SearchBoxCtrl implements IController {
         }
         if (this.incompleteSearchReason.length > 0) {
             this.resultErrorMessage = `Incomplete search: ${this.incompleteSearchReason}.` +
-                ` For better results choose more specific search options.`;
+                ` For better results choose more specific search settings.`;
         }
         if (this.createNewWindow) {
             void showSearchResultDialog(this);
@@ -547,7 +547,7 @@ timApp.component("searchBox", {
                 <div class="col-sm-8">
                     <input ng-model="$ctrl.folder" name="folder-selector"
                            type="text" class="form-control" id="folder-selector" placeholder="Input a folder to search"
-                           uib-typeahead="f as f for f in $ctrl.folderSuggestions | filter:$viewValue | limitTo:15"
+           uib-typeahead="f as f for f in $ctrl.folderSuggestions | filter:$viewValue | limitTo:15 | orderBy:'length'"
                            typeahead-min-length="1">
                 </div>
            </div>
