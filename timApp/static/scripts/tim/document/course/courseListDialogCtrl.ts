@@ -39,6 +39,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
     private closedSubjects: boolean[] = [];
     private storage: ngStorage.StorageService & {subjectsStorage: null | boolean[]};
     private toggleCollapseAll: boolean = false;
+    private filterText: string = "";
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -46,6 +47,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
             subjectsStorage: null,
         });
         this.grouped = [];
+        this.toggleCollapseAll = !this.allClosed(this.grouped);
     }
 
     /**
@@ -146,8 +148,8 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
     }
 
     /**
-     * Groups courses by their subject tags. Leaves out expired courses and subjects
-     * with no non-expired courses.
+     * Groups courses by their subject tags. Leaves out expired courses, subjects
+     * with no non-expired courses and filtered courses, if filter is used.
      */
     private groupBySubject() {
         let close = true;
@@ -160,15 +162,23 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
                 for (const d of this.docList) {
                     let isSameSubject = false;
                     let isNonExpiredCourse = false;
+                    let passesFilter = false;  // Won't be added unless this is true.
+                    if (this.filterText.length === 0 ||
+                        d.title.toLowerCase().indexOf(this.filterText.toLowerCase()) > -1) {
+                        passesFilter = true;
+                    }
                     for (const tag of d.tags) {
                         if (tag.type === TagType.Subject && tag.name === s) {
                             isSameSubject = true;
                         }
                         if (tag.type === TagType.CourseCode && !tagIsExpired(tag)) {
+                            if (tag.name.toLowerCase().indexOf(this.filterText.toLowerCase()) > -1) {
+                                passesFilter = true;
+                            }
                             isNonExpiredCourse = true;
                         }
                     }
-                    if (isSameSubject && isNonExpiredCourse) {
+                    if (isSameSubject && isNonExpiredCourse && passesFilter) {
                         documents.push(d);
                     }
                 }
@@ -201,6 +211,26 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
         }
         this.toggleCollapseAll = !this.toggleCollapseAll;
     }
+
+    /**
+     * Update course list according to filter word.
+     */
+    private refresh() {
+        this.grouped = [];
+        this.groupBySubject();
+        this.toggleCollapseAll = false;
+        this.toggleAll();
+    }
+
+    /**
+     * Filter when Enter is pressed.
+     * @param event Keyboard event.
+     */
+    private async keyPressed(event: KeyboardEvent) {
+        if (event.which === 13) {
+            this.refresh();
+        }
+    }
 }
 
 registerDialogComponent("timCourseListDialog",
@@ -215,15 +245,23 @@ registerDialogComponent("timCourseListDialog",
     title="Collapse all subjects" class="glyphicon glyphicon-minus-sign"></i>
     <i ng-if="!$ctrl.toggleCollapseAll" ng-click="$ctrl.toggleAll()" title="Open all subjects"
     class="glyphicon glyphicon-plus-sign"></i></a></h5>
-    <div>
+    <div class="col-xs-8">
         <p>
             <span>
                 <span ng-if="$ctrl.allClosed($ctrl.grouped)">
                     Press the plus signs to view available courses on different subjects
                 </span>
-                &nbsp;
             </span>
         </p>
+    </div>
+    <div class="input-group float-right col-xs-4">
+        <input class="float-right form-control" ng-if="true" ng-model="$ctrl.filterText" placeholder="Input filter word"
+        title="Filter by course code and title" ng-keypress="$ctrl.keyPressed($event)">
+        <span class="input-group-addon btn" ng-click="$ctrl.refresh()" title="Filter courses">
+        <i class="glyphicon glyphicon-search"></i></span>
+    </div>
+    <br>
+    <div>
         <ul class="list-unstyled" ng-if="$ctrl.grouped.length > 0" id="courses" aria-multiselectable="true">
             <li ng-repeat="subject in $ctrl.grouped" ng-if="subject.docs.length > 0">
                 <span class="cursor-pointer" ng-click="subject.closed = !subject.closed"
@@ -234,7 +272,8 @@ registerDialogComponent("timCourseListDialog",
                     when="{'1': 'course', 'other': 'courses'}"></ng-pluralize>)
                 </span>
                 <ul class="list-unstyled well well-sm" uib-collapse="subject.closed">
-                    <li ng-repeat="course in subject.docs | orderBy:$ctrl.courseCode" ng-if="$ctrl.courseCode(course)">
+                    <li ng-repeat="course in subject.docs | orderBy:$ctrl.courseCode"
+                    ng-if="$ctrl.courseCode(course)">
                         <a href="/view/{{course.path}}" title="Open {{course.title}}">
                         <span class="btn-xs btn-primary">{{$ctrl.courseCode(course)}}</span>
                          {{course.title}}
