@@ -25,7 +25,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private tagsList: ITag[] = []; // List of tags the document has.
     private expires?: Moment;
     private errorMessage?: string;
-    private selected: ITag | null = null;
+    private selected: ITag | null = null; // Target of editing, if any.
     private successMessage?: string;
     private f!: IFormController; // initialized in the template
     private focusName: boolean = true;
@@ -117,6 +117,44 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     }
 
     /**
+     * Replaces old tag with new tag of same tag type.
+     * @returns {Promise<void>}
+     */
+    private async editSelectedTag() {
+        if (this.selected) {
+            if (this.selected.type !== TagType.Regular) {
+                if (!userBelongsToTeachersOrIsAdmin) {
+                    this.errorMessage = `Editing this tag is only allowed for admins or ${TEACHERS_GROUPNAME} group!`;
+                    this.successMessage = undefined;
+                    return;
+                }
+            }
+            const docPath = this.resolve.params.path;
+            const newTag = {
+                block_id: this.resolve.params.id,
+                expires: this.expires,
+                name: this.tagName.trim(),
+                type: this.selected.type,
+            };
+            const data = {oldTag: this.selected, newTag: newTag};
+            const [err, response] = await to($http.post(`/tags/edit/${docPath}`, data));
+
+            if (err) {
+                this.errorMessage = err.data.error;
+                this.successMessage = undefined;
+            } else {
+                this.errorMessage = undefined;
+            }
+            if (response) {
+                this.successMessage = `'${this.selected.name}' was edited.`;
+                this.selected = null;
+                await this.updateTags();
+                return;
+            }
+        }
+    }
+
+    /**
      * Removes the selected tag from the database. Checks admin/teachers rights if
      * tag to remove is not of regular type.
      * @param {ITag} t Tag to delete.
@@ -133,7 +171,6 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         }
 
         const docPath = this.resolve.params.path;
-
         const data = {tagObject: t};
         const [err, response] = await to($http.post(`/tags/remove/${docPath}`, data));
 
@@ -216,6 +253,10 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
         return color + " " + opacity + " " + highlight;
     }
 
+    /**
+     * Select a tag or unselect a selected one.
+     * @param {ITag} tag
+     */
     private selectTag(tag: ITag) {
         if (this.selected === tag) {
             this.selected = null;
@@ -293,7 +334,7 @@ registerDialogComponent("timEditTags",
         <button ng-if="!$ctrl.selected" class="timButton" data-ng-disabled="$ctrl.f.$invalid"
         ng-click="$ctrl.addTagClicked()">Save new tags</button>
         <button ng-if="$ctrl.selected" class="timButton" data-ng-disabled="$ctrl.f.$invalid"
-        ng-click="$ctrl.editTagClicked()">Save changes</button>
+        ng-click="$ctrl.editSelectedTag()">Save changes</button>
         <button class="timButton" data-ng-disabled="!$ctrl.selected" title="Return to adding new tags"
         ng-click="$ctrl.selected = null">Unselect</button>
         <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>

@@ -78,6 +78,44 @@ def check_tag_access(tag_type, group):
             abort(400, f"Managing this tag requires admin or {group} rights.")
 
 
+@tags_blueprint.route('/edit/<path:doc>', methods=["POST"])
+def edit_tag(doc):
+    """
+    Replaces a tag-document entry in the database with new one.
+    :param doc The target document.
+    :returns Edit success response.
+    """
+    d = DocEntry.find_by_path(doc, try_translation=True)
+    if not d:
+        abort(404)
+    verify_manage_access(d)
+
+    new_tag_dict, = verify_json_params('newTag')
+    old_tag_dict, = verify_json_params('oldTag')
+
+    new_tag_type = TagType(int(new_tag_dict["type"]))
+    old_tag_type = TagType(int(old_tag_dict["type"]))
+
+    check_tag_access(old_tag_type, TEACHERS_GROUPNAME)
+    check_tag_access(new_tag_type, TEACHERS_GROUPNAME)
+
+    new_tag_name = new_tag_dict["name"]
+    old_tag_name = old_tag_dict["name"]
+    new_tag_expire = new_tag_dict.get("expires")
+
+    new_tag = Tag(name=new_tag_name, expires=new_tag_expire, type=new_tag_type)
+    old_tag = Tag.query.filter_by(block_id=d.id, name=old_tag_name, type=old_tag_type).first()
+
+    if not old_tag:
+        abort(400, "Tag to edit not found.")
+    try:
+        db.session.delete(old_tag)
+        d.block.tags.append(new_tag)
+        db.session.commit()
+    except (IntegrityError, FlushError):
+        abort(400, "Tag editing failed! New tag name may already be in use")
+    return ok_response()
+
 @tags_blueprint.route('/remove/<path:doc>', methods=["POST"])
 def remove_tag(doc):
     """
