@@ -624,7 +624,7 @@ export class TimTableController implements IController {
                 if (typeof value === "string" && this.editedCellInitialContent !== value) {
                     this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
                 }
-                if (this.data.table.rows && this.currentCell.row === this.data.table.rows.length - 1) {
+                if (this.currentCell.row === this.cellDataMatrix.length - 1) {
                     this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
                 } else {
                     this.openCellNextRowOrColumn(this.currentCell.row + 1, this.currentCell.col);
@@ -759,22 +759,20 @@ export class TimTableController implements IController {
         const modal: CellEntity = {
             cell: "",
         };
-        if (this.data.table.rows) {
-            if (rowi >= this.data.table.rows.length) { rowi = 0; } // if bigger then 0
-            if (rowi < 0) { rowi = this.data.table.rows.length - 1; }
+
+        if (rowi >= this.cellDataMatrix.length) {
+            rowi = 0;
+        } else if (rowi < 0) {
+            rowi = this.cellDataMatrix.length - 1;
         }
 
-        if (this.data.table.rows && this.data.table.rows[rowi].row) {
-            const rowrow = this.data.table.rows[rowi].row;
-            if (rowrow) {
-                if (coli >= rowrow.length) {
-                    coli = 0;
-                    // if (rowi + 1 >= this.data.table.rows.length) { rowi = 0; } else { rowi += 1; }
-                    if (rowi + 1 < this.data.table.rows.length) { rowi++; }
-                }
-                if (coli < 0) { coli = rowrow.length - 1; }
-            }
+        if (coli >= this.cellDataMatrix[rowi].length) {
+            coli = 0;
+            if (rowi + 1 < this.cellDataMatrix.length) { rowi++; }
+        } else if (coli < 0) {
+            coli = this.cellDataMatrix[rowi].length - 1;
         }
+
         this.cellClicked(modal, rowi, coli);
     }
 
