@@ -65,12 +65,13 @@ def add_tag(doc):
     return ok_response()
 
 
-def check_tag_access(tag_type, group):
+def check_tag_access(tag_type: TagType, group: str) -> None:
     """
     Checks whether the user is allowed to make changes to the tag type.
-    :param tag_type:
-    :param group:
-    :return:
+    If not allowed, gives abort response.
+    :param tag_type: Tag type.
+    :param group: Group name.
+    :return: None.
     """
     if tag_type != TagType.Regular:
         ug = UserGroup.get_by_name(group)
@@ -185,7 +186,9 @@ def get_tagged_documents():
     Gets a list of documents that have a certain tag.
     Options:
     - Search exact or partial words.
+    - Case sensitivity
     - Get all other tags in the document as well or don't fetch them.
+    :returns Response containing list of documents with the searched tag.
     """
     tag_name = request.args.get('name', '')
     exact_search = get_option(request, 'exact_search', default=False, cast=bool)
@@ -221,11 +224,11 @@ def get_tagged_documents():
 
 
 @tags_blueprint.route("/getDoc/<int:doc_id>")
-def get_documents_by_id(doc_id):
+def get_tagged_document_by_id(doc_id):
     """
-    Gets document and its tags by id.
-    :param doc_id:
-    :return:
+    Gets a document and its tags by id.
+    :param doc_id: Searched document id.
+    :return: A DocEntry with tags.
     """
     docs = get_documents(filter_user=get_current_user_object(),
                          custom_filter=DocEntry.id.in_([doc_id]),

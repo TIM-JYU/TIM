@@ -242,10 +242,10 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     }
 
     /**
-     * Changes tag css style class depending on the tag type. Currently normal tags are light blue-green
-     * and special tags green.
-     * @param {ITag} tag
-     * @returns {string}
+     * Set tag css style classes depending on the tag type. Currently normal tags are light blue-green
+     * special tags green, selected tag red with borders and expired tags fainter colored..
+     * @param {ITag} tag The tag.
+     * @returns {string} String containing style classes.
      */
     private tagStyleClass(tag: ITag) {
         let opacity = "";
@@ -266,7 +266,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
 
     /**
      * Select a tag or unselect a selected one.
-     * @param {ITag} tag
+     * @param {ITag} tag Tag to toggle.
      */
     private selectTag(tag: ITag) {
         if (this.selected === tag) {

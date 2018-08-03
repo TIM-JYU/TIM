@@ -121,9 +121,9 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
     }
 
     /**
-     * True if all course categories are closed, false if one or more are open.
-     * @param {IGroupedCourses[]} courses
-     * @returns {boolean}
+     * Checks collapse states of all subjects.
+     * @param {IGroupedCourses[]} courses List of grouped courses.
+     * @returns {boolean} True if all course categories are closed, false if one or more are open.
      */
     private allClosed(courses: IGroupedCourses[]) {
         for (const course of courses) {
@@ -132,19 +132,6 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
             }
         }
         return true;
-    }
-
-    /**
-     * Changes course count text to plural if there are more than one.
-     * @param {number} count
-     * @returns {string}
-     */
-    private courseCount(count: number) {
-        if (count === 1) {
-            return `${count} course`;
-        } else {
-            return `${count} courses`;
-        }
     }
 
     /**
@@ -195,8 +182,8 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
 
     /**
      * Gets course code of an unexpired course.
-     * @param {ITaggedItem} d
-     * @returns {string}
+     * @param {ITaggedItem} d Document with tags.
+     * @returns {string} Coursecode or undefined, if non-existent or expired.
      */
     private courseCode(d: ITaggedItem) {
         return getCourseCode(d.tags, true);
