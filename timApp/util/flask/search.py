@@ -3,7 +3,7 @@ import re
 import sre_constants
 import subprocess
 from datetime import datetime
-from typing import Match, List
+from typing import Match, List, Union
 
 from flask import Blueprint, json
 from flask import abort
@@ -48,7 +48,7 @@ def get_subfolders():
     Returns subfolders of the starting folder.
     Options:
     folder = Starting folder.
-    :return: A list of subfolder paths.
+    :return: Response containing a list of subfolder paths.
     """
     root_path = request.args.get('folder', '')
     folders = Folder.query.filter(Folder.location.like(root_path + '%'))
@@ -63,8 +63,8 @@ def get_subfolders():
 def tag_search():
     """
     A route for document tag search.
+    :return: Tag search results response.
     """
-
     query = request.args.get('query', '')
     case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
     folder = request.args.get('folder', '')
@@ -77,19 +77,18 @@ def tag_search():
     # from the database and then apply regex search on them.
     any_tag = "%%"
     if search_owned_docs:
-        custom_filter = DocEntry.id.in_(get_current_user_object()
-                                        .get_personal_group()
-                                        .accesses.filter_by(type=AccessType.owner.value)
+        custom_filter = DocEntry.id.in_(get_current_user_object().get_personal_group().accesses.
+                                        filter_by(type=AccessType.owner.value)
                                         .with_entities(BlockAccess.block_id)) & \
-                        DocEntry.id.in_(
-                            Tag.query.filter(
-                                Tag.name.ilike(any_tag) & ((Tag.expires > datetime.now()) | (Tag.expires == None))).
-                                with_entities(Tag.block_id))
+                        DocEntry.id.in_(Tag.query.
+                                        filter(Tag.name.ilike(any_tag) & ((Tag.expires > datetime.now()) |
+                                                                          (Tag.expires == None))).
+                                        with_entities(Tag.block_id))
     else:
-        custom_filter = DocEntry.id.in_(
-            Tag.query.filter(
-                Tag.name.ilike(any_tag) & ((Tag.expires > datetime.now()) | (Tag.expires == None))).
-                with_entities(Tag.block_id))
+        custom_filter = DocEntry.id.in_(Tag.query.
+                                        filter(Tag.name.ilike(any_tag) & ((Tag.expires > datetime.now()) |
+                                                                          (Tag.expires == None))).
+                                        with_entities(Tag.block_id))
     query_options = joinedload(DocEntry._block).joinedload(Block.tags)
     docs = get_documents(filter_user=get_current_user_object(), filter_folder=folder,
                          search_recursively=True, custom_filter=custom_filter,
@@ -176,7 +175,7 @@ def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str =
     log_error(common_part + tag_part + par_part)
 
 
-def get_documents_by_access_type(access: AccessType):
+def get_documents_by_access_type(access: AccessType) -> List[DocEntry]:
     """
     Return all documents that user has certain access type to.
     :param access: Access type, for example: AccessType.owner or AccessType.view.
@@ -188,7 +187,8 @@ def get_documents_by_access_type(access: AccessType):
     return docs
 
 
-def preview(md: str, query, m: Match[str], snippet_length=PREVIEW_LENGTH, max_length=PREVIEW_MAX_LENGTH):
+def preview(md: str, query, m: Match[str], snippet_length: int = PREVIEW_LENGTH,
+            max_length: int = PREVIEW_MAX_LENGTH) -> str:
     """
     Forms preview of the match paragraph.
     :param md: Paragraph markdown to preview.
@@ -220,11 +220,20 @@ class WordResult:
     """
 
     def __init__(self, match_word: str, match_start: int, match_end: int):
+        """
+        Title or paragraph word result object constructor.
+        :param match_word: String that matched query.
+        :param match_start: Match start index.
+        :param match_end: Match end index.
+        """
         self.match_word = match_word
         self.match_start = match_start
         self.match_end = match_end
 
     def to_dict(self):
+        """
+        :return: A dictionary containing object data, suitable for JSON-conversion.
+        """
         return {'match_word': self.match_word, 'match_start': self.match_start, 'match_end': self.match_end}
 
 
@@ -234,22 +243,35 @@ class ParResult:
     """
 
     def __init__(self, par_id: str = "", preview: str = "", word_results=None):
+        """
+        Paragraph result object constructor.
+        :param par_id: Paragrapg id.
+        :param preview: A snippet from paragraph markdown.
+        :param word_results: List of word search results in the paragraph.
+        """
         if word_results is None:
             word_results = []
         self.par_id = par_id
         self.preview = preview
         self.word_results = word_results
 
-    def add_result(self, result: WordResult):
+    def add_result(self, result: WordResult) -> None:
+        """
+        Add new word result.
+        :param result: New word result from paragraph markdown.
+        :return: None.
+        """
         self.word_results.append(result)
 
     def has_results(self) -> bool:
+        """
+        :return: True if the object contains results.
+        """
         return len(self.word_results) > 0
 
     def to_dict(self):
         """
-        Form a dictionary from the attributes and derived attributes.
-        :return:
+        :return: A dictionary of attributes and derived attributes, suitable for JSON-conversion.
         """
         results_dicts = []
         for r in self.word_results:
@@ -258,7 +280,7 @@ class ParResult:
                 'preview': self.preview,
                 'results': results_dicts, 'num_results': self.get_match_count()}
 
-    def get_match_count(self):
+    def get_match_count(self) -> int:
         """
         :return: How many matches there are in this paragraph.
         """
@@ -271,15 +293,19 @@ class TitleResult:
     """
 
     def __init__(self, word_results=None):
+        """
+        Title result object constructor.
+        :param word_results: List of word results from the title string.
+        """
         if word_results is None:
             word_results = []
         self.word_results = word_results
 
-    def add_result(self, result: WordResult):
+    def add_result(self, result: WordResult) -> None:
         """
         Add new result to the list.
-        :param result:
-        :return:
+        :param result: New word result.
+        :return: None.
         """
         self.word_results.append(result)
 
@@ -291,18 +317,16 @@ class TitleResult:
 
     def to_dict(self):
         """
-        Form a dictionary from the attributes and derived attributes.
-        :return:
+        :return: A dictionary of attributes and derived attributes, suitable for JSON-conversion.
         """
         results_dicts = []
         for r in self.word_results:
             results_dicts.append(r.to_dict())
         return {'results': results_dicts, 'num_results': self.get_match_count()}
 
-    def get_match_count(self):
+    def get_match_count(self) -> int:
         """
-        How many match words the paragraph has.
-        :return:
+        :return: How many match words the paragraph has.
         """
         return len(self.word_results)
 
@@ -322,18 +346,18 @@ class DocResult:
         self.title_results = title_results
         self.incomplete = incomplete
 
-    def add_par_result(self, result: ParResult):
+    def add_par_result(self, result: ParResult) -> None:
         """
         Add new paragraph search result to the list.
-        :param result:
+        :param result: New paragraph result.
         :return: None.
         """
         self.par_results.append(result)
 
-    def add_title_result(self, result: TitleResult):
+    def add_title_result(self, result: TitleResult) -> None:
         """
         Add new title search result to the list.
-        :param result:
+        :param result: New title result.
         :return: None.
         """
         self.title_results.append(result)
@@ -346,8 +370,7 @@ class DocResult:
 
     def to_dict(self):
         """
-        Form a dictionary suitable for JSON.
-        :return:
+        :return: A dictionary of the object, suitable for JSON-conversion.
         """
         par_result_dicts = []
         for r in self.par_results:
@@ -360,30 +383,18 @@ class DocResult:
             'title_results': title_result_dicts, 'num_title_results': self.get_title_match_count(),
             'par_results': par_result_dicts, 'num_par_results': self.get_par_match_count()}
 
-    def latest_par_result(self):
+    def get_par_match_count(self) -> int:
         """
-        Return the previously added par result.
-        :return:
-        """
-        try:
-            return self.par_results[len(self.par_results) - 1]
-        except IndexError:
-            return None
-
-    def get_par_match_count(self):
-        """
-        Total document count for word matches.
-        :return:
+        :return: Total document count for paragraph word matches.
         """
         count = 0
         for p in self.par_results:
             count += p.get_match_count()
         return count
 
-    def get_title_match_count(self):
+    def get_title_match_count(self) -> int:
         """
-        Total document count for title matches.
-        :return:
+        :return: Total document count for title matches.
         """
         count = 0
         for p in self.title_results:
@@ -391,12 +402,12 @@ class DocResult:
         return count
 
 
-def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = True):
+def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = True) -> bool:
     """
     Check whether a document is in document entry list.
     :param doc_info: Document to search from the list.
     :param docs: List of documents.
-    :param shorten_list: Remove found documents from the list.
+    :param shorten_list: Remove found documents from the list to save time on later loops.
     :return: Whether the document is in list.
     """
     for d in docs:
@@ -407,7 +418,7 @@ def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = Tr
     return False
 
 
-def decode_scandinavians(s: str):
+def decode_scandinavians(s: str) -> str:
     """
     Replace unicode codes with å, ä & ö.
     :param s: A string with encoded characters like '\u00e4'.
@@ -417,7 +428,7 @@ def decode_scandinavians(s: str):
         replace(r"\u00c5", "Å").replace(r"\u00c4", "Ä").replace(r"\u00d6", "Ö")
 
 
-def add_doc_info_line(doc_id, par_data):
+def add_doc_info_line(doc_id: int, par_data) -> Union[str, None]:
     """
     Forms a JSON-compatible string with doc_id and list of parargraph data with id and md attributes.
     :param doc_id: Document id.
@@ -430,9 +441,10 @@ def add_doc_info_line(doc_id, par_data):
     for par in par_data:
         # Cherry pick attributes, because others are unnecessary for the search.
         par_dict = json.loads(f"{{{par}}}")
+        par_id = par_dict['id']
         par_md = decode_scandinavians(par_dict['md'].replace("\r", " ").replace("\n", " "))
         par_attrs = par_dict['attrs']
-        par_json += json.dumps({'id': par_dict['id'], 'attrs': par_attrs, 'md': par_md}) + ", "
+        par_json += json.dumps({'id': par_id, 'attrs': par_attrs, 'md': par_md}) + ", "
     # TODO: Use some module to do this.
     # Do this here because json.dumps changes characters back to code form.
     par_json = decode_scandinavians(par_json)
@@ -440,7 +452,7 @@ def add_doc_info_line(doc_id, par_data):
     return f'{{"doc_id": "{doc_id}", "pars": [{par_json[:len(par_json)-2]}]}}\n'
 
 
-def get_doc_par_id(line) -> (int, str, str):
+def get_doc_par_id(line: str) -> (int, str, str):
     """
     Takes doc id, par id and par data from one grep search result line.
     :param line: Tim pars grep search result line.
@@ -462,7 +474,7 @@ def create_search_file():
     """
     Grouped all TIM-paragraphs under documents and combines them into a single file.
     Creates also a raw file without grouping.
-    :return:
+    :return: A message confirming success of file creation.
     """
     verify_admin()
 
@@ -490,7 +502,7 @@ def create_search_file():
             first = True
             for line in raw_file:
                 try:
-                    # TODO: Check paragraph existences and leave out those that have been deleted.
+                    # TODO: Leave out deleted pars or remove them from files.
                     doc_id, par_id, par = get_doc_par_id(line)
                     if not doc_id:
                         continue
@@ -516,7 +528,7 @@ def create_search_file():
                 new_line = add_doc_info_line(par_data[0], par_data[1])
                 if new_line and len(new_line) >= 30:
                     file.write(new_line)
-        return json_response(f"File created to {dir_path}{file_name}")
+        return json_response(f"Combined and processed paragraph file created to {dir_path}{file_name}")
     except Exception as e:
         abort(400, f"Failed to create search file {dir_path}{file_name}: {str(e.__class__.__name__)}: {str(e)}")
 
@@ -525,7 +537,7 @@ def create_search_file():
 def title_search():
     """
     Performs search on document titles.
-    :return:
+    :return: Title search results.
     """
     query = request.args.get('query', '')
     folder = request.args.get('folder', '')
@@ -542,17 +554,16 @@ def title_search():
     validate_query(query, search_whole_words)
 
     if search_owned_docs:
-        custom_filter = DocEntry.id.in_(get_current_user_object()
-                                        .get_personal_group()
-                                        .accesses.filter_by(type=AccessType.owner.value)
+        custom_filter = DocEntry.id.in_(get_current_user_object().get_personal_group().accesses.
+                                        filter_by(type=AccessType.owner.value)
                                         .with_entities(BlockAccess.block_id))
     else:
         custom_filter = None
-    docs = list(set(get_documents(
+    docs = get_documents(
         filter_user=get_current_user_object(),
         filter_folder=folder,
         custom_filter=custom_filter,
-        search_recursively=True)))
+        search_recursively=True)
 
     if not docs:
         if not folder:
@@ -574,6 +585,7 @@ def title_search():
         term_regex = re.compile(term, flags)
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
+    # TODO: Make faster, currently root search takes ~2.5 seconds in timbeta.
     if term_regex:
         for d in docs:
             current_doc = d.path
@@ -604,17 +616,17 @@ def title_search():
     })
 
 
-def validate_query(query, search_exact_words):
+def validate_query(query: str, search_whole_words: bool) -> None:
     """
     Abort if query is too short.
-    :param query:
-    :param search_exact_words:
-    :return:
+    :param query: Search word(s).
+    :param search_whole_words: Whole words search has different limits.
+    :return: None.
     """
-    if len(query.strip()) < MIN_QUERY_LENGTH and not search_exact_words:
+    if len(query.strip()) < MIN_QUERY_LENGTH and not search_whole_words:
         if query.strip().lower() not in WHITE_LIST:
             abort(400, f'Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped.')
-    if len(query.strip()) < MIN_WHOLE_WORDS_QUERY_LENGTH and search_exact_words:
+    if len(query.strip()) < MIN_WHOLE_WORDS_QUERY_LENGTH and search_whole_words:
         abort(400, f'Whole word search text must be at least {MIN_WHOLE_WORDS_QUERY_LENGTH} character(s) '
                    f'long with whitespace stripped.')
 
@@ -624,7 +636,7 @@ def validate_query(query, search_exact_words):
 def search():
     """
     Perform document word search on a combined and grouped par file using grep.
-    :return:
+    :return: Document paragraph search results with total result count.
     """
 
     query = request.args.get('query', '')

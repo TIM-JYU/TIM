@@ -27,8 +27,8 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     private titleResults: IDocSearchResult[] = [];
     private folder: string = "";
     private totalResults: number = 0;
-    private limitedDisplay: boolean = false; // If there's large number of results, optimize shown results.
-    private limitedDisplayThreshold: number = 100000;
+    private limitedDisplay: boolean = false; // If there's large number of results, don't show previews.
+    private limitedDisplayThreshold: number = 100000; // More than this could cause memory overload in browser.
     private errorMessage: string = "";
     private orderByOption = "1";
     private allClosed = true;
@@ -56,7 +56,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
 
     /**
      * Get all data from the search controller.
-     * @param {SearchBoxCtrl} ctrl
+     * @param {SearchBoxCtrl} ctrl Controller which calls the search routes.
      */
     public updateAttributes(ctrl: SearchBoxCtrl) {
         this.collapsables = false;
@@ -88,7 +88,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     }
 
     /**
-     * Merge results and tag results and add open/close state variable.
+     * Merge different types of results as display results with open/close state variable.
      */
     private filterResults() {
         this.displayResults = [];

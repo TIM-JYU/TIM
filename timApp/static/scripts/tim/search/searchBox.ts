@@ -205,7 +205,7 @@ export class SearchBoxCtrl implements IController {
 
     /**
      * Sets a search result controller.
-     * @param {ShowSearchResultController} resultsDialog
+     * @param {ShowSearchResultController} resultsDialog The currently active search result window.
      */
     registerResultsDialog(resultsDialog: ShowSearchResultController | null) {
         this.resultsDialog = resultsDialog;
@@ -269,7 +269,7 @@ export class SearchBoxCtrl implements IController {
      *
      * Rules:
      *
-     * root -> kurssit
+     * root -> root
      * users/username/somesubfolders -> users/username
      * kurssit/faculty/course/somesubfolders -> kurssit/faculty/course
      * kurssit/faculty/course -> kurssit/faculty/course
@@ -356,7 +356,7 @@ export class SearchBoxCtrl implements IController {
     }
 
     /**
-     * Document word search.
+     * Document paragraph word search.
      * @returns {Promise<void>}
      */
     private async wordSearch() {
@@ -452,11 +452,10 @@ export class SearchBoxCtrl implements IController {
     }
 
     /**
-     * Make a list of folder paths.
+     * Makes a list of folder paths starting from the current default search folder.
      * @returns {Promise<void>}
      */
     private async loadFolderSuggestions() {
-        // Currently goes only three levels deep to save time.
         const response = await $http<string[]>({
             method: "GET",
             params: {
@@ -486,7 +485,7 @@ export class SearchBoxCtrl implements IController {
 
     /**
      * Format search button tooltip based on the situation.
-     * @returns {string}
+     * @returns {string} Tooltip, which is different depending on whether loading and input query states.
      */
     private searchButtonTooltip() {
         if (this.query.length < 1) {
@@ -502,8 +501,8 @@ export class SearchBoxCtrl implements IController {
 
 /**
  * Removes HTML tags, linebreaks and extra white spaces.
- * @param {string} str
- * @returns {string}
+ * @param {string} str Raw html string.
+ * @returns {string} Plain text string.
  */
 function removeHtmlTags(str: string) {
     return str.replace(/<{1}[^<>]{1,}>{1}/g, " ").
