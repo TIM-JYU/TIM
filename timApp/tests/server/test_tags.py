@@ -27,10 +27,7 @@ class TagTest(TimRouteTest):
         self.json_post(f'/tags/add/{d.path}', {'tags': [{'name': 'test', 'expires': None, 'type': TagType.Regular},
                                                         {'name': 'test2#¤%&/()=', 'expires': None,
                                                          'type': TagType.Regular}]},
-                       expect_status=400,
-                       expect_content={
-                           'error': 'Tags can only contain letters a-z, numbers, underscores, spaces and dashes.'}
-                       )
+                       expect_status=200)
 
     def test_special_tag_adding_without_rights(self):
         self.login_test1()
@@ -172,3 +169,11 @@ class TagTest(TimRouteTest):
                                                                    'type': TagType.Regular.value}],
                                                          'title': d.title,
                                                          'unpublished': True})
+
+    def test_tag_edit(self):
+        self.login_test1()
+        d = self.create_doc()
+        old_tag = {'name': 'cat', 'expires': None, 'type': TagType.Regular}
+        new_tag = {'name': 'dog', 'expires': None, 'type': TagType.Regular}
+        self.json_post(f'/tags/add/{d.path}', {'tags': [old_tag]})
+        self.json_post(f'/tags/edit/{d.path}', {'oldTag': old_tag, 'newTag': new_tag}, expect_status=200)
