@@ -38,6 +38,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
     private grouped: IGroupedCourses[];
     private closedSubjects: boolean[] = [];
     private storage: ngStorage.StorageService & {subjectsStorage: null | boolean[]};
+    private toggleCollapseAll: boolean = false;
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -59,6 +60,7 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
         }
         this.groupBySubject();
         this.loadCollapseStates();
+        this.toggleCollapseAll = !this.allClosed(this.grouped);
     }
 
     $onDestroy() {
@@ -189,6 +191,16 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
     private courseCode(d: ITaggedItem) {
         return getCourseCode(d.tags, true);
     }
+
+    /**
+     * Collapse or open all subjects.
+     */
+    private toggleAll() {
+        for (const item of this.grouped) {
+            item.closed = this.toggleCollapseAll;
+        }
+        this.toggleCollapseAll = !this.toggleCollapseAll;
+    }
 }
 
 registerDialogComponent("timCourseListDialog",
@@ -199,7 +211,10 @@ registerDialogComponent("timCourseListDialog",
     <dialog-header>
     </dialog-header>
     <dialog-body>
-    <h5>Listing available courses</h5>
+    <h5>Listing available courses <a><i ng-if="$ctrl.toggleCollapseAll" ng-click="$ctrl.toggleAll()"
+    title="Collapse all subjects" class="glyphicon glyphicon-minus-sign"></i>
+    <i ng-if="!$ctrl.toggleCollapseAll" ng-click="$ctrl.toggleAll()" title="Open all subjects"
+    class="glyphicon glyphicon-plus-sign"></i></a></h5>
     <div>
         <p>
             <span>
