@@ -29,7 +29,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     private totalResults: number = 0;
     private limitedDisplay: boolean = false; // If there's large number of results, don't show previews.
     private limitedDisplayThreshold: number = 100000; // More than this could cause memory overload in browser.
-    private errorMessage: string = "";
+    private errorMessage: string | undefined = undefined;
     private orderByOption = "1";
     private allClosed = true;
     private collapsables = false; // True if there are any collapsable results.
@@ -205,8 +205,8 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     }
 
     /**
-     * Pick how to order the results. All information needs to be passed as parameters and processed
-     * in inner functions due to AngularJS' limitations in orderBy functions.
+     * Pick how to order the results. Only information passed as parameters or the item in ng-repeat
+     * can be used in the inner functions due to AngularJS' limitations to orderBy functions.
      *
      * @param {number} orderByOption A number corresponding to different order rules.
      * @returns {any} Search result order for AngularJS elements.

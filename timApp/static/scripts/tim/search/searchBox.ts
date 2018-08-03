@@ -92,19 +92,19 @@ export interface ITagSearchResult {
 }
 
 export class SearchBoxCtrl implements IController {
-    // Results and variables search results dialog needs to know.
+    // Results and variables search results dialog needs to know:
     public results: IDocSearchResult[] = [];
-    public resultErrorMessage: string = ""; // Message displayed only in results dialog.
+    public resultErrorMessage: string | undefined = undefined; // Message displayed only in results dialog.
     public tagMatchCount: number = 0;
     public wordMatchCount: number = 0;
     public titleMatchCount: number = 0;
     public tagResults: ITagSearchResult[] = [];
     public titleResults: IDocSearchResult[] = [];
-    public incompleteSearchReason: string = "";
+    public incompleteSearchReason: string | undefined = undefined;
     public query: string = "";
     public folder!: Binding<string, "<">;
 
-    // Settings:
+    // Route settings:
     private regex: boolean = false; // Regular expressions.
     private caseSensitive: boolean = false; // Take upper/lower case in account.
     private advancedSearch: boolean = false; // Toggle advanced options panel.
@@ -116,7 +116,8 @@ export class SearchBoxCtrl implements IController {
     private searchWholeWords: boolean = false; // Whole word search.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
 
-    private errorMessage: string = ""; // Message displayed only in search panel.
+    // Controller's private attributes:
+    private errorMessage: string | undefined = undefined; // Message displayed only in search panel.
     private focusMe: boolean = true;
     private loading: boolean = false; // Display loading icon.
     private item: IItem = $window.item;
@@ -124,10 +125,12 @@ export class SearchBoxCtrl implements IController {
         searchWordStorage: null | string,
         optionsStorage: null | boolean[]};
     private folderSuggestions: string[] = []; // A list of folder path suggestions.
-    private resultsDialog: ShowSearchResultController | null = null;
+    private resultsDialog: ShowSearchResultController | null = null; // The most recent search result dialog.
+    private timeWarningLimit: number = 20;  // Gives a warning about long search time if over this.
 
-    // The most recent search result dialog.
-
+    /**
+     * SearchBox constructor.
+     */
     constructor() {
         this.storage = $localStorage.$default({
             optionsStorage: null,
@@ -163,6 +166,8 @@ export class SearchBoxCtrl implements IController {
         }
 
         const start = new Date().getTime();
+
+        // Each search type has separate route.
         if (this.searchTags) {
             await this.tagSearch();
         }
@@ -172,6 +177,7 @@ export class SearchBoxCtrl implements IController {
         if (this.searchDocNames) {
             await this.titleSearch();
         }
+
         if (this.results.length === 0 && this.tagResults.length === 0 &&
                 this.titleResults.length === 0 && !this.errorMessage) {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
@@ -182,15 +188,20 @@ export class SearchBoxCtrl implements IController {
             this.loading = false;
             return;
         }
+        // After successful search save search options to local storage.
         this.updateLocalStorage();
-        if (((new Date().getTime() - start) / 1000) > 20) {
+
+        // Give warnings if search was incomplete or took a long time.
+        if (((new Date().getTime() - start) / 1000) > this.timeWarningLimit) {
             this.resultErrorMessage = "The search took a long time. " +
                 "Use more specific search settings for a faster search.";
         }
-        if (this.incompleteSearchReason.length > 0) {
+        if (this.incompleteSearchReason) {
             this.resultErrorMessage = `Incomplete search: ${this.incompleteSearchReason}.` +
                 ` For better results choose more specific search settings.`;
         }
+
+        // Show results in result dialog.
         if (this.createNewWindow) {
             void showSearchResultDialog(this);
         } else {
@@ -475,12 +486,12 @@ export class SearchBoxCtrl implements IController {
         this.tagMatchCount = 0;
         this.wordMatchCount = 0;
         this.titleMatchCount = 0;
-        this.incompleteSearchReason = "";
+        this.incompleteSearchReason = undefined;
         this.tagResults = [];
         this.titleResults = [];
         this.results = [];
-        this.errorMessage = "";
-        this.resultErrorMessage = "";
+        this.errorMessage = undefined;
+        this.resultErrorMessage = undefined;
     }
 
     /**
