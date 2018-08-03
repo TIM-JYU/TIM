@@ -103,6 +103,9 @@ def edit_tag(doc):
     old_tag_name = old_tag_dict["name"]
     new_tag_expire = new_tag_dict.get("expires")
 
+    # If commas in the name, use first part.
+    new_tag_name = new_tag_name.split(",", 1)[0]
+
     new_tag = Tag(name=new_tag_name, expires=new_tag_expire, type=new_tag_type)
     old_tag = Tag.query.filter_by(block_id=d.id, name=old_tag_name, type=old_tag_type).first()
 
@@ -115,6 +118,7 @@ def edit_tag(doc):
     except (IntegrityError, FlushError):
         abort(400, "Tag editing failed! New tag name may already be in use")
     return ok_response()
+
 
 @tags_blueprint.route('/remove/<path:doc>', methods=["POST"])
 def remove_tag(doc):

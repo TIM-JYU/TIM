@@ -117,7 +117,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     }
 
     /**
-     * Replaces old tag with new tag of same tag type.
+     * Replaces old tag with new tag of the same tag type.
      * @returns {Promise<void>}
      */
     private async editSelectedTag() {
@@ -129,11 +129,15 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
                     return;
                 }
             }
+            let newName = this.tagName;
+            if (this.selected.type === TagType.CourseCode) {
+                newName = newName.trim().toUpperCase();
+            }
             const docPath = this.resolve.params.path;
             const newTag = {
                 block_id: this.resolve.params.id,
                 expires: this.expires,
-                name: this.tagName.trim(),
+                name: newName,
                 type: this.selected.type,
             };
             const data = {oldTag: this.selected, newTag: newTag};
@@ -151,6 +155,9 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
                 await this.updateTags();
                 return;
             }
+        } else {
+            this.successMessage = undefined;
+            this.errorMessage = "Click a tag to edit";
         }
     }
 
@@ -167,7 +174,11 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
                 this.successMessage = undefined;
                 return;
             }
+        }
 
+        // To avoid complications with editing a non-existent tag.
+        if (t === this.selected) {
+            this.selected = null;
         }
 
         const docPath = this.resolve.params.path;
