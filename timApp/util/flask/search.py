@@ -76,16 +76,25 @@ def tag_search():
     # PostgreSQL doesn't support regex directly, so as workaround get all tags below the search folder
     # from the database and then apply regex search on them.
     any_tag = "%%"
-    custom_filter = DocEntry.id.in_(Tag.query.filter(Tag.name.ilike(any_tag) &
-                                                     ((Tag.expires > datetime.now()) | (Tag.expires == None))).
-                                    with_entities(Tag.block_id))
+    if search_owned_docs:
+        custom_filter = DocEntry.id.in_(get_current_user_object()
+                                        .get_personal_group()
+                                        .accesses.filter_by(type=AccessType.owner.value)
+                                        .with_entities(BlockAccess.block_id)) & \
+                        DocEntry.id.in_(
+                            Tag.query.filter(
+                                Tag.name.ilike(any_tag) & ((Tag.expires > datetime.now()) | (Tag.expires == None))).
+                                with_entities(Tag.block_id))
+    else:
+        custom_filter = DocEntry.id.in_(
+            Tag.query.filter(
+                Tag.name.ilike(any_tag) & ((Tag.expires > datetime.now()) | (Tag.expires == None))).
+                with_entities(Tag.block_id))
     query_options = joinedload(DocEntry._block).joinedload(Block.tags)
     docs = get_documents(filter_user=get_current_user_object(), filter_folder=folder,
                          search_recursively=True, custom_filter=custom_filter,
                          query_options=query_options)
 
-    if search_owned_docs:
-        docs = list(set(docs) - (set(docs) - set(get_documents_by_access_type(AccessType.owner))))
     tag_result_count = 0
     error_list = []
     current_doc = "before search"
@@ -532,19 +541,23 @@ def title_search():
 
     validate_query(query, search_whole_words)
 
+    if search_owned_docs:
+        custom_filter = DocEntry.id.in_(get_current_user_object()
+                                        .get_personal_group()
+                                        .accesses.filter_by(type=AccessType.owner.value)
+                                        .with_entities(BlockAccess.block_id))
+    else:
+        custom_filter = None
     docs = list(set(get_documents(
         filter_user=get_current_user_object(),
         filter_folder=folder,
+        custom_filter=custom_filter,
         search_recursively=True)))
 
     if not docs:
         if not folder:
             folder = "root"
         abort(400, f"Folder '{folder}' not found or not accessible")
-    if search_owned_docs:
-        docs = list(set(docs) - (set(docs) - set(get_documents_by_access_type(AccessType.owner))))
-        if not docs:
-            abort(400, f"No owned documents found in '{folder}'")
 
     if case_sensitive:
         flags = re.DOTALL
