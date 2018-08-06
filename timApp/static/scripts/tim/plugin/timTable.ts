@@ -1363,7 +1363,8 @@ export class TimTableController implements IController {
      * @param coli Column index
      */
     private getTrustedCellContentHtml(rowi: number, coli: number) {
-        return this.sceService.trustAsHtml(this.cellDataMatrix[rowi][coli].cell);
+        //return this.sceService.trustAsHtml(this.cellDataMatrix[rowi][coli].cell);
+        return this.cellDataMatrix[rowi][coli].cell;
     }
     //</editor-fold>
 }
