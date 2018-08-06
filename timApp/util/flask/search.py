@@ -22,6 +22,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.tag import Tag
 from timApp.tim_app import app
+from timApp.timdb.exceptions import TimDbException
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
@@ -440,10 +441,18 @@ def add_doc_info_line(doc_id: int, par_data) -> Union[str, None]:
     if not par_data:
         return None
     par_json = ""
+    doc_info = DocEntry.find_by_id(doc_id)
+    if not doc_info:
+        return None
     for par in par_data:
-        # Cherry pick attributes, because others are unnecessary for the search.
         par_dict = json.loads(f"{{{par}}}")
         par_id = par_dict['id']
+        # If par can't be found (deleted), don't add it.
+        try:
+            doc_info.document.get_paragraph(par_id)
+        except TimDbException:
+            continue
+        # Cherry pick attributes, because others are unnecessary for the search.
         par_md = decode_scandinavians(par_dict['md'].replace("\r", " ").replace("\n", " "))
         par_attrs = par_dict['attrs']
         par_json += json.dumps({'id': par_id, 'attrs': par_attrs, 'md': par_md}) + ", "
@@ -504,7 +513,6 @@ def create_search_file():
             first = True
             for line in raw_file:
                 try:
-                    # TODO: Leave out deleted pars or remove them from files.
                     doc_id, par_id, par = get_doc_par_id(line)
                     if not doc_id:
                         continue
