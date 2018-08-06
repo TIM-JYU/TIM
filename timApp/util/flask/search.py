@@ -37,6 +37,9 @@ MIN_QUERY_LENGTH = 3  # For word and title search. Tags have no limitations.
 MIN_WHOLE_WORDS_QUERY_LENGTH = 1  # For whole word search.
 PREVIEW_LENGTH = 40  # Before and after the search word separately.
 PREVIEW_MAX_LENGTH = 160
+PROCESSED_CONTENT_FILE_NAME = "all_processed.log"
+RAW_CONTENT_FILE_NAME = "all.log"
+MIN_CONTENT_FILE_LINE_LENGHT = 70  # Excludes empty documents.
 
 
 # noinspection PyUnusedLocal
@@ -62,18 +65,28 @@ def get_subfolders():
     return json_response(folders_viewable)
 
 
+def get_common_search_params(request) -> (str, str, bool, bool, bool, bool):
+    """
+    Picks parameters that are common in the search routes from a request.
+    :param request:
+    :return: A tuple with six values.
+    """
+    query = request.args.get('query', '')
+    case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
+    folder = request.args.get('folder', '')
+    regex = get_option(request, 'regex', default=False, cast=bool)
+    search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
+    search_whole_words = get_option(request, 'searchWholeWords', default=False, cast=bool)
+    return query, folder, regex, case_sensitive, search_whole_words, search_owned_docs
+
+
 @search_routes.route('/tags')
 def tag_search():
     """
     A route for document tag search.
     :return: Tag search results response.
     """
-    query = request.args.get('query', '')
-    case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-    folder = request.args.get('folder', '')
-    regex_option = get_option(request, 'regex', default=False, cast=bool)
-    search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
-    search_whole_words = get_option(request, 'searchWholeWords', default=False, cast=bool)
+    (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
     results = []
 
     # PostgreSQL doesn't support regex directly, so as workaround get all tags below the search folder
@@ -105,14 +118,14 @@ def tag_search():
         flags = re.DOTALL
     else:
         flags = re.DOTALL | re.IGNORECASE
-    if regex_option:
+    if regex:
         term = query
     else:
         term = re.escape(query)
     if search_whole_words:
         term = fr"\b{term}\b"
     try:
-        regex = re.compile(term, flags)
+        term_regex = re.compile(term, flags)
         for d in docs:
             try:
                 current_doc = d.path
@@ -120,7 +133,7 @@ def tag_search():
                 m_num = 0
                 for tag in d.block.tags:
                     current_tag = tag.name
-                    matches = list(regex.finditer(tag.name))
+                    matches = list(term_regex.finditer(tag.name))
                     if matches:
                         match_count = len(matches)
                         if not query:
@@ -190,7 +203,7 @@ def get_documents_by_access_type(access: AccessType) -> List[DocEntry]:
     return docs
 
 
-def preview(md: str, query, m: Match[str], snippet_length: int = PREVIEW_LENGTH,
+def preview_result(md: str, query, m: Match[str], snippet_length: int = PREVIEW_LENGTH,
             max_length: int = PREVIEW_MAX_LENGTH) -> str:
     """
     Forms preview of the match paragraph.
@@ -233,7 +246,7 @@ class WordResult:
         self.match_start = match_start
         self.match_end = match_end
 
-    def to_dict(self):
+    def to_json(self):
         """
         :return: A dictionary containing object data, suitable for JSON-conversion.
         """
@@ -272,13 +285,13 @@ class ParResult:
         """
         return len(self.word_results) > 0
 
-    def to_dict(self):
+    def to_json(self):
         """
-        :return: A dictionary of attributes and derived attributes, suitable for JSON-conversion.
+        :return: A dictionary of attributes and derived attributes.
         """
         results_dicts = []
         for r in self.word_results:
-            results_dicts.append(r.to_dict())
+            results_dicts.append(r)
         return {'par_id': self.par_id,
                 'preview': self.preview,
                 'results': results_dicts, 'num_results': self.get_match_count()}
@@ -318,14 +331,14 @@ class TitleResult:
         """
         return len(self.word_results) > 0
 
-    def to_dict(self):
+    def to_json(self):
         """
         :return: A dictionary of attributes and derived attributes, suitable for JSON-conversion.
         """
-        results_dicts = []
+        results = []
         for r in self.word_results:
-            results_dicts.append(r.to_dict())
-        return {'results': results_dicts, 'num_results': self.get_match_count()}
+            results.append(r)
+        return {'results': results, 'num_results': self.get_match_count()}
 
     def get_match_count(self) -> int:
         """
@@ -371,16 +384,16 @@ class DocResult:
         """
         return len(self.par_results) > 0 or len(self.title_results) > 0
 
-    def to_dict(self):
+    def to_json(self):
         """
         :return: A dictionary of the object, suitable for JSON-conversion.
         """
         par_result_dicts = []
         for r in self.par_results:
-            par_result_dicts.append(r.to_dict())
+            par_result_dicts.append(r)
         title_result_dicts = []
         for r in self.title_results:
-            title_result_dicts.append(r.to_dict())
+            title_result_dicts.append(r)
         return {
             'doc': self.doc_info, 'incomplete': self.incomplete,
             'title_results': title_result_dicts, 'num_title_results': self.get_title_match_count(),
@@ -423,17 +436,17 @@ def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = Tr
 
 def add_doc_info_line(doc_id: int, par_data) -> Union[str, None]:
     """
-    Forms a JSON-compatible string with doc_id and list of parargraph data with id and md attributes.
+    Forms a JSON-compatible string with doc_id and list of paragraph data with id and md attributes.
     :param doc_id: Document id.
     :param par_data: List of paragraph dictionaries.
     :return: String with paragraph data grouped under a document.
     """
     if not par_data:
         return None
-    par_json = ""
     doc_info = DocEntry.find_by_id(doc_id)
     if not doc_info:
         return None
+    par_json_list = []
     for par in par_data:
         par_dict = json.loads(f"{{{par}}}")
         par_id = par_dict['id']
@@ -445,9 +458,8 @@ def add_doc_info_line(doc_id: int, par_data) -> Union[str, None]:
         # Cherry pick attributes, because others are unnecessary for the search.
         par_md = par_dict['md'].replace("\r", " ").replace("\n", " ")
         par_attrs = par_dict['attrs']
-        par_json += json.dumps({'id': par_id, 'attrs': par_attrs, 'md': par_md}, ensure_ascii=False) + ", "
-    # [:len(par_json)-2] slices off the last ", " left by ending loop.
-    return f'{{"doc_id": "{doc_id}", "pars": [{par_json[:len(par_json)-2]}]}}\n'
+        par_json_list.append({'id': par_id, 'attrs': par_attrs, 'md': par_md})
+    return json.dumps({'doc_id': doc_id, 'pars': par_json_list}, ensure_ascii=False) + '\n'
 
 
 def get_doc_par_id(line: str) -> (int, str, str):
@@ -461,16 +473,16 @@ def get_doc_par_id(line: str) -> (int, str, str):
         doc_id = int(temp[0])
         par_id = temp[1]
         par_data = temp[2].replace("current:", "", 1)
-        par_data = par_data[1:len(par_data) - 2]
+        par_data = par_data[1:-2]
         return doc_id, par_id, par_data
     else:
         return None
 
 
-@search_routes.route("combinePars")
+@search_routes.route("createContentFile")
 def create_search_file():
     """
-    Grouped all TIM-paragraphs under documents and combines them into a single file.
+    Groups all TIM-paragraphs under documents and combines them into a single file.
     Creates also a raw file without grouping.
     Note: may take several minutes, so timeout settings need to be lenient.
     :return: A message confirming success of file creation.
@@ -478,8 +490,8 @@ def create_search_file():
     verify_admin()
 
     dir_path = Path(app.config['FILES_PATH']) / 'pars'
-    raw_file_name = 'all.log'
-    file_name = 'all_processed.log'
+    raw_file_name = RAW_CONTENT_FILE_NAME
+    file_name = PROCESSED_CONTENT_FILE_NAME
     raw_file = None
 
     try:
@@ -494,37 +506,33 @@ def create_search_file():
     except FileNotFoundError:
         abort(400, f"Failed to open preliminary file {dir_path / raw_file_name}")
     try:
-        with raw_file, open(dir_path / file_name,
-                            "w+", encoding='utf-8') as file:
-            # Carry document id with par-list to ensure they won't be saved to wrong document.
-            par_data = [-1, []]
-            first = True
+        with raw_file, open(dir_path / file_name, "w+", encoding='utf-8') as file:
+            current_doc, current_pars = -1, []
             for line in raw_file:
                 try:
                     doc_id, par_id, par = get_doc_par_id(line)
                     if not doc_id:
                         continue
-                    if first:
-                        par_data[0] = doc_id
-                        first = False
+                    if not current_doc:
+                        current_doc = doc_id
                     # If same doc as previous line or the first, just add par data to list.
-                    if par_data[0] == doc_id:
-                        par_data[1].append(par)
+                    if current_doc == doc_id:
+                        current_pars.append(par)
                         continue
                     # Otherwise save the previous one and empty par data.
                     else:
-                        new_line = add_doc_info_line(par_data[0], par_data[1])
-                        if new_line and len(new_line) >= 30:
+                        new_line = add_doc_info_line(current_doc, current_pars)
+                        if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGHT:
                             file.write(new_line)
-                        par_data[0] = doc_id
-                        par_data[1].clear()
-                        par_data[1].append(par)
+                        current_doc = doc_id
+                        current_pars.clear()
+                        current_pars.append(par)
                 except Exception as e:
                     log_error(f"'{get_error_message(e)}' while writing search file line '{line}''")
             # Write the last line separately, because loop leaves it unsaved.
-            if par_data:
-                new_line = add_doc_info_line(par_data[0], par_data[1])
-                if new_line and len(new_line) >= 30:
+            if current_doc and current_pars:
+                new_line = add_doc_info_line(current_doc, current_pars)
+                if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGHT:
                     file.write(new_line)
         return json_response({'status': f"Combined and processed paragraph file created to {dir_path / file_name}"})
     except Exception as e:
@@ -537,14 +545,9 @@ def title_search():
     Performs search on document titles.
     :return: Title search results.
     """
-    query = request.args.get('query', '')
-    folder = request.args.get('folder', '')
-    regex_option = get_option(request, 'regex', default=False, cast=bool)
-    case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-    search_whole_words = get_option(request, 'searchWholeWords', default=False, cast=bool)
-    search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
+    (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
 
-    results_dicts = []
+    results = []
     title_result_count = 0
     term_regex = None
 
@@ -571,7 +574,7 @@ def title_search():
         flags = re.DOTALL
     else:
         flags = re.DOTALL | re.IGNORECASE
-    if regex_option:
+    if regex:
         term = query
     else:
         term = re.escape(query)
@@ -599,12 +602,12 @@ def title_search():
                 if title_result.has_results():
                     r = DocResult(d)
                     r.add_title_result(title_result)
-                    results_dicts.append(r.to_dict())
+                    results.append(r)
                     title_result_count += r.get_title_match_count()
             except Exception as e:
                 log_search_error(get_error_message(e), query, current_doc, par="")
 
-    return json_response(result_response(results_dicts, title_result_count))
+    return json_response(result_response(results, title_result_count))
 
 
 def result_response(results, title_result_count: int = 0, word_result_count: int = 0, incomplete_search_reason=""):
@@ -656,26 +659,25 @@ def search():
     Perform document word search on a combined and grouped par file using grep.
     :return: Document paragraph search results with total result count.
     """
+    # If the file containing all TIM content doesn't exists, give warning immediately.
+    dir_path = Path(app.config['FILES_PATH']) / 'pars'
+    search_file_name = PROCESSED_CONTENT_FILE_NAME
+    if not Path(dir_path / search_file_name).exists():
+        abort(404, f"Combined content file '{search_file_name}' not found, unable to perform content search!")
 
-    query = request.args.get('query', '')
-    folder = request.args.get('folder', '')
-    regex_option = get_option(request, 'regex', default=False, cast=bool)
-    case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-    search_whole_words = get_option(request, 'searchWholeWords', default=False, cast=bool)
-    search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
+    (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
     max_results = get_option(request, 'maxResults', default=1000000, cast=int)
     ignore_plugins = get_option(request, 'ignorePlugins', default=False, cast=bool)
 
     validate_query(query, search_whole_words)
 
-    dir_path = Path(app.config['FILES_PATH']) / 'pars'
     term_regex = None
     owned_docs = []
     incomplete_search_reason = ""
     current_doc = ""
     current_par = ""
     output = []
-    results_dicts = []
+    results = []
     word_result_count = 0
 
     cmd = ["grep"]
@@ -685,7 +687,7 @@ def search():
     else:
         cmd.append("-i")
         flags = re.DOTALL | re.IGNORECASE
-    if regex_option:
+    if regex:
         cmd.append("-E")
         term = query
     else:
@@ -749,7 +751,7 @@ def search():
                 edit_access = has_edit_access(doc_info)
 
                 for par in pars:
-                    id = par['id']
+                    par_id = par['id']
                     md = par['md']
 
                     # Tries to get plugin and settings key values from dict;
@@ -768,7 +770,7 @@ def search():
                     except KeyError:
                         pass
 
-                    par_result = ParResult(id)
+                    par_result = ParResult(par_id)
                     matches = list(term_regex.finditer(md))
 
                     if matches:
@@ -777,7 +779,7 @@ def search():
                                                 match_start=m.start(),
                                                 match_end=m.end())
                             par_result.add_result(result)
-                        par_result.preview = preview(md, query, matches[0])
+                        par_result.preview = preview_result(md, query, matches[0])
 
                     # Don't add empty par result (in error cases).
                     if par_result.has_results():
@@ -786,7 +788,7 @@ def search():
                 # If no valid paragraph results, skip document.
                 if doc_result.has_results():
                     word_result_count += doc_result.get_par_match_count()
-                    results_dicts.append(doc_result.to_dict())  # Save directly as dict to save time.
+                    results.append(doc_result)  # Save directly as dict to save time.
 
                 # End search if the limit is reached.
                 if word_result_count > max_results:
@@ -797,6 +799,6 @@ def search():
             log_search_error(get_error_message(e), query, current_doc, par=current_par)
 
     return json_response(result_response(
-        results_dicts,
+        results,
         word_result_count=word_result_count,
         incomplete_search_reason=incomplete_search_reason))
