@@ -152,6 +152,13 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
             return;
         }
 
+        const $target = $(e.target);
+        const ignoredClasses = ["no-highlight"];
+        const classSelector = ignoredClasses.map((c) => "." + c).join(",");
+        if ($target.parents(classSelector).length > 0) {
+            return false;
+        }
+
         if (toggle2 && this.lastclickplace && this.lastclicktime) {
             // Clicked twice successively
             const clicktime = new Date().getTime() - this.lastclicktime;
