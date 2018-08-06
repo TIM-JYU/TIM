@@ -228,27 +228,20 @@ registerDialogComponent("timCourseListDialog",
     <dialog-header>
     </dialog-header>
     <dialog-body>
-    <h5>Listing available courses <a><i ng-if="$ctrl.toggleCollapseAll" ng-click="$ctrl.toggleAll()"
-    title="Collapse all subjects" class="glyphicon glyphicon-minus-sign"></i>
-    <i ng-if="!$ctrl.toggleCollapseAll" ng-click="$ctrl.toggleAll()" title="Open all subjects"
-    class="glyphicon glyphicon-plus-sign"></i></a></h5>
-    <div class="col-xs-8">
-        <p>
-            <span>
-                <span ng-if="$ctrl.allClosed($ctrl.grouped)">
-                    Press the plus signs to view available courses on different subjects
-                </span>
-            </span>
-        </p>
+    <div class="col-md-8">
+        <h5>Listing available courses <a><i ng-if="$ctrl.toggleCollapseAll"
+        ng-click="$ctrl.toggleAll()" title="Collapse all subjects" class="glyphicon glyphicon-minus-sign"></i>
+        <i ng-if="!$ctrl.toggleCollapseAll" ng-click="$ctrl.toggleAll()" title="Open all subjects"
+        class="glyphicon glyphicon-plus-sign"></i></a></h5>
     </div>
-    <div class="input-group float-right col-xs-4">
-        <input class="float-right form-control" ng-if="true" ng-model="$ctrl.filterText" placeholder="Input filter word"
-        title="Filter by course code and title" ng-keypress="$ctrl.keyPressed($event)">
+    <div class="input-group col-md-4">
+        <input class="form-control" ng-if="true" ng-model="$ctrl.filterText"
+        placeholder="Input filter word" title="Filter by course code and title"
+        ng-keypress="$ctrl.keyPressed($event)">
         <span class="input-group-addon btn" ng-click="$ctrl.refresh()" title="Filter courses">
         <i class="glyphicon glyphicon-search"></i></span>
     </div>
-    <br>
-    <div>
+    <div class="col-md-12">
         <ul class="list-unstyled" ng-if="$ctrl.grouped.length > 0" id="courses" aria-multiselectable="true">
             <li ng-repeat="subject in $ctrl.grouped" ng-if="subject.docs.length > 0">
                 <span class="cursor-pointer" ng-click="subject.closed = !subject.closed"

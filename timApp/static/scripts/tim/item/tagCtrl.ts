@@ -273,6 +273,8 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             this.selected = null;
         } else {
             this.selected = tag;
+            this.tagName = this.selected.name;
+            this.expires = this.selected.expires;
         }
     }
 }

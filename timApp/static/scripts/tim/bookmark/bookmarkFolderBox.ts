@@ -81,7 +81,11 @@ class BookmarkFolderBoxCtrl implements IController {
         if (!cc) {
             return d.bookmark.name;
         } else {
-            return `${cc} - ${d.bookmark.name}`;
+            if (d.bookmark.name.length > 0) {
+                return `${cc} - ${d.bookmark.name}`;
+            } else {
+                return `${cc} - ${d.doc.title}`;
+            }
         }
     }
 
@@ -104,14 +108,14 @@ class BookmarkFolderBoxCtrl implements IController {
 
     /**
      * Opens editing dialog for the bookmark and updates list if changes were made.
-     * @param {IBookmark} d Bookmark to edit.
+     * @param {IBookmark} b Bookmark to edit.
      * @returns {Promise<void>}
      */
-    private async editFromList(d: IBookmark) {
+    private async editFromList(b: IBookmark) {
         const [err, bookmark] = await to(showBookmarkDialog({
             group: this.bookmarkFolderName,
-            link: d.link,
-            name: d.name,
+            link: b.link,
+            name: b.name,
         }));
         if (!bookmark || !bookmark.name) {
             return;
@@ -119,8 +123,8 @@ class BookmarkFolderBoxCtrl implements IController {
         const response = await $http.post<IBookmarkGroup[]>("/bookmarks/edit", {
             old: {
             group: this.bookmarkFolderName,
-            link: d.link,
-            name: d.name,
+            link: b.link,
+            name: b.name,
             }, new: bookmark,
         });
         if (response) {
@@ -177,7 +181,7 @@ timApp.component("bookmarkFolderBox", {
     },
     controller: BookmarkFolderBoxCtrl,
     template: `
-        <div ng-cloak ng-if="$ctrl.documents.length > 0">
+        <div ng-cloak ng-if="$ctrl.bookmarkFolder.items.length > 0">
             <h3>{{$ctrl.bookmarkFolder.name}}<a class="font-medium"><i class="glyphicon glyphicon-pencil"
             title="Toggle editing {{$ctrl.bookmarkFolder.name}}"
             ng-click="$ctrl.editOn = !$ctrl.editOn"></i></a></h3>
