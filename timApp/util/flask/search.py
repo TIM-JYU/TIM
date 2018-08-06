@@ -3,6 +3,7 @@ import re
 import sre_constants
 import subprocess
 from datetime import datetime
+from pathlib import Path
 from typing import Match, List, Union
 
 from flask import Blueprint, json
@@ -20,6 +21,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.tag import Tag
+from timApp.tim_app import app
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
@@ -129,7 +131,7 @@ def tag_search():
                 if m_num > 0:
                     results.append({'doc': d, 'matching_tags': m_tags, 'num_results': m_num})
             except Exception as e:
-                error = f"{str(e.__class__.__name__)}: {str(e)}"
+                error = get_error_message(e)
                 error_list.append({
                     'error': error,
                     'doc_path': current_doc,
@@ -139,12 +141,12 @@ def tag_search():
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
     except Exception as e:
-        abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
+        abort(400, get_error_message(e))
     else:
         try:
             return json_response({'results': results,
                                   'incomplete_search_reason': "",
-                                  'tagResultCount': tag_result_count,
+                                  'tag_result_count': tag_result_count,
                                   'errors': error_list
                                   })
         except MemoryError:
@@ -194,13 +196,13 @@ def preview(md: str, query, m: Match[str], snippet_length: int = PREVIEW_LENGTH,
     :param md: Paragraph markdown to preview.
     :param query: Search word.
     :param m: Match object.
-    :param snippet_length: The lenght of preview before and after search word.
+    :param snippet_length: The length of preview before and after search word.
     :param max_length: The maximum allowed length of the preview.
     :return: Preview with set amount of characters around search word.
     """
     start_index = m.start() - snippet_length
     end_index = m.end() + snippet_length
-    # If the match is longer than given treshold, limit its size.
+    # If the match is longer than given threshold, limit its size.
     if end_index - start_index > max_length:
         end_index = m.start() + len(query) + snippet_length
     prefix = "..."
@@ -411,7 +413,7 @@ def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = Tr
     :return: Whether the document is in list.
     """
     for d in docs:
-        if doc_info.id is d.id:
+        if doc_info.id == d.id:
             if shorten_list:
                 docs.remove(d)
             return True
@@ -478,7 +480,7 @@ def create_search_file():
     """
     verify_admin()
 
-    dir_path = '/tim_files/pars/'
+    dir_path = Path(app.config['FILES_PATH']) / 'pars'
     raw_file_name = 'all.log'
     file_name = 'all_processed.log'
     raw_file = None
@@ -489,13 +491,13 @@ def create_search_file():
                          shell=True).communicate()
     except Exception as e:
         abort(400,
-              f"Failed to create preliminary file {dir_path}{raw_file_name}: {str(e.__class__.__name__)}: {str(e)}")
+              f"Failed to create preliminary file {dir_path / raw_file_name}: {get_error_message(e)}")
     try:
-        raw_file = open(dir_path + raw_file_name, "r", encoding='utf-8')
+        raw_file = open(dir_path / raw_file_name, "r", encoding='utf-8')
     except FileNotFoundError:
-        abort(400, f"Failed to open preliminary file {dir_path}{raw_file_name}")
+        abort(400, f"Failed to open preliminary file {dir_path / raw_file_name}")
     try:
-        with raw_file, open(dir_path + file_name,
+        with raw_file, open(dir_path / file_name,
                             "w+", encoding='utf-8') as file:
             # Carry document id with par-list to ensure they won't be saved to wrong document.
             par_data = [-1, []]
@@ -522,15 +524,15 @@ def create_search_file():
                         par_data[1].clear()
                         par_data[1].append(par)
                 except Exception as e:
-                    log_error(f"'{str(e.__class__.__name__)}: {str(e)}' while writing search file line '{line}''")
+                    log_error(f"'{get_error_message(e)}' while writing search file line '{line}''")
             # Write the last line separately, because loop leaves it unsaved.
             if par_data:
                 new_line = add_doc_info_line(par_data[0], par_data[1])
                 if new_line and len(new_line) >= 30:
                     file.write(new_line)
-        return json_response(f"Combined and processed paragraph file created to {dir_path}{file_name}")
+        return json_response(f"Combined and processed paragraph file created to {dir_path / file_name}")
     except Exception as e:
-        abort(400, f"Failed to create search file {dir_path}{file_name}: {str(e.__class__.__name__)}: {str(e)}")
+        abort(400, f"Failed to create search file {dir_path / file_name}: {get_error_message(e)}")
 
 
 @search_routes.route("/titles")
@@ -547,7 +549,6 @@ def title_search():
     search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
 
     results_dicts = []
-    word_result_count = 0
     title_result_count = 0
     term_regex = None
 
@@ -585,13 +586,13 @@ def title_search():
         term_regex = re.compile(term, flags)
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
-    # TODO: Make faster, currently root search takes ~2.5 seconds in timbeta.
+    # TODO: Make faster.
     if term_regex:
         for d in docs:
             current_doc = d.path
             try:
                 title_result = TitleResult()
-                d_title = d.document.docinfo.title
+                d_title = d.title
                 matches = list(term_regex.finditer(d_title))
                 if matches:
                     for m in matches:
@@ -600,20 +601,32 @@ def title_search():
                                             match_end=m.end())
                         title_result.add_result(result)
                 if title_result.has_results():
-                    r = DocResult(d.document.docinfo)
+                    r = DocResult(d)
                     r.add_title_result(title_result)
                     results_dicts.append(r.to_dict())
                     title_result_count += r.get_title_match_count()
             except Exception as e:
-                log_search_error(f"{str(e.__class__.__name__)}: {str(e)}", query, current_doc, par="")
+                log_search_error(get_error_message(e), query, current_doc, par="")
 
-    return json_response({
-        'titleResultCount': title_result_count,
-        'wordResultCount': word_result_count,
+    return json_response(result_response(results_dicts, title_result_count))
+
+
+def result_response(results, title_result_count: int = 0, word_result_count: int = 0, incomplete_search_reason=""):
+    """
+    Formats result data for JSON-response.
+    :param results: List of result dictionaries.
+    :param title_result_count: Number of title results.
+    :param word_result_count: Number of paragraph word results.
+    :param incomplete_search_reason: Whether search was cut short.
+    :return: Dictionary containing search results.
+    """
+    return {
+        'title_result_count': title_result_count,
+        'word_result_count': word_result_count,
         'errors': [],
-        'incomplete_search_reason': "",
-        'results': results_dicts,
-    })
+        'incomplete_search_reason': incomplete_search_reason,
+        'results': results,
+    }
 
 
 def validate_query(query: str, search_whole_words: bool) -> None:
@@ -629,6 +642,15 @@ def validate_query(query: str, search_whole_words: bool) -> None:
     if len(query.strip()) < MIN_WHOLE_WORDS_QUERY_LENGTH and search_whole_words:
         abort(400, f'Whole word search text must be at least {MIN_WHOLE_WORDS_QUERY_LENGTH} character(s) '
                    f'long with whitespace stripped.')
+
+
+def get_error_message(e: Exception):
+    """
+    Gives error message with error class.
+    :param e: Exception.
+    :return: String 'ErrorClass: reason'.
+    """
+    return f"{str(e.__class__.__name__)}: {str(e)}"
 
 
 @search_routes.route("")
@@ -650,60 +672,53 @@ def search():
 
     validate_query(query, search_whole_words)
 
-    dir = '/tim_files/pars/'
-    grep_flags = ""
+    dir_path = Path(app.config['FILES_PATH']) / 'pars'
     term_regex = None
     owned_docs = []
-    # results = []
     incomplete_search_reason = ""
-    doc_result = None
     current_doc = ""
     current_par = ""
     output = []
     results_dicts = []
-    title_result_count = 0
     word_result_count = 0
+
+    cmd = ["grep"]
 
     if case_sensitive:
         flags = re.DOTALL
     else:
-        grep_flags += "-i "
+        cmd.append("-i")
         flags = re.DOTALL | re.IGNORECASE
     if regex_option:
-        grep_flags += "-E "
+        cmd.append("-E")
         term = query
     else:
-        grep_flags += "-F "
+        cmd.append("-F")
         term = re.escape(query)
     if search_whole_words:
         # Picks the term if it's a whole word, only word or separated by comma etc.
-        grep_flags += "-sw "
+        cmd.append("-sw")
         term = fr"(?:^|\W)({term})(?:$|\W)"
     try:
         term_regex = re.compile(term, flags)
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
 
+    cmd.append(query)
+    cmd.append("all_processed.log")
+
     # TODO: Error cases in subprocess may not show, slips through as empty search result instead.
     # TODO: Output has all paragraphs even though only one or more have matches.
     try:
-        cmd = f'grep {grep_flags}"{query}" all_processed.log'
         s = subprocess.Popen(cmd,
-                             cwd=dir,
-                             stdout=subprocess.PIPE,
-                             shell=True)
+                             cwd=dir_path,
+                             stdout=subprocess.PIPE)
         output_str = s.communicate()[0].decode('utf-8').strip()
         output = output_str.splitlines()
     except Exception as e:
-        abort(400, f"{str(e.__class__.__name__)}: {str(e)}")
+        abort(400, get_error_message(e))
     if not output:
-        return json_response({
-            'titleResultCount': 0,
-            'wordResultCount': 0,
-            'errors': [],
-            'incomplete_search_reason': "",
-            'results': [],
-        })
+        return json_response(result_response([]))
 
     if search_owned_docs:
         owned_docs = get_documents_by_access_type(AccessType.owner)
@@ -783,12 +798,9 @@ def search():
                     break
 
         except Exception as e:
-            log_search_error(f"{str(e.__class__.__name__)}: {str(e)}", query, current_doc, par=current_par)
+            log_search_error(get_error_message(e), query, current_doc, par=current_par)
 
-    return json_response({
-        'titleResultCount': title_result_count,
-        'wordResultCount': word_result_count,
-        'errors': [],
-        'incomplete_search_reason': incomplete_search_reason,
-        'results': results_dicts,
-    })
+    return json_response(result_response(
+        results_dicts,
+        word_result_count=word_result_count,
+        incomplete_search_reason=incomplete_search_reason))

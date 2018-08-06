@@ -16,8 +16,8 @@ import {ShowSearchResultController, showSearchResultDialog} from "./searchResult
 export interface ISearchResultsInfo {
     results: IDocSearchResult[];
     incomplete_search_reason: string; // Tells the reason why when the search is incomplete.
-    wordResultCount: number;
-    titleResultCount: number;
+    word_result_count: number;
+    title_result_count: number;
     errors: ISearchError[];
 }
 
@@ -37,7 +37,7 @@ export interface ISearchError {
 export interface ITagSearchResultsInfo {
     results: ITagSearchResult[];
     incomplete_search_reason: string;
-    tagResultCount: number;
+    tag_result_count: number;
     errors: ISearchError[];
 }
 
@@ -362,7 +362,7 @@ export class SearchBoxCtrl implements IController {
             if (response.data.incomplete_search_reason) {
                 this.incompleteSearchReason = response.data.incomplete_search_reason;
             }
-            this.titleMatchCount = response.data.titleResultCount;
+            this.titleMatchCount = response.data.title_result_count;
         }
     }
 
@@ -411,7 +411,7 @@ export class SearchBoxCtrl implements IController {
             if (response.data.incomplete_search_reason) {
                 this.incompleteSearchReason = response.data.incomplete_search_reason;
             }
-            this.wordMatchCount = response.data.wordResultCount;
+            this.wordMatchCount = response.data.word_result_count;
         }
     }
 
@@ -434,7 +434,7 @@ export class SearchBoxCtrl implements IController {
         }));
         if (response) {
             this.tagResults = response.data.results;
-            this.tagMatchCount = response.data.tagResultCount;
+            this.tagMatchCount = response.data.tag_result_count;
             if (response.data.incomplete_search_reason) {
                 this.incompleteSearchReason = response.data.incomplete_search_reason;
             }
