@@ -1280,6 +1280,11 @@ export class TimTableController implements IController {
         this.closeSmallEditor();
     }
 
+    //<editor-fold desc="Toolbar">
+
+    //</editor-fold>
+
+    //<editor-fold desc="Rendering">
     /**
      * Checks whether a cell is the currently active cell of the table.
      * The active cell is the cell that is being edited, or if no cell is being edited,
@@ -1308,28 +1313,46 @@ export class TimTableController implements IController {
         const rows = this.data.table.rows;
 
         if (!rows ||
-            rowi >= rows.length ||
-            !rows[rowi].row ||
-            coli >= rows[rowi].row.length ||
-            !rows[rowi].row[coli].colspan) {
+            rowi >= rows.length) {
             return 1;
         }
 
-        return rows[rowi].row[coli].colspan;
+        const row = rows[rowi].row;
+
+        if (!row || coli >= row.length) {
+            return 1;
+        }
+
+        const cell = row[coli];
+
+        if (isPrimitiveCell(cell) || !cell.colspan) {
+            return 1;
+        }
+
+        return cell.colspan;
     }
 
     private getRowspan(rowi: number, coli: number) {
         const rows = this.data.table.rows;
 
         if (!rows ||
-            rowi >= rows.length ||
-            !rows[rowi].row ||
-            coli >= rows[rowi].row.length ||
-            !rows[rowi].row[coli].rowspan) {
+            rowi >= rows.length) {
             return 1;
         }
 
-        return rows[rowi].row[coli].rowspan;
+        const row = rows[rowi].row;
+
+        if (!row || coli >= row.length) {
+            return 1;
+        }
+
+        const cell = row[coli];
+
+        if (isPrimitiveCell(cell) || !cell.rowspan) {
+            return 1;
+        }
+
+        return cell.rowspan;
     }
 
     /**
@@ -1342,6 +1365,7 @@ export class TimTableController implements IController {
     private getTrustedCellContentHtml(rowi: number, coli: number) {
         return this.sceService.trustAsHtml(this.cellDataMatrix[rowi][coli].cell);
     }
+    //</editor-fold>
 }
 
 timApp.component("timTable", {
@@ -1349,13 +1373,17 @@ timApp.component("timTable", {
     bindings: {
         data: "<",
     },
-
+// uib-dropdown
+// https://angular-ui.github.io/bootstrap/#!#dropdown
     require: {
         viewctrl: "?^timView",
     },
     template: `<div ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
     <div class="timTableContentDiv no-highlight">
+    <div class="timTableEditBar">
+        
+    </div>
     <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
             ng-click="$ctrl.addColumnButtonClick()"><span class="glyphicon glyphicon-plus"></span></button>
     <button class="timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.isInEditMode()"
