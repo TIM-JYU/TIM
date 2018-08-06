@@ -421,16 +421,6 @@ def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = Tr
     return False
 
 
-def decode_scandinavians(s: str) -> str:
-    """
-    Replace unicode codes with å, ä & ö.
-    :param s: A string with encoded characters like '\u00e4'.
-    :return: Plain text (except for other chars).
-    """
-    return s.replace(r"\u00e5", "å").replace(r"\u00e4", "ä").replace(r"\u00f6", "ö"). \
-        replace(r"\u00c5", "Å").replace(r"\u00c4", "Ä").replace(r"\u00d6", "Ö")
-
-
 def add_doc_info_line(doc_id: int, par_data) -> Union[str, None]:
     """
     Forms a JSON-compatible string with doc_id and list of parargraph data with id and md attributes.
@@ -453,12 +443,9 @@ def add_doc_info_line(doc_id: int, par_data) -> Union[str, None]:
         except TimDbException:
             continue
         # Cherry pick attributes, because others are unnecessary for the search.
-        par_md = decode_scandinavians(par_dict['md'].replace("\r", " ").replace("\n", " "))
+        par_md = par_dict['md'].replace("\r", " ").replace("\n", " ")
         par_attrs = par_dict['attrs']
-        par_json += json.dumps({'id': par_id, 'attrs': par_attrs, 'md': par_md}) + ", "
-    # TODO: Use some module to do this.
-    # Do this here because json.dumps changes characters back to code form.
-    par_json = decode_scandinavians(par_json)
+        par_json += json.dumps({'id': par_id, 'attrs': par_attrs, 'md': par_md}, ensure_ascii=False) + ", "
     # [:len(par_json)-2] slices off the last ", " left by ending loop.
     return f'{{"doc_id": "{doc_id}", "pars": [{par_json[:len(par_json)-2]}]}}\n'
 
@@ -485,6 +472,7 @@ def create_search_file():
     """
     Grouped all TIM-paragraphs under documents and combines them into a single file.
     Creates also a raw file without grouping.
+    Note: may take several minutes, so timeout settings need to be lenient.
     :return: A message confirming success of file creation.
     """
     verify_admin()
@@ -538,7 +526,7 @@ def create_search_file():
                 new_line = add_doc_info_line(par_data[0], par_data[1])
                 if new_line and len(new_line) >= 30:
                     file.write(new_line)
-        return json_response(f"Combined and processed paragraph file created to {dir_path / file_name}")
+        return json_response({'status': f"Combined and processed paragraph file created to {dir_path / file_name}"})
     except Exception as e:
         abort(400, f"Failed to create search file {dir_path / file_name}: {get_error_message(e)}")
 
