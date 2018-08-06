@@ -1,4 +1,4 @@
-import {IController, IRootElementService, IScope} from "angular";
+import {IController, IRootElementService, IScope, ISCEService} from "angular";
 import {getParId} from "tim/document/parhelpers";
 import {timApp} from "../app";
 import {ViewCtrl} from "../document/viewctrl";
@@ -189,7 +189,7 @@ function isPrimitiveCell(cell: CellEntity): cell is CellType {
 }
 
 export class TimTableController implements IController {
-    private static $inject = ["$scope", "$element"];
+    private static $inject = ["$scope", "$element", "$sce"];
     public viewctrl?: ViewCtrl;
     public cellDataMatrix: ICell[][] = [];
     private data!: Binding<TimTable, "<">;
@@ -204,7 +204,7 @@ export class TimTableController implements IController {
 
     private addRowButtonText: string = "";
 
-    constructor(private scope: IScope, private element: IRootElementService) {
+    constructor(private scope: IScope, private element: IRootElementService, private sceService: ISCEService) {
         this.keyDownPressedTable = this.keyDownPressedTable.bind(this);
     }
 
@@ -1331,6 +1331,17 @@ export class TimTableController implements IController {
 
         return rows[rowi].row[coli].rowspan;
     }
+
+    /**
+     * Returns cell content HTML as trusted through AngularJS's SCE service.
+     * Disables AngularJS HTML sanitizing for TimTable cells which breaks some attributes
+     * of markdown tables placed inside TimTables (and possibly other things as well).
+     * @param rowi Row index
+     * @param coli Column index
+     */
+    private getTrustedCellContentHtml(rowi: number, coli: number) {
+        return this.sceService.trustAsHtml(this.cellDataMatrix[rowi][coli].cell);
+    }
 }
 
 timApp.component("timTable", {
@@ -1358,7 +1369,7 @@ timApp.component("timTable", {
                 <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
                  ng-repeat="td in r" ng-init="coli = $index" colspan="$ctrl.getColspan(rowi, coli)" rowspan="$ctrl.getRowspan(rowi, coli)"
                     ng-style="$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
-                    <div ng-bind-html="$ctrl.cellDataMatrix[rowi][coli].cell">
+                    <div ng-bind-html="$ctrl.getTrustedCellContentHtml(rowi, coli)">
                     </div>
                 </td>
         </tr>
