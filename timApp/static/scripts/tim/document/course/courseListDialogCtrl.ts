@@ -247,9 +247,10 @@ registerDialogComponent("timCourseListDialog",
                 <span class="cursor-pointer" ng-click="subject.closed = !subject.closed"
                 data-toggle="collapse" data-parent="#courses" href="#{{subject.subject}}" aria-expanded="false"
                 aria-controls="{{subject.subject}}">
-                    <a><i class="glyphicon" ng-class="subject.closed ? 'glyphicon-plus' : 'glyphicon-minus'"></i></a>
-                    {{subject.subject}} ({{subject.docs.length}} <ng-pluralize count="subject.docs.length"
-                    when="{'1': 'course', 'other': 'courses'}"></ng-pluralize>)
+                    <a><span style="width: 1.2em;" class="glyphicon"
+                    ng-class="subject.closed ? 'glyphicon-plus' : 'glyphicon-minus'"></span></a>
+                    <span>{{subject.subject}} <i>({{subject.docs.length}} <ng-pluralize count="subject.docs.length"
+                    when="{'1': 'course', 'other': 'courses'}"></ng-pluralize>)</i></span>
                 </span>
                 <ul class="list-unstyled well well-sm" uib-collapse="subject.closed">
                     <li ng-repeat="course in subject.docs | orderBy:$ctrl.courseCode"
