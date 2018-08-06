@@ -255,8 +255,7 @@ registerDialogComponent("timSearchResults",
             <i ng-if="!$ctrl.folder">root</i>
             <a ng-if="$ctrl.collapsables && !$ctrl.limitedDisplay" title="Toggle results collapse"
                 ng-click="$ctrl.toggleCollapseAll()">
-                <i ng-if="$ctrl.allClosed" class="glyphicon glyphicon-plus-sign"></i>
-                <i ng-if="!$ctrl.allClosed" class="glyphicon glyphicon-minus-sign"></i>
+                <i class="glyphicon" ng-class="$ctrl.allClosed ? 'glyphicon-plus-sign' : 'glyphicon-minus-sign'"></i>
             </a>
         </h5>
         <ul class="list-unstyled">
@@ -264,7 +263,7 @@ registerDialogComponent("timSearchResults",
                 <a class="cursor-pointer" ng-click="r.closed = !r.closed"
              ng-if="$ctrl.collapsables && !$ctrl.limitedDisplay && (r.result.num_par_results + r.num_tag_results) > 0">
                     <i class="glyphicon" ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
-                    title="Toggle preview"></i></a>
+                    title="Toggle preview" style="width:1.2em;"></i></a>
                 <span title="Note: hidden elements can affect the result count">
                 <a href="/view/{{r.result.doc.path}}" title="Open {{r.result.doc.title}}"> {{r.result.doc.title}}</a>
                 <i>{{r.result.doc.path}}</i>
