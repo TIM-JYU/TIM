@@ -231,5 +231,6 @@ def get_tagged_document_by_id(doc_id):
     docs = get_documents(filter_user=get_current_user_object(),
                          custom_filter=DocEntry.id.in_([doc_id]),
                          query_options=joinedload(DocEntry._block).joinedload(Block.tags))
-    if not docs: abort(404, "Document not found or not accessible!")
+    if not docs:
+        abort(404, "Document not found or not accessible!")
     return json_response(docs[0])

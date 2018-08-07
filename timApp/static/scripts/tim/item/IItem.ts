@@ -74,3 +74,27 @@ export function tagIsExpired(tag: ITag) {
         return false;
     }
 }
+
+/**
+ * Set tag css style classes depending on the tag type. Currently normal tags are light blue-green
+ * special tags green, selected tag red with borders and expired tags fainter colored..
+ * @param {ITag} tag The tag.
+ * @param {boolean} selected Whether the tag is selected tag.
+ * @returns {string} String containing style classes.
+ */
+export function tagStyleClass(tag: ITag, selected: boolean) {
+    let opacity = "";
+    let highlight = "";
+    let color = "btn-success";
+    if (tagIsExpired(tag)) {
+        opacity = "less-opacity";
+    }
+    if (tag.type === TagType.Regular) {
+        color = "btn-primary";
+    }
+    if (selected) {
+        color = "btn-danger";
+        highlight = "selected-tag";
+    }
+    return color + " " + opacity + " " + highlight;
+}

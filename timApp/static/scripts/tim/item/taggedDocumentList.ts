@@ -9,7 +9,7 @@ import {ngStorage} from "ngstorage";
 import {Binding, to} from "tim/util/utils";
 import {timApp} from "../app";
 import {$http, $localStorage} from "../util/ngimport";
-import {ITag, ITaggedItem, TagType} from "./IItem";
+import {ITag, ITaggedItem, tagStyleClass, TagType} from "./IItem";
 
 class TaggedDocumentListCtrl implements IController {
     public tagFilter!: Binding<string, "<">;
@@ -102,22 +102,17 @@ class TaggedDocumentListCtrl implements IController {
     }
 
     /**
-     * Changes tag css style depending on whether search is enabled and
+     * Changes tag css class depending on whether search is enabled and
      * if it's regular or special tag.
      * @param {ITag} tag
      * @returns {string}
      */
-    private tagStyle(tag: ITag) {
-        let style = "";
+    private tagClass(tag: ITag) {
+        let classes = tagStyleClass(tag, false);
         if (this.enableSearch) {
-            style += "cursor-pointer ";
+            classes += " cursor-pointer";
         }
-        if (tag.type === TagType.Regular) {
-            style += "btn-primary";
-        } else {
-            style += "btn-success";
-        }
-        return style;
+        return classes;
     }
 }
 
@@ -137,7 +132,7 @@ timApp.component("taggedDocumentList", {
                            title="Search documents by entering a tag"
                            placeholder="Search documents by entering a tag"
                            class="form-control" id="tagFilterField" autocomplete="off"
-                           uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue | limitTo:15 | orderBy:'name'"
+    uib-typeahead="tag as tag for tag in $ctrl.allUniqueTags | filter:$viewValue | limitTo:15 | orderBy:'name'"
                            typeahead-min-length="1">
             <span class="input-group-addon btn">
                 <span class="glyphicon glyphicon-search"
@@ -149,7 +144,7 @@ timApp.component("taggedDocumentList", {
             <li ng-repeat="d in $ctrl.docList | orderBy:'title'">
                 <a href="/view/{{d.path}}" title="Open {{d.title}}">{{d.title}}</a>
                 <span ng-repeat="tag in d.tags" ng-click="$ctrl.searchClicked(tag.name)">
-                    <span class="btn-xs" ng-class="$ctrl.tagStyle(tag)"
+                    <span class="btn-xs" ng-class="$ctrl.tagClass(tag)"
                         title="{{$ctrl.tagToolTip}}'{{tag.name}}'">{{tag.name}}</span>
                 </span>
             </li>

@@ -6,7 +6,7 @@ import {IFormController, IRootElementService, IScope} from "angular";
 import {Moment} from "moment";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {IItem, ITag, tagIsExpired, TagType} from "./IItem";
+import {IItem, ITag, tagIsExpired, tagStyleClass, TagType} from "./IItem";
 import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
 import {Users} from "../user/userService";
 import {$http} from "../util/ngimport";
@@ -242,29 +242,6 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     }
 
     /**
-     * Set tag css style classes depending on the tag type. Currently normal tags are light blue-green
-     * special tags green, selected tag red with borders and expired tags fainter colored..
-     * @param {ITag} tag The tag.
-     * @returns {string} String containing style classes.
-     */
-    private tagStyleClass(tag: ITag) {
-        let opacity = "";
-        let highlight = "";
-        let color = "btn-success";
-        if (tagIsExpired(tag)) {
-            opacity = "less-opacity";
-        }
-        if (tag.type === TagType.Regular) {
-            color = "btn-primary";
-        }
-        if (tag === this.selected) {
-            color = "btn-danger";
-            highlight = "selected-tag";
-        }
-        return color + " " + opacity + " " + highlight;
-    }
-
-    /**
      * Select a tag or unselect a selected one.
      * @param {ITag} tag Tag to toggle.
      */
@@ -276,6 +253,19 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             this.tagName = this.selected.name;
             this.expires = this.selected.expires;
         }
+    }
+
+    /**
+     * Pick tag style classes.
+     * @param {ITag} tag The tag.
+     * @returns {string} Classes as string separated by spaces.
+     */
+    private tagClass(tag: ITag) {
+        let isSelected = false;
+        if (this.selected === tag) {
+            isSelected = true;
+        }
+        return tagStyleClass(tag, isSelected);
     }
 }
 
@@ -307,7 +297,7 @@ registerDialogComponent("timEditTags",
         <div class="tags-list">
             <span ng-repeat="x in $ctrl.tagsList">
                 <span class="btn-xs cursor-pointer" ng-click="$ctrl.selectTag(x)" title="Toggle selected tag"
-                ng-class="$ctrl.tagStyleClass(x)">{{x.name}}</span>
+                ng-class="$ctrl.tagClass(x)">{{x.name}}</span>
                 <i ng-if="x.expires" class="glyphicon glyphicon-time"
                 uib-tooltip="Expires: {{x.expires | timdate}}"></i>
                 <a><span class="glyphicon glyphicon-remove" title="Remove tag" ng-click="$ctrl.removeTag(x)"></span></a>
