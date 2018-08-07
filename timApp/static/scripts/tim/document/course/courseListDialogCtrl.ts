@@ -235,9 +235,8 @@ registerDialogComponent("timCourseListDialog",
         class="glyphicon glyphicon-plus-sign"></i></a></h5>
     </div>
     <div class="input-group col-md-4">
-        <input class="form-control" ng-if="true" ng-model="$ctrl.filterText"
-        placeholder="Input filter word" title="Filter by course code and title"
-        ng-keypress="$ctrl.keyPressed($event)">
+        <input class="form-control" ng-model="$ctrl.filterText" placeholder="Input filter word"
+        title="Filter by course code and title" ng-keypress="$ctrl.keyPressed($event)">
         <span class="input-group-addon btn" ng-click="$ctrl.refresh()" title="Filter courses">
         <i class="glyphicon glyphicon-search"></i></span>
     </div>
@@ -247,7 +246,7 @@ registerDialogComponent("timCourseListDialog",
                 <span class="cursor-pointer" ng-click="subject.closed = !subject.closed"
                 data-toggle="collapse" data-parent="#courses" href="#{{subject.subject}}" aria-expanded="false"
                 aria-controls="{{subject.subject}}">
-                    <a><span style="width: 1.2em;" class="glyphicon"
+                    <a><span style="width: 1.3em;" class="glyphicon"
                     ng-class="subject.closed ? 'glyphicon-plus' : 'glyphicon-minus'"></span></a>
                     <span>{{subject.subject}} <i>({{subject.docs.length}} <ng-pluralize count="subject.docs.length"
                     when="{'1': 'course', 'other': 'courses'}"></ng-pluralize>)</i></span>

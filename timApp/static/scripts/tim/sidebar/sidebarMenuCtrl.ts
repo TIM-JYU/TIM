@@ -13,7 +13,7 @@ import {showMessageDialog} from "../ui/dialog";
 import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "../user/IUser";
 import {Users, UserService} from "../user/userService";
 import {$http, $uibModal, $window} from "../util/ngimport";
-import {Require} from "../util/utils";
+import {Require, to} from "../util/utils";
 import {getActiveDocument} from "../document/document";
 
 /**
@@ -283,20 +283,18 @@ export class SidebarMenuCtrl implements IController {
 
     /**
      * Marks all paragraphs of the document as read.
-     * Note: copied from readings.ts' function of the same name.
      * @returns {Promise<void>}
      */
     private async markAllAsRead() {
-        try {
-            if (this.vctrl) {
-                await $http.put("/read/" + this.vctrl.item.id, {});
-            }
-        } catch (e) {
-            $window.alert("Could not mark the document as read.");
-            return;
+        if (this.vctrl) {
+                const [err, response] = await to($http.put("/read/" + this.vctrl.item.id, {}));
+                if (err) {
+                    $window.alert("Could not mark the document as read.");
+                    return;
+                }
+                $(".readline").attr("class", "readline read");
+                getActiveDocument().refreshSectionReadMarks();
         }
-        $(".readline").attr("class", "readline read");
-        getActiveDocument().refreshSectionReadMarks();
     }
 }
 

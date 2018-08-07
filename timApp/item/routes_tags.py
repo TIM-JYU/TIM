@@ -49,8 +49,6 @@ def add_tag(doc):
         tag_name = tag_dict["name"]
         tag_expire = tag_dict.get("expires")
         tag = Tag(name=tag_name, expires=tag_expire, type=tag_type)
-        # if tag.has_tag_special_chars:
-        #    abort(400, "Tags can only contain letters a-z, numbers, underscores, spaces and dashes.")
         tags.append(tag)
 
     if not tags:
@@ -233,4 +231,5 @@ def get_tagged_document_by_id(doc_id):
     docs = get_documents(filter_user=get_current_user_object(),
                          custom_filter=DocEntry.id.in_([doc_id]),
                          query_options=joinedload(DocEntry._block).joinedload(Block.tags))
+    if not docs: abort(404, "Document not found or not accessible!")
     return json_response(docs[0])

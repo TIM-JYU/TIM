@@ -40,18 +40,13 @@ export class ShowTagSearchController extends DialogController<{ params: IItem },
         if (this.enableSearch) {
             this.header = "Input a tag name to search documents";
             if (this.storage.searchOptionStorage && this.storage.searchOptionStorage.length === 3) {
-                this.caseSensitive = this.storage.searchOptionStorage[0];
-                this.exactMatch = this.storage.searchOptionStorage[1];
-                this.listDocTags = this.storage.searchOptionStorage[2];
+                [this.caseSensitive, this.exactMatch, this.listDocTags] = this.storage.searchOptionStorage;
         }
         }
     }
 
     $onDestroy() {
-        this.storage.searchOptionStorage = [];
-        this.storage.searchOptionStorage.push(this.caseSensitive);
-        this.storage.searchOptionStorage.push(this.exactMatch);
-        this.storage.searchOptionStorage.push(this.listDocTags);
+        this.storage.searchOptionStorage = [this.caseSensitive, this.exactMatch, this.listDocTags];
     }
 
     /*
@@ -76,16 +71,13 @@ registerDialogComponent("timSearchTags",
         exact-match="$ctrl.exactMatch" list-doc-tags="$ctrl.listDocTags"
         case-sensitive="$ctrl.caseSensitive"></tagged-document-list>
     <div>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.advancedOptions"
-        class="ng-pristine ng-untouched ng-valid ng-not-empty"> Advanced options</label>
+        <label class="font-weight-normal"><input type="checkbox"
+        ng-model="$ctrl.advancedOptions"> Advanced options</label>
     </div>
     <div ng-if="$ctrl.advancedOptions">
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.exactMatch"
-        class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search exact words</label>
-        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.caseSensitive"
-        class="ng-pristine ng-untouched ng-valid ng-not-empty"> Case sensitive</label>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.exactMatch"> Search whole words</label>
+        <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.caseSensitive"> Case sensitive</label>
         <label class="font-weight-normal"><input type="checkbox" ng-model="$ctrl.listDocTags"
-        class="ng-pristine ng-untouched ng-valid ng-not-empty"
         title="List all document tags in search results"> List all tags</label>
     </div>
     </dialog-body>

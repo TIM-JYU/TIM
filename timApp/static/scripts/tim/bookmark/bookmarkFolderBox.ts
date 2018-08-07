@@ -186,7 +186,7 @@ timApp.component("bookmarkFolderBox", {
             title="Toggle editing {{$ctrl.bookmarkFolder.name}}"
             ng-click="$ctrl.editOn = !$ctrl.editOn"></i></a></h3>
             <ul class="list-unstyled">
-                <li class="h5 list-unstyled" ng-repeat="d in $ctrl.documents | orderBy:$ctrl.courseCode">
+                <li class="h5" ng-repeat="d in $ctrl.documents | orderBy:$ctrl.courseCode">
                     <a href="/view/{{d.doc.path}}">
                         <span>{{$ctrl.getLinkText(d)}}
                         <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-pencil" title="Edit bookmark"
@@ -197,7 +197,7 @@ timApp.component("bookmarkFolderBox", {
                         </span>
                     </a>
                 </li>
-                <li class="h5 list-unstyled" ng-repeat="b in $ctrl.orphanBookmarks">
+                <li class="h5" ng-repeat="b in $ctrl.orphanBookmarks">
                     <a href="{{b.link}}">
                         <span>{{b.name}}
                         <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-pencil" title="Edit bookmark"

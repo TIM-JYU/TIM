@@ -25,7 +25,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
     private tagsList: ITag[] = []; // List of tags the document has.
     private expires?: Moment;
     private errorMessage?: string;
-    private selected: ITag | null = null; // Target of editing, if any.
+    private selected: ITag | undefined; // Target of editing, if any.
     private successMessage?: string;
     private f!: IFormController; // initialized in the template
     private focusName: boolean = true;
@@ -151,7 +151,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
             }
             if (response) {
                 this.successMessage = `'${this.selected.name}' was edited.`;
-                this.selected = null;
+                this.selected = undefined;
                 await this.updateTags();
                 return;
             }
@@ -178,7 +178,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
 
         // To avoid complications with editing a non-existent tag.
         if (t === this.selected) {
-            this.selected = null;
+            this.selected = undefined;
         }
 
         const docPath = this.resolve.params.path;
@@ -270,7 +270,7 @@ export class ShowTagController extends DialogController<{ params: IItem }, {}, "
      */
     private selectTag(tag: ITag) {
         if (this.selected === tag) {
-            this.selected = null;
+            this.selected = undefined;
         } else {
             this.selected = tag;
             this.tagName = this.selected.name;

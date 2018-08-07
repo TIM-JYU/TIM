@@ -1,8 +1,7 @@
 <form name="itemForm">
-    <div ng-cloak ng-if="$ctrl.tagsWithExpirations" class="alert alert-warning">
-            <span class="glyphicon glyphicon-exclamation-sign"></span>
-             The source document has tags with expiration dates which may need to be updated manually.
-        </div>
+    <tim-alert severity="warning" ng-show="$ctrl.tagsWithExpirations">
+        The source document has tags with expiration dates which may need to be updated manually.
+    </tim-alert>
     <div class="form-group" tim-error-state>
         <label>
             Title:
