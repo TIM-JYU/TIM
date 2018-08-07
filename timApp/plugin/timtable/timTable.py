@@ -174,7 +174,10 @@ def tim_table_get_cell_data():
         cell_cnt = find_cell_from_datablock(yaml[TABLE][DATABLOCK][CELLS], int(args[ROW]), int(args[COL]))
     if cell_cnt is not None:
         if isinstance(cell_cnt, dict):
-            multi.append(cell_cnt[CELL])
+            if CELL in cell_cnt:
+                multi.append(cell_cnt[CELL])
+            else:
+                return abort(400)
         else:
             multi.append(cell_cnt)
     else:
@@ -512,7 +515,11 @@ def tim_table_set_cell_background_color():
                 break
 
         if not existing_datablock_entry:
-            new_entry = RelativeDataBlockValue(row_id, col_id, {BACKGROUND_COLOR: color} )
+            try:
+                cell_content = find_cell(plug.values[TABLE][ROWS], row_id, col_id)
+            except KeyError:
+                cell_content = ''
+            new_entry = RelativeDataBlockValue(row_id, col_id, {BACKGROUND_COLOR: color, CELL: cell_content} )
             datablock_entries.append(new_entry)
         else:
             if isinstance(existing_datablock_entry.data, str):
@@ -543,7 +550,6 @@ def tim_table_set_cell_background_color():
 
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
-
 
 def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
     """
