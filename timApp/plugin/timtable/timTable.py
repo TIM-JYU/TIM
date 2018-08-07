@@ -2,7 +2,6 @@ import copy
 import json
 from typing import Optional, Union
 from xml.sax.saxutils import quoteattr
-from distutils import util
 from flask import Blueprint
 from flask import abort
 from flask import request
@@ -41,6 +40,7 @@ UNIQUE_ROW_COUNT = 'uniqueRowCount'
 GLOBAL_APPEND_MODE = 'globalAppendMode'
 DATA_INPUT = "dataInput"
 BACKGROUND_COLOR = 'backgroundColor'
+MD = 'md:'
 ID = 'id'
 ASCII_OF_A = 65
 ASCII_CHAR_COUNT = 26
@@ -503,6 +503,40 @@ def tim_table_set_cell_background_color():
     :return: The entire table's data after the cell's background color has been set.
     """
     doc_id, par_id, row_id, col_id, color = verify_json_params('docId', 'parId', 'rowId', 'colId', 'color')
+    return set_cell_style_attribute(doc_id, par_id, row_id, col_id, BACKGROUND_COLOR, color)
+
+
+@timTable_plugin.route("setCellColor", methods=["POST"])
+def tim_table_set_cell_foreground_color():
+    """
+    Sets a cell's foreground color.
+    :return: The entire table's data after the cell's foreground color has been set.
+    """
+    doc_id, par_id, row_id, col_id, color = verify_json_params('docId', 'parId', 'rowId', 'colId', 'color')
+    return set_cell_style_attribute(doc_id, par_id, row_id, col_id, 'color', color)
+
+
+@timTable_plugin.route("setTextAlign", methods=["POST"])
+def tim_table_set_cell_text_align():
+    """
+    Sets a cell's text align.
+    :return: The entire table's data after the cell's text align has been set.
+    """
+    doc_id, par_id, row_id, col_id, text_align = verify_json_params('docId', 'parId', 'rowId', 'colId', 'textAlign')
+    return set_cell_style_attribute(doc_id, par_id, row_id, col_id, 'textAlign', text_align)
+
+
+def set_cell_style_attribute(doc_id, par_id, row_id, col_id, attribute, value):
+    """
+    Sets a style attribute for a cell.
+    :param doc_id: Document ID
+    :param par_id: Paragraph ID
+    :param row_id: Row index
+    :param col_id: Column index
+    :param attribute: The attribute to set.
+    :param value: The value of the attribute.
+    :return: The entire table's data after the style attribute has been set.
+    """
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     verify_edit_access(d)
     data_input_mode = is_in_datainput_mode(plug)
@@ -519,13 +553,13 @@ def tim_table_set_cell_background_color():
                 cell_content = find_cell(plug.values[TABLE][ROWS], row_id, col_id)
             except KeyError:
                 cell_content = ''
-            new_entry = RelativeDataBlockValue(row_id, col_id, {BACKGROUND_COLOR: color, CELL: cell_content} )
+            new_entry = RelativeDataBlockValue(row_id, col_id, {attribute: value, CELL: cell_content} )
             datablock_entries.append(new_entry)
         else:
             if isinstance(existing_datablock_entry.data, str):
-                existing_datablock_entry.data = {CELL: existing_datablock_entry.data, BACKGROUND_COLOR: color}
+                existing_datablock_entry.data = {CELL: existing_datablock_entry.data, attribute: value}
             else:
-                existing_datablock_entry.data[BACKGROUND_COLOR] = color
+                existing_datablock_entry.data[attribute] = value
         plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(datablock_entries)
     else:
         try:
@@ -544,12 +578,14 @@ def tim_table_set_cell_background_color():
             return abort(400)
         cell = row_data[col_id]
         if is_primitive(cell):
-            row_data[col_id] = {CELL: cell, BACKGROUND_COLOR: color}
+            row_data[col_id] = {CELL: cell, attribute: value}
         else:
-            cell[BACKGROUND_COLOR] = color
+            cell[attribute] = value
 
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
+
+
 
 def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
     """
@@ -799,11 +835,11 @@ def prepare_for_dumbo(values):
                     continue
 
             if isinstance(cell, str):
-                if cell.startswith('md:'):
+                if cell.startswith(MD):
                     continue
-                rowdata[i] = 'md: ' + cell
+                rowdata[i] = MD + cell
             else:
-                cell[CELL] = 'md: ' + cell[CELL]
+                cell[CELL] = MD + cell[CELL]
 
     # datablock
     data_block = None
@@ -815,12 +851,12 @@ def prepare_for_dumbo(values):
     if data_block is not None:
         for key, value in data_block.items():
             if isinstance(value, str):
-                if not value.startswith('md:'):
-                    data_block[key] = 'md: ' + value
+                if not value.startswith(MD):
+                    data_block[key] = MD + value
             elif isinstance(value, dict):
                 for subkey, subvalue in value.items():
-                    if isinstance(subvalue, str) and not subvalue.startswith('md:'):
-                        data_block[key][subkey] = 'md: ' + subvalue
+                    if isinstance(subvalue, str) and not subvalue.startswith(MD):
+                        data_block[key][subkey] = MD + subvalue
 
     return values
 
