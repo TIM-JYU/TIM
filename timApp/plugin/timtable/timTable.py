@@ -39,6 +39,8 @@ COL = 'col'
 RELATIVE = 'relative'
 UNIQUE_ROW_COUNT = 'uniqueRowCount'
 GLOBAL_APPEND_MODE = 'globalAppendMode'
+DATA_INPUT = "dataInput"
+BACKGROUND_COLOR = 'backgroundColor'
 ID = 'id'
 ASCII_OF_A = 65
 ASCII_CHAR_COUNT = 26
@@ -487,6 +489,61 @@ def tim_table_remove_column():
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
 
+#############################
+# Table editor toolbar routes
+#############################
+
+@timTable_plugin.route("setCellBackgroundColor", methods=["POST"])
+def tim_table_set_cell_background_color():
+    """
+    Sets a cell's background color.
+    :return: The entire table's data after the cell's background color has been set.
+    """
+    doc_id, par_id, row_id, col_id, color = verify_json_params('docId', 'parId', 'rowId', 'colId', 'color')
+    d, plug = get_plugin_from_paragraph(doc_id, par_id)
+    verify_edit_access(d)
+    data_input_mode = is_in_datainput_mode(plug)
+    if data_input_mode:
+        datablock_entries = construct_datablock_entry_list_from_yaml(plug)
+        existing_datablock_entry = None
+        for entry in datablock_entries:
+            if entry.row == row_id and entry.column == col_id:
+                existing_datablock_entry = entry
+                break
+
+        if not existing_datablock_entry:
+            new_entry = RelativeDataBlockValue(row_id, col_id, {BACKGROUND_COLOR: color} )
+            datablock_entries.append(new_entry)
+        else:
+            if isinstance(existing_datablock_entry.data, str):
+                existing_datablock_entry.data = {CELL: existing_datablock_entry.data, BACKGROUND_COLOR: color}
+            else:
+                existing_datablock_entry.data[BACKGROUND_COLOR] = color
+        plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(datablock_entries)
+    else:
+        try:
+            rows = plug.values[TABLE][ROWS]
+        except KeyError:
+            return abort(400)
+
+        if len(rows) <= row_id:
+            return abort(400)
+        row = rows[row_id]
+        try:
+            row_data = row[ROW]
+        except KeyError:
+            return abort(400)
+        if len(row_data) <= col_id:
+            return abort(400)
+        cell = row_data[col_id]
+        if is_primitive(cell):
+            row_data[col_id] = {CELL: cell, BACKGROUND_COLOR: color}
+        else:
+            cell[BACKGROUND_COLOR] = color
+
+    plug.save()
+    return json_response(prepare_for_and_call_dumbo(plug))
+
 
 def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
     """
@@ -669,7 +726,7 @@ def datablock_key_to_indexes(datablock_key: str) -> (int, int):
     return column_index - 1, row_index - 1
 
 
-def is_in_global_append_mode(plug: Plugin):
+def is_in_global_append_mode(plug: Plugin) -> bool:
     """
     Checks whether global append mode is enabled.
     In global append mode even users without edit rights can add rows,
@@ -681,6 +738,16 @@ def is_in_global_append_mode(plug: Plugin):
         return True
     return False
 
+
+def is_in_datainput_mode(plug: Plugin) -> bool:
+    """
+    Checks whether the table is in data input mode.
+    :param plug: The plugin instance.
+    :return: True if the table is in data input mode, otherwise false.
+    """
+    if DATA_INPUT in plug.values and plug.values[DATA_INPUT]:
+        return True
+    return False
 
 def is_review(request):
     """
@@ -754,6 +821,10 @@ def prepare_for_dumbo(values):
 
 def is_of_unconvertible_type(value):
     return isinstance(value, int) or isinstance(value, bool) or isinstance(value, float)
+
+
+def is_primitive(value):
+    return is_of_unconvertible_type(value) or isinstance(value, str)
 
 
 def construct_datablock_entry_list_from_yaml(plug: Plugin) -> list:

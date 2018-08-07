@@ -189,6 +189,8 @@ function isPrimitiveCell(cell: CellEntity): cell is CellType {
 }
 
 export class TimTableController implements IController {
+    readonly DEFAULT_CELL_BGCOLOR = "#EEEEEE";
+
     private static $inject = ["$scope", "$element", "$sce"];
     public viewctrl?: ViewCtrl;
     public cellDataMatrix: ICell[][] = [];
@@ -203,6 +205,9 @@ export class TimTableController implements IController {
     private bigEditorOpen: boolean = false;
 
     private addRowButtonText: string = "";
+
+    // Variables for toolbar
+    private selectedCellBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
 
     constructor(private scope: IScope, private element: IRootElementService, private sceService: ISCEService) {
         this.keyDownPressedTable = this.keyDownPressedTable.bind(this);
@@ -234,6 +239,21 @@ export class TimTableController implements IController {
             this.viewctrl.addTable(this, parId);
         }
         document.addEventListener("keyup", this.keyDownPressedTable);
+    }
+
+    $doCheck() {
+        if (this.lastEditedCell) {
+            const cell = this.cellDataMatrix[this.lastEditedCell.row][this.lastEditedCell.col];
+            if (cell.backgroundColor) {
+                if (cell.backgroundColor !== this.selectedCellBackgroundColor) {
+                    cell.backgroundColor = this.selectedCellBackgroundColor;
+                    this.setCellBackgroundColor();
+                }
+            } else if (this.selectedCellBackgroundColor !== this.DEFAULT_CELL_BGCOLOR) {
+                cell.backgroundColor = this.selectedCellBackgroundColor;
+                this.setCellBackgroundColor();
+            }
+        }
     }
 
     /**
@@ -716,7 +736,7 @@ export class TimTableController implements IController {
         if (this.lastEditedCell) {
             const newRow = this.constrainRowIndex(this.lastEditedCell.row + y);
             const newColumn = this.constrainColumnIndex(newRow, this.lastEditedCell.col + x);
-            this.lastEditedCell = {row: newRow, col: newColumn};
+            this.setActiveCell(newRow, newColumn);
         }
     }
 
@@ -776,6 +796,16 @@ export class TimTableController implements IController {
         this.cellClicked(modal, rowi, coli);
     }
 
+    private setActiveCell(rowi: number, coli: number) {
+        this.lastEditedCell = {row: rowi, col: coli};
+        const cell = this.cellDataMatrix[rowi][coli];
+        if (cell.backgroundColor) {
+            this.selectedCellBackgroundColor = cell.backgroundColor;
+        } else {
+            this.selectedCellBackgroundColor = this.DEFAULT_CELL_BGCOLOR; ///a
+        }
+    }
+
     /**
      * Deals with cell clicking
      * @param {CellEntity} cell Cell that was clicked
@@ -798,7 +828,7 @@ export class TimTableController implements IController {
         this.editedCellContent = cellData;
         this.editedCellInitialContent = cellData;
         this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
-        this.lastEditedCell = {row: rowi, col: coli};
+        this.setActiveCell(rowi, coli);
         this.currentCell = {row: rowi, col: coli, editorOpen: false};
         this.calculateElementPlaces(rowi, coli, event);
     }
@@ -1282,6 +1312,27 @@ export class TimTableController implements IController {
 
     //<editor-fold desc="Toolbar">
 
+    /**
+     * Tells the server to change the background color of the selected cell.
+     */
+    async setCellBackgroundColor() {
+        if (!this.viewctrl || !this.lastEditedCell) {
+            return;
+        }
+
+        const parId = this.getOwnParId();
+        const docId = this.viewctrl.item.id;
+        const rowId = this.lastEditedCell.row;
+        const colId = this.lastEditedCell.col;
+        const color = this.selectedCellBackgroundColor;
+
+        const response = await $http.post<TimTable>("/timTable/setCellBackgroundColor",
+            {docId, parId, rowId, colId, color});
+        this.data = response.data;
+        this.reInitialize();
+        this.selectedCellBackgroundColor = this.cellDataMatrix[rowId][colId].backgroundColor;
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="Rendering">
@@ -1366,6 +1417,7 @@ export class TimTableController implements IController {
         //return this.sceService.trustAsHtml(this.cellDataMatrix[rowi][coli].cell);
         return this.cellDataMatrix[rowi][coli].cell;
     }
+
     //</editor-fold>
 }
 
@@ -1383,7 +1435,7 @@ timApp.component("timTable", {
      ng-mouseleave="$ctrl.mouseOutTable()">
     <div class="timTableContentDiv no-highlight">
     <div class="timTableEditBar">
-        
+        <input type="color" title="Change cell background color" class="colorchange-button" ng-model="$ctrl.selectedCellBackgroundColor"/>
     </div>
     <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
             ng-click="$ctrl.addColumnButtonClick()"><span class="glyphicon glyphicon-plus"></span></button>
