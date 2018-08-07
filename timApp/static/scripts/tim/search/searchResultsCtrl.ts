@@ -29,11 +29,15 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     private totalResults: number = 0;
     private limitedDisplay: boolean = false; // If there's large number of results, don't show previews.
     private limitedDisplayThreshold: number = 100000; // More than this could cause memory overload in browser.
-    private errorMessage: string | undefined = undefined;
-    private orderByOption = "1";
+    private errorMessage: string | undefined;
     private allClosed = true;
     private collapsables = false; // True if there are any collapsable results.
-    private searchComponent: null | SearchBoxCtrl = null;
+    private searchComponent: undefined | SearchBoxCtrl;
+    private sortingOptions = [
+            {value: "1", name: "Sort by path"},
+            {value: "2", name: "Sort by title"},
+            {value: "3", name: "Sort by matches"}];
+    private orderByOption = this.sortingOptions[0];
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
@@ -69,7 +73,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
         this.folder = ctrl.folder;
         this.errorMessage = ctrl.resultErrorMessage;
         this.searchWord = ctrl.query;
-        // If result count is over the treshold, skip paragraph grouping and previews.
+        // If result count is over the threshold, skip paragraph grouping and previews.
         // Without some limit massive results can crash browser.
         if (this.totalResults > this.limitedDisplayThreshold) {
             this.limitedDisplay = true;
@@ -106,7 +110,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
                     newDisplayResult.num_tag_results = t.num_results;
                 }
             }
-            // Add titlemathces to existing word search result objects.
+            // Add titlematches to existing word search result objects.
             for (const t of this.titleResults) {
                 if (t.doc.id === r.doc.id) {
                     newDisplayResult.result.title_results = t.title_results;
@@ -197,20 +201,17 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     }
 
     /**
-     * Pick how to order the results. Only information passed as parameters or the item in ng-repeat
-     * can be used in the inner functions due to AngularJS' limitations to orderBy functions.
+     * Pick how to order the results.
      *
      * @param {number} orderByOption A number corresponding to different order rules.
      * @returns {any} Search result order for AngularJS elements.
      */
-    private resultOrder(orderByOption: string) {
-        if (orderByOption.toString() === "2") {
-            return function(r: ISearchResultDisplay) {
-                return r.result.doc.title;
-            };
+    private resultOrder(orderByOption: {value: string, name: string}) {
+        if (orderByOption.value === "2") {
+            return (r: ISearchResultDisplay) =>  r.result.doc.title;
         }
-        if (orderByOption.toString() === "3") {
-            return function(r: ISearchResultDisplay) {
+        if (orderByOption.value === "3") {
+            return (r: ISearchResultDisplay) =>  {
                 let matches =  - (r.result.num_par_results + r.num_tag_results + r.result.num_title_results);
                 // Show "x or more matches" before "x matches".
                 if (r.result.incomplete) {
@@ -219,9 +220,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
                 return matches;
             };
         } else {
-            return function(r: ISearchResultDisplay) {
-                return r.result.doc.path;
-            };
+            return (r: ISearchResultDisplay) =>  r.result.doc.path;
         }
     }
 }
@@ -280,10 +279,8 @@ registerDialogComponent("timSearchResults",
     <dialog-footer>
         <div class="float-left" id="order-selector-box">
             <select id="order-selector" ng-model="$ctrl.orderByOption"
+            ng-options="s as s.name for s in $ctrl.sortingOptions track by s.value"
                 title="Select the result sorting order" name="order-selector">
-                <option selected value="1">Sort by path</option>
-                <option value="2">Sort by title</option>
-                <option value="3">Sort by matches</option>
             </select>
         </div>
         <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
