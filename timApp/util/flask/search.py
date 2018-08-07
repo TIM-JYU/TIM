@@ -39,7 +39,7 @@ PREVIEW_LENGTH = 40  # Before and after the search word separately.
 PREVIEW_MAX_LENGTH = 160
 PROCESSED_CONTENT_FILE_NAME = "all_processed.log"
 RAW_CONTENT_FILE_NAME = "all.log"
-MIN_CONTENT_FILE_LINE_LENGHT = 70  # Excludes empty documents.
+MIN_CONTENT_FILE_LINE_LENGTH = 70  # Excludes empty documents.
 
 
 # noinspection PyUnusedLocal
@@ -204,7 +204,7 @@ def get_documents_by_access_type(access: AccessType) -> List[DocEntry]:
 
 
 def preview_result(md: str, query, m: Match[str], snippet_length: int = PREVIEW_LENGTH,
-            max_length: int = PREVIEW_MAX_LENGTH) -> str:
+                   max_length: int = PREVIEW_MAX_LENGTH) -> str:
     """
     Forms preview of the match paragraph.
     :param md: Paragraph markdown to preview.
@@ -434,27 +434,30 @@ def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = Tr
     return False
 
 
-def add_doc_info_line(doc_id: int, par_data) -> Union[str, None]:
+def add_doc_info_line(doc_id: int, par_data, remove_deleted_pars: bool = True) -> Union[str, None]:
     """
     Forms a JSON-compatible string with doc_id and list of paragraph data with id and md attributes.
     :param doc_id: Document id.
     :param par_data: List of paragraph dictionaries.
+    :param remove_deleted_pars: Check paragraph existence and leave deleted ones out.
     :return: String with paragraph data grouped under a document.
     """
     if not par_data:
         return None
-    doc_info = DocEntry.find_by_id(doc_id)
-    if not doc_info:
-        return None
+    if remove_deleted_pars:
+        doc_info = DocEntry.find_by_id(doc_id)
+        if not doc_info:
+            return None
     par_json_list = []
     for par in par_data:
         par_dict = json.loads(f"{{{par}}}")
         par_id = par_dict['id']
-        # If par can't be found (deleted), don't add it.
-        try:
-            doc_info.document.get_paragraph(par_id)
-        except TimDbException:
-            continue
+        if remove_deleted_pars:
+            # If par can't be found (deleted), don't add it.
+            try:
+                doc_info.document.get_paragraph(par_id)
+            except TimDbException:
+                continue
         # Cherry pick attributes, because others are unnecessary for the search.
         par_md = par_dict['md'].replace("\r", " ").replace("\n", " ")
         par_attrs = par_dict['attrs']
@@ -489,6 +492,9 @@ def create_search_file():
     """
     verify_admin()
 
+    # Checks paragraph existence before adding at the cost of taking more time.
+    remove_deleted_pars = get_option(request, 'removeDeletedPars', default=False, cast=bool)
+
     dir_path = Path(app.config['FILES_PATH']) / 'pars'
     raw_file_name = RAW_CONTENT_FILE_NAME
     file_name = PROCESSED_CONTENT_FILE_NAME
@@ -521,8 +527,8 @@ def create_search_file():
                         continue
                     # Otherwise save the previous one and empty par data.
                     else:
-                        new_line = add_doc_info_line(current_doc, current_pars)
-                        if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGHT:
+                        new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars)
+                        if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
                             file.write(new_line)
                         current_doc = doc_id
                         current_pars.clear()
@@ -531,8 +537,8 @@ def create_search_file():
                     log_error(f"'{get_error_message(e)}' while writing search file line '{line}''")
             # Write the last line separately, because loop leaves it unsaved.
             if current_doc and current_pars:
-                new_line = add_doc_info_line(current_doc, current_pars)
-                if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGHT:
+                new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars)
+                if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
                     file.write(new_line)
         return json_response({'status': f"Combined and processed paragraph file created to {dir_path / file_name}"})
     except Exception as e:
@@ -703,7 +709,7 @@ def search():
         abort(400, f"Invalid regex: {str(e)}")
 
     cmd.append(query)
-    cmd.append("all_processed.log")
+    cmd.append(search_file_name)
 
     # TODO: Error cases in subprocess may not show, slips through as empty search result instead.
     # TODO: Output has all paragraphs even though only one or more have matches.

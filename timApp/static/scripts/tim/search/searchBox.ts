@@ -94,13 +94,13 @@ export interface ITagSearchResult {
 export class SearchBoxCtrl implements IController {
     // Results and variables search results dialog needs to know:
     public results: IDocSearchResult[] = [];
-    public resultErrorMessage: string | undefined = undefined; // Message displayed only in results dialog.
+    public resultErrorMessage: string | undefined; // Message displayed only in results dialog.
     public tagMatchCount: number = 0;
     public wordMatchCount: number = 0;
     public titleMatchCount: number = 0;
     public tagResults: ITagSearchResult[] = [];
     public titleResults: IDocSearchResult[] = [];
-    public incompleteSearchReason: string | undefined = undefined;
+    public incompleteSearchReason: string | undefined;
     public query: string = "";
     public folder!: Binding<string, "<">;
 
@@ -117,7 +117,7 @@ export class SearchBoxCtrl implements IController {
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
 
     // Controller's private attributes:
-    private errorMessage: string | undefined = undefined; // Message displayed only in search panel.
+    private errorMessage: string | undefined; // Message displayed only in search panel.
     private focusMe: boolean = true;
     private loading: boolean = false; // Display loading icon.
     private item: IItem = $window.item;
@@ -177,15 +177,13 @@ export class SearchBoxCtrl implements IController {
         if (this.searchDocNames) {
             await this.titleSearch();
         }
-
+        this.loading = false;
         if (this.results.length === 0 && this.tagResults.length === 0 &&
                 this.titleResults.length === 0 && !this.errorMessage) {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
-            this.loading = false;
             return;
         }
         if (this.errorMessage) {
-            this.loading = false;
             return;
         }
         // After successful search save search options to local storage.
@@ -211,7 +209,6 @@ export class SearchBoxCtrl implements IController {
                 this.resultsDialog.updateAttributes(this);
             }
         }
-        this.loading = false;
     }
 
     /**
@@ -337,23 +334,7 @@ export class SearchBoxCtrl implements IController {
             url: "/search/titles",
         }));
         if (err) {
-            let tempError = "";
-            // Basic error message from server.
-            if (err.data.error) {
-                tempError = err.data.error.toString();
-            }
-            // Some errors don't have err.data.error and are in raw HTML.
-            if (err.data && tempError.length < 1) {
-                tempError = removeHtmlTags(err.data.toString());
-                if (tempError.indexOf("Proxy Error") > -1) {
-                    tempError = tempError.replace("Proxy Error Proxy Error", "Proxy Error:").
-                    replace("&nbsp;", " ");
-                }
-            }
-            if (tempError.length < 1) {
-                tempError = "Unknown error";
-            }
-            this.errorMessage = tempError;
+            this.errorMessage = this.getErrorMessage(err);
             this.results = [];
             return;
         }
@@ -386,23 +367,7 @@ export class SearchBoxCtrl implements IController {
             url: "/search",
         }));
         if (err) {
-            let tempError = "";
-            // Basic error message from server.
-            if (err.data.error) {
-                tempError = err.data.error.toString();
-            }
-            // Some errors don't have err.data.error and are in raw HTML.
-            if (err.data && tempError.length < 1) {
-                tempError = removeHtmlTags(err.data.toString());
-                if (tempError.indexOf("Proxy Error") > -1) {
-                    tempError = tempError.replace("Proxy Error Proxy Error", "Proxy Error:").
-                    replace("&nbsp;", " ");
-                }
-            }
-            if (tempError.length < 1) {
-                tempError = "Unknown error";
-            }
-            this.errorMessage = tempError;
+            this.errorMessage = this.getErrorMessage(err);
             this.results = [];
             return;
         }
@@ -440,26 +405,35 @@ export class SearchBoxCtrl implements IController {
             }
         }
         if (err) {
-            let tempError = "";
-            if (err.data.error) {
-                tempError = err.data.error.toString();
-            }
-            if (err.data && tempError.length < 1) {
-                // Proxy error data is in raw HTML format, so this is to make it more readable.
-                tempError = removeHtmlTags(err.data.toString());
-                if (tempError.indexOf("Proxy Error") > -1) {
-                    tempError = tempError.replace("Proxy ErrorProxy Error", "Proxy Error ").
-                    replace(".R", ". R").replace("&nbsp;", " ");
-                }
-            }
-            if (tempError.length < 1) {
-                tempError = "Unknown error";
-            }
-            this.errorMessage = tempError;
+            this.errorMessage = this.getErrorMessage(err);
             this.tagResults = [];
             return;
         }
 
+    }
+
+    /**
+     * Parses unusual kinds of error messages.
+     * @param {{data: {error: string}}} err Error response.
+     * @returns {string} An error message.
+     */
+    private getErrorMessage(err: {data: {error: string}}) {
+        let tempError = "";
+        if (err.data.error) {
+            tempError = err.data.error.toString();
+        }
+        if (err.data && tempError.length < 1) {
+            // Proxy error data is in raw HTML format, so this is to make it more readable.
+            tempError = removeHtmlTags(err.data.toString());
+            if (tempError.indexOf("Proxy Error") > -1) {
+                tempError = tempError.replace("Proxy ErrorProxy Error", "Proxy Error ").
+                replace(".R", ". R").replace("&nbsp;", " ");
+            }
+        }
+        if (tempError.length < 1) {
+            tempError = "Unknown error";
+        }
+        return tempError;
     }
 
     /**
@@ -474,9 +448,7 @@ export class SearchBoxCtrl implements IController {
             },
             url: "/search/getFolders",
         });
-        if (response) {
-            this.folderSuggestions = response.data;
-        }
+        this.folderSuggestions = response.data;
     }
 
     /**
@@ -559,33 +531,24 @@ timApp.component("searchBox", {
                 </div>
            </div>
         <label class="font-weight-normal" title="Distinguish between upper and lower case letters">
-            <input type="checkbox" ng-model="$ctrl.caseSensitive"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Case sensitive</label>
+            <input type="checkbox" ng-model="$ctrl.caseSensitive"> Case sensitive</label>
         <label class="font-weight-normal" title="Allow regular expressions">
-            <input type="checkbox" ng-model="$ctrl.regex"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Regex</label>
+            <input type="checkbox" ng-model="$ctrl.regex"> Regex</label>
         <label class="font-weight-normal" title="Leave plugin and setting contents out of the results">
-            <input type="checkbox" ng-model="$ctrl.ignorePlugins"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Ignore plugins and settings</label>
+            <input type="checkbox" ng-model="$ctrl.ignorePlugins"> Ignore plugins and settings</label>
         <label class="font-weight-normal" title="Search only whole words with one or more character">
-            <input type="checkbox" ng-model="$ctrl.searchWholeWords"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search whole words</label>
+            <input type="checkbox" ng-model="$ctrl.searchWholeWords"> Search whole words</label>
         <label class="font-weight-normal dropdown-item" title="Search from documents you own">
-            <input type="checkbox" ng-model="$ctrl.searchOwned"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Search owned documents</label>
+            <input type="checkbox" ng-model="$ctrl.searchOwned"> Search owned documents</label>
         <label class="font-weight-normal" title="Show result of each search in new window">
-            <input type="checkbox" ng-model="$ctrl.createNewWindow"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Open new window for each search</label>
+            <input type="checkbox" ng-model="$ctrl.createNewWindow"> Open new window for each search</label>
         <h5 class="font-weight-normal">Search scope:</h5>
         <label class="font-weight-normal" title="Search document titles">
-            <input type="checkbox" ng-model="$ctrl.searchDocNames"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Title search</label>
+            <input type="checkbox" ng-model="$ctrl.searchDocNames"> Title search</label>
         <label class="font-weight-normal" title="Search document tags">
-            <input type="checkbox" ng-model="$ctrl.searchTags"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Tag search</label>
+            <input type="checkbox" ng-model="$ctrl.searchTags"> Tag search</label>
         <label class="font-weight-normal" title="Search document content">
-            <input type="checkbox" ng-model="$ctrl.searchWords"
-            class="ng-pristine ng-untouched ng-valid ng-not-empty"> Content search</label>
+            <input type="checkbox" ng-model="$ctrl.searchWords"> Content search</label>
       </form>
     </div>
 `,

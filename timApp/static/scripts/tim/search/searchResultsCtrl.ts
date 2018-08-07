@@ -40,11 +40,11 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     }
 
     async $onInit() {
+        super.$onInit();
         this.updateAttributes(this.resolve.ctrl);
         if (this.searchComponent) {
             this.searchComponent.registerResultsDialog(this);
         }
-        super.$onInit();
     }
 
     $onDestroy() {
@@ -117,74 +117,66 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
         }
 
         for (const t of this.titleResults) {
-            try {
-                let found = false;
-                for (const r of this.displayResults) {
-                    if (t.doc.id === r.result.doc.id) {
-                        found = true;
-                    }
+            let found = false;
+            for (const r of this.displayResults) {
+                if (t.doc.id === r.result.doc.id) {
+                    found = true;
                 }
-                // Add documents found only with the title to results list.
-                if (!found) {
-                    const newDocResult = {
-                        closed: true,
-                        num_tag_results: 0,
-                        result: {
-                            doc: t.doc,
-                            incomplete: false,
-                            num_par_results: 0,
-                            num_title_results: t.num_title_results,
-                            par_results: [],
-                            title_results: t.title_results,
-                        },
-                        tags: [],
-                    };
-                    this.displayResults.push(newDocResult);
-                }
-            } catch (e) {
-                this.errorMessage = e.getMessage().toString();
+            }
+            // Add documents found only with the title to results list.
+            if (!found) {
+                const newDocResult = {
+                    closed: true,
+                    num_tag_results: 0,
+                    result: {
+                        doc: t.doc,
+                        incomplete: false,
+                        num_par_results: 0,
+                        num_title_results: t.num_title_results,
+                        par_results: [],
+                        title_results: t.title_results,
+                    },
+                    tags: [],
+                };
+                this.displayResults.push(newDocResult);
             }
         }
 
         for (const t of this.tagResults) {
-            try {
-                let found = false;
-                for (const r of this.displayResults) {
-                    if (t.doc.path === r.result.doc.path) {
-                        // r.tags = t.matching_tags;
-                        // r.num_tag_results = t.num_results;
-                        found = true;
-                    }
+            let found = false;
+            for (const r of this.displayResults) {
+                if (t.doc.path === r.result.doc.path) {
+                    // r.tags = t.matching_tags;
+                    // r.num_tag_results = t.num_results;
+                    found = true;
                 }
-                // Add documents found only with the tag to results list.
-                if (!found) {
-                    const newDocResult = {
-                        closed: true,
-                        num_tag_results: t.num_results,
-                        result: {
-                            doc: t.doc,
-                            incomplete: false,
-                            num_par_results: 0,
-                            num_title_results: 0,
-                            par_results: [],
-                            title_results: [],
-                        },
-                        tags: t.matching_tags,
-                    };
-                    this.displayResults.push(newDocResult);
-                }
-            } catch (e) {
-                this.errorMessage = e.getMessage().toString();
+            }
+            // Add documents found only with the tag to results list.
+            if (!found) {
+                const newDocResult = {
+                    closed: true,
+                    num_tag_results: t.num_results,
+                    result: {
+                        doc: t.doc,
+                        incomplete: false,
+                        num_par_results: 0,
+                        num_title_results: 0,
+                        par_results: [],
+                        title_results: [],
+                    },
+                    tags: t.matching_tags,
+                };
+                this.displayResults.push(newDocResult);
             }
         }
     }
 
     /**
-     * Changes tag css style depending on whether it's regular or special tag.
-     * @param {ITag} tag
-     * @returns {string}
+     * Changes tag css class depending on whether it's regular or special tag.
+     * @param {ITag} tag The tag to display.
+     * @returns {string} The class as a string.
      */
-    private tagStyle(tag: ITag) {
+    private tagClass(tag: ITag) {
         let style = "";
         if (tag.type === TagType.Regular) {
             style += "btn-primary";
@@ -278,7 +270,7 @@ registerDialogComponent("timSearchResults",
                         <a href="/view/{{r.result.doc.path}}#{{p.par_id}}" title="Open paragraph">{{p.preview}}</a>
                     </li>
                     <span ng-repeat="tag in r.tags" ng-if="!r.closed">
-                        <span class="btn-xs" ng-class="$ctrl.tagStyle(tag)">{{tag.name}}</span>
+                        <span class="btn-xs" ng-class="$ctrl.tagClass(tag)">{{tag.name}}</span>
                     </span>
                 </ul>
             </li>
