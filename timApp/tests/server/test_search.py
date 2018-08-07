@@ -6,12 +6,14 @@ class SearchTest(TimRouteTest):
 
     def test_search(self):
         u = self.test_user_1
+        self.make_admin(u)
         self.login_test1()
         text_to_search = 'cat'
         text_in_document = 'House cats like to hunt too.'
         d = self.create_doc(initial_par=text_in_document)
-        url = f'search?caseSensitive=false&folder=&ignorePluginsSettings=false&maxDocPars=999' \
-              f'&query={text_to_search}&regex=false&searchDocNames=false&searchWords=true'
+        self.get(f'search/createContentFile')
+        print(d.id)
+        url = f'search?caseSensitive=false&folder=&ignorePlugins=false&query={text_to_search}&regex=false'
         self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
                                                          'errors': [],
                                                          'results': [{'doc': {'id': d.id,
@@ -38,95 +40,136 @@ class SearchTest(TimRouteTest):
                                                                       'num_par_results': 1,
                                                                       'num_title_results': 0,
                                                                       'par_results': [{'num_results': 1,
-                                                                                       'par_id': '02rrzIY0IaHV',
-                                                                                       'preview': 'House cats like to hunt too....',
+                                                                                       'par_id': "b846fS0dIKsF",
+                                                                                       'preview': 'House cats like to hunt too.',
                                                                                        'results': [{'match_end': 9,
                                                                                                     'match_start': 6,
                                                                                                     'match_word': 'cat'}]}],
                                                                       'title_results': []}],
-                                                         'titleResultCount': 0,
-                                                         'wordResultCount': 1})
+                                                         'title_result_count': 0,
+                                                         'word_result_count': 1})
 
     def test_too_short_search(self):
+        u = self.test_user_1
+        self.make_admin(u)
         self.login_test1()
         self.create_doc(initial_par="There's a match inside, but it can't be searched.")
         text_to_search = 'a'
-        url = f'search?caseSensitive=false&folder=&ignorePluginsSettings=false&maxDocPars=999' \
-              f'&query={text_to_search}&regex=false&searchDocNames=false&searchWords=true'
+        self.get(f'search/createContentFile')
+        url = f'search?folder=&query={text_to_search}'
         self.get(url, expect_status=400,
                  expect_content={'error': 'Search text must be at least 3 character(s) long with whitespace stripped.'})
 
     def test_not_found_search(self):
+        u = self.test_user_1
+        self.make_admin(u)
         self.login_test1()
-        text_to_search = 'Another text to search'
-        url = f'search?caseSensitive=false&folder=&ignorePluginsSettings=false&maxDocPars=999' \
-              f'&query={text_to_search}&regex=false&searchDocNames=false&searchWords=true'
+        self.create_doc(initial_par="I contain plenty of text but not the one you are searching!")
+        self.get(f'search/createContentFile')
+        text_to_search = 'Cannot be found anywhere'
+        url = f'search?folder=&query={text_to_search}'
         self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
                                                          'errors': [],
                                                          'results': [],
-                                                         'titleResultCount': 0,
-                                                         'wordResultCount': 0})
+                                                         'title_result_count': 0,
+                                                         'word_result_count': 0})
 
     def test_case_sensitive_search(self):
+        u = self.test_user_1
+        self.make_admin(u)
         self.login_test1()
         text_to_search = 'Text to search'
         case_sensitive = True
         self.create_doc(initial_par=text_to_search)
+        self.get(f'search/createContentFile')
         text_to_search_upper = 'TEXT TO SEARCH'
-        url = f'search?caseSensitive={case_sensitive}&folder=&ignorePluginsSettings=false&maxDocPars=999' \
-              f'&query={text_to_search_upper}&regex=false&searchDocNames=false&searchWords=true'
+        url = f'search?caseSensitive={case_sensitive}&folder=&query={text_to_search_upper}'
         self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
                                                          'errors': [],
                                                          'results': [],
-                                                         'titleResultCount': 0,
-                                                         'wordResultCount': 0})
+                                                         'title_result_count': 0,
+                                                         'word_result_count': 0})
 
-    def test_whole_word_search(self):
-        u = self.test_user_1
+    def test_search_without_view_rights(self):
+        text_to_search = 'secret'
+        url = f'search?folder=&query={text_to_search}'
+
+        self.make_admin(self.test_user_1)
         self.login_test1()
-        text = 'Cats are intensely attracted to catnip. For a cat it can be irresistible.'
-        text_to_search = 'cat'
-        whole_words = True
-        d = self.create_doc(initial_par=text)
-        url = f'search?caseSensitive=false&folder=&ignorePluginsSettings=false&maxDocPars=999&' \
-              f'query={text_to_search}&searchExactWords={whole_words}&regex=false&searchDocNames=false&' \
-              f'searchWords=true'
-        self.get(url, expect_status=200, expect_content={'errors': [],
-                                                         'incomplete_search_reason': '',
-                                                         'results': [{'doc': {'id': d.id,
-                                                                              'isFolder': False,
-                                                                              'location': d.location,
-                                                                              'modified': 'just now',
-                                                                              'name': d.short_name,
-                                                                              'owner': {
-                                                                                  'id': self.get_test_user_1_group_id(),
-                                                                                  'name': u.name},
-                                                                              'path': d.path,
-                                                                              'public': True,
-                                                                              'rights': {'browse_own_answers': True,
-                                                                                         'can_comment': True,
-                                                                                         'can_mark_as_read': True,
-                                                                                         'editable': True,
-                                                                                         'manage': True,
-                                                                                         'owner': True,
-                                                                                         'see_answers': True,
-                                                                                         'teacher': True},
-                                                                              'title': d.title,
-                                                                              'unpublished': True},
-                                                                      'incomplete': False,
-                                                                      'num_par_results': 1,
-                                                                      'num_title_results': 0,
-                                                                      'par_results': [{'num_results': 1,
-                                                                                       'par_id': 'DiJPVjF2AdjH',
-                                                                                       'preview': '...are intensely attracted to '
-                                                                                                  'catnip. For a cat it can be '
-                                                                                                  'irresistible....',
-                                                                                       'results': [{'match_end': 50,
-                                                                                                    'match_start': 45,
-                                                                                                    'match_word': ' cat '}]}],
-                                                                      'title_results': []}],
-                                                         'titleResultCount': 0,
-                                                         'wordResultCount': 1})
+        d = self.create_doc(initial_par='Super secret things.')
+        self.get(f'search/createContentFile')
+        self.login_test2()
+        self.test_user_2.remove_access(d.id, 'view')
+        self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
+                                                         'errors': [],
+                                                         'results': [],
+                                                         'title_result_count': 0,
+                                                         'word_result_count': 0})
+
+    def test_search_plugin(self):
+        text_to_search = 'answer'
+        plugin_md = """``` {plugin="test"}
+        question: What cats like the most?
+        answer: Catnip.
+        ```"""
+        self.make_admin(self.test_user_1)
+        self.login_test1()
+        d = self.create_doc(initial_par=plugin_md)
+        self.get(f'search/createContentFile')
+        self.test_user_1.grant_access(d.id, 'edit')
+        self.get(f'search?folder=&query={text_to_search}', expect_status=200,
+                 expect_content={'incomplete_search_reason': '',
+                                 'errors': [],
+                                 'results': [{'doc': {'id': d.id,
+                                                      'isFolder': False,
+                                                      'location': d.location,
+                                                      'modified': 'just now',
+                                                      'name': d.short_name,
+                                                      'owner': {
+                                                          'id': self.get_test_user_1_group_id(),
+                                                          'name': self.test_user_1.name},
+                                                      'path': d.path,
+                                                      'public': True,
+                                                      'rights': {'browse_own_answers': True,
+                                                                 'can_comment': True,
+                                                                 'can_mark_as_read': True,
+                                                                 'editable': True,
+                                                                 'manage': True,
+                                                                 'owner': True,
+                                                                 'see_answers': True,
+                                                                 'teacher': True},
+                                                      'title': d.title,
+                                                      'unpublished': True},
+                                              'incomplete': False,
+                                              'num_par_results': 1,
+                                              'num_title_results': 0,
+                                              'par_results': [{'num_results': 1,
+                                                               'par_id': '4mayw3MVytjV',
+                                                               'preview': '...stion: What cats like the '
+                                                                          'most?         answer: '
+                                                                          'Catnip.         ``` ```',
+                                                               'results': [{'match_end': 61,
+                                                                            'match_start': 55,
+                                                                            'match_word': 'answer'}]}],
+                                              'title_results': []}],
+                                 'title_result_count': 0,
+                                 'word_result_count': 1})
+
+        self.get(f'search?folder=&query={text_to_search}&ignorePlugins=True', expect_status=200,
+                 expect_content={'incomplete_search_reason': '',
+                                 'errors': [],
+                                 'results': [],
+                                 'title_result_count': 0,
+                                 'word_result_count': 0})
+
+        self.login_test2()
+        self.test_user_2.grant_access(d.id, 'view')
+        self.get(f'search?folder=&query={text_to_search}', expect_status=200,
+                 expect_content={'incomplete_search_reason': '',
+                                 'errors': [],
+                                 'results': [],
+                                 'title_result_count': 0,
+                                 'word_result_count': 0})
 
     def test_title_search(self):
         u = self.test_user_1
@@ -134,8 +177,7 @@ class SearchTest(TimRouteTest):
         d = self.create_doc()
         search_titles = True
         text_to_search = d.title
-        url = f'search?caseSensitive=false&folder=&ignorePluginsSettings=false&maxDocPars=1000' \
-              f'&query={text_to_search}&regex=false&searchDocNames={search_titles}&searchWords=false'
+        url = f'search/titles?caseSensitive=false&folder=&query={text_to_search}'
         self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
                                                          'errors': [],
                                                          'results': [{'doc': {'id': d.id,
@@ -167,8 +209,8 @@ class SearchTest(TimRouteTest):
                                                                                              {'match_end': len(d.title),
                                                                                               'match_start': 0,
                                                                                               'match_word': d.title}]}]}],
-                                                         'titleResultCount': 1,
-                                                         'wordResultCount': 0})
+                                                         'title_result_count': 1,
+                                                         'word_result_count': 0})
 
     def test_tag_search(self):
         u = self.test_user_1
@@ -213,7 +255,7 @@ class SearchTest(TimRouteTest):
                                                                                         'expires': None,
                                                                                         'name': tags[2],
                                                                                         'type': TagType.Regular.value}],
-                                                                              'title': 'document 4',
+                                                                              'title': d.title,
                                                                               'unpublished': True},
                                                                       'matching_tags': [{'block_id': d.id,
                                                                                          'expires': None,
@@ -224,4 +266,4 @@ class SearchTest(TimRouteTest):
                                                                                          'name': tags[1],
                                                                                          'type': TagType.Regular.value}],
                                                                       'num_results': 2}],
-                                                         'tagResultCount': 2})
+                                                         'tag_result_count': 2})
