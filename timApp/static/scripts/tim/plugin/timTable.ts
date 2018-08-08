@@ -4,7 +4,7 @@ import {timApp} from "../app";
 import {ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
 import {openEditorSimple} from "../editor/pareditor";
-import {$http, $timeout} from "../util/ngimport";
+import {$http, $timeout, $sce} from "../util/ngimport";
 import {Binding} from "../util/utils";
 
 const styleToHtml: { [index: string]: string } = {
@@ -208,8 +208,9 @@ export class TimTableController implements IController {
 
     // Variables for toolbar
     private selectedCellBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
+    private previousBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
 
-    constructor(private scope: IScope, private element: IRootElementService, private sceService: ISCEService) {
+    constructor(private scope: IScope, private element: IRootElementService) {
         this.keyDownPressedTable = this.keyDownPressedTable.bind(this);
     }
 
@@ -369,9 +370,8 @@ export class TimTableController implements IController {
             return;
         }
         this.bigEditorOpen = true;
-        const result = await openEditorSimple(docId, this.editedCellContent, "Edit table cell",
-            "timTableCell",
-            () => { this.bigEditorOpen = false; this.closeSmallEditor(); });
+        const result = await openEditorSimple(docId, this.editedCellContent,
+            "Edit table cell", "timTableCell");
         this.bigEditorOpen = false;
         if (this.currentCell) { this.currentCell.editorOpen = false; }
         if (result.type == "save" && result.text != this.editedCellInitialContent) {
@@ -381,9 +381,6 @@ export class TimTableController implements IController {
             this.closeSmallEditor();
         }
         if (result.type == "cancel") {
-            // this code path seems to be unused, because the result type is never cancel?
-            // when the user clicks 'cancel' in the paragraph editor, the dialog is just dismissed
-            // and no code after "await openEditorSimple" is executed here
             this.closeSmallEditor();
         }
         if (isPrimitiveCell(cell)) {
