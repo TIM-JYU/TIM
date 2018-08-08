@@ -1,8 +1,5 @@
 /**
  * The directive handles the logic behind a single annotation.
- * The annotation must be implemented to the element as a directive declaration,
- * because IE does not support custom elements reliably. In example, use:
- * `<span annotation="">...</span>` instead of `<annotation>...</annotation>`.
  *
  * @module annotation
  * @author Joonas Lattu
@@ -14,14 +11,17 @@
 
 import {IController, IRootElementService, IScope} from "angular";
 import {timApp} from "tim/app";
+import * as focusme from "tim/ui/focusMe";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {$http, $window} from "../util/ngimport";
-import {Binding, Require} from "../util/utils";
+import {Binding, markAsUsed, Require} from "../util/utils";
 import {ReviewController} from "./reviewController";
 import {IAnnotationCoordless} from "./velptypes";
 
 const UNDEFINED = "undefined";
+
+markAsUsed(focusme);
 
 export class AnnotationController implements IController {
     private static $inject = ["$scope", "$element"];
@@ -34,9 +34,9 @@ export class AnnotationController implements IController {
     }; // $onInit
     private newcomment: string;
     private isvalid: {points: {value: boolean; msg: string}};
-    private element: IRootElementService;
     private velpElement!: HTMLElement; // $postLink
-    private showHidden: boolean;
+    private showFull = false;
+    private focus = false;
     public show: boolean = false;
     private showStr!: Binding<string, "@">;
     private original!: {
@@ -51,20 +51,21 @@ export class AnnotationController implements IController {
     }; // $onInit
     private velp!: Binding<string, "@">;
     private rctrl!: Require<ReviewController>;
-    private scope: IScope;
     private annotationdata!: Binding<string, "@">;
     private annotation!: IAnnotationCoordless; // $onInit
 
-    constructor(scope: IScope, element: IRootElementService) {
-        this.scope = scope;
-        this.element = element;
+    constructor(private scope: IScope, private element: IRootElementService) {
         this.ctrlDown = false;
         this.ctrlKey = 17;
         this.newcomment = "";
-        this.showHidden = false;
         this.isvalid = {
             points: {value: true, msg: ""},
         };
+    }
+
+    setShowFull(v: boolean) {
+        this.showFull = v;
+        this.focus = v;
     }
 
     $onInit() {
@@ -77,11 +78,12 @@ export class AnnotationController implements IController {
             values: [1, 2, 3, 4],
             names: ["Just me", "Document owner", "Teachers", "Everyone"],
         };
-        this.annotation.newannotation = false;
 
         if (this.annotation.default_comment != null) {
             this.newcomment = this.annotation.default_comment;
         }
+
+        this.setShowFull(this.annotation.newannotation);
 
         // Original visibility, or visibility in session
         // TODO: origin visibility
@@ -178,19 +180,11 @@ export class AnnotationController implements IController {
      * @method showAnnotation
      */
     showAnnotation() {
-        this.showHidden = false;
+        this.setShowFull(false);
         this.annotation.newannotation = false;
         this.show = true;
 
         this.updateVelpZIndex();
-    }
-
-    /**
-     * Focuses on the comment field of the annotation.
-     * @method focusTextarea
-     */
-    focusTextarea() {
-        return true;
     }
 
     /**
@@ -314,7 +308,7 @@ export class AnnotationController implements IController {
      * @returns {boolean} - Whether any modifications were made or not
      */
     checkIfChanged() {
-        if (!this.showHidden) {
+        if (!this.showFull) {
             return false;
         }
         if (this.original.points !== this.annotation.points || this.original.comment !== this.newcomment ||

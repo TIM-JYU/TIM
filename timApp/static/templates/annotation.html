@@ -1,4 +1,4 @@
-<!-- Pop over element --><span class="annotation-element"><span   ng-init="actrl.showHidden=actrl.newannotation" ng-show="actrl.show" ng-click="actrl.updateVelpZIndex()"
+<!-- Pop over element --><span class="annotation-element"><span ng-show="actrl.show" ng-click="actrl.updateVelpZIndex()"
                                                                   class="no-popup-menu"
                                                                 ng-class="['annotation-info', 'emphasise', 'default', {neutral: actrl.annotation.points == 0, negative: actrl.annotation.points<0, positive: actrl.annotation.points > 0}]"
                                                                 ng-keydown="actrl.keyDownFunc($event)" ng-keyup="actrl.keyUpFunc($event)"
@@ -6,25 +6,25 @@
     <span class="fulldiv">
         <span class="div-90 annTopSection">
             <p><span class="annHeader"><strong>{{ velp }}</strong></span></p>
-            <p ng-show="actrl.showHidden"><a class="username" href="mailto:{{ actrl.annotation.email }}">{{ actrl.annotation.annotator_name }}</a>
+            <p ng-show="actrl.showFull"><a class="username" href="mailto:{{ actrl.annotation.email }}">{{ actrl.annotation.annotator_name }}</a>
                     <span class="timestamp" title="{{ actrl.annotation.creationtime }}">{{ actrl.annotation.timesince }}</span></p>
         </span>
         <span class="div-10 pull-right">
             <span title="Close" class="glyphicon glyphicon-remove clickable-icon closeAnn"
-                  ng-click="actrl.toggleAnnotation();actrl.showHidden=false"></span>
+                  ng-click="actrl.toggleAnnotation();actrl.setShowFull(false)"></span>
         </span>
     </span>
 
 
-        <div ng-mouseenter="actrl.showHidden=true;actrl.updateVelpZIndex()">
-            <div ng-show="actrl.showHidden">
+        <div ng-mouseenter="actrl.setShowFull(true);actrl.updateVelpZIndex()">
+            <div ng-show="actrl.showFull">
             <p ng-hide="actrl.checkRights() || !actrl.allowChangePoints()"><label>Points: <input type="number" ng-model="actrl.annotation.points" ng-disabled="actrl.checkRights()"
                                                                                      ng-change="actrl.changePoints()"/></label>
             </p>
                 <p ng-hide="actrl.isvalid.points.value" class="error">{{ actrl.isvalid.points.msg }}</p>
                 <p ng-show="actrl.checkRights()"><label ng-hide="actrl.annotation.points == null">Points:  {{ actrl.annotation.points }}</label></p>
             </div>
-            <div ng-hide="actrl.showHidden">
+            <div ng-hide="actrl.showFull">
               <div ng-show="actrl.annotation.points != null">
                 <p><label>Points: {{ actrl.annotation.points }}</label></p>
             </div>
@@ -45,8 +45,8 @@
         </ul>
 
     </span>
-    <div ng-show="actrl.showHidden" >
-        <textarea placeholder="Add comment" ng-model="actrl.newcomment" ></textarea>
+    <div ng-show="actrl.showFull" >
+        <textarea focus-me="actrl.focus" placeholder="Add comment" ng-model="actrl.newcomment" ></textarea>
         <div>
             <form class="form-inline adjustAnnForm">
                 <!--<div class="form-group"> -->
@@ -87,19 +87,19 @@
         <button class="saveChanges timButton" ng-show="actrl.checkIfChanged()" ng-click="actrl.saveChanges()">Save
         </button>
     </span>
-        <div ng-show="actrl.showHidden">
+        <div ng-show="actrl.showFull">
         <span class="annDelAnnotation" title="Delete annotation"
                      ng-class="['delAnnotation', 'pull-right', 'glyphicon', 'glyphicon-trash', 'clickable-icon', {hide: actrl.annotation.comments.length > 1} ]"
                      ng-hide="actrl.checkRights()"
 
                      ng-click="actrl.deleteAnnotation()"></span>
         </div>
-         <div class="annotationVisibleText" ng-hide="actrl.showHidden">
+         <div class="annotationVisibleText" ng-hide="actrl.showFull">
             {{ actrl.visible_options.names[actrl.visible_options.value - 1] }}
         </div>
     </div>
 
 </span></span><!--
-Highlighted text--><span ng-click="actrl.showHidden=false;actrl.toggleAnnotation()" class="no-popup-menu" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
+Highlighted text--><span ng-click="actrl.setShowFull(false);actrl.toggleAnnotation()" class="no-popup-menu" ng-class="['highlighted', 'clickable', 'emphasise', 'default',
 {neutral: actrl.annotation.points == 0, negative: actrl.annotation.points < 0, positive: actrl.annotation.points > 0}]" ng-transclude
 ng-style="{backgroundColor: actrl.getCustomColor()}"></span>
