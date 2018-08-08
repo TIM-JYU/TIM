@@ -4,8 +4,9 @@ import sre_constants
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Match, List, Union
+from typing import Match, List, Union, Tuple
 
+from elasticsearch_dsl import connections, Document, Text, Keyword, Integer, Search
 from flask import Blueprint, json
 from flask import abort
 from flask import request
@@ -14,7 +15,6 @@ from sqlalchemy.orm import joinedload
 from timApp.auth.accesshelper import has_view_access, verify_admin, has_edit_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
-from timApp.auth.sessioninfo import get_current_user_id
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
@@ -23,10 +23,11 @@ from timApp.item.block import Block
 from timApp.item.tag import Tag
 from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException
-from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_option
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.logger import log_error
+
+es = connections.create_connection(hosts=['elasticsearch'], timeout=20)
 
 search_routes = Blueprint('search',
                           __name__,
@@ -40,12 +41,6 @@ PREVIEW_MAX_LENGTH = 160
 PROCESSED_CONTENT_FILE_NAME = "all_processed.log"
 RAW_CONTENT_FILE_NAME = "all.log"
 MIN_CONTENT_FILE_LINE_LENGTH = 70  # Excludes empty documents.
-
-
-# noinspection PyUnusedLocal
-def make_cache_key(*args, **kwargs):
-    path = request.path
-    return (str(get_current_user_id()) + path + str(request.query_string)).encode('utf-8')
 
 
 @search_routes.route('getFolders')
@@ -65,7 +60,7 @@ def get_subfolders():
     return json_response(folders_viewable)
 
 
-def get_common_search_params(request) -> (str, str, bool, bool, bool, bool):
+def get_common_search_params(request) -> Tuple[str, str, bool, bool, bool, bool]:
     """
     Picks parameters that are common in the search routes from a request.
     :param request:
@@ -434,14 +429,17 @@ def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = Tr
     return False
 
 
-def add_doc_info_line(doc_id: int, par_data, remove_deleted_pars: bool = True) -> Union[str, None]:
+def add_doc_info_line(doc_id: int, par_data, remove_deleted_pars: bool = True, add_title: bool = True) \
+        -> Union[str, None]:
     """
     Forms a JSON-compatible string with doc_id and list of paragraph data with id and md attributes.
     :param doc_id: Document id.
     :param par_data: List of paragraph dictionaries.
     :param remove_deleted_pars: Check paragraph existence and leave deleted ones out.
+    :param add_title Add document title.
     :return: String with paragraph data grouped under a document.
     """
+    doc_info = None
     if not par_data:
         return None
     if remove_deleted_pars:
@@ -462,10 +460,16 @@ def add_doc_info_line(doc_id: int, par_data, remove_deleted_pars: bool = True) -
         par_md = par_dict['md'].replace("\r", " ").replace("\n", " ")
         par_attrs = par_dict['attrs']
         par_json_list.append({'id': par_id, 'attrs': par_attrs, 'md': par_md})
-    return json.dumps({'doc_id': doc_id, 'pars': par_json_list}, ensure_ascii=False) + '\n'
+    if add_title:
+        if not doc_info:
+            doc_info = DocEntry.find_by_id(doc_id)
+        doc_title = doc_info.title
+        return json.dumps({'doc_id': doc_id, 'doc_title': doc_title, 'pars': par_json_list}, ensure_ascii=False) + '\n'
+    else:
+        return json.dumps({'doc_id': doc_id, 'pars': par_json_list}, ensure_ascii=False) + '\n'
 
 
-def get_doc_par_id(line: str) -> (int, str, str):
+def get_doc_par_id(line: str) -> Union[Tuple[int, str, str], None]:
     """
     Takes doc id, par id and par data from one grep search result line.
     :param line: Tim pars grep search result line.
@@ -482,7 +486,55 @@ def get_doc_par_id(line: str) -> (int, str, str):
         return None
 
 
+class Paragraph(Document):
+    body = Text(analyzer='snowball', fielddata=True)  # md
+    plugin = Text()
+    setting = Text()
+    par_id = Keyword()
+    doc_id = Integer()
+
+    class Index:
+        name = 'pars'
+
+    def is_plugin_or_setting(self) -> bool:
+        if self.plugin or self.setting:
+            return True
+        else:
+            return False
+
+    def save(self, **kwargs):
+        return super(Paragraph, self).save(**kwargs)
+
+
+@search_routes.route("elasticsearch/createIndex")
+def elasticsearch_create_index():
+    es.indices.delete(index='pars', ignore=[400, 404])
+    Paragraph.init()
+    with open(Path(app.config['FILES_PATH']) / 'pars' / RAW_CONTENT_FILE_NAME, "r+", encoding='utf-8') as file:
+        for line in file:
+            doc_id, par_id, par = get_doc_par_id(line)
+            par_dict = json.loads(f"{{{par}}}")
+            par_md = par_dict['md']
+            new_par = Paragraph(meta={'id': f'{doc_id}.{par_id}'}, doc_id=doc_id, par_id=par_id, body=par_md)
+            new_par.save()
+    return ok_response()
+
+
+@search_routes.route("elasticsearch")
+def elasticsearch():
+    query = request.args.get('q', '')
+    s = Search(index="pars").query("match", body=query)
+    s.aggs.bucket('per_paragraph', 'terms', field='body')
+
+    response = s.execute()
+    results = []
+    for hit in response:
+        results.append({'doc_id': hit.doc_id, 'par_id': hit.par_id, 'md': hit.body})
+    return json_response(results)
+
+
 @search_routes.route("createContentFile")
+
 def create_search_file():
     """
     Groups all TIM-paragraphs under documents and combines them into a single file.
@@ -494,6 +546,8 @@ def create_search_file():
 
     # Checks paragraph existence before adding at the cost of taking more time.
     remove_deleted_pars = get_option(request, 'removeDeletedPars', default=False, cast=bool)
+    # Include document titles in the file.
+    add_titles = get_option(request, 'addTitles', default=False, cast=bool)
 
     dir_path = Path(app.config['FILES_PATH']) / 'pars'
     raw_file_name = RAW_CONTENT_FILE_NAME
@@ -527,7 +581,7 @@ def create_search_file():
                         continue
                     # Otherwise save the previous one and empty par data.
                     else:
-                        new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars)
+                        new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars, add_titles)
                         if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
                             file.write(new_line)
                         current_doc = doc_id
@@ -537,7 +591,7 @@ def create_search_file():
                     log_error(f"'{get_error_message(e)}' while writing search file line '{line}''")
             # Write the last line separately, because loop leaves it unsaved.
             if current_doc and current_pars:
-                new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars)
+                new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars, add_titles)
                 if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
                     file.write(new_line)
         return json_response({'status': f"Combined and processed paragraph file created to {dir_path / file_name}"})
@@ -659,7 +713,6 @@ def get_error_message(e: Exception):
 
 
 @search_routes.route("")
-@cache.cached(key_prefix=make_cache_key)
 def search():
     """
     Perform document word search on a combined and grouped par file using grep.
