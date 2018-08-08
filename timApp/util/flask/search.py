@@ -254,18 +254,20 @@ class ParResult:
     Paragraph search results.
     """
 
-    def __init__(self, par_id: str = "", preview: str = "", word_results=None):
+    def __init__(self, par_id: str = "", preview: str = "", word_results=None, alt_num_results=0):
         """
         Paragraph result object constructor.
         :param par_id: Paragrapg id.
         :param preview: A snippet from paragraph markdown.
         :param word_results: List of word search results in the paragraph.
+        :param alt_num_results: Alternative to listing word results.
         """
         if word_results is None:
             word_results = []
         self.par_id = par_id
         self.preview = preview
         self.word_results = word_results
+        self.alt_num_results = alt_num_results
 
     def add_result(self, result: WordResult) -> None:
         """
@@ -296,7 +298,10 @@ class ParResult:
         """
         :return: How many matches there are in this paragraph.
         """
-        return len(self.word_results)
+        if len(self.word_results) > 0:
+            return len(self.word_results)
+        else:
+            return self.alt_num_results
 
 
 class TitleResult:
@@ -488,7 +493,7 @@ def get_doc_par_id(line: str) -> Union[Tuple[int, str, str], None]:
 
 
 class Paragraph(Document):
-    body = Text(analyzer='snowball', fielddata=True)  # md
+    body = Text(fielddata=True)  # md
     plugin = Text()
     setting = Text()
     par_id = Keyword()
@@ -509,10 +514,19 @@ class Paragraph(Document):
 
 @search_routes.route("elasticsearch/createIndex")
 def elasticsearch_create_index():
+    dir_path = Path(app.config['FILES_PATH']) / 'pars'
+    try:
+        subprocess.Popen(f'grep -R "" --include="current" . > {RAW_CONTENT_FILE_NAME} 2>&1',
+                         cwd=dir_path,
+                         shell=True).communicate()
+    except Exception as e:
+        abort(400,
+              f"Failed to create preliminary file {dir_path / RAW_CONTENT_FILE_NAME}: {get_error_message(e)}")
+
     def generate():
         es.indices.delete(index='pars', ignore=[400, 404])
         Paragraph.init()
-        with open(Path(app.config['FILES_PATH']) / 'pars' / RAW_CONTENT_FILE_NAME, "r+", encoding='utf-8') as file:
+        with open(dir_path / RAW_CONTENT_FILE_NAME, "r+", encoding='utf-8') as file:
             for line in file:
                 doc_id, par_id, par = get_doc_par_id(line)
                 par_dict = json.loads(f"{{{par}}}")
@@ -525,6 +539,7 @@ def elasticsearch_create_index():
                            'par_id': par_id,
                            'body': par_md}
                        }
+
     bulk(es, generate())
     return ok_response()
 
@@ -532,13 +547,44 @@ def elasticsearch_create_index():
 @search_routes.route("elasticsearch")
 def elasticsearch():
     query = request.args.get('q', '')
-    s = Search(index="pars").query("match", body=query)
+    s = Search(index="pars").query("match", body=query).highlight('body', fragment_size=1, number_of_fragments=1000). \
+        sort('doc_id').extra(explain=True)
     s.aggs.bucket('per_paragraph', 'terms', field='body')
     response = s[0:s.count()].execute()
     results = []
+    doc_result = None
+    total_word_result_count = 0
     for hit in response:
-        results.append({'doc_id': hit.doc_id, 'par_id': hit.par_id, 'md': hit.body})
-    return json_response(results)
+        try:
+            highlighted_hits = hit.meta.highlight['body']
+            # print(highlighted_hits)
+            par_word_result_count = len(highlighted_hits)
+            total_word_result_count += par_word_result_count
+            doc_info = DocEntry.find_by_id(hit.doc_id)
+            if not doc_info:
+                continue
+            par_result = ParResult(hit.par_id,
+                                   preview="",
+                                   alt_num_results=par_word_result_count)
+            if not doc_result:
+                doc_result = DocResult(doc_info)
+
+            if doc_result.doc_info.id == hit.doc_id:
+                doc_result.add_par_result(par_result)
+                continue
+            else:
+                doc_result = DocResult(doc_info)
+                doc_result.add_par_result(par_result)
+                results.append(doc_result)
+                doc_result = None
+        except Exception as e:
+            log_error(get_error_message(e))
+    if doc_result:
+        results.append(doc_result)
+    return json_response(result_response(
+        results,
+        word_result_count=total_word_result_count,
+        incomplete_search_reason=""))
 
 
 @search_routes.route("createContentFile")
