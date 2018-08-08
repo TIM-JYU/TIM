@@ -272,14 +272,11 @@ def pluginify(doc: Document,
         css_paths = list(OrderedDict.fromkeys(css_paths))
         modules = list(OrderedDict.fromkeys(modules))
 
-        default_auto_md = False
-        if 'default_automd' in reqs and reqs['default_automd']:
-            default_auto_md = True
+        default_auto_md = reqs.get('default_automd', False)
 
         plugin_url = get_plugin_tim_url(plugin_name)
         needs_browser = get_plugin_needs_browser(plugin_name)
-        if (html_out and 'multihtml' in reqs and reqs['multihtml']) or \
-                (md_out and 'multimd' in reqs and reqs['multimd']):
+        if (html_out and reqs.get('multihtml')) or (md_out and reqs.get('multimd')):
             try:
                 # taketime("plg m", plugin_name)
                 response = render_plugin_multi(

@@ -16,7 +16,7 @@ from timApp.user.user import User
 from timApp.util.utils import try_load_json
 
 date_format = '%Y-%m-%d %H:%M:%S'
-
+AUTOMD = 'automd'
 
 class PluginRenderOptions(NamedTuple):
     user: Optional[User]
@@ -300,12 +300,7 @@ class Plugin:
 
 
     def is_automd_enabled(self, default = False):
-        if 'automd' in self.values:
-            if self.values['automd']:
-                return True
-            else:
-                return False
-        return default
+        return self.values.get(AUTOMD, default)
 
 
 def parse_plugin_values_macros(par: DocParagraph,
