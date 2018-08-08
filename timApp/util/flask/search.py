@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Match, List, Union, Tuple
 
 from elasticsearch_dsl import connections, Document, Text, Keyword, Integer, Search
-from flask import Blueprint, json
+from flask import Blueprint, json, stream_with_context, Response
 from flask import abort
 from flask import request
 from sqlalchemy.orm import joinedload
@@ -508,16 +508,18 @@ class Paragraph(Document):
 
 @search_routes.route("elasticsearch/createIndex")
 def elasticsearch_create_index():
-    es.indices.delete(index='pars', ignore=[400, 404])
-    Paragraph.init()
-    with open(Path(app.config['FILES_PATH']) / 'pars' / RAW_CONTENT_FILE_NAME, "r+", encoding='utf-8') as file:
-        for line in file:
-            doc_id, par_id, par = get_doc_par_id(line)
-            par_dict = json.loads(f"{{{par}}}")
-            par_md = par_dict['md']
-            new_par = Paragraph(meta={'id': f'{doc_id}.{par_id}'}, doc_id=doc_id, par_id=par_id, body=par_md)
-            new_par.save()
-    return ok_response()
+    def generate():
+        es.indices.delete(index='pars', ignore=[400, 404])
+        Paragraph.init()
+        with open(Path(app.config['FILES_PATH']) / 'pars' / RAW_CONTENT_FILE_NAME, "r+", encoding='utf-8') as file:
+            for line in file:
+                doc_id, par_id, par = get_doc_par_id(line)
+                par_dict = json.loads(f"{{{par}}}")
+                par_md = par_dict['md']
+                new_par = Paragraph(meta={'id': f'{doc_id}.{par_id}'}, doc_id=doc_id, par_id=par_id, body=par_md)
+                new_par.save()
+                yield f'{doc_id}.{par_id}\n'
+    return Response(stream_with_context(generate()), mimetype='text/plain')
 
 
 @search_routes.route("elasticsearch")
