@@ -512,8 +512,12 @@ class Paragraph(Document):
         return super(Paragraph, self).save(**kwargs)
 
 
-@search_routes.route("elasticsearch/createIndex")
+# @search_routes.route("elasticsearch/createIndex")
 def elasticsearch_create_index():
+    """
+    Create index for elasticsearch.
+    :return: Ok response.
+    """
     dir_path = Path(app.config['FILES_PATH']) / 'pars'
     try:
         subprocess.Popen(f'grep -R "" --include="current" . > {RAW_CONTENT_FILE_NAME} 2>&1',
@@ -544,8 +548,16 @@ def elasticsearch_create_index():
     return ok_response()
 
 
-@search_routes.route("elasticsearch")
+# @search_routes.route("elasticsearch")
 def elasticsearch():
+    """
+    A way to perform search using elasticsearch (https://pypi.org/project/elasticsearch-dsl/).
+    Note: Performance for comprehensive search with large amount of resutls is lower than grep-search,
+    so currently unused.
+    With some changes this would suit a search where results are divided on different pages showing X results each
+    (scan-method in Search turns this into generator that yields results on demand).
+    :return: Search results.
+    """
     query = request.args.get('q', '')
     s = Search(index="pars").query("match", body=query).highlight('body', fragment_size=1, number_of_fragments=1000). \
         sort('doc_id').extra(explain=True)
