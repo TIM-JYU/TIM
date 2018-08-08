@@ -9,8 +9,8 @@
             <p ng-show="actrl.showHidden"><a class="username" href="mailto:{{ actrl.annotation.email }}">{{ actrl.annotation.annotator_name }}</a>
                     <span class="timestamp" title="{{ actrl.annotation.creationtime }}">{{ actrl.annotation.timesince }}</span></p>
         </span>
-        <span class="div-10 no-popup-menu">
-            <span title="Close" class="float-right glyphicon glyphicon-remove clickable-icon closeAnn"
+        <span class="div-10 pull-right">
+            <span title="Close" class="glyphicon glyphicon-remove clickable-icon closeAnn"
                   ng-click="actrl.toggleAnnotation();actrl.showHidden=false"></span>
         </span>
     </span>
