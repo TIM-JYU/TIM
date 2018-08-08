@@ -277,7 +277,7 @@ registerDialogComponent("timSearchResults",
     </div>
     </dialog-body>
     <dialog-footer>
-        <div class="float-left" id="order-selector-box">
+        <div class="pull-left" id="order-selector-box">
             <select id="order-selector" ng-model="$ctrl.orderByOption"
             ng-options="s as s.name for s in $ctrl.sortingOptions track by s.value"
                 title="Select the result sorting order" name="order-selector">

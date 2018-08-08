@@ -525,7 +525,6 @@ def elasticsearch_create_index():
                            'par_id': par_id,
                            'body': par_md}
                        }
-
     bulk(es, generate())
     return ok_response()
 
@@ -535,8 +534,7 @@ def elasticsearch():
     query = request.args.get('q', '')
     s = Search(index="pars").query("match", body=query)
     s.aggs.bucket('per_paragraph', 'terms', field='body')
-
-    response = s.execute()
+    response = s[0:s.count()].execute()
     results = []
     for hit in response:
         results.append({'doc_id': hit.doc_id, 'par_id': hit.par_id, 'md': hit.body})
