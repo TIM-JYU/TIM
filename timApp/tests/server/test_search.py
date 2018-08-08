@@ -7,12 +7,12 @@ class SearchTest(TimRouteTest):
     def test_search(self):
         u = self.test_user_1
         self.make_admin(u)
+        u_name = u.name
         self.login_test1()
         text_to_search = 'cat'
         text_in_document = 'House cats like to hunt too.'
         d = self.create_doc(initial_par=text_in_document)
         self.get(f'search/createContentFile')
-        print(d.id)
         url = f'search?caseSensitive=false&folder=&ignorePlugins=false&query={text_to_search}&regex=false'
         self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
                                                          'errors': [],
@@ -23,7 +23,7 @@ class SearchTest(TimRouteTest):
                                                                               'name': d.short_name,
                                                                               'owner': {
                                                                                   'id': self.get_test_user_1_group_id(),
-                                                                                  'name': u.name},
+                                                                                  'name': u_name},
                                                                               'path': d.path,
                                                                               'public': True,
                                                                               'rights': {'browse_own_answers': True,
@@ -40,7 +40,7 @@ class SearchTest(TimRouteTest):
                                                                       'num_par_results': 1,
                                                                       'num_title_results': 0,
                                                                       'par_results': [{'num_results': 1,
-                                                                                       'par_id': "b846fS0dIKsF",
+                                                                                       'par_id': d.document.get_paragraphs()[0].get_id(),
                                                                                        'preview': 'House cats like to hunt too.',
                                                                                        'results': [{'match_end': 9,
                                                                                                     'match_start': 6,
@@ -139,12 +139,12 @@ class SearchTest(TimRouteTest):
                                                                  'see_answers': True,
                                                                  'teacher': True},
                                                       'title': d.title,
-                                                      'unpublished': True},
+                                                      'unpublished': False},
                                               'incomplete': False,
                                               'num_par_results': 1,
                                               'num_title_results': 0,
                                               'par_results': [{'num_results': 1,
-                                                               'par_id': '4mayw3MVytjV',
+                                                               'par_id': d.document.get_paragraphs()[0].get_id(),
                                                                'preview': '...stion: What cats like the '
                                                                           'most?         answer: '
                                                                           'Catnip.         ``` ```',
