@@ -1,6 +1,6 @@
 import copy
 import json
-from typing import Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from xml.sax.saxutils import quoteattr
 from flask import Blueprint
 from flask import abort
@@ -65,7 +65,7 @@ class TimTable:
 
 
 class RelativeDataBlockValue:
-    def __init__(self, row: int, column: int, data: Union[str, dict]):
+    def __init__(self, row: int, column: int, data: Union[str, Dict[str, Any]]):
         self.row = row
         self.column = column
         self.data = data
@@ -112,14 +112,14 @@ def tim_table_multihtml():
     return json_response(multi)
 
 
-def prepare_multi_for_dumbo(list):
+def prepare_multi_for_dumbo(timtable_list):
     """
     Prepares multiple TimTables (given in a request) for Dumbo.
-    :param list:
+    :param timtable_list:
     :return:
     """
-    for i in range(0, len(list)):
-        prepare_for_dumbo(list[i][MARKUP])
+    for table in timtable_list:
+        prepare_for_dumbo(table[MARKUP])
 
 
 def tim_table_get_html(jso, review):
@@ -364,7 +364,7 @@ def tim_table_add_datablock_column():
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
-def get_column_counts(plug: Plugin) -> (dict, list):
+def get_column_counts(plug: Plugin) -> Tuple[Dict[int, int], List[RelativeDataBlockValue]]:
     """
     Returns the number of columns for each row.
     Takes both the regular table structure and the datablock into account.
@@ -602,7 +602,7 @@ def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
     return d, Plugin.from_paragraph(par)
 
 
-def is_datablock(yaml: dict) -> bool:
+def is_datablock(yaml: Dict[str, Any]) -> bool:
     """
     Checks if tableDataBlock exists
     :param yaml:
@@ -617,7 +617,7 @@ def is_datablock(yaml: dict) -> bool:
         return False
 
 
-def create_datablock(table: dict):
+def create_datablock(table: Dict[str, Any]):
     """
     Creates tableDatablock
     :param table:
@@ -655,15 +655,15 @@ def tim_table_save_cell_list():
         save_cell(yaml[TABLE][DATABLOCK], row, col, cell_content)
 
     cc = str(cell_content)
-    if plug.is_automd_enabled(True) and not cc.startswith('md:'):
-        cc = 'md: ' + cc
+    if plug.is_automd_enabled(True) and not cc.startswith(MD):
+        cc = MD + cc
     html = call_dumbo([cc], DUMBO_PARAMS)
     plug.save()
     multi.append(html[0])
     return json_response(multi)
 
 
-def save_cell(datablock: dict, row: int, col: int, cell_content: Union[str, dict]):
+def save_cell(datablock: Dict[str, Any], row: int, col: int, cell_content: Union[str, Dict[str, Any]]):
     """
     Updates datablock with the content and the coordinate of a cell.
     :param datablock:
@@ -741,7 +741,7 @@ def colnum_to_letters(column_index: int) -> str:
     return colnum_to_letters(remainder - 1) + last_char
 
 
-def datablock_key_to_indexes(datablock_key: str) -> (int, int):
+def datablock_key_to_indexes(datablock_key: str) -> Tuple[int, int]:
     """
     Gets the column and row indexes from a single relative datablock entry.
     :param datablock_key: The entry in the relative datablock.
@@ -776,9 +776,7 @@ def is_in_global_append_mode(plug: Plugin) -> bool:
     :param plug: The plugin instance.
     :return: True if global append mode is enabled, otherwise false.
     """
-    if GLOBAL_APPEND_MODE in plug.values and plug.values[GLOBAL_APPEND_MODE]:
-        return True
-    return False
+    return plug.values.get(GLOBAL_APPEND_MODE, False)
 
 
 def is_in_datainput_mode(plug: Plugin) -> bool:
@@ -787,9 +785,8 @@ def is_in_datainput_mode(plug: Plugin) -> bool:
     :param plug: The plugin instance.
     :return: True if the table is in data input mode, otherwise false.
     """
-    if DATA_INPUT in plug.values and plug.values[DATA_INPUT]:
-        return True
-    return False
+    return plug.values.get(DATA_INPUT, False)
+
 
 def is_review(request):
     """
@@ -869,7 +866,7 @@ def is_primitive(value):
     return is_of_unconvertible_type(value) or isinstance(value, str)
 
 
-def construct_datablock_entry_list_from_yaml(plug: Plugin) -> list:
+def construct_datablock_entry_list_from_yaml(plug: Plugin) -> List[RelativeDataBlockValue]:
     """
     Parses a relative datablock and returns its data as a list of
     RelativeDataBlockValue instances.
@@ -891,7 +888,7 @@ def construct_datablock_entry_list_from_yaml(plug: Plugin) -> list:
     return final_list
 
 
-def create_datablock_from_entry_list(relative_data_block_values: list) -> dict:
+def create_datablock_from_entry_list(relative_data_block_values: list) -> Dict[str, Any]:
     """
     Creates the datablock from a list of RelativeDataBlockValues.
     :param relative_data_block_values: The list of RelativeDataBlockValues.
