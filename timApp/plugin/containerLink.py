@@ -202,9 +202,7 @@ def get_inner_plugin_instance(plugin: str):
 
 
 def has_auto_md(data, default: bool):
-    if AUTOMD in data:
-        return data[AUTOMD]
-    return default
+    return data.get(AUTOMD, default)
 
 
 def call_plugin_resource(plugin, filename, args=None):
