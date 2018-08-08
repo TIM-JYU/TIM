@@ -218,6 +218,15 @@ export class ShowCourseListDialogController extends DialogController<{ params: I
             this.refresh();
         }
     }
+
+    /**
+     * "some string" -> "Some string"
+     * @param {string} str String to capitalize.
+     * @returns {string} Capitalized string.
+     */
+    private firstToUpper(str: string) {
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
 }
 
 registerDialogComponent("timCourseListDialog",
@@ -228,30 +237,32 @@ registerDialogComponent("timCourseListDialog",
     <dialog-header>
     </dialog-header>
     <dialog-body>
-    <div class="col-md-8">
-        <h5>Listing available courses <a><i ng-if="$ctrl.toggleCollapseAll"
-        ng-click="$ctrl.toggleAll()" title="Collapse all subjects" class="glyphicon glyphicon-minus-sign"></i>
-        <i ng-if="!$ctrl.toggleCollapseAll" ng-click="$ctrl.toggleAll()" title="Open all subjects"
-        class="glyphicon glyphicon-plus-sign"></i></a></h5>
+    <div>
+        <div class="col-md-8">
+            <h5>Listing available courses <a><i ng-click="$ctrl.toggleAll()" class="glyphicon"
+            ng-class="$ctrl.toggleCollapseAll ? 'glyphicon-minus-sign' : 'glyphicon-plus-sign'"></i></a></h5>
+        </div>
+        <div class="input-group col-md-4">
+            <input class="form-control" ng-model="$ctrl.filterText" placeholder="Input filter word"
+            title="Filter by course code and title" ng-keypress="$ctrl.keyPressed($event)">
+            <span class="input-group-addon btn" ng-click="$ctrl.refresh()" title="Filter courses">
+            <i class="glyphicon glyphicon-search"></i></span>
+        </div>
     </div>
-    <div class="input-group col-md-4">
-        <input class="form-control" ng-model="$ctrl.filterText" placeholder="Input filter word"
-        title="Filter by course code and title" ng-keypress="$ctrl.keyPressed($event)">
-        <span class="input-group-addon btn" ng-click="$ctrl.refresh()" title="Filter courses">
-        <i class="glyphicon glyphicon-search"></i></span>
-    </div>
-    <div class="col-md-12">
+    <div>
+        <h5></h5>
         <ul class="list-unstyled" ng-if="$ctrl.grouped.length > 0" id="courses">
             <li ng-repeat="subject in $ctrl.grouped" ng-if="subject.docs.length > 0">
                 <span class="cursor-pointer" ng-click="subject.closed = !subject.closed">
                     <a><span style="width: 1.3em;" class="glyphicon"
                     ng-class="subject.closed ? 'glyphicon-plus' : 'glyphicon-minus'"></span></a>
-                    <span>{{subject.subject}} <i>({{subject.docs.length}} <ng-pluralize count="subject.docs.length"
+                    <span>{{$ctrl.firstToUpper(subject.subject)}} <i>({{subject.docs.length}} <ng-pluralize
+                    count="subject.docs.length"
                     when="{'1': 'course', 'other': 'courses'}"></ng-pluralize>)</i></span>
                 </span>
-                <ul class="list-unstyled well well-sm" ng-hide="subject.closed">
+                <ul class="list-unstyled" ng-hide="subject.closed">
                     <li ng-repeat="course in subject.docs | orderBy:$ctrl.courseCode"
-                    ng-if="$ctrl.courseCode(course)">
+                    ng-if="$ctrl.courseCode(course)" style="text-indent: 20px;">
                         <a href="/view/{{course.path}}" title="Open {{course.title}}">
                         <span class="btn-xs btn-primary">{{$ctrl.courseCode(course)}}</span>
                          {{course.title}}
