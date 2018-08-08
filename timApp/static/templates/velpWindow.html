@@ -26,7 +26,7 @@
                 <p class="velpInfoText truncate">{{ $ctrl.velp.default_comment }}</p>
 
                 <div class="tags">
-                    <span class="float-right" ng-show="$ctrl.advancedOn"
+                    <span class="pull-right" ng-show="$ctrl.advancedOn"
                           ng-class="['glyphicon', 'glyphicon-tag']"
                           ng-repeat="label in $ctrl.velp.labels" title="label.content"
                           ng-style="{ color: $ctrl.getColor(label) }"></span>
@@ -40,7 +40,7 @@
 
      --><div ng-if="$ctrl.velp.edit" class="content">
                             <span ng-click="$ctrl.toggleVelpToEdit(); $event.stopPropagation();"
-                            ng-class="['float-right', 'glyphicon', 'glyphicon-remove', 'clickable-icon']"></span>
+                            ng-class="['pull-right', 'glyphicon', 'glyphicon-remove', 'clickable-icon']"></span>
 
         <form name="saveVelpForm" ng-submit="$ctrl.saveVelp(saveVelpForm)">
             <p class="header"><input name="velpName" type="text" ng-model="$ctrl.velp.content"
@@ -63,7 +63,7 @@
 
             <fieldset ng-show="$ctrl.advancedOn">
                 <legend>Labels
-                    <span class="float-right"
+                    <span class="pull-right"
                           ng-class="['glyphicon', 'glyphicon-tag']"
                           ng-repeat="l in $ctrl.velp.labels"
                           ng-style="{ color: $ctrl.getColor(l) }">
@@ -81,7 +81,7 @@
                             {{ l.content }}
                         </label>
 
-                        <span class="float-right" ng-click="$ctrl.toggleLabelToEdit(l)"
+                        <span class="pull-right" ng-click="$ctrl.toggleLabelToEdit(l)"
                               ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']">
                         </span>
                         <br>
@@ -94,7 +94,7 @@
                                ng-change="$ctrl.setLabelValid($ctrl.labelToEdit)"
                                ng-model="$ctrl.labelToEdit.content">
 
-                        <span class="float-right" ng-click="$ctrl.toggleLabelToEdit(l)"
+                        <span class="pull-right" ng-click="$ctrl.toggleLabelToEdit(l)"
                               ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']">
                         </span>
                         <input class="timButton" type="button"
