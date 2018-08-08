@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Match, List, Union, Tuple
 
+from elasticsearch.helpers import bulk
 from elasticsearch_dsl import connections, Document, Text, Keyword, Integer, Search
 from flask import Blueprint, json, stream_with_context, Response
 from flask import abort
@@ -516,10 +517,17 @@ def elasticsearch_create_index():
                 doc_id, par_id, par = get_doc_par_id(line)
                 par_dict = json.loads(f"{{{par}}}")
                 par_md = par_dict['md']
-                new_par = Paragraph(meta={'id': f'{doc_id}.{par_id}'}, doc_id=doc_id, par_id=par_id, body=par_md)
-                new_par.save()
-                yield f'{doc_id}.{par_id}\n'
-    return Response(stream_with_context(generate()), mimetype='text/plain')
+                yield {'_index': 'pars',
+                       '_type': 'doc',
+                       '_id': f'{doc_id}.{par_id}',
+                       "_source": {
+                           'doc_id': doc_id,
+                           'par_id': par_id,
+                           'body': par_md}
+                       }
+
+    bulk(es, generate())
+    return ok_response()
 
 
 @search_routes.route("elasticsearch")
@@ -536,7 +544,6 @@ def elasticsearch():
 
 
 @search_routes.route("createContentFile")
-
 def create_search_file():
     """
     Groups all TIM-paragraphs under documents and combines them into a single file.
