@@ -126,7 +126,10 @@ export class SearchBoxCtrl implements IController {
         optionsStorage: null | boolean[]};
     private folderSuggestions: string[] = []; // A list of folder path suggestions.
     private resultsDialog: ShowSearchResultController | null = null; // The most recent search result dialog.
-    private timeWarningLimit: number = 20;  // Gives a warning about long search time if over this.
+    private timeWarningLimit: number = 20;
+    private maxDocResults: number = 1000;
+
+    // Gives a warning about long search time if over this.
 
     /**
      * SearchBox constructor.
@@ -324,12 +327,12 @@ export class SearchBoxCtrl implements IController {
         const [err, response] = await to($http<ISearchResultsInfo>({
             method: "GET",
             params: {
-                query: this.query,
-                folder: this.folder,
                 caseSensitive: this.caseSensitive,
+                folder: this.folder,
+                query: this.query,
                 regex: this.regex,
-                searchWholeWords: this.searchWholeWords,
                 searchOwned: this.searchOwned,
+                searchWholeWords: this.searchWholeWords,
             },
             url: "/search/titles",
         }));
@@ -355,14 +358,15 @@ export class SearchBoxCtrl implements IController {
         const [err, response] = await to($http<ISearchResultsInfo>({
             method: "GET",
             params: {
-                query: this.query,
-                folder: this.folder,
                 caseSensitive: this.caseSensitive,
-                regex: this.regex,
+                folder: this.folder,
                 ignorePlugins: this.ignorePlugins,
                 // maxResults: 100000,
-                searchWholeWords: this.searchWholeWords,
+                maxDocResults: this.maxDocResults,
+                query: this.query,
+                regex: this.regex,
                 searchOwned: this.searchOwned,
+                searchWholeWords: this.searchWholeWords,
             },
             url: "/search",
         }));
@@ -392,8 +396,8 @@ export class SearchBoxCtrl implements IController {
                 folder: this.folder,
                 query: this.query,
                 regex: this.regex,
-                searchWholeWords: this.searchWholeWords,
                 searchOwned: this.searchOwned,
+                searchWholeWords: this.searchWholeWords,
             },
             url: "/search/tags",
         }));
@@ -530,6 +534,16 @@ timApp.component("searchBox", {
                            typeahead-min-length="1">
                 </div>
            </div>
+           <div class="form-group" title="Input maximum number of results to give from a single document">
+                <label for="max-doc-results-selector" class="col-sm-5 control-label font-weight-normal"
+                style="text-align:left;">Max results / document:</label>
+                <div class="col-sm-7">
+                    <input ng-model="$ctrl.maxDocResults" name="max-doc-results-selector"
+                           type="number" class="form-control" id="folder-selector"
+                           placeholder="Input max # of results per document">
+                </div>
+           </div>
+
         <label class="font-weight-normal" title="Distinguish between upper and lower case letters">
             <input type="checkbox" ng-model="$ctrl.caseSensitive"> Case sensitive</label>
         <label class="font-weight-normal" title="Allow regular expressions">

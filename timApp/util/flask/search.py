@@ -61,18 +61,18 @@ def get_subfolders():
     return json_response(folders_viewable)
 
 
-def get_common_search_params(request) -> Tuple[str, str, bool, bool, bool, bool]:
+def get_common_search_params(req) -> Tuple[str, str, bool, bool, bool, bool]:
     """
     Picks parameters that are common in the search routes from a request.
-    :param request:
+    :param req: Request.
     :return: A tuple with six values.
     """
-    query = request.args.get('query', '')
-    case_sensitive = get_option(request, 'caseSensitive', default=False, cast=bool)
-    folder = request.args.get('folder', '')
-    regex = get_option(request, 'regex', default=False, cast=bool)
-    search_owned_docs = get_option(request, 'searchOwned', default=False, cast=bool)
-    search_whole_words = get_option(request, 'searchWholeWords', default=False, cast=bool)
+    query = req.args.get('query', '')
+    case_sensitive = get_option(req, 'caseSensitive', default=False, cast=bool)
+    folder = req.args.get('folder', '')
+    regex = get_option(req, 'regex', default=False, cast=bool)
+    search_owned_docs = get_option(req, 'searchOwned', default=False, cast=bool)
+    search_whole_words = get_option(req, 'searchWholeWords', default=False, cast=bool)
     return query, folder, regex, case_sensitive, search_whole_words, search_owned_docs
 
 
@@ -281,7 +281,7 @@ class ParResult:
         """
         :return: True if the object contains results.
         """
-        return len(self.word_results) > 0
+        return len(self.word_results) > 0 or self.alt_num_results > 0
 
     def to_json(self):
         """
@@ -309,14 +309,16 @@ class TitleResult:
     Title search result containing a list of match data.
     """
 
-    def __init__(self, word_results=None):
+    def __init__(self, word_results=None, alt_num_results: int = 0):
         """
         Title result object constructor.
         :param word_results: List of word results from the title string.
+        :param alt_num_results: Alternative to listing word results.
         """
         if word_results is None:
             word_results = []
         self.word_results = word_results
+        self.alt_num_results = alt_num_results
 
     def add_result(self, result: WordResult) -> None:
         """
@@ -330,7 +332,7 @@ class TitleResult:
         """
         :return: Whether the object contains any results.
         """
-        return len(self.word_results) > 0
+        return len(self.word_results) > 0 or self.alt_num_results > 0
 
     def to_json(self):
         """
@@ -343,9 +345,12 @@ class TitleResult:
 
     def get_match_count(self) -> int:
         """
-        :return: How many match words the paragraph has.
+        :return: How many match words the title has.
         """
-        return len(self.word_results)
+        if len(self.word_results) > 0:
+            return len(self.word_results)
+        else:
+            return self.alt_num_results
 
 
 class DocResult:
@@ -493,6 +498,9 @@ def get_doc_par_id(line: str) -> Union[Tuple[int, str, str], None]:
 
 
 class Paragraph(Document):
+    """
+    Paragraph data to be used in elasticsearch.
+    """
     body = Text(fielddata=True)  # md
     plugin = Text()
     setting = Text()
@@ -569,7 +577,6 @@ def elasticsearch():
     for hit in response:
         try:
             highlighted_hits = hit.meta.highlight['body']
-            # print(highlighted_hits)
             par_word_result_count = len(highlighted_hits)
             total_word_result_count += par_word_result_count
             doc_info = DocEntry.find_by_id(hit.doc_id)
@@ -585,7 +592,7 @@ def elasticsearch():
                 doc_result.add_par_result(par_result)
                 continue
             else:
-                doc_result = DocResult(doc_info)
+                doc_result = DocResult(doc_info)#
                 doc_result.add_par_result(par_result)
                 results.append(doc_result)
                 doc_result = None
@@ -719,11 +726,13 @@ def title_search():
                 d_title = d.title
                 matches = list(term_regex.finditer(d_title))
                 if matches:
-                    for m in matches:
-                        result = WordResult(match_word=m.group(0),
-                                            match_start=m.start(),
-                                            match_end=m.end())
-                        title_result.add_result(result)
+                    title_result.alt_num_results = len(matches)
+                    # for m in matches:
+                    #     result = WordResult(match_word=m.group(0),
+                    #                         match_start=m.start(),
+                    #                         match_end=m.end())
+                    #     title_result.add_result(result)
+
                 if title_result.has_results():
                     r = DocResult(d)
                     r.add_title_result(title_result)
@@ -791,6 +800,7 @@ def search():
 
     (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
     max_results = get_option(request, 'maxResults', default=1000000, cast=int)
+    max_doc_results = get_option(request, 'maxDocResults', default=10000, cast=int)
     ignore_plugins = get_option(request, 'ignorePlugins', default=False, cast=bool)
 
     validate_query(query, search_whole_words)
@@ -849,6 +859,7 @@ def search():
 
     for line in output:
         try:
+            # Any line shorter than this is broken.
             if line and len(line) > 10:
 
                 # The file is supposed to contain doc_id and pars in a list for each document.
@@ -874,7 +885,7 @@ def search():
                 doc_result = DocResult(doc_info)
                 edit_access = has_edit_access(doc_info)
 
-                for par in pars:
+                for i, par in enumerate(pars):
                     par_id = par['id']
                     md = par['md']
 
@@ -898,16 +909,27 @@ def search():
                     matches = list(term_regex.finditer(md))
 
                     if matches:
-                        for m in matches:
-                            result = WordResult(match_word=m.group(0),
-                                                match_start=m.start(),
-                                                match_end=m.end())
-                            par_result.add_result(result)
+                        # Word results aren't used for anything currently,
+                        # so to save time and bandwidth they are replaced by a number.
+                        par_result.alt_num_results = len(matches)
+                        # for m in matches:
+                        #     result = WordResult(match_word=m.group(0),
+                        #                         match_start=m.start(),
+                        #                         match_end=m.end())
+                        #     par_result.add_result(result)
                         par_result.preview = preview_result(md, query, matches[0])
 
                     # Don't add empty par result (in error cases).
                     if par_result.has_results():
                         doc_result.add_par_result(par_result)
+
+                    # End paragraph match search if limit has been reached, but
+                    # don't break and mark as incomplete if this was the last paragraph.
+                    if doc_result.get_par_match_count() > max_doc_results and i != len(pars)-1:
+                        incomplete_search_reason = f"one or more document has over the maximum " \
+                                                   f"of {max_doc_results} results"
+                        doc_result.incomplete = True
+                        break
 
                 # If no valid paragraph results, skip document.
                 if doc_result.has_results():
