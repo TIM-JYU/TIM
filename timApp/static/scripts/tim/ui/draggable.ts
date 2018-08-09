@@ -187,7 +187,7 @@ export class DraggableController implements IController {
         this.dragClick = fn;
     }
 
-    setCloseFn(fn: () => void) {
+    setCloseFn(fn: (() => void) | undefined) {
         this.closeFn = fn;
     }
 

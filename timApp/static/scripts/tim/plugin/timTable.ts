@@ -6,6 +6,8 @@ import {ParCompiler} from "../editor/parCompiler";
 import {openEditorSimple} from "../editor/pareditor";
 import {$http, $timeout, $sce} from "../util/ngimport";
 import {Binding} from "../util/utils";
+import {openTableEditorToolbar, hideToolbar} from "./timTableEditorToolbar";
+import {onClick} from "../document/eventhandlers";
 
 const styleToHtml: { [index: string]: string } = {
         backgroundColor: "background-color",
@@ -189,8 +191,6 @@ function isPrimitiveCell(cell: CellEntity): cell is CellType {
 }
 
 export class TimTableController implements IController {
-    readonly DEFAULT_CELL_BGCOLOR = "#EEEEEE";
-
     private static $inject = ["$scope", "$element", "$sce"];
     public viewctrl?: ViewCtrl;
     public cellDataMatrix: ICell[][] = [];
@@ -206,12 +206,10 @@ export class TimTableController implements IController {
 
     private addRowButtonText: string = "";
 
-    // Variables for toolbar
-    private selectedCellBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
-    private previousBackgroundColor: string = this.DEFAULT_CELL_BGCOLOR;
-
     constructor(private scope: IScope, private element: IRootElementService) {
         this.keyDownPressedTable = this.keyDownPressedTable.bind(this);
+        this.onClick = this.onClick.bind(this);
+        this.setCellTextAlign = this.setCellTextAlign.bind(this);
     }
 
     /**
@@ -240,10 +238,16 @@ export class TimTableController implements IController {
             this.viewctrl.addTable(this, parId);
         }
         document.addEventListener("keyup", this.keyDownPressedTable);
+        // document.addEventListener("click", this.onClick);
+        onClick("body", ($this, e) => {
+            this.onClick(e);
+        });
     }
 
     $doCheck() {
-        if (this.lastEditedCell) {
+        // TODO reference timTableEditorToolbar and ask if the color is different
+
+        /*if (this.lastEditedCell) {
             const cell = this.cellDataMatrix[this.lastEditedCell.row][this.lastEditedCell.col];
             if (cell.backgroundColor) {
                 if (cell.backgroundColor !== this.selectedCellBackgroundColor) {
@@ -254,7 +258,8 @@ export class TimTableController implements IController {
                 cell.backgroundColor = this.selectedCellBackgroundColor;
                 this.setCellBackgroundColor();
             }
-        }
+        }*/
+
     }
 
     /**
@@ -262,6 +267,19 @@ export class TimTableController implements IController {
      */
     $onDestroy() {
         document.removeEventListener("keyup", this.keyDownPressedTable);
+        //document.removeEventListener("click", this.onClick);
+    }
+
+    private onClick(e: JQueryEventObject) {
+        if (this.mouseInTable) {
+            if (this.isInEditMode()) {
+                openTableEditorToolbar({callbacks: {
+                setTextAlign: this.setCellTextAlign,
+                setCellBackgroundColor: this.setCellBackgroundColor}, activeTable: this } );
+            }
+        } else {
+            hideToolbar(this);
+        }
     }
 
     /**
@@ -795,12 +813,12 @@ export class TimTableController implements IController {
 
     private setActiveCell(rowi: number, coli: number) {
         this.lastEditedCell = {row: rowi, col: coli};
-        const cell = this.cellDataMatrix[rowi][coli];
+        /*const cell = this.cellDataMatrix[rowi][coli];
         if (cell.backgroundColor) {
             this.selectedCellBackgroundColor = cell.backgroundColor;
         } else {
             this.selectedCellBackgroundColor = this.DEFAULT_CELL_BGCOLOR; ///a
-        }
+        } */
     }
 
     /**
@@ -1309,10 +1327,39 @@ export class TimTableController implements IController {
 
     //<editor-fold desc="Toolbar">
 
+    async setCellBackgroundColor(value: string) {
+        // TODO implement
+    }
+
+    async setCellTextAlign(value: string) {
+        this.setCellStyleAttribute("setCellTextAlign", "textAlign", value);
+    }
+
+    /**
+     * Tells the server to set a cell style attribute.
+     * @param route The route to call.
+     * @param value The value of the attribute.
+     */
+    async setCellStyleAttribute(route: string, key: string, value: string) {
+        if (!this.viewctrl || !this.lastEditedCell) {
+            return;
+        }
+
+        const parId = this.getOwnParId();
+        const docId = this.viewctrl.item.id;
+        const rowId = this.lastEditedCell.row;
+        const colId = this.lastEditedCell.col;
+
+        const response = await $http.post<TimTable>("/timTable/" + route,
+            {docId, parId, rowId, colId, [key]: value});
+        this.data = response.data;
+        this.reInitialize();
+    }
+
     /**
      * Tells the server to change the background color of the selected cell.
      */
-    async setCellBackgroundColor() {
+    /*async setCellBackgroundColor() {
         if (!this.viewctrl || !this.lastEditedCell) {
             return;
         }
@@ -1328,7 +1375,7 @@ export class TimTableController implements IController {
         this.data = response.data;
         this.reInitialize();
         this.selectedCellBackgroundColor = this.cellDataMatrix[rowId][colId].backgroundColor;
-    }
+    }*/
 
     //</editor-fold>
 
@@ -1423,17 +1470,12 @@ timApp.component("timTable", {
     bindings: {
         data: "<",
     },
-// uib-dropdown
-// https://angular-ui.github.io/bootstrap/#!#dropdown
     require: {
         viewctrl: "?^timView",
     },
     template: `<div ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
     <div class="timTableContentDiv no-highlight">
-    <div class="timTableEditBar">
-        <input type="color" title="Change cell background color" class="colorchange-button" ng-model="$ctrl.selectedCellBackgroundColor"/>
-    </div>
     <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
             ng-click="$ctrl.addColumnButtonClick()"><span class="glyphicon glyphicon-plus"></span></button>
     <button class="timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.isInEditMode()"

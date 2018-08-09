@@ -197,13 +197,14 @@ export function showDialog<T extends Dialog<T>>(component: T["component"],
                                                 opts: {
                                                     saveKey?: string,
                                                     classes?: string[],
+                                                    showMinimizeButton?: boolean,
                                                     size?: "sm" | "md" | "lg",
                                                     absolute?: boolean,
                                                     forceMaximized?: boolean,
                                                 } = {}): IModalInstance<T["ret"]> {
     $templateCache.put("uib/template/modal/window.html", `
 <div tim-draggable-fixed
-     click="true"
+     click="${opts.showMinimizeButton || true }"
      resize="true"
      save="${opts.saveKey || component}"
      absolute="${opts.absolute || false}"

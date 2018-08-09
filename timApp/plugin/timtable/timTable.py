@@ -516,7 +516,7 @@ def tim_table_set_cell_foreground_color():
     return set_cell_style_attribute(doc_id, par_id, row_id, col_id, 'color', color)
 
 
-@timTable_plugin.route("setTextAlign", methods=["POST"])
+@timTable_plugin.route("setCellTextAlign", methods=["POST"])
 def tim_table_set_cell_text_align():
     """
     Sets a cell's text align.
