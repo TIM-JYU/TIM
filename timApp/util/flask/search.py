@@ -10,7 +10,7 @@ from typing import Match, List, Union, Tuple
 from flask import Blueprint, json, Response, stream_with_context
 from flask import abort
 from flask import request
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, lazyload
 
 from timApp.auth.accesshelper import has_view_access, verify_admin, has_edit_access
 from timApp.auth.accesstype import AccessType
@@ -761,9 +761,9 @@ def search():
 
                 # The file is supposed to contain doc_id and pars in a list for each document.
                 line_info = json.loads(line)
-
                 doc_id = line_info['doc_id']
-                doc_info = DocEntry.find_by_id(doc_id)
+                # TODO: Handle aliases.
+                doc_info = DocEntry.query.filter_by(id=doc_id).options(lazyload(DocEntry._block)).first()
 
                 # If doc isn't in the search path, continue to the next one.
                 if not doc_info.path.startswith(folder):
