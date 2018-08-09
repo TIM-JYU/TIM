@@ -113,7 +113,7 @@ export class SearchBoxCtrl implements IController {
     private searchDocNames: boolean = true; // Doc title search. On by default.
     private searchTags: boolean = true; // Tag search. On by default.
     private searchWords: boolean = true; // Content search. On by default.
-    private searchWholeWords: boolean = false; // Whole word search.
+    private searchWholeWords: boolean = true; // Whole word search.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
 
     // Controller's private attributes:
@@ -534,13 +534,13 @@ timApp.component("searchBox", {
                            typeahead-min-length="1">
                 </div>
            </div>
-           <div class="form-group" title="Input maximum number of results to give from a single document">
-                <label for="max-doc-results-selector" class="col-sm-5 control-label font-weight-normal"
-                style="text-align:left;">Max results / document:</label>
-                <div class="col-sm-7">
+           <div class="form-group" title="Input maximum number of results to get from a single document">
+                <label for="max-doc-results-selector" class="col-sm-6 control-label font-weight-normal"
+                style="text-align:left;">Max results per document:</label>
+                <div class="col-sm-6">
                     <input ng-model="$ctrl.maxDocResults" name="max-doc-results-selector"
                            type="number" class="form-control" id="folder-selector"
-                           placeholder="Input max # of results per document">
+                           placeholder="Input a result limit">
                 </div>
            </div>
 

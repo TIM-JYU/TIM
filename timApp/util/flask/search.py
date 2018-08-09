@@ -8,7 +8,7 @@ from typing import Match, List, Union, Tuple
 
 from elasticsearch.helpers import bulk
 from elasticsearch_dsl import connections, Document, Text, Keyword, Integer, Search
-from flask import Blueprint, json, stream_with_context, Response
+from flask import Blueprint, json
 from flask import abort
 from flask import request
 from sqlalchemy.orm import joinedload
@@ -76,93 +76,113 @@ def get_common_search_params(req) -> Tuple[str, str, bool, bool, bool, bool]:
     return query, folder, regex, case_sensitive, search_whole_words, search_owned_docs
 
 
-@search_routes.route('/tags')
-def tag_search():
+class Paragraph(Document):
     """
-    A route for document tag search.
-    :return: Tag search results response.
+    Paragraph data to be used in elasticsearch.
     """
-    (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
-    results = []
+    body = Text(fielddata=True)  # md
+    plugin = Text()
+    setting = Text()
+    par_id = Keyword()
+    doc_id = Integer()
 
-    # PostgreSQL doesn't support regex directly, so as workaround get all tags below the search folder
-    # from the database and then apply regex search on them.
-    any_tag = "%%"
-    if search_owned_docs:
-        custom_filter = DocEntry.id.in_(get_current_user_object().get_personal_group().accesses.
-                                        filter_by(type=AccessType.owner.value)
-                                        .with_entities(BlockAccess.block_id)) & \
-                        DocEntry.id.in_(Tag.query.
-                                        filter(Tag.name.ilike(any_tag) & ((Tag.expires > datetime.now()) |
-                                                                          (Tag.expires == None))).
-                                        with_entities(Tag.block_id))
-    else:
-        custom_filter = DocEntry.id.in_(Tag.query.
-                                        filter(Tag.name.ilike(any_tag) & ((Tag.expires > datetime.now()) |
-                                                                          (Tag.expires == None))).
-                                        with_entities(Tag.block_id))
-    query_options = joinedload(DocEntry._block).joinedload(Block.tags)
-    docs = get_documents(filter_user=get_current_user_object(), filter_folder=folder,
-                         search_recursively=True, custom_filter=custom_filter,
-                         query_options=query_options)
+    class Index:
+        name = 'pars'
 
-    tag_result_count = 0
-    error_list = []
-    current_doc = "before search"
-    current_tag = "before search"
-    if case_sensitive:
-        flags = re.DOTALL
-    else:
-        flags = re.DOTALL | re.IGNORECASE
-    if regex:
-        term = query
-    else:
-        term = re.escape(query)
-    if search_whole_words:
-        term = fr"\b{term}\b"
+    def is_plugin_or_setting(self) -> bool:
+        if self.plugin or self.setting:
+            return True
+        else:
+            return False
+
+    def save(self, **kwargs):
+        return super(Paragraph, self).save(**kwargs)
+
+
+# @search_routes.route("elasticsearch/createIndex")
+def elasticsearch_create_index():
+    """
+    Create index for elasticsearch.
+    :return: Ok response.
+    """
+    dir_path = Path(app.config['FILES_PATH']) / 'pars'
     try:
-        term_regex = re.compile(term, flags)
-        for d in docs:
-            try:
-                current_doc = d.path
-                m_tags = []
-                m_num = 0
-                for tag in d.block.tags:
-                    current_tag = tag.name
-                    matches = list(term_regex.finditer(tag.name))
-                    if matches:
-                        match_count = len(matches)
-                        if not query:
-                            match_count = 1
-                        m_num += match_count
-                        tag_result_count += match_count
-                        m_tags.append(tag)
-
-                if m_num > 0:
-                    results.append({'doc': d, 'matching_tags': m_tags, 'num_results': m_num})
-            except Exception as e:
-                error = get_error_message(e)
-                error_list.append({
-                    'error': error,
-                    'doc_path': current_doc,
-                    'tag_name': current_tag
-                })
-                log_search_error(error, query, current_doc, tag=current_tag)
-    except sre_constants.error as e:
-        abort(400, f"Invalid regex: {str(e)}")
+        subprocess.Popen(f'grep -R "" --include="current" . > {RAW_CONTENT_FILE_NAME} 2>&1',
+                         cwd=dir_path,
+                         shell=True).communicate()
     except Exception as e:
-        abort(400, get_error_message(e))
-    else:
+        abort(400,
+              f"Failed to create preliminary file {dir_path / RAW_CONTENT_FILE_NAME}: {get_error_message(e)}")
+
+    def generate():
+        es.indices.delete(index='pars', ignore=[400, 404])
+        Paragraph.init()
+        with open(dir_path / RAW_CONTENT_FILE_NAME, "r+", encoding='utf-8') as file:
+            for line in file:
+                doc_id, par_id, par = get_doc_par_id(line)
+                par_dict = json.loads(f"{{{par}}}")
+                par_md = par_dict['md']
+                yield {'_index': 'pars',
+                       '_type': 'doc',
+                       '_id': f'{doc_id}.{par_id}',
+                       "_source": {
+                           'doc_id': doc_id,
+                           'par_id': par_id,
+                           'body': par_md}
+                       }
+
+    bulk(es, generate())
+    return ok_response()
+
+
+# @search_routes.route("elasticsearch")
+def elasticsearch():
+    """
+    A way to perform search using elasticsearch (https://pypi.org/project/elasticsearch-dsl/).
+    Note: Performance for comprehensive search with large amount of resutls is lower than grep-search,
+    so currently unused.
+    With some changes this would suit a search where results are divided on different pages showing X results each
+    (scan-method in Search turns this into generator that yields results on demand).
+    :return: Search results.
+    """
+    query = request.args.get('q', '')
+    s = Search(index="pars").query("match", body=query).highlight('body', fragment_size=1, number_of_fragments=1000). \
+        sort('doc_id').extra(explain=True)
+    s.aggs.bucket('per_paragraph', 'terms', field='body')
+    response = s[0:s.count()].execute()
+    results = []
+    doc_result = None
+    total_word_result_count = 0
+    for hit in response:
         try:
-            return json_response({'results': results,
-                                  'incomplete_search_reason': "",
-                                  'tag_result_count': tag_result_count,
-                                  'errors': error_list
-                                  })
-        except MemoryError:
-            abort(400, "MemoryError: results too large")
+            highlighted_hits = hit.meta.highlight['body']
+            par_word_result_count = len(highlighted_hits)
+            total_word_result_count += par_word_result_count
+            doc_info = DocEntry.find_by_id(hit.doc_id)
+            if not doc_info:
+                continue
+            par_result = ParResult(hit.par_id,
+                                   preview="",
+                                   alt_num_results=par_word_result_count)
+            if not doc_result:
+                doc_result = DocResult(doc_info)
+
+            if doc_result.doc_info.id == hit.doc_id:
+                doc_result.add_par_result(par_result)
+                continue
+            else:
+                doc_result = DocResult(doc_info)
+                doc_result.add_par_result(par_result)
+                results.append(doc_result)
+                doc_result = None
         except Exception as e:
-            abort(400, f"Error encountered while formatting JSON-response: {e}")
+            log_error(get_error_message(e))
+    if doc_result:
+        results.append(doc_result)
+    return json_response(result_response(
+        results,
+        word_result_count=total_word_result_count,
+        incomplete_search_reason=""))
 
 
 def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str = "") -> None:
@@ -424,6 +444,48 @@ class DocResult:
         return count
 
 
+def result_response(results, title_result_count: int = 0, word_result_count: int = 0, incomplete_search_reason=""):
+    """
+    Formats result data for JSON-response.
+    :param results: List of result dictionaries.
+    :param title_result_count: Number of title results.
+    :param word_result_count: Number of paragraph word results.
+    :param incomplete_search_reason: Whether search was cut short.
+    :return: Dictionary containing search results.
+    """
+    return {
+        'title_result_count': title_result_count,
+        'word_result_count': word_result_count,
+        'errors': [],
+        'incomplete_search_reason': incomplete_search_reason,
+        'results': results,
+    }
+
+
+def validate_query(query: str, search_whole_words: bool) -> None:
+    """
+    Abort if query is too short.
+    :param query: Search word(s).
+    :param search_whole_words: Whole words search has different limits.
+    :return: None.
+    """
+    if len(query.strip()) < MIN_QUERY_LENGTH and not search_whole_words:
+        if query.strip().lower() not in WHITE_LIST:
+            abort(400, f'Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped.')
+    if len(query.strip()) < MIN_WHOLE_WORDS_QUERY_LENGTH and search_whole_words:
+        abort(400, f'Whole word search text must be at least {MIN_WHOLE_WORDS_QUERY_LENGTH} character(s) '
+                   f'long with whitespace stripped.')
+
+
+def get_error_message(e: Exception):
+    """
+    Gives error message with error class.
+    :param e: Exception.
+    :return: String 'ErrorClass: reason'.
+    """
+    return f"{str(e.__class__.__name__)}: {str(e)}"
+
+
 def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = True) -> bool:
     """
     Check whether a document is in document entry list.
@@ -464,7 +526,7 @@ def add_doc_info_line(doc_id: int, par_data, remove_deleted_pars: bool = True, a
         if remove_deleted_pars:
             # If par can't be found (deleted), don't add it.
             try:
-                doc_info.document.get_paragraph(par_id)
+                doc_info.document.has_paragraph(par_id)
             except TimDbException:
                 continue
         # Cherry pick attributes, because others are unnecessary for the search.
@@ -495,115 +557,6 @@ def get_doc_par_id(line: str) -> Union[Tuple[int, str, str], None]:
         return doc_id, par_id, par_data
     else:
         return None
-
-
-class Paragraph(Document):
-    """
-    Paragraph data to be used in elasticsearch.
-    """
-    body = Text(fielddata=True)  # md
-    plugin = Text()
-    setting = Text()
-    par_id = Keyword()
-    doc_id = Integer()
-
-    class Index:
-        name = 'pars'
-
-    def is_plugin_or_setting(self) -> bool:
-        if self.plugin or self.setting:
-            return True
-        else:
-            return False
-
-    def save(self, **kwargs):
-        return super(Paragraph, self).save(**kwargs)
-
-
-# @search_routes.route("elasticsearch/createIndex")
-def elasticsearch_create_index():
-    """
-    Create index for elasticsearch.
-    :return: Ok response.
-    """
-    dir_path = Path(app.config['FILES_PATH']) / 'pars'
-    try:
-        subprocess.Popen(f'grep -R "" --include="current" . > {RAW_CONTENT_FILE_NAME} 2>&1',
-                         cwd=dir_path,
-                         shell=True).communicate()
-    except Exception as e:
-        abort(400,
-              f"Failed to create preliminary file {dir_path / RAW_CONTENT_FILE_NAME}: {get_error_message(e)}")
-
-    def generate():
-        es.indices.delete(index='pars', ignore=[400, 404])
-        Paragraph.init()
-        with open(dir_path / RAW_CONTENT_FILE_NAME, "r+", encoding='utf-8') as file:
-            for line in file:
-                doc_id, par_id, par = get_doc_par_id(line)
-                par_dict = json.loads(f"{{{par}}}")
-                par_md = par_dict['md']
-                yield {'_index': 'pars',
-                       '_type': 'doc',
-                       '_id': f'{doc_id}.{par_id}',
-                       "_source": {
-                           'doc_id': doc_id,
-                           'par_id': par_id,
-                           'body': par_md}
-                       }
-
-    bulk(es, generate())
-    return ok_response()
-
-
-# @search_routes.route("elasticsearch")
-def elasticsearch():
-    """
-    A way to perform search using elasticsearch (https://pypi.org/project/elasticsearch-dsl/).
-    Note: Performance for comprehensive search with large amount of resutls is lower than grep-search,
-    so currently unused.
-    With some changes this would suit a search where results are divided on different pages showing X results each
-    (scan-method in Search turns this into generator that yields results on demand).
-    :return: Search results.
-    """
-    query = request.args.get('q', '')
-    s = Search(index="pars").query("match", body=query).highlight('body', fragment_size=1, number_of_fragments=1000). \
-        sort('doc_id').extra(explain=True)
-    s.aggs.bucket('per_paragraph', 'terms', field='body')
-    response = s[0:s.count()].execute()
-    results = []
-    doc_result = None
-    total_word_result_count = 0
-    for hit in response:
-        try:
-            highlighted_hits = hit.meta.highlight['body']
-            par_word_result_count = len(highlighted_hits)
-            total_word_result_count += par_word_result_count
-            doc_info = DocEntry.find_by_id(hit.doc_id)
-            if not doc_info:
-                continue
-            par_result = ParResult(hit.par_id,
-                                   preview="",
-                                   alt_num_results=par_word_result_count)
-            if not doc_result:
-                doc_result = DocResult(doc_info)
-
-            if doc_result.doc_info.id == hit.doc_id:
-                doc_result.add_par_result(par_result)
-                continue
-            else:
-                doc_result = DocResult(doc_info)#
-                doc_result.add_par_result(par_result)
-                results.append(doc_result)
-                doc_result = None
-        except Exception as e:
-            log_error(get_error_message(e))
-    if doc_result:
-        results.append(doc_result)
-    return json_response(result_response(
-        results,
-        word_result_count=total_word_result_count,
-        incomplete_search_reason=""))
 
 
 @search_routes.route("createContentFile")
@@ -744,46 +697,93 @@ def title_search():
     return json_response(result_response(results, title_result_count))
 
 
-def result_response(results, title_result_count: int = 0, word_result_count: int = 0, incomplete_search_reason=""):
+@search_routes.route('/tags')
+def tag_search():
     """
-    Formats result data for JSON-response.
-    :param results: List of result dictionaries.
-    :param title_result_count: Number of title results.
-    :param word_result_count: Number of paragraph word results.
-    :param incomplete_search_reason: Whether search was cut short.
-    :return: Dictionary containing search results.
+    A route for document tag search.
+    :return: Tag search results response.
     """
-    return {
-        'title_result_count': title_result_count,
-        'word_result_count': word_result_count,
-        'errors': [],
-        'incomplete_search_reason': incomplete_search_reason,
-        'results': results,
-    }
+    (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
+    results = []
 
+    # PostgreSQL doesn't support regex directly, so as workaround get all tags below the search folder
+    # from the database and then apply regex search on them.
+    any_tag = "%%"
+    if search_owned_docs:
+        custom_filter = DocEntry.id.in_(get_current_user_object().get_personal_group().accesses.
+                                        filter_by(type=AccessType.owner.value)
+                                        .with_entities(BlockAccess.block_id)) & \
+                        DocEntry.id.in_(Tag.query.
+                                        filter(Tag.name.ilike(any_tag) & ((Tag.expires > datetime.now()) |
+                                                                          (Tag.expires == None))).
+                                        with_entities(Tag.block_id))
+    else:
+        custom_filter = DocEntry.id.in_(Tag.query.
+                                        filter(Tag.name.ilike(any_tag) & ((Tag.expires > datetime.now()) |
+                                                                          (Tag.expires == None))).
+                                        with_entities(Tag.block_id))
+    query_options = joinedload(DocEntry._block).joinedload(Block.tags)
+    docs = get_documents(filter_user=get_current_user_object(), filter_folder=folder,
+                         search_recursively=True, custom_filter=custom_filter,
+                         query_options=query_options)
 
-def validate_query(query: str, search_whole_words: bool) -> None:
-    """
-    Abort if query is too short.
-    :param query: Search word(s).
-    :param search_whole_words: Whole words search has different limits.
-    :return: None.
-    """
-    if len(query.strip()) < MIN_QUERY_LENGTH and not search_whole_words:
-        if query.strip().lower() not in WHITE_LIST:
-            abort(400, f'Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped.')
-    if len(query.strip()) < MIN_WHOLE_WORDS_QUERY_LENGTH and search_whole_words:
-        abort(400, f'Whole word search text must be at least {MIN_WHOLE_WORDS_QUERY_LENGTH} character(s) '
-                   f'long with whitespace stripped.')
+    tag_result_count = 0
+    error_list = []
+    current_doc = "before search"
+    current_tag = "before search"
+    if case_sensitive:
+        flags = re.DOTALL
+    else:
+        flags = re.DOTALL | re.IGNORECASE
+    if regex:
+        term = query
+    else:
+        term = re.escape(query)
+    if search_whole_words:
+        term = fr"\b{term}\b"
+    try:
+        term_regex = re.compile(term, flags)
+        for d in docs:
+            try:
+                current_doc = d.path
+                m_tags = []
+                m_num = 0
+                for tag in d.block.tags:
+                    current_tag = tag.name
+                    matches = list(term_regex.finditer(tag.name))
+                    if matches:
+                        match_count = len(matches)
+                        if not query:
+                            match_count = 1
+                        m_num += match_count
+                        tag_result_count += match_count
+                        m_tags.append(tag)
 
-
-def get_error_message(e: Exception):
-    """
-    Gives error message with error class.
-    :param e: Exception.
-    :return: String 'ErrorClass: reason'.
-    """
-    return f"{str(e.__class__.__name__)}: {str(e)}"
+                if m_num > 0:
+                    results.append({'doc': d, 'matching_tags': m_tags, 'num_results': m_num})
+            except Exception as e:
+                error = get_error_message(e)
+                error_list.append({
+                    'error': error,
+                    'doc_path': current_doc,
+                    'tag_name': current_tag
+                })
+                log_search_error(error, query, current_doc, tag=current_tag)
+    except sre_constants.error as e:
+        abort(400, f"Invalid regex: {str(e)}")
+    except Exception as e:
+        abort(400, get_error_message(e))
+    else:
+        try:
+            return json_response({'results': results,
+                                  'incomplete_search_reason': "",
+                                  'tag_result_count': tag_result_count,
+                                  'errors': error_list
+                                  })
+        except MemoryError:
+            abort(400, "MemoryError: results too large")
+        except Exception as e:
+            abort(400, f"Error encountered while formatting JSON-response: {e}")
 
 
 @search_routes.route("")
@@ -925,7 +925,7 @@ def search():
 
                     # End paragraph match search if limit has been reached, but
                     # don't break and mark as incomplete if this was the last paragraph.
-                    if doc_result.get_par_match_count() > max_doc_results and i != len(pars)-1:
+                    if doc_result.get_par_match_count() > max_doc_results and i != len(pars) - 1:
                         incomplete_search_reason = f"one or more document has over the maximum " \
                                                    f"of {max_doc_results} results"
                         doc_result.incomplete = True
