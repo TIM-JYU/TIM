@@ -1,4 +1,5 @@
 """Routes for searching."""
+import os
 import re
 import sre_constants
 import subprocess
@@ -577,6 +578,7 @@ def create_search_file():
     dir_path = Path(app.config['FILES_PATH']) / 'pars'
     raw_file_name = RAW_CONTENT_FILE_NAME
     file_name = PROCESSED_CONTENT_FILE_NAME
+    temp_file_name = f"temp_{PROCESSED_CONTENT_FILE_NAME}"
     raw_file = None
 
     try:
@@ -591,7 +593,7 @@ def create_search_file():
     except FileNotFoundError:
         abort(400, f"Failed to open preliminary file {dir_path / raw_file_name}")
     try:
-        with raw_file, open(dir_path / file_name, "w+", encoding='utf-8') as file:
+        with raw_file, open(dir_path / temp_file_name, "w+", encoding='utf-8') as temp_file:
             current_doc, current_pars = -1, []
             for line in raw_file:
                 try:
@@ -608,7 +610,7 @@ def create_search_file():
                     else:
                         new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars, add_titles)
                         if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
-                            file.write(new_line)
+                            temp_file.write(new_line)
                         current_doc = doc_id
                         current_pars.clear()
                         current_pars.append(par)
@@ -618,7 +620,10 @@ def create_search_file():
             if current_doc and current_pars:
                 new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars, add_titles)
                 if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
-                    file.write(new_line)
+                    temp_file.write(new_line)
+            temp_file.flush()
+            os.fsync(temp_file)
+        os.rename(str(dir_path / temp_file_name), str(dir_path / file_name))
         return json_response({'status': f"Combined and processed paragraph file created to {dir_path / file_name}"})
     except Exception as e:
         abort(400, f"Failed to create search file {dir_path / file_name}: {get_error_message(e)}")
