@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Match, List, Union, Tuple
 
-from flask import Blueprint, json
+from flask import Blueprint, json, Response, stream_with_context
 from flask import abort
 from flask import request
 from sqlalchemy.orm import joinedload
@@ -480,38 +480,46 @@ def create_search_file():
     except FileNotFoundError:
         abort(400, f"Failed to open preliminary file {dir_path / raw_file_name}")
     try:
-        with raw_file, open(dir_path / temp_file_name, "w+", encoding='utf-8') as temp_file:
-            current_doc, current_pars = -1, []
-            for line in raw_file:
-                try:
-                    doc_id, par_id, par = get_doc_par_id(line)
-                    if not doc_id:
-                        continue
-                    if not current_doc:
-                        current_doc = doc_id
-                    # If same doc as previous line or the first, just add par data to list.
-                    if current_doc == doc_id:
-                        current_pars.append(par)
-                        continue
-                    # Otherwise save the previous one and empty par data.
+        def process_raw_file():
+            with raw_file, open(dir_path / temp_file_name, "w+", encoding='utf-8') as temp_file:
+                current_doc, current_pars = -1, []
+                processed = 0
+                for line in raw_file:
+                    try:
+                        doc_id, par_id, par = get_doc_par_id(line)
+                        if not doc_id:
+                            continue
+                        if not current_doc:
+                            current_doc = doc_id
+                        # If same doc as previous line or the first, just add par data to list.
+                        if current_doc == doc_id:
+                            current_pars.append(par)
+                        # Otherwise save the previous one and empty par data.
+                        else:
+                            new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars, add_titles)
+                            if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
+                                temp_file.write(new_line)
+                            current_doc = doc_id
+                            current_pars.clear()
+                            current_pars.append(par)
+                        processed += 1
+                    except Exception as e:
+                        yield f"'{get_error_message(e)}' while writing search file line '{line}''\n"
                     else:
-                        new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars, add_titles)
-                        if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
-                            temp_file.write(new_line)
-                        current_doc = doc_id
-                        current_pars.clear()
-                        current_pars.append(par)
-                except Exception as e:
-                    log_error(f"'{get_error_message(e)}' while writing search file line '{line}''")
-            # Write the last line separately, because loop leaves it unsaved.
-            if current_doc and current_pars:
-                new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars, add_titles)
-                if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
-                    temp_file.write(new_line)
-            temp_file.flush()
-            os.fsync(temp_file)
-        os.rename(str(dir_path / temp_file_name), str(dir_path / file_name))
-        return json_response({'status': f"Combined and processed paragraph file created to {dir_path / file_name}"})
+                        if processed % 1000 == 0:
+                            yield f'Processed {processed} paragraphs so far\n'
+                # Write the last line separately, because loop leaves it unsaved.
+                if current_doc and current_pars:
+                    new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars, add_titles)
+                    if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
+                        temp_file.write(new_line)
+                yield f'Finished processing all {processed} paragraphs\n'
+                temp_file.flush()
+                os.fsync(temp_file)
+            os.rename(str(dir_path / temp_file_name), str(dir_path / file_name))
+            yield f"Combined and processed paragraph file created to {dir_path / file_name}\n"
+
+        return Response(stream_with_context(process_raw_file()), mimetype='text/plain')
     except Exception as e:
         abort(400, f"Failed to create search file {dir_path / file_name}: {get_error_message(e)}")
 
