@@ -42,9 +42,7 @@ class SearchTest(TimRouteTest):
                                                                       'par_results': [{'num_results': 1,
                                                                                        'par_id': d.document.get_paragraphs()[0].get_id(),
                                                                                        'preview': 'House cats like to hunt too.',
-                                                                                       'results': [{'match_end': 9,
-                                                                                                    'match_start': 6,
-                                                                                                    'match_word': 'cat'}]}],
+                                                                                       'results': []}],
                                                                       'title_results': []}],
                                                          'title_result_count': 0,
                                                          'word_result_count': 1})
@@ -148,9 +146,7 @@ class SearchTest(TimRouteTest):
                                                                'preview': '...stion: What cats like the '
                                                                           'most?         answer: '
                                                                           'Catnip.         ``` ```',
-                                                               'results': [{'match_end': 61,
-                                                                            'match_start': 55,
-                                                                            'match_word': 'answer'}]}],
+                                                               'results': []}],
                                               'title_results': []}],
                                  'title_result_count': 0,
                                  'word_result_count': 1})
@@ -205,10 +201,7 @@ class SearchTest(TimRouteTest):
                                                                       'num_title_results': 1,
                                                                       'par_results': [],
                                                                       'title_results': [{'num_results': 1,
-                                                                                         'results': [
-                                                                                             {'match_end': len(d.title),
-                                                                                              'match_start': 0,
-                                                                                              'match_word': d.title}]}]}],
+                                                                                         'results': []}]}],
                                                          'title_result_count': 1,
                                                          'word_result_count': 0})
 
