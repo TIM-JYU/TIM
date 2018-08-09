@@ -196,13 +196,17 @@ class Cell:
         if "*" not in str(cell_width):
             cell_width = f"{cell_width}pt"
 
+        font_family_line = ""
+        font_family_line_postfix = ""
+        if self.font_family is not default_font_family:
+            font_family_line = fr"\fontfamily{{{self.font_family}}}\selectfont{{"
+            font_family_line_postfix = f"}}"
         return fr"\multicolumn{{{self.colspan}}}{{{v_border_and_align}}}{{" \
                fr"\multirow{{{self.rowspan}}}{{{cell_width}}}{{" \
                f"{cell_color}" \
                fr"\fontsize{{{self.font_size}}}{{{self.line_space}}}" \
-               fr"\selectfont{{\textcolor{{{self.text_color}}}{{{{" \
-               fr"\fontfamily{{{self.font_family}}}\selectfont{{" \
-               fr"\centering {content}}}}}}}}}}}}}"
+               fr"\selectfont{{\textcolor{{{self.text_color}}}{{{{{font_family_line}" \
+               fr"\centering {content}}}}}}}}}}}{font_family_line_postfix}"
 
     def __repr__(self) -> str:
         return custom_repr(self)
@@ -483,8 +487,8 @@ class Table:
         output = ""
         for i in range(0, len(self.rows)):
             output += "\n" + fr"\hhline{{{str(self.hborders[i])}}}" \
-                      "\n" + f"{str(self.rows[i])}" \
-                      "\n" + fr"\tabularnewline[{self.rows[i].get_row_height()}pt]"
+                             "\n" + f"{str(self.rows[i])}" \
+                                    "\n" + fr"\tabularnewline[{self.rows[i].get_row_height()}pt]"
 
         output += "\n" + fr"\hhline{{{str(self.hborders[-1])}}}"
         return f"{prefix}\n{output}\n{postfix}"
@@ -628,6 +632,23 @@ def get_color(item, key: str, default_color=None, default_color_html=None) -> (s
         pass
     finally:
         return color, color_html
+
+
+def get_datablock_cell_data(datablock, row: int, cell: int):
+    """
+    Returns data from datablock index.
+    :param datablock:
+    :param row:
+    :param cell:
+    :return:
+    """
+    if not datablock:
+        return None
+    try:
+        datablock_index = f"{int_to_datablock_index(cell)}{row+1}"
+        return datablock[datablock_index]
+    except:
+        return None
 
 
 def get_span(item) -> (int, int):
@@ -914,22 +935,22 @@ def decide_format_tuple(format_levels):
     return final_format
 
 
-def decide_format_width(format_levels):
+def decide_format_size(format_levels):
     """
-    Decides which width (column, row, cell) to use by taking the widest one.
+    Decides which size (column, row, cell, datablock) to use by taking the longest one.
     :param format_levels:
     :return:
     """
-    final_width = 0
+    final_size = 0
     for level in format_levels:
         if level and default_width not in level:
-            width = float(parse_size_attribute(level))
-            if width > final_width:
-                final_width = width
-    if is_close(final_width, 0):
+            size = float(parse_size_attribute(level))
+            if size > final_size:
+                final_size = size
+    if is_close(final_size, 0):
         return default_width
     else:
-        return final_width
+        return final_size
 
 
 def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
@@ -1002,16 +1023,12 @@ def convert_table(table_json) -> Table:
         table_row = table.get_or_create_row(i)
         row_data = table_json['rows'][i]
 
-        (row_default_bg_color, row_default_bg_color_html) = \
-            get_color(row_data, "backgroundColor")
-        (row_default_text_color, row_default_text_color_html) = \
-            get_color(row_data, "color")
-
+        (row_default_bg_color, row_default_bg_color_html) = get_color(row_data, "backgroundColor")
+        (row_default_text_color, row_default_text_color_html) = get_color(row_data, "color")
         row_default_width = get_size(row_data, key="width", default=default_width)
         row_default_height = get_size(row_data, key="height", default=default_height)
 
-        row_default_font_family = \
-            get_font_family(row_data, table_default_font_family)
+        row_default_font_family = get_font_family(row_data, table_default_font_family)
         row_default_font_size = get_font_size(row_data, table_default_font_size)
         row_default_h_align = get_text_horizontal_align(row_data, table_default_h_align)
 
@@ -1020,6 +1037,7 @@ def convert_table(table_json) -> Table:
 
         for j in range(0, len(table_json['rows'][i]['row'])):
             content = ""
+            cell_data = ""
             try:
                 cell_data = table_json['rows'][i]['row'][j]
                 content = get_content(table_json['rows'][i]['row'][j]['cell'])
@@ -1028,13 +1046,9 @@ def convert_table(table_json) -> Table:
                 content = get_content(table_json['rows'][i]['row'][j])
             finally:
                 # Set cell attributes:
-                (bg_color, bg_color_html) = get_color(
-                    cell_data,
-                    'backgroundColor')
-                (text_color, text_color_html) = get_color(
-                    cell_data,
-                    'color')
-                cell_height = get_size(cell_data, key="height", default=row_default_height)
+                (cell_bg_color, cell_bg_color_html) = get_color(cell_data, 'backgroundColor')
+                (text_color, text_color_html) = get_color(cell_data, 'color')
+                cell_height = get_size(cell_data, key="height")
                 cell_width = get_size(cell_data, key="width")
 
                 (colspan, rowspan) = get_span(cell_data)
@@ -1047,20 +1061,42 @@ def convert_table(table_json) -> Table:
                 # For estimating column count:
                 max_colspan = max(max_colspan, colspan)
 
+                # Get datablock formats:
+                datablock_cell_data = get_datablock_cell_data(datablock, i, j)
+                if not datablock_cell_data:
+                    pass
+                else:
+                    # Datablocks may not exists or have dictionary, str or other types.
+                    if isinstance(datablock_cell_data, dict):
+                        try:
+                            datablock_content = get_content(datablock_cell_data['cell'])
+                            content = datablock_content
+                        except TypeError:
+                            pass
+                    else:
+                        content = str(datablock_cell_data)
+                (datablock_bg_color, datablock_bg_color_html) = get_color(datablock_cell_data, 'backgroundColor')
+                (datablock_text_color, datablock_text_color_html) = get_color(datablock_cell_data, 'color')
+                datablock_cell_height = get_size(datablock_cell_data, key="height")
+                datablock_cell_width = get_size(datablock_cell_data, key="width")
+
+                # Decide which styles to use (from table, column, row, cell or datablock)
                 (bg_color, bg_color_html) = decide_format_tuple([
                     (table_default_bg_color, table_default_bg_color_html),
                     column_bg_color_list[j],
                     (row_default_bg_color, row_default_bg_color_html),
-                    (bg_color, bg_color_html),
+                    (cell_bg_color, cell_bg_color_html),
+                    (datablock_bg_color, datablock_bg_color_html),
                 ])
                 (text_color, text_color_html) = decide_format_tuple([
                     (table_default_text_color, table_default_text_color_html),
                     column_text_color_list[j],
                     (row_default_text_color, row_default_text_color_html),
                     (text_color, text_color_html),
+                    (datablock_text_color, datablock_text_color_html),
                 ])
-                height = cell_height
-                width = decide_format_width([row_default_width, column_width_list[j], cell_width])
+                height = decide_format_size([row_default_height, cell_height, datablock_cell_height])
+                width = decide_format_size([row_default_width, column_width_list[j], cell_width, datablock_cell_width])
 
                 c = Cell(
                     content=content,
@@ -1077,10 +1113,6 @@ def convert_table(table_json) -> Table:
                     cell_height=height,
                     borders=borders
                 )
-                # Tries updating content from the tabledatablock.
-                if datablock:
-                    c.content = \
-                        update_content_from_datablock(datablock, i, j, c.content)
 
                 # Cells with rowspan > 1:
                 # Multirow-cells need to be set from bottom-up in LaTeX to
