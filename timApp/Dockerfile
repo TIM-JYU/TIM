@@ -119,7 +119,6 @@ cffi \
 cssselect \
 cssutils \
 docformatter \
-elasticsearch-dsl==6.2 \
 filelock \
 flask \
 flask-assets \

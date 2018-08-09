@@ -7,8 +7,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Match, List, Union, Tuple
 
-from elasticsearch.helpers import bulk
-from elasticsearch_dsl import connections, Document, Text, Keyword, Integer, Search
 from flask import Blueprint, json
 from flask import abort
 from flask import request
@@ -28,8 +26,6 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.logger import log_error
-
-es = connections.create_connection(hosts=['elasticsearch'], timeout=20)
 
 search_routes = Blueprint('search',
                           __name__,
@@ -75,115 +71,6 @@ def get_common_search_params(req) -> Tuple[str, str, bool, bool, bool, bool]:
     search_owned_docs = get_option(req, 'searchOwned', default=False, cast=bool)
     search_whole_words = get_option(req, 'searchWholeWords', default=False, cast=bool)
     return query, folder, regex, case_sensitive, search_whole_words, search_owned_docs
-
-
-class Paragraph(Document):
-    """
-    Paragraph data to be used in elasticsearch.
-    """
-    body = Text(fielddata=True)  # md
-    plugin = Text()
-    setting = Text()
-    par_id = Keyword()
-    doc_id = Integer()
-
-    class Index:
-        name = 'pars'
-
-    def is_plugin_or_setting(self) -> bool:
-        if self.plugin or self.setting:
-            return True
-        else:
-            return False
-
-    def save(self, **kwargs):
-        return super(Paragraph, self).save(**kwargs)
-
-
-# @search_routes.route("elasticsearch/createIndex")
-def elasticsearch_create_index():
-    """
-    Create index for elasticsearch.
-    :return: Ok response.
-    """
-    dir_path = Path(app.config['FILES_PATH']) / 'pars'
-    try:
-        subprocess.Popen(f'grep -R "" --include="current" . > {RAW_CONTENT_FILE_NAME} 2>&1',
-                         cwd=dir_path,
-                         shell=True).communicate()
-    except Exception as e:
-        abort(400,
-              f"Failed to create preliminary file {dir_path / RAW_CONTENT_FILE_NAME}: {get_error_message(e)}")
-
-    def generate():
-        es.indices.delete(index='pars', ignore=[400, 404])
-        Paragraph.init()
-        with open(dir_path / RAW_CONTENT_FILE_NAME, "r+", encoding='utf-8') as file:
-            for line in file:
-                doc_id, par_id, par = get_doc_par_id(line)
-                par_dict = json.loads(f"{{{par}}}")
-                par_md = par_dict['md']
-                yield {'_index': 'pars',
-                       '_type': 'doc',
-                       '_id': f'{doc_id}.{par_id}',
-                       "_source": {
-                           'doc_id': doc_id,
-                           'par_id': par_id,
-                           'body': par_md}
-                       }
-
-    bulk(es, generate())
-    return ok_response()
-
-
-# @search_routes.route("elasticsearch")
-def elasticsearch():
-    """
-    A way to perform search using elasticsearch (https://pypi.org/project/elasticsearch-dsl/).
-    Note: Performance for comprehensive search with large amount of resutls is lower than grep-search,
-    so currently unused.
-    With some changes this would suit a search where results are divided on different pages showing X results each
-    (scan-method in Search turns this into generator that yields results on demand).
-    :return: Search results.
-    """
-    query = request.args.get('q', '')
-    s = Search(index="pars").query("match", body=query).highlight('body', fragment_size=1, number_of_fragments=1000). \
-        sort('doc_id').extra(explain=True)
-    s.aggs.bucket('per_paragraph', 'terms', field='body')
-    response = s[0:s.count()].execute()
-    results = []
-    doc_result = None
-    total_word_result_count = 0
-    for hit in response:
-        try:
-            highlighted_hits = hit.meta.highlight['body']
-            par_word_result_count = len(highlighted_hits)
-            total_word_result_count += par_word_result_count
-            doc_info = DocEntry.find_by_id(hit.doc_id)
-            if not doc_info:
-                continue
-            par_result = ParResult(hit.par_id,
-                                   preview="",
-                                   alt_num_results=par_word_result_count)
-            if not doc_result:
-                doc_result = DocResult(doc_info)
-
-            if doc_result.doc_info.id == hit.doc_id:
-                doc_result.add_par_result(par_result)
-                continue
-            else:
-                doc_result = DocResult(doc_info)
-                doc_result.add_par_result(par_result)
-                results.append(doc_result)
-                doc_result = None
-        except Exception as e:
-            log_error(get_error_message(e))
-    if doc_result:
-        results.append(doc_result)
-    return json_response(result_response(
-        results,
-        word_result_count=total_word_result_count,
-        incomplete_search_reason=""))
 
 
 def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str = "") -> None:
