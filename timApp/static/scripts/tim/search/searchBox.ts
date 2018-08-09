@@ -125,7 +125,7 @@ export class SearchBoxCtrl implements IController {
         searchWordStorage: null | string,
         optionsStorage: null | boolean[]};
     private folderSuggestions: string[] = []; // A list of folder path suggestions.
-    private resultsDialog: ShowSearchResultController | null = null; // The most recent search result dialog.
+    private resultsDialog: ShowSearchResultController | undefined; // The most recent search result dialog.
     private timeWarningLimit: number = 20;
     private maxDocResults: number = 1000;
 
@@ -218,7 +218,7 @@ export class SearchBoxCtrl implements IController {
      * Sets a search result controller.
      * @param {ShowSearchResultController} resultsDialog The currently active search result window.
      */
-    registerResultsDialog(resultsDialog: ShowSearchResultController | null) {
+    registerResultsDialog(resultsDialog: ShowSearchResultController | undefined) {
         this.resultsDialog = resultsDialog;
     }
 

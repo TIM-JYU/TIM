@@ -54,7 +54,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     $onDestroy() {
         // Unregister the dialog when closing.
         if (this.searchComponent) {
-            this.searchComponent.registerResultsDialog(null);
+            this.searchComponent.registerResultsDialog(undefined);
         }
     }
 
