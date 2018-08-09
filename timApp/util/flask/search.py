@@ -22,9 +22,8 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.tag import Tag
 from timApp.tim_app import app
-from timApp.timdb.exceptions import TimDbException
 from timApp.util.flask.requesthelper import get_option
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_error
 
 search_routes = Blueprint('search',
@@ -413,9 +412,7 @@ def add_doc_info_line(doc_id: int, par_data, remove_deleted_pars: bool = True, a
         par_id = par_dict['id']
         if remove_deleted_pars:
             # If par can't be found (deleted), don't add it.
-            try:
-                doc_info.document.has_paragraph(par_id)
-            except TimDbException:
+            if not doc_info.document.has_paragraph(par_id):
                 continue
         # Cherry pick attributes, because others are unnecessary for the search.
         par_md = par_dict['md'].replace("\r", " ").replace("\n", " ")
