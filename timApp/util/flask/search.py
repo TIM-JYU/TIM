@@ -763,12 +763,10 @@ def search():
                 line_info = json.loads(line)
                 doc_id = line_info['doc_id']
                 # TODO: Handle aliases.
-                doc_info = DocEntry.query.filter_by(id=doc_id).options(lazyload(DocEntry._block)).first()
-
-                # If doc isn't in the search path, continue to the next one.
-                if not doc_info.path.startswith(folder):
+                doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
+                    options(lazyload(DocEntry._block)).first()
+                if not doc_info:
                     continue
-
                 # If not allowed to view, continue to the next one.
                 if not has_view_access(doc_info):
                     continue
