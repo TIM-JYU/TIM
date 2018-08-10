@@ -35,7 +35,8 @@ MIN_QUERY_LENGTH = 3  # For word and title search. Tags have no limitations.
 MIN_WHOLE_WORDS_QUERY_LENGTH = 1  # For whole word search.
 PREVIEW_LENGTH = 40  # Before and after the search word separately.
 PREVIEW_MAX_LENGTH = 160
-PROCESSED_CONTENT_FILE_NAME = "all_processed.log"
+PROCESSED_CONTENT_FILE_NAME = "content_all_processed.log"
+PROCESSED_TITLE_FILE_NAME = "titles_all_processed.log"
 RAW_CONTENT_FILE_NAME = "all.log"
 MIN_CONTENT_FILE_LINE_LENGTH = 70  # Excludes empty documents.
 
@@ -72,7 +73,7 @@ def get_common_search_params(req) -> Tuple[str, str, bool, bool, bool, bool]:
     return query, folder, regex, case_sensitive, search_whole_words, search_owned_docs
 
 
-def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str = "") -> None:
+def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str = "", title: bool = False) -> None:
     """
     Forms an error report and sends it to timLog.
     :param error: The error's message
@@ -80,6 +81,7 @@ def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str =
     :param doc: Document identifier.
     :param tag: Tag name.
     :param par: Par id.
+    :param title: If error was in title search.
     :return: None.
     """
     if not error:
@@ -87,11 +89,14 @@ def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str =
     common_part = f"'{error}' while searching '{query}' in document {doc}"
     tag_part = ""
     par_part = ""
+    title_part = ""
     if tag:
         tag_part = f" tag {tag}"
     if par:
         par_part = f" paragraph {par}"
-    log_error(common_part + tag_part + par_part)
+    if title:
+        title_part = " title"
+    log_error(common_part + tag_part + par_part + title_part)
 
 
 def get_documents_by_access_type(access: AccessType) -> List[DocEntry]:
@@ -389,7 +394,20 @@ def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = Tr
     return False
 
 
-def add_doc_info_line(doc_id: int, par_data, remove_deleted_pars: bool = True, add_title: bool = True) \
+def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
+    """
+    Forms a JSON-compatible string with doc id, title and path.
+    :param doc_id: Document id.
+    :return: String with doc data.
+    """
+    doc_info = DocEntry.find_by_id(doc_id)
+    if not doc_info:
+        return None
+    return json.dumps({'doc_id': doc_id, 'doc_title': doc_info.title, 'doc_path': doc_info.path},
+                      ensure_ascii=False) + '\n'
+
+
+def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool = True, add_title: bool = False) \
         -> Union[str, None]:
     """
     Forms a JSON-compatible string with doc_id and list of paragraph data with id and md attributes.
@@ -455,13 +473,15 @@ def create_search_file():
     verify_admin()
 
     # Checks paragraph existence before adding at the cost of taking more time.
-    remove_deleted_pars = get_option(request, 'removeDeletedPars', default=False, cast=bool)
+    remove_deleted_pars = get_option(request, 'removeDeletedPars', default=True, cast=bool)
     # Include document titles in the file.
-    add_titles = get_option(request, 'addTitles', default=False, cast=bool)
+    # add_titles = get_option(request, 'addTitles', default=False, cast=bool)
     dir_path = Path(app.config['FILES_PATH']) / 'pars'
     raw_file_name = RAW_CONTENT_FILE_NAME
-    file_name = PROCESSED_CONTENT_FILE_NAME
-    temp_file_name = f"temp_{PROCESSED_CONTENT_FILE_NAME}"
+    content_file_name = PROCESSED_CONTENT_FILE_NAME
+    title_file_name = PROCESSED_TITLE_FILE_NAME
+    temp_content_file_name = f"temp_{content_file_name}"
+    temp_title_file_name = f"temp_{title_file_name}"
     raw_file = None
 
     try:
@@ -477,9 +497,13 @@ def create_search_file():
         abort(400, f"Failed to open preliminary file {dir_path / raw_file_name}")
     try:
         def process_raw_file():
-            with raw_file, open(dir_path / temp_file_name, "w+", encoding='utf-8') as temp_file:
+            with raw_file, open(
+                    dir_path / temp_content_file_name, "w+", encoding='utf-8') as temp_content_file, open(
+                    dir_path / temp_title_file_name, "w+", encoding='utf-8') as temp_title_file:
+
                 current_doc, current_pars = -1, []
                 processed = 0
+
                 for line in raw_file:
                     try:
                         doc_id, par_id, par = get_doc_par_id(line)
@@ -492,9 +516,11 @@ def create_search_file():
                             current_pars.append(par)
                         # Otherwise save the previous one and empty par data.
                         else:
-                            new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars, add_titles)
-                            if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
-                                temp_file.write(new_line)
+                            new_content_line = add_doc_info_content_line(current_doc, current_pars, remove_deleted_pars)
+                            new_title_line = add_doc_info_title_line(current_doc)
+                            if new_content_line and len(new_content_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
+                                temp_content_file.write(new_content_line)
+                                temp_title_file.write(new_title_line)
                             current_doc = doc_id
                             current_pars.clear()
                             current_pars.append(par)
@@ -504,20 +530,31 @@ def create_search_file():
                     else:
                         if processed % 1000 == 0:
                             yield f'Processed {processed} paragraphs so far\n'
+
                 # Write the last line separately, because loop leaves it unsaved.
                 if current_doc and current_pars:
-                    new_line = add_doc_info_line(current_doc, current_pars, remove_deleted_pars, add_titles)
-                    if new_line and len(new_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
-                        temp_file.write(new_line)
+                    new_content_line = add_doc_info_content_line(current_doc, current_pars, remove_deleted_pars)
+                    new_title_line = add_doc_info_title_line(current_doc)
+                    if new_content_line and len(new_content_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
+                        temp_content_file.write(new_content_line)
+                        temp_title_file.write(new_title_line)
                 yield f'Finished processing all {processed} paragraphs\n'
-                temp_file.flush()
-                os.fsync(temp_file)
-            os.rename(str(dir_path / temp_file_name), str(dir_path / file_name))
-            yield f"Combined and processed paragraph file created to {dir_path / file_name}\n"
+
+                temp_content_file.flush()
+                temp_title_file.flush()
+                os.fsync(temp_content_file)
+                os.fsync(temp_title_file)
+
+            os.rename(str(dir_path / temp_content_file_name), str(dir_path / content_file_name))
+            os.rename(str(dir_path / temp_title_file_name), str(dir_path / title_file_name))
+
+            yield f"Combined and processed paragraph files created to" \
+                  f" {dir_path / content_file_name} and {dir_path / title_file_name}\n"
 
         return Response(stream_with_context(process_raw_file()), mimetype='text/plain')
     except Exception as e:
-        abort(400, f"Failed to create search file {dir_path / file_name}: {get_error_message(e)}")
+        abort(400, f"Failed to create search files "
+                   f"{dir_path / content_file_name} and {dir_path / title_file_name}: {get_error_message(e)}")
 
 
 @search_routes.route("/titles")
@@ -543,6 +580,7 @@ def title_search():
     docs = get_documents(
         filter_user=get_current_user_object(),
         filter_folder=folder,
+        query_options=lazyload(DocEntry._block),
         custom_filter=custom_filter,
         search_recursively=True)
 
@@ -690,16 +728,19 @@ def search():
     """
     # If the file containing all TIM content doesn't exists, give warning immediately.
     dir_path = Path(app.config['FILES_PATH']) / 'pars'
-    search_file_name = PROCESSED_CONTENT_FILE_NAME
-    if not Path(dir_path / search_file_name).exists():
-        abort(404, f"Combined content file '{search_file_name}' not found, unable to perform content search!")
-
+    content_search_file_name = PROCESSED_CONTENT_FILE_NAME
+    title_search_file_name = PROCESSED_TITLE_FILE_NAME
     (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
     max_results = get_option(request, 'maxResults', default=1000000, cast=int)
     max_doc_results = get_option(request, 'maxDocResults', default=10000, cast=int)
     ignore_plugins = get_option(request, 'ignorePlugins', default=False, cast=bool)
     search_titles = get_option(request, 'searchTitles', default=True, cast=bool)
     search_content = get_option(request, 'searchContent', default=True, cast=bool)
+
+    if search_content and not Path(dir_path / content_search_file_name).exists():
+        abort(404, f"Combined content file '{content_search_file_name}' not found, unable to perform content search!")
+    if search_titles and not Path(dir_path / title_search_file_name).exists():
+        abort(404, f"Combined title file '{title_search_file_name}' not found, unable to perform title search!")
 
     validate_query(query, search_whole_words)
 
@@ -708,8 +749,10 @@ def search():
     incomplete_search_reason = ""
     current_doc = ""
     current_par = ""
-    output = []
-    results = []
+    content_output = []
+    title_output = []
+    content_results = []
+    title_results = []
     word_result_count = 0
     title_result_count = 0
 
@@ -734,21 +777,29 @@ def search():
         term_regex = re.compile(term, flags)
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
-
     cmd.append(query)
-    cmd.append(search_file_name)
 
-    # TODO: Error cases in subprocess may not show, slips through as empty search result instead.
-    # TODO: Output has all paragraphs even though only one or more have matches.
-    try:
-        s = subprocess.Popen(cmd,
-                             cwd=dir_path,
-                             stdout=subprocess.PIPE)
-        output_str = s.communicate()[0].decode('utf-8').strip()
-        output = output_str.splitlines()
-    except Exception as e:
-        abort(400, get_error_message(e))
-    if not output:
+    if search_content:
+        try:
+            s = subprocess.Popen(cmd + [content_search_file_name],
+                                 cwd=dir_path,
+                                 stdout=subprocess.PIPE)
+            content_output_str = s.communicate()[0].decode('utf-8').strip()
+            content_output = content_output_str.splitlines()
+        except Exception as e:
+            abort(400, get_error_message(e))
+
+    if search_titles:
+        try:
+            s = subprocess.Popen(cmd + [title_search_file_name],
+                                 cwd=dir_path,
+                                 stdout=subprocess.PIPE)
+            title_output_str = s.communicate()[0].decode('utf-8').strip()
+            title_output = title_output_str.splitlines()
+        except Exception as e:
+            abort(400, get_error_message(e))
+
+    if not content_output and not title_output:
         return json_response(result_response([]))
 
     if search_owned_docs:
@@ -756,10 +807,44 @@ def search():
         if not owned_docs:
             abort(400, f"No owned documents found")
 
-    for line in output:
+    for line in title_output:
         try:
             # Any line shorter than this is broken.
-            if line and len(line) > 10:
+            if line and len(line) > 30:
+                line_info = json.loads(line)
+                doc_id = line_info['doc_id']
+                # TODO: Handle aliases.
+                doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
+                    options(lazyload(DocEntry._block)).first()
+                if not doc_info:
+                    continue
+                # If not allowed to view, continue to the next one.
+                if not has_view_access(doc_info):
+                    continue
+                # Skip if searching only owned and it's not owned.
+                if search_owned_docs:
+                    if not in_doc_list(doc_info, owned_docs):
+                        continue
+
+                doc_result = DocResult(doc_info)
+
+                doc_title = line_info['doc_title']
+                title_matches = list(term_regex.finditer(doc_title))
+                if title_matches:
+                    title_match_count = len(title_matches)
+                    doc_result.add_title_result(TitleResult(alt_num_results=title_match_count))
+                    title_result_count += title_match_count
+
+                if doc_result.has_results():
+                    title_results.append(doc_result)
+
+        except Exception as e:
+            log_search_error(get_error_message(e), query, current_doc, title=True)
+
+    for line in content_output:
+        try:
+            # Any line shorter than this is broken.
+            if line and len(line) > 60:
 
                 # The file is supposed to contain doc_id and pars in a list for each document.
                 line_info = json.loads(line)
@@ -782,67 +867,56 @@ def search():
                 doc_result = DocResult(doc_info)
                 edit_access = has_edit_access(doc_info)
 
-                # Title search:
-                if search_titles:
-                    doc_title = line_info['doc_title']
-                    title_matches = list(term_regex.finditer(doc_title))
-                    if title_matches:
-                        title_match_count = len(title_matches)
-                        doc_result.add_title_result(TitleResult(alt_num_results=title_match_count))
-                        title_result_count += title_match_count
+                for i, par in enumerate(pars):
+                    par_id = par['id']
+                    md = par['md']
 
-                # Pars search:
-                if search_content:
-                    for i, par in enumerate(pars):
-                        par_id = par['id']
-                        md = par['md']
+                    # Tries to get plugin and settings key values from dict;
+                    # if par isn't either, gives KeyError and does nothing.
+                    try:
+                        plugin = par['attrs']['plugin']
+                        # If ignore_plugins or no edit access, leave out plugin and setting results.
+                        if ignore_plugins or not edit_access:
+                            continue
+                    except KeyError:
+                        pass
+                    try:
+                        settings = par['attrs']['settings']
+                        if ignore_plugins or not edit_access:
+                            continue
+                    except KeyError:
+                        pass
 
-                        # Tries to get plugin and settings key values from dict;
-                        # if par isn't either, gives KeyError and does nothing.
-                        try:
-                            plugin = par['attrs']['plugin']
-                            # If ignore_plugins or no edit access, leave out plugin and setting results.
-                            if ignore_plugins or not edit_access:
-                                continue
-                        except KeyError:
-                            pass
-                        try:
-                            settings = par['attrs']['settings']
-                            if ignore_plugins or not edit_access:
-                                continue
-                        except KeyError:
-                            pass
+                    par_result = ParResult(par_id)
+                    par_matches = list(term_regex.finditer(md))
 
-                        par_result = ParResult(par_id)
-                        par_matches = list(term_regex.finditer(md))
+                    if par_matches:
+                        # Word results aren't used for anything currently,
+                        # so to save time and bandwidth they are replaced by a number.
+                        par_result.alt_num_results = len(par_matches)
+                        # for m in matches:
+                        #     result = WordResult(match_word=m.group(0),
+                        #                         match_start=m.start(),
+                        #                         match_end=m.end())
+                        #     par_result.add_result(result)
+                        par_result.preview = preview_result(md, query, par_matches[0])
 
-                        if par_matches:
-                            # Word results aren't used for anything currently,
-                            # so to save time and bandwidth they are replaced by a number.
-                            par_result.alt_num_results = len(par_matches)
-                            # for m in matches:
-                            #     result = WordResult(match_word=m.group(0),
-                            #                         match_start=m.start(),
-                            #                         match_end=m.end())
-                            #     par_result.add_result(result)
-                            par_result.preview = preview_result(md, query, par_matches[0])
+                    # Don't add empty par result (in error cases).
+                    if par_result.has_results():
+                        doc_result.add_par_result(par_result)
 
-                        # Don't add empty par result (in error cases).
-                        if par_result.has_results():
-                            doc_result.add_par_result(par_result)
-
-                        # End paragraph match search if limit has been reached, but
-                        # don't break and mark as incomplete if this was the last paragraph.
-                        if doc_result.get_par_match_count() > max_doc_results and i != len(pars) - 1:
-                            incomplete_search_reason = f"one or more document has over the maximum " \
-                                                       f"of {max_doc_results} results"
-                            doc_result.incomplete = True
-                            break
+                    # End paragraph match search if limit has been reached, but
+                    # don't break and mark as incomplete if this was the last paragraph.
+                    if doc_result.get_par_match_count() > max_doc_results and i != len(pars) - 1:
+                        incomplete_search_reason = f"one or more document has over the maximum " \
+                                                   f"of {max_doc_results} results"
+                        doc_result.incomplete = True
+                        break
 
                 # If no valid paragraph results, skip document.
                 if doc_result.has_results():
                     word_result_count += doc_result.get_par_match_count()
-                    results.append(doc_result)  # Save directly as dict to save time.
+                    content_results.append(doc_result)
 
                 # End search if the limit is reached.
                 if word_result_count > max_results:
@@ -852,8 +926,9 @@ def search():
         except Exception as e:
             log_search_error(get_error_message(e), query, current_doc, par=current_par)
 
-    return json_response(result_response(
-        results,
-        word_result_count=word_result_count,
-        title_result_count=title_result_count,
-        incomplete_search_reason=incomplete_search_reason))
+    return json_response({'title_result_count': title_result_count,
+                          'word_result_count': word_result_count,
+                          'errors': [],
+                          'incomplete_search_reason': incomplete_search_reason,
+                          'title_results': title_results,
+                          'content_results': content_results})

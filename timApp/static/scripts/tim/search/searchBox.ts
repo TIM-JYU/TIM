@@ -14,7 +14,8 @@ import {ShowSearchResultController, showSearchResultDialog} from "./searchResult
  * All data title/word search route returns.
  */
 export interface ISearchResultsInfo {
-    results: IDocSearchResult[];
+    content_results: IDocSearchResult[];
+    title_results: IDocSearchResult[];
     incomplete_search_reason: string; // Tells the reason why when the search is incomplete.
     word_result_count: number;
     title_result_count: number;
@@ -160,6 +161,8 @@ export class SearchBoxCtrl implements IController {
         if (this.loading) {
             return;
         }
+        console.log(this.searchTitles);
+
         this.resetAttributes();
         this.loading = true;
         if (!this.searchTitles && !this.searchTags && !this.searchContent) {
@@ -174,14 +177,15 @@ export class SearchBoxCtrl implements IController {
         if (this.searchTags) {
             await this.tagSearch();
         }
-        // If both title and content searches are selected, they're done in the content search route.
-        if (this.searchContent) {
+        if (this.searchContent || this.searchTitles) {
             await this.wordSearch();
+            console.log(this.titleResults);
+            console.log(this.results);
         }
-        // If title search is selected but content search isn't, do it on a separate route.
-        if (this.searchTitles && !this.searchContent) {
-            await this.titleSearch();
-        }
+        // // If title search is selected but content search isn't, do it on a separate route.
+        // if (this.searchTitles && !this.searchContent) {
+        //     await this.titleSearch();
+        // }
         this.loading = false;
         if (this.results.length === 0 && this.tagResults.length === 0 &&
                 this.titleResults.length === 0 && !this.errorMessage) {
@@ -339,11 +343,11 @@ export class SearchBoxCtrl implements IController {
         }));
         if (err) {
             this.errorMessage = this.getErrorMessage(err);
-            this.results = [];
+            this.titleResults = [];
             return;
         }
         if (response) {
-            this.titleResults = response.data.results;
+            this.titleResults = response.data.title_results;
             if (response.data.incomplete_search_reason) {
                 this.incompleteSearchReason = response.data.incomplete_search_reason;
             }
@@ -376,10 +380,12 @@ export class SearchBoxCtrl implements IController {
         if (err) {
             this.errorMessage = this.getErrorMessage(err);
             this.results = [];
+            this.titleResults = [];
             return;
         }
         if (response) {
-            this.results = response.data.results;
+            this.results = response.data.content_results;
+            this.titleResults = response.data.title_results;
             if (response.data.incomplete_search_reason) {
                 this.incompleteSearchReason = response.data.incomplete_search_reason;
             }
