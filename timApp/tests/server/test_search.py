@@ -14,36 +14,41 @@ class SearchTest(TimRouteTest):
         d = self.create_doc(initial_par=text_in_document)
         self.get(f'search/createContentFile')
         url = f'search?caseSensitive=false&folder=&ignorePlugins=false&query={text_to_search}&regex=false'
-        self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
+        self.get(url, expect_status=200, expect_content={'content_results': [{'doc': {'id': d.id,
+                                                                                      'isFolder': False,
+                                                                                      'location': d.location,
+                                                                                      'modified': 'just now',
+                                                                                      'name': d.short_name,
+                                                                                      'owner': {
+                                                                                          'id': self.get_test_user_1_group_id(),
+                                                                                          'name': u_name},
+                                                                                      'path': d.path,
+                                                                                      'public': True,
+                                                                                      'rights': {
+                                                                                          'browse_own_answers': True,
+                                                                                          'can_comment': True,
+                                                                                          'can_mark_as_read': True,
+                                                                                          'editable': True,
+                                                                                          'manage': True,
+                                                                                          'owner': True,
+                                                                                          'see_answers': True,
+                                                                                          'teacher': True},
+                                                                                      'title': d.title,
+                                                                                      'unpublished': True},
+                                                                              'incomplete': False,
+                                                                              'num_par_results': 1,
+                                                                              'num_title_results': 0,
+                                                                              'par_results': [{'num_results': 1,
+                                                                                               'par_id':
+                                                                                                   d.document.get_paragraphs()[
+                                                                                                       0].get_id(),
+                                                                                               'preview': 'House cats like to hunt '
+                                                                                                          'too.',
+                                                                                               'results': []}],
+                                                                              'title_results': []}],
+                                                         'incomplete_search_reason': '',
                                                          'errors': [],
-                                                         'results': [{'doc': {'id': d.id,
-                                                                              'isFolder': False,
-                                                                              'location': d.location,
-                                                                              'modified': 'just now',
-                                                                              'name': d.short_name,
-                                                                              'owner': {
-                                                                                  'id': self.get_test_user_1_group_id(),
-                                                                                  'name': u_name},
-                                                                              'path': d.path,
-                                                                              'public': True,
-                                                                              'rights': {'browse_own_answers': True,
-                                                                                         'can_comment': True,
-                                                                                         'can_mark_as_read': True,
-                                                                                         'editable': True,
-                                                                                         'manage': True,
-                                                                                         'owner': True,
-                                                                                         'see_answers': True,
-                                                                                         'teacher': True},
-                                                                              'title': d.title,
-                                                                              'unpublished': True},
-                                                                      'incomplete': False,
-                                                                      'num_par_results': 1,
-                                                                      'num_title_results': 0,
-                                                                      'par_results': [{'num_results': 1,
-                                                                                       'par_id': d.document.get_paragraphs()[0].get_id(),
-                                                                                       'preview': 'House cats like to hunt too.',
-                                                                                       'results': []}],
-                                                                      'title_results': []}],
+                                                         'title_results': [],
                                                          'title_result_count': 0,
                                                          'word_result_count': 1})
 
@@ -66,9 +71,10 @@ class SearchTest(TimRouteTest):
         self.get(f'search/createContentFile')
         text_to_search = 'Cannot be found anywhere'
         url = f'search?folder=&query={text_to_search}'
-        self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
+        self.get(url, expect_status=200, expect_content={'content_results': [],
+                                                         'incomplete_search_reason': '',
                                                          'errors': [],
-                                                         'results': [],
+                                                         'title_results': [],
                                                          'title_result_count': 0,
                                                          'word_result_count': 0})
 
@@ -82,9 +88,10 @@ class SearchTest(TimRouteTest):
         self.get(f'search/createContentFile')
         text_to_search_upper = 'TEXT TO SEARCH'
         url = f'search?caseSensitive={case_sensitive}&folder=&query={text_to_search_upper}'
-        self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
+        self.get(url, expect_status=200, expect_content={'content_results': [],
+                                                         'incomplete_search_reason': '',
                                                          'errors': [],
-                                                         'results': [],
+                                                         'title_results': [],
                                                          'title_result_count': 0,
                                                          'word_result_count': 0})
 
@@ -96,11 +103,13 @@ class SearchTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc(initial_par='Super secret things.')
         self.get(f'search/createContentFile')
+
         self.login_test2()
         self.test_user_2.remove_access(d.id, 'view')
-        self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
+        self.get(url, expect_status=200, expect_content={'content_results': [],
+                                                         'incomplete_search_reason': '',
                                                          'errors': [],
-                                                         'results': [],
+                                                         'title_results': [],
                                                          'title_result_count': 0,
                                                          'word_result_count': 0})
 
@@ -116,93 +125,99 @@ class SearchTest(TimRouteTest):
         self.get(f'search/createContentFile')
         self.test_user_1.grant_access(d.id, 'edit')
         self.get(f'search?folder=&query={text_to_search}', expect_status=200,
-                 expect_content={'incomplete_search_reason': '',
-                                 'errors': [],
-                                 'results': [{'doc': {'id': d.id,
-                                                      'isFolder': False,
-                                                      'location': d.location,
-                                                      'modified': 'just now',
-                                                      'name': d.short_name,
-                                                      'owner': {
-                                                          'id': self.get_test_user_1_group_id(),
-                                                          'name': self.test_user_1.name},
-                                                      'path': d.path,
-                                                      'public': True,
-                                                      'rights': {'browse_own_answers': True,
-                                                                 'can_comment': True,
-                                                                 'can_mark_as_read': True,
-                                                                 'editable': True,
-                                                                 'manage': True,
-                                                                 'owner': True,
-                                                                 'see_answers': True,
-                                                                 'teacher': True},
-                                                      'title': d.title,
-                                                      'unpublished': False},
-                                              'incomplete': False,
-                                              'num_par_results': 1,
-                                              'num_title_results': 0,
-                                              'par_results': [{'num_results': 1,
-                                                               'par_id': d.document.get_paragraphs()[0].get_id(),
-                                                               'preview': '...stion: What cats like the '
-                                                                          'most?         answer: '
-                                                                          'Catnip.         ``` ```',
-                                                               'results': []}],
-                                              'title_results': []}],
-                                 'title_result_count': 0,
-                                 'word_result_count': 1})
+                 expect_content={
+                     'content_results': [{'doc': {'id': d.id,
+                                                  'isFolder': False,
+                                                  'location': d.location,
+                                                  'modified': 'just now',
+                                                  'name': d.short_name,
+                                                  'owner': {
+                                                      'id': self.get_test_user_1_group_id(),
+                                                      'name': self.test_user_1.name},
+                                                  'path': d.path,
+                                                  'public': True,
+                                                  'rights': {'browse_own_answers': True,
+                                                             'can_comment': True,
+                                                             'can_mark_as_read': True,
+                                                             'editable': True,
+                                                             'manage': True,
+                                                             'owner': True,
+                                                             'see_answers': True,
+                                                             'teacher': True},
+                                                  'title': d.title,
+                                                  'unpublished': False},
+                                          'incomplete': False,
+                                          'num_par_results': 1,
+                                          'num_title_results': 0,
+                                          'par_results': [{'num_results': 1,
+                                                           'par_id': d.document.get_paragraphs()[0].get_id(),
+                                                           'preview': '...stion: What cats like '
+                                                                      'the most?         answer: '
+                                                                      'Catnip.         ``` ```',
+                                                           'results': []}],
+                                          'title_results': []}],
+                     'errors': [],
+                     'incomplete_search_reason': '',
+                     'title_result_count': 0,
+                     'title_results': [],
+                     'word_result_count': 1})
 
         self.get(f'search?folder=&query={text_to_search}&ignorePlugins=True', expect_status=200,
-                 expect_content={'incomplete_search_reason': '',
+                 expect_content={'content_results': [],
                                  'errors': [],
-                                 'results': [],
+                                 'incomplete_search_reason': '',
                                  'title_result_count': 0,
+                                 'title_results': [],
                                  'word_result_count': 0})
 
         self.login_test2()
         self.test_user_2.grant_access(d.id, 'view')
         self.get(f'search?folder=&query={text_to_search}', expect_status=200,
-                 expect_content={'incomplete_search_reason': '',
+                 expect_content={'content_results': [],
                                  'errors': [],
-                                 'results': [],
+                                 'incomplete_search_reason': '',
                                  'title_result_count': 0,
+                                 'title_results': [],
                                  'word_result_count': 0})
 
     def test_title_search(self):
-        u = self.test_user_1
+        self.make_admin(self.test_user_1)
         self.login_test1()
-        d = self.create_doc()
-        search_titles = True
-        text_to_search = d.title
-        url = f'search/titles?caseSensitive=false&folder=&query={text_to_search}'
-        self.get(url, expect_status=200, expect_content={'incomplete_search_reason': '',
+        search_word = "Some title"
+        d = self.create_doc(title=search_word, initial_par="I cannot be found without some par content here.")
+        self.get(f'search/createContentFile')
+        url = f'search?folder=&query={search_word}&searchContent=false&searchTitles=true'
+        self.get(url, expect_status=200, expect_content={'content_results': [],
                                                          'errors': [],
-                                                         'results': [{'doc': {'id': d.id,
-                                                                              'isFolder': False,
-                                                                              'location': d.location,
-                                                                              'modified': 'just now',
-                                                                              'name': d.short_name,
-                                                                              'owner': {
-                                                                                  'id': self.get_test_user_1_group_id(),
-                                                                                  'name': u.name},
-                                                                              'path': d.path,
-                                                                              'public': True,
-                                                                              'rights': {'browse_own_answers': True,
-                                                                                         'can_comment': True,
-                                                                                         'can_mark_as_read': True,
-                                                                                         'editable': True,
-                                                                                         'manage': True,
-                                                                                         'owner': True,
-                                                                                         'see_answers': True,
-                                                                                         'teacher': True},
-                                                                              'title': d.title,
-                                                                              'unpublished': True},
-                                                                      'incomplete': False,
-                                                                      'num_par_results': 0,
-                                                                      'num_title_results': 1,
-                                                                      'par_results': [],
-                                                                      'title_results': [{'num_results': 1,
-                                                                                         'results': []}]}],
+                                                         'incomplete_search_reason': '',
                                                          'title_result_count': 1,
+                                                         'title_results': [{'doc': {'id': d.id,
+                                                                                    'isFolder': False,
+                                                                                    'location': 'users/test-user-1',
+                                                                                    'modified': 'just now',
+                                                                                    'name': d.short_name,
+                                                                                    'owner': {
+                                                                                        'id': self.get_test_user_1_group_id(),
+                                                                                        'name': self.test_user_1.name},
+                                                                                    'path': d.path,
+                                                                                    'public': True,
+                                                                                    'rights': {
+                                                                                        'browse_own_answers': True,
+                                                                                        'can_comment': True,
+                                                                                        'can_mark_as_read': True,
+                                                                                        'editable': True,
+                                                                                        'manage': True,
+                                                                                        'owner': True,
+                                                                                        'see_answers': True,
+                                                                                        'teacher': True},
+                                                                                    'title': d.title,
+                                                                                    'unpublished': True},
+                                                                            'incomplete': False,
+                                                                            'num_par_results': 0,
+                                                                            'num_title_results': 1,
+                                                                            'par_results': [],
+                                                                            'title_results': [
+                                                                                {'num_results': 1, 'results': []}]}],
                                                          'word_result_count': 0})
 
     def test_tag_search(self):

@@ -543,6 +543,7 @@ class TimRouteTest(TimDbTest):
                    copy_from: Optional[int] = None,
                    cite: Optional[int] = None,
                    template: Optional[str] = None,
+                   title: Optional[str] = None,
                    expect_status=200,
                    **kwargs
                    ) -> Optional[DocEntry]:
@@ -560,10 +561,12 @@ class TimRouteTest(TimDbTest):
         if path is None:
             path = f'{self.current_user.get_personal_folder().path}/doc{self.doc_num}'
             self.__class__.doc_num += 1
+        if title is None:
+            title = 'document ' + str(self.doc_num)
         resp = self.json_post('/createItem', {
             'item_path': path,
             'item_type': 'document',
-            'item_title': 'document ' + str(self.doc_num),
+            'item_title': title,
             **({'copy': copy_from} if copy_from else {}),
             **({'template': template} if template else {}),
             **({'cite': cite} if cite else {})
