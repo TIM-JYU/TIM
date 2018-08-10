@@ -458,7 +458,6 @@ def create_search_file():
     remove_deleted_pars = get_option(request, 'removeDeletedPars', default=False, cast=bool)
     # Include document titles in the file.
     add_titles = get_option(request, 'addTitles', default=False, cast=bool)
-
     dir_path = Path(app.config['FILES_PATH']) / 'pars'
     raw_file_name = RAW_CONTENT_FILE_NAME
     file_name = PROCESSED_CONTENT_FILE_NAME
@@ -699,6 +698,8 @@ def search():
     max_results = get_option(request, 'maxResults', default=1000000, cast=int)
     max_doc_results = get_option(request, 'maxDocResults', default=10000, cast=int)
     ignore_plugins = get_option(request, 'ignorePlugins', default=False, cast=bool)
+    search_titles = get_option(request, 'searchTitles', default=True, cast=bool)
+    search_content = get_option(request, 'searchContent', default=True, cast=bool)
 
     validate_query(query, search_whole_words)
 
@@ -710,6 +711,7 @@ def search():
     output = []
     results = []
     word_result_count = 0
+    title_result_count = 0
 
     cmd = ["grep"]
 
@@ -780,51 +782,62 @@ def search():
                 doc_result = DocResult(doc_info)
                 edit_access = has_edit_access(doc_info)
 
-                for i, par in enumerate(pars):
-                    par_id = par['id']
-                    md = par['md']
+                # Title search:
+                if search_titles:
+                    doc_title = line_info['doc_title']
+                    title_matches = list(term_regex.finditer(doc_title))
+                    if title_matches:
+                        title_match_count = len(title_matches)
+                        doc_result.add_title_result(TitleResult(alt_num_results=title_match_count))
+                        title_result_count += title_match_count
 
-                    # Tries to get plugin and settings key values from dict;
-                    # if par isn't either, gives KeyError and does nothing.
-                    try:
-                        plugin = par['attrs']['plugin']
-                        # If ignore_plugins or no edit access, leave out plugin and setting results.
-                        if ignore_plugins or not edit_access:
-                            continue
-                    except KeyError:
-                        pass
-                    try:
-                        settings = par['attrs']['settings']
-                        if ignore_plugins or not edit_access:
-                            continue
-                    except KeyError:
-                        pass
+                # Pars search:
+                if search_content:
+                    for i, par in enumerate(pars):
+                        par_id = par['id']
+                        md = par['md']
 
-                    par_result = ParResult(par_id)
-                    matches = list(term_regex.finditer(md))
+                        # Tries to get plugin and settings key values from dict;
+                        # if par isn't either, gives KeyError and does nothing.
+                        try:
+                            plugin = par['attrs']['plugin']
+                            # If ignore_plugins or no edit access, leave out plugin and setting results.
+                            if ignore_plugins or not edit_access:
+                                continue
+                        except KeyError:
+                            pass
+                        try:
+                            settings = par['attrs']['settings']
+                            if ignore_plugins or not edit_access:
+                                continue
+                        except KeyError:
+                            pass
 
-                    if matches:
-                        # Word results aren't used for anything currently,
-                        # so to save time and bandwidth they are replaced by a number.
-                        par_result.alt_num_results = len(matches)
-                        # for m in matches:
-                        #     result = WordResult(match_word=m.group(0),
-                        #                         match_start=m.start(),
-                        #                         match_end=m.end())
-                        #     par_result.add_result(result)
-                        par_result.preview = preview_result(md, query, matches[0])
+                        par_result = ParResult(par_id)
+                        par_matches = list(term_regex.finditer(md))
 
-                    # Don't add empty par result (in error cases).
-                    if par_result.has_results():
-                        doc_result.add_par_result(par_result)
+                        if par_matches:
+                            # Word results aren't used for anything currently,
+                            # so to save time and bandwidth they are replaced by a number.
+                            par_result.alt_num_results = len(par_matches)
+                            # for m in matches:
+                            #     result = WordResult(match_word=m.group(0),
+                            #                         match_start=m.start(),
+                            #                         match_end=m.end())
+                            #     par_result.add_result(result)
+                            par_result.preview = preview_result(md, query, par_matches[0])
 
-                    # End paragraph match search if limit has been reached, but
-                    # don't break and mark as incomplete if this was the last paragraph.
-                    if doc_result.get_par_match_count() > max_doc_results and i != len(pars) - 1:
-                        incomplete_search_reason = f"one or more document has over the maximum " \
-                                                   f"of {max_doc_results} results"
-                        doc_result.incomplete = True
-                        break
+                        # Don't add empty par result (in error cases).
+                        if par_result.has_results():
+                            doc_result.add_par_result(par_result)
+
+                        # End paragraph match search if limit has been reached, but
+                        # don't break and mark as incomplete if this was the last paragraph.
+                        if doc_result.get_par_match_count() > max_doc_results and i != len(pars) - 1:
+                            incomplete_search_reason = f"one or more document has over the maximum " \
+                                                       f"of {max_doc_results} results"
+                            doc_result.incomplete = True
+                            break
 
                 # If no valid paragraph results, skip document.
                 if doc_result.has_results():
@@ -842,4 +855,5 @@ def search():
     return json_response(result_response(
         results,
         word_result_count=word_result_count,
+        title_result_count=title_result_count,
         incomplete_search_reason=incomplete_search_reason))

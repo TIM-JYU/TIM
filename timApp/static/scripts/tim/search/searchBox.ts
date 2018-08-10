@@ -174,12 +174,12 @@ export class SearchBoxCtrl implements IController {
         if (this.searchTags) {
             await this.tagSearch();
         }
-        if (this.searchWords) {
+        if (this.searchWords || this.searchDocNames) {
             await this.wordSearch();
         }
-        if (this.searchDocNames) {
-            await this.titleSearch();
-        }
+        // if (this.searchDocNames) {
+        //     await this.titleSearch();
+        // }
         this.loading = false;
         if (this.results.length === 0 && this.tagResults.length === 0 &&
                 this.titleResults.length === 0 && !this.errorMessage) {
@@ -365,7 +365,9 @@ export class SearchBoxCtrl implements IController {
                 maxDocResults: this.maxDocResults,
                 query: this.query,
                 regex: this.regex,
+                searchContent: this.searchWords,
                 searchOwned: this.searchOwned,
+                searchTitles: this.searchDocNames,
                 searchWholeWords: this.searchWholeWords,
             },
             url: "/search",
@@ -381,6 +383,7 @@ export class SearchBoxCtrl implements IController {
                 this.incompleteSearchReason = response.data.incomplete_search_reason;
             }
             this.wordMatchCount = response.data.word_result_count;
+            this.titleMatchCount = response.data.title_result_count;
         }
     }
 
