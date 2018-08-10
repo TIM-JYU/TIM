@@ -72,7 +72,8 @@ def get_common_search_params(req) -> Tuple[str, str, bool, bool, bool, bool]:
     return query, folder, regex, case_sensitive, search_whole_words, search_owned_docs
 
 
-def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str = "", title: bool = False) -> None:
+def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str = "",
+                     title: bool = False, path: bool = False) -> None:
     """
     Forms an error report and sends it to timLog.
     :param error: The error's message
@@ -81,6 +82,7 @@ def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str =
     :param tag: Tag name.
     :param par: Par id.
     :param title: If error was in title search.
+    :param path: If error was in path search.
     :return: None.
     """
     if not error:
@@ -89,13 +91,16 @@ def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str =
     tag_part = ""
     par_part = ""
     title_part = ""
+    path_part = ""
     if tag:
         tag_part = f" tag {tag}"
     if par:
         par_part = f" paragraph {par}"
     if title:
         title_part = " title"
-    log_error(common_part + tag_part + par_part + title_part)
+    if path:
+        path_part = " path"
+    log_error(common_part + tag_part + par_part + title_part + par_part)
 
 
 def get_documents_by_access_type(access: AccessType) -> List[DocEntry]:
@@ -402,7 +407,7 @@ def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
     doc_info = DocEntry.find_by_id(doc_id)
     if not doc_info:
         return None
-    return json.dumps({'doc_id': doc_id, 'doc_title': doc_info.title, 'doc_path': doc_info.path},
+    return json.dumps({'doc_id': doc_id, 'doc_title': doc_info.title},
                       ensure_ascii=False) + '\n'
 
 
@@ -473,8 +478,7 @@ def create_search_file():
 
     # Checks paragraph existence before adding at the cost of taking more time.
     remove_deleted_pars = get_option(request, 'removeDeletedPars', default=True, cast=bool)
-    # Include document titles in the file.
-    # add_titles = get_option(request, 'addTitles', default=False, cast=bool)
+
     dir_path = Path(app.config['FILES_PATH']) / 'pars'
     raw_file_name = RAW_CONTENT_FILE_NAME
     content_file_name = PROCESSED_CONTENT_FILE_NAME
@@ -498,7 +502,7 @@ def create_search_file():
         def process_raw_file():
             with raw_file, open(
                     dir_path / temp_content_file_name, "w+", encoding='utf-8') as temp_content_file, open(
-                    dir_path / temp_title_file_name, "w+", encoding='utf-8') as temp_title_file:
+                dir_path / temp_title_file_name, "w+", encoding='utf-8') as temp_title_file:
 
                 current_doc, current_pars = -1, []
                 processed = 0
@@ -718,6 +722,86 @@ def tag_search():
             abort(400, "MemoryError: results too large")
         except Exception as e:
             abort(400, f"Error encountered while formatting JSON-response: {e}")
+
+
+@search_routes.route("paths")
+def path_search():
+    """
+    Document path search. Path results are treated as title results and use
+    TitleResult objects and content & title search interface.
+    :return: Path results.
+    """
+    (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
+    validate_query(query, search_whole_words)
+    term_regex = None
+    if case_sensitive:
+        flags = re.DOTALL
+    else:
+        flags = re.DOTALL | re.IGNORECASE
+    if regex:
+        term = query
+    else:
+        term = re.escape(query)
+    if search_whole_words:
+        term = fr"\b{term}\b"
+    try:
+        term_regex = re.compile(term, flags)
+    except sre_constants.error as e:
+        abort(400, f"Invalid regex: {str(e)}")
+
+    db_term = f"%{query}%"
+    custom_filter = None
+    if regex:
+        if search_owned_docs:
+            custom_filter = DocEntry.id.in_(get_current_user_object().get_personal_group().accesses.
+                                            filter_by(type=AccessType.owner.value)
+                                            .with_entities(BlockAccess.block_id))
+    else:
+        if case_sensitive:
+            if search_owned_docs:
+                custom_filter = DocEntry.id.in_(get_current_user_object().get_personal_group().accesses.
+                                                filter_by(type=AccessType.owner.value)
+                                                .with_entities(BlockAccess.block_id)) & DocEntry.name.like(db_term)
+            else:
+                custom_filter = DocEntry.name.like(db_term)
+        else:
+            if search_owned_docs:
+                custom_filter = DocEntry.id.in_(get_current_user_object().get_personal_group().accesses.
+                                                filter_by(type=AccessType.owner.value)
+                                                .with_entities(BlockAccess.block_id)) & DocEntry.name.ilike(db_term)
+            else:
+                custom_filter = DocEntry.name.ilike(db_term)
+
+    docs = get_documents(
+        filter_user=get_current_user_object(),
+        filter_folder=folder,
+        query_options=lazyload(DocEntry._block),
+        custom_filter=custom_filter,
+        search_recursively=True)
+    path_results = []
+    path_result_count = 0
+    for d in docs:
+        current_doc = d.path
+        try:
+            path_result = TitleResult()
+            matches = list(term_regex.finditer(d.path))
+            if matches:
+                path_result.alt_num_results = len(matches)
+
+            if path_result.has_results():
+                r = DocResult(d)
+                r.add_title_result(path_result)
+                path_results.append(r)
+                path_result_count += r.get_title_match_count()
+        except Exception as e:
+            log_search_error(get_error_message(e), query, current_doc, par="")
+
+    return json_response({'title_result_count': path_result_count,
+                          'word_result_count': 0,
+                          'errors': [],
+                          'incomplete_search_reason': "",
+                          'title_results': path_results,
+                          'content_results': []})
 
 
 @search_routes.route("")

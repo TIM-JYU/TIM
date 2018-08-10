@@ -65,7 +65,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
         this.results = ctrl.results;
         this.tagResults = ctrl.tagResults;
         this.titleResults = ctrl.titleResults;
-        this.totalResults = ctrl.titleMatchCount + ctrl.tagMatchCount + ctrl.wordMatchCount;
+        this.totalResults = ctrl.titleMatchCount + ctrl.tagMatchCount + ctrl.wordMatchCount + ctrl.pathMatchCount;
         this.folder = ctrl.folder;
         this.errorMessage = ctrl.resultErrorMessage;
         this.searchWord = ctrl.query;

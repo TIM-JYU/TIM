@@ -99,6 +99,7 @@ export class SearchBoxCtrl implements IController {
     public tagMatchCount: number = 0;
     public wordMatchCount: number = 0;
     public titleMatchCount: number = 0;
+    public pathMatchCount: number = 0;
     public tagResults: ITagSearchResult[] = [];
     public titleResults: IDocSearchResult[] = [];
     public incompleteSearchReason: string | undefined;
@@ -116,6 +117,7 @@ export class SearchBoxCtrl implements IController {
     private searchContent: boolean = true; // Content search. On by default.
     private searchWholeWords: boolean = true; // Whole word search.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
+    private searchPaths: boolean = false; // Search document paths.
 
     // Controller's private attributes:
     private errorMessage: string | undefined; // Message displayed only in search panel.
@@ -161,11 +163,10 @@ export class SearchBoxCtrl implements IController {
         if (this.loading) {
             return;
         }
-        console.log(this.searchTitles);
 
         this.resetAttributes();
         this.loading = true;
-        if (!this.searchTitles && !this.searchTags && !this.searchContent) {
+        if (!this.searchTitles && !this.searchTags && !this.searchContent && !this.searchPaths) {
             this.errorMessage = (`All search scope options are unchecked.`);
             this.loading = false;
             return;
@@ -177,15 +178,12 @@ export class SearchBoxCtrl implements IController {
         if (this.searchTags) {
             await this.tagSearch();
         }
+        if (this.searchPaths) {
+            await this.pathSearch();
+        }
         if (this.searchContent || this.searchTitles) {
             await this.wordSearch();
-            console.log(this.titleResults);
-            console.log(this.results);
         }
-        // // If title search is selected but content search isn't, do it on a separate route.
-        // if (this.searchTitles && !this.searchContent) {
-        //     await this.titleSearch();
-        // }
         this.loading = false;
         if (this.results.length === 0 && this.tagResults.length === 0 &&
                 this.titleResults.length === 0 && !this.errorMessage) {
@@ -246,7 +244,6 @@ export class SearchBoxCtrl implements IController {
             this.storage.searchWordStorage = this.query;
         }
         this.storage.optionsStorage = [];
-        // Alphabetical order.
         this.storage.optionsStorage.push(this.advancedSearch);
         this.storage.optionsStorage.push(this.caseSensitive);
         this.storage.optionsStorage.push(this.createNewWindow);
@@ -257,6 +254,7 @@ export class SearchBoxCtrl implements IController {
         this.storage.optionsStorage.push(this.searchTags);
         this.storage.optionsStorage.push(this.searchOwned);
         this.storage.optionsStorage.push(this.searchContent);
+        this.storage.optionsStorage.push(this.searchPaths);
     }
 
     /**
@@ -266,7 +264,7 @@ export class SearchBoxCtrl implements IController {
         if (this.storage.searchWordStorage) {
             this.query = this.storage.searchWordStorage;
         }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 9) {
+        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 10) {
             this.advancedSearch = this.storage.optionsStorage[0];
             this.caseSensitive = this.storage.optionsStorage[1];
             this.createNewWindow = this.storage.optionsStorage[2];
@@ -277,6 +275,7 @@ export class SearchBoxCtrl implements IController {
             this.searchTags = this.storage.optionsStorage[7];
             this.searchOwned = this.storage.optionsStorage[8];
             this.searchContent = this.storage.optionsStorage[9];
+            this.searchPaths = this.storage.optionsStorage[10];
         }
     }
 
@@ -325,7 +324,39 @@ export class SearchBoxCtrl implements IController {
     }
 
     /**
-     * Document title search (used when content search is off).
+     * Document path search.
+     * @returns {Promise<void>}
+     */
+    private async pathSearch() {
+        const [err, response] = await to($http<ISearchResultsInfo>({
+            method: "GET",
+            params: {
+                caseSensitive: this.caseSensitive,
+                folder: this.folder,
+                query: this.query,
+                regex: this.regex,
+                searchOwned: this.searchOwned,
+                searchWholeWords: this.searchWholeWords,
+            },
+            url: "/search/paths",
+        }));
+        if (err) {
+            this.errorMessage = this.getErrorMessage(err);
+            this.titleResults = [];
+            return;
+        }
+        if (response) {
+            // Path results use title interface.
+            this.titleResults.push(...response.data.title_results);
+            if (response.data.incomplete_search_reason) {
+                this.incompleteSearchReason = response.data.incomplete_search_reason;
+            }
+            this.pathMatchCount = response.data.title_result_count;
+        }
+    }
+
+    /**
+     * Document title search (unused).
      * @returns {Promise<void>}
      */
     private async titleSearch() {
@@ -385,7 +416,7 @@ export class SearchBoxCtrl implements IController {
         }
         if (response) {
             this.results = response.data.content_results;
-            this.titleResults = response.data.title_results;
+            this.titleResults.push(...response.data.title_results);
             if (response.data.incomplete_search_reason) {
                 this.incompleteSearchReason = response.data.incomplete_search_reason;
             }
@@ -567,12 +598,15 @@ timApp.component("searchBox", {
         <label class="font-weight-normal" title="Show result of each search in new window">
             <input type="checkbox" ng-model="$ctrl.createNewWindow"> Open new window for each search</label>
         <h5 class="font-weight-normal">Search scope:</h5>
+        <label class="font-weight-normal" title="Search document content">
+            <input type="checkbox" ng-model="$ctrl.searchContent"> Content search</label>
         <label class="font-weight-normal" title="Search document titles">
             <input type="checkbox" ng-model="$ctrl.searchTitles"> Title search</label>
         <label class="font-weight-normal" title="Search document tags">
             <input type="checkbox" ng-model="$ctrl.searchTags"> Tag search</label>
-        <label class="font-weight-normal" title="Search document content">
-            <input type="checkbox" ng-model="$ctrl.searchContent"> Content search</label>
+        <label class="font-weight-normal" title="Search document paths">
+            <input type="checkbox" ng-model="$ctrl.searchPaths"> Path search</label>
+
       </form>
     </div>
 `,
