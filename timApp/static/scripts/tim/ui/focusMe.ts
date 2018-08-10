@@ -17,7 +17,7 @@ timApp.directive("focusMe", [() => {
             element.bind("blur", () => {
                 // Catch "model.assign is not a function"
                 try {
-                    scope.$apply(model.assign(scope, false));
+                    scope.$applyAsync(model.assign(scope, false));
                 } catch (e) {
                 }
             });

@@ -16,6 +16,7 @@ export class ShowCourseDialogController extends DialogController<{ params: IItem
     private courseCode: string = "";
     private expires: Moment | undefined;
     private errorMessage?: string;
+    private focusName: boolean = true;
     private successMessage?: string;
     private subjects?: ISubjectList;
     private datePickerOptions: EonasdanBootstrapDatetimepicker.SetOptions;
