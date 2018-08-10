@@ -38,7 +38,6 @@ PREVIEW_MAX_LENGTH = 160
 PROCESSED_CONTENT_FILE_NAME = "content_all_processed.log"
 PROCESSED_TITLE_FILE_NAME = "titles_all_processed.log"
 RAW_CONTENT_FILE_NAME = "all.log"
-MIN_CONTENT_FILE_LINE_LENGTH = 70  # Excludes empty documents.
 
 
 @search_routes.route('getFolders')
@@ -518,8 +517,9 @@ def create_search_file():
                         else:
                             new_content_line = add_doc_info_content_line(current_doc, current_pars, remove_deleted_pars)
                             new_title_line = add_doc_info_title_line(current_doc)
-                            if new_content_line and len(new_content_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
+                            if new_content_line:
                                 temp_content_file.write(new_content_line)
+                            if new_title_line:
                                 temp_title_file.write(new_title_line)
                             current_doc = doc_id
                             current_pars.clear()
@@ -535,8 +535,9 @@ def create_search_file():
                 if current_doc and current_pars:
                     new_content_line = add_doc_info_content_line(current_doc, current_pars, remove_deleted_pars)
                     new_title_line = add_doc_info_title_line(current_doc)
-                    if new_content_line and len(new_content_line) >= MIN_CONTENT_FILE_LINE_LENGTH:
+                    if new_content_line:
                         temp_content_file.write(new_content_line)
+                    if new_title_line:
                         temp_title_file.write(new_title_line)
                 yield f'Finished processing all {processed} paragraphs\n'
 
@@ -604,7 +605,6 @@ def title_search():
         term_regex = re.compile(term, flags)
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
-    # TODO: Make faster.
     if term_regex:
         for d in docs:
             current_doc = d.path
@@ -800,7 +800,12 @@ def search():
             abort(400, get_error_message(e))
 
     if not content_output and not title_output:
-        return json_response(result_response([]))
+        return json_response({'title_result_count': title_result_count,
+                              'word_result_count': word_result_count,
+                              'errors': [],
+                              'incomplete_search_reason': incomplete_search_reason,
+                              'title_results': title_results,
+                              'content_results': content_results})
 
     if search_owned_docs:
         owned_docs = get_documents_by_access_type(AccessType.owner)
@@ -810,7 +815,7 @@ def search():
     for line in title_output:
         try:
             # Any line shorter than this is broken.
-            if line and len(line) > 30:
+            if line and len(line) > 10:
                 line_info = json.loads(line)
                 doc_id = line_info['doc_id']
                 # TODO: Handle aliases.
@@ -844,7 +849,7 @@ def search():
     for line in content_output:
         try:
             # Any line shorter than this is broken.
-            if line and len(line) > 60:
+            if line and len(line) > 10:
 
                 # The file is supposed to contain doc_id and pars in a list for each document.
                 line_info = json.loads(line)
