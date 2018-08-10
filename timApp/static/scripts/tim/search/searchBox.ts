@@ -110,9 +110,9 @@ export class SearchBoxCtrl implements IController {
     private advancedSearch: boolean = false; // Toggle advanced options panel.
     private createNewWindow: boolean = false; // Open new dialog for each search.
     private ignorePlugins: boolean = false; // Leave plugins out of the results.
-    private searchDocNames: boolean = true; // Doc title search. On by default.
+    private searchTitles: boolean = true; // Doc title search. On by default.
     private searchTags: boolean = true; // Tag search. On by default.
-    private searchWords: boolean = true; // Content search. On by default.
+    private searchContent: boolean = true; // Content search. On by default.
     private searchWholeWords: boolean = true; // Whole word search.
     private searchOwned: boolean = false; // Limit search to docs owned by the user.
 
@@ -162,7 +162,7 @@ export class SearchBoxCtrl implements IController {
         }
         this.resetAttributes();
         this.loading = true;
-        if (!this.searchDocNames && !this.searchTags && !this.searchWords) {
+        if (!this.searchTitles && !this.searchTags && !this.searchContent) {
             this.errorMessage = (`All search scope options are unchecked.`);
             this.loading = false;
             return;
@@ -174,12 +174,14 @@ export class SearchBoxCtrl implements IController {
         if (this.searchTags) {
             await this.tagSearch();
         }
-        if (this.searchWords || this.searchDocNames) {
+        // If both title and content searches are selected, they're done in the content search route.
+        if (this.searchContent) {
             await this.wordSearch();
         }
-        // if (this.searchDocNames) {
-        //     await this.titleSearch();
-        // }
+        // If title search is selected but content search isn't, do it on a separate route.
+        if (this.searchTitles && !this.searchContent) {
+            await this.titleSearch();
+        }
         this.loading = false;
         if (this.results.length === 0 && this.tagResults.length === 0 &&
                 this.titleResults.length === 0 && !this.errorMessage) {
@@ -227,7 +229,6 @@ export class SearchBoxCtrl implements IController {
      * @param event Keyboard event.
      */
     async keyPressed(event: KeyboardEvent) {
-        // TODO: Causes "$digest already in progress" errors.
         if (event.which === 13) {
             await this.search();
         }
@@ -247,11 +248,11 @@ export class SearchBoxCtrl implements IController {
         this.storage.optionsStorage.push(this.createNewWindow);
         this.storage.optionsStorage.push(this.ignorePlugins);
         this.storage.optionsStorage.push(this.regex);
-        this.storage.optionsStorage.push(this.searchDocNames);
+        this.storage.optionsStorage.push(this.searchTitles);
         this.storage.optionsStorage.push(this.searchWholeWords);
         this.storage.optionsStorage.push(this.searchTags);
         this.storage.optionsStorage.push(this.searchOwned);
-        this.storage.optionsStorage.push(this.searchWords);
+        this.storage.optionsStorage.push(this.searchContent);
     }
 
     /**
@@ -267,11 +268,11 @@ export class SearchBoxCtrl implements IController {
             this.createNewWindow = this.storage.optionsStorage[2];
             this.ignorePlugins = this.storage.optionsStorage[3];
             this.regex = this.storage.optionsStorage[4];
-            this.searchDocNames = this.storage.optionsStorage[5];
+            this.searchTitles = this.storage.optionsStorage[5];
             this.searchWholeWords = this.storage.optionsStorage[6];
             this.searchTags = this.storage.optionsStorage[7];
             this.searchOwned = this.storage.optionsStorage[8];
-            this.searchWords = this.storage.optionsStorage[9];
+            this.searchContent = this.storage.optionsStorage[9];
         }
     }
 
@@ -320,7 +321,7 @@ export class SearchBoxCtrl implements IController {
     }
 
     /**
-     * Document title search.
+     * Document title search (used when content search is off).
      * @returns {Promise<void>}
      */
     private async titleSearch() {
@@ -351,7 +352,7 @@ export class SearchBoxCtrl implements IController {
     }
 
     /**
-     * Document paragraph word search.
+     * Document paragraph word and title search.
      * @returns {Promise<void>}
      */
     private async wordSearch() {
@@ -365,9 +366,9 @@ export class SearchBoxCtrl implements IController {
                 maxDocResults: this.maxDocResults,
                 query: this.query,
                 regex: this.regex,
-                searchContent: this.searchWords,
+                searchContent: this.searchContent,
                 searchOwned: this.searchOwned,
-                searchTitles: this.searchDocNames,
+                searchTitles: this.searchTitles,
                 searchWholeWords: this.searchWholeWords,
             },
             url: "/search",
@@ -561,11 +562,11 @@ timApp.component("searchBox", {
             <input type="checkbox" ng-model="$ctrl.createNewWindow"> Open new window for each search</label>
         <h5 class="font-weight-normal">Search scope:</h5>
         <label class="font-weight-normal" title="Search document titles">
-            <input type="checkbox" ng-model="$ctrl.searchDocNames"> Title search</label>
+            <input type="checkbox" ng-model="$ctrl.searchTitles"> Title search</label>
         <label class="font-weight-normal" title="Search document tags">
             <input type="checkbox" ng-model="$ctrl.searchTags"> Tag search</label>
         <label class="font-weight-normal" title="Search document content">
-            <input type="checkbox" ng-model="$ctrl.searchWords"> Content search</label>
+            <input type="checkbox" ng-model="$ctrl.searchContent"> Content search</label>
       </form>
     </div>
 `,

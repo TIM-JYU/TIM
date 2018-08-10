@@ -3,13 +3,9 @@
  */
 
 import {IRootElementService, IScope} from "angular";
-import * as focusMe from "tim/ui/focusMe";
 import {ITag, TagType} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {markAsUsed} from "../util/utils";
 import {IDocSearchResult, ITagSearchResult, SearchBoxCtrl} from "./searchBox";
-
-markAsUsed(focusMe);
 
 export interface ISearchResultDisplay {
     result: IDocSearchResult;

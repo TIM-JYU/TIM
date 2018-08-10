@@ -14,8 +14,8 @@ from alembic import op
 
 
 def upgrade():
-    op.create_index('doc_id_index', 'docentry', ['id'], unique=False)
+    op.create_index('docentry_id_idx', 'docentry', ['id'], unique=False)
 
 
 def downgrade():
-    op.drop_index('doc_id_index', table_name='docentry')
+    op.drop_index('docentry_id_idx', table_name='docentry')
