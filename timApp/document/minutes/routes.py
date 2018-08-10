@@ -30,7 +30,7 @@ def create_minute_extracts(doc):
     :param doc:
     :return:
     """
-    d = DocEntry.find_by_path(doc, try_translation=True)
+    d = DocEntry.find_by_path(doc)
     if not d:
         abort(404)
     verify_manage_access(d)
@@ -160,7 +160,7 @@ def create_minutes_route():
 
     item_path, item_title, copy_id = verify_json_params('item_path', 'item_title', 'copy')
 
-    d = DocEntry.find_by_id(copy_id, try_translation=True)
+    d = DocEntry.find_by_id(copy_id)
     if not d:
         abort(404)
 
@@ -180,7 +180,7 @@ def create_or_get_and_wipe_document(path: str, title: str):
     :param title: The title of the document.
     :return: The DocEntry of a new document or an already existing document that has been wiped clean.
     """
-    d = DocEntry.find_by_path(path, try_translation=False)
+    d = DocEntry.find_by_path(path)
 
     if not d:
         return do_create_item(path, "document", title, copied_doc=None, template_name=None, use_template=False)
@@ -200,7 +200,7 @@ def get_attachment_list(doc):
     :return: List of valid attachments and whether the list is incomplete.
     """
     try:
-        d = DocEntry.find_by_path(doc, try_translation=True)
+        d = DocEntry.find_by_path(doc)
         if not d:
             abort(404)
         verify_edit_access(d)
@@ -226,7 +226,7 @@ def merge_attachments(doc):
     :return: Merged pdf-file.
     """
     try:
-        d = DocEntry.find_by_path(doc, try_translation=True)
+        d = DocEntry.find_by_path(doc)
         if not d:
             abort(404)
         verify_edit_access(d)
@@ -254,7 +254,7 @@ def get_attachments(doc):
     :return: merged pdf-file
     """
     try:
-        d = DocEntry.find_by_path(doc, try_translation=True)
+        d = DocEntry.find_by_path(doc)
         if not d:
             abort(404)
         verify_edit_access(d)

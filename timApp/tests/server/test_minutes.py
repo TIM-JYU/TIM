@@ -15,7 +15,7 @@ class MinutesHandlingTest(TimRouteTest):
                        json_data={"item_path": minutes_document_path,
                                   "item_title": f"PK{knro}",
                                   "copy": d.id})
-        d2 = DocEntry.find_by_path(minutes_document_path, try_translation=False)
+        d2 = DocEntry.find_by_path(minutes_document_path)
         self.assertIsNotNone(d2)
         self.assertTrue(d2.document.get_settings().is_minutes())
 

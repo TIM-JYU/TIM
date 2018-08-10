@@ -35,7 +35,7 @@ def add_tag(doc):
     :returns Tag adding success response.
     """
 
-    d = DocEntry.find_by_path(doc, try_translation=True)
+    d = DocEntry.find_by_path(doc)
     if not d:
         abort(404)
     verify_manage_access(d)
@@ -84,7 +84,7 @@ def edit_tag(doc):
     :param doc The target document.
     :returns Edit success response.
     """
-    d = DocEntry.find_by_path(doc, try_translation=True)
+    d = DocEntry.find_by_path(doc)
     if not d:
         abort(404)
     verify_manage_access(d)
@@ -126,7 +126,7 @@ def remove_tag(doc):
     :param doc The target document.
     :returns Removal success response.
     """
-    d = DocEntry.find_by_path(doc, try_translation=True)
+    d = DocEntry.find_by_path(doc)
     if not d:
         abort(404)
     verify_manage_access(d)
@@ -155,7 +155,7 @@ def get_tags(doc):
     :param doc The target document.
     :returns The list of document's Tag-objects converted into JSON.
     """
-    d = DocEntry.find_by_path(doc, try_translation=True)
+    d = DocEntry.find_by_path(doc)
     if not d:
         abort(404)
     verify_view_access(d)

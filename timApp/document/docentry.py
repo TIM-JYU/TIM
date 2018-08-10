@@ -80,7 +80,7 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry.query.filter_by(id=doc_id).all()
 
     @staticmethod
-    def find_by_id(doc_id: int, try_translation=False) -> Optional['DocInfo']:
+    def find_by_id(doc_id: int) -> Optional['DocInfo']:
         """Finds a DocInfo by id.
 
         TODO: This method doesn't really belong in DocEntry class.
@@ -88,16 +88,13 @@ class DocEntry(db.Model, DocInfo):
         d = DocEntry.query.filter_by(id=doc_id).first()
         if d:
             return d
-        if try_translation:
-            d = Translation.query.get(doc_id)
-        return d
+        return Translation.query.get(doc_id)
 
     @staticmethod
-    def find_by_path(path: str, fallback_to_id=False, try_translation=False) -> Optional['DocInfo']:
+    def find_by_path(path: str, fallback_to_id=False, try_translation=True) -> Optional['DocInfo']:
         """Finds a DocInfo by id.
 
         TODO: This method doesn't really belong in DocEntry class.
-        TODO: Try translation should probably be True by default.
         """
         d = DocEntry.query.get(path)
         if d:
@@ -105,7 +102,7 @@ class DocEntry(db.Model, DocInfo):
         # try translation
         if try_translation:
             base_doc_path, lang = split_location(path)
-            entry = DocEntry.find_by_path(base_doc_path)
+            entry = DocEntry.find_by_path(base_doc_path, try_translation=False)
             if entry is not None:
                 tr = Translation.query.filter_by(src_docid=entry.id, lang_id=lang).first()
                 if tr is not None:

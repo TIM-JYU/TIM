@@ -17,4 +17,4 @@ class ItemCreateTest(TimRouteTest):
         tr = self.create_translation(d)
         self.create_folder(f'{tr.path}/x',
                            expect_status=403,
-                           expect_content={'error': f'A document already exists at path {d.path}'})
+                           expect_content={'error': f'A document already exists at path {tr.path}'})

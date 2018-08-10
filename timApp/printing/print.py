@@ -44,7 +44,7 @@ def pull_doc_path(endpoint, values):
         if doc_path is None:
             abort(400)
         g.doc_path = doc_path
-        g.doc_entry = DocEntry.find_by_path(doc_path, try_translation=True)
+        g.doc_entry = DocEntry.find_by_path(doc_path)
         if not g.doc_entry:
             abort(404, 'Document not found')
         verify_view_access(g.doc_entry)

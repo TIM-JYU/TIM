@@ -183,7 +183,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     save_last_page()
 
-    doc_info = DocEntry.find_by_path(item_path, fallback_to_id=True, try_translation=True)
+    doc_info = DocEntry.find_by_path(item_path, fallback_to_id=True)
 
     if doc_info is None:
         return try_return_folder(item_path)

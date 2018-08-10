@@ -138,7 +138,7 @@ def upload_file():
     doc_id = request.form.get('doc_id')
     if not doc_id:
         abort(400, 'Missing doc_id')
-    d = DocEntry.find_by_id(int(doc_id), try_translation=True)
+    d = DocEntry.find_by_id(int(doc_id))
     verify_edit_access(d)
     try:
         attachment_params = json.loads(request.form.get('attachmentParams'))

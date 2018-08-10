@@ -194,7 +194,7 @@ def empty_response_route():
 
 @app.errorhandler(ItemLockedException)
 def item_locked(error: ItemLockedException):
-    item = DocEntry.find_by_id(error.access.block_id, try_translation=True)
+    item = DocEntry.find_by_id(error.access.block_id)
     is_folder = False
     if not item:
         is_folder = True
@@ -239,7 +239,7 @@ def ping():
 @app.route("/getTemplates")
 def get_templates():
     current_path = request.args.get('item_path', '')
-    d = DocEntry.find_by_path(current_path, try_translation=True)
+    d = DocEntry.find_by_path(current_path)
     if not d:
         abort(404)
     verify_edit_access(d)

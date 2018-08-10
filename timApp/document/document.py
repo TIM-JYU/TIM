@@ -999,7 +999,7 @@ class Document:
     def get_docinfo(self) -> DocInfoType:
         if self.docinfo is None:
             from timApp.document.docentry import DocEntry
-            self.docinfo = DocEntry.find_by_id(self.doc_id, try_translation=True)
+            self.docinfo = DocEntry.find_by_id(self.doc_id)
         return self.docinfo
 
     def get_source_document(self) -> Optional['Document']:

@@ -72,8 +72,7 @@ def enum_pars(item: Union[Folder, DocInfo, None] = None) -> Generator[Tuple[DocI
 def process_items(func: Callable[[DocInfo, BasicArguments], int], parser: ArgumentParser):
     opts: Union[BasicArguments, DryrunnableArguments] = parser.parse_args()
     with app.app_context():
-        doc_to_fix = DocEntry.find_by_path(opts.doc, fallback_to_id=True,
-                                           try_translation=True) if opts.doc is not None else None
+        doc_to_fix = DocEntry.find_by_path(opts.doc, fallback_to_id=True) if opts.doc is not None else None
         folder_to_fix = Folder.find_by_path(opts.folder, fallback_to_id=True) if opts.folder is not None else None
         if opts.doc is not None and not doc_to_fix:
             print('Document not found.')

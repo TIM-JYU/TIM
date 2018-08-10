@@ -29,7 +29,7 @@ def validate_item(item_path: str, item_type: str):
         abort(400,
               f'The {item_type} path has invalid characters. Only letters, numbers, underscores and dashes are allowed.')
 
-    if DocEntry.find_by_path(item_path, try_translation=True) is not None or Folder.find_by_path(item_path) is not None:
+    if DocEntry.find_by_path(item_path) is not None or Folder.find_by_path(item_path) is not None:
         raise ItemAlreadyExistsException('Item with a same name already exists.')
 
     f = Folder.find_first_existing(item_path)

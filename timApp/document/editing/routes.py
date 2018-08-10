@@ -57,7 +57,7 @@ def update_document(doc_id):
         original = request.form['original']
         strict_validation = not request.form.get('ignore_warnings', False)
     elif 'template_name' in request.get_json():
-        template = DocEntry.find_by_path(request.get_json()['template_name'], try_translation=True)
+        template = DocEntry.find_by_path(request.get_json()['template_name'])
         if not template:
             abort(404, 'Template not found')
         verify_view_access(template)
@@ -366,7 +366,7 @@ def par_response(pars,
         duplicates = check_duplicates(pars, doc, get_timdb())
         if edit_request and logged_in():
             bms = Bookmarks(get_current_user_object())
-            d = DocEntry.find_by_id(doc.doc_id, try_translation=True)
+            d = DocEntry.find_by_id(doc.doc_id)
             if d is not None:
                 bms.add_bookmark('Last edited',
                                  d.title,

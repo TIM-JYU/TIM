@@ -272,7 +272,7 @@ def get_hidden_name(user_id):
 
 def should_hide_name(doc_id, user_id):
     u: User = User.query.get(user_id)
-    d = DocEntry.find_by_id(doc_id, try_translation=True)
+    d = DocEntry.find_by_id(doc_id)
     return not u.has_teacher_access(d) and user_id != get_current_user_id()
 
 
@@ -323,7 +323,7 @@ def get_answers(task_id, user_id):
 
 @answers.route("/allDocumentAnswersPlain/<path:doc_path>")
 def get_document_answers(doc_path):
-    d = DocEntry.find_by_path(doc_path, fallback_to_id=True, try_translation=True)
+    d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
     pars = d.document.get_dereferenced_paragraphs()
     task_ids, _ = find_task_ids(pars)
     return get_all_answers_list_plain(task_ids)

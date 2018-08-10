@@ -91,7 +91,7 @@ def get_pars_from_editor_text(doc: Document, text: str,
                 refdoc = int(p.get_attr('rd'))
             except (ValueError, TypeError):
                 continue
-            d = DocEntry.find_by_id(refdoc, try_translation=True)
+            d = DocEntry.find_by_id(refdoc)
             if not skip_access_check and d \
                     and not has_view_access(d):
                 raise ValidationException(f"You don't have view access to document {refdoc}")

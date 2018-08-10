@@ -40,7 +40,7 @@ manage_page = Blueprint('manage_page',
 def manage(path):
     if has_special_chars(path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
-    item = DocEntry.find_by_path(path, fallback_to_id=True, try_translation=True)
+    item = DocEntry.find_by_path(path, fallback_to_id=True)
     if item is None:
         item = Folder.find_by_path(path, fallback_to_id=True)
         if item is None:
@@ -186,7 +186,7 @@ def change_alias(alias):
     new_alias = new_alias.strip('/')
     is_public, = verify_json_params('public', require=False, default=True)
 
-    doc = DocEntry.find_by_path(alias)
+    doc = DocEntry.find_by_path(alias, try_translation=False)
     if doc is None:
         return abort(404, 'The document does not exist!')
 
@@ -195,7 +195,7 @@ def change_alias(alias):
     new_parent, _ = split_location(new_alias)
     f = Folder.find_first_existing(new_alias)
     if alias != new_alias:
-        if DocEntry.find_by_path(new_alias, try_translation=True) is not None or Folder.find_by_path(new_alias) is not None:
+        if DocEntry.find_by_path(new_alias) is not None or Folder.find_by_path(new_alias) is not None:
             return abort(403, 'Item with a same name already exists.')
         src_f = Folder.find_first_existing(alias)
         if not get_current_user_object().can_write_to_folder(src_f):
@@ -215,7 +215,7 @@ def change_alias(alias):
 def remove_alias(alias):
     alias = alias.strip('/')
 
-    doc = DocEntry.find_by_path(alias)
+    doc = DocEntry.find_by_path(alias, try_translation=False)
     if doc is None:
         return abort(404, 'The document does not exist!')
 
@@ -237,7 +237,7 @@ def remove_alias(alias):
 def rename_folder(item_id):
     new_name = request.get_json()['new_name'].strip('/')
 
-    d = DocEntry.find_by_id(item_id, try_translation=True)
+    d = DocEntry.find_by_id(item_id)
     if d:
         return abort(403, 'Rename route is no longer supported for documents.')
 

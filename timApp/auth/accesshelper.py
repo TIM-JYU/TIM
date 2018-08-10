@@ -26,7 +26,7 @@ from timApp.util.flask.requesthelper import get_option
 
 
 def get_doc_or_abort(doc_id: int):
-    d = DocEntry.find_by_id(doc_id, try_translation=True)
+    d = DocEntry.find_by_id(doc_id)
     if not d:
         abort(404, 'Document not found')
     return d

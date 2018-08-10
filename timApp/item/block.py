@@ -66,7 +66,7 @@ class Block(db.Model):
     def parent(self) -> FolderType:
         if self.type_id == BlockType.Document.value:
             from timApp.document.docentry import DocEntry
-            return DocEntry.find_by_id(self.id, try_translation=True).parent
+            return DocEntry.find_by_id(self.id).parent
         elif self.type_id == BlockType.Folder.value:
             from timApp.folder.folder import Folder
             folder = Folder.get_by_id(self.id)

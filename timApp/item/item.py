@@ -149,7 +149,7 @@ class Item(ItemBase):
         if b:
             if b.type_id == BlockType.Document.value:
                 from timApp.document.docentry import DocEntry
-                return DocEntry.find_by_id(item_id, try_translation=True)
+                return DocEntry.find_by_id(item_id)
             elif b.type_id == BlockType.Folder.value:
                 from timApp.folder.folder import Folder
                 return Folder.get_by_id(item_id)
