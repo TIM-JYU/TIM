@@ -3,20 +3,16 @@ import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {$compile, $document, $timeout} from "../util/ngimport";
-import {Binding, getOutOffsetFully, getOutOffsetVisible, getPageXYnull, IBounds, ISize, isMobileDevice} from "../util/utils";
-
-function setStorage(key: string, value: any) {
-    value = JSON.stringify(value);
-    window.localStorage.setItem(key, value);
-}
-
-function getStorage(key: string) {
-    const s = window.localStorage.getItem(key);
-    if (!s) {
-        return s;
-    }
-    return JSON.parse(s);
-}
+import {
+    Binding,
+    getOutOffsetFully,
+    getOutOffsetVisible,
+    getPageXYnull, getStorage,
+    IBounds,
+    ISize,
+    isMobileDevice,
+    setStorage
+} from "../util/utils";
 
 function getPixels(s: string) {
     const s2 = s.replace(/px$/, "");
