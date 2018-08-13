@@ -502,7 +502,7 @@ def create_search_file():
         def process_raw_file():
             with raw_file, open(
                     dir_path / temp_content_file_name, "w+", encoding='utf-8') as temp_content_file, open(
-                dir_path / temp_title_file_name, "w+", encoding='utf-8') as temp_title_file:
+                    dir_path / temp_title_file_name, "w+", encoding='utf-8') as temp_title_file:
 
                 current_doc, current_pars = -1, []
                 processed = 0
@@ -548,6 +548,7 @@ def create_search_file():
                 temp_content_file.flush()
                 temp_title_file.flush()
                 os.fsync(temp_content_file)
+                # noinspection PyTypeChecker
                 os.fsync(temp_title_file)
 
             os.rename(str(dir_path / temp_content_file_name), str(dir_path / content_file_name))
@@ -594,21 +595,8 @@ def title_search():
             folder = "root"
         abort(400, f"Folder '{folder}' not found or not accessible")
 
-    if case_sensitive:
-        flags = re.DOTALL
-    else:
-        flags = re.DOTALL | re.IGNORECASE
-    if regex:
-        term = query
-    else:
-        term = re.escape(query)
-    if search_whole_words:
-        # Picks the term if it's a whole word, only word or separated by comma etc.
-        term = fr"(?:^|\W)({term})(?:$|\W)"
-    try:
-        term_regex = re.compile(term, flags)
-    except sre_constants.error as e:
-        abort(400, f"Invalid regex: {str(e)}")
+    term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
+
     if term_regex:
         for d in docs:
             current_doc = d.path
@@ -669,18 +657,9 @@ def tag_search():
     error_list = []
     current_doc = "before search"
     current_tag = "before search"
-    if case_sensitive:
-        flags = re.DOTALL
-    else:
-        flags = re.DOTALL | re.IGNORECASE
-    if regex:
-        term = query
-    else:
-        term = re.escape(query)
-    if search_whole_words:
-        term = fr"\b{term}\b"
+    term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
+
     try:
-        term_regex = re.compile(term, flags)
         for d in docs:
             try:
                 current_doc = d.path
@@ -707,8 +686,6 @@ def tag_search():
                     'tag_name': current_tag
                 })
                 log_search_error(error, query, current_doc, tag=current_tag)
-    except sre_constants.error as e:
-        abort(400, f"Invalid regex: {str(e)}")
     except Exception as e:
         abort(400, get_error_message(e))
     else:
@@ -724,16 +701,15 @@ def tag_search():
             abort(400, f"Error encountered while formatting JSON-response: {e}")
 
 
-@search_routes.route("paths")
-def path_search():
+def compile_regex(query: str, regex: bool, case_sensitive: bool, search_whole_words: bool):
     """
-    Document path search. Path results are treated as title results and use
-    TitleResult objects and content & title search interface.
-    :return: Path results.
+    Set flags and compile regular expression. Abort if invalid or empty regex.
+    :param query: Search word.
+    :param regex: Regex search.
+    :param case_sensitive: Distinguish between upper and lower case in search.
+    :param search_whole_words: Search words separated by spaces, commas etc.
+    :return: Compiled regex.
     """
-    (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
-    validate_query(query, search_whole_words)
-    term_regex = None
     if case_sensitive:
         flags = re.DOTALL
     else:
@@ -748,6 +724,22 @@ def path_search():
         term_regex = re.compile(term, flags)
     except sre_constants.error as e:
         abort(400, f"Invalid regex: {str(e)}")
+    else:
+        if not term_regex:
+            abort(400, f"Regex compiling failed")
+        return term_regex
+
+
+@search_routes.route("paths")
+def path_search():
+    """
+    Document path search. Path results are treated as title results and use
+    TitleResult objects and content & title search interface.
+    :return: Path results.
+    """
+    (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
+    validate_query(query, search_whole_words)
+    term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
 
     db_term = f"%{query}%"
     custom_filter = None
@@ -839,28 +831,19 @@ def search():
     title_results = []
     word_result_count = 0
     title_result_count = 0
+    user = get_current_user_object()
+
+    term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
 
     cmd = ["grep"]
-
     if case_sensitive:
-        flags = re.DOTALL
-    else:
         cmd.append("-i")
-        flags = re.DOTALL | re.IGNORECASE
     if regex:
         cmd.append("-E")
-        term = query
     else:
         cmd.append("-F")
-        term = re.escape(query)
     if search_whole_words:
-        # Picks the term if it's a whole word, only word or separated by comma etc.
         cmd.append("-sw")
-        term = fr"(?:^|\W)({term})(?:$|\W)"
-    try:
-        term_regex = re.compile(term, flags)
-    except sre_constants.error as e:
-        abort(400, f"Invalid regex: {str(e)}")
     cmd.append(query)
 
     if search_content:
@@ -902,7 +885,7 @@ def search():
             if line and len(line) > 10:
                 line_info = json.loads(line)
                 doc_id = line_info['doc_id']
-                # TODO: Handle aliases.
+                # TODO: Handle aliases and translated documents.
                 doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
                     options(lazyload(DocEntry._block)).first()
                 if not doc_info:
@@ -912,7 +895,7 @@ def search():
                     continue
                 # Skip if searching only owned and it's not owned.
                 if search_owned_docs:
-                    if not in_doc_list(doc_info, owned_docs):
+                    if not user.has_ownership(doc_info, allow_admin=False):
                         continue
 
                 doc_result = DocResult(doc_info)

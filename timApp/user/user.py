@@ -309,8 +309,8 @@ class User(db.Model):
         if password:
             self.pass_ = create_password_hash(password)
 
-    def has_some_access(self, i: ItemOrBlock, vals: Set[int]) -> Optional[BlockAccess]:
-        if self.is_admin:
+    def has_some_access(self, i: ItemOrBlock, vals: Set[int], allow_admin: bool = True) -> Optional[BlockAccess]:
+        if allow_admin and self.is_admin:
             return BlockAccess(block_id=i.id,
                                accessible_from=datetime.min.replace(tzinfo=timezone.utc),
                                type=AccessType.owner.value,
@@ -352,8 +352,8 @@ class User(db.Model):
     def has_seeanswers_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
         return self.has_some_access(i, seeanswers_access_set)
 
-    def has_ownership(self, i: ItemOrBlock) -> Optional[BlockAccess]:
-        return self.has_some_access(i, owner_access_set)
+    def has_ownership(self, i: ItemOrBlock, allow_admin: bool = True) -> Optional[BlockAccess]:
+        return self.has_some_access(i, owner_access_set, allow_admin)
 
     def can_write_to_folder(self, f: Folder):
         # not even admins are allowed to create new items in 'users' folder

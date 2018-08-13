@@ -245,17 +245,9 @@ export class SearchBoxCtrl implements IController {
             this.storage.searchWordStorage = this.query;
         }
         this.storage.optionsStorage = [];
-        this.storage.optionsStorage.push(this.advancedSearch);
-        this.storage.optionsStorage.push(this.caseSensitive);
-        this.storage.optionsStorage.push(this.createNewWindow);
-        this.storage.optionsStorage.push(this.ignorePlugins);
-        this.storage.optionsStorage.push(this.regex);
-        this.storage.optionsStorage.push(this.searchTitles);
-        this.storage.optionsStorage.push(this.searchWholeWords);
-        this.storage.optionsStorage.push(this.searchTags);
-        this.storage.optionsStorage.push(this.searchOwned);
-        this.storage.optionsStorage.push(this.searchContent);
-        this.storage.optionsStorage.push(this.searchPaths);
+        this.storage.optionsStorage = [this.advancedSearch, this.caseSensitive, this.createNewWindow,
+            this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
+            this.searchOwned, this.searchContent, this.searchPaths];
     }
 
     /**
@@ -266,17 +258,9 @@ export class SearchBoxCtrl implements IController {
             this.query = this.storage.searchWordStorage;
         }
         if (this.storage.optionsStorage && this.storage.optionsStorage.length > 10) {
-            this.advancedSearch = this.storage.optionsStorage[0];
-            this.caseSensitive = this.storage.optionsStorage[1];
-            this.createNewWindow = this.storage.optionsStorage[2];
-            this.ignorePlugins = this.storage.optionsStorage[3];
-            this.regex = this.storage.optionsStorage[4];
-            this.searchTitles = this.storage.optionsStorage[5];
-            this.searchWholeWords = this.storage.optionsStorage[6];
-            this.searchTags = this.storage.optionsStorage[7];
-            this.searchOwned = this.storage.optionsStorage[8];
-            this.searchContent = this.storage.optionsStorage[9];
-            this.searchPaths = this.storage.optionsStorage[10];
+            [this.advancedSearch, this.caseSensitive, this.createNewWindow,
+            this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
+            this.searchOwned, this.searchContent, this.searchPaths] = this.storage.optionsStorage;
         }
     }
 
@@ -324,6 +308,17 @@ export class SearchBoxCtrl implements IController {
         }
     }
 
+    private getCommonSearchOptions() {
+        return {
+            caseSensitive: this.caseSensitive,
+            folder: this.folder,
+            query: this.query,
+            regex: this.regex,
+            searchOwned: this.searchOwned,
+            searchWholeWords: this.searchWholeWords,
+        };
+    }
+
     /**
      * Document path search.
      * @returns {Promise<void>}
@@ -331,14 +326,7 @@ export class SearchBoxCtrl implements IController {
     private async pathSearch() {
         const [err, response] = await to($http<ISearchResultsInfo>({
             method: "GET",
-            params: {
-                caseSensitive: this.caseSensitive,
-                folder: this.folder,
-                query: this.query,
-                regex: this.regex,
-                searchOwned: this.searchOwned,
-                searchWholeWords: this.searchWholeWords,
-            },
+            params: {...this.getCommonSearchOptions()},
             url: "/search/paths",
         }));
         if (err) {
@@ -363,14 +351,7 @@ export class SearchBoxCtrl implements IController {
     private async titleSearch() {
         const [err, response] = await to($http<ISearchResultsInfo>({
             method: "GET",
-            params: {
-                caseSensitive: this.caseSensitive,
-                folder: this.folder,
-                query: this.query,
-                regex: this.regex,
-                searchOwned: this.searchOwned,
-                searchWholeWords: this.searchWholeWords,
-            },
+            params: {...this.getCommonSearchOptions()},
             url: "/search/titles",
         }));
         if (err) {
@@ -395,17 +376,11 @@ export class SearchBoxCtrl implements IController {
         const [err, response] = await to($http<ISearchResultsInfo>({
             method: "GET",
             params: {
-                caseSensitive: this.caseSensitive,
-                folder: this.folder,
                 ignorePlugins: this.ignorePlugins,
-                // maxResults: 100000,
                 maxDocResults: this.maxDocResults,
-                query: this.query,
-                regex: this.regex,
                 searchContent: this.searchContent,
-                searchOwned: this.searchOwned,
                 searchTitles: this.searchTitles,
-                searchWholeWords: this.searchWholeWords,
+                ...this.getCommonSearchOptions(),
             },
             url: "/search",
         }));
@@ -433,14 +408,7 @@ export class SearchBoxCtrl implements IController {
     private async tagSearch() {
         const [err, response] = await to($http<ITagSearchResultsInfo>({
             method: "GET",
-            params: {
-                caseSensitive: this.caseSensitive,
-                folder: this.folder,
-                query: this.query,
-                regex: this.regex,
-                searchOwned: this.searchOwned,
-                searchWholeWords: this.searchWholeWords,
-            },
+            params: {...this.getCommonSearchOptions()},
             url: "/search/tags",
         }));
         if (response) {
@@ -504,6 +472,7 @@ export class SearchBoxCtrl implements IController {
         this.tagMatchCount = 0;
         this.wordMatchCount = 0;
         this.titleMatchCount = 0;
+        this.pathMatchCount = 0;
         this.incompleteSearchReason = undefined;
         this.tagResults = [];
         this.titleResults = [];
