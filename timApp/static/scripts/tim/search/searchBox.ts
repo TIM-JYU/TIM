@@ -102,6 +102,7 @@ export class SearchBoxCtrl implements IController {
     public pathMatchCount: number = 0;
     public tagResults: ITagSearchResult[] = [];
     public titleResults: IDocSearchResult[] = [];
+    public pathResults: IDocSearchResult[] = [];
     public incompleteSearchReason: string | undefined;
     public query: string = "";
     public folder!: Binding<string, "<">;
@@ -186,7 +187,7 @@ export class SearchBoxCtrl implements IController {
         }
         this.loading = false;
         if (this.results.length === 0 && this.tagResults.length === 0 &&
-                this.titleResults.length === 0 && !this.errorMessage) {
+                this.titleResults.length === 0 && this.pathResults.length === 0 && !this.errorMessage) {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
             return;
         }
@@ -342,12 +343,12 @@ export class SearchBoxCtrl implements IController {
         }));
         if (err) {
             this.errorMessage = this.getErrorMessage(err);
-            this.titleResults = [];
+            this.pathResults = [];
             return;
         }
         if (response) {
             // Path results use title interface.
-            this.titleResults.push(...response.data.title_results);
+            this.pathResults.push(...response.data.title_results);
             if (response.data.incomplete_search_reason) {
                 this.incompleteSearchReason = response.data.incomplete_search_reason;
             }
@@ -416,7 +417,7 @@ export class SearchBoxCtrl implements IController {
         }
         if (response) {
             this.results = response.data.content_results;
-            this.titleResults.push(...response.data.title_results);
+            this.titleResults = response.data.title_results;
             if (response.data.incomplete_search_reason) {
                 this.incompleteSearchReason = response.data.incomplete_search_reason;
             }
@@ -506,6 +507,7 @@ export class SearchBoxCtrl implements IController {
         this.incompleteSearchReason = undefined;
         this.tagResults = [];
         this.titleResults = [];
+        this.pathResults = [];
         this.results = [];
         this.errorMessage = undefined;
         this.resultErrorMessage = undefined;

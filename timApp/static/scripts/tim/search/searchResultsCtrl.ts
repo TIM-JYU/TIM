@@ -5,7 +5,7 @@
 import {IRootElementService, IScope} from "angular";
 import {ITag, TagType} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {IDocSearchResult, ITagSearchResult, SearchBoxCtrl} from "./searchBox";
+import {IDocSearchResult, ITagSearchResult, ITitleSearchResult, SearchBoxCtrl} from "./searchBox";
 
 export interface ISearchResultDisplay {
     result: IDocSearchResult;
@@ -21,6 +21,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     private displayResults: ISearchResultDisplay[] = [];
     private tagResults: ITagSearchResult[] = [];
     private titleResults: IDocSearchResult[] = [];
+    private pathResults: IDocSearchResult[] = [];
     private folder: string = "";
     private totalResults: number = 0;
     private limitedDisplay: boolean = false; // If there's large number of results, don't show previews.
@@ -65,6 +66,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
         this.results = ctrl.results;
         this.tagResults = ctrl.tagResults;
         this.titleResults = ctrl.titleResults;
+        this.pathResults = ctrl.pathResults;
         this.totalResults = ctrl.titleMatchCount + ctrl.tagMatchCount + ctrl.wordMatchCount + ctrl.pathMatchCount;
         this.folder = ctrl.folder;
         this.errorMessage = ctrl.resultErrorMessage;
@@ -92,6 +94,24 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
      */
     private filterResults() {
         this.displayResults = [];
+        // Combine title and path results.
+        const titleAndPathResults: IDocSearchResult[] = [];
+        for (const p of this.pathResults) {
+            let pathResultsFound = false;
+            for (const t of this.titleResults) {
+                if (t.doc.id === p.doc.id) {
+                    const temp = t;
+                    temp.num_title_results = t.num_title_results + p.num_title_results;
+                    titleAndPathResults.push(temp);
+                    pathResultsFound = true;
+                    break;
+                }
+            }
+            if (!pathResultsFound) {
+                titleAndPathResults.push(p);
+            }
+        }
+        // Combine title and tag results with existing content results.
         for (const r of this.results) {
             const newDisplayResult: ISearchResultDisplay = {
                 closed: true,
@@ -107,16 +127,16 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
                 }
             }
             // Add titlematches to existing word search result objects.
-            for (const t of this.titleResults) {
+            for (const t of titleAndPathResults) {
                 if (t.doc.id === r.doc.id) {
-                    newDisplayResult.result.title_results = t.title_results;
+                    newDisplayResult.result.title_results.push(...t.title_results);
                     newDisplayResult.result.num_title_results = t.num_title_results;
                 }
             }
             this.displayResults.push(newDisplayResult);
         }
 
-        for (const t of this.titleResults) {
+        for (const t of titleAndPathResults) {
             let found = false;
             for (const r of this.displayResults) {
                 if (t.doc.id === r.result.doc.id) {
@@ -127,7 +147,9 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
             if (!found) {
                 const newDocResult = {
                     closed: true,
+                    num_path_results: 0,
                     num_tag_results: 0,
+                    path_results: [],
                     result: {
                         doc: t.doc,
                         incomplete: false,
@@ -155,7 +177,9 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
             if (!found) {
                 const newDocResult = {
                     closed: true,
+                    num_path_results: 0,
                     num_tag_results: t.num_results,
+                    path_results: [],
                     result: {
                         doc: t.doc,
                         incomplete: false,
@@ -252,13 +276,13 @@ registerDialogComponent("timSearchResults",
                     <i class="glyphicon" ng-class="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
                     title="Toggle preview" style="width:1.3em;"></i></a>
                 <span title="Note: hidden elements can affect the result count">
-                <a href="/view/{{r.result.doc.path}}" title="Open {{r.result.doc.title}}"> {{r.result.doc.title}}</a>
-                <i>{{r.result.doc.path}}</i>
-                 ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}} <span
+                <a href="/view/{{r.result.doc.path}}"
+                title="Open {{r.result.doc.title}}"> {{r.result.doc.title}}</a> {{r.result.doc.path}}
+                <i> ({{r.result.num_par_results + r.result.num_title_results + r.num_tag_results}} <span
                 ng-if="r.result.incomplete">or more matches)</span>
                 <ng-pluralize ng-if="!r.result.incomplete"
                 count="r.result.num_par_results + r.result.num_title_results + r.num_tag_results"
-                when="{'1': 'match)', 'other': 'matches)'}"></ng-pluralize>
+                when="{'1': 'match)', 'other': 'matches)'}"></ng-pluralize></i>
                 </span>
                 <ul ng-if="!r.closed">
                     <li ng-repeat="p in r.result.par_results" ng-if="p.preview">
