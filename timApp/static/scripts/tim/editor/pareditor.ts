@@ -18,7 +18,6 @@ markAsUsed(rangyinputs);
 
 const MENU_BUTTON_CLASS = "menuButtons";
 const MENU_BUTTON_CLASS_DOT = "." + MENU_BUTTON_CLASS;
-const CURSOR = "⁞";
 
 export interface IPreviewResult {
     html: string;
@@ -50,6 +49,7 @@ export interface IEditorParams {
         touchDevice: boolean,
         tags: ITag[],
         choices?: IChoice[],
+        cursorPosition?: number,
     };
     previewCb: (text: string) => Promise<IPluginInfoResponse>;
     saveCb: (text: string, data: IExtraData) => Promise<{error?: string}>;
@@ -386,12 +386,15 @@ or newer one that is more familiar to write in YAML:
     async setInitialText() {
         let initialText = this.getInitialText();
         if (initialText) {
-            const pos = initialText.indexOf(CURSOR);
-            if (pos >= 0) { initialText = initialText.replace(CURSOR, ""); } // cursor pos
+            const pos = this.getOptions().cursorPosition;
             this.editor.setEditorText(initialText);
             this.editorChanged();
             await $timeout(10);
-            if (pos >= 0) { this.editor.setPosition(pos); }
+            if (pos != undefined) {
+                this.editor.setPosition(pos);
+            } else {
+                this.editor.bottomClicked();
+            }
         }
     }
 
@@ -433,12 +436,6 @@ or newer one that is more familiar to write in YAML:
         });
         this.editor.setEditorText(text);
         $textarea.on("input", () => this.editorChanged());
-    }
-
-    editorReady() {
-        this.focusEditor();
-        this.editor.bottomClicked();
-        this.element.find(".editorContainer").removeClass("editor-loading");
     }
 
     editorChanged() {
@@ -912,7 +909,8 @@ or newer one that is more familiar to write in YAML:
         if (initialMode != null) {
             await this.setInitialText();
         }
-        this.editorReady();
+        await this.focusEditor();
+        this.element.find(".editorContainer").removeClass("editor-loading");
         setEditorScope(this.editor);
         this.adjustPreview();
     }

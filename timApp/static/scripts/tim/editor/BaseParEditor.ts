@@ -57,3 +57,5 @@ export abstract class BaseParEditor {
         });
     }
 }
+
+export const CURSOR = "⁞";

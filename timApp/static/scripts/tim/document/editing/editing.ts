@@ -2,6 +2,7 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {getActiveDocument} from "tim/document/document";
 import {markPageDirty} from "tim/util/utils";
+import {CURSOR} from "../../editor/BaseParEditor";
 import {IPluginInfoResponse, ParCompiler} from "../../editor/parCompiler";
 import {openEditor, PareditorController} from "../../editor/pareditor";
 import {showMessageDialog} from "../../ui/dialog";
@@ -51,17 +52,9 @@ export interface IParEditorOptions {
     texts?: {beforeText: string, initialText: string, afterText: string};
 }
 
-export interface IParEditorAttrs {
-    [key: string]: any;
-}
-
 function prepareOptions($this: Element, saveTag: string): [JQuery, IParEditorOptions] {
-    // var $par = $('.par').last();
-    // return sc.showAddParagraphBelow(e, $par);
-    // return sc.showAddParagraphAbove(e, sc.$pars);
     const par = $($this).closest(".par");
     const text = par.find("pre").text();
-    // text = text.replace('⁞', '');  // TODO: set cursor to | position
     let forcedClasses: string[] = [];
     const forceAttr = getParAttributes(par).forceclass;
     if (forceAttr) {
@@ -236,7 +229,12 @@ export class EditingHandler {
             ...(params.type === EditType.Edit ? isReference(params.pars) ? getRefAttrs(params.pars) : {} : {}),
         };
         let initialText = "";
-        if (options.showDelete && parId !== "HELP_PAR") {
+        let cursorPos;
+        if (options.texts) {
+            initialText = options.texts.initialText;
+            cursorPos = initialText.indexOf(CURSOR);
+            initialText = initialText.replace(CURSOR, "");
+        } else if (options.showDelete && parId !== "HELP_PAR") {
             const [err, resp] = await to($http.get<{text: string}>(`/getBlock/${this.viewctrl.docId}/${parId}`,
                 {params: extraData}));
             if (resp) {
@@ -263,6 +261,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 showDelete: options.showDelete,
                 showImageUpload: true,
                 showPlugins: true,
+                cursorPosition: cursorPos,
                 showSettings: params.type === EditType.Edit ? isSettingsPar(params.pars) : false,
                 tags: [
                     {name: "markread", desc: "Mark as read"},

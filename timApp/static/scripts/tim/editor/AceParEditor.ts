@@ -1,9 +1,7 @@
 import {wrapText} from "../document/editing/editing";
 import {$log, $timeout} from "../util/ngimport";
 import {IAceEditor} from "./ace-types";
-import {BaseParEditor, focusAfter, IEditorCallbacks} from "./BaseParEditor";
-
-const CURSOR = "⁞";
+import {BaseParEditor, CURSOR, focusAfter, IEditorCallbacks} from "./BaseParEditor";
 
 interface ISnippetManager {
     insertSnippet(editor: AceAjax.Editor, text: string): void;
