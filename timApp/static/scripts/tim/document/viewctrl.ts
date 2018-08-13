@@ -16,7 +16,7 @@ import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {timLogTime} from "tim/util/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty, to} from "tim/util/utils";
+import {getStorage, isPageDirty, markAsUsed, markPageNotDirty, setStorage, to} from "tim/util/utils";
 import {BookmarksController, IBookmarkGroup} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IItem, ITag, TagType} from "../item/IItem";
@@ -186,6 +186,25 @@ export class ViewCtrl implements IController {
             this.setHeaderLinks();
             this.document.rebuildSections();
             $window.addEventListener("beforeunload", (e) => {
+                // Save scroll position to local storage.
+                const positions = getStorage("scrollPositions");
+                if (!positions) {
+                    setStorage("scrollPositions", [{id: this.item.id, scrollY: $window.scrollY}]);
+                } else {
+                    let found = false;
+                    for (const item of positions) {
+                        // Overwrite if the document already has position data in storage.
+                        if (item["id"] === this.item.id) {
+                            item["scrollY"] = $window.scrollY;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        positions.push({id: this.item.id, scrollY: $window.scrollY});
+                    }
+                    setStorage("scrollPositions", positions);
+                }
                 if (!this.editing) {
                     return undefined;
                 }
@@ -332,7 +351,7 @@ export class ViewCtrl implements IController {
         }, Math.max(1000 * this.liveUpdates, 1000));
     }
 
-    $onInit() {
+    async $onInit() {
         this.scope.$watchGroup([
             () => this.lectureMode,
             () => this.selection.start,
@@ -352,6 +371,24 @@ export class ViewCtrl implements IController {
         });
         void this.checkIfTaggedAsCourse();
         void this.checkIfBookmarked();
+        await $timeout(0);
+        this.recallScrollPosition();
+    }
+
+    /**
+     * Force the page to scroll to the previous position.
+     */
+    private recallScrollPosition() {
+        const positions = getStorage("scrollPositions");
+        for (const item of positions) {
+            if (item["id"] === this.item.id) {
+                $window.scrollTo({
+                    behavior: "instant",
+                    top: item["scrollY"],
+                });
+                break;
+            }
+        }
     }
 
     /**
