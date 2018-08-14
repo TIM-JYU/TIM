@@ -545,7 +545,6 @@ def title_search():
 
     results = []
     title_result_count = 0
-    term_regex = None
 
     validate_query(query, search_whole_words)
 
