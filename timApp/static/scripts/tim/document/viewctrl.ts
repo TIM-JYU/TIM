@@ -10,7 +10,7 @@ import {ClipboardHandler} from "tim/document/editing/clipboard";
 import {initIndex} from "tim/document/index";
 import * as interceptor from "tim/document/interceptor";
 import {NotesHandler} from "tim/document/notes";
-import {getElementByParId, Paragraph} from "tim/document/parhelpers";
+import {getElementByParId, getParId, Paragraph} from "tim/document/parhelpers";
 import {ParmenuHandler} from "tim/document/parmenu";
 import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
@@ -185,26 +185,13 @@ export class ViewCtrl implements IController {
             this.questionHandler.processQuestions();
             this.setHeaderLinks();
             this.document.rebuildSections();
-            $window.addEventListener("beforeunload", (e) => {
-                // Save scroll position to local storage.
-                const positions = getStorage("scrollPositions");
-                if (!positions) {
-                    setStorage("scrollPositions", [{id: this.item.id, scrollY: $window.scrollY}]);
-                } else {
-                    let found = false;
-                    for (const item of positions) {
-                        // Overwrite if the document already has position data in storage.
-                        if (item["id"] === this.item.id) {
-                            item["scrollY"] = $window.scrollY;
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        positions.push({id: this.item.id, scrollY: $window.scrollY});
-                    }
-                    setStorage("scrollPositions", positions);
-                }
+            window.addEventListener("beforeunload", (e) => {
+
+                // Save currently viewed location hash to browser history.
+                // noinspection CssInvalidPseudoSelector
+                const parId = getParId($(".par:not('.preamble'):onScreen").first());
+                window.history.replaceState(undefined, undefined, `#${parId}`);
+
                 if (!this.editing) {
                     return undefined;
                 }
@@ -371,24 +358,6 @@ export class ViewCtrl implements IController {
         });
         void this.checkIfTaggedAsCourse();
         void this.checkIfBookmarked();
-        await $timeout(0);
-        this.recallScrollPosition();
-    }
-
-    /**
-     * Force the page to scroll to the previous position.
-     */
-    private recallScrollPosition() {
-        const positions = getStorage("scrollPositions");
-        for (const item of positions) {
-            if (item["id"] === this.item.id) {
-                $window.scrollTo({
-                    behavior: "instant",
-                    top: item["scrollY"],
-                });
-                break;
-            }
-        }
     }
 
     /**
