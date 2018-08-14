@@ -755,15 +755,14 @@ def add_missing_elements(table_json, datablock):
             max_row_count = row
         if cell > max_cell_count:
             max_cell_count = cell
-    print(table_json)
 
     empty_cell = {'cell': ''}
 
-    row_count = len(table_json)
+    # Row adding doesn't work (there are no LaTeX-errors, but the pdf is invalid).
+    # row_count = len(table_json)
     # Add missing rows.
     # for i in range(0, max_row_count - row_count + 1):
     #     table_json['rows'].append({'row': [empty_cell]})
-    # print(table_json)
 
     # Add missing cells to existing rows.
     for row_json in table_json['rows']:
@@ -771,7 +770,6 @@ def add_missing_elements(table_json, datablock):
         for i in range(0, max_cell_count - row_cell_count + 1):
             row_json['row'].append(empty_cell)
 
-    print(table_json)
     return table_json['rows']
 
 
@@ -1200,7 +1198,10 @@ def convert_table(table_json) -> Table:
 
                 # Get datablock formats:
                 datablock_cell_data = get_datablock_cell_data(datablock, i, j)
-                if not datablock_cell_data:
+
+                # Check being None instead of 'not datablock_cell_data' because need to
+                # also replace when this is an empty string.
+                if datablock_cell_data is None:
                     pass
                 else:
                     # Datablocks may not exists or have dictionary, str or other types.
@@ -1212,6 +1213,7 @@ def convert_table(table_json) -> Table:
                             pass
                     else:
                         content = str(datablock_cell_data)
+
                 (datablock_bg_color, datablock_bg_color_html) = get_color(datablock_cell_data, 'backgroundColor')
                 (datablock_text_color, datablock_text_color_html) = get_color(datablock_cell_data, 'color')
                 datablock_cell_height = get_size(datablock_cell_data, key="height")
