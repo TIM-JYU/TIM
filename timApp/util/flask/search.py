@@ -5,7 +5,7 @@ import sre_constants
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Match, List, Union, Tuple
+from typing import Match, Union, Tuple
 
 from flask import Blueprint, json, Response, stream_with_context
 from flask import abort
@@ -101,18 +101,6 @@ def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str =
     if path:
         path_part = " path"
     log_error(common_part + tag_part + par_part + title_part + par_part)
-
-
-def get_documents_by_access_type(access: AccessType) -> List[DocEntry]:
-    """
-    Return all documents that user has certain access type to.
-    :param access: Access type, for example: AccessType.owner or AccessType.view.
-    :return: List of documents the user has the set type of access to.
-    """
-    block_query = get_current_user_object().get_personal_group().accesses.filter_by(type=access.value).with_entities(
-        BlockAccess.block_id)
-    docs = DocEntry.query.filter(DocEntry.id.in_(block_query)).all()
-    return docs
 
 
 def preview_result(md: str, query, m: Match[str], snippet_length: int = PREVIEW_LENGTH,
@@ -380,22 +368,6 @@ def get_error_message(e: Exception):
     :return: String 'ErrorClass: reason'.
     """
     return f"{str(e.__class__.__name__)}: {str(e)}"
-
-
-def in_doc_list(doc_info: DocInfo, docs: List[DocEntry], shorten_list: bool = True) -> bool:
-    """
-    Check whether a document is in document entry list.
-    :param doc_info: Document to search from the list.
-    :param docs: List of documents.
-    :param shorten_list: Remove found documents from the list to save time on later loops.
-    :return: Whether the document is in list.
-    """
-    for d in docs:
-        if doc_info.id == d.id:
-            if shorten_list:
-                docs.remove(d)
-            return True
-    return False
 
 
 def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
@@ -820,8 +792,6 @@ def search():
 
     validate_query(query, search_whole_words)
 
-    term_regex = None
-    owned_docs = []
     incomplete_search_reason = ""
     current_doc = ""
     current_par = ""
@@ -873,11 +843,6 @@ def search():
                               'incomplete_search_reason': incomplete_search_reason,
                               'title_results': title_results,
                               'content_results': content_results})
-
-    if search_owned_docs:
-        owned_docs = get_documents_by_access_type(AccessType.owner)
-        if not owned_docs:
-            abort(400, f"No owned documents found")
 
     for line in title_output:
         try:
@@ -932,7 +897,7 @@ def search():
 
                 # Skip if searching only owned and it's not owned.
                 if search_owned_docs:
-                    if not in_doc_list(doc_info, owned_docs):
+                    if not user.has_ownership(doc_info, allow_admin=False):
                         continue
 
                 pars = line_info['pars']
