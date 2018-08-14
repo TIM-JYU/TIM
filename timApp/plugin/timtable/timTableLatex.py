@@ -669,16 +669,7 @@ def get_content(content: str) -> str:
     :param content: Text / other content in the cell.
     :return: Formatted content of the cell.
     """
-    text = str(content).strip()
-    # Replace_pairs contains corresponding html and LaTeX elements
-    # Commented off as unneeded: TIM already does the conversion outside this module.
-    """
-    for i in range(0, len(replace_pairs)):
-        text = text.replace(replace_pairs[i][0], replace_pairs[i][1])
-    """
-    # In case any are left, HTML-formattings and line breaks will be removed.
-    text = re.sub(r'<.+?>', '', text).replace('\r', '').replace('\n', '')
-    return text
+    return str(content).strip()
 
 
 def get_color(item, key: str, default_color=None, default_color_html=None) -> (str, bool):
