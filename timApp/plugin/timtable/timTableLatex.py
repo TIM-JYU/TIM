@@ -6,7 +6,7 @@ Visa Naukkarinen
 
 import copy
 import re
-from typing import List
+from typing import List, Union, Tuple
 
 # Default values:
 
@@ -146,21 +146,21 @@ class Cell:
         :param borders: Object containing border-data.
         """
         self.index = index
-        self.content = content
+        self.content = use_default_if_none(content, "")
         self.colspan = colspan
         self.rowspan = rowspan
         self.text_color = use_default_if_none(text_color, default_text_color)
         self.text_color_html = use_default_if_none(text_color_html, False)
         self.bg_color = use_default_if_none(bg_color, default_transparent_color)
         self.bg_color_html = use_default_if_none(bg_color_html, False)
-        self.h_align = h_align
+        self.h_align = use_default_if_none(h_align, default_text_h_align)
         self.cell_width = use_default_if_none(cell_width, default_width)
-        self.cell_height = cell_height
-        self.font_size = font_size
+        self.cell_height = use_default_if_none(cell_height, default_height)
+        self.font_size = use_default_if_none(font_size, default_font_size)
         self.line_space = line_space
         self.pbox = pbox
         self.borders = borders
-        self.font_family = font_family
+        self.font_family = use_default_if_none(font_family, default_font_family)
 
     def __str__(self) -> str:
         """
@@ -180,7 +180,7 @@ class Cell:
 
         # HTML-colors have an extra tag
         cell_color = format_color(self.bg_color, self.bg_color_html)
-        if self.bg_color == default_transparent_color:
+        if self.bg_color == default_transparent_color or not self.bg_color:
             cell_color = ""
         else:
             cell_color = fr"\cellcolor{cell_color}"
@@ -263,7 +263,7 @@ class Row:
             output += f"& {str(self.cells[i])}"
         return output
 
-    def get_row_height(self) -> str:
+    def get_row_height(self) -> Union[int, float]:
         """
         Gives the largest cell height to be used as row height.
         Currently this way because separate cell heights aren't supported.
@@ -581,6 +581,79 @@ def get_column_width_list(table_data):
     return l
 
 
+def get_column_style_list(table_data, key):
+    """
+    Forms a list of styles corresponding to the key from the columns data.
+    :param table_data:
+    :param key:
+    :return:
+    """
+    l = []
+    try:
+        columns_data = table_data['columns']
+    except:
+        return [None] * max_col_count
+    for i in range(0, len(columns_data)):
+        column_data = columns_data[i]
+        span = get_column_span(column_data)
+        for j in range(0, span):
+            try:
+                l.append(column_data[key])
+            except:
+                l.append(None)
+    for k in range(0, max_col_count):
+        l.append(None)
+    return l
+
+
+def get_column_h_align_list(table_data):
+    """
+    Forms a list of horizontal alignments from the columns data.
+    :param table_data:
+    :return:
+    """
+    l = []
+    try:
+        columns_data = table_data['columns']
+    except:
+        return [None] * max_col_count
+    for i in range(0, len(columns_data)):
+        column_data = columns_data[i]
+        span = get_column_span(column_data)
+        for j in range(0, span):
+            try:
+                l.append(get_text_horizontal_align(column_data, None))
+            except:
+                l.append(None)
+    for k in range(0, max_col_count):
+        l.append(None)
+    return l
+
+
+def get_column_font_family_list(table_data):
+    """
+    Forms a list of font families from the columns data.
+    :param table_data:
+    :return:
+    """
+    l = []
+    try:
+        columns_data = table_data['columns']
+    except:
+        return [None] * max_col_count
+    for i in range(0, len(columns_data)):
+        column_data = columns_data[i]
+        span = get_column_span(column_data)
+        for j in range(0, span):
+            try:
+                l.append(get_font_family(column_data, None))
+            except:
+                l.append(None)
+    for k in range(0, max_col_count):
+        l.append(None)
+    return l
+
+
 def custom_repr(obj) -> str:
     """
     Extended repr that displays all contents of the object.
@@ -669,7 +742,7 @@ def get_span(item) -> (int, int):
     return colspan, rowspan
 
 
-def get_size(item, key: str, default=None) -> str:
+def get_size(item, key: str, default=None) -> Union[str, None]:
     """
     Parse width or height into LaTeX-supported format.
     :param item: Cell data.
@@ -683,7 +756,7 @@ def get_size(item, key: str, default=None) -> str:
         return default
 
 
-def get_font_family(item, default: str = default_font_family) -> str:
+def get_font_family(item, default: Union[str, None] = default_font_family) -> Union[str, None]:
     """
     :param item: Cell or row data.
     :param default: Font family to use in case none set.
@@ -953,6 +1026,19 @@ def decide_format_size(format_levels):
         return final_size
 
 
+def decide_format(format_levels):
+    """
+    Decides which fiormat (column, row, cell, datablock) to use by taking the latest non-empty one.
+    :param format_levels:
+    :return:
+    """
+    final_format = None
+    for level in format_levels:
+        if level:
+            final_format = level
+    return final_format
+
+
 def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     """
     Compares floats and returns true if they are almost same.
@@ -1011,52 +1097,53 @@ def convert_table(table_json) -> Table:
     table_default_h_align = get_text_horizontal_align(table_json, default_text_h_align)
 
     # Get column formattings.
-    # Note: TimTable doesn't recognize most of the other formattings, so
-    # extending this isn't necessary.
     column_bg_color_list = get_column_color_list("backgroundColor", table_json)
     column_text_color_list = get_column_color_list("color", table_json)
     column_width_list = get_column_width_list(table_json)
+    column_font_size_list = get_column_style_list(table_json, "fontSize")
+    column_h_align_list = get_column_h_align_list(table_json)
+    column_font_family_list = get_column_font_family_list(table_json)
 
+
+    table_json_rows = table_json['rows']
     max_cells = 0
     max_colspan = 1
-    for i in range(0, len(table_json['rows'])):
+    for i in range(0, len(table_json_rows)):
         table_row = table.get_or_create_row(i)
-        row_data = table_json['rows'][i]
+        row_data = table_json_rows[i]
 
         (row_default_bg_color, row_default_bg_color_html) = get_color(row_data, "backgroundColor")
         (row_default_text_color, row_default_text_color_html) = get_color(row_data, "color")
-        row_default_width = get_size(row_data, key="width", default=default_width)
+        row_default_width = get_size(row_data, key="width", default=None)
         row_default_height = get_size(row_data, key="height", default=default_height)
-
-        row_default_font_family = get_font_family(row_data, table_default_font_family)
-        row_default_font_size = get_font_size(row_data, table_default_font_size)
-        row_default_h_align = get_text_horizontal_align(row_data, table_default_h_align)
+        row_default_font_size = get_font_size(row_data, None)
+        row_default_h_align = get_text_horizontal_align(row_data, None)
+        row_default_font_family = get_font_family(row_data, None)
 
         # TODO: Change the logic: in HTML these go around the whole row, not each cell!
         row_default_borders = get_borders(row_data, table_default_borders)
 
-        for j in range(0, len(table_json['rows'][i]['row'])):
+        for j in range(0, len(table_json_rows[i]['row'])):
             content = ""
             cell_data = ""
             try:
-                cell_data = table_json['rows'][i]['row'][j]
-                content = get_content(table_json['rows'][i]['row'][j]['cell'])
+                cell_data = table_json_rows[i]['row'][j]
+                content = get_content(table_json_rows[i]['row'][j]['cell'])
             # Cells that use simplified format (without 'cell').
             except TypeError:
-                content = get_content(table_json['rows'][i]['row'][j])
+                content = get_content(table_json_rows[i]['row'][j])
             finally:
                 # Set cell attributes:
                 (cell_bg_color, cell_bg_color_html) = get_color(cell_data, 'backgroundColor')
-                (text_color, text_color_html) = get_color(cell_data, 'color')
+                (cell_text_color, cell_text_color_html) = get_color(cell_data, 'color')
                 cell_height = get_size(cell_data, key="height")
                 cell_width = get_size(cell_data, key="width")
+                cell_h_align = get_text_horizontal_align(cell_data, None)
+                cell_font_family = get_font_family(cell_data, None)
+                cell_font_size = get_font_size(cell_data, None)
 
                 (colspan, rowspan) = get_span(cell_data)
-
                 borders = get_borders(cell_data, row_default_borders)
-                text_h_align = get_text_horizontal_align(cell_data, row_default_h_align)
-                font_family = get_font_family(cell_data, row_default_font_family)
-                font_size = get_font_size(cell_data, row_default_font_size)
 
                 # For estimating column count:
                 max_colspan = max(max_colspan, colspan)
@@ -1079,6 +1166,9 @@ def convert_table(table_json) -> Table:
                 (datablock_text_color, datablock_text_color_html) = get_color(datablock_cell_data, 'color')
                 datablock_cell_height = get_size(datablock_cell_data, key="height")
                 datablock_cell_width = get_size(datablock_cell_data, key="width")
+                datablock_font_family = get_font_family(datablock_cell_data, None)
+                datablock_font_size = get_font_size(datablock_cell_data, None)
+                datablock_h_align = get_text_horizontal_align(datablock_cell_data, None)
 
                 # Decide which styles to use (from table, column, row, cell or datablock)
                 (bg_color, bg_color_html) = decide_format_tuple([
@@ -1092,17 +1182,42 @@ def convert_table(table_json) -> Table:
                     (table_default_text_color, table_default_text_color_html),
                     column_text_color_list[j],
                     (row_default_text_color, row_default_text_color_html),
-                    (text_color, text_color_html),
+                    (cell_text_color, cell_text_color_html),
                     (datablock_text_color, datablock_text_color_html),
                 ])
-                height = decide_format_size([row_default_height, cell_height, datablock_cell_height])
-                width = decide_format_size([row_default_width, column_width_list[j], cell_width, datablock_cell_width])
+                height = decide_format_size([
+                    row_default_height,
+                    cell_height,
+                    datablock_cell_height])
+                width = decide_format_size([
+                    column_width_list[j],
+                    row_default_width,
+                    cell_width,
+                    datablock_cell_width])
+                h_align = decide_format([
+                    table_default_h_align,
+                    column_h_align_list[j],
+                    row_default_h_align,
+                    cell_h_align,
+                    datablock_h_align])
+                font_family = decide_format([
+                    table_default_font_family,
+                    column_font_family_list[j],
+                    row_default_font_family,
+                    cell_font_family,
+                    datablock_font_family])
+                font_size = decide_format([
+                    table_default_font_size,
+                    column_font_size_list[j],
+                    row_default_font_size,
+                    cell_font_size,
+                    datablock_font_size])
 
                 c = Cell(
                     content=content,
                     font_family=font_family,
                     font_size=font_size,
-                    h_align=text_h_align,
+                    h_align=h_align,
                     bg_color=bg_color,
                     bg_color_html=bg_color_html,
                     text_color=text_color,
