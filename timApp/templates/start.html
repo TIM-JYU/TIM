@@ -38,37 +38,6 @@
                                          item-type="document">
                             </create-item>
                         </bootstrap-panel>
-                    {% elif session.altlogin == "signup2" %}
-                        <form method="POST" action="/altsignup2">
-                            <p>
-                                Welcome to TIM! We need just a few more details to get you started.
-                            </p>
-                            <input type="hidden" name="token" value="{{ session.token }}">
-
-                            <div class="form-group">
-                                <label for="username">User name</label>
-                                <p id="username">{{ session.user_name }}</p>
-                            </div>
-                            <div class="form-group">
-                                <label for="realname">Real name</label>
-                                <input class="form-control" id="realname" name="realname" type="text"
-                                       value="{{ session.real_name }}">
-                            </div>
-                            <div class="form-group">
-                                <label>Email</label>
-
-                                <p>{{ session.email }}</p>
-                            </div>
-                            <div class="form-group">
-                                <label for="password">New password</label>
-                                <input class="form-control" id="password" name="password" type="password">
-                            </div>
-                            <div class="form-group">
-                                <label for="passconfirm">Repeat new password</label>
-                                <input class="form-control" id="passconfirm" name="passconfirm" type="password">
-                            </div>
-                            <button class="wideButton" type="submit">Create account</button>
-                        </form>
                     {% else %}
                         <h3>Get started</h3>
                         <p>To log in or sign up, use the "Log in" button at the top.</p>

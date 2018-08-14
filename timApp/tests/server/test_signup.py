@@ -15,96 +15,103 @@ class TestSignUp(TimRouteTest):
         self.logout()
 
     def test_signup(self):
-        self.post('/altsignup',
-                  data={'email': 'testingsignup@example.com'},
-                  follow_redirects=True,
-                  expect_contains='A password has been sent to you. Please check your email.')
+        self.json_post(
+            '/altsignup',
+            {'email': 'testingsignup@example.com'})
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('testingsignup@example.com',)])
-        self.post('/altsignup',
-                  data={'email': 'testingsignup@example.com'},
-                  follow_redirects=True,
-                  expect_contains='A password has been sent to you. Please check your email.')
+        self.json_post(
+            '/altsignup',
+            {'email': 'testingsignup@example.com'})
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('testingsignup@example.com',)])
-        self.post('/altsignup2',
-                  data={'realname': 'Testing Signup',
-                        'token': test_pws[-1],
-                        'password': 'somepwd',
-                        'passconfirm': 'somepwd'},
-                  follow_redirects=True,
-                  xhr=False,
-                  expect_contains='Registration succeeded!')
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup',
+             'token': test_pws[-1],
+             'password': 'somepwd',
+             'passconfirm': 'somepwd'},
+            expect_contains='registered',
+            json_key='status')
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [])
         self.assertEqual('Testing Signup', self.current_user.real_name)
 
         # TODO needs a better error message
-        self.post('/altsignup2',
-                  data={'realname': 'Testing Signup',
-                        'token': test_pws[-1],
-                        'password': 'somepwd',
-                        'passconfirm': 'somepwd'},
-                  follow_redirects=True,
-                  xhr=False,
-                  expect_contains='The temporary password you provided is wrong. Please re-check your email to see the password.')
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup',
+             'token': test_pws[-1],
+             'password': 'somepwd',
+             'passconfirm': 'somepwd'},
+            expect_contains='Wrong temporary password. Please re-check your email to see the password.',
+            expect_status=400,
+            json_key='error')
 
-        self.post('/altsignup',
-                  data={'email': 'testingsignup@example.com'},
-                  follow_redirects=True,
-                  expect_contains='A password has been sent to you. Please check your email.')
-        self.post('/altsignup2',
-                  data={'realname': 'Testing Signup2',
-                        'token': test_pws[-1],
-                        'password': 'somepwd',
-                        'passconfirm': 'somepwd'},
-                  follow_redirects=True,
-                  xhr=False,
-                  expect_contains='Your information was updated successfully.')
+        self.json_post(
+            '/altsignup',
+            {'email': 'testingsignup@example.com'})
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup2',
+             'token': test_pws[-1],
+             'password': 'somepwd',
+             'passconfirm': 'somepwd'},
+            expect_contains='updated',
+            json_key='status')
         self.assertEqual('Testing Signup2', self.current_user.real_name)
 
     def test_password_mismatch(self):
-        self.post('/altsignup',
-                  data={'email': 'testingsignup@example.com'},
-                  follow_redirects=True)
-        self.post('/altsignup2',
-                  data={'realname': 'Testing Signup',
-                        'token': test_pws[-1],
-                        'password': 'somepwd',
-                        'passconfirm': 'somepwd2'},
-                  follow_redirects=True,
-                  expect_contains='Passwords do not match.')
+        self.json_post(
+            '/altsignup',
+            {'email': 'testingsignup@example.com'})
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup',
+             'token': test_pws[-1],
+             'password': 'somepwd',
+             'passconfirm': 'somepwd2'},
+            expect_contains='Passwords do not match.',
+            json_key='error',
+            expect_status=400)
         self.assertFalse(self.is_logged_in)
 
     def test_too_short_password(self):
-        self.post('/altsignup',
-                  data={'email': 'testingsignup@example.com'},
-                  follow_redirects=True)
-        self.post('/altsignup2',
-                  data={'realname': 'Testing Signup',
-                        'token': test_pws[-1],
-                        'password': 'test',
-                        'passconfirm': 'test'},
-                  follow_redirects=True,
-                  expect_contains='A password should contain at least six characters.')
+        self.json_post(
+            '/altsignup',
+            {'email': 'testingsignup@example.com'})
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup',
+             'token': test_pws[-1],
+             'password': 'test',
+             'passconfirm': 'test'},
+            expect_contains='A password should contain at least six characters.',
+            json_key='error',
+            expect_status=400,
+        )
         self.assertFalse(self.is_logged_in)
 
     def test_temp_password_wrong(self):
-        self.post('/altsignup',
-                  data={'email': 'testingsignup@example.com'},
-                  follow_redirects=True)
-        self.post('/altsignup2',
-                  data={'realname': 'Testing Signup',
-                        'token': 'asdasd',
-                        'password': 'somepwd',
-                        'passconfirm': 'somepwd'},
-                  follow_redirects=True,
-                  expect_contains='The temporary password you provided is wrong. Please re-check your email to see the password.',
-                  )
+        self.json_post(
+            '/altsignup',
+            {'email': 'testingsignup@example.com'})
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup',
+             'token': 'asdasd',
+             'password': 'somepwd',
+             'passconfirm': 'somepwd'},
+            expect_contains='Wrong temporary password. Please re-check your email to see the password.',
+            json_key='error',
+            expect_status=400,
+        )
         self.assertFalse(self.is_logged_in)
 
     def test_invalid_email(self):
-        self.post('/altsignup',
-                  data={'email': 'invalid'},
-                  follow_redirects=True,
-                  expect_contains='You must supply a valid email address!')
+        self.json_post(
+            '/altsignup',
+            {'email': 'invalid'},
+            expect_contains='Email address is not valid',
+            json_key='error',
+            expect_status=400)
         self.assertFalse(self.is_logged_in)
 
     @property
@@ -198,19 +205,18 @@ class TestSignUp(TimRouteTest):
         curr_name = self.current_user.name
         curr_real_name = self.current_user.real_name
         curr_email = self.current_user.email
-        self.post('/altsignup',
-                  data={'email': curr_email},
-                  follow_redirects=True,
-                  expect_contains='A password has been sent to you. Please check your email.')
+        self.json_post(
+            '/altsignup',
+            {'email': curr_email})
         pw = 'somepwd'
-        self.post('/altsignup2',
-                  data={'realname': 'Johnny John',
-                        'token': test_pws[-1],
-                        'password': pw,
-                        'passconfirm': pw},
-                  follow_redirects=True,
-                  xhr=False,
-                  expect_contains='Your information was updated successfully.')
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Johnny John',
+             'token': test_pws[-1],
+             'password': pw,
+             'passconfirm': pw},
+            expect_contains='updated',
+            json_key='status')
         self.assertEqual(self.current_user.id, curr_id)
         self.assertEqual(self.current_user.name, curr_name)
         self.assertEqual(self.current_user.email, curr_email)

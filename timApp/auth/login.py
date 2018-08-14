@@ -241,13 +241,18 @@ def signup_with_email():
 test_pws = []
 
 
+@login_page.route("/checkTempPass", methods=['POST'])
+def check_temp_password():
+    email, token, = verify_json_params('email', 'token')
+    check_temp_pw(email, token)
+    return ok_response()
+
+
 @login_page.route("/altsignup", methods=['POST'])
 def alt_signup():
-    # Before password verification
-    email = request.form['email']
+    email, = verify_json_params('email')
     if not email or not is_valid_email(email):
-        flash("You must supply a valid email address!")
-        return finish_login(ready=False)
+        return abort(400, "Email address is not valid")
 
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
@@ -270,30 +275,29 @@ def alt_signup():
         send_email(email, 'Your new TIM password', f'Your password is {password}')
         if current_app.config['TESTING']:
             test_pws.append(password)
-        flash("A password has been sent to you. Please check your email.")
+        return ok_response()
     except Exception as e:
         log_error(f'Could not send login email (user: {email}, password: {password}, exception: {str(e)})')
-        flash(f'Could not send the email, please try again later. The error was: {str(e)}')
+        return abort(400, f'Could not send the email, please try again later. The error was: {str(e)}')
 
-    return finish_login(ready=False)
+
+def check_temp_pw(email: str, oldpass: str):
+    nu = NewUser.query.get(email)
+    if not (nu and nu.check_password(oldpass)):
+        return abort(400, 'Wrong temporary password. '
+                          'Please re-check your email to see the password.')
+    return nu
 
 
 @login_page.route("/altsignup2", methods=['POST'])
 def alt_signup_after():
-    # After password verification
     user_id = 0
-    real_name = request.form['realname']
+    real_name, oldpass, password, confirm = verify_json_params('realname', 'token', 'password', 'passconfirm')
     email = session['email']
     username = email
-    oldpass = request.form['token']
-    password = request.form['password']
-    confirm = request.form['passconfirm']
     save_came_from()
 
-    nu = NewUser.query.get(email)
-    if not (nu and nu.check_password(oldpass)):
-        flash('The temporary password you provided is wrong. Please re-check your email to see the password.')
-        return finish_login(ready=False)
+    nu = check_temp_pw(email, oldpass)
 
     user = User.get_by_email(email)
     if user is not None:
@@ -302,30 +306,26 @@ def alt_signup_after():
         u2 = User.get_by_name(username)
 
         if u2 is not None and u2.id != user_id:
-            flash('User name already exists. Please try another one.', 'loginmsg')
-            return finish_login(ready=False)
+            return abort(400, 'User name already exists. Please try another one.')
 
         # Use the existing user name; don't replace it with email
         username = user.name
     else:
         if User.get_by_name(username) is not None:
-            flash('User name already exists. Please try another one.', 'loginmsg')
-            return finish_login(ready=False)
+            return abort(400, 'User name already exists. Please try another one.')
 
     if password != confirm:
-        flash('Passwords do not match.', 'loginmsg')
-        return finish_login(ready=False)
+        return abort(400, 'Passwords do not match.')
 
     if len(password) < 6:
-        flash('A password should contain at least six characters.', 'loginmsg')
-        return finish_login(ready=False)
+        return abort(400, 'A password should contain at least six characters.')
 
     if not user:
-        flash('Registration succeeded!')
+        success_status = 'registered'
         user, _ = User.create_with_group(username, real_name, email, password=password)
         user_id = user.id
     else:
-        flash('Your information was updated successfully.')
+        success_status = 'updated'
         user.update_info(username, real_name, email, password=password)
 
     db.session.delete(nu)
@@ -335,7 +335,7 @@ def alt_signup_after():
     session['user_id'] = user_id
     session['user_name'] = username
     session['real_name'] = real_name
-    return finish_login()
+    return json_response({'status': success_status})
 
 
 @login_page.route("/altlogin", methods=['POST'])
