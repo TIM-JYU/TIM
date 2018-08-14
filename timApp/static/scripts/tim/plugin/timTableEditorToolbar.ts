@@ -30,10 +30,20 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
 
     $onInit() {
         super.$onInit();
-        this.draggable.setCloseFn(undefined);
+        this.draggable.setCloseFn(undefined); // Hides the close button
     }
 
-    public callbacks?: TimTableToolbarCallbacks;
+    /**
+     * Checks for changes in the cell background color selector.
+     */
+    $doCheck() {
+        if (this.cellBackgroundColor !== this.previousBackgroundColor) {
+            this.previousBackgroundColor = this.cellBackgroundColor;
+            this.callbacks.setCellBackgroundColor(this.cellBackgroundColor);
+        }
+    }
+
+    public callbacks: TimTableToolbarCallbacks;
     private activeTable?: object;
     private visible: boolean = true;
 
@@ -57,18 +67,14 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
         }
     }
 
-    public show(callbacks: TimTableToolbarCallbacks | undefined, activeTable: object) {
+    public show(callbacks: TimTableToolbarCallbacks, activeTable: object) {
         this.visible = true;
         this.activeTable = activeTable;
-        if (callbacks) {
-            this.callbacks = callbacks;
-        }
+        this.callbacks = callbacks;
     }
 
     private setTextAlign(value: string) {
-        if (this.callbacks) {
-            this.callbacks.setTextAlign(value);
-        }
+        this.callbacks.setTextAlign(value);
     }
 }
 

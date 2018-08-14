@@ -210,6 +210,7 @@ export class TimTableController implements IController {
         this.keyDownPressedTable = this.keyDownPressedTable.bind(this);
         this.onClick = this.onClick.bind(this);
         this.setCellTextAlign = this.setCellTextAlign.bind(this);
+        this.setCellBackgroundColor = this.setCellBackgroundColor.bind(this);
     }
 
     /**
@@ -1336,7 +1337,7 @@ export class TimTableController implements IController {
     //<editor-fold desc="Toolbar">
 
     async setCellBackgroundColor(value: string) {
-        // TODO implement
+        this.setCellStyleAttribute("setCellBackgroundColor", "color", value);
     }
 
     async setCellTextAlign(value: string) {
@@ -1346,6 +1347,7 @@ export class TimTableController implements IController {
     /**
      * Tells the server to set a cell style attribute.
      * @param route The route to call.
+     * @param key The name of the attribute to set.
      * @param value The value of the attribute.
      */
     async setCellStyleAttribute(route: string, key: string, value: string) {
