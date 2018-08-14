@@ -45,8 +45,10 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
     }
 
     public hide() {
+        this.close("");
         this.visible = false;
         this.scope.$apply();
+        instance = null;
     }
 
     public hideIfActiveTable(table: object) {
@@ -92,7 +94,7 @@ registerDialogComponent("timTableEditorToolbar",
     TimTableEditorToolbarController,
     {
         template: `
-  <div ng-show="$ctrl.visible">
+  <div >
     <div class="timTableEditorToolbar">
         <input type="color" title="Change cell background color" class="colorchange-button"
                ng-model="$ctrl.cellBackgroundColor"/>

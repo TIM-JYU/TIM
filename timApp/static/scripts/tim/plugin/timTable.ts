@@ -271,6 +271,14 @@ export class TimTableController implements IController {
     }
 
     private onClick(e: JQueryEventObject) {
+        const target = e.target;
+        if (target) {
+            // Do not hide the toolbar if the user clicks on it
+            if ($(target).parents(".modal-dialog").length > 0) {
+                return;
+            }
+        }
+
         if (this.mouseInTable) {
             if (this.isInEditMode()) {
                 openTableEditorToolbar({callbacks: {
