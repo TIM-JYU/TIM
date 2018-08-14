@@ -272,21 +272,32 @@ export class TimTableController implements IController {
     }
 
     private onClick(e: JQueryEventObject) {
-        const target = e.target;
-        if (target) {
-            // Do not hide the toolbar if the user clicks on it
-            if ($(target).parents(".modal-dialog").length > 0) {
-                return;
-            }
-        }
-
         if (this.mouseInTable) {
             if (this.isInEditMode()) {
                 openTableEditorToolbar({callbacks: {
                 setTextAlign: this.setCellTextAlign,
                 setCellBackgroundColor: this.setCellBackgroundColor}, activeTable: this } );
+            } else {
+                // Hide the toolbar if we're not in edit mode
+                hideToolbar(this);
             }
         } else {
+            this.lastEditedCell = undefined;
+            
+            const target = e.target;
+
+            if (target) {
+                // Do not hide the toolbar if the user clicks on it
+                if ($(target).parents(".modal-dialog").length > 0) {
+                    return;
+                }
+
+                // Do not hide the toolbar if the user clicks on another TimTable
+                if ($(target).parents(".timTableTable").length > 0) {
+                    return;
+                }
+            }
+
             hideToolbar(this);
         }
     }
@@ -847,14 +858,18 @@ export class TimTableController implements IController {
             }
         }
 
-        this.saveCurrentCell();
-        const cellData = this.getCellContentString(rowi, coli);
-        this.editedCellContent = cellData;
-        this.editedCellInitialContent = cellData;
-        this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
+        const activeCell = this.lastEditedCell;
         this.setActiveCell(rowi, coli);
-        this.currentCell = {row: rowi, col: coli, editorOpen: false};
-        this.calculateElementPlaces(rowi, coli, event);
+        if (activeCell && this.lastEditedCell &&
+            activeCell.row === this.lastEditedCell.row && activeCell.col === this.lastEditedCell.col) {
+            this.saveCurrentCell();
+            const cellData = this.getCellContentString(rowi, coli);
+            this.editedCellContent = cellData;
+            this.editedCellInitialContent = cellData;
+            this.getCellData(cell, this.viewctrl.item.id, parId, rowi, coli);
+            this.currentCell = {row: rowi, col: coli, editorOpen: false};
+            this.calculateElementPlaces(rowi, coli, event);
+        }
     }
 
     /**

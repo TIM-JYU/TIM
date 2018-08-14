@@ -96,7 +96,8 @@ export function openTableEditorToolbar(p: timTableEditorToolbarParams) {
 
 export function hideToolbar(closingTable: object) {
     if (instance) {
-        instance.hideIfActiveTable(closingTable);
+        //instance.hideIfActiveTable(closingTable);
+        instance.hide();
     }
 }
 
