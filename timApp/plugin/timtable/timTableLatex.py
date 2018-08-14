@@ -724,6 +724,57 @@ def get_datablock_cell_data(datablock, row: int, cell: int):
         return None
 
 
+def convert_datablock_index(datablock_index) -> Tuple[int, int]:
+    """
+    A 1 -> 0, 0
+    ZZ13 -> 51, 12
+    :param datablock_index:
+    :return:
+    """
+    letters = re.sub(r'[0-9]+', '', datablock_index)
+    numbers = re.sub(r'[A-Z]+', '', datablock_index)
+    cell = (ord(letters[0]) - ord("A")) + (ord("Z") - ord("A") + 1) * (len(letters) - 1)
+    row = int(numbers) - 1
+    return cell, row
+
+
+def add_missing_elements(table_json, datablock):
+    """
+    Add cells and rows only present in datablock to table row json.
+    :param table_json:
+    :param datablock:
+    :return:
+    """
+    max_row_count = 0
+    max_cell_count = 0
+    if not datablock:
+        return table_json['rows']
+    for item in datablock:
+        cell, row = convert_datablock_index(item)
+        if row > max_row_count:
+            max_row_count = row
+        if cell > max_cell_count:
+            max_cell_count = cell
+    print(table_json)
+
+    empty_cell = {'cell': ''}
+
+    row_count = len(table_json)
+    # Add missing rows.
+    # for i in range(0, max_row_count - row_count + 1):
+    #     table_json['rows'].append({'row': [empty_cell]})
+    # print(table_json)
+
+    # Add missing cells to existing rows.
+    for row_json in table_json['rows']:
+        row_cell_count = len(row_json['row'])
+        for i in range(0, max_cell_count - row_cell_count + 1):
+            row_json['row'].append(empty_cell)
+
+    print(table_json)
+    return table_json['rows']
+
+
 def get_span(item) -> (int, int):
     """
     Parses row and column span of the cell.
@@ -1104,8 +1155,7 @@ def convert_table(table_json) -> Table:
     column_h_align_list = get_column_h_align_list(table_json)
     column_font_family_list = get_column_font_family_list(table_json)
 
-
-    table_json_rows = table_json['rows']
+    table_json_rows = add_missing_elements(table_json, datablock)
     max_cells = 0
     max_colspan = 1
     for i in range(0, len(table_json_rows)):
