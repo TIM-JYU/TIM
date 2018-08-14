@@ -54,6 +54,10 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
         return "Edit table";
     }
 
+    dismiss() {
+        this.hide();
+    }
+
     public hide() {
         this.close("");
         this.visible = false;
