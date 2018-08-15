@@ -69,7 +69,12 @@ def logout():
         session.pop('anchor', None)
         session.pop('other_users', None)
         session.pop('adding_user', None)
-    return json_response(dict(current_user=get_current_user(), other_users=get_other_users_as_list()))
+    return login_response()
+
+
+def login_response():
+    return json_response(dict(current_user=get_current_user_object().to_json(full=True),
+                              other_users=get_other_users_as_list()))
 
 
 @login_page.route("/login")
@@ -212,9 +217,9 @@ def check_temp_password():
     """Checks that the temporary password provided by user is correct.
     Sends the real name of the user if the email already exists so that the name field can be prefilled.
     """
-    email, token, = verify_json_params('email', 'token')
-    check_temp_pw(email, token)
-    u = User.get_by_email(email)
+    email_or_username, token, = verify_json_params('email', 'token')
+    nu = check_temp_pw(email_or_username, token)
+    u = User.get_by_email(nu.email)
     if u:
         return json_response({'status': 'name', 'name': u.real_name, 'can_change_name': u.is_email_user})
     else:
@@ -223,9 +228,14 @@ def check_temp_password():
 
 @login_page.route("/altsignup", methods=['POST'])
 def alt_signup():
-    email, = verify_json_params('email')
-    if not email or not is_valid_email(email):
-        return abort(400, "Email address is not valid")
+    email_or_username, = verify_json_params('email')
+    if not is_valid_email(email_or_username):
+        u = User.get_by_name(email_or_username)
+        if not u:
+            return abort(400, "Email address is not valid")
+        email = u.email
+    else:
+        email = email_or_username
 
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
@@ -240,7 +250,6 @@ def alt_signup():
 
     session.pop('user_id', None)
     session.pop('appcookie', None)
-    session["email"] = email
 
     try:
         send_email(email, 'Your new TIM password', f'Your password is {password}')
@@ -252,8 +261,12 @@ def alt_signup():
         return abort(400, f'Could not send the email, please try again later. The error was: {str(e)}')
 
 
-def check_temp_pw(email: str, oldpass: str):
-    nu = NewUser.query.get(email)
+def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
+    nu = NewUser.query.get(email_or_username)
+    if not nu:
+        u = User.get_by_name(email_or_username)
+        if u:
+            nu = NewUser.query.get(u.email)
     if not (nu and nu.check_password(oldpass)):
         return abort(400, 'Wrong temporary password. '
                           'Please re-check your email to see the password.')
@@ -262,7 +275,7 @@ def check_temp_pw(email: str, oldpass: str):
 
 @login_page.route("/altsignup2", methods=['POST'])
 def alt_signup_after():
-    email, confirm, password, real_name, temp_pass = verify_json_params(
+    email_or_username, confirm, password, real_name, temp_pass = verify_json_params(
         'email',
         'passconfirm',
         'password',
@@ -278,7 +291,8 @@ def alt_signup_after():
 
     save_came_from()
 
-    nu = check_temp_pw(email, temp_pass)
+    nu = check_temp_pw(email_or_username, temp_pass)
+    email = nu.email
     username = email
 
     user = User.get_by_email(email)
@@ -317,11 +331,11 @@ def alt_signup_after():
 @login_page.route("/altlogin", methods=['POST'])
 def alt_login():
     save_came_from()
-    email = request.form['email']
+    email_or_username = request.form['email']
     password = request.form['password']
     session['adding_user'] = request.form.get('add_user', 'false').lower() == 'true'
 
-    user = User.get_by_email(email)
+    user = User.get_by_email_or_username(email_or_username)
     if user is not None:
         old_hash = user.pass_
         if user.check_password(password, allow_old=True, update_if_old=True):
@@ -368,7 +382,7 @@ def finish_login(ready=True):
     if not is_xhr(request):
         return safe_redirect(came_from + anchor)
     else:
-        return json_response(dict(current_user=get_current_user(), other_users=get_other_users_as_list()))
+        return login_response()
 
 
 @login_page.route("/quickLogin/<username>")

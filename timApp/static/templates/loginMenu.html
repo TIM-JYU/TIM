@@ -29,17 +29,28 @@
                 </p>
 
                 <div class="form-group">
-                    <label for="email" class="control-label">Email</label>
-                    <input class="form-control" id="email" ng-model="$ctrl.form.email" type="email">
+                    <label for="email" class="control-label">Email or username</label>
+                    <input class="form-control"
+                           id="email"
+                           ng-model="$ctrl.form.email"
+                           on-enter="$ctrl.focusLoginPassword = true"
+                           type="text">
                 </div>
 
                 <div class="form-group">
                     <label for="password" class="control-label">Password</label>
-                    <input class="form-control" id="password" ng-model="$ctrl.form.password" type="password">
+                    <input class="form-control"
+                           id="password"
+                           focus-me="$ctrl.focusLoginPassword"
+                           ng-model="$ctrl.form.password"
+                           type="password">
                     <p class="text-smaller"><a href="#" ng-click="$ctrl.forgotPassword()">I forgot my password</a></p>
                 </div>
 
                 <button class="center-block timButton" type="submit">Log in</button>
+                <tim-alert severity="danger" ng-show="$ctrl.loginError">
+                    {{ $ctrl.loginError }}
+                </tim-alert>
                 <hr>
                 <p class="text-center" ng-show="!$ctrl.showSignup">
                     Not a JYU student or staff member and don't have a TIM account?
@@ -51,10 +62,10 @@
             </form>
             <div class="form" ng-show="$ctrl.showSignup">
                 <p class="text-center" ng-if="$ctrl.resetPassword && !$ctrl.emailSent">
-                    To reset password, provide your email first.
+                    To reset password, enter your email or username first.
                 </p>
                 <div class="form-group">
-                    <label for="email-signup" class="control-label">Email</label>
+                    <label for="email-signup" class="control-label">{{ $ctrl.getEmailOrUserText(true) }}</label>
                     <input class="form-control"
                            id="email-signup"
                            focus-me="$ctrl.focusEmail"
@@ -63,8 +74,8 @@
                            on-enter="$ctrl.provideEmail()"
                            name="email"
                            required
-                           placeholder="Enter your email address"
-                           type="email"/>
+                           placeholder="Enter your {{ $ctrl.getEmailOrUserText() }}"
+                           type="text"/>
                 </div>
                 <button ng-click="$ctrl.provideEmail()"
                         ng-disabled="!$ctrl.email"

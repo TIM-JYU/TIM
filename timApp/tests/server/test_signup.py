@@ -7,6 +7,7 @@ from timApp.tim_app import app
 from timApp.user.newuser import NewUser
 from timApp.user.user import User
 from timApp.timdb.sqa import db
+from timApp.user.userutils import create_password_hash
 
 
 class TestSignUp(TimRouteTest):
@@ -263,3 +264,28 @@ class TestSignUp(TimRouteTest):
         u.pass_ = None
         db.session.commit()
         self.login(email='someone@example.com', passw='something', force=True, expect_status=403)
+
+    def test_email_login_with_korppi_username(self):
+        self.register_user_with_korppi('someone2', 'Some One', 'someone2@example.com')
+        u = User.get_by_name('someone2')
+        u.pass_ = create_password_hash('somepass')
+        db.session.commit()
+        self.login(email='someone2', passw='somepass', force=True)
+
+    def test_korppi_user_reset_pass_with_username(self):
+        """A Korppi user can reset their password using their username."""
+        self.register_user_with_korppi()
+        curr_name = self.current_user.name
+        self.json_post(
+            '/altsignup',
+            {'email': curr_name})
+        pw = 'somepwd'
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Johnny John',
+             'email': curr_name,
+             'token': test_pws[-1],
+             'password': pw,
+             'passconfirm': pw},
+            expect_contains='updated',
+            json_key='status')

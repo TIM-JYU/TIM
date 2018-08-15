@@ -3,7 +3,7 @@ import {timApp} from "tim/app";
 import * as loading from "tim/ui/loadingIndicator";
 import * as onEnter from "tim/ui/onEnter";
 import {$http} from "../util/ngimport";
-import {capitalizeFirstLetter, markAsUsed, to} from "../util/utils";
+import {capitalizeFirstLetter, markAsUsed, to, ToReturn} from "../util/utils";
 import {IUser} from "./IUser";
 import {Users} from "./userService";
 
@@ -12,9 +12,6 @@ markAsUsed(onEnter, loading);
 interface IOkResponse {
     status: "ok";
 }
-
-type ToReturn<T, U = {data: {error: string}}> = IPromise<[U, undefined] | [null, IHttpResponse<T>]>;
-const ToReturn = Promise;
 
 interface INameResponse {
     status: "name";
@@ -47,6 +44,7 @@ class LoginMenuController implements IController {
     private resetPassword = false;
     private canChangeName = true;
     private focusNewPassword = false;
+    private loginError: string | undefined;
 
     constructor() {
         this.form = {email: "", password: ""};
@@ -86,11 +84,16 @@ class LoginMenuController implements IController {
         }
     }
 
-    loginWithEmail() {
-        Users.loginWithEmail(this.form.email, this.form.password, this.addingToSession,
-            () => {
-                this.addingToSession = false;
-            });
+    async loginWithEmail() {
+        const [err, resp] = await Users.loginWithEmail(this.form.email, this.form.password, this.addingToSession);
+        if (err) {
+            this.loginError = err.data.error;
+        } else {
+            this.loginError = undefined;
+            if (!this.addingToSession) {
+                window.location.reload();
+            }
+        }
     }
 
     beginLogout($event: Event) {
@@ -214,6 +217,20 @@ class LoginMenuController implements IController {
     private cancelSignup() {
         this.showSignup = false;
         this.resetPassword = false;
+    }
+
+    private getEmailOrUserText(capitalize?: boolean) {
+        let txt;
+        if (this.resetPassword) {
+            txt = "email or username";
+        } else {
+            txt = "email";
+        }
+        if (capitalize) {
+            return capitalizeFirstLetter(txt);
+        } else {
+            return txt;
+        }
     }
 }
 

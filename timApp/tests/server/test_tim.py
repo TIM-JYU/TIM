@@ -6,7 +6,6 @@ from lxml.cssselect import CSSSelector
 
 from timApp.document.document import Document
 from timApp.markdown.markdownconverter import md_to_html
-from timApp.tests.db.timdbtest import TEST_USER_1_NAME
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.userutils import get_anon_group_id, grant_view_access
 
@@ -18,12 +17,7 @@ class TimTest(TimRouteTest):
     def test_activities(self):
         timdb = self.get_db()
 
-        login_resp = self.login_test1(force=True)
-        self.assertDictEqual({'current_user': {'email': 'test1@example.com',
-                                               'id': 4,
-                                               'name': 'testuser1',
-                                               'real_name': TEST_USER_1_NAME},
-                              'other_users': []}, login_resp)
+        self.login_test1(force=True)
 
         # Make sure user's personal folder exists
         personal_folder = self.current_user.get_personal_folder().path

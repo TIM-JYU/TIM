@@ -193,6 +193,13 @@ class User(db.Model):
     def get_by_email(email: str) -> Optional['User']:
         return User.query.filter_by(email=email).first()
 
+    @staticmethod
+    def get_by_email_or_username(email_or_username: str) -> Optional['User']:
+        u = User.get_by_email(email_or_username)
+        if u:
+            return u
+        return User.get_by_name(email_or_username)
+
     def check_password(self, password: str, allow_old=False, update_if_old=True) -> bool:
         if not self.pass_:
             return False

@@ -1,4 +1,4 @@
-import angular, {IPromise} from "angular";
+import angular, {IHttpResponse, IPromise} from "angular";
 import moment from "moment";
 import sessionsettings from "tim/session";
 import {$http, $timeout} from "./ngimport";
@@ -318,3 +318,6 @@ export function capitalizeFirstLetter(s: string) {
     }
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
+export type ToReturn<T, U = {data: {error: string}}> = IPromise<[U, undefined] | [null, IHttpResponse<T>]>;
+export const ToReturn = Promise;
