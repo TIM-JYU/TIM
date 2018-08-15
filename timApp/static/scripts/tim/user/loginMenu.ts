@@ -38,6 +38,7 @@ class LoginMenuController implements IController {
     private newPassword: string | undefined;
     private rePassword: string | undefined;
     private finishStatus: undefined | "registered" | "updated";
+    private resetPassword = false;
 
     constructor() {
         this.form = {email: "", password: ""};
@@ -162,6 +163,11 @@ class LoginMenuController implements IController {
             this.nameProvided = true;
             this.focusLink = true;
         }
+    }
+
+    private forgotPassword() {
+        this.resetPassword = true;
+        this.beginSignup();
     }
 }
 

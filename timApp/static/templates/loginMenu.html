@@ -36,12 +36,16 @@
                 <div class="form-group">
                     <label for="password" class="control-label">Password</label>
                     <input class="form-control" id="password" ng-model="$ctrl.form.password" type="password">
+                    <p class="text-smaller"><a href="#" ng-click="$ctrl.forgotPassword()">I forgot my password</a></p>
                 </div>
 
                 <button class="center-block timButton" type="submit">Log in</button>
                 <hr>
                 <p class="text-center" ng-show="!$ctrl.showSignup">
                     Not a JYU student or staff member and don't have a TIM account?
+                </p>
+                <p class="text-center" ng-if="$ctrl.resetPassword && !$ctrl.emailSent">
+                    To reset password, provide your email first.
                 </p>
                 <button ng-show="!$ctrl.showSignup" class="center-block timButton" type="button"
                         ng-click="$ctrl.beginSignup()">
@@ -65,7 +69,8 @@
                 <button ng-click="$ctrl.provideEmail()"
                         ng-disabled="!$ctrl.email"
                         ng-show="!$ctrl.emailSent"
-                        class="center-block timButton">Sign up
+                        class="center-block timButton">
+                    Continue
                 </button>
                 <div ng-show="$ctrl.emailSent">
                     <div class="form-group" ng-show="!$ctrl.tempPasswordProvided">
