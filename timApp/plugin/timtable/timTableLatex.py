@@ -244,13 +244,14 @@ class Row:
     LaTeX-table row.
     """
 
-    def __init__(self, index: int, cells: List[Cell]) -> None:
+    def __init__(self, index: int, cells: List[Cell], height: Union[float, None] = None) -> None:
         """
         :param index: Row index.
         :param cells: A list of the cells this row contains.
         """
         self.index = index
         self.cells = cells
+        self.height = height
 
     def __str__(self) -> str:
         """
@@ -265,8 +266,8 @@ class Row:
 
     def get_row_height(self) -> Union[int, float]:
         """
-        Gives the largest cell height to be used as row height.
-        Currently this way because separate cell heights aren't supported.
+        Gives the largest cell height to be used as row height or row's height attribute, if it is taller.
+        Note: sseparate cell heights aren't supported.
         :return: Row height.
         """
         height = 0
@@ -275,6 +276,8 @@ class Row:
                 height = max(float(height), float(self.cells[i].cell_height))
         except:
             pass
+        if self.height and self.height > height:
+            return self.height
         return height
 
     def add_cell(self, i: int, cell: Cell) -> None:
@@ -487,8 +490,8 @@ class Table:
         output = ""
         for i in range(0, len(self.rows)):
             output += "\n" + fr"\hhline{{{str(self.hborders[i])}}}" \
-                             "\n" + f"{str(self.rows[i])}" \
-                                    "\n" + fr"\tabularnewline[{self.rows[i].get_row_height()}pt]"
+                      "\n" + f"{str(self.rows[i])}" \
+                      "\n" + fr"\tabularnewline[{self.rows[i].get_row_height()}pt]"
 
         output += "\n" + fr"\hhline{{{str(self.hborders[-1])}}}"
         return f"{prefix}\n{output}\n{postfix}"
@@ -527,6 +530,41 @@ class Table:
 
     def __repr__(self) -> str:
         return custom_repr(self)
+
+    def auto_size_cells(self):
+        """
+        Try to set cell widths and row heights automatically based on content lenght.
+        :return:
+        """
+        if not self.rows:
+            return
+        widths = []
+        for cell in self.rows[0].cells:
+            cell_width = cell.cell_width
+            if cell_width is default_width:
+                cell_width = len(cell.content)*cell.font_size/2
+            widths.append(cell_width)
+        for i in range(0, len(self.rows)):
+            try:
+                max_height = 0  # Tallest estimated height in the cells of the row.
+                for j in range(0, len(self.rows[i].cells)):
+                    self.rows[i].cells[j].cell_width = widths[j]
+                    # This is guesswork.
+                    height = (self.rows[i].cells[j].font_size + 65) * len(self.rows[i].cells[j].content) / widths[j]
+                    # Row height will be decided by the tallest cell.
+                    if height > max_height:
+                        max_height = height
+                if not is_close(float(max_height), float(default_height)):
+                    # Column widths are based on first row so it's more exact and needs less buffer space.
+                    if i == 0:
+                        max_height = max_height / 2
+                    # Row height is later on compared with cell heights and the tallest is chosen,
+                    # so this is effectively the minimal height.
+                    self.rows[i].height = max_height
+                # print(max_height)
+            except:
+                pass
+        # print(widths)
 
 
 def get_column_span(item):
@@ -791,7 +829,10 @@ def get_size(item, key: str, default=None) -> Union[str, None]:
     :return: Cell width or height.
     """
     try:
-        return parse_size_attribute(item[key])
+        size = parse_size_attribute(item[key])
+        if size is 'auto':
+            return None
+        return size
     except:
         return default
 
@@ -1057,9 +1098,12 @@ def decide_format_size(format_levels):
     final_size = 0
     for level in format_levels:
         if level and default_width not in level:
-            size = float(parse_size_attribute(level))
-            if size > final_size:
-                final_size = size
+            try:
+                size = float(parse_size_attribute(level))
+                if size > final_size:
+                    final_size = size
+            except ValueError:
+                continue
     if is_close(final_size, 0):
         return default_width
     else:
@@ -1299,6 +1343,7 @@ def convert_table(table_json) -> Table:
                     table_row.add_cell(j, c)
                 max_cells = max(max_cells, len(table_row.cells))
 
+
     # Currently plays it safe by overestimating table cell count.
     # If estimation larger than max_col_count, use max_col_count instead.
     estimation = max_cells * max_colspan
@@ -1306,8 +1351,14 @@ def convert_table(table_json) -> Table:
         table.col_count = max_col_count
     else:
         table.col_count = estimation
+
     # Whether table should be fit to page.
     table.fit_to_page_width = get_table_resize(table_json, table.col_count)
 
+    # Set row and column sizes according to cell contents.
+    table.auto_size_cells()
+
+    # Create horizontal border objects.
     table.create_hborders()
+
     return table
