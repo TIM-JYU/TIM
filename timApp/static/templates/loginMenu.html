@@ -144,14 +144,17 @@
                                 class="center-block timButton">Finish
                         </button>
                     </div>
-                    <div ng-if="$ctrl.finishStatus === 'registered'">
-                        Thank you! Now you can
+                    <span ng-if="$ctrl.finishStatus === 'registered'">
+                        Thank you!
+                    </span>
+                    <span ng-if="$ctrl.finishStatus === 'updated'">
+                        Your information was updated successfully.
+                    </span>
+                    <span ng-if="$ctrl.finishStatus">
+                        Now you can
                         <a href="." focus-me="$ctrl.focusLink">refresh</a>
                         the page to log in.
-                    </div>
-                    <div ng-if="$ctrl.finishStatus === 'updated'">
-                        Your information was updated successfully.
-                    </div>
+                    </span>
                 </div>
                 <tim-loading ng-show="$ctrl.signUpRequestInProgress"></tim-loading>
                 <tim-alert severity="danger" ng-show="$ctrl.signUpError">
