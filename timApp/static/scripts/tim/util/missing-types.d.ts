@@ -4,6 +4,7 @@ declare module "humanize-duration";
 declare module "angular-messages";
 declare module "angular-timer";
 declare module "angular-eonasdan-datetimepicker";
+declare module "angularjs-color-picker";
 declare module "bootstrap-sass";
 declare module "angular-touch";
 declare module "angular-bootstrap-colorpicker";

@@ -3,6 +3,7 @@ import angular, {
     IModule, IQProvider, IQService, IWindowService,
 } from "angular";
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
+import colorpicker from "angularjs-color-picker";
 import ngMessages from "angular-messages";
 import ngSanitize from "angular-sanitize";
 import timer from "angular-timer";
@@ -22,7 +23,7 @@ import {initUserService} from "./user/userService";
 import {injectProviders, injectServices} from "./util/ngimport";
 
 markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize,
-    uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, oclazyload);
+    uibootstrap, ngFileUpload, ngStorage, plugins, extramodules, oclazyload, colorpicker);
 
 // timApp's Angular modules:
 // base: 'ngMessages', 'timer', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap'
@@ -38,6 +39,7 @@ export const timApp = angular.module("timApp", [
     "ngFileUpload",
     "ngStorage",
     "oc.lazyLoad",
+    "color.picker",
 ].concat(angularmodules));
 // disable Angular URL manipulation when using ng-include; from http://stackoverflow.com/a/19825756
 timApp.config(["$provide", ($provide: IModule) => {

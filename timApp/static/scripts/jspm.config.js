@@ -180,6 +180,7 @@ SystemJS.config({
     "github:*/*.json"
   ],
   map: {
+    "angularjs-color-picker": "npm:angularjs-color-picker@3.4.8",
     "@types/systemjs": "npm:@types/systemjs@0.20.2",
     "ace": "github:ajaxorg/ace-builds@1.2.6",
     "constants": "npm:jspm-nodelibs-constants@0.2.1",
@@ -660,6 +661,12 @@ SystemJS.config({
       "map": {
         "base64-js": "npm:base64-js@1.2.1",
         "ieee754": "npm:ieee754@1.1.8"
+      }
+    },
+    "npm:angularjs-color-picker@3.4.8": {
+      "map": {
+        "tinycolor2": "npm:tinycolor2@1.4.1",
+        "angular": "npm:angular@1.5.11"
       }
     }
   }

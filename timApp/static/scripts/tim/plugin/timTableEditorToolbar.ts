@@ -37,9 +37,10 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
      * Checks for changes in the cell background color selector.
      */
     $doCheck() {
+        return;
         if (this.cellBackgroundColor !== this.previousBackgroundColor) {
             this.previousBackgroundColor = this.cellBackgroundColor;
-            this.callbacks.setCellBackgroundColor(this.cellBackgroundColor);
+            this.callbacks.setCellBackgroundColor("#" + this.cellBackgroundColor);
         }
     }
 
@@ -80,6 +81,16 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
     private setTextAlign(value: string) {
         this.callbacks.setTextAlign(value);
     }
+
+    private eventApi = {
+        onClose: function(api: any, color: string, $event: any) {TimTableEditorToolbarController.onColorPickerClose(color);},
+    };
+
+    private static onColorPickerClose(color: string) {
+        if (instance) {
+            instance.callbacks.setCellBackgroundColor("#" + color);
+        }
+    }
 }
 
 // : IPromise< { } >
@@ -107,8 +118,8 @@ registerDialogComponent("timTableEditorToolbar",
         template: `
   <div >
     <div class="timTableEditorToolbar">
-        <input type="color" title="Change cell background color" class="colorchange-button"
-               ng-model="$ctrl.cellBackgroundColor"/>
+        <color-picker class="timtable-colorpicker" ng-model="$ctrl.cellBackgroundColor" event-api="$ctrl.eventApi"
+        options="{'format':'hex', 'placeholder': '#EEEEEE', 'round': false, 'inline': false}"></color-picker>
         <button class="glyphicon glyphicon-align-left" title="Align left" ng-click="$ctrl.setTextAlign('left')"></button>
         <button class="glyphicon glyphicon-align-center" title="Align center" ng-click="$ctrl.setTextAlign('center')"></button>
         <button class="glyphicon glyphicon-align-right" title="Align right" ng-click="$ctrl.setTextAlign('right')"></button>

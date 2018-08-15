@@ -76,6 +76,7 @@
       "angular-touch": "npm:angular-touch@1.5",
       "angular-ui-bootstrap": "npm:angular-ui-bootstrap@^2.5.0",
       "angular-ui-grid": "npm:angular-ui-grid@4.0.1",
+      "angularjs-color-picker": "npm:angularjs-color-picker@^3.4.8",
       "bootstrap-sass": "github:twbs/bootstrap-sass@^3.3.7",
       "chart.js": "npm:chart.js@^2.7.1",
       "humanize-duration": "npm:humanize-duration@^3.10.0",
@@ -242,4 +243,4 @@
       }
     }
   }
-}
+}
