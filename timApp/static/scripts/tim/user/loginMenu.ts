@@ -16,6 +16,11 @@ interface IOkResponse {
 type ToReturn<T, U = {data: {error: string}}> = IPromise<[U, undefined] | [null, IHttpResponse<T>]>;
 const ToReturn = Promise;
 
+interface INameResponse {
+    status: "name";
+    name: string;
+}
+
 class LoginMenuController implements IController {
     private loggingout: boolean;
     private form: {email: string, password: string};
@@ -132,7 +137,7 @@ class LoginMenuController implements IController {
         if (!this.tempPassword || this.signUpRequestInProgress) {
             return;
         }
-        const [err, resp] = await this.sendRequest("/checkTempPass", {
+        const [err, resp] = await this.sendRequest<IOkResponse | INameResponse>("/checkTempPass", {
             email: this.email,
             token: this.tempPassword,
         });
@@ -142,6 +147,9 @@ class LoginMenuController implements IController {
             this.signUpError = undefined;
             this.tempPasswordProvided = true;
             this.focusName = true;
+            if (resp.data.status === "name") {
+                this.name = resp.data.name;
+            }
         }
     }
 

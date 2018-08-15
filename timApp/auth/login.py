@@ -209,9 +209,16 @@ test_pws = []
 
 @login_page.route("/checkTempPass", methods=['POST'])
 def check_temp_password():
+    """Checks that the temporary password provided by user is correct.
+    Sends the real name of the user if the email already exists so that the name field can be prefilled.
+    """
     email, token, = verify_json_params('email', 'token')
     check_temp_pw(email, token)
-    return ok_response()
+    u = User.get_by_email(email)
+    if u:
+        return json_response({'status': 'name', 'name': u.real_name})
+    else:
+        return ok_response()
 
 
 @login_page.route("/altsignup", methods=['POST'])
