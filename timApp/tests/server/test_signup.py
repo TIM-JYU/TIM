@@ -231,7 +231,7 @@ class TestSignUp(TimRouteTest):
         self.assertEqual(self.current_user.id, curr_id)
         self.assertEqual(self.current_user.name, curr_name)
         self.assertEqual(self.current_user.email, curr_email)
-        self.assertEqual(self.current_user.real_name, 'Johnny John')
+        self.assertEqual(self.current_user.real_name, 'Doe John Matt')  # changing name not allowed for Korppi users
         self.assertTrue(self.current_user.check_password(pw))
 
         self.logout()

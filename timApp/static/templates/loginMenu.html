@@ -101,7 +101,7 @@
                                    id="name-signup"
                                    focus-me="$ctrl.focusName"
                                    ng-model="$ctrl.name"
-                                   ng-disabled="$ctrl.nameProvided"
+                                   ng-disabled="$ctrl.nameProvided || !$ctrl.canChangeName"
                                    on-enter="$ctrl.focusNewPassword = true"
                                    name="name"
                                    required

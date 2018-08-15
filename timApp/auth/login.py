@@ -216,7 +216,7 @@ def check_temp_password():
     check_temp_pw(email, token)
     u = User.get_by_email(email)
     if u:
-        return json_response({'status': 'name', 'name': u.real_name})
+        return json_response({'status': 'name', 'name': u.real_name, 'can_change_name': u.is_email_user})
     else:
         return ok_response()
 
@@ -293,6 +293,12 @@ def alt_signup_after():
         # Use the existing user name; don't replace it with email
         username = user.name
         success_status = 'updated'
+
+        # If the user isn't an email user, don't let them change name
+        # (because it has been provided by other system such as Korppi).
+        if not user.is_email_user:
+            real_name = user.real_name
+
         user.update_info(username, real_name, email, password=password)
     else:
         if User.get_by_name(username) is not None:

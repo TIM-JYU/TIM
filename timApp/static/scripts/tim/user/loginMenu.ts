@@ -19,6 +19,7 @@ const ToReturn = Promise;
 interface INameResponse {
     status: "name";
     name: string;
+    can_change_name: boolean;
 }
 
 class LoginMenuController implements IController {
@@ -44,6 +45,8 @@ class LoginMenuController implements IController {
     private rePassword: string | undefined;
     private finishStatus: undefined | "registered" | "updated";
     private resetPassword = false;
+    private canChangeName = true;
+    private focusNewPassword = false;
 
     constructor() {
         this.form = {email: "", password: ""};
@@ -149,6 +152,11 @@ class LoginMenuController implements IController {
             this.focusName = true;
             if (resp.data.status === "name") {
                 this.name = resp.data.name;
+                this.canChangeName = resp.data.can_change_name;
+                if (!this.canChangeName) {
+                    this.focusName = false;
+                    this.focusNewPassword = true;
+                }
             } else {
                 const nameParts = this.email.split("@")[0].split(".");
                 for (const n of nameParts) {
