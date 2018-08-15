@@ -282,8 +282,6 @@ export class TimTableController implements IController {
                 hideToolbar(this);
             }
         } else {
-            this.lastEditedCell = undefined;
-            
             const target = e.target;
 
             if (target) {
@@ -292,12 +290,14 @@ export class TimTableController implements IController {
                     return;
                 }
 
+                this.lastEditedCell = undefined;
+
                 // Do not hide the toolbar if the user clicks on another TimTable
                 if ($(target).parents(".timTableTable").length > 0) {
                     return;
                 }
             }
-
+            
             hideToolbar(this);
         }
     }
