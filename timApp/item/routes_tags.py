@@ -59,6 +59,7 @@ def add_tag(doc):
     try:
         db.session.commit()
     except (IntegrityError, FlushError):
+        db.session.rollback()
         abort(400, "Tag name is already in use.")
     return ok_response()
 

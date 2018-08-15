@@ -15,17 +15,19 @@ class TestSignUp(TimRouteTest):
         self.logout()
 
     def test_signup(self):
+        email = 'testingsignup@example.com'
         self.json_post(
             '/altsignup',
-            {'email': 'testingsignup@example.com'})
-        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('testingsignup@example.com',)])
+            {'email': email})
+        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [(email,)])
         self.json_post(
             '/altsignup',
-            {'email': 'testingsignup@example.com'})
-        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('testingsignup@example.com',)])
+            {'email': email})
+        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [(email,)])
         self.json_post(
             '/altsignup2',
             {'realname': 'Testing Signup',
+             'email': email,
              'token': test_pws[-1],
              'password': 'somepwd',
              'passconfirm': 'somepwd'},
@@ -39,6 +41,7 @@ class TestSignUp(TimRouteTest):
             '/altsignup2',
             {'realname': 'Testing Signup',
              'token': test_pws[-1],
+             'email': email,
              'password': 'somepwd',
              'passconfirm': 'somepwd'},
             expect_contains='Wrong temporary password. Please re-check your email to see the password.',
@@ -47,10 +50,11 @@ class TestSignUp(TimRouteTest):
 
         self.json_post(
             '/altsignup',
-            {'email': 'testingsignup@example.com'})
+            {'email': email})
         self.json_post(
             '/altsignup2',
             {'realname': 'Testing Signup2',
+             'email': email,
              'token': test_pws[-1],
              'password': 'somepwd',
              'passconfirm': 'somepwd'},
@@ -59,12 +63,14 @@ class TestSignUp(TimRouteTest):
         self.assertEqual('Testing Signup2', self.current_user.real_name)
 
     def test_password_mismatch(self):
+        email = 'testingsignup@example.com'
         self.json_post(
             '/altsignup',
-            {'email': 'testingsignup@example.com'})
+            {'email': email})
         self.json_post(
             '/altsignup2',
             {'realname': 'Testing Signup',
+             'email': email,
              'token': test_pws[-1],
              'password': 'somepwd',
              'passconfirm': 'somepwd2'},
@@ -74,12 +80,14 @@ class TestSignUp(TimRouteTest):
         self.assertFalse(self.is_logged_in)
 
     def test_too_short_password(self):
+        email = 'testingsignup@example.com'
         self.json_post(
             '/altsignup',
-            {'email': 'testingsignup@example.com'})
+            {'email': email})
         self.json_post(
             '/altsignup2',
             {'realname': 'Testing Signup',
+             'email': email,
              'token': test_pws[-1],
              'password': 'test',
              'passconfirm': 'test'},
@@ -90,12 +98,14 @@ class TestSignUp(TimRouteTest):
         self.assertFalse(self.is_logged_in)
 
     def test_temp_password_wrong(self):
+        email = 'testingsignup@example.com'
         self.json_post(
             '/altsignup',
-            {'email': 'testingsignup@example.com'})
+            {'email': email})
         self.json_post(
             '/altsignup2',
             {'realname': 'Testing Signup',
+             'email': email,
              'token': 'asdasd',
              'password': 'somepwd',
              'passconfirm': 'somepwd'},
@@ -212,6 +222,7 @@ class TestSignUp(TimRouteTest):
         self.json_post(
             '/altsignup2',
             {'realname': 'Johnny John',
+             'email': curr_email,
              'token': test_pws[-1],
              'password': pw,
              'passconfirm': pw},

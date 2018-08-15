@@ -63,17 +63,12 @@ def logout():
         session['other_users'] = group
     else:
         session.pop('user_id', None)
-        session.pop('user_name', None)
-        session.pop('email', None)
-        session.pop('real_name', None)
         session.pop('appcookie', None)
-        session.pop('altlogin', None)
         session.pop('came_from', None)
         session.pop('last_doc', None)
         session.pop('anchor', None)
         session.pop('other_users', None)
         session.pop('adding_user', None)
-        session['user_name'] = 'Anonymous'
     return json_response(dict(current_user=get_current_user(), other_users=get_other_users_as_list()))
 
 
@@ -83,16 +78,9 @@ def login():
     if logged_in():
         flash('You are already logged in.')
         return safe_redirect(session.get('came_from', '/'))
-    if request.args.get('korppiLogin'):
-        return login_with_korppi()
-    elif request.args.get('emailLogin'):
-        return login_with_email()
-    elif request.args.get('emailSignup'):
-        return signup_with_email()
-    else:
-        return render_template('loginpage.html',
-                               hide_require_text=True,
-                               anchor=request.args.get('anchor'))
+    return render_template('loginpage.html',
+                           hide_require_text=True,
+                           anchor=request.args.get('anchor'))
 
 
 @login_page.route("/korppiLogin")
@@ -202,7 +190,6 @@ def openid_success_handler(resp: KorppiOpenIDResponse):
 def set_user_to_session(user: User):
     adding = session.get('adding_user')
     session.pop('appcookie', None)
-    session.pop('altlogin', None)
     session.pop('adding_user', None)
     if adding:
         if user.id in get_session_users_ids():
@@ -213,28 +200,7 @@ def set_user_to_session(user: User):
         session['other_users'] = other_users
     else:
         session['user_id'] = user.id
-        session['user_name'] = user.name
-        session['real_name'] = user.real_name
-        session['email'] = user.email
         session.pop('other_users', None)
-
-
-def login_with_email():
-    if 'altlogin' in session and session['altlogin'] == 'login':
-        session.pop('altlogin', None)
-    else:
-        session['altlogin'] = "login"
-
-    return safe_redirect(session.get('came_from', '/'))
-
-
-def signup_with_email():
-    if 'altlogin' in session and session['altlogin'] == 'signup':
-        session.pop('altlogin', None)
-    else:
-        session['altlogin'] = "signup"
-
-    return safe_redirect(session.get('came_from', '/'))
 
 
 """Sent passwords are stored here when running tests."""
@@ -265,10 +231,8 @@ def alt_signup():
         db.session.add(nu)
     db.session.commit()
 
-    session.pop('altlogin', None)
     session.pop('user_id', None)
     session.pop('appcookie', None)
-    session['user_name'] = 'Anonymous'
     session["email"] = email
 
     try:
@@ -291,13 +255,24 @@ def check_temp_pw(email: str, oldpass: str):
 
 @login_page.route("/altsignup2", methods=['POST'])
 def alt_signup_after():
-    user_id = 0
-    real_name, oldpass, password, confirm = verify_json_params('realname', 'token', 'password', 'passconfirm')
-    email = session['email']
-    username = email
+    email, confirm, password, real_name, temp_pass = verify_json_params(
+        'email',
+        'passconfirm',
+        'password',
+        'realname',
+        'token',
+    )
+
+    if password != confirm:
+        return abort(400, 'Passwords do not match.')
+
+    if len(password) < 6:
+        return abort(400, 'A password should contain at least six characters.')
+
     save_came_from()
 
-    nu = check_temp_pw(email, oldpass)
+    nu = check_temp_pw(email, temp_pass)
+    username = email
 
     user = User.get_by_email(email)
     if user is not None:
@@ -310,31 +285,19 @@ def alt_signup_after():
 
         # Use the existing user name; don't replace it with email
         username = user.name
+        success_status = 'updated'
+        user.update_info(username, real_name, email, password=password)
     else:
         if User.get_by_name(username) is not None:
             return abort(400, 'User name already exists. Please try another one.')
-
-    if password != confirm:
-        return abort(400, 'Passwords do not match.')
-
-    if len(password) < 6:
-        return abort(400, 'A password should contain at least six characters.')
-
-    if not user:
         success_status = 'registered'
         user, _ = User.create_with_group(username, real_name, email, password=password)
         user_id = user.id
-    else:
-        success_status = 'updated'
-        user.update_info(username, real_name, email, password=password)
 
     db.session.delete(nu)
     db.session.commit()
 
-    session.pop('altlogin', None)
     session['user_id'] = user_id
-    session['user_name'] = username
-    session['real_name'] = real_name
     return json_response({'status': success_status})
 
 
@@ -363,23 +326,11 @@ def alt_login():
                 db.session.commit()
             return finish_login()
 
-    nu = NewUser.query.get(email)
-    if nu and nu.check_password(password):
-        # New user
-        session['user_id'] = 0
-        session['user_name'] = email
-        session['real_name'] = get_real_name(email)
-        session['email'] = email
-        session['altlogin'] = 'signup2'
-        session['token'] = password
-
+    error_msg = "Email address or password did not match. Please try again."
+    if is_xhr(request):
+        return abort(403, error_msg)
     else:
-        error_msg = "Email address or password did not match. Please try again."
-        if is_xhr(request):
-            return abort(403, error_msg)
-        else:
-            flash(error_msg, 'loginmsg')
-
+        flash(error_msg, 'loginmsg')
     return finish_login(ready=False)
 
 
@@ -419,9 +370,6 @@ def quick_login(username):
     if user is None:
         abort(404, 'User not found.')
     session['user_id'] = user.id
-    session['user_name'] = user.name
-    session['real_name'] = user.real_name
-    session['email'] = user.email
     flash(f"Logged in as: {username}")
     return redirect(url_for('view_page.index_page'))
 
@@ -485,9 +433,6 @@ def yubi_login(username, otp):
         abort(403, 'Authentication failed')
 
     session['user_id'] = user.id
-    session['user_name'] = user.name
-    session['real_name'] = user.real_name
-    session['email'] = user.email
     flash(f"Logged in as: {username}")
     return redirect(url_for('view_page.index_page'))
 
@@ -498,6 +443,4 @@ def log_in_as_anonymous(sess) -> User:
     user_real_name = 'Guest'
     user = timdb.users.create_anonymous_user(user_name, user_real_name)
     sess['user_id'] = user.id
-    sess['user_name'] = user_name
-    sess['real_name'] = user_real_name
     return user

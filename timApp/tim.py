@@ -57,7 +57,7 @@ from timApp.upload.upload import upload
 from timApp.velp.velp import velps
 from timApp.item.routes import view_page
 from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
-    get_current_user_name, logged_in, current_user_in_lecture
+    logged_in, current_user_in_lecture
 from timApp.tim_app import app, default_secret
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.timdb.exceptions import ItemAlreadyExistsException
@@ -179,10 +179,11 @@ Exception happened on {datetime.now(tz=timezone.utc)} at {request.url}
 {tb}
 """.strip()
     db.session.rollback()
+    u = get_current_user_object()
     send_email(rcpt=app.config['ERROR_EMAIL'],
-               subject=f'{app.config["TIM_HOST"]}: Error at {request.path} ({get_current_user_name()})',
+               subject=f'{app.config["TIM_HOST"]}: Error at {request.path} ({u.name})',
                mail_from=app.config['WUFF_EMAIL'],
-               reply_to=f'{app.config["ERROR_EMAIL"]},{get_current_user_object().email}',
+               reply_to=f'{app.config["ERROR_EMAIL"]},{u.email}',
                msg=message)
     return error_generic(error, 500)
 
@@ -330,7 +331,7 @@ def log_request(response):
 
 
 def get_request_message(status_code=None, include_body=False):
-    msg = f'{get_current_user_name()} [{request.headers.get("X-Forwarded-For") or request.remote_addr}]: {request.method} {request.full_path if request.query_string else request.path} {status_code or ""}'.strip()
+    msg = f'{get_current_user_object().name} [{request.headers.get("X-Forwarded-For") or request.remote_addr}]: {request.method} {request.full_path if request.query_string else request.path} {status_code or ""}'.strip()
     if not include_body or request.method not in ('POST', 'PUT', 'DELETE'):
         return msg
     return f'{msg}\n\n{pprint.pformat(request.get_json(silent=True) or request.get_data(as_text=True))}'

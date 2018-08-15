@@ -6,10 +6,7 @@ from timApp.user.user import User
 
 
 def get_current_user():
-    return {'id': get_current_user_id(),
-            'name': get_current_user_name(),
-            'real_name': session.get('real_name'),
-            'email': session.get('email')}
+    return get_current_user_object().to_json()
 
 
 def get_current_user_object() -> User:
@@ -51,11 +48,6 @@ def get_session_usergroup_ids():
 def get_current_user_id():
     uid = session.get('user_id')
     return uid if uid is not None else 0
-
-
-def get_current_user_name():
-    name = session.get('user_name')
-    return name if name is not None else 'Anonymous'
 
 
 def get_current_user_group():

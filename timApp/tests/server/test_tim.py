@@ -21,7 +21,7 @@ class TimTest(TimRouteTest):
         login_resp = self.login_test1(force=True)
         self.assertDictEqual({'current_user': {'email': 'test1@example.com',
                                                'id': 4,
-                                               'name': self.current_user_name(),
+                                               'name': 'testuser1',
                                                'real_name': TEST_USER_1_NAME},
                               'other_users': []}, login_resp)
 

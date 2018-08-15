@@ -33,5 +33,5 @@ class GroupLoginTest(TimRouteTest):
         self.assertDictEqual({'current_user': {'email': None,
                                                'id': 0,
                                                'name': 'Anonymous',
-                                               'real_name': None},
+                                               'real_name': 'Anonymous user'},
                               'other_users': []}, resp)

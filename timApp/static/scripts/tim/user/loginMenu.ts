@@ -150,6 +150,7 @@ class LoginMenuController implements IController {
             return;
         }
         const [err, resp] = await this.sendRequest<{status: "registered" | "updated"}>("/altsignup2", {
+            email: this.email,
             passconfirm: this.rePassword,
             password: this.newPassword,
             realname: this.name,
