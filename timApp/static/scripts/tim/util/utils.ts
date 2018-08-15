@@ -310,3 +310,11 @@ export function getStorage(key: string) {
     }
     return JSON.parse(s);
 }
+
+// from https://stackoverflow.com/a/1026087
+export function capitalizeFirstLetter(s: string) {
+    if (s.length === 0) {
+        return s;
+    }
+    return s.charAt(0).toUpperCase() + s.slice(1);
+}

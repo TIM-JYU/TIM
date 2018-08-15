@@ -3,7 +3,7 @@ import {timApp} from "tim/app";
 import * as loading from "tim/ui/loadingIndicator";
 import * as onEnter from "tim/ui/onEnter";
 import {$http} from "../util/ngimport";
-import {markAsUsed, to} from "../util/utils";
+import {capitalizeFirstLetter, markAsUsed, to} from "../util/utils";
 import {IUser} from "./IUser";
 import {Users} from "./userService";
 
@@ -134,7 +134,7 @@ class LoginMenuController implements IController {
     }
 
     private async provideTempPassword() {
-        if (!this.tempPassword || this.signUpRequestInProgress) {
+        if (!this.email || !this.tempPassword || this.signUpRequestInProgress) {
             return;
         }
         const [err, resp] = await this.sendRequest<IOkResponse | INameResponse>("/checkTempPass", {
@@ -149,6 +149,20 @@ class LoginMenuController implements IController {
             this.focusName = true;
             if (resp.data.status === "name") {
                 this.name = resp.data.name;
+            } else {
+                const nameParts = this.email.split("@")[0].split(".");
+                for (const n of nameParts) {
+                    // don't try to form name if there are any special characters
+                    if (n.match(/[^a-zöäåé]/i)) {
+                        return;
+                    }
+                }
+                const lastName = capitalizeFirstLetter(nameParts[nameParts.length - 1]);
+                let firstName = "";
+                if (nameParts.length > 1) {
+                    firstName = capitalizeFirstLetter(nameParts[0]);
+                }
+                this.name = `${lastName} ${firstName}`.trim();
             }
         }
     }
