@@ -30,22 +30,12 @@ default_table_height = "!"
 default_minipage_width = "4cm"
 # Maximum number of columns in table; overtly large count will crash LaTeX-conversion.
 max_col_count = 250
-# Number of columns after which the table will be resized to fit page.
-resizing_threshold = 3
+# Pixels; 595px is the width of 72 dpi (web) a4 and minus 35px is for the margins.
+resizing_px_threshold = 595 - 35
+# Minimum number of columns (checked when table width is estimated by cell content width).
+resizing_col_threshold = 3
 
-# Mappings:
-# TODO: Add missing pairs.
-
-# TimTable text-styles and corresponding LaTeX-replacements (unused!):
-replace_pairs = [("$$", "$"),
-                 ("md:***", "\\textbf{\\textit{"),
-                 ("***", "}}"),
-                 ("md:**", "\\textbf{"),
-                 ("**", "}"),
-                 ("md:*", "\\textit{"),
-                 ("*", "}"),
-                 ("md:", "")]
-
+# TODO: Add more.
 # HTML font families and their closest corresponding LaTeX-codes:
 fonts = {'monospace': 'pcr',
          'sans-serif': 'cmss',
@@ -121,12 +111,12 @@ class Cell:
     def __init__(
             self, index: int = -1, content: str = "",
             colspan: int = default_colspan, rowspan: int = default_rowspan,
-            text_color=default_text_color, text_color_html: bool = False,
-            bg_color=default_transparent_color, bg_color_html: bool = False,
+            text_color: Union[None, str] = default_text_color, text_color_html: Union[None, bool] = False,
+            bg_color: Union[None, str] = default_transparent_color, bg_color_html: Union[None, bool] = False,
             h_align=default_text_h_align, font_size=default_font_size,
             cell_width=default_width, cell_height=default_height,
             line_space=0, pbox="10cm", font_family=default_font_family,
-            borders: CellBorders = CellBorders()):
+            borders: CellBorders = CellBorders(), font_weight=None):
         """
 
         :param index: Cell index in a row.
@@ -161,6 +151,7 @@ class Cell:
         self.pbox = pbox
         self.borders = borders
         self.font_family = use_default_if_none(font_family, default_font_family)
+        self.font_weight = font_weight
 
     def __str__(self) -> str:
         """
@@ -191,6 +182,16 @@ class Cell:
             if "*" in str(minipage_width):
                 minipage_width = default_minipage_width
             content = fr"\begin{{minipage}}{{{minipage_width}}}{content}\end{{minipage}}"
+
+        # Font weight may be bold, bolder, lighter or number from 100 to 900.
+        if self.font_weight:
+            if "bold" in self.font_weight:
+                content = rf"\textbf{{{content}}}"
+            try:
+                if int(self.font_weight) > 599:
+                    content = rf"\textbf{{{content}}}"
+            except:
+                pass
 
         cell_width = self.cell_width
         if "*" not in str(cell_width):
@@ -448,6 +449,48 @@ class HorizontalBorder:
         return custom_repr(self)
 
 
+def estimate_cell_width(cell):
+    """
+    Give estimation of cell width based on content.
+    :param cell: Cell to estimate.
+    :return: Width of cell.
+    """
+    return len(cell.content) * cell.font_size / 2
+
+
+def estimate_cell_height(cell, width_constraint):
+    """
+    Gives estimation of cell height with width as constraint.
+    :param cell: Cell to estimate.
+    :param width_constraint: The width is locked before estimating height.
+    :return: Height of cell.
+    """
+    # The formula is just guesswork.
+    return (cell.font_size + 70) * len(cell.content) / width_constraint
+
+
+def estimate_table_width(self) -> Tuple[float, bool]:
+    """
+    Get total width of the table (i.e. width of longest row).
+    :return: Width.
+    """
+    width = 0
+    estimate = False
+    for row in self.rows:
+        for cell in row.cells:
+            try:
+                cell_width = float(parse_size_attribute(cell.cell_width))
+            except:
+                estimate = True
+                cell_width = estimate_cell_width(cell)
+            else:
+                if is_close(0, cell_width):
+                    estimate = True
+                    cell_width = estimate_cell_width(cell)
+            width += cell_width
+    return width, estimate
+
+
 class Table:
     """
     Table with rows, cells in rows, and horizontal borders between rows.
@@ -483,15 +526,15 @@ class Table:
         postfix = "\\end{tabular}\n\\end{table}"
         resize = self.fit_to_page_width
         if resize:
-            prefix = f"\\begin{{table}}[h]\n" \
+            prefix = f"\\begin{{table}}[H]\n" \
                      f"\\resizebox{{{self.width}}}{{{self.height}}}{{%\n" \
                      f"\\begin{{tabular}}{{{columns}}}"
             postfix = "\\end{tabular}%\n}\n\\end{table}"
         output = ""
         for i in range(0, len(self.rows)):
             output += "\n" + fr"\hhline{{{str(self.hborders[i])}}}" \
-                      "\n" + f"{str(self.rows[i])}" \
-                      "\n" + fr"\tabularnewline[{self.rows[i].get_row_height()}pt]"
+                             "\n" + f"{str(self.rows[i])}" \
+                                    "\n" + fr"\tabularnewline[{self.rows[i].get_row_height()}pt]"
 
         output += "\n" + fr"\hhline{{{str(self.hborders[-1])}}}"
         return f"{prefix}\n{output}\n{postfix}"
@@ -533,24 +576,31 @@ class Table:
 
     def auto_size_cells(self):
         """
-        Try to set cell widths and row heights automatically based on content lenght.
+        Try to set row heights automatically based on cell content lenght.
         :return:
         """
+
+        # TODO: A word which isn't broken by spaces and is considerably longer than title
+        # row may overflow from the cell boundaries.
+        # TODO: Calculate a value that approximates the width need of a column.
+        # Take the longest content in each column and divide space in their ratio?
         if not self.rows:
             return
         widths = []
         for cell in self.rows[0].cells:
             cell_width = cell.cell_width
             if cell_width is default_width:
-                cell_width = len(cell.content)*cell.font_size/2
+                cell_width = estimate_cell_width(cell)
             widths.append(cell_width)
         for i in range(0, len(self.rows)):
             try:
                 max_height = 0  # Tallest estimated height in the cells of the row.
                 for j in range(0, len(self.rows[i].cells)):
-                    self.rows[i].cells[j].cell_width = widths[j]
-                    # This is guesswork.
-                    height = (self.rows[i].cells[j].font_size + 65) * len(self.rows[i].cells[j].content) / widths[j]
+                    cell = self.rows[i].cells[j]
+                    # Don't change width of the first row (since all heights are constrained by it).
+                    if i != 0:
+                        cell.cell_width = widths[j]
+                    height = estimate_cell_height(cell, widths[j])
                     # Row height will be decided by the tallest cell.
                     if height > max_height:
                         max_height = height
@@ -561,13 +611,16 @@ class Table:
                     # Row height is later on compared with cell heights and the tallest is chosen,
                     # so this is effectively the minimal height.
                     self.rows[i].height = max_height
-                # print(max_height)
             except:
                 pass
-        # print(widths)
 
 
 def get_column_span(item):
+    """
+    Get column span value.
+    :param item: Column data.
+    :return: Span.
+    """
     try:
         return int(item["span"])
     except:
@@ -577,9 +630,9 @@ def get_column_span(item):
 def get_column_color_list(key, table_data):
     """
     Reads all the columns of the table and makes a list of their color formattings.
-    :param key:
-    :param table_data:
-    :return:
+    :param key: Key for color type.
+    :param table_data: Table JSON.
+    :return: List of column colors.
     """
     l = []
     try:
@@ -882,6 +935,21 @@ def get_font_size(item, default_size):
     return a
 
 
+def get_key_value(item, key, default=None):
+    """
+    Returns a value from dictionary or default if key doesn't exist.
+    :param item: Dictionary (JSON).
+    :param default: Value that's used in case key cannot be found.
+    :param key: Key.
+    :return: Value or default.
+    """
+    try:
+        a = item[key].strip()
+    except:
+        a = default
+    return a
+
+
 def get_border_color(border_data) -> (str, bool):
     """
     Parses border color from HTML border format.
@@ -990,28 +1058,6 @@ def int_to_datablock_index(i: int) -> str:
     return (a + 1) * str(chr(ord("A") + b))
 
 
-def update_content_from_datablock(datablock, row: int, cell: int, content: str) -> str:
-    """
-    Updates the cell content based on tabledatablock if a match is found.
-    :param datablock: Datablock containing updated cell contents.
-    :param row: Row-index.
-    :param cell: Cell-index.
-    :param content: Original cell content.
-    :return: Cell content from datablock or the original if
-             no corresponging datablock item.
-    """
-    output = content
-    try:
-        datablock_index = f"{int_to_datablock_index(cell)}{row+1}"
-        output = get_content(datablock[datablock_index])
-    except (TypeError, KeyError):
-        pass
-    finally:
-        # If index conversion fails or there's no such key,
-        # return the original content value.
-        return output
-
-
 def parse_size_attribute(attribute) -> str:
     """
     Converts numeric attribute to string and removes px and spaces.
@@ -1056,21 +1102,29 @@ def get_html_color_latex_definitions(defs: str = default_color_defs_path) -> Lis
         return definition_list
 
 
-def get_table_resize(table_data, table_col_count) -> bool:
+def get_table_resize(table_data, table_width_estimation, col_count) -> bool:
     """
     Whether table should be resized to fit the page width.
     If the attribute isn't set, automatically decide whether to resize.
     :param table_data: Table JSON.
+    :param table_width_estimation: Table width and whether it's an estimation as tuple.
     :return: Table scaling true or false.
     """
+    table_width = table_width_estimation[0]
+    estimate = table_width_estimation[1]
     resize = False
+    # If forced.
     try:
+
         resize = table_data['fitToPageWidth']
+    # Otherwise check automatically.
     except:
-        # Auto-refit if the table is large.
-        # TODO: Get more accurate way to tell that the table is larger than page width.
-        if table_col_count >= resizing_threshold:
-            resize = True
+        # If table size is estimation and col count is low, don't resize
+        # (because width estimation isn't reliable currently).
+        if estimate and col_count <= resizing_col_threshold:
+            return False
+        if table_width >= resizing_px_threshold:
+            return True
     return resize
 
 
@@ -1112,9 +1166,9 @@ def decide_format_size(format_levels):
 
 def decide_format(format_levels):
     """
-    Decides which fiormat (column, row, cell, datablock) to use by taking the latest non-empty one.
-    :param format_levels:
-    :return:
+    Decides which format to use by taking the latest non-empty one.
+    :param format_levels: Table, column, row, cell and datablock format values.
+    :return: Last non-empty value or None if all are empty.
     """
     final_format = None
     for level in format_levels:
@@ -1180,7 +1234,7 @@ def convert_table(table_json) -> Table:
     table_default_font_size = get_font_size(table_json, default_font_size)
     table_default_h_align = get_text_horizontal_align(table_json, default_text_h_align)
 
-    # Get column formattings.
+    # Get column formattings:
     column_bg_color_list = get_column_color_list("backgroundColor", table_json)
     column_text_color_list = get_column_color_list("color", table_json)
     column_width_list = get_column_width_list(table_json)
@@ -1202,6 +1256,7 @@ def convert_table(table_json) -> Table:
         row_default_font_size = get_font_size(row_data, None)
         row_default_h_align = get_text_horizontal_align(row_data, None)
         row_default_font_family = get_font_family(row_data, None)
+        row_font_weight = get_key_value(row_data, "fontWeight", None)
 
         # TODO: Change the logic: in HTML these go around the whole row, not each cell!
         row_default_borders = get_borders(row_data, table_default_borders)
@@ -1224,6 +1279,7 @@ def convert_table(table_json) -> Table:
                 cell_h_align = get_text_horizontal_align(cell_data, None)
                 cell_font_family = get_font_family(cell_data, None)
                 cell_font_size = get_font_size(cell_data, None)
+                cell_font_weight = get_key_value(cell_data, "fontWeight", None)
 
                 (colspan, rowspan) = get_span(cell_data)
                 borders = get_borders(cell_data, row_default_borders)
@@ -1256,6 +1312,7 @@ def convert_table(table_json) -> Table:
                 datablock_font_family = get_font_family(datablock_cell_data, None)
                 datablock_font_size = get_font_size(datablock_cell_data, None)
                 datablock_h_align = get_text_horizontal_align(datablock_cell_data, None)
+                datablock_font_weight = get_key_value(datablock_cell_data, "fontWeight", None)
 
                 # Decide which styles to use (from table, column, row, cell or datablock)
                 (bg_color, bg_color_html) = decide_format_tuple([
@@ -1299,6 +1356,10 @@ def convert_table(table_json) -> Table:
                     row_default_font_size,
                     cell_font_size,
                     datablock_font_size])
+                font_weight = decide_format([
+                    row_font_weight,
+                    cell_font_weight,
+                    datablock_font_weight])
 
                 c = Cell(
                     content=content,
@@ -1313,7 +1374,8 @@ def convert_table(table_json) -> Table:
                     rowspan=rowspan,
                     cell_width=width,
                     cell_height=height,
-                    borders=borders
+                    borders=borders,
+                    font_weight=font_weight
                 )
 
                 # Cells with rowspan > 1:
@@ -1343,7 +1405,6 @@ def convert_table(table_json) -> Table:
                     table_row.add_cell(j, c)
                 max_cells = max(max_cells, len(table_row.cells))
 
-
     # Currently plays it safe by overestimating table cell count.
     # If estimation larger than max_col_count, use max_col_count instead.
     estimation = max_cells * max_colspan
@@ -1352,11 +1413,11 @@ def convert_table(table_json) -> Table:
     else:
         table.col_count = estimation
 
-    # Whether table should be fit to page.
-    table.fit_to_page_width = get_table_resize(table_json, table.col_count)
-
     # Set row and column sizes according to cell contents.
     table.auto_size_cells()
+
+    # Whether table should be fit to page.
+    table.fit_to_page_width = get_table_resize(table_json, estimate_table_width(table), table.col_count)
 
     # Create horizontal border objects.
     table.create_hborders()
