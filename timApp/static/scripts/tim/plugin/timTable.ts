@@ -290,6 +290,10 @@ export class TimTableController implements IController {
                     return;
                 }
 
+                if ($(target).parents(".timTableEditor").length > 0) {
+                    return;
+                }
+
                 this.lastEditedCell = undefined;
 
                 // Do not hide the toolbar if the user clicks on another TimTable
@@ -297,7 +301,7 @@ export class TimTableController implements IController {
                     return;
                 }
             }
-            
+
             hideToolbar(this);
         }
     }
@@ -860,8 +864,9 @@ export class TimTableController implements IController {
 
         const activeCell = this.lastEditedCell;
         this.setActiveCell(rowi, coli);
-        if (activeCell && this.lastEditedCell &&
-            activeCell.row === this.lastEditedCell.row && activeCell.col === this.lastEditedCell.col) {
+        if (this.currentCell ||
+            (activeCell && this.lastEditedCell &&
+            activeCell.row === this.lastEditedCell.row && activeCell.col === this.lastEditedCell.col)) {
             this.saveCurrentCell();
             const cellData = this.getCellContentString(rowi, coli);
             this.editedCellContent = cellData;
@@ -1501,9 +1506,9 @@ timApp.component("timTable", {
     template: `<div ng-mouseenter="$ctrl.mouseInsideTable()"
      ng-mouseleave="$ctrl.mouseOutTable()">
     <div class="timTableContentDiv no-highlight">
-    <button class="timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
+    <button class="timTableEditor timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
             ng-click="$ctrl.addColumnButtonClick()"><span class="glyphicon glyphicon-plus"></span></button>
-    <button class="timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.isInEditMode()"
+    <button class="timTableEditor timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.isInEditMode()"
             ng-click="$ctrl.removeColumnButtonClick()"><span class="glyphicon glyphicon-minus"></span></button>
     <table ng-class="{editable: $ctrl.isInEditMode() && !$ctrl.isInForcedEditMode(), forcedEditable: $ctrl.isInForcedEditMode()}" class="timTableTable"
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
@@ -1519,12 +1524,13 @@ timApp.component("timTable", {
                 </td>
         </tr>
     </table>
-    <button class="timButton buttonAddRow" title="Add row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.addRowButtonClick()"><span
+    <button class="timTableEditor timButton buttonAddRow" title="Add row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.addRowButtonClick()"><span
             class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
-    <button class="timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.removeRow()"><span
+    <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.removeRow()"><span
             class="glyphicon glyphicon-minus"></span></button>            
     </div>
-    <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"
+    <div class="timTableEditor">
+        <input class="editInput" ng-show="$ctrl.isSomeCellBeingEdited()"
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent">
              <button class="timButton buttonCloseSmallEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
@@ -1536,6 +1542,8 @@ timApp.component("timTable", {
              <button class="timButton buttonOpenBigEditor" ng-show="$ctrl.isSomeCellBeingEdited()"
                     ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
             </button>
+</div>
+
 </div>
 `,
 });
