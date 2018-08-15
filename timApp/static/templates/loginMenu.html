@@ -1,6 +1,6 @@
 <button ng-show="!$ctrl.isLoggedIn()"
         uib-popover-template="'loginTemplate.html'"
-        popover-title="Log in"
+        popover-title="{{ $ctrl.getTitle() }}"
         popover-placement="bottom"
         popover-animation="false"
         popover-trigger="outsideClick"
@@ -11,7 +11,7 @@
 <script type="text/ng-template" id="loginTemplate.html">
     <div class="row" ng-click="$ctrl.stopClick($event)">
         <div class="col-sm-12">
-            <form ng-submit="$ctrl.loginWithEmail()">
+            <form ng-submit="$ctrl.loginWithEmail()" ng-show="!$ctrl.showSignup">
                 <p class="text-center">
                     JYU students and staff, please log in with Korppi:
                 </p>
@@ -44,15 +44,15 @@
                 <p class="text-center" ng-show="!$ctrl.showSignup">
                     Not a JYU student or staff member and don't have a TIM account?
                 </p>
-                <p class="text-center" ng-if="$ctrl.resetPassword && !$ctrl.emailSent">
-                    To reset password, provide your email first.
-                </p>
                 <button ng-show="!$ctrl.showSignup" class="center-block timButton" type="button"
                         ng-click="$ctrl.beginSignup()">
                     Sign up
                 </button>
             </form>
             <div class="form" ng-show="$ctrl.showSignup">
+                <p class="text-center" ng-if="$ctrl.resetPassword && !$ctrl.emailSent">
+                    To reset password, provide your email first.
+                </p>
                 <div class="form-group">
                     <label for="email-signup" class="control-label">Email</label>
                     <input class="form-control"
@@ -69,8 +69,13 @@
                 <button ng-click="$ctrl.provideEmail()"
                         ng-disabled="!$ctrl.email"
                         ng-show="!$ctrl.emailSent"
-                        class="center-block timButton">
+                        class="timButton">
                     Continue
+                </button>
+                <button ng-click="$ctrl.cancelSignup()"
+                        ng-show="!$ctrl.emailSent"
+                        class="btn btn-default">
+                    Cancel
                 </button>
                 <div ng-show="$ctrl.emailSent">
                     <div class="form-group" ng-show="!$ctrl.tempPasswordProvided">

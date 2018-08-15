@@ -200,6 +200,21 @@ class LoginMenuController implements IController {
         this.resetPassword = true;
         this.beginSignup();
     }
+
+    private getTitle() {
+        if (!this.showSignup) {
+            return "Log in";
+        } else if (this.resetPassword) {
+            return "Reset password";
+        } else {
+            return "Sign up";
+        }
+    }
+
+    private cancelSignup() {
+        this.showSignup = false;
+        this.resetPassword = false;
+    }
 }
 
 timApp.component("loginMenu", {
