@@ -186,8 +186,9 @@ export class ViewCtrl implements IController {
             this.setHeaderLinks();
             this.document.rebuildSections();
             window.addEventListener("beforeunload", (e) => {
-
-                // Save currently viewed location hash to browser history.
+                // Save currently viewed paragraph hash to browser history to make the browser
+                // come back there when returning to the document. (Firefox & IE tested; Chrome doesn't show
+                // hash in address, but returns to the right place regardless.)
                 // noinspection CssInvalidPseudoSelector
                 const parId = getParId($(".par:not('.preamble'):onScreen").first());
                 window.history.replaceState(undefined, undefined, `#${parId}`);
@@ -338,7 +339,7 @@ export class ViewCtrl implements IController {
         }, Math.max(1000 * this.liveUpdates, 1000));
     }
 
-    async $onInit() {
+    $onInit() {
         this.scope.$watchGroup([
             () => this.lectureMode,
             () => this.selection.start,
