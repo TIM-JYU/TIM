@@ -34,7 +34,7 @@ from timApp.user.newuser import NewUser
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.timdb.sqa import db
-from timApp.user.userutils import create_password_hash
+from timApp.user.userutils import create_password_hash, check_password_hash
 
 login_page = Blueprint('login_page',
                        __name__,
@@ -63,18 +63,18 @@ def logout():
         session['other_users'] = group
     else:
         session.pop('user_id', None)
-        session.pop('user_name', None)
-        session.pop('email', None)
-        session.pop('real_name', None)
         session.pop('appcookie', None)
-        session.pop('altlogin', None)
         session.pop('came_from', None)
         session.pop('last_doc', None)
         session.pop('anchor', None)
         session.pop('other_users', None)
         session.pop('adding_user', None)
-        session['user_name'] = 'Anonymous'
-    return json_response(dict(current_user=get_current_user(), other_users=get_other_users_as_list()))
+    return login_response()
+
+
+def login_response():
+    return json_response(dict(current_user=get_current_user_object().to_json(full=True),
+                              other_users=get_other_users_as_list()))
 
 
 @login_page.route("/login")
@@ -83,16 +83,9 @@ def login():
     if logged_in():
         flash('You are already logged in.')
         return safe_redirect(session.get('came_from', '/'))
-    if request.args.get('korppiLogin'):
-        return login_with_korppi()
-    elif request.args.get('emailLogin'):
-        return login_with_email()
-    elif request.args.get('emailSignup'):
-        return signup_with_email()
-    else:
-        return render_template('loginpage.html',
-                               hide_require_text=True,
-                               anchor=request.args.get('anchor'))
+    return render_template('loginpage.html',
+                           hide_require_text=True,
+                           anchor=request.args.get('anchor'))
 
 
 @login_page.route("/korppiLogin")
@@ -202,7 +195,6 @@ def openid_success_handler(resp: KorppiOpenIDResponse):
 def set_user_to_session(user: User):
     adding = session.get('adding_user')
     session.pop('appcookie', None)
-    session.pop('altlogin', None)
     session.pop('adding_user', None)
     if adding:
         if user.id in get_session_users_ids():
@@ -213,41 +205,41 @@ def set_user_to_session(user: User):
         session['other_users'] = other_users
     else:
         session['user_id'] = user.id
-        session['user_name'] = user.name
-        session['real_name'] = user.real_name
-        session['email'] = user.email
         session.pop('other_users', None)
-
-
-def login_with_email():
-    if 'altlogin' in session and session['altlogin'] == 'login':
-        session.pop('altlogin', None)
-    else:
-        session['altlogin'] = "login"
-
-    return safe_redirect(session.get('came_from', '/'))
-
-
-def signup_with_email():
-    if 'altlogin' in session and session['altlogin'] == 'signup':
-        session.pop('altlogin', None)
-    else:
-        session['altlogin'] = "signup"
-
-    return safe_redirect(session.get('came_from', '/'))
 
 
 """Sent passwords are stored here when running tests."""
 test_pws = []
 
 
+@login_page.route("/checkTempPass", methods=['POST'])
+def check_temp_password():
+    """Checks that the temporary password provided by user is correct.
+    Sends the real name of the user if the email already exists so that the name field can be prefilled.
+    """
+    email_or_username, token, = verify_json_params('email', 'token')
+    nu = check_temp_pw(email_or_username, token)
+    u = User.get_by_email(nu.email)
+    if u:
+        return json_response({'status': 'name', 'name': u.real_name, 'can_change_name': u.is_email_user})
+    else:
+        return ok_response()
+
+
 @login_page.route("/altsignup", methods=['POST'])
 def alt_signup():
-    # Before password verification
-    email = request.form['email']
-    if not email or not is_valid_email(email):
-        flash("You must supply a valid email address!")
-        return finish_login(ready=False)
+    email_or_username, = verify_json_params('email')
+    fail = False
+    if not is_valid_email(email_or_username):
+        u = User.get_by_name(email_or_username)
+        if not u:
+            # Don't return immediately; otherwise it is too easy to analyze timing of the route to deduce success.
+            fail = True
+            email = 'nobody@example.com'
+        else:
+            email = u.email
+    else:
+        email = email_or_username
 
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
@@ -258,42 +250,58 @@ def alt_signup():
     else:
         nu = NewUser(email=email, pass_=password_hash)
         db.session.add(nu)
+
+    if fail:
+        return ok_response()
+
     db.session.commit()
 
-    session.pop('altlogin', None)
     session.pop('user_id', None)
     session.pop('appcookie', None)
-    session['user_name'] = 'Anonymous'
-    session["email"] = email
 
     try:
         send_email(email, 'Your new TIM password', f'Your password is {password}')
         if current_app.config['TESTING']:
             test_pws.append(password)
-        flash("A password has been sent to you. Please check your email.")
+        return ok_response()
     except Exception as e:
         log_error(f'Could not send login email (user: {email}, password: {password}, exception: {str(e)})')
-        flash(f'Could not send the email, please try again later. The error was: {str(e)}')
+        return abort(400, f'Could not send the email, please try again later. The error was: {str(e)}')
 
-    return finish_login(ready=False)
+
+def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
+    nu = NewUser.query.get(email_or_username)
+    if not nu:
+        u = User.get_by_name(email_or_username)
+        if u:
+            nu = NewUser.query.get(u.email)
+    if not (nu and nu.check_password(oldpass)):
+        return abort(400, 'Wrong temporary password. '
+                          'Please re-check your email to see the password.')
+    return nu
 
 
 @login_page.route("/altsignup2", methods=['POST'])
 def alt_signup_after():
-    # After password verification
-    user_id = 0
-    real_name = request.form['realname']
-    email = session['email']
-    username = email
-    oldpass = request.form['token']
-    password = request.form['password']
-    confirm = request.form['passconfirm']
+    email_or_username, confirm, password, real_name, temp_pass = verify_json_params(
+        'email',
+        'passconfirm',
+        'password',
+        'realname',
+        'token',
+    )
+
+    if password != confirm:
+        return abort(400, 'Passwords do not match.')
+
+    if len(password) < 6:
+        return abort(400, 'A password should contain at least six characters.')
+
     save_came_from()
 
-    nu = NewUser.query.get(email)
-    if not (nu and nu.check_password(oldpass)):
-        flash('The temporary password you provided is wrong. Please re-check your email to see the password.')
-        return finish_login(ready=False)
+    nu = check_temp_pw(email_or_username, temp_pass)
+    email = nu.email
+    username = email
 
     user = User.get_by_email(email)
     if user is not None:
@@ -302,50 +310,44 @@ def alt_signup_after():
         u2 = User.get_by_name(username)
 
         if u2 is not None and u2.id != user_id:
-            flash('User name already exists. Please try another one.', 'loginmsg')
-            return finish_login(ready=False)
+            return abort(400, 'User name already exists. Please try another one.')
 
         # Use the existing user name; don't replace it with email
         username = user.name
+        success_status = 'updated'
+
+        # If the user isn't an email user, don't let them change name
+        # (because it has been provided by other system such as Korppi).
+        if not user.is_email_user:
+            real_name = user.real_name
+
+        user.update_info(username, real_name, email, password=password)
     else:
         if User.get_by_name(username) is not None:
-            flash('User name already exists. Please try another one.', 'loginmsg')
-            return finish_login(ready=False)
-
-    if password != confirm:
-        flash('Passwords do not match.', 'loginmsg')
-        return finish_login(ready=False)
-
-    if len(password) < 6:
-        flash('A password should contain at least six characters.', 'loginmsg')
-        return finish_login(ready=False)
-
-    if not user:
-        flash('Registration succeeded!')
+            return abort(400, 'User name already exists. Please try another one.')
+        success_status = 'registered'
         user, _ = User.create_with_group(username, real_name, email, password=password)
         user_id = user.id
-    else:
-        flash('Your information was updated successfully.')
-        user.update_info(username, real_name, email, password=password)
 
     db.session.delete(nu)
     db.session.commit()
 
-    session.pop('altlogin', None)
     session['user_id'] = user_id
-    session['user_name'] = username
-    session['real_name'] = real_name
-    return finish_login()
+    return json_response({'status': success_status})
+
+
+def is_possibly_jyu_account(email_or_username: str):
+    return bool(re.fullmatch('[a-z]{2,8}|.+@([a-z]+.)*jyu\.fi', email_or_username))
 
 
 @login_page.route("/altlogin", methods=['POST'])
 def alt_login():
     save_came_from()
-    email = request.form['email']
+    email_or_username = request.form['email']
     password = request.form['password']
     session['adding_user'] = request.form.get('add_user', 'false').lower() == 'true'
 
-    user = User.get_by_email(email)
+    user = User.get_by_email_or_username(email_or_username)
     if user is not None:
         old_hash = user.pass_
         if user.check_password(password, allow_old=True, update_if_old=True):
@@ -362,24 +364,17 @@ def alt_login():
             if old_hash != user.pass_:
                 db.session.commit()
             return finish_login()
-
-    nu = NewUser.query.get(email)
-    if nu and nu.check_password(password):
-        # New user
-        session['user_id'] = 0
-        session['user_name'] = email
-        session['real_name'] = get_real_name(email)
-        session['email'] = email
-        session['altlogin'] = 'signup2'
-        session['token'] = password
-
     else:
-        error_msg = "Email address or password did not match. Please try again."
-        if is_xhr(request):
-            return abort(403, error_msg)
-        else:
-            flash(error_msg, 'loginmsg')
+        # Protect from timing attacks.
+        check_password_hash('', '$2b$12$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu')
 
+    error_msg = "Email address or password did not match."
+    if is_possibly_jyu_account(email_or_username):
+        error_msg += " You might not have a TIM account. JYU members can log in using Korppi."
+    if is_xhr(request):
+        return abort(403, error_msg)
+    else:
+        flash(error_msg, 'loginmsg')
     return finish_login(ready=False)
 
 
@@ -404,7 +399,7 @@ def finish_login(ready=True):
     if not is_xhr(request):
         return safe_redirect(came_from + anchor)
     else:
-        return json_response(dict(current_user=get_current_user(), other_users=get_other_users_as_list()))
+        return login_response()
 
 
 @login_page.route("/quickLogin/<username>")
@@ -419,9 +414,6 @@ def quick_login(username):
     if user is None:
         abort(404, 'User not found.')
     session['user_id'] = user.id
-    session['user_name'] = user.name
-    session['real_name'] = user.real_name
-    session['email'] = user.email
     flash(f"Logged in as: {username}")
     return redirect(url_for('view_page.index_page'))
 
@@ -485,9 +477,6 @@ def yubi_login(username, otp):
         abort(403, 'Authentication failed')
 
     session['user_id'] = user.id
-    session['user_name'] = user.name
-    session['real_name'] = user.real_name
-    session['email'] = user.email
     flash(f"Logged in as: {username}")
     return redirect(url_for('view_page.index_page'))
 
@@ -498,6 +487,4 @@ def log_in_as_anonymous(sess) -> User:
     user_real_name = 'Guest'
     user = timdb.users.create_anonymous_user(user_name, user_real_name)
     sess['user_id'] = user.id
-    sess['user_name'] = user_name
-    sess['real_name'] = user_real_name
     return user

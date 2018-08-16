@@ -427,15 +427,6 @@ class TimRouteTest(TimDbTest):
         return answer_list
 
     @staticmethod
-    def current_user_name() -> str:
-        """Returns the name of the current user.
-
-        :return: The name of the current user.
-
-        """
-        return session['user_name']
-
-    @staticmethod
     def current_user_id() -> Optional[int]:
         """Returns the name of the current user.
 
@@ -521,10 +512,7 @@ class TimRouteTest(TimDbTest):
                 #     print('creating request context')
                 #     tim.app.test_request_context().__enter__()
                 with self.client.session_transaction() as s:
-                    s['user_name'] = username
-                    s['email'] = email
                     s['user_id'] = u.id
-                    s['real_name'] = u.real_name
                     s.pop('other_users', None)
                 self.client.session_transaction().__enter__()
                 return

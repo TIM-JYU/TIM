@@ -233,14 +233,14 @@ class Plugin:
 
     def get_info(self, users: Iterable[User], old_answers: int, look_answer: bool = False, valid: bool = True):
         user_ids = ';'.join([u.name for u in users])
-        from timApp.auth.sessioninfo import get_current_user_name
+        from timApp.auth.sessioninfo import get_current_user_object
         return {
             # number of earlier answers
             # TODO: this is None when browsing answers with answer browser; should determine the number of answers
             # posted before the current one
             'earlier_answers': old_answers,
             'max_answers': self.answer_limit(),
-            'current_user_id': get_current_user_name(),
+            'current_user_id': get_current_user_object().name,
             'user_id': user_ids,
             # indicates whether we are just looking at an answer, not actually posting a new one
             'look_answer': look_answer,

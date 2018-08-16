@@ -1,4 +1,4 @@
-import angular, {IPromise} from "angular";
+import angular, {IHttpResponse, IPromise} from "angular";
 import moment from "moment";
 import sessionsettings from "tim/session";
 import {$http, $timeout} from "./ngimport";
@@ -297,3 +297,27 @@ export function getPageXYnull(e: JQueryEventObject) {
 
     return {X: e.pageX, Y: e.pageY};
 }
+
+export function setStorage(key: string, value: any) {
+    value = JSON.stringify(value);
+    window.localStorage.setItem(key, value);
+}
+
+export function getStorage(key: string) {
+    const s = window.localStorage.getItem(key);
+    if (!s) {
+        return s;
+    }
+    return JSON.parse(s);
+}
+
+// from https://stackoverflow.com/a/1026087
+export function capitalizeFirstLetter(s: string) {
+    if (s.length === 0) {
+        return s;
+    }
+    return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+export type ToReturn<T, U = {data: {error: string}}> = IPromise<[U, undefined] | [null, IHttpResponse<T>]>;
+export const ToReturn = Promise;

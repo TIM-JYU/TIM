@@ -99,6 +99,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
         for (const p of this.pathResults) {
             let pathResultsFound = false;
             for (const t of this.titleResults) {
+                // If path and title result are from same doc, combine.
                 if (t.doc.id === p.doc.id) {
                     const temp = t;
                     temp.num_title_results = t.num_title_results + p.num_title_results;
@@ -107,10 +108,26 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
                     break;
                 }
             }
+            // If path result didn't overlap with any title result, add.
             if (!pathResultsFound) {
                 titleAndPathResults.push(p);
             }
         }
+        for (const t of this.titleResults) {
+            let titleResultsFound = false;
+            for (const tp of titleAndPathResults) {
+                // If title result is already in combined list, go to next one.
+                if (t.doc.id === tp.doc.id) {
+                    titleResultsFound = true;
+                    break;
+                }
+            }
+            // If title result didn't overlap with any combined title and path result, add.
+            if (!titleResultsFound) {
+                titleAndPathResults.push(t);
+            }
+        }
+
         // Combine title and tag results with existing content results.
         for (const r of this.results) {
             const newDisplayResult: ISearchResultDisplay = {

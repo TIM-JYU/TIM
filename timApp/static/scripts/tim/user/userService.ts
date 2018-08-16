@@ -1,5 +1,11 @@
 import {$http, $httpParamSerializer, $window} from "../util/ngimport";
+import {to, ToReturn} from "../util/utils";
 import {IFullUser, IUser} from "./IUser";
+
+export interface ILoginResponse {
+    other_users: IUser[];
+    current_user: IFullUser;
+}
 
 export class UserService {
     private current: IFullUser; // currently logged in user
@@ -23,7 +29,7 @@ export class UserService {
     }
 
     public logout(user: IUser, logoutFromKorppi = false) {
-        $http.post<{other_users: IUser[], current_user: IFullUser}>("/logout", {user_id: user.id}).then((response) => {
+        $http.post<ILoginResponse>("/logout", {user_id: user.id}).then((response) => {
             this.group = response.data.other_users;
             this.current = response.data.current_user;
             if (!this.isLoggedIn()) {
@@ -88,8 +94,8 @@ export class UserService {
             }).finally(redirectFn);
     }
 
-    public loginWithEmail(email: string, password: string, addUser: boolean, successFn: () => void) {
-        $http<{other_users: IUser[], current_user: IFullUser}>(
+    public async loginWithEmail(email: string, password: string, addUser: boolean): ToReturn<ILoginResponse> {
+        const [err, response] = await to($http<ILoginResponse>(
             {
                 method: "POST",
                 url: "/altlogin",
@@ -102,16 +108,18 @@ export class UserService {
                     password,
                     add_user: addUser,
                 }),
-            }).then((response) => {
+            }));
+        if (response) {
             this.group = response.data.other_users;
             this.current = response.data.current_user;
-            successFn();
-            if (!addUser) {
-                $window.location.reload();
-            }
-        }, function(response) {
-            $window.alert(response.data.error);
-        });
+        }
+        if (err && !response) {
+            return [err, response];
+        } else if (response && !err) {
+            return [err, response];
+        } else {
+            throw new Error("unreachable");
+        }
     }
 }
 

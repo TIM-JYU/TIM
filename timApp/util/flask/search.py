@@ -805,7 +805,7 @@ def search():
     term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
 
     cmd = ["grep"]
-    if case_sensitive:
+    if not case_sensitive:
         cmd.append("-i")
     if regex:
         cmd.append("-E")

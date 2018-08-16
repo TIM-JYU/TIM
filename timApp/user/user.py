@@ -24,7 +24,7 @@ from timApp.timdb.sqa import db
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.auth.auth_models import BlockAccess
 from timApp.user.userutils import grant_access, get_access_type_id, \
-    create_password_hash, check_password_hash
+    create_password_hash, check_password_hash, check_password_hash_old
 from timApp.util.utils import remove_path_special_chars, cached_property
 from timApp.user.settings.theme_css import ThemeNotFoundException, generate_theme_scss, get_combined_css_filename
 
@@ -193,15 +193,22 @@ class User(db.Model):
     def get_by_email(email: str) -> Optional['User']:
         return User.query.filter_by(email=email).first()
 
+    @staticmethod
+    def get_by_email_or_username(email_or_username: str) -> Optional['User']:
+        u = User.get_by_email(email_or_username)
+        if u:
+            return u
+        return User.get_by_name(email_or_username)
+
     def check_password(self, password: str, allow_old=False, update_if_old=True) -> bool:
         if not self.pass_:
             return False
-        is_ok = check_password_hash(password, self.pass_, allow_old=False)
+        is_ok = check_password_hash(password, self.pass_)
         if is_ok:
             return True
         if not allow_old:
             return False
-        is_ok = check_password_hash(password, self.pass_, allow_old=True)
+        is_ok = check_password_hash_old(password, self.pass_)
         if is_ok and update_if_old:
             self.pass_ = create_password_hash(password)
         return is_ok

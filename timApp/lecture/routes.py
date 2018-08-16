@@ -21,7 +21,7 @@ from timApp.util.flask.responsehelper import json_response, ok_response, empty_r
 from timApp.auth.login import log_in_as_anonymous
 from timApp.plugin.qst.qst import get_question_data_from_document, create_points_table, \
     calculate_points_from_json_answer, calculate_points
-from timApp.auth.sessioninfo import get_current_user_id, logged_in, get_current_user_name, get_current_user_object, \
+from timApp.auth.sessioninfo import get_current_user_id, logged_in, get_current_user_object, \
     current_user_in_lecture, get_user_settings
 from timApp.tim_app import app
 from timApp.lecture.askedjson import get_asked_json_by_hash, AskedJson
@@ -157,9 +157,10 @@ def do_get_updates(request):
 
     lecturers = []
     students = []
-    user_name = get_current_user_name()
+    u = get_current_user_object()
+    user_name = u.name
 
-    update_activity(lecture, get_current_user_object())
+    update_activity(lecture, u)
 
     options = lecture.options_parsed
     teacher_poll = options.get("teacher_poll", "")
@@ -195,7 +196,7 @@ def do_get_updates(request):
 
     lecture_ending = 100
     base_resp = None
-    u = get_current_user_object()
+
     # Jos poistaa tämän while loopin, muuttuu long pollista perinteiseksi polliksi
     while step <= 10:
         lecture_ending = check_if_lecture_is_ending(lecture)

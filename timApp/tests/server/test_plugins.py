@@ -216,11 +216,12 @@ class PluginTest(TimRouteTest):
                                 expect_status=400,
                                 expect_content={'error': f'Non-existent upload: {invalid_file}'}
                                 )
-        self.assertEqual(f'/uploads/{doc.doc_id}/{task_name}/{self.current_user_name()}/1/test.txt', ur['file'])
+        curr_name = self.current_user.name
+        self.assertEqual(f'/uploads/{doc.doc_id}/{task_name}/{curr_name}/1/test.txt', ur['file'])
         self.assertEqual(file_content, self.get_no_warn(ur['file']))
         self.get(ur['file'] + 'x', expect_status=404)
         self.assertEqual(file_content,
-                         self.get_no_warn(f'/uploads/{doc.doc_id}/{task_name}/{self.current_user_name()}'))
+                         self.get_no_warn(f'/uploads/{doc.doc_id}/{task_name}/{curr_name}'))
         self.get(f'/uploads/{doc.doc_id}/{task_name}', expect_status=400)
         self.get(f'/uploads/{doc.doc_id}', expect_status=400)
         self.get(f'/uploads', expect_status=404)
@@ -251,7 +252,7 @@ class PluginTest(TimRouteTest):
                        data={'file': (io.BytesIO(bytes(file_content, encoding='utf-8')), filename)},
                        expect_status=200)
         mimetype = "text/plain"
-        self.assertDictEqual({'file': f'/uploads/{doc.doc_id}/{task_name}/{self.current_user_name()}/{expect_version}/{filename}',
+        self.assertDictEqual({'file': f'/uploads/{doc.doc_id}/{task_name}/{self.current_user.name}/{expect_version}/{filename}',
                               'type': mimetype,
                               'block': ur['block']}, ur)
         self.assertIsInstance(ur['block'], int)

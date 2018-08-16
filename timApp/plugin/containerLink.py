@@ -3,6 +3,8 @@ import json
 from functools import lru_cache
 from typing import List
 
+import re
+
 import requests
 from flask import current_app
 
@@ -26,9 +28,10 @@ PALIPLUGIN_NAME = 'pali'
 IMAGEXPLUGIN_NAME = 'imagex'
 MARKUP = 'markup'
 AUTOMD = 'automd'
+REGEXATTRS = 'regexattrs'
 
 PLUGINS = None
-
+PLUGIN_REGEX_OBJS = {}
 
 def get_plugins():
     global PLUGINS
@@ -49,11 +52,21 @@ def get_plugins():
             "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
-            "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/"},
+            "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/", REGEXATTRS: ["rows", "questionText"]},
             "timTable": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/timTable/", "instance": timTable.TimTable()},
             "echo": {"host": "http://" + "tim" + ":5000/echoRequest/", "skip_reqs": True}
         }
     return PLUGINS
+
+
+def get_plugin_regex_obj(plugin: str):
+    regex_obj = PLUGIN_REGEX_OBJS.get(plugin)
+    if regex_obj is None:
+        regexattrs = get_plugin(plugin).get("regexattrs")
+        regex_pattern = "((" + ")|(".join(regexattrs) + "))"
+        regex_obj = re.compile(regex_pattern)
+        PLUGIN_REGEX_OBJS[plugin] = regex_obj
+    return regex_obj
 
 
 def call_plugin_generic(plugin: str, method: str, route: str, data=None, headers=None, params=None):
@@ -145,6 +158,29 @@ def convert_md(plugin_data: List[dict], options: DumboOptions, outtype='md', plu
         p['markup'] = h
 
 
+def prepare_for_dumbo_attr_list_recursive(regex_obj, plugin_data: dict):
+    for key, value in plugin_data.items():
+        if isinstance(value, dict):
+            prepare_for_dumbo_attr_list_recursive(regex_obj, value)
+        elif isinstance(value, list):
+            if regex_obj.search(key) is not None:
+                prepare_for_dumbo_attr_list_list_recursive(regex_obj, value)
+        elif isinstance(value, str):
+             if regex_obj.search(key) is not None:
+                 plugin_data[key] = "md: " + value
+
+
+def prepare_for_dumbo_attr_list_list_recursive(regex_obj, data: list):
+    for i in range(0, len(data)):
+        item = data[i]
+        if isinstance(item, dict):
+            prepare_for_dumbo_attr_list_recursive(regex_obj, item)
+        elif isinstance(item, list):
+            prepare_for_dumbo_attr_list_list_recursive(regex_obj, data)
+        elif isinstance(item, str):
+            data[i] = "md: " + item
+
+
 def convert_tex_mock(plugin_data):
     if type(plugin_data) is dict:
         dict_to_dumbo(plugin_data)
@@ -166,11 +202,15 @@ def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
 
     for plug_dict in plugin_dicts:
         if has_auto_md(plug_dict[MARKUP], default_auto_md):
-            # TODO implement attribute list as an alternative to calling the plugin
-            if inner:
+            regexattrs = get_plugin(plugin).get(REGEXATTRS)
+            if regexattrs is not None:
+                regex_obj = get_plugin_regex_obj(plugin)
+                # use attribute list instead of calling the plugin
+                prepare_for_dumbo_attr_list_recursive(regex_obj, plug_dict)
+            elif inner:
                 plugin_instance.prepare_for_dumbo(plug_dict)
             else:
-                raise PluginException("Dumbo preparation for non-inner plugins not implemented yet") # TODO implement
+                raise PluginException("automd for non-inner plugins not implemented yet") # TODO implement
 
 
     if doc.get_settings().plugin_md():

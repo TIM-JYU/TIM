@@ -7,6 +7,7 @@ from timApp.tim_app import app
 from timApp.user.newuser import NewUser
 from timApp.user.user import User
 from timApp.timdb.sqa import db
+from timApp.user.userutils import create_password_hash
 
 
 class TestSignUp(TimRouteTest):
@@ -15,97 +16,113 @@ class TestSignUp(TimRouteTest):
         self.logout()
 
     def test_signup(self):
-        self.post('/altsignup',
-                  data={'email': 'testingsignup@example.com'},
-                  follow_redirects=True,
-                  expect_contains='A password has been sent to you. Please check your email.')
-        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('testingsignup@example.com',)])
-        self.post('/altsignup',
-                  data={'email': 'testingsignup@example.com'},
-                  follow_redirects=True,
-                  expect_contains='A password has been sent to you. Please check your email.')
-        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('testingsignup@example.com',)])
-        self.post('/altsignup2',
-                  data={'realname': 'Testing Signup',
-                        'token': test_pws[-1],
-                        'password': 'somepwd',
-                        'passconfirm': 'somepwd'},
-                  follow_redirects=True,
-                  xhr=False,
-                  expect_contains='Registration succeeded!')
+        email = 'testingsignup@example.com'
+        self.json_post(
+            '/altsignup',
+            {'email': email})
+        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [(email,)])
+        self.json_post(
+            '/altsignup',
+            {'email': email})
+        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [(email,)])
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup',
+             'email': email,
+             'token': test_pws[-1],
+             'password': 'somepwd',
+             'passconfirm': 'somepwd'},
+            expect_contains='registered',
+            json_key='status')
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [])
         self.assertEqual('Testing Signup', self.current_user.real_name)
 
         # TODO needs a better error message
-        self.post('/altsignup2',
-                  data={'realname': 'Testing Signup',
-                        'token': test_pws[-1],
-                        'password': 'somepwd',
-                        'passconfirm': 'somepwd'},
-                  follow_redirects=True,
-                  xhr=False,
-                  expect_contains='The temporary password you provided is wrong. Please re-check your email to see the password.')
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup',
+             'token': test_pws[-1],
+             'email': email,
+             'password': 'somepwd',
+             'passconfirm': 'somepwd'},
+            expect_contains='Wrong temporary password. Please re-check your email to see the password.',
+            expect_status=400,
+            json_key='error')
 
-        self.post('/altsignup',
-                  data={'email': 'testingsignup@example.com'},
-                  follow_redirects=True,
-                  expect_contains='A password has been sent to you. Please check your email.')
-        self.post('/altsignup2',
-                  data={'realname': 'Testing Signup2',
-                        'token': test_pws[-1],
-                        'password': 'somepwd',
-                        'passconfirm': 'somepwd'},
-                  follow_redirects=True,
-                  xhr=False,
-                  expect_contains='Your information was updated successfully.')
+        self.json_post(
+            '/altsignup',
+            {'email': email})
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup2',
+             'email': email,
+             'token': test_pws[-1],
+             'password': 'somepwd',
+             'passconfirm': 'somepwd'},
+            expect_contains='updated',
+            json_key='status')
         self.assertEqual('Testing Signup2', self.current_user.real_name)
 
     def test_password_mismatch(self):
-        self.post('/altsignup',
-                  data={'email': 'testingsignup@example.com'},
-                  follow_redirects=True)
-        self.post('/altsignup2',
-                  data={'realname': 'Testing Signup',
-                        'token': test_pws[-1],
-                        'password': 'somepwd',
-                        'passconfirm': 'somepwd2'},
-                  follow_redirects=True,
-                  expect_contains='Passwords do not match.')
+        email = 'testingsignup@example.com'
+        self.json_post(
+            '/altsignup',
+            {'email': email})
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup',
+             'email': email,
+             'token': test_pws[-1],
+             'password': 'somepwd',
+             'passconfirm': 'somepwd2'},
+            expect_contains='Passwords do not match.',
+            json_key='error',
+            expect_status=400)
         self.assertFalse(self.is_logged_in)
 
     def test_too_short_password(self):
-        self.post('/altsignup',
-                  data={'email': 'testingsignup@example.com'},
-                  follow_redirects=True)
-        self.post('/altsignup2',
-                  data={'realname': 'Testing Signup',
-                        'token': test_pws[-1],
-                        'password': 'test',
-                        'passconfirm': 'test'},
-                  follow_redirects=True,
-                  expect_contains='A password should contain at least six characters.')
+        email = 'testingsignup@example.com'
+        self.json_post(
+            '/altsignup',
+            {'email': email})
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup',
+             'email': email,
+             'token': test_pws[-1],
+             'password': 'test',
+             'passconfirm': 'test'},
+            expect_contains='A password should contain at least six characters.',
+            json_key='error',
+            expect_status=400,
+        )
         self.assertFalse(self.is_logged_in)
 
     def test_temp_password_wrong(self):
-        self.post('/altsignup',
-                  data={'email': 'testingsignup@example.com'},
-                  follow_redirects=True)
-        self.post('/altsignup2',
-                  data={'realname': 'Testing Signup',
-                        'token': 'asdasd',
-                        'password': 'somepwd',
-                        'passconfirm': 'somepwd'},
-                  follow_redirects=True,
-                  expect_contains='The temporary password you provided is wrong. Please re-check your email to see the password.',
-                  )
+        email = 'testingsignup@example.com'
+        self.json_post(
+            '/altsignup',
+            {'email': email})
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup',
+             'email': email,
+             'token': 'asdasd',
+             'password': 'somepwd',
+             'passconfirm': 'somepwd'},
+            expect_contains='Wrong temporary password. Please re-check your email to see the password.',
+            json_key='error',
+            expect_status=400,
+        )
         self.assertFalse(self.is_logged_in)
 
     def test_invalid_email(self):
-        self.post('/altsignup',
-                  data={'email': 'invalid'},
-                  follow_redirects=True,
-                  expect_contains='You must supply a valid email address!')
+        old_len = len(test_pws)
+        self.json_post(
+            '/altsignup',
+            {'email': 'invalid'})
         self.assertFalse(self.is_logged_in)
+        self.assertEqual(old_len, len(test_pws))
 
     @property
     def korppi_auth_url(self):
@@ -198,23 +215,23 @@ class TestSignUp(TimRouteTest):
         curr_name = self.current_user.name
         curr_real_name = self.current_user.real_name
         curr_email = self.current_user.email
-        self.post('/altsignup',
-                  data={'email': curr_email},
-                  follow_redirects=True,
-                  expect_contains='A password has been sent to you. Please check your email.')
+        self.json_post(
+            '/altsignup',
+            {'email': curr_email})
         pw = 'somepwd'
-        self.post('/altsignup2',
-                  data={'realname': 'Johnny John',
-                        'token': test_pws[-1],
-                        'password': pw,
-                        'passconfirm': pw},
-                  follow_redirects=True,
-                  xhr=False,
-                  expect_contains='Your information was updated successfully.')
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Johnny John',
+             'email': curr_email,
+             'token': test_pws[-1],
+             'password': pw,
+             'passconfirm': pw},
+            expect_contains='updated',
+            json_key='status')
         self.assertEqual(self.current_user.id, curr_id)
         self.assertEqual(self.current_user.name, curr_name)
         self.assertEqual(self.current_user.email, curr_email)
-        self.assertEqual(self.current_user.real_name, 'Johnny John')
+        self.assertEqual(self.current_user.real_name, 'Doe John Matt')  # changing name not allowed for Korppi users
         self.assertTrue(self.current_user.check_password(pw))
 
         self.logout()
@@ -246,3 +263,40 @@ class TestSignUp(TimRouteTest):
         u.pass_ = None
         db.session.commit()
         self.login(email='someone@example.com', passw='something', force=True, expect_status=403)
+
+    def test_email_login_with_korppi_username(self):
+        self.register_user_with_korppi('someone2', 'Some One', 'someone2@example.com')
+        u = User.get_by_name('someone2')
+        u.pass_ = create_password_hash('somepass')
+        db.session.commit()
+        self.login(email='someone2', passw='somepass', force=True)
+
+    def test_korppi_user_reset_pass_with_username(self):
+        """A Korppi user can reset their password using their username."""
+        self.register_user_with_korppi()
+        curr_name = self.current_user.name
+        self.json_post(
+            '/altsignup',
+            {'email': curr_name})
+        pw = 'somepwd'
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Johnny John',
+             'email': curr_name,
+             'token': test_pws[-1],
+             'password': pw,
+             'passconfirm': pw},
+            expect_contains='updated',
+            json_key='status')
+
+    def test_login_fail(self):
+        basic_error = 'Email address or password did not match.'
+        jyu_error = basic_error + ' You might not have a TIM account. JYU members can log in using Korppi.'
+        self.login(email='a@example.com', passw='somepass', force=True,
+                   expect_status=403,
+                   expect_content=basic_error,
+                   json_key='error')
+        self.login(email='a@jyu.fi', passw='somepass', force=True,
+                   expect_status=403,
+                   expect_content=jyu_error,
+                   json_key='error')
