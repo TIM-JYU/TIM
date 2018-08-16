@@ -337,9 +337,7 @@ def alt_signup_after():
 
 
 def is_possibly_jyu_account(email_or_username: str):
-    if email_or_username.endswith('@jyu.fi') or email_or_username.endswith('@student.jyu.fi'):
-        return True
-    return bool(re.fullmatch('[a-z]{2,8}', email_or_username))
+    return bool(re.fullmatch('[a-z]{2,8}|.+@([a-z]+.)*jyu\.fi', email_or_username))
 
 
 @login_page.route("/altlogin", methods=['POST'])

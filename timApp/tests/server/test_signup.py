@@ -300,15 +300,3 @@ class TestSignUp(TimRouteTest):
                    expect_status=403,
                    expect_content=jyu_error,
                    json_key='error')
-        self.login(email='a@student.jyu.fi', passw='somepass', force=True,
-                   expect_status=403,
-                   expect_content=jyu_error,
-                   json_key='error')
-        self.login(email='john', passw='somepass', force=True,
-                   expect_status=403,
-                   expect_content=jyu_error,
-                   json_key='error')
-        self.login(email='verylongname', passw='somepass', force=True,
-                   expect_status=403,
-                   expect_content=basic_error,
-                   json_key='error')
