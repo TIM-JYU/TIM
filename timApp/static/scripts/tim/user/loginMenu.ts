@@ -1,4 +1,4 @@
-import {IController, IHttpResponse, IPromise} from "angular";
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as loading from "tim/ui/loadingIndicator";
 import * as onEnter from "tim/ui/onEnter";
@@ -21,39 +21,36 @@ interface INameResponse {
 
 class LoginMenuController implements IController {
     private loggingout: boolean;
-    private form: {email: string, password: string};
+    private loginForm: {email: string, password: string};
     private addingToSession: boolean;
     private korppiLoading: boolean = false;
-    private emailSent = false;
-    private showSignup = false;
-    private focusEmail = false;
-    private focusPassword = false;
-    private tempPasswordProvided = false;
-    private nameProvided = false;
-    private focusName = false;
-    private focusLink = false;
-    private wrongPassword = false;
+
+    // fields related to signup
+    private canChangeName = true;
     private email: string | undefined;
-    private tempPassword: string | undefined;
+    private emailSent = false;
+    private finishStatus: undefined | "registered" | "updated";
+    private focusEmail = false;
+    private focusLink = false;
+    private focusName = false;
+    private focusNewPassword = false;
+    private focusPassword = false;
+    private loginError: string | undefined;
     private name: string | undefined;
-    private signUpError: string | undefined;
-    private signUpRequestInProgress = false;
+    private nameProvided = false;
     private newPassword: string | undefined;
     private rePassword: string | undefined;
-    private finishStatus: undefined | "registered" | "updated";
     private resetPassword = false;
-    private canChangeName = true;
-    private focusNewPassword = false;
-    private loginError: string | undefined;
+    private showSignup = false;
+    private signUpError: string | undefined;
+    private signUpRequestInProgress = false;
+    private tempPassword: string | undefined;
+    private tempPasswordProvided = false;
 
     constructor() {
-        this.form = {email: "", password: ""};
+        this.loginForm = {email: "", password: ""};
         this.loggingout = false;
         this.addingToSession = false;
-    }
-
-    $onInit() {
-
     }
 
     getCurrentUser = () => Users.getCurrent();
@@ -74,18 +71,22 @@ class LoginMenuController implements IController {
 
     isKorppi = () => Users.isKorppi();
 
-    stopClick($event: Event) {
+    // noinspection JSMethodCanBeStatic
+    public stopClick($event: Event) {
         $event.stopPropagation();
     }
 
-    toggled(open: boolean) {
+    public toggled(open: boolean) {
         if (!open) {
             this.addingToSession = false;
         }
     }
 
-    async loginWithEmail() {
-        const [err, resp] = await Users.loginWithEmail(this.form.email, this.form.password, this.addingToSession);
+    public async loginWithEmail() {
+        const [err] = await Users.loginWithEmail(
+            this.loginForm.email,
+            this.loginForm.password,
+            this.addingToSession);
         if (err) {
             this.loginError = err.data.error;
         } else {
@@ -105,7 +106,7 @@ class LoginMenuController implements IController {
         }
     }
 
-    private async provideEmail() {
+    public async provideEmail() {
         if (!this.email || this.signUpRequestInProgress) {
             return;
         }
@@ -121,28 +122,7 @@ class LoginMenuController implements IController {
         }
     }
 
-    private async sendRequest<T>(url: string, data: any): ToReturn<T> {
-        this.signUpRequestInProgress = true;
-        const [err, resp] = await to($http.post<T>(url, data));
-        this.signUpRequestInProgress = false;
-        if (err && !resp) {
-            return [err, resp];
-        } else if (!err && resp) {
-            return [err, resp];
-        } else {
-            throw new Error("unreachable");
-        }
-    }
-
-    private beginSignup() {
-        this.showSignup = true;
-        this.focusEmail = true;
-        if (this.form.email) {
-            this.email = this.form.email;
-        }
-    }
-
-    private async provideTempPassword() {
+    public async provideTempPassword() {
         if (!this.email || !this.tempPassword || this.signUpRequestInProgress) {
             return;
         }
@@ -181,7 +161,7 @@ class LoginMenuController implements IController {
         }
     }
 
-    private async provideName() {
+    public async provideName() {
         if (!this.name || this.signUpRequestInProgress) {
             return;
         }
@@ -202,12 +182,12 @@ class LoginMenuController implements IController {
         }
     }
 
-    private forgotPassword() {
+    public forgotPassword() {
         this.resetPassword = true;
         this.beginSignup();
     }
 
-    private getTitle() {
+    public getTitle() {
         if (!this.showSignup) {
             return "Log in";
         } else if (this.resetPassword) {
@@ -217,12 +197,12 @@ class LoginMenuController implements IController {
         }
     }
 
-    private cancelSignup() {
+    public cancelSignup() {
         this.showSignup = false;
         this.resetPassword = false;
     }
 
-    private getEmailOrUserText(capitalize?: boolean) {
+    public getEmailOrUserText(capitalize?: boolean) {
         let txt;
         if (this.resetPassword) {
             txt = "email or username";
@@ -233,6 +213,27 @@ class LoginMenuController implements IController {
             return capitalizeFirstLetter(txt);
         } else {
             return txt;
+        }
+    }
+
+    public beginSignup() {
+        this.showSignup = true;
+        this.focusEmail = true;
+        if (this.loginForm.email) {
+            this.email = this.loginForm.email;
+        }
+    }
+
+    private async sendRequest<T>(url: string, data: any): ToReturn<T> {
+        this.signUpRequestInProgress = true;
+        const [err, resp] = await to($http.post<T>(url, data));
+        this.signUpRequestInProgress = false;
+        if (err && !resp) {
+            return [err, resp];
+        } else if (!err && resp) {
+            return [err, resp];
+        } else {
+            throw new Error("unreachable");
         }
     }
 }

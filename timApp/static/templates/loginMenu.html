@@ -32,7 +32,7 @@
                     <label for="email" class="control-label">Email or username</label>
                     <input class="form-control"
                            id="email"
-                           ng-model="$ctrl.form.email"
+                           ng-model="$ctrl.loginForm.email"
                            on-enter="$ctrl.focusLoginPassword = true"
                            type="text">
                 </div>
@@ -42,7 +42,7 @@
                     <input class="form-control"
                            id="password"
                            focus-me="$ctrl.focusLoginPassword"
-                           ng-model="$ctrl.form.password"
+                           ng-model="$ctrl.loginForm.password"
                            type="password">
                     <p class="text-smaller"><a href="#" ng-click="$ctrl.forgotPassword()">I forgot my password</a></p>
                 </div>
