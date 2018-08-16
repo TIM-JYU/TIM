@@ -67,7 +67,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         # self.save_screenshot('adsasd')
         elem = self.drv.find_element_by_xpath('//login-menu/button')
         elem.click()
-        elem.find_element_by_xpath("//input[@type='email']").send_keys(email)
+        elem.find_element_by_xpath("//input[@type='text']").send_keys(email)
         elem.find_element_by_xpath("//input[@type='password']").send_keys(password)
         elem.find_element_by_xpath("//button[@type='submit']").click()
         self.wait.until(ec.text_to_be_present_in_element((By.XPATH, self.login_dropdown_path), name))
