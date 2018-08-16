@@ -13,7 +13,7 @@ export interface timTableEditorToolbarParams {
     activeTable: object;
 }
 
-let instance: TimTableEditorToolbarController | null = null;
+let instance: TimTableEditorToolbarController | undefined;
 
 export class TimTableEditorToolbarController extends DialogController<{params: timTableEditorToolbarParams},
     { }, "timTableEditorToolbar" > {
@@ -68,7 +68,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
         this.close("");
         this.visible = false;
         this.scope.$apply();
-        instance = null;
+        instance = undefined;
     }
 
     public hideIfActiveTable(table: object) {
@@ -104,7 +104,8 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
     }
 
     private eventApi = {
-        onClose: function(api: any, color: string, $event: any) {TimTableEditorToolbarController.onColorPickerClose(color);},
+        onClose: (api: any, color: string, $event: any) =>
+            { TimTableEditorToolbarController.onColorPickerClose(color); },
     };
 
     /**
