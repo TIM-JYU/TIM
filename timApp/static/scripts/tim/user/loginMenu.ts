@@ -137,6 +137,9 @@ class LoginMenuController implements IController {
     private beginSignup() {
         this.showSignup = true;
         this.focusEmail = true;
+        if (this.form.email) {
+            this.email = this.form.email;
+        }
     }
 
     private async provideTempPassword() {
