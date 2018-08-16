@@ -6,7 +6,7 @@ Visa Naukkarinen
 
 import copy
 import re
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Callable, Dict, Any
 
 # Default values:
 
@@ -185,13 +185,14 @@ class Cell:
 
         # Font weight may be bold, bolder, lighter or number from 100 to 900.
         if self.font_weight:
-            if "bold" in self.font_weight:
+            if "bold" in str(self.font_weight):
                 content = rf"\textbf{{{content}}}"
-            try:
-                if int(self.font_weight) > 599:
-                    content = rf"\textbf{{{content}}}"
-            except:
-                pass
+            else:
+                try:
+                    if int(self.font_weight) > 699:
+                        content = rf"\textbf{{{content}}}"
+                except:
+                    pass
 
         cell_width = self.cell_width
         if "*" not in str(cell_width):
@@ -491,6 +492,38 @@ def estimate_table_width(self) -> Tuple[float, bool]:
     return width, estimate
 
 
+def estimate_col_widths(rows):
+    """
+    Takes the most large set width of the column's cells,
+    or estimation of their needed content size, if all are automatic.
+    :param rows: Table rows.
+    :return: Estimation of column widths.
+    """
+    widths = []
+    for i in range(0, len(rows)):
+        i_widths = []
+        max_content_size = 0
+        for j in range(0, 100):
+            try:
+                cell = rows[j].cells[i]
+            except IndexError:
+                break
+            else:
+                content_size = estimate_cell_width(cell)*0.8
+                if len(cell.content) > 45:
+                    content_size = content_size*0.2
+                width = cell.cell_width
+                if content_size > max_content_size:
+                    max_content_size = content_size
+                if width != default_width:
+                    i_widths.append(width)
+        if i_widths:
+            widths.append(max(i_widths))
+        else:
+            widths.append(max_content_size)
+    return widths
+
+
 class Table:
     """
     Table with rows, cells in rows, and horizontal borders between rows.
@@ -582,16 +615,14 @@ class Table:
 
         # TODO: A word which isn't broken by spaces and is considerably longer than title
         # row may overflow from the cell boundaries.
-        # TODO: Calculate a value that approximates the width need of a column.
-        # Take the longest content in each column and divide space in their ratio?
         if not self.rows:
             return
-        widths = []
-        for cell in self.rows[0].cells:
-            cell_width = cell.cell_width
-            if cell_width is default_width:
-                cell_width = estimate_cell_width(cell)
-            widths.append(cell_width)
+        widths = estimate_col_widths(self.rows)
+        # for cell in self.rows[0].cells:
+        #     cell_width = cell.cell_width
+        #     if cell_width is default_width:
+        #         cell_width = estimate_cell_width(cell)
+        #     widths.append(cell_width)
         for i in range(0, len(self.rows)):
             try:
                 max_height = 0  # Tallest estimated height in the cells of the row.
@@ -697,35 +728,12 @@ def get_column_style_list(table_data, key):
     return l
 
 
-def get_column_h_align_list(table_data):
-    """
-    Forms a list of horizontal alignments from the columns data.
-    :param table_data:
-    :return:
-    """
-    l = []
-    try:
-        columns_data = table_data['columns']
-    except:
-        return [None] * max_col_count
-    for i in range(0, len(columns_data)):
-        column_data = columns_data[i]
-        span = get_column_span(column_data)
-        for j in range(0, span):
-            try:
-                l.append(get_text_horizontal_align(column_data, None))
-            except:
-                l.append(None)
-    for k in range(0, max_col_count):
-        l.append(None)
-    return l
-
-
-def get_column_font_family_list(table_data):
+def get_column_format_list(table_data, f: Callable[[Dict, Any], Any]):
     """
     Forms a list of font families from the columns data.
     :param table_data:
-    :return:
+    :param f: Function to get the format values from the column data.
+    :return: List of column formats.
     """
     l = []
     try:
@@ -737,7 +745,7 @@ def get_column_font_family_list(table_data):
         span = get_column_span(column_data)
         for j in range(0, span):
             try:
-                l.append(get_font_family(column_data, None))
+                l.append(f(column_data, None))
             except:
                 l.append(None)
     for k in range(0, max_col_count):
@@ -944,7 +952,7 @@ def get_key_value(item, key, default=None):
     :return: Value or default.
     """
     try:
-        a = item[key].strip()
+        a = item[key]
     except:
         a = default
     return a
@@ -1115,7 +1123,6 @@ def get_table_resize(table_data, table_width_estimation, col_count) -> bool:
     resize = False
     # If forced.
     try:
-
         resize = table_data['fitToPageWidth']
     # Otherwise check automatically.
     except:
@@ -1128,26 +1135,11 @@ def get_table_resize(table_data, table_width_estimation, col_count) -> bool:
     return resize
 
 
-def decide_format_tuple(format_levels):
-    """
-    Goes through a list of formats and returns the last non-empty one.
-    The idea is to stack table, column, row and cell formats and take the
-    topmost format.
-    :param format_levels:
-    :return:
-    """
-    final_format = (None, None)
-    for level in format_levels:
-        if level[0]:
-            final_format = level
-    return final_format
-
-
 def decide_format_size(format_levels):
     """
     Decides which size (column, row, cell, datablock) to use by taking the longest one.
-    :param format_levels:
-    :return:
+    :param format_levels: Table, column, row, cell, datablock.
+    :return: Largest size.
     """
     final_size = 0
     for level in format_levels:
@@ -1164,10 +1156,25 @@ def decide_format_size(format_levels):
         return final_size
 
 
+def decide_format_tuple(format_levels):
+    """
+    Goes through a list of formats and returns the last non-empty one.
+    The idea is to stack table, column, row and cell formats and take the
+    topmost format.
+    :param format_levels: Table, column, row, cell, datablock.
+    :return: Last non-empty format.
+    """
+    final_format = (None, None)
+    for level in format_levels:
+        if level[0]:
+            final_format = level
+    return final_format
+
+
 def decide_format(format_levels):
     """
     Decides which format to use by taking the latest non-empty one.
-    :param format_levels: Table, column, row, cell and datablock format values.
+    :param format_levels: Table, column, row, cell, datablock.
     :return: Last non-empty value or None if all are empty.
     """
     final_format = None
@@ -1184,9 +1191,9 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     what-is-the-best-way-to-compare-floats-for-almost-equality-in-python
     :param a: Number a.
     :param b: Number b.
-    :param rel_tol:
-    :param abs_tol:
-    :return:
+    :param rel_tol: Relative tolerance.
+    :param abs_tol: Absolute tolerance.
+    :return: True if floats are very close to each other.
     """
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
@@ -1218,29 +1225,29 @@ def convert_table(table_json) -> Table:
     # Table settings will be used as defaults, if set.
     # Each level's format is saved in a variable, which will be empty, if
     # that level doesn't have any formattings.
-    (table_default_bg_color, table_default_bg_color_html) = \
+    (table_bg_color, table_bg_color_html) = \
         get_color(table_json,
                   "backgroundColor",
                   default_transparent_color,
                   False)
-    (table_default_text_color, table_default_text_color_html) = \
+    (table_text_color, table_text_color_html) = \
         get_color(table_json,
                   "color",
                   default_text_color,
                   False)
-
-    table_default_font_family = get_font_family(table_json, default_font_family)
-    table_default_borders = get_borders(table_json, CellBorders())
-    table_default_font_size = get_font_size(table_json, default_font_size)
-    table_default_h_align = get_text_horizontal_align(table_json, default_text_h_align)
+    table_font_family = get_font_family(table_json, default_font_family)
+    table_borders = get_borders(table_json, CellBorders())
+    table_font_size = get_font_size(table_json, default_font_size)
+    table_h_align = get_text_horizontal_align(table_json, default_text_h_align)
+    table_font_weight = get_key_value(table_json, "fontWeight", None)
 
     # Get column formattings:
     column_bg_color_list = get_column_color_list("backgroundColor", table_json)
     column_text_color_list = get_column_color_list("color", table_json)
     column_width_list = get_column_width_list(table_json)
     column_font_size_list = get_column_style_list(table_json, "fontSize")
-    column_h_align_list = get_column_h_align_list(table_json)
-    column_font_family_list = get_column_font_family_list(table_json)
+    column_h_align_list = get_column_format_list(table_json, f=get_text_horizontal_align)
+    column_font_family_list = get_column_format_list(table_json, f=get_font_family)
 
     table_json_rows = add_missing_elements(table_json, datablock)
     max_cells = 0
@@ -1249,17 +1256,17 @@ def convert_table(table_json) -> Table:
         table_row = table.get_or_create_row(i)
         row_data = table_json_rows[i]
 
-        (row_default_bg_color, row_default_bg_color_html) = get_color(row_data, "backgroundColor")
-        (row_default_text_color, row_default_text_color_html) = get_color(row_data, "color")
-        row_default_width = get_size(row_data, key="width", default=None)
-        row_default_height = get_size(row_data, key="height", default=default_height)
-        row_default_font_size = get_font_size(row_data, None)
-        row_default_h_align = get_text_horizontal_align(row_data, None)
-        row_default_font_family = get_font_family(row_data, None)
+        (row_bg_color, row_bg_color_html) = get_color(row_data, "backgroundColor")
+        (row_text_color, row_text_color_html) = get_color(row_data, "color")
+        row_width = get_size(row_data, key="width", default=None)
+        row_height = get_size(row_data, key="height", default=None)
+        row_font_size = get_font_size(row_data, None)
+        row_h_align = get_text_horizontal_align(row_data, None)
+        row_font_family = get_font_family(row_data, None)
         row_font_weight = get_key_value(row_data, "fontWeight", None)
 
         # TODO: Change the logic: in HTML these go around the whole row, not each cell!
-        row_default_borders = get_borders(row_data, table_default_borders)
+        row_borders = get_borders(row_data, table_borders)
 
         for j in range(0, len(table_json_rows[i]['row'])):
             content = ""
@@ -1282,7 +1289,7 @@ def convert_table(table_json) -> Table:
                 cell_font_weight = get_key_value(cell_data, "fontWeight", None)
 
                 (colspan, rowspan) = get_span(cell_data)
-                borders = get_borders(cell_data, row_default_borders)
+                borders = get_borders(cell_data, row_borders)
 
                 # For estimating column count:
                 max_colspan = max(max_colspan, colspan)
@@ -1316,47 +1323,48 @@ def convert_table(table_json) -> Table:
 
                 # Decide which styles to use (from table, column, row, cell or datablock)
                 (bg_color, bg_color_html) = decide_format_tuple([
-                    (table_default_bg_color, table_default_bg_color_html),
+                    (table_bg_color, table_bg_color_html),
                     column_bg_color_list[j],
-                    (row_default_bg_color, row_default_bg_color_html),
+                    (row_bg_color, row_bg_color_html),
                     (cell_bg_color, cell_bg_color_html),
                     (datablock_bg_color, datablock_bg_color_html),
                 ])
                 (text_color, text_color_html) = decide_format_tuple([
-                    (table_default_text_color, table_default_text_color_html),
+                    (table_text_color, table_text_color_html),
                     column_text_color_list[j],
-                    (row_default_text_color, row_default_text_color_html),
+                    (row_text_color, row_text_color_html),
                     (cell_text_color, cell_text_color_html),
                     (datablock_text_color, datablock_text_color_html),
                 ])
                 height = decide_format_size([
-                    row_default_height,
+                    row_height,
                     cell_height,
                     datablock_cell_height])
                 width = decide_format_size([
                     column_width_list[j],
-                    row_default_width,
+                    row_width,
                     cell_width,
                     datablock_cell_width])
                 h_align = decide_format([
-                    table_default_h_align,
+                    table_h_align,
                     column_h_align_list[j],
-                    row_default_h_align,
+                    row_h_align,
                     cell_h_align,
                     datablock_h_align])
                 font_family = decide_format([
-                    table_default_font_family,
+                    table_font_family,
                     column_font_family_list[j],
-                    row_default_font_family,
+                    row_font_family,
                     cell_font_family,
                     datablock_font_family])
                 font_size = decide_format([
-                    table_default_font_size,
+                    table_font_size,
                     column_font_size_list[j],
-                    row_default_font_size,
+                    row_font_size,
                     cell_font_size,
                     datablock_font_size])
                 font_weight = decide_format([
+                    table_font_weight,
                     row_font_weight,
                     cell_font_weight,
                     datablock_font_weight])
