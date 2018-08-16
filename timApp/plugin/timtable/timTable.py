@@ -193,10 +193,10 @@ def tim_table_add_row():
     Adds a row into the table.
     :return: The entire table's data after the row has been added.
     """
-    doc_id, par_id = verify_json_params('docId', 'parId')
+    doc_id, par_id, row_id = verify_json_params('docId', 'parId', 'rowId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     verify_edit_access(d)
-    add_row(plug)
+    add_row(plug, row_id)
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
@@ -208,7 +208,7 @@ def tim_table_add_user_specific_row():
     """
     doc_id, par_id = verify_json_params('docId', 'parId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    unique_id = add_row(plug)
+    unique_id = add_row(plug, -1)
     # todo database stuff
     user = get_current_user_object()
     owner_info = RowOwnerInfo(doc_id=doc_id, par_id=par_id,
@@ -220,31 +220,43 @@ def tim_table_add_user_specific_row():
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
-def add_row(plug: Plugin):
+def add_row(plug: Plugin, row_id: int):
     """
     Generic function for adding a row.
     :param plug: The plugin.
+    :param row_id: The place (index) where the row should be added. -1 can be used for appending
+     rows to the end of the table.
     :return: The unique ID of the row, or None if it has no ID.
     """
     try:
         rows = plug.values[TABLE][ROWS]
     except KeyError:
         return abort(400)
+    if row_id == -1:
+        row_id = len(rows)
+    elif len(rows) < row_id:
+        return abort(400)
+
     # clone the previous row's data into the new row but remove the cell content
-    copy_row = copy.deepcopy(rows[-1])
-    rows.append(copy_row)
+    copy_row = copy.deepcopy(rows[row_id - 1])
+    rows.insert(row_id, copy_row)
     # rows.append({'row': copy.deepcopy(rows[-1]['row'])})
-    row = rows[-1]['row']
+    row = rows[row_id]['row']
     unique_id = None
     if is_in_global_append_mode(plug):
         unique_id = pop_unique_row_id(plug)
-        rows[-1][ID] = unique_id
+        rows[row_id][ID] = unique_id
     for i in range(len(row)):
-        if isinstance(row[i], str) or isinstance(row[i], int) or isinstance(row[i], bool) \
-                or isinstance(row[i], float):
+        if is_primitive(row[i]):
             row[i] = {CELL: ''}
         else:
             row[i][CELL] = ''
+    if row_id < len(rows) - 1:
+        datablock_entries = construct_datablock_entry_list_from_yaml(plug)
+        for entry in datablock_entries:
+            if entry.row >= row_id:
+                entry.row = entry.row + 1
+        apply_datablock_from_entry_list(plug, datablock_entries)
     plug.save()
     return unique_id
 
@@ -301,7 +313,7 @@ def tim_table_add_datablock_row():
         for i in range(0, len(row)):
             new_datablock_entries.append(RelativeDataBlockValue(len(rows), i, ''))
 
-    plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(new_datablock_entries)
+    apply_datablock_from_entry_list(plug, new_datablock_entries)
     plug.save()
 
     return json_response(prepare_for_and_call_dumbo(plug))
@@ -327,8 +339,7 @@ def tim_table_add_column():
         except KeyError:
             return abort(400)
         last_cell = current_row[-1]
-        if isinstance(last_cell, str) or isinstance(last_cell, int) or isinstance(last_cell, bool) \
-                or isinstance(last_cell, float):
+        if is_primitive(last_cell):
             current_row.append({CELL: ""})
         else:
             # Copy the last cell's other properties for the new cell, but leave the text empty
@@ -359,7 +370,7 @@ def tim_table_add_datablock_column():
     for row_index, column_count in column_counts.items():
         datablock_entries.append(RelativeDataBlockValue(row_index, column_count, ''))
 
-    plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(datablock_entries)
+    apply_datablock_from_entry_list(plug, datablock_entries)
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
 
@@ -411,7 +422,7 @@ def tim_table_remove_datablock_column():
         if entry.column < column_counts[entry.row] - 1:
             new_datablock_entries.append(entry)
 
-    plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(new_datablock_entries)
+    apply_datablock_from_entry_list(plug, new_datablock_entries)
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
 
@@ -446,7 +457,7 @@ def tim_table_remove_row():
                 entry.row -= 1
             new_datablock_entries.append(entry)
 
-        plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(new_datablock_entries)
+        apply_datablock_from_entry_list(plug, new_datablock_entries)
 
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
@@ -487,7 +498,7 @@ def tim_table_remove_column():
             if entry.column > col_id:
                 entry.column -= 1
             new_datablock_entries.append(entry)
-        plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(new_datablock_entries)
+        apply_datablock_from_entry_list(plug, new_datablock_entries)
 
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
@@ -560,7 +571,7 @@ def set_cell_style_attribute(doc_id, par_id, row_id, col_id, attribute, value):
                 existing_datablock_entry.data = {CELL: existing_datablock_entry.data, attribute: value}
             else:
                 existing_datablock_entry.data[attribute] = value
-        plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(datablock_entries)
+        apply_datablock_from_entry_list(plug, datablock_entries)
     else:
         try:
             rows = plug.values[TABLE][ROWS]
@@ -904,3 +915,7 @@ def create_datablock_from_entry_list(relative_data_block_values: list) -> Dict[s
     datablock[CELLS] = cells
     datablock[TYPE] = RELATIVE
     return datablock
+
+
+def apply_datablock_from_entry_list(plug: Plugin, relative_data_block_values: list):
+    plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(relative_data_block_values)

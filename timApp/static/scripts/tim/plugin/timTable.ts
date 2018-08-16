@@ -1144,6 +1144,10 @@ export class TimTableController implements IController {
 
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
+        let rowId = this.cellDataMatrix.length;
+        if (this.data.table.rows) {
+            rowId = this.data.table.rows.length;
+        }
         let response;
 
         if (this.isInGlobalAppendMode()) {
@@ -1151,7 +1155,7 @@ export class TimTableController implements IController {
                 {docId, parId});
         } else {
             response = await $http.post<TimTable>("/timTable/addRow",
-                {docId, parId});
+                {docId, parId, rowId});
         }
 
         this.data = response.data;
