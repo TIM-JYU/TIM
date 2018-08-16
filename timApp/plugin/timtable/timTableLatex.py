@@ -62,12 +62,6 @@ class IndexConversionError(TimTableException):
     """
 
 
-class ColorDefinitionsMissingError(TimTableException):
-    """
-    If file containing HTML-color LaTeX-defnitions is missing.
-    """
-
-
 class CellBorders:
     """
     Contains the attributes of a cell's borders.
@@ -1092,24 +1086,6 @@ def get_table_size(table_data):
     return width, height
 
 
-def get_html_color_latex_definitions(defs: str = default_color_defs_path) -> List[str]:
-    """
-    Returns a list of LaTeX color definitions to be used for
-    displaying HTML-colors.
-    :param defs: A file containing a list of color definitions.
-    :return: Definitions as a list of strings.
-    """
-    definition_list = []
-    try:
-        with open(defs, "r") as definition_file:
-            for line in definition_file:
-                definition_list.append(line)
-    except FileNotFoundError:
-        raise ColorDefinitionsMissingError()
-    finally:
-        return definition_list
-
-
 def get_table_resize(table_data, table_width_estimation, col_count) -> bool:
     """
     Whether table should be resized to fit the page width.
@@ -1422,7 +1398,8 @@ def convert_table(table_json) -> Table:
         table.col_count = estimation
 
     # Set row and column sizes according to cell contents.
-    table.auto_size_cells()
+    if get_key_value(table_json, "autoSize", True):
+        table.auto_size_cells()
 
     # Whether table should be fit to page.
     table.fit_to_page_width = get_table_resize(table_json, estimate_table_width(table), table.col_count)
