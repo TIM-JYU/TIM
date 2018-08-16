@@ -1103,7 +1103,7 @@ def get_table_resize(table_data, table_width_estimation, col_count) -> bool:
     resize = False
     # If forced.
     try:
-        resize = table_data['fitToPageWidth']
+        resize = table_data['texFitToPage']
     # Otherwise check automatically.
     except:
         # If table size is estimation and col count is low, don't resize
@@ -1252,7 +1252,7 @@ def convert_table(table_json) -> Table:
             cell_data = table_json_rows[i]['row'][j]
 
             content = get_content(cell_data)
-            
+
             # Get cell attributes:
             (cell_bg_color, cell_bg_color_html) = get_color(cell_data, 'backgroundColor')
             (cell_text_color, cell_text_color_html) = get_color(cell_data, 'color')
@@ -1389,7 +1389,7 @@ def convert_table(table_json) -> Table:
         table.col_count = estimation
 
     # Set row and column sizes according to cell contents.
-    if get_key_value(table_json, "autoSize", True):
+    if get_key_value(table_json, "texAutoSize", True):
         table.auto_size_cells()
 
     # Whether table should be fit to page.
