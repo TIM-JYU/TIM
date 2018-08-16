@@ -503,9 +503,9 @@ def estimate_col_widths(rows):
             except IndexError:
                 break
             else:
-                content_size = estimate_cell_width(cell)*0.8
+                content_size = estimate_cell_width(cell) * 0.8
                 if len(cell.content) > 45:
-                    content_size = content_size*0.2
+                    content_size = content_size * 0.2
                 width = cell.cell_width
                 if content_size > max_content_size:
                     max_content_size = content_size
@@ -756,13 +756,17 @@ def custom_repr(obj) -> str:
     return f"{str(obj.__class__)}: {str(obj.__dict__)}"
 
 
-def get_content(content: str) -> str:
+def get_content(cell_data) -> str:
     """
-    Converts content to LaTeX-compatible format.
-    :param content: Text / other content in the cell.
-    :return: Formatted content of the cell.
+    Gets content from a cell.
+    :param cell_data: Cell JSON.
+    :return: Cell content.
     """
-    return str(content).strip()
+    try:
+        return str(cell_data['cell']).strip()
+    # Cells that use simplified format (without 'cell').
+    except TypeError:
+        return str(cell_data)
 
 
 def get_color(item, key: str, default_color=None, default_color_html=None) -> (str, bool):
@@ -1245,149 +1249,136 @@ def convert_table(table_json) -> Table:
         row_borders = get_borders(row_data, table_borders)
 
         for j in range(0, len(table_json_rows[i]['row'])):
-            content = ""
-            cell_data = ""
-            try:
-                cell_data = table_json_rows[i]['row'][j]
-                content = get_content(table_json_rows[i]['row'][j]['cell'])
-            # Cells that use simplified format (without 'cell').
-            except TypeError:
-                content = get_content(table_json_rows[i]['row'][j])
-            finally:
-                # Set cell attributes:
-                (cell_bg_color, cell_bg_color_html) = get_color(cell_data, 'backgroundColor')
-                (cell_text_color, cell_text_color_html) = get_color(cell_data, 'color')
-                cell_height = get_size(cell_data, key="height")
-                cell_width = get_size(cell_data, key="width")
-                cell_h_align = get_text_horizontal_align(cell_data, None)
-                cell_font_family = get_font_family(cell_data, None)
-                cell_font_size = get_font_size(cell_data, None)
-                cell_font_weight = get_key_value(cell_data, "fontWeight", None)
+            cell_data = table_json_rows[i]['row'][j]
 
-                (colspan, rowspan) = get_span(cell_data)
-                borders = get_borders(cell_data, row_borders)
+            content = get_content(cell_data)
+            
+            # Get cell attributes:
+            (cell_bg_color, cell_bg_color_html) = get_color(cell_data, 'backgroundColor')
+            (cell_text_color, cell_text_color_html) = get_color(cell_data, 'color')
+            cell_height = get_size(cell_data, key="height")
+            cell_width = get_size(cell_data, key="width")
+            cell_h_align = get_text_horizontal_align(cell_data, None)
+            cell_font_family = get_font_family(cell_data, None)
+            cell_font_size = get_font_size(cell_data, None)
+            cell_font_weight = get_key_value(cell_data, "fontWeight", None)
+            (colspan, rowspan) = get_span(cell_data)
+            borders = get_borders(cell_data, row_borders)
 
-                # For estimating column count:
-                max_colspan = max(max_colspan, colspan)
+            # For estimating column count:
+            max_colspan = max(max_colspan, colspan)
 
-                # Get datablock formats:
-                datablock_cell_data = get_datablock_cell_data(datablock, i, j)
+            # Get datablock formats:
+            datablock_cell_data = get_datablock_cell_data(datablock, i, j)
 
-                # Check being None instead of 'not datablock_cell_data' because need to
-                # also replace when this is an empty string.
-                if datablock_cell_data is None:
-                    pass
-                else:
-                    # Datablocks may not exists or have dictionary, str or other types.
-                    if isinstance(datablock_cell_data, dict):
-                        try:
-                            datablock_content = get_content(datablock_cell_data['cell'])
-                            content = datablock_content
-                        except TypeError:
-                            pass
-                    else:
-                        content = str(datablock_cell_data)
+            # Check being None instead of 'not datablock_cell_data' because need to
+            # also replace when this is an empty string.
+            if datablock_cell_data is None:
+                pass
+            else:
+                content = get_content(datablock_cell_data)
 
-                (datablock_bg_color, datablock_bg_color_html) = get_color(datablock_cell_data, 'backgroundColor')
-                (datablock_text_color, datablock_text_color_html) = get_color(datablock_cell_data, 'color')
-                datablock_cell_height = get_size(datablock_cell_data, key="height")
-                datablock_cell_width = get_size(datablock_cell_data, key="width")
-                datablock_font_family = get_font_family(datablock_cell_data, None)
-                datablock_font_size = get_font_size(datablock_cell_data, None)
-                datablock_h_align = get_text_horizontal_align(datablock_cell_data, None)
-                datablock_font_weight = get_key_value(datablock_cell_data, "fontWeight", None)
+            (datablock_bg_color, datablock_bg_color_html) = get_color(datablock_cell_data, 'backgroundColor')
+            (datablock_text_color, datablock_text_color_html) = get_color(datablock_cell_data, 'color')
+            datablock_cell_height = get_size(datablock_cell_data, key="height")
+            datablock_cell_width = get_size(datablock_cell_data, key="width")
+            datablock_font_family = get_font_family(datablock_cell_data, None)
+            datablock_font_size = get_font_size(datablock_cell_data, None)
+            datablock_h_align = get_text_horizontal_align(datablock_cell_data, None)
+            datablock_font_weight = get_key_value(datablock_cell_data, "fontWeight", None)
 
-                # Decide which styles to use (from table, column, row, cell or datablock)
-                (bg_color, bg_color_html) = decide_format_tuple([
-                    (table_bg_color, table_bg_color_html),
-                    column_bg_color_list[j],
-                    (row_bg_color, row_bg_color_html),
-                    (cell_bg_color, cell_bg_color_html),
-                    (datablock_bg_color, datablock_bg_color_html),
-                ])
-                (text_color, text_color_html) = decide_format_tuple([
-                    (table_text_color, table_text_color_html),
-                    column_text_color_list[j],
-                    (row_text_color, row_text_color_html),
-                    (cell_text_color, cell_text_color_html),
-                    (datablock_text_color, datablock_text_color_html),
-                ])
-                height = decide_format_size([
-                    row_height,
-                    cell_height,
-                    datablock_cell_height])
-                width = decide_format_size([
-                    column_width_list[j],
-                    row_width,
-                    cell_width,
-                    datablock_cell_width])
-                h_align = decide_format([
-                    table_h_align,
-                    column_h_align_list[j],
-                    row_h_align,
-                    cell_h_align,
-                    datablock_h_align])
-                font_family = decide_format([
-                    table_font_family,
-                    column_font_family_list[j],
-                    row_font_family,
-                    cell_font_family,
-                    datablock_font_family])
-                font_size = decide_format([
-                    table_font_size,
-                    column_font_size_list[j],
-                    row_font_size,
-                    cell_font_size,
-                    datablock_font_size])
-                font_weight = decide_format([
-                    table_font_weight,
-                    row_font_weight,
-                    cell_font_weight,
-                    datablock_font_weight])
+            # Decide which styles to use (from table, column, row, cell or datablock)
+            (bg_color, bg_color_html) = decide_format_tuple([
+                (table_bg_color, table_bg_color_html),
+                column_bg_color_list[j],
+                (row_bg_color, row_bg_color_html),
+                (cell_bg_color, cell_bg_color_html),
+                (datablock_bg_color, datablock_bg_color_html),
+            ])
+            (text_color, text_color_html) = decide_format_tuple([
+                (table_text_color, table_text_color_html),
 
-                c = Cell(
-                    content=content,
-                    font_family=font_family,
-                    font_size=font_size,
-                    h_align=h_align,
-                    bg_color=bg_color,
-                    bg_color_html=bg_color_html,
-                    text_color=text_color,
-                    text_color_html=text_color_html,
-                    colspan=colspan,
-                    rowspan=rowspan,
-                    cell_width=width,
-                    cell_height=height,
-                    borders=borders,
-                    font_weight=font_weight
-                )
+                column_text_color_list[j],
+                (row_text_color, row_text_color_html),
+                (cell_text_color, cell_text_color_html),
+                (datablock_text_color, datablock_text_color_html),
+            ])
+            height = decide_format_size([
+                row_height,
+                cell_height,
+                datablock_cell_height])
+            width = decide_format_size([
+                column_width_list[j],
+                row_width,
+                cell_width,
+                datablock_cell_width])
+            h_align = decide_format([
+                table_h_align,
+                column_h_align_list[j],
+                row_h_align,
+                cell_h_align,
+                datablock_h_align])
+            font_family = decide_format([
+                table_font_family,
+                column_font_family_list[j],
+                row_font_family,
+                cell_font_family,
+                datablock_font_family])
+            font_size = decide_format([
+                table_font_size,
+                column_font_size_list[j],
+                row_font_size,
+                cell_font_size,
+                datablock_font_size])
+            font_weight = decide_format([
+                table_font_weight,
+                row_font_weight,
+                cell_font_weight,
+                datablock_font_weight])
 
-                # Cells with rowspan > 1:
-                # Multirow-cells need to be set from bottom-up in LaTeX to
-                # properly show bg-colors, and empty cells need to be placed
-                # above to avoid overlap, since LaTeX doesn't automatically
-                # move cells aside.
-                # TODO: Multirow-multicol cells have some border problems.
-                if rowspan > 1:
-                    # Take multicol-cells messing up indices into account with this:
-                    cell_index = table_row.get_colspan()
-                    for y in range(0, rowspan - 1):
-                        # Empty filler cell has mostly same the settings as the multirow-cell:
-                        d = copy_cell(c)
-                        d.content = ""
-                        d.borders.color_bottom = (c.bg_color, c.bg_color_html)
-                        if y > 1:
-                            d.borders.color_top = (c.bg_color, c.bg_color_html)
-                        d.rowspan = 1
-                        table.get_or_create_row(i + y).add_cell(cell_index, d)
-                    c.borders.color_top = (c.bg_color, c.bg_color_html)
-                    c.rowspan = -rowspan
-                    table.get_or_create_row(i + rowspan - 1).add_cell(cell_index, c)
+            c = Cell(
+                content=content,
+                font_family=font_family,
+                font_size=font_size,
+                h_align=h_align,
+                bg_color=bg_color,
+                bg_color_html=bg_color_html,
+                text_color=text_color,
+                text_color_html=text_color_html,
+                colspan=colspan,
+                rowspan=rowspan,
+                cell_width=width,
+                cell_height=height,
+                borders=borders,
+                font_weight=font_weight
+            )
 
-                # Normal cells:
-                else:
-                    table_row.add_cell(j, c)
-                max_cells = max(max_cells, len(table_row.cells))
+            # Cells with rowspan > 1:
+            # Multirow-cells need to be set from bottom-up in LaTeX to
+            # properly show bg-colors, and empty cells need to be placed
+            # above to avoid overlap, since LaTeX doesn't automatically
+            # move cells aside.
+            # TODO: Multirow-multicol cells have some border problems.
+            if rowspan > 1:
+                # Take multicol-cells messing up indices into account with this:
+                cell_index = table_row.get_colspan()
+                for y in range(0, rowspan - 1):
+                    # Empty filler cell has mostly same the settings as the multirow-cell:
+                    d = copy_cell(c)
+                    d.content = ""
+                    d.borders.color_bottom = (c.bg_color, c.bg_color_html)
+                    if y > 1:
+                        d.borders.color_top = (c.bg_color, c.bg_color_html)
+                    d.rowspan = 1
+                    table.get_or_create_row(i + y).add_cell(cell_index, d)
+                c.borders.color_top = (c.bg_color, c.bg_color_html)
+                c.rowspan = -rowspan
+                table.get_or_create_row(i + rowspan - 1).add_cell(cell_index, c)
+
+            # Normal cells:
+            else:
+                table_row.add_cell(j, c)
+            max_cells = max(max_cells, len(table_row.cells))
 
     # Currently plays it safe by overestimating table cell count.
     # If estimation larger than max_col_count, use max_col_count instead.
