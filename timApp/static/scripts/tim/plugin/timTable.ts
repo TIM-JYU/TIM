@@ -1231,8 +1231,9 @@ export class TimTableController implements IController {
 
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
+        const colId = -1; // magic number for adding a column to each row regardless of the row's length
         const response = await $http.post<TimTable>(route,
-            {docId, parId});
+            {docId, parId, colId});
         this.data = response.data;
         this.reInitialize();
     }

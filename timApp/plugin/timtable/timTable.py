@@ -326,27 +326,45 @@ def tim_table_add_column():
     In other words, adds a column into the table.
     :return: The entire table's data after the column has been added.
     """
-    doc_id, par_id = verify_json_params('docId', 'parId')
+    doc_id, par_id, col_id = verify_json_params('docId', 'parId', 'colId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     verify_edit_access(d)
     try:
         rows = plug.values[TABLE][ROWS]
     except KeyError:
         return abort(400)
-    for row in rows:
-        try:
-            current_row = row[ROW]
-        except KeyError:
-            return abort(400)
-        last_cell = current_row[-1]
-        if is_primitive(last_cell):
-            current_row.append({CELL: ""})
-        else:
-            # Copy the last cell's other properties for the new cell, but leave the text empty
-            new_cell = copy.deepcopy(last_cell)
-            new_cell[CELL] = ''
-            current_row.append(new_cell)
-        
+
+    if col_id < 1:
+        # Add a column to the end of each row, regardless of their length
+        for row in rows:
+            try:
+                current_row = row[ROW]
+            except KeyError:
+                return abort(400)
+            last_cell = current_row[-1]
+            if is_primitive(last_cell):
+                current_row.append({CELL: ""})
+            else:
+                # Copy the last cell's other properties for the new cell, but leave the text empty
+                new_cell = copy.deepcopy(last_cell)
+                new_cell[CELL] = ''
+                current_row.append(new_cell)
+    else:
+        for row in rows:
+            try:
+                current_row = row[ROW]
+            except KeyError:
+                return abort(400)
+            if len(current_row) < col_id:
+                continue
+            previous_cell = current_row[col_id - 1]
+            if is_primitive(previous_cell):
+                current_row.insert(col_id, {CELL: ""})
+            else:
+                new_cell = copy.deepcopy(previous_cell)
+                new_cell[CELL] = ''
+                current_row.insert(col_id, {CELL: ""})
+
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
 
@@ -358,7 +376,7 @@ def tim_table_add_datablock_column():
     Doesn't affect the table's regular YAML.
     :return: The entire table's data after the column has been added.
     """
-    doc_id, par_id = verify_json_params('docId', 'parId')
+    doc_id, par_id, col_id = verify_json_params('docId', 'parId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     verify_edit_access(d)
 
