@@ -2,7 +2,7 @@ import {$http, $httpParamSerializer, $window} from "../util/ngimport";
 import {to, ToReturn} from "../util/utils";
 import {IFullUser, IUser} from "./IUser";
 
-interface ILoginResponse {
+export interface ILoginResponse {
     other_users: IUser[];
     current_user: IFullUser;
 }
