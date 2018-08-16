@@ -204,3 +204,11 @@ tim-alert {
     }
 }
 
+div.color-picker-input-wrapper.input-group {
+    display: inline-flex;
+    width: auto;
+}
+
+div.color-picker-wrapper.color-picker-closed, div.color-picker-wrapper.color-picker-open {
+    display: inline;
+}

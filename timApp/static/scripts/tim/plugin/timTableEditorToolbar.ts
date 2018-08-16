@@ -37,11 +37,13 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
      * Checks for changes in the cell background color selector.
      */
     $doCheck() {
-        return;
+
+        /* replaced by onColorPickerClose
         if (this.cellBackgroundColor !== this.previousBackgroundColor) {
             this.previousBackgroundColor = this.cellBackgroundColor;
             this.callbacks.setCellBackgroundColor("#" + this.cellBackgroundColor);
-        }
+            this.scope.$apply();
+        } */
     }
 
     public callbacks: TimTableToolbarCallbacks;
@@ -59,6 +61,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
         this.hide();
     }
 
+    /**
+     * Hides the toolbar and removes the instance.
+     */
     public hide() {
         this.close("");
         this.visible = false;
@@ -72,12 +77,28 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
         }
     }
 
+    /**
+     * Shows the toolbar.
+     * @param callbacks Callbacks for communicating with the table.
+     * @param activeTable The object that requested the toolbar to open.
+     */
     public show(callbacks: TimTableToolbarCallbacks, activeTable: object) {
         this.visible = true;
         this.activeTable = activeTable;
         this.callbacks = callbacks;
     }
 
+    /**
+     * Sets the color of the toolbar's color picker object.
+     * @param color The color.
+     */
+    public setColorPickerColor(color: string) {
+        this.cellBackgroundColor = color;
+    }
+
+    /**
+     * Sets the text-align value of a cell.
+     */
     private setTextAlign(value: string) {
         this.callbacks.setTextAlign(value);
     }
@@ -86,10 +107,23 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
         onClose: function(api: any, color: string, $event: any) {TimTableEditorToolbarController.onColorPickerClose(color);},
     };
 
+    /**
+     * Updates the color of a cell when the color picker is closed.
+     * @param color The color.
+     */
     private static onColorPickerClose(color: string) {
         if (instance) {
+            instance.previousBackgroundColor = instance.cellBackgroundColor;
             instance.callbacks.setCellBackgroundColor("#" + color);
         }
+    }
+
+    private getStyle() {
+        return {'background-color': "#" + this.previousBackgroundColor};
+    }
+
+    private applyBackgroundColor() {
+        this.callbacks.setCellBackgroundColor("#" + this.previousBackgroundColor);
     }
 }
 
@@ -119,7 +153,8 @@ registerDialogComponent("timTableEditorToolbar",
   <div >
     <div class="timTableEditorToolbar">
         <color-picker class="timtable-colorpicker" ng-model="$ctrl.cellBackgroundColor" event-api="$ctrl.eventApi"
-        options="{'format':'hex', 'placeholder': '#EEEEEE', 'round': false, 'inline': false}"></color-picker>
+        options="{'format':'hex', 'placeholder': '#EEEEEE', 'round': false}"></color-picker>
+        <button ng-style="$ctrl.getStyle()" ng-click="$ctrl.applyBackgroundColor()">Apply color</button>
         <button class="glyphicon glyphicon-align-left" title="Align left" ng-click="$ctrl.setTextAlign('left')"></button>
         <button class="glyphicon glyphicon-align-center" title="Align center" ng-click="$ctrl.setTextAlign('center')"></button>
         <button class="glyphicon glyphicon-align-right" title="Align right" ng-click="$ctrl.setTextAlign('right')"></button>
