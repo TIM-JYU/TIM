@@ -229,11 +229,15 @@ def check_temp_password():
 @login_page.route("/altsignup", methods=['POST'])
 def alt_signup():
     email_or_username, = verify_json_params('email')
+    fail = False
     if not is_valid_email(email_or_username):
         u = User.get_by_name(email_or_username)
         if not u:
-            return abort(400, "Email address is not valid")
-        email = u.email
+            # Don't return immediately; otherwise it is too easy to analyze timing of the route to deduce success.
+            fail = True
+            email = 'nobody@example.com'
+        else:
+            email = u.email
     else:
         email = email_or_username
 
@@ -246,6 +250,10 @@ def alt_signup():
     else:
         nu = NewUser(email=email, pass_=password_hash)
         db.session.add(nu)
+
+    if fail:
+        return ok_response()
+
     db.session.commit()
 
     session.pop('user_id', None)

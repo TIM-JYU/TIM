@@ -117,13 +117,12 @@ class TestSignUp(TimRouteTest):
         self.assertFalse(self.is_logged_in)
 
     def test_invalid_email(self):
+        old_len = len(test_pws)
         self.json_post(
             '/altsignup',
-            {'email': 'invalid'},
-            expect_contains='Email address is not valid',
-            json_key='error',
-            expect_status=400)
+            {'email': 'invalid'})
         self.assertFalse(self.is_logged_in)
+        self.assertEqual(old_len, len(test_pws))
 
     @property
     def korppi_auth_url(self):
