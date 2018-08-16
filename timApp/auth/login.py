@@ -34,7 +34,7 @@ from timApp.user.newuser import NewUser
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.timdb.sqa import db
-from timApp.user.userutils import create_password_hash
+from timApp.user.userutils import create_password_hash, check_password_hash
 
 login_page = Blueprint('login_page',
                        __name__,
@@ -366,6 +366,9 @@ def alt_login():
             if old_hash != user.pass_:
                 db.session.commit()
             return finish_login()
+    else:
+        # Protect from timing attacks.
+        check_password_hash('', '$2b$12$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu')
 
     error_msg = "Email address or password did not match."
     if is_possibly_jyu_account(email_or_username):

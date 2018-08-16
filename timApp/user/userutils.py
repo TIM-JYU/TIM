@@ -194,13 +194,13 @@ def create_password_hash(password: str) -> str:
     return h
 
 
-def check_password_hash(password: str, password_hash: str, allow_old=False) -> bool:
+def check_password_hash(password: str, password_hash: str) -> bool:
     try:
         is_bcrypt_ok = bcrypt.checkpw(password.encode(), password_hash.encode())
     except ValueError:
         is_bcrypt_ok = False
-    if is_bcrypt_ok:
-        return True
-    if not allow_old:
-        return False
+    return is_bcrypt_ok
+
+
+def check_password_hash_old(password: str, password_hash: str) -> bool:
     return password_hash == hash_password_old(password)
