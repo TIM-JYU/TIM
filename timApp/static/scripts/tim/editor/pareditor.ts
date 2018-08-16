@@ -55,7 +55,6 @@ export interface IEditorParams {
     saveCb: (text: string, data: IExtraData) => Promise<{error?: string}>;
     deleteCb: () => Promise<{error?: string}>;
     unreadCb: () => Promise<void>;
-    funcOnDismiss: () => void;
 }
 
 export type IEditorResult = {type: "save", text: string} | {type: "delete"} | {type: "markunread"} | {type: "cancel"};
@@ -81,8 +80,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
         multiline: string,
         strokes: string,
         pipe: string,
-        timTableSimple: string,
-        timTableAdvanced: string
+        timTable: string,
     };
     private storage: Storage;
     private touchDevice: boolean;
@@ -194,31 +192,14 @@ export class PareditorController extends DialogController<{params: IEditorParams
             "|  123  |  123 |   123   |   123  |\n" +
             "|    1  |    1 |     1   |     1  |\n",
 
-             timTableSimple:
+             timTable:
              "``` {plugin=\"timTable\"} \n" +
-             "automd: true              \n" +
              "table:                   \n" +
              "    rows:                 \n" +
              "      - row:              \n" +
              "        - cell: \"solu\"     \n" +
              "                            \n" +
              "```                        \n",
-
-            timTableAdvanced:
-            "``` {plugin=\"timTable\"}\n" +
-            "automd: true             \n" +
-            "table:                   \n" +
-            "    rows:                \n" +
-            "      - row:             \n" +
-            "        - cell: 'Ekan sarakkeen otsikko' \n" +
-            "        - cell: 'Tokan sarakkeen otsikko'\n" +
-            "        backgroundColor: lightgray       \n" +
-            "        fontWeight: bold                 \n" +
-            "      - row:                             \n" +
-            "        - cell: '1. solun sisältö'       \n" +
-            "        - cell: '2. solun sisältö'       \n" +
-            "                                         \n" +
-            "```\n",
         };
 
         $(document).on("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", (event) => {
@@ -547,9 +528,6 @@ or newer one that is more familiar to write in YAML:
     }
 
     dismiss() {
-        if (this.resolve.params.funcOnDismiss != undefined) {
-            this.resolve.params.funcOnDismiss();
-        }
         this.saveOptions();
         super.dismiss();
     }
@@ -953,16 +931,16 @@ export function openEditor(p: IEditorParams): IPromise<IEditorResult> {
         {saveKey: p.options.localSaveTag, absolute: true, size: p.defaultSize, forceMaximized: true}).result;
 }
 
-export function openEditorSimple(docId: number, text: string, caption: string, onDismiss?: () => void) {
+export function openEditorSimple(docId: number, text: string) {
     return openEditor({
         initialText: text,
         defaultSize: "lg",
         extraData: {docId, tags: {markread: false}, par: "nothing"}, options: {
-            caption: caption,
+            caption: "",
             choices: undefined,
             localSaveTag: "",
             showDelete: false,
-            showImageUpload: true,
+            showImageUpload: false,
             showPlugins: false,
             showSettings: false,
             tags: [],
@@ -980,8 +958,5 @@ export function openEditorSimple(docId: number, text: string, caption: string, o
         unreadCb: async () => {
 
         },
-        funcOnDismiss: () => {
-            if (onDismiss !== undefined) { onDismiss(); }
-        }
     });
 }
