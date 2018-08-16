@@ -10,7 +10,6 @@ from typing import List, Union, Tuple, Callable, Dict, Any
 
 # Default values:
 
-default_color_defs_path = "colors.txt"
 default_text_color = "black"
 default_colspan = 1
 default_rowspan = 1
@@ -27,6 +26,7 @@ default_font_family = "qpl"
 default_transparent_color = "none"
 default_table_width = "\\columnwidth"
 default_table_height = "!"
+default_table_float = "[H]"
 default_minipage_width = "4cm"
 # Maximum number of columns in table; overtly large count will crash LaTeX-conversion.
 max_col_count = 250
@@ -547,13 +547,13 @@ class Table:
         # 'c' would be text horizontal alignment, but it's actually set elsewhere,
         # so here it tells only the highest amount of cols in the table.
         columns = "c" * self.col_count
-        prefix = f"\\begin{{table}}[h]\n" \
+        prefix = f"\\begin{{table}}{default_table_float}\n" \
                  "\centering\n" \
                  f"\\begin{{tabular}}{{{columns}}}"
         postfix = "\\end{tabular}\n\\end{table}"
         resize = self.fit_to_page_width
         if resize:
-            prefix = f"\\begin{{table}}[H]\n" \
+            prefix = f"\\begin{{table}}{default_table_float}\n" \
                      f"\\resizebox{{{self.width}}}{{{self.height}}}{{%\n" \
                      f"\\begin{{tabular}}{{{columns}}}"
             postfix = "\\end{tabular}%\n}\n\\end{table}"

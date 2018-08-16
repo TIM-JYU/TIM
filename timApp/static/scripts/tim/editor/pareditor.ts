@@ -624,13 +624,11 @@ or newer one that is more familiar to write in YAML:
         // If there's no stampFormat set in preamble, uses hard coded default format.
         if (editorText.length > 0 && editorText.lastIndexOf(macroStringBegin) > 0 && this.docSettings) {
             autostamp = true;
-
-            // TODO: Better parsing needed.
-            // Giving commas inside parameters will break this without giving an error.
             try {
-                macroParams = editorText.substring(
+                const macroText = editorText.substring(
                     editorText.lastIndexOf(macroStringBegin) + macroStringBegin.length,
-                    editorText.lastIndexOf(macroStringEnd)).split(",");
+                    editorText.lastIndexOf(macroStringEnd));
+                macroParams = JSON.parse(`[${macroText}]`);
             } catch {
                 throw new Error("Parsing stamp parameters failed");
             }
