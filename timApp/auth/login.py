@@ -336,6 +336,12 @@ def alt_signup_after():
     return json_response({'status': success_status})
 
 
+def is_possibly_jyu_account(email_or_username: str):
+    if email_or_username.endswith('@jyu.fi') or email_or_username.endswith('@student.jyu.fi'):
+        return True
+    return bool(re.fullmatch('[a-z]{2,8}', email_or_username))
+
+
 @login_page.route("/altlogin", methods=['POST'])
 def alt_login():
     save_came_from()
@@ -361,7 +367,9 @@ def alt_login():
                 db.session.commit()
             return finish_login()
 
-    error_msg = "Email address or password did not match. Please try again."
+    error_msg = "Email address or password did not match."
+    if is_possibly_jyu_account(email_or_username):
+        error_msg += " You might not have a TIM account. JYU members can log in using Korppi."
     if is_xhr(request):
         return abort(403, error_msg)
     else:

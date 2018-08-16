@@ -288,3 +288,27 @@ class TestSignUp(TimRouteTest):
              'passconfirm': pw},
             expect_contains='updated',
             json_key='status')
+
+    def test_login_fail(self):
+        basic_error = 'Email address or password did not match.'
+        jyu_error = basic_error + ' You might not have a TIM account. JYU members can log in using Korppi.'
+        self.login(email='a@example.com', passw='somepass', force=True,
+                   expect_status=403,
+                   expect_content=basic_error,
+                   json_key='error')
+        self.login(email='a@jyu.fi', passw='somepass', force=True,
+                   expect_status=403,
+                   expect_content=jyu_error,
+                   json_key='error')
+        self.login(email='a@student.jyu.fi', passw='somepass', force=True,
+                   expect_status=403,
+                   expect_content=jyu_error,
+                   json_key='error')
+        self.login(email='john', passw='somepass', force=True,
+                   expect_status=403,
+                   expect_content=jyu_error,
+                   json_key='error')
+        self.login(email='verylongname', passw='somepass', force=True,
+                   expect_status=403,
+                   expect_content=basic_error,
+                   json_key='error')
