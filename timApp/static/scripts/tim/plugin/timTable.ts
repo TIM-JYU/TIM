@@ -17,11 +17,13 @@ const styleToHtml: { [index: string]: string } = {
         borderRight: "border-right",
         borderTop: "border-top",
         color: "color",
+        colspan: "colspan",
         fontFamily: "font-family",
         fontSize: "font-size",
         fontWeight: "font-weight",
         height: "height",
         horizontalAlign: "horizontal-align",
+        rowspan: "rowspan",
         textAlign: "text-align",
         verticalAlign: "vertical-align",
         visibility: "visibility",
@@ -108,6 +110,8 @@ const cellStyles: Set<string> = new Set<string>([
     "fontWeight",
     "width",
     "height",
+    "colspan",
+    "rowspan"
     ]);
 
 /*export interface ICellStyles {
@@ -1434,52 +1438,6 @@ export class TimTableController implements IController {
         return false;
     }
 
-    private getColspan(rowi: number, coli: number) {
-        const rows = this.data.table.rows;
-
-        if (!rows ||
-            rowi >= rows.length) {
-            return 1;
-        }
-
-        const row = rows[rowi].row;
-
-        if (!row || coli >= row.length) {
-            return 1;
-        }
-
-        const cell = row[coli];
-
-        if (isPrimitiveCell(cell) || !cell.colspan) {
-            return 1;
-        }
-
-        return cell.colspan;
-    }
-
-    private getRowspan(rowi: number, coli: number) {
-        const rows = this.data.table.rows;
-
-        if (!rows ||
-            rowi >= rows.length) {
-            return 1;
-        }
-
-        const row = rows[rowi].row;
-
-        if (!row || coli >= row.length) {
-            return 1;
-        }
-
-        const cell = row[coli];
-
-        if (isPrimitiveCell(cell) || !cell.rowspan) {
-            return 1;
-        }
-
-        return cell.rowspan;
-    }
-
     /**
      * Returns cell content HTML as trusted through AngularJS's SCE service.
      * Disables AngularJS HTML sanitizing for TimTable cells which breaks some attributes
@@ -1517,7 +1475,7 @@ timApp.component("timTable", {
         <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
             ng-style="$ctrl.stylingForRow(rowi)">
                 <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
-                 ng-repeat="td in r" ng-init="coli = $index" colspan="$ctrl.getColspan(rowi, coli)" rowspan="$ctrl.getRowspan(rowi, coli)"
+                 ng-repeat="td in r" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
                     ng-style="$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.getTrustedCellContentHtml(rowi, coli)">
                     </div>
