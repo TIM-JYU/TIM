@@ -32,8 +32,10 @@
                 <button class="timButton btn btn-block" ng-click="$ctrl.vctrl.editingHandler.editSettingsPars()">Edit settings</button>
                 <button class="timButton btn btn-block" ng-click="$ctrl.markAllAsRead()" title="Mark all paragraphs of the document as read">Mark all as read</button>
                 {% else %}
-                <h5>Document settings</h5>
-                 <button class="timButton btn btn-block" ng-click="$ctrl.markAllAsRead()" title="Mark all paragraphs of the document as read">Mark all as read</button>
+                <div ng-show="$ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder">
+                  <h5>Document settings</h5>
+                  <button class="timButton btn btn-block" ng-click="$ctrl.markAllAsRead()" title="Mark all paragraphs of the document as read">Mark all as read</button>
+                </div>
                 {% endif %}
                 <div ng-show="$ctrl.lctrl.lectureSettings.inLecture">
                     <h5>Lecture settings</h5>
