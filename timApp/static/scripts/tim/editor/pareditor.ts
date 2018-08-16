@@ -549,7 +549,9 @@ or newer one that is more familiar to write in YAML:
     }
 
     dismiss() {
-        this.close({type: "cancel"});
+        if (this.confirmDismiss()) {
+            this.close({type: "cancel"});
+        }
     }
 
     cancelClicked() {
