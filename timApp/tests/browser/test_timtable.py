@@ -29,7 +29,7 @@ table:
 ```
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableSimple")
 
 
@@ -81,7 +81,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableAllColumnStyles")
 
 
@@ -133,7 +133,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableAllRowStyles")
 
 
@@ -186,7 +186,7 @@ table:
 ```
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableAllCellStyles")
 
 
@@ -238,7 +238,7 @@ table:
         
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableTableStyles")
 
 
@@ -325,7 +325,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableAllStyles")
 
 
@@ -421,7 +421,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableExtraStyles")
 
 
@@ -463,7 +463,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableColspan")
 
 
@@ -505,7 +505,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableRowspan")
 
     def test_timtable_rowspan_over_rows(self):
@@ -547,7 +547,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableRowspanOverRows")
 
     def test_timtable_colspan_over_columns(self):
@@ -587,7 +587,7 @@ table:
 ```
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableColspanOverColumns")
 
     def test_timtable_rowspan_colspan(self):
@@ -630,7 +630,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableRowspanColspan")
 
     def test_timtable_column_span(self):
@@ -678,7 +678,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableColumnSpan")
 
     def test_timtable_many_things(self):
@@ -765,7 +765,7 @@ table:
             """)
         self.goto_document(d)
         sleep(2)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableManyThings")
 
     def test_timtable_tabledatablock(self):
@@ -806,5 +806,5 @@ table:
 ```
                         """)
         self.goto_document(d)
-        we = self.find_element('tim-table')
+        we = self.find_element_avoid_staleness('tim-table')
         self.save_element_screenshot(we, "timTableTabledatablock")
