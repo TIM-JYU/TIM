@@ -10,6 +10,7 @@ from flask import current_app
 
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.markdown.dumboclient import call_dumbo, DumboOptions
+from timApp.util.flask.search import get_error_message
 from timApp.util.logger import log_warning
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
@@ -208,7 +209,10 @@ def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
                 # use attribute list instead of calling the plugin
                 prepare_for_dumbo_attr_list_recursive(regex_obj, plug_dict)
             elif inner:
-                plugin_instance.prepare_for_dumbo(plug_dict)
+                try:
+                    plugin_instance.prepare_for_dumbo(plug_dict)
+                except:
+                    continue
             else:
                 raise PluginException("automd for non-inner plugins not implemented yet") # TODO implement
 

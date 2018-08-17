@@ -872,7 +872,7 @@ def prepare_for_dumbo(values):
                 if cell.startswith(MD):
                     continue
                 rowdata[i] = MD + cell
-            elif isinstance(cell, dict) and isinstance(cell[CELL], str):
+            else:
                 cell[CELL] = MD + cell[CELL]
 
     # datablock
