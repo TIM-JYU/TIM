@@ -1,13 +1,13 @@
-import {IController, IRootElementService, IScope, ISCEService} from "angular";
+import {IController, IRootElementService, IScope} from "angular";
 import {getParId} from "tim/document/parhelpers";
 import {timApp} from "../app";
+import {onClick} from "../document/eventhandlers";
 import {ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
 import {openEditorSimple} from "../editor/pareditor";
-import {$http, $timeout, $sce} from "../util/ngimport";
+import {$http, $sce, $timeout} from "../util/ngimport";
 import {Binding} from "../util/utils";
-import {openTableEditorToolbar, hideToolbar} from "./timTableEditorToolbar";
-import {onClick} from "../document/eventhandlers";
+import {hideToolbar, openTableEditorToolbar} from "./timTableEditorToolbar";
 
 const styleToHtml: { [index: string]: string } = {
         backgroundColor: "background-color",
@@ -111,7 +111,7 @@ const cellStyles: Set<string> = new Set<string>([
     "width",
     "height",
     "colspan",
-    "rowspan"
+    "rowspan",
     ]);
 
 /*export interface ICellStyles {
@@ -526,7 +526,6 @@ export class TimTableController implements IController {
         return cell.toString();
     }
 
-
     /**
      * Returns a cell's content from the datablock.
      * @param {number} rowi: Table row index
@@ -536,7 +535,6 @@ export class TimTableController implements IController {
     private getCellContentString(rowi: number, coli: number) {
         return this.cellToString(this.cellDataMatrix[rowi][coli].cell);
     }
-
 
     /**
      * Reads DataBlock and sets all values to DataCellMatrix
@@ -1035,7 +1033,7 @@ export class TimTableController implements IController {
 
     /**
      * Sets style attributes for rows
-     * @param {IRow} row The row to be styled
+     * @param {IRow} rowi The row to be styled
      */
     private stylingForRow(rowi: number) {
         const styles: { [index: string]: string } = {};

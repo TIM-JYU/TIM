@@ -1,21 +1,19 @@
-import angular, {IController, IFormController, IHttpPromise, IPromise, IRootElementService, IScope} from "angular";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
-import {ILectureFormParams} from "../lecture/lecturetypes";
-import {IEditorParams, IEditorResult, PareditorController} from "../editor/pareditor";
+import {IRootElementService, IScope} from "angular";
+import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 
-export interface TimTableToolbarCallbacks {
-    setTextAlign: (value: string) => void,
-    setCellBackgroundColor: (value: string) => void,
+export interface ITimTableToolbarCallbacks {
+    setTextAlign: (value: string) => void;
+    setCellBackgroundColor: (value: string) => void;
 }
 
-export interface timTableEditorToolbarParams {
-    callbacks: TimTableToolbarCallbacks;
+export interface ITimTableEditorToolbarParams {
+    callbacks: ITimTableToolbarCallbacks;
     activeTable: object;
 }
 
 let instance: TimTableEditorToolbarController | undefined;
 
-export class TimTableEditorToolbarController extends DialogController<{params: timTableEditorToolbarParams},
+export class TimTableEditorToolbarController extends DialogController<{params: ITimTableEditorToolbarParams},
     { }, "timTableEditorToolbar" > {
     private static $inject = ["$scope", "$element"];
 
@@ -46,7 +44,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
         } */
     }
 
-    public callbacks: TimTableToolbarCallbacks;
+    public callbacks: ITimTableToolbarCallbacks;
     private activeTable?: object;
     private visible: boolean = true;
 
@@ -82,7 +80,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
      * @param callbacks Callbacks for communicating with the table.
      * @param activeTable The object that requested the toolbar to open.
      */
-    public show(callbacks: TimTableToolbarCallbacks, activeTable: object) {
+    public show(callbacks: ITimTableToolbarCallbacks, activeTable: object) {
         this.visible = true;
         this.activeTable = activeTable;
         this.callbacks = callbacks;
@@ -104,8 +102,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
     }
 
     private eventApi = {
-        onClose: (api: any, color: string, $event: any) =>
-            { TimTableEditorToolbarController.onColorPickerClose(color); },
+        onClose: (api: any, color: string, $event: any) => { TimTableEditorToolbarController.onColorPickerClose(color); },
     };
 
     /**
@@ -120,7 +117,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
     }
 
     private getStyle() {
-        return {'background-color': "#" + this.previousBackgroundColor};
+        return {"background-color": "#" + this.previousBackgroundColor};
     }
 
     private applyBackgroundColor() {
@@ -129,7 +126,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: t
 }
 
 // : IPromise< { } >
-export function openTableEditorToolbar(p: timTableEditorToolbarParams) {
+export function openTableEditorToolbar(p: ITimTableEditorToolbarParams) {
     if (instance) {
         instance.show(p.callbacks, p.activeTable);
     } else {
@@ -142,7 +139,7 @@ export function openTableEditorToolbar(p: timTableEditorToolbarParams) {
 
 export function hideToolbar(closingTable: object) {
     if (instance) {
-        //instance.hideIfActiveTable(closingTable);
+        // instance.hideIfActiveTable(closingTable);
         instance.hide();
     }
 }
