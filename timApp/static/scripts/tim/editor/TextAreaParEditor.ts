@@ -1,7 +1,7 @@
 import {IAngularEvent} from "angular";
 import {wrapText} from "../document/editing/editing";
 import {$log, $timeout} from "../util/ngimport";
-import {BaseParEditor, CURSOR, focusAfter, IEditorCallbacks} from "./BaseParEditor";
+import {BaseParEditor, CURSOR, SelectionRange, focusAfter, IEditorCallbacks} from "./BaseParEditor";
 
 export class TextAreaParEditor extends BaseParEditor {
     public editor: JQuery;
@@ -551,9 +551,14 @@ export class TextAreaParEditor extends BaseParEditor {
         this.editor.val(text);
     }
 
-    setPosition(pos: number) {
+    getPosition(): SelectionRange {
+        return [this.editorElement.selectionStart, this.editorElement.selectionEnd];
+    }
+
+    setPosition([start, end]: SelectionRange) {
         const editor = this.editorElement;
-        editor.selectionStart = editor.selectionEnd = pos;
+        editor.selectionStart = start;
+        editor.selectionEnd = end;
         this.scrollToCaret();
     }
 

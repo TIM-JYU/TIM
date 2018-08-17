@@ -1,7 +1,7 @@
 import {wrapText} from "../document/editing/editing";
 import {$log, $timeout} from "../util/ngimport";
 import {IAceEditor} from "./ace-types";
-import {BaseParEditor, CURSOR, focusAfter, IEditorCallbacks} from "./BaseParEditor";
+import {BaseParEditor, CURSOR, SelectionRange, focusAfter, IEditorCallbacks} from "./BaseParEditor";
 
 interface ISnippetManager {
     insertSnippet(editor: AceAjax.Editor, text: string): void;
@@ -568,9 +568,19 @@ export class AceParEditor extends BaseParEditor {
         this.editor.getSession().setValue(text);
     }
 
-    setPosition(pos: number) {
-        const range = this.editor.session.doc.indexToPosition(pos, 0);
-        this.editor.moveCursorTo(range.row, range.column); // TODO: find a way to move to postion
+    getPosition(): SelectionRange {
+        const r = this.editor.selection.getRange();
+        return [
+            this.editor.session.doc.positionToIndex(r.start, 0),
+            this.editor.session.doc.positionToIndex(r.end, 0),
+        ];
+    }
+
+    setPosition([start, end]: SelectionRange) {
+        const range = this.editor.session.doc.indexToPosition(start, 0);
+        const range2 = this.editor.session.doc.indexToPosition(end, 0);
+        const Range = ace.require("ace/range").Range;
+        this.editor.selection.setRange(Range.fromPoints(range, range2), false);
         this.gotoCursor();
     }
 

@@ -1,5 +1,3 @@
-// TODO: save cursor position when changing editor
-
 import angular, {IPromise, IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
@@ -63,7 +61,7 @@ export type IEditorResult = {type: "save", text: string} | {type: "delete"} | {t
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult, "pareditor"> {
     private static $inject = ["$scope", "$element"];
     private deleting = false;
-    private editor!: TextAreaParEditor | AceParEditor; // $onInit
+    private editor?: TextAreaParEditor | AceParEditor; // $onInit
     private file?: File & {progress?: number, error?: string};
     private isIE: boolean = false;
     private oldmeta?: HTMLMetaElement;
@@ -106,7 +104,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     }
 
     protected confirmDismiss() {
-        if (this.editor.getEditorText() === this.getInitialText()) {
+        if (this.editor!.getEditorText() === this.getInitialText()) {
             return true;
         }
         return window.confirm("You have unsaved changes. Close editor anyway?");
@@ -288,7 +286,7 @@ ${backTicks}
     }
 
     $onDestroy() {
-        setEditorScope(null);
+        setEditorScope(undefined);
     }
 
     getCiteText(): string {
@@ -419,16 +417,17 @@ or newer one that is more familiar to write in YAML:
     }
 
     async setInitialText() {
-        let initialText = this.getInitialText();
+        const initialText = this.getInitialText();
         if (initialText) {
             const pos = this.getOptions().cursorPosition;
-            this.editor.setEditorText(initialText);
+            const editor = this.editor!;
+            editor.setEditorText(initialText);
             this.editorChanged();
             await $timeout(10);
-            if (pos != undefined) {
-                this.editor.setPosition(pos);
+            if (pos !== undefined) {
+                editor.setPosition([pos, pos]);
             } else {
-                this.editor.bottomClicked();
+                editor.bottomClicked();
             }
         }
     }
@@ -475,10 +474,11 @@ or newer one that is more familiar to write in YAML:
 
     editorChanged() {
         this.scope.$evalAsync(async () => {
+            const editor = this.editor!;
             this.outofdate = true;
-            const text = this.editor.getEditorText();
+            const text = editor.getEditorText();
             await $timeout(500);
-            if (text !== this.editor.getEditorText()) {
+            if (text !== editor.getEditorText()) {
                 return;
             }
             this.scrollPos = this.element.find(".previewcontent").scrollTop() || this.scrollPos;
@@ -511,7 +511,7 @@ or newer one that is more familiar to write in YAML:
     private async focusEditor() {
         await $timeout();
         const s = $(window).scrollTop();
-        this.editor.focus();
+        this.editor!.focus();
         await $timeout();
         $(window).scrollTop(s || this.scrollPos || 0);
     }
@@ -549,7 +549,7 @@ or newer one that is more familiar to write in YAML:
 
     async unreadClicked() {
         await this.resolve.params.unreadCb();
-        if (this.resolve.params.initialText === this.editor.getEditorText()) {
+        if (this.resolve.params.initialText === this.editor!.getEditorText()) {
             this.close({type: "markunread"});
         }
     }
@@ -581,7 +581,7 @@ or newer one that is more familiar to write in YAML:
             return;
         }
         this.saving = true;
-        const text = this.editor.getEditorText();
+        const text = this.editor!.getEditorText();
         if (text.trim() === "") {
             this.deleteClicked();
             this.saving = false;
@@ -619,14 +619,15 @@ or newer one that is more familiar to write in YAML:
         return this.isAce(this.editor);
     }
 
-    isAce(editor: AceParEditor | TextAreaParEditor): editor is AceParEditor {
-        return editor && (editor.editor as IAceEditor).renderer != null;
+    isAce(editor: AceParEditor | TextAreaParEditor | undefined): editor is AceParEditor {
+        return editor !== undefined && (editor.editor as IAceEditor).renderer != null;
     }
 
     onFileSelect(file: File) {
+        const editor = this.editor!;
         this.focusEditor();
         this.file = file;
-        const editorText = this.editor.getEditorText();
+        const editorText = editor.getEditorText();
         let autostamp = false;
         let attachmentParams;
         let macroParams;
@@ -680,7 +681,8 @@ or newer one that is more familiar to write in YAML:
             // May fail when there are non-plugin-paragraphs before a plugin-paragraph in editor.
             upload.then((response) => {
                 $timeout(() => {
-                    const isplugin = (this.editor.editorStartsWith("``` {"));
+                    const editor = this.editor!;
+                    const isplugin = (editor.editorStartsWith("``` {"));
                     let start = "[File](";
                     if (response.data.image) {
                         this.uploadedFile = "/images/" + response.data.image;
@@ -689,9 +691,9 @@ or newer one that is more familiar to write in YAML:
                         this.uploadedFile = "/files/" + response.data.file;
                     }
                     if (isplugin) {
-                        this.editor.insertTemplate(this.uploadedFile);
+                        editor.insertTemplate(this.uploadedFile);
                     } else {
-                        this.editor.insertTemplate(start + this.uploadedFile + ")");
+                        editor.insertTemplate(start + this.uploadedFile + ")");
                     }
                 });
             }, (response) => {
@@ -778,7 +780,7 @@ or newer one that is more familiar to write in YAML:
 
     putTemplate(data: string) {
         this.focusEditor();
-        this.editor.insertTemplate(data);
+        this.editor!.insertTemplate(data);
     }
 
     getTemplate(plugin: string, template: string, index: string) {
@@ -789,7 +791,7 @@ or newer one that is more familiar to write in YAML:
             processData: false,
             success: (data) => {
                 data = data.replace(/\\/g, "\\\\");
-                this.editor.insertTemplate(data);
+                this.editor!.insertTemplate(data);
             },
             error() {
                 $log.error("Error getting template");
@@ -881,8 +883,10 @@ or newer one that is more familiar to write in YAML:
         let text = "";
         const editorContainer = this.element.find(".editorContainer");
         editorContainer.addClass("editor-loading");
+        let oldPosition;
         if (this.editor) {
             text = this.editor.getEditorText();
+            oldPosition = this.editor.getPosition();
         }
         let oldeditor;
         if (this.isAce(this.editor) || initialMode === "text") {
@@ -942,10 +946,12 @@ or newer one that is more familiar to write in YAML:
         }
         if (initialMode != null) {
             await this.setInitialText();
+        } else if (this.editor && oldPosition) {
+            this.editor.setPosition(oldPosition);
         }
         await this.focusEditor();
         this.element.find(".editorContainer").removeClass("editor-loading");
-        setEditorScope(this.editor);
+        setEditorScope(this.editor!);
         this.adjustPreview();
     }
 

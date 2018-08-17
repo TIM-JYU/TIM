@@ -1,7 +1,7 @@
 import {AceParEditor} from "./AceParEditor";
 import {TextAreaParEditor} from "./TextAreaParEditor";
 
-let currentEditorScope: AceParEditor | TextAreaParEditor | null = null;
+let currentEditorScope: AceParEditor | TextAreaParEditor | undefined;
 
 export function editorChangeValue(attributes: string[], text: string) {
     if (!currentEditorScope) {
@@ -10,6 +10,6 @@ export function editorChangeValue(attributes: string[], text: string) {
     currentEditorScope.changeValue(attributes, text);
 }
 
-export function setEditorScope(scope: AceParEditor | TextAreaParEditor | null) {
+export function setEditorScope(scope: AceParEditor | TextAreaParEditor | undefined) {
     currentEditorScope = scope;
 }

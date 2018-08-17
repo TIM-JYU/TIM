@@ -17,6 +17,8 @@ export interface IEditorCallbacks {
     getWrapValue: () => number;
 }
 
+export type SelectionRange = [number, number];
+
 export abstract class BaseParEditor {
     public callbacks: IEditorCallbacks;
     protected editor: IAceEditor | JQuery;
@@ -45,6 +47,10 @@ export abstract class BaseParEditor {
     }
 
     public abstract surroundedBy(before: string, after: string): boolean;
+
+    public abstract getPosition(): SelectionRange;
+
+    public abstract setPosition(pos: SelectionRange): void;
 
     public surroundedByItalic() {
         return (this.surroundedBy("*", "*") && !this.surroundedBy("**", "**")) || this.surroundedBy("***", "***");
