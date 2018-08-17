@@ -136,9 +136,12 @@ export function openTableEditorToolbar(p: ITimTableEditorToolbarParams) {
         instance.show(p.callbacks, p.activeTable);
     } else {
         showDialog<TimTableEditorToolbarController>(
-        "timTableEditorToolbar",
-        {params: () => p},
-        {forceMaximized: false});
+            "timTableEditorToolbar",
+            {params: () => p},
+            {
+                forceMaximized: false,
+                showMinimizeButton: false,
+            });
     }
 }
 

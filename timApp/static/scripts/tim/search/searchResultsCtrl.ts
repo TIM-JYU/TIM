@@ -327,5 +327,8 @@ registerDialogComponent("timSearchResults",
     });
 
 export async function showSearchResultDialog(r: SearchBoxCtrl) {
-    return await showDialog<ShowSearchResultController>("timSearchResults", {ctrl: () => r}).result;
+    return await showDialog<ShowSearchResultController>(
+        "timSearchResults",
+        {ctrl: () => r},
+        {showMinimizeButton: false}).result;
 }
