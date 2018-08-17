@@ -844,7 +844,7 @@ def get_color(item, key: str, default_color=None, default_color_html=None) -> (s
         color = item[key]
         if "#" in color:
             color_html = True
-            color = color.replace("#", "")
+            color = re.sub(r'\W+', '', color)
         else:
             color_html = False
     except KeyError:
