@@ -28,8 +28,9 @@ default_table_width = "\\columnwidth"
 default_table_height = "!"
 default_table_float = "[H]"
 default_minipage_width = "4cm"
+wrap_cell_threshold = 50  # The content lenght limit for when to assume need for more than one line in cell.
 # Maximum number of columns in table; overtly large count will crash LaTeX-conversion.
-max_col_count = 250
+default_max_col_count = 250
 # Pixels; 595px is the width of 72 dpi (web) a4 and minus 35px is for the margins.
 resizing_px_threshold = 595 - 35
 # Minimum number of columns (checked when table width is estimated by cell content width).
@@ -141,6 +142,8 @@ class Cell:
         self.cell_width = use_default_if_none(cell_width, default_width)
         self.cell_height = use_default_if_none(cell_height, default_height)
         self.font_size = use_default_if_none(font_size, default_font_size)
+        if self.font_size == 0:
+            self.font_size = default_font_size
         self.line_space = line_space
         self.pbox = pbox
         self.borders = borders
@@ -202,7 +205,7 @@ class Cell:
                f"{cell_color}" \
                fr"\fontsize{{{self.font_size}}}{{{self.line_space}}}" \
                fr"\selectfont{{\textcolor{{{self.text_color}}}{{{{{font_family_line}" \
-               fr"\centering {content}}}}}}}}}}}{font_family_line_postfix}"
+               fr"{content}}}}}}}}}}}{font_family_line_postfix}"
 
     def __repr__(self) -> str:
         return custom_repr(self)
@@ -497,14 +500,15 @@ def estimate_col_widths(rows):
     for i in range(0, len(rows)):
         i_widths = []
         max_content_size = 0
-        for j in range(0, 100):
+        for j in range(0, default_max_col_count):
             try:
                 cell = rows[j].cells[i]
             except IndexError:
                 break
             else:
+                # Cells with lots of content are expected to be divided on separa
                 content_size = estimate_cell_width(cell) * 0.8
-                if len(cell.content) > 45:
+                if len(cell.content) > wrap_cell_threshold:
                     content_size = content_size * 0.2
                 width = cell.cell_width
                 if content_size > max_content_size:
@@ -523,19 +527,21 @@ class Table:
     Table with rows, cells in rows, and horizontal borders between rows.
     """
 
-    def __init__(self, rows: List[Row], col_count: int = 0, width=default_table_width,
+    def __init__(self, rows: List[Row], width=default_table_width,
                  height=default_table_height, fit_to_page_width: bool = False) -> None:
         """
         :param rows: List of the rows of the table.
-        :param col_count: Number of columns in the table.
         :param width: Table width.
         :param height: Table height.
         """
         self.rows = rows
-        self.col_count = col_count
+
         self.width = width
         self.height = height
         self.hborders = []
+        self.col_count = None
+        self.largest_content_len = None
+        self.largest_col_count = None
         self.fit_to_page_width = fit_to_page_width
 
     def __str__(self) -> str:
@@ -546,7 +552,8 @@ class Table:
             return ""
         # 'c' would be text horizontal alignment, but it's actually set elsewhere,
         # so here it tells only the highest amount of cols in the table.
-        columns = "c" * self.col_count
+        # Always uses max amount because this doesn't cause problems and avoids errors caused by having too few.
+        columns = "c" * default_max_col_count
         prefix = f"\\begin{{table}}{default_table_float}\n" \
                  "\centering\n" \
                  f"\\begin{{tabular}}{{{columns}}}"
@@ -601,17 +608,23 @@ class Table:
     def __repr__(self) -> str:
         return custom_repr(self)
 
-    def auto_size_cells(self):
+    def auto_size_cells(self) -> None:
         """
         Try to set row heights automatically based on cell content lenght.
-        :return:
+        :return: None.
         """
+        # If table has only few cells and little content, don't resize.
+        if self.get_largest_content_len() <= wrap_cell_threshold and \
+                self.get_largest_col_count() <= resizing_col_threshold:
+            return
 
         # TODO: A word which isn't broken by spaces and is considerably longer than title
         # row may overflow from the cell boundaries.
         if not self.rows:
             return
         widths = estimate_col_widths(self.rows)
+
+        # # Alternative way to do this, based on the first row.
         # for cell in self.rows[0].cells:
         #     cell_width = cell.cell_width
         #     if cell_width is default_width:
@@ -639,6 +652,51 @@ class Table:
             except:
                 pass
 
+    def save_largest(self) -> None:
+        """
+        Add largest row column count and cell content lenght to table attributes.
+        :return: None.
+        """
+        table_max_col_count = 0
+        table_max_content_len = 0
+        for row in self.rows:
+            row_col_count = 0
+            row_max_content_len = 0
+            for cell in row.cells:
+                row_col_count += cell.colspan
+                cell_content_len = len(cell.content)
+                if cell_content_len > row_max_content_len:
+                    row_max_content_len = cell_content_len
+            if row_col_count > table_max_col_count:
+                table_max_col_count = row_col_count
+            if row_max_content_len > table_max_content_len:
+                table_max_content_len = row_max_content_len
+        self.largest_content_len = table_max_content_len
+        self.largest_col_count = table_max_col_count
+
+    def get_largest_content_len(self) -> int:
+        """
+        Get largest content lenght in the table.
+        :return: Content lenght of the longest cell.
+        """
+        if self.largest_content_len:
+            return self.largest_content_len
+        else:
+            self.save_largest()
+            return self.largest_content_len
+
+
+    def get_largest_col_count(self) -> int:
+        """
+        Get largest total row colspan in the table.
+        :return: Colspan of the widest row.
+        """
+        if self.largest_col_count:
+            return self.largest_col_count
+        else:
+            self.save_largest()
+            return self.largest_col_count
+
 
 def get_column_span(item):
     """
@@ -664,12 +722,12 @@ def get_column_color_list(key, table_data):
         columns_data = table_data['columns']
     except:
         # Add empty entries as a quick fix for index out of bounds error.
-        return [(None, None)] * max_col_count
+        return [(None, None)] * default_max_col_count
     for i in range(0, len(columns_data)):
         span = get_column_span(columns_data[i])
         for j in range(0, span):
             l.append(get_color(columns_data[i], key))
-    for k in range(0, max_col_count):
+    for k in range(0, default_max_col_count):
         l.append((None, None))
     return l
 
@@ -684,7 +742,7 @@ def get_column_width_list(table_data):
     try:
         columns_data = table_data['columns']
     except:
-        return [None] * max_col_count
+        return [None] * default_max_col_count
     for i in range(0, len(columns_data)):
         span = get_column_span(columns_data[i])
         for j in range(0, span):
@@ -692,7 +750,7 @@ def get_column_width_list(table_data):
                 l.append(get_size(columns_data[i], "width"))
             except:
                 l.append(None)
-    for k in range(0, max_col_count):
+    for k in range(0, default_max_col_count):
         l.append(None)
     return l
 
@@ -708,7 +766,7 @@ def get_column_style_list(table_data, key):
     try:
         columns_data = table_data['columns']
     except:
-        return [None] * max_col_count
+        return [None] * default_max_col_count
     for i in range(0, len(columns_data)):
         column_data = columns_data[i]
         span = get_column_span(column_data)
@@ -717,7 +775,7 @@ def get_column_style_list(table_data, key):
                 l.append(column_data[key])
             except:
                 l.append(None)
-    for k in range(0, max_col_count):
+    for k in range(0, default_max_col_count):
         l.append(None)
     return l
 
@@ -733,7 +791,7 @@ def get_column_format_list(table_data, f: Callable[[Dict, Any], Any]):
     try:
         columns_data = table_data['columns']
     except:
-        return [None] * max_col_count
+        return [None] * default_max_col_count
     for i in range(0, len(columns_data)):
         column_data = columns_data[i]
         span = get_column_span(column_data)
@@ -742,7 +800,7 @@ def get_column_format_list(table_data, f: Callable[[Dict, Any], Any]):
                 l.append(f(column_data, None))
             except:
                 l.append(None)
-    for k in range(0, max_col_count):
+    for k in range(0, default_max_col_count):
         l.append(None)
     return l
 
@@ -835,29 +893,43 @@ def add_missing_elements(table_json, datablock):
     """
     max_row_count = 0
     max_cell_count = 0
+
     if not datablock:
         return table_json['rows']
+
+    print(table_json['rows'], len(table_json['rows']))
+
     for item in datablock:
-        cell, row = convert_datablock_index(item)
-        if row > max_row_count:
-            max_row_count = row
-        if cell > max_cell_count:
-            max_cell_count = cell
+        cell_index, row_index = convert_datablock_index(item)
+        row_count = row_index + 1
+        cell_count = cell_index + 1
+        if row_count > max_row_count:
+            max_row_count = row_count
+        if cell_count > max_cell_count:
+            max_cell_count = cell_count
 
-    empty_cell = {'cell': ''}
+    print(max_cell_count, max_row_count)
 
-    # Row adding doesn't work (there are no LaTeX-errors, but the pdf is invalid).
-    # row_count = len(table_json)
+    empty_cell = {'cell': '-'}
+
+    table_row_count = len(table_json['rows'])
     # Add missing rows.
-    # for i in range(0, max_row_count - row_count + 1):
-    #     table_json['rows'].append({'row': [empty_cell]})
+    for i in range(0, max_row_count - table_row_count):
+        table_json['rows'].append({'row': [empty_cell]})
 
     # Add missing cells to existing rows.
-    for row_json in table_json['rows']:
+    for i in range(0, len(table_json['rows'])):
+        row_json = table_json['rows'][i]
         row_cell_count = len(row_json['row'])
-        for i in range(0, max_cell_count - row_cell_count + 1):
-            row_json['row'].append(empty_cell)
-
+        for j in range(row_cell_count, max_cell_count):
+            # Use the real content if cell is in datablock.
+            datablock_cell_data = get_datablock_cell_data(datablock, i, j)
+            if datablock_cell_data:
+                row_json['row'].append(datablock_cell_data)
+            # Filler cells between existing ones get empty cell data.
+            else:
+                row_json['row'].append(empty_cell)
+    print(table_json['rows'], len(table_json['rows']))
     return table_json['rows']
 
 
@@ -1189,7 +1261,7 @@ def convert_table(table_json) -> Table:
     table_rows = []
     table = Table(table_rows)
     datablock = get_datablock(table_json)
-
+    table_json_rows = add_missing_elements(table_json, datablock)
     # TODO: Make the table size work with correct logic.
     # These may stretch the table until unreadable or outside the page.
     # Also, even if the same value is set horizontally and vertically,
@@ -1229,9 +1301,6 @@ def convert_table(table_json) -> Table:
     column_h_align_list = get_column_format_list(table_json, f=get_text_horizontal_align)
     column_font_family_list = get_column_format_list(table_json, f=get_font_family)
 
-    table_json_rows = add_missing_elements(table_json, datablock)
-    max_cells = 0
-    max_colspan = 1
     for i in range(0, len(table_json_rows)):
         table_row = table.get_or_create_row(i)
         row_data = table_json_rows[i]
@@ -1264,9 +1333,6 @@ def convert_table(table_json) -> Table:
             cell_font_weight = get_key_value(cell_data, "fontWeight", None)
             (colspan, rowspan) = get_span(cell_data)
             borders = get_borders(cell_data, row_borders)
-
-            # For estimating column count:
-            max_colspan = max(max_colspan, colspan)
 
             # Get datablock formats:
             datablock_cell_data = get_datablock_cell_data(datablock, i, j)
@@ -1378,23 +1444,12 @@ def convert_table(table_json) -> Table:
             # Normal cells:
             else:
                 table_row.add_cell(j, c)
-            max_cells = max(max_cells, len(table_row.cells))
-
-    # Currently plays it safe by overestimating table cell count.
-    # If estimation larger than max_col_count, use max_col_count instead.
-    estimation = max_cells * max_colspan
-    if estimation > max_col_count:
-        table.col_count = max_col_count
-    else:
-        table.col_count = estimation
 
     # Set row and column sizes according to cell contents.
     if get_key_value(table_json, "texAutoSize", True):
         table.auto_size_cells()
-
     # Whether table should be fit to page.
-    table.fit_to_page_width = get_table_resize(table_json, estimate_table_width(table), table.col_count)
-
+    table.fit_to_page_width = get_table_resize(table_json, estimate_table_width(table), table.get_largest_col_count())
     # Create horizontal border objects.
     table.create_hborders()
 
