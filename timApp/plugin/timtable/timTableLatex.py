@@ -214,9 +214,9 @@ class Cell:
 def use_default_if_none(value, default):
     """
     Checks whether the value is None and uses default if it is.
-    :param value:
-    :param default:
-    :return:
+    :param value: Value to check.
+    :param default: Default to use if value is None.
+    :return: Value without changes or default, if value was None.
     """
     if value is None:
         return default
@@ -322,8 +322,8 @@ def pt_to_float(pt: str) -> float:
     """
     Parses a float from LaTeX pt units;
     for example "12.333pt" -> 12.333.
-    :param pt:
-    :return:
+    :param pt: Parses points to float number.
+    :return: Point's number without pt and as float.
     """
     return float(pt.replace("pt", "").strip())
 
@@ -337,8 +337,8 @@ class HorizontalBorder:
         """
         In LaTeX there can't be duplicate h-lines, so the line needs to be a
         composite of all cell-borders from rows above and below.
-        :param row_above:
-        :param row_below:
+        :param row_above: The row above the line.
+        :param row_below: The row below the line.
         """
         self.row_above = row_above
         self.row_below = row_below
@@ -464,6 +464,8 @@ def estimate_cell_height(cell, width_constraint):
     :return: Height of cell.
     """
     # The formula is just guesswork.
+    if width_constraint == 0:
+        width_constraint = 1
     return (cell.font_size + 70) * len(cell.content) / width_constraint
 
 
@@ -506,7 +508,8 @@ def estimate_col_widths(rows):
             except IndexError:
                 break
             else:
-                # Cells with lots of content are expected to be divided on separa
+                # Cells with lots of content are expected to be divided on separate lines.
+                # Magic number factors are there to balance things out.
                 content_size = estimate_cell_width(cell) * 0.8
                 if len(cell.content) > wrap_cell_threshold:
                     content_size = content_size * 0.2
@@ -622,35 +625,38 @@ class Table:
         # row may overflow from the cell boundaries.
         if not self.rows:
             return
-        widths = estimate_col_widths(self.rows)
-
-        # # Alternative way to do this, based on the first row.
-        # for cell in self.rows[0].cells:
-        #     cell_width = cell.cell_width
-        #     if cell_width is default_width:
-        #         cell_width = estimate_cell_width(cell)
-        #     widths.append(cell_width)
-        for i in range(0, len(self.rows)):
-            try:
+        try:
+            widths = estimate_col_widths(self.rows)
+            # # Alternative way to do this, based on the first row.
+            # for cell in self.rows[0].cells:
+            #     cell_width = cell.cell_width
+            #     if cell_width is default_width:
+            #         cell_width = estimate_cell_width(cell)
+            #     widths.append(cell_width)
+            for i in range(0, len(self.rows)):
                 max_height = 0  # Tallest estimated height in the cells of the row.
                 for j in range(0, len(self.rows[i].cells)):
                     cell = self.rows[i].cells[j]
-                    # Don't change width of the first row (since all heights are constrained by it).
-                    if i != 0:
-                        cell.cell_width = widths[j]
-                    height = estimate_cell_height(cell, widths[j])
+                    # Don't change width of the first row (because it is in most cases titles).
+                    try:
+                        if i != 0:
+                            cell.cell_width = widths[j]
+                        height = estimate_cell_height(cell, widths[j])
+                    except IndexError:
+                        height = estimate_cell_height(cell, estimate_cell_width(cell))
                     # Row height will be decided by the tallest cell.
                     if height > max_height:
                         max_height = height
                 if not is_close(float(max_height), float(default_height)):
                     # Column widths are based on first row so it's more exact and needs less buffer space.
                     if i == 0:
-                        max_height = max_height / 2
+                        max_height = max_height * 0.3
                     # Row height is later on compared with cell heights and the tallest is chosen,
                     # so this is effectively the minimal height.
                     self.rows[i].height = max_height
-            except:
-                pass
+        except:
+            # If auto-sizing fails, skip it.
+            return
 
     def save_largest(self) -> None:
         """
@@ -735,8 +741,8 @@ def get_column_color_list(key, table_data):
 def get_column_width_list(table_data):
     """
     Forms a list of column widths from the columns data.
-    :param table_data:
-    :return:
+    :param table_data: Table JSON.
+    :return: List of column widths.
     """
     l = []
     try:
@@ -758,9 +764,9 @@ def get_column_width_list(table_data):
 def get_column_style_list(table_data, key):
     """
     Forms a list of styles corresponding to the key from the columns data.
-    :param table_data:
-    :param key:
-    :return:
+    :param table_data: Table JSON.
+    :param key: Style key.
+    :return: List of column styles.
     """
     l = []
     try:
@@ -844,13 +850,13 @@ def get_color(item, key: str, default_color=None, default_color_html=None) -> (s
         color = item[key]
         if "#" in color:
             color_html = True
-            color = re.sub(r'\W+', '', color)
+            color = re.sub('[^a-zA-Z0-9]+', '', color)
             missing_chars = 6 - len(color)
-
-            # If incomplete, add missing zeroes.
+            # If incomplete, add missing Fs.
+            if len(color) > 6:
+                color = color[0:6]
             if missing_chars > 0:
-                color = "0"*missing_chars + color
-
+                color = "F"*missing_chars + color
         else:
             color_html = False
     except KeyError:
@@ -862,10 +868,10 @@ def get_color(item, key: str, default_color=None, default_color_html=None) -> (s
 def get_datablock_cell_data(datablock, row: int, cell: int):
     """
     Returns data from datablock index.
-    :param datablock:
-    :param row:
-    :param cell:
-    :return:
+    :param datablock: Datablock JSON.
+    :param row: Row index.
+    :param cell: Cell index.
+    :return: Datablock data for a cell, if it exists.
     """
     if not datablock:
         return None
@@ -880,8 +886,8 @@ def convert_datablock_index(datablock_index) -> Tuple[int, int]:
     """
     A 1 -> 0, 0
     ZZ13 -> 51, 12
-    :param datablock_index:
-    :return:
+    :param datablock_index: Index in format "A1".
+    :return: Integer tuple (cell_index, row_index).
     """
     letters = re.sub(r'[0-9]+', '', datablock_index)
     numbers = re.sub(r'[A-Z]+', '', datablock_index)
@@ -892,16 +898,16 @@ def convert_datablock_index(datablock_index) -> Tuple[int, int]:
 
 def add_missing_elements(table_json, datablock):
     """
-    Add cells and rows only present in datablock to table row json.
-    :param table_json:
-    :param datablock:
-    :return:
+    Add cells and rows only present in datablock.
+    :param table_json: Table data.
+    :param datablock: Datablock data.
+    :return: table_json with datablock-only cells added.
     """
     max_row_count = 0
     max_cell_count = 0
 
     if not datablock:
-        return table_json['rows']
+        return table_json
 
     for item in datablock:
         cell_index, row_index = convert_datablock_index(item)
@@ -931,7 +937,7 @@ def add_missing_elements(table_json, datablock):
             # Filler cells between existing ones get empty cell data.
             else:
                 row_json['row'].append(empty_cell)
-    return table_json['rows']
+    return table_json
 
 
 def get_span(item) -> (int, int):
@@ -1262,7 +1268,7 @@ def convert_table(table_json) -> Table:
     table_rows = []
     table = Table(table_rows)
     datablock = get_datablock(table_json)
-    table_json_rows = add_missing_elements(table_json, datablock)
+    table_json = add_missing_elements(table_json, datablock)
     # TODO: Make the table size work with correct logic.
     # These may stretch the table until unreadable or outside the page.
     # Also, even if the same value is set horizontally and vertically,
@@ -1302,6 +1308,7 @@ def convert_table(table_json) -> Table:
     column_h_align_list = get_column_format_list(table_json, f=get_text_horizontal_align)
     column_font_family_list = get_column_format_list(table_json, f=get_font_family)
 
+    table_json_rows = table_json['rows']
     for i in range(0, len(table_json_rows)):
         table_row = table.get_or_create_row(i)
         row_data = table_json_rows[i]
