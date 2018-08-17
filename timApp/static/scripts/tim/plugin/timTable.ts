@@ -7,7 +7,7 @@ import {ParCompiler} from "../editor/parCompiler";
 import {openEditorSimple} from "../editor/pareditor";
 import {$http, $sce, $timeout} from "../util/ngimport";
 import {Binding} from "../util/utils";
-import {hideToolbar, openTableEditorToolbar} from "./timTableEditorToolbar";
+import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 
 const styleToHtml: { [index: string]: string } = {
         backgroundColor: "background-color",
@@ -277,7 +277,7 @@ export class TimTableController implements IController {
 
     private onClick(e: JQueryEventObject) {
         if (this.mouseInTable) {
-            if (this.isInEditMode()) {
+            if (this.isInEditMode() && isToolbarEnabled()) {
                 openTableEditorToolbar({callbacks: {
                 setTextAlign: this.setCellTextAlign,
                 setCellBackgroundColor: this.setCellBackgroundColor}, activeTable: this } );

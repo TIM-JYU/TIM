@@ -1,5 +1,6 @@
 import {IRootElementService, IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {getURLParameter} from "../util/utils";
 
 export interface ITimTableToolbarCallbacks {
     setTextAlign: (value: string) => void;
@@ -123,6 +124,10 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     private applyBackgroundColor() {
         this.callbacks.setCellBackgroundColor("#" + this.previousBackgroundColor);
     }
+}
+
+export function isToolbarEnabled() {
+    return window.location.hostname !== "tim.jyu.fi" || getURLParameter("toolbar") !== undefined;
 }
 
 // : IPromise< { } >
