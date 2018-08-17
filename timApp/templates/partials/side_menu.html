@@ -30,9 +30,9 @@
                 {% if route and item.rights.manage %}
                <h5>Document settings</h5>
                 <button class="timButton btn btn-block" ng-click="$ctrl.vctrl.editingHandler.editSettingsPars()">Edit settings</button>
-                <button class="timButton btn btn-block" ng-click="$ctrl.markAllAsRead()" title="Mark all paragraphs of the document as read">Mark all as read</button>
+                <button ng-show="$ctrl.users.isLoggedIn()" class="timButton btn btn-block" ng-click="$ctrl.markAllAsRead()" title="Mark all paragraphs of the document as read">Mark all as read</button>
                 {% else %}
-                <div ng-show="$ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder">
+                <div ng-show="$ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder && $ctrl.users.isLoggedIn()">
                   <h5>Document settings</h5>
                   <button class="timButton btn btn-block" ng-click="$ctrl.markAllAsRead()" title="Mark all paragraphs of the document as read">Mark all as read</button>
                 </div>

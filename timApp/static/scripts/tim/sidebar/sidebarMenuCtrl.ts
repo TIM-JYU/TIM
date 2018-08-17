@@ -191,7 +191,6 @@ export class SidebarMenuCtrl implements IController {
         if (this.docSettings == null || this.docSettings.macros == null) {
             return false;
         }
-
         return this.docSettings.macros.knro != null;
     }
 
