@@ -28,7 +28,7 @@ default_table_width = "\\columnwidth"
 default_table_height = "!"
 default_table_float = "[H]"
 default_minipage_width = "4cm"
-wrap_cell_threshold = 50  # The content lenght limit for when to assume need for more than one line in cell.
+wrap_cell_threshold = 50  # The content length limit for when to assume need for more than one line in cell.
 # Maximum number of columns in table; overtly large count will crash LaTeX-conversion.
 default_max_col_count = 250
 # Pixels; 595px is the width of 72 dpi (web) a4 and minus 35px is for the margins.
@@ -610,7 +610,7 @@ class Table:
 
     def auto_size_cells(self) -> None:
         """
-        Try to set row heights automatically based on cell content lenght.
+        Try to set row heights automatically based on cell content length.
         :return: None.
         """
         # If table has only few cells and little content, don't resize.
@@ -654,7 +654,7 @@ class Table:
 
     def save_largest(self) -> None:
         """
-        Add largest row column count and cell content lenght to table attributes.
+        Add largest row column count and cell content length to table attributes.
         :return: None.
         """
         table_max_col_count = 0
@@ -676,8 +676,8 @@ class Table:
 
     def get_largest_content_len(self) -> int:
         """
-        Get largest content lenght in the table.
-        :return: Content lenght of the longest cell.
+        Get largest content length in the table.
+        :return: Content length of the longest cell.
         """
         if self.largest_content_len:
             return self.largest_content_len

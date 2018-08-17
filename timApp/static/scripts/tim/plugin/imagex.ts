@@ -913,7 +913,7 @@ imagexApp.initDrawing = function(scope, canvas) {
 
     // Check if key exists in value, previous or defaults
     // if (  isKeyDef(initValues, "pin", false) ...;
-    // there is no sence to call this with true because then it allways returns true
+    // there is no sence to call this with true because then it always returns true
     function isKeyDef(value, key, defaultValue) {
         const keys = key.split(".");
         let v = value;
@@ -1352,7 +1352,7 @@ imagexApp.initDrawing = function(scope, canvas) {
             },
 
             init2() {
-                // TODO: pinlenght so that it is allways same length.
+                // TODO: pin length so that it is always same length.
                 // Now 45 deg pins are longer
                 this.pinPositions = {
                     west: {x: 0, y: this.r2 / 2, off: {x: -this.pinLength, y: 0}},

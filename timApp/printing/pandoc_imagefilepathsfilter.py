@@ -149,7 +149,7 @@ def handle_images(key, value, fmt, meta):
 
         if allow:
             # open("Output.txt", "a").write("Check texdocid \n")
-            global texdocid  # check if we allready have path for doc id
+            global texdocid  # check if we already have path for doc id
             if not texdocid:
                 m = meta.get('texdocid', None)  # if we do not have, get the path from meta data
                 # open("Output.txt", "a").write("m:" + str(m) + "\n")

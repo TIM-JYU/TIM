@@ -2627,14 +2627,14 @@ csApp.Controller = function($scope,$transclude) {
             var html = "";
             var scripts = "";
             $scope.fullhtml = ($scope.attrs.fullhtml||"");
-            if ( $scope.fullhtml ) $scope.iframe = true;  // fullhtml allways to iframe
+            if ( $scope.fullhtml ) $scope.iframe = true;  // fullhtml always to iframe
             if ( $scope.type.indexOf("html") >= 0 ) {
-                $scope.iframe = true; // html allways iframe
+                $scope.iframe = true; // html always iframe
                 if ( !$scope.fullhtml ) $scope.fullhtml = "REPLACEBYCODE";
 
-            }  // html allways to iframe
+            }  // html always to iframe
             if ( $scope.type.indexOf("/vis") >= 0 ) {
-                $scope.iframe = true;  // visjs allways to iframe
+                $scope.iframe = true;  // visjs always to iframe
                 html =  '<div id="myDiv" class="mydiv" width="800" height="400" ></div>';
                 scripts = "https://cdnjs.cloudflare.com/ajax/libs/vis/4.20.0/vis.min.js";
             }

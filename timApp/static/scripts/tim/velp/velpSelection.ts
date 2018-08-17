@@ -369,7 +369,7 @@ export class VelpSelectionController implements IController {
     /**
      * Get color for the object from colorPalette variable.
      * @method getColor
-     * @param index - Index of the color in the colorPalette variable (modulo by lenght of color palette)
+     * @param index - Index of the color in the colorPalette variable (modulo by length of color palette)
      * @returns {string} String representation of the color
      */
     getColor(index: number) {

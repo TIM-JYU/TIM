@@ -1153,7 +1153,7 @@ var simcir = function($) {
            var dy = cir.offset().top+4 -y0;
            var curdist = dx*dx + dy*dy;
            if ( curdist < mindist ) {
-              if ( curdist > 4*4 ) { // if inside circle, allways accept
+              if ( curdist > 4*4 ) { // if inside circle, always accept
                  if ( cur.attr('simcir-node-type') == 'in' && dx < 0 ) continue; // in from left
                  if ( cur.attr('simcir-node-type') == 'out' && dx > 0 ) continue; // out from right
               }

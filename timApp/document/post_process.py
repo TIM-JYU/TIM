@@ -271,7 +271,7 @@ def process_areas(html_pars: List[Dict], macros, delimiter, env) -> List[Dict]:
                             endtime = getdatetime(et, default_val=max_time)
                             access &= starttime <= now < endtime
                             # if not access and a.attrs.get('alttext') is not None:
-                            #     TODO:  what??? here was just todo?  alttext is allready show in area?
+                            #     TODO:  what??? here was just todo?  alttext is already show in area?
                             #     noinspection PyUnusedLocal
                             #     alttext = a.attrs.get('alttext')
 

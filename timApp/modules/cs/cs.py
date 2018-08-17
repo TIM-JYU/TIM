@@ -728,7 +728,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             signal.signal(signal.SIGALRM, signal_handler)
             signal.alarm(20)  # Ten seconds
         except Exception as e:
-            # print("No signal", e)  #  TODO; why is this signal at all when it allways comes here?
+            # print("No signal", e)  #  TODO; why is this signal at all when it always comes here?
             pass
         try:
             self.do_all_t(query)
@@ -1274,7 +1274,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 give_points(points_rule, is_test + "compile")
 
-                if not err and not language.run_points_given:  # because test points are allready given
+                if not err and not language.run_points_given:  # because test points are already given
                     give_points(points_rule, "run")
                 # print(code, out, err, pwddir)
 
