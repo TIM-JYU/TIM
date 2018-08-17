@@ -845,6 +845,12 @@ def get_color(item, key: str, default_color=None, default_color_html=None) -> (s
         if "#" in color:
             color_html = True
             color = re.sub(r'\W+', '', color)
+            missing_chars = 6 - len(color)
+
+            # If incomplete, add missing zeroes.
+            if missing_chars > 0:
+                color = "0"*missing_chars + color
+
         else:
             color_html = False
     except KeyError:
@@ -897,8 +903,6 @@ def add_missing_elements(table_json, datablock):
     if not datablock:
         return table_json['rows']
 
-    print(table_json['rows'], len(table_json['rows']))
-
     for item in datablock:
         cell_index, row_index = convert_datablock_index(item)
         row_count = row_index + 1
@@ -908,9 +912,7 @@ def add_missing_elements(table_json, datablock):
         if cell_count > max_cell_count:
             max_cell_count = cell_count
 
-    print(max_cell_count, max_row_count)
-
-    empty_cell = {'cell': '-'}
+    empty_cell = {'cell': ''}
 
     table_row_count = len(table_json['rows'])
     # Add missing rows.
@@ -929,7 +931,6 @@ def add_missing_elements(table_json, datablock):
             # Filler cells between existing ones get empty cell data.
             else:
                 row_json['row'].append(empty_cell)
-    print(table_json['rows'], len(table_json['rows']))
     return table_json['rows']
 
 
