@@ -1,14 +1,20 @@
 from time import sleep
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions
+from selenium.common.exceptions import StaleElementReferenceException
 
-from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
+from timApp.tests.browser.browsertest import BrowserTest
 
 
 class TimTableTest(BrowserTest):
 
-
+    def find_and_save_timtable(self, name: str):
+        while True:
+            t = self.find_element_and_move_to('tim-table')
+            try:
+                self.save_element_screenshot(t, name)
+                break
+            except StaleElementReferenceException:
+                continue
 
     def test_timtable_simple(self):
         """
@@ -29,9 +35,7 @@ table:
 ```
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableSimple")
-
+        self.find_and_save_timtable("timTableSimple")
 
     def test_timtable_all_column_styles(self):
         """
@@ -81,9 +85,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableAllColumnStyles")
-
+        self.find_and_save_timtable("timTableAllColumnStyles")
 
     def test_timtable_all_row_styles(self):
         """
@@ -133,9 +135,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableAllRowStyles")
-
+        self.find_and_save_timtable("timTableAllRowStyles")
 
     def test_timtable_all_cell_styles(self):
         """
@@ -186,9 +186,7 @@ table:
 ```
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableAllCellStyles")
-
+        self.find_and_save_timtable("timTableAllCellStyles")
 
     def test_timtable_all_table_styles(self):
         """
@@ -238,9 +236,7 @@ table:
         
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableTableStyles")
-
+        self.find_and_save_timtable("timTableTableStyles")
 
     def test_timtable_all_styles(self):
         """
@@ -325,9 +321,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableAllStyles")
-
+        self.find_and_save_timtable("timTableAllStyles")
 
     def test_timtable_extra_properties(self):
         """
@@ -421,9 +415,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableExtraStyles")
-
+        self.find_and_save_timtable("timTableExtraStyles")
 
     def test_timtable_colspan(self):
         """
@@ -463,9 +455,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableColspan")
-
+        self.find_and_save_timtable("timTableColspan")
 
     def test_timtable_rowspan(self):
         """
@@ -505,8 +495,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableRowspan")
+        self.find_and_save_timtable("timTableRowspan")
 
     def test_timtable_rowspan_over_rows(self):
         """
@@ -547,8 +536,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableRowspanOverRows")
+        self.find_and_save_timtable("timTableRowspanOverRows")
 
     def test_timtable_colspan_over_columns(self):
         """
@@ -587,8 +575,7 @@ table:
 ```
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableColspanOverColumns")
+        self.find_and_save_timtable("timTableColspanOverColumns")
 
     def test_timtable_rowspan_colspan(self):
         """
@@ -630,8 +617,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableRowspanColspan")
+        self.find_and_save_timtable("timTableRowspanColspan")
 
     def test_timtable_column_span(self):
         """
@@ -678,8 +664,7 @@ table:
 
                     """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableColumnSpan")
+        self.find_and_save_timtable("timTableColumnSpan")
 
     def test_timtable_many_things(self):
         """
@@ -765,8 +750,7 @@ table:
             """)
         self.goto_document(d)
         sleep(2)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableManyThings")
+        self.find_and_save_timtable("timTableManyThings")
 
     def test_timtable_tabledatablock(self):
         """
@@ -806,5 +790,4 @@ table:
 ```
                         """)
         self.goto_document(d)
-        we = self.find_element_avoid_staleness('tim-table')
-        self.save_element_screenshot(we, "timTableTabledatablock")
+        self.find_and_save_timtable("timTableTabledatablock")
