@@ -7,12 +7,13 @@ from flask import abort
 from flask import request
 from timApp.auth.accesshelper import verify_edit_access
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.document import Document
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response
 from timApp.document.docentry import DocEntry
-from timApp.markdown.dumboclient import call_dumbo
+from timApp.markdown.dumboclient import call_dumbo, DumboOptions
 from timApp.plugin.timtable.timTableLatex import convert_table
 from timApp.timdb.sqa import db
 
@@ -686,7 +687,8 @@ def tim_table_save_cell_list():
     cc = str(cell_content)
     if plug.is_automd_enabled(True) and not cc.startswith(MD):
         cc = MD + cc
-    html = call_dumbo([cc], DUMBO_PARAMS)
+    settings = d.document.get_settings()
+    html = call_dumbo([cc], DUMBO_PARAMS, options=plug.par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
     plug.save()
     multi.append(html[0])
     return json_response(multi)
@@ -834,10 +836,16 @@ def prepare_for_and_call_dumbo(plug: Plugin):
     :param plug: The plugin instance.
     :return: The conversion result from Dumbo.
     """
+    par = plug.par
+    if par:
+        doc: Document = par.doc
+        dumbo_opts = par.get_dumbo_options(base_opts=doc.get_settings().get_dumbo_options())
+    else:
+        dumbo_opts = DumboOptions.default()
     if plug.is_automd_enabled(default = True):
-        return call_dumbo(prepare_for_dumbo(plug.values), DUMBO_PARAMS)
+        return call_dumbo(prepare_for_dumbo(plug.values), DUMBO_PARAMS, options=dumbo_opts)
 
-    return call_dumbo(plug.values, DUMBO_PARAMS)
+    return call_dumbo(plug.values, DUMBO_PARAMS, options=dumbo_opts)
 
 
 def prepare_for_dumbo(values):
