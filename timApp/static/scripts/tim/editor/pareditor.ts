@@ -142,85 +142,99 @@ export class PareditorController extends DialogController<{params: IEditorParams
         this.element.find(".editorContainer").on("resize", () => this.adjustPreview());
 
         this.citeText = this.getCiteText();
+        const backTicks = "```";
 
         this.tables = {
+            normal: `
+Otsikko1 Otsikko2 Otsikko3 Otsikko4
+-------- -------- -------- --------
+1.rivi   x        x        x
+2.rivi   x        x        x       `.trim(),
 
-            normal: "Otsikko1 Otsikko2 Otsikko3 Otsikko4\n" +
-            "-------- -------- -------- --------\n" +
-            "1.rivi   x        x        x       \n" +
-            "2.rivi   x        x        x       ",
+            example: `
+Table:  Otsikko taulukolle
 
-            example: "Table:  Otsikko taulukolle\n\n" +
-            "Otsikko    Vasen laita    Keskitetty    Oikea laita\n" +
-            "---------- ------------- ------------ -------------\n" +
-            "1. rivi      2                  3         4\n" +
-            "2. rivi        1000      2000             30000",
+Otsikko    Vasen laita    Keskitetty    Oikea laita
+---------- ------------- ------------ -------------
+1. rivi      2                  3         4
+2. rivi        1000      2000             30000`.trim(),
 
-            noheaders: ":  Otsikko taulukolle\n\n" +
-            "---------- ------------- ------------ -------------\n" +
-            "1. rivi      2                  3         4\n" +
-            "2. rivi        1000      2000             30000\n" +
-            "---------- ------------- ------------ -------------\n",
+            noheaders: `
+:  Otsikko taulukolle
 
-            multiline: "Table:  Otsikko taulukolle voi\n" +
-            "jakaantua usealle riville\n\n" +
-            "-----------------------------------------------------\n" +
-            "Ekan       Toisen\         kolmas\            neljäs\\\n" +
-            "sarkkeen   sarakkeen\     keskitettynä      oikeassa\\\n" +
-            "otsikko    otsikko                           reunassa\n" +
-            "---------- ------------- -------------- -------------\n" +
-            "1. rivi     toki\              3         4\n" +
-            "voi olla    sisältökin\n" +
-            "useita        voi\\\n" +
-            "rivejä      olla \n" +
-            "            monella\\\n" +
-            "            rivillä\n" +
-            "            \n" +
-            "2. rivi        1000      2000             30000\n" +
-            "-----------------------------------------------------\n",
-            strokes: ": Viivoilla tehty taulukko\n\n" +
-            "+---------------+---------------+----------------------+\n" +
-            "| Hedelmä       | Hinta         | Edut                 |\n" +
-            "+===============+===============+======================+\n" +
-            "| Banaani       |  1.34 €       | - valmis kääre       |\n" +
-            "|               |               | - kirkas väri        |\n" +
-            "+---------------+---------------+----------------------+\n" +
-            "| Appelsiini    |  2.10 €       | - auttaa keripukkiin |\n" +
-            "|               |               | - makea              |\n" +
-            "+---------------+---------------+----------------------+\n",
+---------- ------------- ------------ -------------
+1. rivi      2                  3         4
+2. rivi        1000      2000             30000
+---------- ------------- ------------ -------------
+`.trim(),
 
-            pipe: ": Taulukko, jossa tolpat määräävat sarkkeiden paikat.\n\n" +
-            "|Oikea  | Vasen | Oletus | Keskitetty |\n" +
-            "|------:|:-----|---------|:------:|\n" +
-            "|   12  |  12  |    12   |    12  |\n" +
-            "|  123  |  123 |   123   |   123  |\n" +
-            "|    1  |    1 |     1   |     1  |\n",
+            multiline: `
+Table:  Otsikko taulukolle voi\\
+jakaantua usealle riville
 
-             timTable1x1:
-             "``` {plugin=\"timTable\"} \n" +
-             "automd: true              \n" +
-             "table:                   \n" +
-             "    rows:                 \n" +
-             "      - row:              \n" +
-             "        - cell: \"solu\"     \n" +
-             "                            \n" +
-             "```                        \n",
+-----------------------------------------------------
+Ekan       Toisen         kolmas            neljäs\\
+sarakkeen  sarakkeen     keskitettynä      oikeassa\\
+otsikko    otsikko                           reunassa
+---------- ------------- -------------- -------------
+1. rivi     toki              3         4
+voi olla    sisältökin
+useita      voi\\
+rivejä      olla
+            monella\\
+            rivillä
 
-            timTable2x2:
-            "``` {plugin=\"timTable\"}\n" +
-            "automd: true             \n" +
-            "table:                   \n" +
-            "    rows:                \n" +
-            "      - row:             \n" +
-            "        - cell: 'Ekan sarakkeen otsikko' \n" +
-            "        - cell: 'Tokan sarakkeen otsikko'\n" +
-            "        backgroundColor: lightgray       \n" +
-            "        fontWeight: bold                 \n" +
-            "      - row:                             \n" +
-            "        - cell: '1. solun sisältö'       \n" +
-            "        - cell: '2. solun sisältö'       \n" +
-            "                                         \n" +
-            "```\n",
+2. rivi        1000      2000             30000
+-----------------------------------------------------
+`.trim(),
+
+            strokes: `
+: Viivoilla tehty taulukko
+
++---------------+---------------+----------------------+
+| Hedelmä       | Hinta         | Edut                 |
++===============+===============+======================+
+| Banaani       |  1.34 €       | - valmis kääre       |
+|               |               | - kirkas väri        |
++---------------+---------------+----------------------+
+| Appelsiini    |  2.10 €       | - auttaa keripukkiin |
+|               |               | - makea              |
++---------------+---------------+----------------------+
+`.trim(),
+
+            pipe: `
+: Taulukko, jossa tolpat määräävät sarakkeiden paikat.
+
+| Oikea | Vasen | Oletus  | Keskitetty |
+|------:|:------|---------|:----------:|
+|   12  |  12   |    12   |    12      |
+|  123  |  123  |   123   |   123      |
+|    1  |    1  |     1   |     1      |
+`.trim(),
+
+            timTable1x1: `
+${backTicks} {plugin="timTable"}
+table:
+    rows:
+      - row:
+        - cell: "solu"
+${backTicks}
+`.trim(),
+
+            timTable2x2: `
+${backTicks} {plugin="timTable"}
+table:
+    rows:
+      - row:
+        - cell: 'Ekan sarakkeen otsikko'
+        - cell: 'Tokan sarakkeen otsikko'
+        backgroundColor: lightgray
+        fontWeight: bold
+      - row:
+        - cell: '1. solun sisältö'
+        - cell: '2. solun sisältö'
+${backTicks}
+`.trim(),
         };
 
         $(document).on("webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange", (event) => {
