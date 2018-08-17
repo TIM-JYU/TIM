@@ -191,7 +191,9 @@ export class ViewCtrl implements IController {
                 // hash in address, but returns to the right place regardless.)
                 // noinspection CssInvalidPseudoSelector
                 const parId = getParId($(".par:not('.preamble'):onScreen").first());
-                window.history.replaceState(undefined, undefined, `#${parId}`);
+                if (parId) {
+                    window.history.replaceState(undefined, undefined, `#${parId}`);
+                }
 
                 if (!this.editing) {
                     return undefined;
