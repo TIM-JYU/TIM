@@ -564,14 +564,14 @@ export class ViewCtrl implements IController {
      * Remove page break from the first header to avoid empty page in browser print.
      */
     private noBeginPageBreak() {
-        try {
-            const pars = $(".parContent");
-            pars.each((index, elem) => {
-                const $p = $(elem);
-                $p.find("h1")[0].setAttribute("class", "no-page-break-before");
-            });
-        } catch {
-            return;
+        const pars = $(".parContent");
+        for (const par of pars) {
+            const $p = $(par);
+            const headers = $p.find("h1");
+            if (headers.length > 0) {
+                headers.first().addClass("no-page-break-before");
+                return;
+            }
         }
     }
 }
