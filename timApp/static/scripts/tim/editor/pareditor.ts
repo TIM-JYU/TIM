@@ -11,6 +11,7 @@ import {IAceEditor} from "./ace-types";
 import {AceParEditor} from "./AceParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {TextAreaParEditor} from "./TextAreaParEditor";
+import {getElementByParId} from "../document/parhelpers";
 
 markAsUsed(rangyinputs);
 
@@ -544,7 +545,7 @@ or newer one that is more familiar to write in YAML:
     }
 
     showUnread() {
-        return this.getExtraData().par !== "NEW_PAR" && this.element.parents(".par").find(".readline.read").length > 0;
+        return this.getExtraData().par !== "NEW_PAR" && getElementByParId(this.getExtraData().par).find(".readline.read").length > 0;
     }
 
     async unreadClicked() {
@@ -996,7 +997,6 @@ export function openEditorSimple(docId: number, text: string, caption: string, l
             return await {};
         },
         unreadCb: async () => {
-
         },
     });
 }
