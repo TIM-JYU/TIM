@@ -1306,7 +1306,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     table_font_weight = get_key_value(table_json, "fontWeight", None)
 
     # Add light borders around every cell like in HTML-table.
-    if add_html_borders:
+    if draw_html_borders:
         border_color = ("lightgray", False)
         table_borders = CellBorders(left=True, right=True, top=True, bottom=True,
                      color_bottom=border_color,
