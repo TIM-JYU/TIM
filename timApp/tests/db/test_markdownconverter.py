@@ -28,8 +28,8 @@ class MarkdownConverterTest(TimDbTest):
             self.check_conversion(html, md)
         d = self.create_doc()
         self.assertListEqual([html for html, _ in cases],
-                             par_list_to_html_list([DocParagraph.create(None, md=md) for _, md in cases],
-                                                   settings=DocSettings(d.document)))
+                             par_list_to_html_list([DocParagraph.create(d.document, md=md) for _, md in cases],
+                                                   settings=d.document.get_settings()))
 
         macrotests = [('<p>hello world!</p>',
                        'hello %%somemacro%%!',
