@@ -184,6 +184,7 @@ export class ViewCtrl implements IController {
         $(() => {
             this.questionHandler.processQuestions();
             this.setHeaderLinks();
+            this.noBeginPageBreak();
             this.document.rebuildSections();
             window.addEventListener("beforeunload", (e) => {
                 // Save currently viewed paragraph hash to browser history to make the browser
@@ -557,6 +558,21 @@ export class ViewCtrl implements IController {
      */
     registerBookmarks(bookmarksCtrl: BookmarksController) {
         this.bookmarksCtrl = bookmarksCtrl;
+    }
+
+    /**
+     * Remove page break from the first header to avoid empty page in browser print.
+     */
+    private noBeginPageBreak() {
+        try {
+            const pars = $(".parContent");
+            pars.each((index, elem) => {
+                const $p = $(elem);
+                $p.find("h1")[0].setAttribute("class", "no-page-break-before");
+            });
+        } catch {
+            return;
+        }
     }
 }
 
