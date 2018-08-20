@@ -1,10 +1,13 @@
-"""Server tests for xxx."""
+"""Server tests for macros."""
+
+from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.plugin.plugin import Plugin
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID
-from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.tests.server.timroutetest import TimRouteTest, get_content
 from timApp.user.user import User
 from timApp.user.userutils import grant_view_access
+from timApp.util.utils import decode_csplugin
 
 
 class MacroTest(TimRouteTest):
@@ -94,3 +97,26 @@ header: %%username%% and %%realname%%
         d.document.add_paragraph('%%docid%% %%docpath%%')
         e = self.get(d.url, as_tree=True)
         self.assert_content(e, [f'{d.id} {d.path}'])
+
+    def test_globalmacros_with_reference(self):
+        self.login_test1()
+        pp = self.current_user.get_personal_folder().path
+        d = self.create_doc(f'{pp}/a/b/d1',
+                            initial_par="""
+this is a %%x()%%
+#- {plugin=csPlugin}
+stem: this is a %%x()%%
+                            """,
+                            settings={'globalmacros': {'ADDFOREVERY': '{% macro x() %}cat{% endmacro %}'}})
+        self.create_doc(f'{pp}/a/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}',
+                        settings={'globalmacros': {'ADDFOREVERY': '{% macro x() %}law{% endmacro %}'}})
+        d2 = self.create_doc(f'{pp}/a/c/d2',
+                             initial_par="""this is the %%x()%%""")
+        p = d2.document.get_paragraphs()[0].create_reference(d.document)
+        d.document.add_paragraph_obj(p)
+        d.document.clear_mem_cache()
+        tree = self.get(d.url, as_tree=True)
+        pars = get_content(tree)
+        self.assertEqual(pars[:-2] + pars[-1::], ['', 'this is a cat', 'this is the law'])
+        plugins = tree.cssselect('cs-runner')
+        self.assertEqual('this is a cat', decode_csplugin(plugins[0].text)['stem'])

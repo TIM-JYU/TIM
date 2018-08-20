@@ -326,6 +326,7 @@ def parse_plugin_values_macros(par: DocParagraph,
         if not par.get_nomacros():
             yaml_str = expand_macros(yaml_str,
                                      macros=macros,
+                                     settings=par.doc.get_settings(),
                                      macro_delimiter=macro_delimiter)
         try:
             values = YamlBlock.from_markdown(yaml_str).values

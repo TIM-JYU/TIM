@@ -396,13 +396,14 @@ class DocParagraph:
         md = self.get_markdown()
         if self.get_nomacros():
             return md
+        settings = self.doc.get_settings()
         if macroinfo is None:
-            macroinfo = self.doc.get_settings().get_macroinfo()
+            macroinfo = settings.get_macroinfo()
         macros = macroinfo.get_macros(nocache=self.get_nocache())
 
         if self.insert_rnds(md+macros.get("username","")): # TODO: RND_SEED: check what seed should be used, is this used to plugins?
             macros = {**macros, **self.__rands}
-        return expand_macros(md, macros, macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
+        return expand_macros(md, macros, settings, macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
 
     def get_title(self) -> Optional[str]:
         """Attempts heuristically to return a title for this paragraph.
@@ -705,7 +706,7 @@ class DocParagraph:
             md_expanded = deref.get_markdown()
         if not prev_par.get_nomacros():
             # TODO: RND_SEED should we fill the rands also?
-            md_expanded = expand_macros(md_expanded, macros, macro_delim)
+            md_expanded = expand_macros(md_expanded, macros, self.doc.get_settings(), macro_delim)
         blocks = DocumentParser(md_expanded, options=DocumentParserOptions.break_on_empty_lines()).get_blocks()
         deltas = copy(prev_par_auto_values['h'])
         title_ids = []

@@ -1,4 +1,5 @@
 """Utility functions."""
+import binascii
 import json
 import os
 import re
@@ -216,4 +217,9 @@ def get_boolean(s, default, cast=None):
             pass
     return result
 
+
 EXAMPLE_DOCS_PATH = 'static/example_docs'
+
+
+def decode_csplugin(text: str):
+    return json.loads(binascii.unhexlify(remove_prefix(text, 'xxxHEXJSONxxx')).decode())

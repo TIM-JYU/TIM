@@ -117,12 +117,13 @@ class DocumentPrinter:
 
         if self._content is not None:
             return self._content
-        pdoc_plugin_attrs = self._doc_entry.document.get_settings().global_plugin_attrs()
-        pdoc_macroinfo = self._doc_entry.document.get_settings().get_macroinfo(get_current_user_object())
+        settings = self._doc_entry.document.get_settings()
+        pdoc_plugin_attrs = settings.global_plugin_attrs()
+        pdoc_macroinfo = settings.get_macroinfo(get_current_user_object())
         pdoc_macro_delimiter = pdoc_macroinfo.get_macro_delimiter()
         pdoc_macros = pdoc_macroinfo.get_macros()
         pdoc_macro_env = create_environment(pdoc_macro_delimiter)
-        pdoc_macros.update(self._doc_entry.document.get_settings().get_macroinfo(key=TEX_MACROS_KEY).get_macros())
+        pdoc_macros.update(settings.get_macroinfo(key=TEX_MACROS_KEY).get_macros())
         self._macros = pdoc_macros
 
         # Remove paragraphs that are not to be printed and replace plugin pars,
@@ -131,9 +132,9 @@ class DocumentPrinter:
         self._doc_entry.document.preload_option = PreloadOption.all
         pars = dereference_pars(pars, source_doc=self._doc_entry.document.get_source_document())
         pars_to_print = []
-        self.texplain = self._doc_entry.document.get_settings().is_texplain()
+        self.texplain = settings.is_texplain()
 
-        self.texfiles = self._doc_entry.document.get_settings().get_macroinfo(key=TEX_MACROS_KEY).\
+        self.texfiles = settings.get_macroinfo(key=TEX_MACROS_KEY).\
             get_macros().get('texfiles')
         if self.texfiles and self.texfiles is str:
             self.texfiles = [self.texfiles]
@@ -204,6 +205,7 @@ class DocumentPrinter:
             if not pd['is_plugin'] and not pd['is_question']:
                 md = expand_macros(text=md,
                                    macros=pdoc_macros,
+                                   settings=settings,
                                    macro_delimiter=pdoc_macro_delimiter,
                                    env=pdoc_macro_env,
                                    ignore_errors=True)
@@ -249,7 +251,7 @@ class DocumentPrinter:
         if self.texplain:
             content = '\n'.join(export_pars)
         else:
-            content = self._doc_entry.document.get_settings().get_doctexmacros() + '\n' + '\n\n'.join(export_pars)
+            content = settings.get_doctexmacros() + '\n' + '\n\n'.join(export_pars)
 
         self._content = content
         return content

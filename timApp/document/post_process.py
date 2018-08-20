@@ -41,11 +41,12 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                                                         edit_window=edit_window,
                                                         load_states=load_plugin_states)
     taketime("end pluginfy")
-    macroinfo = doc.get_settings().get_macroinfo()
+    settings = doc.get_settings()
+    macroinfo = settings.get_macroinfo()
     user_macros = macroinfo.get_user_specific_macros(user)
     macros = macroinfo.get_macros_with_user_specific(user)
     delimiter = macroinfo.get_macro_delimiter()
-    doc_nomacros = doc.settings.nomacros()
+    doc_nomacros = settings.nomacros()
     # Process user-specific macros.
     # We define the environment here because it stays the same for each paragraph. This improves performance.
     env = create_environment(delimiter)
@@ -54,7 +55,8 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
             # htmlpar.insert_rnds(0)
             no_macros = DocParagraph.is_no_macros(htmlpar['attrs'], doc_nomacros)
             if not no_macros:
-                htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, delimiter, env=env, ignore_errors=True)
+                htmlpar['html'] = expand_macros(htmlpar['html'], user_macros, settings, delimiter, env=env,
+                                                ignore_errors=True)
             # if htmlpar['attrs'].get('texmacros', False): # in view texmacros should be inside $
             #    htmlpar['md'] = '<p><span class="math inline">\\(' + htmlpar['md'] + '\\)</span></p>';
 
@@ -63,9 +65,9 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
 
     if edit_window:
         # Skip readings and notes
-        return process_areas(html_pars, macros, delimiter, env), js_paths, css_paths, modules
+        return process_areas(settings, html_pars, macros, delimiter, env), js_paths, css_paths, modules
 
-    if doc.get_settings().show_authors():
+    if settings.show_authors():
         authors = doc.get_changelog(-1).get_authorinfo(pars)
         for p in html_pars:
             p['authorinfo'] = authors.get(p['id'])
@@ -96,7 +98,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         # taketime("readings begin")
         readings = get_common_readings(get_session_usergroup_ids(),
                                        doc,
-                                       get_read_expiry_condition(doc.get_settings().read_expiry()))
+                                       get_read_expiry_condition(settings.read_expiry()))
         taketime("readings end")
         for r in readings:  # type: ReadParagraph
             key = (r.par_id, r.doc_id)
@@ -128,10 +130,10 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                 p['notes'].append(n)
     # taketime("notes mixed")
 
-    return process_areas(html_pars, macros, delimiter, env), js_paths, css_paths, modules
+    return process_areas(settings, html_pars, macros, delimiter, env), js_paths, css_paths, modules
 
 
-def process_areas(html_pars: List[Dict], macros, delimiter, env) -> List[Dict]:
+def process_areas(settings, html_pars: List[Dict], macros, delimiter, env) -> List[Dict]:
     class Area:
 
         def __init__(self, index, area_attrs):
@@ -221,7 +223,7 @@ def process_areas(html_pars: List[Dict], macros, delimiter, env) -> List[Dict]:
                         vis = True
                     else:
                         if str(vis).find(delimiter) >= 0:
-                            vis = expand_macros(vis, macros, delimiter, env=env, ignore_errors=True)
+                            vis = expand_macros(vis, macros, settings, delimiter, env=env, ignore_errors=True)
                         vis = get_boolean(vis, True)
                         cur_area.attrs['visible'] = vis
                     if vis:
@@ -249,7 +251,7 @@ def process_areas(html_pars: List[Dict], macros, delimiter, env) -> List[Dict]:
                 vis = True
             else:
                 if str(vis).find(delimiter) >= 0:
-                    vis = expand_macros(vis, macros, delimiter, env=env, ignore_errors=True)
+                    vis = expand_macros(vis, macros, settings, delimiter, env=env, ignore_errors=True)
                 vis = get_boolean(vis, True)
                 if not vis:
                     access = False  # TODO: this should be added as some kind of small par that is visible in edit-mode

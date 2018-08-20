@@ -1,9 +1,7 @@
-import binascii
-import json
-
 from lxml import html
 
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.util.utils import decode_csplugin
 
 diamond_tex = r"""
 \begin{tikzpicture}
@@ -91,7 +89,7 @@ stem: 'md: $a+b$'
         t = self.get(d.url, as_tree=True)
         plugins = t.cssselect('cs-runner')
         for plugin, e in zip(plugins, [a_plus_b_svg, a_plus_b_mathjax]):
-            stem = json.loads(binascii.unhexlify(plugin.text.replace('xxxHEXJSONxxx', '')).decode())['stem']
+            stem = decode_csplugin(plugin.text)['stem']
             self.assert_same_html(html.fromstring(stem), e)
 
     def test_mixed_settings(self):

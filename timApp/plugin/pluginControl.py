@@ -160,8 +160,10 @@ def pluginify(doc: Document,
             md = block.get_markdown()
             try:
                 # md = Plugin.from_paragraph_macros(md, global_attrs, macros, macro_delimiter)
-                md = expand_macros(md, macros=macros,
-                                       macro_delimiter=macro_delimiter)
+                md = expand_macros(md,
+                                   macros=macros,
+                                   settings=settings,
+                                   macro_delimiter=macro_delimiter)
 
                 gamified_data = gamificationdata.gamify(YamlBlock.from_markdown(md))
                 html_pars[idx][output_format.value] = render_template('partials/gamification_map.html',

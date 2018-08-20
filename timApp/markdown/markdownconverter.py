@@ -85,7 +85,7 @@ class Belongs:
 # ------------------------ Jinja filters end ---------------------------------------------------------------
 
 
-def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None, env=None, ignore_errors: bool=False):
+def expand_macros(text: str, macros, settings, macro_delimiter: Optional[str]=None, env=None, ignore_errors: bool=False):
     # return text  # comment out when want to take time if this slows things
     if not has_macros(text, macros, macro_delimiter):
         return text
@@ -97,11 +97,7 @@ def expand_macros_jinja2(text: str, macros, macro_delimiter: Optional[str]=None,
         if env is None:
             env = create_environment(macro_delimiter)
     try:
-        globalmacros = None
-        try:
-            globalmacros = getattr(g, 'globalmacros', None)
-        except:
-            pass
+        globalmacros = settings.get_globalmacros() if settings else None
         if globalmacros:
             for gmacro in globalmacros:
                 macrotext = "%%"+gmacro+"%%"
@@ -153,12 +149,6 @@ def create_environment(macro_delimiter: str):
     return env
 
 
-expand_macros = expand_macros_jinja2
-
-
-# expand_macros = expand_macros_regex
-
-
 def md_to_html(text: str,
                sanitize: bool = True,
                macros: Optional[Dict[str, object]] = None,
@@ -173,7 +163,7 @@ def md_to_html(text: str,
 
     """
 
-    text = expand_macros(text, macros, macro_delimiter)
+    text = expand_macros(text, macros, None, macro_delimiter)  # TODO should provide doc instead of None
 
     raw = call_dumbo([text])
 

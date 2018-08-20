@@ -105,7 +105,7 @@ class DocSettings:
     def get_macro_delimiter(self) -> str:
         return self.__dict.get(self.macro_delimiter_key, '%%')
 
-    def get_globalmacros(self) -> str:
+    def get_globalmacros(self) -> Dict[str, str]:
         return self.__dict.get(self.globalmacros_key, {})
 
     def get_doctexmacros(self) -> str:
