@@ -103,11 +103,11 @@
 
                             <h5>Choose area for velp group:</h5>
                             <fieldset>
-                                <input type="radio" ng-click="$ctrl.updateVelpList()" ng-model="$ctrl.groupAttachment.target_type"
+                                <input type="radio" ng-change="$ctrl.updateVelpList()" ng-model="$ctrl.groupAttachment.target_type"
                                        ng-value="0" name="selArea" id="selDoc">
                                 <label for="selDoc">Whole document</label><br/>
                                 <input title="A paragraph must be clicked to choose this option" type="radio"
-                                       ng-click="$ctrl.updateVelpList()" ng-model="$ctrl.groupAttachment.target_type" ng-value="1"
+                                       ng-change="$ctrl.updateVelpList()" ng-model="$ctrl.groupAttachment.target_type" ng-value="1"
                                        name="selArea" id="selPar" ng-class="{disabled: $ctrl.rctrl.selectedElement == null}"
                                        ng-disabled="$ctrl.rctrl.selectedElement == null">
                                 <label for="selPar" ng-class="{'disabled':$ctrl.rctrl.selectedElement == null}">Selected paragraph</label>
@@ -116,12 +116,12 @@
                             <tr>
                                 <th><label class="comment-info small"><input type="checkbox"
                                                                             ng-model="$ctrl.settings.selectedAllShows"
-                                                                            ng-click="$ctrl.changeAllVelpGroupSelections('show')">Show</label>
+                                                                            ng-change="$ctrl.changeAllVelpGroupSelections('show')">Show</label>
                                 </th>
                                 <th><label ng-class="['comment-info', 'small', {disabled: !$ctrl.rctrl.vctrl.item.rights.manage}]"><input type="checkbox"
                                                                             ng-model="$ctrl.settings.selectedAllDefault"
                                                                             ng-disabled="!$ctrl.rctrl.vctrl.item.rights.manage"
-                                                                            ng-click="$ctrl.changeAllVelpGroupSelections('default')">Default</label>
+                                                                            ng-change="$ctrl.changeAllVelpGroupSelections('default')">Default</label>
                                 </th>
                                 <th><span class="small">Velp group</span></th>
                             </tr>
@@ -129,11 +129,11 @@
                             <tr ng-repeat="group in $ctrl.velpGroups" ng-hide="group.id<0">
                                 <td>
                                     <input type="checkbox" ng-model="group.show"
-                                           ng-click="$ctrl.changeVelpGroupSelection(group, 'show')">
+                                           ng-change="$ctrl.changeVelpGroupSelection(group, 'show')">
                                 </td>
                                 <td>
                                     <input type="checkbox" ng-model="group.default" ng-disabled="!$ctrl.rctrl.vctrl.item.rights.manage"
-                                           ng-click="$ctrl.changeVelpGroupSelection(group, 'default')">
+                                           ng-change="$ctrl.changeVelpGroupSelection(group, 'default')">
                                 </td>
                                 <td>
                                     <a ng-href="/manage/{{ group.location }}">{{ group.name }}</a>

@@ -66,11 +66,11 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private file?: File & {progress?: number, error?: string};
     private isIE: boolean = false;
     private oldmeta?: HTMLMetaElement;
-    private wrap: {n: number};
+    private wrap!: {n: number}; // $onInit
     private outofdate: boolean;
     private parCount: number;
     private pluginButtonList: {[tabName: string]: JQuery[]};
-    private proeditor: boolean;
+    private proeditor!: boolean; // $onInit
     private saving: boolean = false;
     private scrollPos?: number;
     private tables: {
@@ -86,10 +86,9 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private storage: Storage;
     private touchDevice: boolean;
     private plugintab?: JQuery;
-    private autocomplete: boolean;
-    private citeText: string;
+    private autocomplete!: boolean; // $onInit
+    private citeText!: string; // $onInit
     private docSettings?: {macros: {dates: string[], knro: number, stampformat: string}};
-    private metaset = false;
     private uploadedFile?: string;
 
     private getOptions() {
@@ -119,19 +118,6 @@ export class PareditorController extends DialogController<{params: IEditorParams
         super(element, scope);
         this.storage = localStorage;
 
-        const sn = this.storage.getItem("wrap" + this.getSaveTag());
-        let n = parseInt(sn || "-90");
-        if (isNaN(n)) {
-            n = -90;
-        }
-
-        this.wrap = {n: n};
-
-        const saveTag = this.getSaveTag();
-        this.proeditor = this.getLocalBool("proeditor",
-            saveTag === "par" || saveTag === TIM_TABLE_CELL);
-        this.autocomplete = this.getLocalBool("autocomplete", false);
-
         this.pluginButtonList = {};
 
         if ((navigator.userAgent.match(/Trident/i))) {
@@ -140,7 +126,6 @@ export class PareditorController extends DialogController<{params: IEditorParams
 
         this.element.find(".editorContainer").on("resize", () => this.adjustPreview());
 
-        this.citeText = this.getCiteText();
         const backTicks = "```";
 
         this.tables = {
@@ -248,20 +233,31 @@ ${backTicks}
         this.outofdate = false;
         this.parCount = 0;
         this.touchDevice = false;
+    }
+
+    $onInit() {
+        super.$onInit();
+        this.autocomplete = this.getLocalBool("autocomplete", false);
+        const saveTag = this.getSaveTag();
+        this.proeditor = this.getLocalBool("proeditor",
+            saveTag === "par" || saveTag === TIM_TABLE_CELL);
+        this.citeText = this.getCiteText();
+        const sn = this.storage.getItem("wrap" + this.getSaveTag());
+        let n = parseInt(sn || "-90");
+        if (isNaN(n)) {
+            n = -90;
+        }
+
+        this.wrap = {n: n};
 
         if (this.getOptions().touchDevice) {
-            if (!this.metaset) {
+            if (!this.oldmeta) {
                 const $meta = $("meta[name='viewport']");
                 this.oldmeta = $meta[0] as HTMLMetaElement;
                 $meta.remove();
                 $("head").prepend('<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=0">');
             }
-            this.metaset = true;
         }
-    }
-
-    $onInit() {
-        super.$onInit();
         this.draggable.makeHeightAutomatic();
         const oldMode = $window.localStorage.getItem("oldMode" + this.getOptions().localSaveTag) || (this.getOptions().touchDevice ? "text" : "ace");
         this.changeEditor(oldMode);
@@ -518,6 +514,9 @@ or newer one that is more familiar to write in YAML:
     }
 
     changeMeta() {
+        if (!this.oldmeta) {
+            return;
+        }
         $("meta[name='viewport']").remove();
         const $meta = $(this.oldmeta);
         $("head").prepend($meta);
@@ -805,7 +804,7 @@ or newer one that is more familiar to write in YAML:
         if (!$event.target) {
             return;
         }
-        const active = $($event.target).parent();
+        const active = $($event.target as HTMLElement).parent();
         setSetting("editortab", area);
         this.setActiveTab(active, area);
         this.wrapFn();

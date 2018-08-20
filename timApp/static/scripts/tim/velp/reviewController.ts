@@ -576,7 +576,7 @@ export class ReviewController implements IController {
         if (!$event.target) {
             return;
         }
-        const $par = $($event.target).parents(".par")[0];
+        const $par = $($event.target as HTMLElement).parents(".par")[0];
 
         let oldElement = null;
         if (this.selectedElement != null) {
@@ -882,7 +882,7 @@ export class ReviewController implements IController {
             coord = {
                 start: {
                     par_id: parelement.id,
-                    t: parelement.getAttribute("t"),
+                    t: parelement.getAttribute("t") || undefined,
                     el_path: elementPath,
                     offset: startoffset,
                     depth: elementPath.length,
@@ -890,7 +890,7 @@ export class ReviewController implements IController {
                 },
                 end: {
                     par_id: parelement.id,
-                    t: parelement.getAttribute("t"),
+                    t: parelement.getAttribute("t") || undefined,
                     el_path: elementPath,
                     offset: endOffset,
                     depth: elementPath.length,
@@ -907,19 +907,11 @@ export class ReviewController implements IController {
             coord = {
                 start: {
                     par_id: this.selectedElement.id,
-                    t: this.selectedElement.getAttribute("t"),
-                    offset: null,
-                    el_path: null,
-                    node: null,
-                    depth: null,
+                    t: this.selectedElement.getAttribute("t") || undefined,
                 },
                 end: {
                     par_id: this.selectedElement.id,
-                    t: this.selectedElement.getAttribute("t"),
-                    el_path: null,
-                    node: null,
-                    depth: null,
-                    offset: null,
+                    t: this.selectedElement.getAttribute("t") || undefined,
                 },
             };
 

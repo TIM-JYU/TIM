@@ -195,14 +195,15 @@ PaliScope.prototype.doSaveText = function(nosave) {
     }
 
     $scope.http({method: 'PUT', url: url, data: params, headers: {'Content-Type': 'application/json'}, timeout: 20000}
-    ).success(function (data, status, headers, config) {
+    ).then(function (resp) {
+        var data = resp.data;
         $scope.isRunning = false;
         $scope.error = data.web.error;
         $scope.result = data.web.result;
         $scope.tries = data.web.tries;
-    }).error(function (data, status) {
+    }, function (err) {
         $scope.isRunning = false;
-        $scope.errors.push(status);
+        $scope.errors.push(err.status);
         $scope.error = "Ikuinen silmukka tai jokin muu vika?";
         // $scope.error = data;
     });

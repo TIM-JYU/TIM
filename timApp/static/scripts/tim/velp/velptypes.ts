@@ -1,4 +1,4 @@
-import {Omit, Overwrite, Required} from "type-zoo";
+import {Omit, Overwrite} from "type-zoo";
 
 export type VelpGroupSelectionType = "show" | "default";
 
@@ -11,11 +11,11 @@ export interface IUIFields {
 
 export interface IAnnotationCoordinate {
     par_id: string;
-    t: string | null;
-    offset: number | null;
-    el_path: number[] | null;
-    node: number | null;
-    depth: number | null;
+    t?: string;
+    offset?: number;
+    el_path?: number[];
+    node?: number;
+    depth?: number;
 }
 
 export function isFullCoord(c: IAnnotationCoordinate): c is Required<IAnnotationCoordinate> {

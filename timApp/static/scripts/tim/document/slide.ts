@@ -20,7 +20,7 @@ function refresh() {
         dataType: "json",
         error(xhr, status, err) {
             $log.info("error");
-            pollTimeout = setTimeout(refresh, pollInterval);
+            pollTimeout = window.setTimeout(refresh, pollInterval);
         },
         success(data) {
             const oldstate = Reveal.getState();
@@ -49,7 +49,7 @@ function refresh() {
                     Reveal.slide(newh, newv, data.indexf, "remote");
                 }
             }
-            pollTimeout = setTimeout(refresh, pollInterval);
+            pollTimeout = window.setTimeout(refresh, pollInterval);
         },
     });
 }
@@ -65,12 +65,12 @@ function updateSlideStatus(h: number, v: number, f: number) {
         url: "/setslidestatus",
         data: {doc_id: item.id, status: JSON.stringify({indexh: h, indexv: v, indexf: f})},
         success() {
-            pollTimeout = setTimeout(refresh, pollInterval);
+            pollTimeout = window.setTimeout(refresh, pollInterval);
             receiving = true;
         },
         error() {
             $log.info("error");
-            pollTimeout = setTimeout(refresh, pollInterval);
+            pollTimeout = window.setTimeout(refresh, pollInterval);
             receiving = true;
         },
     });
@@ -122,11 +122,11 @@ function initReveal() {
 
 $(() => {
     if (getURLParameter("controls") == null && is_owner) {
-        pollTimeout = setTimeout(refresh, pollInterval);
+        pollTimeout = window.setTimeout(refresh, pollInterval);
     }
     document.onkeyup = function(evt) {
         if (evt.keyCode == 82) {
-            pollTimeout = setTimeout(refresh, pollInterval);
+            pollTimeout = window.setTimeout(refresh, pollInterval);
         }
     };
     setTimeout(function() {

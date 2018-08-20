@@ -212,7 +212,7 @@ export class NotesHandler {
             return;
         }
         $event.stopPropagation();
-        let $par = $($event.target);
+        let $par = $($event.target as HTMLElement);
         if (!$par.hasClass("par")) { $par = $par.parents(".par"); }
         this.updateNoteBadge($par);
     }

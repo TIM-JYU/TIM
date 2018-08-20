@@ -49,10 +49,10 @@
         {% block stylesheet %}
             {{ scss(config.SASS_GEN_PATH + '/' + prefs.css_combined) }}
         {% endblock %}
-        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='angular-ui-grid@4.0.1/ui-grid.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='katex@0.7.1/dist/katex.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='angularjs-color-picker@3.4.8/dist/angularjs-color-picker.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='angularjs-color-picker@3.4.8/dist/themes/angularjs-color-picker-bootstrap.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/angular-ui-grid@4.6.3/ui-grid.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/katex@0.7.1/dist/katex.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/angularjs-color-picker@3.4.8/dist/angularjs-color-picker.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/angularjs-color-picker@3.4.8/dist/themes/angularjs-color-picker-bootstrap.min.css') }}">
         {% block customcss %}
             <style type="text/css">
                 {{ prefs.custom_css }}

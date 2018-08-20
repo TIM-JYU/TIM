@@ -60,7 +60,7 @@ export function onClick(className: string, func: (obj: JQuery, e: JQueryEventObj
     const eventName = isIOS ? "touchend" : "mouseup";
     $document.on(eventName, className, function(e) {
         if (downEvent != null) {
-            if (func($(this), downEvent)) {
+            if (func($(this) as any, downEvent)) {
                 // e.preventDefault();
                 // e.stopPropagation();
             }
@@ -71,7 +71,7 @@ export function onClick(className: string, func: (obj: JQuery, e: JQueryEventObj
 
 export function onMouseOver(className: string, func: MouseFn) {
     $document.on("mouseover", className, function(e: JQueryEventObject) {
-        if (func($(this), fixPageCoords(e))) {
+        if (func($(this) as any, fixPageCoords(e))) {
             e.preventDefault();
             e.stopPropagation();
         }
@@ -80,7 +80,7 @@ export function onMouseOver(className: string, func: MouseFn) {
 
 export function onMouseOut(className: string, func: MouseFn) {
     $document.on("mouseout", className, function(e: JQueryEventObject) {
-        if (func($(this), fixPageCoords(e))) {
+        if (func($(this) as any, fixPageCoords(e))) {
             e.preventDefault();
             e.stopPropagation();
         }
@@ -95,13 +95,13 @@ export function onMouseOverOut(className: string, func: MouseOverOutFn) {
     // true when over, false when out
 
     $document.on("mouseover", className, function(e: JQueryEventObject) {
-        if (func($(this), fixPageCoords(e), true)) {
+        if (func($(this) as any, fixPageCoords(e), true)) {
             e.preventDefault();
         }
     });
 
     $document.on("mouseout", className, function(e: JQueryEventObject) {
-        if (func($(this), fixPageCoords(e), false)) {
+        if (func($(this) as any, fixPageCoords(e), false)) {
             e.preventDefault();
         }
     });

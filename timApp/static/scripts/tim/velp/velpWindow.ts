@@ -26,7 +26,7 @@ export let colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "corn
  */
 export class VelpWindowController implements IController {
     private onVelpSelect!: Binding<(params: {$VELP: IVelp}) => void, "&">;
-    private velpLocal: IVelp;
+    private velpLocal!: IVelp;
     private velp!: Binding<IVelpUI, "<">;
     private newLabel: INewLabel;
     private labelToEdit: INewLabel;
@@ -41,34 +41,12 @@ export class VelpWindowController implements IController {
     private docId!: Binding<number, "<">;
     private teacherRight!: Binding<boolean, "<">;
 
-    constructor() {
+    $onInit() {
         this.velpLocal = JSON.parse(JSON.stringify(this.velp)); // clone object
-
-        this.newLabel = {content: "", selected: true, valid: true, id: null};
-        this.labelToEdit = {content: "", selected: false, edit: false, valid: true, id: null};
-
-        this.visible_options = {
-            type: "select",
-            title: "Visible to",
-            values: [1, 2, 3, 4],
-            names: ["Just me", "Document owner", "Teachers", "Everyone"],
-        };
 
         if (typeof this.velp.visible_to === UNDEFINED) {
             this.velp.visible_to = 4; // Everyone by default
         }
-
-        this.settings = {
-            teacherRightsError: "You need to have teacher rights to change points in this document.",
-            labelContentError: "Label content too short",
-            velpGroupError: "Select at least one velp group.",
-            velpGroupWarning: "All selected velp groups are hidden in the current area.",
-            velpContentError: "Velp content too short",
-        };
-
-        this.submitted = false;
-
-        this.hasEditAccess = false;
 
         // declare edit rights
         if (this.new) {
@@ -78,8 +56,24 @@ export class VelpWindowController implements IController {
         }
     }
 
-    $onInit() {
-
+    constructor() {
+        this.newLabel = {content: "", selected: true, valid: true, id: null};
+        this.labelToEdit = {content: "", selected: false, edit: false, valid: true, id: null};
+        this.visible_options = {
+            type: "select",
+            title: "Visible to",
+            values: [1, 2, 3, 4],
+            names: ["Just me", "Document owner", "Teachers", "Everyone"],
+        };
+        this.settings = {
+            teacherRightsError: "You need to have teacher rights to change points in this document.",
+            labelContentError: "Label content too short",
+            velpGroupError: "Select at least one velp group.",
+            velpGroupWarning: "All selected velp groups are hidden in the current area.",
+            velpContentError: "Velp content too short",
+        };
+        this.submitted = false;
+        this.hasEditAccess = false;
     }
 
     saveButtonText() {

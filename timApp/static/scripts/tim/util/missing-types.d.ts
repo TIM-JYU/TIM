@@ -1,4 +1,3 @@
-
 // All 3rd party libraries without type definitions should be listed here:
 declare module "humanize-duration";
 declare module "angular-messages";
@@ -9,7 +8,19 @@ declare module "bootstrap-sass";
 declare module "angular-touch";
 declare module "angular-bootstrap-colorpicker";
 declare module "katex-auto-render" {
-    const renderMathInElement: (e: Element) => void;
+
+    interface Delimiter {
+        left: string;
+        right: string;
+        display: boolean;
+    }
+
+    interface KatexRenderOptions {
+        delimiters?: Delimiter[];
+        ignoredTags?: string[];
+    }
+
+    const renderMathInElement: (e: Element, options?: KatexRenderOptions) => void;
     export = renderMathInElement;
 }
 declare module "reveal";
@@ -31,7 +42,6 @@ declare module "tim/session" {
     let timelimit: string | undefined;
 }
 declare module "tim/show_slide_vars";
-declare let require: typeof SystemJS.amdRequire;
 
 declare module "mathjax" {
     const MathJax: jax.IMathJax;

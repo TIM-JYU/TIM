@@ -23,12 +23,12 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     constructor(protected scope: IScope, protected element: IRootElementService) {
         super(element, scope);
         instance = this;
-        this.callbacks = this.resolve.params.callbacks;
-        this.activeTable = this.resolve.params.activeTable;
     }
 
     $onInit() {
         super.$onInit();
+        this.callbacks = this.resolve.params.callbacks;
+        this.activeTable = this.resolve.params.activeTable;
         this.draggable.setCloseFn(undefined); // Hides the close button
     }
 
@@ -45,7 +45,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         } */
     }
 
-    public callbacks: ITimTableToolbarCallbacks;
+    public callbacks!: ITimTableToolbarCallbacks; // $onInit
     private activeTable?: object;
     private visible: boolean = true;
 

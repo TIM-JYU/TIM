@@ -20,82 +20,66 @@
   "license": "MIT",
   "dependencies": {
     "@types/ace": "^0.0.32",
-    "@types/angular": "^1.5.23",
-    "@types/angular-animate": "^1.5.6",
-    "@types/angular-sanitize": "^1.3.4",
-    "@types/angular-ui-bootstrap": "^0.13.41",
-    "@types/bootstrap": "^3.3.32",
-    "@types/chart.js": "^2.7.3",
-    "@types/eonasdan-bootstrap-datetimepicker": "^4.17.22",
-    "@types/jquery": "^3.2.16",
-    "@types/jqueryui": "^1.11.35",
+    "@types/angular": "^1.6.50",
+    "@types/angular-animate": "^1.5.10",
+    "@types/angular-sanitize": "^1.3.7",
+    "@types/angular-ui-bootstrap": "^0.13.47",
+    "@types/bootstrap": "^3.3.39",
+    "@types/chart.js": "^2.7.30",
+    "@types/eonasdan-bootstrap-datetimepicker": "^4.17.26",
+    "@types/jquery": "^3.3.5",
+    "@types/jqueryui": "^1.12.3",
     "@types/katex": "^0.5.0",
     "@types/mathjax": "^0.0.31",
-    "@types/ng-file-upload": "^12.2.0",
+    "@types/ng-file-upload": "^12.2.2",
     "@types/ngstorage": "^0.3.34",
     "@types/oclazyload": "^0.0.31",
     "@types/rangyinputs": "^1.2.0",
     "@types/systemjs": "^0.20.2",
     "@types/ui-grid": "^0.0.35",
-    "moment": "^2.18.1",
-    "tslib": "^1.7.1",
-    "type-zoo": "^2.0.0"
+    "moment": "^2.22.2",
+    "tslib": "^1.9.3",
+    "type-zoo": "^3.0.0"
   },
   "devDependencies": {
-    "jspm": "^0.17.0-beta.47",
+    "jspm": "^0.17.0-beta.48",
     "replace-in-file": "^2.5.0",
-    "systemjs-builder": "^0.16.12",
-    "tslint": "^5.10.0",
-    "typescript": "^2.7.1"
+    "systemjs-builder": "^0.16.13",
+    "tslint": "^5.11.0",
+    "typescript": "^3.0.1"
   },
   "jspm": {
     "dependencies": {
-      "@types/ace": "npm:@types/ace@^0.0.32",
-      "@types/angular": "npm:@types/angular@1.5",
-      "@types/angular-animate": "npm:@types/angular-animate@^1.5.6",
-      "@types/angular-sanitize": "npm:@types/angular-sanitize@^1.3.4",
-      "@types/angular-ui-bootstrap": "npm:@types/angular-ui-bootstrap@^0.13.41",
-      "@types/bootstrap": "npm:@types/bootstrap@^3.3.32",
-      "@types/chart.js": "npm:@types/chart.js@^2.7.3",
-      "@types/eonasdan-bootstrap-datetimepicker": "npm:@types/eonasdan-bootstrap-datetimepicker@^4.17.22",
-      "@types/jquery": "npm:@types/jquery@^2.0.41",
-      "@types/katex": "npm:@types/katex@^0.5.0",
-      "@types/mathjax": "npm:@types/mathjax@^0.0.31",
-      "@types/ngstorage": "npm:@types/ngstorage@^0.3.34",
-      "@types/oclazyload": "npm:@types/oclazyload@^0.0.31",
-      "@types/rangyinputs": "npm:@types/rangyinputs@^1.2.0",
-      "@types/systemjs": "npm:@types/systemjs@^0.20.2",
-      "@types/ui-grid": "npm:@types/ui-grid@^0.0.35",
       "ace": "github:ajaxorg/ace-builds@^1.2.6",
-      "angular-animate": "npm:angular-animate@1.5",
+      "angular-animate": "npm:angular-animate@^1.7.3",
       "angular-bootstrap-colorpicker": "npm:angular-bootstrap-colorpicker@^3.0.26",
       "angular-eonasdan-datetimepicker": "npm:angular-eonasdan-datetimepicker@^0.3.9",
-      "angular-messages": "npm:angular-messages@1.5",
-      "angular-sanitize": "npm:angular-sanitize@1.5",
+      "angular-messages": "npm:angular-messages@^1.7.3",
+      "angular-sanitize": "npm:angular-sanitize@^1.7.3",
       "angular-timer": "npm:angular-timer@^1.3.5",
-      "angular-touch": "npm:angular-touch@1.5",
+      "angular-touch": "npm:angular-touch@^1.7.3",
       "angular-ui-bootstrap": "npm:angular-ui-bootstrap@^2.5.0",
-      "angular-ui-grid": "npm:angular-ui-grid@4.0.1",
+      "angular-ui-grid": "npm:angular-ui-grid@^4.6.3",
       "angularjs-color-picker": "npm:angularjs-color-picker@^3.4.8",
       "bootstrap-sass": "github:twbs/bootstrap-sass@^3.3.7",
-      "chart.js": "npm:chart.js@^2.7.1",
-      "humanize-duration": "npm:humanize-duration@^3.10.0",
-      "katex": "npm:katex@^0.7.1",
+      "chart.js": "npm:chart.js@^2.7.2",
+      "humanize-duration": "github:EvanHahn/HumanizeDuration.js@^3.15.1",
+      "katex": "npm:katex@0.7.1",
       "ng-file-upload": "npm:ng-file-upload@^12.2.13",
       "ngstorage": "npm:ngstorage@^0.3.11",
       "oclazyload": "npm:oclazyload@^1.1.0",
       "rangyinputs": "github:jigargosar/rangyinputs@^1.2.0",
       "text": "github:systemjs/plugin-text@^0.0.9",
-      "ts": "github:frankwallis/plugin-typescript@^9.0.0",
-      "tslib": "npm:tslib@^1.7.1"
+      "ts": "github:frankwallis/plugin-typescript@^9.0.0"
     },
     "devDependencies": {
       "core-js": "npm:core-js@^1.1.4",
       "plugin-typescript": "github:frankwallis/plugin-typescript@^9.0.0",
+      "source-map-support": "npm:source-map-support@^0.5.8",
       "ts-runtime": "npm:babel-runtime@^5.8.24"
     },
     "peerDependencies": {
-      "angular": "npm:angular@1.5",
+      "angular": "npm:angular@^1.7.3",
       "assert": "npm:jspm-nodelibs-assert@^0.2.0",
       "bootstrap": "github:twbs/bootstrap@^3.3.7",
       "buffer": "npm:jspm-nodelibs-buffer@^0.2.0",
@@ -108,20 +92,26 @@
       "http": "npm:jspm-nodelibs-http@^0.2.0",
       "jquery": "npm:jquery@^2.2",
       "module": "npm:jspm-nodelibs-module@^0.2.0",
-      "moment": "npm:moment@^2.18.1",
-      "moment-timezone": "npm:moment-timezone@^0.4.0",
+      "moment": "npm:moment@^2.22.2",
+      "moment-timezone": "npm:moment-timezone@^0.5.21",
       "net": "npm:jspm-nodelibs-net@^0.2.0",
       "os": "npm:jspm-nodelibs-os@^0.2.0",
       "path": "npm:jspm-nodelibs-path@^0.2.0",
       "process": "npm:jspm-nodelibs-process@^0.2.0",
+      "readline": "npm:jspm-nodelibs-readline@^0.2.0",
       "stream": "npm:jspm-nodelibs-stream@^0.2.0",
       "string_decoder": "npm:jspm-nodelibs-string_decoder@^0.2.0",
-      "typescript": "npm:typescript@^2.7.1",
+      "tslib": "npm:tslib@^1.9.3",
+      "typescript": "npm:typescript@^3.0.1",
       "url": "npm:jspm-nodelibs-url@^0.2.0",
       "util": "npm:jspm-nodelibs-util@^0.2.0",
       "vm": "npm:jspm-nodelibs-vm@^0.2.0"
     },
     "overrides": {
+      "github:EvanHahn/HumanizeDuration.js@3.15.1": {
+        "main": "humanize-duration",
+        "format": "global"
+      },
       "github:ajaxorg/ace-builds@1.2.6": {
         "main": "ace",
         "format": "global",
@@ -165,7 +155,15 @@
           }
         }
       },
-      "npm:angular@1.5.11": {
+      "npm:angular-eonasdan-datetimepicker@0.3.9": {
+        "peerDependencies": {
+          "bootstrap": "github:twbs/bootstrap"
+        },
+        "dependencies": {
+          "angular": "1.7"
+        }
+      },
+      "npm:angular@1.7.3": {
         "format": "global",
         "jspmNodeConversion": false,
         "main": "angular",
@@ -174,14 +172,6 @@
             "exports": "angular",
             "format": "global"
           }
-        }
-      },
-      "npm:angular-eonasdan-datetimepicker@0.3.9": {
-        "peerDependencies": {
-          "bootstrap": "github:twbs/bootstrap"
-        },
-        "dependencies": {
-          "angular": "1.5"
         }
       },
       "npm:babel-runtime@5.8.38": {
@@ -207,40 +197,23 @@
       "npm:jquery@2.2.4": {
         "format": "amd"
       },
-      "npm:moment@2.18.1": {
+      "npm:moment@2.22.2": {
         "jspmNodeConversion": false
       },
-      "npm:moment@2.6.0": {
-        "jspmNodeConversion": false
-      },
-      "npm:pbkdf2@3.0.14": {
+      "npm:pbkdf2@3.0.16": {
         "main": "browser.js"
       },
-      "npm:safe-buffer@5.1.1": {
+      "npm:safe-buffer@5.1.2": {
         "browser": "index.js"
       },
-      "npm:tslib@1.7.1": {
+      "npm:tslib@1.9.3": {
         "format": "cjs",
         "meta": {
           "tslib.js": {
             "esModule": true
           }
         }
-      },
-      "npm:typescript@2.7.1": {
-        "browser": {},
-        "map": {
-          "buffer": "@empty",
-          "child_process": "@empty",
-          "fs": "@empty",
-          "path": "@empty",
-          "process": "@empty",
-          "readline": "@empty"
-        },
-        "dependencies": {
-          "source-map-support": "*"
-        }
       }
     }
   }
-}
+}

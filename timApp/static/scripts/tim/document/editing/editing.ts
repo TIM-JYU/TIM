@@ -52,7 +52,7 @@ export interface IParEditorOptions {
     texts?: {beforeText: string, initialText: string, afterText: string};
 }
 
-function prepareOptions($this: Element, saveTag: string): [JQuery, IParEditorOptions] {
+function prepareOptions($this: HTMLElement, saveTag: string): [JQuery, IParEditorOptions] {
     const par = $($this).closest(".par");
     const text = par.find("pre").text();
     let forcedClasses: string[] = [];

@@ -10,5 +10,4 @@
 #  - you modify tim/editor/ace.ts or tim/plugin/imagex.ts (because these are not included in the set of watched files)
 
 # ./run_command_workdir.sh timApp/static/scripts /bin/bash -c "npm install && jspm install && npm run fixLibs && npm run build && tsc"
-./run_command_workdir.sh timApp/static/scripts /bin/bash -c "npm install --no-bin-links && jspm install && npm run fixLibs && npm run build && tsc"
-
+./run_command_workdir.sh timApp/static/scripts /bin/bash -c "npm install && jspm install && npm run fixLibs && npm run build && tsc"

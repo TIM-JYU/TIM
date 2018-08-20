@@ -47,7 +47,7 @@
             </div>
             <div class="form-group form-horz-flex" tim-error-state>
                 <label>
-                    <input type="radio" name="useDate" ng-click="clctrl.enableDate2()"
+                    <input type="radio" name="useDate" ng-change="clctrl.enableDate2()"
                            ng-model="clctrl.useDate" ng-value="true"/>
                     Ending time
                 </label>
@@ -68,7 +68,7 @@
 
             <div class="form-horz-flex">
                 <label>
-                    <input type="radio" name="useDate" ng-click="clctrl.enableDue2()"
+                    <input type="radio" name="useDate" ng-change="clctrl.enableDue2()"
                            ng-model="clctrl.useDate" ng-value="false"/>
                     Duration
                 </label>

@@ -1,19 +1,18 @@
-import angular from "angular";
-import {IController} from "angular";
+import angular, {IController} from "angular";
 import {timApp} from "tim/app";
 import * as formErrorMessage from "tim/ui/formErrorMessage";
 import * as shortNameValidator from "tim/ui/shortNameValidator";
 import {Binding, getURLParameter, markAsUsed} from "tim/util/utils";
 import {$http, $window} from "../util/ngimport";
 import {slugify} from "../util/slugify";
-import {ITag, ITaggedItem, TagType} from "./IItem";
 import {to} from "../util/utils";
+import {ITaggedItem, TagType} from "./IItem";
 
 markAsUsed(formErrorMessage, shortNameValidator);
 
 class CreateItemController implements IController {
     private fullPath?: Binding<string, "@?">;
-    private automaticShortName: boolean;
+    private automaticShortName: boolean = false;
     private itemLocation?: Binding<string, "@?">;
     private itemTitle?: Binding<string, "@?">;
     private itemName?: Binding<string, "@">;
@@ -26,6 +25,10 @@ class CreateItemController implements IController {
     private tagsWithExpirations: boolean = false;
 
     constructor() {
+        this.alerts = [];
+    }
+
+    async $onInit() {
         this.automaticShortName = !this.force;
 
         if (this.fullPath) {
@@ -41,10 +44,6 @@ class CreateItemController implements IController {
             this.params.template = this.template;
         }
 
-        this.alerts = [];
-    }
-
-    async $onInit() {
         await this.checkExpiredTags();
     }
 

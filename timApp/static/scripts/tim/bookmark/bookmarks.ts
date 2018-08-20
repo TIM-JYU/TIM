@@ -27,17 +27,16 @@ export class BookmarksController implements IController {
     public viewctrl?: ViewCtrl;
 
     constructor() {
-        if ($window.bookmarks && !this.data) {
-            this.data = angular.copy($window.bookmarks);
-        }
         this.deleting = false;
-
-        if (this.userId && !this.data) {
-            void this.refresh();
-        }
     }
 
     $onInit() {
+        if ($window.bookmarks && !this.data) {
+            this.data = angular.copy($window.bookmarks);
+        }
+        if (this.userId && !this.data) {
+            void this.refresh();
+        }
         if (this.viewctrl) {
             this.viewctrl.registerBookmarks(this);
         }

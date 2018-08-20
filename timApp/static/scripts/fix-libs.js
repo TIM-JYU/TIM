@@ -22,7 +22,7 @@ replace.sync({
 
 // Fixes async-await syntax so that uncaught exceptions are logged.
 replace.sync({
-    files: 'jspm_packages/npm/tslib@1.7.1/tslib.js',
+    files: 'jspm_packages/npm/tslib@1.9.3/tslib.js',
     from: /catch \(e\) { reject\(e\); }/g,
     to: 'catch (e) { console.log(e); reject(e); }'
 });

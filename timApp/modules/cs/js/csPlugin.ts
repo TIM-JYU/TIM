@@ -1394,7 +1394,7 @@ csApp.Controller = function($scope,$transclude) {
                 reader.onload = (function(e) {
                     // showTrack(theFile.target.result,type);  
                     // console.log(theFile.target.result);
-                    $scope.usercode = reader.result;
+                    $scope.usercode = reader.result as string;
                   });
                 reader.readAsText(file);  
 
@@ -2434,8 +2434,9 @@ csApp.Controller = function($scope,$transclude) {
         if ( $scope.editorMode >= 0 ) return;
         $scope.editorMode = 0;
         if ( typeof(localStorage) === "undefined" )  return;
-        if ( localStorage.editorIndex === "undefined" ) return;
-        var eindex = localStorage.editorIndex;
+        const eindexStr = localStorage.getItem("editorIndex");
+        if ( !eindexStr ) return;
+        const eindex = parseInt(eindexStr, 10);
         if ( $scope.editorModes.indexOf("0") < 0 ) return;
         if ( $scope.editorModes.indexOf("1") < 0 ) return;
         for ( var em = 0; em < $scope.editorModeIndecies.length; em++ ) {
@@ -2486,7 +2487,7 @@ csApp.Controller = function($scope,$transclude) {
         var eindex = $scope.editorModeIndecies[$scope.editorMode];
         $scope.editorIndex = eindex;
         var otherEditDiv = $scope.element0.getElementsByClassName('csrunEditorDiv')[0];                    
-        var editorDiv: JQuery = angular.element(otherEditDiv);
+        var editorDiv = angular.element(otherEditDiv) as JQuery;
         $scope.edit = $compile(html[eindex])($scope as any)[0] as HTMLTextAreaElement; // TODO unsafe cast
         // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
         // $scope.aceEnabled = eindex == 1;
@@ -2532,7 +2533,7 @@ csApp.Controller = function($scope,$transclude) {
         }
         $scope.initEditorKeyBindings();
         if ( typeof(localStorage) !== "undefined" && eindex <= 1) {
-            localStorage.editorIndex = eindex;
+            localStorage.setItem("editorIndex", eindex.toString());
         }
     };
     

@@ -195,15 +195,15 @@
                 <p>Send me email on</p>
                 <div class="checkbox"><label>
                     <input type="checkbox" ng-model="$ctrl.notifySettings.email_doc_modify"
-                           ng-click="$ctrl.notifyChanged()"/>Document modifications
+                           ng-change="$ctrl.notifyChanged()"/>Document modifications
                 </label></div>
                 <div class="checkbox"><label>
                     <input type="checkbox" ng-model="$ctrl.notifySettings.email_comment_add"
-                           ng-click="$ctrl.notifyChanged()"/>New comments
+                           ng-change="$ctrl.notifyChanged()"/>New comments
                 </label></div>
                 <div class="checkbox"><label>
                     <input type="checkbox" ng-model="$ctrl.notifySettings.email_comment_modify"
-                           ng-click="$ctrl.notifyChanged()"/>Edited comments
+                           ng-change="$ctrl.notifyChanged()"/>Edited comments
                 </label></div>
             </form>
         </div>

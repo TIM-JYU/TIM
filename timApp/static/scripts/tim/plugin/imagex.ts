@@ -1758,7 +1758,8 @@ ImagexScope.prototype.doshowAnswer = function() {
     }
 
     $scope.http({method: "PUT", url, data: params, headers: {"Content-Type": "application/json"}, timeout: 20000},
-    ).success(function(data, status, headers, config) {
+    ).then(function(resp) {
+        const data = resp.data;
         $scope.isRunning = false;
         $scope.error = data.web.error;
         $scope.result = data.web.result;
@@ -1768,9 +1769,9 @@ ImagexScope.prototype.doshowAnswer = function() {
         $scope.dt.addRightAnswers();
         //$scope.imagexScope.resetExercise();
 
-    }).error(function(data, status) {
+    }, function(err) {
         $scope.isRunning = false;
-        $scope.errors.push(status);
+        $scope.errors.push(err.status);
         $scope.error = "Ikuinen silmukka tai jokin muu vika?";
     });
 };
@@ -1858,7 +1859,8 @@ ImagexScope.prototype.doSave = function(nosave) {
     }
 
     $scope.http({method: "PUT", url, data: params, headers: {"Content-Type": "application/json"}, timeout: 20000},
-    ).success(function(data, status, headers, config) {
+    ).then(function(resp) {
+        const data = resp.data;
         $scope.isRunning = false;
         $scope.error = data.web.error;
         $scope.result = data.web.result;
@@ -1866,9 +1868,9 @@ ImagexScope.prototype.doSave = function(nosave) {
         $scope.userHasAnswered = true;
         $scope.replyImage = data.web["-replyImage"];
         $scope.replyHTML = data.web["-replyHTML"];
-    }).error(function(data, status) {
+    }, function(err) {
         $scope.isRunning = false;
-        $scope.errors.push(status);
+        $scope.errors.push(err.status);
         $scope.error = "Ikuinen silmukka tai jokin muu vika?";
     });
 };

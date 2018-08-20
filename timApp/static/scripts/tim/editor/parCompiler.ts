@@ -1,5 +1,4 @@
 import {IScope} from "angular";
-import katex from "katex-auto-render";
 import {$compile, $log, $ocLazyLoad, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
 import {lazyLoad, lazyLoadMany} from "../util/lazyLoad";
@@ -34,7 +33,7 @@ export class ParagraphCompiler {
             return;
         }
         timLogTime("processAllMath start", "view");
-        const renderMathInElement = await lazyLoad<typeof katex>("katex-auto-render");
+        const renderMathInElement = (await import("katex-auto-render")) as any as typeof import ("katex-auto-render");
         mathelems.each((index, elem) => {
             const result = this.processMath(renderMathInElement, elem, false);
             if (result != null) {
