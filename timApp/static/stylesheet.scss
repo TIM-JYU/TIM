@@ -1239,3 +1239,7 @@ body > .footer {
     width:auto;
     max-height: 500px;
 }
+
+.no-page-break-before {
+    page-break-before: avoid;
+}
