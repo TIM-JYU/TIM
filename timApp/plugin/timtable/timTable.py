@@ -147,7 +147,7 @@ def tim_table_multimd():
     multi = []
     for jso in jsondata:
         tbl = jso[MARKUP][TABLE]
-        latexTable = str(convert_table(tbl))
+        latexTable = str(convert_table(tbl, draw_html_borders=False))
         multi.append(latexTable)
     return json_response(multi)
 

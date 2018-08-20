@@ -1261,12 +1261,13 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
-def convert_table(table_json) -> Table:
+def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     """
     Converts TimTable-json into LaTeX-compatible object.
     Note: for correct functioning all the other modules should use this.
     :param table_json: Table data as json dictionary with
         'rows', 'tabledatablock', etc. at the first level.
+    :param draw_html_borders Add light gray default borders around cells similarly to HTML-table.
     :return: Table-object containing the rows and cells in LaTex.
     """
     table_rows = []
@@ -1305,12 +1306,13 @@ def convert_table(table_json) -> Table:
     table_font_weight = get_key_value(table_json, "fontWeight", None)
 
     # Add light borders around every cell like in HTML-table.
-    # border_color = ("lightgray", False)
-    # table_borders = CellBorders(left=True, right=True, top=True, bottom=True,
-    #              color_bottom=border_color,
-    #              color_top=border_color,
-    #              color_left=border_color,
-    #              color_right=border_color)
+    if add_html_borders:
+        border_color = ("lightgray", False)
+        table_borders = CellBorders(left=True, right=True, top=True, bottom=True,
+                     color_bottom=border_color,
+                     color_top=border_color,
+                     color_left=border_color,
+                     color_right=border_color)
 
     # Get column formattings:
     column_bg_color_list = get_column_color_list("backgroundColor", table_json)
@@ -1445,6 +1447,8 @@ def convert_table(table_json) -> Table:
             # above to avoid overlap, since LaTeX doesn't automatically
             # move cells aside.
             # TODO: Multirow-multicol cells have some border problems.
+            # TODO: Cells that are replaced in html by rowspan or colspan are left in some cases and
+            # TODO: may break multicol and -row cells.
             if rowspan > 1:
                 # Take multicol-cells messing up indices into account with this:
                 cell_index = table_row.get_colspan()
