@@ -306,7 +306,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 if (params.type !== EditType.Edit) {
                     return;
                 }
-                await $http.post(`/unread/${this.viewctrl.docId}/${extraData.par}`, {});
+                await $http.put(`/unread/${this.viewctrl.docId}/${extraData.par}`, {});
                 params.pars.first().find(".readline").removeClass("read read-modified");
                 getActiveDocument().refreshSectionReadMarks();
             },
