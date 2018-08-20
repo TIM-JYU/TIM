@@ -498,6 +498,7 @@ def estimate_col_widths(rows):
     :param rows: Table rows.
     :return: Estimation of column widths.
     """
+    # TODO: Take colspan into account.
     widths = []
     for i in range(0, len(rows)):
         i_widths = []
@@ -518,6 +519,7 @@ def estimate_col_widths(rows):
                     max_content_size = content_size
                 if width != default_width:
                     i_widths.append(width)
+
         if i_widths:
             widths.append(max(i_widths))
         else:
@@ -691,7 +693,6 @@ class Table:
             self.save_largest()
             return self.largest_content_len
 
-
     def get_largest_col_count(self) -> int:
         """
         Get largest total row colspan in the table.
@@ -850,13 +851,7 @@ def get_color(item, key: str, default_color=None, default_color_html=None) -> (s
         color = item[key]
         if "#" in color:
             color_html = True
-            color = re.sub('[^a-zA-Z0-9]+', '', color)
-            missing_chars = 6 - len(color)
-            # If incomplete, add missing Fs.
-            if len(color) > 6:
-                color = color[0:6]
-            if missing_chars > 0:
-                color = "F"*missing_chars + color
+            color = parse_hex_color(color)
         else:
             color_html = False
     except KeyError:
@@ -930,13 +925,7 @@ def add_missing_elements(table_json, datablock):
         row_json = table_json['rows'][i]
         row_cell_count = len(row_json['row'])
         for j in range(row_cell_count, max_cell_count):
-            # Use the real content if cell is in datablock.
-            datablock_cell_data = get_datablock_cell_data(datablock, i, j)
-            if datablock_cell_data:
-                row_json['row'].append(datablock_cell_data)
-            # Filler cells between existing ones get empty cell data.
-            else:
-                row_json['row'].append(empty_cell)
+            row_json['row'].append(empty_cell)
     return table_json
 
 
@@ -1035,6 +1024,19 @@ def get_key_value(item, key, default=None):
     return a
 
 
+def parse_hex_color(color, default_color=None) -> Union[str, None]:
+    """
+    Removes non-hex characters and checks if result is valid.
+    :param color: Color string.
+    :param default_color: Color returned in case valid hex can't be parsed.
+    :return: A hex color code of six characters.
+    """
+    color = re.sub('[^a-fA-F0-9]+', '', color)
+    if len(color) != 6:
+        color = default_color
+    return color
+
+
 def get_border_color(border_data) -> (str, bool):
     """
     Parses border color from HTML border format.
@@ -1046,9 +1048,10 @@ def get_border_color(border_data) -> (str, bool):
     color_html = False
     if arg_count == 2:
         color = border_data[border_data.rfind(" "):].strip()
-        if "#" in color:
-            color_html = True
-            color = color.replace("#", "")
+        # Hex codes don't work in TimTable.
+        # if "#" in color:
+        #     color_html = True
+        #     color = parse_hex_color(color, default_text_color)
     return color, color_html
 
 
@@ -1175,6 +1178,7 @@ def get_table_resize(table_data, table_width_estimation, col_count) -> bool:
     If the attribute isn't set, automatically decide whether to resize.
     :param table_data: Table JSON.
     :param table_width_estimation: Table width and whether it's an estimation as tuple.
+    :param col_count Max number of columns (including colspans) in the table.
     :return: Table scaling true or false.
     """
     table_width = table_width_estimation[0]
@@ -1299,6 +1303,14 @@ def convert_table(table_json) -> Table:
     table_font_size = get_font_size(table_json, default_font_size)
     table_h_align = get_text_horizontal_align(table_json, default_text_h_align)
     table_font_weight = get_key_value(table_json, "fontWeight", None)
+
+    # Add light borders around every cell like in HTML-table.
+    # border_color = ("lightgray", False)
+    # table_borders = CellBorders(left=True, right=True, top=True, bottom=True,
+    #              color_bottom=border_color,
+    #              color_top=border_color,
+    #              color_left=border_color,
+    #              color_right=border_color)
 
     # Get column formattings:
     column_bg_color_list = get_column_color_list("backgroundColor", table_json)
