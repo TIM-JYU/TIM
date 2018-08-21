@@ -216,6 +216,8 @@ export class TimTableController implements IController {
         this.onClick = this.onClick.bind(this);
         this.setCellTextAlign = this.setCellTextAlign.bind(this);
         this.setCellBackgroundColor = this.setCellBackgroundColor.bind(this);
+        this.addColumnFromToolbar = this.addColumnFromToolbar.bind(this);
+        this.addRowFromToolbar = this.addRowFromToolbar.bind(this);
     }
 
     /**
@@ -280,8 +282,10 @@ export class TimTableController implements IController {
         if (this.mouseInTable) {
             if (this.isInEditMode() && isToolbarEnabled()) {
                 openTableEditorToolbar({callbacks: {
-                setTextAlign: this.setCellTextAlign,
-                setCellBackgroundColor: this.setCellBackgroundColor}, activeTable: this } );
+                    setTextAlign: this.setCellTextAlign,
+                    setCellBackgroundColor: this.setCellBackgroundColor,
+                    addColumn: this.addColumnFromToolbar,
+                    addRow: this.addRowFromToolbar}, activeTable: this } );
             } else {
                 // Hide the toolbar if we're not in edit mode
                 hideToolbar(this);
@@ -1123,57 +1127,37 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Handles the user's click on the "add row" button.
-     */
-    async addRowButtonClick() {
-        if (this.isInDataInputMode()) {
-            this.addDatablockRow();
-        } else {
-            this.addRegularRow();
-        }
-    }
-
-    /**
      * Tells the server to add a new row into this table.
      */
-    async addRegularRow() {
+    async addRow(rowId: number) {
         if (this.viewctrl == null) {
             return;
         }
 
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
-        let rowId = this.cellDataMatrix.length;
-        if (this.data.table.rows) {
-            rowId = this.data.table.rows.length;
+        if (rowId == -1) {
+            if (this.isInDataInputMode()) {
+                rowId = this.cellDataMatrix.length;
+            } else {
+                if (this.data.table.rows) {
+                    rowId = this.data.table.rows.length;
+                } else {
+                    return;
+                }
+            }
         }
+
         let response;
 
         if (this.isInGlobalAppendMode()) {
             response = await $http.post<TimTable>("/timTable/addUserSpecificRow",
                 {docId, parId});
         } else {
-            response = await $http.post<TimTable>("/timTable/addRow",
+            const route = this.isInDataInputMode() ? "/timTable/addDatablockRow" : "/timTable/addRow";
+            response = await $http.post<TimTable>(route,
                 {docId, parId, rowId});
         }
-
-        this.data = response.data;
-        this.reInitialize();
-    }
-
-    /**
-     * Tells the server to add a new datablock-only row into this table.
-     */
-    async addDatablockRow() {
-        if (this.viewctrl == null) {
-            return;
-        }
-
-        const parId = this.getOwnParId();
-        const docId = this.viewctrl.item.id;
-        const rowId = this.cellDataMatrix.length;
-        const response = await $http.post<TimTable>("/timTable/addDatablockRow",
-            {docId, parId, rowId});
 
         this.data = response.data;
         this.reInitialize();
@@ -1210,27 +1194,16 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Handles the user's click on the "add column" button.
-     */
-    async addColumnButtonClick() {
-        if (this.isInDataInputMode()) {
-            this.addColumn("/timTable/addDatablockColumn");
-        } else {
-            this.addColumn("/timTable/addColumn");
-        }
-    }
-
-    /**
      * Tells the server to add a new column into this table.
      */
-    async addColumn(route: string) {
+    async addColumn(colId: number) {
         if (this.viewctrl == null) {
             return;
         }
 
+        const route = this.isInDataInputMode() ? "/timTable/addDatablockColumn" : "/timTable/addColumn";
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
-        const colId = -1; // magic number for adding a column to each row regardless of the row's length
         const response = await $http.post<TimTable>(route,
             {docId, parId, colId});
         this.data = response.data;
@@ -1345,6 +1318,14 @@ export class TimTableController implements IController {
 
     //<editor-fold desc="Toolbar">
 
+    async addColumnFromToolbar(offset: number) {
+        if (this.lastEditedCell) return this.addColumn(this.lastEditedCell.col + offset);
+    }
+
+    async addRowFromToolbar(offset: number) {
+        if (this.lastEditedCell) return this.addRow(this.lastEditedCell.row + offset);
+    }
+
     async setCellBackgroundColor(value: string) {
         this.setCellStyleAttribute("setCellBackgroundColor", "color", value);
     }
@@ -1374,27 +1355,6 @@ export class TimTableController implements IController {
         this.data = response.data;
         this.reInitialize();
     }
-
-    /**
-     * Tells the server to change the background color of the selected cell.
-     */
-    /*async setCellBackgroundColor() {
-        if (!this.viewctrl || !this.lastEditedCell) {
-            return;
-        }
-
-        const parId = this.getOwnParId();
-        const docId = this.viewctrl.item.id;
-        const rowId = this.lastEditedCell.row;
-        const colId = this.lastEditedCell.col;
-        const color = this.selectedCellBackgroundColor;
-
-        const response = await $http.post<TimTable>("/timTable/setCellBackgroundColor",
-            {docId, parId, rowId, colId, color});
-        this.data = response.data;
-        this.reInitialize();
-        this.selectedCellBackgroundColor = this.cellDataMatrix[rowId][colId].backgroundColor;
-    }*/
 
     //</editor-fold>
 
@@ -1450,7 +1410,7 @@ timApp.component("timTable", {
      ng-mouseleave="$ctrl.mouseOutTable()">
     <div class="timTableContentDiv no-highlight">
     <button class="timTableEditor timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
-            ng-click="$ctrl.addColumnButtonClick()"><span class="glyphicon glyphicon-plus"></span></button>
+            ng-click="$ctrl.addColumn(-1)"><span class="glyphicon glyphicon-plus"></span></button>
     <button class="timTableEditor timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.isInEditMode()"
             ng-click="$ctrl.removeColumnButtonClick()"><span class="glyphicon glyphicon-minus"></span></button>
     <table ng-class="{editable: $ctrl.isInEditMode() && !$ctrl.isInForcedEditMode(), forcedEditable: $ctrl.isInForcedEditMode()}" class="timTableTable"
@@ -1467,7 +1427,7 @@ timApp.component("timTable", {
                 </td>
         </tr>
     </table>
-    <button class="timTableEditor timButton buttonAddRow" title="Add row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.addRowButtonClick()"><span
+    <button class="timTableEditor timButton buttonAddRow" title="Add row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.addRow(-1)"><span
             class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
     <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.removeRow()"><span
             class="glyphicon glyphicon-minus"></span></button>            
