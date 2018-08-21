@@ -63,7 +63,7 @@ OPENID_IDENTITY_URL = 'https://korppi.jyu.fi/openid'
 
 CELERY_BROKER_URL = 'redis://redis:6379',
 CELERY_RESULT_BACKEND = 'redis://redis:6379'
-CELERY_IMPORTS = ('timApp.tim_celery')
+CELERY_IMPORTS = ('timApp.tim_celery',)
 CELERYBEAT_SCHEDULE = {
     'update-search-files': {
         'task': 'timApp.tim_celery.update_search_files',
