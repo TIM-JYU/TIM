@@ -298,24 +298,23 @@ def tim_table_add_datablock_row():
     datablock_entries = construct_datablock_entry_list_from_yaml(plug)
     new_datablock_entries = []
 
-    if datablock_entries:
-        for entry in datablock_entries:
-            if entry.row == row_id - 1:
-                new_datablock_entries.append(RelativeDataBlockValue(row_id, entry.column, ''))
-            elif entry.row >= row_id:
-                entry.row += 1
+    try:
+        rows = plug.values[TABLE][ROWS]
+    except KeyError:
+        return abort(400)
+    if not rows:
+        return abort(400)
+    row = rows[-1][ROW]
+    for i in range(0, len(row)):
+        new_datablock_entries.append(RelativeDataBlockValue(len(rows), i, ''))
 
-            new_datablock_entries.append(entry)
-    else:
-        try:
-            rows = plug.values[TABLE][ROWS]
-        except KeyError:
-            return abort(400)
-        if not rows:
-            return abort(400)
-        row = rows[-1][ROW]
-        for i in range(0, len(row)):
-            new_datablock_entries.append(RelativeDataBlockValue(len(rows), i, ''))
+    for entry in datablock_entries:
+        if entry.row == row_id - 1:
+            new_datablock_entries.append(RelativeDataBlockValue(row_id, entry.column, ''))
+        elif entry.row >= row_id:
+            entry.row += 1
+
+        new_datablock_entries.append(entry)
 
     apply_datablock_from_entry_list(plug, new_datablock_entries)
     plug.save()
