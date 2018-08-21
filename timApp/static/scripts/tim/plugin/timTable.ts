@@ -1291,7 +1291,7 @@ export class TimTableController implements IController {
      * In data input mode, new rows are added to the datablock instead of the regular YAML.
      */
     private isInDataInputMode() {
-        return this.data.dataInput;
+        return this.data.dataInput === true;
     }
 
     /**
