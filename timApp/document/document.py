@@ -8,17 +8,16 @@ from time import time
 from typing import List, Optional, Set, Tuple, Union, Iterable, Generator, Dict
 
 from filelock import FileLock
-from flask import g
 from lxml import etree, html
 
 from timApp.document.changelog import Changelog
 from timApp.document.changelogentry import ChangelogEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings, resolve_settings_for_pars
-from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
 from timApp.document.documentwriter import DocumentWriter
+from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.exceptions import DocExistsError, ValidationException
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.validationresult import ValidationResult
@@ -270,9 +269,6 @@ class Document:
         settings = DocSettings(self, settings_dict=final_settings)
         settings.user = user
         self.settings = settings
-        gmacros = settings.get_globalmacros()
-        if gmacros:
-            g.globalmacros = gmacros
         return settings
 
     def create(self, ignore_exists: bool = False):
