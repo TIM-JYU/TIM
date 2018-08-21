@@ -10,7 +10,6 @@ from flask import current_app
 
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.markdown.dumboclient import call_dumbo, DumboOptions
-from timApp.util.flask.search import get_error_message
 from timApp.util.logger import log_warning
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat

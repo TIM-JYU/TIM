@@ -438,18 +438,14 @@ def get_doc_par_id(line: str) -> Union[Tuple[int, str, str], None]:
         return None
 
 
-@search_routes.route("createContentFile")
-def create_search_file():
+def create_search_files(remove_deleted_pars=True):
     """
     Groups all TIM-paragraphs under documents and combines them into a single file.
     Creates also a raw file without grouping.
     Note: may take several minutes, so timeout settings need to be lenient.
+    :remove_deleted_pars: Check paragraph existence before adding.
     :return: A message confirming success of file creation.
     """
-    verify_admin()
-
-    # Checks paragraph existence before adding at the cost of taking more time.
-    remove_deleted_pars = get_option(request, 'removeDeletedPars', default=True, cast=bool)
 
     dir_path = Path(app.config['FILES_PATH']) / 'pars'
     raw_file_name = RAW_CONTENT_FILE_NAME
@@ -464,75 +460,80 @@ def create_search_file():
                          cwd=dir_path,
                          shell=True).communicate()
     except Exception as e:
-        abort(400,
-              f"Failed to create preliminary file {dir_path / raw_file_name}: {get_error_message(e)}")
+        return(400, f"Failed to create preliminary file {dir_path / raw_file_name}: {get_error_message(e)}")
     try:
         raw_file = open(dir_path / raw_file_name, "r", encoding='utf-8')
     except FileNotFoundError:
-        abort(400, f"Failed to open preliminary file {dir_path / raw_file_name}")
+        return (400, f"Failed to open preliminary file {dir_path / raw_file_name}")
     try:
-        def process_raw_file():
-            with raw_file, open(
-                    dir_path / temp_content_file_name, "w+", encoding='utf-8') as temp_content_file, open(
-                    dir_path / temp_title_file_name, "w+", encoding='utf-8') as temp_title_file:
+        with raw_file, open(
+                dir_path / temp_content_file_name, "w+", encoding='utf-8') as temp_content_file, open(
+                dir_path / temp_title_file_name, "w+", encoding='utf-8') as temp_title_file:
 
-                current_doc, current_pars = -1, []
-                processed = 0
+            current_doc, current_pars = -1, []
 
-                for line in raw_file:
-                    try:
-                        doc_id, par_id, par = get_doc_par_id(line)
-                        if not doc_id:
-                            continue
-                        if not current_doc:
-                            current_doc = doc_id
-                        # If same doc as previous line or the first, just add par data to list.
-                        if current_doc == doc_id:
-                            current_pars.append(par)
-                        # Otherwise save the previous one and empty par data.
-                        else:
-                            new_content_line = add_doc_info_content_line(current_doc, current_pars, remove_deleted_pars)
-                            new_title_line = add_doc_info_title_line(current_doc)
-                            if new_content_line:
-                                temp_content_file.write(new_content_line)
-                            if new_title_line:
-                                temp_title_file.write(new_title_line)
-                            current_doc = doc_id
-                            current_pars.clear()
-                            current_pars.append(par)
-                        processed += 1
-                    except Exception as e:
-                        yield f"'{get_error_message(e)}' while writing search file line '{line}''\n"
+            for line in raw_file:
+                try:
+                    doc_id, par_id, par = get_doc_par_id(line)
+                    if not doc_id:
+                        continue
+                    if not current_doc:
+                        current_doc = doc_id
+                    # If same doc as previous line or the first, just add par data to list.
+                    if current_doc == doc_id:
+                        current_pars.append(par)
+                    # Otherwise save the previous one and empty par data.
                     else:
-                        if processed % 1000 == 0:
-                            yield f'Processed {processed} paragraphs so far\n'
+                        new_content_line = add_doc_info_content_line(current_doc, current_pars,
+                                                                     remove_deleted_pars)
+                        new_title_line = add_doc_info_title_line(current_doc)
+                        if new_content_line:
+                            temp_content_file.write(new_content_line)
+                        if new_title_line:
+                            temp_title_file.write(new_title_line)
+                        current_doc = doc_id
+                        current_pars.clear()
+                        current_pars.append(par)
+                except Exception as e:
+                    print(f"'{get_error_message(e)}' while writing search file line '{line}''\n")
 
-                # Write the last line separately, because loop leaves it unsaved.
-                if current_doc and current_pars:
-                    new_content_line = add_doc_info_content_line(current_doc, current_pars, remove_deleted_pars)
-                    new_title_line = add_doc_info_title_line(current_doc)
-                    if new_content_line:
-                        temp_content_file.write(new_content_line)
-                    if new_title_line:
-                        temp_title_file.write(new_title_line)
-                yield f'Finished processing all {processed} paragraphs\n'
+            # Write the last line separately, because loop leaves it unsaved.
+            if current_doc and current_pars:
+                new_content_line = add_doc_info_content_line(current_doc, current_pars, remove_deleted_pars)
+                new_title_line = add_doc_info_title_line(current_doc)
+                if new_content_line:
+                    temp_content_file.write(new_content_line)
+                if new_title_line:
+                    temp_title_file.write(new_title_line)
 
-                temp_content_file.flush()
-                temp_title_file.flush()
-                os.fsync(temp_content_file)
-                # noinspection PyTypeChecker
-                os.fsync(temp_title_file)
+            temp_content_file.flush()
+            temp_title_file.flush()
+            os.fsync(temp_content_file)
+            # noinspection PyTypeChecker
+            os.fsync(temp_title_file)
 
-            os.rename(str(dir_path / temp_content_file_name), str(dir_path / content_file_name))
-            os.rename(str(dir_path / temp_title_file_name), str(dir_path / title_file_name))
+        os.rename(str(dir_path / temp_content_file_name), str(dir_path / content_file_name))
+        os.rename(str(dir_path / temp_title_file_name), str(dir_path / title_file_name))
 
-            yield f"Combined and processed paragraph files created to" \
-                  f" {dir_path / content_file_name} and {dir_path / title_file_name}\n"
+        return 200, f"Combined and processed paragraph files created to " \
+              f"{dir_path / content_file_name} and {dir_path / title_file_name}\n"
+    except:
+        return 400, "Creating files to {dir_path / content_file_name} and {dir_path / title_file_name} failed!"
 
-        return Response(stream_with_context(process_raw_file()), mimetype='text/plain')
-    except Exception as e:
-        abort(400, f"Failed to create search files "
-                   f"{dir_path / content_file_name} and {dir_path / title_file_name}: {get_error_message(e)}")
+
+@search_routes.route("createContentFile")
+def create_search_files_route():
+    """
+    Groups all TIM-paragraphs under documents and combines them into a single file.
+    Creates also a raw file without grouping.
+    Note: may take several minutes, so timeout settings need to be lenient.
+    :return: A message confirming success of file creation.
+    """
+    verify_admin()
+
+    # Checks paragraph existence before adding at the cost of taking more time.
+    status, msg = create_search_files(get_option(request, 'removeDeletedPars', default=True, cast=bool))
+    return json_response(status_code=status, jsondata=msg)
 
 
 @search_routes.route("/titles")

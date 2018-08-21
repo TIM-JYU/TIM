@@ -114,5 +114,21 @@ services:
   logging:
    driver: none
   restart: unless-stopped
+ redis:
+  image: redis
+ celery:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  command: celery -A timApp.tim_celery.celery worker -B
+  volumes:
+   - .:/service
+   - ${LOG_DIR}:/service/tim_logs
+   - ${FILES_ROOT}:/tim_files
+  working_dir: /service/timApp
+  environment:
+   FLASK_APP: tim_app.py
+   PYTHONPATH: /service:/usr/local/lib/python3.6/dist-packages
+   COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
+   TIM_SETTINGS: ${CONFIG_FILE}
+   TIM_HOST: ${TIM_HOST}
 volumes:
  data:

@@ -115,6 +115,7 @@ attrs \
 autopep8 \
 beautifulsoup4 \
 bcrypt \
+celery[redis] \
 cffi \
 cssselect \
 cssutils \

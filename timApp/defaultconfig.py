@@ -3,6 +3,8 @@ import os
 import subprocess
 from datetime import timedelta
 
+from celery.schedules import crontab
+
 ALLOWED_DOCUMENT_UPLOAD_MIMETYPES = ['text/plain']
 COMPRESS_DEBUG = True
 COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript']
@@ -58,3 +60,13 @@ GIT_LATEST_COMMIT_TIMESTAMP = subprocess.run(["git", "log", "-1", "--date=format
                                              stdout=subprocess.PIPE).stdout.decode().strip()
 GIT_BRANCH = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], stdout=subprocess.PIPE).stdout.decode().strip()
 OPENID_IDENTITY_URL = 'https://korppi.jyu.fi/openid'
+
+CELERY_BROKER_URL = 'redis://redis:6379',
+CELERY_RESULT_BACKEND = 'redis://redis:6379'
+CELERY_IMPORTS = ('timApp.tim_celery')
+CELERYBEAT_SCHEDULE = {
+    'update-search-files': {
+        'task': 'timApp.tim_celery.update_search_files',
+        'schedule': crontab(minute='*/15'),  # Repeat every quarter hour.
+    }
+}
