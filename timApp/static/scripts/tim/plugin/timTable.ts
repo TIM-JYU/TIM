@@ -218,6 +218,8 @@ export class TimTableController implements IController {
         this.setCellBackgroundColor = this.setCellBackgroundColor.bind(this);
         this.addColumnFromToolbar = this.addColumnFromToolbar.bind(this);
         this.addRowFromToolbar = this.addRowFromToolbar.bind(this);
+        this.removeColumnFromToolbar = this.removeColumnFromToolbar.bind(this);
+        this.removeRowFromToolbar = this.removeRowFromToolbar.bind(this);
     }
 
     /**
@@ -285,7 +287,9 @@ export class TimTableController implements IController {
                     setTextAlign: this.setCellTextAlign,
                     setCellBackgroundColor: this.setCellBackgroundColor,
                     addColumn: this.addColumnFromToolbar,
-                    addRow: this.addRowFromToolbar}, activeTable: this } );
+                    addRow: this.addRowFromToolbar,
+                    removeColumn: this.removeColumnFromToolbar,
+                    removeRow: this.removeRowFromToolbar}, activeTable: this } );
             } else {
                 // Hide the toolbar if we're not in edit mode
                 hideToolbar(this);
@@ -1166,26 +1170,25 @@ export class TimTableController implements IController {
     /**
      * Tells the server to remove a row from this table.
      */
-    async removeRow() {
+    async removeRow(rowId: number) {
         if (this.viewctrl == null || !this.data.table.rows) {
             return;
         }
 
-        let datablockOnly;
-        let rowId;
+        const datablockOnly = this.isInDataInputMode();
 
-        if (this.isInDataInputMode()) {
-            datablockOnly = true;
-            rowId = this.cellDataMatrix.length - 1;
-        } else {
-            datablockOnly = false;
-            rowId = this.data.table.rows.length - 1;
+        if (rowId == -1) {
+            if (datablockOnly) {
+                rowId = this.cellDataMatrix.length - 1;
+            } else {
+                rowId = this.data.table.rows.length - 1;
+            }
         }
 
         const docId = this.viewctrl.item.id;
         const parId = this.getOwnParId();
 
-        if (rowId < 1) { return; }
+        if (rowId < 0 || this.cellDataMatrix.length < 2) { return; }
 
         const response = await $http.post<TimTable>("/timTable/removeRow",
             {docId, parId, rowId, datablockOnly});
@@ -1211,26 +1214,21 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Handles clicks on the "remove column" button.
-     */
-    async removeColumnButtonClick() {
-        this.removeColumn();
-    }
-
-    /**
      * Tells the server to remove a column from this table.
      */
-    async removeColumn() {
+    async removeColumn(colId: number) {
         if (this.viewctrl == null) {
             return;
         }
 
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
-        let colId = this.getColumnCount() - 1;
+        if (colId == -1) {
+            colId = this.getColumnCount() - 1;
+        }
         const datablockOnly = this.isInDataInputMode();
 
-        if (colId < 1) { return; }
+        if (colId < 0) { return; }
 
         const response = await $http.post<TimTable>("/timTable/removeColumn",
             {docId, parId, colId, datablockOnly});
@@ -1326,6 +1324,14 @@ export class TimTableController implements IController {
         if (this.lastEditedCell) return this.addRow(this.lastEditedCell.row + offset);
     }
 
+    async removeColumnFromToolbar() {
+        if (this.lastEditedCell) return this.removeColumn(this.lastEditedCell.col);
+    }
+
+    async removeRowFromToolbar() {
+        if (this.lastEditedCell) return this.removeRow(this.lastEditedCell.row);
+    }
+
     async setCellBackgroundColor(value: string) {
         this.setCellStyleAttribute("setCellBackgroundColor", "color", value);
     }
@@ -1412,7 +1418,7 @@ timApp.component("timTable", {
     <button class="timTableEditor timButton buttonAddCol" title="Add column" ng-show="$ctrl.isInEditMode()"
             ng-click="$ctrl.addColumn(-1)"><span class="glyphicon glyphicon-plus"></span></button>
     <button class="timTableEditor timButton buttonRemoveCol" title="Remove column" ng-show="$ctrl.isInEditMode()"
-            ng-click="$ctrl.removeColumnButtonClick()"><span class="glyphicon glyphicon-minus"></span></button>
+            ng-click="$ctrl.removeColumn(-1)"><span class="glyphicon glyphicon-minus"></span></button>
     <table ng-class="{editable: $ctrl.isInEditMode() && !$ctrl.isInForcedEditMode(), forcedEditable: $ctrl.isInForcedEditMode()}" class="timTableTable"
      ng-style="$ctrl.stylingForTable($ctrl.data.table)" id={{$ctrl.data.table.id}}>
         <col ng-repeat="c in $ctrl.data.table.columns" ng-attr-span="{{c.span}}}" id={{c.id}}
@@ -1429,7 +1435,7 @@ timApp.component("timTable", {
     </table>
     <button class="timTableEditor timButton buttonAddRow" title="Add row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.addRow(-1)"><span
             class="glyphicon glyphicon-plus" ng-bind="$ctrl.addRowButtonText"></span></button>
-    <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.removeRow()"><span
+    <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" ng-show="$ctrl.isInEditMode()" ng-click="$ctrl.removeRow(-1)"><span
             class="glyphicon glyphicon-minus"></span></button>            
     </div>
     <div class="timTableEditor">

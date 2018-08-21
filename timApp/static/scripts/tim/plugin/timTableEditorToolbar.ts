@@ -7,6 +7,8 @@ export interface ITimTableToolbarCallbacks {
     setCellBackgroundColor: (value: string) => void;
     addColumn: (offset: number) => void;
     addRow: (offset: number) => void;
+    removeColumn: () => void;
+    removeRow: () => void;
 }
 
 export interface ITimTableEditorToolbarParams {
@@ -134,6 +136,14 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     private addRow(offset: number) {
         this.callbacks.addRow(offset);
     }
+
+    private removeColumn() {
+        this.callbacks.removeColumn();
+    }
+
+    private removeRow() {
+        this.callbacks.removeRow();
+    }
 }
 
 export function isToolbarEnabled() {
@@ -169,15 +179,22 @@ registerDialogComponent("timTableEditorToolbar",
   <div >
     <div class="timTableEditorToolbar">
         <div>
-        <span role="menuitem" uib-dropdown>
-        <a uib-dropdown-toggle>Insert</a>
-        <ul class="dropdown-menu" uib-dropdown-menu>
-            <li role="menuitem" ng-click="$ctrl.addRow(0)"><a>Row above</a></li>
-            <li role="menuitem" ng-click="$ctrl.addRow(1)"><a>Row below</a></li>
-            <li role="menuitem" ng-click="$ctrl.addColumn(1)"><a>Column to the right</a></li>
-            <li role="menuitem" ng-click="$ctrl.addColumn(0)"><a>Column to the left</a></li>
-        </ul>
-        </span>
+            <span role="menuitem" uib-dropdown>
+                <a uib-dropdown-toggle>Edit</a>
+                <ul class="dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem" ng-click="$ctrl.removeRow()"><a>Remove row</a></li>
+                    <li role="menuitem" ng-click="$ctrl.removeColumn()"><a>Remove column</a></li>
+                </ul>
+            </span>
+            <span role="menuitem" uib-dropdown>
+                <a uib-dropdown-toggle>Insert</a>
+                <ul class="dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem" ng-click="$ctrl.addRow(0)"><a>Row above</a></li>
+                    <li role="menuitem" ng-click="$ctrl.addRow(1)"><a>Row below</a></li>
+                    <li role="menuitem" ng-click="$ctrl.addColumn(1)"><a>Column to the right</a></li>
+                    <li role="menuitem" ng-click="$ctrl.addColumn(0)"><a>Column to the left</a></li>
+                </ul>
+            </span> 
         </div>
         <color-picker class="timtable-colorpicker" ng-model="$ctrl.cellBackgroundColor" event-api="$ctrl.eventApi"
         options="{'format':'hex', 'placeholder': '#EEEEEE', 'round': false}"></color-picker>
