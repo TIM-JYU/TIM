@@ -337,6 +337,9 @@ def tim_table_add_column():
     except KeyError:
         return abort(400)
 
+    if is_in_datainput_mode(plug):
+        return abort(400)
+
     if col_id < 1:
         # Add a column to the end of each row, regardless of their length
         for row in rows:
@@ -369,6 +372,12 @@ def tim_table_add_column():
                 new_cell[CELL] = ''
                 current_row.insert(col_id, {CELL: ""})
 
+        datablock_entries = construct_datablock_entry_list_from_yaml(plug)
+        for entry in datablock_entries:
+            if entry.column >= col_id:
+                entry.column += 1
+        apply_datablock_from_entry_list(plug, datablock_entries)
+
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
 
@@ -383,6 +392,9 @@ def tim_table_add_datablock_column():
     doc_id, par_id, col_id = verify_json_params('docId', 'parId', 'colId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     verify_edit_access(d)
+
+    if not is_in_datainput_mode(plug):
+        return abort(400)
 
     if not is_datablock(plug.values):
         create_datablock(plug.values[TABLE])
