@@ -437,29 +437,6 @@ def get_column_counts(plug: Plugin) -> Tuple[Dict[int, int], List[RelativeDataBl
     return column_counts, datablock_entries
 
 
-@timTable_plugin.route("removeDatablockColumn", methods=["POST"])
-def tim_table_remove_datablock_column():
-    """
-    Removes a column from the table's datablock.
-    Doesn't affect the regular table structure.
-    :return: The entire table's data after the column has been removed.
-    """
-    doc_id, par_id = verify_json_params('docId', 'parId')
-    d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
-
-    column_counts, datablock_entries = get_column_counts(plug)
-
-    new_datablock_entries = []
-    for entry in datablock_entries:
-        if entry.column < column_counts[entry.row] - 1:
-            new_datablock_entries.append(entry)
-
-    apply_datablock_from_entry_list(plug, new_datablock_entries)
-    plug.save()
-    return json_response(prepare_for_and_call_dumbo(plug))
-
-
 @timTable_plugin.route("removeRow", methods=["POST"])
 def tim_table_remove_row():
     """
@@ -502,24 +479,25 @@ def tim_table_remove_column():
     Removes a column from the table.
     :return: The entire table's data after the column has been removed.
     """
-    doc_id, par_id, col_id = verify_json_params('docId', 'parId', 'colId')
+    doc_id, par_id, col_id, datablock_only = verify_json_params('docId', 'parId', 'colId', 'datablockOnly')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     verify_edit_access(d)
-    try:
-        rows = plug.values[TABLE][ROWS]
-    except KeyError:
-        return abort(400)
-
-    for row in rows:
+    if not datablock_only:
         try:
-            current_row = row[ROW]
+            rows = plug.values[TABLE][ROWS]
         except KeyError:
             return abort(400)
-        if len(current_row) <= col_id:
-            continue # continue instead of erroring out, some rows might have colspan in
-                     # their cells while we can still remove the column from other rows
 
-        current_row.pop(col_id)
+        for row in rows:
+            try:
+                current_row = row[ROW]
+            except KeyError:
+                return abort(400)
+            if len(current_row) <= col_id:
+                continue # continue instead of erroring out, some rows might have colspan in
+                         # their cells while we can still remove the column from other rows
+
+            current_row.pop(col_id)
 
     if is_datablock(plug.values):
         datablock_entries = construct_datablock_entry_list_from_yaml(plug)

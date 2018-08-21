@@ -1241,27 +1241,7 @@ export class TimTableController implements IController {
      * Handles clicks on the "remove column" button.
      */
     async removeColumnButtonClick() {
-        if (this.isInDataInputMode()) {
-            this.removeDatablockColumn();
-        } else {
-            this.removeColumn();
-        }
-    }
-
-    /**
-     * Tells the server to remove a datablock column from this table.
-     */
-    async removeDatablockColumn() {
-        if (this.viewctrl == null) {
-            return;
-        }
-
-        const parId = this.getOwnParId();
-        const docId = this.viewctrl.item.id;
-        const response = await $http.post<TimTable>("/timTable/removeDatablockColumn",
-            {docId, parId});
-        this.data = response.data;
-        this.reInitialize();
+        this.removeColumn();
     }
 
     /**
@@ -1275,11 +1255,12 @@ export class TimTableController implements IController {
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
         let colId = this.getColumnCount() - 1;
+        const datablockOnly = this.isInDataInputMode();
 
         if (colId < 1) { return; }
 
         const response = await $http.post<TimTable>("/timTable/removeColumn",
-            {docId, parId, colId});
+            {docId, parId, colId, datablockOnly});
         this.data = response.data;
         this.reInitialize();
     }
