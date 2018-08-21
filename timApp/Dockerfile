@@ -1,4 +1,3 @@
-# Start from the Ubuntu image
 FROM ubuntu:17.10
 
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
@@ -12,30 +11,6 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
 
-# Install Python, pip and other necessary packages
-
-RUN bash -c "${APT_INSTALL} openssh-server wget ca-certificates python3.6 && ${APT_CLEANUP}"
-
-# Make Python 3.6 the default one
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
-    python3 -V
-
-RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && rm get-pip.py
-
-# lxml dependencies
-# C-parser for PyYAML
-# python-magic dependency
-RUN bash -c "${APT_INSTALL} git-core \
- zlib1g-dev libxml2-dev libxslt-dev python3.6-dev \
- libyaml-dev \
- libmagic1 \
- gcc g++ \
- libmagickwand-dev \
- && ${APT_CLEANUP}"
-
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
-    python3 -V
-
 # Install dependencies of texlive-full excluding packages that are not needed (such as documentation files).
 # This almost-full installation of TeX Live is needed for the latex-pdf printing functionality, as
 # TeX Live doesn't have an (MiKTeX/MacTeX-esque) auto-install functionality for missing LaTeX packages,
@@ -43,6 +18,7 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 
 # severely limited.
 RUN bash -c "${APT_INSTALL} \
 biber \
+ca-certificates \
 cm-super \
 dvidvi \
 dvipng \
@@ -103,7 +79,44 @@ texlive-pstricks \
 texlive-publishers \
 texlive-science \
 texlive-xetex \
+wget \
 && ${APT_CLEANUP}"
+
+# Update dvisvgm so that it supports converting PDFs to SVGs
+RUN bash -c "${APT_INSTALL} gcc g++ libpotrace-dev libgs-dev libkpathsea-dev && ${APT_CLEANUP}"
+RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/2.4/dvisvgm-2.4.tar.gz" -qO $FILE && \
+ tar -xf $FILE && \
+ cd dvisvgm-2.4 && \
+ ./configure && \
+ make -j4 && \
+ make install && \
+ find . -type f -name '*.o' -delete && \
+ find . -type f -name '*.a' -delete && \
+ cd .. && \
+ rm $FILE
+
+# Install Python, pip and other necessary packages
+
+RUN bash -c "${APT_INSTALL} openssh-server python3.6 && ${APT_CLEANUP}"
+
+# Make Python 3.6 the default one
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
+    python3 -V
+
+RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && rm get-pip.py
+
+# lxml dependencies
+# C-parser for PyYAML
+# python-magic dependency
+RUN bash -c "${APT_INSTALL} git-core \
+ zlib1g-dev libxml2-dev libxslt-dev python3.6-dev \
+ libyaml-dev \
+ libmagic1 \
+ libmagickwand-dev \
+ && ${APT_CLEANUP}"
+
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
+    python3 -V
 
 RUN bash -c "${APT_INSTALL} libffi-dev && ${APT_CLEANUP}"
 ENV LD_LIBRARY_PATH /usr/local/lib
@@ -158,19 +171,6 @@ yubico-client \
 
 # Install Pandoc document converter
 RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.1.2/pandoc-2.1.2-1-amd64.deb" -qO $FILE && dpkg -i $FILE && rm $FILE
-
-# Update dvisvgm so that it supports converting PDFs to SVGs
-RUN bash -c "${APT_INSTALL} libpotrace-dev libgs-dev libkpathsea-dev && ${APT_CLEANUP}"
-RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/2.4/dvisvgm-2.4.tar.gz" -qO $FILE && \
- tar -xf $FILE && \
- cd dvisvgm-2.4 && \
- ./configure && \
- make -j4 && \
- make install && \
- find . -type f -name '*.o' -delete && \
- find . -type f -name '*.a' -delete && \
- cd .. && \
- rm $FILE
 
 # Set name and email for git.
 RUN git config --global user.email "agent@docker.com"
