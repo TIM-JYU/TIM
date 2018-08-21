@@ -5,7 +5,7 @@
 import {IRootElementService, IScope} from "angular";
 import {ITag, TagType} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {IDocSearchResult, ITagSearchResult, ITitleSearchResult, SearchBoxCtrl} from "./searchBox";
+import {IDocSearchResult, ITagSearchResult, SearchBoxCtrl} from "./searchBox";
 
 export interface ISearchResultDisplay {
     result: IDocSearchResult;
@@ -94,7 +94,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
      */
     private filterResults() {
         this.displayResults = [];
-        // Combine title and path results.
+        // Combine title-path results.
         const titleAndPathResults: IDocSearchResult[] = [];
         for (const p of this.pathResults) {
             let pathResultsFound = false;
@@ -113,6 +113,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
                 titleAndPathResults.push(p);
             }
         }
+        // Add missing title results to combined title-path results.
         for (const t of this.titleResults) {
             let titleResultsFound = false;
             for (const tp of titleAndPathResults) {
@@ -160,7 +161,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
                     found = true;
                 }
             }
-            // Add documents found only with the title to results list.
+            // Add documents found only with the title and/or path to results list.
             if (!found) {
                 const newDocResult = {
                     closed: true,
@@ -180,13 +181,13 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
                 this.displayResults.push(newDocResult);
             }
         }
-
         for (const t of this.tagResults) {
             let found = false;
             for (const r of this.displayResults) {
                 if (t.doc.path === r.result.doc.path) {
-                    // r.tags = t.matching_tags;
-                    // r.num_tag_results = t.num_results;
+                    // Add tag results to existing content-title-path results.
+                    r.tags = t.matching_tags;
+                    r.num_tag_results = t.num_results;
                     found = true;
                 }
             }
