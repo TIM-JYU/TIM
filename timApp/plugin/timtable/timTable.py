@@ -354,6 +354,7 @@ def tim_table_add_column():
                 new_cell[CELL] = ''
                 current_row.append(new_cell)
     else:
+        # Insert a new column into the table instead of adding it to the end
         for row in rows:
             try:
                 current_row = row[ROW]
@@ -380,7 +381,7 @@ def tim_table_add_datablock_column():
     Doesn't affect the table's regular YAML.
     :return: The entire table's data after the column has been added.
     """
-    doc_id, par_id, col_id = verify_json_params('docId', 'parId')
+    doc_id, par_id, col_id = verify_json_params('docId', 'parId', 'colId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     verify_edit_access(d)
 
@@ -389,8 +390,18 @@ def tim_table_add_datablock_column():
 
     column_counts, datablock_entries = get_column_counts(plug)
 
-    for row_index, column_count in column_counts.items():
-        datablock_entries.append(RelativeDataBlockValue(row_index, column_count, ''))
+    if col_id < 0:
+        # Add a column to the end of each row, regardless of their length
+        for row_index, column_count in column_counts.items():
+            datablock_entries.append(RelativeDataBlockValue(row_index, column_count, ''))
+    else:
+        # Insert a new column into the table instead of adding it to the end
+        for entry in datablock_entries:
+            if entry.column >= col_id:
+                entry.column += 1
+        for row_index, column_count in column_counts.items():
+            if column_count >= col_id:
+                datablock_entries.append(RelativeDataBlockValue(row_index, col_id, ''))
 
     apply_datablock_from_entry_list(plug, datablock_entries)
     plug.save()
@@ -617,7 +628,6 @@ def set_cell_style_attribute(doc_id, par_id, row_id, col_id, attribute, value):
 
     plug.save()
     return json_response(prepare_for_and_call_dumbo(plug))
-
 
 
 def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
