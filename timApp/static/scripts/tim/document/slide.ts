@@ -9,7 +9,9 @@ let pollTimeout: number;
 let receiving = true;
 
 function refresh() {
-    return; // TODO: think this so that things are paired
+    if (1 === 1) { // suppress "unreachable code" warning
+        return; // TODO: think this so that things are paired
+    }
     clearTimeout(pollTimeout);
     $.ajax({
         cache: false,

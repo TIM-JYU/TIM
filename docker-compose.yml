@@ -100,7 +100,7 @@ services:
    - ./timApp/static:/static:ro
   restart: unless-stopped
  dumbo:
-  image: timimages/dumbo:svg
+  image: timimages/dumbo:${TIM_IMAGE_TAG}
   build:
    context: ./Dumbo
    dockerfile: Dockerfile
