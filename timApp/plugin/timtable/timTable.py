@@ -199,7 +199,6 @@ def tim_table_add_row():
     """
     doc_id, par_id, row_id = verify_json_params('docId', 'parId', 'rowId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
     add_row(plug, row_id)
     return json_response(prepare_for_and_call_dumbo(plug))
 
@@ -331,7 +330,6 @@ def tim_table_add_column():
     """
     doc_id, par_id, col_id = verify_json_params('docId', 'parId', 'colId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
     try:
         rows = plug.values[TABLE][ROWS]
     except KeyError:
@@ -391,7 +389,6 @@ def tim_table_add_datablock_column():
     """
     doc_id, par_id, col_id = verify_json_params('docId', 'parId', 'colId')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
 
     if not is_in_datainput_mode(plug):
         return abort(400)
@@ -456,7 +453,6 @@ def tim_table_remove_row():
     """
     doc_id, par_id, row_id, datablock_only = verify_json_params('docId', 'parId', 'rowId', 'datablockOnly')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
     if not datablock_only:
         try:
             rows = plug.values[TABLE][ROWS]
@@ -492,7 +488,6 @@ def tim_table_remove_column():
     """
     doc_id, par_id, col_id, datablock_only = verify_json_params('docId', 'parId', 'colId', 'datablockOnly')
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
     if not datablock_only:
         try:
             rows = plug.values[TABLE][ROWS]
@@ -571,7 +566,6 @@ def set_cell_style_attribute(doc_id, par_id, row_id, col_id, attribute, value):
     :return: The entire table's data after the style attribute has been set.
     """
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
-    verify_edit_access(d)
     data_input_mode = is_in_datainput_mode(plug)
     if data_input_mode:
         datablock_entries = construct_datablock_entry_list_from_yaml(plug)
