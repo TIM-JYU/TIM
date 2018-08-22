@@ -28,6 +28,20 @@ import {getActiveDocument} from "../document/document";
  * @copyright 2015 Timppa project authors
  */
 
+export interface IHeader {
+    id: string;
+    level: number;
+    text: string;
+}
+
+export interface IHeaderDisplayIndexItem {
+    h1: IHeader;
+    h2List: IHeader[];
+    closed: boolean;
+}
+
+type HeaderIndexItem = [IHeader, IHeader[]];
+
 export class SidebarMenuCtrl implements IController {
     private currentLecturesList: ILecture[];
     private futureLecturesList: ILecture[];
@@ -41,7 +55,7 @@ export class SidebarMenuCtrl implements IController {
     private isDocumentMinutes: boolean = false;
     private docSettings?: {macros?: {knro?: string}};
     private hideLinks: boolean = false;
-    private displayIndex?: any;
+    private displayIndex?: IHeaderDisplayIndexItem[];
 
     constructor() {
         this.currentLecturesList = [];
@@ -305,7 +319,7 @@ export class SidebarMenuCtrl implements IController {
      * @param header Header containing h1 and possibly h2 list.
      * @returns {string} Header class.
      */
-    private headerClass(header: any) {
+    private headerClass(header: IHeaderDisplayIndexItem) {
         if (header.h2List.length > 0) {
             if (header.closed) {
                 return "exp";
@@ -320,31 +334,32 @@ export class SidebarMenuCtrl implements IController {
     /**
      * Add closed states to header index.
      * @param index Index containing headers.
-     * @returns {any[]} Index with added closed states.
+     * @returns {HeaderIndexItem[]} Index with added closed states.
      */
-    private formDisplayIndex(index: any) {
+    private formDisplayIndex(index: HeaderIndexItem[]) {
         if (!index || !index[0]) {
             return [];
         }
 
         let closedState = true;
         const headerCount = this.getHeaderCount(index);
-        if (index[0].length === 1 || headerCount < 40) {
+        if (index.length === 1 || headerCount < 40) {
             closedState = false;
         }
 
-        const tempIndex = [];
+        const displayIndex: IHeaderDisplayIndexItem[] = [];
         for (const h of index) {
             if (!h[0]) {
                 continue;
             }
-            let temp = [];
+            const h1: IHeader = h[0];
+            let h2List: IHeader[] = [];
             if (h[1]) {
-                temp = h[1];
+                h2List = h[1];
             }
-            tempIndex.push({closed: closedState, h1: h[0], h2List: temp});
+            displayIndex.push({closed: closedState, h1: h1, h2List: h2List});
         }
-        return tempIndex;
+        return displayIndex;
     }
 
     /**
@@ -352,7 +367,7 @@ export class SidebarMenuCtrl implements IController {
      * @param index Index containing the headers.
      * @returns {number} Total count of all headers.
      */
-    private getHeaderCount(index: any) {
+    private getHeaderCount(index: HeaderIndexItem[]) {
         let temp = 0;
         for (const h of index) {
             if (!h[0]) {
@@ -374,183 +389,195 @@ timApp.component("timSidebarMenu", {
         lctrl: "?^timLecture",
         vctrl: "?^timView",
     },
-    template: `<div><div class="btn btn-default btn-sm pull-left" ng-click="$ctrl.showSidebar()" title="Show menu">
-            <i class="glyphicon glyphicon-menu-hamburger" title="Click to open sidebar-menu"></i>
+    template: `<div class="btn btn-default btn-sm pull-left" ng-click="$ctrl.showSidebar()" title="Show menu">
+    <i class="glyphicon glyphicon-menu-hamburger" title="Click to open sidebar-menu"></i>
+</div>
+<uib-tabset id="menuTabs" active="$ctrl.active" class="hidden-sm hidden-xs">
+    <uib-tab ng-if="!$ctrl.hideLinks" index="6" select="$ctrl.bookmarkTabSelected(true)"
+             deselect="$ctrl.bookmarkTabSelected(false)"
+             ng-show="$ctrl.users.isLoggedIn()">
+        <uib-tab-heading>
+            <i class="glyphicon glyphicon-bookmark"></i>
+        </uib-tab-heading>
+        <h5>Bookmarks</h5>
+        <bookmarks data="$ctrl.bookmarks"></bookmarks>
+    </uib-tab>
+
+    <uib-tab index="1" ng-if="!$ctrl.hideLinks">
+        <uib-tab-heading>
+            <i class="glyphicon glyphicon-cog"></i>
+        </uib-tab-heading>
+        <h5>Customize</h5>
+        <a href="/settings">Customize TIM</a>
+        <div ng-show="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder)">
+            <h5>Search</h5>
+            <button class="timButton btn btn-block"
+                    title="Search with tags" ng-click="$ctrl.searchWithTagsStart()">Search with tags
+            </button>
         </div>
-        <uib-tabset id="menuTabs" active="$ctrl.active" class="hidden-sm hidden-xs">
-            <uib-tab ng-if="!$ctrl.hideLinks" index="6" select="$ctrl.bookmarkTabSelected(true)"
-                     deselect="$ctrl.bookmarkTabSelected(false)"
-                     ng-show="$ctrl.users.isLoggedIn()">
-                <uib-tab-heading>
-                    <i class="glyphicon glyphicon-bookmark"></i>
-                </uib-tab-heading>
-                <h5>Bookmarks</h5>
-                <bookmarks data="$ctrl.bookmarks"></bookmarks>
-            </uib-tab>
 
-            <uib-tab index="1" ng-if="!$ctrl.hideLinks">
-                <uib-tab-heading>
-                    <i class="glyphicon glyphicon-cog"></i>
-                </uib-tab-heading>
-                <h5>Customize</h5>
-                <a href="/settings">Customize TIM</a>
-                <div ng-show="!($ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder)">
-                    <h5>Search</h5>
-                    <button class="timButton btn btn-block"
-                        title="Search with tags" ng-click="$ctrl.searchWithTagsStart()">Search with tags</button>
-                </div>
-
-               <div ng-if="$ctrl.vctrl && $ctrl.vctrl.item.rights.manage">
-                   <h5>Document settings</h5>
-                    <button class="timButton btn btn-block"
-                    ng-click="$ctrl.vctrl.editingHandler.editSettingsPars()">Edit settings</button>
-                    <button ng-show="$ctrl.users.isLoggedIn()" class="timButton btn btn-block"
+        <div ng-if="$ctrl.vctrl && $ctrl.vctrl.item.rights.manage">
+            <h5>Document settings</h5>
+            <button class="timButton btn btn-block"
+                    ng-click="$ctrl.vctrl.editingHandler.editSettingsPars()">Edit settings
+            </button>
+            <button ng-show="$ctrl.users.isLoggedIn()" class="timButton btn btn-block"
                     ng-click="$ctrl.markAllAsRead()"
-                    title="Mark all paragraphs of the document as read">Mark all as read</button>
-                </div>
-                <div ng-if="!$ctrl.vctrl.item.rights.manage && !$ctrl.vctrl.item.isFolder && $ctrl.users.isLoggedIn()">
-                  <h5>Document settings</h5>
-                  <button class="timButton btn btn-block" ng-click="$ctrl.markAllAsRead()"
-                  title="Mark all paragraphs of the document as read">Mark all as read</button>
-                </div>
+                    title="Mark all paragraphs of the document as read">Mark all as read
+            </button>
+        </div>
+        <div ng-if="!$ctrl.vctrl.item.rights.manage && !$ctrl.vctrl.item.isFolder && $ctrl.users.isLoggedIn()">
+            <h5>Document settings</h5>
+            <button class="timButton btn btn-block" ng-click="$ctrl.markAllAsRead()"
+                    title="Mark all paragraphs of the document as read">Mark all as read
+            </button>
+        </div>
 
-                <div ng-show="$ctrl.lctrl.lectureSettings.inLecture">
-                    <h5>Lecture settings</h5>
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" ng-model="$ctrl.lctrl.lectureSettings.useWall"> Show wall
-                        </label>
-                    </div>
-                    <div ng-show="!isLecturer" class="checkbox">
-                        <label>
-                            <input type="checkbox" ng-model="$ctrl.lctrl.lectureSettings.useQuestions"> Show questions
-                        </label>
-                    </div>
-                    <div ng-show="$ctrl.lctrl.isLecturer" class="checkbox">
-                        <label>
-                            <input type="checkbox" ng-model="$ctrl.lctrl.lectureSettings.useAnswers"> Show answers
-                        </label>
-                    </div>
-                    <div ng-show="$ctrl.lctrl.isLecturer" class="checkbox">
-                        <label>
-                            <input type="checkbox" ng-model="$ctrl.lctrl.lectureSettings.useNotPollingDialog"> Show 'not
-                            polling' dialog
-                        </label>
-                    </div>
-                </div>
-                <!-- TODO: check rights -->
-                <div ng-show="$ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder">
-                    <h5 style="display: inline-block">Print document</h5>
-                    <a style="display: inline-block" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
-                        <span class="glyphicon glyphicon-question-sign"></span>
-                    </a>
-                    <button class="timButton btn btn-block"  title="Print using LaTeX => best quality"
-                    ng-click="$ctrl.printDocument()">Print document</button>
-                    <button class="timButton btn btn-block" title="Print using Browser own printing capabilities"
-                    ng-click="$ctrl.cssPrint()">Browser print</button>
-                    <h5 style="display: inline-block">Document tags</h5>
-                    <a style="display: inline-block
-                     href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
-                        <span class="glyphicon glyphicon-question-sign"></span>
-                    </a>
-                    <button class="timButton btn btn-block" ng-show="$ctrl.vctrl.item.rights.manage"
-                    title="Add and remove document tags" ng-click="$ctrl.addTag()">Edit tags</button>
-                    <button class="timButton btn btn-block" title="Search with tags"
-                    ng-click="$ctrl.searchWithTags()">Search with tags</button>
-                    <button class="timButton btn btn-block" ng-show="$ctrl.userBelongsToTeachersOrIsAdmin()"
+        <div ng-show="$ctrl.lctrl.lectureSettings.inLecture">
+            <h5>Lecture settings</h5>
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="$ctrl.lctrl.lectureSettings.useWall"> Show wall
+                </label>
+            </div>
+            <div ng-show="!isLecturer" class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="$ctrl.lctrl.lectureSettings.useQuestions"> Show questions
+                </label>
+            </div>
+            <div ng-show="$ctrl.lctrl.isLecturer" class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="$ctrl.lctrl.lectureSettings.useAnswers"> Show answers
+                </label>
+            </div>
+            <div ng-show="$ctrl.lctrl.isLecturer" class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="$ctrl.lctrl.lectureSettings.useNotPollingDialog"> Show 'not
+                    polling' dialog
+                </label>
+            </div>
+        </div>
+        <!-- TODO: check rights -->
+        <div ng-show="$ctrl.vctrl.item && !$ctrl.vctrl.item.isFolder">
+            <h5 style="display: inline-block">Print document</h5>
+            <a style="display: inline-block" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
+                <span class="glyphicon glyphicon-question-sign"></span>
+            </a>
+            <button class="timButton btn btn-block" title="Print using LaTeX => best quality"
+                    ng-click="$ctrl.printDocument()">Print document
+            </button>
+            <button class="timButton btn btn-block" title="Print using Browser own printing capabilities"
+                    ng-click="$ctrl.cssPrint()">Browser print
+            </button>
+            <h5 style="display: inline-block">Document tags</h5>
+            <a style="display: inline-block
+                     href=" https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
+            <span class="glyphicon glyphicon-question-sign"></span>
+            </a>
+            <button class="timButton btn btn-block" ng-show="$ctrl.vctrl.item.rights.manage"
+                    title="Add and remove document tags" ng-click="$ctrl.addTag()">Edit tags
+            </button>
+            <button class="timButton btn btn-block" title="Search with tags"
+                    ng-click="$ctrl.searchWithTags()">Search with tags
+            </button>
+            <button class="timButton btn btn-block" ng-show="$ctrl.userBelongsToTeachersOrIsAdmin()"
                     title="Set document as a course main page"
-                    ng-click="$ctrl.openCourseDialog()">Set as a course</button>
-                    <h5 style="display: inline-block" ng-show="$ctrl.isMinutesOrInvitation()">Memos/Minutes</h5>
-                    <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateExtractsButton()"
-                    ng-click="$ctrl.createMinuteExtracts()">Create extracts</button>
-                    <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateMinutesButton()"
-                    ng-click="$ctrl.createMinutes()">Create minutes</button>
-                    <button class="timButton btn btn-block" ng-show="$ctrl.isMinutesOrInvitation()"
-                    ng-click="$ctrl.mergePdf()">Merge attachments</button>
-                </div>
+                    ng-click="$ctrl.openCourseDialog()">Set as a course
+            </button>
+            <h5 style="display: inline-block" ng-show="$ctrl.isMinutesOrInvitation()">Memos/Minutes</h5>
+            <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateExtractsButton()"
+                    ng-click="$ctrl.createMinuteExtracts()">Create extracts
+            </button>
+            <button class="timButton btn btn-block" ng-show="$ctrl.enableCreateMinutesButton()"
+                    ng-click="$ctrl.createMinutes()">Create minutes
+            </button>
+            <button class="timButton btn btn-block" ng-show="$ctrl.isMinutesOrInvitation()"
+                    ng-click="$ctrl.mergePdf()">Merge attachments
+            </button>
+        </div>
 
-            </uib-tab>
+    </uib-tab>
 
-            <uib-tab ng-if="$ctrl.displayIndex.length > 0" index="0" ng-if="!$ctrl.hideLinks">
-                <uib-tab-heading>
-                    <i class="glyphicon glyphicon-book"></i>
-                </uib-tab-heading>
-                <h5>Index <a href="#" title="Go to top" class="pull-right">Go to top</a></h5>
-                <ul class="subexp">
-                    <li ng-class="$ctrl.headerClass(h)" ng-repeat="h in $ctrl.displayIndex"
-                    ng-click="h.closed = !h.closed">
-                        <a class="a{{::h.h1.level}}" href="#{{::h.h1.id}}" target="_self">{{::h.h1.text}}</a>
-                        <ul ng-class="sub" ng-if="!h.closed">
-                            <li class="basic" ng-repeat="h2 in h.h2List">
-                                <a class="a{{::h2.level}}" href="#{{::h2.id}}" target="_self">{{::h2.text}}</a>
-                            </li>
-                        </ul>
+    <uib-tab ng-if="$ctrl.displayIndex.length > 0" index="0" ng-if="!$ctrl.hideLinks">
+        <uib-tab-heading>
+            <i class="glyphicon glyphicon-book"></i>
+        </uib-tab-heading>
+        <h5>Index <a href="#" title="Go to top" class="pull-right">Go to top</a></h5>
+        <ul class="subexp">
+            <li ng-class="$ctrl.headerClass(h)" ng-repeat="h in $ctrl.displayIndex"
+                ng-click="h.closed = !h.closed">
+                <a class="a{{::h.h1.level}}" href="#{{::h.h1.id}}" target="_self">{{::h.h1.text}}</a>
+                <ul ng-class="sub" ng-if="!h.closed">
+                    <li class="basic" ng-repeat="h2 in h.h2List">
+                        <a class="a{{::h2.level}}" href="#{{::h2.id}}" target="_self">{{::h2.text}}</a>
                     </li>
                 </ul>
-            </uib-tab>
+            </li>
+        </ul>
+    </uib-tab>
 
-            <uib-tab index="2" ng-if="!$ctrl.hideLinks"
-            ng-show="$ctrl.lctrl.lectureSettings.lectureMode" select="$ctrl.toggleLectures()">
-                <uib-tab-heading>
-                    <i class="glyphicon glyphicon-education"></i>
-                </uib-tab-heading>
-                <h5>Current Lectures</h5>
-                <ul>
-                    <li ng-repeat="lecture in $ctrl.currentLecturesList">
-                        <a href="/showLectureInfo/{{ lecture.lecture_id }}">{{ lecture.lecture_code }}</a>
-                        <button class="timButton btn-xs" ng-if="$ctrl.lctrl.lecture.lecture_id != lecture.lecture_id"
-                                value="Join"
-                                ng-click="$ctrl.lctrl.joinLecture(lecture)">Join
-                        </button>
-                    </li>
-                    <li ng-show="$ctrl.currentLecturesList.length == 0"><p>No current lectures</p></li>
-                </ul>
-                <h5>Coming Lectures</h5>
-                <ul>
-                    <li ng-repeat="lecture in $ctrl.futureLecturesList">
-                        <a href="/showLectureInfo/{{ lecture.lecture_id }}">{{ lecture.lecture_code }}</a>
-                    </li>
-                    <li ng-show="$ctrl.futureLecturesList.length == 0"><p>No coming lectures</p></li>
-                </ul>
-                <h5>Past Lectures</h5>
-                <ul>
-                    <li ng-repeat="lecture in $ctrl.pastLecturesList">
-                        <a href="/showLectureInfo/{{ lecture.lecture_id }}">{{ lecture.lecture_code }}</a>
-                    </li>
-                    <li ng-show="$ctrl.pastLecturesList.length == 0"><p>No past lectures</p></li>
-                </ul>
-            </uib-tab>
+    <uib-tab index="2" ng-if="!$ctrl.hideLinks"
+             ng-show="$ctrl.lctrl.lectureSettings.lectureMode" select="$ctrl.toggleLectures()">
+        <uib-tab-heading>
+            <i class="glyphicon glyphicon-education"></i>
+        </uib-tab-heading>
+        <h5>Current Lectures</h5>
+        <ul>
+            <li ng-repeat="lecture in $ctrl.currentLecturesList">
+                <a href="/showLectureInfo/{{ lecture.lecture_id }}">{{ lecture.lecture_code }}</a>
+                <button class="timButton btn-xs" ng-if="$ctrl.lctrl.lecture.lecture_id != lecture.lecture_id"
+                        value="Join"
+                        ng-click="$ctrl.lctrl.joinLecture(lecture)">Join
+                </button>
+            </li>
+            <li ng-show="$ctrl.currentLecturesList.length == 0"><p>No current lectures</p></li>
+        </ul>
+        <h5>Coming Lectures</h5>
+        <ul>
+            <li ng-repeat="lecture in $ctrl.futureLecturesList">
+                <a href="/showLectureInfo/{{ lecture.lecture_id }}">{{ lecture.lecture_code }}</a>
+            </li>
+            <li ng-show="$ctrl.futureLecturesList.length == 0"><p>No coming lectures</p></li>
+        </ul>
+        <h5>Past Lectures</h5>
+        <ul>
+            <li ng-repeat="lecture in $ctrl.pastLecturesList">
+                <a href="/showLectureInfo/{{ lecture.lecture_id }}">{{ lecture.lecture_code }}</a>
+            </li>
+            <li ng-show="$ctrl.pastLecturesList.length == 0"><p>No past lectures</p></li>
+        </ul>
+    </uib-tab>
 
-            <uib-tab ng-if="!$ctrl.hideLinks" index="4"
-            ng-show="$ctrl.lctrl.lectureSettings.inLecture && !$ctrl.lctrl.isLecturer"
-                     select="$ctrl.lctrl.getQuestionManually()">
-                <uib-tab-heading>
-                    <i class="glyphicon glyphicon-question-sign"></i>
-                </uib-tab-heading>
-                Loading question manually...
-            </uib-tab>
+    <uib-tab ng-if="!$ctrl.hideLinks" index="4"
+             ng-show="$ctrl.lctrl.lectureSettings.inLecture && !$ctrl.lctrl.isLecturer"
+             select="$ctrl.lctrl.getQuestionManually()">
+        <uib-tab-heading>
+            <i class="glyphicon glyphicon-question-sign"></i>
+        </uib-tab-heading>
+        Loading question manually...
+    </uib-tab>
 
-            <uib-tab ng-if="!$ctrl.hideLinks" index="5"
-            ng-show="$ctrl.lctrl.isLecturer && $ctrl.lctrl.lectureSettings.inLecture">
-                <uib-tab-heading>
-                    <i class="glyphicon glyphicon-user"></i>
-                </uib-tab-heading>
-                <h5>People logged-in: <span
-                        ng-bind="$ctrl.lctrl.lecturerTable.length + $ctrl.lctrl.studentTable.length">None</span></h5>
-                <h5>Lecturers (<span ng-bind="$ctrl.lctrl.lecturerTable.length">None</span>)</h5>
-                <ul>
-                    <li ng-repeat="lecturer in $ctrl.lctrl.lecturerTable">
-                        {{ lecturer.user.name }} > {{ lecturer.active | timreldate }}
-                    </li>
-                </ul>
-                <h5>Students (<span ng-bind="$ctrl.lctrl.studentTable.length">None</span>)</h5>
-                <p ng-show="$ctrl.lctrl.lecturerTable.length == 0">No lecturers</p>
-                <ul>
-                    <li ng-repeat="person in $ctrl.lctrl.studentTable track by $index">
-                        {{ person.user.name }} > {{ person.active | timreldate }}
-                    </li>
-                </ul>
-                <p ng-show="$ctrl.lctrl.studentTable.length == 0">No students</p>
-            </uib-tab>
-        </uib-tabset></div>`,
+    <uib-tab ng-if="!$ctrl.hideLinks" index="5"
+             ng-show="$ctrl.lctrl.isLecturer && $ctrl.lctrl.lectureSettings.inLecture">
+        <uib-tab-heading>
+            <i class="glyphicon glyphicon-user"></i>
+        </uib-tab-heading>
+        <h5>People logged-in: <span
+                ng-bind="$ctrl.lctrl.lecturerTable.length + $ctrl.lctrl.studentTable.length">None</span></h5>
+        <h5>Lecturers (<span ng-bind="$ctrl.lctrl.lecturerTable.length">None</span>)</h5>
+        <ul>
+            <li ng-repeat="lecturer in $ctrl.lctrl.lecturerTable">
+                {{ lecturer.user.name }} > {{ lecturer.active | timreldate }}
+            </li>
+        </ul>
+        <h5>Students (<span ng-bind="$ctrl.lctrl.studentTable.length">None</span>)</h5>
+        <p ng-show="$ctrl.lctrl.lecturerTable.length == 0">No lecturers</p>
+        <ul>
+            <li ng-repeat="person in $ctrl.lctrl.studentTable track by $index">
+                {{ person.user.name }} > {{ person.active | timreldate }}
+            </li>
+        </ul>
+        <p ng-show="$ctrl.lctrl.studentTable.length == 0">No students</p>
+    </uib-tab>
+</uib-tabset>`,
 });
