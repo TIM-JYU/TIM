@@ -7,7 +7,6 @@ import {AreaHandler} from "tim/document/areas";
 import {Document, setActiveDocument} from "tim/document/document";
 import {ClipboardHandler} from "tim/document/editing/clipboard";
 //noinspection TypeScriptPreferShortImport
-import {initIndex} from "tim/document/index";
 import * as interceptor from "tim/document/interceptor";
 import {NotesHandler} from "tim/document/notes";
 import {getElementByParId, getParId, Paragraph} from "tim/document/parhelpers";
@@ -177,7 +176,6 @@ export class ViewCtrl implements IController {
         this.parmenuHandler = new ParmenuHandler(sc, this);
         this.refpopupHandler = new RefPopupHandler(sc, this);
         initReadings(this);
-        initIndex();
         initCssPrint();
 
         // from https://stackoverflow.com/a/7317311
