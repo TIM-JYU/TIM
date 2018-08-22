@@ -39,6 +39,7 @@ texlive-bibtex-extra \
 texlive-binaries \
 texlive-extra-utils \
 texlive-font-utils \
+texlive-fonts-extra \
 texlive-fonts-recommended \
 texlive-formats-extra \
 texlive-games \
