@@ -19,7 +19,7 @@ services:
   tmpfs:
    - /var/lib/postgresql/data
  imagex:
-  image: timimages/cs3sudo:compose
+  image: timimages/cs3sudo:bionic
   volumes:
    - ./timApp/modules/imagex:/imagex:ro
    - ./timApp/modules/py:/py:ro

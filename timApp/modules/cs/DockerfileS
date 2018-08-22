@@ -1,4 +1,4 @@
-FROM timimages/cs3:compose
+FROM timimages/cs3:bionic
 USER root
 RUN bash -c "${APT_INSTALL} openssh-server && ${APT_CLEANUP}"
 RUN mkdir /var/run/sshd

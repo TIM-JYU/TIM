@@ -1,15 +1,15 @@
-FROM ubuntu:17.10
+FROM ubuntu:18.04
 
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
-    APT_CLEANUP="rm -r /var/lib/apt/lists/*"
+    APT_CLEANUP="rm -rf /var/lib/apt/lists /dvisvgm-2.4 /usr/share/doc ~/.cache"
 
 # Configure timezone and locale
 RUN bash -c "${APT_INSTALL} locales tzdata && ${APT_CLEANUP}"
-RUN locale-gen en_US.UTF-8
+RUN locale-gen en_US.UTF-8 && bash -c "${APT_CLEANUP}"
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
-RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata
+RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata && bash -c "${APT_CLEANUP}"
 
 # Install dependencies of texlive-full excluding packages that are not needed (such as documentation files).
 # This almost-full installation of TeX Live is needed for the latex-pdf printing functionality, as
@@ -39,7 +39,6 @@ texlive-bibtex-extra \
 texlive-binaries \
 texlive-extra-utils \
 texlive-font-utils \
-texlive-fonts-extra \
 texlive-fonts-recommended \
 texlive-formats-extra \
 texlive-games \
@@ -90,39 +89,28 @@ RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/2
  ./configure && \
  make -j4 && \
  make install && \
- find . -type f -name '*.o' -delete && \
- find . -type f -name '*.a' -delete && \
- cd .. && \
- rm $FILE
+ cd / && \
+ ${APT_CLEANUP}
 
 # Install Python, pip and other necessary packages
 
-RUN bash -c "${APT_INSTALL} openssh-server python3.6 && ${APT_CLEANUP}"
-
-# Make Python 3.6 the default one
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
-    python3 -V
-
-RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && rm get-pip.py
+RUN bash -c "${APT_INSTALL} openssh-server python3 python3-pip && ${APT_CLEANUP}"
 
 # lxml dependencies
 # C-parser for PyYAML
 # python-magic dependency
 RUN bash -c "${APT_INSTALL} git-core \
- zlib1g-dev libxml2-dev libxslt-dev python3.6-dev \
+ zlib1g-dev libxml2-dev libxslt-dev python3-dev \
  libyaml-dev \
  libmagic1 \
  libmagickwand-dev \
+ libffi-dev \
  && ${APT_CLEANUP}"
 
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2 && \
-    python3 -V
-
-RUN bash -c "${APT_INSTALL} libffi-dev && ${APT_CLEANUP}"
 ENV LD_LIBRARY_PATH /usr/local/lib
 
-ENV PIP_INSTALL="python3 -m pip install" \
-    PIP_CLEANUP="rm -r ~/.cache/pip"
+ENV PIP_INSTALL="python3 -m pip install"
+RUN bash -c "${PIP_INSTALL} wheel setuptools && ${APT_CLEANUP}"
 RUN bash -c "${PIP_INSTALL} \
 attrs \
 autopep8 \
@@ -165,16 +153,15 @@ selenium==3.8.1 \
 sphinx \
 sqlalchemy \
 wand \
-wheel \
 yubico-client \
-&& ${PIP_INSTALL} requests --upgrade && ${PIP_CLEANUP}"
+&& ${PIP_INSTALL} requests --upgrade && ${APT_CLEANUP}"
 
-# Install Pandoc document converter
-RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.1.2/pandoc-2.1.2-1-amd64.deb" -qO $FILE && dpkg -i $FILE && rm $FILE
+# Install Pandoc
+RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.1.2/pandoc-2.1.2-1-amd64.deb" -qO $FILE && \
+ dpkg -i $FILE && rm $FILE && bash -c "${APT_CLEANUP}"
 
 # Set name and email for git.
-RUN git config --global user.email "agent@docker.com"
-RUN git config --global user.name "agent"
+RUN git config --global user.email "agent@docker.com" && git config --global user.name "agent"
 
 RUN mkdir /service
 
@@ -182,12 +169,12 @@ RUN mkdir /service
 RUN useradd -M agent
 RUN chown -R agent /service
 
-RUN bash -c "${APT_INSTALL} curl && ${APT_CLEANUP}"
-RUN (curl -sL https://deb.nodesource.com/setup_10.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
-RUN npm i npm@latest -g
-RUN npm install -g typescript@2.8 typedoc tslint jspm typescript-formatter && npm cache clean --force
+RUN bash -c "${APT_INSTALL} software-properties-common && add-apt-repository ppa:malteworld/ppa && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} curl pdftk gpg-agent && ${APT_CLEANUP} && pdftk --version && curl --version"
 
-RUN bash -c "${APT_INSTALL} pdftk && ${APT_CLEANUP}"
+RUN (curl -sL https://deb.nodesource.com/setup_10.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
+RUN npm install -g typescript@2.8 typedoc tslint jspm typescript-formatter && npm cache clean --force && bash -c "${APT_CLEANUP}"
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:test' | chpasswd
