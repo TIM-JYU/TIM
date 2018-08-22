@@ -4,6 +4,7 @@ Note: Add new tasks here. For scheduling add parameters to defaultconfig as well
 """
 
 from celery import Celery
+
 from timApp.tim_app import app
 from timApp.util.flask.search import create_search_files
 
@@ -28,6 +29,7 @@ def make_celery(app):
 
     celery.Task = ContextTask
     return celery
+
 
 celery = make_celery(app)
 

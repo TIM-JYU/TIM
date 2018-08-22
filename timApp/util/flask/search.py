@@ -361,7 +361,7 @@ def validate_query(query: str, search_whole_words: bool) -> None:
                    f'long with whitespace stripped.')
 
 
-def get_error_message(e: Exception):
+def get_error_message(e: Exception) -> str:
     """
     Gives error message with error class.
     :param e: Exception.
@@ -441,10 +441,9 @@ def get_doc_par_id(line: str) -> Union[Tuple[int, str, str], None]:
 def create_search_files(remove_deleted_pars=True):
     """
     Groups all TIM-paragraphs under documents and combines them into a single file.
-    Creates also a raw file without grouping.
-    Note: may take several minutes, so timeout settings need to be lenient.
+    Creates also a similar file for title searches and a raw file without grouping.
     :remove_deleted_pars: Check paragraph existence before adding.
-    :return: A message confirming success of file creation.
+    :return: Status code and a message confirming success of file creation.
     """
 
     dir_path = Path(app.config['FILES_PATH']) / 'pars'
@@ -453,18 +452,17 @@ def create_search_files(remove_deleted_pars=True):
     title_file_name = PROCESSED_TITLE_FILE_NAME
     temp_content_file_name = f"temp_{content_file_name}"
     temp_title_file_name = f"temp_{title_file_name}"
-    raw_file = None
 
     try:
         subprocess.Popen(f'grep -R "" --include="current" . > {raw_file_name} 2>&1',
                          cwd=dir_path,
                          shell=True).communicate()
     except Exception as e:
-        return(400, f"Failed to create preliminary file {dir_path / raw_file_name}: {get_error_message(e)}")
+        return 400, f"Failed to create preliminary file {dir_path / raw_file_name}: {get_error_message(e)}"
     try:
         raw_file = open(dir_path / raw_file_name, "r", encoding='utf-8')
     except FileNotFoundError:
-        return (400, f"Failed to open preliminary file {dir_path / raw_file_name}")
+        return 400, f"Failed to open preliminary file {dir_path / raw_file_name}"
     try:
         with raw_file, open(
                 dir_path / temp_content_file_name, "w+", encoding='utf-8') as temp_content_file, open(
@@ -495,7 +493,7 @@ def create_search_files(remove_deleted_pars=True):
                         current_pars.clear()
                         current_pars.append(par)
                 except Exception as e:
-                    print(f"'{get_error_message(e)}' while writing search file line '{line}''\n")
+                    print(f"'{get_error_message(e)}' while writing search file line '{line}''")
 
             # Write the last line separately, because loop leaves it unsaved.
             if current_doc and current_pars:
@@ -516,7 +514,7 @@ def create_search_files(remove_deleted_pars=True):
         os.rename(str(dir_path / temp_title_file_name), str(dir_path / title_file_name))
 
         return 200, f"Combined and processed paragraph files created to " \
-              f"{dir_path / content_file_name} and {dir_path / title_file_name}\n"
+                    f"{dir_path / content_file_name} and {dir_path / title_file_name}"
     except:
         return 400, "Creating files to {dir_path / content_file_name} and {dir_path / title_file_name} failed!"
 
@@ -524,14 +522,14 @@ def create_search_files(remove_deleted_pars=True):
 @search_routes.route("createContentFile")
 def create_search_files_route():
     """
-    Groups all TIM-paragraphs under documents and combines them into a single file.
-    Creates also a raw file without grouping.
+    Route for grouping all TIM-paragraphs under documents and combining them into a single file.
+    Creates also a similar file for title searches and a raw file without grouping.
     Note: may take several minutes, so timeout settings need to be lenient.
     :return: A message confirming success of file creation.
     """
     verify_admin()
 
-    # Checks paragraph existence before adding at the cost of taking more time.
+    # 'removeDeletedPars' checks paragraph existence before adding at the cost of taking more time.
     status, msg = create_search_files(get_option(request, 'removeDeletedPars', default=True, cast=bool))
     return json_response(status_code=status, jsondata=msg)
 

@@ -197,7 +197,7 @@ class Cell:
 
         font_family_line = ""
         font_family_line_postfix = ""
-        if self.font_family is not default_font_family:
+        if self.font_family != default_font_family:
             font_family_line = fr"\fontfamily{{{self.font_family}}}\selectfont{{"
             font_family_line_postfix = f"}}"
         return fr"\multicolumn{{{self.colspan}}}{{{v_border_and_align}}}{{" \
@@ -294,7 +294,6 @@ class Row:
         # 0:1  1:1  2:1  3:1  4:1
         # 0:1  1:-2 2:1  3:1  4:-2
 
-        # TODO: find the optimal place for sorting
         # Sorting the cells by index is necessary.
         self.cells = sorted(self.cells, key=lambda c: c.index)
 
@@ -957,7 +956,7 @@ def get_size(item, key: str, default=None) -> Union[str, None]:
     """
     try:
         size = parse_size_attribute(item[key])
-        if size is 'auto':
+        if size == 'auto':
             return None
         return size
     except:
