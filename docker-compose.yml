@@ -68,7 +68,7 @@ services:
   command: ./startAll.sh
   restart: unless-stopped
  imagex:
-  image: timimages/cs3:compose
+  image: timimages/cs3:bionic
   volumes:
    - ./timApp/modules/imagex:/imagex:ro
    - ./timApp/modules/py:/py:ro

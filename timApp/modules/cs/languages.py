@@ -10,6 +10,8 @@ cmdline_whitelist = "A-Za-z\-/\.åöäÅÖÄ 0-9_"
 filename_whitelist = "A-Za-z\-/\.åöäÅÖÄ 0-9_"
 
 
+
+
 def sanitize_filename(s):
     global cmdline_whitelist
     return re.sub("[^" + filename_whitelist + "]", "", s)
@@ -52,7 +54,7 @@ class Language:
         self.no_x11 = get_json_param(query.jso, "markup", "noX11", False)
         self.env = dict(os.environ)
         self.userargs = get_json_param(query.jso, "input", "userargs", None)
-        self.dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", "timimages/cs3:compose")
+        self.dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", f"timimages/cs3:{CS3_TAG}")
         self.ulimit = get_param(query, "ulimit", None)
         self.savestate = get_param(query, "savestate", "")
         self.soucecode = sourcecode
@@ -917,7 +919,7 @@ class Octave(Language):
     def run(self, web, sourcelines, points_rule):
         # print("octave: ", self.exename)
         extra = get_param(self.query, "extra", "").format(self.pure_exename, self.userargs)
-        self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer", "timimages/cs3:compose")
+        self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer", f"timimages/cs3:{CS3_TAG}")
         code, out, err, pwddir = self.runself(["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],
                                               timeout=20,
                                               ulimit=df(self.ulimit, "ulimit -t 30 -f 80000"), no_x11=True,

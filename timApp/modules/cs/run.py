@@ -6,6 +6,8 @@ from subprocess import PIPE, Popen
 import subprocess
 import shutil
 
+CS3_TAG = 'bionic'
+
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 from fileParams import *  # noqa
@@ -78,7 +80,7 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
 
 # noinspection PyBroadException
 def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
-         extra="", ulimit=None, no_x11=False, savestate="", dockercontainer="timimages/cs3:compose", compile_commandline = ""):
+         extra="", ulimit=None, no_x11=False, savestate="", dockercontainer=f"timimages/cs3:{CS3_TAG}", compile_commandline = ""):
     """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
     run inside docker.
 
