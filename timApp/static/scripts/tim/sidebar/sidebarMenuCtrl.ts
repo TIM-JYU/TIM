@@ -393,9 +393,8 @@ timApp.component("timSidebarMenu", {
     <i class="glyphicon glyphicon-menu-hamburger" title="Click to open sidebar-menu"></i>
 </div>
 <uib-tabset id="menuTabs" active="$ctrl.active" class="hidden-sm hidden-xs">
-    <uib-tab ng-if="!$ctrl.hideLinks" index="6" select="$ctrl.bookmarkTabSelected(true)"
-             deselect="$ctrl.bookmarkTabSelected(false)"
-             ng-show="$ctrl.users.isLoggedIn()">
+    <uib-tab ng-if="!$ctrl.hideLinks && $ctrl.users.isLoggedIn()" index="6" select="$ctrl.bookmarkTabSelected(true)"
+             deselect="$ctrl.bookmarkTabSelected(false)">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-bookmark"></i>
         </uib-tab-heading>
@@ -498,13 +497,13 @@ timApp.component("timSidebarMenu", {
 
     </uib-tab>
 
-    <uib-tab ng-if="$ctrl.displayIndex.length > 0" index="0" ng-if="!$ctrl.hideLinks">
+    <uib-tab ng-if="$ctrl.displayIndex.length > 0 && !$ctrl.hideLinks" index="0">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-book"></i>
         </uib-tab-heading>
         <h5>Index <a href="#" title="Go to top" class="pull-right">Go to top</a></h5>
         <ul class="subexp">
-            <li ng-class="$ctrl.headerClass(h)" ng-repeat="h in $ctrl.displayIndex"
+            <li ng-class="$ctrl.headerClass(h)" ng-repeat="h in ::$ctrl.displayIndex"
                 ng-click="h.closed = !h.closed">
                 <a class="a{{::h.h1.level}}" href="#{{::h.h1.id}}" target="_self">{{::h.h1.text}}</a>
                 <ul ng-class="sub" ng-if="!h.closed">
@@ -516,8 +515,8 @@ timApp.component("timSidebarMenu", {
         </ul>
     </uib-tab>
 
-    <uib-tab index="2" ng-if="!$ctrl.hideLinks"
-             ng-show="$ctrl.lctrl.lectureSettings.lectureMode" select="$ctrl.toggleLectures()">
+    <uib-tab index="2" ng-if="!$ctrl.hideLinks && $ctrl.lctrl.lectureSettings.lectureMode"
+        select="$ctrl.toggleLectures()">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-education"></i>
         </uib-tab-heading>
@@ -548,8 +547,7 @@ timApp.component("timSidebarMenu", {
         </ul>
     </uib-tab>
 
-    <uib-tab ng-if="!$ctrl.hideLinks" index="4"
-             ng-show="$ctrl.lctrl.lectureSettings.inLecture && !$ctrl.lctrl.isLecturer"
+    <uib-tab ng-if="!$ctrl.hideLinks && $ctrl.lctrl.lectureSettings.inLecture && !$ctrl.lctrl.isLecturer" index="4"
              select="$ctrl.lctrl.getQuestionManually()">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-question-sign"></i>
@@ -557,8 +555,7 @@ timApp.component("timSidebarMenu", {
         Loading question manually...
     </uib-tab>
 
-    <uib-tab ng-if="!$ctrl.hideLinks" index="5"
-             ng-show="$ctrl.lctrl.isLecturer && $ctrl.lctrl.lectureSettings.inLecture">
+    <uib-tab ng-if="!$ctrl.hideLinks && $ctrl.lctrl.isLecturer && $ctrl.lctrl.lectureSettings.inLecture" index="5">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-user"></i>
         </uib-tab-heading>
