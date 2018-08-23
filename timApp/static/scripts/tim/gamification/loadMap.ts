@@ -1,9 +1,10 @@
 import $ from "jquery";
 import {$http} from "../util/ngimport";
-import {IController, IRootElementService} from "angular";
-import {timApp} from "../app";
 import {Binding} from "../util/utils";
 import {Tile} from "./tile";
+
+import {IController, IRootElementService} from "angular";
+import {timApp} from "../app";
 
 export interface ITileSet {
     tileoffset: {x: number, y: number};
@@ -67,6 +68,7 @@ export interface IMapResponse {
 export let scale: number = 0.5;
 
 export class GamificationMapCtrl implements IController {
+    // noinspection JSUnusedLocalSymbols
     private static $inject = ["$element"];
     private displayMap: boolean = false;
     private sources: string[] = [];
@@ -81,9 +83,9 @@ export class GamificationMapCtrl implements IController {
     // Used for drawing the map
     private bottomCanvas!: HTMLCanvasElement;
     private json!: IMapResponse;
-    private alpha: number = 0.2; // Alpha value for the building frames
-    private showAll: boolean = false; // Show all building frames
-    private tiles: ITile[] = []; // Array of tile objects on the map
+    private alpha: number = 0.2; // Alpha value for the building frames.
+    private showAll: boolean = false; // Show all building frames.
+    private tiles: ITile[] = []; // Array of tile objects on the map.
     private images: {[index: number]: HTMLImageElement} = {};
 
     // Positions for tiles used in the building frames
@@ -123,9 +125,9 @@ export class GamificationMapCtrl implements IController {
         {
             const container = $container[0];
             $container.css({
-                "z-index": 0,
                 "display": "none",
                 "position": "relative",
+                "z-index": 0,
             });
 
             // Title and description elements for the info box
@@ -183,6 +185,7 @@ export class GamificationMapCtrl implements IController {
         // Set style settings for info box text elements
         const title = this.element.find(".mapContainer .infoBoxTitle");
         const description = this.element.find(".mapContainer .infoBoxDescription");
+        // noinspection TsLint
         title.css({
             "position": "absolute",
             "left": (rectX + 10 * tscale) + "px",
@@ -196,6 +199,7 @@ export class GamificationMapCtrl implements IController {
             "font-size": (1.1 * tscale) + "em",
             "z-index": 4,
         });
+        // noinspection TsLint
         description.css({
             "min-width": (width - 20 * tscale) + "px",
             "max-width": (width - 20 * tscale) + "px",
@@ -503,6 +507,7 @@ export class GamificationMapCtrl implements IController {
         }
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Add click-event listener to the top canvas
      */
@@ -692,6 +697,7 @@ export class GamificationMapCtrl implements IController {
         this.drawMap();
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Button click function for showing frames on all possible tiles.
      */
@@ -705,18 +711,23 @@ export class GamificationMapCtrl implements IController {
         }
     }
 
+    // noinspection JSUnusedLocalSymbols
     /**
      * Called when user changes settings.
      */
     private update() {
         // Change global variable so tiles get the new value.
         scale = this.scaleInput;
-
+        // console.log(`showAll: ${this.showAll}, scale: ${scale}, alpha: ${this.alpha}`);
         this.clearSelection();
         this.createCanvases();
         this.drawMap();
     }
 
+    // noinspection JSUnusedLocalSymbols
+    /**
+     * Toggle map and UI.
+     */
     private clickShowMap() {
         const map = this.element.find(".mapContainer")[0];
         const ui = this.element.find(".uiContainer")[0];
@@ -814,7 +825,7 @@ controller: GamificationMapCtrl, template: `<div class="no-highlight">
         <tr><td>Goals <input type="checkbox" class="showFrames" ng-click="$ctrl.clickShowFrames()"></td></tr>
         <tr><td>Zoom </td><td><input type="range" max="1" min="0.3" step="0.05" class="mapZoom"
         ng-model="$ctrl.scaleInput" ng-change="$ctrl.update()"></td></tr>
-        <tr><td>Goal Transparency</td><td><input type="range" max="1" min="0.3" step="0.05" class="alphaRange"
+        <tr><td>Goal Transparency</td><td><input type="range" max="1" min="0" step="0.05" class="alphaRange"
         ng-model="$ctrl.alpha" ng-change="$ctrl.update()"></td></tr>
     </table>
 </div>
