@@ -27,6 +27,7 @@ import * as l from "tim/lecture/smallMenuCtrl";
 import * as ae from "tim/plugin/qstController";
 import * as af from "tim/plugin/timTable";
 import * as ai from "tim/search/searchBox";
+import * as aj from "tim/gamification/loadMap";
 import * as k from "tim/sidebar/sidebarMenuCtrl";
 import * as s from "tim/ui/bootstrapPanel";
 import * as u from "tim/user/loginMenu";
@@ -38,7 +39,7 @@ import * as y from "tim/velp/velpSelection";
 import {ParCompiler} from "./editor/parCompiler";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 
-markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, x, y, ab, ac, ad, ae, ag, ah, ai, lectureMenu, templateList, af);
+markAsUsed(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, x, y, ab, ac, ad, ae, ag, ah, ai, aj, lectureMenu, templateList, af);
 
 timLogInit(document.location.search.slice(1));
 

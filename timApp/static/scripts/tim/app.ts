@@ -18,7 +18,6 @@ import angularmodules from "tim/angularmodules";
 import extramodules from "tim/extramodules";
 import plugins from "tim/plugins";
 import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
-import {loadMap} from "./gamification/loadMap";
 import {initUserService} from "./user/userService";
 import {injectProviders, injectServices} from "./util/ngimport";
 
@@ -126,7 +125,6 @@ timApp.filter("timtim", ["$filter", ($filter: IFilterService) => {
 timApp.config(injectProviders);
 timApp.run(injectServices);
 timApp.run(initUserService);
-timApp.run(loadMap);
 
 // https://stackoverflow.com/questions/35629246/typescript-async-await-and-angular-q-service/41825004#41825004
 timApp.run(["$window", "$q", ($window: IWindowService, $q: IQService) => {

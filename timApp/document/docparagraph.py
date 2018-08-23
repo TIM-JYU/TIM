@@ -287,7 +287,7 @@ class DocParagraph:
                                           + (['preamble'] if preamble else [])
                                           + ([plugintype] if self.is_plugin() and not self.is_question() else [])
                                           )
-        self.__htmldata['is_plugin'] = self.is_plugin()
+        self.__htmldata['is_plugin'] = self.is_plugin() or self.get_attr('gamification') is not None
         if preamble:
             self.__htmldata['from_preamble'] = preamble.path
         self.__htmldata['is_question'] = self.is_question()

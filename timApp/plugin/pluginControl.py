@@ -3,6 +3,7 @@
 import json
 from collections import OrderedDict
 from typing import List, Tuple, Optional, Dict
+from xml.sax.saxutils import quoteattr
 
 import yaml
 import yaml.parser
@@ -166,8 +167,8 @@ def pluginify(doc: Document,
                                    macro_delimiter=macro_delimiter)
 
                 gamified_data = gamificationdata.gamify(YamlBlock.from_markdown(md))
-                html_pars[idx][output_format.value] = render_template('partials/gamification_map.html',
-                                                                      gamified_data=gamified_data)
+                runner = 'gamification-map'
+                html_pars[idx][output_format.value] = f'<{runner} data={quoteattr(json.dumps(gamified_data))}></{runner}>'
             except yaml.YAMLError as e:
                 html_pars[idx][output_format.value] = '<div class="error"><p>Gamification error:</p><pre>' + \
                                                       str(e) + \
