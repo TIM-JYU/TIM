@@ -1,6 +1,6 @@
 import $ from "jquery";
 import {$http} from "../util/ngimport";
-import {IController} from "angular";
+import {IController, IRootElementService} from "angular";
 import {timApp} from "../app";
 import {Binding} from "../util/utils";
 import {Tile} from "./tile";
@@ -67,6 +67,7 @@ export interface IMapResponse {
 export let scale: number = 0.5;
 
 export class GamificationMapCtrl implements IController {
+    private static $inject = ["$element"];
     private displayMap: boolean = false;
     private sources: string[] = [];
     private scaleInput = scale;
@@ -102,9 +103,12 @@ export class GamificationMapCtrl implements IController {
     private roofImage!: HTMLImageElement;
     private data!: Binding<string, "@">;
 
+    constructor(protected element: IRootElementService) {
+    }
+
     async $onInit() {
         // Get the div that will hold canvases
-        const $container = $(".mapContainer");
+        const $container = this.element.find(".mapContainer");
 
         // Get the JSON map file
         const response = await $http.post<IMapResponse>("/generateMap", JSON.parse(this.data));
@@ -177,8 +181,8 @@ export class GamificationMapCtrl implements IController {
         }
 
         // Set style settings for info box text elements
-        const title = $(".mapContainer .infoBoxTitle");
-        const description = $(".mapContainer .infoBoxDescription");
+        const title = this.element.find(".mapContainer .infoBoxTitle");
+        const description = this.element.find(".mapContainer .infoBoxDescription");
         title.css({
             "position": "absolute",
             "left": (rectX + 10 * tscale) + "px",
@@ -502,7 +506,7 @@ export class GamificationMapCtrl implements IController {
     /**
      * Add click-event listener to the top canvas
      */
-    private canvasClicked(event: MouseEvent) {
+    private clickCanvas(event: MouseEvent) {
         // Add event listener for `click` events on top canvas.
         // this.topCanvas.addEventListener("click", function(event) {
         const pos = absolutePosition(this.topCanvas);
@@ -593,7 +597,7 @@ export class GamificationMapCtrl implements IController {
      */
     private clearSelection() {
         // Remove previous frame canvas and create a new one
-        $("#middleCanvas").remove();
+        this.element.find("#middleCanvas").remove();
         this.middleCanvas = document.createElement("canvas");
 
         // Set some attributes for the canvas
@@ -602,9 +606,9 @@ export class GamificationMapCtrl implements IController {
         this.middleCanvas.width = this.json.width * this.json.tilewidth * scale;
         this.middleCanvas.height = this.json.height * this.json.tileheight + this.json.tileheight * 3 * scale;
 
-        $(".mapContainer").append(this.middleCanvas);
-        const title = $(".mapContainer .infoBoxTitle");
-        const description = $(".mapContainer .infoBoxDescription");
+        this.element.find(".mapContainer").append(this.middleCanvas);
+        const title = this.element.find(".mapContainer .infoBoxTitle");
+        const description = this.element.find(".mapContainer .infoBoxDescription");
 
         // Deactivate currently active tiles
         for (const t of this.tiles) {
@@ -623,9 +627,9 @@ export class GamificationMapCtrl implements IController {
     private createCanvases() {
         // If earlier canvases exist, remove them
         if (this.canvases.length > 0) {
-            $("#topCanvas").remove();
-            $("#middleCanvas").remove();
-            $("#bottomCanvas").remove();
+            this.element.find("#topCanvas").remove();
+            this.element.find("#middleCanvas").remove();
+            this.element.find("#bottomCanvas").remove();
             this.canvases = [];
         }
 
@@ -634,7 +638,7 @@ export class GamificationMapCtrl implements IController {
         // Canvases used to draw the final map
         for (let j = 0; j < 3; j++) {
             canvas = document.createElement("canvas");
-            $(".mapContainer").append(canvas);
+            this.element.find(".mapContainer").append(canvas);
 
             // Set some attributes for the canvas
             if (j === 0) {
@@ -701,20 +705,21 @@ export class GamificationMapCtrl implements IController {
         }
     }
 
+    /**
+     * Called when user changes settings.
+     */
     private update() {
+        // Change global variable so tiles get the new value.
         scale = this.scaleInput;
-        console.log("scale: " + scale + ", alpha: " + this.alpha);
+
         this.clearSelection();
         this.createCanvases();
         this.drawMap();
     }
 
     private clickShowMap() {
-        console.log("Click!");
-        const map = $(".mapContainer")[0];
-        const ui = $(".uiContainer")[0];
-        console.log(map);
-        console.log(ui);
+        const map = this.element.find(".mapContainer")[0];
+        const ui = this.element.find(".uiContainer")[0];
         if (!this.displayMap) {
             this.displayMap = true;
             map.setAttribute("style", "z-index: 0; position: relative;");
@@ -802,7 +807,7 @@ timApp.component("gamificationMap", {
 bindings: {
     data: "@",
 },
-controller: GamificationMapCtrl, template: `
+controller: GamificationMapCtrl, template: `<div class="no-highlight">
 <button class="btn showMap" ng-click="$ctrl.clickShowMap()">Show map</button>
 <div class="uiContainer" ng-show="$ctrl.displayMap">
     <table>
@@ -813,6 +818,6 @@ controller: GamificationMapCtrl, template: `
         ng-model="$ctrl.alpha" ng-change="$ctrl.update()"></td></tr>
     </table>
 </div>
-<div class="mapContainer" ng-show="$ctrl.displayMap"></div>
+<div class="mapContainer" ng-show="$ctrl.displayMap" ng-click="$ctrl.clickCanvas($event)"></div></div>
 `,
 });
