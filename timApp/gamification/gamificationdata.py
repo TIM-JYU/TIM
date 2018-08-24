@@ -2,8 +2,6 @@
 from collections import defaultdict
 from operator import itemgetter, attrgetter
 
-from flask import request
-
 import timApp.plugin.pluginControl
 from timApp.auth.sessioninfo import get_current_user_id
 from timApp.document.docentry import DocEntry
@@ -45,24 +43,8 @@ def get_lecture_data(lecture_paths):
     :param lecture_paths: Lecture path dicts.
     :return: List of lecture data dicts.
     """
-    lecture_path_list = []
     results = []
-    filtered_lectures = []
-
-    # Separate paths to be used for database fetch and filter None values.
-    for lecture in lecture_paths:
-        path = lecture['path']
-        if path is not None:
-            lecture_path_list.append(path)
-            filtered_lectures.append(lecture)
-    # Sort both so they can be looped simultaneusly without value mismatches.
-    docs = sorted(DocEntry.query.filter(DocEntry.name.in_(lecture_path_list)).all(), key=attrgetter('path'))
-    lectures = sorted(filtered_lectures, key=itemgetter('path'))
-
-    invalid_paths = set(d['path'] for d in lectures) - set(d.path for d in docs)
-    if invalid_paths:
-        raise GamificationException(f"Failed to fetch following lecture document(s): {invalid_paths}")
-
+    lectures, docs = get_sorted_lists(lecture_paths, "lecture")
     # TODO: There was a starts with "http" check, but is it necessary here?
     for doc, lecture in zip(docs, lectures):
         # If short_name has been input, use it. Otherwise get document attribute short name.
@@ -74,32 +56,46 @@ def get_lecture_data(lecture_paths):
     return results
 
 
-def get_demo_data(demos, default_max):
+def get_sorted_lists(items, item_name: str):
+    """
+    Fetches document list from a dictionary list and sorts it and the dictionary list.
+    Checks also whether every path was founf from database and raises error accordingly.
+    :param items: Dictionary list with 'path' keys.
+    :param item_name: Name of the item type (demo, lecture, etc.).
+    :return: Documents and original items as lists sorted by paths.
+    """
+    item_path_list = []
+    filtered_items = []
+
+    # Separate paths to be used for database fetch and filter None values.
+    for item in items:
+        path = item['path']
+        # Leave out demos with None paths.
+        if path is not None:
+            item_path_list.append(path)
+            filtered_items.append(item)
+        # Sort both so they can be looped simultaneusly without value mismatches.
+    docs = sorted(DocEntry.query.filter(DocEntry.name.in_(item_path_list)).all(), key=attrgetter('path'))
+    items = sorted(filtered_items, key=itemgetter('path'))
+
+    # If demos don't match the documents fetched from their paths, there's an error.
+    invalid_paths = set(d['path'] for d in items) - set(d.path for d in docs)
+    if invalid_paths:
+        raise GamificationException(f"Failed to fetch following {item_name} document(s): {invalid_paths}")
+    return items, docs
+
+
+def get_demo_data(demo_paths, default_max):
     """
     Configure data of all demos.
-    :param demos: Demo path dicts.
+    :param demo_paths: Demo path dicts.
     :param default_max: default maximum points.
     :return: List of demo data dicts.
     """
-    demo_path_list = []
-    filtered_demos = []
     results = []
     task_id_list = []
 
-    for demo in demos:
-        path = demo['path']
-        # Leave out demos with None paths.
-        if path is not None:
-            demo_path_list.append(path)
-            filtered_demos.append(demo)
-    # Sort both by path to avoid demo and doc mismatches.
-    docs = sorted(DocEntry.query.filter(DocEntry.name.in_(demo_path_list)).all(), key=attrgetter('path'))
-    demos = sorted(filtered_demos, key=itemgetter('path'))
-
-    # If demos don't match the documents fetched from their paths, there's an error.
-    invalid_paths = set(d['path'] for d in demos) - set(d.path for d in docs)
-    if invalid_paths:
-        raise GamificationException(f"Failed to fetch following demo document(s): {invalid_paths}")
+    demos, docs = get_sorted_lists(demo_paths, "demo")
 
     for doc in docs:
         task_id_list += (timApp.plugin.pluginControl.find_task_ids(doc.document.get_paragraphs()))[0]
