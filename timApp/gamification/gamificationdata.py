@@ -33,37 +33,44 @@ def get_doc_data(gamify_data: YamlBlock):
     default_max = gamify_data.get('defaultMax', 5)
     button_text = gamify_data.get('buttonText', "Show map")
 
-    # Configure data of lecture documents
-    lectures = []
-    for path in lecture_paths:
-        p = path.get('path', None)
-        if not p:
-            continue
-        if p.startswith('http'):
-            doc = path.get('shortname', 'doc')
-            temp_dict = dict()
-            temp_dict['id'] = 0
-            temp_dict['name'] = doc
-            temp_dict['link'] = p
-            lectures.append(temp_dict)
-        else:
-            lecture = DocEntry.find_by_path(path['path'])
-            if lecture is not None:
-                doc = path.get('shortname', lecture.short_name)
-                temp_dict = dict()
-                temp_dict['id'] = lecture.id
-                temp_dict['name'] = doc
-                temp_dict['link'] = request.url_root + 'view/' + lecture.path
-                lectures.append(temp_dict)
-
+    lectures = get_lecture_data(lecture_paths)
     demos = get_demo_data(demo_paths, default_max)
 
     return lectures, demos, button_text
 
 
+def get_lecture_data(lecture_paths):
+    """
+    Configure data of all lecture documents.
+    :param lecture_paths: Lecture path dicts.
+    :return: List of lecture data dicts.
+    """
+    lecture_path_list = []
+    results = []
+    filtered_lectures = []
+
+    for lecture in lecture_paths:
+        path = lecture['path']
+        # Leave out demos with None paths.
+        if path is not None:
+            lecture_path_list.append(path)
+            filtered_lectures.append(lecture)
+    docs = sorted(DocEntry.query.filter(DocEntry.name.in_(lecture_path_list)).all(), key=attrgetter('path'))
+    lectures = sorted(filtered_lectures, key=itemgetter('path'))
+
+    # TODO: There was a starts with "http" check, but is it necessary here?
+    for doc, lecture in zip(docs, lectures):
+        short_name = lecture.get('short_name')
+        if short_name is None:
+            short_name = doc.short_name
+        temp_dict = dict(id=doc.id, name=short_name, link=doc.url)
+        results.append(temp_dict)
+    return results
+
+
 def get_demo_data(demos, default_max):
     """
-    Forms point data for all demos.
+    Configure data of all demos.
     :param demos: Demo path dicts.
     :param default_max: default maximum points.
     :return: List of demo data dicts.
@@ -79,6 +86,7 @@ def get_demo_data(demos, default_max):
         if path is not None:
             demo_path_list.append(path)
             filtered_demos.append(demo)
+    # Sort both by path to avoid demo and doc mismatches.
     docs = sorted(DocEntry.query.filter(DocEntry.name.in_(demo_path_list)).all(), key=attrgetter('path'))
     demos = sorted(filtered_demos, key=itemgetter('path'))
 
@@ -95,7 +103,10 @@ def get_demo_data(demos, default_max):
         task_info_dict[task.get('doc_id')] += float(task.get('total_points'))
     for doc, demo in zip(docs, demos):
         doc_max_points = demo.get('max_points')
-        temp_dict = dict(id=doc.id, name=doc.short_name, link=doc.url)
+        short_name = demo.get('short_name')
+        if short_name is None:
+            short_name = doc.short_name
+        temp_dict = dict(id=doc.id, name=short_name, link=doc.url)
         if doc_max_points is None:
             doc_set = doc.document.get_settings()
             doc_max_points = doc_set.max_points() or default_max
