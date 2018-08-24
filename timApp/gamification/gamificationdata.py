@@ -1,5 +1,6 @@
 """Collection of gamification functions."""
 from collections import defaultdict
+from operator import itemgetter, attrgetter
 
 from flask import request
 
@@ -74,28 +75,26 @@ def get_demo_data(demos, default_max):
 
     for demo in demos:
         path = demo['path']
+        # Leave out demos with None paths.
         if path is not None:
             demo_path_list.append(path)
             filtered_demos.append(demo)
-    demos = filtered_demos  # Leave out demos with None paths.
-    docs = DocEntry.query.filter(DocEntry.name.in_(demo_path_list)).all()
+    docs = sorted(DocEntry.query.filter(DocEntry.name.in_(demo_path_list)).all(), key=attrgetter('path'))
+    demos = sorted(filtered_demos, key=itemgetter('path'))
 
     # If demos don't match the documents fetched from their paths, there's an error.
-    if len(demos) is not len(docs):
-        invalid_paths = []
-        for doc, demo in zip(docs, demos):
-            if demo.get('path') != doc.path:
-                invalid_paths.append(demo.get('path'))
+    invalid_paths = set(d['path'] for d in demos) - set(d.path for d in docs)
+    if invalid_paths:
         raise GamificationException(f"Failed to fetch following demo document(s): {invalid_paths}")
 
     for doc in docs:
         task_id_list += (timApp.plugin.pluginControl.find_task_ids(doc.document.get_paragraphs()))[0]
     task_info_list = get_timdb().answers.get_users_for_tasks(task_id_list, [get_current_user_id()], group_by_doc=True)
-    task_info_dict = defaultdict(int)
+    task_info_dict = defaultdict(float)
     for task in task_info_list:
-        task_info_dict[task.get('doc_id')] += int(task.get('total_points'))
+        task_info_dict[task.get('doc_id')] += float(task.get('total_points'))
     for doc, demo in zip(docs, demos):
-        doc_max_points = demo.get('max_points', None)
+        doc_max_points = demo.get('max_points')
         temp_dict = dict(id=doc.id, name=doc.short_name, link=doc.url)
         if doc_max_points is None:
             doc_set = doc.document.get_settings()
