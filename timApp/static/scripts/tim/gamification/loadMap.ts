@@ -105,23 +105,30 @@ export class GamificationMapCtrl implements IController {
     private roofImage!: HTMLImageElement;
     private data!: Binding<string, "@">;
 
+    private buttonText: string = "";
+
     constructor(protected element: IRootElementService) {
     }
 
-    async $onInit() {
-        // Get the div that will hold canvases
-        const $container = this.element.find(".mapContainer");
+    $onInit() {
+        const parsedData = JSON.parse(this.data);
+        this.buttonText = parsedData.buttonText;
+    }
 
-        // Get the JSON map file
-        const response = await $http.post<IMapResponse>("/generateMap", JSON.parse(this.data));
+    async loadMap() {
+        // Get the div that will hold canvases.
+        const $container = this.element.find(".mapContainer");
+        const parsedData = JSON.parse(this.data);
+        // Get the JSON map file.
+        const response = await $http.post<IMapResponse>("/generateMap", parsedData);
         this.json = response.data;
 
-        // don't try to do anything if there are no maps on the page
+        // don't try to do anything if there are no maps on the page.
         if ($container.length === 0) {
             return;
         }
 
-        // separate scope is intentional
+        // Separate scope is intentional.
         {
             const container = $container[0];
             $container.css({
@@ -130,7 +137,7 @@ export class GamificationMapCtrl implements IController {
                 "z-index": 0,
             });
 
-            // Title and description elements for the info box
+            // Title and description elements for the info box.
             const title = $("<p></p>");
             title.addClass("infoBoxTitle");
             title.css("position", "absolute");
@@ -142,22 +149,22 @@ export class GamificationMapCtrl implements IController {
             description.appendTo(container);
         }
 
-        // Fill the sources array with tileset image sources
+        // Fill the sources array with tileset image sources.
         for (const tileset of this.json.tilesets) {
             this.sources.push(tileset.image);
         }
 
         this.createCanvases();
 
-        // Preload the images and draw the map
+        // Preload the images and draw the map.
         this.loadImages((p) => this.callback(p));
     }
 
     /**
-     * Draws an info box
-     * @param x X coordinate for the box
-     * @param y Y coordinate for the box
-     * @param tile Clicked tile
+     * Draws an info box.
+     * @param x X coordinate for the box.
+     * @param y Y coordinate for the box.
+     * @param tile Clicked tile.
      */
     private drawInfo(x: number, y: number, tile: ITile) {
         let tscale = scale;
@@ -182,7 +189,7 @@ export class GamificationMapCtrl implements IController {
             rectX = this.json.tilewidth * this.json.width * scale - this.json.tilewidth * scale - width;
         }
 
-        // Set style settings for info box text elements
+        // Set style settings for info box text elements.
         const title = this.element.find(".mapContainer .infoBoxTitle");
         const description = this.element.find(".mapContainer .infoBoxDescription");
         // noinspection TsLint
@@ -252,8 +259,8 @@ export class GamificationMapCtrl implements IController {
     }
 
     /**
-     * Function for drawing a frame of a building on given position
-     * @param tile Tile that the frame is drawn over
+     * Function for drawing a frame of a building on given position.
+     * @param tile Tile that the frame is drawn over.
      */
     private drawFrame(tile: ITile) {
         const context = this.middleCanvas.getContext("2d");
@@ -413,7 +420,7 @@ export class GamificationMapCtrl implements IController {
     }
 
     /**
-     * Function for preloading the images
+     * Function for preloading the images.
      * @param callback Callback function.
      */
     private loadImages(callback: (images: {[index: number]: HTMLImageElement}) => void) {
@@ -432,10 +439,10 @@ export class GamificationMapCtrl implements IController {
     }
 
     /**
-     * Draw tiles according to data dictionary
-     * @param dict Dictionary holding the data for the tiles
-     * @param canvas Canvas to draw on
-     * @param layer Layer that is being drawn
+     * Draw tiles according to data dictionary.
+     * @param dict Dictionary holding the data for the tiles.
+     * @param canvas Canvas to draw on.
+     * @param layer Layer that is being drawn.
      */
     private drawTilesFromDict(dict: ILayerData, canvas: HTMLCanvasElement, layer: number) {
         // Get all keys from the data dictionarty
@@ -463,15 +470,14 @@ export class GamificationMapCtrl implements IController {
     }
 
     /**
-     * Function draws a map on canvases
-     * @returns {Array} All tile objects of the map
+     * Function draws a map on canvases.
+     * @returns {Array} All tile objects of the map.
      */
     private drawMap() {
         // Current layer
         let layer;
         // Current canvas
         let c;
-
         // Go through every layer of the map in reverse order so that the draw order will be correct
         for (let k = this.json.layers.length - 1; k >= 0; k--) {
             layer = this.json.layers[k];
@@ -479,7 +485,6 @@ export class GamificationMapCtrl implements IController {
             c = this.canvases[k];
             this.drawTilesFromDict(layer.data, c, k);
         }
-
         // Draw images in helper canvases on a single canvas
         for (const canvas of this.canvases) {
             const context = this.bottomCanvas.getContext("2d");
@@ -487,7 +492,6 @@ export class GamificationMapCtrl implements IController {
                 context.drawImage(canvas, 0, 0);
             }
         }
-
         // View all frames if required
         if (this.showAll) {
             this.activateAll();
@@ -536,7 +540,6 @@ export class GamificationMapCtrl implements IController {
                         } else {
                             this.activateAll();
                         }
-
                         // Draw a frame on activated tiles
                         this.drawOnActive();
                     }
@@ -555,8 +558,8 @@ export class GamificationMapCtrl implements IController {
     }
 
     /**
-     * Activate a cluster of "top tiles" and building tiles on the map
-     * @param tile A tile that is part of the cluster
+     * Activate a cluster of "top tiles" and building tiles on the map.
+     * @param tile A tile that is part of the cluster.
      */
     private activateCluster(tile: ITile) {
         tile.active = true;
@@ -637,9 +640,7 @@ export class GamificationMapCtrl implements IController {
             this.element.find("#bottomCanvas").remove();
             this.canvases = [];
         }
-
         let canvas;
-
         // Canvases used to draw the final map
         for (let j = 0; j < 3; j++) {
             canvas = document.createElement("canvas");
@@ -728,7 +729,10 @@ export class GamificationMapCtrl implements IController {
     /**
      * Toggle map and UI.
      */
-    private clickShowMap() {
+    private async clickShowMap() {
+        if (!this.json) {
+            await this.loadMap();
+        }
         const map = this.element.find(".mapContainer")[0];
         const ui = this.element.find(".uiContainer")[0];
         if (!this.displayMap) {
@@ -744,6 +748,11 @@ export class GamificationMapCtrl implements IController {
     }
 }
 
+/**
+ * @param {number} d
+ * @param {number} des
+ * @returns {number}
+ */
 function rround(d: number, des: number) {
     const mult = Math.pow(10, des);
     return Math.round(d * mult) / mult;
@@ -804,7 +813,14 @@ function findTileImagePos(tileset: ITileSet, offset: number): {x: number, y: num
     };
 }
 
-function hasOwnProperty(json: IMapResponse, tile: ITile, layerdelta: number, datadelta: number) {
+/**
+ * @param {IMapResponse} json
+ * @param {ITile} tile
+ * @param {number} layerdelta
+ * @param {number} datadelta
+ * @returns {boolean}
+ */
+function hasOwnProperty(json: IMapResponse, tile: ITile, layerdelta: number, datadelta: number): boolean {
     if (!json.layers[tile.layerNo + layerdelta]) {
         return false;
     }
@@ -819,7 +835,7 @@ bindings: {
     data: "@",
 },
 controller: GamificationMapCtrl, template: `<div class="no-highlight">
-<button class="btn showMap" ng-click="$ctrl.clickShowMap()">Show map</button>
+<button class="btn showMap" ng-click="$ctrl.clickShowMap()">{{$ctrl.buttonText}}</button>
 <div class="uiContainer" ng-show="$ctrl.displayMap">
     <table>
         <tr><td>Goals <input type="checkbox" class="showFrames" ng-click="$ctrl.clickShowFrames()"></td></tr>

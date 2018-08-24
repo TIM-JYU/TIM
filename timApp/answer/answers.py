@@ -264,9 +264,13 @@ ORDER BY {order_by}, a.answered_on
         common_answers = result_as_dict_list(c)
         return common_answers
 
-    def get_users_for_tasks(self, task_ids: List[str], user_ids: Optional[List[int]]=None, group_by_user=True) -> List[Dict[str, str]]:
+    def get_users_for_tasks(self, task_ids: List[str], user_ids: Optional[List[int]]=None, group_by_user=True, group_by_doc=False) -> List[Dict[str, str]]:
         if not task_ids:
             return []
+
+        sub = r", substring(task_id from '(\d+)\..+')"
+        subb = sub + " AS doc_id"
+
         if user_ids is None:
             user_ids = []
             user_restrict_sql = ''
@@ -278,7 +282,7 @@ ORDER BY {order_by}, a.answered_on
                 SELECT *, task_points + COALESCE(velp_points, 0) as total_points
                 FROM (
                 SELECT UserAccount.id, name, real_name, email,
-                       COUNT(task_id) AS task_count,
+                       COUNT(task_id) AS task_count{subb if group_by_doc else ''},
                        ROUND(SUM(cast(points as float))::numeric,4) as task_points,
                        ROUND(SUM(velp_points)::numeric,4) as velp_points,
                        COUNT(annotation_answer_id) AS velped_task_count
@@ -303,7 +307,7 @@ ORDER BY {order_by}, a.answered_on
 
                       ) tmp ON tmp.aid = UserAnswer.answer_id AND UserAccount.id = tmp.uid
                 {user_restrict_sql}
-                GROUP BY UserAccount.id {'' if group_by_user else ', task_id'}
+                GROUP BY UserAccount.id {'' if group_by_user else ', task_id'}{sub if group_by_doc else ''}
                 ORDER BY real_name ASC
                 ) tmp
             """
