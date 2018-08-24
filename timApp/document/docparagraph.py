@@ -287,6 +287,9 @@ class DocParagraph:
                                           + (['preamble'] if preamble else [])
                                           + ([plugintype] if self.is_plugin() and not self.is_question() else [])
                                           )
+        # TODO: Need to check for gamification attribute to avoid ng-non-bindable directive being added in the par.
+        # As an AngularJS component it needs to be processed by AngularJS. is_plugin also shouldn't return True
+        # for gamification because it isn't a proper plugin.
         self.__htmldata['is_plugin'] = self.is_plugin() or self.get_attr('gamification') is not None
         if preamble:
             self.__htmldata['from_preamble'] = preamble.path

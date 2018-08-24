@@ -49,6 +49,22 @@ interface ILayer {
     y: number;
 }
 
+interface IParsedData {
+    lectures: [{
+        id: number,
+        name: string,
+        link: string,
+    }];
+    demos: [{
+        id: number;
+        name: string;
+        link: string;
+        maxPoints: number;
+        gotPoints: number;
+    }];
+    buttonText: string;
+}
+
 export interface ILayerData {[index: string]: number; }
 
 export interface IMapResponse {
@@ -104,6 +120,7 @@ export class GamificationMapCtrl implements IController {
     private roofFrameSet!: ITileSet;
     private roofImage!: HTMLImageElement;
     private data!: Binding<string, "@">;
+    private parsedData!: IParsedData;
 
     private buttonText: string = "";
 
@@ -111,43 +128,14 @@ export class GamificationMapCtrl implements IController {
     }
 
     $onInit() {
-        const parsedData = JSON.parse(this.data);
-        this.buttonText = parsedData.buttonText;
+        this.parsedData = JSON.parse(this.data);
+        this.buttonText = this.parsedData.buttonText;
     }
 
     async loadMap() {
-        // Get the div that will hold canvases.
-        const $container = this.element.find(".mapContainer");
-        const parsedData = JSON.parse(this.data);
         // Get the JSON map file.
-        const response = await $http.post<IMapResponse>("/generateMap", parsedData);
+        const response = await $http.post<IMapResponse>("/generateMap", this.parsedData);
         this.json = response.data;
-
-        // don't try to do anything if there are no maps on the page.
-        if ($container.length === 0) {
-            return;
-        }
-
-        // Separate scope is intentional.
-        {
-            const container = $container[0];
-            $container.css({
-                "display": "none",
-                "position": "relative",
-                "z-index": 0,
-            });
-
-            // Title and description elements for the info box.
-            const title = $("<p></p>");
-            title.addClass("infoBoxTitle");
-            title.css("position", "absolute");
-            title.appendTo(container);
-
-            const description = $("<p></p>");
-            description.addClass("infoBoxDescription");
-            description.css("position", "absolute");
-            description.appendTo(container);
-        }
 
         // Fill the sources array with tileset image sources.
         for (const tileset of this.json.tilesets) {
@@ -635,9 +623,9 @@ export class GamificationMapCtrl implements IController {
     private createCanvases() {
         // If earlier canvases exist, remove them
         if (this.canvases.length > 0) {
-            this.element.find("#topCanvas").remove();
-            this.element.find("#middleCanvas").remove();
-            this.element.find("#bottomCanvas").remove();
+            this.element.find(".topCanvas").remove();
+            this.element.find(".middleCanvas").remove();
+            this.element.find(".bottomCanvas").remove();
             this.canvases = [];
         }
         let canvas;
@@ -648,15 +636,15 @@ export class GamificationMapCtrl implements IController {
 
             // Set some attributes for the canvas
             if (j === 0) {
-                canvas.setAttribute("id", "bottomCanvas");
+                canvas.setAttribute("class", "bottomCanvas");
                 canvas.setAttribute("style", "padding-bottom: 1em; z-index: " + j + ";");
                 this.bottomCanvas = canvas;
             } else if (j === 1) {
-                canvas.setAttribute("id", "middleCanvas");
+                canvas.setAttribute("class", "middleCanvas");
                 canvas.setAttribute("style", "position: absolute; left: 0; top: 0; z-index: " + j + ";");
                 this.middleCanvas = canvas;
             } else {
-                canvas.setAttribute("id", "topCanvas");
+                canvas.setAttribute("class", "topCanvas");
                 canvas.setAttribute("style", "position: absolute; left: 0; top: 0; z-index: " + j + ";");
                 this.topCanvas = canvas;
             }
@@ -834,17 +822,23 @@ timApp.component("gamificationMap", {
 bindings: {
     data: "@",
 },
-controller: GamificationMapCtrl, template: `<div class="no-highlight">
-<button class="btn showMap" ng-click="$ctrl.clickShowMap()">{{$ctrl.buttonText}}</button>
-<div class="uiContainer" ng-show="$ctrl.displayMap">
-    <table>
-        <tr><td>Goals <input type="checkbox" class="showFrames" ng-click="$ctrl.clickShowFrames()"></td></tr>
-        <tr><td>Zoom </td><td><input type="range" max="1" min="0.3" step="0.05" class="mapZoom"
-        ng-model="$ctrl.scaleInput" ng-change="$ctrl.update()"></td></tr>
-        <tr><td>Goal Transparency</td><td><input type="range" max="1" min="0" step="0.05" class="alphaRange"
-        ng-model="$ctrl.alpha" ng-change="$ctrl.update()"></td></tr>
-    </table>
+controller: GamificationMapCtrl, template: `
+<div class="no-highlight">
+    <button class="btn showMap" ng-click="$ctrl.clickShowMap()">{{$ctrl.buttonText}}</button>
+    <div class="uiContainer" ng-show="$ctrl.displayMap">
+        <table>
+            <tr><td>Goals <input type="checkbox" class="showFrames" ng-click="$ctrl.clickShowFrames()"></td></tr>
+            <tr><td>Zoom </td><td><input type="range" max="1" min="0.3" step="0.05" class="mapZoom"
+            ng-model="$ctrl.scaleInput" ng-change="$ctrl.update()"></td></tr>
+            <tr><td>Goal Transparency</td><td><input type="range" max="1" min="0" step="0.05" class="alphaRange"
+            ng-model="$ctrl.alpha" ng-change="$ctrl.update()"></td></tr>
+        </table>
+    </div>
+    <div class="mapContainer" ng-show="$ctrl.displayMap" ng-click="$ctrl.clickCanvas($event)"
+        style="{display:none; position:relative; z-index:0;}">
+        <p class="infoBoxTitle" style="{position: absolute;}"></p>
+        <p class="infoBoxDescription" style="{position: absolute;}"></p>
+    </div>
 </div>
-<div class="mapContainer" ng-show="$ctrl.displayMap" ng-click="$ctrl.clickCanvas($event)"></div></div>
 `,
 });
