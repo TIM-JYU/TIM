@@ -1,4 +1,3 @@
-import $ from "jquery";
 import {$http} from "../util/ngimport";
 import {Binding} from "../util/utils";
 import {Tile} from "./tile";
@@ -121,7 +120,6 @@ export class GamificationMapCtrl implements IController {
     private roofImage!: HTMLImageElement;
     private data!: Binding<string, "@">;
     private parsedData!: IParsedData;
-
     private buttonText: string = "";
 
     constructor(protected element: IRootElementService) {
@@ -593,11 +591,11 @@ export class GamificationMapCtrl implements IController {
      */
     private clearSelection() {
         // Remove previous frame canvas and create a new one
-        this.element.find("#middleCanvas").remove();
+        this.element.find(".middleCanvas").remove();
         this.middleCanvas = document.createElement("canvas");
 
         // Set some attributes for the canvas
-        this.middleCanvas.setAttribute("id", "middleCanvas");
+        this.middleCanvas.setAttribute("class", "middleCanvas");
         this.middleCanvas.setAttribute("style", "position: absolute; left: 0; top: 0; z-index: 1;");
         this.middleCanvas.width = this.json.width * this.json.tilewidth * scale;
         this.middleCanvas.height = this.json.height * this.json.tileheight + this.json.tileheight * 3 * scale;
@@ -652,12 +650,10 @@ export class GamificationMapCtrl implements IController {
             canvas.height = (this.json.height * this.json.tileheight + this.json.tileheight * 3) * scale;
         }
 
-        // Canvases used to draw the layers
-        for (let j = 0; j < this.json.layers.length; j++) {
+        // Canvases used to draw the layers.
+        for (const layer of this.json.layers) {
             canvas = document.createElement("canvas");
 
-            // Set some attributes for the canvas and get it's context
-            canvas.setAttribute("id", "layer" + j);
             canvas.width = this.json.width * this.json.tilewidth * scale;
             canvas.height = (this.json.height * this.json.tileheight + this.json.tileheight * 3) * scale;
             this.canvases.push(canvas);
@@ -835,9 +831,9 @@ controller: GamificationMapCtrl, template: `
         </table>
     </div>
     <div class="mapContainer" ng-show="$ctrl.displayMap" ng-click="$ctrl.clickCanvas($event)"
-        style="{display:none; position:relative; z-index:0;}">
-        <p class="infoBoxTitle" style="{position: absolute;}"></p>
-        <p class="infoBoxDescription" style="{position: absolute;}"></p>
+        style="display:none; position:relative; z-index:0;">
+        <p class="infoBoxTitle" style="position: absolute;"></p>
+        <p class="infoBoxDescription" style="position: absolute;"></p>
     </div>
 </div>
 `,
