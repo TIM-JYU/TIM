@@ -9,6 +9,7 @@ import yaml
 import yaml.parser
 from flask import render_template
 
+from timApp.gamification.gamificationdata import GamificationException
 from timApp.plugin.containerLink import get_plugin_needs_browser
 from timApp.plugin.containerLink import get_plugin_tim_url
 from timApp.plugin.containerLink import plugin_reqs
@@ -170,6 +171,12 @@ def pluginify(doc: Document,
                 runner = 'gamification-map'
                 html_pars[idx][output_format.value] = f'<{runner} data={quoteattr(json.dumps(gamified_data))}></{runner}>'
             except yaml.YAMLError as e:
+                html_pars[idx][output_format.value] = '<div class="error"><p>Gamification error:</p><pre>' + \
+                                                      str(e) + \
+                                                      '</pre><p>From block:</p><pre>' + \
+                                                      md + \
+                                                      '</pre></div>'
+            except GamificationException as e:
                 html_pars[idx][output_format.value] = '<div class="error"><p>Gamification error:</p><pre>' + \
                                                       str(e) + \
                                                       '</pre><p>From block:</p><pre>' + \
