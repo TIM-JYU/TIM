@@ -22,8 +22,8 @@ def gamify(initial_data: YamlBlock):
 
 
 def get_doc_data(gamify_data: YamlBlock):
-    """Parses json to find and link appropriate data into lecture and demo documents.
-
+    """
+    Parses json to find and link appropriate data into lecture and demo documents.
     :param gamify_data = Checked documents in JSON
     :returns: Arrays of lecture and demo documents
 
@@ -49,17 +49,23 @@ def get_lecture_data(lecture_paths):
     results = []
     filtered_lectures = []
 
+    # Separate paths to be used for database fetch and filter None values.
     for lecture in lecture_paths:
         path = lecture['path']
-        # Leave out demos with None paths.
         if path is not None:
             lecture_path_list.append(path)
             filtered_lectures.append(lecture)
+    # Sort both so they can be looped simultaneusly without value mismatches.
     docs = sorted(DocEntry.query.filter(DocEntry.name.in_(lecture_path_list)).all(), key=attrgetter('path'))
     lectures = sorted(filtered_lectures, key=itemgetter('path'))
 
+    invalid_paths = set(d['path'] for d in lectures) - set(d.path for d in docs)
+    if invalid_paths:
+        raise GamificationException(f"Failed to fetch following lecture document(s): {invalid_paths}")
+
     # TODO: There was a starts with "http" check, but is it necessary here?
     for doc, lecture in zip(docs, lectures):
+        # If short_name has been input, use it. Otherwise get document attribute short name.
         short_name = lecture.get('short_name')
         if short_name is None:
             short_name = doc.short_name
@@ -101,6 +107,7 @@ def get_demo_data(demos, default_max):
     task_info_dict = defaultdict(float)
     for task in task_info_list:
         task_info_dict[task.get('doc_id')] += float(task.get('total_points'))
+
     for doc, demo in zip(docs, demos):
         doc_max_points = demo.get('max_points')
         short_name = demo.get('short_name')
