@@ -106,8 +106,10 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     pwddir = ""
     if not ulimit:
         ulimit = "ulimit -f 1000 -t 10 -s 2000 "  # -v 2000 -s 100 -u 10
-    if uargs and len(uargs):
-        args.extend(shlex.split(uargs))
+    if uargs:
+        uargs = str(uargs)
+        if len(uargs):
+            args.extend(shlex.split(uargs))
     if stdin:
         s_in = " <" + stdin
     mkdirs(cwd + "/run")

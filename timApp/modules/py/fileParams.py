@@ -437,6 +437,8 @@ class FileParams:
         self.include = get_param(query, "include" + nr, "")
         self.replace = do_matcher(get_param(query, "replace" + nr, ""))
         self.by = replace_random(query, get_param_by(query, "by" + nr, ""))
+        if not self.by and nr == "":
+            self.by = replace_random(query, get_param_by(query, "byCode" + nr, ""))
         self.prorgam = replace_random(query, get_param_by(query, "program" + nr, ""))
         self.breakCount = int(get_param(query, "breakCount" + nr, "0"))
 

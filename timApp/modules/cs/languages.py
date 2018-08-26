@@ -54,6 +54,8 @@ class Language:
         self.no_x11 = get_json_param(query.jso, "markup", "noX11", False)
         self.env = dict(os.environ)
         self.userargs = get_json_param(query.jso, "input", "userargs", None)
+        if not self.userargs:
+            self.userargs = get_json_param(query.jso, "markup", "userargs", None)
         self.dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", f"timimages/cs3:{CS3_TAG}")
         self.ulimit = get_param(query, "ulimit", None)
         self.savestate = get_param(query, "savestate", "")
@@ -65,6 +67,7 @@ class Language:
         self.readpoints_default = None # what is default string for readpoints
         self.compile_commandline = ""
         self.just_compile = False
+        self.imgname = get_param(query, "imgname", None)
 
         # Check if user name or temp name
 
@@ -154,6 +157,8 @@ class Language:
     def runself(self, args, cwd=None, shell=None, kill_tree=None, timeout=None, env=None, stdin=None, uargs=None,
                 code=None, extra=None, ulimit=None, no_x11=None, savestate=None, dockercontainer=None,
                 no_uargs=False):
+        if self.imgname:
+            self.pngname = self.imgname + '.png'
         uargs = df(uargs, self.userargs)
         if no_uargs:
             uargs = None
@@ -194,7 +199,10 @@ class Language:
             # print(self.is_optional_image, image_ok)
             remove(self.imgsource)
             if image_ok:
-                web["image"] = "/csgenerated/" + self.rndname + ".png"
+                if self.imgname:
+                    web["image"] = self.pngname
+                else:
+                    web["image"] = "/csgenerated/" + self.rndname + ".png"
                 give_points(points_rule, "run")
                 self.run_points_given = True
         return out, err
@@ -274,7 +282,10 @@ class Jypeli(CS):
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
         else:
-            web["image"] = "/csgenerated/" + self.pure_pngname
+            if self.imgname:
+                web["image"] = self.pngname
+            else:
+                web["image"] = "/csgenerated/" + self.pure_pngname
             give_points(points_rule, "run")
             self.run_points_given = True
         if self.delete_tmp:

@@ -8,6 +8,8 @@ import socketserver
 import threading
 from languages import *
 import pwd, os
+import glob
+from base64 import b64encode
 
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)
@@ -299,7 +301,67 @@ def get_md(ttype, query):
     return s
 
 
-def get_html(ttype, query):
+def get_html(self, ttype, query):
+    if get_param(query, "cache", False): # check if we should take the html from cache
+        cache_clear = get_param(query, "cacheClear", True)
+        h = hashlib.new('ripemd160')
+        h.update(str(query.jso['markup']).encode())
+        task_id = get_param(query, "taskID", False)
+        filepath = '/tmp/imgcache/' + task_id.replace('.', '/')
+        if filepath.endswith('/'):
+            task_id = get_param(query, "taskIDExt", False)
+            filepath = '/tmp/imgcache/' + task_id.replace('..', '/')
+
+        contenthash = h.hexdigest()
+        filename = filepath + '/' + contenthash + '.html'
+        if os.path.isfile(filename):  # if we have cache, use that
+            with open(filename, "r") as fh:
+                htmldata = fh.read()
+            return htmldata
+
+        query.jso['markup']['imgname'] = "/csgenerated/" + task_id # + "/" + hash
+        query.jso['state']= None
+        ret = self.do_all(query) # otherwise generate new image
+
+        htmldata = ""
+
+        error = ret['web'].get('error', None)
+        if error:
+            htmldata += '<div class="error">' + error + '</div>'
+
+        console = ret['web'].get('console', None)
+        if console:
+            htmldata += '<div class="htmlresult">' + console + '</div>'
+
+        img = ret['web'].get('image', None)
+        if img:
+            with open(img,"rb") as fh:
+                pngdata = fh.read()
+            pngenc = b64encode(pngdata)
+            htmldata += '<img src="data:image/png;base64, ' + pngenc.decode() + '" />'
+            os.remove(img)
+
+        cache_footer = get_param(query, "cacheFooter", "")
+        if not cache_footer:
+            cache_footer = get_param(query, "footer", "")
+
+        if cache_footer:
+            htmldata += '<figcaption>' + cache_footer + '</figcaption>'
+
+
+        if cache_clear:
+            files = glob.glob(filepath+'/*')
+            for f in files:
+                os.remove(f)
+
+        os.makedirs(filepath, exist_ok = True)
+
+        with open(filename,"w") as fh:
+            fh.write(htmldata)
+
+        # return '<img src="' + img + '">'
+        return htmldata
+
     user_id = get_param(query, "user_id", "--")
     tiny = False
     # print("UserId:", user_id)
@@ -618,6 +680,7 @@ def signal_handler(signum, frame):
     print("Timed out1!")
     raise Exception("Timed out1!")
 
+type_splitter = re.compile("[^a-z0-9]")
 
 class TIMServer(http.server.BaseHTTPRequestHandler):
     def __init__(self, request, client_address, _server):
@@ -674,12 +737,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if usercode:
                 query.query["usercode"] = [usercode]
             userinput = get_json_param(query.jso, "state", "userinput", None)
+            if not userinput:
+                userinput = get_json_param(query.jso, "markup", "userinput", None)
 
             if userinput:
-                query.query["userinput"] = [userinput]
+                query.query["userinput"] = [str(userinput)]
             userargs = get_json_param(query.jso, "state", "userargs", None)
+            if not userargs:
+                userargs = get_json_param(query.jso, "markup", "userargs", None)
+
             if userargs:
-                query.query["userargs"] = [userargs]
+                query.query["userargs"] = [str(userargs)]
             selected_language = get_json_param(query.jso, "state", "selectedLanguage", None)
             if selected_language:
                 query.query["selectedLanguage"] = [selected_language]
@@ -699,7 +767,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("ERROR: " + str(ex) + " " + json.dumps(query))
                     continue
             else:
-                s = get_html(ttype, query)
+                s = get_html(self, ttype, query)
             # print(s)
             htmls.append(s)
 
@@ -731,7 +799,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # print("No signal", e)  #  TODO; why is this signal at all when it always comes here?
             pass
         try:
-            self.do_all_t(query)
+            return self.do_all_t(query)
         except Exception as e:
             print("Timed out2!", e)
             logging.exception("Timed out 2 trace")
@@ -781,6 +849,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         is_test = ""
 
+        is_cache = get_param(query, "cache", False)
         is_template = self.path.find('/template') >= 0
         is_fullhtml = self.path.find('/fullhtml') >= 0
         is_gethtml = self.path.find('/gethtml') >= 0
@@ -807,7 +876,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             content_type = "application/json"
         if is_css:
             content_type = 'text/css'
-        do_headers(self, content_type)
+        if not is_cache:
+            do_headers(self, content_type)
 
         if is_template:
             tempfile = get_param(query, "file", "")
@@ -840,6 +910,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # Get the template type
         ttype = get_param(query, "type", "cs").lower()
+        ttype = type_splitter.split(ttype)
+        ttype = ttype[0]
+
 
         if is_tauno and not is_answer:
             ttype = 'tauno'  # answer is newer tauno
@@ -909,12 +982,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if usercode:
                 query.query["usercode"] = [usercode]
             userinput = get_json_param(query.jso, "state", "userinput", None)
+            if not userinput:
+                userinput = get_json_param(query.jso, "markup", "userinput", None)
             if userinput:
+                userinput = str(userinput)
                 query.query["userinput"] = [userinput]
             selected_language = get_json_param(query.jso, "input", "selectedLanguage", None)
             if selected_language:
                 save["selectedLanguage"] = selected_language
             userargs = get_json_param(query.jso, "input", "userargs", None)
+            if not userargs:
+                userargs = get_json_param(query.jso, "markup", "userargs", None)
             is_doc = get_json_param3(query.jso, "input", "markup", "document", False)
 
             extra_files = get_json_param(query.jso, "markup", "extrafiles", None)
@@ -923,6 +1001,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # print("t:", time.time() - t1start)
             if userargs:
+                userargs = str(userargs)
                 save["userargs"] = userargs
 
             # print("USERCODE: XXXXX = ", usercode)
@@ -942,13 +1021,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             if is_html and not is_iframe:
                 # print("HTML:==============")
-                s = get_html(ttype, query)
+                s = get_html(self, ttype, query)
                 # print(s)
                 return self.wout(s)
 
             if is_fullhtml:
                 self.wout(file_to_string('begin.html'))
-                self.wout(get_html(ttype, query))
+                self.wout(get_html(self, ttype, query))
                 self.wout(file_to_string('end.html'))
                 return
 
@@ -1000,8 +1079,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if usercode:
                 save["usercode"] = usercode
             userinput = get_json_param(query.jso, "input", "userinput", None)
+            if not userinput:
+                userinput = get_json_param(query.jso, "markup", "userinput", None)
 
             if userinput:
+                userinput = str(userinput)
                 save["userinput"] = userinput
                 if userinput[-1:] != "\n":
                     userinput += "\n"
@@ -1380,6 +1462,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # self.wfile.write(out)
         # self.wfile.write(err)
         sresult = json.dumps(result)
+        if is_cache:
+            return result
         self.wout(sresult)
         # print("Result ========")
         # print(sresult)
