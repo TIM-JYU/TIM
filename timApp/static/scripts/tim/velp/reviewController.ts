@@ -1203,6 +1203,11 @@ export class ReviewController implements IController {
         if (parent == null) {
             return;
         }
+        const attrs = parent.getAttribute("attrs");
+        if (attrs == null) {
+            return;
+        }
+        const taskId = JSON.parse(attrs).taskId;
 
         let annotationElement = parent.querySelectorAll(`annotation[aid='${annotation.id}']`)[0];
         const isolateScope = angular.element(annotationElement).isolateScope<any>();
@@ -1222,12 +1227,13 @@ export class ReviewController implements IController {
         // Find answer browser and its scope
         // set answer id -> change answer to that
         // query selector element -> toggle annotation
-        let ab: any = parent.getElementsByTagName("ANSWERBROWSER")[0];
+        let ab: any = this.vctrl.getAnswerBrowser(taskId);
 
         if (typeof ab === UNDEFINED) {
-            const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-            const ablis: AnswerBrowserLazyController = abl.isolateScope<any>().$ctrl;
-            ablis.loadAnswerBrowser();
+            const ablis = this.vctrl.getAnswerBrowserLazy(taskId);
+            if (ablis !== undefined) {
+                ablis.loadAnswerBrowser();
+            }
         }
         if (this.vctrl.selectedUser.id !== annotation.user_id) {
             for (let i = 0; i < this.vctrl.users.length; i++) {
@@ -1244,10 +1250,16 @@ export class ReviewController implements IController {
 
         await $timeout(abtimeout);
 
-        ab = angular.element(parent.getElementsByTagName("ANSWERBROWSER")[0]);
-        const abscope = ab.isolateScope().$ctrl;
+        const abscope = this.vctrl.getAnswerBrowser(taskId);
+        if (abscope === undefined) {
+            return;
+        }
         let abscopetimeout = 500;
-        if (abscope.review && abscope.selectedAnswer && abscope.selectedAnswer.id === annotation.answer_id) { abscopetimeout = 1; } else { abscope.setAnswerById(annotation.answer_id); }
+        if (abscope.review && abscope.selectedAnswer && abscope.selectedAnswer.id === annotation.answer_id) {
+                abscopetimeout = 1;
+        } else {
+            abscope.setAnswerById(annotation.answer_id);
+        }
         abscope.review = true;
 
         await $timeout(abscopetimeout);

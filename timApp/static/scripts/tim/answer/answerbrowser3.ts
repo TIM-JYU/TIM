@@ -68,10 +68,15 @@ export class AnswerBrowserLazyController implements IController {
     }
 
     $onInit() {
+        this.viewctrl.registerAnswerBrowserLazy(this);
     }
 
     $postLink() {
         this.element.parent().on("mouseenter touchstart", () => this.loadAnswerBrowser());
+    }
+
+    getTaskId(): string {
+        return this.taskId;
     }
 
     /**
@@ -141,7 +146,7 @@ export class AnswerBrowserController implements IController {
     public selectedAnswer: IAnswer | undefined;
     private anyInvalid: boolean = false;
     private giveCustomPoints: boolean = false;
-    private review: boolean = false;
+    public review: boolean = false;
     private shouldFocus: boolean = false;
     private alerts: Array<{}> = [];
     private taskInfo: ITaskInfo | undefined;
@@ -237,6 +242,11 @@ export class AnswerBrowserController implements IController {
                 }
             },
         );
+        this.viewctrl.registerAnswerBrowser(this);
+    }
+
+    getTaskId(): string {
+        return this.taskId;
     }
 
     savePoints() {

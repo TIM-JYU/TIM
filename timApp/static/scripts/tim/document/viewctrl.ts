@@ -34,6 +34,7 @@ import {IPopupMenuAttrs, optionsWindowClosed} from "./parmenu";
 import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {createPopupMenuAttrs, MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
+import {AnswerBrowserController, AnswerBrowserLazyController} from "../answer/answerbrowser3";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -126,6 +127,9 @@ export class ViewCtrl implements IController {
 
     // For search box.
     private displaySearch = false;
+
+    public answerBrowsers: AnswerBrowserController[] = [];
+    public answerBrowsersLazy: AnswerBrowserLazyController[] = [];
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -556,6 +560,43 @@ export class ViewCtrl implements IController {
      */
     registerBookmarks(bookmarksCtrl: BookmarksController) {
         this.bookmarksCtrl = bookmarksCtrl;
+    }
+
+    /**
+     * Add answerbrowser to list.
+     * @param {AnswerBrowserController} ab
+     */
+    registerAnswerBrowser(ab: AnswerBrowserController) {
+        this.answerBrowsers.push(ab);
+    }
+
+    /**
+     * Get the answer browser corresponding to the task id.
+     * @param {string} taskId Just "taskID" or "docId.taskId".
+     * @returns {AnswerBrowserController | undefined}
+     */
+    getAnswerBrowser(taskId: string): AnswerBrowserController | undefined {
+        for (const ab of this.answerBrowsers) {
+            const temp = ab.getTaskId();
+            // AbCtrl uses format "docId.taskId", while parameter taskId may be just the task name.
+            if (temp === taskId || temp.substring(temp.indexOf(".") + 1) === taskId) {
+                return ab;
+            }
+        }
+        return undefined;
+    }
+
+    getAnswerBrowserLazy(taskId: string): AnswerBrowserLazyController | undefined {
+        for (const abl of this.answerBrowsersLazy) {
+            if (abl.getTaskId() === taskId) {
+                return abl;
+            }
+        }
+        return undefined;
+    }
+
+    registerAnswerBrowserLazy(ab: AnswerBrowserLazyController) {
+        this.answerBrowsersLazy.push(ab);
     }
 
     /**
