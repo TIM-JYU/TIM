@@ -196,27 +196,23 @@ class TimTest(TimRouteTest):
     def test_hide_links(self):
         self.login_test1()
         doc = self.create_doc()
+        hide = "var hideLinks = true;"
 
         grant_view_access(get_anon_group_id(), doc.id)
-        has_links = "var hideLinks = true;" in str(tostring(self.get(f'/view/{doc.id}', as_tree=True)))
-        self.assertEqual(has_links, False)
+        self.assertFalse(hide in self.get(f'/view/{doc.id}'))
 
         self.logout()
-        has_links = "var hideLinks = true;" in str(tostring(self.get(f'/view/{doc.id}', as_tree=True)))
-        self.assertEqual(has_links, False)
+        self.assertFalse(hide in self.get(f'/view/{doc.id}'))
 
         doc.document.add_setting('hide_links', 'view')
-        has_links = "var hideLinks = true;" in str(tostring(self.get(f'/view/{doc.id}', as_tree=True)))
-        self.assertEqual(has_links, True)
+        self.assertTrue(hide in self.get(f'/view/{doc.id}'))
 
         doc.document.add_paragraph(text='# 1\n\n# 2')
         # Index is visible always
-        has_links = "var hideLinks = true;" in str(tostring(self.get(f'/view/{doc.id}', as_tree=True)))
-        self.assertEqual(has_links, True)
+        self.assertTrue(hide in self.get(f'/view/{doc.id}'))
 
         self.login_test1()
-        has_links = "var hideLinks = true;" in str(tostring(self.get(f'/view/{doc.id}', as_tree=True)))
-        self.assertEqual(has_links, False)
+        self.assertFalse(hide in self.get(f'/view/{doc.id}'))
 
     def test_teacher(self):
         self.login_test1()
