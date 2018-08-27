@@ -350,6 +350,9 @@ def make_lazy(html: str, plugin: Plugin, do_lazy):
     markup_lazy = get_markup_value(markup, "lazy", "")
     if markup_lazy == False:
         return html, False  # user do not want lazy
+    if get_markup_value(markup, "cache", False):
+        return html, False  # cache never lazy
+
     if not do_lazy and markup_lazy != True:
         return html, False
     if html.find(NOLAZY) >= 0:

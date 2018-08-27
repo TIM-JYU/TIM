@@ -301,13 +301,22 @@ def get_md(ttype, query):
     return s
 
 
+def min_sanitaize(s):
+    if s.find('<svg') >= 0: return s;
+    s = s.replace('<', '&lt;').replace('>', '&gt;')
+    return s
+
+
 def get_html(self, ttype, query):
     if get_param(query, "cache", False): # check if we should take the html from cache
+        cache_root = "/tmp"
         cache_clear = get_param(query, "cacheClear", True)
+        if not cache_clear:
+            cache_root = "/tmp/ucache" # maybe user dependent cacha that may grow bigger, so to different place
         h = hashlib.new('ripemd160')
         h.update(str(query.jso['markup']).encode())
         task_id = get_param(query, "taskID", False)
-        filepath = '/tmp/imgcache/' + task_id.replace('.', '/')
+        filepath = cache_root + '/imgcache/' + task_id.replace('.', '/')
         if filepath.endswith('/'):
             task_id = get_param(query, "taskIDExt", False)
             filepath = '/tmp/imgcache/' + task_id.replace('..', '/')
@@ -323,15 +332,30 @@ def get_html(self, ttype, query):
         query.jso['state']= None
         ret = self.do_all(query) # otherwise generate new image
 
-        htmldata = ""
+        htmldata = NOLAZY
 
         error = ret['web'].get('error', None)
         if error:
-            htmldata += '<div class="error">' + error + '</div>'
+            htmldata += '<div class="error">' + min_sanitaize(error) + '</div>'
+
+        is_html = get_param(query, "isHtml", False)
+        default_class = 'console'
+        if is_html:
+            default_class = 'htmlresult'
+        cache_class = get_param(query, "cacheClass", default_class)
+
+        cache_elem = 'div'
+        if cache_class == 'console':
+            cache_elem = 'pre'
+
+        if cache_class:
+            cache_class = 'class="' + min_sanitaize(cache_class) + '"'
 
         console = ret['web'].get('console', None)
         if console:
-            htmldata += '<div class="htmlresult">' + console + '</div>'
+            if not is_html:
+                console = min_sanitaize(console)
+            htmldata += '<' + cache_elem + ' ' + cache_class + '>' + console + '</'+ cache_elem+'>'
 
         img = ret['web'].get('image', None)
         if img:
@@ -737,16 +761,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if usercode:
                 query.query["usercode"] = [usercode]
             userinput = get_json_param(query.jso, "state", "userinput", None)
-            if not userinput:
+            if userinput is None:
                 userinput = get_json_param(query.jso, "markup", "userinput", None)
 
-            if userinput:
+            if userinput is not None:
                 query.query["userinput"] = [str(userinput)]
             userargs = get_json_param(query.jso, "state", "userargs", None)
-            if not userargs:
+            if userargs is None:
                 userargs = get_json_param(query.jso, "markup", "userargs", None)
 
-            if userargs:
+            if userargs is not None:
                 query.query["userargs"] = [str(userargs)]
             selected_language = get_json_param(query.jso, "state", "selectedLanguage", None)
             if selected_language:
@@ -981,18 +1005,33 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             usercode = get_json_param(query.jso, "state", "usercode", None)
             if usercode:
                 query.query["usercode"] = [usercode]
+
             userinput = get_json_param(query.jso, "state", "userinput", None)
-            if not userinput:
+            if userinput is None:
                 userinput = get_json_param(query.jso, "markup", "userinput", None)
-            if userinput:
+            if userinput is not None:
                 userinput = str(userinput)
+                save["userinput"] = userinput
+                if len(userinput) > 0 and userinput[-1:] != "\n":
+                    userinput += "\n"
                 query.query["userinput"] = [userinput]
+            else:
+                userinput = ''
+
             selected_language = get_json_param(query.jso, "input", "selectedLanguage", None)
             if selected_language:
                 save["selectedLanguage"] = selected_language
+
             userargs = get_json_param(query.jso, "input", "userargs", None)
-            if userargs is not None:
+            if userargs is None:
                 userargs = get_json_param(query.jso, "markup", "userargs", None)
+            if userargs is not None:
+                userargs = str(userargs)
+                save["userargs"] = userargs
+            else:
+                userargs = ''
+
+
             is_doc = get_json_param3(query.jso, "input", "markup", "document", False)
 
             extra_files = get_json_param(query.jso, "markup", "extrafiles", None)
@@ -1000,11 +1039,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 extra_files = get_json_param(query.jso, "markup", "-extrafiles", None)
 
             # print("t:", time.time() - t1start)
-            if userargs is not None:
-                userargs = str(userargs)
-                save["userargs"] = userargs
-            else:
-                userargs = ''
 
             # print("USERCODE: XXXXX = ", usercode)
 
@@ -1080,15 +1114,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             usercode = get_json_param(query.jso, "input", "usercode", None)
             if usercode:
                 save["usercode"] = usercode
-            userinput = get_json_param(query.jso, "input", "userinput", None)
-            if not userinput:
-                userinput = get_json_param(query.jso, "markup", "userinput", None)
 
-            if userinput:
-                userinput = str(userinput)
-                save["userinput"] = userinput
-                if userinput[-1:] != "\n":
-                    userinput += "\n"
             nosave = get_param(query, "nosave", None)
             nosave = get_json_param(query.jso, "input", "nosave", nosave)
 
