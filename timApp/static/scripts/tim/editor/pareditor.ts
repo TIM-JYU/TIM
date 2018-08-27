@@ -59,6 +59,8 @@ export interface IEditorParams {
 
 export type IEditorResult = {type: "save", text: string} | {type: "delete"} | {type: "markunread"} | {type: "cancel"};
 
+export let currentParEditor: PareditorController | undefined;
+
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult, "pareditor"> {
     private static $inject = ["$scope", "$element"];
     private deleting = false;

@@ -4,7 +4,7 @@ import {getActiveDocument} from "tim/document/document";
 import {markPageDirty} from "tim/util/utils";
 import {CURSOR} from "../../editor/BaseParEditor";
 import {IPluginInfoResponse, ParCompiler} from "../../editor/parCompiler";
-import {openEditor, PareditorController} from "../../editor/pareditor";
+import {currentParEditor, openEditor, PareditorController} from "../../editor/pareditor";
 import {showMessageDialog} from "../../ui/dialog";
 import {$compile, $http, $window} from "../../util/ngimport";
 import {empty, isMobileDevice, to} from "../../util/utils";
@@ -465,11 +465,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
     }
 
     getParEditor(): PareditorController | undefined {
-        const elem = $("pareditor");
-        if (elem.length === 0) {
-            return;
-        }
-        return elem.isolateScope<any>().$ctrl;
+        return currentParEditor;
     }
 
     goToEditor() {
