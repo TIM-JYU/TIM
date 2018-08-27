@@ -33,6 +33,7 @@ export interface ITile {
     active: boolean;
 
     draw(canvas: HTMLCanvasElement): void;
+
     isPointInside(x: number, y: number): boolean;
 }
 
@@ -64,7 +65,9 @@ interface IParsedData {
     buttonText: string;
 }
 
-export interface ILayerData {[index: string]: number; }
+export interface ILayerData {
+    [index: string]: number;
+}
 
 export interface IMapResponse {
     width: number;
@@ -123,6 +126,7 @@ export class GamificationMapCtrl implements IController {
     private parsedData!: IParsedData;
     private buttonText: string = "";
     private errorMessage: string | undefined;
+    private loading = false;
 
     constructor(protected element: IRootElementService) {
     }
@@ -137,7 +141,9 @@ export class GamificationMapCtrl implements IController {
 
     async loadMap() {
         // Configure data and generate the JSON map file.
+        this.loading = true;
         const [err, response] = await to($http.post<IMapResponse>("/generateMap", this.parsedData));
+        this.loading = false;
         if (response) {
             this.errorMessage = undefined;
             this.json = response.data;
@@ -726,18 +732,7 @@ export class GamificationMapCtrl implements IController {
         if (!this.json && !this.errorMessage) {
             await this.loadMap();
         }
-        const map = this.element.find(".mapContainer")[0];
-        const ui = this.element.find(".uiContainer")[0];
-        if (!this.displayMap) {
-            this.displayMap = true;
-            map.setAttribute("style", "z-index: 0; position: relative;");
-            ui.setAttribute("style", "");
-
-        } else {
-            this.displayMap = false;
-            map.setAttribute("style", "z-index: 0; display: none; position: relative;");
-            ui.setAttribute("style", "display: none;");
-        }
+        this.displayMap = !this.displayMap;
     }
 }
 
@@ -824,15 +819,18 @@ function hasOwnProperty(json: IMapResponse, tile: ITile, layerdelta: number, dat
 }
 
 timApp.component("gamificationMap", {
-bindings: {
-    data: "@",
-},
-controller: GamificationMapCtrl, template: `
-<div class="no-highlight">
-    <button class="btn showMap" ng-click="$ctrl.clickShowMap()">{{$ctrl.buttonText}}</button>
-    <div ng-show="$ctrl.errorMessage" class="alert alert-warning">
-        <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
-    </div>
+    bindings: {
+        data: "@",
+    },
+    controller: GamificationMapCtrl, template: `
+<div class="no-highlight hidden-print">
+    <button class="timButton"
+            ng-click="$ctrl.clickShowMap()"
+            ng-disabled="$ctrl.loading">{{$ctrl.buttonText}}</button>
+    <tim-loading ng-if="$ctrl.loading"></tim-loading>
+    <tim-alert ng-if="$ctrl.errorMessage">
+        {{$ctrl.errorMessage}}
+    </tim-alert>
     <div class="uiContainer" ng-show="$ctrl.displayMap && !$ctrl.errorMessage">
         <table>
             <tr><td>Goals <input type="checkbox" class="showFrames" ng-click="$ctrl.clickShowFrames()"></td></tr>
@@ -843,7 +841,7 @@ controller: GamificationMapCtrl, template: `
         </table>
     </div>
     <div class="mapContainer" ng-show="$ctrl.displayMap" ng-click="$ctrl.clickCanvas($event)"
-        style="display:none; position:relative; z-index:0;">
+        style="position:relative; z-index:0;">
         <p class="infoBoxTitle" style="position: absolute;"></p>
         <p class="infoBoxDescription" style="position: absolute;"></p>
     </div>

@@ -479,11 +479,6 @@ p.caption {
     width: 100%;
 }
 
-
-button.showMap {
-   @extend .btn, .btn-primary;
-}
-
 .uiContainer table, .uiContainer td, .uiContainer tr, .uiContainer th {
     border: none !important;
     padding: 0;
