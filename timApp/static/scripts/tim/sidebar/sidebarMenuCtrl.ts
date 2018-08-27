@@ -505,8 +505,9 @@ timApp.component("timSidebarMenu", {
         <ul class="subexp">
             <li ng-class="$ctrl.headerClass(h)" ng-repeat="h in ::$ctrl.displayIndex"
                 ng-click="h.closed = !h.closed">
-                <a class="a{{::h.h1.level}}" href="#{{::h.h1.id}}" target="_self">{{::h.h1.text}}</a>
-                <ul ng-class="sub" ng-if="!h.closed">
+                <a class="a{{::h.h1.level}}" href="#{{::h.h1.id}}" target="_self" ng-click="$event.stopPropagation()">
+                {{::h.h1.text}}</a>
+                <ul ng-class="sub" ng-if="!h.closed" ng-click="$event.stopPropagation()">
                     <li class="basic" ng-repeat="h2 in h.h2List">
                         <a class="a{{::h2.level}}" href="#{{::h2.id}}" target="_self">{{::h2.text}}</a>
                     </li>
