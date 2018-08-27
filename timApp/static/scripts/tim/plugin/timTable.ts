@@ -81,6 +81,9 @@ export interface ICell { // extends ICellStyles
     formula?: string;
     row?: number;
     col?: number;
+    underSpanOf?: {row: number, col: number};
+    renderIndexX?: number;
+    renderIndexY?: number;
     inputScope?: boolean | undefined;
     [key: string]: any;
 }
@@ -136,31 +139,39 @@ const cellStyles: Set<string> = new Set<string>([
     "height",
     "colspan",
     "rowspan",
-    ]);
+]);
 
 const columnStyles: Set<string> = new Set<string>([
-        "width",
-        "backgroundColor",
-        "border",
-        "borderTop",
-        "borderBottom",
-        "borderLeft",
-        "borderRight",
-    ]);
-
+    "width",
+    "backgroundColor",
+    "border",
+    "borderTop",
+    "borderBottom",
+    "borderLeft",
+    "borderRight",
+]);
 
 const columnCellStyles: Set<string> = new Set<string>([
-        "fontSize",
-        "verticalAlign",
-        "textAlign",
-        "fontFamily",
-        "color",
-        "fontWeight",
-    ]);
+    "fontSize",
+    "verticalAlign",
+    "textAlign",
+    "fontFamily",
+    "color",
+    "fontWeight",
+]);
+
+
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right
+}
 
 function isPrimitiveCell(cell: CellEntity): cell is CellType {
     return cell == null || (cell as ICell).cell === undefined;
 }
+
 
 export class TimTableController implements IController {
     private static $inject = ["$scope", "$element", "$sce"];
@@ -195,7 +206,7 @@ export class TimTableController implements IController {
     $onInit() {
 
         this.initializeCellDataMatrix();
-        this.readDataBlockAndSetValuesToDataCellMatrix();
+        this.processDataBlockAndCellDataMatrix();
 
         if (this.viewctrl == null) {
             return;
@@ -381,7 +392,7 @@ export class TimTableController implements IController {
      * @param {CellEntity} cell
      * @param {number} docId Document id
      * @param {string} value Value that editor will show
-     * @param {string} parId Pargharph id
+     * @param {string} parId Paragraph id
      * @param {number} row Row index
      * @param {number} col Column index
      * @returns {Promise<void>}
@@ -513,9 +524,10 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Reads DataBlock and sets all values to DataCellMatrix
+     * Combines datablock data with YAML table data.
+     * Also processes rowspan and colspan and sets the table up for rendering.
      */
-    private readDataBlockAndSetValuesToDataCellMatrix() {
+    private processDataBlockAndCellDataMatrix() {
         if (this.data.table.tabledatablock) {   // reads tabledatablock and sets all values to datacellmatrix
             for (const item in this.data.table.tabledatablock.cells) {
 
@@ -533,7 +545,47 @@ export class TimTableController implements IController {
             }
         }
 
-        const cdm = this.cellDataMatrix;
+        // Process cell col/rowspan and figure out which cells should be rendered as part of another cell
+        // (or, in terms of HTML, should not be rendered at all)
+
+        for (let y = 0; y < this.cellDataMatrix.length; y++) {
+            const row = this.cellDataMatrix[y];
+
+            if (!row) { continue; }
+
+            let renderIndexX = 0;
+
+            for (let x = 0; x < row.length; x++) {
+                const cell = row[x];
+                if (cell.underSpanOf) {
+                    continue;
+                }
+                cell.renderIndexX = renderIndexX;
+                cell.renderIndexY = y;
+                renderIndexX++;
+
+                const colspan = cell.colspan ? cell.colspan : 1;
+                const rowspan = cell.rowspan ? cell.rowspan : 1;
+
+                if (colspan === 1 && rowspan === 1) { continue; } // might enhance performance?
+
+                for (let spanCellY = 0; spanCellY < rowspan; spanCellY++) {
+                    if (y + spanCellY >= this.cellDataMatrix.length) { break; }
+
+                    const spanRow = this.cellDataMatrix[y + spanCellY];
+
+                    for (let spanCellX = 0; spanCellX < colspan; spanCellX++) {
+                        if (spanCellY == 0 && spanCellX == 0) { continue; }
+                        if (x + spanCellX >= spanRow.length) { break; }
+
+                        const spanCell = spanRow[x + spanCellX];
+                        if (spanCell.underSpanOf) { break; }
+
+                        spanCell.underSpanOf = {row: y, col: x};
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -662,9 +714,11 @@ export class TimTableController implements IController {
                     this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
                 }
                 if (this.currentCell.row === this.cellDataMatrix.length - 1) {
-                    this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
+                    //this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
+                    this.doCellMovement(Direction.Right);
                 } else {
-                    this.openCellNextRowOrColumn(this.currentCell.row + 1, this.currentCell.col);
+                    //this.openCellNextRowOrColumn(this.currentCell.row + 1, this.currentCell.col);
+                    this.doCellMovement(Direction.Down);
                 }
                 return;
             }
@@ -687,7 +741,8 @@ export class TimTableController implements IController {
             }
 
             if (this.currentCell) {
-                this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
+                this.doCellMovement(Direction.Right);
+                // this.openCellNextRowOrColumn(this.currentCell.row, this.currentCell.col + 1);
             }
 
             return;
@@ -721,56 +776,81 @@ export class TimTableController implements IController {
         this.saveCurrentCell();
 
         if (ev.keyCode === KEY_DOWN) {
-            this.doCellMovement(0, 1);
-            return;
-        }
-        if (ev.keyCode === KEY_RIGHT) {
-            this.doCellMovement(1, 0);
-            return;
-        }
-        if (ev.keyCode === KEY_LEFT) {
-            this.doCellMovement(-1, 0);
-            return;
-        }
-        if (ev.keyCode === KEY_UP) {
-            this.doCellMovement(0, -1);
-            return;
+            this.doCellMovement(Direction.Down);
+        } else if (ev.keyCode === KEY_RIGHT) {
+            this.doCellMovement(Direction.Right);
+        } else if (ev.keyCode === KEY_LEFT) {
+            this.doCellMovement(Direction.Left);
+        } else if (ev.keyCode === KEY_UP) {
+            this.doCellMovement(Direction.Up);
         }
     }
 
     /**
      * Switches the edit mode to another cell relative to either the current
      * or last edited cell.
-     * @param {number} x
-     * @param {number} y
+     * @param direction The direction that the cell edit mode should move to.
      */
-    private doCellMovement(x: number, y: number) {
-        if (this.currentCell) {
-            this.openCell(this.currentCell.row + y, this.currentCell.col + x);
-            return;
-        }
-
+    private doCellMovement(direction: Direction) {
         if (this.lastEditedCell) {
-            const newRow = this.constrainRowIndex(this.lastEditedCell.row + y);
-            const newColumn = this.constrainColumnIndex(newRow, this.lastEditedCell.col + x);
-            this.setActiveCell(newRow, newColumn);
+            const nextCellCoords = this.getNextCell(this.lastEditedCell.col, this.lastEditedCell.row, direction);
+
+            if (!nextCellCoords) {
+                return;
+            }
+
+            if (this.currentCell) {
+                this.openCell(nextCellCoords.row, nextCellCoords.col);
+                return;
+            }
+
+            this.setActiveCell(nextCellCoords.row, nextCellCoords.col);
         }
     }
 
     /**
-     * Clicks specified cell or hops opposite side of the table
-     * @param {number} rowi Row index
-     * @param {number} coli Column index
+     * Gets the next cell in a given direction from a cell.
+     * Takes rowspan and colspan into account.
+     * @param x The X coordinate (column index) of the source cell.
+     * @param y The Y coordinate (row index) of the source cell.
+     * @param direction The direction.
      */
-    private openCell(rowi: number, coli: number) {
-        const modal: CellEntity = {
-            cell: "",
-        };
+    private getNextCell(x: number, y: number, direction: Direction): {row: number, col: number} | null {
+        const sourceCell = this.cellDataMatrix[y][x];
+        let nextRow;
+        let nextColumn;
+        let cell;
+        switch (direction) {
+            case Direction.Up:
+                nextRow = this.constrainRowIndex(y - 1);
+                nextColumn = this.constrainColumnIndex(nextRow, x);
+                break;
+            case Direction.Left:
+                nextRow = this.constrainRowIndex(y);
+                nextColumn = this.constrainColumnIndex(nextRow, x - 1);
+                break;
+            case Direction.Down:
+                const sourceRowspan = sourceCell.rowspan ? sourceCell.rowspan : 1;
+                nextRow = this.constrainRowIndex(y + sourceRowspan);
+                nextColumn = this.constrainColumnIndex(nextRow, x);
+                break;
+            case Direction.Right:
+                const sourceColspan = sourceCell.colspan ? sourceCell.colspan : 1;
+                nextRow = this.constrainRowIndex(y);
+                nextColumn = this.constrainColumnIndex(nextRow, x + sourceColspan);
+                break;
+            default:
+                return null;
+        }
 
-        rowi = this.constrainRowIndex(rowi);
-        coli = this.constrainColumnIndex(rowi, coli);
+        cell = this.cellDataMatrix[nextRow][nextColumn];
+        while (cell.underSpanOf) {
+            nextRow = cell.underSpanOf.row;
+            nextColumn = cell.underSpanOf.col;
+            cell = this.cellDataMatrix[nextRow][nextColumn];
+        }
 
-        this.cellClicked(modal, rowi, coli);
+        return { row: nextRow, col: nextColumn };
     }
 
     private constrainRowIndex(rowIndex: number) {
@@ -788,7 +868,7 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Clicks given or hops opposite side of the table
+     * Opens given cell for editing or hops to opposite side of the table
      * @param {number} rowi Row index
      * @param {number} coli Column index
      */
@@ -810,17 +890,40 @@ export class TimTableController implements IController {
             coli = this.cellDataMatrix[rowi].length - 1;
         }
 
+        let cell = this.cellDataMatrix[rowi][coli];
+        while (cell.underSpanOf) {
+            rowi = cell.underSpanOf.row;
+            coli = cell.underSpanOf.col;
+            cell = this.cellDataMatrix[rowi][coli];
+        }
+
         this.cellClicked(modal, rowi, coli);
     }
 
     private setActiveCell(rowi: number, coli: number) {
+        let cell = this.cellDataMatrix[rowi][coli];
+        while (cell.underSpanOf) {
+            rowi = cell.underSpanOf.row;
+            coli = cell.underSpanOf.col;
+            cell = this.cellDataMatrix[rowi][coli];
+        }
         this.lastEditedCell = {row: rowi, col: coli};
-        /*const cell = this.cellDataMatrix[rowi][coli];
-        if (cell.backgroundColor) {
-            this.selectedCellBackgroundColor = cell.backgroundColor;
-        } else {
-            this.selectedCellBackgroundColor = this.DEFAULT_CELL_BGCOLOR; ///a
-        } */
+    }
+
+    /**
+     * Clicks specified cell or hops opposite side of the table
+     * @param {number} rowi Row index
+     * @param {number} coli Column index
+     */
+    private openCell(rowi: number, coli: number) {
+        const modal: CellEntity = {
+            cell: "",
+        };
+
+        rowi = this.constrainRowIndex(rowi);
+        coli = this.constrainColumnIndex(rowi, coli);
+
+        this.cellClicked(modal, rowi, coli);
     }
 
     /**
@@ -882,7 +985,11 @@ export class TimTableController implements IController {
     private async calculateElementPlaces(rowi: number, coli: number, event?: MouseEvent) {
         await $timeout();
         const table = this.element.find(".timTableTable").first();
-        const tablecell = table.children("tbody").last().children("tr").eq(rowi).children("td").eq(coli);
+        const cell = this.cellDataMatrix[rowi][coli];
+        if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
+            return; // we should never be able to get here
+        }
+        const tablecell = table.children("tbody").last().children("tr").eq(cell.renderIndexY).children("td").eq(cell.renderIndexX);
         const off = tablecell.offset();
         /*let off;
         if (event && event.target) {
@@ -1187,7 +1294,7 @@ export class TimTableController implements IController {
      */
     private reInitialize() {
         this.initializeCellDataMatrix();
-        this.readDataBlockAndSetValuesToDataCellMatrix();
+        this.processDataBlockAndCellDataMatrix();
         ParCompiler.processAllMathDelayed(this.element);
 
         if (this.currentCell) {
@@ -1345,8 +1452,8 @@ export class TimTableController implements IController {
         return this.cellDataMatrix[rowi][coli].cell;
     }
 
-    private showCell(rowi: number, coli: number) {
-        return true;
+    private showCell(cell: ICell) {
+        return !cell.underSpanOf;
     }
 
     //</editor-fold>
@@ -1374,7 +1481,7 @@ timApp.component("timTable", {
         <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
             ng-style="$ctrl.stylingForRow(rowi)">
                 <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}" 
-                 ng-repeat="td in r" ng-init="coli = $index" ng-if="$ctrl.showCell(rowi, $index)" 
+                 ng-repeat="td in r" ng-init="coli = $index" ng-if="$ctrl.showCell(td)" 
                  colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
                     ng-style="$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.getTrustedCellContentHtml(rowi, coli)">
