@@ -40,29 +40,12 @@ export interface TimTable {
     dataInput?: boolean;
 }
 
-export interface ITable extends ITableStyles {
+export interface ITable { // extends ITableStyles
     rows?: IRow[];
     columns?: IColumn[];
     tabledatablock?: DataEntity;
 }
 
-/**
- * Styles
- */
-export interface ITableStyles {
-    backgroundColor?: string;
-    border?: string;
-    borderTop?: string;
-    borderBottom?: string;
-    borderLeft?: string;
-    borderRight?: string;
-    verticalAlign?: string;
-    textAlign?: string;
-    color?: string;
-    fontFamily?: string;
-    fontSize?: string;
-    visibility?: string;
-}
 
 export interface DataEntity {
     type: "Relative" | "Abstract";
@@ -76,25 +59,65 @@ export interface CellDataEntity {
 export type CellType = string | number | boolean | null;
 export type CellEntity = ICell | CellType;
 
-export interface IRow extends IRowStyles {
+export interface IRow { // extends IRowStyles
     row?: CellEntity[];
     id?: string;
 }
 
-export interface IRowStyles {
-    backgroundColor?: string;
-    border?: string;
-    borderTop?: string;
-    borderBottom?: string;
-    borderLeft?: string;
-    borderRight?: string;
-    verticalAlign?: string;
-    textAlign?: string;
-    color?: string;
-    fontFamily?: string;
-    fontSize?: string;
-    fontWeight?: string;
+export interface IColumn { // extends IColumnStyles
+    id?: string;
+    span?: number;
+    formula?: string;
 }
+
+export interface ICell { // extends ICellStyles
+    cell: CellType;
+    editing?: boolean;
+    editorOpen?: boolean;
+    type?: string;
+    colspan?: number;
+    rowspan?: number;
+    id?: string;
+    formula?: string;
+    row?: number;
+    col?: number;
+    inputScope?: boolean | undefined;
+    [key: string]: any;
+}
+
+/**
+ * Styles
+ */
+
+const tableStyles: Set<string> = new Set<string>([
+    "backgroundColor",
+    "border",
+    "borderTop",
+    "borderBottom",
+    "borderLeft",
+    "borderRight",
+    "verticalAlign",
+    "textAlign",
+    "color",
+    "fontFamily",
+    "fontSize",
+    "visibility"
+    ]);
+
+const rowStyles: Set<string> = new Set<string>( [
+    "backgroundColor",
+    "border",
+    "borderTop",
+    "borderBottom",
+    "borderLeft",
+    "borderRight",
+    "verticalAlign",
+    "textAlign",
+    "color",
+    "fontFamily",
+    "fontSize",
+    "fontWeight"
+    ]);
 
 const cellStyles: Set<string> = new Set<string>([
     "verticalAlign",
@@ -115,42 +138,6 @@ const cellStyles: Set<string> = new Set<string>([
     "rowspan",
     ]);
 
-/*export interface ICellStyles {
-    verticalAlign?: string;
-    fontSize?: string;
-    border?: string;
-    borderTop?: string;
-    borderBottom?: string;
-    borderLeft?: string;
-    borderRight?: string;
-    backgroundColor?: string;
-    textAlign?: string;
-    fontFamily?: string;
-    color?: string;
-    fontWeight?: string;
-} */
-
-export interface ICell { // extends ICellStyles
-    cell: CellType;
-    editing?: boolean;
-    editorOpen?: boolean;
-    type?: string;
-    colspan?: number;
-    rowspan?: number;
-    id?: string;
-    formula?: string;
-    row?: number;
-    col?: number;
-    inputScope?: boolean | undefined;
-    [key: string]: any;
-}
-
-export interface IColumn { // extends IColumnStyles
-    id?: string;
-    span?: number;
-    formula?: string;
-}
-
 const columnStyles: Set<string> = new Set<string>([
         "width",
         "backgroundColor",
@@ -161,35 +148,15 @@ const columnStyles: Set<string> = new Set<string>([
         "borderRight",
     ]);
 
-/*export interface IColumnStyles {
-    width?: string;
-    backgroundColor?: string;
-    border?: string;
-    borderTop?: string;
-    borderBottom?: string;
-    borderLeft?: string;
-    borderRight?: string;
-} */
 
-const columnCellStyles: Set<string> = new Set<string>(
-    [
-            "fontSize",
-            "verticalAlign",
-            "textAlign",
-            "fontFamily",
-            "color",
-            "fontWeight",
-            ]);
-
-/** Using this for property validating failed
-export interface IColumnCellStyles {
-    verticalAlign: string;
-    fontSize: string;
-    textAlign: string;
-    fontFamily: string;
-    color: string;
-    fontWeight: string;
-} */
+const columnCellStyles: Set<string> = new Set<string>([
+        "fontSize",
+        "verticalAlign",
+        "textAlign",
+        "fontFamily",
+        "color",
+        "fontWeight",
+    ]);
 
 function isPrimitiveCell(cell: CellEntity): cell is CellType {
     return cell == null || (cell as ICell).cell === undefined;
@@ -337,7 +304,7 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Set attirbutes value to correct ones when saved cell values
+     * Set attributes value to correct ones when saved cell values
      */
     public editSave() {
         this.editing = false;
@@ -345,7 +312,7 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Returns true if currentcell is not undefined
+     * Returns true if the simple cell content editor is open
      * @returns {{row: number; col: number; editorOpen: boolean} | undefined}
      */
     public isSomeCellBeingEdited() {
@@ -353,14 +320,14 @@ export class TimTableController implements IController {
     }
 
     /**
-     * Sets mouseInTable attribut to true
+     * Sets mouseInTable attribute to true
      */
     public mouseInsideTable() {
         this.mouseInTable = true;
     }
 
     /**
-     * Sets mouseInTable attribut to false
+     * Sets mouseInTable attribute to false
      */
     public mouseOutTable() {
         this.mouseInTable = false;
@@ -1052,19 +1019,7 @@ export class TimTableController implements IController {
         }
 
         const row = this.data.table.rows[rowi];
-
-        // TODO decide what to do with this old implementation
-        for (const key of Object.keys(row)) {
-            const property: string = styleToHtml[key];
-            if (property === undefined) {
-                continue;
-            }
-            const c = row[key as keyof IRowStyles];
-            if (!c) {
-                continue;
-            }
-            styles[property] = c;
-        }
+        this.applyStyle(styles, row, rowStyles);
         return styles;
     }
 
@@ -1074,18 +1029,7 @@ export class TimTableController implements IController {
      */
     private stylingForTable(tab: ITable) {
         const styles: { [index: string]: string } = {};
-
-        for (const key of Object.keys(tab)) {
-            const property: string = styleToHtml[key];
-            if (property === undefined) {
-                continue;
-            }
-            const c = tab[key as keyof ITableStyles];
-            if (!c) {
-                continue;
-            }
-            styles[property] = c;
-        }
+        this.applyStyle(styles, tab, tableStyles);
         return styles;
     }
 
@@ -1401,6 +1345,10 @@ export class TimTableController implements IController {
         return this.cellDataMatrix[rowi][coli].cell;
     }
 
+    private showCell(rowi: number, coli: number) {
+        return true;
+    }
+
     //</editor-fold>
 }
 
@@ -1425,8 +1373,9 @@ timApp.component("timTable", {
              ng-style="$ctrl.stylingForColumn(c)"/>
         <tr ng-repeat="r in $ctrl.cellDataMatrix" ng-init="rowi = $index"
             ng-style="$ctrl.stylingForRow(rowi)">
-                <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}"
-                 ng-repeat="td in r" ng-init="coli = $index" colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
+                <td ng-class="{'activeCell': $ctrl.isActiveCell(rowi, coli)}" 
+                 ng-repeat="td in r" ng-init="coli = $index" ng-if="$ctrl.showCell(rowi, $index)" 
+                 colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
                     ng-style="$ctrl.stylingForCell(rowi, coli)" ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.getTrustedCellContentHtml(rowi, coli)">
                     </div>
