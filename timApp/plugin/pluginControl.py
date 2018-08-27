@@ -167,16 +167,10 @@ def pluginify(doc: Document,
                                    settings=settings,
                                    macro_delimiter=macro_delimiter)
 
-                gamified_data = gamificationdata.gamify(YamlBlock.from_markdown(md))
+                gamified_data = YamlBlock.from_markdown(md).values
                 runner = 'gamification-map'
                 html_pars[idx][output_format.value] = f'<{runner} data={quoteattr(json.dumps(gamified_data))}></{runner}>'
             except yaml.YAMLError as e:
-                html_pars[idx][output_format.value] = '<div class="error"><p>Gamification error:</p><pre>' + \
-                                                      str(e) + \
-                                                      '</pre><p>From block:</p><pre>' + \
-                                                      md + \
-                                                      '</pre></div>'
-            except GamificationException as e:
                 html_pars[idx][output_format.value] = '<div class="error"><p>Gamification error:</p><pre>' + \
                                                       str(e) + \
                                                       '</pre><p>From block:</p><pre>' + \

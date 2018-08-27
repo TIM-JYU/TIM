@@ -1,5 +1,5 @@
 import {$http} from "../util/ngimport";
-import {Binding} from "../util/utils";
+import {Binding, to} from "../util/utils";
 import {Tile} from "./tile";
 
 import {IController, IRootElementService} from "angular";
@@ -121,6 +121,8 @@ export class GamificationMapCtrl implements IController {
     private data!: Binding<string, "@">;
     private parsedData!: IParsedData;
     private buttonText: string = "";
+    private defaultButtonText: string = "Show map";
+    private errorMessage: string | undefined;
 
     constructor(protected element: IRootElementService) {
     }
@@ -128,22 +130,29 @@ export class GamificationMapCtrl implements IController {
     $onInit() {
         this.parsedData = JSON.parse(this.data);
         this.buttonText = this.parsedData.buttonText;
+        if (!this.buttonText) {
+            this.buttonText = this.defaultButtonText;
+        }
     }
 
     async loadMap() {
-        // Get the JSON map file.
-        const response = await $http.post<IMapResponse>("/generateMap", this.parsedData);
-        this.json = response.data;
-
-        // Fill the sources array with tileset image sources.
-        for (const tileset of this.json.tilesets) {
-            this.sources.push(tileset.image);
+        // Configure data and generate the JSON map file.
+        const [err, response] = await to($http.post<IMapResponse>("/generateMap", this.parsedData));
+        if (response) {
+            this.errorMessage = undefined;
+            this.json = response.data;
+            // Fill the sources array with tileset image sources.
+            for (const tileset of this.json.tilesets) {
+                this.sources.push(tileset.image);
+            }
+            this.createCanvases();
+            // Preload the images and draw the map.
+            this.loadImages((p) => this.callback(p));
+        }
+        if (err) {
+            this.errorMessage = err.data.error;
         }
 
-        this.createCanvases();
-
-        // Preload the images and draw the map.
-        this.loadImages((p) => this.callback(p));
     }
 
     /**
@@ -714,7 +723,7 @@ export class GamificationMapCtrl implements IController {
      * Toggle map and UI.
      */
     private async clickShowMap() {
-        if (!this.json) {
+        if (!this.json && !this.errorMessage) {
             await this.loadMap();
         }
         const map = this.element.find(".mapContainer")[0];
@@ -821,7 +830,10 @@ bindings: {
 controller: GamificationMapCtrl, template: `
 <div class="no-highlight">
     <button class="btn showMap" ng-click="$ctrl.clickShowMap()">{{$ctrl.buttonText}}</button>
-    <div class="uiContainer" ng-show="$ctrl.displayMap">
+    <div ng-show="$ctrl.errorMessage" class="alert alert-warning">
+        <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
+    </div>
+    <div class="uiContainer" ng-show="$ctrl.displayMap && !$ctrl.errorMessage">
         <table>
             <tr><td>Goals <input type="checkbox" class="showFrames" ng-click="$ctrl.clickShowFrames()"></td></tr>
             <tr><td>Zoom </td><td><input type="range" max="1" min="0.3" step="0.05" class="mapZoom"
