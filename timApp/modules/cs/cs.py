@@ -372,7 +372,7 @@ def get_html(self, ttype, query):
             cache_footer = get_param(query, "footer", "")
 
         if cache_footer:
-            htmldata += '<figcaption>' + cache_footer + '</figcaption>'
+            htmldata += '<figcaption>' + min_sanitaize(cache_footer) + '</figcaption>'
 
 
         if cache_clear:
