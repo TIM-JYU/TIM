@@ -97,6 +97,21 @@ class CellBorders:
     def __repr__(self) -> str:
         return custom_repr(self)
 
+    def set_all_borders(self, color: Tuple[str, bool]) -> None:
+        """
+        Set all borders visible and with same color.
+        :param color: Tuple containing color name or hex and whether it's in hex.
+        :return: None.
+        """
+        self.left = True
+        self.right = True
+        self.top = True
+        self.bottom = True
+        self.color_bottom = color
+        self.color_top = color
+        self.color_left = color
+        self.color_right = color
+
 
 class Cell:
     """
@@ -1036,7 +1051,7 @@ def parse_hex_color(color, default_color=None) -> Union[str, None]:
     return color
 
 
-def get_border_color(border_data) -> (str, bool):
+def get_border_color(border_data) -> Tuple[str, bool]:
     """
     Parses border color from HTML border format.
     :param border_data: HTML border format with line thickness, style, color.
@@ -1064,12 +1079,8 @@ def get_borders(item, default_borders=CellBorders()) -> CellBorders:
     try:
         border_data = item['border']
         if border_data:
-            (color, color_html) = get_border_color(border_data)
-            borders = CellBorders(True, True, True, True)
-            borders.color_bottom = color, color_html
-            borders.color_top = color, color_html
-            borders.color_left = color, color_html
-            borders.color_right = color, color_html
+            borders = CellBorders()
+            borders.set_all_borders(get_border_color(border_data))
             return borders
     except:
         borders = copy.copy(default_borders)
@@ -1246,7 +1257,7 @@ def decide_format(format_levels):
     return final_format
 
 
-def is_close(a, b, rel_tol=1e-09, abs_tol=0.0):
+def is_close(a, b, rel_tol=1e-09, abs_tol=0.0) -> bool:
     """
     Compares floats and returns true if they are almost same.
     Source: https://stackoverflow.com/questions/5595425/
@@ -1306,12 +1317,8 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
 
     # Add light borders around every cell like in HTML-table.
     if draw_html_borders:
-        border_color = ("lightgray", False)
-        table_borders = CellBorders(left=True, right=True, top=True, bottom=True,
-                     color_bottom=border_color,
-                     color_top=border_color,
-                     color_left=border_color,
-                     color_right=border_color)
+        table_borders = CellBorders()
+        table_borders.set_all_borders(("lightgray", False))
 
     # Get column formattings:
     column_bg_color_list = get_column_color_list("backgroundColor", table_json)
@@ -1440,14 +1447,13 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
                 font_weight=font_weight
             )
 
+            # TODO: Cells that are replaced in html by rowspan or colspan are left in some cases and
+            # TODO: may break multicol and -row cells and their borders.
             # Cells with rowspan > 1:
             # Multirow-cells need to be set from bottom-up in LaTeX to
             # properly show bg-colors, and empty cells need to be placed
             # above to avoid overlap, since LaTeX doesn't automatically
             # move cells aside.
-            # TODO: Multirow-multicol cells have some border problems.
-            # TODO: Cells that are replaced in html by rowspan or colspan are left in some cases and
-            # TODO: may break multicol and -row cells.
             if rowspan > 1:
                 # Take multicol-cells messing up indices into account with this:
                 cell_index = table_row.get_colspan()
