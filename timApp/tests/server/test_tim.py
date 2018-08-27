@@ -2,6 +2,7 @@
 import re
 import unittest
 
+from defusedxml.lxml import tostring
 from lxml.cssselect import CSSSelector
 
 from timApp.document.document import Document
@@ -195,25 +196,27 @@ class TimTest(TimRouteTest):
     def test_hide_links(self):
         self.login_test1()
         doc = self.create_doc()
+
         grant_view_access(get_anon_group_id(), doc.id)
-        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
-        self.assertGreater(len(links), 0)
+        has_links = "var hideLinks = true;" in str(tostring(self.get(f'/view/{doc.id}', as_tree=True)))
+        self.assertEqual(has_links, False)
 
         self.logout()
-        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
-        self.assertGreater(len(links), 0)
-        doc.document.add_setting('hide_links', 'view')
-        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
-        self.assertEqual(len(links), 0)
-        doc.document.add_paragraph(text='# 1\n\n# 2')
+        has_links = "var hideLinks = true;" in str(tostring(self.get(f'/view/{doc.id}', as_tree=True)))
+        self.assertEqual(has_links, False)
 
+        doc.document.add_setting('hide_links', 'view')
+        has_links = "var hideLinks = true;" in str(tostring(self.get(f'/view/{doc.id}', as_tree=True)))
+        self.assertEqual(has_links, True)
+
+        doc.document.add_paragraph(text='# 1\n\n# 2')
         # Index is visible always
-        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
-        self.assertEqual(len(links), 3)
+        has_links = "var hideLinks = true;" in str(tostring(self.get(f'/view/{doc.id}', as_tree=True)))
+        self.assertEqual(has_links, True)
 
         self.login_test1()
-        links = link_selector(self.get(f'/view/{doc.id}', as_tree=True))
-        self.assertGreater(len(links), 0)
+        has_links = "var hideLinks = true;" in str(tostring(self.get(f'/view/{doc.id}', as_tree=True)))
+        self.assertEqual(has_links, False)
 
     def test_teacher(self):
         self.login_test1()
