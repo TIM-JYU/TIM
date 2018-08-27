@@ -991,7 +991,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if selected_language:
                 save["selectedLanguage"] = selected_language
             userargs = get_json_param(query.jso, "input", "userargs", None)
-            if not userargs:
+            if userargs is not None:
                 userargs = get_json_param(query.jso, "markup", "userargs", None)
             is_doc = get_json_param3(query.jso, "input", "markup", "document", False)
 
@@ -1000,9 +1000,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 extra_files = get_json_param(query.jso, "markup", "-extrafiles", None)
 
             # print("t:", time.time() - t1start)
-            if userargs:
+            if userargs is not None:
                 userargs = str(userargs)
                 save["userargs"] = userargs
+            else:
+                userargs = ''
 
             # print("USERCODE: XXXXX = ", usercode)
 
