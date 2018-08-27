@@ -350,6 +350,8 @@ def get_html(self, ttype, query):
 
         if cache_class:
             cache_class = 'class="' + min_sanitaize(cache_class) + '"'
+        else:
+            cache_class = ''
 
         console = ret['web'].get('console', None)
         if console:
