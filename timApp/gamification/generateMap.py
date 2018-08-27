@@ -14,11 +14,10 @@ generateMap = Blueprint('generateMap', __name__, url_prefix='')
 @generateMap.route('/generateMap', methods=["POST"])
 def generate_map():
     # Configuring the data is here to make the map load lazier.
-    coursedata = {}
     try:
         coursedata = gamificationdata.gamify(request.get_json())
     except GamificationException as e:
-        abort(400, str(e))
+        return abort(400, str(e))
     # Get lectures from json
     lecturejson = coursedata['lectures']
     # Get demos from json
@@ -34,7 +33,6 @@ def generate_map():
         'maxpoints': 0,  # Maximum points attainable from this demo/lecture
         'site': "",  # Link to this demo/lecture
         'title': ""  # Title of this demo/lecture
-
     }
     # Width of the map, needed for calculating tiles.
     mapwidth = g_map['width']

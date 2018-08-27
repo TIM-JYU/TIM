@@ -81,6 +81,7 @@ export interface IMapResponse {
 
 // A global variable because Tile-class uses this too.
 export let scale: number = 0.5;
+const defaultButtonText: string = "Show map";
 
 export class GamificationMapCtrl implements IController {
     // noinspection JSUnusedLocalSymbols
@@ -121,7 +122,6 @@ export class GamificationMapCtrl implements IController {
     private data!: Binding<string, "@">;
     private parsedData!: IParsedData;
     private buttonText: string = "";
-    private defaultButtonText: string = "Show map";
     private errorMessage: string | undefined;
 
     constructor(protected element: IRootElementService) {
@@ -131,7 +131,7 @@ export class GamificationMapCtrl implements IController {
         this.parsedData = JSON.parse(this.data);
         this.buttonText = this.parsedData.buttonText;
         if (!this.buttonText) {
-            this.buttonText = this.defaultButtonText;
+            this.buttonText = defaultButtonText;
         }
     }
 

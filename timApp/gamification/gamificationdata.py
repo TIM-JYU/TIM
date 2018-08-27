@@ -102,7 +102,7 @@ def get_demo_data(demo_paths, default_max):
     task_info_list = get_timdb().answers.get_users_for_tasks(task_id_list, [get_current_user_id()], group_by_doc=True)
     task_info_dict = defaultdict(float)
     for task in task_info_list:
-        task_info_dict[task.get('doc_id')] += float(task.get('total_points'))
+        task_info_dict[task.get('doc_id')] += task.get('total_points', 0.0)
 
     for doc, demo in zip(docs, demos):
         doc_max_points = demo.get('max_points')
