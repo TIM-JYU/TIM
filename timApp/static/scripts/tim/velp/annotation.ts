@@ -52,7 +52,7 @@ export class AnnotationController implements IController {
     private velp!: Binding<string, "@">;
     private rctrl!: Require<ReviewController>;
     private annotationdata!: Binding<string, "@">;
-    private annotation!: IAnnotationCoordless; // $onInit
+    public annotation!: IAnnotationCoordless; // $onInit
 
     constructor(private scope: IScope, private element: IRootElementService) {
         this.ctrlDown = false;
@@ -97,6 +97,8 @@ export class AnnotationController implements IController {
             comment: "", // this.newcomment,
             aid: this.annotation.id,
         };
+
+        this.rctrl.vctrl.registerAnnotation(this);
     }
 
     $postLink() {
@@ -180,10 +182,10 @@ export class AnnotationController implements IController {
      * @method showAnnotation
      */
     showAnnotation() {
+        // console.log("Showing " + this.annotation.content);
         this.setShowFull(false);
         this.annotation.newannotation = false;
         this.show = true;
-
         this.updateVelpZIndex();
     }
 

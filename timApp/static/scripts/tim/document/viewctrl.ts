@@ -35,6 +35,7 @@ import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {createPopupMenuAttrs, MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
 import {AnswerBrowserController, AnswerBrowserLazyController} from "../answer/answerbrowser3";
+import {AnnotationController} from "../velp/annotation";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -130,6 +131,7 @@ export class ViewCtrl implements IController {
 
     public answerBrowsers: AnswerBrowserController[] = [];
     public answerBrowsersLazy: AnswerBrowserLazyController[] = [];
+    public annotations: AnnotationController[] = [];
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -586,6 +588,10 @@ export class ViewCtrl implements IController {
         return undefined;
     }
 
+    registerAnswerBrowserLazy(ab: AnswerBrowserLazyController) {
+        this.answerBrowsersLazy.push(ab);
+    }
+
     getAnswerBrowserLazy(taskId: string): AnswerBrowserLazyController | undefined {
         for (const abl of this.answerBrowsersLazy) {
             if (abl.getTaskId() === taskId) {
@@ -595,8 +601,17 @@ export class ViewCtrl implements IController {
         return undefined;
     }
 
-    registerAnswerBrowserLazy(ab: AnswerBrowserLazyController) {
-        this.answerBrowsersLazy.push(ab);
+    registerAnnotation(an: AnnotationController) {
+        this.annotations.push(an);
+    }
+
+    getAnnotation(id: number): AnnotationController | undefined {
+        for (const an of this.annotations) {
+            if (an.annotation.id === id) {
+                return an;
+            }
+        }
+        return undefined;
     }
 
     /**

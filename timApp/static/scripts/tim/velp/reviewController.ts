@@ -53,7 +53,7 @@ export class ReviewController implements IController {
     private scope: IScope;
     private velpBadge?: HTMLElementTagNameMap["input"];
     private velpBadgePar?: string;
-    private vctrl!: Require<ViewCtrl>;
+    public vctrl!: Require<ViewCtrl>;
     private velpSelection!: VelpSelectionController; // initialized through onInit
     private onInit!: Binding<(params: {$SCOPE: IScope}) => void, "&">;
     private velpMode: boolean;
@@ -859,7 +859,10 @@ export class ReviewController implements IController {
                 newAnnotation.user_id = this.vctrl.selectedUser.id;
             }
 
-            const startoffset = this.getRealStartOffset(this.selectedArea.startContainer, this.selectedArea.startOffset);
+            const startoffset = this.getRealStartOffset(
+                this.selectedArea.startContainer,
+                this.selectedArea.startOffset,
+            );
             let endOffset = this.selectedArea.endOffset;
             if (innerDiv.childElementCount === 0) {
                 const lastChild = innerDiv.childNodes[innerDiv.childNodes.length - 1];
@@ -873,7 +876,12 @@ export class ReviewController implements IController {
             }
 
             if (this.selectedElement != null) {
-                this.addAnnotationToElement(this.selectedElement, newAnnotation, false, "Added also margin annotation");
+                this.addAnnotationToElement(
+                    this.selectedElement,
+                    newAnnotation,
+                    false,
+                    "Added also margin annotation",
+                );
             }
             this.addAnnotationToCoord(this.selectedArea, newAnnotation, true);
             await angularWait();
@@ -947,11 +955,16 @@ export class ReviewController implements IController {
      */
     getAnswerInfo(start: Element): IAnswer | undefined {
 
-        if (start.hasAttribute("attrs") && start.hasAttribute("t")) {
+        const attrs = start.getAttribute("attrs");
+        if (attrs !== null && start.hasAttribute("t")) {
             const answ = start.getElementsByTagName("answerbrowser");
             if (answ.length > 0) {
-                const ctrl = angular.element(answ[0]).isolateScope<any>().$ctrl as AnswerBrowserController;
-                return ctrl.selectedAnswer;
+                const ctrl = this.vctrl.getAnswerBrowser(JSON.parse(attrs).taskId);
+                if (ctrl === undefined) {
+                    return undefined;
+                } else {
+                    return ctrl.selectedAnswer;
+                }
             }
             return undefined;
         }
@@ -962,8 +975,14 @@ export class ReviewController implements IController {
         }
 
         if (myparent.tagName === "ANSWERBROWSER") {
-            const ctrl = angular.element(myparent).isolateScope<any>().$ctrl as AnswerBrowserController;
-            return ctrl.selectedAnswer;
+            if (attrs !== null) {
+                const ctrl = this.vctrl.getAnswerBrowser(JSON.parse(attrs).taskId);
+                if (ctrl) {
+                    return ctrl.selectedAnswer;
+                } else {
+                    return undefined;
+                }
+            }
         }
 
         if (myparent.hasAttribute("t")) {
@@ -990,33 +1009,29 @@ export class ReviewController implements IController {
         if (myparent == null) {
             throw new Error("Element position in tree was not found (getElementParent returned null)");
         }
-
         if (myparent.hasAttribute("t")) {
             return array.reverse();
         }
-
         let count = 0;
 
         const children = this.getElementChildren(myparent);
-        for (let i = 0; i < children.length; i++) {
+        for (const child of children) {
 
-            if (children[i] === start) {
+            if (child === start) {
                 array.push(count);
                 return this.getElementPositionInTree(myparent, array);
             }
 
-            if (this.checkIfAnnotation(children[i])) {
-                const innerElements = children[i].getElementsByClassName("highlighted")[0];
+            if (this.checkIfAnnotation(child)) {
+                const innerElements = child.getElementsByClassName("highlighted")[0];
                 const innerChildren = this.getElementChildren(innerElements);
                 if (innerChildren.length > 2) {
                     count += innerChildren.length - 2;
                 }
                 continue;
             }
-
             count++;
         }
-
         throw new Error("Element position in tree was not found");
     }
 
@@ -1209,13 +1224,12 @@ export class ReviewController implements IController {
         }
         const taskId = JSON.parse(attrs).taskId;
 
+        const annotationCtrl = this.vctrl.getAnnotation(annotation.id);
         let annotationElement = parent.querySelectorAll(`annotation[aid='${annotation.id}']`)[0];
-        const isolateScope = angular.element(annotationElement).isolateScope<any>();
-        if (isolateScope) {
-            const actrl: AnnotationController | undefined = isolateScope.actrl;
-            if (actrl && (annotation.coord.start == null || actrl.show || !annotation.user_id)) {
-                if (actrl.show) { scrollToWindow = false; }
-                actrl.toggleAnnotationShow();
+        if (annotationCtrl) {
+            if (annotation.coord.start == null || annotationCtrl.show || !annotation.user_id) {
+                if (annotationCtrl.show) { scrollToWindow = false; }
+                annotationCtrl.toggleAnnotationShow();
                 if (scrollToWindow && !isInViewport(annotationElement)) {
                     scrollToElement(annotationElement);
                 }
@@ -1227,50 +1241,51 @@ export class ReviewController implements IController {
         // Find answer browser and its scope
         // set answer id -> change answer to that
         // query selector element -> toggle annotation
-        let ab: any = this.vctrl.getAnswerBrowser(taskId);
+        let answerBrowserCtrl = this.vctrl.getAnswerBrowser(taskId);
 
-        if (typeof ab === UNDEFINED) {
+        if (answerBrowserCtrl === undefined) {
             const ablis = this.vctrl.getAnswerBrowserLazy(taskId);
             if (ablis !== undefined) {
                 ablis.loadAnswerBrowser();
             }
         }
         if (this.vctrl.selectedUser.id !== annotation.user_id) {
-            for (let i = 0; i < this.vctrl.users.length; i++) {
-                if (this.vctrl.users[i].id === annotation.user_id) {
-                    this.vctrl.changeUser(this.vctrl.users[i], false);
+            for (const u of this.vctrl.users) {
+                if (u.id === annotation.user_id) {
+                    this.vctrl.changeUser(u, false);
                     break;
                 }
             }
-
         }
 
         let abtimeout = 300;
-        if (ab) { abtimeout = 1; }
+        if (answerBrowserCtrl) { abtimeout = 1; }
 
         await $timeout(abtimeout);
 
-        const abscope = this.vctrl.getAnswerBrowser(taskId);
-        if (abscope === undefined) {
+        answerBrowserCtrl = this.vctrl.getAnswerBrowser(taskId);
+        if (answerBrowserCtrl === undefined || annotation.answer_id === null) {
             return;
         }
         let abscopetimeout = 500;
-        if (abscope.review && abscope.selectedAnswer && abscope.selectedAnswer.id === annotation.answer_id) {
+        if (answerBrowserCtrl.review && answerBrowserCtrl.selectedAnswer &&
+            answerBrowserCtrl.selectedAnswer.id === annotation.answer_id) {
                 abscopetimeout = 1;
         } else {
-            abscope.setAnswerById(annotation.answer_id);
+            answerBrowserCtrl.setAnswerById(annotation.answer_id);
         }
-        abscope.review = true;
+        answerBrowserCtrl.review = true;
 
         await $timeout(abscopetimeout);
-
-        annotationElement = parent.querySelectorAll(`annotation[aid='${annotation.id}']`)[0];
-        const ae = angular.element(annotationElement).isolateScope<any>().actrl;
-        // ae.toggleAnnotationShow();
-        // TODO: tutki ylimääräinen show ja miten saadaan toggleksi.
-        ae.showAnnotation();
-        // if ( abscopetimeout > 1 && scrollToWindow) scrollToElement(annotationElement);
-        if (scrollToWindow && !isInViewport(annotationElement)) { scrollToElement(annotationElement); }
+        if (annotationCtrl !== undefined) {
+            annotationElement = parent.querySelectorAll(`annotation[aid='${annotation.id}']`)[0];
+            // annotationCtrl.toggleAnnotationShow();
+            // TODO: tutki ylimääräinen show ja miten saadaan toggleksi.
+            annotationCtrl.showAnnotation();
+            if (scrollToWindow && !isInViewport(annotationElement)) {
+                scrollToElement(annotationElement);
+            }
+        }
     }
 }
 
