@@ -954,21 +954,22 @@ def add_missing_elements(table_json, datablock):
     return table_json
 
 
-def get_span(item) -> (int, int):
+def get_span(item, default=None) -> (int, int):
     """
     Parses row and column span of the cell.
     If not specified, assume it's 1.
     :param item: Cell data.
+    :param default: Default used when not found.
     :return: Colspan and rowspan in a tuple.
     """
     try:
         colspan = item['colspan']
     except:
-        colspan = default_colspan
+        colspan = default
     try:
         rowspan = item['rowspan']
     except:
-        rowspan = default_rowspan
+        rowspan = default
     return colspan, rowspan
 
 
@@ -1282,6 +1283,20 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0) -> bool:
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
+def decide_colspan_rowspan(cell_colspan, cell_rowspan, datablock_colspan, datablock_rowspan):
+    colspan = cell_colspan
+    rowspan = cell_rowspan
+    if datablock_colspan:
+        colspan = datablock_colspan
+    if not colspan:
+        colspan = default_colspan
+    if datablock_colspan:
+        rowspan = datablock_rowspan
+    if not rowspan:
+        rowspan = default_rowspan
+    return colspan, rowspan
+
+
 def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     """
     Converts TimTable-json into LaTeX-compatible object.
@@ -1379,7 +1394,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             cell_font_family = get_font_family(cell_data, None)
             cell_font_size = get_font_size(cell_data, None)
             cell_font_weight = get_key_value(cell_data, "fontWeight", None)
-            (colspan, rowspan) = get_span(cell_data)
+            (cell_colspan, cell_rowspan) = get_span(cell_data)
             borders = get_borders(cell_data, row_borders)
 
             # Get datablock formats:
@@ -1401,7 +1416,6 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             datablock_h_align = get_text_horizontal_align(datablock_cell_data, None)
             datablock_font_weight = get_key_value(datablock_cell_data, "fontWeight", None)
             datablock_colspan, datablock_rowspan = get_span(datablock_cell_data)
-
 
             # Decide which styles to use (from table, column, row, cell or datablock)
             (bg_color, bg_color_html) = decide_format_tuple([
@@ -1451,10 +1465,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
                 row_font_weight,
                 cell_font_weight,
                 datablock_font_weight])
-            if datablock_colspan:
-                colspan = datablock_colspan
-            if datablock_rowspan:
-                rowspan = datablock_rowspan
+            colspan, rowspan = decide_colspan_rowspan(cell_colspan, cell_rowspan, datablock_colspan, datablock_rowspan)
 
             c = Cell(
                 content=content,
