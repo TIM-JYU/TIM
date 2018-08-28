@@ -959,7 +959,7 @@ export class ReviewController implements IController {
         if (attrs !== null && start.hasAttribute("t")) {
             const answ = start.getElementsByTagName("answerbrowser");
             if (answ.length > 0) {
-                const ctrl = this.vctrl.getAnswerBrowser(JSON.parse(attrs).taskId);
+                const ctrl = this.vctrl.getAnswerBrowser(`${this.docId}.${JSON.parse(attrs).taskId}`);
                 if (ctrl === undefined) {
                     return undefined;
                 } else {
@@ -976,7 +976,7 @@ export class ReviewController implements IController {
 
         if (myparent.tagName === "ANSWERBROWSER") {
             if (attrs !== null) {
-                const ctrl = this.vctrl.getAnswerBrowser(JSON.parse(attrs).taskId);
+                const ctrl = this.vctrl.getAnswerBrowser(`${this.docId}.${JSON.parse(attrs).taskId}`);
                 if (ctrl) {
                     return ctrl.selectedAnswer;
                 } else {
@@ -1222,7 +1222,7 @@ export class ReviewController implements IController {
         if (attrs == null) {
             return;
         }
-        const taskId = JSON.parse(attrs).taskId;
+        const taskId = `${this.docId}.${JSON.parse(attrs).taskId}`;
 
         const annotationCtrl = this.vctrl.getAnnotation(annotation.id);
         let annotationElement = parent.querySelectorAll(`annotation[aid='${annotation.id}']`)[0];
@@ -1242,7 +1242,6 @@ export class ReviewController implements IController {
         // set answer id -> change answer to that
         // query selector element -> toggle annotation
         let answerBrowserCtrl = this.vctrl.getAnswerBrowser(taskId);
-
         if (answerBrowserCtrl === undefined) {
             const ablis = this.vctrl.getAnswerBrowserLazy(taskId);
             if (ablis !== undefined) {

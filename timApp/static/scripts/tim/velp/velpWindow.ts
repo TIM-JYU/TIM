@@ -54,7 +54,7 @@ export class VelpWindowController implements IController {
         } else {
             this.hasEditAccess = this.velpGroups.some((g) => g.edit_access && this.isGroupInVelp(g) || false);
         }
-        this.velpSelection.rctrl.vctrl.registerVelpWindow(this);
+        this.velpSelection.rctrl.vctrl.registerVelpWindow(this.velp.id, this);
     }
 
     constructor() {

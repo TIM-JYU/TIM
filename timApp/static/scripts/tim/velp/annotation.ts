@@ -97,7 +97,7 @@ export class AnnotationController implements IController {
             comment: "", // this.newcomment,
             aid: this.annotation.id,
         };
-        this.rctrl.vctrl.registerAnnotation(this);
+        this.rctrl.vctrl.registerAnnotation(this.annotation.id, this);
     }
 
     $postLink() {
@@ -144,7 +144,7 @@ export class AnnotationController implements IController {
         }
         const a = this.rctrl.getAnnotationById(this.annotation.id);
         if (!a) {
-            showMessageDialog(`Could not annotation with id ${this.annotation.id}`);
+            showMessageDialog(`Could not find annotation with id ${this.annotation.id}`);
             return;
         }
         this.rctrl.toggleAnnotation(a, false);

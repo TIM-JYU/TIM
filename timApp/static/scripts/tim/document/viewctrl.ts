@@ -130,10 +130,11 @@ export class ViewCtrl implements IController {
     // For search box.
     private displaySearch = false;
 
-    public answerBrowsers: AnswerBrowserController[] = [];
-    public answerBrowsersLazy: AnswerBrowserLazyController[] = [];
-    public annotations: AnnotationController[] = [];
-    public velpWindows: VelpWindowController[] = [];
+    // Maps containing registered controllers.
+    public answerBrowsers: Map<string, AnswerBrowserController> = new Map<string, AnswerBrowserController>();
+    public answerBrowsersLazy: Map<string, AnswerBrowserLazyController> = new Map<string, AnswerBrowserLazyController>();
+    public annotations: Map<number, AnnotationController> = new Map<number, AnnotationController>();
+    public velpWindows: Map<number, VelpWindowController> = new Map<number, VelpWindowController>();
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -567,72 +568,49 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * Add answerbrowser to list.
+     * Add answerbrowser to a map.
+     * @param {number} id Answerbrowser id.
      * @param {AnswerBrowserController} ab
      */
-    registerAnswerBrowser(ab: AnswerBrowserController) {
-        this.answerBrowsers.push(ab);
+    registerAnswerBrowser(id: string, ab: AnswerBrowserController) {
+        this.answerBrowsers.set(id, ab);
     }
 
     /**
      * Get the answer browser corresponding to the task id.
-     * @param {string} taskId Just "taskID" or "docId.taskId".
+     * @param {string} taskId "docId.taskName".
      * @returns {AnswerBrowserController | undefined}
      */
     getAnswerBrowser(taskId: string): AnswerBrowserController | undefined {
-        for (const ab of this.answerBrowsers) {
-            const temp = ab.getTaskId();
-            // AbCtrl uses format "docId.taskId", while parameter taskId may be just the task name.
-            if (temp === taskId || temp.substring(temp.indexOf(".") + 1) === taskId) {
-                return ab;
-            }
-        }
-        return undefined;
+        return this.answerBrowsers.get(taskId);
     }
 
     /*
      * More similar methods registering and getting registered items.
      */
 
-    registerAnswerBrowserLazy(ab: AnswerBrowserLazyController) {
-        this.answerBrowsersLazy.push(ab);
+    registerAnswerBrowserLazy(id: string, abl: AnswerBrowserLazyController) {
+        this.answerBrowsersLazy.set(id, abl);
     }
 
     getAnswerBrowserLazy(taskId: string): AnswerBrowserLazyController | undefined {
-        for (const abl of this.answerBrowsersLazy) {
-            if (abl.getTaskId() === taskId) {
-                return abl;
-            }
-        }
-        return undefined;
+        return this.answerBrowsersLazy.get(taskId);
     }
 
-    registerAnnotation(an: AnnotationController) {
-        this.annotations.push(an);
+    registerAnnotation(id: number, an: AnnotationController) {
+        this.annotations.set(id, an);
     }
 
     getAnnotation(id: number): AnnotationController | undefined {
-        for (const an of this.annotations) {
-            if (an.annotation.id === id) {
-                return an;
-            }
-        }
-        return undefined;
+        return this.annotations.get(id);
     }
 
-    registerVelpWindow(vw: VelpWindowController) {
-        console.log(vw);
-        this.velpWindows.push(vw);
+    registerVelpWindow(id: number, vw: VelpWindowController) {
+        this.velpWindows.set(id, vw);
     }
 
     getVelpWindow(id: number): VelpWindowController | undefined {
-        for (const vw of this.velpWindows) {
-            console.log(id + " " + vw.velp.id);
-            if (vw.velp.id.toString() === id.toString()) {
-                return vw;
-            }
-        }
-        return undefined;
+        return this.velpWindows.get(id);
     }
 
     /**

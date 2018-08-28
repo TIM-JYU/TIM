@@ -68,7 +68,7 @@ export class AnswerBrowserLazyController implements IController {
     }
 
     $onInit() {
-        this.viewctrl.registerAnswerBrowserLazy(this);
+        this.viewctrl.registerAnswerBrowserLazy(this.taskId, this);
     }
 
     $postLink() {
@@ -242,7 +242,7 @@ export class AnswerBrowserController implements IController {
                 }
             },
         );
-        this.viewctrl.registerAnswerBrowser(this);
+        this.viewctrl.registerAnswerBrowser(this.taskId, this);
     }
 
     getTaskId(): string {
