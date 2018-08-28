@@ -1353,17 +1353,11 @@ export class TimTableController implements IController {
      * Calculates and returns the number of columns in the table.
      */
     private getColumnCount() {
-        if (this.viewctrl == null || !this.data.table.rows) {
-            return 0;
-        }
-
         let highestCellCount = 0;
 
-        this.data.table.rows.forEach((row) => {
-            if (row.row) {
-                if (row.row.length > highestCellCount) {
-                    highestCellCount = row.row.length;
-                }
+        this.cellDataMatrix.forEach((row) => {
+            if (row.length > highestCellCount) {
+                highestCellCount = row.length;
             }
         });
 
