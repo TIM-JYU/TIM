@@ -328,6 +328,17 @@ class Row:
             i += cell.colspan
         return i
 
+    def get_cell(self, index: int) -> Union[Cell, None]:
+        """
+        Gives cell with the index number (which may be different from list index).
+        :param index: Cell index number in the table.
+        :return: Cell or None, if not found.
+        """
+        for cell in self.cells:
+            if cell.index == index:
+                return cell
+        return None
+
     def __repr__(self):
         return custom_repr(self)
 
@@ -1345,7 +1356,16 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
         # TODO: Change the logic: in HTML these go around the whole row, not each cell!
         row_borders = get_borders(row_data, table_borders)
 
+        skip_index = 0
         for j in range(0, len(table_json_rows[i]['row'])):
+            # Skips following cells based on previous cell's colspan.
+            if skip_index > 0:
+                skip_index -= 1
+                continue
+            # Skip cells that have been added because of rowspan.
+            if table_row.get_cell(j):
+                continue
+
             cell_data = table_json_rows[i]['row'][j]
 
             content = get_content(cell_data)
@@ -1473,6 +1493,8 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             # Normal cells:
             else:
                 table_row.add_cell(j, c)
+
+            skip_index = colspan - 1
 
     # Set row and column sizes according to cell contents.
     if get_key_value(table_json, "texAutoSize", True):
