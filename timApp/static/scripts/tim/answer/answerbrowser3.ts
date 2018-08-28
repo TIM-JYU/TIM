@@ -6,6 +6,7 @@ import {timLogTime} from "tim/util/timTiming";
 import {dereferencePar, getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
+import {DestroyScope} from "../ui/destroyScope";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
 import {$compile, $filter, $http, $timeout, $window} from "../util/ngimport";
@@ -121,9 +122,9 @@ interface ITaskInfo {
     answerLimit: number;
 }
 
-export class AnswerBrowserController implements IController {
+export class AnswerBrowserController extends DestroyScope implements IController {
     private static $inject = ["$scope", "$element"];
-    private element: JQuery;
+    private par: JQuery;
     private taskId!: Binding<string, "@">;
     private loading: number;
     private viewctrl!: Require<ViewCtrl>;
@@ -146,13 +147,12 @@ export class AnswerBrowserController implements IController {
     private alerts: Array<{}> = [];
     private taskInfo: ITaskInfo | undefined;
     private points: number | undefined;
-    private scope: IScope;
     private skipAnswerUpdateForId: number | undefined;
 
-    constructor(scope: IScope, element: IRootElementService) {
-        this.scope = scope;
-        this.element = element.parents(".par");
-        this.parContent = this.element.find(".parContent");
+    constructor(private scope: IScope, private element: IRootElementService) {
+        super(scope, element);
+        this.par = element.parents(".par");
+        this.parContent = this.par.find(".parContent");
         this.loading = 0;
     }
 
@@ -171,18 +171,18 @@ export class AnswerBrowserController implements IController {
         setTimeout(() => this.changeAnswer(), 500); // TODO: Don't use timeout
 
         if (this.viewctrl.teacherMode) {
-            this.element.attr("tabindex", 1);
-            this.element.css("outline", "none");
+            this.par.attr("tabindex", 1);
+            this.par.css("outline", "none");
 
             // ng-keypress will not fire if the textbox has focus
-            this.element[0].addEventListener("keydown", this.checkKeyPress);
+            this.par[0].addEventListener("keydown", this.checkKeyPress);
         }
 
         this.scope.$on("answerSaved", (event, args) => {
             if (args.taskId === this.taskId) {
                 this.getAvailableAnswers(false);
                 // HACK: for some reason the math mode is lost because of the above call, so we restore it here
-                ParCompiler.processAllMathDelayed(this.element.find(".parContent"));
+                ParCompiler.processAllMathDelayed(this.par.find(".parContent"));
                 if (args.error) {
                     this.alerts.push({msg: args.error, type: "warning"});
                 }
@@ -220,7 +220,7 @@ export class AnswerBrowserController implements IController {
 
         // call checkUsers automatically for now; suitable only for lazy mode!
         this.checkUsers();
-        this.element.on("mouseenter touchstart", () => {
+        this.par.on("mouseenter touchstart", () => {
             this.checkUsers();
         });
 
@@ -269,7 +269,7 @@ export class AnswerBrowserController implements IController {
     }
 
     setFocus() {
-        this.element.focus();
+        this.par.focus();
     }
 
     changeAnswer(forceUpdate = false) {
@@ -283,7 +283,7 @@ export class AnswerBrowserController implements IController {
         this.parContent.css("opacity", "1.0");
         this.skipAnswerUpdateForId = undefined;
         this.updatePoints();
-        const $par = this.element;
+        const $par = this.par;
         const ids = dereferencePar($par);
         if (!ids) {
             return;
@@ -305,7 +305,7 @@ export class AnswerBrowserController implements IController {
             }
             loadPlugin(response.data.html, $par, this.scope);
             if (this.review) {
-                this.element.find(".review").html(response.data.reviewHtml);
+                this.par.find(".review").html(response.data.reviewHtml);
             }
             this.rctrl.loadAnnotationsToAnswer(this.selectedAnswer.id, $par[0], this.review);
 
@@ -544,7 +544,7 @@ export class AnswerBrowserController implements IController {
 
     showVelpsCheckBox() {
         // return this.$parent.teacherMode || $window.velpMode; // && this.$parent.item.rights.teacher;
-        return $window.velpMode || ($(this.element).attr("class") || "").indexOf("has-annotation") >= 0;
+        return $window.velpMode || ($(this.par).attr("class") || "").indexOf("has-annotation") >= 0;
     }
 
     getTriesLeft() {
