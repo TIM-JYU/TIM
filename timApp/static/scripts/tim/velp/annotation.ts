@@ -181,7 +181,6 @@ export class AnnotationController implements IController {
      * @method showAnnotation
      */
     showAnnotation() {
-        // console.log("Showing " + this.annotation.content);
         this.setShowFull(false);
         this.annotation.newannotation = false;
         this.show = true;

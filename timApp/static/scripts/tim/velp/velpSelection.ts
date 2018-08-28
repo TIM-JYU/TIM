@@ -484,7 +484,6 @@ export class VelpSelectionController implements IController {
         if (this.newVelp.id === null) {
             return;
         }
-        console.log(this.newVelp.id);
         const velp = this.rctrl.vctrl.getVelpWindow(this.newVelp.id);
         if (velp === undefined) {
             return;
