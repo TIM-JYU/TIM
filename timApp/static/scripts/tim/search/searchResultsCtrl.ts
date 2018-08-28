@@ -62,6 +62,7 @@ export class ShowSearchResultController extends DialogController<{ ctrl: SearchB
     public updateAttributes(ctrl: SearchBoxCtrl) {
         this.collapsables = false;
         this.limitedDisplay = false;
+        this.allClosed = true;
         this.searchComponent = ctrl;
         this.results = ctrl.results;
         this.tagResults = ctrl.tagResults;
