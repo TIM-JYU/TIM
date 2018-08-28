@@ -224,5 +224,18 @@ export function canEditPar(item: IItem, $par: JQuery) {
     return right;
 }
 
+/**
+ * Get paragraph from element or its parent, if it exists.
+ * @param {Element} e
+ * @returns {Paragraph | undefined}
+ */
+export function findElementParagraph(e: Element): Paragraph | undefined {
+    if ($(e).hasClass(".par")) {
+        return $(e);
+    } else {
+        return $(e).parents(".par");
+    }
+}
+
 export const EDITOR_CLASS = "editorArea";
 export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;

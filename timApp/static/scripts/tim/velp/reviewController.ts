@@ -3,7 +3,7 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {AnswerBrowserController, AnswerBrowserLazyController} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
-import {addElementToParagraphMargin} from "../document/parhelpers";
+import {addElementToParagraphMargin, findElementParagraph, getParAttributes} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
@@ -238,8 +238,8 @@ export class ReviewController implements IController {
             }
         }
 
-        for (let i = 0; i < annotations.length; i++) {
-            const placeInfo = annotations[i].coord;
+        for (const an of this.annotations) {
+            const placeInfo = an.coord;
 
             const preElem = par.getElementsByTagName("PRE")[0];
             if (!preElem) {
@@ -248,7 +248,7 @@ export class ReviewController implements IController {
             const element = preElem.firstChild;
 
             if (!showInPlace || !isFullCoord(placeInfo.start) || !isFullCoord(placeInfo.end)) {
-                this.addAnnotationToElement(par, annotations[i], false, "Added as margin annotation");
+                this.addAnnotationToElement(par, an, false, "Added as margin annotation");
             } else if (element) {
                 const range = document.createRange();
                 try {
@@ -257,8 +257,8 @@ export class ReviewController implements IController {
                 } catch (e) {
                     // catch: Failed to execute 'setStart' on 'Range': The offset XX is larger than the node's length (YY).
                 }
-                this.addAnnotationToCoord(range, annotations[i], false);
-                this.addAnnotationToElement(par, annotations[i], false, "Added also margin annotation");
+                this.addAnnotationToCoord(range, an, false);
+                this.addAnnotationToElement(par, an, false, "Added also margin annotation");
             } else {
                 showMessageDialog("Couldn't add annotations");
             }
@@ -474,13 +474,13 @@ export class ReviewController implements IController {
         const par = annotationElement.parents(".par");
         const annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
         if (!inmargin) {
-            for (let a = 0; a < this.annotations.length; a++) {
-                if (id === this.annotations[a].id) {
+            for (const an of this.annotations) {
+                if (id === an.id) {
                     const node = annotationElement[1].parentNode;
                     if (node) {
                         node.removeChild(annotationElement[1]);
                     }
-                    this.addAnnotationToElement(par[0], this.annotations[a], false, "Added also margin annotation");
+                    this.addAnnotationToElement(par[0], an, false, "Added also margin annotation");
                     // addAnnotationToElement(this.annotations[a], false, "Added also margin annotation");
                 }
             }
@@ -508,18 +508,18 @@ export class ReviewController implements IController {
      * @param points - Annotation points
      */
     changeAnnotationPoints(id: number, points: number | null): void {
-        for (let i = 0; i < this.annotations.length; i++) {
-            if (this.annotations[i].id === id) {
-                this.annotations[i].points = points;
+        for (const an of this.annotations) {
+            if (an.id === id) {
+                an.points = points;
                 break;
             }
         }
     }
 
     changeAnnotationColor(id: number, color: string | null): void {
-        for (let i = 0; i < this.annotations.length; i++) {
-            if (this.annotations[i].id === id) {
-                this.annotations[i].color = color;
+        for (const an of this.annotations) {
+            if (an.id === id) {
+                an.color = color;
                 break;
             }
         }
@@ -533,9 +533,9 @@ export class ReviewController implements IController {
      * @param comment - Content of the given comment
      */
     addComment(id: number, name: string, comment: string): void {
-        for (let i = 0; i < this.annotations.length; i++) {
-            if (this.annotations[i].id === id) {
-                this.annotations[i].comments.push({
+        for (const an of this.annotations) {
+            if (an.id === id) {
+                an.comments.push({
                     commenter_username: name,
                     content: comment,
                     comment_time: "now",
@@ -558,10 +558,10 @@ export class ReviewController implements IController {
      * @param id - Annoation ID
      * @param visibility - Annotation visibility (1, 2, 3 or 4)
      */
-    changeVisibility(id: number, visiblity: number): void {
-        for (let i = 0; i < this.annotations.length; i++) {
-            if (this.annotations[i].id === id) {
-                this.annotations[i].visible_to = visiblity;
+    changeVisibility(id: number, visibility: number): void {
+        for (const an of this.annotations) {
+            if (an.id === id) {
+                an.visible_to = visibility;
                 break;
             }
         }
@@ -592,7 +592,9 @@ export class ReviewController implements IController {
             }
             if (range.toString().length > 0) {
                 this.selectedArea = range.getRangeAt(0);
-                this.selectedElement = this.getElementParentUntilAttribute(this.selectedArea.startContainer, "t") || undefined;
+                this.selectedElement = this.getElementParentUntilAttribute(
+                    this.selectedArea.startContainer,
+                    "t") || undefined;
             } else {
                 this.selectedArea = undefined;
             }
@@ -669,8 +671,8 @@ export class ReviewController implements IController {
      * @returns {boolean} Whether illegal classes were found or not.
      */
     hasAnyIllegalClass(element: Element): boolean {
-        for (let i = 0; i < illegalClasses.length; i++) {
-            if (element.classList.contains(illegalClasses[i])) {
+        for (const illegalClass of illegalClasses) {
+            if (element.classList.contains(illegalClass)) {
                 return true;
             }
         }
@@ -730,9 +732,9 @@ export class ReviewController implements IController {
             return null;
         }
 
-        for (let i = 0; i < this.velpSelection.velps.length; i++) {
-            if (this.velpSelection.velps[i].id === id) {
-                return this.velpSelection.velps[i];
+        for (const velp of this.velpSelection.velps) {
+            if (velp.id === id) {
+                return velp;
             }
         }
 
@@ -951,45 +953,21 @@ export class ReviewController implements IController {
      * Gets the answer info of the element. Returns null if no answer found.
      * @method getAnswerInfo
      * @param start - Paragraph where the answerbrowser element is searched for.
-     * @returns {Element|null} answerbrowser element or null.
+     * @returns {IAnswer|null} answerbrowser element or null.
      */
     getAnswerInfo(start: Element): IAnswer | undefined {
-
-        const attrs = start.getAttribute("attrs");
-        if (attrs !== null && start.hasAttribute("t")) {
-            const answ = start.getElementsByTagName("answerbrowser");
-            if (answ.length > 0) {
-                const ctrl = this.vctrl.getAnswerBrowser(`${this.docId}.${JSON.parse(attrs).taskId}`);
-                if (ctrl === undefined) {
-                    return undefined;
-                } else {
-                    return ctrl.selectedAnswer;
-                }
-            }
-            return undefined;
+        let taskId = null;
+        const par = findElementParagraph(start);
+        if (par) {
+            taskId = getParAttributes(par).taskId;
         }
-
-        const myparent = getElementParent(start);
-        if (myparent == null) {
-            return undefined;
-        }
-
-        if (myparent.tagName === "ANSWERBROWSER") {
-            if (attrs !== null) {
-                const ctrl = this.vctrl.getAnswerBrowser(`${this.docId}.${JSON.parse(attrs).taskId}`);
-                if (ctrl) {
-                    return ctrl.selectedAnswer;
-                } else {
-                    return undefined;
-                }
+        if (taskId) {
+            const ab = this.vctrl.getAnswerBrowser(`${this.docId}.${taskId}`);
+            if (ab) {
+                return ab.selectedAnswer;
             }
         }
-
-        if (myparent.hasAttribute("t")) {
-            return undefined;
-        }
-
-        return this.getAnswerInfo(myparent);
+        return undefined;
     }
 
     /**
@@ -1112,7 +1090,7 @@ export class ReviewController implements IController {
             if (this.checkIfAnnotation(child)) {
 
                 const aidAttr = child.getAttribute("aid");
-                if (aidAttr && parseInt(aidAttr) === aid) {
+                if (aidAttr && parseInt(aidAttr, 10) === aid) {
 
                     let startnum = num - 1;
                     num += innerElement.childNodes.length;
@@ -1120,7 +1098,8 @@ export class ReviewController implements IController {
                     if (lastInnerFirstChild.nodeName === prevNodeName) {
                         num--;
                     }
-                    if (i < parent.childNodes.length - 1 && lastInnerLastChild.nodeName === parent.childNodes[i + 1].nodeName) {
+                    if (i < parent.childNodes.length - 1 &&
+                        lastInnerLastChild.nodeName === parent.childNodes[i + 1].nodeName) {
                         num--;
                     }
 
@@ -1137,7 +1116,8 @@ export class ReviewController implements IController {
                         num--;
                     }
 
-                    if (i < parent.childNodes.length - 1 && lastInnerLastChild.nodeName === parent.childNodes[i + 1].nodeName) {
+                    if (i < parent.childNodes.length - 1 &&
+                        lastInnerLastChild.nodeName === parent.childNodes[i + 1].nodeName) {
                         num--;
                     }
 
@@ -1161,9 +1141,9 @@ export class ReviewController implements IController {
      * @returns Object - Annotation
      */
     getAnnotation(id: number): IAnnotation | undefined {
-        for (let i = 0; i < this.annotations.length; i++) {
-            if (id === this.annotations[i].id) {
-                return this.annotations[i];
+        for (const an of this.annotations) {
+            if (id === an.id) {
+                return an;
             }
         }
     }
