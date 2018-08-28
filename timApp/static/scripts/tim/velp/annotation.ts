@@ -97,7 +97,6 @@ export class AnnotationController implements IController {
             comment: "", // this.newcomment,
             aid: this.annotation.id,
         };
-
         this.rctrl.vctrl.registerAnnotation(this);
     }
 

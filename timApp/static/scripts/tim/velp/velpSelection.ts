@@ -65,7 +65,7 @@ export class VelpSelectionController implements IController {
     private advancedOnKey!: string; // $onInit
     private default_velp_group: IVelpGroupUI;
     private labelAdded: boolean = false;
-    private rctrl!: Require<ReviewController>;
+    public rctrl!: Require<ReviewController>;
     private default_personal_velp_group: IVelpGroup;
     private previewReleased: boolean = false;
     private teacherRight!: Binding<boolean, "<">;
@@ -481,9 +481,14 @@ export class VelpSelectionController implements IController {
             $log.error("Couldn't find newVelp element");
             return;
         }
-        const velp: VelpWindowController = angular.element(
-            newVelpWindow,
-        ).isolateScope<any>().$ctrl;
+        if (this.newVelp.id === null) {
+            return;
+        }
+        console.log(this.newVelp.id);
+        const velp = this.rctrl.vctrl.getVelpWindow(this.newVelp.id);
+        if (velp === undefined) {
+            return;
+        }
         velp.toggleVelpToEdit();
 
         // if (this.getVelpUnderEdit().id !== this.newVelp.id)

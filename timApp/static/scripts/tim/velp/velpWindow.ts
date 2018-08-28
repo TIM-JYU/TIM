@@ -27,7 +27,7 @@ export let colorPalette = ["blueviolet", "darkcyan", "orange", "darkgray", "corn
 export class VelpWindowController implements IController {
     private onVelpSelect!: Binding<(params: {$VELP: IVelp}) => void, "&">;
     private velpLocal!: IVelp;
-    private velp!: Binding<IVelpUI, "<">;
+    public velp!: Binding<IVelpUI, "<">;
     private newLabel: INewLabel;
     private labelToEdit: INewLabel;
     private visible_options: {type: string; title: string; values: [number, number, number, number]; names: [string, string, string, string]};
@@ -54,6 +54,7 @@ export class VelpWindowController implements IController {
         } else {
             this.hasEditAccess = this.velpGroups.some((g) => g.edit_access && this.isGroupInVelp(g) || false);
         }
+        this.velpSelection.rctrl.vctrl.registerVelpWindow(this);
     }
 
     constructor() {

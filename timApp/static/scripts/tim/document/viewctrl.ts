@@ -36,6 +36,7 @@ import {RefPopupHandler} from "./refpopup";
 import {createPopupMenuAttrs, MenuFunctionCollection, MenuFunctionEntry} from "./viewutils";
 import {AnswerBrowserController, AnswerBrowserLazyController} from "../answer/answerbrowser3";
 import {AnnotationController} from "../velp/annotation";
+import {VelpWindowController} from "../velp/velpWindow";
 
 markAsUsed(ngs, popupMenu, interceptor);
 
@@ -132,6 +133,7 @@ export class ViewCtrl implements IController {
     public answerBrowsers: AnswerBrowserController[] = [];
     public answerBrowsersLazy: AnswerBrowserLazyController[] = [];
     public annotations: AnnotationController[] = [];
+    public velpWindows: VelpWindowController[] = [];
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -588,6 +590,10 @@ export class ViewCtrl implements IController {
         return undefined;
     }
 
+    /*
+     * More similar methods registering and getting registered items.
+     */
+
     registerAnswerBrowserLazy(ab: AnswerBrowserLazyController) {
         this.answerBrowsersLazy.push(ab);
     }
@@ -609,6 +615,21 @@ export class ViewCtrl implements IController {
         for (const an of this.annotations) {
             if (an.annotation.id === id) {
                 return an;
+            }
+        }
+        return undefined;
+    }
+
+    registerVelpWindow(vw: VelpWindowController) {
+        console.log(vw);
+        this.velpWindows.push(vw);
+    }
+
+    getVelpWindow(id: number): VelpWindowController | undefined {
+        for (const vw of this.velpWindows) {
+            console.log(id + " " + vw.velp.id);
+            if (vw.velp.id.toString() === id.toString()) {
+                return vw;
             }
         }
         return undefined;
