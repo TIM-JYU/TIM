@@ -1400,6 +1400,8 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             datablock_font_size = get_font_size(datablock_cell_data, None)
             datablock_h_align = get_text_horizontal_align(datablock_cell_data, None)
             datablock_font_weight = get_key_value(datablock_cell_data, "fontWeight", None)
+            datablock_colspan, datablock_rowspan = get_span(datablock_cell_data)
+
 
             # Decide which styles to use (from table, column, row, cell or datablock)
             (bg_color, bg_color_html) = decide_format_tuple([
@@ -1449,6 +1451,10 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
                 row_font_weight,
                 cell_font_weight,
                 datablock_font_weight])
+            if datablock_colspan:
+                colspan = datablock_colspan
+            if datablock_rowspan:
+                rowspan = datablock_rowspan
 
             c = Cell(
                 content=content,
