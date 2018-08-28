@@ -75,10 +75,6 @@ export class AnswerBrowserLazyController implements IController {
         this.element.parent().on("mouseenter touchstart", () => this.loadAnswerBrowser());
     }
 
-    getTaskId(): string {
-        return this.taskId;
-    }
-
     /**
      * Returns whether the given task id is valid.
      * A valid task id is of the form '1.taskname'.
@@ -243,10 +239,6 @@ export class AnswerBrowserController implements IController {
             },
         );
         this.viewctrl.registerAnswerBrowser(this.taskId, this);
-    }
-
-    getTaskId(): string {
-        return this.taskId;
     }
 
     savePoints() {
