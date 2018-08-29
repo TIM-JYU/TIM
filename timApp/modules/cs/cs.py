@@ -301,13 +301,29 @@ def get_md(ttype, query):
     return s
 
 
-def min_sanitaize(s):
+def min_sanitize(s):
     if s.find('<svg') >= 0: return s;
     s = s.replace('<', '&lt;').replace('>', '&gt;')
+
+    # s = tim_sanitize(s)
     return s
 
 
+def get_cache_footer(query):
+    cache_footer = get_param(query, "cacheFooter", "")
+    if not cache_footer:
+        cache_footer = get_param(query, "footer", "")
+
+    if not cache_footer:
+        return ''
+
+    return '<figcaption>' + min_sanitize(cache_footer) + '</figcaption>'
+
+
 def get_html(self, ttype, query):
+    htmldata =  get_param(query, "cacheHtml", None) # check if constant html
+    if htmldata:
+        return tim_sanitize(htmldata) + get_cache_footer(query)
     if get_param(query, "cache", False): # check if we should take the html from cache
         cache_root = "/tmp"
         cache_clear = get_param(query, "cacheClear", True)
@@ -336,7 +352,7 @@ def get_html(self, ttype, query):
 
         error = ret['web'].get('error', None)
         if error:
-            htmldata += '<div class="error">' + min_sanitaize(error) + '</div>'
+            htmldata += '<div class="error">' + min_sanitize(error) + '</div>'
 
         is_html = get_param(query, "isHtml", False)
         default_class = 'console'
@@ -349,14 +365,16 @@ def get_html(self, ttype, query):
             cache_elem = 'pre'
 
         if cache_class:
-            cache_class = 'class="' + min_sanitaize(cache_class) + '"'
+            cache_class = 'class="' + min_sanitize(cache_class) + '"'
         else:
             cache_class = ''
 
         console = ret['web'].get('console', None)
         if console:
             if not is_html:
-                console = min_sanitaize(console)
+                console = min_sanitize(console)
+            #else:
+            #    console = tim_sanitize(console)
             htmldata += '<' + cache_elem + ' ' + cache_class + '>' + console + '</'+ cache_elem+'>'
 
         img = ret['web'].get('image', None)
@@ -367,13 +385,7 @@ def get_html(self, ttype, query):
             htmldata += '<img src="data:image/png;base64, ' + pngenc.decode() + '" />'
             os.remove(img)
 
-        cache_footer = get_param(query, "cacheFooter", "")
-        if not cache_footer:
-            cache_footer = get_param(query, "footer", "")
-
-        if cache_footer:
-            htmldata += '<figcaption>' + min_sanitaize(cache_footer) + '</figcaption>'
-
+        htmldata += get_cache_footer(query)
 
         if cache_clear:
             files = glob.glob(filepath+'/*')
