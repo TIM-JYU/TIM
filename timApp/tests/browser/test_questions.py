@@ -5,10 +5,10 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
 
+from timApp.answer.answer import Answer
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text, find_by_ngmodel, find_all_by_ngmodel, \
     find_by_ngclick, ignore_timeout
-from timApp.answer.answer import Answer
 
 ChoiceList = List[Tuple[str, str]]
 ElementList = List[WebElement]
@@ -46,12 +46,13 @@ def get_matrix_fields(dialog: WebElement) -> Tuple[ElementList, ElementList, Ele
 
 def adjust_matrix_size(dialog: WebElement, missing_choices: int, rowcol: str):
     addbutton = find_by_ngclick(dialog, f'$ctrl.qctrl.add{rowcol}(-1)')
-    delbutton = find_by_ngclick(dialog, f'$ctrl.qctrl.del{rowcol}($index)')
     if missing_choices > 0:
         for i in range(missing_choices):
             addbutton.click()
     elif missing_choices < 0:
-        delbutton.click()
+        for i in range(-missing_choices):
+            delbutton = find_by_ngclick(dialog, f'$ctrl.qctrl.del{rowcol}($index)')
+            delbutton.click()
 
 
 class QuestionTest(BrowserTest):
@@ -102,6 +103,7 @@ class QuestionTest(BrowserTest):
             points=['3', '', '0', '1'],
             questiontype='true-false',
             type_choice='True/False',
+            adjust_matrix=['Row'],
         )
         matrixheaders = ['h1', 'h2', 'h3', 'h4']
         choices.append(('Maybe', 'reason for maybe'), )
@@ -121,7 +123,7 @@ class QuestionTest(BrowserTest):
             questiontype='matrix-checkbox',
             type_choice='Many rows and columns',
             answer_type_choice='Checkbox',
-            adjust_matrix=True,
+            adjust_matrix=['Row', 'Col'],
         )
         self.do_question_test(
             answer_choices=[5, 11, 18],
@@ -139,7 +141,7 @@ class QuestionTest(BrowserTest):
             questiontype='matrix-radio',
             type_choice='Many rows and columns',
             answer_type_choice='Radio Button horizontal',
-            adjust_matrix=True,
+            adjust_matrix=['Row', 'Col'],
         )
         matrixheaders = ['h1', 'h2', 'h3']
         self.do_question_test(
@@ -153,7 +155,7 @@ class QuestionTest(BrowserTest):
             questiontype='matrix-textarea',
             type_choice='Many rows and columns',
             answer_type_choice='Text area',
-            adjust_matrix=True,
+            adjust_matrix=['Row', 'Col'],
         )
 
     def do_question_test(self,
@@ -167,8 +169,10 @@ class QuestionTest(BrowserTest):
                          questiontype: str,
                          type_choice: str,
                          answer_type_choice=None,
-                         adjust_matrix=False,
+                         adjust_matrix=None,
                          ):
+        if adjust_matrix is None:
+            adjust_matrix = []
         d = self.create_doc(initial_par='test')
         self.goto_document(d, view='lecture')
         self.find_element('.glyphicon-menu-hamburger').click()
@@ -188,9 +192,13 @@ class QuestionTest(BrowserTest):
             answertypeselect = Select(find_by_ngmodel(dialog, 'qctrl.question.matrixType'))
             answertypeselect.select_by_visible_text(answer_type_choice)
         choice_elems, header_elems, point_elems, reason_elems = get_matrix_fields(dialog)
+        diffs = {
+            'Row': len(choices) - len(choice_elems),
+            'Col': len(headers) - len(header_elems),
+        }
+        for x in adjust_matrix:
+            adjust_matrix_size(dialog, diffs[x], x)
         if adjust_matrix:
-            adjust_matrix_size(dialog, len(choices) - len(choice_elems), 'Row')
-            adjust_matrix_size(dialog, len(headers) - len(header_elems), 'Col')
             choice_elems, header_elems, point_elems, reason_elems = get_matrix_fields(dialog)
 
         self.assertEqual(len(reason_elems), len(choice_elems))
@@ -207,8 +215,11 @@ class QuestionTest(BrowserTest):
             elem.send_keys(header)
         matrix = self.drv.find_element_by_css_selector('tim-question-matrix')
         answersheet = self.drv.find_element_by_css_selector('dynamic-answer-sheet')
-        self.assert_same_screenshot(matrix, f'questions/question_matrix_{questiontype}', move_to_element=True)
-        self.assert_same_screenshot(answersheet, f'questions/answer_sheet_{questiontype}', move_to_element=True)
+        questiontext.click()  # move focus out of matrix to get consistent screenshots
+        self.assert_same_screenshot(matrix, f'questions/question_matrix_{questiontype}',
+                                    move_to_element=True, attempts=2)
+        self.assert_same_screenshot(answersheet, f'questions/answer_sheet_{questiontype}',
+                                    move_to_element=True)
         find_button_by_text(dialog, 'Save').click()
         self.wait_until_hidden('tim-edit-question')
         qst = self.find_element_and_move_to('qst-runner')

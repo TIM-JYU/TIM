@@ -161,8 +161,13 @@ class BrowserTest(TimLiveServer, TimRouteTest):
             im.save(file=filename_or_file)
         return im
 
-    def assert_same_screenshot(self, element: WebElement, filename: Union[str, List[str]], move_to_element: bool = False):
+    def assert_same_screenshot(self,
+                               element: WebElement,
+                               filename: Union[str, List[str]],
+                               move_to_element: bool = False,
+                               attempts=1):
         """Asserts that the provided element looks the same as in the provided screenshot.
+        :param attempts: Number of comparison attempts.
         :param element: The element to check.
         :param filename: The filename of the expected screenshot.
         :param move_to_element: Whether to move to the element before taking the screenshot.
@@ -171,17 +176,18 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         diff = None
         result = None
         fail_suffix = ''
-        with self.save_element_screenshot(element, move_to_element=move_to_element) as im:
-            for f in filenames:
-                try:
-                    ref = Image(filename=f'tests/browser/expected_screenshots/{f}.png')
-                except BaseError:
-                    print(f'Expected screenshot not found, saving image to {f}.png')
-                    im.save(filename=f'{self.screenshot_dir}/{f}.png')
-                    return
-                diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
-                if result <= self.get_screenshot_tolerance():
-                    return
+        for i in range(attempts):
+            with self.save_element_screenshot(element, move_to_element=move_to_element) as im:
+                for f in filenames:
+                    try:
+                        ref = Image(filename=f'tests/browser/expected_screenshots/{f}.png')
+                    except BaseError:
+                        print(f'Expected screenshot not found, saving image to {f}.png')
+                        im.save(filename=f'{self.screenshot_dir}/{f}.png')
+                        return
+                    diff, result = im.compare(ref, metric='peak_signal_to_noise_ratio')
+                    if result <= self.get_screenshot_tolerance():
+                        return
         self.save_element_screenshot(element, f'{f}{fail_suffix}', move_to_element).close()
         diff.save(filename=f'{self.screenshot_dir}/{f}{fail_suffix}_DIFF.png')
         assert_msg = f'Screenshots did not match (diff value is {result}); ' \

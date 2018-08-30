@@ -328,7 +328,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     settings = get_user_settings()
     # settings['add_button_text'] = doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
 
-    show_unpublished_bg = doc_info.block.is_unpublished()
+    show_unpublished_bg = doc_info.block.is_unpublished() and not app.config['TESTING']
     taketime("view to render")
 
     reqs = get_all_reqs()
