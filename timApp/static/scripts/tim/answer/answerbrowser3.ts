@@ -53,26 +53,28 @@ function loadPlugin(html: string, $par: JQuery, scope: IScope) {
     }, 500);
 }
 
-export class AnswerBrowserLazyController implements IController {
+export class PluginLoaderCtrl extends DestroyScope implements IController {
     private static $inject = ["$element", "$scope"];
-    private compiled: boolean;
-    private element: IRootElementService;
+    private compiled = false;
     private viewctrl!: Require<ViewCtrl>;
     private taskId!: Binding<string, "@">;
-    private scope: IScope;
+    private type!: Binding<string, "@">;
 
-    constructor($element: IRootElementService, scope: IScope) {
-        this.element = $element;
-        this.scope = scope;
-        timLogTime("answerbrowserlazy ctrl function", "answ", 1);
-        this.compiled = false;
+    constructor(private element: IRootElementService, private scope: IScope) {
+        super(scope, element);
+        this.loadPlugin = this.loadPlugin.bind(this);
+        timLogTime("timPluginLoader constructor", "answ", 1);
     }
 
     $onInit() {
     }
 
     $postLink() {
-        this.element.parent().on("mouseenter touchstart", () => this.loadAnswerBrowser());
+        this.element.parent().on("mouseenter touchstart", this.loadPlugin);
+    }
+
+    $onDestroy() {
+        this.element.parent().off("mouseenter touchstart", this.loadPlugin);
     }
 
     /**
@@ -85,32 +87,36 @@ export class AnswerBrowserLazyController implements IController {
         return taskId.slice(-1) !== ".";
     }
 
-    loadAnswerBrowser() {
+    loadPlugin() {
         if (this.compiled) {
+            console.warn(`Plugin ${this.taskId} was already compiled`);
             return;
         }
         const par: JQuery = this.element.parents(".par");
         const plugin = par.find(".parContent");
         this.compiled = true;
-        if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId)) {
-            const newHtml = '<answerbrowser task-id="' + this.taskId + '"></answerbrowser>';
+        if (!this.viewctrl.noBrowser && this.isValidTaskId(this.taskId) && this.type !== "lazyonly") {
+            const newHtml = `<answerbrowser task-id="${this.taskId}"></answerbrowser>`;
             const newElement = $compile(newHtml);
-            par.prepend(newElement(this.scope)[0]);
+            par.prepend(newElement(this.viewctrl.scope)[0]);
         }
         // Next the inside of the plugin to non lazy
         const origHtml = plugin[0].innerHTML;
         if (origHtml.indexOf(LAZYSTART) < 0) {
+            // plugin is not lazy; it is already loaded
         } else {
-            loadPlugin(origHtml, par, this.scope);
+            loadPlugin(origHtml, par, this.viewctrl.scope);
         }
+        this.element.remove();
     }
 }
 
-timApp.component("answerbrowserlazy", {
+timApp.component("timPluginLoader", {
     bindings: {
         taskId: "@",
+        type: "@",
     },
-    controller: AnswerBrowserLazyController,
+    controller: PluginLoaderCtrl,
     require: {
         viewctrl: "^timView",
     },
@@ -622,6 +628,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     closeAlert(index: number) {
         this.alerts.splice(index, 1);
+    }
+
+    $onDestroy() {
     }
 }
 

@@ -678,8 +678,31 @@ a
         """)
         e = self.get(d.url, as_tree=True)
         ab = e.cssselect('answerbrowser')
-        ablazy = e.cssselect('answerbrowserlazy')
+        ablazy = e.cssselect('tim-plugin-loader')
         self.assertFalse(ab)
+        self.assertFalse(ablazy)
+
+    def test_lazyonly_browser(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {plugin=graphviz}
+lazy: true
+```
+        """)
+        e = self.get(d.url, as_tree=True)
+        ablazy = e.cssselect('tim-plugin-loader')
+        self.assertEqual({'type': 'lazyonly', 'task-id': f'{d.id}.'}, ablazy[0].attrib)
+
+    def test_cache_no_browser(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {plugin=graphviz}
+lazy: true
+cache: true
+```
+        """)
+        e = self.get(d.url, as_tree=True)
+        ablazy = e.cssselect('tim-plugin-loader')
         self.assertFalse(ablazy)
 
     def test_invalid_taskid(self):

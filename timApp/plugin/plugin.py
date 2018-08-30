@@ -18,6 +18,12 @@ from timApp.util.utils import try_load_json
 date_format = '%Y-%m-%d %H:%M:%S'
 AUTOMD = 'automd'
 
+LAZYSTART = "<!--lazy "
+LAZYEND = " lazy-->"
+NOLAZY = "<!--nolazy-->"
+NEVERLAZY = "NEVERLAZY"
+
+
 class PluginRenderOptions(NamedTuple):
     user: Optional[User]
     do_lazy: bool
@@ -25,6 +31,7 @@ class PluginRenderOptions(NamedTuple):
     preview: bool
     target_format: str
     review: bool
+    wrap_in_div: bool
 
 
 def get_value(values, key, default=None):
@@ -85,6 +92,7 @@ class Plugin:
         self.type = plugin_type
         self.par = par
         self.points_rule_cache = None  # cache for points rule
+        self.output = None
 
     @property
     def full_task_id(self):
@@ -298,9 +306,49 @@ class Plugin:
             return False, 'Answer is not valid'
         return True, 'ok'
 
+    def is_cached(self):
+        return self.values.get('cache', False)
+
+    def is_lazy(self) -> bool:
+        do_lazy = self.options.do_lazy
+        html = self.output
+        if do_lazy == NEVERLAZY:
+            return False
+        markup = self.values
+        markup_lazy = markup.get("lazy", "")
+        if markup_lazy == False:
+            return False  # user do not want lazy
+        if self.is_cached():
+            return False  # cache never lazy
+        if not do_lazy and markup_lazy != True:
+            return False
+        if html is not None and html.find(NOLAZY) >= 0:
+            return False  # not allowed to make lazy
+        return True
 
     def is_automd_enabled(self, default = False):
         return self.values.get(AUTOMD, default)
+
+    def set_output(self, output: str):
+        self.output = output
+
+    def get_answerbrowser_type(self):
+        if self.is_cached():
+            return None
+        # Some plugins don't have answers but they may still need to be loaded lazily.
+        if self.type.startswith('show') or self.type == 'graphviz':
+            return 'lazyonly' if self.is_lazy() else None
+        return 'full'
+
+    def get_final_output(self):
+        html = self.output
+        if self.is_lazy() and html.find(LAZYSTART) < 0:
+            markup = self.values
+            header = str(markup.get("header", markup.get("headerText", "")))
+            stem = str(markup.get("stem", "Open plugin"))
+            html = html.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
+            html = f'{LAZYSTART}{html}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
+        return f"<div id='{self.task_id_ext}' data-plugin='/{self.type}'>{html}</div>" if self.options.wrap_in_div else html
 
 
 def parse_plugin_values_macros(par: DocParagraph,

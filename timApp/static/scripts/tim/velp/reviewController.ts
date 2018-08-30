@@ -1,7 +1,7 @@
 import angular, {IController, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {AnswerBrowserController, AnswerBrowserLazyController} from "../answer/answerbrowser3";
+import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -1225,9 +1225,9 @@ export class ReviewController implements IController {
         let ab: any = parent.getElementsByTagName("ANSWERBROWSER")[0];
 
         if (typeof ab === UNDEFINED) {
-            const abl = angular.element(parent.getElementsByTagName("ANSWERBROWSERLAZY")[0]);
-            const ablis: AnswerBrowserLazyController = abl.isolateScope<any>().$ctrl;
-            ablis.loadAnswerBrowser();
+            const abl = angular.element(parent.getElementsByTagName("TIM-PLUGIN-LOADER")[0]);
+            const ablis: PluginLoaderCtrl = abl.isolateScope<any>().$ctrl;
+            ablis.loadPlugin();
         }
         if (this.vctrl.selectedUser.id !== annotation.user_id) {
             for (let i = 0; i < this.vctrl.users.length; i++) {

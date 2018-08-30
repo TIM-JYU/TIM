@@ -86,7 +86,7 @@ export class ViewCtrl implements IController {
 
     private hidePending: boolean;
     public group: any;
-    private scope: IScope;
+    public scope: IScope;
     public noBrowser: boolean;
     public docVersion: [number, number];
     private crumbs: any;
@@ -471,11 +471,12 @@ export class ViewCtrl implements IController {
     updatePending() {
         for (const key in this.pendingUpdates) {
             if (this.pendingUpdates.hasOwnProperty(key)) {
-                const $par = getElementByParId(key);
-                const $newPar = $($compile(this.pendingUpdates[key])(this.scope));
-                $par.replaceWith($newPar);
-                this.applyDynamicStyles($newPar);
-                ParCompiler.processAllMathDelayed($newPar);
+                const par = getElementByParId(key);
+                const n = $(this.pendingUpdates[key]);
+                par.replaceWith(n);
+                const compiled = $($compile(n)(this.scope));
+                this.applyDynamicStyles(compiled);
+                ParCompiler.processAllMathDelayed(compiled);
             }
         }
         this.document.rebuildSections();

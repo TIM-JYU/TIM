@@ -294,10 +294,6 @@ class DocParagraph:
         if preamble:
             self.__htmldata['from_preamble'] = preamble.path
         self.__htmldata['is_question'] = self.is_question()
-        from timApp.plugin import containerLink
-        self.__htmldata['needs_browser'] = self.is_plugin() \
-                                           and not self.is_question() \
-                                           and containerLink.get_plugin_needs_browser(plugintype)
 
     def _cache_props(self):
         """Caches some boolean properties about this paragraph in internal attributes."""

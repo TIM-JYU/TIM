@@ -11,7 +11,7 @@ from flask import current_app
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.markdown.dumboclient import call_dumbo, DumboOptions
 from timApp.util.logger import log_warning
-from timApp.plugin.plugin import Plugin
+from timApp.plugin.plugin import Plugin, AUTOMD
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.timtypes import DocumentType as Document
@@ -27,11 +27,11 @@ HASKELLPLUGIN_NAME = 'haskellplugins'
 PALIPLUGIN_NAME = 'pali'
 IMAGEXPLUGIN_NAME = 'imagex'
 MARKUP = 'markup'
-AUTOMD = 'automd'
 REGEXATTRS = 'regexattrs'
 
 PLUGINS = None
 PLUGIN_REGEX_OBJS = {}
+
 
 def get_plugins():
     global PLUGINS
@@ -41,15 +41,15 @@ def get_plugins():
             "taunoPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/tauno/"},
             "simcirPlugin": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/simcir/"},
             "csPluginRikki": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/rikki/"},  # demonstrates a broken plugin
-            "showCode": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/", "browser": False},
-            "showImage": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/", "browser": False},
-            "showVideo": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/", "browser": False},
-            "showPdf": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/pdf/", "browser": False},
+            "showCode": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/"},
+            "showImage": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/image/"},
+            "showVideo": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/video/"},
+            "showPdf": {"host": "http://" + SVNPLUGIN_NAME + ":5000/svn/pdf/"},
             "mcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5001/"},
             "mmcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
             "uploader": {"host": current_app.config['UPLOADER_CONTAINER_URL']},
             #  "shortNote": {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
-            "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/", "browser": False},
+            "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/"},
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
             "imagex": {"host": "http://" + IMAGEXPLUGIN_NAME + ":5000/"},
             "qst": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/", REGEXATTRS: ["rows", "questionText"]},
@@ -279,18 +279,3 @@ def get_plugin(plugin: str):
     if plug:
         return plug
     raise PluginException("Plugin does not exist.")
-
-
-# Get address towards which the plugin must send its further requests, such as answers
-def get_plugin_tim_url(plugin):
-    if plugin in get_plugins():
-        return TIM_URL + "/" + plugin
-    raise PluginException("Plugin does not exist.")
-
-
-def get_plugin_needs_browser(plugin) -> bool:
-    try:
-        plg = get_plugin(plugin)
-    except PluginException:
-        return False
-    return plg.get('browser', True)

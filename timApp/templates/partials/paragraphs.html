@@ -94,8 +94,9 @@
          {% endif %}
         {% if not t.is_plugin %}ng-non-bindable{% endif %}>
         {% set task_id = (t.ref_attrs or t.attrs)['taskId'] %}
-            {%- if t.is_plugin and t.needs_browser and not preview -%}
-                <answerbrowserlazy task-id="{{ (t.ref_doc_id or t.doc_id) }}.{{ task_id }}"></answerbrowserlazy>
+            {%- if t.answerbrowser_type and not preview -%}
+                <tim-plugin-loader type="{{ t.answerbrowser_type }}" task-id="{{ (t.ref_doc_id or t.doc_id) }}.{{ task_id }}">
+                </tim-plugin-loader>
             {%- endif -%}
         {%- if task_id and not preview -%}
             <a href="#{{ task_id }}" title="Permlink" class="headerlink">#</a>

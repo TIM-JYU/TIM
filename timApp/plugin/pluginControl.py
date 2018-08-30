@@ -7,31 +7,21 @@ from xml.sax.saxutils import quoteattr
 
 import yaml
 import yaml.parser
-from flask import render_template
 
-from timApp.gamification.gamificationdata import GamificationException
-from timApp.plugin.containerLink import get_plugin_needs_browser
-from timApp.plugin.containerLink import get_plugin_tim_url
-from timApp.plugin.containerLink import plugin_reqs
-from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import dereference_pars, Document
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.markdown.markdownconverter import expand_macros
+from timApp.plugin.containerLink import plugin_reqs
+from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.plugin.plugin import Plugin, PluginRenderOptions
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
-from timApp.util.rndutils import get_simple_hash_from_par_and_user
-from timApp.gamification import gamificationdata
 from timApp.user.user import User
+from timApp.util.rndutils import get_simple_hash_from_par_and_user
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_html, get_error_tex
-
-LAZYSTART = "<!--lazy "
-LAZYEND = " lazy-->"
-NOLAZY = "<!--nolazy-->"
-NEVERLAZY = "NEVERLAZY"
 
 
 def get_error_plugin(plugin_name, message, response=None,
@@ -134,7 +124,8 @@ def pluginify(doc: Document,
                                       preview=edit_window,
                                       target_format=target_format,
                                       user=user,
-                                      review=review)
+                                      review=review,
+                                      wrap_in_div=wrap_in_div)
 
     if load_states and custom_answer is None and user is not None:
         for idx, block in enumerate(pars):  # find taskid's
@@ -258,16 +249,14 @@ def pluginify(doc: Document,
             if src.startswith("http") or src.startswith("/"):  # absolute URL
                 js_paths.append(src)
             elif src.endswith('.js'):  # relative JS URL
-                path = get_plugin_tim_url(plugin_name) + "/" + src
-                js_paths.append(path)
+                js_paths.append(f"/{plugin_name}/{src}")
             else:  # module name
                 js_paths.append(src)
         for src in plugin_css_files:
             if src.startswith("http") or src.startswith("/"):
                 css_paths.append(src)
             else:
-                path = get_plugin_tim_url(plugin_name) + "/" + src
-                css_paths.append(path)
+                css_paths.append(f"/{plugin_name}/{src}")
         for mod in plugin_modules:
             modules.append(mod)
 
@@ -278,8 +267,6 @@ def pluginify(doc: Document,
 
         default_auto_md = reqs.get('default_automd', False)
 
-        plugin_url = get_plugin_tim_url(plugin_name)
-        needs_browser = get_plugin_needs_browser(plugin_name)
         if (html_out and reqs.get('multihtml')) or (md_out and reqs.get('multimd')):
             try:
                 # taketime("plg m", plugin_name)
@@ -306,13 +293,11 @@ def pluginify(doc: Document,
                 continue
 
             for idx, plugin, html in zip(plugin_block_map.keys(), plugin_block_map.values(), plugin_htmls):
-                html, is_lazy = make_lazy(html, plugin, do_lazy)
-
-                html_pars[idx]['needs_browser'] = needs_browser or is_lazy
-                html_pars[idx][output_format.value] = (
-                f"<div id='{plugin.task_id_ext}' data-plugin='{plugin_url}'>{html}</div>") if wrap_in_div else html
+                plugin.set_output(html)
+                html_pars[idx]['answerbrowser_type'] = plugin.get_answerbrowser_type()
+                html_pars[idx][output_format.value] = plugin.get_final_output()
         else:
-            for idx, val in plugin_block_map.items():
+            for idx, plugin in plugin_block_map.items():
                 if md_out:
                     err_msg_md = "Plugin does not support printing yet. " \
                                  "Please refer to TIM help pages if you want to learn how you can manually " \
@@ -323,16 +308,16 @@ def pluginify(doc: Document,
                 else:
                     try:
                         html = render_plugin(doc=doc,
-                                             plugin=val,
+                                             plugin=plugin,
                                              output_format=output_format)
                     except PluginException as e:
                         html_pars[idx][output_format.value] = get_error_plugin(plugin_name, str(e),
                                                                                plugin_output_format=output_format)
                         continue
 
-                    html, is_lazy = make_lazy(html, val, do_lazy)
-                    html_pars[idx]['needs_browser'] = needs_browser or is_lazy
-                    html_pars[idx]['html'] = f"<div id='{val.task_id_ext}' data-plugin='{plugin_url}'>{html}</div>" if wrap_in_div else html
+                    plugin.set_output(html)
+                    html_pars[idx]['answerbrowser_type'] = plugin.get_answerbrowser_type()
+                    html_pars[idx][output_format.value] = plugin.get_final_output()
 
     # taketime("phtml done")
 
@@ -341,30 +326,6 @@ def pluginify(doc: Document,
 
 def get_markup_value(markup, key, default):
     return markup.get(key, default)
-
-
-def make_lazy(html: str, plugin: Plugin, do_lazy):
-    if do_lazy == NEVERLAZY:
-        return html, False
-    markup = plugin.values
-    markup_lazy = get_markup_value(markup, "lazy", "")
-    if markup_lazy == False:
-        return html, False  # user do not want lazy
-    if get_markup_value(markup, "cache", False):
-        return html, False  # cache never lazy
-
-    if not do_lazy and markup_lazy != True:
-        return html, False
-    if html.find(NOLAZY) >= 0:
-        return html, False  # not allowed to make lazy
-    if html.find(LAZYSTART) >= 0:
-        return html, True  # allredy lazy
-    header = str(get_markup_value(markup, "header", get_markup_value(markup, "headerText", "")))
-    stem = str(get_markup_value(markup, "stem", "Open plugin"))
-    html = html.replace("<!--", "<!-LAZY-").replace("-->", "-LAZY->")
-    # print(header, stem)
-    return LAZYSTART + html + LAZYEND + '<span style="font-weight:bold">' + header + '</span>' + \
-           "<div><p>" + stem + "</p></div>", True
 
 
 def get_all_reqs():
