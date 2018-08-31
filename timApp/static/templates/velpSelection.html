@@ -56,9 +56,13 @@
                         ng-click="$ctrl.openCreateNewVelpWindow(newVelp)"
                         value="">Create new velp</button>
 
-                <div save="%%PAGEID%%selectVelpsDiv" tim-draggable-fixed detachable="true"
+                <div save="%%PAGEID%%selectVelpsDiv"
+                     tim-draggable-fixed
+                     detachable="true"
+                     click="true"
+                     resize="true"
                      caption="Available velps">
-                    <div class="stack">
+                    <div class="stack draggable-content">
                         <velp-window id="newVelp"
                                      class="velp" ng-style="{top: 0}"
                                      ng-show="$ctrl.newVelp.edit"

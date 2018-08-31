@@ -149,11 +149,13 @@ export class DraggableController implements IController {
     private toggleDetach() {
         if (this.canDrag()) {
             this.element.css("position", "static");
+            this.element.css("visibility", "inherit");
             for (const prop of ["width", "height"]) {
                 this.element.css(prop, "");
             }
         } else {
             this.element.css("position", "absolute");
+            this.element.css("visibility", "visible");
             this.restoreSizeAndPosition();
         }
         setStorage(this.posKey + "detach", this.canDrag());
@@ -328,7 +330,7 @@ export class DraggableController implements IController {
 
     toggleMinimize() {
         this.areaMinimized = !this.areaMinimized;
-        const base = this.element.find(".draggable-content");
+        const base = this.element.children(".draggable-content");
         if (this.areaMinimized) {
             this.areaHeight = this.getHeight();
             this.areaWidth = this.getWidth();
@@ -336,11 +338,11 @@ export class DraggableController implements IController {
             this.element.width(200);
             this.element.css("left", this.getCss("left") + (this.areaWidth - this.getWidth()));
 
-            base.css("display", "none");
+            base.css("visibility", "hidden");
             this.element.css("min-height", "0");
             setStorage(this.posKey + "min", true);
         } else {
-            base.css("display", "");
+            base.css("visibility", "");
             this.element.css("min-height", "");
             this.element.css("left", this.getCss("left") - (this.areaWidth - this.getWidth()));
             if (this.autoHeight) {
