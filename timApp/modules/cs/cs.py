@@ -415,6 +415,7 @@ def get_html(self, ttype, query):
     if query.hide_program:
         get_param_del(query, 'program', '')
 
+
     js = query_params_to_map_check_parts(query)
     # print(js)
     if "byFile" in js and not ("byCode" in js):
@@ -423,6 +424,9 @@ def get_html(self, ttype, query):
     bycode = ""
     if "byCode" in js:
         bycode = js["byCode"]
+    else:
+        if "by" in js:
+            bycode = js["by"]
     if get_param(query, "noeditor", False):
         bycode = ""
 
